@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ControlStack Workspace Shell</title>
+    <link rel="stylesheet" href="/apps/workspace-shell/src/styles.css" />
+  </head>
+  <body>
+    <div id="cs-shell-root" class="cs-shell" data-phase="1B">
+      <header class="cs-shell__topbar" aria-label="Workspace top bar">
+        <div>
+          <p class="cs-shell__eyebrow">ControlStack Runtime</p>
+          <h1>Workspace Shell</h1>
+        </div>
+        <div id="cs-shell-status" class="cs-shell__status" role="status">Booting shell…</div>
+      </header>
+
+      <div class="cs-shell__body">
+        <aside class="cs-shell__sidebar" aria-label="Workspace sidebar">
+          <h2>Workspace</h2>
+          <nav>
+            <a href="/workspace?module=cs_selector" data-module-link="cs_selector">cs_selector</a>
+            <a href="/workspace?module=workspace_home" data-module-link="workspace_home">Home</a>
+          </nav>
+          <section class="cs-shell__context-card">
+            <h3>Shell-owned context</h3>
+            <dl id="cs-shell-context-summary"></dl>
+          </section>
+        </aside>
+
+        <main class="cs-shell__main" aria-label="Workspace main panel">
+          <section id="cs-workspace-home" class="cs-shell__home" hidden>
+            <h2>Workspace home</h2>
+            <p>This Phase 1B shell proves the runtime route, shell layout, context ownership shape, and module mount contract.</p>
+          </section>
+          <section id="cs-shell-module-host" class="cs-shell__module-host" aria-live="polite"></section>
+        </main>
+      </div>
+    </div>
+
+    <script type="module" src="/apps/workspace-shell/src/shell.js"></script>
+  </body>
+</html>
