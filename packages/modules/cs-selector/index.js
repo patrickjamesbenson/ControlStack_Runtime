@@ -60,6 +60,8 @@ function render(container, payload) {
     ["Handoff owner", context.handoff.owner],
     ["Visibility owner", visibility.owner],
     ["Feature flags owner", flags.owner],
+    ["Visibility allows module", String(services.visibility.canShowModule?.("cs_selector", context) ?? true)],
+    ["Feature migration enabled", String(services.flags.isEnabled?.("featureMigrationEnabled") ?? false)],
   ]);
 
   const servicesSection = document.createElement("section");

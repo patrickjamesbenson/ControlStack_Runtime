@@ -31,6 +31,7 @@ function renderContextSummary(context) {
   if (!contextSummary) return;
   appendDefinitionListRows(contextSummary, [
     ["phase", context.phase],
+    ["contract", context.contractVersion || "not-declared"],
     ["module", context.route.moduleId],
     ["project", `${context.project.owner}:${context.project.status}`],
     ["save", `${context.project.save.owner}:${context.project.save.available ? "available" : "deferred"}`],

@@ -1,3 +1,8 @@
+import { createContractDiagnostics } from "./contracts.js";
+import { createFeatureFlagService } from "./featureFlags.js";
+import { createProjectService } from "./projectService.js";
+import { createVisibilityService } from "./visibilityService.js";
+
 function createEventBus() {
   const listeners = new Map();
 
@@ -19,6 +24,9 @@ function createEventBus() {
 
 export function createShellServices() {
   const eventBus = createEventBus();
+  const projectAdapter = createProjectService({ eventBus });
+  const visibilityAdapter = createVisibilityService({ eventBus });
+  const flagAdapter = createFeatureFlagService({ eventBus });
 
   return {
     identity: {
@@ -26,49 +34,26 @@ export function createShellServices() {
       status: "placeholder",
       currentUser: null,
     },
-    project: {
-      owner: "shell",
-      status: "placeholder",
-      currentProject: null,
-      metadata: {
-        source: "phase-1b-placeholder",
-        dirty: false,
-      },
-      save: {
-        owner: "shell",
-        available: false,
-        reason: "Phase 1B placeholder only; save/restore is restored in a later phase.",
-      },
-      restore: {
-        owner: "shell",
-        available: false,
-        reason: "Phase 1B placeholder only; save/restore is restored in a later phase.",
-      },
-    },
+    project: projectAdapter,
     handoff: {
       owner: "shell",
       status: "placeholder",
       available: false,
       reason: "Phase 1B placeholder only; handoff ownership is shell-level but implementation is deferred.",
-    },
-    visibility: {
-      owner: "shell",
-      status: "placeholder",
-      rule: "cross-module or role-based visibility is shell-owned; local UI-only visibility remains module-owned",
-      toggles: {
-        cs_selector: true,
-        workspace_home: true,
+      getHandoffSnapshot() {
+        return {
+          owner: this.owner,
+          status: this.status,
+          available: this.available,
+          reason: this.reason,
+        };
+      },
+      createHandoff() {
+        return { ...this.getHandoffSnapshot(), requestAccepted: false };
       },
     },
-    flags: {
-      owner: "shell",
-      status: "placeholder",
-      values: {
-        phase1bMinimalShell: true,
-        optionalPluginsBootCritical: false,
-        featureRestorationEnabled: false,
-      },
-    },
+    visibility: visibilityAdapter,
+    flags: flagAdapter,
     crm: {
       owner: "shell",
       status: "placeholder",
@@ -94,15 +79,4 @@ export function createShellServices() {
   };
 }
 
-export function createShellContext({ route, services }) {
-  return {
-    phase: "1B",
-    route,
-    identity: services.identity,
-    project: services.project,
-    handoff: services.handoff,
-    visibility: services.visibility,
-    flags: services.flags,
-    crm: services.crm,
-  };
-}
+export { createShellContext } from "./context.js";
