@@ -29,6 +29,7 @@ function appendPillList(parent, items) {
 
 function appendSection(parent, heading, rows) {
   const section = document.createElement("section");
+  section.className = "cs-selector-proof__section";
   appendText(section, "h3", heading);
   appendDefinitionList(section, rows);
   parent.appendChild(section);
@@ -43,13 +44,46 @@ export function renderSelectorView(container, viewModel) {
 
   const intro = document.createElement("div");
   appendText(intro, "p", "Selector migration surface", "cs-shell__eyebrow");
-  appendText(intro, "h2", "cs_selector contract consumer");
+  appendText(intro, "h2", "cs_selector identity and CRM context consumer");
   appendText(
     intro,
     "p",
-    "Phase 3 keeps selector logic narrow: it consumes shell-owned project, visibility, and feature-flag policy while save, restore, handoff, engine, RunTable, and payload work remain deferred.",
+    "Phase 4 keeps identity and CRM context shell-owned. The selector displays read-only user and company context while CRM writes, save, restore, handoff, engine, RunTable, and payload work remain deferred.",
   );
   article.appendChild(intro);
+
+  appendSection(article, "Shell-owned identity context", [
+    ["Identity owner", viewModel.identity.owner],
+    ["Identity status", viewModel.identity.status],
+    ["Identity source", viewModel.identity.source],
+    ["User", viewModel.identity.name],
+    ["Email", viewModel.identity.email],
+    ["Role", viewModel.identity.role],
+    ["Selector capability", viewModel.identity.canViewSelector],
+  ]);
+
+  appendSection(article, "Shell-owned company context", [
+    ["Company owner", viewModel.company.owner],
+    ["Company status", viewModel.company.status],
+    ["Company source", viewModel.company.source],
+    ["Company", viewModel.company.companyName],
+    ["Company ID", viewModel.company.companyId],
+    ["Website", viewModel.company.website],
+    ["Lifecycle stage", viewModel.company.lifecycleStage],
+    ["Owner", viewModel.company.ownerName],
+    ["Associated deal", viewModel.company.associatedDealId],
+    ["Associated contact", viewModel.company.associatedContactId],
+  ]);
+
+  appendSection(article, "CRM / HubSpot write policy", [
+    ["CRM owner", viewModel.crm.owner],
+    ["CRM status", viewModel.crm.status],
+    ["CRM source", viewModel.crm.source],
+    ["HubSpot status", viewModel.crm.hubspotStatus],
+    ["HubSpot available", viewModel.crm.hubspotAvailable],
+    ["Write flows enabled", viewModel.crm.writeFlowsEnabled],
+    ["Write policy", viewModel.crm.writeReason],
+  ]);
 
   appendSection(article, "Shell-owned project context", [
     ["Project owner", viewModel.project.owner],
@@ -80,6 +114,7 @@ export function renderSelectorView(container, viewModel) {
   ]);
 
   const localSection = document.createElement("section");
+  localSection.className = "cs-selector-proof__section";
   appendText(localSection, "h3", "Selector-local UI state");
   appendPillList(localSection, [
     `category:${viewModel.local.selectedCategory}`,
@@ -89,9 +124,12 @@ export function renderSelectorView(container, viewModel) {
   article.appendChild(localSection);
 
   const deferredSection = document.createElement("section");
+  deferredSection.className = "cs-selector-proof__section";
   appendText(deferredSection, "h3", "Deferred selector actions");
   appendPillList(deferredSection, viewModel.deferredActions);
   article.appendChild(deferredSection);
+
+  appendText(article, "p", viewModel.responsiveNote, "cs-shell__eyebrow");
 
   container.appendChild(article);
 }

@@ -1,5 +1,7 @@
 import { createContractDiagnostics } from "./contracts.js";
+import { createCrmService } from "./crmService.js";
 import { createFeatureFlagService } from "./featureFlags.js";
+import { createIdentityService } from "./identityService.js";
 import { createProjectService } from "./projectService.js";
 import { createVisibilityService } from "./visibilityService.js";
 
@@ -24,22 +26,20 @@ function createEventBus() {
 
 export function createShellServices() {
   const eventBus = createEventBus();
+  const identityAdapter = createIdentityService({ eventBus });
   const projectAdapter = createProjectService({ eventBus });
   const visibilityAdapter = createVisibilityService({ eventBus });
   const flagAdapter = createFeatureFlagService({ eventBus });
+  const crmAdapter = createCrmService({ eventBus });
 
   return {
-    identity: {
-      owner: "shell",
-      status: "placeholder",
-      currentUser: null,
-    },
+    identity: identityAdapter,
     project: projectAdapter,
     handoff: {
       owner: "shell",
       status: "placeholder",
       available: false,
-      reason: "Phase 1B placeholder only; handoff ownership is shell-level but implementation is deferred.",
+      reason: "Handoff ownership is shell-level; live behavior is deferred.",
       getHandoffSnapshot() {
         return {
           owner: this.owner,
@@ -54,11 +54,7 @@ export function createShellServices() {
     },
     visibility: visibilityAdapter,
     flags: flagAdapter,
-    crm: {
-      owner: "shell",
-      status: "placeholder",
-      company: null,
-    },
+    crm: crmAdapter,
     storage: {
       owner: "shell",
       status: "placeholder",
@@ -66,12 +62,20 @@ export function createShellServices() {
     diagnostics: {
       owner: "shell",
       status: "placeholder",
-      report() {
+      getSnapshot() {
         return {
-          phase: "1B",
-          projectOwnedByShell: true,
-          visibilityOwnedByShell: true,
-          optionalPluginsBootCritical: false,
+          owner: "shell",
+          status: "placeholder",
+          phase: "4",
+          contract: createContractDiagnostics(),
+          responsiveRequirement: "desktop-tablet-mobile",
+        };
+      },
+      report(event) {
+        return {
+          accepted: true,
+          event,
+          phase: "4",
         };
       },
     },

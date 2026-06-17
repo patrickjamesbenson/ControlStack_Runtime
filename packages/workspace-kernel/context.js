@@ -1,11 +1,14 @@
 import { WORKSPACE_CONTRACT_VERSION } from "./contracts.js";
 
 function readIdentity(service) {
+  if (typeof service.getIdentitySnapshot === "function") return service.getIdentitySnapshot();
   return {
     owner: service.owner,
     status: service.status,
+    source: "phase-4-fallback",
     currentUser: service.currentUser || null,
     role: service.role || "anonymous",
+    capabilities: [],
   };
 }
 
@@ -14,9 +17,31 @@ function readCompany(service) {
   return {
     owner: service.owner,
     status: service.status,
-    source: "phase-2-placeholder",
+    source: "phase-4-fallback",
     companyId: null,
-    companyName: null,
+    companyName: "No company loaded",
+    diagnostics: {
+      hydrated: false,
+      writeFlowsEnabled: false,
+      reason: "No CRM service snapshot available.",
+    },
+  };
+}
+
+function readCrm(service) {
+  if (typeof service.getCrmSnapshot === "function") return service.getCrmSnapshot();
+  const company = readCompany(service);
+  return {
+    owner: service.owner,
+    status: service.status,
+    source: company.source,
+    company,
+    deal: null,
+    contact: null,
+    writePolicy: {
+      enabled: false,
+      reason: "Phase 4 CRM writes are deferred.",
+    },
   };
 }
 
@@ -25,18 +50,20 @@ function readDiagnostics(service) {
   return {
     owner: service.owner,
     status: service.status,
-    phase: "2",
+    phase: "4",
   };
 }
 
 export function createShellContext({ route, services, mountedModuleId = null }) {
+  const crm = readCrm(services.crm);
   return {
     contractVersion: WORKSPACE_CONTRACT_VERSION,
-    phase: "2",
+    phase: "4",
     route,
     identity: readIdentity(services.identity),
     project: services.project.getProjectSnapshot(),
-    company: readCompany(services.crm),
+    company: crm.company,
+    crm,
     handoff: services.handoff.getHandoffSnapshot(),
     visibility: services.visibility.getVisibilitySnapshot(),
     flags: services.flags.getFlagSnapshot(),
@@ -56,6 +83,7 @@ export function createModuleUpdateSnapshot(context) {
     identity: context.identity,
     project: context.project,
     company: context.company,
+    crm: context.crm,
     visibility: context.visibility,
     flags: context.flags,
   };

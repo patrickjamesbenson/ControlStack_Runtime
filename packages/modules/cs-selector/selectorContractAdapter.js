@@ -18,9 +18,10 @@ export function createSelectorContractAdapter({ services, context }) {
     readSnapshots() {
       return {
         route: context.route,
-        identity: context.identity,
+        identity: safeRead(() => services.identity.getIdentitySnapshot(), context.identity),
         project: safeRead(() => services.project.getProjectSnapshot(), context.project),
-        company: context.company,
+        company: safeRead(() => services.crm.getCompanyContext(), context.company),
+        crm: safeRead(() => services.crm.getCrmSnapshot(), context.crm),
         handoff: safeRead(() => services.handoff.getHandoffSnapshot(), context.handoff),
         visibility: safeRead(() => services.visibility.getVisibilitySnapshot(), context.visibility),
         flags: safeRead(() => services.flags.getFlagSnapshot(), context.flags),
@@ -35,6 +36,10 @@ export function createSelectorContractAdapter({ services, context }) {
 
     isFlagEnabled(flagId) {
       return services.flags.isEnabled?.(flagId) ?? false;
+    },
+
+    hasCapability(capabilityId) {
+      return services.identity.hasCapability?.(capabilityId) ?? false;
     },
   };
 }
