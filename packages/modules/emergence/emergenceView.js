@@ -48,7 +48,7 @@ export function renderEmergenceView(container, viewModel) {
   appendText(
     intro,
     "p",
-    "Phase 5 proves a second runtime module can mount cleanly and consume shell-owned services without restoring engine, RunTable, payload, HubSpot writes, optional plugins, or donor parity code.",
+    "Phase 7 keeps project selection shell-owned. Emergence displays the selected current project as a read-only contract consumer while save, restore, handoff, HubSpot writes, engine, RunTable, payload, optional plugin restoration, and donor parity code remain out of scope.",
   );
   article.appendChild(intro);
 
@@ -61,11 +61,17 @@ export function renderEmergenceView(container, viewModel) {
     ["Emergence capability", viewModel.identity.canViewEmergence],
   ]);
 
-  appendSection(article, "Shell-owned project context", [
+  appendSection(article, "Shell-owned current project", [
     ["Project owner", viewModel.project.owner],
+    ["Project status", viewModel.project.status],
     ["Project title", viewModel.project.title],
+    ["Project ID", viewModel.project.projectId],
+    ["Readiness", viewModel.project.readiness],
+    ["Project source", viewModel.project.source],
+    ["Selected at", viewModel.project.selectedAt],
+    ["Client", viewModel.project.client],
+    ["Site", viewModel.project.site],
     ["Project dirty", viewModel.project.dirty],
-    ["Metadata source", viewModel.project.metadataSource],
     ["Save status", viewModel.project.saveStatus],
     ["Restore status", viewModel.project.restoreStatus],
   ]);

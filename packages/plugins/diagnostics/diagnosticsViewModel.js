@@ -23,6 +23,7 @@ export function createDiagnosticsViewModel({ adapter, diagnosticsState }) {
   const snapshots = adapter.readSnapshots();
   const local = diagnosticsState.getSnapshot();
   const project = snapshots.project;
+  const currentProject = project.currentProject || {};
   const identity = snapshots.identity;
   const company = snapshots.company || snapshots.crm?.company || {};
   const crm = snapshots.crm || {};
@@ -52,6 +53,12 @@ export function createDiagnosticsViewModel({ adapter, diagnosticsState }) {
       owner: project.owner,
       status: project.status,
       title: readProjectTitle(project),
+      projectId: project.metadata?.projectId || currentProject.projectId || "none",
+      readiness: project.metadata?.readiness || currentProject.readiness || "not-ready",
+      source: project.selection?.source || project.metadata?.source || "unknown",
+      selectedAt: project.selection?.selectedAt || project.metadata?.selectedAt || "none",
+      client: currentProject.client || "none",
+      site: currentProject.site || "none",
       saveStatus: project.save?.status || project.saveState?.status || "deferred",
       restoreStatus: project.restore?.status || project.restoreState?.status || "deferred",
     },
@@ -90,9 +97,11 @@ export function createDiagnosticsViewModel({ adapter, diagnosticsState }) {
       statuses: pluginStatus.plugins || [],
     },
     constraints: [
+      "Current project selection is shell-owned",
       "Diagnostics is optional and post-render only",
       "Plugin failure is isolated to this host",
       "Diagnostics is read-only",
+      "Save / restore / handoff remain deferred",
       "Engine / RunTable / payload are out of scope",
       "HubSpot write flows are deferred",
     ],

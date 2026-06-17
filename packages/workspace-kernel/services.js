@@ -66,16 +66,21 @@ export function createShellServices() {
         return {
           owner: "shell",
           status: "placeholder",
-          phase: "4",
+          phase: "7",
           contract: createContractDiagnostics(),
           responsiveRequirement: "desktop-tablet-mobile",
+          projectSelection: {
+            owner: "shell",
+            status: "selectable",
+            persistence: "not-enabled",
+          },
         };
       },
       report(event) {
         return {
           accepted: true,
           event,
-          phase: "4",
+          phase: "7",
         };
       },
     },

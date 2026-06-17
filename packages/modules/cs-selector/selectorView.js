@@ -44,11 +44,11 @@ export function renderSelectorView(container, viewModel) {
 
   const intro = document.createElement("div");
   appendText(intro, "p", "Selector migration surface", "cs-shell__eyebrow");
-  appendText(intro, "h2", "cs_selector identity and CRM context consumer");
+  appendText(intro, "h2", "cs_selector shell context consumer");
   appendText(
     intro,
     "p",
-    "Phase 4 keeps identity and CRM context shell-owned. The selector displays read-only user and company context while CRM writes, save, restore, handoff, engine, RunTable, and payload work remain deferred.",
+    "Phase 7 keeps current project selection shell-owned. The selector displays read-only identity, company, CRM, and selected current-project context while save, restore, handoff, engine, RunTable, payload, and HubSpot writes remain deferred.",
   );
   article.appendChild(intro);
 
@@ -60,6 +60,21 @@ export function renderSelectorView(container, viewModel) {
     ["Email", viewModel.identity.email],
     ["Role", viewModel.identity.role],
     ["Selector capability", viewModel.identity.canViewSelector],
+  ]);
+
+  appendSection(article, "Shell-owned current project", [
+    ["Project owner", viewModel.project.owner],
+    ["Project status", viewModel.project.status],
+    ["Project title", viewModel.project.title],
+    ["Project ID", viewModel.project.projectId],
+    ["Readiness", viewModel.project.readiness],
+    ["Project source", viewModel.project.source],
+    ["Selected at", viewModel.project.selectedAt],
+    ["Client", viewModel.project.client],
+    ["Site", viewModel.project.site],
+    ["Project dirty", viewModel.project.dirty],
+    ["Save status", viewModel.project.saveStatus],
+    ["Restore status", viewModel.project.restoreStatus],
   ]);
 
   appendSection(article, "Shell-owned company context", [
@@ -83,15 +98,6 @@ export function renderSelectorView(container, viewModel) {
     ["HubSpot available", viewModel.crm.hubspotAvailable],
     ["Write flows enabled", viewModel.crm.writeFlowsEnabled],
     ["Write policy", viewModel.crm.writeReason],
-  ]);
-
-  appendSection(article, "Shell-owned project context", [
-    ["Project owner", viewModel.project.owner],
-    ["Project title", viewModel.project.title],
-    ["Project dirty", viewModel.project.dirty],
-    ["Metadata source", viewModel.project.metadataSource],
-    ["Save status", viewModel.project.saveStatus],
-    ["Restore status", viewModel.project.restoreStatus],
   ]);
 
   appendSection(article, "Shell-owned handoff placeholder", [

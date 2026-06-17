@@ -25,6 +25,7 @@ export function createEmergenceViewModel({ adapter, emergenceState }) {
   const flags = snapshots.flags.values || {};
   const identity = snapshots.identity;
   const project = snapshots.project;
+  const currentProject = project.currentProject || {};
   const company = snapshots.company || snapshots.crm?.company || {};
   const crm = snapshots.crm || {};
   const crmWritePolicy = crm.writePolicy || company.diagnostics || {};
@@ -32,7 +33,7 @@ export function createEmergenceViewModel({ adapter, emergenceState }) {
 
   return {
     moduleId: adapter.moduleId,
-    phase: snapshots.diagnostics?.phase || "5",
+    phase: snapshots.diagnostics?.phase || "7",
     route: snapshots.route,
     local,
     identity: {
@@ -46,7 +47,14 @@ export function createEmergenceViewModel({ adapter, emergenceState }) {
     },
     project: {
       owner: project.owner,
+      status: project.status,
       title: readProjectTitle(project),
+      projectId: project.metadata?.projectId || currentProject.projectId || "none",
+      readiness: project.metadata?.readiness || currentProject.readiness || "not-ready",
+      source: project.selection?.source || project.metadata?.source || "unknown",
+      selectedAt: project.selection?.selectedAt || project.metadata?.selectedAt || "none",
+      client: currentProject.client || "none",
+      site: currentProject.site || "none",
       dirty: stateLabel(project.dirty || local.localDirty),
       metadataSource: project.metadata?.source || "unknown",
       saveStatus: project.save?.status || project.saveState?.status || "deferred",
@@ -64,7 +72,7 @@ export function createEmergenceViewModel({ adapter, emergenceState }) {
       owner: crm.owner || "shell",
       status: crm.status || "placeholder",
       writeFlowsEnabled: stateLabel(readWriteEnabled(crmWritePolicy)),
-      writeReason: crmWritePolicy.reason || "Phase 5 module migration does not enable CRM writes.",
+      writeReason: crmWritePolicy.reason || "Phase 7 project selection does not enable CRM writes.",
       hubspotStatus: crm.hubspot?.status || "placeholder",
     },
     handoff: {
@@ -88,6 +96,7 @@ export function createEmergenceViewModel({ adapter, emergenceState }) {
       payloadSurfaceEnabled: stateLabel(flags.payloadSurfaceEnabled),
     },
     deferredActions: [
+      "Project selection is shell-owned",
       "Save is shell-owned and deferred",
       "Restore is shell-owned and deferred",
       "Handoff is shell-owned and deferred",

@@ -50,18 +50,20 @@ function readDiagnostics(service) {
   return {
     owner: service.owner,
     status: service.status,
-    phase: "4",
+    phase: "7",
   };
 }
 
 export function createShellContext({ route, services, mountedModuleId = null }) {
   const crm = readCrm(services.crm);
+  const project = services.project.getProjectSnapshot();
   return {
     contractVersion: WORKSPACE_CONTRACT_VERSION,
-    phase: "4",
+    phase: "7",
     route,
     identity: readIdentity(services.identity),
-    project: services.project.getProjectSnapshot(),
+    project,
+    currentProject: project.currentProject,
     company: crm.company,
     crm,
     handoff: services.handoff.getHandoffSnapshot(),
@@ -82,6 +84,7 @@ export function createModuleUpdateSnapshot(context) {
     route: context.route,
     identity: context.identity,
     project: context.project,
+    currentProject: context.currentProject,
     company: context.company,
     crm: context.crm,
     visibility: context.visibility,

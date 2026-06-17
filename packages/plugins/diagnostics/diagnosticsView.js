@@ -48,7 +48,7 @@ export function renderDiagnosticsView(container, viewModel) {
   appendText(
     intro,
     "p",
-    "This plugin loads after the shell and route module have rendered. It reads shell-owned snapshots only and is not boot-critical.",
+    "This plugin loads after the shell and route module have rendered. It reads shell-owned snapshots only, including selected current-project context, and is not boot-critical.",
   );
   article.appendChild(intro);
 
@@ -60,7 +60,7 @@ export function renderDiagnosticsView(container, viewModel) {
     ["Responsive requirement", viewModel.shell.responsiveRequirement],
   ]);
 
-  appendSection(article, "Identity and project", [
+  appendSection(article, "Identity and current project", [
     ["Identity owner", viewModel.identity.owner],
     ["Identity status", viewModel.identity.status],
     ["User", viewModel.identity.user],
@@ -68,6 +68,12 @@ export function renderDiagnosticsView(container, viewModel) {
     ["Project owner", viewModel.project.owner],
     ["Project status", viewModel.project.status],
     ["Project title", viewModel.project.title],
+    ["Project ID", viewModel.project.projectId],
+    ["Readiness", viewModel.project.readiness],
+    ["Project source", viewModel.project.source],
+    ["Selected at", viewModel.project.selectedAt],
+    ["Client", viewModel.project.client],
+    ["Site", viewModel.project.site],
     ["Save status", viewModel.project.saveStatus],
     ["Restore status", viewModel.project.restoreStatus],
   ]);
@@ -110,7 +116,7 @@ export function renderDiagnosticsView(container, viewModel) {
 
   const constraintsSection = document.createElement("section");
   constraintsSection.className = "cs-diagnostics__section";
-  appendText(constraintsSection, "h3", "Phase 6 constraints");
+  appendText(constraintsSection, "h3", "Phase 7 constraints");
   appendPillList(constraintsSection, viewModel.constraints);
   article.appendChild(constraintsSection);
 

@@ -32,6 +32,7 @@ export function createSelectorViewModel({ adapter, selectorState }) {
   const local = selectorState.getSnapshot();
   const flags = snapshots.flags.values || {};
   const project = snapshots.project;
+  const currentProject = project.currentProject || {};
   const handoff = snapshots.handoff;
   const identity = snapshots.identity;
   const company = snapshots.company || snapshots.crm?.company || {};
@@ -40,7 +41,7 @@ export function createSelectorViewModel({ adapter, selectorState }) {
 
   return {
     moduleId: adapter.moduleId,
-    phase: snapshots.diagnostics?.phase || "4",
+    phase: snapshots.diagnostics?.phase || "7",
     route: snapshots.route,
     local,
     identity: {
@@ -55,7 +56,14 @@ export function createSelectorViewModel({ adapter, selectorState }) {
     },
     project: {
       owner: project.owner,
+      status: project.status,
       title: readProjectTitle(project),
+      projectId: project.metadata?.projectId || currentProject.projectId || "none",
+      readiness: project.metadata?.readiness || currentProject.readiness || "not-ready",
+      source: project.selection?.source || project.metadata?.source || "unknown",
+      selectedAt: project.selection?.selectedAt || project.metadata?.selectedAt || "none",
+      client: currentProject.client || "none",
+      site: currentProject.site || "none",
       dirty: stateLabel(project.dirty || local.localDirty),
       metadataSource: project.metadata?.source || "unknown",
       saveStatus: project.save?.status || project.saveState?.status || "deferred",
@@ -102,6 +110,7 @@ export function createSelectorViewModel({ adapter, selectorState }) {
       payloadSurfaceEnabled: stateLabel(flags.payloadSurfaceEnabled),
     },
     deferredActions: [
+      "Project selection is shell-owned",
       "Save is shell-owned and deferred",
       "Restore is shell-owned and deferred",
       "Handoff is shell-owned and deferred",
