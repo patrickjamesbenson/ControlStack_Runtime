@@ -1,4 +1,5 @@
 import { createModuleRegistry } from "/packages/workspace-kernel/moduleRegistry.js";
+import { createPluginRegistry } from "/packages/workspace-kernel/pluginRegistry.js";
 import { resolveWorkspaceRoute } from "/packages/workspace-kernel/route.js";
 import { createShellContext, createShellServices } from "/packages/workspace-kernel/services.js";
 import { csSelectorModule } from "/packages/modules/cs-selector/index.js";
@@ -6,6 +7,7 @@ import { emergenceModule } from "/packages/modules/emergence/index.js";
 
 const statusEl = document.getElementById("cs-shell-status");
 const moduleHost = document.getElementById("cs-shell-module-host");
+const pluginHost = document.getElementById("cs-shell-plugin-host");
 const homePanel = document.getElementById("cs-workspace-home");
 const contextSummary = document.getElementById("cs-shell-context-summary");
 
@@ -108,6 +110,74 @@ function renderMountFailure(route) {
   moduleHost.append(article);
 }
 
+function renderPluginFailure({ pluginId, error }) {
+  if (!pluginHost) return;
+  pluginHost.hidden = false;
+  clearElement(pluginHost);
+
+  const article = document.createElement("article");
+  article.className = "cs-shell__plugin-fallback";
+
+  const eyebrow = document.createElement("p");
+  eyebrow.className = "cs-shell__eyebrow";
+  eyebrow.textContent = "Optional plugin isolated";
+
+  const heading = document.createElement("h2");
+  heading.textContent = "Diagnostics unavailable";
+
+  const body = document.createElement("p");
+  body.textContent = `${pluginId} failed to load, but the shell and route module stayed responsive.`;
+
+  const detail = document.createElement("p");
+  detail.textContent = error?.message || String(error || "Unknown plugin failure");
+
+  article.append(eyebrow, heading, body, detail);
+  pluginHost.append(article);
+}
+
+function buildPluginContext({ pluginRegistry, registry, route }) {
+  return {
+    owner: "shell",
+    optional: true,
+    postRender: true,
+    routeModuleId: route.moduleId,
+    registeredModules: registry.list(),
+    pluginStatus: pluginRegistry.getStatusSnapshot(),
+  };
+}
+
+function scheduleOptionalDiagnosticsPlugin({ services, context, registry }) {
+  if (!pluginHost) return;
+  const pluginRegistry = createPluginRegistry();
+  const pluginId = "diagnostics";
+
+  setTimeout(async () => {
+    try {
+      pluginHost.hidden = false;
+      pluginRegistry.markLoading(pluginId);
+      const { diagnosticsPlugin } = await import("/packages/plugins/diagnostics/index.js");
+      pluginRegistry.register(pluginId, diagnosticsPlugin);
+      diagnosticsPlugin.mount({
+        container: pluginHost,
+        services,
+        context,
+        pluginContext: buildPluginContext({ pluginRegistry, registry, route: context.route }),
+      });
+      pluginRegistry.markMounted(pluginId);
+      diagnosticsPlugin.update?.({
+        context,
+        pluginContext: buildPluginContext({ pluginRegistry, registry, route: context.route }),
+      });
+      services.eventBus.emit("plugin:mounted", { pluginId, optional: true, postRender: true });
+    } catch (error) {
+      console.warn("[workspace-shell] optional diagnostics plugin failed", error);
+      pluginRegistry.markFailed(pluginId, error);
+      renderPluginFailure({ pluginId, error });
+      services.eventBus.emit("plugin:failed", { pluginId, optional: true, postRender: true, error });
+    }
+  }, 0);
+}
+
 function bootWorkspaceShell() {
   if (!moduleHost) {
     setStatus("Shell boot failed: missing module host.");
@@ -127,6 +197,7 @@ function bootWorkspaceShell() {
 
   if (showHomeIfRequested(route.moduleId)) {
     setStatus("Workspace home mounted. Phase 1B shell is responsive.");
+    scheduleOptionalDiagnosticsPlugin({ services, context, registry });
     return;
   }
 
@@ -134,6 +205,7 @@ function bootWorkspaceShell() {
   if (!moduleApi) {
     renderUnknownModuleFallback({ route, registry });
     setStatus(`Unknown module fallback rendered for ${route.moduleId}.`);
+    scheduleOptionalDiagnosticsPlugin({ services, context, registry });
     return;
   }
 
@@ -141,10 +213,12 @@ function bootWorkspaceShell() {
     moduleApi.mount({ container: moduleHost, services, context });
     setStatus(`Mounted ${route.moduleId}. Phase 1B shell baseline is running.`);
     services.eventBus.emit("module:mounted", { moduleId: route.moduleId, route });
+    scheduleOptionalDiagnosticsPlugin({ services, context, registry });
   } catch (error) {
     console.error("[workspace-shell] module mount failed", error);
     renderMountFailure(route);
     setStatus(`Module mount failed for ${route.moduleId}; shell stayed responsive.`);
+    scheduleOptionalDiagnosticsPlugin({ services, context, registry });
   }
 }
 

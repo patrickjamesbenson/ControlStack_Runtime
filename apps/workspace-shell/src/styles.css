@@ -131,9 +131,9 @@ a {
 }
 
 .cs-shell__home,
-.cs-shell__module-host {
+.cs-shell__module-host,
+.cs-shell__plugin-host {
   max-width: 1120px;
-  min-height: 360px;
   padding: 24px;
   border: 1px solid #d8deea;
   border-radius: 16px;
@@ -141,14 +141,31 @@ a {
   box-shadow: 0 10px 30px rgba(16, 24, 39, 0.08);
 }
 
+.cs-shell__home,
+.cs-shell__module-host {
+  min-height: 360px;
+}
+
+.cs-shell__plugin-host {
+  margin-top: 18px;
+  min-height: 180px;
+}
+
+.cs-shell__plugin-host[hidden] {
+  display: none;
+}
+
 .cs-shell__fallback,
-.cs-selector-proof {
+.cs-shell__plugin-fallback,
+.cs-selector-proof,
+.cs-diagnostics {
   display: grid;
   gap: 14px;
 }
 
 .cs-selector-proof__meta,
-.cs-shell__diagnostic-list {
+.cs-shell__diagnostic-list,
+.cs-diagnostics__meta {
   display: grid;
   grid-template-columns: max-content minmax(0, 1fr);
   gap: 8px 12px;
@@ -156,8 +173,14 @@ a {
 }
 
 .cs-selector-proof__meta dd,
-.cs-shell__diagnostic-list dd {
+.cs-shell__diagnostic-list dd,
+.cs-diagnostics__meta dd {
   margin: 0;
+  word-break: break-word;
+}
+
+.cs-diagnostics__section {
+  min-width: 0;
 }
 
 .cs-shell__pill-list {
@@ -185,5 +208,26 @@ a {
   .cs-shell__topbar {
     align-items: flex-start;
     flex-direction: column;
+  }
+}
+
+@media (max-width: 560px) {
+  .cs-shell__main,
+  .cs-shell__sidebar,
+  .cs-shell__topbar {
+    padding: 16px;
+  }
+
+  .cs-shell__home,
+  .cs-shell__module-host,
+  .cs-shell__plugin-host {
+    padding: 16px;
+    border-radius: 12px;
+  }
+
+  .cs-selector-proof__meta,
+  .cs-shell__diagnostic-list,
+  .cs-diagnostics__meta {
+    grid-template-columns: 1fr;
   }
 }
