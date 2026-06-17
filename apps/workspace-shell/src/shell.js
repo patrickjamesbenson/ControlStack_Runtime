@@ -2,6 +2,7 @@ import { createModuleRegistry } from "/packages/workspace-kernel/moduleRegistry.
 import { resolveWorkspaceRoute } from "/packages/workspace-kernel/route.js";
 import { createShellContext, createShellServices } from "/packages/workspace-kernel/services.js";
 import { csSelectorModule } from "/packages/modules/cs-selector/index.js";
+import { emergenceModule } from "/packages/modules/emergence/index.js";
 
 const statusEl = document.getElementById("cs-shell-status");
 const moduleHost = document.getElementById("cs-shell-module-host");
@@ -119,6 +120,7 @@ function bootWorkspaceShell() {
   const registry = createModuleRegistry();
 
   registry.register("cs_selector", csSelectorModule);
+  registry.register("emergence", emergenceModule);
 
   renderContextSummary(context);
   markActiveLink(route.moduleId);

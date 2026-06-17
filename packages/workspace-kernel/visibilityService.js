@@ -19,6 +19,7 @@ export function createVisibilityService({ eventBus } = {}) {
     rule: "cross-module or role-based visibility is shell-owned; local UI-only visibility remains module-owned",
     moduleVisibility: {
       cs_selector: true,
+      emergence: true,
       workspace_home: true,
     },
     shellFeatureVisibility: {
@@ -28,7 +29,7 @@ export function createVisibilityService({ eventBus } = {}) {
       moduleHost: true,
     },
     roleVisibility: {
-      anonymous: ["workspace_home", "cs_selector"],
+      anonymous: ["workspace_home", "cs_selector", "emergence"],
     },
   };
 
