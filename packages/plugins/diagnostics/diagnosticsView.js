@@ -35,6 +35,14 @@ function appendSection(parent, heading, rows) {
   parent.appendChild(section);
 }
 
+function decisionText(decision) {
+  return `${decision.moduleId}:${decision.visible ? "visible" : "hidden"}:${decision.reason}`;
+}
+
+function consumerText(consumer) {
+  return `${consumer.id}:${consumer.status}:${consumer.registered ? "registered" : "not-registered"}`;
+}
+
 export function renderDiagnosticsView(container, viewModel) {
   clearElement(container);
 
@@ -45,11 +53,7 @@ export function renderDiagnosticsView(container, viewModel) {
   const intro = document.createElement("div");
   appendText(intro, "p", "Optional plugin", "cs-shell__eyebrow");
   appendText(intro, "h2", "Diagnostics panel");
-  appendText(
-    intro,
-    "p",
-    "This plugin loads after the shell and route module have rendered. It reads shell-owned snapshots only, including selected current-project context, and is not boot-critical.",
-  );
+  appendText(intro, "p", "Diagnostics reads shell-owned snapshots, including Project Browser P1 read-only state.");
   article.appendChild(intro);
 
   appendSection(article, "Route and shell", [
@@ -58,25 +62,101 @@ export function renderDiagnosticsView(container, viewModel) {
     ["Shell phase", viewModel.shell.phase],
     ["Contract", viewModel.shell.contractVersion],
     ["Responsive requirement", viewModel.shell.responsiveRequirement],
+    ["Registered modules", viewModel.shell.registeredModules],
   ]);
 
-  appendSection(article, "Identity and current project", [
+  appendSection(article, "Project Browser P1", [
+    ["owner", viewModel.projectBrowser.owner],
+    ["status", viewModel.projectBrowser.status],
+    ["read only", viewModel.projectBrowser.readOnly],
+    ["non-boot-critical", viewModel.projectBrowser.nonBootCritical],
+    ["current project", viewModel.projectBrowser.currentProject],
+    ["current project id", viewModel.projectBrowser.currentProjectId],
+    ["saved count", viewModel.projectBrowser.savedCount],
+    ["safe empty", viewModel.projectBrowser.safeEmpty],
+    ["save", viewModel.projectBrowser.save],
+    ["restore", viewModel.projectBrowser.restore],
+    ["hydrate", viewModel.projectBrowser.hydrate],
+    ["handoff", viewModel.projectBrowser.handoff],
+    ["share", viewModel.projectBrowser.share],
+  ]);
+
+  const browserSection = document.createElement("section");
+  browserSection.className = "cs-diagnostics__section";
+  appendText(browserSection, "h3", "Browser saved projects");
+  appendPillList(browserSection, viewModel.projectBrowser.projects.length ? viewModel.projectBrowser.projects : ["safe-empty:no saved projects"]);
+  article.appendChild(browserSection);
+
+  appendSection(article, "Scene Builder structural registration", [
+    ["registered", viewModel.sceneBuilder.structuralRegistered],
+    ["route status", viewModel.sceneBuilder.routeStatus],
+    ["visible", viewModel.sceneBuilder.visible],
+    ["reason", viewModel.sceneBuilder.reason],
+    ["feature restoration", viewModel.sceneBuilder.featureRestoration],
+    ["reads downstream context", viewModel.sceneBuilder.readsDownstreamContext],
+  ]);
+
+  appendSection(article, "Identity lookup and derived role", [
     ["Identity owner", viewModel.identity.owner],
     ["Identity status", viewModel.identity.status],
+    ["Identity source", viewModel.identity.source],
     ["User", viewModel.identity.user],
-    ["Role", viewModel.identity.role],
+    ["Email", viewModel.identity.email],
+    ["Identity state", viewModel.identity.state],
+    ["Classification", viewModel.identity.classification],
+    ["Derived actual role", viewModel.identity.derivedActualRole],
+    ["Effective actual role", viewModel.identity.actualRole],
+    ["Override active", viewModel.identity.actualRoleOverrideEnabled],
+    ["Display role", viewModel.identity.displayRole],
+    ["Display clamped", viewModel.identity.displayRoleClamped],
+    ["Real auth", viewModel.identity.realAuth],
+  ]);
+
+  appendSection(article, "Current project", [
     ["Project owner", viewModel.project.owner],
     ["Project status", viewModel.project.status],
     ["Project title", viewModel.project.title],
     ["Project ID", viewModel.project.projectId],
     ["Readiness", viewModel.project.readiness],
     ["Project source", viewModel.project.source],
-    ["Selected at", viewModel.project.selectedAt],
-    ["Client", viewModel.project.client],
-    ["Site", viewModel.project.site],
     ["Save status", viewModel.project.saveStatus],
     ["Restore status", viewModel.project.restoreStatus],
   ]);
+
+  appendSection(article, "Visibility policy", [
+    ["Visibility owner", viewModel.visibility.owner],
+    ["Visibility status", viewModel.visibility.status],
+    ["Visible modules", viewModel.visibility.visibleModules],
+    ["Hidden modules", viewModel.visibility.hiddenModules],
+    ["Visibility rule", viewModel.visibility.rule],
+  ]);
+
+  const registeredSection = document.createElement("section");
+  registeredSection.className = "cs-diagnostics__section";
+  appendText(registeredSection, "h3", "Registered module decisions");
+  appendPillList(registeredSection, viewModel.visibility.registeredModules.map(decisionText));
+  article.appendChild(registeredSection);
+
+  const plannedSection = document.createElement("section");
+  plannedSection.className = "cs-diagnostics__section";
+  appendText(plannedSection, "h3", "Planned module decisions");
+  appendPillList(plannedSection, viewModel.visibility.plannedModules.map(decisionText));
+  article.appendChild(plannedSection);
+
+  appendSection(article, "Selector-fed downstream context", [
+    ["Downstream owner", viewModel.downstream.owner],
+    ["Downstream status", viewModel.downstream.status],
+    ["Selector status", viewModel.downstream.selectorStatus],
+    ["Run refs", viewModel.downstream.runRefs],
+    ["Area refs", viewModel.downstream.areaRefs],
+    ["Scene candidates", viewModel.downstream.sceneBuilderCandidates],
+  ]);
+
+  const consumerSection = document.createElement("section");
+  consumerSection.className = "cs-diagnostics__section";
+  appendText(consumerSection, "h3", "Planned downstream consumers");
+  appendPillList(consumerSection, viewModel.downstream.consumerRows.map(consumerText));
+  article.appendChild(consumerSection);
 
   appendSection(article, "Company, CRM, and handoff", [
     ["Company owner", viewModel.company.owner],
@@ -84,39 +164,21 @@ export function renderDiagnosticsView(container, viewModel) {
     ["Company", viewModel.company.name],
     ["CRM owner", viewModel.crm.owner],
     ["CRM status", viewModel.crm.status],
-    ["HubSpot status", viewModel.crm.hubspotStatus],
     ["CRM writes enabled", viewModel.crm.writeFlowsEnabled],
-    ["CRM write policy", viewModel.crm.writeReason],
     ["Handoff owner", viewModel.handoff.owner],
     ["Handoff status", viewModel.handoff.status],
     ["Handoff available", viewModel.handoff.available],
   ]);
 
-  appendSection(article, "Visibility, flags, and plugins", [
-    ["Visibility owner", viewModel.visibility.owner],
-    ["Visibility status", viewModel.visibility.status],
-    ["Known modules", viewModel.visibility.knownModules],
-    ["Flags owner", viewModel.flags.owner],
-    ["Flags status", viewModel.flags.status],
-    ["Engine surface", viewModel.flags.engineSurfaceEnabled],
-    ["RunTable surface", viewModel.flags.runTableSurfaceEnabled],
-    ["Payload surface", viewModel.flags.payloadSurfaceEnabled],
-    ["Plugin registry owner", viewModel.plugin.owner],
-    ["Plugins boot-critical", viewModel.plugin.optionalPluginsBootCritical],
-  ]);
-
   const statusSection = document.createElement("section");
   statusSection.className = "cs-diagnostics__section";
   appendText(statusSection, "h3", "Optional plugin statuses");
-  appendPillList(
-    statusSection,
-    viewModel.plugin.statuses.map((status) => `${status.pluginId}:${status.status}`),
-  );
+  appendPillList(statusSection, viewModel.plugin.statuses.map((status) => `${status.pluginId}:${status.status}`));
   article.appendChild(statusSection);
 
   const constraintsSection = document.createElement("section");
   constraintsSection.className = "cs-diagnostics__section";
-  appendText(constraintsSection, "h3", "Phase 7 constraints");
+  appendText(constraintsSection, "h3", "P1 constraints");
   appendPillList(constraintsSection, viewModel.constraints);
   article.appendChild(constraintsSection);
 

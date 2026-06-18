@@ -37,7 +37,6 @@ function appendSection(parent, heading, rows) {
 
 export function renderEmergenceView(container, viewModel) {
   clearElement(container);
-
   const article = document.createElement("article");
   article.className = "cs-selector-proof";
   article.dataset.module = viewModel.moduleId;
@@ -45,73 +44,60 @@ export function renderEmergenceView(container, viewModel) {
   const intro = document.createElement("div");
   appendText(intro, "p", "Module expansion proof", "cs-shell__eyebrow");
   appendText(intro, "h2", "emergence contract consumer");
-  appendText(
-    intro,
-    "p",
-    "Phase 7 keeps project selection shell-owned. Emergence displays the selected current project as a read-only contract consumer while save, restore, handoff, HubSpot writes, engine, RunTable, payload, optional plugin restoration, and donor parity code remain out of scope.",
-  );
+  appendText(intro, "p", "Phase 8A displays shell-owned identity lookup, derived actual role, display-role preview, project state, and visibility policy. Emergence remains a proof surface and read-only consumer.");
   article.appendChild(intro);
 
-  appendSection(article, "Shell-owned identity context", [
-    ["Identity owner", viewModel.identity.owner],
-    ["Identity status", viewModel.identity.status],
-    ["User", viewModel.identity.name],
-    ["Email", viewModel.identity.email],
-    ["Role", viewModel.identity.role],
-    ["Emergence capability", viewModel.identity.canViewEmergence],
+  appendSection(article, "Identity and derived role", [
+    ["owner", viewModel.identity.owner],
+    ["status", viewModel.identity.status],
+    ["user", viewModel.identity.name],
+    ["email", viewModel.identity.email],
+    ["identity state", viewModel.identity.identityState],
+    ["classification", viewModel.identity.classification],
+    ["derived actual role", viewModel.identity.derivedActualRole],
+    ["effective actual role", viewModel.identity.actualRole],
+    ["actual role source", viewModel.identity.actualRoleSource],
+    ["actual role derived", viewModel.identity.actualRoleDerived],
+    ["override active", viewModel.identity.actualRoleOverrideEnabled],
+    ["override role", viewModel.identity.actualRoleOverride],
+    ["display role", viewModel.identity.displayRole],
+    ["display requested", viewModel.identity.displayRoleRequested],
+    ["display clamped", viewModel.identity.displayRoleClamped],
+    ["emergence capability", viewModel.identity.canViewEmergence],
   ]);
 
-  appendSection(article, "Shell-owned current project", [
-    ["Project owner", viewModel.project.owner],
-    ["Project status", viewModel.project.status],
-    ["Project title", viewModel.project.title],
-    ["Project ID", viewModel.project.projectId],
-    ["Readiness", viewModel.project.readiness],
-    ["Project source", viewModel.project.source],
-    ["Selected at", viewModel.project.selectedAt],
-    ["Client", viewModel.project.client],
-    ["Site", viewModel.project.site],
-    ["Project dirty", viewModel.project.dirty],
-    ["Save status", viewModel.project.saveStatus],
-    ["Restore status", viewModel.project.restoreStatus],
+  appendSection(article, "Current project", [
+    ["owner", viewModel.project.owner],
+    ["status", viewModel.project.status],
+    ["title", viewModel.project.title],
+    ["project id", viewModel.project.projectId],
+    ["readiness", viewModel.project.readiness],
+    ["source", viewModel.project.source],
+    ["client", viewModel.project.client],
+    ["site", viewModel.project.site],
+    ["save", viewModel.project.saveStatus],
+    ["restore", viewModel.project.restoreStatus],
   ]);
 
-  appendSection(article, "Shell-owned company / CRM context", [
-    ["Company owner", viewModel.company.owner],
-    ["Company status", viewModel.company.status],
-    ["Company source", viewModel.company.source],
-    ["Company", viewModel.company.companyName],
-    ["Associated deal", viewModel.company.associatedDealId],
-    ["Associated contact", viewModel.company.associatedContactId],
-    ["CRM owner", viewModel.crm.owner],
-    ["CRM status", viewModel.crm.status],
-    ["HubSpot status", viewModel.crm.hubspotStatus],
-    ["Write flows enabled", viewModel.crm.writeFlowsEnabled],
-    ["Write policy", viewModel.crm.writeReason],
+  appendSection(article, "Visibility", [
+    ["owner", viewModel.visibility.owner],
+    ["status", viewModel.visibility.status],
+    ["test mode", viewModel.visibility.testMode],
+    ["emergence visible", viewModel.visibility.moduleVisible],
+    ["reason", viewModel.visibility.moduleReason],
+    ["project input", viewModel.visibility.projectMode],
+    ["project present", viewModel.visibility.projectPresent],
+    ["visible modules", viewModel.visibility.visibleModules],
+    ["hidden modules", viewModel.visibility.hiddenModules],
   ]);
 
-  appendSection(article, "Shell-owned handoff placeholder", [
-    ["Handoff owner", viewModel.handoff.owner],
-    ["Handoff status", viewModel.handoff.status],
-    ["Handoff available", viewModel.handoff.available],
-  ]);
-
-  appendSection(article, "Visibility and feature flags", [
-    ["Visibility owner", viewModel.visibility.owner],
-    ["Emergence visible", viewModel.visibility.moduleVisible],
-    ["Visibility rule", viewModel.visibility.rule],
-    ["Feature flags owner", viewModel.flags.owner],
-    ["Feature migration", viewModel.flags.featureMigrationEnabled],
-    ["Project persistence live", viewModel.flags.projectPersistenceLive],
-    ["Handoff live", viewModel.flags.handoffLive],
-    ["CRM live", viewModel.flags.crmLive],
-    ["Engine surface", viewModel.flags.engineSurfaceEnabled],
-    ["RunTable surface", viewModel.flags.runTableSurfaceEnabled],
-    ["Payload surface", viewModel.flags.payloadSurfaceEnabled],
+  appendSection(article, "Shared actions", [
+    ["handoff", viewModel.handoff.status],
+    ["crm", viewModel.crm.status],
+    ["crm writes", viewModel.crm.writeFlowsEnabled],
   ]);
 
   const localSection = document.createElement("section");
-  localSection.className = "cs-selector-proof__section";
   appendText(localSection, "h3", "Emergence-local UI state");
   appendPillList(localSection, [
     `section:${viewModel.local.selectedSection}`,
@@ -121,12 +107,9 @@ export function renderEmergenceView(container, viewModel) {
   article.appendChild(localSection);
 
   const deferredSection = document.createElement("section");
-  deferredSection.className = "cs-selector-proof__section";
-  appendText(deferredSection, "h3", "Deferred module actions");
+  appendText(deferredSection, "h3", "Deferred actions");
   appendPillList(deferredSection, viewModel.deferredActions);
   article.appendChild(deferredSection);
-
   appendText(article, "p", viewModel.responsiveNote, "cs-shell__eyebrow");
-
   container.appendChild(article);
 }

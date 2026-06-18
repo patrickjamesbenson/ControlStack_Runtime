@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="/apps/workspace-shell/src/styles.css" />
   </head>
   <body>
-    <div id="cs-shell-root" class="cs-shell" data-phase="7">
+    <div id="cs-shell-root" class="cs-shell" data-phase="8A">
       <header class="cs-shell__topbar" aria-label="Workspace top bar">
         <div>
           <p class="cs-shell__eyebrow">ControlStack Runtime</p>
@@ -24,6 +24,29 @@
             <a href="/workspace?module=emergence" data-module-link="emergence">emergence</a>
             <a href="/workspace?module=workspace_home" data-module-link="workspace_home">Home</a>
           </nav>
+          <section class="cs-shell__visibility-card" aria-label="Identity lookup and visibility support">
+            <h3>Identity & visibility</h3>
+            <p>Shell-owned lookup / role visibility support. Not real auth.</p>
+            <label for="cs-shell-identity-select">Test identity lookup</label>
+            <select id="cs-shell-identity-select"></select>
+            <dl id="cs-shell-resolved-identity-summary" class="cs-shell__inline-summary"></dl>
+            <label class="cs-shell__checkbox-row" for="cs-shell-role-override-toggle">
+              <input id="cs-shell-role-override-toggle" type="checkbox" />
+              <span>Developer actual-role override</span>
+            </label>
+            <p class="cs-shell__warning">Temporary developer-only override. Off by default. Not final donor-like role resolution.</p>
+            <label for="cs-shell-role-override-select">Override role</label>
+            <select id="cs-shell-role-override-select" disabled></select>
+            <label for="cs-shell-display-role-select">Display role preview</label>
+            <select id="cs-shell-display-role-select"></select>
+            <label for="cs-shell-project-mode-select">Project visibility input</label>
+            <select id="cs-shell-project-mode-select">
+              <option value="auto">Current project state</option>
+              <option value="present">Force project present</option>
+              <option value="missing">Force project missing</option>
+            </select>
+            <dl id="cs-shell-visibility-summary"></dl>
+          </section>
           <section class="cs-shell__project-card" aria-label="Current project selection">
             <h3>Current project</h3>
             <label for="cs-shell-project-select">Select project</label>
@@ -39,7 +62,7 @@
         <main class="cs-shell__main" aria-label="Workspace main panel">
           <section id="cs-workspace-home" class="cs-shell__home" hidden>
             <h2>Workspace home</h2>
-            <p>This shell proves the runtime route, shell layout, context ownership shape, module mount contract, and shell-owned current project selection.</p>
+            <p>This shell proves the runtime route, shell layout, context ownership shape, module mount contract, shell-owned current project selection, and shell-owned identity/role visibility support.</p>
           </section>
           <section id="cs-shell-module-host" class="cs-shell__module-host" aria-live="polite"></section>
           <section

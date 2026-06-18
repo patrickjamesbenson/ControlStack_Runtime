@@ -1,8 +1,11 @@
 import { createContractDiagnostics } from "./contracts.js";
 import { createCrmService } from "./crmService.js";
+import { createDownstreamContextService } from "./downstreamContextService.js";
 import { createFeatureFlagService } from "./featureFlags.js";
 import { createIdentityService } from "./identityService.js";
+import { createProjectBrowserService } from "./projectBrowserService.js";
 import { createProjectService } from "./projectService.js";
+import { createSavedProjectStore } from "./savedProjectStore.js";
 import { createVisibilityService } from "./visibilityService.js";
 
 function createEventBus() {
@@ -29,12 +32,18 @@ export function createShellServices() {
   const identityAdapter = createIdentityService({ eventBus });
   const projectAdapter = createProjectService({ eventBus });
   const visibilityAdapter = createVisibilityService({ eventBus });
+  const downstreamAdapter = createDownstreamContextService({ eventBus });
+  const savedProjectStore = createSavedProjectStore({ eventBus });
+  const projectBrowserAdapter = createProjectBrowserService({ savedProjectStore, eventBus });
   const flagAdapter = createFeatureFlagService({ eventBus });
   const crmAdapter = createCrmService({ eventBus });
 
   return {
     identity: identityAdapter,
     project: projectAdapter,
+    projectBrowser: projectBrowserAdapter,
+    savedProjects: savedProjectStore,
+    downstream: downstreamAdapter,
     handoff: {
       owner: "shell",
       status: "placeholder",
@@ -66,7 +75,7 @@ export function createShellServices() {
         return {
           owner: "shell",
           status: "placeholder",
-          phase: "7",
+          phase: "p1-project-browser-read-only-foundation",
           contract: createContractDiagnostics(),
           responsiveRequirement: "desktop-tablet-mobile",
           projectSelection: {
@@ -74,13 +83,36 @@ export function createShellServices() {
             status: "selectable",
             persistence: "not-enabled",
           },
+          projectBrowser: {
+            owner: "shell",
+            status: "read-only-browser-ready",
+            readOnly: true,
+            saveLive: false,
+            restoreLive: false,
+            hydrateLive: false,
+            handoffLive: false,
+          },
+          identityVisibility: {
+            owner: "shell",
+            status: "derived-role-and-visibility-ready",
+            actualRoleDerivedFromIdentity: true,
+            overrideDefault: "off",
+            realAuth: false,
+            credentialAuth: false,
+          },
+          downstreamContext: {
+            owner: "shell",
+            status: "foundation-ready",
+            source: "selector-fed-downstream-context-foundation",
+            consumersImplemented: false,
+          },
         };
       },
       report(event) {
         return {
           accepted: true,
           event,
-          phase: "7",
+          phase: "p1-project-browser-read-only-foundation",
         };
       },
     },

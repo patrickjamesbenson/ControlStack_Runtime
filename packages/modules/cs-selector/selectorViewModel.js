@@ -27,6 +27,28 @@ function readWriteEnabled(policy) {
   return false;
 }
 
+function decisionFor(visibility, moduleId) {
+  return visibility.moduleReasons?.[moduleId] || { visible: false, reason: "not_registered" };
+}
+
+function readDownstream(adapter, snapshots) {
+  return adapter.services.downstream?.getDownstreamContextSnapshot?.({
+    identity: snapshots.identity,
+    project: snapshots.project,
+    visibility: snapshots.visibility,
+  }) || {
+    owner: "shell",
+    status: "unavailable",
+    selector: { readiness: {}, runRefs: [], areaRefs: [], fittingRefs: [], emergencyCandidates: [] },
+    consumers: {},
+    constraints: {},
+  };
+}
+
+function consumerSummary(consumers = {}) {
+  return Object.entries(consumers).map(([id, consumer]) => `${id}:${consumer.status}`).join(", ") || "none";
+}
+
 export function createSelectorViewModel({ adapter, selectorState }) {
   const snapshots = adapter.readSnapshots();
   const local = selectorState.getSnapshot();
@@ -38,19 +60,32 @@ export function createSelectorViewModel({ adapter, selectorState }) {
   const company = snapshots.company || snapshots.crm?.company || {};
   const crm = snapshots.crm || {};
   const crmWritePolicy = crm.writePolicy || company.diagnostics || {};
+  const selectorDecision = decisionFor(snapshots.visibility, "cs_selector");
+  const downstream = readDownstream(adapter, snapshots);
+  const selectorDownstream = downstream.selector || {};
 
   return {
     moduleId: adapter.moduleId,
-    phase: snapshots.diagnostics?.phase || "7",
+    phase: snapshots.diagnostics?.phase || "selector-fed-downstream-context-foundation",
     route: snapshots.route,
     local,
     identity: {
       owner: identity.owner,
       status: identity.status,
-      source: identity.source || "phase-4-placeholder",
+      source: identity.source || "phase-8a-shell-owned-identity-resolver",
       name: readUserName(identity),
       email: readUserEmail(identity),
-      role: identity.role || "anonymous",
+      identityState: identity.identityState || "external_anonymous",
+      classification: identity.classification || "anonymous",
+      derivedActualRole: identity.derivedActualRole || identity.actualRole || "external_user",
+      actualRole: identity.actualRole || "external_user",
+      actualRoleSource: identity.actualRoleSource || "unknown",
+      actualRoleDerived: stateLabel(identity.actualRoleDerived),
+      actualRoleOverrideEnabled: stateLabel(identity.actualRoleOverrideEnabled),
+      actualRoleOverride: identity.actualRoleOverride || "none",
+      displayRole: identity.displayRole || identity.role || "external_user",
+      displayRoleRequested: identity.displayRoleRequested || identity.displayRole || "external_user",
+      displayRoleClamped: stateLabel(identity.displayRoleClamped),
       capabilities: identity.capabilities || [],
       canViewSelector: stateLabel(adapter.hasCapability("module:cs_selector:view")),
     },
@@ -86,7 +121,7 @@ export function createSelectorViewModel({ adapter, selectorState }) {
       status: crm.status || "placeholder",
       source: crm.source || "phase-4-placeholder",
       writeFlowsEnabled: stateLabel(readWriteEnabled(crmWritePolicy)),
-      writeReason: crmWritePolicy.reason || "Phase 4 CRM write flows are deferred.",
+      writeReason: crmWritePolicy.reason || "CRM write flows are deferred.",
       hubspotStatus: crm.hubspot?.status || "placeholder",
       hubspotAvailable: stateLabel(crm.hubspot?.available),
     },
@@ -97,8 +132,36 @@ export function createSelectorViewModel({ adapter, selectorState }) {
     },
     visibility: {
       owner: snapshots.visibility.owner,
-      selectorVisible: stateLabel(adapter.canShowSelector()),
+      status: snapshots.visibility.status,
+      testMode: stateLabel(snapshots.visibility.testMode),
+      selectorVisible: stateLabel(selectorDecision.visible),
+      selectorReason: selectorDecision.reason,
+      projectMode: snapshots.visibility.inputs?.projectMode || "auto",
+      projectPresent: stateLabel(snapshots.visibility.inputs?.projectPresent),
+      visibleModules: snapshots.visibility.visibleModules?.join(", ") || "none",
+      hiddenModules: snapshots.visibility.hiddenModules?.join(", ") || "none",
       rule: snapshots.visibility.rule,
+    },
+    downstream: {
+      owner: downstream.owner,
+      status: downstream.status,
+      source: downstream.source,
+      selectorStatus: selectorDownstream.status || "foundation-placeholder",
+      selectorSource: selectorDownstream.source || "selector-fed-downstream-context-foundation",
+      runRefs: selectorDownstream.runRefs?.length || 0,
+      areaRefs: selectorDownstream.areaRefs?.length || 0,
+      fittingRefs: selectorDownstream.fittingRefs?.length || 0,
+      optionRefs: selectorDownstream.optionRefs?.length || 0,
+      emergencyCandidates: selectorDownstream.emergencyCandidates?.length || 0,
+      sceneBuilderCandidates: selectorDownstream.sceneBuilderCandidates?.length || 0,
+      complianceCandidates: selectorDownstream.complianceCandidates?.length || 0,
+      ceilingCandidates: selectorDownstream.ceilingCandidates?.length || 0,
+      sceneBuilderReadiness: selectorDownstream.readiness?.sceneBuilder || "contract-only",
+      egresReadiness: selectorDownstream.readiness?.egres || "contract-only",
+      complianceReadiness: selectorDownstream.readiness?.compliance || "blocked-until-egres-package",
+      ceilingReadiness: selectorDownstream.readiness?.ceiling || "contract-only",
+      consumers: consumerSummary(downstream.consumers),
+      constraints: downstream.constraints || {},
     },
     flags: {
       owner: snapshots.flags.owner,
@@ -110,6 +173,16 @@ export function createSelectorViewModel({ adapter, selectorState }) {
       payloadSurfaceEnabled: stateLabel(flags.payloadSurfaceEnabled),
     },
     deferredActions: [
+      "Downstream context is foundation-only",
+      "Scene Builder is not implemented",
+      "EGRES is not implemented",
+      "Compliance Matters is not implemented",
+      "Ceiling / Coordinated Surfaces is not implemented",
+      "Engine / RunTable / payload are out of scope",
+      "Actual role is resolved from identity lookup by default",
+      "Developer actual-role override is temporary and off by default",
+      "Display role is preview-only and clamped",
+      "This is not real auth",
       "Project selection is shell-owned",
       "Save is shell-owned and deferred",
       "Restore is shell-owned and deferred",

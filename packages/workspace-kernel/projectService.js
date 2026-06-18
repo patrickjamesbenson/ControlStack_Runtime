@@ -1,31 +1,29 @@
-const PROJECT_SOURCE = "phase-7-shell-selection";
-
-const PROJECT_FIXTURES = [
-  {
+const PROJECT_FIXTURES = Object.freeze([
+  Object.freeze({
     projectId: "project-alpha",
-    title: "Project Alpha - Selector validation",
-    status: "loaded",
-    readiness: "ready-for-selector-testing",
-    client: "Workspace Client A",
-    site: "North test tenancy",
-  },
-  {
+    title: "Alpha Linear Workspace",
+    client: "Alpha Client",
+    site: "Sydney",
+    readiness: "fixture-current-project",
+    source: "phase-7-shell-project-selection-fixture",
+  }),
+  Object.freeze({
     projectId: "project-bravo",
-    title: "Project Bravo - Emergency coordination",
-    status: "loaded",
-    readiness: "ready-for-emergence-testing",
-    client: "Workspace Client B",
-    site: "Emergency test tenancy",
-  },
-  {
+    title: "Bravo Emergency Review",
+    client: "Bravo Client",
+    site: "Parramatta",
+    readiness: "fixture-current-project",
+    source: "phase-7-shell-project-selection-fixture",
+  }),
+  Object.freeze({
     projectId: "project-charlie",
-    title: "Project Charlie - Compliance review",
-    status: "loaded",
-    readiness: "ready-for-compliance-context",
-    client: "Workspace Client C",
-    site: "Compliance test tenancy",
-  },
-];
+    title: "Charlie Scene Planning",
+    client: "Charlie Client",
+    site: "Newcastle",
+    readiness: "fixture-current-project",
+    source: "phase-7-shell-project-selection-fixture",
+  }),
+]);
 
 function createSubscriptionSet() {
   const listeners = new Set();
@@ -40,152 +38,127 @@ function createSubscriptionSet() {
   };
 }
 
-function cloneProject(project) {
-  if (!project) return null;
-  return { ...project };
+function clone(value) {
+  return JSON.parse(JSON.stringify(value));
 }
 
-function createSelectionSnapshot(state) {
+function fixtureToCurrentProject(fixture) {
   return {
-    owner: "shell",
-    status: "selectable",
-    source: PROJECT_SOURCE,
-    persistence: "not-enabled",
-    selectedProjectId: state.currentProject?.projectId || null,
-    selectedAt: state.selectedAt,
-    availableProjects: state.availableProjects.map(cloneProject),
-  };
-}
-
-function createMetadataForProject(project, selectedAt) {
-  return {
-    source: PROJECT_SOURCE,
-    dirty: false,
-    dirtyReason: null,
-    title: project?.title || "No project loaded",
-    projectId: project?.projectId || null,
-    readiness: project?.readiness || "not-ready",
-    status: project?.status || "not-loaded",
-    selectedAt,
+    projectId: fixture.projectId,
+    title: fixture.title,
+    client: fixture.client,
+    site: fixture.site,
+    readiness: fixture.readiness,
+    source: fixture.source,
   };
 }
 
 export function createProjectService({ eventBus } = {}) {
   const subscriptions = createSubscriptionSet();
-  const initialProject = cloneProject(PROJECT_FIXTURES[0]);
-  const initialSelectedAt = new Date().toISOString();
   const state = {
     owner: "shell",
     status: "selectable",
-    currentProject: initialProject,
-    selectedAt: initialSelectedAt,
-    availableProjects: PROJECT_FIXTURES.map(cloneProject),
-    metadata: createMetadataForProject(initialProject, initialSelectedAt),
-    saveState: {
-      owner: "shell",
-      available: false,
-      status: "deferred",
-      reason: "Phase 7 restores shell-owned current project selection only; real save implementation is deferred.",
-    },
-    restoreState: {
-      owner: "shell",
-      available: false,
-      status: "deferred",
-      reason: "Phase 7 restores shell-owned current project selection only; real restore implementation is deferred.",
-    },
+    source: "phase-7-shell-owned-current-project-fixture",
+    selectedProjectId: PROJECT_FIXTURES[0].projectId,
+    selectedAt: new Date().toISOString(),
   };
 
+  function selectedFixture() {
+    return PROJECT_FIXTURES.find((project) => project.projectId === state.selectedProjectId) || PROJECT_FIXTURES[0];
+  }
+
   function snapshot() {
+    const fixture = selectedFixture();
+    const currentProject = fixtureToCurrentProject(fixture);
     return {
       owner: state.owner,
       status: state.status,
-      source: PROJECT_SOURCE,
-      currentProject: cloneProject(state.currentProject),
-      metadata: { ...state.metadata },
-      selection: createSelectionSnapshot(state),
-      dirty: state.metadata.dirty,
-      saveState: { ...state.saveState },
-      restoreState: { ...state.restoreState },
-      save: { ...state.saveState },
-      restore: { ...state.restoreState },
+      source: state.source,
+      currentProject,
+      metadata: {
+        projectId: currentProject.projectId,
+        title: currentProject.title,
+        readiness: currentProject.readiness,
+        source: currentProject.source,
+        browserReady: true,
+        browserStatus: "p1-read-only-foundation",
+      },
+      selection: {
+        owner: "shell",
+        selectedProjectId: state.selectedProjectId,
+        selectedAt: state.selectedAt,
+        availableProjects: PROJECT_FIXTURES.map(clone),
+        source: state.source,
+      },
+      save: {
+        owner: "shell",
+        status: "deferred",
+        available: false,
+        reason: "P1 Project Browser is read-only. Save is deferred to the next approved phase.",
+      },
+      restore: {
+        owner: "shell",
+        status: "deferred",
+        available: false,
+        reason: "P1 Project Browser is read-only. Restore/hydrate is deferred to a later approved phase.",
+      },
+      handoff: {
+        owner: "shell",
+        status: "deferred",
+        available: false,
+        reason: "P1 Project Browser is read-only. Handoff/share is deferred to a later approved phase.",
+      },
+      dirty: false,
     };
   }
 
-  function notify(reason, eventName = "project:changed") {
+  function notify(reason) {
     const nextSnapshot = snapshot();
     subscriptions.notify(nextSnapshot);
-    eventBus?.emit(eventName, { reason, project: nextSnapshot });
-    if (eventName !== "project:changed") eventBus?.emit("project:changed", { reason, project: nextSnapshot });
+    eventBus?.emit("project:changed", { reason, project: nextSnapshot });
     return nextSnapshot;
   }
 
-  function selectProject(projectId, reason = "project-selected") {
-    const project = state.availableProjects.find((candidate) => candidate.projectId === projectId);
-    if (!project) {
+  return {
+    owner: state.owner,
+    status: state.status,
+    getProjectSnapshot: snapshot,
+    getAvailableProjects() {
+      return PROJECT_FIXTURES.map(clone);
+    },
+    selectProject(projectId, reason = "shell-project-selected") {
+      const fixture = PROJECT_FIXTURES.find((project) => project.projectId === projectId);
+      if (!fixture) {
+        return {
+          accepted: false,
+          reason: `Unknown project id: ${projectId}`,
+          project: snapshot(),
+        };
+      }
+      state.selectedProjectId = fixture.projectId;
+      state.selectedAt = new Date().toISOString();
+      eventBus?.emit("project:switch", { projectId: fixture.projectId, reason });
+      const nextSnapshot = notify(reason);
+      eventBus?.emit("project:switch:complete", { projectId: fixture.projectId, project: nextSnapshot });
+      return {
+        accepted: true,
+        project: nextSnapshot,
+      };
+    },
+    saveCurrentProject() {
       return {
         accepted: false,
-        reason: `Unknown project id: ${projectId}`,
+        status: "deferred",
+        reason: "P1 Project Browser is read-only. Save is not live yet.",
         project: snapshot(),
       };
-    }
-
-    const previousProjectId = state.currentProject?.projectId || null;
-    state.currentProject = cloneProject(project);
-    state.selectedAt = new Date().toISOString();
-    state.metadata = createMetadataForProject(state.currentProject, state.selectedAt);
-
-    const nextSnapshot = notify(reason, "project:switch");
-    eventBus?.emit("project:switch:complete", {
-      previousProjectId,
-      selectedProjectId: projectId,
-      project: nextSnapshot,
-      persistence: "not-enabled",
-    });
-
-    return {
-      accepted: true,
-      previousProjectId,
-      selectedProjectId: projectId,
-      project: nextSnapshot,
-    };
-  }
-
-  return {
-    owner: "shell",
-    status: "selectable",
-    getAvailableProjects() {
-      return state.availableProjects.map(cloneProject);
     },
-    getCurrentProject() {
-      return cloneProject(state.currentProject);
-    },
-    getProjectMetadata() {
-      return { ...state.metadata };
-    },
-    getProjectSnapshot: snapshot,
-    selectProject,
-    markDirty(reason = "unspecified") {
-      state.metadata.dirty = true;
-      state.metadata.dirtyReason = reason;
-      return notify(reason);
-    },
-    clearDirty(reason = "unspecified") {
-      state.metadata.dirty = false;
-      state.metadata.dirtyReason = null;
-      return notify(reason);
-    },
-    save(request = {}) {
-      eventBus?.emit("project:save-requested", { request, handled: false, phase: "7" });
+    restoreProject() {
       return {
-        ...state.saveState,
-        requestAccepted: false,
-      };
-    },
-    restore(request = {}) {
-      eventBus?.emit("project:restore-requested", { request, handled: false, phase: "7" });
-      return {
-        ...state.restoreState,
-        requestAccepted: false,
+        accepted: false,
+        status: "deferred",
+        reason: "P1 Project Browser is read-only. Restore/hydrate is not live yet.",
+        project: snapshot(),
       };
     },
     subscribe: subscriptions.subscribe,

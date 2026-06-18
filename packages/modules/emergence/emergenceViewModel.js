@@ -19,6 +19,10 @@ function readWriteEnabled(policy) {
   return false;
 }
 
+function decisionFor(visibility, moduleId) {
+  return visibility.moduleReasons?.[moduleId] || { visible: false, reason: "not_registered" };
+}
+
 export function createEmergenceViewModel({ adapter, emergenceState }) {
   const snapshots = adapter.readSnapshots();
   const local = emergenceState.getSnapshot();
@@ -30,19 +34,30 @@ export function createEmergenceViewModel({ adapter, emergenceState }) {
   const crm = snapshots.crm || {};
   const crmWritePolicy = crm.writePolicy || company.diagnostics || {};
   const handoff = snapshots.handoff;
+  const emergenceDecision = decisionFor(snapshots.visibility, "emergence");
 
   return {
     moduleId: adapter.moduleId,
-    phase: snapshots.diagnostics?.phase || "7",
+    phase: snapshots.diagnostics?.phase || "8A",
     route: snapshots.route,
     local,
     identity: {
       owner: identity.owner,
       status: identity.status,
-      source: identity.source || "phase-4-placeholder",
+      source: identity.source || "phase-8a-shell-owned-identity-resolver",
       name: identity.currentUser?.name || "Workspace User",
       email: identity.currentUser?.email || "No email loaded",
-      role: identity.role || "anonymous",
+      identityState: identity.identityState || "external_anonymous",
+      classification: identity.classification || "anonymous",
+      derivedActualRole: identity.derivedActualRole || identity.actualRole || "external_user",
+      actualRole: identity.actualRole || "external_user",
+      actualRoleSource: identity.actualRoleSource || "unknown",
+      actualRoleDerived: stateLabel(identity.actualRoleDerived),
+      actualRoleOverrideEnabled: stateLabel(identity.actualRoleOverrideEnabled),
+      actualRoleOverride: identity.actualRoleOverride || "none",
+      displayRole: identity.displayRole || identity.role || "external_user",
+      displayRoleRequested: identity.displayRoleRequested || identity.displayRole || "external_user",
+      displayRoleClamped: stateLabel(identity.displayRoleClamped),
       canViewEmergence: stateLabel(adapter.hasCapability("module:emergence:view")),
     },
     project: {
@@ -72,7 +87,7 @@ export function createEmergenceViewModel({ adapter, emergenceState }) {
       owner: crm.owner || "shell",
       status: crm.status || "placeholder",
       writeFlowsEnabled: stateLabel(readWriteEnabled(crmWritePolicy)),
-      writeReason: crmWritePolicy.reason || "Phase 7 project selection does not enable CRM writes.",
+      writeReason: crmWritePolicy.reason || "Phase 8A project selection does not enable CRM writes.",
       hubspotStatus: crm.hubspot?.status || "placeholder",
     },
     handoff: {
@@ -82,7 +97,14 @@ export function createEmergenceViewModel({ adapter, emergenceState }) {
     },
     visibility: {
       owner: snapshots.visibility.owner,
-      moduleVisible: stateLabel(adapter.canShowModule()),
+      status: snapshots.visibility.status,
+      testMode: stateLabel(snapshots.visibility.testMode),
+      moduleVisible: stateLabel(emergenceDecision.visible),
+      moduleReason: emergenceDecision.reason,
+      projectMode: snapshots.visibility.inputs?.projectMode || "auto",
+      projectPresent: stateLabel(snapshots.visibility.inputs?.projectPresent),
+      visibleModules: snapshots.visibility.visibleModules?.join(", ") || "none",
+      hiddenModules: snapshots.visibility.hiddenModules?.join(", ") || "none",
       rule: snapshots.visibility.rule,
     },
     flags: {
@@ -96,6 +118,10 @@ export function createEmergenceViewModel({ adapter, emergenceState }) {
       payloadSurfaceEnabled: stateLabel(flags.payloadSurfaceEnabled),
     },
     deferredActions: [
+      "Actual role is resolved from identity lookup by default",
+      "Developer actual-role override is temporary and off by default",
+      "Display role is preview-only and clamped",
+      "This is not real auth",
       "Project selection is shell-owned",
       "Save is shell-owned and deferred",
       "Restore is shell-owned and deferred",

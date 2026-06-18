@@ -19,6 +19,52 @@ function readWriteEnabled(policy) {
   return false;
 }
 
+function readDownstream(adapter, snapshots) {
+  return adapter.services.downstream?.getDownstreamContextSnapshot?.({
+    identity: snapshots.identity,
+    project: snapshots.project,
+    visibility: snapshots.visibility,
+  }) || {
+    owner: "shell",
+    status: "unavailable",
+    selector: { readiness: {} },
+    consumers: {},
+    constraints: {},
+  };
+}
+
+function readProjectBrowser(adapter, snapshots, downstream) {
+  return adapter.services.projectBrowser?.getProjectBrowserSnapshot?.({
+    identity: snapshots.identity,
+    project: snapshots.project,
+    visibility: snapshots.visibility,
+    downstream,
+  }) || snapshots.context?.projectBrowser || {
+    owner: "shell",
+    status: "unavailable",
+    readOnly: true,
+    projects: [],
+    projectCount: 0,
+    capabilities: {},
+    currentProject: {},
+    deferred: {},
+  };
+}
+
+function consumerRows(consumers = {}) {
+  return Object.entries(consumers).map(([id, consumer]) => ({
+    id,
+    label: consumer.label,
+    status: consumer.status,
+    registered: consumer.registered,
+    receives: consumer.receives || [],
+  }));
+}
+
+function decisionFor(visibility, moduleId) {
+  return visibility.moduleReasons?.[moduleId] || { visible: false, reason: "not_registered" };
+}
+
 export function createDiagnosticsViewModel({ adapter, diagnosticsState }) {
   const snapshots = adapter.readSnapshots();
   const local = diagnosticsState.getSnapshot();
@@ -30,6 +76,12 @@ export function createDiagnosticsViewModel({ adapter, diagnosticsState }) {
   const flags = snapshots.flags.values || {};
   const writePolicy = crm.writePolicy || company.diagnostics || {};
   const pluginStatus = snapshots.pluginContext?.pluginStatus || {};
+  const registeredModules = snapshots.pluginContext?.registeredModules || [];
+  const visibility = snapshots.visibility || {};
+  const downstream = readDownstream(adapter, snapshots);
+  const projectBrowser = readProjectBrowser(adapter, snapshots, downstream);
+  const selector = downstream.selector || {};
+  const sceneDecision = decisionFor(visibility, "scene_builder");
 
   return {
     pluginId: adapter.pluginId,
@@ -42,12 +94,34 @@ export function createDiagnosticsViewModel({ adapter, diagnosticsState }) {
       phase: snapshots.diagnostics?.phase || snapshots.context?.phase || "unknown",
       contractVersion: snapshots.diagnostics?.contract?.contractVersion || snapshots.context?.contractVersion || "not-declared",
       responsiveRequirement: snapshots.diagnostics?.responsiveRequirement || "desktop-tablet-mobile",
+      registeredModules: registeredModules.join(", ") || "none",
+    },
+    sceneBuilder: {
+      structuralRegistered: stateLabel(registeredModules.includes("scene_builder")),
+      routeStatus: registeredModules.includes("scene_builder") ? "structural-module" : "not-registered",
+      visible: stateLabel(sceneDecision.visible),
+      reason: sceneDecision.reason,
+      featureRestoration: "not-restored",
+      readsDownstreamContext: "yes",
     },
     identity: {
       owner: identity.owner,
       status: identity.status,
-      role: identity.role || "anonymous",
+      source: identity.source || "phase-8a-shell-owned-identity-resolver",
+      state: identity.identityState || "external_anonymous",
+      classification: identity.classification || "anonymous",
+      derivedActualRole: identity.derivedActualRole || identity.actualRole || "external_user",
+      actualRole: identity.actualRole || "external_user",
+      actualRoleSource: identity.actualRoleSource || "unknown",
+      actualRoleDerived: stateLabel(identity.actualRoleDerived),
+      actualRoleOverrideEnabled: stateLabel(identity.actualRoleOverrideEnabled),
+      actualRoleOverride: identity.actualRoleOverride || "none",
+      displayRole: identity.displayRole || identity.role || "external_user",
+      displayRoleRequested: identity.displayRoleRequested || identity.displayRole || "external_user",
+      displayRoleClamped: stateLabel(identity.displayRoleClamped),
       user: identity.currentUser?.name || "Workspace User",
+      email: identity.currentUser?.email || "No email loaded",
+      realAuth: stateLabel(identity.auth?.realAuth),
     },
     project: {
       owner: project.owner,
@@ -61,6 +135,22 @@ export function createDiagnosticsViewModel({ adapter, diagnosticsState }) {
       site: currentProject.site || "none",
       saveStatus: project.save?.status || project.saveState?.status || "deferred",
       restoreStatus: project.restore?.status || project.restoreState?.status || "deferred",
+    },
+    projectBrowser: {
+      owner: projectBrowser.owner,
+      status: projectBrowser.status,
+      readOnly: stateLabel(projectBrowser.readOnly),
+      nonBootCritical: stateLabel(projectBrowser.nonBootCritical),
+      currentProject: projectBrowser.currentProject?.title || "No project loaded",
+      currentProjectId: projectBrowser.currentProject?.projectId || "none",
+      savedCount: projectBrowser.projectCount || 0,
+      safeEmpty: stateLabel(projectBrowser.safeEmpty),
+      save: projectBrowser.capabilities?.save ? "live" : "deferred",
+      restore: projectBrowser.capabilities?.restore ? "live" : "deferred",
+      hydrate: projectBrowser.capabilities?.hydrate ? "live" : "deferred",
+      handoff: projectBrowser.capabilities?.handoff ? "live" : "deferred",
+      share: projectBrowser.capabilities?.share ? "live" : "deferred",
+      projects: (projectBrowser.projects || []).map((item) => `${item.projectId}:${item.title}:${item.lifecycleStatus}`),
     },
     company: {
       owner: company.owner || "shell",
@@ -80,9 +170,37 @@ export function createDiagnosticsViewModel({ adapter, diagnosticsState }) {
       available: stateLabel(snapshots.handoff.available),
     },
     visibility: {
-      owner: snapshots.visibility.owner,
-      status: snapshots.visibility.status,
-      knownModules: Object.keys(snapshots.visibility.moduleVisibility || {}).join(", ") || "none",
+      owner: visibility.owner,
+      status: visibility.status,
+      source: visibility.source || "phase-8-shell-owned-visibility-policy",
+      testMode: stateLabel(visibility.testMode),
+      rule: visibility.rule || "none",
+      projectMode: visibility.inputs?.projectMode || "auto",
+      projectPresent: stateLabel(visibility.inputs?.projectPresent),
+      visibleModules: visibility.visibleModules?.join(", ") || "none",
+      hiddenModules: visibility.hiddenModules?.join(", ") || "none",
+      registeredModules: visibility.registeredModules || [],
+      plannedModules: visibility.plannedModules || [],
+    },
+    downstream: {
+      owner: downstream.owner,
+      status: downstream.status,
+      source: downstream.source,
+      selectorStatus: selector.status || "foundation-placeholder",
+      runRefs: selector.runRefs?.length || 0,
+      areaRefs: selector.areaRefs?.length || 0,
+      fittingRefs: selector.fittingRefs?.length || 0,
+      optionRefs: selector.optionRefs?.length || 0,
+      emergencyCandidates: selector.emergencyCandidates?.length || 0,
+      sceneBuilderCandidates: selector.sceneBuilderCandidates?.length || 0,
+      complianceCandidates: selector.complianceCandidates?.length || 0,
+      ceilingCandidates: selector.ceilingCandidates?.length || 0,
+      sceneBuilderReadiness: selector.readiness?.sceneBuilder || "contract-only",
+      egresReadiness: selector.readiness?.egres || "contract-only",
+      complianceReadiness: selector.readiness?.compliance || "blocked-until-egres-package",
+      ceilingReadiness: selector.readiness?.ceiling || "contract-only",
+      consumerRows: consumerRows(downstream.consumers),
+      constraints: downstream.constraints || {},
     },
     flags: {
       owner: snapshots.flags.owner,
@@ -97,12 +215,17 @@ export function createDiagnosticsViewModel({ adapter, diagnosticsState }) {
       statuses: pluginStatus.plugins || [],
     },
     constraints: [
-      "Current project selection is shell-owned",
-      "Diagnostics is optional and post-render only",
-      "Plugin failure is isolated to this host",
-      "Diagnostics is read-only",
-      "Save / restore / handoff remain deferred",
+      "Project Browser is shell-owned",
+      "Project Browser is read-only in P1",
+      "Save is not live",
+      "Restore / hydrate is not live",
+      "Handoff / share is not live",
+      "Scene Builder remains structural only",
+      "EGRES route is not registered",
+      "Compliance Matters route is not registered",
+      "Ceiling route is not registered",
       "Engine / RunTable / payload are out of scope",
+      "Diagnostics is read-only",
       "HubSpot write flows are deferred",
     ],
   };

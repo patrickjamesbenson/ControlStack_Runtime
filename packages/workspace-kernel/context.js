@@ -5,9 +5,14 @@ function readIdentity(service) {
   return {
     owner: service.owner,
     status: service.status,
-    source: "phase-4-fallback",
+    source: "phase-8a-fallback",
     currentUser: service.currentUser || null,
-    role: service.role || "anonymous",
+    role: service.role || "external_user",
+    actualRole: service.role || "external_user",
+    derivedActualRole: service.role || "external_user",
+    displayRole: service.role || "external_user",
+    identityState: "external_anonymous",
+    classification: "anonymous",
     capabilities: [],
   };
 }
@@ -40,7 +45,7 @@ function readCrm(service) {
     contact: null,
     writePolicy: {
       enabled: false,
-      reason: "Phase 4 CRM writes are deferred.",
+      reason: "CRM writes are deferred.",
     },
   };
 }
@@ -50,24 +55,30 @@ function readDiagnostics(service) {
   return {
     owner: service.owner,
     status: service.status,
-    phase: "7",
+    phase: "p1-project-browser-read-only-foundation",
   };
 }
 
 export function createShellContext({ route, services, mountedModuleId = null }) {
   const crm = readCrm(services.crm);
   const project = services.project.getProjectSnapshot();
+  const identity = readIdentity(services.identity);
+  const visibility = services.visibility.getVisibilitySnapshot({ identity, project });
+  const downstream = services.downstream.getDownstreamContextSnapshot({ identity, project, visibility });
+  const projectBrowser = services.projectBrowser.getProjectBrowserSnapshot({ identity, project, visibility, downstream });
   return {
     contractVersion: WORKSPACE_CONTRACT_VERSION,
-    phase: "7",
+    phase: "p1-project-browser-read-only-foundation",
     route,
-    identity: readIdentity(services.identity),
+    identity,
     project,
     currentProject: project.currentProject,
+    projectBrowser,
     company: crm.company,
     crm,
     handoff: services.handoff.getHandoffSnapshot(),
-    visibility: services.visibility.getVisibilitySnapshot(),
+    visibility,
+    downstream,
     flags: services.flags.getFlagSnapshot(),
     lifecycle: {
       owner: "shell",
@@ -85,9 +96,11 @@ export function createModuleUpdateSnapshot(context) {
     identity: context.identity,
     project: context.project,
     currentProject: context.currentProject,
+    projectBrowser: context.projectBrowser,
     company: context.company,
     crm: context.crm,
     visibility: context.visibility,
+    downstream: context.downstream,
     flags: context.flags,
   };
 }

@@ -4,6 +4,7 @@ import { resolveWorkspaceRoute } from "/packages/workspace-kernel/route.js";
 import { createShellContext, createShellServices } from "/packages/workspace-kernel/services.js";
 import { csSelectorModule } from "/packages/modules/cs-selector/index.js";
 import { emergenceModule } from "/packages/modules/emergence/index.js";
+import { sceneBuilderModule } from "/packages/modules/scene-builder/index.js";
 
 const statusEl = document.getElementById("cs-shell-status");
 const moduleHost = document.getElementById("cs-shell-module-host");
@@ -12,6 +13,17 @@ const homePanel = document.getElementById("cs-workspace-home");
 const contextSummary = document.getElementById("cs-shell-context-summary");
 const projectSelect = document.getElementById("cs-shell-project-select");
 const projectSummary = document.getElementById("cs-shell-project-summary");
+const identitySelect = document.getElementById("cs-shell-identity-select");
+const resolvedIdentitySummary = document.getElementById("cs-shell-resolved-identity-summary");
+const roleOverrideToggle = document.getElementById("cs-shell-role-override-toggle");
+const roleOverrideSelect = document.getElementById("cs-shell-role-override-select");
+const displayRoleSelect = document.getElementById("cs-shell-display-role-select");
+const projectModeSelect = document.getElementById("cs-shell-project-mode-select");
+const visibilitySummary = document.getElementById("cs-shell-visibility-summary");
+
+let projectBrowserPanel = null;
+let projectBrowserSummary = null;
+let projectBrowserList = null;
 
 function setStatus(message) {
   if (statusEl) statusEl.textContent = message;
@@ -33,6 +45,40 @@ function appendDefinitionListRows(list, rows) {
   }
 }
 
+function ensureModuleNavLink(moduleId, label) {
+  const nav = document.querySelector(".cs-shell__sidebar nav");
+  if (!nav || document.querySelector(`[data-module-link="${moduleId}"]`)) return;
+  const link = document.createElement("a");
+  link.href = `/workspace?module=${moduleId}`;
+  link.dataset.moduleLink = moduleId;
+  link.textContent = label;
+  nav.appendChild(link);
+}
+
+function ensureProjectBrowserPanel() {
+  if (projectBrowserPanel) return;
+  const sidebar = document.querySelector(".cs-shell__sidebar");
+  const projectCard = document.querySelector(".cs-shell__project-card");
+  if (!sidebar || !projectCard) return;
+
+  projectBrowserPanel = document.createElement("section");
+  projectBrowserPanel.className = "cs-shell__project-browser-card";
+  projectBrowserPanel.setAttribute("aria-label", "Project Browser read-only foundation");
+
+  const heading = document.createElement("h3");
+  heading.textContent = "Project Browser";
+  const note = document.createElement("p");
+  note.textContent = "Read-only P1 browser foundation. Save, restore, hydrate, handoff, and share are not live.";
+  projectBrowserSummary = document.createElement("dl");
+  projectBrowserSummary.id = "cs-shell-project-browser-summary";
+  projectBrowserList = document.createElement("ul");
+  projectBrowserList.id = "cs-shell-project-browser-list";
+  projectBrowserList.className = "cs-shell__project-browser-list";
+
+  projectBrowserPanel.append(heading, note, projectBrowserSummary, projectBrowserList);
+  projectCard.insertAdjacentElement("afterend", projectBrowserPanel);
+}
+
 function readProjectTitle(project) {
   return project?.metadata?.title || project?.currentProject?.title || "No project loaded";
 }
@@ -42,12 +88,15 @@ function renderContextSummary(context) {
     ["phase", context.phase],
     ["contract", context.contractVersion || "not-declared"],
     ["module", context.route.moduleId],
+    ["identity", `${context.identity.identityState}:${context.identity.displayRole}`],
+    ["actual role", context.identity.actualRole],
     ["project", `${context.project.owner}:${context.project.status}`],
     ["current", readProjectTitle(context.project)],
+    ["browser", `${context.projectBrowser.owner}:${context.projectBrowser.status}`],
+    ["visibility", `${context.visibility.owner}:${context.visibility.status}`],
     ["save", `${context.project.save.owner}:${context.project.save.available ? "available" : "deferred"}`],
     ["restore", `${context.project.restore.owner}:${context.project.restore.available ? "available" : "deferred"}`],
     ["handoff", `${context.handoff.owner}:${context.handoff.status}`],
-    ["visibility", `${context.visibility.owner}:${context.visibility.status}`],
     ["flags", `${context.flags.owner}:${context.flags.status}`],
   ]);
 }
@@ -77,9 +126,109 @@ function renderProjectSelection({ services, context }) {
   ]);
 }
 
+function renderProjectBrowser({ context }) {
+  ensureProjectBrowserPanel();
+  if (!projectBrowserSummary || !projectBrowserList) return;
+  const browser = context.projectBrowser;
+  appendDefinitionListRows(projectBrowserSummary, [
+    ["owner", browser.owner],
+    ["status", browser.status],
+    ["read only", browser.readOnly ? "yes" : "no"],
+    ["current", browser.currentProject?.title || "No project loaded"],
+    ["current id", browser.currentProject?.projectId || "none"],
+    ["saved count", browser.projectCount],
+    ["save", browser.capabilities?.save ? "live" : "deferred"],
+    ["restore", browser.capabilities?.restore ? "live" : "deferred"],
+    ["handoff", browser.capabilities?.handoff ? "live" : "deferred"],
+  ]);
+
+  clearElement(projectBrowserList);
+  const projects = browser.projects || [];
+  if (projects.length === 0) {
+    const item = document.createElement("li");
+    item.textContent = browser.emptyStateMessage || "No saved projects found. Browser remains safe and read-only.";
+    projectBrowserList.appendChild(item);
+    return;
+  }
+  for (const project of projects) {
+    const item = document.createElement("li");
+    item.innerHTML = `<strong>${project.title}</strong><span>${project.client} · ${project.site}</span><span>${project.lifecycleStatus} · ${project.updatedAt}</span>`;
+    projectBrowserList.appendChild(item);
+  }
+}
+
+function fillRoleSelect(select, roles, value) {
+  clearElement(select);
+  for (const role of roles) {
+    const option = document.createElement("option");
+    option.value = role;
+    option.textContent = role;
+    select.appendChild(option);
+  }
+  select.value = value || "external_user";
+}
+
+function renderIdentityVisibilityControls({ services, context }) {
+  if (!identitySelect || !roleOverrideToggle || !roleOverrideSelect || !displayRoleSelect || !projectModeSelect || !visibilitySummary) return;
+  const identities = services.identity.getAvailableIdentities?.() || [];
+  const roles = services.identity.getRoleOptions?.() || [];
+
+  clearElement(identitySelect);
+  for (const identity of identities) {
+    const option = document.createElement("option");
+    option.value = identity.id;
+    option.textContent = identity.label;
+    identitySelect.appendChild(option);
+  }
+  identitySelect.value = context.identity.lookup?.selectedIdentityId || context.identity.currentUser?.id || "";
+
+  appendDefinitionListRows(resolvedIdentitySummary, [
+    ["identity state", context.identity.identityState],
+    ["classification", context.identity.classification],
+    ["actual role", context.identity.actualRole],
+    ["derived role", context.identity.derivedActualRole || context.identity.actualRole],
+    ["actual role source", context.identity.actualRoleSource],
+    ["override active", context.identity.actualRoleOverrideEnabled ? "yes" : "no"],
+  ]);
+
+  roleOverrideToggle.checked = context.identity.actualRoleOverrideEnabled === true;
+  fillRoleSelect(roleOverrideSelect, roles, context.identity.actualRoleOverride || context.identity.derivedActualRole || context.identity.actualRole);
+  roleOverrideSelect.disabled = !roleOverrideToggle.checked;
+  roleOverrideSelect.hidden = !roleOverrideToggle.checked;
+  fillRoleSelect(displayRoleSelect, roles, context.identity.displayRole || "external_user");
+  projectModeSelect.value = context.visibility.inputs?.projectMode || services.visibility.getProjectMode?.() || "auto";
+
+  const visible = context.visibility.visibleModules.join(", ") || "none";
+  const hidden = context.visibility.hiddenModules.join(", ") || "none";
+  const currentDecision = context.visibility.moduleReasons[context.route.moduleId];
+  appendDefinitionListRows(visibilitySummary, [
+    ["mode", "lookup / derived role / visibility support"],
+    ["real auth", "no"],
+    ["display role", context.identity.displayRole],
+    ["display clamped", context.identity.displayRoleClamped ? "yes" : "no"],
+    ["override label", context.identity.resolver?.overrideLabel || "temporary developer override"],
+    ["project input", context.visibility.inputs?.projectMode || "auto"],
+    ["project present", context.visibility.inputs?.projectPresent ? "yes" : "no"],
+    ["visible", visible],
+    ["hidden", hidden],
+    ["route reason", currentDecision?.reason || "not_registered"],
+  ]);
+}
+
 function markActiveLink(moduleId) {
   for (const link of document.querySelectorAll("[data-module-link]")) {
-    if (link.getAttribute("data-module-link") === moduleId) link.setAttribute("aria-current", "page");
+    const linkModuleId = link.getAttribute("data-module-link");
+    const decision = window.__csLatestShellContext?.visibility?.moduleReasons?.[linkModuleId];
+    if (decision && !decision.visible) {
+      link.setAttribute("aria-disabled", "true");
+      link.dataset.visibilityReason = decision.reason;
+      link.title = `Hidden in current visibility preview: ${decision.reason}`;
+    } else {
+      link.removeAttribute("aria-disabled");
+      delete link.dataset.visibilityReason;
+      link.removeAttribute("title");
+    }
+    if (linkModuleId === moduleId) link.setAttribute("aria-current", "page");
     else link.removeAttribute("aria-current");
   }
 }
@@ -206,8 +355,12 @@ function bootWorkspaceShell() {
 
   function refreshContext(reason = "context-refresh") {
     context = createShellContext({ route, services, mountedModuleId: route.moduleId });
+    window.__csLatestShellContext = context;
     renderContextSummary(context);
     renderProjectSelection({ services, context });
+    renderProjectBrowser({ context });
+    renderIdentityVisibilityControls({ services, context });
+    markActiveLink(route.moduleId);
     mountedModuleApi?.update?.(context);
     if (diagnosticsPluginApi && diagnosticsPluginRegistry) {
       diagnosticsPluginApi.update?.({
@@ -234,16 +387,59 @@ function bootWorkspaceShell() {
     setStatus(`Selected ${readProjectTitle(nextContext.project)}. Project context updated.`);
   }
 
+  function handleIdentityChange(event) {
+    const result = services.identity.setIdentityById(event.target.value, "shell-identity-selection-change");
+    if (!result.accepted) {
+      setStatus(`Identity lookup failed: ${result.reason}`);
+      return;
+    }
+    const nextContext = refreshContext("identity-change");
+    setStatus(`Identity lookup resolved ${nextContext.identity.actualRole} from ${nextContext.identity.currentUser.name}.`);
+  }
+
+  function handleRoleOverrideToggle(event) {
+    const result = services.identity.setActualRoleOverrideEnabled(event.target.checked, "shell-actual-role-override-toggle");
+    const nextContext = refreshContext("actual-role-override-toggle");
+    const stateText = nextContext.identity.actualRoleOverrideEnabled ? "enabled" : "off";
+    const clampText = result.clamped ? " Display role was clamped to actual authority." : "";
+    setStatus(`Developer actual-role override ${stateText}.${clampText}`);
+  }
+
+  function handleRoleOverrideChange(event) {
+    const result = services.identity.setActualRoleOverride(event.target.value, "shell-actual-role-override-change");
+    const nextContext = refreshContext("actual-role-override-change");
+    const clampText = result.clamped ? " Display role was clamped to actual authority." : "";
+    setStatus(`Temporary override role: ${nextContext.identity.actualRole}.${clampText}`);
+  }
+
+  function handleDisplayRoleChange(event) {
+    const result = services.identity.setDisplayRole(event.target.value, "shell-display-role-preview-change");
+    const nextContext = refreshContext("display-role-change");
+    const clampText = result.clamped ? " Requested role was clamped to actual authority." : "";
+    setStatus(`Display role preview: ${nextContext.identity.displayRole}.${clampText}`);
+  }
+
+  function handleProjectModeChange(event) {
+    services.visibility.setProjectMode(event.target.value, context, "shell-project-visibility-mode-change");
+    const nextContext = refreshContext("project-visibility-mode-change");
+    setStatus(`Visibility project input: ${nextContext.visibility.inputs.projectMode}.`);
+  }
+
   registry.register("cs_selector", csSelectorModule);
   registry.register("emergence", emergenceModule);
+  registry.register("scene_builder", sceneBuilderModule);
+  ensureModuleNavLink("scene_builder", "Scene Builder");
 
-  renderContextSummary(context);
-  renderProjectSelection({ services, context });
+  refreshContext("initial-render");
   projectSelect?.addEventListener("change", handleProjectSelectionChange);
-  markActiveLink(route.moduleId);
+  identitySelect?.addEventListener("change", handleIdentityChange);
+  roleOverrideToggle?.addEventListener("change", handleRoleOverrideToggle);
+  roleOverrideSelect?.addEventListener("change", handleRoleOverrideChange);
+  displayRoleSelect?.addEventListener("change", handleDisplayRoleChange);
+  projectModeSelect?.addEventListener("change", handleProjectModeChange);
 
   if (showHomeIfRequested(route.moduleId)) {
-    setStatus("Workspace home mounted. Shell project selection is ready.");
+    setStatus("Workspace home mounted. Project Browser is read-only; save/restore/handoff are deferred.");
     scheduleOptionalDiagnosticsPlugin({ services, getContext: () => context, registry, onPluginReady: rememberDiagnosticsPlugin });
     return;
   }
@@ -259,7 +455,7 @@ function bootWorkspaceShell() {
   try {
     mountedModuleApi = moduleApi;
     moduleApi.mount({ container: moduleHost, services, context });
-    setStatus(`Mounted ${route.moduleId}. Shell project selection is ready.`);
+    setStatus(`Mounted ${route.moduleId}. Project Browser is read-only; save/restore/handoff are deferred.`);
     services.eventBus.emit("module:mounted", { moduleId: route.moduleId, route });
     scheduleOptionalDiagnosticsPlugin({ services, getContext: () => context, registry, onPluginReady: rememberDiagnosticsPlugin });
   } catch (error) {

@@ -37,7 +37,6 @@ function appendSection(parent, heading, rows) {
 
 export function renderSelectorView(container, viewModel) {
   clearElement(container);
-
   const article = document.createElement("article");
   article.className = "cs-selector-proof";
   article.dataset.module = viewModel.moduleId;
@@ -45,82 +44,82 @@ export function renderSelectorView(container, viewModel) {
   const intro = document.createElement("div");
   appendText(intro, "p", "Selector migration surface", "cs-shell__eyebrow");
   appendText(intro, "h2", "cs_selector shell context consumer");
-  appendText(
-    intro,
-    "p",
-    "Phase 7 keeps current project selection shell-owned. The selector displays read-only identity, company, CRM, and selected current-project context while save, restore, handoff, engine, RunTable, payload, and HubSpot writes remain deferred.",
-  );
+  appendText(intro, "p", "Selector now shows a shell-owned downstream context foundation. This is contract-only: Scene Builder, EGRES, Compliance Matters, Ceiling, engine, RunTable, and payload remain out of scope.");
   article.appendChild(intro);
 
-  appendSection(article, "Shell-owned identity context", [
-    ["Identity owner", viewModel.identity.owner],
-    ["Identity status", viewModel.identity.status],
-    ["Identity source", viewModel.identity.source],
-    ["User", viewModel.identity.name],
-    ["Email", viewModel.identity.email],
-    ["Role", viewModel.identity.role],
-    ["Selector capability", viewModel.identity.canViewSelector],
+  appendSection(article, "Identity and derived role", [
+    ["owner", viewModel.identity.owner],
+    ["status", viewModel.identity.status],
+    ["user", viewModel.identity.name],
+    ["email", viewModel.identity.email],
+    ["identity state", viewModel.identity.identityState],
+    ["classification", viewModel.identity.classification],
+    ["derived actual role", viewModel.identity.derivedActualRole],
+    ["effective actual role", viewModel.identity.actualRole],
+    ["actual role source", viewModel.identity.actualRoleSource],
+    ["override active", viewModel.identity.actualRoleOverrideEnabled],
+    ["display role", viewModel.identity.displayRole],
+    ["display clamped", viewModel.identity.displayRoleClamped],
+    ["selector capability", viewModel.identity.canViewSelector],
   ]);
 
-  appendSection(article, "Shell-owned current project", [
-    ["Project owner", viewModel.project.owner],
-    ["Project status", viewModel.project.status],
-    ["Project title", viewModel.project.title],
-    ["Project ID", viewModel.project.projectId],
-    ["Readiness", viewModel.project.readiness],
-    ["Project source", viewModel.project.source],
-    ["Selected at", viewModel.project.selectedAt],
-    ["Client", viewModel.project.client],
-    ["Site", viewModel.project.site],
-    ["Project dirty", viewModel.project.dirty],
-    ["Save status", viewModel.project.saveStatus],
-    ["Restore status", viewModel.project.restoreStatus],
+  appendSection(article, "Current project", [
+    ["owner", viewModel.project.owner],
+    ["status", viewModel.project.status],
+    ["title", viewModel.project.title],
+    ["project id", viewModel.project.projectId],
+    ["readiness", viewModel.project.readiness],
+    ["source", viewModel.project.source],
+    ["client", viewModel.project.client],
+    ["site", viewModel.project.site],
+    ["save", viewModel.project.saveStatus],
+    ["restore", viewModel.project.restoreStatus],
   ]);
 
-  appendSection(article, "Shell-owned company context", [
-    ["Company owner", viewModel.company.owner],
-    ["Company status", viewModel.company.status],
-    ["Company source", viewModel.company.source],
-    ["Company", viewModel.company.companyName],
-    ["Company ID", viewModel.company.companyId],
-    ["Website", viewModel.company.website],
-    ["Lifecycle stage", viewModel.company.lifecycleStage],
-    ["Owner", viewModel.company.ownerName],
-    ["Associated deal", viewModel.company.associatedDealId],
-    ["Associated contact", viewModel.company.associatedContactId],
+  appendSection(article, "Visibility", [
+    ["owner", viewModel.visibility.owner],
+    ["status", viewModel.visibility.status],
+    ["selector visible", viewModel.visibility.selectorVisible],
+    ["reason", viewModel.visibility.selectorReason],
+    ["project input", viewModel.visibility.projectMode],
+    ["project present", viewModel.visibility.projectPresent],
+    ["visible modules", viewModel.visibility.visibleModules],
+    ["hidden modules", viewModel.visibility.hiddenModules],
   ]);
 
-  appendSection(article, "CRM / HubSpot write policy", [
-    ["CRM owner", viewModel.crm.owner],
-    ["CRM status", viewModel.crm.status],
-    ["CRM source", viewModel.crm.source],
-    ["HubSpot status", viewModel.crm.hubspotStatus],
-    ["HubSpot available", viewModel.crm.hubspotAvailable],
-    ["Write flows enabled", viewModel.crm.writeFlowsEnabled],
-    ["Write policy", viewModel.crm.writeReason],
+  appendSection(article, "Downstream context foundation", [
+    ["owner", viewModel.downstream.owner],
+    ["status", viewModel.downstream.status],
+    ["source", viewModel.downstream.source],
+    ["selector status", viewModel.downstream.selectorStatus],
+    ["run refs", viewModel.downstream.runRefs],
+    ["area refs", viewModel.downstream.areaRefs],
+    ["fitting refs", viewModel.downstream.fittingRefs],
+    ["option refs", viewModel.downstream.optionRefs],
+    ["emergency candidates", viewModel.downstream.emergencyCandidates],
+    ["scene candidates", viewModel.downstream.sceneBuilderCandidates],
+    ["compliance candidates", viewModel.downstream.complianceCandidates],
+    ["ceiling candidates", viewModel.downstream.ceilingCandidates],
+    ["planned consumers", viewModel.downstream.consumers],
   ]);
 
-  appendSection(article, "Shell-owned handoff placeholder", [
-    ["Handoff owner", viewModel.handoff.owner],
-    ["Handoff status", viewModel.handoff.status],
-    ["Handoff available", viewModel.handoff.available],
+  appendSection(article, "Downstream readiness", [
+    ["Scene Builder", viewModel.downstream.sceneBuilderReadiness],
+    ["Emergency / EGRES", viewModel.downstream.egresReadiness],
+    ["Compliance Matters", viewModel.downstream.complianceReadiness],
+    ["Ceiling / Coordinated Surfaces", viewModel.downstream.ceilingReadiness],
+    ["engine restored", viewModel.downstream.constraints.engineRestored],
+    ["RunTable restored", viewModel.downstream.constraints.runTableRestored],
+    ["payload restored", viewModel.downstream.constraints.payloadRestored],
   ]);
 
-  appendSection(article, "Visibility and feature flags", [
-    ["Visibility owner", viewModel.visibility.owner],
-    ["Selector visible", viewModel.visibility.selectorVisible],
-    ["Visibility rule", viewModel.visibility.rule],
-    ["Feature flags owner", viewModel.flags.owner],
-    ["Feature migration", viewModel.flags.featureMigrationEnabled],
-    ["Project persistence live", viewModel.flags.projectPersistenceLive],
-    ["Handoff live", viewModel.flags.handoffLive],
-    ["Engine surface", viewModel.flags.engineSurfaceEnabled],
-    ["RunTable surface", viewModel.flags.runTableSurfaceEnabled],
-    ["Payload surface", viewModel.flags.payloadSurfaceEnabled],
+  appendSection(article, "Shared actions", [
+    ["handoff", viewModel.handoff.status],
+    ["crm", viewModel.crm.status],
+    ["crm writes", viewModel.crm.writeFlowsEnabled],
   ]);
 
   const localSection = document.createElement("section");
-  localSection.className = "cs-selector-proof__section";
   appendText(localSection, "h3", "Selector-local UI state");
   appendPillList(localSection, [
     `category:${viewModel.local.selectedCategory}`,
@@ -130,12 +129,9 @@ export function renderSelectorView(container, viewModel) {
   article.appendChild(localSection);
 
   const deferredSection = document.createElement("section");
-  deferredSection.className = "cs-selector-proof__section";
-  appendText(deferredSection, "h3", "Deferred selector actions");
+  appendText(deferredSection, "h3", "Deferred actions");
   appendPillList(deferredSection, viewModel.deferredActions);
   article.appendChild(deferredSection);
-
   appendText(article, "p", viewModel.responsiveNote, "cs-shell__eyebrow");
-
   container.appendChild(article);
 }

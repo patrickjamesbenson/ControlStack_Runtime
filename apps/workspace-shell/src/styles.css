@@ -69,7 +69,7 @@ a {
 .cs-shell__body {
   flex: 1;
   display: grid;
-  grid-template-columns: 280px minmax(0, 1fr);
+  grid-template-columns: 300px minmax(0, 1fr);
   min-height: 0;
 }
 
@@ -97,32 +97,77 @@ a {
   background: rgba(255, 255, 255, 0.18);
 }
 
+.cs-shell__sidebar a[aria-disabled="true"] {
+  opacity: 0.48;
+  border: 1px dashed rgba(255, 255, 255, 0.22);
+}
+
+.cs-shell__sidebar a[aria-disabled="true"]::after {
+  content: " · " attr(data-visibility-reason);
+  display: block;
+  margin-top: 4px;
+  color: #f7cfcf;
+  font-size: 11px;
+}
+
 .cs-shell__context-card,
-.cs-shell__project-card {
+.cs-shell__project-card,
+.cs-shell__project-browser-card,
+.cs-shell__visibility-card {
   padding: 14px;
   border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.06);
 }
 
-.cs-shell__project-card {
+.cs-shell__project-card,
+.cs-shell__project-browser-card,
+.cs-shell__visibility-card {
   margin-bottom: 16px;
 }
 
 .cs-shell__context-card h3,
-.cs-shell__project-card h3 {
+.cs-shell__project-card h3,
+.cs-shell__project-browser-card h3,
+.cs-shell__visibility-card h3 {
   margin-bottom: 12px;
   font-size: 14px;
 }
 
-.cs-shell__project-card label {
+.cs-shell__visibility-card p,
+.cs-shell__project-browser-card p {
+  margin-bottom: 12px;
+  color: #f7cfcf;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.cs-shell__visibility-card .cs-shell__warning {
+  margin-bottom: 8px;
+  color: #ffd9a8;
+}
+
+.cs-shell__checkbox-row {
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.cs-shell__checkbox-row input {
+  flex: 0 0 auto;
+}
+
+.cs-shell__project-card label,
+.cs-shell__visibility-card label {
   display: block;
   margin-bottom: 6px;
   color: #b8c3d9;
   font-size: 13px;
 }
 
-.cs-shell__project-card select {
+.cs-shell__project-card select,
+.cs-shell__visibility-card select {
   width: 100%;
   min-width: 0;
   margin-bottom: 12px;
@@ -133,23 +178,67 @@ a {
   color: #172033;
 }
 
+.cs-shell__visibility-card select:disabled {
+  opacity: 0.55;
+}
+
+.cs-shell__visibility-card select[hidden] {
+  display: none;
+}
+
 .cs-shell__context-card dl,
-.cs-shell__project-card dl {
+.cs-shell__project-card dl,
+.cs-shell__project-browser-card dl,
+.cs-shell__visibility-card dl {
   display: grid;
   gap: 8px;
   margin: 0;
   font-size: 13px;
 }
 
+.cs-shell__inline-summary {
+  margin-bottom: 12px !important;
+}
+
 .cs-shell__context-card dt,
-.cs-shell__project-card dt {
+.cs-shell__project-card dt,
+.cs-shell__project-browser-card dt,
+.cs-shell__visibility-card dt {
   color: #b8c3d9;
 }
 
 .cs-shell__context-card dd,
-.cs-shell__project-card dd {
+.cs-shell__project-card dd,
+.cs-shell__project-browser-card dd,
+.cs-shell__visibility-card dd {
   margin: 0;
   word-break: break-word;
+}
+
+.cs-shell__project-browser-list {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cs-shell__project-browser-list li {
+  display: grid;
+  gap: 3px;
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  font-size: 12px;
+}
+
+.cs-shell__project-browser-list strong {
+  font-size: 13px;
+}
+
+.cs-shell__project-browser-list span {
+  color: #b8c3d9;
 }
 
 .cs-shell__main {
