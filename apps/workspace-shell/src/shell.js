@@ -25,6 +25,7 @@ let projectBrowserPanel = null;
 let projectBrowserSummary = null;
 let projectBrowserList = null;
 let projectBrowserSaveButton = null;
+let projectBrowserRestoreButton = null;
 
 function setStatus(message) {
   if (statusEl) statusEl.textContent = message;
@@ -71,28 +72,36 @@ function ensureProjectBrowserPanel() {
 
   projectBrowserPanel = document.createElement("section");
   projectBrowserPanel.className = "cs-shell__project-browser-card";
-  projectBrowserPanel.setAttribute("aria-label", "Project Browser save envelope foundation");
+  projectBrowserPanel.setAttribute("aria-label", "Project Browser restore hydrate foundation");
 
   const heading = document.createElement("h3");
   heading.textContent = "Project Browser";
   const note = document.createElement("p");
-  note.textContent = "P2 save envelope: Save is live and shell-owned. Restore, hydrate, handoff, and share are not live.";
+  note.textContent = "P3 restore/hydrate: Save, restore, and hydrate are shell-owned. Handoff and share are not live.";
   projectBrowserSaveButton = document.createElement("button");
   projectBrowserSaveButton.type = "button";
   projectBrowserSaveButton.className = "cs-shell__project-browser-save";
   projectBrowserSaveButton.textContent = "Save Project";
+  projectBrowserRestoreButton = document.createElement("button");
+  projectBrowserRestoreButton.type = "button";
+  projectBrowserRestoreButton.className = "cs-shell__project-browser-restore";
+  projectBrowserRestoreButton.textContent = "Restore / Open Project";
   projectBrowserSummary = document.createElement("dl");
   projectBrowserSummary.id = "cs-shell-project-browser-summary";
   projectBrowserList = document.createElement("ul");
   projectBrowserList.id = "cs-shell-project-browser-list";
   projectBrowserList.className = "cs-shell__project-browser-list";
 
-  projectBrowserPanel.append(heading, note, projectBrowserSaveButton, projectBrowserSummary, projectBrowserList);
+  projectBrowserPanel.append(heading, note, projectBrowserSaveButton, projectBrowserRestoreButton, projectBrowserSummary, projectBrowserList);
   projectCard.insertAdjacentElement("afterend", projectBrowserPanel);
 }
 
 function readProjectTitle(project) {
   return project?.metadata?.title || project?.currentProject?.title || "No project loaded";
+}
+
+function selectedProjectSummary(browser) {
+  return (browser.projects || []).find((project) => project.envelopeId === browser.selectedProjectId || project.projectId === browser.selectedProjectId) || null;
 }
 
 function renderContextSummary(context) {
@@ -107,7 +116,8 @@ function renderContextSummary(context) {
     ["browser", `${context.projectBrowser.owner}:${context.projectBrowser.status}`],
     ["visibility", `${context.visibility.owner}:${context.visibility.status}`],
     ["save", `${context.project.save.owner}:${context.project.save.available ? "live" : "deferred"}`],
-    ["restore", `${context.project.restore.owner}:${context.project.restore.available ? "available" : "deferred"}`],
+    ["restore", `${context.project.restore.owner}:${context.project.restore.available ? "live" : "deferred"}`],
+    ["hydrate", `${context.project.hydrate?.owner || "shell"}:${context.project.hydrate?.available ? "live" : "deferred"}`],
     ["handoff", `${context.handoff.owner}:${context.handoff.status}`],
     ["flags", `${context.flags.owner}:${context.flags.status}`],
   ]);
@@ -124,7 +134,7 @@ function renderProjectSelection({ services, context }) {
     option.textContent = project.title;
     projectSelect.appendChild(option);
   }
-  projectSelect.value = selectedProjectId;
+  projectSelect.value = projects.some((project) => project.projectId === selectedProjectId) ? selectedProjectId : "";
   appendDefinitionListRows(projectSummary, [
     ["owner", context.project.owner],
     ["status", context.project.status],
@@ -132,8 +142,11 @@ function renderProjectSelection({ services, context }) {
     ["id", selectedProjectId || "none"],
     ["readiness", context.project.metadata?.readiness || "not-ready"],
     ["source", context.project.selection?.source || context.project.metadata?.source || "unknown"],
+    ["restored envelope", context.project.metadata?.restoredEnvelopeId || "none"],
+    ["restored at", context.project.metadata?.restoredAt || "none"],
     ["save", context.project.save?.status || "deferred"],
     ["restore", context.project.restore?.status || "deferred"],
+    ["hydrate", context.project.hydrate?.status || "idle"],
     ["handoff", context.handoff?.status || "deferred"],
   ]);
 }
@@ -143,25 +156,39 @@ function renderProjectBrowser({ context }) {
   if (!projectBrowserSummary || !projectBrowserList) return;
   const browser = context.projectBrowser;
   const save = browser.save || {};
+  const restore = browser.restore || {};
+  const hydrate = browser.hydrate || {};
+  const selected = selectedProjectSummary(browser);
   appendDefinitionListRows(projectBrowserSummary, [
     ["owner", browser.owner],
     ["status", browser.status],
     ["browser read only", browser.readOnly ? "yes" : "no"],
     ["current", browser.currentProject?.title || "No project loaded"],
     ["current id", browser.currentProject?.projectId || "none"],
-    ["saved count", browser.savedCount || 0],
+    ["restored source", browser.currentProject?.source || "none"],
+    ["selected envelope", browser.selectedProjectId || "none"],
+    ["selected restore", selected?.restoreEligible ? "enabled" : "disabled"],
+    ["runtime saved count", browser.savedCount || 0],
     ["fixture count", browser.fixtureCount || 0],
     ["save", browser.capabilities?.save ? "live" : "deferred"],
     ["save status", save.status || "ready"],
-    ["last saved", save.lastSavedAt || "none"],
-    ["last envelope", save.lastSavedEnvelopeId || "none"],
     ["restore", browser.capabilities?.restore ? "live" : "deferred"],
+    ["restore status", restore.status || "ready"],
+    ["last restored", restore.lastRestoredAt || "none"],
+    ["last restored envelope", restore.lastRestoredEnvelopeId || "none"],
     ["hydrate", browser.capabilities?.hydrate ? "live" : "deferred"],
+    ["hydrate status", hydrate.status || "idle"],
+    ["hydrated modules", (hydrate.lastHydratedModules || []).join(", ") || "none"],
     ["handoff/share", browser.capabilities?.handoff || browser.capabilities?.share ? "live" : "deferred"],
   ]);
   if (projectBrowserSaveButton) {
     projectBrowserSaveButton.disabled = browser.capabilities?.save !== true;
     projectBrowserSaveButton.textContent = save.status === "saving" ? "Saving..." : "Save Project";
+  }
+  if (projectBrowserRestoreButton) {
+    projectBrowserRestoreButton.disabled = browser.capabilities?.restore !== true || selected?.restoreEligible !== true;
+    projectBrowserRestoreButton.textContent = restore.status === "restoring" ? "Restoring..." : "Restore / Open Project";
+    projectBrowserRestoreButton.title = selected?.restoreEligible ? "Restore selected runtime-saved envelope" : selected?.restoreDisabledReason || "Select a runtime-saved envelope first.";
   }
 
   clearElement(projectBrowserList);
@@ -174,10 +201,16 @@ function renderProjectBrowser({ context }) {
   }
   for (const project of projects) {
     const item = document.createElement("li");
+    const isSelected = project.envelopeId === browser.selectedProjectId || project.projectId === browser.selectedProjectId;
     item.className = project.readOnly ? "cs-shell__project-browser-item is-fixture" : "cs-shell__project-browser-item is-runtime-save";
+    if (isSelected) item.classList.add("is-selected");
+    item.dataset.envelopeId = project.envelopeId || project.projectId;
+    item.tabIndex = 0;
     appendProjectBrowserLine(item, project.title, "strong");
     appendProjectBrowserLine(item, `${project.client} · ${project.site}`);
     appendProjectBrowserLine(item, `${project.readOnly ? "fixture/read-only" : "runtime save"} · ${project.lifecycleStatus} · ${project.savedAt || project.updatedAt}`);
+    appendProjectBrowserLine(item, `restore: ${project.restoreEligible ? "enabled" : "disabled"}`);
+    appendProjectBrowserLine(item, project.restoreDisabledReason || "Runtime saved envelope can be restored.");
     appendProjectBrowserLine(item, `saved by ${project.savedBy} · modules: ${(project.moduleIds || []).join(", ") || "none"}`);
     appendProjectBrowserLine(item, `envelope: ${project.envelopeId || project.projectId}`);
     projectBrowserList.appendChild(item);
@@ -421,7 +454,28 @@ function bootWorkspaceShell() {
       setStatus(`Save failed: ${result.reason || result.status}`);
       return;
     }
-    setStatus(`Saved ${readProjectTitle(nextContext.project)}. Restore/hydrate and handoff/share remain deferred.`);
+    setStatus(`Saved ${readProjectTitle(nextContext.project)}. Restore/hydrate is live; handoff/share remains deferred.`);
+  }
+
+  function handleProjectBrowserRestore() {
+    const envelopeId = context.projectBrowser.selectedProjectId;
+    const result = services.projectBrowser.restoreProject(envelopeId, context);
+    const nextContext = refreshContext("project-restore-hydrate");
+    if (!result.accepted) {
+      setStatus(`Restore skipped: ${result.reason || result.status}`);
+      return;
+    }
+    const hydrated = result.hydratedModules?.map((item) => `${item.moduleId}:${item.status}`).join(", ") || "none";
+    setStatus(`Restored ${readProjectTitle(nextContext.project)}. Module hydration payloads prepared (${hydrated}). Handoff/share remain deferred.`);
+  }
+
+  function handleProjectBrowserListClick(event) {
+    const item = event.target.closest?.("[data-envelope-id]");
+    if (!item) return;
+    const result = services.projectBrowser.inspectProject(item.dataset.envelopeId, context);
+    refreshContext("project-browser-select-envelope");
+    if (!result.accepted) setStatus(`Envelope selection failed: ${result.reason}`);
+    else setStatus(`Selected envelope ${result.envelopeId}. Restore is ${result.restoreEligible ? "enabled" : "disabled"}.`);
   }
 
   function handleIdentityChange(event) {
@@ -469,6 +523,8 @@ function bootWorkspaceShell() {
 
   refreshContext("initial-render");
   projectBrowserSaveButton?.addEventListener("click", handleProjectBrowserSave);
+  projectBrowserRestoreButton?.addEventListener("click", handleProjectBrowserRestore);
+  projectBrowserList?.addEventListener("click", handleProjectBrowserListClick);
   projectSelect?.addEventListener("change", handleProjectSelectionChange);
   identitySelect?.addEventListener("change", handleIdentityChange);
   roleOverrideToggle?.addEventListener("change", handleRoleOverrideToggle);
@@ -477,7 +533,7 @@ function bootWorkspaceShell() {
   projectModeSelect?.addEventListener("change", handleProjectModeChange);
 
   if (showHomeIfRequested(route.moduleId)) {
-    setStatus("Workspace home mounted. Save envelope is live; restore/hydrate and handoff/share are deferred.");
+    setStatus("Workspace home mounted. Restore/hydrate is live; handoff/share remains deferred.");
     scheduleOptionalDiagnosticsPlugin({ services, getContext: () => context, registry, onPluginReady: rememberDiagnosticsPlugin });
     return;
   }
@@ -493,7 +549,7 @@ function bootWorkspaceShell() {
   try {
     mountedModuleApi = moduleApi;
     moduleApi.mount({ container: moduleHost, services, context });
-    setStatus(`Mounted ${route.moduleId}. Save envelope is live; restore/hydrate and handoff/share are deferred.`);
+    setStatus(`Mounted ${route.moduleId}. Restore/hydrate is live; handoff/share remains deferred.`);
     services.eventBus.emit("module:mounted", { moduleId: route.moduleId, route });
     scheduleOptionalDiagnosticsPlugin({ services, getContext: () => context, registry, onPluginReady: rememberDiagnosticsPlugin });
   } catch (error) {

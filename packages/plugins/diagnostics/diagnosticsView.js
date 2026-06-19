@@ -53,7 +53,7 @@ export function renderDiagnosticsView(container, viewModel) {
   const intro = document.createElement("div");
   appendText(intro, "p", "Optional plugin", "cs-shell__eyebrow");
   appendText(intro, "h2", "Diagnostics panel");
-  appendText(intro, "p", "Diagnostics reads shell-owned snapshots, including P2 save envelope state.");
+  appendText(intro, "p", "Diagnostics reads shell-owned snapshots, including P3 restore/hydrate state.");
   article.appendChild(intro);
 
   appendSection(article, "Route and shell", [
@@ -72,6 +72,7 @@ export function renderDiagnosticsView(container, viewModel) {
     ["non-boot-critical", viewModel.projectBrowser.nonBootCritical],
     ["current project", viewModel.projectBrowser.currentProject],
     ["current project id", viewModel.projectBrowser.currentProjectId],
+    ["selected envelope", viewModel.projectBrowser.selectedProjectId],
     ["runtime saved count", viewModel.projectBrowser.savedCount],
     ["fixture count", viewModel.projectBrowser.fixtureCount],
     ["total count", viewModel.projectBrowser.totalCount],
@@ -98,6 +99,31 @@ export function renderDiagnosticsView(container, viewModel) {
     ["handoff live", viewModel.saveEnvelope.handoffLive],
     ["share live", viewModel.saveEnvelope.shareLive],
   ]);
+
+  appendSection(article, "Restore / hydrate", [
+    ["restore owner", viewModel.restoreHydrate.restoreOwner],
+    ["restore status", viewModel.restoreHydrate.restoreStatus],
+    ["restore live", viewModel.restoreHydrate.restoreLive],
+    ["restore source", viewModel.restoreHydrate.restoreSource],
+    ["last restored envelope", viewModel.restoreHydrate.lastRestoredEnvelopeId],
+    ["last restored project", viewModel.restoreHydrate.lastRestoredProjectId],
+    ["last restored", viewModel.restoreHydrate.lastRestoredAt],
+    ["last error", viewModel.restoreHydrate.lastError],
+    ["validation", viewModel.restoreHydrate.validation],
+    ["hydrate owner", viewModel.restoreHydrate.hydrateOwner],
+    ["hydrate status", viewModel.restoreHydrate.hydrateStatus],
+    ["hydrate live", viewModel.restoreHydrate.hydrateLive],
+    ["last hydrated envelope", viewModel.restoreHydrate.lastHydratedEnvelopeId],
+    ["last hydrated modules", viewModel.restoreHydrate.lastHydratedModules],
+    ["handoff live", viewModel.restoreHydrate.handoffLive],
+    ["share live", viewModel.restoreHydrate.shareLive],
+  ]);
+
+  const hydrateSection = document.createElement("section");
+  hydrateSection.className = "cs-diagnostics__section";
+  appendText(hydrateSection, "h3", "Module hydrate results");
+  appendPillList(hydrateSection, viewModel.restoreHydrate.moduleResults.length ? viewModel.restoreHydrate.moduleResults : ["none"]);
+  article.appendChild(hydrateSection);
 
   const browserSection = document.createElement("section");
   browserSection.className = "cs-diagnostics__section";
@@ -137,8 +163,12 @@ export function renderDiagnosticsView(container, viewModel) {
     ["Project ID", viewModel.project.projectId],
     ["Readiness", viewModel.project.readiness],
     ["Project source", viewModel.project.source],
+    ["Restored from envelope", viewModel.project.restoredFromEnvelope],
+    ["Restored envelope", viewModel.project.restoredEnvelopeId],
+    ["Restored at", viewModel.project.restoredAt],
     ["Save status", viewModel.project.saveStatus],
     ["Restore status", viewModel.project.restoreStatus],
+    ["Hydrate status", viewModel.project.hydrateStatus],
   ]);
 
   appendSection(article, "Visibility policy", [
@@ -196,7 +226,7 @@ export function renderDiagnosticsView(container, viewModel) {
 
   const constraintsSection = document.createElement("section");
   constraintsSection.className = "cs-diagnostics__section";
-  appendText(constraintsSection, "h3", "P2 constraints");
+  appendText(constraintsSection, "h3", "P3 constraints");
   appendPillList(constraintsSection, viewModel.constraints);
   article.appendChild(constraintsSection);
 

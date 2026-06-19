@@ -51,6 +51,8 @@ function readProjectBrowser(adapter, snapshots, downstream) {
     currentProject: {},
     deferred: {},
     save: {},
+    restore: {},
+    hydrate: {},
   };
 }
 
@@ -86,6 +88,9 @@ export function createDiagnosticsViewModel({ adapter, diagnosticsState }) {
   const selector = downstream.selector || {};
   const sceneDecision = decisionFor(visibility, "scene_builder");
   const save = projectBrowser.save || {};
+  const restore = projectBrowser.restore || {};
+  const hydrate = projectBrowser.hydrate || {};
+  const moduleResults = hydrate.moduleResults || {};
 
   return {
     pluginId: adapter.pluginId,
@@ -134,11 +139,15 @@ export function createDiagnosticsViewModel({ adapter, diagnosticsState }) {
       projectId: project.metadata?.projectId || currentProject.projectId || "none",
       readiness: project.metadata?.readiness || currentProject.readiness || "not-ready",
       source: project.selection?.source || project.metadata?.source || "unknown",
+      restoredFromEnvelope: stateLabel(project.metadata?.restoredFromEnvelope),
+      restoredEnvelopeId: project.metadata?.restoredEnvelopeId || "none",
+      restoredAt: project.metadata?.restoredAt || "none",
       selectedAt: project.selection?.selectedAt || project.metadata?.selectedAt || "none",
       client: currentProject.client || "none",
       site: currentProject.site || "none",
       saveStatus: project.save?.status || project.saveState?.status || "deferred",
       restoreStatus: project.restore?.status || project.restoreState?.status || "deferred",
+      hydrateStatus: project.hydrate?.status || "idle",
     },
     projectBrowser: {
       owner: projectBrowser.owner,
@@ -147,6 +156,7 @@ export function createDiagnosticsViewModel({ adapter, diagnosticsState }) {
       nonBootCritical: stateLabel(projectBrowser.nonBootCritical),
       currentProject: projectBrowser.currentProject?.title || "No project loaded",
       currentProjectId: projectBrowser.currentProject?.projectId || "none",
+      selectedProjectId: projectBrowser.selectedProjectId || "none",
       savedCount: projectBrowser.savedCount || 0,
       fixtureCount: projectBrowser.fixtureCount || 0,
       totalCount: projectBrowser.projectCount || 0,
@@ -156,7 +166,7 @@ export function createDiagnosticsViewModel({ adapter, diagnosticsState }) {
       hydrate: projectBrowser.capabilities?.hydrate ? "live" : "deferred",
       handoff: projectBrowser.capabilities?.handoff ? "live" : "deferred",
       share: projectBrowser.capabilities?.share ? "live" : "deferred",
-      projects: (projectBrowser.projects || []).map((item) => `${item.readOnly ? "fixture" : "runtime"}:${item.projectId}:${item.title}:${item.lifecycleStatus}`),
+      projects: (projectBrowser.projects || []).map((item) => `${item.readOnly ? "fixture" : "runtime"}:${item.projectId}:${item.title}:restore-${item.restoreEligible ? "enabled" : "disabled"}`),
     },
     saveEnvelope: {
       owner: save.owner || "shell",
@@ -168,10 +178,29 @@ export function createDiagnosticsViewModel({ adapter, diagnosticsState }) {
       lastSavedAt: save.lastSavedAt || "none",
       lastError: save.lastError || "none",
       updateExistingEnvelope: stateLabel(save.capabilities?.updateExistingEnvelope),
-      restoreLive: "no",
-      hydrateLive: "no",
+      restoreLive: stateLabel(save.capabilities?.restore),
+      hydrateLive: stateLabel(save.capabilities?.hydrate),
       handoffLive: "no",
       shareLive: "no",
+    },
+    restoreHydrate: {
+      restoreOwner: restore.owner || "shell",
+      restoreStatus: restore.status || "ready",
+      restoreLive: stateLabel(restore.live),
+      restoreSource: restore.source || "p3-shell-restore-hydrate",
+      lastRestoredEnvelopeId: restore.lastRestoredEnvelopeId || "none",
+      lastRestoredProjectId: restore.lastRestoredProjectId || "none",
+      lastRestoredAt: restore.lastRestoredAt || "none",
+      lastError: restore.lastError || "none",
+      validation: restore.validation || "not-run",
+      hydrateOwner: hydrate.owner || "shell",
+      hydrateStatus: hydrate.status || "idle",
+      hydrateLive: stateLabel(hydrate.live),
+      lastHydratedEnvelopeId: hydrate.lastHydratedEnvelopeId || "none",
+      lastHydratedModules: (hydrate.lastHydratedModules || []).join(", ") || "none",
+      handoffLive: "no",
+      shareLive: "no",
+      moduleResults: Object.values(moduleResults).map((result) => `${result.moduleId}:${result.status}:${result.reason}`),
     },
     company: {
       owner: company.owner || "shell",
@@ -236,10 +265,13 @@ export function createDiagnosticsViewModel({ adapter, diagnosticsState }) {
       statuses: pluginStatus.plugins || [],
     },
     constraints: [
-      "Save envelope is shell-owned and live",
-      "Project Browser remains shell-owned",
-      "Runtime-saved envelopes are visually distinct from fixture browser items",
-      "Restore / hydrate is not live",
+      "Restore is shell-owned and live",
+      "Hydrate is shell-orchestrated and live",
+      "Current identity remains shell-authoritative after restore",
+      "Actual role and display role remain shell-authoritative after restore",
+      "Visibility and flags remain current shell policy after restore",
+      "Fixture/read-only envelopes are disabled for restore",
+      "Missing module hydrate handlers report safe no-handler results",
       "Handoff / share is not live",
       "Scene Builder remains structural only",
       "EGRES route is not registered",

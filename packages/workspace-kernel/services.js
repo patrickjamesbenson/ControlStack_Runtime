@@ -34,7 +34,7 @@ export function createShellServices() {
   const visibilityAdapter = createVisibilityService({ eventBus });
   const downstreamAdapter = createDownstreamContextService({ eventBus });
   const savedProjectStore = createSavedProjectStore({ eventBus });
-  const projectBrowserAdapter = createProjectBrowserService({ savedProjectStore, eventBus });
+  const projectBrowserAdapter = createProjectBrowserService({ savedProjectStore, projectService: projectAdapter, eventBus });
   const flagAdapter = createFeatureFlagService({ eventBus });
   const crmAdapter = createCrmService({ eventBus });
 
@@ -75,21 +75,21 @@ export function createShellServices() {
         return {
           owner: "shell",
           status: "placeholder",
-          phase: "p2-save-envelope",
+          phase: "p3-restore-hydrate",
           contract: createContractDiagnostics(),
           responsiveRequirement: "desktop-tablet-mobile",
           projectSelection: {
             owner: "shell",
-            status: "selectable",
-            persistence: "save-envelope-live",
+            status: "selectable-and-restorable",
+            persistence: "save-restore-hydrate-live",
           },
           projectBrowser: {
             owner: "shell",
-            status: "save-ready-browser",
+            status: "restore-hydrate-ready-browser",
             readOnly: true,
             saveLive: true,
-            restoreLive: false,
-            hydrateLive: false,
+            restoreLive: true,
+            hydrateLive: true,
             handoffLive: false,
             shareLive: false,
           },
@@ -98,8 +98,16 @@ export function createShellServices() {
             status: "ready",
             live: true,
             source: "p2-shell-save-envelope",
-            restoreLive: false,
-            hydrateLive: false,
+            restoreLive: true,
+            hydrateLive: true,
+            handoffLive: false,
+            shareLive: false,
+          },
+          restoreHydrate: {
+            owner: "shell",
+            status: "ready",
+            live: true,
+            source: "p3-shell-restore-hydrate",
             handoffLive: false,
             shareLive: false,
           },
@@ -123,7 +131,7 @@ export function createShellServices() {
         return {
           accepted: true,
           event,
-          phase: "p2-save-envelope",
+          phase: "p3-restore-hydrate",
         };
       },
     },

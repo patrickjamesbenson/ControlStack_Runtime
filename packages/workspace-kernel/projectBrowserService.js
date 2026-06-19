@@ -10,14 +10,16 @@ function readProject(project = {}) {
     site: project.currentProject?.site || project.metadata?.site || "No site loaded",
     readiness: project.metadata?.readiness || project.currentProject?.readiness || "not-ready",
     source: project.selection?.source || project.metadata?.source || "unknown",
+    restoredEnvelopeId: project.metadata?.restoredEnvelopeId || project.selection?.restoredEnvelopeId || null,
+    restoredAt: project.metadata?.restoredAt || null,
   };
 }
 
-export function createProjectBrowserService({ savedProjectStore, eventBus } = {}) {
+export function createProjectBrowserService({ savedProjectStore, projectService, eventBus } = {}) {
   const state = {
     owner: "shell",
-    status: "save-ready-browser",
-    source: "p2-shell-save-envelope",
+    status: "restore-hydrate-ready-browser",
+    source: "p3-shell-restore-hydrate",
     selectedProjectId: null,
     filters: {
       search: "",
@@ -42,20 +44,20 @@ export function createProjectBrowserService({ savedProjectStore, eventBus } = {}
       savedCount: storeSnapshot.savedCount || 0,
       fixtureCount: storeSnapshot.fixtureCount || 0,
       safeEmpty: storeSnapshot.safeEmpty,
-      emptyStateMessage: storeSnapshot.safeEmpty ? "No saved projects found. Browser remains safe; save is ready." : "Saved projects available. Runtime saves are visually marked.",
+      emptyStateMessage: storeSnapshot.safeEmpty ? "No saved projects found. Save is ready; restore waits for a runtime save." : "Saved projects available. Runtime saves can be restored; fixtures stay disabled.",
       save: storeSnapshot.save,
+      restore: storeSnapshot.restore,
+      hydrate: storeSnapshot.hydrate,
       capabilities: {
         list: true,
         inspect: true,
         save: true,
-        restore: false,
-        hydrate: false,
+        restore: true,
+        hydrate: true,
         handoff: false,
         share: false,
       },
       deferred: {
-        restore: "deferred-to-p3",
-        hydrate: "deferred-to-p3",
         handoff: "deferred-to-p4",
         share: "deferred-to-p4",
       },
@@ -77,6 +79,7 @@ export function createProjectBrowserService({ savedProjectStore, eventBus } = {}
       readOnly: true,
       projectId: envelope.projectId,
       envelopeId: envelope.envelopeId,
+      restoreEligible: envelope.readOnly !== true && envelope.browserOnly !== true,
       envelope,
       browser: getProjectBrowserSnapshot(context),
     };
@@ -86,11 +89,33 @@ export function createProjectBrowserService({ savedProjectStore, eventBus } = {}
 
   function saveProject(context = {}, moduleContributions = {}) {
     const result = savedProjectStore.saveCurrentProjectEnvelope(context, moduleContributions);
+    if (result.accepted) state.selectedProjectId = result.envelopeId;
     eventBus?.emit("project-browser:save", result);
     return {
       ...result,
       browser: getProjectBrowserSnapshot(context),
     };
+  }
+
+  function restoreProject(projectIdOrEnvelopeId, context = {}) {
+    const result = savedProjectStore.restoreProjectEnvelope(projectIdOrEnvelopeId || state.selectedProjectId, context);
+    if (!result.accepted) {
+      eventBus?.emit("project-browser:restore-rejected", result);
+      return {
+        ...result,
+        browser: getProjectBrowserSnapshot(context),
+      };
+    }
+    state.selectedProjectId = result.envelopeId;
+    const projectResult = projectService?.restoreProjectFromEnvelope?.(result.envelope, result);
+    const combined = {
+      ...result,
+      shellProjectUpdated: projectResult?.accepted === true,
+      project: projectResult?.project || null,
+      browser: getProjectBrowserSnapshot(context),
+    };
+    eventBus?.emit("project-browser:restore", combined);
+    return combined;
   }
 
   function setSearch(search = "", context = {}) {
@@ -107,18 +132,12 @@ export function createProjectBrowserService({ savedProjectStore, eventBus } = {}
     inspectProject,
     setSearch,
     saveProject,
-    restoreProject() {
-      return {
-        accepted: false,
-        status: "deferred",
-        reason: "P2 Save envelope does not implement restore/hydrate. Restore/hydrate is deferred to P3.",
-      };
-    },
+    restoreProject,
     requestHandoff() {
       return {
         accepted: false,
         status: "deferred",
-        reason: "P2 Save envelope does not implement handoff/share. Handoff/share is deferred to P4.",
+        reason: "P3 Restore/hydrate does not implement handoff/share. Handoff/share is deferred to P4.",
       };
     },
   };

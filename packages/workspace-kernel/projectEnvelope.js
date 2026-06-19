@@ -87,6 +87,31 @@ function createModuleEnvelopeSet({ downstream = {}, moduleContributions = {} } =
   };
 }
 
+export function validateSavedProjectEnvelope(envelope) {
+  if (!envelope || typeof envelope !== "object") {
+    return { valid: false, reason: "Envelope is missing or not an object." };
+  }
+  if (envelope.schema !== SAVED_PROJECT_SCHEMA) {
+    return { valid: false, reason: `Unsupported envelope schema: ${envelope.schema || "none"}` };
+  }
+  if (envelope.owner !== "shell") {
+    return { valid: false, reason: `Envelope owner is not shell: ${envelope.owner || "none"}` };
+  }
+  if (!envelope.envelopeId || !envelope.projectId) {
+    return { valid: false, reason: "Envelope is missing envelopeId or projectId." };
+  }
+  if (!envelope.project || typeof envelope.project !== "object") {
+    return { valid: false, reason: "Envelope is missing project block." };
+  }
+  if (!envelope.project.currentProject && !envelope.project.metadata) {
+    return { valid: false, reason: "Envelope project block has no currentProject or metadata." };
+  }
+  if (!envelope.modules || typeof envelope.modules !== "object") {
+    return { valid: false, reason: "Envelope is missing modules block." };
+  }
+  return { valid: true, reason: "Envelope is valid." };
+}
+
 export function createSavedProjectEnvelope({ project = {}, identity = {}, visibility = {}, flags = {}, downstream = {}, contractVersion = "not-declared", moduleContributions = {}, source = "project-browser-fixture", previousEnvelope = null } = {}) {
   const now = isoNow();
   const projectId = readProjectId(project);
@@ -143,13 +168,45 @@ export function createSavedProjectEnvelope({ project = {}, identity = {}, visibi
   };
 }
 
+export function createHydrationPayloadsFromEnvelope(envelope) {
+  const modules = envelope?.modules || {};
+  return Object.fromEntries(Object.entries(modules).map(([moduleId, moduleEnvelope]) => [
+    moduleId,
+    {
+      owner: "shell",
+      moduleId,
+      sourceEnvelopeId: envelope.envelopeId,
+      sourceProjectId: envelope.projectId,
+      payloadAvailable: true,
+      payload: clone(moduleEnvelope || {}),
+    },
+  ]));
+}
+
+export function createHydrationResultsFromEnvelope(envelope) {
+  const modules = envelope?.modules || {};
+  return Object.fromEntries(Object.entries(modules).map(([moduleId, moduleEnvelope]) => [
+    moduleId,
+    {
+      moduleId,
+      status: "no-handler",
+      payloadAvailable: true,
+      reason: `Module hydrate handler not implemented yet for ${moduleId}. Payload is available through shell context.`,
+      sourceStatus: moduleEnvelope?.status || "empty",
+    },
+  ]));
+}
+
 export function summariseProjectEnvelope(envelope) {
+  const validation = validateSavedProjectEnvelope(envelope);
   return {
     schema: envelope.schema,
     owner: envelope.owner,
     source: envelope.source || "unknown",
     readOnly: envelope.readOnly === true,
     browserOnly: envelope.browserOnly === true,
+    restoreEligible: validation.valid && envelope.readOnly !== true && envelope.browserOnly !== true,
+    restoreDisabledReason: validation.valid && envelope.readOnly !== true && envelope.browserOnly !== true ? null : "Fixture/read-only envelopes are not restored in P3. Save a runtime envelope first.",
     envelopeId: envelope.envelopeId || envelope.projectId,
     projectId: envelope.projectId,
     title: envelope.title,

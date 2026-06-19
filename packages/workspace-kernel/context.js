@@ -55,7 +55,7 @@ function readDiagnostics(service) {
   return {
     owner: service.owner,
     status: service.status,
-    phase: "p2-save-envelope",
+    phase: "p3-restore-hydrate",
   };
 }
 
@@ -69,7 +69,7 @@ export function createShellContext({ route, services, mountedModuleId = null }) 
   const diagnostics = readDiagnostics(services.diagnostics);
   const baseContext = {
     contractVersion: WORKSPACE_CONTRACT_VERSION,
-    phase: "p2-save-envelope",
+    phase: "p3-restore-hydrate",
     route,
     identity,
     project,
@@ -92,6 +92,7 @@ export function createShellContext({ route, services, mountedModuleId = null }) 
   return {
     ...baseContext,
     projectBrowser,
+    moduleHydrate: projectBrowser.hydrate || null,
   };
 }
 
@@ -102,6 +103,7 @@ export function createModuleUpdateSnapshot(context) {
     project: context.project,
     currentProject: context.currentProject,
     projectBrowser: context.projectBrowser,
+    moduleHydrate: context.moduleHydrate,
     company: context.company,
     crm: context.crm,
     visibility: context.visibility,

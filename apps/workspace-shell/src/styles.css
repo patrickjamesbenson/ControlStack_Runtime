@@ -186,7 +186,8 @@ a {
   display: none;
 }
 
-.cs-shell__project-browser-save {
+.cs-shell__project-browser-save,
+.cs-shell__project-browser-restore {
   width: 100%;
   margin-bottom: 12px;
   padding: 9px 12px;
@@ -198,7 +199,12 @@ a {
   font-weight: 650;
 }
 
-.cs-shell__project-browser-save:disabled {
+.cs-shell__project-browser-restore {
+  margin-top: -4px;
+}
+
+.cs-shell__project-browser-save:disabled,
+.cs-shell__project-browser-restore:disabled {
   cursor: not-allowed;
   opacity: 0.55;
 }
@@ -248,6 +254,7 @@ a {
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.05);
   font-size: 12px;
+  cursor: pointer;
 }
 
 .cs-shell__project-browser-list li.is-runtime-save {
@@ -258,6 +265,11 @@ a {
 .cs-shell__project-browser-list li.is-fixture {
   border-style: dashed;
   opacity: 0.82;
+}
+
+.cs-shell__project-browser-list li.is-selected {
+  outline: 2px solid rgba(255, 255, 255, 0.72);
+  outline-offset: 2px;
 }
 
 .cs-shell__project-browser-list strong {

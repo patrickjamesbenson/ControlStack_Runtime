@@ -53,6 +53,18 @@ function fixtureToCurrentProject(fixture) {
   };
 }
 
+function envelopeToRestoredProject(envelope) {
+  const currentProject = envelope.project?.currentProject || {};
+  return {
+    projectId: currentProject.projectId || envelope.projectId,
+    title: currentProject.title || envelope.title || "Restored project",
+    client: currentProject.client || envelope.client || "No client loaded",
+    site: currentProject.site || envelope.site || "No site loaded",
+    readiness: "restored-from-envelope",
+    source: "restored-from-envelope",
+  };
+}
+
 export function createProjectService({ eventBus } = {}) {
   const subscriptions = createSubscriptionSet();
   const state = {
@@ -61,34 +73,44 @@ export function createProjectService({ eventBus } = {}) {
     source: "phase-7-shell-owned-current-project-fixture",
     selectedProjectId: PROJECT_FIXTURES[0].projectId,
     selectedAt: new Date().toISOString(),
+    restoredProject: null,
+    lastRestore: null,
   };
 
   function selectedFixture() {
     return PROJECT_FIXTURES.find((project) => project.projectId === state.selectedProjectId) || PROJECT_FIXTURES[0];
   }
 
+  function currentProject() {
+    return state.restoredProject || fixtureToCurrentProject(selectedFixture());
+  }
+
   function snapshot() {
-    const fixture = selectedFixture();
-    const currentProject = fixtureToCurrentProject(fixture);
+    const activeProject = currentProject();
+    const restored = state.restoredProject !== null;
     return {
       owner: state.owner,
       status: state.status,
-      source: state.source,
-      currentProject,
+      source: restored ? "restored-from-envelope" : state.source,
+      currentProject: clone(activeProject),
       metadata: {
-        projectId: currentProject.projectId,
-        title: currentProject.title,
-        readiness: currentProject.readiness,
-        source: currentProject.source,
+        projectId: activeProject.projectId,
+        title: activeProject.title,
+        readiness: activeProject.readiness,
+        source: activeProject.source,
         browserReady: true,
-        browserStatus: "p2-save-ready-browser",
+        browserStatus: "p3-restore-hydrate-ready",
+        restoredFromEnvelope: restored,
+        restoredAt: state.lastRestore?.restoredAt || null,
+        restoredEnvelopeId: state.lastRestore?.envelopeId || null,
       },
       selection: {
         owner: "shell",
-        selectedProjectId: state.selectedProjectId,
-        selectedAt: state.selectedAt,
+        selectedProjectId: activeProject.projectId,
+        selectedAt: restored ? state.lastRestore?.restoredAt : state.selectedAt,
         availableProjects: PROJECT_FIXTURES.map(clone),
-        source: state.source,
+        source: restored ? "restored-from-envelope" : state.source,
+        restoredEnvelopeId: state.lastRestore?.envelopeId || null,
       },
       save: {
         owner: "shell",
@@ -96,21 +118,34 @@ export function createProjectService({ eventBus } = {}) {
         available: true,
         live: true,
         source: "p2-shell-save-envelope",
-        reason: "P2 Save envelope is shell-owned and live. Restore/hydrate and handoff/share remain deferred.",
+        reason: "Save envelope remains shell-owned and live. Restore/hydrate is now live; handoff/share remains deferred.",
       },
       restore: {
         owner: "shell",
-        status: "deferred",
-        available: false,
-        live: false,
-        reason: "P2 Save envelope does not implement restore/hydrate. Restore/hydrate is deferred to P3.",
+        status: state.lastRestore?.status || "ready",
+        available: true,
+        live: true,
+        source: "p3-shell-restore-hydrate",
+        lastRestoredEnvelopeId: state.lastRestore?.envelopeId || null,
+        lastRestoredProjectId: state.lastRestore?.projectId || null,
+        lastRestoredAt: state.lastRestore?.restoredAt || null,
+        reason: "P3 Restore/hydrate is shell-owned and live.",
+      },
+      hydrate: {
+        owner: "shell",
+        status: state.lastRestore?.hydrateStatus || "idle",
+        available: true,
+        live: true,
+        source: "p3-shell-restore-hydrate",
+        lastHydratedEnvelopeId: state.lastRestore?.envelopeId || null,
+        lastHydratedModules: state.lastRestore?.hydratedModules || [],
       },
       handoff: {
         owner: "shell",
         status: "deferred",
         available: false,
         live: false,
-        reason: "P2 Save envelope does not implement handoff/share. Handoff/share is deferred to P4.",
+        reason: "P3 Restore/hydrate does not implement handoff/share. Handoff/share is deferred to P4.",
       },
       dirty: false,
     };
@@ -139,6 +174,8 @@ export function createProjectService({ eventBus } = {}) {
           project: snapshot(),
         };
       }
+      state.restoredProject = null;
+      state.lastRestore = null;
       state.selectedProjectId = fixture.projectId;
       state.selectedAt = new Date().toISOString();
       eventBus?.emit("project:switch", { projectId: fixture.projectId, reason });
@@ -153,15 +190,43 @@ export function createProjectService({ eventBus } = {}) {
       return {
         accepted: false,
         status: "delegate-to-project-browser",
-        reason: "P2 save is live through the shell-owned Project Browser service.",
+        reason: "P3 save remains live through the shell-owned Project Browser service.",
         project: snapshot(),
+      };
+    },
+    restoreProjectFromEnvelope(envelope, restoreResult = {}) {
+      if (!envelope) {
+        return {
+          accepted: false,
+          status: "failed",
+          reason: "No envelope supplied for project restore.",
+          project: snapshot(),
+        };
+      }
+      const restoredProject = envelopeToRestoredProject(envelope);
+      state.restoredProject = restoredProject;
+      state.selectedProjectId = restoredProject.projectId;
+      state.lastRestore = {
+        status: restoreResult.status || "restored",
+        envelopeId: envelope.envelopeId,
+        projectId: envelope.projectId,
+        restoredAt: restoreResult.restoredAt || new Date().toISOString(),
+        hydrateStatus: restoreResult.hydrate?.status || "prepared",
+        hydratedModules: restoreResult.hydratedModules?.map((item) => item.moduleId) || Object.keys(restoreResult.hydrate?.moduleResults || {}),
+      };
+      const nextSnapshot = notify("project-restored-from-envelope");
+      eventBus?.emit("project:restore:complete", { envelopeId: envelope.envelopeId, project: nextSnapshot });
+      return {
+        accepted: true,
+        status: "restored",
+        project: nextSnapshot,
       };
     },
     restoreProject() {
       return {
         accepted: false,
-        status: "deferred",
-        reason: "P2 Save envelope does not implement restore/hydrate. Restore/hydrate is deferred to P3.",
+        status: "delegate-to-project-browser",
+        reason: "P3 restore is live through the shell-owned Project Browser service.",
         project: snapshot(),
       };
     },

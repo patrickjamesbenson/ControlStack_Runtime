@@ -1,7 +1,11 @@
-import { createSavedProjectEnvelope, summariseProjectEnvelope } from "./projectEnvelope.js";
+import { createHydrationPayloadsFromEnvelope, createHydrationResultsFromEnvelope, createSavedProjectEnvelope, summariseProjectEnvelope, validateSavedProjectEnvelope } from "./projectEnvelope.js";
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
+}
+
+function nowIso() {
+  return new Date().toISOString();
 }
 
 function createFixtureEnvelope({ projectId, title, client, site, savedByName, savedByEmail, lifecycleStatus = "draft" }) {
@@ -115,8 +119,8 @@ const FIXTURE_ENVELOPES = Object.freeze([
 export function createSavedProjectStore({ eventBus } = {}) {
   const state = {
     owner: "shell",
-    status: "save-ready",
-    source: "p2-shell-save-envelope",
+    status: "restore-ready",
+    source: "p3-shell-restore-hydrate",
     fixtureEnvelopes: FIXTURE_ENVELOPES.map(clone),
     savedEnvelopes: [],
     save: {
@@ -128,6 +132,27 @@ export function createSavedProjectStore({ eventBus } = {}) {
       lastSavedProjectId: null,
       lastSavedAt: null,
       lastError: null,
+    },
+    restore: {
+      owner: "shell",
+      status: "ready",
+      live: true,
+      source: "p3-shell-restore-hydrate",
+      lastRestoredEnvelopeId: null,
+      lastRestoredProjectId: null,
+      lastRestoredAt: null,
+      lastError: null,
+      validation: "not-run",
+    },
+    hydrate: {
+      owner: "shell",
+      status: "idle",
+      live: true,
+      source: "p3-shell-restore-hydrate",
+      lastHydratedEnvelopeId: null,
+      lastHydratedModules: [],
+      modulePayloads: {},
+      moduleResults: {},
     },
   };
 
@@ -164,12 +189,31 @@ export function createSavedProjectStore({ eventBus } = {}) {
         updateExistingEnvelope: true,
         list: true,
         inspect: true,
-        restore: false,
-        hydrate: false,
+        restore: true,
+        hydrate: true,
         handoff: false,
         share: false,
       },
     };
+  }
+
+  function getRestoreSnapshot() {
+    return {
+      ...state.restore,
+      capabilities: {
+        list: true,
+        inspect: true,
+        save: true,
+        restore: true,
+        hydrate: true,
+        handoff: false,
+        share: false,
+      },
+    };
+  }
+
+  function getHydrateSnapshot() {
+    return clone(state.hydrate);
   }
 
   function getStoreSnapshot(context = {}) {
@@ -188,12 +232,14 @@ export function createSavedProjectStore({ eventBus } = {}) {
       safeEmpty: allEnvelopes().length === 0,
       currentProjectPreview: summariseProjectEnvelope(currentProjectPreview),
       save: getSaveSnapshot(),
+      restore: getRestoreSnapshot(),
+      hydrate: getHydrateSnapshot(),
       capabilities: {
         list: true,
         inspect: true,
         save: true,
-        restore: false,
-        hydrate: false,
+        restore: true,
+        hydrate: true,
         handoff: false,
         share: false,
       },
@@ -250,6 +296,79 @@ export function createSavedProjectStore({ eventBus } = {}) {
     }
   }
 
+  function restoreProjectEnvelope(projectIdOrEnvelopeId, context = {}) {
+    const restoredAt = nowIso();
+    const envelope = getProjectEnvelope(projectIdOrEnvelopeId);
+    if (!envelope) {
+      state.restore.status = "failed";
+      state.restore.lastError = `Saved project not found: ${projectIdOrEnvelopeId}`;
+      state.restore.validation = "missing";
+      return {
+        accepted: false,
+        status: "failed",
+        reason: state.restore.lastError,
+        browser: getStoreSnapshot(context),
+      };
+    }
+
+    const validation = validateSavedProjectEnvelope(envelope);
+    if (!validation.valid) {
+      state.restore.status = "failed";
+      state.restore.lastError = validation.reason;
+      state.restore.validation = "failed";
+      return {
+        accepted: false,
+        status: "failed",
+        reason: validation.reason,
+        envelope,
+        browser: getStoreSnapshot(context),
+      };
+    }
+
+    if (envelope.readOnly === true || envelope.browserOnly === true) {
+      state.restore.status = "rejected";
+      state.restore.lastError = "Fixture/read-only envelopes cannot be restored in P3. Save a runtime envelope first.";
+      state.restore.validation = "read-only-rejected";
+      return {
+        accepted: false,
+        status: "rejected",
+        reason: state.restore.lastError,
+        envelope,
+        browser: getStoreSnapshot(context),
+      };
+    }
+
+    state.restore.status = "restoring";
+    state.restore.lastError = null;
+    state.restore.validation = "passed";
+    const modulePayloads = createHydrationPayloadsFromEnvelope(envelope);
+    const moduleResults = createHydrationResultsFromEnvelope(envelope);
+    const lastHydratedModules = Object.keys(moduleResults);
+    state.restore.status = "restored";
+    state.restore.lastRestoredEnvelopeId = envelope.envelopeId;
+    state.restore.lastRestoredProjectId = envelope.projectId;
+    state.restore.lastRestoredAt = restoredAt;
+    state.hydrate.status = "prepared";
+    state.hydrate.lastHydratedEnvelopeId = envelope.envelopeId;
+    state.hydrate.lastHydratedModules = lastHydratedModules;
+    state.hydrate.modulePayloads = modulePayloads;
+    state.hydrate.moduleResults = moduleResults;
+    const result = {
+      accepted: true,
+      status: "restored",
+      envelopeId: envelope.envelopeId,
+      projectId: envelope.projectId,
+      restoredAt,
+      shellProjectUpdated: true,
+      envelope,
+      hydrate: getHydrateSnapshot(),
+      hydratedModules: Object.values(moduleResults),
+      browser: getStoreSnapshot(context),
+    };
+    eventBus?.emit("saved-project-store:restored", result);
+    return result;
+  }
+
   return {
     owner: state.owner,
     status: state.status,
@@ -257,25 +376,19 @@ export function createSavedProjectStore({ eventBus } = {}) {
     getProjectEnvelope,
     getStoreSnapshot,
     getSaveSnapshot,
+    getRestoreSnapshot,
+    getHydrateSnapshot,
     createCurrentProjectPreviewEnvelope,
     saveCurrentProjectEnvelope,
     saveProjectEnvelope(context = {}, moduleContributions = {}) {
       return saveCurrentProjectEnvelope(context, moduleContributions);
     },
-    restoreProjectEnvelope() {
-      const result = {
-        accepted: false,
-        status: "deferred",
-        reason: "P2 Save envelope does not implement restore/hydrate. Restore/hydrate is deferred to P3.",
-      };
-      eventBus?.emit("saved-project-store:restore-rejected", result);
-      return result;
-    },
+    restoreProjectEnvelope,
     requestHandoff() {
       const result = {
         accepted: false,
         status: "deferred",
-        reason: "P2 Save envelope does not implement handoff/share. Handoff/share is deferred to P4.",
+        reason: "P3 Restore/hydrate does not implement handoff/share. Handoff/share is deferred to P4.",
       };
       eventBus?.emit("saved-project-store:handoff-rejected", result);
       return result;
