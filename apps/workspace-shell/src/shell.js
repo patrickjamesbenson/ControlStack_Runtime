@@ -26,6 +26,7 @@ let projectBrowserSummary = null;
 let projectBrowserList = null;
 let projectBrowserSaveButton = null;
 let projectBrowserRestoreButton = null;
+let projectBrowserHandoffButton = null;
 
 function setStatus(message) {
   if (statusEl) statusEl.textContent = message;
@@ -72,12 +73,12 @@ function ensureProjectBrowserPanel() {
 
   projectBrowserPanel = document.createElement("section");
   projectBrowserPanel.className = "cs-shell__project-browser-card";
-  projectBrowserPanel.setAttribute("aria-label", "Project Browser restore hydrate foundation");
+  projectBrowserPanel.setAttribute("aria-label", "Project Browser handoff share foundation");
 
   const heading = document.createElement("h3");
   heading.textContent = "Project Browser";
   const note = document.createElement("p");
-  note.textContent = "P3 restore/hydrate: Save, restore, and hydrate are shell-owned. Handoff and share are not live.";
+  note.textContent = "P4 handoff/share: package preparation is shell-owned. External delivery, email, and HubSpot writes are not live.";
   projectBrowserSaveButton = document.createElement("button");
   projectBrowserSaveButton.type = "button";
   projectBrowserSaveButton.className = "cs-shell__project-browser-save";
@@ -86,13 +87,17 @@ function ensureProjectBrowserPanel() {
   projectBrowserRestoreButton.type = "button";
   projectBrowserRestoreButton.className = "cs-shell__project-browser-restore";
   projectBrowserRestoreButton.textContent = "Restore / Open Project";
+  projectBrowserHandoffButton = document.createElement("button");
+  projectBrowserHandoffButton.type = "button";
+  projectBrowserHandoffButton.className = "cs-shell__project-browser-handoff";
+  projectBrowserHandoffButton.textContent = "Prepare Handoff / Share";
   projectBrowserSummary = document.createElement("dl");
   projectBrowserSummary.id = "cs-shell-project-browser-summary";
   projectBrowserList = document.createElement("ul");
   projectBrowserList.id = "cs-shell-project-browser-list";
   projectBrowserList.className = "cs-shell__project-browser-list";
 
-  projectBrowserPanel.append(heading, note, projectBrowserSaveButton, projectBrowserRestoreButton, projectBrowserSummary, projectBrowserList);
+  projectBrowserPanel.append(heading, note, projectBrowserSaveButton, projectBrowserRestoreButton, projectBrowserHandoffButton, projectBrowserSummary, projectBrowserList);
   projectCard.insertAdjacentElement("afterend", projectBrowserPanel);
 }
 
@@ -118,7 +123,7 @@ function renderContextSummary(context) {
     ["save", `${context.project.save.owner}:${context.project.save.available ? "live" : "deferred"}`],
     ["restore", `${context.project.restore.owner}:${context.project.restore.available ? "live" : "deferred"}`],
     ["hydrate", `${context.project.hydrate?.owner || "shell"}:${context.project.hydrate?.available ? "live" : "deferred"}`],
-    ["handoff", `${context.handoff.owner}:${context.handoff.status}`],
+    ["handoff/share", `${context.handoff.owner}:${context.handoff.packagePreparationOnly ? "package-only" : context.handoff.status}`],
     ["flags", `${context.flags.owner}:${context.flags.status}`],
   ]);
 }
@@ -147,7 +152,9 @@ function renderProjectSelection({ services, context }) {
     ["save", context.project.save?.status || "deferred"],
     ["restore", context.project.restore?.status || "deferred"],
     ["hydrate", context.project.hydrate?.status || "idle"],
-    ["handoff", context.handoff?.status || "deferred"],
+    ["handoff/share", context.project.handoff?.status || "ready"],
+    ["last package", context.project.handoff?.lastPreparedPackageId || "none"],
+    ["delivery", context.project.handoff?.externalDelivery ? "live" : "deferred"],
   ]);
 }
 
@@ -158,6 +165,8 @@ function renderProjectBrowser({ context }) {
   const save = browser.save || {};
   const restore = browser.restore || {};
   const hydrate = browser.hydrate || {};
+  const handoffShare = browser.handoffShare || {};
+  const packageSummary = handoffShare.packageSummary || {};
   const selected = selectedProjectSummary(browser);
   appendDefinitionListRows(projectBrowserSummary, [
     ["owner", browser.owner],
@@ -179,7 +188,14 @@ function renderProjectBrowser({ context }) {
     ["hydrate", browser.capabilities?.hydrate ? "live" : "deferred"],
     ["hydrate status", hydrate.status || "idle"],
     ["hydrated modules", (hydrate.lastHydratedModules || []).join(", ") || "none"],
-    ["handoff/share", browser.capabilities?.handoff || browser.capabilities?.share ? "live" : "deferred"],
+    ["handoff/share", browser.capabilities?.handoff || browser.capabilities?.share ? "package live" : "deferred"],
+    ["package status", handoffShare.status || "ready"],
+    ["last package", handoffShare.lastPreparedPackageId || "none"],
+    ["package envelope", handoffShare.lastPreparedEnvelopeId || packageSummary.envelopeId || "none"],
+    ["package prepared", handoffShare.lastPreparedAt || "none"],
+    ["delivery", handoffShare.delivery?.externalDelivery ? "live" : "deferred"],
+    ["email", handoffShare.delivery?.emailSend ? "live" : "deferred"],
+    ["HubSpot", handoffShare.delivery?.hubspotWrite ? "live" : "deferred"],
   ]);
   if (projectBrowserSaveButton) {
     projectBrowserSaveButton.disabled = browser.capabilities?.save !== true;
@@ -189,6 +205,11 @@ function renderProjectBrowser({ context }) {
     projectBrowserRestoreButton.disabled = browser.capabilities?.restore !== true || selected?.restoreEligible !== true;
     projectBrowserRestoreButton.textContent = restore.status === "restoring" ? "Restoring..." : "Restore / Open Project";
     projectBrowserRestoreButton.title = selected?.restoreEligible ? "Restore selected runtime-saved envelope" : selected?.restoreDisabledReason || "Select a runtime-saved envelope first.";
+  }
+  if (projectBrowserHandoffButton) {
+    projectBrowserHandoffButton.disabled = browser.capabilities?.prepareHandoff !== true && browser.capabilities?.handoff !== true;
+    projectBrowserHandoffButton.textContent = handoffShare.status === "preparing" ? "Preparing..." : "Prepare Handoff / Share";
+    projectBrowserHandoffButton.title = "Prepare package only. External delivery, email, and HubSpot writes remain deferred.";
   }
 
   clearElement(projectBrowserList);
@@ -211,6 +232,7 @@ function renderProjectBrowser({ context }) {
     appendProjectBrowserLine(item, `${project.readOnly ? "fixture/read-only" : "runtime save"} · ${project.lifecycleStatus} · ${project.savedAt || project.updatedAt}`);
     appendProjectBrowserLine(item, `restore: ${project.restoreEligible ? "enabled" : "disabled"}`);
     appendProjectBrowserLine(item, project.restoreDisabledReason || "Runtime saved envelope can be restored.");
+    appendProjectBrowserLine(item, `handoff/share: ${packageSummary.envelopeId === project.envelopeId ? `prepared ${packageSummary.packageId}` : "package not prepared"}`);
     appendProjectBrowserLine(item, `saved by ${project.savedBy} · modules: ${(project.moduleIds || []).join(", ") || "none"}`);
     appendProjectBrowserLine(item, `envelope: ${project.envelopeId || project.projectId}`);
     projectBrowserList.appendChild(item);
@@ -454,7 +476,7 @@ function bootWorkspaceShell() {
       setStatus(`Save failed: ${result.reason || result.status}`);
       return;
     }
-    setStatus(`Saved ${readProjectTitle(nextContext.project)}. Restore/hydrate is live; handoff/share remains deferred.`);
+    setStatus(`Saved ${readProjectTitle(nextContext.project)}. Restore/hydrate and handoff/share package preparation are live.`);
   }
 
   function handleProjectBrowserRestore() {
@@ -466,7 +488,17 @@ function bootWorkspaceShell() {
       return;
     }
     const hydrated = result.hydratedModules?.map((item) => `${item.moduleId}:${item.status}`).join(", ") || "none";
-    setStatus(`Restored ${readProjectTitle(nextContext.project)}. Module hydration payloads prepared (${hydrated}). Handoff/share remain deferred.`);
+    setStatus(`Restored ${readProjectTitle(nextContext.project)}. Module hydration payloads prepared (${hydrated}).`);
+  }
+
+  function handleProjectBrowserHandoffShare() {
+    const result = services.projectBrowser.prepareHandoffShare(context);
+    const nextContext = refreshContext("project-handoff-share-package");
+    if (!result.accepted) {
+      setStatus(`Handoff/share package failed: ${result.reason || result.status}`);
+      return;
+    }
+    setStatus(`Prepared handoff/share package for ${readProjectTitle(nextContext.project)}. External delivery, email, and HubSpot writes remain deferred.`);
   }
 
   function handleProjectBrowserListClick(event) {
@@ -524,6 +556,7 @@ function bootWorkspaceShell() {
   refreshContext("initial-render");
   projectBrowserSaveButton?.addEventListener("click", handleProjectBrowserSave);
   projectBrowserRestoreButton?.addEventListener("click", handleProjectBrowserRestore);
+  projectBrowserHandoffButton?.addEventListener("click", handleProjectBrowserHandoffShare);
   projectBrowserList?.addEventListener("click", handleProjectBrowserListClick);
   projectSelect?.addEventListener("change", handleProjectSelectionChange);
   identitySelect?.addEventListener("change", handleIdentityChange);
@@ -533,7 +566,7 @@ function bootWorkspaceShell() {
   projectModeSelect?.addEventListener("change", handleProjectModeChange);
 
   if (showHomeIfRequested(route.moduleId)) {
-    setStatus("Workspace home mounted. Restore/hydrate is live; handoff/share remains deferred.");
+    setStatus("Workspace home mounted. Handoff/share package preparation is live; delivery/email/HubSpot remain deferred.");
     scheduleOptionalDiagnosticsPlugin({ services, getContext: () => context, registry, onPluginReady: rememberDiagnosticsPlugin });
     return;
   }
@@ -549,7 +582,7 @@ function bootWorkspaceShell() {
   try {
     mountedModuleApi = moduleApi;
     moduleApi.mount({ container: moduleHost, services, context });
-    setStatus(`Mounted ${route.moduleId}. Restore/hydrate is live; handoff/share remains deferred.`);
+    setStatus(`Mounted ${route.moduleId}. Handoff/share package preparation is live; delivery/email/HubSpot remain deferred.`);
     services.eventBus.emit("module:mounted", { moduleId: route.moduleId, route });
     scheduleOptionalDiagnosticsPlugin({ services, getContext: () => context, registry, onPluginReady: rememberDiagnosticsPlugin });
   } catch (error) {

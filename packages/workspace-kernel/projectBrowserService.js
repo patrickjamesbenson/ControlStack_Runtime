@@ -12,14 +12,16 @@ function readProject(project = {}) {
     source: project.selection?.source || project.metadata?.source || "unknown",
     restoredEnvelopeId: project.metadata?.restoredEnvelopeId || project.selection?.restoredEnvelopeId || null,
     restoredAt: project.metadata?.restoredAt || null,
+    handoffPackageId: project.handoff?.lastPreparedPackageId || null,
+    handoffPreparedAt: project.handoff?.lastPreparedAt || null,
   };
 }
 
 export function createProjectBrowserService({ savedProjectStore, projectService, eventBus } = {}) {
   const state = {
     owner: "shell",
-    status: "restore-hydrate-ready-browser",
-    source: "p3-shell-restore-hydrate",
+    status: "handoff-share-ready-browser",
+    source: "p4-shell-handoff-share",
     selectedProjectId: null,
     filters: {
       search: "",
@@ -44,22 +46,29 @@ export function createProjectBrowserService({ savedProjectStore, projectService,
       savedCount: storeSnapshot.savedCount || 0,
       fixtureCount: storeSnapshot.fixtureCount || 0,
       safeEmpty: storeSnapshot.safeEmpty,
-      emptyStateMessage: storeSnapshot.safeEmpty ? "No saved projects found. Save is ready; restore waits for a runtime save." : "Saved projects available. Runtime saves can be restored; fixtures stay disabled.",
+      emptyStateMessage: storeSnapshot.safeEmpty ? "No saved projects found. Save is ready; handoff/share package can still be prepared from current project state." : "Saved projects available. Runtime saves can be restored; package preparation is live.",
       save: storeSnapshot.save,
       restore: storeSnapshot.restore,
       hydrate: storeSnapshot.hydrate,
+      handoffShare: storeSnapshot.handoffShare,
       capabilities: {
         list: true,
         inspect: true,
         save: true,
         restore: true,
         hydrate: true,
-        handoff: false,
-        share: false,
+        handoff: true,
+        share: true,
+        prepareHandoff: true,
+        prepareShare: true,
+        externalDelivery: false,
+        emailSend: false,
+        hubspotWrite: false,
       },
       deferred: {
-        handoff: "deferred-to-p4",
-        share: "deferred-to-p4",
+        externalDelivery: "deferred",
+        emailSend: "deferred",
+        hubspotWrite: "deferred",
       },
     };
   }
@@ -118,6 +127,19 @@ export function createProjectBrowserService({ savedProjectStore, projectService,
     return combined;
   }
 
+  function prepareHandoffShare(context = {}) {
+    const result = savedProjectStore.prepareHandoffSharePackage(context);
+    if (result.accepted) {
+      projectService?.recordHandoffSharePackage?.(result);
+    }
+    const combined = {
+      ...result,
+      browser: getProjectBrowserSnapshot(context),
+    };
+    eventBus?.emit("project-browser:handoff-share", combined);
+    return combined;
+  }
+
   function setSearch(search = "", context = {}) {
     state.filters.search = String(search || "");
     const snapshot = getProjectBrowserSnapshot(context);
@@ -133,12 +155,9 @@ export function createProjectBrowserService({ savedProjectStore, projectService,
     setSearch,
     saveProject,
     restoreProject,
-    requestHandoff() {
-      return {
-        accepted: false,
-        status: "deferred",
-        reason: "P3 Restore/hydrate does not implement handoff/share. Handoff/share is deferred to P4.",
-      };
+    prepareHandoffShare,
+    requestHandoff(context = {}) {
+      return prepareHandoffShare(context);
     },
   };
 }

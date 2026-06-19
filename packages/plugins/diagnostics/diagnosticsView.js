@@ -53,7 +53,7 @@ export function renderDiagnosticsView(container, viewModel) {
   const intro = document.createElement("div");
   appendText(intro, "p", "Optional plugin", "cs-shell__eyebrow");
   appendText(intro, "h2", "Diagnostics panel");
-  appendText(intro, "p", "Diagnostics reads shell-owned snapshots, including P3 restore/hydrate state.");
+  appendText(intro, "p", "Diagnostics reads shell-owned snapshots, including P4 handoff/share package state.");
   article.appendChild(intro);
 
   appendSection(article, "Route and shell", [
@@ -96,8 +96,10 @@ export function renderDiagnosticsView(container, viewModel) {
     ["update existing", viewModel.saveEnvelope.updateExistingEnvelope],
     ["restore live", viewModel.saveEnvelope.restoreLive],
     ["hydrate live", viewModel.saveEnvelope.hydrateLive],
-    ["handoff live", viewModel.saveEnvelope.handoffLive],
-    ["share live", viewModel.saveEnvelope.shareLive],
+    ["handoff/share live", viewModel.saveEnvelope.handoffShareLive],
+    ["external delivery live", viewModel.saveEnvelope.externalDeliveryLive],
+    ["email send live", viewModel.saveEnvelope.emailSendLive],
+    ["HubSpot write live", viewModel.saveEnvelope.hubspotWriteLive],
   ]);
 
   appendSection(article, "Restore / hydrate", [
@@ -115,8 +117,25 @@ export function renderDiagnosticsView(container, viewModel) {
     ["hydrate live", viewModel.restoreHydrate.hydrateLive],
     ["last hydrated envelope", viewModel.restoreHydrate.lastHydratedEnvelopeId],
     ["last hydrated modules", viewModel.restoreHydrate.lastHydratedModules],
-    ["handoff live", viewModel.restoreHydrate.handoffLive],
-    ["share live", viewModel.restoreHydrate.shareLive],
+    ["ownership unchanged", viewModel.restoreHydrate.ownershipUnchanged],
+  ]);
+
+  appendSection(article, "Handoff / share package", [
+    ["owner", viewModel.handoffShare.owner],
+    ["status", viewModel.handoffShare.status],
+    ["live", viewModel.handoffShare.live],
+    ["source", viewModel.handoffShare.source],
+    ["package preparation only", viewModel.handoffShare.packagePreparationOnly],
+    ["last package", viewModel.handoffShare.lastPreparedPackageId],
+    ["last envelope", viewModel.handoffShare.lastPreparedEnvelopeId],
+    ["last project", viewModel.handoffShare.lastPreparedProjectId],
+    ["last prepared", viewModel.handoffShare.lastPreparedAt],
+    ["last error", viewModel.handoffShare.lastError],
+    ["package summary", viewModel.handoffShare.packageSummary],
+    ["module summaries", viewModel.handoffShare.moduleSummaries],
+    ["external delivery live", viewModel.handoffShare.externalDeliveryLive],
+    ["email send live", viewModel.handoffShare.emailSendLive],
+    ["HubSpot write live", viewModel.handoffShare.hubspotWriteLive],
   ]);
 
   const hydrateSection = document.createElement("section");
@@ -169,6 +188,8 @@ export function renderDiagnosticsView(container, viewModel) {
     ["Save status", viewModel.project.saveStatus],
     ["Restore status", viewModel.project.restoreStatus],
     ["Hydrate status", viewModel.project.hydrateStatus],
+    ["Handoff/share status", viewModel.project.handoffStatus],
+    ["Last package", viewModel.project.lastPackageId],
   ]);
 
   appendSection(article, "Visibility policy", [
@@ -216,6 +237,10 @@ export function renderDiagnosticsView(container, viewModel) {
     ["Handoff owner", viewModel.handoff.owner],
     ["Handoff status", viewModel.handoff.status],
     ["Handoff available", viewModel.handoff.available],
+    ["Package preparation only", viewModel.handoff.packagePreparationOnly],
+    ["External delivery", viewModel.handoff.externalDelivery],
+    ["Email send", viewModel.handoff.emailSend],
+    ["HubSpot write", viewModel.handoff.hubspotWrite],
   ]);
 
   const statusSection = document.createElement("section");
@@ -226,7 +251,7 @@ export function renderDiagnosticsView(container, viewModel) {
 
   const constraintsSection = document.createElement("section");
   constraintsSection.className = "cs-diagnostics__section";
-  appendText(constraintsSection, "h3", "P3 constraints");
+  appendText(constraintsSection, "h3", "P4 constraints");
   appendPillList(constraintsSection, viewModel.constraints);
   article.appendChild(constraintsSection);
 

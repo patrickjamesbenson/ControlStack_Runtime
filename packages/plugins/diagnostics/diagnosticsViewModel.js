@@ -53,6 +53,7 @@ function readProjectBrowser(adapter, snapshots, downstream) {
     save: {},
     restore: {},
     hydrate: {},
+    handoffShare: {},
   };
 }
 
@@ -90,7 +91,9 @@ export function createDiagnosticsViewModel({ adapter, diagnosticsState }) {
   const save = projectBrowser.save || {};
   const restore = projectBrowser.restore || {};
   const hydrate = projectBrowser.hydrate || {};
+  const handoffShare = projectBrowser.handoffShare || {};
   const moduleResults = hydrate.moduleResults || {};
+  const packageSummary = handoffShare.packageSummary || {};
 
   return {
     pluginId: adapter.pluginId,
@@ -148,6 +151,8 @@ export function createDiagnosticsViewModel({ adapter, diagnosticsState }) {
       saveStatus: project.save?.status || project.saveState?.status || "deferred",
       restoreStatus: project.restore?.status || project.restoreState?.status || "deferred",
       hydrateStatus: project.hydrate?.status || "idle",
+      handoffStatus: project.handoff?.status || "ready",
+      lastPackageId: project.handoff?.lastPreparedPackageId || "none",
     },
     projectBrowser: {
       owner: projectBrowser.owner,
@@ -164,8 +169,8 @@ export function createDiagnosticsViewModel({ adapter, diagnosticsState }) {
       save: projectBrowser.capabilities?.save ? "live" : "deferred",
       restore: projectBrowser.capabilities?.restore ? "live" : "deferred",
       hydrate: projectBrowser.capabilities?.hydrate ? "live" : "deferred",
-      handoff: projectBrowser.capabilities?.handoff ? "live" : "deferred",
-      share: projectBrowser.capabilities?.share ? "live" : "deferred",
+      handoff: projectBrowser.capabilities?.handoff ? "package-live" : "deferred",
+      share: projectBrowser.capabilities?.share ? "package-live" : "deferred",
       projects: (projectBrowser.projects || []).map((item) => `${item.readOnly ? "fixture" : "runtime"}:${item.projectId}:${item.title}:restore-${item.restoreEligible ? "enabled" : "disabled"}`),
     },
     saveEnvelope: {
@@ -180,8 +185,10 @@ export function createDiagnosticsViewModel({ adapter, diagnosticsState }) {
       updateExistingEnvelope: stateLabel(save.capabilities?.updateExistingEnvelope),
       restoreLive: stateLabel(save.capabilities?.restore),
       hydrateLive: stateLabel(save.capabilities?.hydrate),
-      handoffLive: "no",
-      shareLive: "no",
+      handoffShareLive: stateLabel(save.capabilities?.handoff || save.capabilities?.share),
+      externalDeliveryLive: "no",
+      emailSendLive: "no",
+      hubspotWriteLive: "no",
     },
     restoreHydrate: {
       restoreOwner: restore.owner || "shell",
@@ -198,9 +205,25 @@ export function createDiagnosticsViewModel({ adapter, diagnosticsState }) {
       hydrateLive: stateLabel(hydrate.live),
       lastHydratedEnvelopeId: hydrate.lastHydratedEnvelopeId || "none",
       lastHydratedModules: (hydrate.lastHydratedModules || []).join(", ") || "none",
-      handoffLive: "no",
-      shareLive: "no",
+      ownershipUnchanged: "yes",
       moduleResults: Object.values(moduleResults).map((result) => `${result.moduleId}:${result.status}:${result.reason}`),
+    },
+    handoffShare: {
+      owner: handoffShare.owner || "shell",
+      status: handoffShare.status || "ready",
+      live: stateLabel(handoffShare.live),
+      source: handoffShare.source || "p4-shell-handoff-share",
+      packagePreparationOnly: stateLabel(handoffShare.packagePreparationOnly),
+      lastPreparedPackageId: handoffShare.lastPreparedPackageId || "none",
+      lastPreparedEnvelopeId: handoffShare.lastPreparedEnvelopeId || "none",
+      lastPreparedProjectId: handoffShare.lastPreparedProjectId || "none",
+      lastPreparedAt: handoffShare.lastPreparedAt || "none",
+      lastError: handoffShare.lastError || "none",
+      packageSummary: packageSummary.packageId ? `${packageSummary.packageId}:${packageSummary.status}:${packageSummary.projectId}` : "none",
+      moduleSummaries: (packageSummary.modules || []).join(", ") || "none",
+      externalDeliveryLive: "no",
+      emailSendLive: "no",
+      hubspotWriteLive: "no",
     },
     company: {
       owner: company.owner || "shell",
@@ -218,6 +241,10 @@ export function createDiagnosticsViewModel({ adapter, diagnosticsState }) {
       owner: snapshots.handoff.owner,
       status: snapshots.handoff.status,
       available: stateLabel(snapshots.handoff.available),
+      packagePreparationOnly: stateLabel(snapshots.handoff.packagePreparationOnly),
+      externalDelivery: stateLabel(snapshots.handoff.externalDelivery),
+      emailSend: stateLabel(snapshots.handoff.emailSend),
+      hubspotWrite: stateLabel(snapshots.handoff.hubspotWrite),
     },
     visibility: {
       owner: visibility.owner,
@@ -265,21 +292,19 @@ export function createDiagnosticsViewModel({ adapter, diagnosticsState }) {
       statuses: pluginStatus.plugins || [],
     },
     constraints: [
-      "Restore is shell-owned and live",
-      "Hydrate is shell-orchestrated and live",
-      "Current identity remains shell-authoritative after restore",
-      "Actual role and display role remain shell-authoritative after restore",
-      "Visibility and flags remain current shell policy after restore",
-      "Fixture/read-only envelopes are disabled for restore",
-      "Missing module hydrate handlers report safe no-handler results",
-      "Handoff / share is not live",
+      "Handoff/share package preparation is shell-owned and live",
+      "Prepared package is distinct from delivered package",
+      "External delivery is not live",
+      "Email sending is not live",
+      "HubSpot writes are not live",
+      "Restore / hydrate ownership remains unchanged",
+      "Modules contribute summaries/placeholders/references only",
       "Scene Builder remains structural only",
       "EGRES route is not registered",
       "Compliance Matters route is not registered",
       "Ceiling route is not registered",
       "Engine / RunTable / payload are out of scope",
       "Diagnostics is read-only",
-      "HubSpot write flows are deferred",
     ],
   };
 }

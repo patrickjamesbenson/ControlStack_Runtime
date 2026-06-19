@@ -187,7 +187,8 @@ a {
 }
 
 .cs-shell__project-browser-save,
-.cs-shell__project-browser-restore {
+.cs-shell__project-browser-restore,
+.cs-shell__project-browser-handoff {
   width: 100%;
   margin-bottom: 12px;
   padding: 9px 12px;
@@ -199,12 +200,14 @@ a {
   font-weight: 650;
 }
 
-.cs-shell__project-browser-restore {
+.cs-shell__project-browser-restore,
+.cs-shell__project-browser-handoff {
   margin-top: -4px;
 }
 
 .cs-shell__project-browser-save:disabled,
-.cs-shell__project-browser-restore:disabled {
+.cs-shell__project-browser-restore:disabled,
+.cs-shell__project-browser-handoff:disabled {
   cursor: not-allowed;
   opacity: 0.55;
 }

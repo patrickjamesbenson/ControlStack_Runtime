@@ -55,7 +55,7 @@ function readDiagnostics(service) {
   return {
     owner: service.owner,
     status: service.status,
-    phase: "p3-restore-hydrate",
+    phase: "p4-handoff-share",
   };
 }
 
@@ -69,7 +69,7 @@ export function createShellContext({ route, services, mountedModuleId = null }) 
   const diagnostics = readDiagnostics(services.diagnostics);
   const baseContext = {
     contractVersion: WORKSPACE_CONTRACT_VERSION,
-    phase: "p3-restore-hydrate",
+    phase: "p4-handoff-share",
     route,
     identity,
     project,
@@ -93,6 +93,7 @@ export function createShellContext({ route, services, mountedModuleId = null }) 
     ...baseContext,
     projectBrowser,
     moduleHydrate: projectBrowser.hydrate || null,
+    handoffShare: projectBrowser.handoffShare || null,
   };
 }
 
@@ -104,6 +105,7 @@ export function createModuleUpdateSnapshot(context) {
     currentProject: context.currentProject,
     projectBrowser: context.projectBrowser,
     moduleHydrate: context.moduleHydrate,
+    handoffShare: context.handoffShare,
     company: context.company,
     crm: context.crm,
     visibility: context.visibility,

@@ -75,6 +75,7 @@ export function createProjectService({ eventBus } = {}) {
     selectedAt: new Date().toISOString(),
     restoredProject: null,
     lastRestore: null,
+    lastHandoffShare: null,
   };
 
   function selectedFixture() {
@@ -99,7 +100,7 @@ export function createProjectService({ eventBus } = {}) {
         readiness: activeProject.readiness,
         source: activeProject.source,
         browserReady: true,
-        browserStatus: "p3-restore-hydrate-ready",
+        browserStatus: "p4-handoff-share-ready",
         restoredFromEnvelope: restored,
         restoredAt: state.lastRestore?.restoredAt || null,
         restoredEnvelopeId: state.lastRestore?.envelopeId || null,
@@ -118,7 +119,7 @@ export function createProjectService({ eventBus } = {}) {
         available: true,
         live: true,
         source: "p2-shell-save-envelope",
-        reason: "Save envelope remains shell-owned and live. Restore/hydrate is now live; handoff/share remains deferred.",
+        reason: "Save envelope remains shell-owned and live. Restore/hydrate and handoff/share package preparation are live.",
       },
       restore: {
         owner: "shell",
@@ -129,7 +130,7 @@ export function createProjectService({ eventBus } = {}) {
         lastRestoredEnvelopeId: state.lastRestore?.envelopeId || null,
         lastRestoredProjectId: state.lastRestore?.projectId || null,
         lastRestoredAt: state.lastRestore?.restoredAt || null,
-        reason: "P3 Restore/hydrate is shell-owned and live.",
+        reason: "P3 Restore/hydrate remains shell-owned and live.",
       },
       hydrate: {
         owner: "shell",
@@ -142,10 +143,19 @@ export function createProjectService({ eventBus } = {}) {
       },
       handoff: {
         owner: "shell",
-        status: "deferred",
-        available: false,
-        live: false,
-        reason: "P3 Restore/hydrate does not implement handoff/share. Handoff/share is deferred to P4.",
+        status: state.lastHandoffShare?.status || "ready",
+        available: true,
+        live: true,
+        source: "p4-shell-handoff-share",
+        packagePreparationOnly: true,
+        lastPreparedPackageId: state.lastHandoffShare?.packageId || null,
+        lastPreparedEnvelopeId: state.lastHandoffShare?.envelopeId || null,
+        lastPreparedProjectId: state.lastHandoffShare?.projectId || null,
+        lastPreparedAt: state.lastHandoffShare?.preparedAt || null,
+        externalDelivery: false,
+        emailSend: false,
+        hubspotWrite: false,
+        reason: "P4 prepares handoff/share packages only. External delivery, email, and HubSpot writes remain deferred.",
       },
       dirty: false,
     };
@@ -176,6 +186,7 @@ export function createProjectService({ eventBus } = {}) {
       }
       state.restoredProject = null;
       state.lastRestore = null;
+      state.lastHandoffShare = null;
       state.selectedProjectId = fixture.projectId;
       state.selectedAt = new Date().toISOString();
       eventBus?.emit("project:switch", { projectId: fixture.projectId, reason });
@@ -190,7 +201,7 @@ export function createProjectService({ eventBus } = {}) {
       return {
         accepted: false,
         status: "delegate-to-project-browser",
-        reason: "P3 save remains live through the shell-owned Project Browser service.",
+        reason: "P4 save remains live through the shell-owned Project Browser service.",
         project: snapshot(),
       };
     },
@@ -222,11 +233,35 @@ export function createProjectService({ eventBus } = {}) {
         project: nextSnapshot,
       };
     },
+    recordHandoffSharePackage(result = {}) {
+      if (!result.accepted) {
+        return {
+          accepted: false,
+          status: result.status || "failed",
+          reason: result.reason || "Handoff/share package was not prepared.",
+          project: snapshot(),
+        };
+      }
+      state.lastHandoffShare = {
+        status: result.status || "prepared",
+        packageId: result.packageId,
+        envelopeId: result.envelopeId,
+        projectId: result.projectId,
+        preparedAt: result.preparedAt,
+      };
+      const nextSnapshot = notify("handoff-share-package-prepared");
+      eventBus?.emit("project:handoff-share:prepared", { packageId: result.packageId, project: nextSnapshot });
+      return {
+        accepted: true,
+        status: "prepared",
+        project: nextSnapshot,
+      };
+    },
     restoreProject() {
       return {
         accepted: false,
         status: "delegate-to-project-browser",
-        reason: "P3 restore is live through the shell-owned Project Browser service.",
+        reason: "P4 restore remains live through the shell-owned Project Browser service.",
         project: snapshot(),
       };
     },

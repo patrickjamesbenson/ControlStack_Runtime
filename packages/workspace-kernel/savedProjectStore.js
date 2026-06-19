@@ -1,3 +1,4 @@
+import { createHandoffSharePackage, summariseHandoffSharePackage } from "./handoffSharePackage.js";
 import { createHydrationPayloadsFromEnvelope, createHydrationResultsFromEnvelope, createSavedProjectEnvelope, summariseProjectEnvelope, validateSavedProjectEnvelope } from "./projectEnvelope.js";
 
 function clone(value) {
@@ -119,8 +120,8 @@ const FIXTURE_ENVELOPES = Object.freeze([
 export function createSavedProjectStore({ eventBus } = {}) {
   const state = {
     owner: "shell",
-    status: "restore-ready",
-    source: "p3-shell-restore-hydrate",
+    status: "handoff-share-ready",
+    source: "p4-shell-handoff-share",
     fixtureEnvelopes: FIXTURE_ENVELOPES.map(clone),
     savedEnvelopes: [],
     save: {
@@ -153,6 +154,24 @@ export function createSavedProjectStore({ eventBus } = {}) {
       lastHydratedModules: [],
       modulePayloads: {},
       moduleResults: {},
+    },
+    handoffShare: {
+      owner: "shell",
+      status: "ready",
+      live: true,
+      source: "p4-shell-handoff-share",
+      packagePreparationOnly: true,
+      lastPreparedPackageId: null,
+      lastPreparedEnvelopeId: null,
+      lastPreparedProjectId: null,
+      lastPreparedAt: null,
+      lastError: null,
+      package: null,
+      delivery: {
+        externalDelivery: false,
+        emailSend: false,
+        hubspotWrite: false,
+      },
     },
   };
 
@@ -191,8 +210,11 @@ export function createSavedProjectStore({ eventBus } = {}) {
         inspect: true,
         restore: true,
         hydrate: true,
-        handoff: false,
-        share: false,
+        handoff: true,
+        share: true,
+        externalDelivery: false,
+        emailSend: false,
+        hubspotWrite: false,
       },
     };
   }
@@ -206,14 +228,38 @@ export function createSavedProjectStore({ eventBus } = {}) {
         save: true,
         restore: true,
         hydrate: true,
-        handoff: false,
-        share: false,
+        handoff: true,
+        share: true,
+        externalDelivery: false,
+        emailSend: false,
+        hubspotWrite: false,
       },
     };
   }
 
   function getHydrateSnapshot() {
     return clone(state.hydrate);
+  }
+
+  function getHandoffShareSnapshot() {
+    return {
+      ...clone(state.handoffShare),
+      packageSummary: summariseHandoffSharePackage(state.handoffShare.package),
+      capabilities: {
+        list: true,
+        inspect: true,
+        save: true,
+        restore: true,
+        hydrate: true,
+        prepareHandoff: true,
+        prepareShare: true,
+        handoff: true,
+        share: true,
+        externalDelivery: false,
+        emailSend: false,
+        hubspotWrite: false,
+      },
+    };
   }
 
   function getStoreSnapshot(context = {}) {
@@ -234,14 +280,18 @@ export function createSavedProjectStore({ eventBus } = {}) {
       save: getSaveSnapshot(),
       restore: getRestoreSnapshot(),
       hydrate: getHydrateSnapshot(),
+      handoffShare: getHandoffShareSnapshot(),
       capabilities: {
         list: true,
         inspect: true,
         save: true,
         restore: true,
         hydrate: true,
-        handoff: false,
-        share: false,
+        handoff: true,
+        share: true,
+        externalDelivery: false,
+        emailSend: false,
+        hubspotWrite: false,
       },
     };
   }
@@ -369,6 +419,54 @@ export function createSavedProjectStore({ eventBus } = {}) {
     return result;
   }
 
+  function resolvePackageEnvelope(context = {}) {
+    const envelopeId = context.project?.metadata?.restoredEnvelopeId || state.restore.lastRestoredEnvelopeId || state.save.lastSavedEnvelopeId || context.projectBrowser?.selectedProjectId || null;
+    return envelopeId ? getProjectEnvelope(envelopeId) : null;
+  }
+
+  function prepareHandoffSharePackage(context = {}) {
+    try {
+      state.handoffShare.status = "preparing";
+      state.handoffShare.lastError = null;
+      const envelope = resolvePackageEnvelope(context);
+      const pkg = createHandoffSharePackage({
+        context,
+        envelope,
+        save: getSaveSnapshot(),
+        restore: getRestoreSnapshot(),
+        hydrate: getHydrateSnapshot(),
+      });
+      state.handoffShare.status = "prepared";
+      state.handoffShare.package = pkg;
+      state.handoffShare.lastPreparedPackageId = pkg.packageId;
+      state.handoffShare.lastPreparedEnvelopeId = pkg.envelopeId;
+      state.handoffShare.lastPreparedProjectId = pkg.projectId;
+      state.handoffShare.lastPreparedAt = pkg.preparedAt;
+      const result = {
+        accepted: true,
+        status: "prepared",
+        packageId: pkg.packageId,
+        projectId: pkg.projectId,
+        envelopeId: pkg.envelopeId,
+        preparedAt: pkg.preparedAt,
+        package: clone(pkg),
+        delivery: clone(pkg.delivery),
+        browser: getStoreSnapshot(context),
+      };
+      eventBus?.emit("saved-project-store:handoff-share-prepared", result);
+      return result;
+    } catch (error) {
+      state.handoffShare.status = "failed";
+      state.handoffShare.lastError = error?.message || String(error || "Unknown handoff/share preparation error");
+      return {
+        accepted: false,
+        status: "failed",
+        reason: state.handoffShare.lastError,
+        browser: getStoreSnapshot(context),
+      };
+    }
+  }
+
   return {
     owner: state.owner,
     status: state.status,
@@ -378,20 +476,16 @@ export function createSavedProjectStore({ eventBus } = {}) {
     getSaveSnapshot,
     getRestoreSnapshot,
     getHydrateSnapshot,
+    getHandoffShareSnapshot,
     createCurrentProjectPreviewEnvelope,
     saveCurrentProjectEnvelope,
     saveProjectEnvelope(context = {}, moduleContributions = {}) {
       return saveCurrentProjectEnvelope(context, moduleContributions);
     },
     restoreProjectEnvelope,
-    requestHandoff() {
-      const result = {
-        accepted: false,
-        status: "deferred",
-        reason: "P3 Restore/hydrate does not implement handoff/share. Handoff/share is deferred to P4.",
-      };
-      eventBus?.emit("saved-project-store:handoff-rejected", result);
-      return result;
+    prepareHandoffSharePackage,
+    requestHandoff(context = {}) {
+      return prepareHandoffSharePackage(context);
     },
   };
 }
