@@ -55,7 +55,7 @@ function readDiagnostics(service) {
   return {
     owner: service.owner,
     status: service.status,
-    phase: "p1-project-browser-read-only-foundation",
+    phase: "p2-save-envelope",
   };
 }
 
@@ -65,28 +65,33 @@ export function createShellContext({ route, services, mountedModuleId = null }) 
   const identity = readIdentity(services.identity);
   const visibility = services.visibility.getVisibilitySnapshot({ identity, project });
   const downstream = services.downstream.getDownstreamContextSnapshot({ identity, project, visibility });
-  const projectBrowser = services.projectBrowser.getProjectBrowserSnapshot({ identity, project, visibility, downstream });
-  return {
+  const flags = services.flags.getFlagSnapshot();
+  const diagnostics = readDiagnostics(services.diagnostics);
+  const baseContext = {
     contractVersion: WORKSPACE_CONTRACT_VERSION,
-    phase: "p1-project-browser-read-only-foundation",
+    phase: "p2-save-envelope",
     route,
     identity,
     project,
     currentProject: project.currentProject,
-    projectBrowser,
     company: crm.company,
     crm,
     handoff: services.handoff.getHandoffSnapshot(),
     visibility,
     downstream,
-    flags: services.flags.getFlagSnapshot(),
+    flags,
     lifecycle: {
       owner: "shell",
       mountedModuleId,
       mountedAt: null,
       lastUpdatedAt: null,
     },
-    diagnostics: readDiagnostics(services.diagnostics),
+    diagnostics,
+  };
+  const projectBrowser = services.projectBrowser.getProjectBrowserSnapshot(baseContext);
+  return {
+    ...baseContext,
+    projectBrowser,
   };
 }
 

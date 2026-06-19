@@ -81,7 +81,7 @@ export function createProjectService({ eventBus } = {}) {
         readiness: currentProject.readiness,
         source: currentProject.source,
         browserReady: true,
-        browserStatus: "p1-read-only-foundation",
+        browserStatus: "p2-save-ready-browser",
       },
       selection: {
         owner: "shell",
@@ -92,21 +92,25 @@ export function createProjectService({ eventBus } = {}) {
       },
       save: {
         owner: "shell",
-        status: "deferred",
-        available: false,
-        reason: "P1 Project Browser is read-only. Save is deferred to the next approved phase.",
+        status: "ready",
+        available: true,
+        live: true,
+        source: "p2-shell-save-envelope",
+        reason: "P2 Save envelope is shell-owned and live. Restore/hydrate and handoff/share remain deferred.",
       },
       restore: {
         owner: "shell",
         status: "deferred",
         available: false,
-        reason: "P1 Project Browser is read-only. Restore/hydrate is deferred to a later approved phase.",
+        live: false,
+        reason: "P2 Save envelope does not implement restore/hydrate. Restore/hydrate is deferred to P3.",
       },
       handoff: {
         owner: "shell",
         status: "deferred",
         available: false,
-        reason: "P1 Project Browser is read-only. Handoff/share is deferred to a later approved phase.",
+        live: false,
+        reason: "P2 Save envelope does not implement handoff/share. Handoff/share is deferred to P4.",
       },
       dirty: false,
     };
@@ -148,8 +152,8 @@ export function createProjectService({ eventBus } = {}) {
     saveCurrentProject() {
       return {
         accepted: false,
-        status: "deferred",
-        reason: "P1 Project Browser is read-only. Save is not live yet.",
+        status: "delegate-to-project-browser",
+        reason: "P2 save is live through the shell-owned Project Browser service.",
         project: snapshot(),
       };
     },
@@ -157,7 +161,7 @@ export function createProjectService({ eventBus } = {}) {
       return {
         accepted: false,
         status: "deferred",
-        reason: "P1 Project Browser is read-only. Restore/hydrate is not live yet.",
+        reason: "P2 Save envelope does not implement restore/hydrate. Restore/hydrate is deferred to P3.",
         project: snapshot(),
       };
     },

@@ -53,7 +53,7 @@ export function renderDiagnosticsView(container, viewModel) {
   const intro = document.createElement("div");
   appendText(intro, "p", "Optional plugin", "cs-shell__eyebrow");
   appendText(intro, "h2", "Diagnostics panel");
-  appendText(intro, "p", "Diagnostics reads shell-owned snapshots, including Project Browser P1 read-only state.");
+  appendText(intro, "p", "Diagnostics reads shell-owned snapshots, including P2 save envelope state.");
   article.appendChild(intro);
 
   appendSection(article, "Route and shell", [
@@ -65,20 +65,38 @@ export function renderDiagnosticsView(container, viewModel) {
     ["Registered modules", viewModel.shell.registeredModules],
   ]);
 
-  appendSection(article, "Project Browser P1", [
+  appendSection(article, "Project Browser", [
     ["owner", viewModel.projectBrowser.owner],
     ["status", viewModel.projectBrowser.status],
-    ["read only", viewModel.projectBrowser.readOnly],
+    ["browser read only", viewModel.projectBrowser.readOnly],
     ["non-boot-critical", viewModel.projectBrowser.nonBootCritical],
     ["current project", viewModel.projectBrowser.currentProject],
     ["current project id", viewModel.projectBrowser.currentProjectId],
-    ["saved count", viewModel.projectBrowser.savedCount],
+    ["runtime saved count", viewModel.projectBrowser.savedCount],
+    ["fixture count", viewModel.projectBrowser.fixtureCount],
+    ["total count", viewModel.projectBrowser.totalCount],
     ["safe empty", viewModel.projectBrowser.safeEmpty],
     ["save", viewModel.projectBrowser.save],
     ["restore", viewModel.projectBrowser.restore],
     ["hydrate", viewModel.projectBrowser.hydrate],
     ["handoff", viewModel.projectBrowser.handoff],
     ["share", viewModel.projectBrowser.share],
+  ]);
+
+  appendSection(article, "Save envelope", [
+    ["owner", viewModel.saveEnvelope.owner],
+    ["status", viewModel.saveEnvelope.status],
+    ["live", viewModel.saveEnvelope.live],
+    ["source", viewModel.saveEnvelope.source],
+    ["last envelope", viewModel.saveEnvelope.lastSavedEnvelopeId],
+    ["last project", viewModel.saveEnvelope.lastSavedProjectId],
+    ["last saved", viewModel.saveEnvelope.lastSavedAt],
+    ["last error", viewModel.saveEnvelope.lastError],
+    ["update existing", viewModel.saveEnvelope.updateExistingEnvelope],
+    ["restore live", viewModel.saveEnvelope.restoreLive],
+    ["hydrate live", viewModel.saveEnvelope.hydrateLive],
+    ["handoff live", viewModel.saveEnvelope.handoffLive],
+    ["share live", viewModel.saveEnvelope.shareLive],
   ]);
 
   const browserSection = document.createElement("section");
@@ -178,7 +196,7 @@ export function renderDiagnosticsView(container, viewModel) {
 
   const constraintsSection = document.createElement("section");
   constraintsSection.className = "cs-diagnostics__section";
-  appendText(constraintsSection, "h3", "P1 constraints");
+  appendText(constraintsSection, "h3", "P2 constraints");
   appendPillList(constraintsSection, viewModel.constraints);
   article.appendChild(constraintsSection);
 

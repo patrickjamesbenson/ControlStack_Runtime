@@ -75,22 +75,33 @@ export function createShellServices() {
         return {
           owner: "shell",
           status: "placeholder",
-          phase: "p1-project-browser-read-only-foundation",
+          phase: "p2-save-envelope",
           contract: createContractDiagnostics(),
           responsiveRequirement: "desktop-tablet-mobile",
           projectSelection: {
             owner: "shell",
             status: "selectable",
-            persistence: "not-enabled",
+            persistence: "save-envelope-live",
           },
           projectBrowser: {
             owner: "shell",
-            status: "read-only-browser-ready",
+            status: "save-ready-browser",
             readOnly: true,
-            saveLive: false,
+            saveLive: true,
             restoreLive: false,
             hydrateLive: false,
             handoffLive: false,
+            shareLive: false,
+          },
+          saveEnvelope: {
+            owner: "shell",
+            status: "ready",
+            live: true,
+            source: "p2-shell-save-envelope",
+            restoreLive: false,
+            hydrateLive: false,
+            handoffLive: false,
+            shareLive: false,
           },
           identityVisibility: {
             owner: "shell",
@@ -112,7 +123,7 @@ export function createShellServices() {
         return {
           accepted: true,
           event,
-          phase: "p1-project-browser-read-only-foundation",
+          phase: "p2-save-envelope",
         };
       },
     },

@@ -24,6 +24,7 @@ const visibilitySummary = document.getElementById("cs-shell-visibility-summary")
 let projectBrowserPanel = null;
 let projectBrowserSummary = null;
 let projectBrowserList = null;
+let projectBrowserSaveButton = null;
 
 function setStatus(message) {
   if (statusEl) statusEl.textContent = message;
@@ -45,6 +46,13 @@ function appendDefinitionListRows(list, rows) {
   }
 }
 
+function appendProjectBrowserLine(parent, text, tagName = "span") {
+  const element = document.createElement(tagName);
+  element.textContent = text;
+  parent.appendChild(element);
+  return element;
+}
+
 function ensureModuleNavLink(moduleId, label) {
   const nav = document.querySelector(".cs-shell__sidebar nav");
   if (!nav || document.querySelector(`[data-module-link="${moduleId}"]`)) return;
@@ -63,19 +71,23 @@ function ensureProjectBrowserPanel() {
 
   projectBrowserPanel = document.createElement("section");
   projectBrowserPanel.className = "cs-shell__project-browser-card";
-  projectBrowserPanel.setAttribute("aria-label", "Project Browser read-only foundation");
+  projectBrowserPanel.setAttribute("aria-label", "Project Browser save envelope foundation");
 
   const heading = document.createElement("h3");
   heading.textContent = "Project Browser";
   const note = document.createElement("p");
-  note.textContent = "Read-only P1 browser foundation. Save, restore, hydrate, handoff, and share are not live.";
+  note.textContent = "P2 save envelope: Save is live and shell-owned. Restore, hydrate, handoff, and share are not live.";
+  projectBrowserSaveButton = document.createElement("button");
+  projectBrowserSaveButton.type = "button";
+  projectBrowserSaveButton.className = "cs-shell__project-browser-save";
+  projectBrowserSaveButton.textContent = "Save Project";
   projectBrowserSummary = document.createElement("dl");
   projectBrowserSummary.id = "cs-shell-project-browser-summary";
   projectBrowserList = document.createElement("ul");
   projectBrowserList.id = "cs-shell-project-browser-list";
   projectBrowserList.className = "cs-shell__project-browser-list";
 
-  projectBrowserPanel.append(heading, note, projectBrowserSummary, projectBrowserList);
+  projectBrowserPanel.append(heading, note, projectBrowserSaveButton, projectBrowserSummary, projectBrowserList);
   projectCard.insertAdjacentElement("afterend", projectBrowserPanel);
 }
 
@@ -94,7 +106,7 @@ function renderContextSummary(context) {
     ["current", readProjectTitle(context.project)],
     ["browser", `${context.projectBrowser.owner}:${context.projectBrowser.status}`],
     ["visibility", `${context.visibility.owner}:${context.visibility.status}`],
-    ["save", `${context.project.save.owner}:${context.project.save.available ? "available" : "deferred"}`],
+    ["save", `${context.project.save.owner}:${context.project.save.available ? "live" : "deferred"}`],
     ["restore", `${context.project.restore.owner}:${context.project.restore.available ? "available" : "deferred"}`],
     ["handoff", `${context.handoff.owner}:${context.handoff.status}`],
     ["flags", `${context.flags.owner}:${context.flags.status}`],
@@ -130,29 +142,44 @@ function renderProjectBrowser({ context }) {
   ensureProjectBrowserPanel();
   if (!projectBrowserSummary || !projectBrowserList) return;
   const browser = context.projectBrowser;
+  const save = browser.save || {};
   appendDefinitionListRows(projectBrowserSummary, [
     ["owner", browser.owner],
     ["status", browser.status],
-    ["read only", browser.readOnly ? "yes" : "no"],
+    ["browser read only", browser.readOnly ? "yes" : "no"],
     ["current", browser.currentProject?.title || "No project loaded"],
     ["current id", browser.currentProject?.projectId || "none"],
-    ["saved count", browser.projectCount],
+    ["saved count", browser.savedCount || 0],
+    ["fixture count", browser.fixtureCount || 0],
     ["save", browser.capabilities?.save ? "live" : "deferred"],
+    ["save status", save.status || "ready"],
+    ["last saved", save.lastSavedAt || "none"],
+    ["last envelope", save.lastSavedEnvelopeId || "none"],
     ["restore", browser.capabilities?.restore ? "live" : "deferred"],
-    ["handoff", browser.capabilities?.handoff ? "live" : "deferred"],
+    ["hydrate", browser.capabilities?.hydrate ? "live" : "deferred"],
+    ["handoff/share", browser.capabilities?.handoff || browser.capabilities?.share ? "live" : "deferred"],
   ]);
+  if (projectBrowserSaveButton) {
+    projectBrowserSaveButton.disabled = browser.capabilities?.save !== true;
+    projectBrowserSaveButton.textContent = save.status === "saving" ? "Saving..." : "Save Project";
+  }
 
   clearElement(projectBrowserList);
   const projects = browser.projects || [];
   if (projects.length === 0) {
     const item = document.createElement("li");
-    item.textContent = browser.emptyStateMessage || "No saved projects found. Browser remains safe and read-only.";
+    item.textContent = browser.emptyStateMessage || "No saved projects found. Save is ready.";
     projectBrowserList.appendChild(item);
     return;
   }
   for (const project of projects) {
     const item = document.createElement("li");
-    item.innerHTML = `<strong>${project.title}</strong><span>${project.client} · ${project.site}</span><span>${project.lifecycleStatus} · ${project.updatedAt}</span>`;
+    item.className = project.readOnly ? "cs-shell__project-browser-item is-fixture" : "cs-shell__project-browser-item is-runtime-save";
+    appendProjectBrowserLine(item, project.title, "strong");
+    appendProjectBrowserLine(item, `${project.client} · ${project.site}`);
+    appendProjectBrowserLine(item, `${project.readOnly ? "fixture/read-only" : "runtime save"} · ${project.lifecycleStatus} · ${project.savedAt || project.updatedAt}`);
+    appendProjectBrowserLine(item, `saved by ${project.savedBy} · modules: ${(project.moduleIds || []).join(", ") || "none"}`);
+    appendProjectBrowserLine(item, `envelope: ${project.envelopeId || project.projectId}`);
     projectBrowserList.appendChild(item);
   }
 }
@@ -387,6 +414,16 @@ function bootWorkspaceShell() {
     setStatus(`Selected ${readProjectTitle(nextContext.project)}. Project context updated.`);
   }
 
+  function handleProjectBrowserSave() {
+    const result = services.projectBrowser.saveProject(context);
+    const nextContext = refreshContext("project-save-envelope");
+    if (!result.accepted) {
+      setStatus(`Save failed: ${result.reason || result.status}`);
+      return;
+    }
+    setStatus(`Saved ${readProjectTitle(nextContext.project)}. Restore/hydrate and handoff/share remain deferred.`);
+  }
+
   function handleIdentityChange(event) {
     const result = services.identity.setIdentityById(event.target.value, "shell-identity-selection-change");
     if (!result.accepted) {
@@ -431,6 +468,7 @@ function bootWorkspaceShell() {
   ensureModuleNavLink("scene_builder", "Scene Builder");
 
   refreshContext("initial-render");
+  projectBrowserSaveButton?.addEventListener("click", handleProjectBrowserSave);
   projectSelect?.addEventListener("change", handleProjectSelectionChange);
   identitySelect?.addEventListener("change", handleIdentityChange);
   roleOverrideToggle?.addEventListener("change", handleRoleOverrideToggle);
@@ -439,7 +477,7 @@ function bootWorkspaceShell() {
   projectModeSelect?.addEventListener("change", handleProjectModeChange);
 
   if (showHomeIfRequested(route.moduleId)) {
-    setStatus("Workspace home mounted. Project Browser is read-only; save/restore/handoff are deferred.");
+    setStatus("Workspace home mounted. Save envelope is live; restore/hydrate and handoff/share are deferred.");
     scheduleOptionalDiagnosticsPlugin({ services, getContext: () => context, registry, onPluginReady: rememberDiagnosticsPlugin });
     return;
   }
@@ -455,7 +493,7 @@ function bootWorkspaceShell() {
   try {
     mountedModuleApi = moduleApi;
     moduleApi.mount({ container: moduleHost, services, context });
-    setStatus(`Mounted ${route.moduleId}. Project Browser is read-only; save/restore/handoff are deferred.`);
+    setStatus(`Mounted ${route.moduleId}. Save envelope is live; restore/hydrate and handoff/share are deferred.`);
     services.eventBus.emit("module:mounted", { moduleId: route.moduleId, route });
     scheduleOptionalDiagnosticsPlugin({ services, getContext: () => context, registry, onPluginReady: rememberDiagnosticsPlugin });
   } catch (error) {

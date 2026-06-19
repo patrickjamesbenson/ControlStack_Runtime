@@ -186,6 +186,23 @@ a {
   display: none;
 }
 
+.cs-shell__project-browser-save {
+  width: 100%;
+  margin-bottom: 12px;
+  padding: 9px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  border-radius: 10px;
+  background: #ffffff;
+  color: #172033;
+  cursor: pointer;
+  font-weight: 650;
+}
+
+.cs-shell__project-browser-save:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
 .cs-shell__context-card dl,
 .cs-shell__project-card dl,
 .cs-shell__project-browser-card dl,
@@ -231,6 +248,16 @@ a {
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.05);
   font-size: 12px;
+}
+
+.cs-shell__project-browser-list li.is-runtime-save {
+  border-style: solid;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.cs-shell__project-browser-list li.is-fixture {
+  border-style: dashed;
+  opacity: 0.82;
 }
 
 .cs-shell__project-browser-list strong {

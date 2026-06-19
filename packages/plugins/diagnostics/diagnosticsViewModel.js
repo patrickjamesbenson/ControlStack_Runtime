@@ -39,6 +39,8 @@ function readProjectBrowser(adapter, snapshots, downstream) {
     project: snapshots.project,
     visibility: snapshots.visibility,
     downstream,
+    flags: snapshots.flags,
+    contractVersion: snapshots.context?.contractVersion,
   }) || snapshots.context?.projectBrowser || {
     owner: "shell",
     status: "unavailable",
@@ -48,6 +50,7 @@ function readProjectBrowser(adapter, snapshots, downstream) {
     capabilities: {},
     currentProject: {},
     deferred: {},
+    save: {},
   };
 }
 
@@ -82,6 +85,7 @@ export function createDiagnosticsViewModel({ adapter, diagnosticsState }) {
   const projectBrowser = readProjectBrowser(adapter, snapshots, downstream);
   const selector = downstream.selector || {};
   const sceneDecision = decisionFor(visibility, "scene_builder");
+  const save = projectBrowser.save || {};
 
   return {
     pluginId: adapter.pluginId,
@@ -143,14 +147,31 @@ export function createDiagnosticsViewModel({ adapter, diagnosticsState }) {
       nonBootCritical: stateLabel(projectBrowser.nonBootCritical),
       currentProject: projectBrowser.currentProject?.title || "No project loaded",
       currentProjectId: projectBrowser.currentProject?.projectId || "none",
-      savedCount: projectBrowser.projectCount || 0,
+      savedCount: projectBrowser.savedCount || 0,
+      fixtureCount: projectBrowser.fixtureCount || 0,
+      totalCount: projectBrowser.projectCount || 0,
       safeEmpty: stateLabel(projectBrowser.safeEmpty),
       save: projectBrowser.capabilities?.save ? "live" : "deferred",
       restore: projectBrowser.capabilities?.restore ? "live" : "deferred",
       hydrate: projectBrowser.capabilities?.hydrate ? "live" : "deferred",
       handoff: projectBrowser.capabilities?.handoff ? "live" : "deferred",
       share: projectBrowser.capabilities?.share ? "live" : "deferred",
-      projects: (projectBrowser.projects || []).map((item) => `${item.projectId}:${item.title}:${item.lifecycleStatus}`),
+      projects: (projectBrowser.projects || []).map((item) => `${item.readOnly ? "fixture" : "runtime"}:${item.projectId}:${item.title}:${item.lifecycleStatus}`),
+    },
+    saveEnvelope: {
+      owner: save.owner || "shell",
+      status: save.status || "ready",
+      live: stateLabel(save.live),
+      source: save.source || "p2-shell-save-envelope",
+      lastSavedEnvelopeId: save.lastSavedEnvelopeId || "none",
+      lastSavedProjectId: save.lastSavedProjectId || "none",
+      lastSavedAt: save.lastSavedAt || "none",
+      lastError: save.lastError || "none",
+      updateExistingEnvelope: stateLabel(save.capabilities?.updateExistingEnvelope),
+      restoreLive: "no",
+      hydrateLive: "no",
+      handoffLive: "no",
+      shareLive: "no",
     },
     company: {
       owner: company.owner || "shell",
@@ -215,9 +236,9 @@ export function createDiagnosticsViewModel({ adapter, diagnosticsState }) {
       statuses: pluginStatus.plugins || [],
     },
     constraints: [
-      "Project Browser is shell-owned",
-      "Project Browser is read-only in P1",
-      "Save is not live",
+      "Save envelope is shell-owned and live",
+      "Project Browser remains shell-owned",
+      "Runtime-saved envelopes are visually distinct from fixture browser items",
       "Restore / hydrate is not live",
       "Handoff / share is not live",
       "Scene Builder remains structural only",

@@ -16,8 +16,8 @@ function readProject(project = {}) {
 export function createProjectBrowserService({ savedProjectStore, eventBus } = {}) {
   const state = {
     owner: "shell",
-    status: "read-only-browser-ready",
-    source: "p1-project-browser-read-only-foundation",
+    status: "save-ready-browser",
+    source: "p2-shell-save-envelope",
     selectedProjectId: null,
     filters: {
       search: "",
@@ -32,26 +32,28 @@ export function createProjectBrowserService({ savedProjectStore, eventBus } = {}
       status: state.status,
       source: state.source,
       readOnly: true,
-      browserOnly: true,
+      browserOnly: false,
       nonBootCritical: true,
       currentProject: readProject(context.project),
       selectedProjectId: state.selectedProjectId,
       filters: { ...state.filters },
       projects: clone(storeSnapshot.projects),
       projectCount: storeSnapshot.count,
+      savedCount: storeSnapshot.savedCount || 0,
+      fixtureCount: storeSnapshot.fixtureCount || 0,
       safeEmpty: storeSnapshot.safeEmpty,
-      emptyStateMessage: storeSnapshot.safeEmpty ? "No saved projects found. Browser remains safe and read-only." : "Saved project fixtures available for browser proof.",
+      emptyStateMessage: storeSnapshot.safeEmpty ? "No saved projects found. Browser remains safe; save is ready." : "Saved projects available. Runtime saves are visually marked.",
+      save: storeSnapshot.save,
       capabilities: {
         list: true,
         inspect: true,
-        save: false,
+        save: true,
         restore: false,
         hydrate: false,
         handoff: false,
         share: false,
       },
       deferred: {
-        save: "deferred-to-p2",
         restore: "deferred-to-p3",
         hydrate: "deferred-to-p3",
         handoff: "deferred-to-p4",
@@ -69,16 +71,26 @@ export function createProjectBrowserService({ savedProjectStore, eventBus } = {}
         browser: getProjectBrowserSnapshot(context),
       };
     }
-    state.selectedProjectId = projectId;
+    state.selectedProjectId = envelope.envelopeId || envelope.projectId;
     const result = {
       accepted: true,
       readOnly: true,
-      projectId,
+      projectId: envelope.projectId,
+      envelopeId: envelope.envelopeId,
       envelope,
       browser: getProjectBrowserSnapshot(context),
     };
     eventBus?.emit("project-browser:inspect", result);
     return result;
+  }
+
+  function saveProject(context = {}, moduleContributions = {}) {
+    const result = savedProjectStore.saveCurrentProjectEnvelope(context, moduleContributions);
+    eventBus?.emit("project-browser:save", result);
+    return {
+      ...result,
+      browser: getProjectBrowserSnapshot(context),
+    };
   }
 
   function setSearch(search = "", context = {}) {
@@ -94,25 +106,19 @@ export function createProjectBrowserService({ savedProjectStore, eventBus } = {}
     getProjectBrowserSnapshot,
     inspectProject,
     setSearch,
-    saveProject() {
-      return {
-        accepted: false,
-        status: "read-only",
-        reason: "P1 Project Browser is read-only. Save is not live yet.",
-      };
-    },
+    saveProject,
     restoreProject() {
       return {
         accepted: false,
-        status: "read-only",
-        reason: "P1 Project Browser is read-only. Restore/hydrate is not live yet.",
+        status: "deferred",
+        reason: "P2 Save envelope does not implement restore/hydrate. Restore/hydrate is deferred to P3.",
       };
     },
     requestHandoff() {
       return {
         accepted: false,
-        status: "read-only",
-        reason: "P1 Project Browser is read-only. Handoff/share is not live yet.",
+        status: "deferred",
+        reason: "P2 Save envelope does not implement handoff/share. Handoff/share is deferred to P4.",
       };
     },
   };
