@@ -1,11 +1,31 @@
 import { WORKSPACE_CONTRACT_VERSION } from "./contracts.js";
 
+function readAuth(service) {
+  if (typeof service.getAuthSnapshot === "function") return service.getAuthSnapshot();
+  return {
+    owner: "shell",
+    status: "signed-out",
+    live: true,
+    source: "real-login-auth",
+    session: { authenticated: false },
+    user: {
+      id: "anonymous-visitor",
+      name: "Anonymous visitor",
+      email: null,
+      classification: "anonymous",
+      identityState: "external_anonymous",
+      actualRole: "external_user",
+      authSource: "fallback",
+    },
+  };
+}
+
 function readIdentity(service) {
   if (typeof service.getIdentitySnapshot === "function") return service.getIdentitySnapshot();
   return {
     owner: service.owner,
     status: service.status,
-    source: "phase-8a-fallback",
+    source: "real-login-auth-fallback",
     currentUser: service.currentUser || null,
     role: service.role || "external_user",
     actualRole: service.role || "external_user",
@@ -55,22 +75,24 @@ function readDiagnostics(service) {
   return {
     owner: service.owner,
     status: service.status,
-    phase: "p4-handoff-share",
+    phase: "real-login-auth",
   };
 }
 
 export function createShellContext({ route, services, mountedModuleId = null }) {
+  const auth = readAuth(services.auth);
   const crm = readCrm(services.crm);
   const project = services.project.getProjectSnapshot();
   const identity = readIdentity(services.identity);
-  const visibility = services.visibility.getVisibilitySnapshot({ identity, project });
+  const visibility = services.visibility.getVisibilitySnapshot({ auth, identity, project });
   const downstream = services.downstream.getDownstreamContextSnapshot({ identity, project, visibility });
   const flags = services.flags.getFlagSnapshot();
   const diagnostics = readDiagnostics(services.diagnostics);
   const baseContext = {
     contractVersion: WORKSPACE_CONTRACT_VERSION,
-    phase: "p4-handoff-share",
+    phase: "real-login-auth",
     route,
+    auth,
     identity,
     project,
     currentProject: project.currentProject,
@@ -100,6 +122,7 @@ export function createShellContext({ route, services, mountedModuleId = null }) 
 export function createModuleUpdateSnapshot(context) {
   return {
     route: context.route,
+    auth: context.auth,
     identity: context.identity,
     project: context.project,
     currentProject: context.currentProject,

@@ -13,6 +13,11 @@ const homePanel = document.getElementById("cs-workspace-home");
 const contextSummary = document.getElementById("cs-shell-context-summary");
 const projectSelect = document.getElementById("cs-shell-project-select");
 const projectSummary = document.getElementById("cs-shell-project-summary");
+const authUserSelect = document.getElementById("cs-shell-auth-user-select");
+const authSummary = document.getElementById("cs-shell-auth-summary");
+const signInButton = document.getElementById("cs-shell-sign-in-button");
+const signOutButton = document.getElementById("cs-shell-sign-out-button");
+const useAuthIdentityButton = document.getElementById("cs-shell-use-auth-identity-button");
 const identitySelect = document.getElementById("cs-shell-identity-select");
 const resolvedIdentitySummary = document.getElementById("cs-shell-resolved-identity-summary");
 const roleOverrideToggle = document.getElementById("cs-shell-role-override-toggle");
@@ -67,9 +72,8 @@ function ensureModuleNavLink(moduleId, label) {
 
 function ensureProjectBrowserPanel() {
   if (projectBrowserPanel) return;
-  const sidebar = document.querySelector(".cs-shell__sidebar");
   const projectCard = document.querySelector(".cs-shell__project-card");
-  if (!sidebar || !projectCard) return;
+  if (!projectCard) return;
 
   projectBrowserPanel = document.createElement("section");
   projectBrowserPanel.className = "cs-shell__project-browser-card";
@@ -109,12 +113,45 @@ function selectedProjectSummary(browser) {
   return (browser.projects || []).find((project) => project.envelopeId === browser.selectedProjectId || project.projectId === browser.selectedProjectId) || null;
 }
 
+function renderAuthControls({ services, context }) {
+  if (!authUserSelect || !authSummary) return;
+  const users = services.auth.getAvailableAuthUsers?.() || [];
+  clearElement(authUserSelect);
+  for (const user of users) {
+    const option = document.createElement("option");
+    option.value = user.id;
+    option.textContent = `${user.label} · ${user.email}`;
+    authUserSelect.appendChild(option);
+  }
+  if (context.auth.session?.userId) authUserSelect.value = context.auth.session.userId;
+  const signedIn = context.auth.session?.authenticated === true;
+  appendDefinitionListRows(authSummary, [
+    ["auth status", context.auth.status || "signed-out"],
+    ["signed in", signedIn ? "yes" : "no"],
+    ["user", context.auth.session?.name || context.auth.user?.name || "Anonymous visitor"],
+    ["email", context.auth.session?.email || "none"],
+    ["provider", context.auth.session?.provider || "none"],
+    ["session id", context.auth.session?.sessionId || "none"],
+    ["identity source", context.identity.lookup?.identitySource || "unknown"],
+    ["developer fixture", context.identity.lookup?.usingDeveloperFixture ? "active" : "off"],
+    ["OAuth/provider", "deferred"],
+    ["password storage", "excluded"],
+    ["MFA", "deferred"],
+  ]);
+  if (signInButton) signInButton.disabled = false;
+  if (signOutButton) signOutButton.disabled = false;
+  if (useAuthIdentityButton) useAuthIdentityButton.disabled = !signedIn;
+}
+
 function renderContextSummary(context) {
   appendDefinitionListRows(contextSummary, [
     ["phase", context.phase],
     ["contract", context.contractVersion || "not-declared"],
     ["module", context.route.moduleId],
+    ["auth", `${context.auth.owner}:${context.auth.status}`],
+    ["auth user", context.auth.session?.email || context.auth.user?.name || "anonymous"],
     ["identity", `${context.identity.identityState}:${context.identity.displayRole}`],
+    ["identity source", context.identity.lookup?.identitySource || "unknown"],
     ["actual role", context.identity.actualRole],
     ["project", `${context.project.owner}:${context.project.status}`],
     ["current", readProjectTitle(context.project)],
@@ -256,21 +293,29 @@ function renderIdentityVisibilityControls({ services, context }) {
   const roles = services.identity.getRoleOptions?.() || [];
 
   clearElement(identitySelect);
+  const noFixtureOption = document.createElement("option");
+  noFixtureOption.value = "";
+  noFixtureOption.textContent = "No fixture active — use auth/anonymous source";
+  identitySelect.appendChild(noFixtureOption);
   for (const identity of identities) {
     const option = document.createElement("option");
     option.value = identity.id;
     option.textContent = identity.label;
     identitySelect.appendChild(option);
   }
-  identitySelect.value = context.identity.lookup?.selectedIdentityId || context.identity.currentUser?.id || "";
+  identitySelect.value = context.identity.lookup?.selectedIdentityId || "";
 
   appendDefinitionListRows(resolvedIdentitySummary, [
     ["identity state", context.identity.identityState],
     ["classification", context.identity.classification],
+    ["identity source", context.identity.lookup?.identitySource || "unknown"],
+    ["developer fixture", context.identity.lookup?.usingDeveloperFixture ? "active" : "off"],
     ["actual role", context.identity.actualRole],
     ["derived role", context.identity.derivedActualRole || context.identity.actualRole],
     ["actual role source", context.identity.actualRoleSource],
     ["override active", context.identity.actualRoleOverrideEnabled ? "yes" : "no"],
+    ["display preview", context.identity.displayRole],
+    ["preview clamped", context.identity.displayRoleClamped ? "yes" : "no"],
   ]);
 
   roleOverrideToggle.checked = context.identity.actualRoleOverrideEnabled === true;
@@ -284,11 +329,13 @@ function renderIdentityVisibilityControls({ services, context }) {
   const hidden = context.visibility.hiddenModules.join(", ") || "none";
   const currentDecision = context.visibility.moduleReasons[context.route.moduleId];
   appendDefinitionListRows(visibilitySummary, [
-    ["mode", "lookup / derived role / visibility support"],
-    ["real auth", "no"],
+    ["mode", "auth-derived identity / developer visibility support"],
+    ["real auth", context.auth.live ? "yes" : "no"],
+    ["authenticated", context.auth.session?.authenticated ? "yes" : "no"],
     ["display role", context.identity.displayRole],
+    ["display preview only", "yes"],
     ["display clamped", context.identity.displayRoleClamped ? "yes" : "no"],
-    ["override label", context.identity.resolver?.overrideLabel || "temporary developer override"],
+    ["override label", context.identity.resolver?.overrideLabel || "developer/test actual-role override"],
     ["project input", context.visibility.inputs?.projectMode || "auto"],
     ["project present", context.visibility.inputs?.projectPresent ? "yes" : "no"],
     ["visible", visible],
@@ -438,6 +485,7 @@ function bootWorkspaceShell() {
   function refreshContext(reason = "context-refresh") {
     context = createShellContext({ route, services, mountedModuleId: route.moduleId });
     window.__csLatestShellContext = context;
+    renderAuthControls({ services, context });
     renderContextSummary(context);
     renderProjectSelection({ services, context });
     renderProjectBrowser({ context });
@@ -457,6 +505,30 @@ function bootWorkspaceShell() {
   function rememberDiagnosticsPlugin({ diagnosticsPlugin, pluginRegistry }) {
     diagnosticsPluginApi = diagnosticsPlugin;
     diagnosticsPluginRegistry = pluginRegistry;
+  }
+
+  function handleAuthSignIn() {
+    const result = services.auth.signIn(authUserSelect?.value || undefined, "real-login-auth-ui-sign-in");
+    services.identity.useAuthenticatedIdentity("real-login-auth-ui-sign-in-sync");
+    const nextContext = refreshContext("auth-sign-in");
+    if (!result.accepted) {
+      setStatus(`Sign in failed: ${result.reason || result.status}`);
+      return;
+    }
+    setStatus(`Signed in as ${nextContext.auth.session.name}. Actual role derives from authenticated identity.`);
+  }
+
+  function handleAuthSignOut() {
+    services.auth.signOut("real-login-auth-ui-sign-out");
+    services.identity.syncFromAuth("real-login-auth-ui-sign-out-sync");
+    const nextContext = refreshContext("auth-sign-out");
+    setStatus(`${nextContext.auth.reason || "Signed out."} Shell is using safe anonymous fallback.`);
+  }
+
+  function handleUseAuthenticatedIdentity() {
+    services.identity.useAuthenticatedIdentity("real-login-auth-ui-use-authenticated-identity");
+    const nextContext = refreshContext("use-authenticated-identity");
+    setStatus(`Using authenticated identity source: ${nextContext.identity.currentUser.name}.`);
   }
 
   function handleProjectSelectionChange(event) {
@@ -511,39 +583,39 @@ function bootWorkspaceShell() {
   }
 
   function handleIdentityChange(event) {
-    const result = services.identity.setIdentityById(event.target.value, "shell-identity-selection-change");
+    const result = services.identity.setIdentityById(event.target.value, "developer-fixture-identity-selection-change");
     if (!result.accepted) {
-      setStatus(`Identity lookup failed: ${result.reason}`);
+      setStatus(`Developer fixture lookup failed: ${result.reason}`);
       return;
     }
-    const nextContext = refreshContext("identity-change");
-    setStatus(`Identity lookup resolved ${nextContext.identity.actualRole} from ${nextContext.identity.currentUser.name}.`);
+    const nextContext = refreshContext("developer-fixture-identity-change");
+    setStatus(`Developer fixture identity active: ${nextContext.identity.currentUser.name}. This is not real auth.`);
   }
 
   function handleRoleOverrideToggle(event) {
-    const result = services.identity.setActualRoleOverrideEnabled(event.target.checked, "shell-actual-role-override-toggle");
+    const result = services.identity.setActualRoleOverrideEnabled(event.target.checked, "developer-test-actual-role-override-toggle");
     const nextContext = refreshContext("actual-role-override-toggle");
     const stateText = nextContext.identity.actualRoleOverrideEnabled ? "enabled" : "off";
     const clampText = result.clamped ? " Display role was clamped to actual authority." : "";
-    setStatus(`Developer actual-role override ${stateText}.${clampText}`);
+    setStatus(`Developer/test actual-role override ${stateText}.${clampText}`);
   }
 
   function handleRoleOverrideChange(event) {
-    const result = services.identity.setActualRoleOverride(event.target.value, "shell-actual-role-override-change");
+    const result = services.identity.setActualRoleOverride(event.target.value, "developer-test-actual-role-override-change");
     const nextContext = refreshContext("actual-role-override-change");
     const clampText = result.clamped ? " Display role was clamped to actual authority." : "";
-    setStatus(`Temporary override role: ${nextContext.identity.actualRole}.${clampText}`);
+    setStatus(`Developer/test override role: ${nextContext.identity.actualRole}.${clampText}`);
   }
 
   function handleDisplayRoleChange(event) {
-    const result = services.identity.setDisplayRole(event.target.value, "shell-display-role-preview-change");
+    const result = services.identity.setDisplayRole(event.target.value, "display-role-preview-change");
     const nextContext = refreshContext("display-role-change");
     const clampText = result.clamped ? " Requested role was clamped to actual authority." : "";
-    setStatus(`Display role preview: ${nextContext.identity.displayRole}.${clampText}`);
+    setStatus(`Display role preview only: ${nextContext.identity.displayRole}.${clampText}`);
   }
 
   function handleProjectModeChange(event) {
-    services.visibility.setProjectMode(event.target.value, context, "shell-project-visibility-mode-change");
+    services.visibility.setProjectMode(event.target.value, context, "real-login-auth-project-visibility-mode-change");
     const nextContext = refreshContext("project-visibility-mode-change");
     setStatus(`Visibility project input: ${nextContext.visibility.inputs.projectMode}.`);
   }
@@ -554,6 +626,9 @@ function bootWorkspaceShell() {
   ensureModuleNavLink("scene_builder", "Scene Builder");
 
   refreshContext("initial-render");
+  signInButton?.addEventListener("click", handleAuthSignIn);
+  signOutButton?.addEventListener("click", handleAuthSignOut);
+  useAuthIdentityButton?.addEventListener("click", handleUseAuthenticatedIdentity);
   projectBrowserSaveButton?.addEventListener("click", handleProjectBrowserSave);
   projectBrowserRestoreButton?.addEventListener("click", handleProjectBrowserRestore);
   projectBrowserHandoffButton?.addEventListener("click", handleProjectBrowserHandoffShare);
@@ -566,7 +641,7 @@ function bootWorkspaceShell() {
   projectModeSelect?.addEventListener("change", handleProjectModeChange);
 
   if (showHomeIfRequested(route.moduleId)) {
-    setStatus("Workspace home mounted. Handoff/share package preparation is live; delivery/email/HubSpot remain deferred.");
+    setStatus("Workspace home mounted. Auth/session is live and shell-owned; developer controls are support only.");
     scheduleOptionalDiagnosticsPlugin({ services, getContext: () => context, registry, onPluginReady: rememberDiagnosticsPlugin });
     return;
   }
@@ -582,7 +657,7 @@ function bootWorkspaceShell() {
   try {
     mountedModuleApi = moduleApi;
     moduleApi.mount({ container: moduleHost, services, context });
-    setStatus(`Mounted ${route.moduleId}. Handoff/share package preparation is live; delivery/email/HubSpot remain deferred.`);
+    setStatus(`Mounted ${route.moduleId}. Auth/session is live and shell-owned; project lifecycle remains intact.`);
     services.eventBus.emit("module:mounted", { moduleId: route.moduleId, route });
     scheduleOptionalDiagnosticsPlugin({ services, getContext: () => context, registry, onPluginReady: rememberDiagnosticsPlugin });
   } catch (error) {

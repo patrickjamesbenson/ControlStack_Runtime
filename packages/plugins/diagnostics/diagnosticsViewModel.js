@@ -35,6 +35,7 @@ function readDownstream(adapter, snapshots) {
 
 function readProjectBrowser(adapter, snapshots, downstream) {
   return adapter.services.projectBrowser?.getProjectBrowserSnapshot?.({
+    auth: snapshots.auth,
     identity: snapshots.identity,
     project: snapshots.project,
     visibility: snapshots.visibility,
@@ -74,6 +75,7 @@ function decisionFor(visibility, moduleId) {
 export function createDiagnosticsViewModel({ adapter, diagnosticsState }) {
   const snapshots = adapter.readSnapshots();
   const local = diagnosticsState.getSnapshot();
+  const auth = snapshots.auth || snapshots.context?.auth || { status: "signed-out", session: {}, user: {}, capabilities: {} };
   const project = snapshots.project;
   const currentProject = project.currentProject || {};
   const identity = snapshots.identity;
@@ -108,6 +110,25 @@ export function createDiagnosticsViewModel({ adapter, diagnosticsState }) {
       responsiveRequirement: snapshots.diagnostics?.responsiveRequirement || "desktop-tablet-mobile",
       registeredModules: registeredModules.join(", ") || "none",
     },
+    auth: {
+      owner: auth.owner || "shell",
+      status: auth.status || "signed-out",
+      live: stateLabel(auth.live),
+      source: auth.source || "real-login-auth",
+      authenticated: stateLabel(auth.session?.authenticated),
+      sessionId: auth.session?.sessionId || "none",
+      userId: auth.session?.userId || "none",
+      name: auth.session?.name || auth.user?.name || "Anonymous visitor",
+      email: auth.session?.email || auth.user?.email || "none",
+      provider: auth.session?.provider || "none",
+      authSource: auth.user?.authSource || "fallback",
+      signIn: stateLabel(auth.capabilities?.signIn),
+      signOut: stateLabel(auth.capabilities?.signOut),
+      restoreSession: stateLabel(auth.capabilities?.restoreSession),
+      oauthProvider: auth.exclusions?.oauthProvider || "deferred",
+      passwordStorage: auth.exclusions?.passwordStorage || "excluded",
+      mfa: auth.exclusions?.mfa || "deferred",
+    },
     sceneBuilder: {
       structuralRegistered: stateLabel(registeredModules.includes("scene_builder")),
       routeStatus: registeredModules.includes("scene_builder") ? "structural-module" : "not-registered",
@@ -119,9 +140,11 @@ export function createDiagnosticsViewModel({ adapter, diagnosticsState }) {
     identity: {
       owner: identity.owner,
       status: identity.status,
-      source: identity.source || "phase-8a-shell-owned-identity-resolver",
+      source: identity.source || "real-login-auth-identity-resolver",
       state: identity.identityState || "external_anonymous",
       classification: identity.classification || "anonymous",
+      identitySource: identity.lookup?.identitySource || "unknown",
+      developerFixture: stateLabel(identity.lookup?.usingDeveloperFixture),
       derivedActualRole: identity.derivedActualRole || identity.actualRole || "external_user",
       actualRole: identity.actualRole || "external_user",
       actualRoleSource: identity.actualRoleSource || "unknown",
@@ -131,6 +154,7 @@ export function createDiagnosticsViewModel({ adapter, diagnosticsState }) {
       displayRole: identity.displayRole || identity.role || "external_user",
       displayRoleRequested: identity.displayRoleRequested || identity.displayRole || "external_user",
       displayRoleClamped: stateLabel(identity.displayRoleClamped),
+      displayRolePreviewOnly: "yes",
       user: identity.currentUser?.name || "Workspace User",
       email: identity.currentUser?.email || "No email loaded",
       realAuth: stateLabel(identity.auth?.realAuth),
@@ -249,11 +273,14 @@ export function createDiagnosticsViewModel({ adapter, diagnosticsState }) {
     visibility: {
       owner: visibility.owner,
       status: visibility.status,
-      source: visibility.source || "phase-8-shell-owned-visibility-policy",
+      source: visibility.source || "real-login-auth-visibility-policy",
       testMode: stateLabel(visibility.testMode),
       rule: visibility.rule || "none",
       projectMode: visibility.inputs?.projectMode || "auto",
       projectPresent: stateLabel(visibility.inputs?.projectPresent),
+      authenticated: stateLabel(visibility.auth?.authenticated),
+      displayRolePreviewOnly: stateLabel(visibility.inputs?.displayRolePreviewOnly),
+      developerFixtureActive: stateLabel(visibility.inputs?.developerFixtureActive),
       visibleModules: visibility.visibleModules?.join(", ") || "none",
       hiddenModules: visibility.hiddenModules?.join(", ") || "none",
       registeredModules: visibility.registeredModules || [],
@@ -292,13 +319,16 @@ export function createDiagnosticsViewModel({ adapter, diagnosticsState }) {
       statuses: pluginStatus.plugins || [],
     },
     constraints: [
-      "Handoff/share package preparation is shell-owned and live",
-      "Prepared package is distinct from delivered package",
-      "External delivery is not live",
-      "Email sending is not live",
+      "Auth/session is shell-owned and live",
+      "Authenticated identity is the default identity source",
+      "Actual role remains shell-derived from authenticated identity/classification",
+      "Display-role preview remains preview-only",
+      "Developer fixture identity remains clearly marked as support mode",
+      "Developer/test actual-role override remains support only",
+      "Visibility remains shell-owned",
+      "Project selection/save/restore/hydrate/handoff-share flows remain intact",
+      "OAuth, password storage, MFA, and production credential database are excluded/deferred",
       "HubSpot writes are not live",
-      "Restore / hydrate ownership remains unchanged",
-      "Modules contribute summaries/placeholders/references only",
       "Scene Builder remains structural only",
       "EGRES route is not registered",
       "Compliance Matters route is not registered",

@@ -53,7 +53,7 @@ export function renderDiagnosticsView(container, viewModel) {
   const intro = document.createElement("div");
   appendText(intro, "p", "Optional plugin", "cs-shell__eyebrow");
   appendText(intro, "h2", "Diagnostics panel");
-  appendText(intro, "p", "Diagnostics reads shell-owned snapshots, including P4 handoff/share package state.");
+  appendText(intro, "p", "Diagnostics reads shell-owned snapshots, including real login/auth session state.");
   article.appendChild(intro);
 
   appendSection(article, "Route and shell", [
@@ -63,6 +63,26 @@ export function renderDiagnosticsView(container, viewModel) {
     ["Contract", viewModel.shell.contractVersion],
     ["Responsive requirement", viewModel.shell.responsiveRequirement],
     ["Registered modules", viewModel.shell.registeredModules],
+  ]);
+
+  appendSection(article, "Auth / session", [
+    ["owner", viewModel.auth.owner],
+    ["status", viewModel.auth.status],
+    ["live", viewModel.auth.live],
+    ["source", viewModel.auth.source],
+    ["authenticated", viewModel.auth.authenticated],
+    ["session id", viewModel.auth.sessionId],
+    ["user id", viewModel.auth.userId],
+    ["name", viewModel.auth.name],
+    ["email", viewModel.auth.email],
+    ["provider", viewModel.auth.provider],
+    ["auth source", viewModel.auth.authSource],
+    ["sign in", viewModel.auth.signIn],
+    ["sign out", viewModel.auth.signOut],
+    ["session restore", viewModel.auth.restoreSession],
+    ["OAuth/provider", viewModel.auth.oauthProvider],
+    ["password storage", viewModel.auth.passwordStorage],
+    ["MFA", viewModel.auth.mfa],
   ]);
 
   appendSection(article, "Project Browser", [
@@ -167,10 +187,15 @@ export function renderDiagnosticsView(container, viewModel) {
     ["Email", viewModel.identity.email],
     ["Identity state", viewModel.identity.state],
     ["Classification", viewModel.identity.classification],
+    ["Identity source mode", viewModel.identity.identitySource],
+    ["Developer fixture", viewModel.identity.developerFixture],
     ["Derived actual role", viewModel.identity.derivedActualRole],
     ["Effective actual role", viewModel.identity.actualRole],
+    ["Actual role source", viewModel.identity.actualRoleSource],
+    ["Actual role derived", viewModel.identity.actualRoleDerived],
     ["Override active", viewModel.identity.actualRoleOverrideEnabled],
     ["Display role", viewModel.identity.displayRole],
+    ["Display role preview only", viewModel.identity.displayRolePreviewOnly],
     ["Display clamped", viewModel.identity.displayRoleClamped],
     ["Real auth", viewModel.identity.realAuth],
   ]);
@@ -195,6 +220,9 @@ export function renderDiagnosticsView(container, viewModel) {
   appendSection(article, "Visibility policy", [
     ["Visibility owner", viewModel.visibility.owner],
     ["Visibility status", viewModel.visibility.status],
+    ["Authenticated", viewModel.visibility.authenticated],
+    ["Display role preview only", viewModel.visibility.displayRolePreviewOnly],
+    ["Developer fixture active", viewModel.visibility.developerFixtureActive],
     ["Visible modules", viewModel.visibility.visibleModules],
     ["Hidden modules", viewModel.visibility.hiddenModules],
     ["Visibility rule", viewModel.visibility.rule],
@@ -251,7 +279,7 @@ export function renderDiagnosticsView(container, viewModel) {
 
   const constraintsSection = document.createElement("section");
   constraintsSection.className = "cs-diagnostics__section";
-  appendText(constraintsSection, "h3", "P4 constraints");
+  appendText(constraintsSection, "h3", "Real login/auth constraints");
   appendPillList(constraintsSection, viewModel.constraints);
   article.appendChild(constraintsSection);
 

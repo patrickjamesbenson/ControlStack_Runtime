@@ -92,12 +92,13 @@ export function createVisibilityService({ eventBus } = {}) {
   const state = {
     owner: "shell",
     status: "policy-ready",
-    rule: "Scene Builder structural module is registered as a shell-owned visibility consumer. EGRES, Compliance Matters, and Ceiling remain planned only.",
+    rule: "Visibility remains shell-owned. Auth supplies identity; display-role preview controls the current preview view only.",
     projectMode: "auto",
     lastSnapshot: null,
   };
 
   function snapshot(context = {}) {
+    const auth = context.auth || {};
     const identity = context.identity || {};
     const project = context.project || {};
     const projectMode = normaliseProjectMode(state.projectMode);
@@ -107,12 +108,17 @@ export function createVisibilityService({ eventBus } = {}) {
     const next = {
       owner: state.owner,
       status: state.status,
-      source: "scene-builder-structural-module-visibility-policy",
+      source: "real-login-auth-visibility-policy",
       rule: state.rule,
       testMode: true,
       auth: {
-        realAuth: false,
-        credentialAuth: false,
+        owner: auth.owner || "shell",
+        status: auth.status || "signed-out",
+        realAuth: auth.live === true,
+        authenticated: auth.session?.authenticated === true,
+        provider: auth.session?.provider || null,
+        credentialAuth: auth.session?.authenticated === true,
+        developerSupportVisible: true,
       },
       inputs: {
         identityState: identity.identityState || "external_anonymous",
@@ -121,7 +127,10 @@ export function createVisibilityService({ eventBus } = {}) {
         actualRoleOverrideEnabled: identity.actualRoleOverrideEnabled === true,
         displayRole: identity.displayRole || identity.role || "external_user",
         displayRoleClamped: identity.displayRoleClamped === true,
+        displayRolePreviewOnly: true,
         classification: identity.classification || "anonymous",
+        identitySource: identity.lookup?.identitySource || "unknown",
+        developerFixtureActive: identity.lookup?.usingDeveloperFixture === true,
         projectMode,
         projectPresent: hasProject(project, projectMode),
       },
@@ -136,6 +145,7 @@ export function createVisibilityService({ eventBus } = {}) {
         sidebar: true,
         workspaceHome: true,
         moduleHost: true,
+        authCard: true,
         visibilityTestCard: true,
       },
       roleVisibility: {
@@ -171,7 +181,7 @@ export function createVisibilityService({ eventBus } = {}) {
     getVisibilitySnapshot(context = {}) {
       return snapshot(context);
     },
-    setProjectMode(projectMode, context = {}, reason = "scene-builder-structural-project-visibility-mode") {
+    setProjectMode(projectMode, context = {}, reason = "real-login-auth-project-visibility-mode") {
       state.projectMode = normaliseProjectMode(projectMode);
       return notify(reason, context);
     },

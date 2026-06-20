@@ -110,6 +110,7 @@ a {
   font-size: 11px;
 }
 
+.cs-shell__auth-card,
 .cs-shell__context-card,
 .cs-shell__project-card,
 .cs-shell__project-browser-card,
@@ -120,12 +121,14 @@ a {
   background: rgba(255, 255, 255, 0.06);
 }
 
+.cs-shell__auth-card,
 .cs-shell__project-card,
 .cs-shell__project-browser-card,
 .cs-shell__visibility-card {
   margin-bottom: 16px;
 }
 
+.cs-shell__auth-card h3,
 .cs-shell__context-card h3,
 .cs-shell__project-card h3,
 .cs-shell__project-browser-card h3,
@@ -134,6 +137,7 @@ a {
   font-size: 14px;
 }
 
+.cs-shell__auth-card p,
 .cs-shell__visibility-card p,
 .cs-shell__project-browser-card p {
   margin-bottom: 12px;
@@ -158,6 +162,7 @@ a {
   flex: 0 0 auto;
 }
 
+.cs-shell__auth-card label,
 .cs-shell__project-card label,
 .cs-shell__visibility-card label {
   display: block;
@@ -166,6 +171,7 @@ a {
   font-size: 13px;
 }
 
+.cs-shell__auth-card select,
 .cs-shell__project-card select,
 .cs-shell__visibility-card select {
   width: 100%;
@@ -186,6 +192,7 @@ a {
   display: none;
 }
 
+.cs-shell__auth-button,
 .cs-shell__project-browser-save,
 .cs-shell__project-browser-restore,
 .cs-shell__project-browser-handoff {
@@ -200,11 +207,13 @@ a {
   font-weight: 650;
 }
 
+.cs-shell__auth-button,
 .cs-shell__project-browser-restore,
 .cs-shell__project-browser-handoff {
   margin-top: -4px;
 }
 
+.cs-shell__auth-button:disabled,
 .cs-shell__project-browser-save:disabled,
 .cs-shell__project-browser-restore:disabled,
 .cs-shell__project-browser-handoff:disabled {
@@ -212,6 +221,7 @@ a {
   opacity: 0.55;
 }
 
+.cs-shell__auth-card dl,
 .cs-shell__context-card dl,
 .cs-shell__project-card dl,
 .cs-shell__project-browser-card dl,
@@ -226,6 +236,7 @@ a {
   margin-bottom: 12px !important;
 }
 
+.cs-shell__auth-card dt,
 .cs-shell__context-card dt,
 .cs-shell__project-card dt,
 .cs-shell__project-browser-card dt,
@@ -233,6 +244,7 @@ a {
   color: #b8c3d9;
 }
 
+.cs-shell__auth-card dd,
 .cs-shell__context-card dd,
 .cs-shell__project-card dd,
 .cs-shell__project-browser-card dd,

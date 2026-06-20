@@ -16,11 +16,13 @@ export function createSceneBuilderContractAdapter({ services, context }) {
     context,
 
     readSnapshots() {
+      const auth = safeRead(() => services.auth.getAuthSnapshot(), context.auth);
       const identity = safeRead(() => services.identity.getIdentitySnapshot(), context.identity);
       const project = safeRead(() => services.project.getProjectSnapshot(), context.project);
-      const visibility = safeRead(() => services.visibility.getVisibilitySnapshot({ identity, project }), context.visibility);
+      const visibility = safeRead(() => services.visibility.getVisibilitySnapshot({ auth, identity, project }), context.visibility);
       return {
         route: context.route,
+        auth,
         identity,
         project,
         currentProject: context.currentProject,

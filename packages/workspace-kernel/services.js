@@ -1,3 +1,4 @@
+import { createAuthService } from "./authService.js";
 import { createContractDiagnostics } from "./contracts.js";
 import { createCrmService } from "./crmService.js";
 import { createDownstreamContextService } from "./downstreamContextService.js";
@@ -29,7 +30,8 @@ function createEventBus() {
 
 export function createShellServices() {
   const eventBus = createEventBus();
-  const identityAdapter = createIdentityService({ eventBus });
+  const authAdapter = createAuthService({ eventBus });
+  const identityAdapter = createIdentityService({ authService: authAdapter, eventBus });
   const projectAdapter = createProjectService({ eventBus });
   const visibilityAdapter = createVisibilityService({ eventBus });
   const downstreamAdapter = createDownstreamContextService({ eventBus });
@@ -39,6 +41,7 @@ export function createShellServices() {
   const crmAdapter = createCrmService({ eventBus });
 
   return {
+    auth: authAdapter,
     identity: identityAdapter,
     project: projectAdapter,
     projectBrowser: projectBrowserAdapter,
@@ -84,12 +87,26 @@ export function createShellServices() {
       owner: "shell",
       status: "placeholder",
       getSnapshot() {
+        const auth = authAdapter.getAuthSnapshot();
         return {
           owner: "shell",
           status: "placeholder",
-          phase: "p4-handoff-share",
+          phase: "real-login-auth",
           contract: createContractDiagnostics(),
           responsiveRequirement: "desktop-tablet-mobile",
+          auth: {
+            owner: "shell",
+            status: auth.status,
+            live: true,
+            source: "real-login-auth",
+            authenticated: auth.session?.authenticated === true,
+            provider: auth.session?.provider || "none",
+            email: auth.session?.email || "none",
+            userId: auth.session?.userId || "none",
+            oauthProviderLive: false,
+            passwordStorageLive: false,
+            mfaLive: false,
+          },
           projectSelection: {
             owner: "shell",
             status: "selectable-restorable-and-handoff-ready",
@@ -138,11 +155,11 @@ export function createShellServices() {
           },
           identityVisibility: {
             owner: "shell",
-            status: "derived-role-and-visibility-ready",
+            status: "auth-derived-role-and-visibility-ready",
             actualRoleDerivedFromIdentity: true,
             overrideDefault: "off",
-            realAuth: false,
-            credentialAuth: false,
+            realAuth: true,
+            credentialAuth: auth.session?.authenticated === true,
           },
           downstreamContext: {
             owner: "shell",
@@ -156,7 +173,7 @@ export function createShellServices() {
         return {
           accepted: true,
           event,
-          phase: "p4-handoff-share",
+          phase: "real-login-auth",
         };
       },
     },

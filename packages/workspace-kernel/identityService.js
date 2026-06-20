@@ -1,5 +1,6 @@
 const ROLE_ORDER = Object.freeze(["external_user", "internal_user", "internal_engineer", "developer", "admin"]);
 const IDENTITY_STATES = Object.freeze(["external_anonymous", "external_identified", "internal_identified"]);
+const IDENTITY_MODES = Object.freeze(["auth-session", "developer-fixture", "anonymous-fallback"]);
 
 const TEST_IDENTITIES = Object.freeze([
   Object.freeze({
@@ -11,7 +12,7 @@ const TEST_IDENTITIES = Object.freeze([
     classification: "anonymous",
     actualRole: "external_user",
     company: "",
-    source: "phase-8a-fixture-identity-lookup",
+    source: "developer-fixture-identity-support",
   }),
   Object.freeze({
     id: "external-client",
@@ -22,7 +23,7 @@ const TEST_IDENTITIES = Object.freeze([
     classification: "external",
     actualRole: "external_user",
     company: "Client Company",
-    source: "phase-8a-fixture-identity-lookup",
+    source: "developer-fixture-identity-support",
   }),
   Object.freeze({
     id: "internal-user",
@@ -33,7 +34,7 @@ const TEST_IDENTITIES = Object.freeze([
     classification: "internal",
     actualRole: "internal_user",
     company: "ControlStack",
-    source: "phase-8a-fixture-identity-lookup",
+    source: "developer-fixture-identity-support",
   }),
   Object.freeze({
     id: "internal-engineer",
@@ -44,7 +45,7 @@ const TEST_IDENTITIES = Object.freeze([
     classification: "internal",
     actualRole: "internal_engineer",
     company: "ControlStack",
-    source: "phase-8a-fixture-identity-lookup",
+    source: "developer-fixture-identity-support",
   }),
   Object.freeze({
     id: "developer",
@@ -55,7 +56,7 @@ const TEST_IDENTITIES = Object.freeze([
     classification: "internal",
     actualRole: "developer",
     company: "ControlStack",
-    source: "phase-8a-fixture-identity-lookup",
+    source: "developer-fixture-identity-support",
   }),
   Object.freeze({
     id: "admin",
@@ -66,7 +67,7 @@ const TEST_IDENTITIES = Object.freeze([
     classification: "internal",
     actualRole: "admin",
     company: "ControlStack",
-    source: "phase-8a-fixture-identity-lookup",
+    source: "developer-fixture-identity-support",
   }),
 ]);
 
@@ -105,6 +106,7 @@ function roleCapabilities(role) {
   const capabilities = ["workspace:view"];
   if (rank >= roleRank("external_user")) capabilities.push("module:cs_selector:view");
   if (rank >= roleRank("internal_user")) capabilities.push("module:emergence:view");
+  if (rank >= roleRank("internal_user")) capabilities.push("module:scene_builder:view");
   if (rank >= roleRank("internal_engineer")) capabilities.push("workspace:visibility:test");
   if (rank >= roleRank("developer")) capabilities.push("workspace:developer-preview");
   if (rank >= roleRank("admin")) capabilities.push("workspace:admin-preview");
@@ -118,58 +120,167 @@ function clampDisplayRole(actualRole, requestedRole) {
   return requested;
 }
 
-function identityFromFixture(fixture, overrideState, requestedDisplayRole) {
-  const derivedActualRole = normaliseRole(fixture.actualRole);
+function fixtureById(availableIdentities, identityId) {
+  return availableIdentities.find((item) => item.id === identityId) || availableIdentities[0];
+}
+
+function anonymousFixture(availableIdentities) {
+  return fixtureById(availableIdentities, "anonymous-visitor");
+}
+
+function normaliseIdentityMode(mode, fallback = "anonymous-fallback") {
+  return IDENTITY_MODES.includes(mode) ? mode : fallback;
+}
+
+function identitySeedFromAuth(authSnapshot) {
+  const user = authSnapshot?.user || {};
+  return {
+    id: user.id || "anonymous-visitor",
+    label: user.name || "Anonymous visitor",
+    name: user.name || "Anonymous visitor",
+    email: user.email || "",
+    identityState: user.identityState || "external_anonymous",
+    classification: user.classification || "anonymous",
+    actualRole: user.actualRole || "external_user",
+    company: user.company || "",
+  };
+}
+
+function identityModeFromAuth(authSnapshot) {
+  return authSnapshot?.session?.authenticated === true ? "auth-session" : "anonymous-fallback";
+}
+
+function buildIdentity({ rawIdentity, overrideState, requestedDisplayRole, source, identitySource, lookupStatus, identityMode }) {
+  const derivedActualRole = normaliseRole(rawIdentity.actualRole);
   const overrideEnabled = overrideState.enabled === true;
   const effectiveActualRole = overrideEnabled ? normaliseRole(overrideState.role, derivedActualRole) : derivedActualRole;
   const displayRole = clampDisplayRole(effectiveActualRole, requestedDisplayRole || effectiveActualRole);
-  const identityState = normaliseIdentityState(fixture.identityState);
+  const identityState = normaliseIdentityState(rawIdentity.identityState);
   return {
-    id: fixture.id,
-    label: fixture.label,
-    name: fixture.name,
-    email: fixture.email,
-    company: fixture.company,
+    id: rawIdentity.id,
+    label: rawIdentity.label || rawIdentity.name,
+    name: rawIdentity.name,
+    email: rawIdentity.email || "",
+    company: rawIdentity.company || "",
     identityState,
-    classification: fixture.classification,
+    classification: rawIdentity.classification || "anonymous",
     derivedActualRole,
     actualRole: effectiveActualRole,
-    actualRoleSource: overrideEnabled ? "phase-8a-temporary-developer-override" : fixture.source,
+    actualRoleSource: overrideEnabled ? "developer-test-actual-role-override" : source,
     actualRoleDerived: overrideEnabled ? false : true,
     actualRoleOverrideEnabled: overrideEnabled,
     actualRoleOverride: overrideEnabled ? effectiveActualRole : null,
     displayRole,
     displayRoleRequested: requestedDisplayRole || effectiveActualRole,
     displayRoleClamped: displayRole !== (requestedDisplayRole || effectiveActualRole),
-    source: fixture.source,
+    source,
+    identitySource,
+    lookupStatus,
+    identityMode,
   };
 }
 
-export function createIdentityService({ eventBus } = {}) {
+export function createIdentityService({ authService, eventBus } = {}) {
   const subscriptions = createSubscriptionSet();
   const overrideState = { enabled: false, role: null };
-  const initialIdentity = identityFromFixture(TEST_IDENTITIES[1], overrideState, "external_user");
+  const initialAuth = authService?.getAuthSnapshot?.() || null;
+  const initialMode = identityModeFromAuth(initialAuth);
   const state = {
     owner: "shell",
-    status: "lookup-ready",
-    source: "phase-8a-shell-owned-identity-resolver",
-    mode: "identity-lookup-derived-role-visibility-support",
-    note: "Not real auth. Phase 8A derives actual role from selected identity by default; developer override is temporary and off by default.",
-    selectedIdentityId: initialIdentity.id,
+    status: "auth-derived-identity-ready",
+    source: "real-login-auth-identity-resolver",
+    mode: "single-source-auth-fixture-or-anonymous",
+    note: "Authenticated session is the default identity source. Developer fixture, actual-role override, and display-role preview are support tools only.",
+    identityMode: initialMode,
+    selectedIdentityId: initialMode === "developer-fixture" ? "anonymous-visitor" : null,
     overrideState,
-    identity: initialIdentity,
+    requestedDisplayRole: initialMode === "auth-session" ? initialAuth.user.actualRole : "external_user",
+    identity: null,
     availableIdentities: TEST_IDENTITIES.map(clone),
   };
 
-  function selectedFixture() {
-    return state.availableIdentities.find((item) => item.id === state.selectedIdentityId) || state.availableIdentities[0];
+  function currentAuthSnapshot() {
+    return authService?.getAuthSnapshot?.() || {
+      owner: "shell",
+      status: "signed-out",
+      live: true,
+      source: "real-login-auth",
+      session: { authenticated: false },
+      user: {
+        id: "anonymous-visitor",
+        name: "Anonymous visitor",
+        email: null,
+        classification: "anonymous",
+        identityState: "external_anonymous",
+        actualRole: "external_user",
+        company: null,
+        authSource: "fallback",
+      },
+    };
   }
 
-  function rebuildIdentity(requestedDisplayRole = state.identity.displayRole) {
-    state.identity = identityFromFixture(selectedFixture(), state.overrideState, requestedDisplayRole);
+  function selectedFixture() {
+    return fixtureById(state.availableIdentities, state.selectedIdentityId);
   }
+
+  function resolveIdentitySource(auth) {
+    const signedIn = auth.session?.authenticated === true;
+    let identityMode = normaliseIdentityMode(state.identityMode);
+    if (identityMode === "auth-session" && !signedIn) identityMode = "anonymous-fallback";
+    state.identityMode = identityMode;
+
+    if (identityMode === "auth-session") {
+      return {
+        rawIdentity: identitySeedFromAuth(auth),
+        source: "real-login-auth-session",
+        identitySource: "auth-session",
+        lookupStatus: "auth-session-derived",
+        selectedIdentityId: null,
+      };
+    }
+
+    if (identityMode === "developer-fixture") {
+      const fixture = selectedFixture();
+      return {
+        rawIdentity: fixture,
+        source: fixture.source,
+        identitySource: signedIn ? "developer-fixture-support-over-signed-in-session" : "developer-fixture-support",
+        lookupStatus: "developer-fixture-support",
+        selectedIdentityId: fixture.id,
+      };
+    }
+
+    const fallback = anonymousFixture(state.availableIdentities);
+    return {
+      rawIdentity: fallback,
+      source: "anonymous-fallback",
+      identitySource: "anonymous-fallback",
+      lookupStatus: "anonymous-fallback",
+      selectedIdentityId: "anonymous-visitor",
+    };
+  }
+
+  function rebuildIdentity(requestedDisplayRole = state.requestedDisplayRole) {
+    const auth = currentAuthSnapshot();
+    const resolved = resolveIdentitySource(auth);
+    state.selectedIdentityId = resolved.selectedIdentityId;
+    state.requestedDisplayRole = requestedDisplayRole || resolved.rawIdentity.actualRole;
+    state.identity = buildIdentity({
+      rawIdentity: resolved.rawIdentity,
+      overrideState: state.overrideState,
+      requestedDisplayRole: state.requestedDisplayRole,
+      source: resolved.source,
+      identitySource: resolved.identitySource,
+      lookupStatus: resolved.lookupStatus,
+      identityMode: state.identityMode,
+    });
+  }
+
+  rebuildIdentity(state.requestedDisplayRole);
 
   function snapshot() {
+    const auth = currentAuthSnapshot();
+    const realAuth = auth.session?.authenticated === true;
     return {
       owner: state.owner,
       status: state.status,
@@ -177,28 +288,41 @@ export function createIdentityService({ eventBus } = {}) {
       mode: state.mode,
       note: state.note,
       auth: {
-        realAuth: false,
-        credentialAuth: false,
-        sessionRestore: false,
-        hardening: "deferred",
+        owner: auth.owner || "shell",
+        status: auth.status || "signed-out",
+        live: auth.live === true,
+        realAuth,
+        credentialAuth: realAuth,
+        sessionRestore: true,
+        source: auth.source || "real-login-auth",
+        provider: auth.session?.provider || null,
+        sessionId: auth.session?.sessionId || null,
+        userId: auth.session?.userId || null,
+        signedInName: auth.session?.name || null,
+        signedInEmail: auth.session?.email || null,
+        hardening: "local-session-foundation-only",
       },
       lookup: {
         owner: "shell",
-        status: "fixture-lookup",
-        source: state.source,
+        status: state.identity.lookupStatus,
+        source: state.identity.source,
+        identityMode: state.identity.identityMode,
+        identitySource: state.identity.identitySource,
         selectedIdentityId: state.selectedIdentityId,
+        usingDeveloperFixture: state.identity.identityMode === "developer-fixture",
+        safeAnonymousFallback: state.identity.identityMode === "anonymous-fallback",
         availableIdentities: state.availableIdentities.map(clone),
       },
       resolver: {
         owner: "shell",
-        status: "derived-from-identity",
+        status: "derived-from-current-identity-source",
         derivedActualRole: state.identity.derivedActualRole,
         effectiveActualRole: state.identity.actualRole,
         actualRoleSource: state.identity.actualRoleSource,
         actualRoleDerived: state.identity.actualRoleDerived,
         overrideEnabled: state.identity.actualRoleOverrideEnabled,
         overrideRole: state.identity.actualRoleOverride,
-        overrideLabel: "Temporary developer actual-role override; not final donor-like role resolution.",
+        overrideLabel: "Developer/test actual-role override only. Not real auth authority.",
       },
       currentUser: {
         id: state.identity.id,
@@ -223,6 +347,7 @@ export function createIdentityService({ eventBus } = {}) {
       actualCapabilities: roleCapabilities(state.identity.actualRole),
       roleOrder: [...ROLE_ORDER],
       identityStates: [...IDENTITY_STATES],
+      identityModes: [...IDENTITY_MODES],
     };
   }
 
@@ -233,22 +358,58 @@ export function createIdentityService({ eventBus } = {}) {
     return nextSnapshot;
   }
 
-  function setIdentityById(identityId, reason = "phase-8a-identity-selected") {
+  function clearDeveloperOverride() {
+    state.overrideState.enabled = false;
+    state.overrideState.role = null;
+  }
+
+  function setIdentityById(identityId, reason = "developer-fixture-identity-selected") {
     const fixture = state.availableIdentities.find((item) => item.id === identityId);
     if (!fixture) {
       return { accepted: false, reason: `Unknown identity id: ${identityId}`, identity: snapshot() };
     }
+    state.identityMode = "developer-fixture";
     state.selectedIdentityId = fixture.id;
-    state.overrideState.enabled = false;
-    state.overrideState.role = null;
+    clearDeveloperOverride();
     rebuildIdentity(fixture.actualRole);
     return { accepted: true, identity: notify(reason) };
   }
 
-  function setActualRoleOverrideEnabled(enabled, reason = "phase-8a-actual-role-override-toggle") {
+  function useAuthenticatedIdentity(reason = "real-login-auth-use-session-identity") {
+    const auth = currentAuthSnapshot();
+    state.identityMode = auth.session?.authenticated === true ? "auth-session" : "anonymous-fallback";
+    state.selectedIdentityId = state.identityMode === "anonymous-fallback" ? "anonymous-visitor" : null;
+    clearDeveloperOverride();
+    rebuildIdentity(auth.user?.actualRole || "external_user");
+    return { accepted: true, identity: notify(reason) };
+  }
+
+  function syncFromAuth(reason = "real-login-auth-session-changed") {
+    const auth = currentAuthSnapshot();
+    if (auth.session?.authenticated === true && state.identityMode !== "developer-fixture") {
+      state.identityMode = "auth-session";
+      state.selectedIdentityId = null;
+      clearDeveloperOverride();
+      rebuildIdentity(auth.user?.actualRole || "external_user");
+      return notify(reason);
+    }
+
+    if (auth.session?.authenticated !== true) {
+      state.identityMode = "anonymous-fallback";
+      state.selectedIdentityId = "anonymous-visitor";
+      clearDeveloperOverride();
+      rebuildIdentity("external_user");
+      return notify(reason);
+    }
+
+    rebuildIdentity(state.identity.displayRoleRequested);
+    return notify(reason);
+  }
+
+  function setActualRoleOverrideEnabled(enabled, reason = "developer-test-actual-role-override-toggle") {
     state.overrideState.enabled = enabled === true;
     if (!state.overrideState.enabled) state.overrideState.role = null;
-    if (state.overrideState.enabled && !state.overrideState.role) state.overrideState.role = selectedFixture().actualRole;
+    if (state.overrideState.enabled && !state.overrideState.role) state.overrideState.role = state.identity.derivedActualRole;
     rebuildIdentity(state.identity.displayRoleRequested);
     return {
       accepted: true,
@@ -257,9 +418,9 @@ export function createIdentityService({ eventBus } = {}) {
     };
   }
 
-  function setActualRoleOverride(actualRole, reason = "phase-8a-actual-role-override-selected") {
+  function setActualRoleOverride(actualRole, reason = "developer-test-actual-role-override-selected") {
     state.overrideState.enabled = true;
-    state.overrideState.role = normaliseRole(actualRole, selectedFixture().actualRole);
+    state.overrideState.role = normaliseRole(actualRole, state.identity.derivedActualRole);
     rebuildIdentity(state.identity.displayRoleRequested);
     return {
       accepted: true,
@@ -268,7 +429,7 @@ export function createIdentityService({ eventBus } = {}) {
     };
   }
 
-  function setDisplayRole(displayRole, reason = "phase-8a-display-role-selected") {
+  function setDisplayRole(displayRole, reason = "display-role-preview-selected") {
     const nextRole = normaliseRole(displayRole, state.identity.actualRole);
     rebuildIdentity(nextRole);
     return {
@@ -301,13 +462,15 @@ export function createIdentityService({ eventBus } = {}) {
       return snapshot().capabilities.includes(capabilityId);
     },
     setIdentityById,
+    useAuthenticatedIdentity,
+    syncFromAuth,
     setActualRoleOverrideEnabled,
     setActualRoleOverride,
-    setActualRole(actualRole, reason = "phase-8a-legacy-override-compat") {
+    setActualRole(actualRole, reason = "developer-test-legacy-override-compat") {
       return setActualRoleOverride(actualRole, reason);
     },
     setDisplayRole,
-    setPlaceholderUser(nextUser = {}, reason = "phase-8a-compat-placeholder-update") {
+    setPlaceholderUser(nextUser = {}, reason = "compat-placeholder-update") {
       state.identity = {
         ...state.identity,
         name: nextUser.name || state.identity.name,
