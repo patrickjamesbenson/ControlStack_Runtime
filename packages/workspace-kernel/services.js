@@ -88,10 +88,13 @@ export function createShellServices() {
       status: "placeholder",
       getSnapshot() {
         const auth = authAdapter.getAuthSnapshot();
+        const project = projectAdapter.getProjectSnapshot();
+        const identity = identityAdapter.getIdentitySnapshot();
+        const crm = crmAdapter.getCrmSnapshot({ auth, identity, project });
         return {
           owner: "shell",
           status: "placeholder",
-          phase: "real-login-auth",
+          phase: "hubspot-company-context",
           contract: createContractDiagnostics(),
           responsiveRequirement: "desktop-tablet-mobile",
           auth: {
@@ -106,6 +109,18 @@ export function createShellServices() {
             oauthProviderLive: false,
             passwordStorageLive: false,
             mfaLive: false,
+          },
+          crmCompanyContext: {
+            owner: "shell",
+            status: crm.status,
+            source: crm.source,
+            companyStatus: crm.company?.status || "no-company",
+            companyId: crm.company?.companyId || "none",
+            companyName: crm.company?.companyName || "No company linked",
+            companySource: crm.company?.source || "fallback",
+            linkedProjectId: crm.company?.linkedProjectId || "none",
+            writeEnabled: false,
+            hubspotWritesLive: false,
           },
           projectSelection: {
             owner: "shell",
@@ -173,7 +188,7 @@ export function createShellServices() {
         return {
           accepted: true,
           event,
-          phase: "real-login-auth",
+          phase: "hubspot-company-context",
         };
       },
     },

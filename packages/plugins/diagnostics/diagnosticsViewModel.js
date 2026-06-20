@@ -10,7 +10,7 @@ function readProjectTitle(project) {
 }
 
 function readCompanyName(company) {
-  return company?.companyName || "No company loaded";
+  return company?.companyName || "No company linked";
 }
 
 function readWriteEnabled(policy) {
@@ -38,6 +38,8 @@ function readProjectBrowser(adapter, snapshots, downstream) {
     auth: snapshots.auth,
     identity: snapshots.identity,
     project: snapshots.project,
+    company: snapshots.company,
+    crm: snapshots.crm,
     visibility: snapshots.visibility,
     downstream,
     flags: snapshots.flags,
@@ -129,6 +131,38 @@ export function createDiagnosticsViewModel({ adapter, diagnosticsState }) {
       passwordStorage: auth.exclusions?.passwordStorage || "excluded",
       mfa: auth.exclusions?.mfa || "deferred",
     },
+    company: {
+      owner: company.owner || "shell",
+      status: company.status || "no-company",
+      source: company.source || "fallback",
+      id: company.companyId || "none",
+      name: readCompanyName(company),
+      domain: company.domain || "none",
+      website: company.website || "none",
+      lifecycleStage: company.lifecycleStage || "none",
+      linkedProjectId: company.linkedProjectId || "none",
+      linkedAt: company.linkedAt || "none",
+      ownerName: company.ownerName || "none",
+      writeEnabled: stateLabel(company.writeEnabled),
+      diagnosticsReason: company.diagnostics?.reason || "No company diagnostics reason available.",
+    },
+    crm: {
+      owner: crm.owner || "shell",
+      status: crm.status || "no-company",
+      source: crm.source || "hubspot-company-context-read-safe",
+      readOnly: stateLabel(crm.readOnly),
+      selectedCompanyId: crm.selectedCompanyId || "none",
+      projectFallback: stateLabel(crm.useProjectLinkedFallback),
+      hubspotStatus: crm.hubspot?.status || "read-safe-deferred-writes",
+      hubspotAvailable: stateLabel(crm.hubspot?.available),
+      writeFlowsEnabled: stateLabel(readWriteEnabled(writePolicy)),
+      writeReason: writePolicy.reason || "CRM writes are deferred.",
+      contactStatus: crm.contact?.status || "empty",
+      contactEmail: crm.contact?.email || "none",
+      dealStatus: crm.deal?.status || "deferred",
+      availableCompanies: (crm.availableCompanies || []).map((item) => `${item.companyId}:${item.companyName}`),
+      capabilities: crm.capabilities || {},
+    },
     sceneBuilder: {
       structuralRegistered: stateLabel(registeredModules.includes("scene_builder")),
       routeStatus: registeredModules.includes("scene_builder") ? "structural-module" : "not-registered",
@@ -172,6 +206,8 @@ export function createDiagnosticsViewModel({ adapter, diagnosticsState }) {
       selectedAt: project.selection?.selectedAt || project.metadata?.selectedAt || "none",
       client: currentProject.client || "none",
       site: currentProject.site || "none",
+      companyName: company.companyName || "No company linked",
+      companySource: company.source || "fallback",
       saveStatus: project.save?.status || project.saveState?.status || "deferred",
       restoreStatus: project.restore?.status || project.restoreState?.status || "deferred",
       hydrateStatus: project.hydrate?.status || "idle",
@@ -249,18 +285,6 @@ export function createDiagnosticsViewModel({ adapter, diagnosticsState }) {
       emailSendLive: "no",
       hubspotWriteLive: "no",
     },
-    company: {
-      owner: company.owner || "shell",
-      status: company.status || "placeholder",
-      name: readCompanyName(company),
-    },
-    crm: {
-      owner: crm.owner || "shell",
-      status: crm.status || "placeholder",
-      hubspotStatus: crm.hubspot?.status || "placeholder",
-      writeFlowsEnabled: stateLabel(readWriteEnabled(writePolicy)),
-      writeReason: writePolicy.reason || "CRM writes are deferred.",
-    },
     handoff: {
       owner: snapshots.handoff.owner,
       status: snapshots.handoff.status,
@@ -319,16 +343,14 @@ export function createDiagnosticsViewModel({ adapter, diagnosticsState }) {
       statuses: pluginStatus.plugins || [],
     },
     constraints: [
-      "Auth/session is shell-owned and live",
-      "Authenticated identity is the default identity source",
-      "Actual role remains shell-derived from authenticated identity/classification",
-      "Display-role preview remains preview-only",
-      "Developer fixture identity remains clearly marked as support mode",
-      "Developer/test actual-role override remains support only",
-      "Visibility remains shell-owned",
+      "Company/CRM context is shell-owned and read-safe",
+      "Modules consume company context through shell context/services only",
+      "HubSpot writes are disabled",
+      "Company/contact/deal mutation is deferred",
+      "Pipeline updates are deferred",
+      "Auth/session remains shell-owned and live",
       "Project selection/save/restore/hydrate/handoff-share flows remain intact",
-      "OAuth, password storage, MFA, and production credential database are excluded/deferred",
-      "HubSpot writes are not live",
+      "Visibility remains shell-owned",
       "Scene Builder remains structural only",
       "EGRES route is not registered",
       "Compliance Matters route is not registered",

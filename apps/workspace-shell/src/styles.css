@@ -145,11 +145,13 @@ select {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
-.cs-shell__project-card {
+.cs-shell__project-card,
+.cs-shell__company-card {
   background: rgba(255, 255, 255, 0.1);
 }
 
 .cs-shell__project-card h2,
+.cs-shell__company-card h3,
 .cs-shell__project-browser-card h3,
 .cs-shell__tools-card h3,
 .cs-shell__user-panel h3,
@@ -161,6 +163,7 @@ select {
 }
 
 .cs-shell__project-card label,
+.cs-shell__company-card label,
 .cs-shell__auth-card label,
 .cs-shell__visibility-card label {
   display: block;
@@ -233,6 +236,7 @@ select {
   font-weight: 700;
 }
 
+.cs-shell__company-card p,
 .cs-shell__tools-card p,
 .cs-shell__auth-card p,
 .cs-shell__visibility-card p,
@@ -263,6 +267,7 @@ select {
 }
 
 .cs-shell__auth-button,
+.cs-shell__company-button,
 .cs-shell__project-browser-save,
 .cs-shell__project-browser-restore,
 .cs-shell__project-browser-handoff {
@@ -278,7 +283,8 @@ select {
   box-shadow: 0 8px 18px rgba(15, 23, 42, 0.14);
 }
 
-.cs-shell__project-browser-save {
+.cs-shell__project-browser-save,
+.cs-shell__company-button {
   background: var(--cs-accent-soft);
   color: #1e40af;
 }
@@ -289,6 +295,7 @@ select {
 }
 
 .cs-shell__auth-button:disabled,
+.cs-shell__company-button:disabled,
 .cs-shell__project-browser-save:disabled,
 .cs-shell__project-browser-restore:disabled,
 .cs-shell__project-browser-handoff:disabled {

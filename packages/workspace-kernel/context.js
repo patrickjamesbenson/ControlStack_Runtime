@@ -37,14 +37,15 @@ function readIdentity(service) {
   };
 }
 
-function readCompany(service) {
-  if (typeof service.getCompanyContext === "function") return service.getCompanyContext();
+function readCompany(service, context = {}) {
+  if (typeof service.getCompanyContext === "function") return service.getCompanyContext(context);
   return {
     owner: service.owner,
     status: service.status,
-    source: "phase-4-fallback",
+    source: "crm-company-context-fallback",
     companyId: null,
-    companyName: "No company loaded",
+    companyName: "No company linked",
+    writeEnabled: false,
     diagnostics: {
       hydrated: false,
       writeFlowsEnabled: false,
@@ -53,13 +54,14 @@ function readCompany(service) {
   };
 }
 
-function readCrm(service) {
-  if (typeof service.getCrmSnapshot === "function") return service.getCrmSnapshot();
-  const company = readCompany(service);
+function readCrm(service, context = {}) {
+  if (typeof service.getCrmSnapshot === "function") return service.getCrmSnapshot(context);
+  const company = readCompany(service, context);
   return {
     owner: service.owner,
     status: service.status,
     source: company.source,
+    readOnly: true,
     company,
     deal: null,
     contact: null,
@@ -75,22 +77,22 @@ function readDiagnostics(service) {
   return {
     owner: service.owner,
     status: service.status,
-    phase: "real-login-auth",
+    phase: "hubspot-company-context",
   };
 }
 
 export function createShellContext({ route, services, mountedModuleId = null }) {
   const auth = readAuth(services.auth);
-  const crm = readCrm(services.crm);
   const project = services.project.getProjectSnapshot();
   const identity = readIdentity(services.identity);
+  const crm = readCrm(services.crm, { auth, identity, project });
   const visibility = services.visibility.getVisibilitySnapshot({ auth, identity, project });
   const downstream = services.downstream.getDownstreamContextSnapshot({ identity, project, visibility });
   const flags = services.flags.getFlagSnapshot();
   const diagnostics = readDiagnostics(services.diagnostics);
   const baseContext = {
     contractVersion: WORKSPACE_CONTRACT_VERSION,
-    phase: "real-login-auth",
+    phase: "hubspot-company-context",
     route,
     auth,
     identity,

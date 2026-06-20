@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="/apps/workspace-shell/src/styles.css" />
   </head>
   <body>
-    <div id="cs-shell-root" class="cs-shell" data-phase="12B-shell-ux-visual-restoration">
+    <div id="cs-shell-root" class="cs-shell" data-phase="hubspot-company-context">
       <header class="cs-shell__topbar" aria-label="Workspace top bar">
         <div class="cs-shell__brand-lockup">
           <p class="cs-shell__eyebrow">ControlStack Runtime</p>
@@ -25,6 +25,18 @@
               <label for="cs-shell-project-select">Select project</label>
               <select id="cs-shell-project-select"></select>
               <dl id="cs-shell-project-summary"></dl>
+            </section>
+
+            <section class="cs-shell__company-card cs-shell__sidebar-section" aria-label="Company account context">
+              <p class="cs-shell__section-kicker">Company context</p>
+              <h3>Account context</h3>
+              <p>Read-safe shell-owned company context. HubSpot writes and CRM mutation remain deferred.</p>
+              <label for="cs-shell-company-select">Fixture/manual company</label>
+              <select id="cs-shell-company-select"></select>
+              <button id="cs-shell-company-link-button" type="button" class="cs-shell__company-button">Link Company Context</button>
+              <button id="cs-shell-company-project-button" type="button" class="cs-shell__company-button">Use Project Company</button>
+              <button id="cs-shell-company-clear-button" type="button" class="cs-shell__company-button">Clear Company</button>
+              <dl id="cs-shell-company-summary"></dl>
             </section>
 
             <nav class="cs-shell__workflow-nav cs-shell__sidebar-section" aria-label="Workflow modules">

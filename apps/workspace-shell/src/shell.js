@@ -13,6 +13,11 @@ const homePanel = document.getElementById("cs-workspace-home");
 const contextSummary = document.getElementById("cs-shell-context-summary");
 const projectSelect = document.getElementById("cs-shell-project-select");
 const projectSummary = document.getElementById("cs-shell-project-summary");
+const companySelect = document.getElementById("cs-shell-company-select");
+const companySummary = document.getElementById("cs-shell-company-summary");
+const companyLinkButton = document.getElementById("cs-shell-company-link-button");
+const companyProjectButton = document.getElementById("cs-shell-company-project-button");
+const companyClearButton = document.getElementById("cs-shell-company-clear-button");
 const authUserSelect = document.getElementById("cs-shell-auth-user-select");
 const authSummary = document.getElementById("cs-shell-auth-summary");
 const signInButton = document.getElementById("cs-shell-sign-in-button");
@@ -92,8 +97,10 @@ function ensureModuleNavLink(moduleId, label) {
 
 function ensureProjectBrowserPanel() {
   if (projectBrowserPanel) return;
+  const companyCard = document.querySelector(".cs-shell__company-card");
   const projectCard = document.querySelector(".cs-shell__project-card");
-  if (!projectCard) return;
+  const anchor = companyCard || projectCard;
+  if (!anchor) return;
 
   projectBrowserPanel = document.createElement("section");
   projectBrowserPanel.className = "cs-shell__project-browser-card cs-shell__sidebar-section";
@@ -125,7 +132,7 @@ function ensureProjectBrowserPanel() {
   projectBrowserList.className = "cs-shell__project-browser-list";
 
   projectBrowserPanel.append(kicker, heading, note, projectBrowserSaveButton, projectBrowserRestoreButton, projectBrowserHandoffButton, projectBrowserSummary, projectBrowserList);
-  projectCard.insertAdjacentElement("afterend", projectBrowserPanel);
+  anchor.insertAdjacentElement("afterend", projectBrowserPanel);
 }
 
 function readProjectTitle(project) {
@@ -171,6 +178,37 @@ function renderAuthControls({ services, context }) {
   if (useAuthIdentityButton) useAuthIdentityButton.disabled = !signedIn;
 }
 
+function renderCompanyControls({ services, context }) {
+  if (!companySelect || !companySummary) return;
+  const companies = services.crm.getAvailableCompanies?.() || [];
+  clearElement(companySelect);
+  const projectOption = document.createElement("option");
+  projectOption.value = "";
+  projectOption.textContent = "Use current project company context";
+  companySelect.appendChild(projectOption);
+  for (const company of companies) {
+    const option = document.createElement("option");
+    option.value = company.companyId;
+    option.textContent = `${company.companyName} · ${company.domain}`;
+    companySelect.appendChild(option);
+  }
+  companySelect.value = context.crm.selectedCompanyId || "";
+  appendDefinitionListRows(companySummary, [
+    ["owner", context.company.owner || "shell"],
+    ["status", context.company.status || "no-company"],
+    ["company", context.company.companyName || "No company linked"],
+    ["id", context.company.companyId || "none"],
+    ["source", context.company.source || "fallback"],
+    ["project", context.company.linkedProjectId || "none"],
+    ["domain", context.company.domain || "none"],
+    ["contact", context.crm.contact?.email || "none"],
+    ["writes", context.crm.writePolicy?.enabled ? "enabled" : "disabled"],
+  ]);
+  if (companyLinkButton) companyLinkButton.disabled = !companySelect.value;
+  if (companyProjectButton) companyProjectButton.disabled = false;
+  if (companyClearButton) companyClearButton.disabled = false;
+}
+
 function renderContextSummary(context) {
   appendDefinitionListRows(contextSummary, [
     ["phase", context.phase],
@@ -183,6 +221,8 @@ function renderContextSummary(context) {
     ["actual role", context.identity.actualRole],
     ["project", `${context.project.owner}:${context.project.status}`],
     ["current", readProjectTitle(context.project)],
+    ["company", `${context.company.owner}:${context.company.status}:${context.company.companyName}`],
+    ["crm writes", context.crm.writePolicy?.enabled ? "enabled" : "disabled"],
     ["browser", `${context.projectBrowser.owner}:${context.projectBrowser.status}`],
     ["visibility", `${context.visibility.owner}:${context.visibility.status}`],
     ["save", `${context.project.save.owner}:${context.project.save.available ? "live" : "deferred"}`],
@@ -212,6 +252,8 @@ function renderProjectSelection({ services, context }) {
     ["id", selectedProjectId || "none"],
     ["readiness", context.project.metadata?.readiness || "not-ready"],
     ["source", context.project.selection?.source || context.project.metadata?.source || "unknown"],
+    ["company", context.company.companyName || "No company linked"],
+    ["company source", context.company.source || "fallback"],
     ["restored envelope", context.project.metadata?.restoredEnvelopeId || "none"],
     ["restored at", context.project.metadata?.restoredAt || "none"],
     ["save", context.project.save?.status || "deferred"],
@@ -235,6 +277,7 @@ function renderProjectBrowser({ context }) {
   const selected = selectedProjectSummary(browser);
   appendDefinitionListRows(projectBrowserSummary, [
     ["current", browser.currentProject?.title || "No project loaded"],
+    ["company", context.company.companyName || "No company linked"],
     ["selected envelope", browser.selectedProjectId || "none"],
     ["selected restore", selected?.restoreEligible ? "enabled" : "disabled"],
     ["runtime saved", browser.savedCount || 0],
@@ -490,6 +533,7 @@ function bootWorkspaceShell() {
     context = createShellContext({ route, services, mountedModuleId: route.moduleId });
     window.__csLatestShellContext = context;
     renderAuthControls({ services, context });
+    renderCompanyControls({ services, context });
     renderContextSummary(context);
     renderProjectSelection({ services, context });
     renderProjectBrowser({ context });
@@ -540,6 +584,32 @@ function bootWorkspaceShell() {
     setStatus(`Using authenticated identity source: ${nextContext.identity.currentUser.name}.`);
   }
 
+  function handleCompanyLink() {
+    const result = services.crm.linkCompanyToCurrentProject(companySelect?.value, context, "shell-company-fixture-linked");
+    const nextContext = refreshContext("company-context-linked");
+    if (!result.accepted) {
+      setStatus(`Company context link failed: ${result.reason || result.status}`);
+      return;
+    }
+    setStatus(`Company context linked: ${nextContext.company.companyName}. CRM writes remain disabled.`);
+  }
+
+  function handleCompanyProjectFallback() {
+    const result = services.crm.useProjectCompanyContext(context, "shell-company-project-context-selected");
+    const nextContext = refreshContext("company-context-project-linked");
+    if (!result.accepted) {
+      setStatus(`Project company context failed: ${result.reason || result.status}`);
+      return;
+    }
+    setStatus(`Using project-linked company context: ${nextContext.company.companyName}. CRM writes remain disabled.`);
+  }
+
+  function handleCompanyClear() {
+    services.crm.clearCompanyContext(context, "shell-company-context-cleared");
+    const nextContext = refreshContext("company-context-cleared");
+    setStatus(`${nextContext.company.companyName}. CRM writes remain disabled.`);
+  }
+
   function handleProjectSelectionChange(event) {
     const result = services.project.selectProject(event.target.value, "shell-project-selector-change");
     if (!result.accepted) {
@@ -547,7 +617,7 @@ function bootWorkspaceShell() {
       return;
     }
     const nextContext = refreshContext("project-switch");
-    setStatus(`Selected ${readProjectTitle(nextContext.project)}. Project context updated.`);
+    setStatus(`Selected ${readProjectTitle(nextContext.project)}. Company context source: ${nextContext.company.source}.`);
   }
 
   function handleProjectBrowserSave() {
@@ -645,6 +715,12 @@ function bootWorkspaceShell() {
   signInButton?.addEventListener("click", handleAuthSignIn);
   signOutButton?.addEventListener("click", handleAuthSignOut);
   useAuthIdentityButton?.addEventListener("click", handleUseAuthenticatedIdentity);
+  companyLinkButton?.addEventListener("click", handleCompanyLink);
+  companyProjectButton?.addEventListener("click", handleCompanyProjectFallback);
+  companyClearButton?.addEventListener("click", handleCompanyClear);
+  companySelect?.addEventListener("change", () => {
+    if (companyLinkButton) companyLinkButton.disabled = !companySelect.value;
+  });
   projectBrowserSaveButton?.addEventListener("click", handleProjectBrowserSave);
   projectBrowserRestoreButton?.addEventListener("click", handleProjectBrowserRestore);
   projectBrowserHandoffButton?.addEventListener("click", handleProjectBrowserHandoffShare);
@@ -657,7 +733,7 @@ function bootWorkspaceShell() {
   projectModeSelect?.addEventListener("change", handleProjectModeChange);
 
   if (showHomeIfRequested(route.moduleId)) {
-    setStatus("Workspace home mounted. Shell chrome is project-first; user/session tools are in the user affordance.");
+    setStatus("Workspace home mounted. Company context is shell-owned and read-safe; CRM writes remain disabled.");
     scheduleOptionalDiagnosticsPlugin({ services, getContext: () => context, registry, onPluginReady: rememberDiagnosticsPlugin });
     return;
   }
@@ -673,7 +749,7 @@ function bootWorkspaceShell() {
   try {
     mountedModuleApi = moduleApi;
     moduleApi.mount({ container: moduleHost, services, context });
-    setStatus(`Mounted ${route.moduleId}. Shell chrome is project-first; user/session tools are in the user affordance.`);
+    setStatus(`Mounted ${route.moduleId}. Company context is shell-owned and read-safe; CRM writes remain disabled.`);
     services.eventBus.emit("module:mounted", { moduleId: route.moduleId, route });
     scheduleOptionalDiagnosticsPlugin({ services, getContext: () => context, registry, onPluginReady: rememberDiagnosticsPlugin });
   } catch (error) {

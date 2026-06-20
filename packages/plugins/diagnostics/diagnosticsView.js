@@ -53,7 +53,7 @@ export function renderDiagnosticsView(container, viewModel) {
   const intro = document.createElement("div");
   appendText(intro, "p", "Optional plugin", "cs-shell__eyebrow");
   appendText(intro, "h2", "Diagnostics panel");
-  appendText(intro, "p", "Diagnostics reads shell-owned snapshots, including real login/auth session state.");
+  appendText(intro, "p", "Diagnostics reads shell-owned snapshots, including read-safe CRM/company context.");
   article.appendChild(intro);
 
   appendSection(article, "Route and shell", [
@@ -84,6 +84,40 @@ export function renderDiagnosticsView(container, viewModel) {
     ["password storage", viewModel.auth.passwordStorage],
     ["MFA", viewModel.auth.mfa],
   ]);
+
+  appendSection(article, "Company / CRM context", [
+    ["Company owner", viewModel.company.owner],
+    ["Company status", viewModel.company.status],
+    ["Company source", viewModel.company.source],
+    ["Company ID", viewModel.company.id],
+    ["Company", viewModel.company.name],
+    ["Domain", viewModel.company.domain],
+    ["Website", viewModel.company.website],
+    ["Lifecycle", viewModel.company.lifecycleStage],
+    ["Linked project", viewModel.company.linkedProjectId],
+    ["Linked at", viewModel.company.linkedAt],
+    ["Owner", viewModel.company.ownerName],
+    ["Company write enabled", viewModel.company.writeEnabled],
+    ["CRM owner", viewModel.crm.owner],
+    ["CRM status", viewModel.crm.status],
+    ["CRM source", viewModel.crm.source],
+    ["Read only", viewModel.crm.readOnly],
+    ["Selected company", viewModel.crm.selectedCompanyId],
+    ["Project fallback", viewModel.crm.projectFallback],
+    ["HubSpot status", viewModel.crm.hubspotStatus],
+    ["HubSpot available", viewModel.crm.hubspotAvailable],
+    ["CRM writes enabled", viewModel.crm.writeFlowsEnabled],
+    ["Write policy", viewModel.crm.writeReason],
+    ["Contact status", viewModel.crm.contactStatus],
+    ["Contact email", viewModel.crm.contactEmail],
+    ["Deal status", viewModel.crm.dealStatus],
+  ]);
+
+  const companyFixturesSection = document.createElement("section");
+  companyFixturesSection.className = "cs-diagnostics__section";
+  appendText(companyFixturesSection, "h3", "Available company fixtures");
+  appendPillList(companyFixturesSection, viewModel.crm.availableCompanies.length ? viewModel.crm.availableCompanies : ["none"]);
+  article.appendChild(companyFixturesSection);
 
   appendSection(article, "Project Browser", [
     ["owner", viewModel.projectBrowser.owner],
@@ -207,6 +241,10 @@ export function renderDiagnosticsView(container, viewModel) {
     ["Project ID", viewModel.project.projectId],
     ["Readiness", viewModel.project.readiness],
     ["Project source", viewModel.project.source],
+    ["Client", viewModel.project.client],
+    ["Site", viewModel.project.site],
+    ["Company", viewModel.project.companyName],
+    ["Company source", viewModel.project.companySource],
     ["Restored from envelope", viewModel.project.restoredFromEnvelope],
     ["Restored envelope", viewModel.project.restoredEnvelopeId],
     ["Restored at", viewModel.project.restoredAt],
@@ -255,13 +293,7 @@ export function renderDiagnosticsView(container, viewModel) {
   appendPillList(consumerSection, viewModel.downstream.consumerRows.map(consumerText));
   article.appendChild(consumerSection);
 
-  appendSection(article, "Company, CRM, and handoff", [
-    ["Company owner", viewModel.company.owner],
-    ["Company status", viewModel.company.status],
-    ["Company", viewModel.company.name],
-    ["CRM owner", viewModel.crm.owner],
-    ["CRM status", viewModel.crm.status],
-    ["CRM writes enabled", viewModel.crm.writeFlowsEnabled],
+  appendSection(article, "Handoff", [
     ["Handoff owner", viewModel.handoff.owner],
     ["Handoff status", viewModel.handoff.status],
     ["Handoff available", viewModel.handoff.available],
@@ -279,7 +311,7 @@ export function renderDiagnosticsView(container, viewModel) {
 
   const constraintsSection = document.createElement("section");
   constraintsSection.className = "cs-diagnostics__section";
-  appendText(constraintsSection, "h3", "Real login/auth constraints");
+  appendText(constraintsSection, "h3", "Company context constraints");
   appendPillList(constraintsSection, viewModel.constraints);
   article.appendChild(constraintsSection);
 
