@@ -18,6 +18,11 @@ const authSummary = document.getElementById("cs-shell-auth-summary");
 const signInButton = document.getElementById("cs-shell-sign-in-button");
 const signOutButton = document.getElementById("cs-shell-sign-out-button");
 const useAuthIdentityButton = document.getElementById("cs-shell-use-auth-identity-button");
+const userMenuButton = document.getElementById("cs-shell-user-menu-button");
+const userMenuPanel = document.getElementById("cs-shell-user-menu-panel");
+const userAvatar = document.getElementById("cs-shell-user-avatar");
+const userName = document.getElementById("cs-shell-user-name");
+const userMeta = document.getElementById("cs-shell-user-meta");
 const identitySelect = document.getElementById("cs-shell-identity-select");
 const resolvedIdentitySummary = document.getElementById("cs-shell-resolved-identity-summary");
 const roleOverrideToggle = document.getElementById("cs-shell-role-override-toggle");
@@ -60,8 +65,23 @@ function appendProjectBrowserLine(parent, text, tagName = "span") {
   return element;
 }
 
+function initialsFor(name = "Workspace User") {
+  return String(name || "Workspace User")
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() || "")
+    .join("") || "CS";
+}
+
+function setUserMenuOpen(isOpen) {
+  if (!userMenuPanel || !userMenuButton) return;
+  userMenuPanel.hidden = !isOpen;
+  userMenuButton.setAttribute("aria-expanded", isOpen ? "true" : "false");
+}
+
 function ensureModuleNavLink(moduleId, label) {
-  const nav = document.querySelector(".cs-shell__sidebar nav");
+  const nav = document.querySelector(".cs-shell__workflow-nav") || document.querySelector(".cs-shell__sidebar nav");
   if (!nav || document.querySelector(`[data-module-link="${moduleId}"]`)) return;
   const link = document.createElement("a");
   link.href = `/workspace?module=${moduleId}`;
@@ -76,13 +96,16 @@ function ensureProjectBrowserPanel() {
   if (!projectCard) return;
 
   projectBrowserPanel = document.createElement("section");
-  projectBrowserPanel.className = "cs-shell__project-browser-card";
-  projectBrowserPanel.setAttribute("aria-label", "Project Browser handoff share foundation");
+  projectBrowserPanel.className = "cs-shell__project-browser-card cs-shell__sidebar-section";
+  projectBrowserPanel.setAttribute("aria-label", "Project Browser lifecycle actions");
 
+  const kicker = document.createElement("p");
+  kicker.className = "cs-shell__section-kicker";
+  kicker.textContent = "Project actions";
   const heading = document.createElement("h3");
   heading.textContent = "Project Browser";
   const note = document.createElement("p");
-  note.textContent = "P4 handoff/share: package preparation is shell-owned. External delivery, email, and HubSpot writes are not live.";
+  note.textContent = "Save, restore, hydrate, and prepare handoff/share packages without changing module ownership.";
   projectBrowserSaveButton = document.createElement("button");
   projectBrowserSaveButton.type = "button";
   projectBrowserSaveButton.className = "cs-shell__project-browser-save";
@@ -101,7 +124,7 @@ function ensureProjectBrowserPanel() {
   projectBrowserList.id = "cs-shell-project-browser-list";
   projectBrowserList.className = "cs-shell__project-browser-list";
 
-  projectBrowserPanel.append(heading, note, projectBrowserSaveButton, projectBrowserRestoreButton, projectBrowserHandoffButton, projectBrowserSummary, projectBrowserList);
+  projectBrowserPanel.append(kicker, heading, note, projectBrowserSaveButton, projectBrowserRestoreButton, projectBrowserHandoffButton, projectBrowserSummary, projectBrowserList);
   projectCard.insertAdjacentElement("afterend", projectBrowserPanel);
 }
 
@@ -125,10 +148,15 @@ function renderAuthControls({ services, context }) {
   }
   if (context.auth.session?.userId) authUserSelect.value = context.auth.session.userId;
   const signedIn = context.auth.session?.authenticated === true;
+  const activeName = context.auth.session?.name || context.identity.currentUser?.name || "Anonymous visitor";
+  const activeMeta = signedIn ? `${context.identity.actualRole} · ${context.identity.lookup?.identitySource || "auth-session"}` : `${context.identity.lookup?.identitySource || "anonymous-fallback"} · ${context.identity.displayRole}`;
+  if (userAvatar) userAvatar.textContent = initialsFor(activeName);
+  if (userName) userName.textContent = activeName;
+  if (userMeta) userMeta.textContent = activeMeta;
   appendDefinitionListRows(authSummary, [
     ["auth status", context.auth.status || "signed-out"],
     ["signed in", signedIn ? "yes" : "no"],
-    ["user", context.auth.session?.name || context.auth.user?.name || "Anonymous visitor"],
+    ["user", activeName],
     ["email", context.auth.session?.email || "none"],
     ["provider", context.auth.session?.provider || "none"],
     ["session id", context.auth.session?.sessionId || "none"],
@@ -206,33 +234,17 @@ function renderProjectBrowser({ context }) {
   const packageSummary = handoffShare.packageSummary || {};
   const selected = selectedProjectSummary(browser);
   appendDefinitionListRows(projectBrowserSummary, [
-    ["owner", browser.owner],
-    ["status", browser.status],
-    ["browser read only", browser.readOnly ? "yes" : "no"],
     ["current", browser.currentProject?.title || "No project loaded"],
-    ["current id", browser.currentProject?.projectId || "none"],
-    ["restored source", browser.currentProject?.source || "none"],
     ["selected envelope", browser.selectedProjectId || "none"],
     ["selected restore", selected?.restoreEligible ? "enabled" : "disabled"],
-    ["runtime saved count", browser.savedCount || 0],
-    ["fixture count", browser.fixtureCount || 0],
-    ["save", browser.capabilities?.save ? "live" : "deferred"],
-    ["save status", save.status || "ready"],
-    ["restore", browser.capabilities?.restore ? "live" : "deferred"],
-    ["restore status", restore.status || "ready"],
-    ["last restored", restore.lastRestoredAt || "none"],
-    ["last restored envelope", restore.lastRestoredEnvelopeId || "none"],
-    ["hydrate", browser.capabilities?.hydrate ? "live" : "deferred"],
-    ["hydrate status", hydrate.status || "idle"],
-    ["hydrated modules", (hydrate.lastHydratedModules || []).join(", ") || "none"],
-    ["handoff/share", browser.capabilities?.handoff || browser.capabilities?.share ? "package live" : "deferred"],
-    ["package status", handoffShare.status || "ready"],
+    ["runtime saved", browser.savedCount || 0],
+    ["fixtures", browser.fixtureCount || 0],
+    ["save", save.status || "ready"],
+    ["restore", restore.status || "ready"],
+    ["hydrate", hydrate.status || "idle"],
+    ["handoff/share", handoffShare.status || "ready"],
     ["last package", handoffShare.lastPreparedPackageId || "none"],
-    ["package envelope", handoffShare.lastPreparedEnvelopeId || packageSummary.envelopeId || "none"],
-    ["package prepared", handoffShare.lastPreparedAt || "none"],
     ["delivery", handoffShare.delivery?.externalDelivery ? "live" : "deferred"],
-    ["email", handoffShare.delivery?.emailSend ? "live" : "deferred"],
-    ["HubSpot", handoffShare.delivery?.hubspotWrite ? "live" : "deferred"],
   ]);
   if (projectBrowserSaveButton) {
     projectBrowserSaveButton.disabled = browser.capabilities?.save !== true;
@@ -265,13 +277,9 @@ function renderProjectBrowser({ context }) {
     item.dataset.envelopeId = project.envelopeId || project.projectId;
     item.tabIndex = 0;
     appendProjectBrowserLine(item, project.title, "strong");
+    appendProjectBrowserLine(item, `${project.readOnly ? "fixture" : "runtime save"} · restore ${project.restoreEligible ? "enabled" : "disabled"}`);
     appendProjectBrowserLine(item, `${project.client} · ${project.site}`);
-    appendProjectBrowserLine(item, `${project.readOnly ? "fixture/read-only" : "runtime save"} · ${project.lifecycleStatus} · ${project.savedAt || project.updatedAt}`);
-    appendProjectBrowserLine(item, `restore: ${project.restoreEligible ? "enabled" : "disabled"}`);
-    appendProjectBrowserLine(item, project.restoreDisabledReason || "Runtime saved envelope can be restored.");
-    appendProjectBrowserLine(item, `handoff/share: ${packageSummary.envelopeId === project.envelopeId ? `prepared ${packageSummary.packageId}` : "package not prepared"}`);
-    appendProjectBrowserLine(item, `saved by ${project.savedBy} · modules: ${(project.moduleIds || []).join(", ") || "none"}`);
-    appendProjectBrowserLine(item, `envelope: ${project.envelopeId || project.projectId}`);
+    appendProjectBrowserLine(item, `handoff/share: ${packageSummary.envelopeId === project.envelopeId ? `prepared ${packageSummary.packageId}` : "not prepared"}`);
     projectBrowserList.appendChild(item);
   }
 }
@@ -330,14 +338,10 @@ function renderIdentityVisibilityControls({ services, context }) {
   const currentDecision = context.visibility.moduleReasons[context.route.moduleId];
   appendDefinitionListRows(visibilitySummary, [
     ["mode", "auth-derived identity / developer visibility support"],
-    ["real auth", context.auth.live ? "yes" : "no"],
     ["authenticated", context.auth.session?.authenticated ? "yes" : "no"],
     ["display role", context.identity.displayRole],
-    ["display preview only", "yes"],
-    ["display clamped", context.identity.displayRoleClamped ? "yes" : "no"],
-    ["override label", context.identity.resolver?.overrideLabel || "developer/test actual-role override"],
+    ["preview only", "yes"],
     ["project input", context.visibility.inputs?.projectMode || "auto"],
-    ["project present", context.visibility.inputs?.projectPresent ? "yes" : "no"],
     ["visible", visible],
     ["hidden", hidden],
     ["route reason", currentDecision?.reason || "not_registered"],
@@ -507,6 +511,11 @@ function bootWorkspaceShell() {
     diagnosticsPluginRegistry = pluginRegistry;
   }
 
+  function handleUserMenuToggle() {
+    const isOpen = userMenuButton?.getAttribute("aria-expanded") !== "true";
+    setUserMenuOpen(isOpen);
+  }
+
   function handleAuthSignIn() {
     const result = services.auth.signIn(authUserSelect?.value || undefined, "real-login-auth-ui-sign-in");
     services.identity.useAuthenticatedIdentity("real-login-auth-ui-sign-in-sync");
@@ -583,6 +592,12 @@ function bootWorkspaceShell() {
   }
 
   function handleIdentityChange(event) {
+    if (!event.target.value) {
+      services.identity.useAuthenticatedIdentity("developer-fixture-cleared-use-auth-or-anonymous");
+      const nextContext = refreshContext("developer-fixture-cleared");
+      setStatus(`Developer fixture cleared. Current identity source: ${nextContext.identity.lookup?.identitySource || "anonymous-fallback"}.`);
+      return;
+    }
     const result = services.identity.setIdentityById(event.target.value, "developer-fixture-identity-selection-change");
     if (!result.accepted) {
       setStatus(`Developer fixture lookup failed: ${result.reason}`);
@@ -626,6 +641,7 @@ function bootWorkspaceShell() {
   ensureModuleNavLink("scene_builder", "Scene Builder");
 
   refreshContext("initial-render");
+  userMenuButton?.addEventListener("click", handleUserMenuToggle);
   signInButton?.addEventListener("click", handleAuthSignIn);
   signOutButton?.addEventListener("click", handleAuthSignOut);
   useAuthIdentityButton?.addEventListener("click", handleUseAuthenticatedIdentity);
@@ -641,7 +657,7 @@ function bootWorkspaceShell() {
   projectModeSelect?.addEventListener("change", handleProjectModeChange);
 
   if (showHomeIfRequested(route.moduleId)) {
-    setStatus("Workspace home mounted. Auth/session is live and shell-owned; developer controls are support only.");
+    setStatus("Workspace home mounted. Shell chrome is project-first; user/session tools are in the user affordance.");
     scheduleOptionalDiagnosticsPlugin({ services, getContext: () => context, registry, onPluginReady: rememberDiagnosticsPlugin });
     return;
   }
@@ -657,7 +673,7 @@ function bootWorkspaceShell() {
   try {
     mountedModuleApi = moduleApi;
     moduleApi.mount({ container: moduleHost, services, context });
-    setStatus(`Mounted ${route.moduleId}. Auth/session is live and shell-owned; project lifecycle remains intact.`);
+    setStatus(`Mounted ${route.moduleId}. Shell chrome is project-first; user/session tools are in the user affordance.`);
     services.eventBus.emit("module:mounted", { moduleId: route.moduleId, route });
     scheduleOptionalDiagnosticsPlugin({ services, getContext: () => context, registry, onPluginReady: rememberDiagnosticsPlugin });
   } catch (error) {

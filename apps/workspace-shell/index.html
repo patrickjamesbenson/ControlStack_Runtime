@@ -7,9 +7,9 @@
     <link rel="stylesheet" href="/apps/workspace-shell/src/styles.css" />
   </head>
   <body>
-    <div id="cs-shell-root" class="cs-shell" data-phase="real-login-auth">
+    <div id="cs-shell-root" class="cs-shell" data-phase="12B-shell-ux-visual-restoration">
       <header class="cs-shell__topbar" aria-label="Workspace top bar">
-        <div>
+        <div class="cs-shell__brand-lockup">
           <p class="cs-shell__eyebrow">ControlStack Runtime</p>
           <h1>Workspace Shell</h1>
         </div>
@@ -17,62 +17,87 @@
       </header>
 
       <div class="cs-shell__body">
-        <aside class="cs-shell__sidebar" aria-label="Workspace sidebar">
-          <h2>Workspace</h2>
-          <nav>
-            <a href="/workspace?module=cs_selector" data-module-link="cs_selector">cs_selector</a>
-            <a href="/workspace?module=emergence" data-module-link="emergence">emergence</a>
-            <a href="/workspace?module=workspace_home" data-module-link="workspace_home">Home</a>
-          </nav>
-          <section class="cs-shell__auth-card" aria-label="Real login and auth session">
-            <h3>Login / auth</h3>
-            <p>Shell-owned auth session. Local runtime session only; OAuth, password storage, MFA, and HubSpot writes are not live.</p>
-            <label for="cs-shell-auth-user-select">Sign in as</label>
-            <select id="cs-shell-auth-user-select"></select>
-            <button id="cs-shell-sign-in-button" type="button" class="cs-shell__auth-button">Sign in</button>
-            <button id="cs-shell-sign-out-button" type="button" class="cs-shell__auth-button">Sign out</button>
-            <button id="cs-shell-use-auth-identity-button" type="button" class="cs-shell__auth-button">Use authenticated identity</button>
-            <dl id="cs-shell-auth-summary" class="cs-shell__inline-summary"></dl>
-          </section>
-          <section class="cs-shell__visibility-card" aria-label="Identity lookup and visibility support">
-            <h3>Identity & visibility</h3>
-            <p>Auth is the default identity source. Developer fixture, actual-role override, and display-role preview are support tools only.</p>
-            <label for="cs-shell-identity-select">Developer fixture identity</label>
-            <select id="cs-shell-identity-select"></select>
-            <dl id="cs-shell-resolved-identity-summary" class="cs-shell__inline-summary"></dl>
-            <label class="cs-shell__checkbox-row" for="cs-shell-role-override-toggle">
-              <input id="cs-shell-role-override-toggle" type="checkbox" />
-              <span>Developer/test actual-role override</span>
-            </label>
-            <p class="cs-shell__warning">Developer/test override only. Off by default. Does not represent authenticated authority.</p>
-            <label for="cs-shell-role-override-select">Override role</label>
-            <select id="cs-shell-role-override-select" disabled></select>
-            <label for="cs-shell-display-role-select">Display role preview only</label>
-            <select id="cs-shell-display-role-select"></select>
-            <label for="cs-shell-project-mode-select">Project visibility input</label>
-            <select id="cs-shell-project-mode-select">
-              <option value="auto">Current project state</option>
-              <option value="present">Force project present</option>
-              <option value="missing">Force project missing</option>
-            </select>
-            <dl id="cs-shell-visibility-summary"></dl>
-          </section>
-          <section class="cs-shell__project-card" aria-label="Current project selection">
-            <h3>Current project</h3>
-            <label for="cs-shell-project-select">Select project</label>
-            <select id="cs-shell-project-select"></select>
-            <dl id="cs-shell-project-summary"></dl>
-          </section>
-          <section class="cs-shell__context-card">
-            <h3>Shell-owned context</h3>
-            <dl id="cs-shell-context-summary"></dl>
+        <aside class="cs-shell__sidebar" aria-label="Project-first workspace sidebar">
+          <div class="cs-shell__sidebar-scroll">
+            <section class="cs-shell__project-card cs-shell__sidebar-section" aria-label="Current project selection">
+              <p class="cs-shell__section-kicker">Current project</p>
+              <h2>Project workspace</h2>
+              <label for="cs-shell-project-select">Select project</label>
+              <select id="cs-shell-project-select"></select>
+              <dl id="cs-shell-project-summary"></dl>
+            </section>
+
+            <nav class="cs-shell__workflow-nav cs-shell__sidebar-section" aria-label="Workflow modules">
+              <p class="cs-shell__section-kicker">Workflows</p>
+              <a href="/workspace?module=cs_selector" data-module-link="cs_selector">CS Selector</a>
+              <a href="/workspace?module=emergence" data-module-link="emergence">Emergence</a>
+              <a href="/workspace?module=workspace_home" data-module-link="workspace_home">Workspace Home</a>
+            </nav>
+
+            <section class="cs-shell__tools-card cs-shell__sidebar-section" aria-label="Optional tools">
+              <p class="cs-shell__section-kicker">Optional tools</p>
+              <p>Diagnostics loads after the active module and remains non-boot-critical.</p>
+            </section>
+          </div>
+
+          <section class="cs-shell__user-menu" aria-label="User account and support tools">
+            <button id="cs-shell-user-menu-button" class="cs-shell__user-button" type="button" aria-expanded="false" aria-controls="cs-shell-user-menu-panel">
+              <span id="cs-shell-user-avatar" class="cs-shell__avatar">CS</span>
+              <span class="cs-shell__user-button-text">
+                <strong id="cs-shell-user-name">Workspace User</strong>
+                <small id="cs-shell-user-meta">Session and view tools</small>
+              </span>
+            </button>
+
+            <div id="cs-shell-user-menu-panel" class="cs-shell__user-panel" hidden>
+              <section class="cs-shell__auth-card" aria-label="Real login and auth session">
+                <h3>Login / auth</h3>
+                <p>Shell-owned auth session. Local runtime session only; OAuth, password storage, MFA, and HubSpot writes are not live.</p>
+                <label for="cs-shell-auth-user-select">Sign in as</label>
+                <select id="cs-shell-auth-user-select"></select>
+                <button id="cs-shell-sign-in-button" type="button" class="cs-shell__auth-button">Sign in</button>
+                <button id="cs-shell-sign-out-button" type="button" class="cs-shell__auth-button">Sign out</button>
+                <button id="cs-shell-use-auth-identity-button" type="button" class="cs-shell__auth-button">Use authenticated identity</button>
+                <dl id="cs-shell-auth-summary" class="cs-shell__inline-summary"></dl>
+              </section>
+
+              <section class="cs-shell__visibility-card" aria-label="Identity lookup and visibility support">
+                <h3>Developer / view support</h3>
+                <p>Auth is the default identity source. Developer fixture, actual-role override, and display-role preview are support tools only.</p>
+                <label for="cs-shell-identity-select">Developer fixture identity</label>
+                <select id="cs-shell-identity-select"></select>
+                <dl id="cs-shell-resolved-identity-summary" class="cs-shell__inline-summary"></dl>
+                <label class="cs-shell__checkbox-row" for="cs-shell-role-override-toggle">
+                  <input id="cs-shell-role-override-toggle" type="checkbox" />
+                  <span>Developer/test actual-role override</span>
+                </label>
+                <p class="cs-shell__warning">Developer/test override only. Off by default. Does not represent authenticated authority.</p>
+                <label for="cs-shell-role-override-select">Override role</label>
+                <select id="cs-shell-role-override-select" disabled></select>
+                <label for="cs-shell-display-role-select">Display role preview only</label>
+                <select id="cs-shell-display-role-select"></select>
+                <label for="cs-shell-project-mode-select">Project visibility input</label>
+                <select id="cs-shell-project-mode-select">
+                  <option value="auto">Current project state</option>
+                  <option value="present">Force project present</option>
+                  <option value="missing">Force project missing</option>
+                </select>
+                <dl id="cs-shell-visibility-summary"></dl>
+              </section>
+
+              <section class="cs-shell__context-card" aria-label="Shell-owned runtime context">
+                <h3>Runtime context</h3>
+                <dl id="cs-shell-context-summary"></dl>
+              </section>
+            </div>
           </section>
         </aside>
 
         <main class="cs-shell__main" aria-label="Workspace main panel">
           <section id="cs-workspace-home" class="cs-shell__home" hidden>
-            <h2>Workspace home</h2>
-            <p>This shell proves the runtime route, shell layout, context ownership shape, module mount contract, shell-owned current project selection, project save/restore/handoff lifecycle, and real shell-owned login/auth foundation.</p>
+            <p class="cs-shell__eyebrow">Workspace home</p>
+            <h2>Project-first shell</h2>
+            <p>This shell keeps project and workflow navigation in the main sidebar while user/account/session and developer/test controls live in the user affordance.</p>
           </section>
           <section id="cs-shell-module-host" class="cs-shell__module-host" aria-live="polite"></section>
           <section
