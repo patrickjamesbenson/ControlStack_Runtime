@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="/apps/workspace-shell/src/styles.css" />
   </head>
   <body>
-    <div id="cs-shell-root" class="cs-shell" data-phase="hubspot-company-context">
+    <div id="cs-shell-root" class="cs-shell" data-phase="nvb-authority-hardening">
       <header class="cs-shell__topbar" aria-label="Workspace top bar">
         <div class="cs-shell__brand-lockup">
           <p class="cs-shell__eyebrow">ControlStack Runtime</p>
@@ -73,6 +73,12 @@
                 <dl id="cs-shell-auth-summary" class="cs-shell__inline-summary"></dl>
               </section>
 
+              <section class="cs-shell__authority-card" aria-label="NVB-backed authority and privilege state">
+                <h3>Authority / privileges</h3>
+                <p>NVB-backed authority resolves the final actual role when available. Internal email/domain is classifier-only. HubSpot/company context is not authority.</p>
+                <dl id="cs-shell-authority-summary" class="cs-shell__inline-summary"></dl>
+              </section>
+
               <section class="cs-shell__visibility-card" aria-label="Identity lookup and visibility support">
                 <h3>Developer / view support</h3>
                 <p>Auth is the default identity source. Developer fixture, actual-role override, and display-role preview are support tools only.</p>
@@ -83,7 +89,7 @@
                   <input id="cs-shell-role-override-toggle" type="checkbox" />
                   <span>Developer/test actual-role override</span>
                 </label>
-                <p class="cs-shell__warning">Developer/test override only. Off by default. Does not represent authenticated authority.</p>
+                <p class="cs-shell__warning">Developer/test override only. Off by default. Does not represent NVB authority.</p>
                 <label for="cs-shell-role-override-select">Override role</label>
                 <select id="cs-shell-role-override-select" disabled></select>
                 <label for="cs-shell-display-role-select">Display role preview only</label>

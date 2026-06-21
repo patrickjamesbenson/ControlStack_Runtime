@@ -1,4 +1,5 @@
 import { createAuthService } from "./authService.js";
+import { createAuthorityService } from "./authorityService.js";
 import { createContractDiagnostics } from "./contracts.js";
 import { createCrmService } from "./crmService.js";
 import { createDownstreamContextService } from "./downstreamContextService.js";
@@ -39,10 +40,12 @@ export function createShellServices() {
   const projectBrowserAdapter = createProjectBrowserService({ savedProjectStore, projectService: projectAdapter, eventBus });
   const flagAdapter = createFeatureFlagService({ eventBus });
   const crmAdapter = createCrmService({ eventBus });
+  const authorityAdapter = createAuthorityService({ eventBus });
 
   return {
     auth: authAdapter,
     identity: identityAdapter,
+    authority: authorityAdapter,
     project: projectAdapter,
     projectBrowser: projectBrowserAdapter,
     savedProjects: savedProjectStore,
@@ -91,10 +94,11 @@ export function createShellServices() {
         const project = projectAdapter.getProjectSnapshot();
         const identity = identityAdapter.getIdentitySnapshot();
         const crm = crmAdapter.getCrmSnapshot({ auth, identity, project });
+        const authority = authorityAdapter.getAuthoritySnapshot({ auth, identity, crm });
         return {
           owner: "shell",
           status: "placeholder",
-          phase: "hubspot-company-context",
+          phase: "nvb-authority-hardening",
           contract: createContractDiagnostics(),
           responsiveRequirement: "desktop-tablet-mobile",
           auth: {
@@ -110,6 +114,20 @@ export function createShellServices() {
             passwordStorageLive: false,
             mfaLive: false,
           },
+          authority: {
+            owner: "shell",
+            status: authority.status,
+            source: authority.source,
+            actualRole: authority.actualRole?.value || "external_user",
+            actualRoleSource: authority.actualRole?.source || "safe-fallback",
+            nvbMatched: authority.nvb?.matched === true,
+            nvbConfidence: authority.nvb?.confidence || "none",
+            internalClassifierOnly: authority.subject?.classifierOnly === true,
+            blacklistActive: authority.privileges?.blacklist?.active === true,
+            restrictions: authority.privileges?.restrictions || [],
+            exceptionalEntitlements: authority.privileges?.exceptionalEntitlements || [],
+            writeEnabled: false,
+          },
           crmCompanyContext: {
             owner: "shell",
             status: crm.status,
@@ -121,6 +139,7 @@ export function createShellServices() {
             linkedProjectId: crm.company?.linkedProjectId || "none",
             writeEnabled: false,
             hubspotWritesLive: false,
+            authoritySource: "not-authority",
           },
           projectSelection: {
             owner: "shell",
@@ -170,8 +189,10 @@ export function createShellServices() {
           },
           identityVisibility: {
             owner: "shell",
-            status: "auth-derived-role-and-visibility-ready",
-            actualRoleDerivedFromIdentity: true,
+            status: "authority-derived-role-and-visibility-ready",
+            actualRoleDerivedFromIdentity: false,
+            actualRoleDerivedFromAuthority: true,
+            internalDomainClassifierOnly: true,
             overrideDefault: "off",
             realAuth: true,
             credentialAuth: auth.session?.authenticated === true,
@@ -188,7 +209,7 @@ export function createShellServices() {
         return {
           accepted: true,
           event,
-          phase: "hubspot-company-context",
+          phase: "nvb-authority-hardening",
         };
       },
     },

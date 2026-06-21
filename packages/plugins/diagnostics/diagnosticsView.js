@@ -53,7 +53,7 @@ export function renderDiagnosticsView(container, viewModel) {
   const intro = document.createElement("div");
   appendText(intro, "p", "Optional plugin", "cs-shell__eyebrow");
   appendText(intro, "h2", "Diagnostics panel");
-  appendText(intro, "p", "Diagnostics reads shell-owned snapshots, including read-safe CRM/company context.");
+  appendText(intro, "p", "Diagnostics reads shell-owned snapshots, including NVB-backed authority and read-safe CRM/company context.");
   article.appendChild(intro);
 
   appendSection(article, "Route and shell", [
@@ -84,6 +84,49 @@ export function renderDiagnosticsView(container, viewModel) {
     ["password storage", viewModel.auth.passwordStorage],
     ["MFA", viewModel.auth.mfa],
   ]);
+
+  appendSection(article, "Authority / privileges", [
+    ["Authority owner", viewModel.authority.owner],
+    ["Authority status", viewModel.authority.status],
+    ["Authority source", viewModel.authority.source],
+    ["Read only", viewModel.authority.readOnly],
+    ["Actual role", viewModel.authority.actualRole],
+    ["Nominal role", viewModel.authority.nominalRole],
+    ["Actual role source", viewModel.authority.actualRoleSource],
+    ["Derived from NVB", viewModel.authority.derivedFromNvb],
+    ["Fallback applied", viewModel.authority.fallbackApplied],
+    ["Fallback reason", viewModel.authority.fallbackReason],
+    ["NVB available", viewModel.authority.nvbAvailable],
+    ["NVB checked", viewModel.authority.nvbChecked],
+    ["NVB matched", viewModel.authority.nvbMatched],
+    ["NVB source", viewModel.authority.nvbSource],
+    ["NVB record", viewModel.authority.nvbRecordId],
+    ["NVB confidence", viewModel.authority.nvbConfidence],
+    ["NVB reason", viewModel.authority.nvbReason],
+    ["Subject email", viewModel.authority.subjectEmail],
+    ["Subject classification", viewModel.authority.subjectClassification],
+    ["Identity source", viewModel.authority.identitySource],
+    ["Internal classifier", viewModel.authority.internalClassifier],
+    ["Classifier only", viewModel.authority.classifierOnly],
+    ["Special visibility", viewModel.authority.specialVisibility],
+    ["Exceptional entitlements", viewModel.authority.exceptionalEntitlements],
+    ["Restrictions", viewModel.authority.restrictions],
+    ["Blacklist active", viewModel.authority.blacklistActive],
+    ["Blacklist reason", viewModel.authority.blacklistReason],
+    ["Blacklist source", viewModel.authority.blacklistSource],
+    ["Company authority", viewModel.authority.companyAuthority],
+    ["Company authority note", viewModel.authority.companyAuthorityNote],
+    ["Developer override", viewModel.authority.developerOverride],
+    ["Developer override label", viewModel.authority.developerOverrideLabel],
+    ["Authority writes enabled", viewModel.authority.writeEnabled],
+    ["Write policy", viewModel.authority.writeReason],
+  ]);
+
+  const authorityCapabilities = document.createElement("section");
+  authorityCapabilities.className = "cs-diagnostics__section";
+  appendText(authorityCapabilities, "h3", "Authority capabilities");
+  appendPillList(authorityCapabilities, viewModel.authority.capabilities === "none" ? ["none"] : viewModel.authority.capabilities.split(", "));
+  article.appendChild(authorityCapabilities);
 
   appendSection(article, "Company / CRM context", [
     ["Company owner", viewModel.company.owner],
@@ -223,8 +266,9 @@ export function renderDiagnosticsView(container, viewModel) {
     ["Classification", viewModel.identity.classification],
     ["Identity source mode", viewModel.identity.identitySource],
     ["Developer fixture", viewModel.identity.developerFixture],
-    ["Derived actual role", viewModel.identity.derivedActualRole],
-    ["Effective actual role", viewModel.identity.actualRole],
+    ["Classified role", viewModel.identity.derivedActualRole],
+    ["Identity support role", viewModel.identity.identityActualRole],
+    ["Authority actual role", viewModel.identity.authorityActualRole],
     ["Actual role source", viewModel.identity.actualRoleSource],
     ["Actual role derived", viewModel.identity.actualRoleDerived],
     ["Override active", viewModel.identity.actualRoleOverrideEnabled],
@@ -245,6 +289,8 @@ export function renderDiagnosticsView(container, viewModel) {
     ["Site", viewModel.project.site],
     ["Company", viewModel.project.companyName],
     ["Company source", viewModel.project.companySource],
+    ["Authority role", viewModel.project.authorityRole],
+    ["Authority source", viewModel.project.authoritySource],
     ["Restored from envelope", viewModel.project.restoredFromEnvelope],
     ["Restored envelope", viewModel.project.restoredEnvelopeId],
     ["Restored at", viewModel.project.restoredAt],
@@ -258,7 +304,15 @@ export function renderDiagnosticsView(container, viewModel) {
   appendSection(article, "Visibility policy", [
     ["Visibility owner", viewModel.visibility.owner],
     ["Visibility status", viewModel.visibility.status],
+    ["Visibility source", viewModel.visibility.source],
     ["Authenticated", viewModel.visibility.authenticated],
+    ["Authority status", viewModel.visibility.authorityStatus],
+    ["Authority source", viewModel.visibility.authoritySource],
+    ["Authority role", viewModel.visibility.authorityRole],
+    ["Authority confidence", viewModel.visibility.authorityConfidence],
+    ["Blacklist active", viewModel.visibility.blacklistActive],
+    ["Restrictions", viewModel.visibility.restrictions],
+    ["Exceptional entitlements", viewModel.visibility.exceptionalEntitlements],
     ["Display role preview only", viewModel.visibility.displayRolePreviewOnly],
     ["Developer fixture active", viewModel.visibility.developerFixtureActive],
     ["Visible modules", viewModel.visibility.visibleModules],
@@ -311,7 +365,7 @@ export function renderDiagnosticsView(container, viewModel) {
 
   const constraintsSection = document.createElement("section");
   constraintsSection.className = "cs-diagnostics__section";
-  appendText(constraintsSection, "h3", "Company context constraints");
+  appendText(constraintsSection, "h3", "Authority constraints");
   appendPillList(constraintsSection, viewModel.constraints);
   article.appendChild(constraintsSection);
 

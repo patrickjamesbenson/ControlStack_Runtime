@@ -37,6 +37,7 @@ function readProjectBrowser(adapter, snapshots, downstream) {
   return adapter.services.projectBrowser?.getProjectBrowserSnapshot?.({
     auth: snapshots.auth,
     identity: snapshots.identity,
+    authority: snapshots.authority,
     project: snapshots.project,
     company: snapshots.company,
     crm: snapshots.crm,
@@ -74,6 +75,21 @@ function decisionFor(visibility, moduleId) {
   return visibility.moduleReasons?.[moduleId] || { visible: false, reason: "not_registered" };
 }
 
+function emptyAuthority() {
+  return {
+    owner: "shell",
+    status: "fallback",
+    source: "shell-safe-fallback",
+    nvb: { matched: false, checked: false, confidence: "none", source: "none", recordId: null, reason: "Authority unavailable." },
+    subject: { classifierOnly: true, internalClassifier: false, identityClassification: "anonymous", email: null },
+    actualRole: { value: "external_user", source: "safe-fallback", derivedFromNvb: false, fallbackApplied: true },
+    privileges: { specialVisibility: [], exceptionalEntitlements: [], restrictions: [], blacklist: { active: false, reason: null, source: "none" }, moduleEntitlements: {} },
+    companyAuthority: { status: "not-authority" },
+    developerSupport: { overrideActive: false, overrideLabel: "Developer/test only. Not NVB authority." },
+    writePolicy: { enabled: false, reason: "Authority resolution is read-only." },
+  };
+}
+
 export function createDiagnosticsViewModel({ adapter, diagnosticsState }) {
   const snapshots = adapter.readSnapshots();
   const local = diagnosticsState.getSnapshot();
@@ -83,6 +99,8 @@ export function createDiagnosticsViewModel({ adapter, diagnosticsState }) {
   const identity = snapshots.identity;
   const company = snapshots.company || snapshots.crm?.company || {};
   const crm = snapshots.crm || {};
+  const authority = adapter.services.authority?.getAuthoritySnapshot?.({ auth, identity, crm }) || snapshots.context?.authority || snapshots.authority || emptyAuthority();
+  snapshots.authority = authority;
   const flags = snapshots.flags.values || {};
   const writePolicy = crm.writePolicy || company.diagnostics || {};
   const pluginStatus = snapshots.pluginContext?.pluginStatus || {};
@@ -130,6 +148,43 @@ export function createDiagnosticsViewModel({ adapter, diagnosticsState }) {
       oauthProvider: auth.exclusions?.oauthProvider || "deferred",
       passwordStorage: auth.exclusions?.passwordStorage || "excluded",
       mfa: auth.exclusions?.mfa || "deferred",
+    },
+    authority: {
+      owner: authority.owner || "shell",
+      status: authority.status || "fallback",
+      source: authority.source || "shell-safe-fallback",
+      readOnly: stateLabel(authority.readOnly),
+      actualRole: authority.actualRole?.value || "external_user",
+      nominalRole: authority.actualRole?.nominalValue || authority.actualRole?.value || "external_user",
+      actualRoleSource: authority.actualRole?.source || "safe-fallback",
+      derivedFromNvb: stateLabel(authority.actualRole?.derivedFromNvb),
+      fallbackApplied: stateLabel(authority.actualRole?.fallbackApplied),
+      fallbackReason: authority.actualRole?.fallbackReason || "none",
+      nvbAvailable: stateLabel(authority.nvb?.available),
+      nvbChecked: stateLabel(authority.nvb?.checked),
+      nvbMatched: stateLabel(authority.nvb?.matched),
+      nvbSource: authority.nvb?.source || "none",
+      nvbRecordId: authority.nvb?.recordId || "none",
+      nvbConfidence: authority.nvb?.confidence || "none",
+      nvbReason: authority.nvb?.reason || "none",
+      subjectEmail: authority.subject?.email || "none",
+      subjectClassification: authority.subject?.identityClassification || "anonymous",
+      identitySource: authority.subject?.identitySource || "unknown",
+      internalClassifier: stateLabel(authority.subject?.internalClassifier),
+      classifierOnly: stateLabel(authority.subject?.classifierOnly),
+      specialVisibility: (authority.privileges?.specialVisibility || []).join(", ") || "none",
+      capabilities: (authority.privileges?.capabilities || []).join(", ") || "none",
+      exceptionalEntitlements: (authority.privileges?.exceptionalEntitlements || []).join(", ") || "none",
+      restrictions: (authority.privileges?.restrictions || []).join(", ") || "none",
+      blacklistActive: stateLabel(authority.privileges?.blacklist?.active),
+      blacklistReason: authority.privileges?.blacklist?.reason || "none",
+      blacklistSource: authority.privileges?.blacklist?.source || "none",
+      companyAuthority: authority.companyAuthority?.status || "not-authority",
+      companyAuthorityNote: authority.companyAuthority?.note || "HubSpot/company context is CRM enrichment only.",
+      developerOverride: stateLabel(authority.developerSupport?.overrideActive),
+      developerOverrideLabel: authority.developerSupport?.overrideLabel || "Developer/test only. Not NVB authority.",
+      writeEnabled: stateLabel(authority.writePolicy?.enabled),
+      writeReason: authority.writePolicy?.reason || "Authority writes are disabled.",
     },
     company: {
       owner: company.owner || "shell",
@@ -180,14 +235,15 @@ export function createDiagnosticsViewModel({ adapter, diagnosticsState }) {
       identitySource: identity.lookup?.identitySource || "unknown",
       developerFixture: stateLabel(identity.lookup?.usingDeveloperFixture),
       derivedActualRole: identity.derivedActualRole || identity.actualRole || "external_user",
-      actualRole: identity.actualRole || "external_user",
-      actualRoleSource: identity.actualRoleSource || "unknown",
-      actualRoleDerived: stateLabel(identity.actualRoleDerived),
+      identityActualRole: identity.actualRole || "external_user",
+      authorityActualRole: authority.actualRole?.value || "external_user",
+      actualRoleSource: authority.actualRole?.source || identity.actualRoleSource || "safe-fallback",
+      actualRoleDerived: stateLabel(authority.actualRole?.derivedFromNvb || authority.actualRole?.fallbackApplied),
       actualRoleOverrideEnabled: stateLabel(identity.actualRoleOverrideEnabled),
       actualRoleOverride: identity.actualRoleOverride || "none",
-      displayRole: identity.displayRole || identity.role || "external_user",
+      displayRole: visibility.inputs?.displayRole || identity.displayRole || identity.role || "external_user",
       displayRoleRequested: identity.displayRoleRequested || identity.displayRole || "external_user",
-      displayRoleClamped: stateLabel(identity.displayRoleClamped),
+      displayRoleClamped: stateLabel(visibility.inputs?.displayRoleClamped || identity.displayRoleClamped),
       displayRolePreviewOnly: "yes",
       user: identity.currentUser?.name || "Workspace User",
       email: identity.currentUser?.email || "No email loaded",
@@ -208,6 +264,8 @@ export function createDiagnosticsViewModel({ adapter, diagnosticsState }) {
       site: currentProject.site || "none",
       companyName: company.companyName || "No company linked",
       companySource: company.source || "fallback",
+      authorityRole: authority.actualRole?.value || "external_user",
+      authoritySource: authority.actualRole?.source || "safe-fallback",
       saveStatus: project.save?.status || project.saveState?.status || "deferred",
       restoreStatus: project.restore?.status || project.restoreState?.status || "deferred",
       hydrateStatus: project.hydrate?.status || "idle",
@@ -297,12 +355,19 @@ export function createDiagnosticsViewModel({ adapter, diagnosticsState }) {
     visibility: {
       owner: visibility.owner,
       status: visibility.status,
-      source: visibility.source || "real-login-auth-visibility-policy",
+      source: visibility.source || "nvb-backed-authority-visibility-policy",
       testMode: stateLabel(visibility.testMode),
       rule: visibility.rule || "none",
       projectMode: visibility.inputs?.projectMode || "auto",
       projectPresent: stateLabel(visibility.inputs?.projectPresent),
       authenticated: stateLabel(visibility.auth?.authenticated),
+      authorityStatus: visibility.authority?.status || authority.status || "fallback",
+      authoritySource: visibility.authority?.source || authority.source || "shell-safe-fallback",
+      authorityRole: visibility.authority?.actualRole || authority.actualRole?.value || "external_user",
+      authorityConfidence: visibility.authority?.confidence || authority.nvb?.confidence || "none",
+      blacklistActive: stateLabel(visibility.authority?.blacklistActive || authority.privileges?.blacklist?.active),
+      restrictions: (visibility.authority?.restrictions || authority.privileges?.restrictions || []).join(", ") || "none",
+      exceptionalEntitlements: (visibility.authority?.exceptionalEntitlements || authority.privileges?.exceptionalEntitlements || []).join(", ") || "none",
       displayRolePreviewOnly: stateLabel(visibility.inputs?.displayRolePreviewOnly),
       developerFixtureActive: stateLabel(visibility.inputs?.developerFixtureActive),
       visibleModules: visibility.visibleModules?.join(", ") || "none",
@@ -343,14 +408,17 @@ export function createDiagnosticsViewModel({ adapter, diagnosticsState }) {
       statuses: pluginStatus.plugins || [],
     },
     constraints: [
-      "Company/CRM context is shell-owned and read-safe",
-      "Modules consume company context through shell context/services only",
-      "HubSpot writes are disabled",
-      "Company/contact/deal mutation is deferred",
-      "Pipeline updates are deferred",
-      "Auth/session remains shell-owned and live",
+      "Authority is shell-owned and read-only",
+      "Internal email/domain is classifier-only, not final authority",
+      "NVB-backed authority resolves actual role when a read-only record is available",
+      "Conservative shell fallback applies when NVB is unavailable or unmatched",
+      "Blacklist, restrictions, and exceptional entitlements are represented clearly",
+      "Developer/test override remains separate from NVB authority",
+      "Display-role preview remains preview-only and clamped to authority",
+      "HubSpot/company context is CRM enrichment only, not visibility authority",
+      "Modules consume authority/company/visibility through shell context/services only",
+      "NVB writes, privilege editing, and blacklist editing are excluded",
       "Project selection/save/restore/hydrate/handoff-share flows remain intact",
-      "Visibility remains shell-owned",
       "Scene Builder remains structural only",
       "EGRES route is not registered",
       "Compliance Matters route is not registered",

@@ -31,6 +31,12 @@ function roleRank(role) {
   return index < 0 ? 0 : index;
 }
 
+function clampRoleToAuthority(requestedRole, authorityRole) {
+  const requested = ROLE_ORDER.includes(requestedRole) ? requestedRole : "external_user";
+  const actual = ROLE_ORDER.includes(authorityRole) ? authorityRole : "external_user";
+  return roleRank(requested) > roleRank(actual) ? actual : requested;
+}
+
 function hasIdentity(identity) {
   return ["external_identified", "internal_identified"].includes(identity?.identityState);
 }
@@ -41,12 +47,30 @@ function hasProject(project, projectMode) {
   return !!(project?.currentProject?.projectId || project?.selection?.selectedProjectId);
 }
 
-function resolveReason({ policy, identity, project, projectMode }) {
+function authorityRole(authority, identity) {
+  return authority?.actualRole?.value || identity?.actualRole || "external_user";
+}
+
+function previewRole(authority, identity) {
+  return clampRoleToAuthority(identity?.displayRole || identity?.role || authorityRole(authority, identity), authorityRole(authority, identity));
+}
+
+function authorityReason({ moduleId, authority }) {
+  if (!authority) return null;
+  if (authority.privileges?.blacklist?.active === true) return "hidden_by_authority_blacklist";
+  const moduleEntitlement = authority.privileges?.moduleEntitlements?.[moduleId];
+  if (moduleEntitlement === false) return "hidden_by_authority_entitlement";
+  return null;
+}
+
+function resolveReason({ moduleId, policy, identity, project, projectMode, authority }) {
   if (!policy) return "not_registered";
   if (!policy.registered) return "planned_not_live";
+  const authorityBlock = authorityReason({ moduleId, authority });
+  if (authorityBlock) return authorityBlock;
   if (policy.requiresIdentity && !hasIdentity(identity)) return "needs_identity";
   if (policy.requiresProject && !hasProject(project, projectMode)) return "needs_project";
-  if (roleRank(identity?.displayRole || "external_user") < roleRank(policy.minRole)) return "hidden_for_display_role";
+  if (roleRank(previewRole(authority, identity)) < roleRank(policy.minRole)) return "hidden_for_authority_role";
   return "allowed";
 }
 
@@ -54,31 +78,37 @@ function visibleFromReason(reason) {
   return reason === "allowed";
 }
 
-function createDecision(moduleId, identity, project, projectMode) {
+function createDecision(moduleId, identity, project, projectMode, authority) {
   const policy = MODULE_POLICIES[moduleId] || null;
-  const reason = resolveReason({ policy, identity, project, projectMode });
+  const reason = resolveReason({ moduleId, policy, identity, project, projectMode, authority });
+  const visible = visibleFromReason(reason);
+  const effectiveRole = previewRole(authority, identity);
   return {
     moduleId,
     label: policy?.label || moduleId,
     registered: policy?.registered === true,
     planned: policy?.registered === false,
-    visible: visibleFromReason(reason),
-    moduleVisible: visibleFromReason(reason),
-    canRead: visibleFromReason(reason),
-    canEdit: visibleFromReason(reason) && roleRank(identity?.displayRole || "external_user") >= roleRank("internal_user"),
-    canExport: visibleFromReason(reason) && roleRank(identity?.displayRole || "external_user") >= roleRank("internal_user"),
-    canAdmin: visibleFromReason(reason) && roleRank(identity?.displayRole || "external_user") >= roleRank("developer"),
+    visible,
+    moduleVisible: visible,
+    canRead: visible,
+    canEdit: visible && roleRank(effectiveRole) >= roleRank("internal_user"),
+    canExport: visible && roleRank(effectiveRole) >= roleRank("internal_user"),
+    canAdmin: visible && roleRank(effectiveRole) >= roleRank("developer"),
     reason,
     requiredIdentity: policy?.requiresIdentity === true,
     requiredProject: policy?.requiresProject === true,
     minRole: policy?.minRole || "external_user",
+    authorityRole: authorityRole(authority, identity),
+    displayRole: effectiveRole,
+    authoritySource: authority?.actualRole?.source || identity?.actualRoleSource || "unknown",
+    moduleEntitled: authority?.privileges?.moduleEntitlements?.[moduleId] !== false,
   };
 }
 
-function createDecisionMap({ identity, project, projectMode }) {
+function createDecisionMap({ identity, project, projectMode, authority }) {
   const ids = [...REGISTERED_MODULES, ...PLANNED_MODULES];
   return ids.reduce((out, moduleId) => {
-    out[moduleId] = createDecision(moduleId, identity, project, projectMode);
+    out[moduleId] = createDecision(moduleId, identity, project, projectMode, authority);
     return out;
   }, {});
 }
@@ -92,7 +122,7 @@ export function createVisibilityService({ eventBus } = {}) {
   const state = {
     owner: "shell",
     status: "policy-ready",
-    rule: "Visibility remains shell-owned. Auth supplies identity; display-role preview controls the current preview view only.",
+    rule: "Visibility remains shell-owned. Authority supplies final actual role and privilege state; display-role preview controls the current preview view only.",
     projectMode: "auto",
     lastSnapshot: null,
   };
@@ -100,15 +130,17 @@ export function createVisibilityService({ eventBus } = {}) {
   function snapshot(context = {}) {
     const auth = context.auth || {};
     const identity = context.identity || {};
+    const authority = context.authority || null;
     const project = context.project || {};
     const projectMode = normaliseProjectMode(state.projectMode);
-    const decisions = createDecisionMap({ identity, project, projectMode });
+    const decisions = createDecisionMap({ identity, project, projectMode, authority });
     const registeredDecisions = REGISTERED_MODULES.map((id) => decisions[id]);
     const plannedDecisions = PLANNED_MODULES.map((id) => decisions[id]);
+    const effectiveDisplayRole = previewRole(authority, identity);
     const next = {
       owner: state.owner,
       status: state.status,
-      source: "real-login-auth-visibility-policy",
+      source: "nvb-backed-authority-visibility-policy",
       rule: state.rule,
       testMode: true,
       auth: {
@@ -120,15 +152,30 @@ export function createVisibilityService({ eventBus } = {}) {
         credentialAuth: auth.session?.authenticated === true,
         developerSupportVisible: true,
       },
+      authority: {
+        owner: authority?.owner || "shell",
+        status: authority?.status || "fallback",
+        source: authority?.source || "shell-safe-fallback",
+        nvbMatched: authority?.nvb?.matched === true,
+        confidence: authority?.nvb?.confidence || "none",
+        actualRole: authorityRole(authority, identity),
+        actualRoleSource: authority?.actualRole?.source || identity?.actualRoleSource || "unknown",
+        blacklistActive: authority?.privileges?.blacklist?.active === true,
+        restrictions: authority?.privileges?.restrictions || [],
+        exceptionalEntitlements: authority?.privileges?.exceptionalEntitlements || [],
+        companyContextIsAuthority: false,
+      },
       inputs: {
         identityState: identity.identityState || "external_anonymous",
-        actualRole: identity.actualRole || "external_user",
-        derivedActualRole: identity.derivedActualRole || identity.actualRole || "external_user",
+        actualRole: authorityRole(authority, identity),
+        identityClassifiedRole: identity.derivedActualRole || identity.actualRole || "external_user",
         actualRoleOverrideEnabled: identity.actualRoleOverrideEnabled === true,
-        displayRole: identity.displayRole || identity.role || "external_user",
-        displayRoleClamped: identity.displayRoleClamped === true,
+        displayRole: effectiveDisplayRole,
+        requestedDisplayRole: identity.displayRole || identity.role || "external_user",
+        displayRoleClamped: effectiveDisplayRole !== (identity.displayRole || identity.role || "external_user") || identity.displayRoleClamped === true,
         displayRolePreviewOnly: true,
         classification: identity.classification || "anonymous",
+        classifierOnly: authority?.subject?.classifierOnly !== false,
         identitySource: identity.lookup?.identitySource || "unknown",
         developerFixtureActive: identity.lookup?.usingDeveloperFixture === true,
         projectMode,
@@ -147,9 +194,10 @@ export function createVisibilityService({ eventBus } = {}) {
         moduleHost: true,
         authCard: true,
         visibilityTestCard: true,
+        authorityCard: true,
       },
       roleVisibility: {
-        [identity.displayRole || identity.role || "external_user"]: registeredDecisions
+        [effectiveDisplayRole]: registeredDecisions
           .filter((decision) => decision.visible)
           .map((decision) => decision.moduleId),
       },
@@ -173,7 +221,7 @@ export function createVisibilityService({ eventBus } = {}) {
       return decision ? decision.visible : false;
     },
     getModuleDecision(moduleId, context = {}) {
-      return snapshot(context).moduleReasons[moduleId] || createDecision(moduleId, context.identity || {}, context.project || {}, state.projectMode);
+      return snapshot(context).moduleReasons[moduleId] || createDecision(moduleId, context.identity || {}, context.project || {}, state.projectMode, context.authority || null);
     },
     canShowShellFeature(featureId, context = {}) {
       return snapshot(context).shellFeatureVisibility[featureId] === true;
@@ -181,7 +229,7 @@ export function createVisibilityService({ eventBus } = {}) {
     getVisibilitySnapshot(context = {}) {
       return snapshot(context);
     },
-    setProjectMode(projectMode, context = {}, reason = "real-login-auth-project-visibility-mode") {
+    setProjectMode(projectMode, context = {}, reason = "nvb-authority-project-visibility-mode") {
       state.projectMode = normaliseProjectMode(projectMode);
       return notify(reason, context);
     },

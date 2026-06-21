@@ -20,6 +20,7 @@ const companyProjectButton = document.getElementById("cs-shell-company-project-b
 const companyClearButton = document.getElementById("cs-shell-company-clear-button");
 const authUserSelect = document.getElementById("cs-shell-auth-user-select");
 const authSummary = document.getElementById("cs-shell-auth-summary");
+const authoritySummary = document.getElementById("cs-shell-authority-summary");
 const signInButton = document.getElementById("cs-shell-sign-in-button");
 const signOutButton = document.getElementById("cs-shell-sign-out-button");
 const useAuthIdentityButton = document.getElementById("cs-shell-use-auth-identity-button");
@@ -156,7 +157,9 @@ function renderAuthControls({ services, context }) {
   if (context.auth.session?.userId) authUserSelect.value = context.auth.session.userId;
   const signedIn = context.auth.session?.authenticated === true;
   const activeName = context.auth.session?.name || context.identity.currentUser?.name || "Anonymous visitor";
-  const activeMeta = signedIn ? `${context.identity.actualRole} · ${context.identity.lookup?.identitySource || "auth-session"}` : `${context.identity.lookup?.identitySource || "anonymous-fallback"} · ${context.identity.displayRole}`;
+  const authorityRole = context.authority?.actualRole?.value || context.identity.actualRole || "external_user";
+  const authoritySource = context.authority?.actualRole?.source || context.identity.actualRoleSource || "safe-fallback";
+  const activeMeta = `${authorityRole} · ${authoritySource}`;
   if (userAvatar) userAvatar.textContent = initialsFor(activeName);
   if (userName) userName.textContent = activeName;
   if (userMeta) userMeta.textContent = activeMeta;
@@ -168,6 +171,8 @@ function renderAuthControls({ services, context }) {
     ["provider", context.auth.session?.provider || "none"],
     ["session id", context.auth.session?.sessionId || "none"],
     ["identity source", context.identity.lookup?.identitySource || "unknown"],
+    ["classifier only", context.authority?.subject?.classifierOnly ? "yes" : "no"],
+    ["authority", `${authorityRole}:${authoritySource}`],
     ["developer fixture", context.identity.lookup?.usingDeveloperFixture ? "active" : "off"],
     ["OAuth/provider", "deferred"],
     ["password storage", "excluded"],
@@ -176,6 +181,29 @@ function renderAuthControls({ services, context }) {
   if (signInButton) signInButton.disabled = false;
   if (signOutButton) signOutButton.disabled = false;
   if (useAuthIdentityButton) useAuthIdentityButton.disabled = !signedIn;
+}
+
+function renderAuthorityControls({ context }) {
+  if (!authoritySummary) return;
+  const authority = context.authority || {};
+  appendDefinitionListRows(authoritySummary, [
+    ["owner", authority.owner || "shell"],
+    ["status", authority.status || "fallback"],
+    ["source", authority.source || "shell-safe-fallback"],
+    ["actual role", authority.actualRole?.value || "external_user"],
+    ["role source", authority.actualRole?.source || "safe-fallback"],
+    ["NVB matched", authority.nvb?.matched ? "yes" : "no"],
+    ["confidence", authority.nvb?.confidence || "none"],
+    ["classifier only", authority.subject?.classifierOnly ? "yes" : "no"],
+    ["internal classifier", authority.subject?.internalClassifier ? "yes" : "no"],
+    ["blacklist", authority.privileges?.blacklist?.active ? "active" : "none"],
+    ["restrictions", (authority.privileges?.restrictions || []).join(", ") || "none"],
+    ["special visibility", (authority.privileges?.specialVisibility || []).join(", ") || "none"],
+    ["exceptional", (authority.privileges?.exceptionalEntitlements || []).join(", ") || "none"],
+    ["company authority", authority.companyAuthority?.status || "not-authority"],
+    ["developer override", authority.developerSupport?.overrideActive ? "support active" : "off"],
+    ["writes", authority.writePolicy?.enabled ? "enabled" : "disabled"],
+  ]);
 }
 
 function renderCompanyControls({ services, context }) {
@@ -199,6 +227,7 @@ function renderCompanyControls({ services, context }) {
     ["company", context.company.companyName || "No company linked"],
     ["id", context.company.companyId || "none"],
     ["source", context.company.source || "fallback"],
+    ["authority", context.authority?.companyAuthority?.status || "not-authority"],
     ["project", context.company.linkedProjectId || "none"],
     ["domain", context.company.domain || "none"],
     ["contact", context.crm.contact?.email || "none"],
@@ -218,7 +247,9 @@ function renderContextSummary(context) {
     ["auth user", context.auth.session?.email || context.auth.user?.name || "anonymous"],
     ["identity", `${context.identity.identityState}:${context.identity.displayRole}`],
     ["identity source", context.identity.lookup?.identitySource || "unknown"],
-    ["actual role", context.identity.actualRole],
+    ["authority", `${context.authority.owner}:${context.authority.status}:${context.authority.actualRole?.value}`],
+    ["authority source", context.authority.actualRole?.source || "safe-fallback"],
+    ["classifier only", context.authority.subject?.classifierOnly ? "yes" : "no"],
     ["project", `${context.project.owner}:${context.project.status}`],
     ["current", readProjectTitle(context.project)],
     ["company", `${context.company.owner}:${context.company.status}:${context.company.companyName}`],
@@ -254,6 +285,7 @@ function renderProjectSelection({ services, context }) {
     ["source", context.project.selection?.source || context.project.metadata?.source || "unknown"],
     ["company", context.company.companyName || "No company linked"],
     ["company source", context.company.source || "fallback"],
+    ["authority role", context.authority.actualRole?.value || "external_user"],
     ["restored envelope", context.project.metadata?.restoredEnvelopeId || "none"],
     ["restored at", context.project.metadata?.restoredAt || "none"],
     ["save", context.project.save?.status || "deferred"],
@@ -278,6 +310,7 @@ function renderProjectBrowser({ context }) {
   appendDefinitionListRows(projectBrowserSummary, [
     ["current", browser.currentProject?.title || "No project loaded"],
     ["company", context.company.companyName || "No company linked"],
+    ["authority", `${context.authority.actualRole?.value || "external_user"}:${context.authority.actualRole?.source || "safe-fallback"}`],
     ["selected envelope", browser.selectedProjectId || "none"],
     ["selected restore", selected?.restoreEligible ? "enabled" : "disabled"],
     ["runtime saved", browser.savedCount || 0],
@@ -359,14 +392,14 @@ function renderIdentityVisibilityControls({ services, context }) {
   appendDefinitionListRows(resolvedIdentitySummary, [
     ["identity state", context.identity.identityState],
     ["classification", context.identity.classification],
+    ["classifier only", context.authority.subject?.classifierOnly ? "yes" : "no"],
     ["identity source", context.identity.lookup?.identitySource || "unknown"],
     ["developer fixture", context.identity.lookup?.usingDeveloperFixture ? "active" : "off"],
-    ["actual role", context.identity.actualRole],
-    ["derived role", context.identity.derivedActualRole || context.identity.actualRole],
-    ["actual role source", context.identity.actualRoleSource],
+    ["authority role", context.authority.actualRole?.value || "external_user"],
+    ["role source", context.authority.actualRole?.source || "safe-fallback"],
     ["override active", context.identity.actualRoleOverrideEnabled ? "yes" : "no"],
-    ["display preview", context.identity.displayRole],
-    ["preview clamped", context.identity.displayRoleClamped ? "yes" : "no"],
+    ["display preview", context.visibility.inputs?.displayRole || context.identity.displayRole],
+    ["preview clamped", context.visibility.inputs?.displayRoleClamped ? "yes" : "no"],
   ]);
 
   roleOverrideToggle.checked = context.identity.actualRoleOverrideEnabled === true;
@@ -380,10 +413,13 @@ function renderIdentityVisibilityControls({ services, context }) {
   const hidden = context.visibility.hiddenModules.join(", ") || "none";
   const currentDecision = context.visibility.moduleReasons[context.route.moduleId];
   appendDefinitionListRows(visibilitySummary, [
-    ["mode", "auth-derived identity / developer visibility support"],
+    ["mode", "NVB-backed authority / developer visibility support"],
     ["authenticated", context.auth.session?.authenticated ? "yes" : "no"],
-    ["display role", context.identity.displayRole],
+    ["authority", `${context.authority.actualRole?.value || "external_user"}:${context.authority.actualRole?.source || "safe-fallback"}`],
+    ["display role", context.visibility.inputs?.displayRole || context.identity.displayRole],
     ["preview only", "yes"],
+    ["blacklist", context.authority.privileges?.blacklist?.active ? "active" : "none"],
+    ["restrictions", (context.authority.privileges?.restrictions || []).join(", ") || "none"],
     ["project input", context.visibility.inputs?.projectMode || "auto"],
     ["visible", visible],
     ["hidden", hidden],
@@ -533,6 +569,7 @@ function bootWorkspaceShell() {
     context = createShellContext({ route, services, mountedModuleId: route.moduleId });
     window.__csLatestShellContext = context;
     renderAuthControls({ services, context });
+    renderAuthorityControls({ context });
     renderCompanyControls({ services, context });
     renderContextSummary(context);
     renderProjectSelection({ services, context });
@@ -568,20 +605,20 @@ function bootWorkspaceShell() {
       setStatus(`Sign in failed: ${result.reason || result.status}`);
       return;
     }
-    setStatus(`Signed in as ${nextContext.auth.session.name}. Actual role derives from authenticated identity.`);
+    setStatus(`Signed in as ${nextContext.auth.session.name}. Actual role source: ${nextContext.authority.actualRole?.source}.`);
   }
 
   function handleAuthSignOut() {
     services.auth.signOut("real-login-auth-ui-sign-out");
     services.identity.syncFromAuth("real-login-auth-ui-sign-out-sync");
     const nextContext = refreshContext("auth-sign-out");
-    setStatus(`${nextContext.auth.reason || "Signed out."} Shell is using safe anonymous fallback.`);
+    setStatus(`${nextContext.auth.reason || "Signed out."} Authority is ${nextContext.authority.actualRole?.source}; shell is using safe anonymous fallback.`);
   }
 
   function handleUseAuthenticatedIdentity() {
     services.identity.useAuthenticatedIdentity("real-login-auth-ui-use-authenticated-identity");
     const nextContext = refreshContext("use-authenticated-identity");
-    setStatus(`Using authenticated identity source: ${nextContext.identity.currentUser.name}.`);
+    setStatus(`Using authenticated identity source: ${nextContext.identity.currentUser.name}. Authority source: ${nextContext.authority.actualRole?.source}.`);
   }
 
   function handleCompanyLink() {
@@ -591,7 +628,7 @@ function bootWorkspaceShell() {
       setStatus(`Company context link failed: ${result.reason || result.status}`);
       return;
     }
-    setStatus(`Company context linked: ${nextContext.company.companyName}. CRM writes remain disabled.`);
+    setStatus(`Company context linked: ${nextContext.company.companyName}. Company context remains CRM enrichment only.`);
   }
 
   function handleCompanyProjectFallback() {
@@ -617,7 +654,7 @@ function bootWorkspaceShell() {
       return;
     }
     const nextContext = refreshContext("project-switch");
-    setStatus(`Selected ${readProjectTitle(nextContext.project)}. Company context source: ${nextContext.company.source}.`);
+    setStatus(`Selected ${readProjectTitle(nextContext.project)}. Authority source: ${nextContext.authority.actualRole?.source}.`);
   }
 
   function handleProjectBrowserSave() {
@@ -674,33 +711,33 @@ function bootWorkspaceShell() {
       return;
     }
     const nextContext = refreshContext("developer-fixture-identity-change");
-    setStatus(`Developer fixture identity active: ${nextContext.identity.currentUser.name}. This is not real auth.`);
+    setStatus(`Developer fixture identity active: ${nextContext.identity.currentUser.name}. This is not NVB authority.`);
   }
 
   function handleRoleOverrideToggle(event) {
     const result = services.identity.setActualRoleOverrideEnabled(event.target.checked, "developer-test-actual-role-override-toggle");
     const nextContext = refreshContext("actual-role-override-toggle");
     const stateText = nextContext.identity.actualRoleOverrideEnabled ? "enabled" : "off";
-    const clampText = result.clamped ? " Display role was clamped to actual authority." : "";
-    setStatus(`Developer/test actual-role override ${stateText}.${clampText}`);
+    const clampText = result.clamped ? " Display role was clamped to authority." : "";
+    setStatus(`Developer/test actual-role override ${stateText}. NVB authority remains ${nextContext.authority.actualRole?.source}.${clampText}`);
   }
 
   function handleRoleOverrideChange(event) {
     const result = services.identity.setActualRoleOverride(event.target.value, "developer-test-actual-role-override-change");
     const nextContext = refreshContext("actual-role-override-change");
-    const clampText = result.clamped ? " Display role was clamped to actual authority." : "";
-    setStatus(`Developer/test override role: ${nextContext.identity.actualRole}.${clampText}`);
+    const clampText = result.clamped ? " Display role was clamped to authority." : "";
+    setStatus(`Developer/test override support role: ${nextContext.identity.actualRole}. NVB authority remains ${nextContext.authority.actualRole?.value}.${clampText}`);
   }
 
   function handleDisplayRoleChange(event) {
     const result = services.identity.setDisplayRole(event.target.value, "display-role-preview-change");
     const nextContext = refreshContext("display-role-change");
-    const clampText = result.clamped ? " Requested role was clamped to actual authority." : "";
-    setStatus(`Display role preview only: ${nextContext.identity.displayRole}.${clampText}`);
+    const clampText = result.clamped || nextContext.visibility.inputs?.displayRoleClamped ? " Requested role was clamped to authority." : "";
+    setStatus(`Display role preview only: ${nextContext.visibility.inputs?.displayRole || nextContext.identity.displayRole}.${clampText}`);
   }
 
   function handleProjectModeChange(event) {
-    services.visibility.setProjectMode(event.target.value, context, "real-login-auth-project-visibility-mode-change");
+    services.visibility.setProjectMode(event.target.value, context, "nvb-authority-project-visibility-mode-change");
     const nextContext = refreshContext("project-visibility-mode-change");
     setStatus(`Visibility project input: ${nextContext.visibility.inputs.projectMode}.`);
   }
@@ -733,7 +770,7 @@ function bootWorkspaceShell() {
   projectModeSelect?.addEventListener("change", handleProjectModeChange);
 
   if (showHomeIfRequested(route.moduleId)) {
-    setStatus("Workspace home mounted. Company context is shell-owned and read-safe; CRM writes remain disabled.");
+    setStatus("Workspace home mounted. Authority is shell-owned and read-only; NVB is used when available.");
     scheduleOptionalDiagnosticsPlugin({ services, getContext: () => context, registry, onPluginReady: rememberDiagnosticsPlugin });
     return;
   }
@@ -749,7 +786,7 @@ function bootWorkspaceShell() {
   try {
     mountedModuleApi = moduleApi;
     moduleApi.mount({ container: moduleHost, services, context });
-    setStatus(`Mounted ${route.moduleId}. Company context is shell-owned and read-safe; CRM writes remain disabled.`);
+    setStatus(`Mounted ${route.moduleId}. Authority is shell-owned and read-only; NVB is used when available.`);
     services.eventBus.emit("module:mounted", { moduleId: route.moduleId, route });
     scheduleOptionalDiagnosticsPlugin({ services, getContext: () => context, registry, onPluginReady: rememberDiagnosticsPlugin });
   } catch (error) {

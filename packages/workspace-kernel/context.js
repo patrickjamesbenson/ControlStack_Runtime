@@ -72,12 +72,71 @@ function readCrm(service, context = {}) {
   };
 }
 
+function readAuthority(service, context = {}) {
+  if (typeof service.getAuthoritySnapshot === "function") return service.getAuthoritySnapshot(context);
+  return {
+    owner: "shell",
+    status: "fallback",
+    source: "shell-safe-fallback",
+    live: true,
+    readOnly: true,
+    subject: {
+      identityClassification: context.identity?.classification || "anonymous",
+      classifierOnly: true,
+      internalClassifier: false,
+    },
+    nvb: {
+      available: false,
+      checked: false,
+      matched: false,
+      confidence: "none",
+    },
+    actualRole: {
+      value: "external_user",
+      source: "safe-fallback",
+      derivedFromNvb: false,
+      internalDomainUsedAsClassifierOnly: true,
+      fallbackApplied: true,
+    },
+    privileges: {
+      specialVisibility: [],
+      capabilities: ["workspace:view", "module:cs_selector:view"],
+      moduleEntitlements: {
+        workspace_home: true,
+        cs_selector: true,
+        emergence: false,
+        scene_builder: false,
+      },
+      exceptionalEntitlements: [],
+      restrictions: [],
+      blacklist: {
+        active: false,
+        reason: null,
+        source: "none",
+      },
+    },
+    companyAuthority: {
+      status: "not-authority",
+    },
+    developerSupport: {
+      displayRolePreview: true,
+      actualRoleOverride: true,
+      overrideActive: false,
+      overrideLabel: "Developer/test only. Not NVB authority.",
+    },
+    writePolicy: {
+      enabled: false,
+      reason: "Authority resolution is read-only.",
+    },
+  };
+}
+
 function readDiagnostics(service) {
   if (typeof service.getSnapshot === "function") return service.getSnapshot();
   return {
     owner: service.owner,
     status: service.status,
-    phase: "hubspot-company-context",
+    phase: "nvb-authority-hardening",
   };
 }
 
@@ -86,16 +145,18 @@ export function createShellContext({ route, services, mountedModuleId = null }) 
   const project = services.project.getProjectSnapshot();
   const identity = readIdentity(services.identity);
   const crm = readCrm(services.crm, { auth, identity, project });
-  const visibility = services.visibility.getVisibilitySnapshot({ auth, identity, project });
+  const authority = readAuthority(services.authority, { auth, identity, crm });
+  const visibility = services.visibility.getVisibilitySnapshot({ auth, identity, authority, project });
   const downstream = services.downstream.getDownstreamContextSnapshot({ identity, project, visibility });
   const flags = services.flags.getFlagSnapshot();
   const diagnostics = readDiagnostics(services.diagnostics);
   const baseContext = {
     contractVersion: WORKSPACE_CONTRACT_VERSION,
-    phase: "hubspot-company-context",
+    phase: "nvb-authority-hardening",
     route,
     auth,
     identity,
+    authority,
     project,
     currentProject: project.currentProject,
     company: crm.company,
@@ -126,6 +187,7 @@ export function createModuleUpdateSnapshot(context) {
     route: context.route,
     auth: context.auth,
     identity: context.identity,
+    authority: context.authority,
     project: context.project,
     currentProject: context.currentProject,
     projectBrowser: context.projectBrowser,
