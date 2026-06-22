@@ -16,20 +16,25 @@ export function createSelectorContractAdapter({ services, context }) {
     context,
 
     readSnapshots() {
-      const auth = safeRead(() => services.auth.getAuthSnapshot(), context.auth);
-      const identity = safeRead(() => services.identity.getIdentitySnapshot(), context.identity);
-      const project = safeRead(() => services.project.getProjectSnapshot(), context.project);
-      const visibility = safeRead(() => services.visibility.getVisibilitySnapshot({ auth, identity, project }), context.visibility);
+      const auth = context.auth || safeRead(() => services.auth.getAuthSnapshot(), context.auth);
+      const identity = context.identity || safeRead(() => services.identity.getIdentitySnapshot(), context.identity);
+      const project = context.project || safeRead(() => services.project.getProjectSnapshot(), context.project);
+      const crm = context.crm || safeRead(() => services.crm.getCrmSnapshot({ auth, identity, project }), context.crm);
+      const authority = context.authority || safeRead(() => services.authority.getAuthoritySnapshot({ auth, identity, crm }), context.authority);
+      const visibility = context.visibility || safeRead(() => services.visibility.getVisibilitySnapshot({ auth, identity, authority, project }), context.visibility);
+      const timelinePolicy = context.timelinePolicy || safeRead(() => services.timelinePolicy.getTimelinePolicySnapshot({ auth, identity, authority, visibility, project }), context.timelinePolicy);
       return {
         route: context.route,
         auth,
         identity,
+        authority,
         project,
-        company: safeRead(() => services.crm.getCompanyContext(), context.company),
-        crm: safeRead(() => services.crm.getCrmSnapshot(), context.crm),
-        handoff: safeRead(() => services.handoff.getHandoffSnapshot(), context.handoff),
+        company: context.company || safeRead(() => services.crm.getCompanyContext({ auth, identity, project }), context.company),
+        crm,
+        handoff: context.handoff || safeRead(() => services.handoff.getHandoffSnapshot(), context.handoff),
         visibility,
-        flags: safeRead(() => services.flags.getFlagSnapshot(), context.flags),
+        timelinePolicy,
+        flags: context.flags || safeRead(() => services.flags.getFlagSnapshot(), context.flags),
         lifecycle: context.lifecycle,
         diagnostics: context.diagnostics,
       };

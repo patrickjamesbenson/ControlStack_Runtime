@@ -49,6 +49,25 @@ function consumerSummary(consumers = {}) {
   return Object.entries(consumers).map(([id, consumer]) => `${id}:${consumer.status}`).join(", ") || "none";
 }
 
+function statusList(policy = {}) {
+  return (policy.statusPolicy?.allowedStatuses || []).join(", ") || "none";
+}
+
+function timelineWindow(policy = {}) {
+  const window = policy.defaultWindow || {};
+  return `${window.pastDays || 0}d back / ${window.futureDays || 0}d forward`;
+}
+
+function timelineRefs({ local = {}, project = {}, selectorDownstream = {} }) {
+  return [
+    `project:${project.metadata?.projectId || project.currentProject?.projectId || "none"}`,
+    `category:${local.selectedCategory || "none"}`,
+    `runs:${selectorDownstream.runRefs?.length || 0}`,
+    `areas:${selectorDownstream.areaRefs?.length || 0}`,
+    `fittings:${selectorDownstream.fittingRefs?.length || 0}`,
+  ].join(", ");
+}
+
 export function createSelectorViewModel({ adapter, selectorState }) {
   const snapshots = adapter.readSnapshots();
   const local = selectorState.getSnapshot();
@@ -63,6 +82,7 @@ export function createSelectorViewModel({ adapter, selectorState }) {
   const selectorDecision = decisionFor(snapshots.visibility, "cs_selector");
   const downstream = readDownstream(adapter, snapshots);
   const selectorDownstream = downstream.selector || {};
+  const timelinePolicy = snapshots.timelinePolicy || {};
 
   return {
     moduleId: adapter.moduleId,
@@ -141,6 +161,28 @@ export function createSelectorViewModel({ adapter, selectorState }) {
       visibleModules: snapshots.visibility.visibleModules?.join(", ") || "none",
       hiddenModules: snapshots.visibility.hiddenModules?.join(", ") || "none",
       rule: snapshots.visibility.rule,
+    },
+    timelinePolicy: {
+      owner: timelinePolicy.owner || "shell",
+      status: timelinePolicy.status || "unavailable",
+      source: timelinePolicy.source || "timeline-policy-fallback",
+      consumedFrom: "shell-context",
+      selectorAuthoritative: "no",
+      lane: `${timelinePolicy.rolePolicy?.displayLane || "external"}:${timelinePolicy.rolePolicy?.actualRole || "external_user"}`,
+      actualRoleSource: timelinePolicy.rolePolicy?.actualRoleSource || "safe-fallback",
+      allowedStatuses: statusList(timelinePolicy),
+      controlsVisible: stateLabel(timelinePolicy.controls?.visible),
+      controlsReason: timelinePolicy.controls?.reason || "not-provided",
+      diagnosticsVisible: stateLabel(timelinePolicy.diagnostics?.visible),
+      gateMode: timelinePolicy.gates?.mode || "unknown",
+      selectorMayOverride: stateLabel(timelinePolicy.gates?.selectorMayOverride),
+      selectorOwnsStatusRules: stateLabel(timelinePolicy.statusPolicy?.selectorOwnsStatusRules),
+      defaultWindow: timelineWindow(timelinePolicy),
+      projectStage: timelinePolicy.projectDateContext?.stage || "unknown",
+      dueDatePosition: timelinePolicy.projectDateContext?.dueDatePosition || "unknown",
+      persistenceLive: stateLabel(timelinePolicy.persistence?.reviewHistoryLive),
+      writeEnabled: stateLabel(timelinePolicy.writePolicy?.enabled),
+      itemRefs: timelineRefs({ local, project, selectorDownstream }),
     },
     downstream: {
       owner: downstream.owner,

@@ -87,6 +87,29 @@ export function renderSelectorView(container, viewModel) {
     ["hidden modules", viewModel.visibility.hiddenModules],
   ]);
 
+  appendSection(article, "Timeline policy consumer", [
+    ["owner", viewModel.timelinePolicy.owner],
+    ["status", viewModel.timelinePolicy.status],
+    ["source", viewModel.timelinePolicy.source],
+    ["consumed from", viewModel.timelinePolicy.consumedFrom],
+    ["selector authoritative", viewModel.timelinePolicy.selectorAuthoritative],
+    ["lane", viewModel.timelinePolicy.lane],
+    ["actual role source", viewModel.timelinePolicy.actualRoleSource],
+    ["allowed statuses", viewModel.timelinePolicy.allowedStatuses],
+    ["controls visible", viewModel.timelinePolicy.controlsVisible],
+    ["controls reason", viewModel.timelinePolicy.controlsReason],
+    ["diagnostics visible", viewModel.timelinePolicy.diagnosticsVisible],
+    ["gate", viewModel.timelinePolicy.gateMode],
+    ["selector may override", viewModel.timelinePolicy.selectorMayOverride],
+    ["selector owns status rules", viewModel.timelinePolicy.selectorOwnsStatusRules],
+    ["default window", viewModel.timelinePolicy.defaultWindow],
+    ["project stage", viewModel.timelinePolicy.projectStage],
+    ["due date position", viewModel.timelinePolicy.dueDatePosition],
+    ["persistence live", viewModel.timelinePolicy.persistenceLive],
+    ["write enabled", viewModel.timelinePolicy.writeEnabled],
+    ["local timeline refs", viewModel.timelinePolicy.itemRefs],
+  ]);
+
   appendSection(article, "Downstream context foundation", [
     ["owner", viewModel.downstream.owner],
     ["status", viewModel.downstream.status],
