@@ -70,7 +70,7 @@ function resolveReason({ moduleId, policy, identity, project, projectMode, autho
   if (authorityBlock) return authorityBlock;
   if (policy.requiresIdentity && !hasIdentity(identity)) return "needs_identity";
   if (policy.requiresProject && !hasProject(project, projectMode)) return "needs_project";
-  if (roleRank(previewRole(authority, identity)) < roleRank(policy.minRole)) return "hidden_for_authority_role";
+  if (roleRank(authorityRole(authority, identity)) < roleRank(policy.minRole)) return "hidden_for_authority_role";
   return "allowed";
 }
 
@@ -82,7 +82,8 @@ function createDecision(moduleId, identity, project, projectMode, authority) {
   const policy = MODULE_POLICIES[moduleId] || null;
   const reason = resolveReason({ moduleId, policy, identity, project, projectMode, authority });
   const visible = visibleFromReason(reason);
-  const effectiveRole = previewRole(authority, identity);
+  const effectiveRole = authorityRole(authority, identity);
+  const previewDisplayRole = previewRole(authority, identity);
   return {
     moduleId,
     label: policy?.label || moduleId,
@@ -99,7 +100,8 @@ function createDecision(moduleId, identity, project, projectMode, authority) {
     requiredProject: policy?.requiresProject === true,
     minRole: policy?.minRole || "external_user",
     authorityRole: authorityRole(authority, identity),
-    displayRole: effectiveRole,
+    displayRole: previewDisplayRole,
+    effectiveActualRole: effectiveRole,
     authoritySource: authority?.actualRole?.source || identity?.actualRoleSource || "unknown",
     moduleEntitled: authority?.privileges?.moduleEntitlements?.[moduleId] !== false,
   };
@@ -140,7 +142,7 @@ export function createVisibilityService({ eventBus } = {}) {
     const next = {
       owner: state.owner,
       status: state.status,
-      source: "nvb-backed-authority-visibility-policy",
+      source: "live-nvb-authority-visibility-policy",
       rule: state.rule,
       testMode: true,
       auth: {

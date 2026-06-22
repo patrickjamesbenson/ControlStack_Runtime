@@ -32,13 +32,15 @@ function normaliseRole(role, fallback = "external_user") {
 function isInternalClassifier(identity = {}, auth = {}) {
   const classification = identity.classification || auth.user?.classification || "anonymous";
   const email = auth.session?.email || identity.currentUser?.email || "";
-  return classification === "internal" || classification === "developer" || classification === "admin" || /@controlstack\.local$/i.test(email) || /@controlstack\./i.test(email);
+  return classification === "internal"
+    || classification === "developer"
+    || classification === "admin"
+    || /@controlstack\.local$/i.test(email)
+    || /@controlstack\./i.test(email)
+    || /@novonlighting\.com\.au$/i.test(email);
 }
 
-function fallbackRole(identity = {}, auth = {}) {
-  if (auth.session?.authenticated !== true) return "external_user";
-  if (identity.classification === "external") return "external_user";
-  if (isInternalClassifier(identity, auth)) return "internal_user";
+function fallbackRole() {
   return "external_user";
 }
 
@@ -70,12 +72,16 @@ function privilegeCapabilities(role, specialVisibility = []) {
   return [...new Set([...capabilities, ...specialVisibility])];
 }
 
+function fallbackReasonFor(nvb) {
+  return nvb.reason || "Live NVB authority did not return a matched record; conservative shell fallback used.";
+}
+
 function deriveAuthority({ auth = {}, identity = {}, crm = {} }, adapter) {
   const nvb = adapter.resolveAuthority({ auth, identity, crm });
   const internalClassifier = isInternalClassifier(identity, auth);
   const fallback = fallbackRole(identity, auth);
   const record = nvb.record || null;
-  const nvbRole = record ? normaliseRole(record.actualRole, fallback) : null;
+  const nvbRole = record && nvb.matched ? normaliseRole(record.actualRole, fallback) : null;
   const actualRole = nvbRole || fallback;
   const restrictions = record?.restrictions || [];
   const blacklist = {
@@ -111,6 +117,10 @@ function deriveAuthority({ auth = {}, identity = {}, crm = {} }, adapter) {
       resolvedAt: nvb.resolvedAt,
       confidence: nvb.confidence,
       reason: nvb.reason,
+      liveReadStatus: nvb.liveReadStatus || "live-read-unavailable",
+      liveReadConfigured: nvb.liveReadConfigured === true,
+      nonBootCritical: nvb.nonBootCritical !== false,
+      timeoutMs: nvb.timeoutMs || null,
     },
     actualRole: {
       value: blacklist.active ? "external_user" : actualRole,
@@ -119,7 +129,7 @@ function deriveAuthority({ auth = {}, identity = {}, crm = {} }, adapter) {
       derivedFromNvb: nvb.matched === true,
       internalDomainUsedAsClassifierOnly: true,
       fallbackApplied: nvb.matched !== true,
-      fallbackReason: nvb.matched ? null : "No NVB authority record matched; conservative shell fallback used.",
+      fallbackReason: nvb.matched ? null : fallbackReasonFor(nvb),
     },
     privileges: {
       specialVisibility: record?.specialVisibility || [],
@@ -149,12 +159,13 @@ function deriveAuthority({ auth = {}, identity = {}, crm = {} }, adapter) {
   };
 }
 
-export function createAuthorityService({ eventBus, nvbAdapter = createNvbAuthorityAdapter() } = {}) {
+export function createAuthorityService({ eventBus, nvbAdapter } = {}) {
   const subscriptions = createSubscriptionSet();
+  const authorityAdapter = nvbAdapter || createNvbAuthorityAdapter({ eventBus });
   const state = {
     owner: "shell",
     status: "ready",
-    source: "nvb-backed-authority-resolution",
+    source: "live-nvb-authority-resolution",
     lastContext: {},
     lastSnapshot: null,
   };
@@ -166,7 +177,7 @@ export function createAuthorityService({ eventBus, nvbAdapter = createNvbAuthori
 
   function snapshot(context = {}) {
     const effectiveContext = rememberContext(context);
-    const next = deriveAuthority(effectiveContext, nvbAdapter);
+    const next = deriveAuthority(effectiveContext, authorityAdapter);
     state.lastSnapshot = next;
     return clone(next);
   }
@@ -177,6 +188,10 @@ export function createAuthorityService({ eventBus, nvbAdapter = createNvbAuthori
     eventBus?.emit("authority:changed", { reason, authority: nextSnapshot });
     return nextSnapshot;
   }
+
+  eventBus?.on?.("authority:live-read-completed", ({ reason } = {}) => {
+    if (state.lastContext) notify(reason || "authority-live-read-completed", state.lastContext);
+  });
 
   return {
     owner: state.owner,

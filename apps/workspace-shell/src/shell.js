@@ -192,6 +192,9 @@ function renderAuthorityControls({ context }) {
     ["source", authority.source || "shell-safe-fallback"],
     ["actual role", authority.actualRole?.value || "external_user"],
     ["role source", authority.actualRole?.source || "safe-fallback"],
+    ["live read", authority.nvb?.liveReadStatus || "live-read-unavailable"],
+    ["configured", authority.nvb?.liveReadConfigured ? "yes" : "no"],
+    ["non-boot-critical", authority.nvb?.nonBootCritical === false ? "no" : "yes"],
     ["NVB matched", authority.nvb?.matched ? "yes" : "no"],
     ["confidence", authority.nvb?.confidence || "none"],
     ["classifier only", authority.subject?.classifierOnly ? "yes" : "no"],
@@ -245,7 +248,9 @@ function renderContextSummary(context) {
     ["module", context.route.moduleId],
     ["auth", `${context.auth.owner}:${context.auth.status}`],
     ["auth user", context.auth.session?.email || context.auth.user?.name || "anonymous"],
-    ["identity", `${context.identity.identityState}:${context.identity.displayRole}`],
+    ["classifier identity", context.identity.identityState || "external_anonymous"],
+    ["effective role", `${context.identity.actualRole || context.authority.actualRole?.value || "external_user"}:${context.identity.actualRoleSource || context.authority.actualRole?.source || "safe-fallback"}`],
+    ["display preview", `${context.identity.displayRole || "external_user"}:preview-only`],
     ["identity source", context.identity.lookup?.identitySource || "unknown"],
     ["authority", `${context.authority.owner}:${context.authority.status}:${context.authority.actualRole?.value}`],
     ["authority source", context.authority.actualRole?.source || "safe-fallback"],
@@ -768,6 +773,10 @@ function bootWorkspaceShell() {
   roleOverrideSelect?.addEventListener("change", handleRoleOverrideChange);
   displayRoleSelect?.addEventListener("change", handleDisplayRoleChange);
   projectModeSelect?.addEventListener("change", handleProjectModeChange);
+  services.eventBus.on?.("authority:live-read-completed", ({ result } = {}) => {
+    const nextContext = refreshContext("authority-live-read-completed");
+    setStatus(`Live NVB authority read ${result?.liveReadStatus || nextContext.authority.nvb?.liveReadStatus || "updated"}. Authority source: ${nextContext.authority.actualRole?.source}.`);
+  });
 
   if (showHomeIfRequested(route.moduleId)) {
     setStatus("Workspace home mounted. Authority is shell-owned and read-only; NVB is used when available.");

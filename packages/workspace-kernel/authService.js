@@ -13,6 +13,17 @@ const AUTH_USERS = Object.freeze([
     provider: "local-dev",
   }),
   Object.freeze({
+    id: "patrick-benson-novonlighting",
+    label: "Patrick Benson · Novon Lighting",
+    name: "Patrick Benson",
+    email: "patrick@novonlighting.com.au",
+    classification: "internal",
+    identityState: "internal_identified",
+    actualRole: "external_user",
+    company: "Novon Lighting",
+    provider: "local-dev",
+  }),
+  Object.freeze({
     id: "internal-user",
     label: "Internal user",
     name: "Internal User",

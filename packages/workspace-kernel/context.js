@@ -136,7 +136,47 @@ function readDiagnostics(service) {
   return {
     owner: service.owner,
     status: service.status,
-    phase: "nvb-authority-hardening",
+    phase: "live-nvb-authority-read",
+  };
+}
+
+function roleCapabilities(role) {
+  const roleOrder = ["external_user", "internal_user", "internal_engineer", "developer", "admin"];
+  const rank = roleOrder.indexOf(role);
+  const capabilities = ["workspace:view", "module:cs_selector:view"];
+  if (rank >= roleOrder.indexOf("internal_user")) capabilities.push("module:emergence:view", "module:scene_builder:view");
+  if (rank >= roleOrder.indexOf("internal_engineer")) capabilities.push("workspace:visibility:test");
+  if (rank >= roleOrder.indexOf("developer")) capabilities.push("workspace:developer-preview");
+  if (rank >= roleOrder.indexOf("admin")) capabilities.push("workspace:admin-preview");
+  return capabilities;
+}
+
+function applyAuthorityToIdentity(identity = {}, authority = {}) {
+  const authorityRole = authority.actualRole?.value || identity.actualRole || "external_user";
+  const authoritySource = authority.actualRole?.source || identity.actualRoleSource || "unknown";
+  const authorityCapabilities = roleCapabilities(authorityRole);
+  return {
+    ...identity,
+    identitySupportActualRole: identity.actualRole || "external_user",
+    identitySupportDerivedActualRole: identity.derivedActualRole || identity.actualRole || "external_user",
+    authorityActualRole: authorityRole,
+    authorityActualRoleSource: authoritySource,
+    derivedActualRole: authorityRole,
+    actualRole: authorityRole,
+    actualRoleSource: authoritySource,
+    actualRoleDerived: authority.actualRole?.derivedFromNvb === true,
+    authorityApplied: true,
+    displayRolePreviewCapabilities: identity.capabilities || [],
+    capabilities: authorityCapabilities,
+    actualCapabilities: authorityCapabilities,
+    resolver: {
+      ...(identity.resolver || {}),
+      derivedActualRole: authorityRole,
+      effectiveActualRole: authorityRole,
+      actualRoleSource: authoritySource,
+      actualRoleDerived: authority.actualRole?.derivedFromNvb === true,
+      authorityApplied: true,
+    },
   };
 }
 
@@ -146,16 +186,17 @@ export function createShellContext({ route, services, mountedModuleId = null }) 
   const identity = readIdentity(services.identity);
   const crm = readCrm(services.crm, { auth, identity, project });
   const authority = readAuthority(services.authority, { auth, identity, crm });
-  const visibility = services.visibility.getVisibilitySnapshot({ auth, identity, authority, project });
-  const downstream = services.downstream.getDownstreamContextSnapshot({ identity, project, visibility });
+  const moduleIdentity = applyAuthorityToIdentity(identity, authority);
+  const visibility = services.visibility.getVisibilitySnapshot({ auth, identity: moduleIdentity, authority, project });
+  const downstream = services.downstream.getDownstreamContextSnapshot({ identity: moduleIdentity, project, visibility });
   const flags = services.flags.getFlagSnapshot();
   const diagnostics = readDiagnostics(services.diagnostics);
   const baseContext = {
     contractVersion: WORKSPACE_CONTRACT_VERSION,
-    phase: "nvb-authority-hardening",
+    phase: "live-nvb-authority-read",
     route,
     auth,
-    identity,
+    identity: moduleIdentity,
     authority,
     project,
     currentProject: project.currentProject,

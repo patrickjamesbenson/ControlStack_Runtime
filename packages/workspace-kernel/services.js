@@ -98,7 +98,7 @@ export function createShellServices() {
         return {
           owner: "shell",
           status: "placeholder",
-          phase: "nvb-authority-hardening",
+          phase: "live-nvb-authority-read",
           contract: createContractDiagnostics(),
           responsiveRequirement: "desktop-tablet-mobile",
           auth: {
@@ -122,6 +122,8 @@ export function createShellServices() {
             actualRoleSource: authority.actualRole?.source || "safe-fallback",
             nvbMatched: authority.nvb?.matched === true,
             nvbConfidence: authority.nvb?.confidence || "none",
+            liveReadStatus: authority.nvb?.liveReadStatus || "live-read-unavailable",
+            liveReadConfigured: authority.nvb?.liveReadConfigured === true,
             internalClassifierOnly: authority.subject?.classifierOnly === true,
             blacklistActive: authority.privileges?.blacklist?.active === true,
             restrictions: authority.privileges?.restrictions || [],
@@ -209,7 +211,7 @@ export function createShellServices() {
         return {
           accepted: true,
           event,
-          phase: "nvb-authority-hardening",
+          phase: "live-nvb-authority-read",
         };
       },
     },
