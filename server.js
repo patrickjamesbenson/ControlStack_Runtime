@@ -8,6 +8,7 @@ const HOST = process.env.CONTROLSTACK_RUNTIME_HOST || "127.0.0.1";
 const ROOT = resolve(process.cwd());
 const NVB_READ_PATH = "/api/nvb-" + String.fromCharCode(97, 117, 116, 104, 111, 114, 105, 116, 121) + "/read";
 const HUBSPOT_READ_PATH = "/api/hubspot/read";
+const HUBSPOT_AUTH_STATUS_PATH = "/api/hubspot/auth-status";
 
 const MIME_TYPES = new Map([
   [".html", "text/html; charset=utf-8"],
@@ -215,13 +216,93 @@ async function sendNvbAuthorityRead(res, requestUrl) {
 
 const sendNvbRead = (...args) => sendNvbAuthorityRead(...args);
 
+function readTextEnv(name) {
+  return String(process.env[name] || "").trim();
+}
+
+function hubspotTokenSource(candidates) {
+  for (const [name, value] of candidates) {
+    if (value) return { token: value, tokenSource: `env:${name}` };
+  }
+  return { token: "", tokenSource: "none" };
+}
+
+function hubspotAuthStatus() {
+  const requestedMode = String(process.env.CONTROLSTACK_HUBSPOT_AUTH_MODE || "oauth").trim().toLowerCase();
+  const staticTokenEnabled = readBooleanEnv("CONTROLSTACK_HUBSPOT_STATIC_TOKEN_ENABLED", false);
+  const oauth = hubspotTokenSource([
+    ["HUBSPOT_OAUTH_ACCESS_TOKEN", readTextEnv("HUBSPOT_OAUTH_ACCESS_TOKEN")],
+    ["HUBSPOT_ACCESS_TOKEN", readTextEnv("HUBSPOT_ACCESS_TOKEN")],
+  ]);
+  const staticToken = hubspotTokenSource([
+    ["HUBSPOT_STATIC_TOKEN", readTextEnv("HUBSPOT_STATIC_TOKEN")],
+    ["HUBSPOT_PRIVATE_APP_TOKEN", readTextEnv("HUBSPOT_PRIVATE_APP_TOKEN")],
+    ["HUBSPOT_TOKEN", readTextEnv("HUBSPOT_TOKEN")],
+  ]);
+  const staticRequested = ["static", "static-token", "private", "private-app", "private-app-token"].includes(requestedMode);
+  const oauthRequested = requestedMode === "oauth" || requestedMode === "oauth-server-bearer";
+
+  let selected = oauth;
+  let mode = "oauth-server-bearer";
+  let configured = Boolean(oauth.token);
+  let status = configured ? "configured" : "unconfigured";
+  let reason = configured
+    ? "HubSpot OAuth-derived server-side bearer token is configured through external environment."
+    : "HubSpot OAuth-derived server-side bearer token is not configured.";
+
+  if (staticRequested) {
+    mode = staticTokenEnabled ? "static-token" : "static-token-disabled";
+    selected = staticTokenEnabled ? staticToken : { token: "", tokenSource: "none" };
+    configured = staticTokenEnabled && Boolean(staticToken.token);
+    status = configured ? "configured" : staticTokenEnabled ? "unconfigured" : "disabled";
+    reason = staticTokenEnabled
+      ? configured
+        ? "Optional HubSpot static/private-token mode is explicitly enabled and configured server-side."
+        : "Optional HubSpot static/private-token mode is enabled but no server-side token is configured."
+      : "Optional HubSpot static/private-token mode was requested but is disabled by default.";
+  } else if (!oauthRequested) {
+    selected = { token: "", tokenSource: "none" };
+    mode = "invalid-mode";
+    configured = false;
+    status = "invalid-mode";
+    reason = `Unsupported HubSpot auth mode '${requestedMode}'. Use oauth or explicitly gated static-token mode.`;
+  }
+
+  return {
+    owner: "runtime-server",
+    provider: "hubspot",
+    status,
+    configured,
+    available: configured,
+    primaryAuthMode: "oauth-server-bearer",
+    activeAuthMode: mode,
+    requestedAuthMode: requestedMode || "oauth",
+    tokenSource: selected.tokenSource,
+    tokenPresent: Boolean(selected.token),
+    staticTokenMode: {
+      enabled: staticTokenEnabled,
+      configured: Boolean(staticToken.token),
+      requested: staticRequested,
+      tokenSource: staticTokenEnabled && staticToken.token ? staticToken.tokenSource : "none",
+    },
+    readOnly: true,
+    nonBootCritical: true,
+    browserSecretsExposed: false,
+    repoLocalSecrets: false,
+    streamlit8501AuthShape: false,
+    reason,
+    writePolicy: { enabled: false, reason: "HubSpot writes and deal sync are disabled." },
+    token: selected.token,
+  };
+}
+
+function publicHubspotAuthStatus(status = hubspotAuthStatus()) {
+  const { token, ...safeStatus } = status;
+  return safeStatus;
+}
+
 function hubspotAccessToken() {
-  return String(
-    process.env.HUBSPOT_ACCESS_TOKEN ||
-    process.env.HUBSPOT_PRIVATE_APP_TOKEN ||
-    process.env.HUBSPOT_TOKEN ||
-    ""
-  ).trim();
+  return hubspotAuthStatus().token;
 }
 
 function cleanText(value) {
@@ -415,7 +496,8 @@ function hubspotReadStatus({ contact, company }) {
 }
 
 async function sendHubspotRead(res, requestUrl) {
-  const token = hubspotAccessToken();
+  const authStatus = hubspotAuthStatus();
+  const token = authStatus.token;
   const email = normaliseEmail(requestUrl.searchParams.get("email"));
   const explicitDomain = cleanDomain(requestUrl.searchParams.get("domain"));
   const domain = explicitDomain || domainFromEmail(email);
@@ -427,7 +509,8 @@ async function sendHubspotRead(res, requestUrl) {
       available: false,
       readOnly: true,
       source: "server-hubspot-read-only",
-      reason: "HubSpot read token is not configured on the runtime server.",
+      reason: authStatus.reason,
+      hubspotAuth: publicHubspotAuthStatus(authStatus),
       contact: { found: false, email: email || null, source: "unconfigured" },
       company: { found: false, domain: domain || null, companyName: companyName || null, source: "unconfigured" },
       writePolicy: { enabled: false, reason: "HubSpot writes are disabled." },
@@ -454,6 +537,7 @@ async function sendHubspotRead(res, requestUrl) {
       readOnly: true,
       source: "server-hubspot-read-only",
       reason: readStatus.reason,
+      hubspotAuth: publicHubspotAuthStatus(authStatus),
       query: { email: email || null, domain: domain || null, companyName: companyName || null },
       contact,
       company,
@@ -467,6 +551,7 @@ async function sendHubspotRead(res, requestUrl) {
       readOnly: true,
       source: "server-hubspot-read-only",
       reason: `HubSpot read-only lookup failed: ${error?.message || "unknown error"}.`,
+      hubspotAuth: publicHubspotAuthStatus(authStatus),
       contact: { found: false, email: email || null, source: "lookup_failed" },
       company: { found: false, domain: domain || null, companyName: companyName || null, source: "lookup_failed" },
       writePolicy: { enabled: false, reason: "HubSpot writes are disabled." },
@@ -531,6 +616,8 @@ const server = createServer(async (req, res) => {
       workspace: "/workspace?module=cs_selector",
       runtimeConfig: "/runtime-config.js",
       hubspotRead: HUBSPOT_READ_PATH,
+      hubspotAuthStatus: HUBSPOT_AUTH_STATUS_PATH,
+      hubspotAuth: publicHubspotAuthStatus(),
       root: ROOT,
     });
     return;
@@ -543,6 +630,11 @@ const server = createServer(async (req, res) => {
 
   if (requestUrl.pathname === NVB_READ_PATH) {
     await sendNvbRead(res, requestUrl);
+    return;
+  }
+
+  if (requestUrl.pathname === HUBSPOT_AUTH_STATUS_PATH) {
+    sendJson(res, 200, publicHubspotAuthStatus());
     return;
   }
 

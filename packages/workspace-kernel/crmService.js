@@ -143,6 +143,15 @@ function emptyCrmRead(reason = "CRM read-only lookup has not run.") {
     company: null,
     resolvedAt: null,
     writePolicy: { enabled: false, reason: "CRM writes are disabled." },
+    hubspotAuth: {
+      status: "unknown",
+      primaryAuthMode: "oauth-server-bearer",
+      activeAuthMode: "unknown",
+      staticTokenMode: { enabled: false, configured: false, requested: false },
+      browserSecretsExposed: false,
+      nonBootCritical: true,
+      reason: "HubSpot auth status has not been read from runtime server.",
+    },
   };
 }
 
@@ -302,6 +311,7 @@ export function createCrmService({ eventBus } = {}) {
           company: payload.company || null,
           resolvedAt: isoNow(),
           writePolicy: payload.writePolicy || { enabled: false, reason: "CRM writes are disabled." },
+          hubspotAuth: payload.hubspotAuth || emptyCrmRead().hubspotAuth,
         };
         eventBus?.emit("crm:read-completed", { reason: state.crmRead.status, crmRead: clone(state.crmRead) });
       })
@@ -456,6 +466,7 @@ export function createCrmService({ eventBus } = {}) {
         source: crmRead.source,
         reason: crmRead.reason,
         resolvedAt: crmRead.resolvedAt,
+        auth: crmRead.hubspotAuth || emptyCrmRead().hubspotAuth,
       },
       crmRead: clone(crmRead),
       writePolicy: {
