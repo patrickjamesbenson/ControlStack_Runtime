@@ -106,6 +106,7 @@ export function createDiagnosticsViewModel({ adapter, diagnosticsState }) {
   const pluginStatus = snapshots.pluginContext?.pluginStatus || {};
   const registeredModules = snapshots.pluginContext?.registeredModules || [];
   const visibility = snapshots.visibility || {};
+  const timelinePolicy = snapshots.timelinePolicy || snapshots.context?.timelinePolicy || snapshots.diagnostics?.timelinePolicy || {};
   const downstream = readDownstream(adapter, snapshots);
   const projectBrowser = readProjectBrowser(adapter, snapshots, downstream);
   const selector = downstream.selector || {};
@@ -204,6 +205,29 @@ export function createDiagnosticsViewModel({ adapter, diagnosticsState }) {
       ownerName: company.ownerName || "none",
       writeEnabled: stateLabel(company.writeEnabled),
       diagnosticsReason: company.diagnostics?.reason || "No company diagnostics reason available.",
+    },
+    timelinePolicy: {
+      owner: timelinePolicy.owner || "shell",
+      status: timelinePolicy.status || "unavailable",
+      source: timelinePolicy.source || "timeline-policy-fallback",
+      actualRole: timelinePolicy.rolePolicy?.actualRole || "external_user",
+      actualRoleSource: timelinePolicy.rolePolicy?.actualRoleSource || "safe-fallback",
+      displayLane: timelinePolicy.rolePolicy?.displayLane || "external",
+      displayPreviewOnly: stateLabel(timelinePolicy.rolePolicy?.displayPreviewOnly),
+      visibleModules: (timelinePolicy.visibilityPolicy?.visibleModules || []).join(", ") || "none",
+      hiddenModules: (timelinePolicy.visibilityPolicy?.hiddenModules || []).join(", ") || "none",
+      allowedStatuses: (timelinePolicy.statusPolicy?.allowedStatuses || []).join(", ") || "none",
+      selectorOwnsStatusRules: stateLabel(timelinePolicy.statusPolicy?.selectorOwnsStatusRules),
+      controlsVisible: stateLabel(timelinePolicy.controls?.visible),
+      diagnosticsVisible: stateLabel(timelinePolicy.diagnostics?.visible),
+      diagnosticsNonBootCritical: stateLabel(timelinePolicy.diagnostics?.nonBootCritical),
+      defaultWindow: `${timelinePolicy.defaultWindow?.pastDays || 0}d back / ${timelinePolicy.defaultWindow?.futureDays || 0}d forward`,
+      projectStage: timelinePolicy.projectDateContext?.stage || "unknown",
+      dueDatePosition: timelinePolicy.projectDateContext?.dueDatePosition || "unknown",
+      gateMode: timelinePolicy.gates?.mode || "unknown",
+      selectorMayOverride: stateLabel(timelinePolicy.gates?.selectorMayOverride),
+      persistenceLive: stateLabel(timelinePolicy.persistence?.reviewHistoryLive),
+      writeEnabled: stateLabel(timelinePolicy.writePolicy?.enabled),
     },
     crm: {
       owner: crm.owner || "shell",

@@ -132,6 +132,30 @@ export function renderDiagnosticsView(container, viewModel) {
   appendPillList(authorityCapabilities, viewModel.authority.capabilities === "none" ? ["none"] : viewModel.authority.capabilities.split(", "));
   article.appendChild(authorityCapabilities);
 
+  appendSection(article, "Timeline policy", [
+    ["Owner", viewModel.timelinePolicy.owner],
+    ["Status", viewModel.timelinePolicy.status],
+    ["Source", viewModel.timelinePolicy.source],
+    ["Actual role", viewModel.timelinePolicy.actualRole],
+    ["Actual role source", viewModel.timelinePolicy.actualRoleSource],
+    ["Display lane", viewModel.timelinePolicy.displayLane],
+    ["Display preview only", viewModel.timelinePolicy.displayPreviewOnly],
+    ["Visible modules", viewModel.timelinePolicy.visibleModules],
+    ["Hidden modules", viewModel.timelinePolicy.hiddenModules],
+    ["Allowed statuses", viewModel.timelinePolicy.allowedStatuses],
+    ["Selector owns status rules", viewModel.timelinePolicy.selectorOwnsStatusRules],
+    ["Controls visible", viewModel.timelinePolicy.controlsVisible],
+    ["Diagnostics visible", viewModel.timelinePolicy.diagnosticsVisible],
+    ["Diagnostics non-boot-critical", viewModel.timelinePolicy.diagnosticsNonBootCritical],
+    ["Default window", viewModel.timelinePolicy.defaultWindow],
+    ["Project stage", viewModel.timelinePolicy.projectStage],
+    ["Due date position", viewModel.timelinePolicy.dueDatePosition],
+    ["Gate mode", viewModel.timelinePolicy.gateMode],
+    ["Selector may override", viewModel.timelinePolicy.selectorMayOverride],
+    ["Persistence live", viewModel.timelinePolicy.persistenceLive],
+    ["Write enabled", viewModel.timelinePolicy.writeEnabled],
+  ]);
+
   appendSection(article, "Company / CRM context", [
     ["Company owner", viewModel.company.owner],
     ["Company status", viewModel.company.status],

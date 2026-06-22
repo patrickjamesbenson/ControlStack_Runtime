@@ -140,6 +140,25 @@ function readDiagnostics(service) {
   };
 }
 
+function readTimelinePolicy(service, context = {}) {
+  if (typeof service?.getTimelinePolicySnapshot === "function") return service.getTimelinePolicySnapshot(context);
+  return {
+    owner: "shell",
+    status: "unavailable",
+    source: "timeline-policy-fallback",
+    readOnly: true,
+    nonBootCritical: true,
+    rolePolicy: { actualRole: context.authority?.actualRole?.value || "external_user", displayLane: "external", displayPreviewOnly: true },
+    statusPolicy: { allowedStatuses: [], selectorOwnsStatusRules: false },
+    controls: { visible: false },
+    diagnostics: { visible: false, nonBootCritical: true },
+    defaultWindow: { pastDays: 14, futureDays: 60, source: "fallback" },
+    projectDateContext: { stage: "unknown" },
+    gates: { mode: "read-only-empty-project", selectorMayOverride: false },
+    writePolicy: { enabled: false, reason: "Timeline policy fallback is read-only." },
+  };
+}
+
 function roleCapabilities(role) {
   const roleOrder = ["external_user", "internal_user", "internal_engineer", "developer", "admin"];
   const rank = roleOrder.indexOf(role);
@@ -188,6 +207,7 @@ export function createShellContext({ route, services, mountedModuleId = null }) 
   const authority = readAuthority(services.authority, { auth, identity, crm });
   const moduleIdentity = applyAuthorityToIdentity(identity, authority);
   const visibility = services.visibility.getVisibilitySnapshot({ auth, identity: moduleIdentity, authority, project });
+  const timelinePolicy = readTimelinePolicy(services.timelinePolicy, { auth, identity: moduleIdentity, authority, visibility, project });
   const downstream = services.downstream.getDownstreamContextSnapshot({ identity: moduleIdentity, project, visibility });
   const flags = services.flags.getFlagSnapshot();
   const diagnostics = readDiagnostics(services.diagnostics);
@@ -204,6 +224,7 @@ export function createShellContext({ route, services, mountedModuleId = null }) 
     crm,
     handoff: services.handoff.getHandoffSnapshot(),
     visibility,
+    timelinePolicy,
     downstream,
     flags,
     lifecycle: {
@@ -237,6 +258,7 @@ export function createModuleUpdateSnapshot(context) {
     company: context.company,
     crm: context.crm,
     visibility: context.visibility,
+    timelinePolicy: context.timelinePolicy,
     downstream: context.downstream,
     flags: context.flags,
   };

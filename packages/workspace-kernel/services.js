@@ -8,6 +8,7 @@ import { createIdentityService } from "./identityService.js";
 import { createProjectBrowserService } from "./projectBrowserService.js";
 import { createProjectService } from "./projectService.js";
 import { createSavedProjectStore } from "./savedProjectStore.js";
+import { createTimelinePolicyService } from "./timelinePolicyService.js";
 import { createVisibilityService } from "./visibilityService.js";
 
 function createEventBus() {
@@ -41,6 +42,7 @@ export function createShellServices() {
   const flagAdapter = createFeatureFlagService({ eventBus });
   const crmAdapter = createCrmService({ eventBus });
   const authorityAdapter = createAuthorityService({ eventBus });
+  const timelinePolicyAdapter = createTimelinePolicyService({ eventBus });
 
   return {
     auth: authAdapter,
@@ -80,6 +82,7 @@ export function createShellServices() {
       },
     },
     visibility: visibilityAdapter,
+    timelinePolicy: timelinePolicyAdapter,
     flags: flagAdapter,
     crm: crmAdapter,
     storage: {
@@ -95,6 +98,8 @@ export function createShellServices() {
         const identity = identityAdapter.getIdentitySnapshot();
         const crm = crmAdapter.getCrmSnapshot({ auth, identity, project });
         const authority = authorityAdapter.getAuthoritySnapshot({ auth, identity, crm });
+        const visibility = visibilityAdapter.getVisibilitySnapshot({ auth, identity, authority, project });
+        const timelinePolicy = timelinePolicyAdapter.getTimelinePolicySnapshot({ auth, identity, authority, visibility, project });
         return {
           owner: "shell",
           status: "placeholder",
@@ -188,6 +193,22 @@ export function createShellServices() {
             externalDeliveryLive: false,
             emailSendLive: false,
             hubspotWriteLive: false,
+          },
+          timelinePolicy: {
+            owner: timelinePolicy.owner,
+            status: timelinePolicy.status,
+            source: timelinePolicy.source,
+            actualRole: timelinePolicy.rolePolicy.actualRole,
+            displayLane: timelinePolicy.rolePolicy.displayLane,
+            allowedStatuses: timelinePolicy.statusPolicy.allowedStatuses,
+            controlsVisible: timelinePolicy.controls.visible,
+            diagnosticsVisible: timelinePolicy.diagnostics.visible,
+            defaultWindow: timelinePolicy.defaultWindow,
+            projectStage: timelinePolicy.projectDateContext.stage,
+            gateMode: timelinePolicy.gates.mode,
+            writeEnabled: timelinePolicy.writePolicy.enabled,
+            selectorOwnsStatusRules: timelinePolicy.statusPolicy.selectorOwnsStatusRules,
+            nonBootCritical: timelinePolicy.nonBootCritical,
           },
           identityVisibility: {
             owner: "shell",

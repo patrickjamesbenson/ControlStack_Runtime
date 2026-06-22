@@ -22,6 +22,7 @@ export function createDiagnosticsContractAdapter({ services, context, pluginCont
       const company = crm.company || safeRead(() => services.crm.getCompanyContext({ auth, identity, project }), context.company);
       const authority = safeRead(() => services.authority.getAuthoritySnapshot({ auth, identity, crm }), context.authority);
       const visibility = safeRead(() => services.visibility.getVisibilitySnapshot({ auth, identity, authority, project }), context.visibility);
+      const timelinePolicy = safeRead(() => services.timelinePolicy.getTimelinePolicySnapshot({ auth, identity, authority, visibility, project }), context.timelinePolicy);
       return {
         route: context.route,
         auth,
@@ -32,6 +33,7 @@ export function createDiagnosticsContractAdapter({ services, context, pluginCont
         crm,
         handoff: safeRead(() => services.handoff.getHandoffSnapshot(), context.handoff),
         visibility,
+        timelinePolicy,
         flags: safeRead(() => services.flags.getFlagSnapshot(), context.flags),
         diagnostics: safeRead(() => services.diagnostics.getSnapshot(), context.diagnostics),
         lifecycle: context.lifecycle,
