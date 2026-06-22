@@ -7,6 +7,7 @@ const PORT = Number.parseInt(process.env.CONTROLSTACK_RUNTIME_PORT || "8787", 10
 const HOST = process.env.CONTROLSTACK_RUNTIME_HOST || "127.0.0.1";
 const ROOT = resolve(process.cwd());
 const NVB_READ_PATH = "/api/nvb-" + String.fromCharCode(97, 117, 116, 104, 111, 114, 105, 116, 121) + "/read";
+const HUBSPOT_READ_PATH = "/api/hubspot/read";
 
 const MIME_TYPES = new Map([
   [".html", "text/html; charset=utf-8"],
@@ -214,6 +215,265 @@ async function sendNvbAuthorityRead(res, requestUrl) {
 
 const sendNvbRead = (...args) => sendNvbAuthorityRead(...args);
 
+function hubspotAccessToken() {
+  return String(
+    process.env.HUBSPOT_ACCESS_TOKEN ||
+    process.env.HUBSPOT_PRIVATE_APP_TOKEN ||
+    process.env.HUBSPOT_TOKEN ||
+    ""
+  ).trim();
+}
+
+function cleanText(value) {
+  return String(value || "").trim();
+}
+
+function cleanDomain(value) {
+  return cleanText(value).replace(/^https?:\/\//i, "").replace(/\/.*$/, "").toLowerCase();
+}
+
+function domainFromEmail(email) {
+  const value = cleanText(email).toLowerCase();
+  return value.includes("@") ? value.split("@").pop() : "";
+}
+
+function hubspotObject(result, objectType) {
+  if (!result) return null;
+  const props = result.properties || {};
+  if (objectType === "contacts") {
+    const first = cleanText(props.firstname);
+    const last = cleanText(props.lastname);
+    return {
+      found: true,
+      contactId: String(result.id || props.hs_object_id || ""),
+      email: cleanText(props.email),
+      name: [first, last].filter(Boolean).join(" ") || cleanText(props.email),
+      firstName: first || null,
+      lastName: last || null,
+      companyName: cleanText(props.company) || null,
+      lifecycleStage: cleanText(props.lifecyclestage) || null,
+      leadStatus: cleanText(props.hs_lead_status) || null,
+      ownerId: cleanText(props.hubspot_owner_id) || null,
+      source: "hubspot-read-only",
+    };
+  }
+  return {
+    found: true,
+    companyId: String(result.id || props.hs_object_id || ""),
+    companyName: cleanText(props.name) || cleanText(props.domain) || "HubSpot company",
+    domain: cleanDomain(props.domain) || null,
+    website: cleanText(props.website) || null,
+    lifecycleStage: cleanText(props.lifecyclestage) || null,
+    ownerId: cleanText(props.hubspot_owner_id) || null,
+    city: cleanText(props.city) || null,
+    state: cleanText(props.state) || null,
+    country: cleanText(props.country) || null,
+    source: "hubspot-read-only",
+  };
+}
+
+async function hubspotSearch({ objectType, token, filters, properties, limit = 1 }) {
+  const response = await fetch(`https://api.hubapi.com/crm/v3/objects/${objectType}/search`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify({
+      filterGroups: [{ filters }],
+      properties,
+      limit,
+    }),
+  });
+  if (!response.ok) {
+    return { ok: false, status: response.status, results: [] };
+  }
+  const payload = await response.json();
+  return { ok: true, status: response.status, results: Array.isArray(payload.results) ? payload.results : [] };
+}
+
+async function lookupHubspotContact(token, email) {
+  if (!email) return null;
+  const page = await hubspotSearch({
+    objectType: "contacts",
+    token,
+    filters: [{ propertyName: "email", operator: "EQ", value: email }],
+    properties: ["email", "firstname", "lastname", "company", "lifecyclestage", "hs_lead_status", "hubspot_owner_id"],
+  });
+  if (!page.ok) return { error: `contact_lookup_http_${page.status}` };
+  return hubspotObject(page.results[0], "contacts");
+}
+
+async function lookupHubspotCompany(token, { domain, companyName }) {
+  const clean = cleanDomain(domain);
+  if (clean) {
+    const byDomain = await hubspotSearch({
+      objectType: "companies",
+      token,
+      filters: [{ propertyName: "domain", operator: "EQ", value: clean }],
+      properties: ["name", "domain", "website", "lifecyclestage", "hubspot_owner_id", "city", "state", "country"],
+    });
+    if (!byDomain.ok) return { error: `company_lookup_http_${byDomain.status}` };
+    if (byDomain.results[0]) return hubspotObject(byDomain.results[0], "companies");
+  }
+  const name = cleanText(companyName);
+  if (name) {
+    const byName = await hubspotSearch({
+      objectType: "companies",
+      token,
+      filters: [{ propertyName: "name", operator: "EQ", value: name }],
+      properties: ["name", "domain", "website", "lifecyclestage", "hubspot_owner_id", "city", "state", "country"],
+    });
+    if (!byName.ok) return { error: `company_lookup_http_${byName.status}` };
+    if (byName.results[0]) return hubspotObject(byName.results[0], "companies");
+  }
+  return null;
+}
+
+function lookupErrorCode(result) {
+  return result?.error || null;
+}
+
+function isAuthLookupError(result) {
+  return /_http_401$/.test(String(lookupErrorCode(result) || ""));
+}
+
+function isScopeLookupError(result) {
+  return /_http_403$/.test(String(lookupErrorCode(result) || ""));
+}
+
+const PUBLIC_EMAIL_DOMAINS = new Set(["gmail.com", "outlook.com", "hotmail.com", "live.com", "icloud.com", "yahoo.com", "proton.me", "protonmail.com"]);
+
+function normaliseComparableText(value) {
+  return cleanText(value).toLowerCase().replace(/\s+/g, " ");
+}
+
+function exactContactResult(contact, queryEmail) {
+  if (!contact || contact.error) return { found: false, email: queryEmail || null, source: contact?.error || "not_found" };
+  if (normaliseEmail(contact.email) !== normaliseEmail(queryEmail)) {
+    return {
+      found: false,
+      email: queryEmail || null,
+      returnedEmail: contact.email || null,
+      source: "email_mismatch",
+      reason: "Returned contact email did not exactly match the queried email.",
+    };
+  }
+  return contact;
+}
+
+function trustworthyCompanyResult(company, { domain, companyName, domainWasExplicit }) {
+  if (!company || company.error) {
+    return { found: false, domain: domain || null, companyName: companyName || null, source: company?.error || "not_found" };
+  }
+  const queryDomain = cleanDomain(domain);
+  const returnedDomain = cleanDomain(company.domain);
+  const queryName = normaliseComparableText(companyName);
+  const returnedName = normaliseComparableText(company.companyName);
+  const domainTrusted = Boolean(domainWasExplicit && queryDomain && !PUBLIC_EMAIL_DOMAINS.has(queryDomain) && returnedDomain === queryDomain);
+  const nameTrusted = Boolean(queryName && returnedName === queryName);
+  if (!domainTrusted && !nameTrusted) {
+    return {
+      found: false,
+      domain: queryDomain || null,
+      companyName: companyName || null,
+      returnedDomain: returnedDomain || null,
+      returnedCompanyName: company.companyName || null,
+      source: "company_mismatch",
+      reason: "Returned company did not exactly match an explicit company domain or company name.",
+    };
+  }
+  return company;
+}
+
+function hubspotReadStatus({ contact, company }) {
+  const contactAuth = isAuthLookupError(contact);
+  const companyAuth = isAuthLookupError(company);
+  const contactScope = isScopeLookupError(contact);
+  const companyScope = isScopeLookupError(company);
+  const anyFound = contact?.found === true || company?.found === true;
+  if (contactAuth || companyAuth) {
+    return {
+      ok: false,
+      available: false,
+      reason: "HubSpot read authentication failed with HTTP 401. Check that the server token is valid/current and matches the donor auth model.",
+    };
+  }
+  if (contactScope || companyScope) {
+    return {
+      ok: false,
+      available: false,
+      reason: "HubSpot read authorization failed with HTTP 403. Check read scopes for contacts/companies.",
+    };
+  }
+  return {
+    ok: true,
+    available: true,
+    reason: anyFound ? "HubSpot read-only lookup completed. No writes were attempted." : "HubSpot read-only lookup completed but no matching contact/company was found. No writes were attempted.",
+  };
+}
+
+async function sendHubspotRead(res, requestUrl) {
+  const token = hubspotAccessToken();
+  const email = normaliseEmail(requestUrl.searchParams.get("email"));
+  const explicitDomain = cleanDomain(requestUrl.searchParams.get("domain"));
+  const domain = explicitDomain || domainFromEmail(email);
+  const companyName = cleanText(requestUrl.searchParams.get("companyName"));
+  if (!token) {
+    sendJson(res, 200, {
+      ok: true,
+      configured: false,
+      available: false,
+      readOnly: true,
+      source: "server-hubspot-read-only",
+      reason: "HubSpot read token is not configured on the runtime server.",
+      contact: { found: false, email: email || null, source: "unconfigured" },
+      company: { found: false, domain: domain || null, companyName: companyName || null, source: "unconfigured" },
+      writePolicy: { enabled: false, reason: "HubSpot writes are disabled." },
+    });
+    return;
+  }
+  try {
+    const rawContact = await lookupHubspotContact(token, email);
+    const contact = exactContactResult(rawContact, email);
+    const rawCompany = await lookupHubspotCompany(token, {
+      domain: explicitDomain,
+      companyName,
+    });
+    const company = trustworthyCompanyResult(rawCompany, {
+      domain: explicitDomain,
+      companyName,
+      domainWasExplicit: Boolean(explicitDomain),
+    });
+    const readStatus = hubspotReadStatus({ contact, company });
+    sendJson(res, readStatus.ok ? 200 : 401, {
+      ok: readStatus.ok,
+      configured: true,
+      available: readStatus.available,
+      readOnly: true,
+      source: "server-hubspot-read-only",
+      reason: readStatus.reason,
+      query: { email: email || null, domain: domain || null, companyName: companyName || null },
+      contact,
+      company,
+      writePolicy: { enabled: false, reason: "HubSpot writes are disabled." },
+    });
+  } catch (error) {
+    sendJson(res, 502, {
+      ok: false,
+      configured: true,
+      available: false,
+      readOnly: true,
+      source: "server-hubspot-read-only",
+      reason: `HubSpot read-only lookup failed: ${error?.message || "unknown error"}.`,
+      contact: { found: false, email: email || null, source: "lookup_failed" },
+      company: { found: false, domain: domain || null, companyName: companyName || null, source: "lookup_failed" },
+      writePolicy: { enabled: false, reason: "HubSpot writes are disabled." },
+    });
+  }
+}
+
 function isInsideRoot(candidate) {
   const relative = normalize(candidate).slice(ROOT.length);
   return candidate === ROOT || (candidate.startsWith(ROOT + sep) && !relative.startsWith(`..${sep}`));
@@ -270,6 +530,7 @@ const server = createServer(async (req, res) => {
       phase: "live-nvb-authority-read",
       workspace: "/workspace?module=cs_selector",
       runtimeConfig: "/runtime-config.js",
+      hubspotRead: HUBSPOT_READ_PATH,
       root: ROOT,
     });
     return;
@@ -282,6 +543,11 @@ const server = createServer(async (req, res) => {
 
   if (requestUrl.pathname === NVB_READ_PATH) {
     await sendNvbRead(res, requestUrl);
+    return;
+  }
+
+  if (requestUrl.pathname === HUBSPOT_READ_PATH) {
+    await sendHubspotRead(res, requestUrl);
     return;
   }
 

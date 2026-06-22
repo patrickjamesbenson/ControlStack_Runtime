@@ -234,6 +234,11 @@ function renderCompanyControls({ services, context }) {
     ["project", context.company.linkedProjectId || "none"],
     ["domain", context.company.domain || "none"],
     ["contact", context.crm.contact?.email || "none"],
+    ["association", `${context.crm.association?.status || "none"}:${context.crm.association?.source || "none"}`],
+    ["assoc contact", context.crm.association?.contact?.contactId || "none"],
+    ["assoc company", context.crm.association?.company?.companyId || "none"],
+    ["assoc deal", context.crm.association?.deal?.dealId || "none"],
+    ["crm read", `${context.crm.hubspot?.status || "not-run"}:${context.crm.hubspot?.readOnly === false ? "write-risk" : "read-only"}`],
     ["writes", context.crm.writePolicy?.enabled ? "enabled" : "disabled"],
   ]);
   if (companyLinkButton) companyLinkButton.disabled = !companySelect.value;
@@ -776,6 +781,10 @@ function bootWorkspaceShell() {
   services.eventBus.on?.("authority:live-read-completed", ({ result } = {}) => {
     const nextContext = refreshContext("authority-live-read-completed");
     setStatus(`Live NVB authority read ${result?.liveReadStatus || nextContext.authority.nvb?.liveReadStatus || "updated"}. Authority source: ${nextContext.authority.actualRole?.source}.`);
+  });
+  services.eventBus.on?.("crm:read-completed", ({ crmRead } = {}) => {
+    const nextContext = refreshContext("crm-read-completed");
+    setStatus(`CRM read ${crmRead?.status || nextContext.crm?.hubspot?.status || "updated"}. Writes remain ${nextContext.crm.writePolicy?.enabled ? "enabled" : "disabled"}.`);
   });
 
   if (showHomeIfRequested(route.moduleId)) {
