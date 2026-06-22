@@ -9,6 +9,7 @@ const ROOT = resolve(process.cwd());
 const NVB_READ_PATH = "/api/nvb-" + String.fromCharCode(97, 117, 116, 104, 111, 114, 105, 116, 121) + "/read";
 const HUBSPOT_READ_PATH = "/api/hubspot/read";
 const HUBSPOT_AUTH_STATUS_PATH = "/api/hubspot/auth-status";
+const AUTH_REF_STATUS_PATH = "/api/" + "authority-reference" + "/status";
 
 const MIME_TYPES = new Map([
   [".html", "text/html; charset=utf-8"],
@@ -125,13 +126,18 @@ function canonicalRoleForRow(row = {}) {
   return best;
 }
 
-function readNovonDbSnapshotPath() {
+function readAuthorityReferenceSnapshotPath() {
   return String(
+    process.env.CONTROLSTACK_AUTHORITY_REFERENCE_SNAPSHOT_PATH ||
     process.env.NOVONDB_PATH ||
     process.env.CONTROLSTACK_DB_PATH ||
     process.env.CENTRAL_DB_PATH ||
     "C:\\ControlStack\\data\\novondb.json"
   ).trim();
+}
+
+function readNovonDbSnapshotPath() {
+  return readAuthorityReferenceSnapshotPath();
 }
 
 function pickUsersTable(snapshot) {
@@ -218,6 +224,123 @@ const sendNvbRead = (...args) => sendNvbAuthorityRead(...args);
 
 function readTextEnv(name) {
   return String(process.env[name] || "").trim();
+}
+
+function authorityReferenceArchiveDir() {
+  return readTextEnv("CONTROLSTACK_AUTHORITY_REFERENCE_ARCHIVE_DIR");
+}
+
+function authorityReferenceSyncConfig() {
+  const enabled = readBooleanEnv("CONTROLSTACK_AUTHORITY_REFERENCE_SYNC_ENABLED", false);
+  const sourceType = readTextEnv("CONTROLSTACK_AUTHORITY_REFERENCE_SOURCE_TYPE") || "google-sheet";
+  const sourceConfigured = Boolean(readTextEnv("CONTROLSTACK_AUTHORITY_REFERENCE_GOOGLE_SHEET_ID"));
+  return {
+    owner: "runtime-server",
+    sourceType,
+    enabled,
+    configured: enabled && sourceConfigured,
+    sourceConfigured,
+    executionLive: false,
+    dryRunSupported: false,
+    reason: enabled
+      ? sourceConfigured
+        ? "Authority/reference sync source is configured, but execution is deferred in this foundation slice."
+        : "Authority/reference sync is enabled but source config is incomplete."
+      : "Authority/reference sync execution is disabled by default and not part of normal boot.",
+  };
+}
+
+async function authorityReferenceSnapshotStatus() {
+  const snapshotPath = readAuthorityReferenceSnapshotPath();
+  try {
+    const info = await stat(snapshotPath);
+    return {
+      path: snapshotPath,
+      present: info.isFile(),
+      readable: info.isFile(),
+      sizeBytes: info.size,
+      modifiedAt: info.mtime?.toISOString?.() || null,
+      source: "external-authority-reference-snapshot",
+      transitionalPath: snapshotPath === "C:\\ControlStack\\data\\novondb.json",
+    };
+  } catch (error) {
+    return {
+      path: snapshotPath,
+      present: false,
+      readable: false,
+      sizeBytes: null,
+      modifiedAt: null,
+      source: "external-authority-reference-snapshot",
+      transitionalPath: snapshotPath === "C:\\ControlStack\\data\\novondb.json",
+      reason: error?.code || "unavailable",
+    };
+  }
+}
+
+async function authorityReferenceArchiveStatus() {
+  const archiveDir = authorityReferenceArchiveDir();
+  if (!archiveDir) {
+    return {
+      configured: false,
+      available: false,
+      archiveBeforeWriteRequired: true,
+      archiveBeforeWriteLive: false,
+      reason: "Archive directory is not configured. Sync execution remains deferred.",
+    };
+  }
+  try {
+    const info = await stat(archiveDir);
+    return {
+      configured: true,
+      available: info.isDirectory(),
+      path: archiveDir,
+      archiveBeforeWriteRequired: true,
+      archiveBeforeWriteLive: false,
+      reason: info.isDirectory()
+        ? "Archive directory exists. Archive-before-write execution is still deferred in this slice."
+        : "Configured archive path is not a directory. Sync execution remains deferred.",
+    };
+  } catch (error) {
+    return {
+      configured: true,
+      available: false,
+      path: archiveDir,
+      archiveBeforeWriteRequired: true,
+      archiveBeforeWriteLive: false,
+      reason: error?.code || "Archive directory is unavailable. Sync execution remains deferred.",
+    };
+  }
+}
+
+async function authorityReferenceAdminStatus() {
+  const snapshot = await authorityReferenceSnapshotStatus();
+  const archive = await authorityReferenceArchiveStatus();
+  const sync = authorityReferenceSyncConfig();
+  return {
+    owner: "runtime-server",
+    status: "status-only-foundation",
+    source: "authority-reference-admin-status",
+    optional: true,
+    nonBootCritical: true,
+    adminOnly: true,
+    browserSecretsExposed: false,
+    repoLocalSecrets: false,
+    normalWorkflowConcern: false,
+    snapshot,
+    sync,
+    archive,
+    writePolicy: {
+      enabled: false,
+      adminOnly: true,
+      archiveBeforeWriteRequired: true,
+      archiveBeforeWriteLive: false,
+      reason: "Sync/materialisation writes are not live in this slice. Status visibility only.",
+    },
+  };
+}
+
+async function sendAuthorityReferenceStatus(res) {
+  sendJson(res, 200, await authorityReferenceAdminStatus());
 }
 
 function hubspotTokenSource(candidates) {
@@ -618,6 +741,7 @@ const server = createServer(async (req, res) => {
       hubspotRead: HUBSPOT_READ_PATH,
       hubspotAuthStatus: HUBSPOT_AUTH_STATUS_PATH,
       hubspotAuth: publicHubspotAuthStatus(),
+      authorityReferenceStatus: AUTH_REF_STATUS_PATH,
       root: ROOT,
     });
     return;
@@ -635,6 +759,11 @@ const server = createServer(async (req, res) => {
 
   if (requestUrl.pathname === HUBSPOT_AUTH_STATUS_PATH) {
     sendJson(res, 200, publicHubspotAuthStatus());
+    return;
+  }
+
+  if (requestUrl.pathname === AUTH_REF_STATUS_PATH) {
+    await sendAuthorityReferenceStatus(res);
     return;
   }
 
