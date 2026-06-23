@@ -36,51 +36,67 @@
           </button>
 
           <div id="cs-shell-user-menu-panel" class="cs-shell__user-panel" hidden>
-            <section class="cs-shell__auth-card" aria-label="Real login and auth session">
-              <h3>Login / auth</h3>
-              <p>Shell-owned auth session. Local runtime session only; OAuth, password storage, MFA, and HubSpot writes are not live.</p>
+            <section class="cs-shell__account-overview" aria-label="Account overview">
+              <p class="cs-shell__section-kicker">Account</p>
+              <h3>Signed-in workspace</h3>
+              <dl id="cs-shell-account-summary" class="cs-shell__account-summary"></dl>
+            </section>
+
+            <section class="cs-shell__auth-card" aria-label="Account sign-in actions">
+              <h3>Account actions</h3>
+              <p>Use your workspace identity for shell-owned project, role, and CRM context.</p>
               <label for="cs-shell-auth-user-select">Sign in as</label>
               <select id="cs-shell-auth-user-select"></select>
-              <button id="cs-shell-sign-in-button" type="button" class="cs-shell__auth-button">Sign in</button>
-              <button id="cs-shell-sign-out-button" type="button" class="cs-shell__auth-button cs-shell__button-secondary">Sign out</button>
-              <button id="cs-shell-use-auth-identity-button" type="button" class="cs-shell__auth-button cs-shell__button-secondary">Use authenticated identity</button>
-              <dl id="cs-shell-auth-summary" class="cs-shell__inline-summary"></dl>
+              <div class="cs-shell__account-actions">
+                <button id="cs-shell-sign-in-button" type="button" class="cs-shell__auth-button">Sign in</button>
+                <button id="cs-shell-sign-out-button" type="button" class="cs-shell__auth-button cs-shell__button-secondary">Sign out</button>
+                <button id="cs-shell-use-auth-identity-button" type="button" class="cs-shell__auth-button cs-shell__button-secondary">Use authenticated identity</button>
+              </div>
             </section>
 
-            <section class="cs-shell__authority-card" aria-label="NVB-backed authority and privilege state">
-              <h3>Authority / privileges</h3>
-              <p>NVB-backed authority resolves the final actual role when available. Internal email/domain is classifier-only. HubSpot/company context is not authority.</p>
-              <dl id="cs-shell-authority-summary" class="cs-shell__inline-summary"></dl>
-            </section>
+            <details class="cs-shell__developer-details">
+              <summary>Developer / Diagnostics details</summary>
+              <section class="cs-shell__auth-card" aria-label="Real login and auth session details">
+                <h3>Login / auth details</h3>
+                <p>Shell-owned auth session. Local runtime session only; OAuth, password storage, MFA, and HubSpot writes are not live.</p>
+                <dl id="cs-shell-auth-summary" class="cs-shell__inline-summary"></dl>
+              </section>
 
-            <section class="cs-shell__visibility-card" aria-label="Identity lookup and visibility support">
-              <h3>Developer / view support</h3>
-              <p>Auth is the default identity source. Developer fixture, actual-role override, and display-role preview are support tools only.</p>
-              <label for="cs-shell-identity-select">Developer fixture identity</label>
-              <select id="cs-shell-identity-select"></select>
-              <dl id="cs-shell-resolved-identity-summary" class="cs-shell__inline-summary"></dl>
-              <label class="cs-shell__checkbox-row" for="cs-shell-role-override-toggle">
-                <input id="cs-shell-role-override-toggle" type="checkbox" />
-                <span>Developer/test actual-role override</span>
-              </label>
-              <p class="cs-shell__warning">Developer/test override only. Off by default. Does not represent NVB authority.</p>
-              <label for="cs-shell-role-override-select">Override role</label>
-              <select id="cs-shell-role-override-select" disabled></select>
-              <label for="cs-shell-display-role-select">Display role preview only</label>
-              <select id="cs-shell-display-role-select"></select>
-              <label for="cs-shell-project-mode-select">Project visibility input</label>
-              <select id="cs-shell-project-mode-select">
-                <option value="auto">Current project state</option>
-                <option value="present">Force project present</option>
-                <option value="missing">Force project missing</option>
-              </select>
-              <dl id="cs-shell-visibility-summary"></dl>
-            </section>
+              <section class="cs-shell__authority-card" aria-label="NVB-backed authority and privilege state">
+                <h3>Authority / privileges</h3>
+                <p>NVB-backed authority resolves the final actual role when available. Internal email/domain is classifier-only. HubSpot/company context is not authority.</p>
+                <dl id="cs-shell-authority-summary" class="cs-shell__inline-summary"></dl>
+              </section>
 
-            <section class="cs-shell__context-card" aria-label="Shell-owned runtime context">
-              <h3>Runtime context</h3>
-              <dl id="cs-shell-context-summary"></dl>
-            </section>
+              <section class="cs-shell__visibility-card" aria-label="Identity lookup and visibility support">
+                <h3>Developer / view support</h3>
+                <p>Auth is the default identity source. Developer fixture, actual-role override, and display-role preview are support tools only.</p>
+                <label for="cs-shell-identity-select">Developer fixture identity</label>
+                <select id="cs-shell-identity-select"></select>
+                <dl id="cs-shell-resolved-identity-summary" class="cs-shell__inline-summary"></dl>
+                <label class="cs-shell__checkbox-row" for="cs-shell-role-override-toggle">
+                  <input id="cs-shell-role-override-toggle" type="checkbox" />
+                  <span>Developer/test actual-role override</span>
+                </label>
+                <p class="cs-shell__warning">Developer/test override only. Off by default. Does not represent NVB authority.</p>
+                <label for="cs-shell-role-override-select">Override role</label>
+                <select id="cs-shell-role-override-select" disabled></select>
+                <label for="cs-shell-display-role-select">Display role preview only</label>
+                <select id="cs-shell-display-role-select"></select>
+                <label for="cs-shell-project-mode-select">Project visibility input</label>
+                <select id="cs-shell-project-mode-select">
+                  <option value="auto">Current project state</option>
+                  <option value="present">Force project present</option>
+                  <option value="missing">Force project missing</option>
+                </select>
+                <dl id="cs-shell-visibility-summary"></dl>
+              </section>
+
+              <section class="cs-shell__context-card" aria-label="Shell-owned runtime context">
+                <h3>Runtime context</h3>
+                <dl id="cs-shell-context-summary"></dl>
+              </section>
+            </details>
           </div>
         </section>
       </header>

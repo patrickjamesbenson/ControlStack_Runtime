@@ -19,6 +19,7 @@ const companyLinkButton = document.getElementById("cs-shell-company-link-button"
 const companyProjectButton = document.getElementById("cs-shell-company-project-button");
 const companyClearButton = document.getElementById("cs-shell-company-clear-button");
 const authUserSelect = document.getElementById("cs-shell-auth-user-select");
+const accountSummary = document.getElementById("cs-shell-account-summary");
 const authSummary = document.getElementById("cs-shell-auth-summary");
 const authoritySummary = document.getElementById("cs-shell-authority-summary");
 const signInButton = document.getElementById("cs-shell-sign-in-button");
@@ -181,6 +182,26 @@ function renderAuthControls({ services, context }) {
   if (signInButton) signInButton.disabled = false;
   if (signOutButton) signOutButton.disabled = false;
   if (useAuthIdentityButton) useAuthIdentityButton.disabled = !signedIn;
+}
+
+function renderAccountOverview(context) {
+  if (!accountSummary) return;
+  const activeName = context.auth.session?.name || context.identity.currentUser?.name || "Anonymous visitor";
+  const activeEmail = context.auth.session?.email || context.auth.user?.email || "none";
+  const authorityRole = context.authority?.actualRole?.value || context.identity.actualRole || "external_user";
+  const authoritySource = context.authority?.actualRole?.source || context.identity.actualRoleSource || "safe-fallback";
+  const crmStatus = context.crm?.hubspot?.status || "not-run";
+  const crmMode = context.crm?.hubspot?.readOnly === false ? "write-risk" : "read-only";
+  const visibleCount = context.visibility?.visibleModules?.length ?? 0;
+  const hiddenCount = context.visibility?.hiddenModules?.length ?? 0;
+  appendDefinitionListRows(accountSummary, [
+    ["identity", `${activeName}${activeEmail !== "none" ? ` · ${activeEmail}` : ""}`],
+    ["role / source", `${authorityRole} · ${authoritySource}`],
+    ["auth", context.auth.status || "signed-out"],
+    ["HubSpot / CRM", `${crmStatus} · ${crmMode}`],
+    ["company", context.company.companyName || "No company linked"],
+    ["visibility", `${context.visibility?.status || "ready"} · ${visibleCount} visible / ${hiddenCount} hidden`],
+  ]);
 }
 
 function renderAuthorityControls({ context }) {
@@ -583,6 +604,7 @@ function bootWorkspaceShell() {
     context = createShellContext({ route, services, mountedModuleId: route.moduleId });
     window.__csLatestShellContext = context;
     renderAuthControls({ services, context });
+    renderAccountOverview(context);
     renderAuthorityControls({ context });
     renderCompanyControls({ services, context });
     renderContextSummary(context);

@@ -7,7 +7,8 @@
   --cs-chrome-bg: rgb(51, 51, 51);
   --cs-chrome-pill: rgb(77, 77, 77);
   --cs-chrome-pill-hover: rgb(102, 102, 102);
-  --cs-page-bg: #f5f6f8;
+  --cs-page-bg: #ffffff;
+  --cs-workspace-bg: #ffffff;
   --cs-panel: #ffffff;
   --cs-panel-soft: #fafafa;
   --cs-text: rgb(20, 20, 20);
@@ -40,7 +41,7 @@ a { color: inherit; }
 button, select, input, textarea { font: inherit; }
 button { cursor: pointer; }
 
-.cs-shell { min-height: 100vh; display: grid; grid-template-rows: var(--cs-topbar-height) 1fr; background: var(--cs-page-bg); }
+.cs-shell { min-height: 100vh; display: grid; grid-template-rows: var(--cs-topbar-height) 1fr; background: var(--cs-workspace-bg); }
 
 .cs-shell__topbar {
   height: var(--cs-topbar-height); display: flex; align-items: center; justify-content: space-between; gap: 12px;
@@ -68,7 +69,7 @@ button { cursor: pointer; }
   font-size: 12px; font-weight: 300; line-height: 18px;
 }
 
-.cs-shell__body { min-height: 0; display: grid; grid-template-columns: var(--cs-left-rail-width) minmax(0, 1fr); }
+.cs-shell__body { min-height: 0; display: grid; grid-template-columns: var(--cs-left-rail-width) minmax(0, 1fr); background: var(--cs-workspace-bg); }
 
 .cs-shell__sidebar {
   min-height: calc(100vh - var(--cs-topbar-height)); background: var(--cs-chrome-bg); color: #ffffff;
@@ -102,7 +103,7 @@ button { cursor: pointer; }
 .cs-shell__rail-item:hover > span:not(.cs-shell__rail-icon), .cs-shell__rail-item:focus-visible > span:not(.cs-shell__rail-icon) { opacity: 1; transform: translate(4px, -50%); }
 .cs-shell__rail-item[aria-disabled="true"] > span:not(.cs-shell__rail-icon)::after { content: " · protected/planned"; color: rgba(255, 255, 255, 0.7); }
 
-.cs-shell__main { min-width: 0; min-height: calc(100vh - var(--cs-topbar-height)); padding: 24px; overflow: auto; }
+.cs-shell__main { min-width: 0; min-height: calc(100vh - var(--cs-topbar-height)); padding: 24px; overflow: auto; background: var(--cs-workspace-bg); }
 
 .cs-shell__workspace-header { max-width: 1240px; display: grid; grid-template-columns: minmax(280px, 0.8fr) minmax(360px, 1fr); gap: 16px; margin-bottom: 18px; }
 .cs-shell__header-card, .cs-shell__project-browser-card, .cs-shell__home, .cs-shell__module-host, .cs-shell__plugin-host {
@@ -180,6 +181,21 @@ button { cursor: pointer; }
 .cs-shell__user-panel > section:last-child { border-bottom: 0; }
 .cs-shell__user-panel h3 { margin-bottom: 8px; }
 .cs-shell__user-panel p { margin-bottom: 12px; color: var(--cs-muted); font-size: 12px; line-height: 18px; }
+.cs-shell__account-overview { background: var(--cs-panel-soft); }
+.cs-shell__account-overview h3 { margin-bottom: 12px; }
+.cs-shell__account-summary { grid-template-columns: 96px minmax(0, 1fr); }
+.cs-shell__account-summary dd { font-weight: 500; }
+.cs-shell__account-actions { display: grid; gap: 8px; }
+.cs-shell__developer-details { border-top: 1px solid var(--cs-border); background: #ffffff; }
+.cs-shell__developer-details summary {
+  position: sticky; top: 0; z-index: 1; padding: 14px 20px; background: #ffffff; color: var(--cs-muted);
+  cursor: pointer; font-size: 12px; font-weight: 600; line-height: 18px; list-style-position: inside;
+}
+.cs-shell__developer-details[open] summary { border-bottom: 1px solid var(--cs-border); color: var(--cs-text); }
+.cs-shell__developer-details > section { padding: 16px 20px; border-bottom: 1px solid var(--cs-border); }
+.cs-shell__developer-details > section:last-child { border-bottom: 0; }
+.cs-shell__developer-details h3 { font-size: 13px; }
+.cs-shell__developer-details p { font-size: 12px; line-height: 18px; }
 .cs-shell__visibility-card .cs-shell__warning { padding: 10px 12px; border-radius: var(--cs-radius-sm); background: var(--cs-tip-bg); color: var(--cs-text); }
 
 .cs-shell__home, .cs-shell__module-host, .cs-shell__plugin-host { max-width: 1240px; padding: 24px; }
