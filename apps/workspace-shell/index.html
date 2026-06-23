@@ -14,15 +14,69 @@
           <img class="cs-shell__brand-mark" src="/apps/workspace-shell/assets/novon-tab-icon.svg" alt="" aria-hidden="true" />
           <span class="cs-shell__brand-text">
             <strong>ControlStack</strong>
-            <small>Workspace</small>
           </span>
         </a>
 
-        <div class="cs-shell__topbar-center" aria-label="Project and timeline affordances">
-          <button class="cs-shell__timeline-button" type="button" aria-label="Timeline controls are shell-owned">
-            <span aria-hidden="true">◷</span>
-            <span>Timeline</span>
-          </button>
+        <div class="cs-shell__topbar-center" aria-label="Shell context controls">
+          <div class="cs-shell__topbar-context" aria-label="Workspace context">
+            <div class="cs-shell__topbar-chip-wrap">
+              <button id="cs-shell-timeline-chip" class="cs-shell__context-chip" type="button" aria-expanded="false" aria-controls="cs-shell-timeline-popout" aria-label="Timeline: view today's workspace timeline. Date range and status filters are planned for a later slice." title="Timeline: view today's workspace timeline. Date range and status filters are planned for a later slice.">
+                <span aria-hidden="true">◷</span>
+                <span>Timeline</span>
+                <span id="cs-shell-timeline-chip-label">Today</span>
+              </button>
+              <div id="cs-shell-timeline-popout" class="cs-shell__topbar-popout" hidden>
+                <p class="cs-shell__section-kicker">Timeline</p>
+                <h3>Today</h3>
+                <p>Use this to check the active project timeline. This slice only relocates the entry point; filtering remains deferred.</p>
+                <div class="cs-shell__chip-row" aria-label="Timeline placeholder filters">
+                  <span class="cs-shell__filter-chip is-selected">Today</span>
+                  <span class="cs-shell__filter-chip">Range later</span>
+                  <span class="cs-shell__filter-chip">Status filters later</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="cs-shell__topbar-chip-wrap">
+              <button id="cs-shell-project-chip" class="cs-shell__context-chip" type="button" aria-expanded="false" aria-controls="cs-shell-project-popout" aria-label="Project: select or change the current project and access project actions." title="Project: select or change the current project. Use the popout for save, restore/open, and handoff/share actions.">
+                <span>Project</span>
+                <span id="cs-shell-project-chip-label">Select project</span>
+              </button>
+              <div id="cs-shell-project-popout" class="cs-shell__topbar-popout cs-shell__topbar-popout--wide" hidden>
+                <p class="cs-shell__section-kicker">Project</p>
+                <h3 id="cs-shell-project-popout-title">Project workspace</h3>
+                <p>Select or change the current project. New project creation is deferred for a later slice.</p>
+                <div id="cs-shell-project-popout-list" class="cs-shell__popout-list"></div>
+                <div id="cs-shell-project-popout-actions" class="cs-shell__popout-actions"></div>
+              </div>
+            </div>
+
+            <div class="cs-shell__topbar-chip-wrap">
+              <button id="cs-shell-company-chip" class="cs-shell__context-chip" type="button" aria-expanded="false" aria-controls="cs-shell-company-popout" aria-label="Company: view or change CRM company context for this project." title="Company: view or change CRM company context. This enriches the project only; it is not login or authority.">
+                <span>Company</span>
+                <span id="cs-shell-company-chip-label">No company linked</span>
+              </button>
+              <div id="cs-shell-company-popout" class="cs-shell__topbar-popout cs-shell__topbar-popout--wide" hidden>
+                <p class="cs-shell__section-kicker">Company context</p>
+                <h3>CRM enrichment</h3>
+                <p>View, select, or clear the company context for this project. Company context is not login or authority.</p>
+                <div id="cs-shell-company-popout-list" class="cs-shell__popout-list"></div>
+                <div id="cs-shell-company-popout-actions" class="cs-shell__popout-actions"></div>
+              </div>
+            </div>
+
+            <div id="cs-shell-view-chip-wrap" class="cs-shell__topbar-chip-wrap" hidden>
+              <button id="cs-shell-view-chip" class="cs-shell__context-chip" type="button" aria-expanded="false" aria-controls="cs-shell-view-popout">
+                <span id="cs-shell-view-chip-label">View</span>
+              </button>
+              <div id="cs-shell-view-popout" class="cs-shell__topbar-popout" hidden>
+                <p class="cs-shell__section-kicker">View mode</p>
+                <h3>Preview only</h3>
+                <p>View mode changes presentation only. It does not change authority.</p>
+                <div id="cs-shell-view-popout-list" class="cs-shell__popout-list"></div>
+              </div>
+            </div>
+          </div>
           <div id="cs-shell-status" class="cs-shell__status" role="status">Booting shell…</div>
         </div>
 
@@ -36,21 +90,13 @@
           </button>
 
           <div id="cs-shell-user-menu-panel" class="cs-shell__user-panel" hidden>
-            <section class="cs-shell__account-overview" aria-label="Account overview">
-              <p class="cs-shell__section-kicker">Account</p>
-              <h3>Signed-in workspace</h3>
-              <dl id="cs-shell-account-summary" class="cs-shell__account-summary"></dl>
-            </section>
-
-            <section class="cs-shell__auth-card" aria-label="Account sign-in actions">
-              <h3>Account actions</h3>
-              <p>Use your workspace identity for shell-owned project, role, and CRM context.</p>
+            <section class="cs-shell__auth-card" aria-label="User sign-in actions">
+              <p class="cs-shell__section-kicker">User</p>
               <label for="cs-shell-auth-user-select">Sign in as</label>
               <select id="cs-shell-auth-user-select"></select>
               <div class="cs-shell__account-actions">
                 <button id="cs-shell-sign-in-button" type="button" class="cs-shell__auth-button">Sign in</button>
                 <button id="cs-shell-sign-out-button" type="button" class="cs-shell__auth-button cs-shell__button-secondary">Sign out</button>
-                <button id="cs-shell-use-auth-identity-button" type="button" class="cs-shell__auth-button cs-shell__button-secondary">Use authenticated identity</button>
               </div>
             </section>
 
@@ -110,15 +156,21 @@
             </details>
           </div>
         </section>
+
+        <button id="cs-shell-context-inspector-button" class="cs-shell__context-inspector-button" type="button" aria-expanded="false" aria-controls="cs-shell-context-inspector" title="Shell Context Inspector" hidden>d</button>
       </header>
 
       <div class="cs-shell__body">
         <aside class="cs-shell__sidebar" aria-label="Workspace module rail">
-          <nav class="cs-shell__rail-nav cs-shell__rail-nav--primary" aria-label="Primary workflow modules">
-            <p class="cs-shell__rail-kicker">Workflow</p>
+          <nav class="cs-shell__rail-nav cs-shell__rail-nav--primary" aria-label="Workspace and workflow modules">
+            <p class="cs-shell__rail-kicker">Workspace</p>
+            <a class="cs-shell__rail-item cs-shell__rail-item--home" href="/workspace?module=workspace_home" data-module-link="workspace_home">
+              <svg class="cs-shell__rail-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11l8-7 8 7" /><path d="M6 10v10h12V10" /></svg>
+              <span>Home</span>
+            </a>
             <a class="cs-shell__rail-item" href="/workspace?module=cs_selector" data-module-link="cs_selector">
               <svg class="cs-shell__rail-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6h14M5 12h10M5 18h7" /></svg>
-              <span>CS Selector</span>
+              <span>Selector</span>
             </a>
             <a class="cs-shell__rail-item" href="/workspace?module=scene_builder" data-module-link="scene_builder">
               <svg class="cs-shell__rail-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="5" width="14" height="14" rx="2" /><path d="M9 9h6v6H9z" /></svg>
@@ -137,21 +189,20 @@
               <span>Ceiling / Coordinated Surfaces</span>
             </button>
           </nav>
-
-          <nav class="cs-shell__rail-nav cs-shell__rail-nav--secondary" aria-label="Secondary and optional shell tools">
-            <a class="cs-shell__rail-item cs-shell__rail-item--quiet" href="/workspace?module=workspace_home" data-module-link="workspace_home">
-              <svg class="cs-shell__rail-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11l8-7 8 7" /><path d="M6 10v10h12V10" /></svg>
-              <span>Workspace Home</span>
-            </a>
-            <button class="cs-shell__rail-item cs-shell__rail-item--quiet" type="button" aria-disabled="true" title="Diagnostics and admin tools are non-boot-critical.">
-              <svg class="cs-shell__rail-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v4M12 17v4M4.2 6.2l2.8 2.8M17 17l2.8 2.8M3 12h4M17 12h4M4.2 17.8L7 15M17 7l2.8-2.8" /></svg>
-              <span>Diagnostics / Admin</span>
-            </button>
-          </nav>
         </aside>
 
         <main class="cs-shell__main" aria-label="Workspace main panel">
-          <section class="cs-shell__workspace-header" aria-label="Project and account workspace header">
+          <section id="cs-shell-start-panel" class="cs-shell__start-panel" hidden>
+            <p class="cs-shell__eyebrow">Start workspace</p>
+            <h1>Start with a user and project</h1>
+            <p>Sign in with an existing workspace identity, choose a visible project, then select a module from the left rail.</p>
+            <div class="cs-shell__start-actions">
+              <button id="cs-shell-start-account-button" type="button" class="cs-shell__auth-button">Open account menu</button>
+              <button id="cs-shell-start-project-button" type="button" class="cs-shell__auth-button cs-shell__button-secondary">Choose project</button>
+            </div>
+          </section>
+
+          <section class="cs-shell__workspace-header cs-shell__workspace-header--legacy" aria-label="Legacy project and account workspace controls">
             <section class="cs-shell__project-card cs-shell__header-card" aria-label="Current project selection">
               <p class="cs-shell__section-kicker">Current project</p>
               <h2>Project workspace</h2>
@@ -177,10 +228,10 @@
 
           <section id="cs-workspace-home" class="cs-shell__home" hidden>
             <p class="cs-shell__eyebrow">Workspace home</p>
-            <h2>Project-first shell</h2>
-            <p>This shell keeps workflow navigation in the left rail while project information stays visible in the header and user/account/session tools live in the top-right account menu.</p>
-            <div class="cs-shell__notice cs-shell__notice--info">System information: shell-owned authority and visibility remain policy gates, not just hidden navigation.</div>
-            <div class="cs-shell__notice cs-shell__notice--tip">Tip: start with a project, then move through Selector, Scene Builder, Emergency / EGRES, Compliance, and coordinated surfaces.</div>
+            <h2>Choose a module from the sidebar</h2>
+            <p>The topbar now carries your project, company, timeline, and view context. Module content opens here.</p>
+            <div class="cs-shell__notice cs-shell__notice--info">Coming soon: cleaner project setup, release notes, and helpful prompts.</div>
+            <div class="cs-shell__notice cs-shell__notice--tip">Tip: start with a project, then choose Selector, Scene Builder, Emergency / EGRES, Compliance Matters, or Ceiling / Coordinated Surfaces.</div>
           </section>
           <section id="cs-shell-module-host" class="cs-shell__module-host" aria-live="polite"></section>
           <section
@@ -192,6 +243,17 @@
           ></section>
         </main>
       </div>
+
+      <aside id="cs-shell-context-inspector" class="cs-shell__context-inspector" aria-label="Shell Context Inspector" hidden>
+        <header class="cs-shell__context-inspector-header">
+          <div>
+            <p class="cs-shell__section-kicker">Developer</p>
+            <h2>Shell Context Inspector</h2>
+          </div>
+          <button id="cs-shell-context-inspector-close" type="button" class="cs-shell__context-inspector-close" aria-label="Close Shell Context Inspector">×</button>
+        </header>
+        <div id="cs-shell-context-inspector-content" class="cs-shell__context-inspector-content"></div>
+      </aside>
     </div>
 
     <script src="/runtime-config.js"></script>

@@ -38,7 +38,33 @@ const roleOverrideSelect = document.getElementById("cs-shell-role-override-selec
 const displayRoleSelect = document.getElementById("cs-shell-display-role-select");
 const projectModeSelect = document.getElementById("cs-shell-project-mode-select");
 const visibilitySummary = document.getElementById("cs-shell-visibility-summary");
+const timelineChip = document.getElementById("cs-shell-timeline-chip");
+const timelinePopout = document.getElementById("cs-shell-timeline-popout");
+const projectChip = document.getElementById("cs-shell-project-chip");
+const projectChipLabel = document.getElementById("cs-shell-project-chip-label");
+const projectPopout = document.getElementById("cs-shell-project-popout");
+const projectPopoutTitle = document.getElementById("cs-shell-project-popout-title");
+const projectPopoutList = document.getElementById("cs-shell-project-popout-list");
+const projectPopoutActions = document.getElementById("cs-shell-project-popout-actions");
+const companyChip = document.getElementById("cs-shell-company-chip");
+const companyChipLabel = document.getElementById("cs-shell-company-chip-label");
+const companyPopout = document.getElementById("cs-shell-company-popout");
+const companyPopoutList = document.getElementById("cs-shell-company-popout-list");
+const companyPopoutActions = document.getElementById("cs-shell-company-popout-actions");
+const viewChipWrap = document.getElementById("cs-shell-view-chip-wrap");
+const viewChip = document.getElementById("cs-shell-view-chip");
+const viewChipLabel = document.getElementById("cs-shell-view-chip-label");
+const viewPopout = document.getElementById("cs-shell-view-popout");
+const viewPopoutList = document.getElementById("cs-shell-view-popout-list");
+const startPanel = document.getElementById("cs-shell-start-panel");
+const startAccountButton = document.getElementById("cs-shell-start-account-button");
+const startProjectButton = document.getElementById("cs-shell-start-project-button");
+const contextInspectorButton = document.getElementById("cs-shell-context-inspector-button");
+const contextInspector = document.getElementById("cs-shell-context-inspector");
+const contextInspectorClose = document.getElementById("cs-shell-context-inspector-close");
+const contextInspectorContent = document.getElementById("cs-shell-context-inspector-content");
 
+const SHELL_ROLE_ORDER = Object.freeze(["external_user", "internal_user", "internal_engineer", "developer", "admin"]);
 const SHELL_DEVELOPER_DIAGNOSTICS_CONTRACT = Object.freeze({
   heading: "DEV ORIENTATION",
   module: "Workspace Shell",
@@ -62,6 +88,7 @@ let projectBrowserList = null;
 let projectBrowserSaveButton = null;
 let projectBrowserRestoreButton = null;
 let projectBrowserHandoffButton = null;
+let shellTopbarBound = false;
 
 function setStatus(message) {
   if (statusEl) statusEl.textContent = message;
@@ -99,8 +126,17 @@ function initialsFor(name = "Workspace User") {
     .join("") || "CS";
 }
 
+function roleRank(role) {
+  const index = SHELL_ROLE_ORDER.indexOf(role);
+  return index < 0 ? 0 : index;
+}
+
 function actualShellRole(context) {
   return context.authority?.actualRole?.value || context.identity?.actualRole || "external_user";
+}
+
+function displayShellRole(context) {
+  return context.visibility?.inputs?.displayRole || context.identity?.displayRole || actualShellRole(context);
 }
 
 function canViewShellContractSection(contract, context) {
@@ -110,7 +146,71 @@ function canViewShellContractSection(contract, context) {
 }
 
 function canViewDeveloperDetails(context) {
-  return canViewShellContractSection(SHELL_DEVELOPER_DIAGNOSTICS_CONTRACT, context);
+  const actualRole = actualShellRole(context);
+  const hasDeveloperAuthority = actualRole === "developer" || actualRole === "admin";
+  return hasDeveloperAuthority && displayShellRole(context) === "developer";
+}
+
+function canViewModeToggle(context) {
+  return roleRank(actualShellRole(context)) >= roleRank("internal_user");
+}
+
+function currentProjectId(context) {
+  return context.project?.selection?.selectedProjectId || context.project?.currentProject?.projectId || "";
+}
+
+function currentProjectTitle(context) {
+  return context.project?.metadata?.title || context.project?.currentProject?.title || "Select project";
+}
+
+function hasProject(context) {
+  return Boolean(currentProjectId(context));
+}
+
+function isSignedIn(context) {
+  return context.auth?.session?.authenticated === true;
+}
+
+function setPopout(button, popout, open) {
+  if (!button || !popout) return;
+  popout.hidden = !open;
+  button.setAttribute("aria-expanded", open ? "true" : "false");
+}
+
+function closeTopbarPopouts(except = null) {
+  for (const [button, popout] of [
+    [timelineChip, timelinePopout],
+    [projectChip, projectPopout],
+    [companyChip, companyPopout],
+    [viewChip, viewPopout],
+  ]) {
+    if (popout !== except) setPopout(button, popout, false);
+  }
+}
+
+function toggleTopbarPopout(button, popout) {
+  if (!button || !popout) return;
+  const open = button.getAttribute("aria-expanded") !== "true";
+  closeTopbarPopouts(popout);
+  setPopout(button, popout, open);
+}
+
+function createShellButton(label, className = "cs-shell__popout-button") {
+  const item = document.createElement("button");
+  item.type = "button";
+  item.className = className;
+  item.textContent = label;
+  return item;
+}
+
+function dispatchLegacyChange(select, value) {
+  if (!select) return;
+  select.value = value;
+  select.dispatchEvent(new Event("change", { bubbles: true }));
+}
+
+function clickLegacy(selector) {
+  document.querySelector(selector)?.click?.();
 }
 
 function createLocalDeveloperSummary(label) {
@@ -285,7 +385,10 @@ function renderAuthControls({ services, context }) {
   const activeMeta = `${authorityRole} · ${authoritySource}`;
   if (userAvatar) userAvatar.textContent = initialsFor(activeName);
   if (userName) userName.textContent = activeName;
-  if (userMeta) userMeta.textContent = activeMeta;
+  if (userMeta) {
+    userMeta.textContent = "";
+    userMeta.hidden = true;
+  }
   appendDefinitionListRows(authSummary, [
     ["auth status", context.auth.status || "signed-out"],
     ["signed in", signedIn ? "yes" : "no"],
@@ -428,7 +531,7 @@ function renderContextSummary(context) {
 function renderProjectSelection({ services, context }) {
   if (!projectSelect || !projectSummary) return;
   const projects = services.project.getAvailableProjects?.() || [];
-  const selectedProjectId = context.project.selection?.selectedProjectId || context.project.currentProject?.projectId || "";
+  const selectedProjectId = currentProjectId(context);
   const currentProject = context.project.currentProject || {};
   clearElement(projectSelect);
   for (const project of projects) {
@@ -479,7 +582,6 @@ function renderProjectBrowser({ context }) {
   const restore = browser.restore || {};
   const hydrate = browser.hydrate || {};
   const handoffShare = browser.handoffShare || {};
-  const packageSummary = handoffShare.packageSummary || {};
   const selected = selectedProjectSummary(browser);
   appendDefinitionListRows(projectBrowserSummary, [
     ["current", browser.currentProject?.title || "No project loaded"],
@@ -612,6 +714,244 @@ function renderIdentityVisibilityControls({ services, context }) {
   ]);
 }
 
+function renderProjectTopbarPopout(context) {
+  if (!projectPopoutList || !projectPopoutActions) return;
+  clearElement(projectPopoutList);
+  clearElement(projectPopoutActions);
+  const selectedProjectId = currentProjectId(context);
+  if (projectPopoutTitle) projectPopoutTitle.textContent = currentProjectTitle(context);
+  for (const option of Array.from(projectSelect?.options || [])) {
+    const item = createShellButton(option.textContent, "cs-shell__popout-row");
+    item.dataset.projectId = option.value;
+    if (option.value === selectedProjectId) item.classList.add("is-selected");
+    item.addEventListener("click", () => {
+      dispatchLegacyChange(projectSelect, option.value);
+      setPopout(projectChip, projectPopout, false);
+    });
+    projectPopoutList.appendChild(item);
+  }
+  const newProject = createShellButton("New project later", "cs-shell__popout-button cs-shell__popout-button--disabled");
+  newProject.disabled = true;
+  const save = createShellButton("Save project");
+  save.addEventListener("click", () => clickLegacy(".cs-shell__project-browser-save"));
+  const restore = createShellButton("Restore / open project");
+  restore.addEventListener("click", () => clickLegacy(".cs-shell__project-browser-restore"));
+  const handoff = createShellButton("Prepare handoff/share");
+  handoff.addEventListener("click", () => clickLegacy(".cs-shell__project-browser-handoff"));
+  projectPopoutActions.append(newProject, save, restore, handoff);
+}
+
+function renderCompanyTopbarPopout(context) {
+  if (!companyPopoutList || !companyPopoutActions) return;
+  clearElement(companyPopoutList);
+  clearElement(companyPopoutActions);
+  const selectedCompanyId = context.crm?.selectedCompanyId || "";
+  for (const option of Array.from(companySelect?.options || [])) {
+    const item = createShellButton(option.textContent, "cs-shell__popout-row");
+    item.dataset.companyId = option.value;
+    if (option.value === selectedCompanyId) item.classList.add("is-selected");
+    item.addEventListener("click", () => {
+      dispatchLegacyChange(companySelect, option.value);
+      if (option.value) companyLinkButton?.click?.();
+      setPopout(companyChip, companyPopout, false);
+    });
+    companyPopoutList.appendChild(item);
+  }
+  const useProject = createShellButton("Use project company");
+  useProject.addEventListener("click", () => companyProjectButton?.click?.());
+  const clearCompany = createShellButton("Clear company", "cs-shell__popout-button cs-shell__popout-button--secondary");
+  clearCompany.addEventListener("click", () => companyClearButton?.click?.());
+  companyPopoutActions.append(useProject, clearCompany);
+}
+
+function renderViewTopbarPopout(context) {
+  if (!viewPopoutList) return;
+  clearElement(viewPopoutList);
+  if (!canViewModeToggle(context)) {
+    setPopout(viewChip, viewPopout, false);
+    return;
+  }
+  const selected = displayShellRole(context);
+  const authority = actualShellRole(context);
+  for (const option of Array.from(displayRoleSelect?.options || [])) {
+    if (roleRank(option.value) > roleRank(authority)) continue;
+    const item = createShellButton(option.textContent, "cs-shell__popout-row");
+    item.dataset.viewRole = option.value;
+    if (option.value === selected) item.classList.add("is-selected");
+    if (option.value === authority) item.classList.add("is-default-view");
+    item.addEventListener("click", () => {
+      dispatchLegacyChange(displayRoleSelect, option.value);
+      setPopout(viewChip, viewPopout, false);
+    });
+    viewPopoutList.appendChild(item);
+  }
+}
+
+function appendInspectorRows(list, rows) {
+  for (const [label, value] of rows) {
+    const dt = document.createElement("dt");
+    dt.textContent = label;
+    const dd = document.createElement("dd");
+    dd.textContent = String(value ?? "none");
+    list.append(dt, dd);
+  }
+}
+
+function createInspectorSection(title, rows) {
+  const section = document.createElement("section");
+  section.className = "cs-shell__context-inspector-section";
+  const heading = document.createElement("h3");
+  heading.textContent = title;
+  const list = document.createElement("dl");
+  appendInspectorRows(list, rows);
+  section.append(heading, list);
+  return section;
+}
+
+function renderShellContextInspector(context) {
+  if (!contextInspectorContent) return;
+  clearElement(contextInspectorContent);
+  const project = context.project || {};
+  const company = context.company || {};
+  const crm = context.crm || {};
+  const browser = context.projectBrowser || {};
+  const authority = context.authority || {};
+  const timeline = context.timelinePolicy || {};
+  const visibility = context.visibility || {};
+  const specialParts = authority.privileges?.specialVisibility || [];
+  contextInspectorContent.append(
+    createInspectorSection("Current Project", [
+      ["selected project id", currentProjectId(context) || "none"],
+      ["project title", currentProjectTitle(context)],
+      ["project source", project.selection?.source || project.metadata?.source || project.source || "unknown"],
+      ["project status", project.status || "unknown"],
+      ["readiness", project.metadata?.readiness || project.currentProject?.readiness || "not-ready"],
+      ["restored envelope id", project.metadata?.restoredEnvelopeId || project.selection?.restoredEnvelopeId || "none"],
+      ["restored at", project.metadata?.restoredAt || "none"],
+      ["selected metadata", JSON.stringify(project.metadata || {})],
+    ]),
+    createInspectorSection("Company Context", [
+      ["company name", company.companyName || "No company linked"],
+      ["company id", company.companyId || "none"],
+      ["domain", company.domain || "none"],
+      ["source", company.source || "fallback"],
+      ["CRM/HubSpot match", crm.hubspot?.status || crm.status || "not-run"],
+      ["contact email", crm.contact?.email || "none"],
+      ["association status", `${crm.association?.status || "none"}:${crm.association?.source || "none"}`],
+      ["associated contact id", crm.association?.contact?.contactId || "none"],
+      ["associated company id", crm.association?.company?.companyId || "none"],
+      ["associated deal id", crm.association?.deal?.dealId || "none"],
+      ["read/write policy", crm.writePolicy?.enabled ? "writes enabled" : "read-only / writes disabled"],
+    ]),
+    createInspectorSection("Project Actions", [
+      ["save state", project.save?.status || browser.save?.status || "unknown"],
+      ["restore state", project.restore?.status || browser.restore?.status || "unknown"],
+      ["hydrate state", project.hydrate?.status || browser.hydrate?.status || "unknown"],
+      ["handoff/share state", project.handoff?.status || browser.handoffShare?.status || "unknown"],
+      ["last package id", project.handoff?.lastPreparedPackageId || browser.handoffShare?.lastPreparedPackageId || "none"],
+      ["external/deferred delivery", project.handoff?.externalDelivery || browser.handoffShare?.delivery?.externalDelivery ? "live" : "deferred"],
+      ["selected envelope", browser.selectedProjectId || "none"],
+      ["saved count", browser.savedCount || 0],
+      ["fixture count", browser.fixtureCount || 0],
+    ]),
+    createInspectorSection("Timeline Context", [
+      ["active date mode", "Today placeholder"],
+      ["today/date range", timeline.defaultWindow || "Today"],
+      ["selected statuses", (timeline.statusPolicy?.allowedStatuses || timeline.allowedStatuses || []).join(", ") || "not configured"],
+      ["external/internal restrictions", timeline.gates?.mode || "shell placeholder"],
+      ["controls visible", timeline.controls?.visible ? "yes" : "no"],
+    ]),
+    createInspectorSection("View Mode / Authority", [
+      ["actual authority role", actualShellRole(context)],
+      ["display/preview role", displayShellRole(context)],
+      ["source of authority", authority.actualRole?.source || context.identity?.actualRoleSource || "safe-fallback"],
+      ["current view default", displayShellRole(context) === actualShellRole(context) ? "yes" : "no"],
+      ["preview mode active", displayShellRole(context) === actualShellRole(context) ? "no" : "yes"],
+      ["visibility status", visibility.status || "unknown"],
+    ]),
+    createInspectorSection("Special Parts", [
+      ["entitlement source", specialParts.length ? "authority privilege placeholder" : "none available in shell context"],
+      ["available special parts", specialParts.join(", ") || "none"],
+      ["selected special parts", "not implemented in Slice 1A"],
+      ["skipped/dismissed state", "not implemented in Slice 1A"],
+      ["opt-in timestamp/state", "not implemented in Slice 1A"],
+    ]),
+    createInspectorSection("CRM / NVB / Source Details", [
+      ["NVB lookup state", authority.nvb?.liveReadStatus || "live-read-unavailable"],
+      ["NVB configured", authority.nvb?.liveReadConfigured ? "yes" : "no"],
+      ["NVB matched", authority.nvb?.matched ? "yes" : "no"],
+      ["CRM lookup state", crm.hubspot?.status || crm.status || "not-run"],
+      ["company/domain inference", `${company.source || "fallback"}:${company.domain || "no-domain"}`],
+      ["fallback/safe-default state", `${authority.status || "fallback"}:${authority.source || "shell-safe-fallback"}`],
+    ])
+  );
+}
+
+function renderShellTopbarContext(context) {
+  if (projectChipLabel) projectChipLabel.textContent = currentProjectTitle(context);
+  if (companyChipLabel) companyChipLabel.textContent = context.company?.companyName || "No company linked";
+  const viewToggleVisible = canViewModeToggle(context);
+  if (viewChipWrap) viewChipWrap.hidden = !viewToggleVisible;
+  if (!viewToggleVisible) setPopout(viewChip, viewPopout, false);
+  if (viewChipLabel) {
+    const viewRole = displayShellRole(context);
+    const suffix = viewRole === actualShellRole(context) ? "default" : "preview";
+    viewChipLabel.textContent = `View: ${viewRole.replace(/_/g, " ")} · ${suffix}`;
+  }
+  if (startPanel) startPanel.hidden = isSignedIn(context) && hasProject(context);
+  const developerVisible = canViewDeveloperDetails(context);
+  if (contextInspectorButton) contextInspectorButton.hidden = !developerVisible;
+  if (!developerVisible && contextInspector) {
+    contextInspector.hidden = true;
+    contextInspectorButton?.setAttribute("aria-expanded", "false");
+  }
+  renderProjectTopbarPopout(context);
+  renderCompanyTopbarPopout(context);
+  renderViewTopbarPopout(context);
+  renderShellContextInspector(context);
+}
+
+function bindShellTopbarControls() {
+  if (shellTopbarBound) return;
+  shellTopbarBound = true;
+  timelineChip?.addEventListener("click", () => toggleTopbarPopout(timelineChip, timelinePopout));
+  projectChip?.addEventListener("click", () => toggleTopbarPopout(projectChip, projectPopout));
+  companyChip?.addEventListener("click", () => toggleTopbarPopout(companyChip, companyPopout));
+  viewChip?.addEventListener("click", () => toggleTopbarPopout(viewChip, viewPopout));
+  contextInspectorButton?.addEventListener("click", () => {
+    const context = window.__csLatestShellContext;
+    if (!context || !canViewDeveloperDetails(context)) return;
+    const open = contextInspector?.hidden !== false;
+    if (contextInspector) contextInspector.hidden = !open;
+    contextInspectorButton.setAttribute("aria-expanded", open ? "true" : "false");
+    renderShellContextInspector(context);
+  });
+  contextInspectorClose?.addEventListener("click", () => {
+    if (contextInspector) contextInspector.hidden = true;
+    contextInspectorButton?.setAttribute("aria-expanded", "false");
+  });
+  startAccountButton?.addEventListener("click", () => userMenuButton?.click?.());
+  startProjectButton?.addEventListener("click", () => toggleTopbarPopout(projectChip, projectPopout));
+  document.addEventListener("click", (event) => {
+    const insideTopbarPopout = event.target.closest?.(".cs-shell__topbar-chip-wrap");
+    const clickedInspector = event.target.closest?.("#cs-shell-context-inspector, #cs-shell-context-inspector-button");
+    const insideUserMenu = event.target.closest?.(".cs-shell__user-menu");
+    if (!insideTopbarPopout && !clickedInspector) closeTopbarPopouts(null);
+    if (!insideUserMenu) setUserMenuOpen(false);
+  });
+  authUserSelect?.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter") return;
+    event.preventDefault();
+    setUserMenuOpen(false);
+  });
+  window.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape") return;
+    closeTopbarPopouts(null);
+    if (contextInspector) contextInspector.hidden = true;
+    contextInspectorButton?.setAttribute("aria-expanded", "false");
+  });
+}
+
 function markActiveLink(moduleId) {
   for (const link of document.querySelectorAll("[data-module-link]")) {
     const linkModuleId = link.getAttribute("data-module-link");
@@ -632,10 +972,10 @@ function markActiveLink(moduleId) {
 
 function moduleLabel(moduleId) {
   const labels = {
-    cs_selector: "CS Selector",
+    cs_selector: "Selector",
     scene_builder: "Scene Builder",
     emergence: "Emergency / EGRES",
-    workspace_home: "Workspace Home",
+    workspace_home: "Home",
   };
   return labels[moduleId] || moduleId;
 }
@@ -672,6 +1012,7 @@ function renderModuleDeveloperSurface(context) {
 }
 
 function renderUnknownModuleFallback({ route, registry }) {
+  if (moduleHost) moduleHost.hidden = false;
   clearElement(moduleHost);
   const article = document.createElement("article");
   article.className = "cs-shell__fallback";
@@ -695,11 +1036,13 @@ function renderUnknownModuleFallback({ route, registry }) {
 function showHomeIfRequested(moduleId) {
   const shouldShowHome = moduleId === "workspace_home";
   if (homePanel) homePanel.hidden = !shouldShowHome;
+  if (moduleHost) moduleHost.hidden = shouldShowHome;
   if (shouldShowHome) clearElement(moduleHost);
   return shouldShowHome;
 }
 
 function renderMountFailure(route) {
+  if (moduleHost) moduleHost.hidden = false;
   clearElement(moduleHost);
   const article = document.createElement("article");
   article.className = "cs-shell__fallback";
@@ -805,6 +1148,7 @@ function bootWorkspaceShell() {
     renderProjectSelection({ services, context });
     renderProjectBrowser({ context });
     renderIdentityVisibilityControls({ services, context });
+    renderShellTopbarContext(context);
     renderDeveloperOnlyContainer(pluginHost, context, "Optional diagnostics panel");
     markActiveLink(route.moduleId);
     mountedModuleApi?.update?.(context);
@@ -838,6 +1182,7 @@ function bootWorkspaceShell() {
       setStatus(`Sign in failed: ${result.reason || result.status}`);
       return;
     }
+    setUserMenuOpen(false);
     setStatus(`Signed in as ${nextContext.auth.session.name}. Actual role source: ${nextContext.authority.actualRole?.source}.`);
   }
 
@@ -845,6 +1190,7 @@ function bootWorkspaceShell() {
     services.auth.signOut("real-login-auth-ui-sign-out");
     services.identity.syncFromAuth("real-login-auth-ui-sign-out-sync");
     const nextContext = refreshContext("auth-sign-out");
+    setUserMenuOpen(false);
     setStatus(`${nextContext.auth.reason || "Signed out."} Authority is ${nextContext.authority.actualRole?.source}; shell is using safe anonymous fallback.`);
   }
 
@@ -979,6 +1325,7 @@ function bootWorkspaceShell() {
   registry.register("emergence", emergenceModule);
   registry.register("scene_builder", sceneBuilderModule);
   ensureModuleNavLink("scene_builder", "Scene Builder");
+  bindShellTopbarControls();
 
   refreshContext("initial-render");
   userMenuButton?.addEventListener("click", handleUserMenuToggle);
@@ -1025,6 +1372,7 @@ function bootWorkspaceShell() {
   }
 
   try {
+    if (moduleHost) moduleHost.hidden = false;
     mountedModuleApi = moduleApi;
     moduleApi.mount({ container: moduleHost, services, context });
     renderModuleDeveloperSurface(context);
