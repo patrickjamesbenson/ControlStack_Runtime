@@ -148,6 +148,7 @@ function projectDateContext(project = {}) {
     lifecycleStatus,
     lifecycleStatusLabel: lifecycleStatus.label,
     projectRequirementDate: dueDate,
+    projectRequirementDateLabel: dueDate || "not set",
     startDate,
     startDatePosition: compareDate(startDate),
     dueDate,
@@ -155,6 +156,71 @@ function projectDateContext(project = {}) {
     updatedAt,
     updatedAtPosition: compareDate(updatedAt),
     comparisonSource: "shell-project-context",
+  };
+}
+
+function timelineModelFor({ actualRole, projectDates }) {
+  const canSeeInternalHints = roleRank(actualRole) >= roleRank("internal_user");
+  const lifecyclePolicy = getTimelineLifecycleStatusPolicy();
+  return {
+    owner: "shell",
+    status: "foundation-only",
+    source: "shell-project-timeline-model-stage-2",
+    question: "Can this user/project use this product or special part by the project requirement date?",
+    defaultLane: {
+      id: "today-live",
+      label: "Today / Live",
+      description: "Live products are available today by default where normal module/product rules allow them.",
+    },
+    projectRequirementDate: {
+      value: projectDates.projectRequirementDate || null,
+      label: projectDates.projectRequirementDateLabel || "not set",
+      requiredForFutureProducts: true,
+      source: "shell-project-context",
+    },
+    futureProducts: {
+      status: "contact-rep",
+      label: "Future products require Timeline access",
+      requirement: "Project requirement date is required before future product availability can be assessed.",
+      contactRepFlow: "To register for future product access, contact your rep.",
+      matchingLive: false,
+    },
+    specialParts: {
+      status: "entitlement-check-later",
+      label: "Special parts may be available to entitled users",
+      entitlementLive: false,
+      optInLive: false,
+    },
+    timelineAccess: {
+      status: "not-enabled-placeholder",
+      label: "not enabled / placeholder",
+      source: "shell-placeholder",
+      contactRepRequired: true,
+    },
+    lifecycleCompatibility: {
+      status: "supported-internally",
+      stagedMapsTo: lifecyclePolicy.compatibility.staged,
+      scheduledMapsTo: lifecyclePolicy.compatibility.scheduled,
+      preferredScheduledLabel: lifecyclePolicy.preferredUserLabels.scheduled,
+      availableApprovedLiveMapTo: "live",
+      writeEnabled: false,
+    },
+    internalHints: canSeeInternalHints
+      ? [
+          "Shell owns identity, project context, project requirement date, Timeline access state, and later special parts opt-in state.",
+          "Modules will consume shell Timeline context later; no CS Selector filtering is active in this stage.",
+          "NVB may still store staged; runtime compatibility presents this as Scheduled.",
+        ]
+      : [],
+    implementation: {
+      realNvbSync: false,
+      realFutureProductMatching: false,
+      realSpecialPartEntitlement: false,
+      realProjectWrite: false,
+      selectorFiltering: false,
+      backendRoutes: false,
+      authorityWriteback: false,
+    },
   };
 }
 
@@ -210,6 +276,7 @@ export function createTimelinePolicyService({ eventBus } = {}) {
     const diagnosticsVisible = diagnosticsVisibleFor({ role: actualRole, visibility });
     const defaultWindow = defaultWindowForRole(actualRole);
     const projectDates = projectDateContext(project);
+    const timelineModel = timelineModelFor({ actualRole, projectDates });
     const gateBehavior = gateBehaviorFor({ authority, visibility, project });
     const snapshot = {
       owner: state.owner,
@@ -244,6 +311,7 @@ export function createTimelinePolicyService({ eventBus } = {}) {
         selectorOwnsStatusRules: false,
       },
       lifecycleStatusPolicy: getTimelineLifecycleStatusPolicy(),
+      timelineModel,
       controls: {
         visible: controlsVisible,
         reason: controlsVisible ? "project-and-role-allow-controls" : "controls-hidden-by-shell-policy",

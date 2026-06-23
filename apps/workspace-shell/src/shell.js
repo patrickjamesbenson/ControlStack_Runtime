@@ -764,6 +764,69 @@ function renderCompanyTopbarPopout(context) {
   companyPopoutActions.append(useProject, clearCompany);
 }
 
+function appendTimelineText(parent, text, tagName = "p") {
+  const element = document.createElement(tagName);
+  element.textContent = text;
+  parent.appendChild(element);
+  return element;
+}
+
+function appendTimelineDefinitionRows(parent, rows) {
+  const list = document.createElement("dl");
+  list.className = "cs-shell__inline-summary";
+  appendDefinitionListRows(list, rows);
+  parent.appendChild(list);
+  return list;
+}
+
+function renderTimelineTopbarPopout(context) {
+  if (!timelinePopout) return;
+  clearElement(timelinePopout);
+  const timeline = context.timelinePolicy || {};
+  const model = timeline.timelineModel || {};
+  const requirement = model.projectRequirementDate || {};
+  const futureProducts = model.futureProducts || {};
+  const specialParts = model.specialParts || {};
+  const timelineAccess = model.timelineAccess || {};
+  const lifecycleCompatibility = model.lifecycleCompatibility || {};
+
+  const kicker = document.createElement("p");
+  kicker.className = "cs-shell__section-kicker";
+  kicker.textContent = "Timeline";
+  const heading = document.createElement("h3");
+  heading.textContent = model.defaultLane?.label || "Today / Live";
+  timelinePopout.append(kicker, heading);
+
+  appendTimelineText(timelinePopout, model.question || "Can this user/project use this product or special part by the project requirement date?");
+  appendTimelineDefinitionRows(timelinePopout, [
+    ["project requirement date", requirement.label || timeline.projectDateContext?.projectRequirementDateLabel || "not set"],
+    ["timeline access", timelineAccess.label || "not enabled / placeholder"],
+    ["future products", futureProducts.contactRepFlow || "To register for future product access, contact your rep."],
+    ["special parts", `${specialParts.label || "Special parts may be available to entitled users"} · ${specialParts.status || "entitlement check later"}`],
+    ["lifecycle", lifecycleCompatibility.preferredScheduledLabel || "Scheduled compatibility supported"],
+  ]);
+  appendTimelineText(timelinePopout, "Live products are available today by default. Future products require Timeline access and a project requirement date before availability can be assessed.");
+
+  const chipRow = document.createElement("div");
+  chipRow.className = "cs-shell__chip-row";
+  chipRow.setAttribute("aria-label", "Timeline model placeholder states");
+  for (const label of ["Today / Live", "Requirement date: not set", "Future products: contact rep", "Special parts: later", "Staged/Scheduled supported"]) {
+    const chip = document.createElement("span");
+    chip.className = label === "Today / Live" ? "cs-shell__filter-chip is-selected" : "cs-shell__filter-chip";
+    chip.textContent = label;
+    chipRow.appendChild(chip);
+  }
+  timelinePopout.appendChild(chipRow);
+
+  const internalHints = Array.isArray(model.internalHints) ? model.internalHints : [];
+  if (internalHints.length) {
+    const hintHeading = document.createElement("h3");
+    hintHeading.textContent = "Internal / developer notes";
+    timelinePopout.appendChild(hintHeading);
+    for (const hint of internalHints) appendTimelineText(timelinePopout, hint);
+  }
+}
+
 function renderViewTopbarPopout(context) {
   if (!viewPopoutList) return;
   clearElement(viewPopoutList);
@@ -855,9 +918,14 @@ function renderShellContextInspector(context) {
       ["fixture count", browser.fixtureCount || 0],
     ]),
     createInspectorSection("Timeline Context", [
-      ["active date mode", "Today placeholder"],
-      ["today/date range", timeline.defaultWindow || "Today"],
-      ["selected statuses", (timeline.statusPolicy?.allowedStatuses || timeline.allowedStatuses || []).join(", ") || "not configured"],
+      ["model question", timeline.timelineModel?.question || "not configured"],
+      ["active lane", timeline.timelineModel?.defaultLane?.label || "Today / Live"],
+      ["project requirement date", timeline.timelineModel?.projectRequirementDate?.label || timeline.projectDateContext?.projectRequirementDateLabel || "not set"],
+      ["timeline access", timeline.timelineModel?.timelineAccess?.label || "not enabled / placeholder"],
+      ["future products", timeline.timelineModel?.futureProducts?.status || "contact-rep"],
+      ["special parts", timeline.timelineModel?.specialParts?.status || "entitlement-check-later"],
+      ["lifecycle compatibility", timeline.timelineModel?.lifecycleCompatibility?.status || "staged/scheduled supported"],
+      ["selector filtering", timeline.timelineModel?.implementation?.selectorFiltering ? "live" : "not implemented"],
       ["external/internal restrictions", timeline.gates?.mode || "shell placeholder"],
       ["controls visible", timeline.controls?.visible ? "yes" : "no"],
     ]),
@@ -905,6 +973,7 @@ function renderShellTopbarContext(context) {
     contextInspector.hidden = true;
     contextInspectorButton?.setAttribute("aria-expanded", "false");
   }
+  renderTimelineTopbarPopout(context);
   renderProjectTopbarPopout(context);
   renderCompanyTopbarPopout(context);
   renderViewTopbarPopout(context);
