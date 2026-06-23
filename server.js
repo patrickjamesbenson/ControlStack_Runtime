@@ -11,6 +11,7 @@ const HUBSPOT_READ_PATH = "/api/hubspot/read";
 const HUBSPOT_AUTH_STATUS_PATH = "/api/hubspot/auth-status";
 const AUTH_REF_STATUS_PATH = "/api/" + "authority-reference" + "/status";
 const AUTH_REF_SYNC_PATH = "/api/" + "authority-reference" + "/sync";
+const CONFIG_STATUS_PATH = "/api/runtime-config/status";
 
 const MIME_TYPES = new Map([
   [".html", "text/html; charset=utf-8"],
@@ -225,6 +226,96 @@ const sendNvbRead = (...args) => sendNvbAuthorityRead(...args);
 
 function readTextEnv(name) {
   return String(process.env[name] || "").trim();
+}
+
+function firstConfiguredEnv(names = []) {
+  for (const name of names) {
+    if (readTextEnv(name)) return name;
+  }
+  return null;
+}
+
+function envStatus({ primary, aliases = [], secret = false, valueKind = "string" }) {
+  const names = [primary, ...aliases].filter(Boolean);
+  const activeName = firstConfiguredEnv(names);
+  return {
+    primary,
+    aliasesRetained: aliases,
+    activeName,
+    configured: Boolean(activeName),
+    valueKind,
+    secret,
+    browserVisibleValue: secret ? "redacted" : activeName ? "configured" : "not-configured",
+  };
+}
+
+function runtimeConfigStatus() {
+  return {
+    owner: "runtime-server",
+    status: "ready",
+    source: "white-label-config-boundary-foundation",
+    browserSecretsExposed: false,
+    repoLocalSecrets: false,
+    optionalIntegrationsNonBlocking: true,
+    tenantSafeNamingPreferred: true,
+    runtime: {
+      host: envStatus({ primary: "CONTROLSTACK_RUNTIME_HOST", valueKind: "network-binding" }),
+      port: envStatus({ primary: "CONTROLSTACK_RUNTIME_PORT", valueKind: "network-binding" }),
+    },
+    runtimeConfigBridge: {
+      endpoint: "/runtime-config.js",
+      browserVisible: true,
+      nonSecretOnly: true,
+      exposesHeaders: false,
+      exposesTokens: false,
+      nvbAuthority: {
+        endpoint: envStatus({ primary: "CONTROLSTACK_NVB_AUTHORITY_ENDPOINT", valueKind: "same-origin-or-admin-configured-url" }),
+        enabled: envStatus({ primary: "CONTROLSTACK_NVB_AUTHORITY_ENABLED", valueKind: "boolean" }),
+        method: envStatus({ primary: "CONTROLSTACK_NVB_AUTHORITY_METHOD", valueKind: "http-method" }),
+        timeoutMs: envStatus({ primary: "CONTROLSTACK_NVB_AUTHORITY_TIMEOUT_MS", valueKind: "number" }),
+        ttlMs: envStatus({ primary: "CONTROLSTACK_NVB_AUTHORITY_TTL_MS", valueKind: "number" }),
+        credentials: envStatus({ primary: "CONTROLSTACK_NVB_AUTHORITY_CREDENTIALS", valueKind: "fetch-credentials" }),
+        emailQueryParam: envStatus({ primary: "CONTROLSTACK_NVB_AUTHORITY_EMAIL_QUERY_PARAM", valueKind: "query-param-name" }),
+      },
+    },
+    authorityReference: {
+      snapshotPath: envStatus({
+        primary: "CONTROLSTACK_AUTHORITY_REFERENCE_SNAPSHOT_PATH",
+        aliases: ["NOVONDB_PATH", "CONTROLSTACK_DB_PATH", "CENTRAL_DB_PATH"],
+        valueKind: "server-file-path",
+      }),
+      syncEnabled: envStatus({ primary: "CONTROLSTACK_AUTHORITY_REFERENCE_SYNC_ENABLED", valueKind: "boolean" }),
+      syncExecutionEnabled: envStatus({ primary: "CONTROLSTACK_AUTHORITY_REFERENCE_SYNC_EXECUTION_ENABLED", valueKind: "boolean" }),
+      sourceType: envStatus({ primary: "CONTROLSTACK_AUTHORITY_REFERENCE_SOURCE_TYPE", valueKind: "provider-kind" }),
+      googleSheetId: envStatus({ primary: "CONTROLSTACK_AUTHORITY_REFERENCE_GOOGLE_SHEET_ID", secret: true, valueKind: "external-provider-id" }),
+      materialisedSourcePath: envStatus({
+        primary: "CONTROLSTACK_AUTHORITY_REFERENCE_MATERIALISED_SOURCE_PATH",
+        aliases: ["CONTROLSTACK_AUTHORITY_REFERENCE_SOURCE_JSON_PATH"],
+        valueKind: "server-file-path",
+      }),
+      archiveDir: envStatus({ primary: "CONTROLSTACK_AUTHORITY_REFERENCE_ARCHIVE_DIR", valueKind: "server-directory-path" }),
+      transitionalFallbackPath: "C:\\ControlStack\\data\\novondb.json",
+      transitionalAliasesRetained: ["NOVONDB_PATH", "CONTROLSTACK_DB_PATH", "CENTRAL_DB_PATH"],
+    },
+    hubspot: {
+      authMode: envStatus({ primary: "CONTROLSTACK_HUBSPOT_AUTH_MODE", valueKind: "auth-mode" }),
+      staticTokenEnabled: envStatus({ primary: "CONTROLSTACK_HUBSPOT_STATIC_TOKEN_ENABLED", valueKind: "boolean" }),
+      oauthToken: envStatus({
+        primary: "HUBSPOT_OAUTH_ACCESS_TOKEN",
+        aliases: ["HUBSPOT_ACCESS_TOKEN"],
+        secret: true,
+        valueKind: "oauth-derived-server-bearer-token",
+      }),
+      staticToken: envStatus({
+        primary: "HUBSPOT_STATIC_TOKEN",
+        aliases: ["HUBSPOT_PRIVATE_APP_TOKEN", "HUBSPOT_TOKEN"],
+        secret: true,
+        valueKind: "optional-static-private-token",
+      }),
+      primaryAuthMode: "oauth-server-bearer",
+      optionalStaticTokenModeDefault: "disabled",
+    },
+  };
 }
 
 function authorityReferenceArchiveDir() {
@@ -942,6 +1033,8 @@ const server = createServer(async (req, res) => {
       hubspotAuth: publicHubspotAuthStatus(),
       authorityReferenceStatus: AUTH_REF_STATUS_PATH,
       authorityReferenceSync: AUTH_REF_SYNC_PATH,
+      configStatus: CONFIG_STATUS_PATH,
+      config: runtimeConfigStatus(),
       root: ROOT,
     });
     return;
@@ -949,6 +1042,11 @@ const server = createServer(async (req, res) => {
 
   if (requestUrl.pathname === "/runtime-config.js") {
     sendRuntimeConfig(res);
+    return;
+  }
+
+  if (requestUrl.pathname === CONFIG_STATUS_PATH) {
+    sendJson(res, 200, runtimeConfigStatus());
     return;
   }
 
