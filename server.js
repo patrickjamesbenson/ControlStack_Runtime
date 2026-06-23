@@ -63,7 +63,7 @@ function readCredentialsEnv(name, fallback = "same-origin") {
 }
 
 function buildRuntimeConfig() {
-  const endpoint = String(process.env.CONTROLSTACK_NVB_AUTHORITY_ENDPOINT || "").trim();
+  const endpoint = String(process.env.CONTROLSTACK_NVB_AUTHORITY_ENDPOINT || NVB_READ_PATH).trim();
   const enabled = readBooleanEnv("CONTROLSTACK_NVB_AUTHORITY_ENABLED", Boolean(endpoint));
   return {
     nvbAuthority: {

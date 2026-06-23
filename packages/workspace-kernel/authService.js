@@ -19,7 +19,7 @@ const AUTH_USERS = Object.freeze([
     email: "patrick@novonlighting.com.au",
     classification: "internal",
     identityState: "internal_identified",
-    actualRole: "external_user",
+    actualRole: "developer",
     company: "Novon Lighting",
     provider: "local-dev",
   }),
