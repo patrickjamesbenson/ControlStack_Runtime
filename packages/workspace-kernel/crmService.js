@@ -382,7 +382,7 @@ export function createCrmService({ eventBus } = {}) {
     return "none";
   }
 
-  function projectCrmAssociationSnapshot({ context = {}, company, contact, deal }) {
+  function projectCrmAssociationSnapshot({ context = {}, company, contact, deal, crmRead }) {
     const project = context.project || {};
     const currentProject = project.currentProject || {};
     const projectId = currentProject.projectId || project.metadata?.projectId || null;
@@ -390,6 +390,9 @@ export function createCrmService({ eventBus } = {}) {
     const hasContact = Boolean(contact?.contactId && contact.source === "crm-read-only");
     const hasCompany = Boolean(company?.companyId && company.status !== "no-company");
     const hasDeal = Boolean(deal?.dealId);
+    const crmReadContactFound = crmRead?.contact?.found === true;
+    const crmReadCompanyFound = crmRead?.company?.found === true;
+    const crmReadAssociationEligible = crmReadContactFound || crmReadCompanyFound;
     return {
       owner: "shell",
       status: hasContact || hasCompany || hasDeal ? "associated" : "none",
@@ -436,6 +439,14 @@ export function createCrmService({ eventBus } = {}) {
         selectorOwned: false,
         providerMutationEnabled: false,
         providerSyncEnabled: false,
+        crmReadStatus: crmRead?.status || "not-run",
+        crmReadConfigured: crmRead?.configured === true,
+        crmReadAvailable: crmRead?.available === true,
+        crmReadContactFound,
+        crmReadCompanyFound,
+        crmReadAssociationEligible,
+        crmReadAssociationApplied: source === "crm-read",
+        crmReadReason: crmRead?.reason || "CRM read-only lookup has not run.",
       },
     };
   }
@@ -447,7 +458,7 @@ export function createCrmService({ eventBus } = {}) {
     const company = companySnapshot(effectiveContext);
     const contact = contactSnapshot(effectiveContext);
     const deal = dealSnapshot();
-    const association = projectCrmAssociationSnapshot({ context: effectiveContext, company, contact, deal });
+    const association = projectCrmAssociationSnapshot({ context: effectiveContext, company, contact, deal, crmRead });
     return {
       owner: state.owner,
       status: crmRead.status === "pending" ? "crm-read-pending" : company.status === "no-company" ? "no-company" : "company-linked",
