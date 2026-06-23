@@ -54,8 +54,19 @@
               </div>
             </section>
 
-            <details class="cs-shell__developer-details">
-              <summary>Developer / Diagnostics details</summary>
+            <details
+              id="shell_developer_diagnostics"
+              class="cs-shell__developer-details"
+              data-module="Workspace Shell"
+              data-item-type="section"
+              data-field-key="developer_diagnostics"
+              data-section-label="Developer / Diagnostics"
+              hidden
+            >
+              <summary class="cs-shell__developer-toggle" title="Developer / Diagnostics" aria-label="Open Developer / Diagnostics details">
+                <span aria-hidden="true">d</span>
+                <span class="cs-shell__sr-only">Developer / Diagnostics</span>
+              </summary>
               <section class="cs-shell__auth-card" aria-label="Real login and auth session details">
                 <h3>Login / auth details</h3>
                 <p>Shell-owned auth session. Local runtime session only; OAuth, password storage, MFA, and HubSpot writes are not live.</p>

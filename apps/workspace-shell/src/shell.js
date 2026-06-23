@@ -30,6 +30,7 @@ const userMenuPanel = document.getElementById("cs-shell-user-menu-panel");
 const userAvatar = document.getElementById("cs-shell-user-avatar");
 const userName = document.getElementById("cs-shell-user-name");
 const userMeta = document.getElementById("cs-shell-user-meta");
+const developerDiagnosticsDetails = document.getElementById("shell_developer_diagnostics");
 const identitySelect = document.getElementById("cs-shell-identity-select");
 const resolvedIdentitySummary = document.getElementById("cs-shell-resolved-identity-summary");
 const roleOverrideToggle = document.getElementById("cs-shell-role-override-toggle");
@@ -37,6 +38,23 @@ const roleOverrideSelect = document.getElementById("cs-shell-role-override-selec
 const displayRoleSelect = document.getElementById("cs-shell-display-role-select");
 const projectModeSelect = document.getElementById("cs-shell-project-mode-select");
 const visibilitySummary = document.getElementById("cs-shell-visibility-summary");
+
+const SHELL_DEVELOPER_DIAGNOSTICS_CONTRACT = Object.freeze({
+  heading: "DEV ORIENTATION",
+  module: "Workspace Shell",
+  itemType: "section",
+  fieldKey: "developer_diagnostics",
+  sectionId: "shell_developer_diagnostics",
+  sectionLabel: "Developer / Diagnostics",
+  contactRolesView: Object.freeze(["developer"]),
+  contactRolesEdit: Object.freeze(["developer"]),
+  workflowModesAllowed: "*",
+  stagesAllowed: "*",
+  requires: "none",
+  helperTextInternal: "Developer-only shell diagnostics entry point",
+  notes: "Controls D affordance and diagnostics disclosure in the shell account area",
+  identityStatesView: Object.freeze(["developer"]),
+});
 
 let projectBrowserPanel = null;
 let projectBrowserSummary = null;
@@ -79,6 +97,26 @@ function initialsFor(name = "Workspace User") {
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase() || "")
     .join("") || "CS";
+}
+
+function actualShellRole(context) {
+  return context.authority?.actualRole?.value || context.identity?.actualRole || "external_user";
+}
+
+function canViewShellContractSection(contract, context) {
+  const role = actualShellRole(context);
+  const identityState = context.identity?.identityState || "external_anonymous";
+  return contract.contactRolesView.includes(role) || contract.identityStatesView.includes(identityState);
+}
+
+function renderDeveloperDiagnosticsAccess(context) {
+  if (!developerDiagnosticsDetails) return;
+  const visible = canViewShellContractSection(SHELL_DEVELOPER_DIAGNOSTICS_CONTRACT, context);
+  developerDiagnosticsDetails.hidden = !visible;
+  developerDiagnosticsDetails.dataset.contractHeading = SHELL_DEVELOPER_DIAGNOSTICS_CONTRACT.heading;
+  developerDiagnosticsDetails.dataset.contactRolesView = SHELL_DEVELOPER_DIAGNOSTICS_CONTRACT.contactRolesView.join(",");
+  developerDiagnosticsDetails.dataset.identityStatesView = SHELL_DEVELOPER_DIAGNOSTICS_CONTRACT.identityStatesView.join(",");
+  if (!visible) developerDiagnosticsDetails.open = false;
 }
 
 function setUserMenuOpen(isOpen) {
@@ -605,6 +643,7 @@ function bootWorkspaceShell() {
     window.__csLatestShellContext = context;
     renderAuthControls({ services, context });
     renderAccountOverview(context);
+    renderDeveloperDiagnosticsAccess(context);
     renderAuthorityControls({ context });
     renderCompanyControls({ services, context });
     renderContextSummary(context);
