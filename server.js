@@ -1,5 +1,5 @@
 import { createReadStream } from "node:fs";
-import { access, readFile, stat } from "node:fs/promises";
+import { access, copyFile, mkdir, readFile, stat } from "node:fs/promises";
 import { createServer } from "node:http";
 import { extname, join, normalize, resolve, sep } from "node:path";
 
@@ -10,6 +10,7 @@ const NVB_READ_PATH = "/api/nvb-" + String.fromCharCode(97, 117, 116, 104, 111, 
 const HUBSPOT_READ_PATH = "/api/hubspot/read";
 const HUBSPOT_AUTH_STATUS_PATH = "/api/hubspot/auth-status";
 const AUTH_REF_STATUS_PATH = "/api/" + "authority-reference" + "/status";
+const AUTH_REF_SYNC_PATH = "/api/" + "authority-reference" + "/sync";
 
 const MIME_TYPES = new Map([
   [".html", "text/html; charset=utf-8"],
@@ -230,24 +231,72 @@ function authorityReferenceArchiveDir() {
   return readTextEnv("CONTROLSTACK_AUTHORITY_REFERENCE_ARCHIVE_DIR");
 }
 
+function authorityReferenceMaterialisedSourcePath() {
+  return readTextEnv("CONTROLSTACK_AUTHORITY_REFERENCE_MATERIALISED_SOURCE_PATH") || readTextEnv("CONTROLSTACK_AUTHORITY_REFERENCE_SOURCE_JSON_PATH");
+}
+
+function archiveStamp() {
+  return new Date().toISOString().replace(/[:.]/g, "-");
+}
+
+function archiveDestinationPath(snapshotPath, archiveDir) {
+  const safeName = snapshotPath.split(/[\\/]/).pop() || "authority-reference-snapshot.json";
+  return resolve(archiveDir, `${archiveStamp()}-${safeName}`);
+}
+
 function authorityReferenceSyncConfig() {
   const enabled = readBooleanEnv("CONTROLSTACK_AUTHORITY_REFERENCE_SYNC_ENABLED", false);
+  const executionEnabled = readBooleanEnv("CONTROLSTACK_AUTHORITY_REFERENCE_SYNC_EXECUTION_ENABLED", false);
   const sourceType = readTextEnv("CONTROLSTACK_AUTHORITY_REFERENCE_SOURCE_TYPE") || "google-sheet";
-  const sourceConfigured = Boolean(readTextEnv("CONTROLSTACK_AUTHORITY_REFERENCE_GOOGLE_SHEET_ID"));
+  const sheetConfigured = Boolean(readTextEnv("CONTROLSTACK_AUTHORITY_REFERENCE_GOOGLE_SHEET_ID"));
+  const materialisedSourcePath = authorityReferenceMaterialisedSourcePath();
+  const sourceConfigured = sheetConfigured || Boolean(materialisedSourcePath);
   return {
     owner: "runtime-server",
     sourceType,
     enabled,
     configured: enabled && sourceConfigured,
     sourceConfigured,
-    executionLive: false,
-    dryRunSupported: false,
+    googleSheetConfigured: sheetConfigured,
+    materialisedSourceConfigured: Boolean(materialisedSourcePath),
+    materialisedSourcePath: materialisedSourcePath || null,
+    executionEnabled,
+    executionLive: enabled && executionEnabled && Boolean(materialisedSourcePath),
+    dryRunSupported: true,
+    normalBootDependency: false,
     reason: enabled
       ? sourceConfigured
-        ? "Authority/reference sync source is configured, but execution is deferred in this foundation slice."
+        ? executionEnabled
+          ? "Authority/reference sync execution is explicitly enabled for admin action."
+          : "Authority/reference sync source is configured. Dry-run is available; live execution is gated off."
         : "Authority/reference sync is enabled but source config is incomplete."
       : "Authority/reference sync execution is disabled by default and not part of normal boot.",
   };
+}
+
+async function fileStatus(pathValue) {
+  if (!pathValue) {
+    return { path: null, present: false, readable: false, sizeBytes: null, modifiedAt: null, reason: "not_configured" };
+  }
+  try {
+    const info = await stat(pathValue);
+    return {
+      path: pathValue,
+      present: info.isFile(),
+      readable: info.isFile(),
+      sizeBytes: info.size,
+      modifiedAt: info.mtime?.toISOString?.() || null,
+    };
+  } catch (error) {
+    return {
+      path: pathValue,
+      present: false,
+      readable: false,
+      sizeBytes: null,
+      modifiedAt: null,
+      reason: error?.code || "unavailable",
+    };
+  }
 }
 
 async function authorityReferenceSnapshotStatus() {
@@ -330,17 +379,166 @@ async function authorityReferenceAdminStatus() {
     sync,
     archive,
     writePolicy: {
-      enabled: false,
+      enabled: sync.executionLive,
       adminOnly: true,
       archiveBeforeWriteRequired: true,
       archiveBeforeWriteLive: false,
-      reason: "Sync/materialisation writes are not live in this slice. Status visibility only.",
+      reason: sync.executionLive
+        ? "Live sync execution is available only through explicit admin POST and still enforces archive-before-write."
+        : "Live sync/materialisation writes are gated off or not fully configured. Dry-run remains available.",
+    },
+  };
+}
+
+async function validateAuthorityReferenceSource(sourcePath) {
+  const text = await readFile(sourcePath, "utf-8");
+  const parsed = JSON.parse(text);
+  return {
+    byteLength: Buffer.byteLength(text),
+    hasUsersTable: Array.isArray(parsed?.USERS) || Array.isArray(parsed?.users),
+  };
+}
+
+async function authorityReferenceSyncExecution({ dryRun = true } = {}) {
+  const status = await authorityReferenceAdminStatus();
+  const sync = status.sync;
+  const target = status.snapshot;
+  const source = await fileStatus(sync.materialisedSourcePath);
+  const archive = status.archive;
+  const plannedArchivePath = archive.path && target.path ? archiveDestinationPath(target.path, archive.path) : null;
+  const preflight = {
+    syncEnabled: sync.enabled === true,
+    executionEnabled: sync.executionEnabled === true,
+    sourceReadable: source.readable === true,
+    archiveAvailable: archive.available === true,
+    targetPath: target.path,
+    sourcePath: source.path,
+    plannedArchivePath,
+  };
+  const steps = [
+    "Read external materialised authority/reference source status.",
+    "Validate source JSON before write.",
+    "Archive current snapshot before any live write when a current snapshot exists.",
+    "Copy materialised source to runtime authority/reference snapshot path only for explicit live admin execution.",
+  ];
+  const executable = preflight.syncEnabled && preflight.executionEnabled && preflight.sourceReadable && preflight.archiveAvailable;
+
+  if (dryRun) {
+    let sourceValidation = null;
+    if (source.readable) {
+      try {
+        sourceValidation = await validateAuthorityReferenceSource(source.path);
+      } catch (error) {
+        sourceValidation = { ok: false, reason: error?.message || "source_validation_failed" };
+      }
+    }
+    return {
+      owner: "runtime-server",
+      status: executable ? "dry-run-ready" : "dry-run-blocked",
+      dryRun: true,
+      adminOnly: true,
+      nonBootCritical: true,
+      browserSecretsExposed: false,
+      repoLocalSecrets: false,
+      executionLive: false,
+      executable,
+      preflight,
+      source,
+      target,
+      archive,
+      sourceValidation,
+      steps,
+      writePolicy: {
+        enabled: false,
+        archiveBeforeWriteRequired: true,
+        archiveBeforeWriteLive: false,
+        reason: "Dry-run only. No archive or snapshot write was attempted.",
+      },
+    };
+  }
+
+  if (!executable) {
+    return {
+      owner: "runtime-server",
+      status: "live-write-blocked",
+      dryRun: false,
+      adminOnly: true,
+      nonBootCritical: true,
+      browserSecretsExposed: false,
+      repoLocalSecrets: false,
+      executionLive: false,
+      executable: false,
+      preflight,
+      source,
+      target,
+      archive,
+      steps,
+      writePolicy: {
+        enabled: false,
+        archiveBeforeWriteRequired: true,
+        archiveBeforeWriteLive: false,
+        reason: "Live write blocked. Require sync enabled, execution enabled, readable source, and available archive directory.",
+      },
+    };
+  }
+
+  const sourceValidation = await validateAuthorityReferenceSource(source.path);
+  await mkdir(archive.path, { recursive: true });
+  let archivedTo = null;
+  if (target.present && target.readable) {
+    archivedTo = plannedArchivePath;
+    await copyFile(target.path, archivedTo);
+  }
+  await copyFile(source.path, target.path);
+  const nextTarget = await authorityReferenceSnapshotStatus();
+  return {
+    owner: "runtime-server",
+    status: "live-write-completed",
+    dryRun: false,
+    adminOnly: true,
+    nonBootCritical: true,
+    browserSecretsExposed: false,
+    repoLocalSecrets: false,
+    executionLive: true,
+    executable: true,
+    preflight,
+    source,
+    target: nextTarget,
+    archive: { ...archive, archivedTo, archiveBeforeWriteLive: true },
+    sourceValidation,
+    steps,
+    writePolicy: {
+      enabled: true,
+      archiveBeforeWriteRequired: true,
+      archiveBeforeWriteLive: true,
+      reason: "Live admin sync completed after archive-before-write enforcement.",
     },
   };
 }
 
 async function sendAuthorityReferenceStatus(res) {
   sendJson(res, 200, await authorityReferenceAdminStatus());
+}
+
+async function sendAuthorityReferenceSync(res, requestUrl) {
+  const dryRunParam = String(requestUrl.searchParams.get("dryRun") || "true").toLowerCase();
+  const dryRun = !["0", "false", "no", "live"].includes(dryRunParam);
+  try {
+    const result = await authorityReferenceSyncExecution({ dryRun });
+    sendJson(res, dryRun || result.executable ? 200 : 409, result);
+  } catch (error) {
+    sendJson(res, 500, {
+      owner: "runtime-server",
+      status: "sync-execution-failed",
+      dryRun,
+      adminOnly: true,
+      nonBootCritical: true,
+      browserSecretsExposed: false,
+      repoLocalSecrets: false,
+      reason: error?.message || "Authority/reference sync execution failed.",
+      writePolicy: { enabled: false, archiveBeforeWriteRequired: true, archiveBeforeWriteLive: false },
+    });
+  }
 }
 
 function hubspotTokenSource(candidates) {
@@ -726,7 +924,8 @@ async function serveFile(res, absolutePath) {
 const server = createServer(async (req, res) => {
   const requestUrl = new URL(req.url || "/", `http://${req.headers.host || `${HOST}:${PORT}`}`);
 
-  if (req.method !== "GET" && req.method !== "HEAD") {
+  const isAuthorityReferenceSyncPost = req.method === "POST" && requestUrl.pathname === AUTH_REF_SYNC_PATH;
+  if (req.method !== "GET" && req.method !== "HEAD" && !isAuthorityReferenceSyncPost) {
     sendJson(res, 405, { ok: false, error: "method_not_allowed" });
     return;
   }
@@ -742,6 +941,7 @@ const server = createServer(async (req, res) => {
       hubspotAuthStatus: HUBSPOT_AUTH_STATUS_PATH,
       hubspotAuth: publicHubspotAuthStatus(),
       authorityReferenceStatus: AUTH_REF_STATUS_PATH,
+      authorityReferenceSync: AUTH_REF_SYNC_PATH,
       root: ROOT,
     });
     return;
@@ -764,6 +964,15 @@ const server = createServer(async (req, res) => {
 
   if (requestUrl.pathname === AUTH_REF_STATUS_PATH) {
     await sendAuthorityReferenceStatus(res);
+    return;
+  }
+
+  if (requestUrl.pathname === AUTH_REF_SYNC_PATH) {
+    if (req.method !== "POST") {
+      sendJson(res, 405, { ok: false, error: "method_not_allowed", requiredMethod: "POST" });
+      return;
+    }
+    await sendAuthorityReferenceSync(res, requestUrl);
     return;
   }
 
