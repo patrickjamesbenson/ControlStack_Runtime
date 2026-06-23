@@ -9,17 +9,122 @@
   <body>
     <div id="cs-shell-root" class="cs-shell" data-phase="live-nvb-authority-read">
       <header class="cs-shell__topbar" aria-label="Workspace top bar">
-        <div class="cs-shell__brand-lockup">
-          <p class="cs-shell__eyebrow">ControlStack Runtime</p>
-          <h1>Workspace Shell</h1>
+        <a class="cs-shell__brand-lockup" href="/workspace?module=workspace_home" aria-label="ControlStack workspace home">
+          <span class="cs-shell__brand-mark" aria-hidden="true">CS</span>
+          <span class="cs-shell__brand-text">
+            <strong>ControlStack</strong>
+            <small>Workspace</small>
+          </span>
+        </a>
+
+        <div class="cs-shell__topbar-center" aria-label="Project and timeline affordances">
+          <button class="cs-shell__timeline-button" type="button" aria-label="Timeline controls are shell-owned">
+            <span aria-hidden="true">◷</span>
+            <span>Timeline</span>
+          </button>
+          <div id="cs-shell-status" class="cs-shell__status" role="status">Booting shell…</div>
         </div>
-        <div id="cs-shell-status" class="cs-shell__status" role="status">Booting shell…</div>
+
+        <section class="cs-shell__user-menu" aria-label="User account and support tools">
+          <button id="cs-shell-user-menu-button" class="cs-shell__user-button" type="button" aria-expanded="false" aria-controls="cs-shell-user-menu-panel">
+            <span id="cs-shell-user-avatar" class="cs-shell__avatar">CS</span>
+            <span class="cs-shell__user-button-text">
+              <strong id="cs-shell-user-name">Workspace User</strong>
+              <small id="cs-shell-user-meta">Session and view tools</small>
+            </span>
+          </button>
+
+          <div id="cs-shell-user-menu-panel" class="cs-shell__user-panel" hidden>
+            <section class="cs-shell__auth-card" aria-label="Real login and auth session">
+              <h3>Login / auth</h3>
+              <p>Shell-owned auth session. Local runtime session only; OAuth, password storage, MFA, and HubSpot writes are not live.</p>
+              <label for="cs-shell-auth-user-select">Sign in as</label>
+              <select id="cs-shell-auth-user-select"></select>
+              <button id="cs-shell-sign-in-button" type="button" class="cs-shell__auth-button">Sign in</button>
+              <button id="cs-shell-sign-out-button" type="button" class="cs-shell__auth-button cs-shell__button-secondary">Sign out</button>
+              <button id="cs-shell-use-auth-identity-button" type="button" class="cs-shell__auth-button cs-shell__button-secondary">Use authenticated identity</button>
+              <dl id="cs-shell-auth-summary" class="cs-shell__inline-summary"></dl>
+            </section>
+
+            <section class="cs-shell__authority-card" aria-label="NVB-backed authority and privilege state">
+              <h3>Authority / privileges</h3>
+              <p>NVB-backed authority resolves the final actual role when available. Internal email/domain is classifier-only. HubSpot/company context is not authority.</p>
+              <dl id="cs-shell-authority-summary" class="cs-shell__inline-summary"></dl>
+            </section>
+
+            <section class="cs-shell__visibility-card" aria-label="Identity lookup and visibility support">
+              <h3>Developer / view support</h3>
+              <p>Auth is the default identity source. Developer fixture, actual-role override, and display-role preview are support tools only.</p>
+              <label for="cs-shell-identity-select">Developer fixture identity</label>
+              <select id="cs-shell-identity-select"></select>
+              <dl id="cs-shell-resolved-identity-summary" class="cs-shell__inline-summary"></dl>
+              <label class="cs-shell__checkbox-row" for="cs-shell-role-override-toggle">
+                <input id="cs-shell-role-override-toggle" type="checkbox" />
+                <span>Developer/test actual-role override</span>
+              </label>
+              <p class="cs-shell__warning">Developer/test override only. Off by default. Does not represent NVB authority.</p>
+              <label for="cs-shell-role-override-select">Override role</label>
+              <select id="cs-shell-role-override-select" disabled></select>
+              <label for="cs-shell-display-role-select">Display role preview only</label>
+              <select id="cs-shell-display-role-select"></select>
+              <label for="cs-shell-project-mode-select">Project visibility input</label>
+              <select id="cs-shell-project-mode-select">
+                <option value="auto">Current project state</option>
+                <option value="present">Force project present</option>
+                <option value="missing">Force project missing</option>
+              </select>
+              <dl id="cs-shell-visibility-summary"></dl>
+            </section>
+
+            <section class="cs-shell__context-card" aria-label="Shell-owned runtime context">
+              <h3>Runtime context</h3>
+              <dl id="cs-shell-context-summary"></dl>
+            </section>
+          </div>
+        </section>
       </header>
 
       <div class="cs-shell__body">
-        <aside class="cs-shell__sidebar" aria-label="Project-first workspace sidebar">
-          <div class="cs-shell__sidebar-scroll">
-            <section class="cs-shell__project-card cs-shell__sidebar-section" aria-label="Current project selection">
+        <aside class="cs-shell__sidebar" aria-label="Workspace module rail">
+          <nav class="cs-shell__rail-nav cs-shell__rail-nav--primary" aria-label="Primary workflow modules">
+            <p class="cs-shell__rail-kicker">Workflow</p>
+            <a class="cs-shell__rail-item" href="/workspace?module=cs_selector" data-module-link="cs_selector">
+              <svg class="cs-shell__rail-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6h14M5 12h10M5 18h7" /></svg>
+              <span>CS Selector</span>
+            </a>
+            <a class="cs-shell__rail-item" href="/workspace?module=scene_builder" data-module-link="scene_builder">
+              <svg class="cs-shell__rail-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="5" width="14" height="14" rx="2" /><path d="M9 9h6v6H9z" /></svg>
+              <span>Scene Builder</span>
+            </a>
+            <a class="cs-shell__rail-item" href="/workspace?module=emergence" data-module-link="emergence">
+              <svg class="cs-shell__rail-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /><circle cx="12" cy="12" r="7" /></svg>
+              <span>Emergency / EGRES</span>
+            </a>
+            <button class="cs-shell__rail-item" type="button" aria-disabled="true" title="Compliance Matters is a planned workflow module.">
+              <svg class="cs-shell__rail-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12l4 4L19 6" /><path d="M6 20h12" /></svg>
+              <span>Compliance Matters</span>
+            </button>
+            <button class="cs-shell__rail-item" type="button" aria-disabled="true" title="Ceiling / Coordinated Surfaces is a planned workflow module.">
+              <svg class="cs-shell__rail-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16M8 4v16M16 4v16" /></svg>
+              <span>Ceiling / Coordinated Surfaces</span>
+            </button>
+          </nav>
+
+          <nav class="cs-shell__rail-nav cs-shell__rail-nav--secondary" aria-label="Secondary and optional shell tools">
+            <a class="cs-shell__rail-item cs-shell__rail-item--quiet" href="/workspace?module=workspace_home" data-module-link="workspace_home">
+              <svg class="cs-shell__rail-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11l8-7 8 7" /><path d="M6 10v10h12V10" /></svg>
+              <span>Workspace Home</span>
+            </a>
+            <button class="cs-shell__rail-item cs-shell__rail-item--quiet" type="button" aria-disabled="true" title="Diagnostics and admin tools are non-boot-critical.">
+              <svg class="cs-shell__rail-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v4M12 17v4M4.2 6.2l2.8 2.8M17 17l2.8 2.8M3 12h4M17 12h4M4.2 17.8L7 15M17 7l2.8-2.8" /></svg>
+              <span>Diagnostics / Admin</span>
+            </button>
+          </nav>
+        </aside>
+
+        <main class="cs-shell__main" aria-label="Workspace main panel">
+          <section class="cs-shell__workspace-header" aria-label="Project and account workspace header">
+            <section class="cs-shell__project-card cs-shell__header-card" aria-label="Current project selection">
               <p class="cs-shell__section-kicker">Current project</p>
               <h2>Project workspace</h2>
               <label for="cs-shell-project-select">Select project</label>
@@ -27,95 +132,27 @@
               <dl id="cs-shell-project-summary"></dl>
             </section>
 
-            <section class="cs-shell__company-card cs-shell__sidebar-section" aria-label="Company account context">
+            <section class="cs-shell__company-card cs-shell__header-card" aria-label="Company account context">
               <p class="cs-shell__section-kicker">Company context</p>
               <h3>Account context</h3>
-              <p>Read-safe shell-owned company context. HubSpot writes and CRM mutation remain deferred.</p>
+              <p>HubSpot/company context is CRM enrichment, not authority.</p>
               <label for="cs-shell-company-select">Fixture/manual company</label>
               <select id="cs-shell-company-select"></select>
-              <button id="cs-shell-company-link-button" type="button" class="cs-shell__company-button">Link Company Context</button>
-              <button id="cs-shell-company-project-button" type="button" class="cs-shell__company-button">Use Project Company</button>
-              <button id="cs-shell-company-clear-button" type="button" class="cs-shell__company-button">Clear Company</button>
+              <div class="cs-shell__button-row">
+                <button id="cs-shell-company-link-button" type="button" class="cs-shell__company-button">Link Company Context</button>
+                <button id="cs-shell-company-project-button" type="button" class="cs-shell__company-button cs-shell__button-secondary">Use Project Company</button>
+                <button id="cs-shell-company-clear-button" type="button" class="cs-shell__company-button cs-shell__button-secondary">Clear Company</button>
+              </div>
               <dl id="cs-shell-company-summary"></dl>
             </section>
-
-            <nav class="cs-shell__workflow-nav cs-shell__sidebar-section" aria-label="Workflow modules">
-              <p class="cs-shell__section-kicker">Workflows</p>
-              <a href="/workspace?module=cs_selector" data-module-link="cs_selector">CS Selector</a>
-              <a href="/workspace?module=emergence" data-module-link="emergence">Emergence</a>
-              <a href="/workspace?module=workspace_home" data-module-link="workspace_home">Workspace Home</a>
-            </nav>
-
-            <section class="cs-shell__tools-card cs-shell__sidebar-section" aria-label="Optional tools">
-              <p class="cs-shell__section-kicker">Optional tools</p>
-              <p>Diagnostics loads after the active module and remains non-boot-critical.</p>
-            </section>
-          </div>
-
-          <section class="cs-shell__user-menu" aria-label="User account and support tools">
-            <button id="cs-shell-user-menu-button" class="cs-shell__user-button" type="button" aria-expanded="false" aria-controls="cs-shell-user-menu-panel">
-              <span id="cs-shell-user-avatar" class="cs-shell__avatar">CS</span>
-              <span class="cs-shell__user-button-text">
-                <strong id="cs-shell-user-name">Workspace User</strong>
-                <small id="cs-shell-user-meta">Session and view tools</small>
-              </span>
-            </button>
-
-            <div id="cs-shell-user-menu-panel" class="cs-shell__user-panel" hidden>
-              <section class="cs-shell__auth-card" aria-label="Real login and auth session">
-                <h3>Login / auth</h3>
-                <p>Shell-owned auth session. Local runtime session only; OAuth, password storage, MFA, and HubSpot writes are not live.</p>
-                <label for="cs-shell-auth-user-select">Sign in as</label>
-                <select id="cs-shell-auth-user-select"></select>
-                <button id="cs-shell-sign-in-button" type="button" class="cs-shell__auth-button">Sign in</button>
-                <button id="cs-shell-sign-out-button" type="button" class="cs-shell__auth-button">Sign out</button>
-                <button id="cs-shell-use-auth-identity-button" type="button" class="cs-shell__auth-button">Use authenticated identity</button>
-                <dl id="cs-shell-auth-summary" class="cs-shell__inline-summary"></dl>
-              </section>
-
-              <section class="cs-shell__authority-card" aria-label="NVB-backed authority and privilege state">
-                <h3>Authority / privileges</h3>
-                <p>NVB-backed authority resolves the final actual role when available. Internal email/domain is classifier-only. HubSpot/company context is not authority.</p>
-                <dl id="cs-shell-authority-summary" class="cs-shell__inline-summary"></dl>
-              </section>
-
-              <section class="cs-shell__visibility-card" aria-label="Identity lookup and visibility support">
-                <h3>Developer / view support</h3>
-                <p>Auth is the default identity source. Developer fixture, actual-role override, and display-role preview are support tools only.</p>
-                <label for="cs-shell-identity-select">Developer fixture identity</label>
-                <select id="cs-shell-identity-select"></select>
-                <dl id="cs-shell-resolved-identity-summary" class="cs-shell__inline-summary"></dl>
-                <label class="cs-shell__checkbox-row" for="cs-shell-role-override-toggle">
-                  <input id="cs-shell-role-override-toggle" type="checkbox" />
-                  <span>Developer/test actual-role override</span>
-                </label>
-                <p class="cs-shell__warning">Developer/test override only. Off by default. Does not represent NVB authority.</p>
-                <label for="cs-shell-role-override-select">Override role</label>
-                <select id="cs-shell-role-override-select" disabled></select>
-                <label for="cs-shell-display-role-select">Display role preview only</label>
-                <select id="cs-shell-display-role-select"></select>
-                <label for="cs-shell-project-mode-select">Project visibility input</label>
-                <select id="cs-shell-project-mode-select">
-                  <option value="auto">Current project state</option>
-                  <option value="present">Force project present</option>
-                  <option value="missing">Force project missing</option>
-                </select>
-                <dl id="cs-shell-visibility-summary"></dl>
-              </section>
-
-              <section class="cs-shell__context-card" aria-label="Shell-owned runtime context">
-                <h3>Runtime context</h3>
-                <dl id="cs-shell-context-summary"></dl>
-              </section>
-            </div>
           </section>
-        </aside>
 
-        <main class="cs-shell__main" aria-label="Workspace main panel">
           <section id="cs-workspace-home" class="cs-shell__home" hidden>
             <p class="cs-shell__eyebrow">Workspace home</p>
             <h2>Project-first shell</h2>
-            <p>This shell keeps project and workflow navigation in the main sidebar while user/account/session and developer/test controls live in the user affordance.</p>
+            <p>This shell keeps workflow navigation in the left rail while project information stays visible in the header and user/account/session tools live in the top-right account menu.</p>
+            <div class="cs-shell__notice cs-shell__notice--info">System information: shell-owned authority and visibility remain policy gates, not just hidden navigation.</div>
+            <div class="cs-shell__notice cs-shell__notice--tip">Tip: start with a project, then move through Selector, Scene Builder, Emergency / EGRES, Compliance, and coordinated surfaces.</div>
           </section>
           <section id="cs-shell-module-host" class="cs-shell__module-host" aria-live="polite"></section>
           <section
