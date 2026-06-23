@@ -12,6 +12,7 @@ const HUBSPOT_AUTH_STATUS_PATH = "/api/hubspot/auth-status";
 const HUBSPOT_DEAL_PREFLIGHT_PATH = "/api/hubspot/deal-writeback/preflight";
 const AUTH_REF_STATUS_PATH = "/api/" + "authority-reference" + "/status";
 const AUTH_REF_SYNC_PATH = "/api/" + "authority-reference" + "/sync";
+const AUTH_REF_SOURCE_MATERIALISATION_PATH = "/api/" + "authority-reference" + "/source-materialisation";
 const CONFIG_STATUS_PATH = "/api/runtime-config/status";
 
 const MIME_TYPES = new Map([
@@ -482,13 +483,154 @@ async function authorityReferenceAdminStatus() {
   };
 }
 
+function authorityReferenceTableCount(snapshot, names = []) {
+  for (const name of names) {
+    const table = snapshot?.[name];
+    if (Array.isArray(table)) return table.length;
+  }
+  return 0;
+}
+
+function authorityReferenceSourceValidationSummary(text, parsed) {
+  const topLevelKeys = parsed && typeof parsed === "object" && !Array.isArray(parsed) ? Object.keys(parsed).slice(0, 25) : [];
+  return {
+    ok: true,
+    byteLength: Buffer.byteLength(text),
+    format: "json",
+    topLevelKeys,
+    tables: {
+      users: {
+        present: Array.isArray(parsed?.USERS) || Array.isArray(parsed?.users),
+        count: authorityReferenceTableCount(parsed, ["USERS", "users"]),
+      },
+      contacts: {
+        present: Array.isArray(parsed?.CONTACTS) || Array.isArray(parsed?.contacts),
+        count: authorityReferenceTableCount(parsed, ["CONTACTS", "contacts"]),
+      },
+      companies: {
+        present: Array.isArray(parsed?.COMPANIES) || Array.isArray(parsed?.companies),
+        count: authorityReferenceTableCount(parsed, ["COMPANIES", "companies"]),
+      },
+    },
+    browserSecretsExposed: false,
+    nonSecretOnly: true,
+  };
+}
+
 async function validateAuthorityReferenceSource(sourcePath) {
   const text = await readFile(sourcePath, "utf-8");
   const parsed = JSON.parse(text);
+  const summary = authorityReferenceSourceValidationSummary(text, parsed);
   return {
-    byteLength: Buffer.byteLength(text),
-    hasUsersTable: Array.isArray(parsed?.USERS) || Array.isArray(parsed?.users),
+    byteLength: summary.byteLength,
+    hasUsersTable: summary.tables.users.present,
+    tableCounts: summary.tables,
+    topLevelKeys: summary.topLevelKeys,
   };
+}
+
+async function inspectAuthorityReferenceSource(sourcePath) {
+  if (!sourcePath) {
+    return {
+      ok: false,
+      configured: false,
+      readable: false,
+      reason: "No materialised authority/reference source path is configured.",
+      browserSecretsExposed: false,
+      nonSecretOnly: true,
+    };
+  }
+  try {
+    const text = await readFile(sourcePath, "utf-8");
+    const parsed = JSON.parse(text);
+    return {
+      configured: true,
+      readable: true,
+      path: sourcePath,
+      ...authorityReferenceSourceValidationSummary(text, parsed),
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      configured: true,
+      readable: false,
+      path: sourcePath,
+      reason: error?.message || "authority_reference_source_inspection_failed",
+      browserSecretsExposed: false,
+      nonSecretOnly: true,
+    };
+  }
+}
+
+async function authorityReferenceSourceMaterialisationStatus() {
+  const adminStatus = await authorityReferenceAdminStatus();
+  const sync = adminStatus.sync;
+  const sourceFile = await fileStatus(sync.materialisedSourcePath);
+  const sourceInspection = await inspectAuthorityReferenceSource(sync.materialisedSourcePath);
+  const plannedArchivePath = adminStatus.archive.path && adminStatus.snapshot.path
+    ? archiveDestinationPath(adminStatus.snapshot.path, adminStatus.archive.path)
+    : null;
+  const materialisationReady = sync.enabled === true && sourceFile.readable === true && sourceInspection.ok === true;
+  const liveWriteReady = materialisationReady && sync.executionEnabled === true && adminStatus.archive.available === true;
+  return {
+    owner: "runtime-server",
+    status: materialisationReady ? "source-materialisation-ready" : "source-materialisation-blocked",
+    source: "authority-reference-source-materialisation-foundation",
+    adminOnly: true,
+    optional: true,
+    nonBootCritical: true,
+    normalWorkflowConcern: false,
+    normalBootDependency: false,
+    browserSecretsExposed: false,
+    nonSecretOnly: true,
+    sourceProfile: {
+      sourceType: sync.sourceType,
+      syncEnabled: sync.enabled === true,
+      sourceConfigured: sync.sourceConfigured === true,
+      googleSheetConfigured: sync.googleSheetConfigured === true,
+      materialisedSourceConfigured: sync.materialisedSourceConfigured === true,
+      materialisedSourcePath: sync.materialisedSourcePath,
+    },
+    sourceFile,
+    sourceInspection,
+    targetSnapshot: adminStatus.snapshot,
+    archive: {
+      ...adminStatus.archive,
+      plannedArchivePath,
+      archiveBeforeWriteRequired: true,
+    },
+    materialisation: {
+      ready: materialisationReady,
+      liveWriteReady,
+      dryRunSupported: true,
+      liveWritePath: sync.executionEnabled === true ? "explicit-admin-sync-post-only" : "disabled",
+      steps: [
+        "Inspect configured materialised authority/reference source.",
+        "Validate source JSON and required authority tables before materialisation.",
+        "Report target snapshot and archive readiness without mutating files.",
+        "Require explicit admin sync POST for any later live materialisation.",
+        "Archive current snapshot before live materialisation when applicable.",
+      ],
+    },
+    writePolicy: {
+      enabled: false,
+      liveProviderWritesEnabled: false,
+      archiveBeforeWriteRequired: true,
+      archiveBeforeWriteLive: false,
+      reason: "Source/materialisation foundation is status/preflight only. Live materialisation remains behind the existing explicit admin sync POST pathway.",
+    },
+    blockers: [
+      ...(sync.enabled === true ? [] : [{ code: "sync-disabled", severity: "blocking", reason: "Authority/reference sync is disabled." }]),
+      ...(sync.materialisedSourceConfigured === true ? [] : [{ code: "materialised-source-missing", severity: "blocking", reason: "Materialised source path is not configured." }]),
+      ...(sourceFile.readable === true ? [] : [{ code: "source-unreadable", severity: "blocking", reason: "Materialised source is not readable." }]),
+      ...(sourceInspection.ok === true ? [] : [{ code: "source-validation-failed", severity: "blocking", reason: sourceInspection.reason || "Source inspection did not pass." }]),
+      { code: "write-policy-disabled", severity: "intentional-block", reason: "No file mutation is performed by this status endpoint." },
+    ],
+  };
+}
+
+async function sendAuthorityReferenceSourceMaterialisation(res) {
+  sendJson(res, 200, await authorityReferenceSourceMaterialisationStatus());
 }
 
 async function authorityReferenceSyncExecution({ dryRun = true } = {}) {
@@ -1172,6 +1314,7 @@ const server = createServer(async (req, res) => {
       },
       authorityReferenceStatus: AUTH_REF_STATUS_PATH,
       authorityReferenceSync: AUTH_REF_SYNC_PATH,
+      authorityReferenceSourceMaterialisation: AUTH_REF_SOURCE_MATERIALISATION_PATH,
       configStatus: CONFIG_STATUS_PATH,
       config: runtimeConfigStatus(),
       root: ROOT,
@@ -1206,6 +1349,11 @@ const server = createServer(async (req, res) => {
 
   if (requestUrl.pathname === AUTH_REF_STATUS_PATH) {
     await sendAuthorityReferenceStatus(res);
+    return;
+  }
+
+  if (requestUrl.pathname === AUTH_REF_SOURCE_MATERIALISATION_PATH) {
+    await sendAuthorityReferenceSourceMaterialisation(res);
     return;
   }
 
