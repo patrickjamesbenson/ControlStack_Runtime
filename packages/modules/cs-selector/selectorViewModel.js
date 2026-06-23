@@ -68,6 +68,32 @@ function timelineRefs({ local = {}, project = {}, selectorDownstream = {} }) {
   ].join(", ");
 }
 
+function authorityActualRole(authority = {}, identity = {}) {
+  return authority.actualRole?.value || identity.actualRole || "external_user";
+}
+
+function authorityActualRoleSource(authority = {}, identity = {}) {
+  return authority.actualRole?.source || identity.actualRoleSource || "safe-fallback";
+}
+
+function authorityNominalRole(authority = {}, identity = {}) {
+  return authority.actualRole?.nominalValue || authorityActualRole(authority, identity);
+}
+
+function shellDisplayRole(authority = {}, identity = {}, visibility = {}) {
+  return visibility.inputs?.displayRole || authority.displayRole?.value || authorityActualRole(authority, identity);
+}
+
+function shellRequestedDisplayRole(authority = {}, identity = {}, visibility = {}) {
+  return visibility.inputs?.requestedDisplayRole || authority.displayRole?.requested || identity.displayRoleRequested || shellDisplayRole(authority, identity, visibility);
+}
+
+function shellDisplayRoleClamped(authority = {}, identity = {}, visibility = {}) {
+  if (visibility.inputs?.displayRoleClamped !== undefined) return visibility.inputs.displayRoleClamped;
+  if (authority.displayRole?.clamped !== undefined) return authority.displayRole.clamped;
+  return identity.displayRoleClamped;
+}
+
 export function createSelectorViewModel({ adapter, selectorState }) {
   const snapshots = adapter.readSnapshots();
   const local = selectorState.getSnapshot();
@@ -76,6 +102,7 @@ export function createSelectorViewModel({ adapter, selectorState }) {
   const currentProject = project.currentProject || {};
   const handoff = snapshots.handoff;
   const identity = snapshots.identity;
+  const authority = snapshots.authority || {};
   const company = snapshots.company || snapshots.crm?.company || {};
   const crm = snapshots.crm || {};
   const crmWritePolicy = crm.writePolicy || company.diagnostics || {};
@@ -97,17 +124,24 @@ export function createSelectorViewModel({ adapter, selectorState }) {
       email: readUserEmail(identity),
       identityState: identity.identityState || "external_anonymous",
       classification: identity.classification || "anonymous",
-      derivedActualRole: identity.derivedActualRole || identity.actualRole || "external_user",
-      actualRole: identity.actualRole || "external_user",
-      actualRoleSource: identity.actualRoleSource || "unknown",
-      actualRoleDerived: stateLabel(identity.actualRoleDerived),
-      actualRoleOverrideEnabled: stateLabel(identity.actualRoleOverrideEnabled),
-      actualRoleOverride: identity.actualRoleOverride || "none",
-      displayRole: identity.displayRole || identity.role || "external_user",
-      displayRoleRequested: identity.displayRoleRequested || identity.displayRole || "external_user",
-      displayRoleClamped: stateLabel(identity.displayRoleClamped),
-      capabilities: identity.capabilities || [],
-      canViewSelector: stateLabel(adapter.hasCapability("module:cs_selector:view")),
+      authorityOwner: authority.owner || "shell",
+      authorityStatus: authority.status || "fallback",
+      authoritySource: authority.source || "shell-safe-fallback",
+      authorityActualRole: authorityActualRole(authority, identity),
+      authorityNominalRole: authorityNominalRole(authority, identity),
+      authorityActualRoleSource: authorityActualRoleSource(authority, identity),
+      derivedActualRole: authorityActualRole(authority, identity),
+      actualRole: authorityActualRole(authority, identity),
+      actualRoleSource: authorityActualRoleSource(authority, identity),
+      actualRoleDerived: stateLabel(authority.actualRole?.derivedFromNvb || authority.actualRole?.fallbackApplied),
+      actualRoleOverrideEnabled: stateLabel(authority.actualRole?.overrideEnabled ?? identity.actualRoleOverrideEnabled),
+      actualRoleOverride: authority.actualRole?.override || identity.actualRoleOverride || "none",
+      displayRole: shellDisplayRole(authority, identity, snapshots.visibility),
+      displayRoleRequested: shellRequestedDisplayRole(authority, identity, snapshots.visibility),
+      displayRoleClamped: stateLabel(shellDisplayRoleClamped(authority, identity, snapshots.visibility)),
+      displayRolePreviewOnly: "yes",
+      capabilities: authority.capabilities || identity.capabilities || [],
+      canViewSelector: stateLabel(selectorDecision.visible),
     },
     project: {
       owner: project.owner,

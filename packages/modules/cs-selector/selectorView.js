@@ -47,20 +47,25 @@ export function renderSelectorView(container, viewModel) {
   appendText(intro, "p", "Selector now shows a shell-owned downstream context foundation. This is contract-only: Scene Builder, EGRES, Compliance Matters, Ceiling, engine, RunTable, and payload remain out of scope.");
   article.appendChild(intro);
 
-  appendSection(article, "Identity and derived role", [
-    ["owner", viewModel.identity.owner],
-    ["status", viewModel.identity.status],
+  appendSection(article, "Identity and shell authority", [
+    ["identity owner", viewModel.identity.owner],
+    ["identity status", viewModel.identity.status],
     ["user", viewModel.identity.name],
     ["email", viewModel.identity.email],
     ["identity state", viewModel.identity.identityState],
     ["classification", viewModel.identity.classification],
-    ["derived actual role", viewModel.identity.derivedActualRole],
-    ["effective actual role", viewModel.identity.actualRole],
-    ["actual role source", viewModel.identity.actualRoleSource],
+    ["authority owner", viewModel.identity.authorityOwner],
+    ["authority status", viewModel.identity.authorityStatus],
+    ["authority source", viewModel.identity.authoritySource],
+    ["authority actual role", viewModel.identity.authorityActualRole],
+    ["authority nominal role", viewModel.identity.authorityNominalRole],
+    ["actual role source", viewModel.identity.authorityActualRoleSource],
+    ["actual role derived", viewModel.identity.actualRoleDerived],
     ["override active", viewModel.identity.actualRoleOverrideEnabled],
-    ["display role", viewModel.identity.displayRole],
+    ["display role preview", viewModel.identity.displayRole],
+    ["display preview only", viewModel.identity.displayRolePreviewOnly],
     ["display clamped", viewModel.identity.displayRoleClamped],
-    ["selector capability", viewModel.identity.canViewSelector],
+    ["selector visible", viewModel.identity.canViewSelector],
   ]);
 
   appendSection(article, "Current project", [
