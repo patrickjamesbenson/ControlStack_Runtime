@@ -1,3 +1,4 @@
+import { createAdminToolRegistry } from "./adminToolRegistry.js";
 import { createAuthService } from "./authService.js";
 import { createAuthorityService } from "./authorityService.js";
 import { createContractDiagnostics } from "./contracts.js";
@@ -43,8 +44,10 @@ export function createShellServices() {
   const crmAdapter = createCrmService({ eventBus });
   const authorityAdapter = createAuthorityService({ eventBus });
   const timelinePolicyAdapter = createTimelinePolicyService({ eventBus });
+  const adminToolRegistry = createAdminToolRegistry();
 
   return {
+    adminTools: adminToolRegistry,
     auth: authAdapter,
     identity: identityAdapter,
     authority: authorityAdapter,
@@ -194,6 +197,7 @@ export function createShellServices() {
             emailSendLive: false,
             hubspotWriteLive: false,
           },
+          adminTools: adminToolRegistry.getStatusSnapshot(),
           timelinePolicy: {
             owner: timelinePolicy.owner,
             status: timelinePolicy.status,
