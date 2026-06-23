@@ -109,14 +109,98 @@ function canViewShellContractSection(contract, context) {
   return contract.contactRolesView.includes(role) || contract.identityStatesView.includes(identityState);
 }
 
+function canViewDeveloperDetails(context) {
+  return canViewShellContractSection(SHELL_DEVELOPER_DIAGNOSTICS_CONTRACT, context);
+}
+
+function createLocalDeveloperSummary(label) {
+  const summary = document.createElement("summary");
+  summary.className = "cs-shell__local-dev-toggle";
+  summary.title = label;
+  summary.setAttribute("aria-label", label);
+  const marker = document.createElement("span");
+  marker.setAttribute("aria-hidden", "true");
+  marker.textContent = "d";
+  const text = document.createElement("span");
+  text.className = "cs-shell__sr-only";
+  text.textContent = label;
+  summary.append(marker, text);
+  return summary;
+}
+
+function ensureLocalDeveloperDetails(anchor, id, label) {
+  if (!anchor) return null;
+  let details = document.getElementById(id);
+  if (!details) {
+    details = document.createElement("details");
+    details.id = id;
+    details.className = "cs-shell__local-dev-details";
+    details.dataset.fieldKey = id;
+    details.appendChild(createLocalDeveloperSummary(label));
+    const body = document.createElement("div");
+    body.className = "cs-shell__local-dev-body";
+    details.appendChild(body);
+    anchor.insertAdjacentElement("afterend", details);
+  }
+  return details;
+}
+
+function renderLocalDeveloperRows({ anchor, context, id, label, rows }) {
+  const details = ensureLocalDeveloperDetails(anchor, id, label);
+  if (!details) return;
+  const visible = canViewDeveloperDetails(context);
+  details.hidden = !visible;
+  if (!visible) details.open = false;
+  const body = details.querySelector(".cs-shell__local-dev-body");
+  if (!body) return;
+  clearElement(body);
+  const list = document.createElement("dl");
+  list.className = "cs-shell__local-dev-list";
+  appendDefinitionListRows(list, rows);
+  body.appendChild(list);
+}
+
 function renderDeveloperDiagnosticsAccess(context) {
   if (!developerDiagnosticsDetails) return;
-  const visible = canViewShellContractSection(SHELL_DEVELOPER_DIAGNOSTICS_CONTRACT, context);
+  const visible = canViewDeveloperDetails(context);
   developerDiagnosticsDetails.hidden = !visible;
   developerDiagnosticsDetails.dataset.contractHeading = SHELL_DEVELOPER_DIAGNOSTICS_CONTRACT.heading;
   developerDiagnosticsDetails.dataset.contactRolesView = SHELL_DEVELOPER_DIAGNOSTICS_CONTRACT.contactRolesView.join(",");
   developerDiagnosticsDetails.dataset.identityStatesView = SHELL_DEVELOPER_DIAGNOSTICS_CONTRACT.identityStatesView.join(",");
   if (!visible) developerDiagnosticsDetails.open = false;
+}
+
+function ensureDeveloperButton(container, label) {
+  let button = container.querySelector(":scope > .cs-shell__local-dev-button");
+  if (!button) {
+    button = document.createElement("button");
+    button.type = "button";
+    button.className = "cs-shell__local-dev-button";
+    button.title = label;
+    button.setAttribute("aria-label", label);
+    button.textContent = "d";
+    button.addEventListener("click", () => {
+      const isOpen = container.dataset.devOpen === "true";
+      container.dataset.devOpen = isOpen ? "false" : "true";
+      button.setAttribute("aria-expanded", isOpen ? "false" : "true");
+    });
+    container.prepend(button);
+  }
+  return button;
+}
+
+function renderDeveloperOnlyContainer(container, context, label) {
+  if (!container) return;
+  const visible = canViewDeveloperDetails(context);
+  container.dataset.shellDeveloperOnly = "true";
+  container.hidden = !visible;
+  if (!visible) {
+    container.dataset.devOpen = "false";
+    return;
+  }
+  if (!container.dataset.devOpen) container.dataset.devOpen = "false";
+  const button = ensureDeveloperButton(container, label);
+  button.setAttribute("aria-expanded", container.dataset.devOpen === "true" ? "true" : "false");
 }
 
 function setUserMenuOpen(isOpen) {
@@ -152,7 +236,7 @@ function ensureProjectBrowserPanel() {
   const heading = document.createElement("h3");
   heading.textContent = "Project Browser";
   const note = document.createElement("p");
-  note.textContent = "Save, restore, hydrate, and prepare handoff/share packages without changing module ownership.";
+  note.textContent = "Save, restore, and prepare handoff/share packages for the current project.";
   projectBrowserSaveButton = document.createElement("button");
   projectBrowserSaveButton.type = "button";
   projectBrowserSaveButton.className = "cs-shell__project-browser-save";
@@ -227,18 +311,10 @@ function renderAccountOverview(context) {
   const activeName = context.auth.session?.name || context.identity.currentUser?.name || "Anonymous visitor";
   const activeEmail = context.auth.session?.email || context.auth.user?.email || "none";
   const authorityRole = context.authority?.actualRole?.value || context.identity.actualRole || "external_user";
-  const authoritySource = context.authority?.actualRole?.source || context.identity.actualRoleSource || "safe-fallback";
-  const crmStatus = context.crm?.hubspot?.status || "not-run";
-  const crmMode = context.crm?.hubspot?.readOnly === false ? "write-risk" : "read-only";
-  const visibleCount = context.visibility?.visibleModules?.length ?? 0;
-  const hiddenCount = context.visibility?.hiddenModules?.length ?? 0;
   appendDefinitionListRows(accountSummary, [
     ["identity", `${activeName}${activeEmail !== "none" ? ` · ${activeEmail}` : ""}`],
-    ["role / source", `${authorityRole} · ${authoritySource}`],
-    ["auth", context.auth.status || "signed-out"],
-    ["HubSpot / CRM", `${crmStatus} · ${crmMode}`],
+    ["role", authorityRole],
     ["company", context.company.companyName || "No company linked"],
-    ["visibility", `${context.visibility?.status || "ready"} · ${visibleCount} visible / ${hiddenCount} hidden`],
   ]);
 }
 
@@ -284,22 +360,34 @@ function renderCompanyControls({ services, context }) {
   }
   companySelect.value = context.crm.selectedCompanyId || "";
   appendDefinitionListRows(companySummary, [
-    ["owner", context.company.owner || "shell"],
-    ["status", context.company.status || "no-company"],
     ["company", context.company.companyName || "No company linked"],
-    ["id", context.company.companyId || "none"],
-    ["source", context.company.source || "fallback"],
-    ["authority", context.authority?.companyAuthority?.status || "not-authority"],
-    ["project", context.company.linkedProjectId || "none"],
     ["domain", context.company.domain || "none"],
     ["contact", context.crm.contact?.email || "none"],
-    ["association", `${context.crm.association?.status || "none"}:${context.crm.association?.source || "none"}`],
-    ["assoc contact", context.crm.association?.contact?.contactId || "none"],
-    ["assoc company", context.crm.association?.company?.companyId || "none"],
-    ["assoc deal", context.crm.association?.deal?.dealId || "none"],
-    ["crm read", `${context.crm.hubspot?.status || "not-run"}:${context.crm.hubspot?.readOnly === false ? "write-risk" : "read-only"}`],
-    ["writes", context.crm.writePolicy?.enabled ? "enabled" : "disabled"],
+    ["project", context.company.linkedProjectId || "none"],
   ]);
+  renderLocalDeveloperRows({
+    anchor: companySummary,
+    context,
+    id: "cs-shell-company-dev-details",
+    label: "Company context details",
+    rows: [
+      ["owner", context.company.owner || "shell"],
+      ["status", context.company.status || "no-company"],
+      ["company", context.company.companyName || "No company linked"],
+      ["id", context.company.companyId || "none"],
+      ["source", context.company.source || "fallback"],
+      ["authority", context.authority?.companyAuthority?.status || "not-authority"],
+      ["project", context.company.linkedProjectId || "none"],
+      ["domain", context.company.domain || "none"],
+      ["contact", context.crm.contact?.email || "none"],
+      ["association", `${context.crm.association?.status || "none"}:${context.crm.association?.source || "none"}`],
+      ["assoc contact", context.crm.association?.contact?.contactId || "none"],
+      ["assoc company", context.crm.association?.company?.companyId || "none"],
+      ["assoc deal", context.crm.association?.deal?.dealId || "none"],
+      ["crm read", `${context.crm.hubspot?.status || "not-run"}:${context.crm.hubspot?.readOnly === false ? "write-risk" : "read-only"}`],
+      ["writes", context.crm.writePolicy?.enabled ? "enabled" : "disabled"],
+    ],
+  });
   if (companyLinkButton) companyLinkButton.disabled = !companySelect.value;
   if (companyProjectButton) companyProjectButton.disabled = false;
   if (companyClearButton) companyClearButton.disabled = false;
@@ -341,6 +429,7 @@ function renderProjectSelection({ services, context }) {
   if (!projectSelect || !projectSummary) return;
   const projects = services.project.getAvailableProjects?.() || [];
   const selectedProjectId = context.project.selection?.selectedProjectId || context.project.currentProject?.projectId || "";
+  const currentProject = context.project.currentProject || {};
   clearElement(projectSelect);
   for (const project of projects) {
     const option = document.createElement("option");
@@ -350,24 +439,36 @@ function renderProjectSelection({ services, context }) {
   }
   projectSelect.value = projects.some((project) => project.projectId === selectedProjectId) ? selectedProjectId : "";
   appendDefinitionListRows(projectSummary, [
-    ["owner", context.project.owner],
-    ["status", context.project.status],
     ["project", readProjectTitle(context.project)],
-    ["id", selectedProjectId || "none"],
-    ["readiness", context.project.metadata?.readiness || "not-ready"],
-    ["source", context.project.selection?.source || context.project.metadata?.source || "unknown"],
+    ["client", currentProject.client || "No client loaded"],
+    ["site", currentProject.site || "No site loaded"],
     ["company", context.company.companyName || "No company linked"],
-    ["company source", context.company.source || "fallback"],
-    ["authority role", context.authority.actualRole?.value || "external_user"],
-    ["restored envelope", context.project.metadata?.restoredEnvelopeId || "none"],
-    ["restored at", context.project.metadata?.restoredAt || "none"],
-    ["save", context.project.save?.status || "deferred"],
-    ["restore", context.project.restore?.status || "deferred"],
-    ["hydrate", context.project.hydrate?.status || "idle"],
-    ["handoff/share", context.project.handoff?.status || "ready"],
-    ["last package", context.project.handoff?.lastPreparedPackageId || "none"],
-    ["delivery", context.project.handoff?.externalDelivery ? "live" : "deferred"],
   ]);
+  renderLocalDeveloperRows({
+    anchor: projectSummary,
+    context,
+    id: "cs-shell-project-dev-details",
+    label: "Project details",
+    rows: [
+      ["owner", context.project.owner],
+      ["status", context.project.status],
+      ["project", readProjectTitle(context.project)],
+      ["id", selectedProjectId || "none"],
+      ["readiness", context.project.metadata?.readiness || "not-ready"],
+      ["source", context.project.selection?.source || context.project.metadata?.source || "unknown"],
+      ["company", context.company.companyName || "No company linked"],
+      ["company source", context.company.source || "fallback"],
+      ["authority role", context.authority.actualRole?.value || "external_user"],
+      ["restored envelope", context.project.metadata?.restoredEnvelopeId || "none"],
+      ["restored at", context.project.metadata?.restoredAt || "none"],
+      ["save", context.project.save?.status || "deferred"],
+      ["restore", context.project.restore?.status || "deferred"],
+      ["hydrate", context.project.hydrate?.status || "idle"],
+      ["handoff/share", context.project.handoff?.status || "ready"],
+      ["last package", context.project.handoff?.lastPreparedPackageId || "none"],
+      ["delivery", context.project.handoff?.externalDelivery ? "live" : "deferred"],
+    ],
+  });
 }
 
 function renderProjectBrowser({ context }) {
@@ -382,19 +483,31 @@ function renderProjectBrowser({ context }) {
   const selected = selectedProjectSummary(browser);
   appendDefinitionListRows(projectBrowserSummary, [
     ["current", browser.currentProject?.title || "No project loaded"],
-    ["company", context.company.companyName || "No company linked"],
-    ["authority", `${context.authority.actualRole?.value || "external_user"}:${context.authority.actualRole?.source || "safe-fallback"}`],
-    ["selected envelope", browser.selectedProjectId || "none"],
-    ["selected restore", selected?.restoreEligible ? "enabled" : "disabled"],
-    ["runtime saved", browser.savedCount || 0],
-    ["fixtures", browser.fixtureCount || 0],
-    ["save", save.status || "ready"],
-    ["restore", restore.status || "ready"],
-    ["hydrate", hydrate.status || "idle"],
-    ["handoff/share", handoffShare.status || "ready"],
-    ["last package", handoffShare.lastPreparedPackageId || "none"],
-    ["delivery", handoffShare.delivery?.externalDelivery ? "live" : "deferred"],
+    ["saved projects", browser.savedCount || 0],
+    ["selected", selected?.title || "Select a saved project"],
+    ["handoff/share", handoffShare.lastPreparedPackageId || "Ready"],
   ]);
+  renderLocalDeveloperRows({
+    anchor: projectBrowserSummary,
+    context,
+    id: "cs-shell-project-actions-dev-details",
+    label: "Project action details",
+    rows: [
+      ["current", browser.currentProject?.title || "No project loaded"],
+      ["company", context.company.companyName || "No company linked"],
+      ["authority", `${context.authority.actualRole?.value || "external_user"}:${context.authority.actualRole?.source || "safe-fallback"}`],
+      ["selected envelope", browser.selectedProjectId || "none"],
+      ["selected restore", selected?.restoreEligible ? "enabled" : "disabled"],
+      ["runtime saved", browser.savedCount || 0],
+      ["fixtures", browser.fixtureCount || 0],
+      ["save", save.status || "ready"],
+      ["restore", restore.status || "ready"],
+      ["hydrate", hydrate.status || "idle"],
+      ["handoff/share", handoffShare.status || "ready"],
+      ["last package", handoffShare.lastPreparedPackageId || "none"],
+      ["delivery", handoffShare.delivery?.externalDelivery ? "live" : "deferred"],
+    ],
+  });
   if (projectBrowserSaveButton) {
     projectBrowserSaveButton.disabled = browser.capabilities?.save !== true;
     projectBrowserSaveButton.textContent = save.status === "saving" ? "Saving..." : "Save Project";
@@ -426,9 +539,8 @@ function renderProjectBrowser({ context }) {
     item.dataset.envelopeId = project.envelopeId || project.projectId;
     item.tabIndex = 0;
     appendProjectBrowserLine(item, project.title, "strong");
-    appendProjectBrowserLine(item, `${project.readOnly ? "fixture" : "runtime save"} · restore ${project.restoreEligible ? "enabled" : "disabled"}`);
     appendProjectBrowserLine(item, `${project.client} · ${project.site}`);
-    appendProjectBrowserLine(item, `handoff/share: ${packageSummary.envelopeId === project.envelopeId ? `prepared ${packageSummary.packageId}` : "not prepared"}`);
+    appendProjectBrowserLine(item, project.restoreEligible ? "Ready to open" : "Reference only");
     projectBrowserList.appendChild(item);
   }
 }
@@ -518,6 +630,47 @@ function markActiveLink(moduleId) {
   }
 }
 
+function moduleLabel(moduleId) {
+  const labels = {
+    cs_selector: "CS Selector",
+    scene_builder: "Scene Builder",
+    emergence: "Emergency / EGRES",
+    workspace_home: "Workspace Home",
+  };
+  return labels[moduleId] || moduleId;
+}
+
+function renderModuleDeveloperSurface(context) {
+  if (!moduleHost) return;
+  const debugSurface = moduleHost.querySelector(":scope > .cs-selector-proof");
+  if (!debugSurface || debugSurface.closest(".cs-shell__local-dev-body")) return;
+
+  let userSurface = moduleHost.querySelector(":scope > .cs-shell__module-user-surface");
+  if (!userSurface) {
+    userSurface = document.createElement("article");
+    userSurface.className = "cs-shell__module-user-surface";
+    const eyebrow = document.createElement("p");
+    eyebrow.className = "cs-shell__eyebrow";
+    eyebrow.textContent = moduleLabel(context.route.moduleId);
+    const heading = document.createElement("h2");
+    heading.textContent = `${moduleLabel(context.route.moduleId)} workspace`;
+    const body = document.createElement("p");
+    body.textContent = "The shell has mounted this module. User-facing module controls will replace the migration surface as the module is reimplemented.";
+    userSurface.append(eyebrow, heading, body);
+    debugSurface.insertAdjacentElement("beforebegin", userSurface);
+  }
+
+  const details = ensureLocalDeveloperDetails(userSurface, `cs-shell-${context.route.moduleId}-module-dev-details`, "Module implementation details");
+  if (!details) return;
+  const visible = canViewDeveloperDetails(context);
+  details.hidden = !visible;
+  if (!visible) details.open = false;
+  const body = details.querySelector(".cs-shell__local-dev-body");
+  if (!body) return;
+  clearElement(body);
+  body.appendChild(debugSurface);
+}
+
 function renderUnknownModuleFallback({ route, registry }) {
   clearElement(moduleHost);
   const article = document.createElement("article");
@@ -597,7 +750,7 @@ function scheduleOptionalDiagnosticsPlugin({ services, getContext, registry, onP
   const pluginId = "diagnostics";
   setTimeout(async () => {
     try {
-      pluginHost.hidden = false;
+      pluginHost.hidden = true;
       pluginRegistry.markLoading(pluginId);
       const { diagnosticsPlugin } = await import("/packages/plugins/diagnostics/index.js");
       pluginRegistry.register(pluginId, diagnosticsPlugin);
@@ -613,12 +766,14 @@ function scheduleOptionalDiagnosticsPlugin({ services, getContext, registry, onP
         context: getContext(),
         pluginContext: buildPluginContext({ pluginRegistry, registry, route: getContext().route }),
       });
+      renderDeveloperOnlyContainer(pluginHost, getContext(), "Optional diagnostics panel");
       onPluginReady?.({ diagnosticsPlugin, pluginRegistry });
       services.eventBus.emit("plugin:mounted", { pluginId, optional: true, postRender: true });
     } catch (error) {
       console.warn("[workspace-shell] optional diagnostics plugin failed", error);
       pluginRegistry.markFailed(pluginId, error);
       renderPluginFailure({ pluginId, error });
+      renderDeveloperOnlyContainer(pluginHost, getContext(), "Optional diagnostics panel");
       services.eventBus.emit("plugin:failed", { pluginId, optional: true, postRender: true, error });
     }
   }, 0);
@@ -650,13 +805,16 @@ function bootWorkspaceShell() {
     renderProjectSelection({ services, context });
     renderProjectBrowser({ context });
     renderIdentityVisibilityControls({ services, context });
+    renderDeveloperOnlyContainer(pluginHost, context, "Optional diagnostics panel");
     markActiveLink(route.moduleId);
     mountedModuleApi?.update?.(context);
+    renderModuleDeveloperSurface(context);
     if (diagnosticsPluginApi && diagnosticsPluginRegistry) {
       diagnosticsPluginApi.update?.({
         context,
         pluginContext: buildPluginContext({ pluginRegistry: diagnosticsPluginRegistry, registry, route }),
       });
+      renderDeveloperOnlyContainer(pluginHost, context, "Optional diagnostics panel");
     }
     services.eventBus.emit("shell:context-updated", { reason, context });
     return context;
@@ -869,6 +1027,7 @@ function bootWorkspaceShell() {
   try {
     mountedModuleApi = moduleApi;
     moduleApi.mount({ container: moduleHost, services, context });
+    renderModuleDeveloperSurface(context);
     setStatus(`Mounted ${route.moduleId}. Authority is shell-owned and read-only; NVB is used when available.`);
     services.eventBus.emit("module:mounted", { moduleId: route.moduleId, route });
     scheduleOptionalDiagnosticsPlugin({ services, getContext: () => context, registry, onPluginReady: rememberDiagnosticsPlugin });
