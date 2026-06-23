@@ -301,8 +301,9 @@ function setAssistiveCompanyTextMode({ focus = false } = {}) {
 function setAssistiveCompanyLogoMode(domain, url) {
   if (companyIdentityState.userLocked || companyIdentityState.companyNameSource === "user") return;
   if (!assistiveCompanyLogoImage || !assistiveCompanyLogoButton || !assistiveCompanyNameInput) return;
+  const logoAlt = assistiveCompanyNameInput.value.trim() || domain;
   assistiveCompanyLogoImage.src = url;
-  assistiveCompanyLogoImage.alt = "";
+  assistiveCompanyLogoImage.alt = logoAlt;
   assistiveCompanyNameInput.hidden = true;
   assistiveCompanyLogoButton.hidden = false;
   if (assistiveCompanyPill) assistiveCompanyPill.dataset.mode = "logo";
@@ -374,16 +375,20 @@ function scheduleAssistiveEmailDomainChange() {
 }
 
 function handleAssistiveCompanyNameInput() {
-  companyIdentityState.userEditedCompanyName = true;
-  companyIdentityState.companyNameSource = "user";
+  const value = assistiveCompanyNameInput?.value?.trim() || "";
+  companyIdentityState.userLocked = true;
+  companyIdentityState.companyNameSource = value ? "user" : "empty";
   companyIdentityState.logoRequestId += 1;
   setAssistiveCompanyTextMode();
-  setAssistiveCompanyStatus("Company name is user-entered. It will not be overwritten by email-domain suggestions this session.");
+  setAssistiveCompanyStatus(value
+    ? "Company name is user-entered. It will not be overwritten by email-domain suggestions this session."
+    : "Company helper cleared. Email-domain suggestions and logo swaps remain locked for this session.");
 }
 
 function handleAssistiveCompanyLogoOverride() {
-  companyIdentityState.userEditedCompanyName = true;
-  companyIdentityState.companyNameSource = "user";
+  const value = assistiveCompanyNameInput?.value?.trim() || "";
+  companyIdentityState.userLocked = true;
+  companyIdentityState.companyNameSource = value ? "user" : "empty";
   companyIdentityState.logoRequestId += 1;
   setAssistiveCompanyTextMode({ focus: true });
   setAssistiveCompanyStatus("Logo hidden. Edit the company name text directly. Email-domain suggestions will not overwrite it this session.");
