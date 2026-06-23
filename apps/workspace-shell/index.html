@@ -105,6 +105,22 @@
               </div>
             </section>
 
+            <section class="cs-shell__assistive-company-card" aria-label="Assistive company identity helper">
+              <p class="cs-shell__section-kicker">Company helper</p>
+              <h3>Email-domain helper</h3>
+              <p>Optional helper only. It does not change sign-in, authority, CRM company context, or project state.</p>
+              <label for="cs-shell-assist-email-input">Workspace email helper</label>
+              <input id="cs-shell-assist-email-input" type="email" autocomplete="email" placeholder="name@company.com" spellcheck="false" />
+              <label for="cs-shell-assist-company-name-input">Suggested company name</label>
+              <div id="cs-shell-assist-company-pill" class="cs-shell__company-identity-pill" data-mode="text-input">
+                <input id="cs-shell-assist-company-name-input" type="text" autocomplete="organization" placeholder="Company name" />
+                <button id="cs-shell-assist-company-logo-button" class="cs-shell__company-logo-button" type="button" hidden aria-label="Company logo found. Click to edit company name.">
+                  <img id="cs-shell-assist-company-logo-image" alt="" />
+                </button>
+              </div>
+              <p id="cs-shell-assist-company-status" class="cs-shell__assistive-status">Enter a work email to suggest a company name. This is assistive only.</p>
+            </section>
+
             <details
               id="shell_developer_diagnostics"
               class="cs-shell__developer-details"

@@ -63,6 +63,64 @@ function readCredentialsEnv(name, fallback = "same-origin") {
   return ["omit", "same-origin", "include"].includes(value) ? value : fallback;
 }
 
+const DEFAULT_COMPANY_IDENTITY_OVERRIDE_MAP = Object.freeze({
+  "novonlighting.com.au": "Novon Lighting",
+});
+
+const DEFAULT_COMPANY_IDENTITY_FREEMAIL_BLOCKLIST = Object.freeze([
+  "gmail.com",
+  "outlook.com",
+  "hotmail.com",
+  "live.com",
+  "yahoo.com",
+  "icloud.com",
+  "proton.me",
+  "bigpond.com",
+  "bigpond.net.au",
+  "optusnet.com.au",
+  "tpg.com.au",
+  "iinet.net.au",
+  "internode.on.net",
+]);
+
+const DEFAULT_COMPANY_IDENTITY_PUBLIC_SUFFIXES = Object.freeze([
+  ".com.au",
+  ".net.au",
+  ".org.au",
+  ".edu.au",
+  ".gov.au",
+  ".asn.au",
+  ".id.au",
+  ".co.nz",
+  ".co.uk",
+  ".com",
+  ".net",
+  ".org",
+  ".io",
+  ".co",
+]);
+
+function readJsonObjectEnv(name, fallback = {}) {
+  const raw = readTextEnv(name);
+  if (!raw) return { ...fallback };
+  try {
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return { ...fallback };
+    return { ...fallback, ...parsed };
+  } catch {
+    return { ...fallback };
+  }
+}
+
+function buildCompanyIdentityConfig() {
+  return {
+    logoDevPublishableKey: readTextEnv("LOGODEV_PUBLISHABLE_KEY"),
+    overrideMap: readJsonObjectEnv("CONTROLSTACK_COMPANY_IDENTITY_OVERRIDE_MAP", DEFAULT_COMPANY_IDENTITY_OVERRIDE_MAP),
+    freemailBlocklist: [...DEFAULT_COMPANY_IDENTITY_FREEMAIL_BLOCKLIST],
+    publicSuffixes: [...DEFAULT_COMPANY_IDENTITY_PUBLIC_SUFFIXES],
+  };
+}
+
 function buildRuntimeConfig() {
   const endpoint = String(process.env.CONTROLSTACK_NVB_AUTHORITY_ENDPOINT || NVB_READ_PATH).trim();
   const enabled = readBooleanEnv("CONTROLSTACK_NVB_AUTHORITY_ENABLED", Boolean(endpoint));
@@ -77,6 +135,7 @@ function buildRuntimeConfig() {
       emailQueryParam: String(process.env.CONTROLSTACK_NVB_AUTHORITY_EMAIL_QUERY_PARAM || "email").trim() || "email",
       headers: {},
     },
+    companyIdentity: buildCompanyIdentityConfig(),
   };
 }
 

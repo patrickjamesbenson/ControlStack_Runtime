@@ -63,6 +63,12 @@ const contextInspectorButton = document.getElementById("cs-shell-context-inspect
 const contextInspector = document.getElementById("cs-shell-context-inspector");
 const contextInspectorClose = document.getElementById("cs-shell-context-inspector-close");
 const contextInspectorContent = document.getElementById("cs-shell-context-inspector-content");
+const assistiveEmailInput = document.getElementById("cs-shell-assist-email-input");
+const assistiveCompanyPill = document.getElementById("cs-shell-assist-company-pill");
+const assistiveCompanyNameInput = document.getElementById("cs-shell-assist-company-name-input");
+const assistiveCompanyLogoButton = document.getElementById("cs-shell-assist-company-logo-button");
+const assistiveCompanyLogoImage = document.getElementById("cs-shell-assist-company-logo-image");
+const assistiveCompanyStatus = document.getElementById("cs-shell-assist-company-status");
 
 const SHELL_ROLE_ORDER = Object.freeze(["external_user", "internal_user", "internal_engineer", "developer", "admin"]);
 const SHELL_DEVELOPER_DIAGNOSTICS_CONTRACT = Object.freeze({
@@ -89,6 +95,16 @@ let projectBrowserSaveButton = null;
 let projectBrowserRestoreButton = null;
 let projectBrowserHandoffButton = null;
 let shellTopbarBound = false;
+
+const companyIdentityState = {
+  debounceId: null,
+  companyNameSource: "empty",
+  userLocked: false,
+  currentDomain: null,
+  logoRequestId: 0,
+  derivedNameCache: new Map(),
+  logoCache: new Map(),
+};
 
 function setStatus(message) {
   if (statusEl) statusEl.textContent = message;
@@ -207,6 +223,176 @@ function dispatchLegacyChange(select, value) {
   if (!select) return;
   select.value = value;
   select.dispatchEvent(new Event("change", { bubbles: true }));
+}
+
+function companyIdentityConfig() {
+  return globalThis.__CONTROLSTACK_RUNTIME_CONFIG__?.companyIdentity || {};
+}
+
+function companyIdentityRuntimeSets() {
+  const config = companyIdentityConfig();
+  return {
+    overrideMap: config.overrideMap && typeof config.overrideMap === "object" ? config.overrideMap : {},
+    freemailBlocklist: new Set(Array.isArray(config.freemailBlocklist) ? config.freemailBlocklist.map((item) => String(item).toLowerCase()) : []),
+    publicSuffixes: Array.isArray(config.publicSuffixes) ? [...config.publicSuffixes].map(String).sort((a, b) => b.length - a.length) : [],
+    logoDevPublishableKey: String(config.logoDevPublishableKey || "").trim(),
+  };
+}
+
+function parseEmailDomain(value) {
+  const email = String(value || "").trim().toLowerCase();
+  const atIndex = email.lastIndexOf("@");
+  if (atIndex <= 0 || atIndex === email.length - 1) return null;
+  let domain = email.slice(atIndex + 1).trim().replace(/\s+/g, "");
+  if (!domain || !domain.includes(".") || domain.startsWith(".") || domain.endsWith(".")) return null;
+  for (const prefix of ["mail.", "smtp.", "mx."]) {
+    if (domain.startsWith(prefix)) domain = domain.slice(prefix.length);
+  }
+  return domain || null;
+}
+
+function splitCompanyLabel(label) {
+  return String(label || "")
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .split(/[\-_\s]+/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+}
+
+function titleCaseCompanyWords(words) {
+  return words.map((word) => {
+    const lower = word.toLowerCase();
+    if (lower.length <= 3 && /^[a-z0-9]+$/i.test(word)) return lower.toUpperCase();
+    return lower.slice(0, 1).toUpperCase() + lower.slice(1);
+  }).join(" ");
+}
+
+function deriveCompanyNameFromDomain(domain) {
+  if (companyIdentityState.derivedNameCache.has(domain)) return companyIdentityState.derivedNameCache.get(domain);
+  const { overrideMap, publicSuffixes } = companyIdentityRuntimeSets();
+  const override = overrideMap[domain];
+  if (override) {
+    companyIdentityState.derivedNameCache.set(domain, override);
+    return override;
+  }
+  const suffix = publicSuffixes.find((candidate) => domain.endsWith(candidate)) || "";
+  if (!suffix) {
+    companyIdentityState.derivedNameCache.set(domain, "");
+    return "";
+  }
+  const base = domain.slice(0, -suffix.length);
+  const label = (base.split(".").filter(Boolean).pop() || "").trim();
+  const suggestion = titleCaseCompanyWords(splitCompanyLabel(label));
+  companyIdentityState.derivedNameCache.set(domain, suggestion);
+  return suggestion;
+}
+
+function setAssistiveCompanyStatus(message) {
+  if (assistiveCompanyStatus) assistiveCompanyStatus.textContent = message;
+}
+
+function setAssistiveCompanyTextMode({ focus = false } = {}) {
+  if (assistiveCompanyPill) assistiveCompanyPill.dataset.mode = "text-input";
+  if (assistiveCompanyNameInput) assistiveCompanyNameInput.hidden = false;
+  if (assistiveCompanyLogoButton) assistiveCompanyLogoButton.hidden = true;
+  if (focus) assistiveCompanyNameInput?.focus?.();
+}
+
+function setAssistiveCompanyLogoMode(domain, url) {
+  if (companyIdentityState.userLocked || companyIdentityState.companyNameSource === "user") return;
+  if (!assistiveCompanyLogoImage || !assistiveCompanyLogoButton || !assistiveCompanyNameInput) return;
+  assistiveCompanyLogoImage.src = url;
+  assistiveCompanyLogoImage.alt = "";
+  assistiveCompanyNameInput.hidden = true;
+  assistiveCompanyLogoButton.hidden = false;
+  if (assistiveCompanyPill) assistiveCompanyPill.dataset.mode = "logo";
+  setAssistiveCompanyStatus("Logo found. This is a visual hint only; click the logo to edit the company name.");
+}
+
+function writeAssistiveCompanySuggestion(suggestion) {
+  if (!assistiveCompanyNameInput || !suggestion) return;
+  if (companyIdentityState.userLocked) return;
+  if (!["empty", "suggested"].includes(companyIdentityState.companyNameSource)) return;
+  assistiveCompanyNameInput.value = suggestion;
+  companyIdentityState.companyNameSource = "suggested";
+}
+
+function lookupCompanyLogo(domain) {
+  const { logoDevPublishableKey } = companyIdentityRuntimeSets();
+  if (!logoDevPublishableKey || companyIdentityState.userLocked || companyIdentityState.companyNameSource === "user") return;
+  if (companyIdentityState.logoCache.has(domain)) {
+    const cached = companyIdentityState.logoCache.get(domain);
+    if (cached?.found) setAssistiveCompanyLogoMode(domain, cached.url);
+    return;
+  }
+  const requestId = ++companyIdentityState.logoRequestId;
+  const url = `https://img.logo.dev/${encodeURIComponent(domain)}?token=${encodeURIComponent(logoDevPublishableKey)}&fallback=404`;
+  const image = new Image();
+  image.onload = () => {
+    companyIdentityState.logoCache.set(domain, { found: true, url });
+    if (requestId !== companyIdentityState.logoRequestId) return;
+    if (companyIdentityState.currentDomain !== domain) return;
+    setAssistiveCompanyLogoMode(domain, url);
+  };
+  image.onerror = () => {
+    companyIdentityState.logoCache.set(domain, { found: false, url: null });
+    if (requestId !== companyIdentityState.logoRequestId) return;
+    if (companyIdentityState.currentDomain !== domain) return;
+    setAssistiveCompanyTextMode();
+    setAssistiveCompanyStatus("No logo was found. You can continue with the editable company name.");
+  };
+  image.src = url;
+}
+
+function handleAssistiveEmailDomainChange() {
+  const domain = parseEmailDomain(assistiveEmailInput?.value);
+  if (!domain) return;
+  const { freemailBlocklist } = companyIdentityRuntimeSets();
+  companyIdentityState.currentDomain = domain;
+  companyIdentityState.logoRequestId += 1;
+  if (freemailBlocklist.has(domain)) {
+    setAssistiveCompanyTextMode();
+    setAssistiveCompanyStatus("Personal or ISP email detected. No company suggestion or logo lookup was run.");
+    return;
+  }
+  if (companyIdentityState.userLocked || companyIdentityState.companyNameSource === "user") {
+    setAssistiveCompanyTextMode();
+    setAssistiveCompanyStatus("Company name is user-entered, so email changes will not overwrite it or swap to a logo this session.");
+    return;
+  }
+  const suggestion = deriveCompanyNameFromDomain(domain);
+  writeAssistiveCompanySuggestion(suggestion);
+  setAssistiveCompanyTextMode();
+  setAssistiveCompanyStatus(suggestion ? `Suggested ${suggestion} from ${domain}.` : `No company suggestion derived from ${domain}.`);
+  if (!suggestion) return;
+  lookupCompanyLogo(domain);
+}
+
+function scheduleAssistiveEmailDomainChange() {
+  window.clearTimeout(companyIdentityState.debounceId);
+  companyIdentityState.debounceId = window.setTimeout(handleAssistiveEmailDomainChange, 400);
+}
+
+function handleAssistiveCompanyNameInput() {
+  companyIdentityState.userEditedCompanyName = true;
+  companyIdentityState.companyNameSource = "user";
+  companyIdentityState.logoRequestId += 1;
+  setAssistiveCompanyTextMode();
+  setAssistiveCompanyStatus("Company name is user-entered. It will not be overwritten by email-domain suggestions this session.");
+}
+
+function handleAssistiveCompanyLogoOverride() {
+  companyIdentityState.userEditedCompanyName = true;
+  companyIdentityState.companyNameSource = "user";
+  companyIdentityState.logoRequestId += 1;
+  setAssistiveCompanyTextMode({ focus: true });
+  setAssistiveCompanyStatus("Logo hidden. Edit the company name text directly. Email-domain suggestions will not overwrite it this session.");
+}
+
+function bindAssistiveCompanyIdentityHelper() {
+  assistiveEmailInput?.addEventListener("input", scheduleAssistiveEmailDomainChange);
+  assistiveCompanyNameInput?.addEventListener("input", handleAssistiveCompanyNameInput);
+  assistiveCompanyLogoButton?.addEventListener("click", handleAssistiveCompanyLogoOverride);
 }
 
 function clickLegacy(selector) {
@@ -1395,6 +1581,7 @@ function bootWorkspaceShell() {
   registry.register("scene_builder", sceneBuilderModule);
   ensureModuleNavLink("scene_builder", "Scene Builder");
   bindShellTopbarControls();
+  bindAssistiveCompanyIdentityHelper();
 
   refreshContext("initial-render");
   userMenuButton?.addEventListener("click", handleUserMenuToggle);
