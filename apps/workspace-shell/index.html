@@ -24,19 +24,20 @@
         <div class="cs-shell__topbar-center" aria-label="Shell context controls">
           <div class="cs-shell__topbar-context" aria-label="Workspace context">
             <div class="cs-shell__topbar-chip-wrap">
-              <button id="cs-shell-timeline-chip" class="cs-shell__context-chip" type="button" aria-expanded="false" aria-controls="cs-shell-timeline-popout" aria-label="Timeline: view today's workspace timeline. Date range and status filters are planned for a later slice." title="Timeline: view today's workspace timeline. Date range and status filters are planned for a later slice.">
+              <button id="cs-shell-timeline-chip" class="cs-shell__context-chip" type="button" aria-expanded="false" aria-controls="cs-shell-timeline-popout" aria-label="Timeline: view today's live workspace timeline. Project requirement dates and future product access are planned for later slices." title="Timeline: view today's live workspace timeline. Project requirement dates and future product access are planned for later slices.">
                 <span aria-hidden="true">◷</span>
                 <span>Timeline</span>
                 <span id="cs-shell-timeline-chip-label">Today</span>
               </button>
               <div id="cs-shell-timeline-popout" class="cs-shell__topbar-popout" hidden>
                 <p class="cs-shell__section-kicker">Timeline</p>
-                <h3>Today</h3>
-                <p>Use this to check the active project timeline. This slice only relocates the entry point; filtering remains deferred.</p>
+                <h3>Today / Live</h3>
+                <p>Use this to check today’s live workspace timeline and the active project requirement date. Future products will require Timeline access.</p>
+                <p>Compatibility foundation is in place: stored NVB status <strong>staged</strong> and future status <strong>scheduled</strong> are treated internally as Scheduled.</p>
                 <div class="cs-shell__chip-row" aria-label="Timeline placeholder filters">
-                  <span class="cs-shell__filter-chip is-selected">Today</span>
-                  <span class="cs-shell__filter-chip">Range later</span>
-                  <span class="cs-shell__filter-chip">Status filters later</span>
+                  <span class="cs-shell__filter-chip is-selected">Today / Live</span>
+                  <span class="cs-shell__filter-chip">Requirement date later</span>
+                  <span class="cs-shell__filter-chip">Scheduled compatibility ready</span>
                 </div>
               </div>
             </div>

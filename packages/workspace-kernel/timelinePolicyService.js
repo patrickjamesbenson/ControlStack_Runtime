@@ -8,8 +8,71 @@ const STATUS_POLICIES = Object.freeze({
   admin: Object.freeze(["concept", "submitted", "customer_review", "internal_review", "engineering_review", "approved", "on_hold", "archived"]),
 });
 
+const TIMELINE_LIFECYCLE_STATUS_ALIASES = Object.freeze({
+  business_case: "business_case",
+  "business-case": "business_case",
+  "business case": "business_case",
+  roadmap: "roadmap",
+  staged: "scheduled",
+  scheduled: "scheduled",
+  available: "live",
+  approved: "live",
+  live: "live",
+});
+
+const TIMELINE_LIFECYCLE_STATUS_LABELS = Object.freeze({
+  business_case: "Business Case",
+  roadmap: "Roadmap",
+  scheduled: "Scheduled",
+  live: "Live",
+});
+
+const TIMELINE_LIFECYCLE_CANONICAL_STATUSES = Object.freeze(["business_case", "roadmap", "scheduled", "live"]);
+const TIMELINE_LIFECYCLE_COMPATIBILITY_KEYS = Object.freeze(["staged", "scheduled", "available", "approved", "live"]);
+
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
+}
+
+function normaliseStatusKey(value) {
+  return String(value || "").trim().toLowerCase().replace(/_/g, " ").replace(/\s+/g, " ");
+}
+
+export function normaliseTimelineLifecycleStatus(value, fallback = "business_case") {
+  const compactKey = String(value || "").trim().toLowerCase();
+  const spacedKey = normaliseStatusKey(value);
+  return TIMELINE_LIFECYCLE_STATUS_ALIASES[compactKey]
+    || TIMELINE_LIFECYCLE_STATUS_ALIASES[spacedKey]
+    || fallback;
+}
+
+export function timelineLifecycleStatusLabel(value, fallback = "Business Case") {
+  const canonical = normaliseTimelineLifecycleStatus(value, "");
+  return TIMELINE_LIFECYCLE_STATUS_LABELS[canonical] || fallback;
+}
+
+export function getTimelineLifecycleStatusPolicy() {
+  return {
+    canonicalStatuses: [...TIMELINE_LIFECYCLE_CANONICAL_STATUSES],
+    labels: { ...TIMELINE_LIFECYCLE_STATUS_LABELS },
+    aliases: { ...TIMELINE_LIFECYCLE_STATUS_ALIASES },
+    compatibility: {
+      staged: "scheduled",
+      scheduled: "scheduled",
+      available: "live",
+      approved: "live",
+      live: "live",
+    },
+    preferredUserLabels: {
+      staged: "Scheduled",
+      scheduled: "Scheduled",
+      available: "Live",
+      approved: "Live",
+      live: "Live",
+    },
+    source: "timeline-lifecycle-status-compatibility-foundation",
+    writeEnabled: false,
+  };
 }
 
 function roleRank(role) {
@@ -25,6 +88,39 @@ function stageFromProject(project = {}) {
   const current = project.currentProject || {};
   const metadata = project.metadata || {};
   return current.stage || metadata.stage || current.readiness || metadata.readiness || "unknown";
+}
+
+function explicitLifecycleStatusFromProject(project = {}) {
+  const current = project.currentProject || {};
+  const metadata = project.metadata || {};
+  return current.lifecycleStatus
+    || metadata.lifecycleStatus
+    || current.productLifecycleStatus
+    || metadata.productLifecycleStatus
+    || current.timelineLifecycleStatus
+    || metadata.timelineLifecycleStatus
+    || "";
+}
+
+function lifecycleStatusFromProject(project = {}) {
+  const rawStatus = explicitLifecycleStatusFromProject(project);
+  if (!rawStatus) {
+    return {
+      rawStatus: "",
+      canonicalStatus: "",
+      label: "Not set",
+      compatibilityApplied: false,
+    };
+  }
+
+  const normalisedRawStatus = String(rawStatus).trim().toLowerCase();
+  const canonicalStatus = normaliseTimelineLifecycleStatus(rawStatus, "");
+  return {
+    rawStatus,
+    canonicalStatus,
+    label: timelineLifecycleStatusLabel(canonicalStatus, "Not set"),
+    compatibilityApplied: TIMELINE_LIFECYCLE_COMPATIBILITY_KEYS.includes(normalisedRawStatus),
+  };
 }
 
 function dateValue(value) {
@@ -46,8 +142,12 @@ function projectDateContext(project = {}) {
   const startDate = current.startDate || metadata.startDate || null;
   const dueDate = current.dueDate || metadata.dueDate || metadata.requiredBy || null;
   const updatedAt = current.updatedAt || metadata.restoredAt || metadata.selectedAt || null;
+  const lifecycleStatus = lifecycleStatusFromProject(project);
   return {
     stage: stageFromProject(project),
+    lifecycleStatus,
+    lifecycleStatusLabel: lifecycleStatus.label,
+    projectRequirementDate: dueDate,
     startDate,
     startDatePosition: compareDate(startDate),
     dueDate,
@@ -143,6 +243,7 @@ export function createTimelinePolicyService({ eventBus } = {}) {
         source: `role-policy:${actualRole}`,
         selectorOwnsStatusRules: false,
       },
+      lifecycleStatusPolicy: getTimelineLifecycleStatusPolicy(),
       controls: {
         visible: controlsVisible,
         reason: controlsVisible ? "project-and-role-allow-controls" : "controls-hidden-by-shell-policy",
