@@ -9,6 +9,7 @@ const ROOT = resolve(process.cwd());
 const NVB_READ_PATH = "/api/nvb-" + String.fromCharCode(97, 117, 116, 104, 111, 114, 105, 116, 121) + "/read";
 const HUBSPOT_READ_PATH = "/api/hubspot/read";
 const HUBSPOT_AUTH_STATUS_PATH = "/api/hubspot/auth-status";
+const HUBSPOT_DEAL_PREFLIGHT_PATH = "/api/hubspot/deal-writeback/preflight";
 const AUTH_REF_STATUS_PATH = "/api/" + "authority-reference" + "/status";
 const AUTH_REF_SYNC_PATH = "/api/" + "authority-reference" + "/sync";
 const CONFIG_STATUS_PATH = "/api/runtime-config/status";
@@ -713,6 +714,138 @@ function publicHubspotAuthStatus(status = hubspotAuthStatus()) {
   return safeStatus;
 }
 
+function hubspotDealWritebackMappingStatus() {
+  const tenantId = envStatus({ primary: "CONTROLSTACK_TENANT_ID", aliases: ["CONTROLSTACK_OCCURRENCE_TENANT_ID"], valueKind: "tenant-id" });
+  const occurrenceId = envStatus({ primary: "CONTROLSTACK_OCCURRENCE_ID", valueKind: "occurrence-id" });
+  const providerProfile = envStatus({ primary: "CONTROLSTACK_HUBSPOT_PROVIDER_PROFILE_ID", valueKind: "provider-profile-id" });
+  const dealMappingProfile = envStatus({ primary: "CONTROLSTACK_HUBSPOT_DEAL_MAPPING_PROFILE_ID", valueKind: "mapping-profile-id" });
+  const contactMappingProfile = envStatus({ primary: "CONTROLSTACK_HUBSPOT_CONTACT_MAPPING_PROFILE_ID", valueKind: "mapping-profile-id" });
+  const companyMappingProfile = envStatus({ primary: "CONTROLSTACK_HUBSPOT_COMPANY_MAPPING_PROFILE_ID", valueKind: "mapping-profile-id" });
+  const pipelineId = envStatus({ primary: "CONTROLSTACK_HUBSPOT_DEAL_PIPELINE_ID", valueKind: "provider-pipeline-id" });
+  const defaultStageId = envStatus({ primary: "CONTROLSTACK_HUBSPOT_DEAL_STAGE_ID", valueKind: "provider-stage-id" });
+  return {
+    owner: "runtime-server",
+    provider: "hubspot",
+    status: dealMappingProfile.configured ? "mapping-profile-present" : "mapping-profile-missing",
+    tenantId,
+    occurrenceId,
+    providerProfile,
+    dealMappingProfile,
+    contactMappingProfile,
+    companyMappingProfile,
+    pipelineId,
+    defaultStageId,
+    mappingReadyForPreflight: dealMappingProfile.configured === true,
+    browserSecretsExposed: false,
+    nonSecretOnly: true,
+  };
+}
+
+function safeQueryValue(requestUrl, name) {
+  return cleanText(requestUrl.searchParams.get(name));
+}
+
+function hubspotDealWritebackPreflightRequest(requestUrl) {
+  const dealId = safeQueryValue(requestUrl, "dealId");
+  const requestedAction = safeQueryValue(requestUrl, "action") || (dealId ? "link-existing-deal" : "create-deal");
+  const allowedActions = new Set(["create-deal", "link-existing-deal", "update-linked-deal", "no-op"]);
+  return {
+    action: allowedActions.has(requestedAction) ? requestedAction : "no-op",
+    requestedAction,
+    projectId: safeQueryValue(requestUrl, "projectId"),
+    projectName: safeQueryValue(requestUrl, "projectName"),
+    projectStatus: safeQueryValue(requestUrl, "projectStatus"),
+    clientName: safeQueryValue(requestUrl, "clientName"),
+    siteName: safeQueryValue(requestUrl, "siteName"),
+    contactId: safeQueryValue(requestUrl, "contactId"),
+    companyId: safeQueryValue(requestUrl, "companyId"),
+    dealId,
+    associationSource: safeQueryValue(requestUrl, "associationSource") || "none",
+  };
+}
+
+function hubspotDealWritebackBlockers({ request, authStatus, mapping }) {
+  const blockers = [];
+  if (!authStatus.configured) {
+    blockers.push({ code: "hubspot-auth-unconfigured", severity: "blocking", reason: authStatus.reason });
+  }
+  if (!mapping.dealMappingProfile.configured) {
+    blockers.push({ code: "deal-mapping-profile-missing", severity: "blocking", reason: "No tenant/provider HubSpot deal mapping profile is configured." });
+  }
+  if (!request.projectId) {
+    blockers.push({ code: "project-id-missing", severity: "blocking", reason: "Project id is required for future project-scoped deal writeback." });
+  }
+  if (!request.projectName) {
+    blockers.push({ code: "project-name-missing", severity: "blocking", reason: "Project name is required for future deal naming/mapping." });
+  }
+  if (!request.contactId && !request.companyId && !request.dealId) {
+    blockers.push({ code: "crm-association-missing", severity: "blocking", reason: "At least one contact, company, or existing deal association is required for future writeback." });
+  }
+  if (["link-existing-deal", "update-linked-deal"].includes(request.action) && !request.dealId) {
+    blockers.push({ code: "deal-id-missing", severity: "blocking", reason: "Existing deal id is required for link/update preflight." });
+  }
+  blockers.push({ code: "write-policy-disabled", severity: "intentional-block", reason: "HubSpot deal writeback is preflight-only. No provider mutation is enabled in this foundation." });
+  return blockers;
+}
+
+function hubspotDealWritebackPreflight(requestUrl) {
+  const authStatus = publicHubspotAuthStatus();
+  const mapping = hubspotDealWritebackMappingStatus();
+  const request = hubspotDealWritebackPreflightRequest(requestUrl);
+  const blockers = hubspotDealWritebackBlockers({ request, authStatus, mapping });
+  const hardBlockers = blockers.filter((blocker) => blocker.severity === "blocking");
+  return {
+    owner: "runtime-server",
+    provider: "hubspot",
+    status: hardBlockers.length ? "preflight-blocked" : "preflight-ready-but-write-disabled",
+    source: "server-hubspot-deal-writeback-preflight-only",
+    preflightOnly: true,
+    dryRun: true,
+    nonBootCritical: true,
+    adminToolCandidate: true,
+    browserSecretsExposed: false,
+    nonSecretOnly: true,
+    providerMutationAttempted: false,
+    providerCallAttempted: false,
+    writePolicy: {
+      enabled: false,
+      liveProviderWritesEnabled: false,
+      reason: "HubSpot deal writeback is disabled. This endpoint only reports safe preflight readiness and intended action.",
+    },
+    authStatus,
+    mapping,
+    request,
+    intendedAction: {
+      action: request.action,
+      providerObject: "deal",
+      syncDirection: "controlstack-to-hubspot",
+      projectScoped: true,
+      targetDealId: request.dealId || null,
+      linkedContactId: request.contactId || null,
+      linkedCompanyId: request.companyId || null,
+      canonicalFields: {
+        projectId: request.projectId || null,
+        projectName: request.projectName || null,
+        projectStatus: request.projectStatus || null,
+        clientName: request.clientName || null,
+        siteName: request.siteName || null,
+      },
+    },
+    readiness: {
+      authConfigured: authStatus.configured === true,
+      mappingConfigured: mapping.dealMappingProfile.configured === true,
+      associationPresent: Boolean(request.contactId || request.companyId || request.dealId),
+      projectPresent: Boolean(request.projectId),
+      liveWriteAllowed: false,
+    },
+    blockers,
+  };
+}
+
+function sendHubspotDealWritebackPreflight(res, requestUrl) {
+  sendJson(res, 200, hubspotDealWritebackPreflight(requestUrl));
+}
+
 function hubspotAccessToken() {
   return hubspotAuthStatus().token;
 }
@@ -1030,7 +1163,13 @@ const server = createServer(async (req, res) => {
       runtimeConfig: "/runtime-config.js",
       hubspotRead: HUBSPOT_READ_PATH,
       hubspotAuthStatus: HUBSPOT_AUTH_STATUS_PATH,
+      hubspotDealWritebackPreflight: HUBSPOT_DEAL_PREFLIGHT_PATH,
       hubspotAuth: publicHubspotAuthStatus(),
+      hubspotDealWriteback: {
+        endpoint: HUBSPOT_DEAL_PREFLIGHT_PATH,
+        preflightOnly: true,
+        writePolicy: { enabled: false, reason: "HubSpot deal writeback live writes are disabled." },
+      },
       authorityReferenceStatus: AUTH_REF_STATUS_PATH,
       authorityReferenceSync: AUTH_REF_SYNC_PATH,
       configStatus: CONFIG_STATUS_PATH,
@@ -1057,6 +1196,11 @@ const server = createServer(async (req, res) => {
 
   if (requestUrl.pathname === HUBSPOT_AUTH_STATUS_PATH) {
     sendJson(res, 200, publicHubspotAuthStatus());
+    return;
+  }
+
+  if (requestUrl.pathname === HUBSPOT_DEAL_PREFLIGHT_PATH) {
+    sendHubspotDealWritebackPreflight(res, requestUrl);
     return;
   }
 
