@@ -981,10 +981,7 @@ function renderTimelineTopbarPopout(context) {
   const timeline = context.timelinePolicy || {};
   const model = timeline.timelineModel || {};
   const requirement = model.projectRequirementDate || {};
-  const futureProducts = model.futureProducts || {};
-  const specialParts = model.specialParts || {};
-  const timelineAccess = model.timelineAccess || {};
-  const lifecycleCompatibility = model.lifecycleCompatibility || {};
+  const requirementLabel = requirement.label || timeline.projectDateContext?.projectRequirementDateLabel || "Not set";
 
   const kicker = document.createElement("p");
   kicker.className = "cs-shell__section-kicker";
@@ -993,34 +990,23 @@ function renderTimelineTopbarPopout(context) {
   heading.textContent = model.defaultLane?.label || "Today / Live";
   timelinePopout.append(kicker, heading);
 
-  appendTimelineText(timelinePopout, model.question || "Can this user/project use this product or special part by the project requirement date?");
   appendTimelineDefinitionRows(timelinePopout, [
-    ["project requirement date", requirement.label || timeline.projectDateContext?.projectRequirementDateLabel || "not set"],
-    ["timeline access", timelineAccess.label || "not enabled / placeholder"],
-    ["future products", futureProducts.contactRepFlow || "To register for future product access, contact your rep."],
-    ["special parts", `${specialParts.label || "Special parts may be available to entitled users"} · ${specialParts.status || "entitlement check later"}`],
-    ["lifecycle", lifecycleCompatibility.preferredScheduledLabel || "Scheduled compatibility supported"],
+    ["Project requirement date", requirementLabel === "not set" ? "Not set" : requirementLabel],
+    ["Future product access", "Contact your rep"],
+    ["Special parts", "No special parts are active for this project yet"],
   ]);
-  appendTimelineText(timelinePopout, "Live products are available today by default. Future products require Timeline access and a project requirement date before availability can be assessed.");
+  appendTimelineText(timelinePopout, "Live products are available today. Future products and special parts will use the project requirement date when access is enabled.");
 
   const chipRow = document.createElement("div");
   chipRow.className = "cs-shell__chip-row";
-  chipRow.setAttribute("aria-label", "Timeline model placeholder states");
-  for (const label of ["Today / Live", "Requirement date: not set", "Future products: contact rep", "Special parts: later", "Staged/Scheduled supported"]) {
+  chipRow.setAttribute("aria-label", "Timeline summary");
+  for (const label of ["Today / Live", `Requirement date: ${requirementLabel === "not set" ? "Not set" : requirementLabel}`, "Future product access: Contact your rep", "Special parts: none active"]) {
     const chip = document.createElement("span");
     chip.className = label === "Today / Live" ? "cs-shell__filter-chip is-selected" : "cs-shell__filter-chip";
     chip.textContent = label;
     chipRow.appendChild(chip);
   }
   timelinePopout.appendChild(chipRow);
-
-  const internalHints = Array.isArray(model.internalHints) ? model.internalHints : [];
-  if (internalHints.length) {
-    const hintHeading = document.createElement("h3");
-    hintHeading.textContent = "Internal / developer notes";
-    timelinePopout.appendChild(hintHeading);
-    for (const hint of internalHints) appendTimelineText(timelinePopout, hint);
-  }
 }
 
 function renderViewTopbarPopout(context) {
