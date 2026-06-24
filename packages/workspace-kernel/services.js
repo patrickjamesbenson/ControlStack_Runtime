@@ -9,6 +9,7 @@ import { createIdentityService } from "./identityService.js";
 import { createProjectBrowserService } from "./projectBrowserService.js";
 import { createProjectService } from "./projectService.js";
 import { createSavedProjectStore } from "./savedProjectStore.js";
+import { createSpecialPartsPolicyService } from "./specialPartsPolicyService.js";
 import { createTimelinePolicyService } from "./timelinePolicyService.js";
 import { createVisibilityService } from "./visibilityService.js";
 
@@ -43,7 +44,8 @@ export function createShellServices() {
   const flagAdapter = createFeatureFlagService({ eventBus });
   const crmAdapter = createCrmService({ eventBus });
   const authorityAdapter = createAuthorityService({ eventBus });
-  const timelinePolicyAdapter = createTimelinePolicyService({ eventBus });
+  const specialPartsPolicyAdapter = createSpecialPartsPolicyService({ eventBus });
+  const timelinePolicyAdapter = createTimelinePolicyService({ eventBus, specialPartsPolicy: specialPartsPolicyAdapter });
   const adminToolRegistry = createAdminToolRegistry();
 
   return {
@@ -85,6 +87,7 @@ export function createShellServices() {
       },
     },
     visibility: visibilityAdapter,
+    specialPartsPolicy: specialPartsPolicyAdapter,
     timelinePolicy: timelinePolicyAdapter,
     flags: flagAdapter,
     crm: crmAdapter,

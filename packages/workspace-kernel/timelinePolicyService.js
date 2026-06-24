@@ -190,6 +190,37 @@ function specialPartsEntitlementContract() {
   };
 }
 
+function hasReferenceSnapshotTables(referenceSnapshot) {
+  if (!referenceSnapshot || typeof referenceSnapshot !== "object" || Array.isArray(referenceSnapshot)) return false;
+  return Array.isArray(referenceSnapshot.USERS)
+    || Array.isArray(referenceSnapshot.users)
+    || Array.isArray(referenceSnapshot.SYSTEM_COMPONENTS)
+    || Array.isArray(referenceSnapshot.system_components);
+}
+
+function explicitReferenceSnapshotFrom({ auth = {}, identity = {}, authority = {}, visibility = {}, project = {} } = {}) {
+  const candidates = [
+    auth.referenceSnapshot,
+    identity.referenceSnapshot,
+    authority.referenceSnapshot,
+    visibility.referenceSnapshot,
+    project.referenceSnapshot,
+  ];
+  return candidates.find(hasReferenceSnapshotTables) || null;
+}
+
+function specialPartsEntitlementFor({ specialPartsPolicy, auth, identity, authority, visibility, project }) {
+  const referenceSnapshot = explicitReferenceSnapshotFrom({ auth, identity, authority, visibility, project });
+  if (!referenceSnapshot || typeof specialPartsPolicy?.getSpecialPartsEntitlementSnapshot !== "function") {
+    return specialPartsEntitlementContract();
+  }
+  try {
+    return specialPartsPolicy.getSpecialPartsEntitlementSnapshot({ identity, authority, referenceSnapshot });
+  } catch {
+    return specialPartsEntitlementContract();
+  }
+}
+
 function specialPartsOptInContract() {
   return {
     owner: "shell",
@@ -272,7 +303,7 @@ function timelineModelFor({
     implementation: {
       realNvbSync: false,
       realFutureProductMatching: false,
-      realSpecialPartEntitlement: false,
+      realSpecialPartEntitlement: specialPartsEntitlement.entitlementLive === true,
       realProjectWrite: false,
       selectorFiltering: false,
       backendRoutes: false,
@@ -317,7 +348,7 @@ function gateBehaviorFor({ authority, visibility, project }) {
   };
 }
 
-export function createTimelinePolicyService({ eventBus } = {}) {
+export function createTimelinePolicyService({ eventBus, specialPartsPolicy } = {}) {
   const state = {
     owner: "shell",
     status: "ready",
@@ -336,7 +367,7 @@ export function createTimelinePolicyService({ eventBus } = {}) {
     const projectDates = projectDateContext(project);
     const projectRequirementDate = projectRequirementDateContract(projectDates);
     const timelineAccess = timelineAccessContract();
-    const specialPartsEntitlement = specialPartsEntitlementContract();
+    const specialPartsEntitlement = specialPartsEntitlementFor({ specialPartsPolicy, auth, identity, authority, visibility, project });
     const specialPartsOptIn = specialPartsOptInContract();
     const moduleConsumption = moduleConsumptionContract();
     const timelineModel = timelineModelFor({
