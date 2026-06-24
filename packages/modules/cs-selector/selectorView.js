@@ -35,6 +35,24 @@ function appendSection(parent, heading, rows) {
   parent.appendChild(section);
 }
 
+function readSpecialPartsDiagnosticsRows(viewModel) {
+  const timelinePolicy = viewModel.timelinePolicy || {};
+  const selectorTimelineContext = viewModel.selectorTimelineContext || {};
+  const compatibility = viewModel.specialPartsCompatibility || {};
+  return [
+    ["Timeline context", selectorTimelineContext.status || timelinePolicy.selectorConsumptionStatus || "passive-consumer"],
+    ["Special parts compatibility", compatibility.live || timelinePolicy.specialPartsCompatibilityLive || "passive"],
+    ["Entitled parts count", compatibility.entitledCount ?? timelinePolicy.specialPartsEntitledCount ?? 0],
+    ["Compatible count", compatibility.compatibleCount ?? timelinePolicy.specialPartsCompatibleCount ?? 0],
+    ["Incompatible count", compatibility.incompatibleCount ?? timelinePolicy.specialPartsIncompatibleCount ?? 0],
+    ["Unknown count", compatibility.unknownCount ?? timelinePolicy.specialPartsUnknownCount ?? 0],
+    ["Filtering live", timelinePolicy.specialPartsFilteringLive || "no"],
+    ["Opt-in live", timelinePolicy.specialPartsOptInLive || "no"],
+    ["Build mutation live", timelinePolicy.specialPartsBuildMutationLive || "no"],
+    ["Display mode", "developer diagnostics only"],
+  ];
+}
+
 export function renderSelectorView(container, viewModel) {
   clearElement(container);
   const article = document.createElement("article");
@@ -114,6 +132,8 @@ export function renderSelectorView(container, viewModel) {
     ["write enabled", viewModel.timelinePolicy.writeEnabled],
     ["local timeline refs", viewModel.timelinePolicy.itemRefs],
   ]);
+
+  appendSection(article, "Developer diagnostics: Timeline / Special Parts", readSpecialPartsDiagnosticsRows(viewModel));
 
   appendSection(article, "Downstream context foundation", [
     ["owner", viewModel.downstream.owner],
