@@ -68,6 +68,74 @@ function timelineRefs({ local = {}, project = {}, selectorDownstream = {} }) {
   ].join(", ");
 }
 
+function listLength(value) {
+  return Array.isArray(value) ? value.length : 0;
+}
+
+function readSelectorTimelineContext(adapter, snapshots, timelinePolicy) {
+  return snapshots.selectorTimelineContext || adapter.createSelectorTimelineContext?.(timelinePolicy) || {
+    owner: "cs_selector",
+    status: "passive-consumer-fallback",
+    source: "selector-view-model-fallback",
+    consumedFrom: "shell-context.timelinePolicy",
+    readOnly: true,
+    selectorAuthoritative: false,
+    projectRequirementDate: {
+      value: null,
+      label: "not set",
+      source: "shell-project-context",
+      requiredForFutureProducts: true,
+    },
+    timelineAccess: {
+      status: "not-enabled-placeholder",
+      label: "not enabled / placeholder",
+      contactRepRequired: true,
+      source: "shell-placeholder",
+      writeEnabled: false,
+    },
+    specialPartsEntitlement: {
+      status: "not-live-placeholder",
+      source: "shell-placeholder",
+      entitlementLive: false,
+      userEmailMatched: false,
+      userComponentIds: [],
+      entitledParts: [],
+      readOnly: true,
+    },
+    specialPartsOptIn: {
+      owner: "shell",
+      status: "not-live-placeholder",
+      source: "shell-project-context-placeholder",
+      projectScoped: true,
+      selectedPartIds: [],
+      dismissedPartIds: [],
+      writeEnabled: false,
+    },
+    moduleConsumption: {
+      csSelector: {
+        consumesTimelineContext: true,
+        ownsSelectionCompatibility: true,
+        filteringLive: false,
+        warningsLive: false,
+      },
+      futureModules: {
+        consumeTimelineContext: true,
+        ownModuleSpecificCompatibility: true,
+      },
+    },
+    implementation: {
+      filteringLive: false,
+      warningsLive: false,
+      entitlementLookupLive: false,
+      optInLive: false,
+      projectWritesLive: false,
+      backendRoutesLive: false,
+      slugMutationLive: false,
+      buildMutationLive: false,
+    },
+  };
+}
+
 function authorityActualRole(authority = {}, identity = {}) {
   return authority.actualRole?.value || identity.actualRole || "external_user";
 }
@@ -110,6 +178,14 @@ export function createSelectorViewModel({ adapter, selectorState }) {
   const downstream = readDownstream(adapter, snapshots);
   const selectorDownstream = downstream.selector || {};
   const timelinePolicy = snapshots.timelinePolicy || {};
+  const selectorTimelineContext = readSelectorTimelineContext(adapter, snapshots, timelinePolicy);
+  const projectRequirementDate = selectorTimelineContext.projectRequirementDate || {};
+  const timelineAccess = selectorTimelineContext.timelineAccess || {};
+  const specialPartsEntitlement = selectorTimelineContext.specialPartsEntitlement || {};
+  const specialPartsOptIn = selectorTimelineContext.specialPartsOptIn || {};
+  const moduleConsumption = selectorTimelineContext.moduleConsumption || {};
+  const csSelectorConsumption = moduleConsumption.csSelector || {};
+  const selectorTimelineImplementation = selectorTimelineContext.implementation || {};
 
   return {
     moduleId: adapter.moduleId,
@@ -200,8 +276,8 @@ export function createSelectorViewModel({ adapter, selectorState }) {
       owner: timelinePolicy.owner || "shell",
       status: timelinePolicy.status || "unavailable",
       source: timelinePolicy.source || "timeline-policy-fallback",
-      consumedFrom: "shell-context",
-      selectorAuthoritative: "no",
+      consumedFrom: selectorTimelineContext.consumedFrom || "shell-context",
+      selectorAuthoritative: stateLabel(selectorTimelineContext.selectorAuthoritative === true),
       lane: `${timelinePolicy.rolePolicy?.displayLane || "external"}:${timelinePolicy.rolePolicy?.actualRole || "external_user"}`,
       actualRoleSource: timelinePolicy.rolePolicy?.actualRoleSource || "safe-fallback",
       allowedStatuses: statusList(timelinePolicy),
@@ -217,7 +293,43 @@ export function createSelectorViewModel({ adapter, selectorState }) {
       persistenceLive: stateLabel(timelinePolicy.persistence?.reviewHistoryLive),
       writeEnabled: stateLabel(timelinePolicy.writePolicy?.enabled),
       itemRefs: timelineRefs({ local, project, selectorDownstream }),
+      selectorConsumptionStatus: selectorTimelineContext.status || "passive-consumer",
+      selectorConsumptionSource: selectorTimelineContext.source || "selector-contract-adapter-stage-3c",
+      contractQuestion: selectorTimelineContext.modelQuestion || "Can this user/project use this product or special part by the project requirement date?",
+      projectRequirementDate: projectRequirementDate.label || "not set",
+      projectRequirementDateValue: projectRequirementDate.value || "none",
+      projectRequirementDateSource: projectRequirementDate.source || "shell-project-context",
+      requiredForFutureProducts: stateLabel(projectRequirementDate.requiredForFutureProducts),
+      timelineAccessStatus: timelineAccess.status || "not-enabled-placeholder",
+      timelineAccessLabel: timelineAccess.label || "not enabled / placeholder",
+      timelineAccessContactRepRequired: stateLabel(timelineAccess.contactRepRequired),
+      timelineAccessWriteEnabled: stateLabel(timelineAccess.writeEnabled),
+      specialPartsEntitlementStatus: specialPartsEntitlement.status || "not-live-placeholder",
+      specialPartsEntitlementSource: specialPartsEntitlement.source || "shell-placeholder",
+      specialPartsEntitlementLive: stateLabel(specialPartsEntitlement.entitlementLive),
+      specialPartsUserEmailMatched: stateLabel(specialPartsEntitlement.userEmailMatched),
+      specialPartsComponentIds: listLength(specialPartsEntitlement.userComponentIds),
+      specialPartsEntitledCount: listLength(specialPartsEntitlement.entitledParts),
+      specialPartsReadOnly: stateLabel(specialPartsEntitlement.readOnly),
+      specialPartsOptInOwner: specialPartsOptIn.owner || "shell",
+      specialPartsOptInStatus: specialPartsOptIn.status || "not-live-placeholder",
+      specialPartsOptInSource: specialPartsOptIn.source || "shell-project-context-placeholder",
+      specialPartsOptInProjectScoped: stateLabel(specialPartsOptIn.projectScoped),
+      specialPartsSelectedCount: listLength(specialPartsOptIn.selectedPartIds),
+      specialPartsDismissedCount: listLength(specialPartsOptIn.dismissedPartIds),
+      specialPartsOptInWriteEnabled: stateLabel(specialPartsOptIn.writeEnabled),
+      csSelectorConsumesTimelineContext: stateLabel(csSelectorConsumption.consumesTimelineContext),
+      csSelectorOwnsSelectionCompatibility: stateLabel(csSelectorConsumption.ownsSelectionCompatibility),
+      filteringLive: stateLabel(csSelectorConsumption.filteringLive || selectorTimelineImplementation.filteringLive),
+      warningsLive: stateLabel(csSelectorConsumption.warningsLive || selectorTimelineImplementation.warningsLive),
+      entitlementLookupLive: stateLabel(selectorTimelineImplementation.entitlementLookupLive),
+      optInLive: stateLabel(selectorTimelineImplementation.optInLive),
+      projectWritesLive: stateLabel(selectorTimelineImplementation.projectWritesLive),
+      backendRoutesLive: stateLabel(selectorTimelineImplementation.backendRoutesLive),
+      slugMutationLive: stateLabel(selectorTimelineImplementation.slugMutationLive),
+      buildMutationLive: stateLabel(selectorTimelineImplementation.buildMutationLive),
     },
+    selectorTimelineContext,
     downstream: {
       owner: downstream.owner,
       status: downstream.status,
@@ -264,6 +376,8 @@ export function createSelectorViewModel({ adapter, selectorState }) {
       "Restore is shell-owned and deferred",
       "Handoff is shell-owned and deferred",
       "CRM writes are shell-owned and deferred",
+      "Timeline and special-parts context are consumed passively only",
+      "Selector filtering, entitlement lookup, opt-in, slug mutation, and build mutation are deferred",
     ],
     responsiveNote: "Selector panel uses module-local sections that can stack inside the shell-owned responsive layout.",
   };
