@@ -1,3 +1,5 @@
+import { evaluateSpecialPartsCompatibility } from "./selectorSpecialPartsCompatibility.js";
+
 function stateLabel(value) {
   if (value === true) return "yes";
   if (value === false) return "no";
@@ -136,6 +138,67 @@ function readSelectorTimelineContext(adapter, snapshots, timelinePolicy) {
   };
 }
 
+function readEntitledSpecialParts(specialPartsEntitlement = {}) {
+  return Array.isArray(specialPartsEntitlement.entitledParts) ? specialPartsEntitlement.entitledParts : [];
+}
+
+function buildPassiveSelectorSelectionContext({ local = {}, timelinePolicy = {}, projectRequirementDate = {} } = {}) {
+  return {
+    selectedSystem: {
+      system: local.selectedSystem?.system || local.system || "",
+      variantKey: local.selectedSystem?.variantKey || local.variantKey || "",
+    },
+    selectedVariant: {
+      key: local.selectedVariant?.key || local.variantKey || local.selectedVariant || "",
+    },
+    environment: {
+      ipClass: local.environment?.ipClass || local.environment?.ip || local.ipClass || "",
+    },
+    timeline: {
+      projectRequirementDate: projectRequirementDate.value || timelinePolicy.projectRequirementDate?.value || null,
+      today: timelinePolicy.today || timelinePolicy.timelineModel?.today || "",
+    },
+    buildContext: {
+      selectedCategory: local.selectedCategory || "overview",
+      slug: "not-read-stage-3e-passive",
+    },
+  };
+}
+
+function hasUnknownCheck(compatibility = {}) {
+  return Object.values(compatibility.checks || {}).includes("unknown");
+}
+
+function summarizeSpecialPartsCompatibility(results = []) {
+  if (!results.length) {
+    return {
+      status: "empty",
+      compatibleCount: 0,
+      incompatibleCount: 0,
+      unknownCount: 0,
+    };
+  }
+  let compatibleCount = 0;
+  let incompatibleCount = 0;
+  let unknownCount = 0;
+  for (const result of results) {
+    const compatibility = result.compatibility || {};
+    if (compatibility.applies === true) {
+      compatibleCount += 1;
+    } else if (hasUnknownCheck(compatibility)) {
+      unknownCount += 1;
+    } else {
+      incompatibleCount += 1;
+    }
+  }
+  return {
+    status: "passive-evaluated",
+    compatibleCount,
+    incompatibleCount,
+    unknownCount,
+  };
+}
+
 function authorityActualRole(authority = {}, identity = {}) {
   return authority.actualRole?.value || identity.actualRole || "external_user";
 }
@@ -186,6 +249,10 @@ export function createSelectorViewModel({ adapter, selectorState }) {
   const moduleConsumption = selectorTimelineContext.moduleConsumption || {};
   const csSelectorConsumption = moduleConsumption.csSelector || {};
   const selectorTimelineImplementation = selectorTimelineContext.implementation || {};
+  const entitledSpecialParts = readEntitledSpecialParts(specialPartsEntitlement);
+  const passiveSelectorSelectionContext = buildPassiveSelectorSelectionContext({ local, timelinePolicy, projectRequirementDate });
+  const specialPartsCompatibilityResults = evaluateSpecialPartsCompatibility(entitledSpecialParts, passiveSelectorSelectionContext);
+  const specialPartsCompatibilitySummary = summarizeSpecialPartsCompatibility(specialPartsCompatibilityResults);
 
   return {
     moduleId: adapter.moduleId,
@@ -318,6 +385,14 @@ export function createSelectorViewModel({ adapter, selectorState }) {
       specialPartsSelectedCount: listLength(specialPartsOptIn.selectedPartIds),
       specialPartsDismissedCount: listLength(specialPartsOptIn.dismissedPartIds),
       specialPartsOptInWriteEnabled: stateLabel(specialPartsOptIn.writeEnabled),
+      specialPartsCompatibilityStatus: specialPartsCompatibilitySummary.status,
+      specialPartsCompatibleCount: specialPartsCompatibilitySummary.compatibleCount,
+      specialPartsIncompatibleCount: specialPartsCompatibilitySummary.incompatibleCount,
+      specialPartsUnknownCount: specialPartsCompatibilitySummary.unknownCount,
+      specialPartsCompatibilityLive: "passive",
+      specialPartsFilteringLive: stateLabel(false),
+      specialPartsOptInLive: stateLabel(false),
+      specialPartsBuildMutationLive: stateLabel(false),
       csSelectorConsumesTimelineContext: stateLabel(csSelectorConsumption.consumesTimelineContext),
       csSelectorOwnsSelectionCompatibility: stateLabel(csSelectorConsumption.ownsSelectionCompatibility),
       filteringLive: stateLabel(csSelectorConsumption.filteringLive || selectorTimelineImplementation.filteringLive),
@@ -330,6 +405,19 @@ export function createSelectorViewModel({ adapter, selectorState }) {
       buildMutationLive: stateLabel(selectorTimelineImplementation.buildMutationLive),
     },
     selectorTimelineContext,
+    specialPartsCompatibility: {
+      status: specialPartsCompatibilitySummary.status,
+      source: "selector-view-model-stage-3e-passive-helper-wiring",
+      live: "passive",
+      filteringLive: false,
+      optInLive: false,
+      buildMutationLive: false,
+      entitledCount: entitledSpecialParts.length,
+      compatibleCount: specialPartsCompatibilitySummary.compatibleCount,
+      incompatibleCount: specialPartsCompatibilitySummary.incompatibleCount,
+      unknownCount: specialPartsCompatibilitySummary.unknownCount,
+      results: specialPartsCompatibilityResults,
+    },
     downstream: {
       owner: downstream.owner,
       status: downstream.status,
@@ -377,6 +465,7 @@ export function createSelectorViewModel({ adapter, selectorState }) {
       "Handoff is shell-owned and deferred",
       "CRM writes are shell-owned and deferred",
       "Timeline and special-parts context are consumed passively only",
+      "Special-parts compatibility helper is wired passively into the view model only",
       "Selector filtering, entitlement lookup, opt-in, slug mutation, and build mutation are deferred",
     ],
     responsiveNote: "Selector panel uses module-local sections that can stack inside the shell-owned responsive layout.",
