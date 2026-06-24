@@ -159,25 +159,85 @@ function projectDateContext(project = {}) {
   };
 }
 
-function timelineModelFor({ actualRole, projectDates }) {
+function projectRequirementDateContract(projectDates = {}) {
+  return {
+    value: projectDates.projectRequirementDate || null,
+    label: projectDates.projectRequirementDateLabel || "not set",
+    source: "shell-project-context",
+    requiredForFutureProducts: true,
+  };
+}
+
+function timelineAccessContract() {
+  return {
+    status: "not-enabled-placeholder",
+    label: "not enabled / placeholder",
+    contactRepRequired: true,
+    source: "shell-placeholder",
+    writeEnabled: false,
+  };
+}
+
+function specialPartsEntitlementContract() {
+  return {
+    status: "not-live-placeholder",
+    source: "shell-placeholder",
+    entitlementLive: false,
+    userEmailMatched: false,
+    userComponentIds: [],
+    entitledParts: [],
+    readOnly: true,
+  };
+}
+
+function specialPartsOptInContract() {
+  return {
+    owner: "shell",
+    status: "not-live-placeholder",
+    source: "shell-project-context-placeholder",
+    projectScoped: true,
+    selectedPartIds: [],
+    dismissedPartIds: [],
+    writeEnabled: false,
+  };
+}
+
+function moduleConsumptionContract() {
+  return {
+    csSelector: {
+      consumesTimelineContext: true,
+      ownsSelectionCompatibility: true,
+      filteringLive: false,
+      warningsLive: false,
+    },
+    futureModules: {
+      consumeTimelineContext: true,
+      ownModuleSpecificCompatibility: true,
+    },
+  };
+}
+
+function timelineModelFor({
+  actualRole,
+  projectRequirementDate,
+  timelineAccess,
+  specialPartsEntitlement,
+  specialPartsOptIn,
+  moduleConsumption,
+}) {
   const canSeeInternalHints = roleRank(actualRole) >= roleRank("internal_user");
   const lifecyclePolicy = getTimelineLifecycleStatusPolicy();
   return {
     owner: "shell",
     status: "foundation-only",
-    source: "shell-project-timeline-model-stage-2",
+    source: "shell-project-timeline-model-stage-3a-contract",
     question: "Can this user/project use this product or special part by the project requirement date?",
     defaultLane: {
       id: "today-live",
       label: "Today / Live",
       description: "Live products are available today by default where normal module/product rules allow them.",
     },
-    projectRequirementDate: {
-      value: projectDates.projectRequirementDate || null,
-      label: projectDates.projectRequirementDateLabel || "not set",
-      requiredForFutureProducts: true,
-      source: "shell-project-context",
-    },
+    projectRequirementDate,
     futureProducts: {
       status: "contact-rep",
       label: "Future products require Timeline access",
@@ -186,17 +246,12 @@ function timelineModelFor({ actualRole, projectDates }) {
       matchingLive: false,
     },
     specialParts: {
-      status: "entitlement-check-later",
+      status: specialPartsEntitlement.status,
       label: "Special parts may be available to entitled users",
-      entitlementLive: false,
-      optInLive: false,
+      entitlementLive: specialPartsEntitlement.entitlementLive,
+      optInLive: specialPartsOptIn.writeEnabled,
     },
-    timelineAccess: {
-      status: "not-enabled-placeholder",
-      label: "not enabled / placeholder",
-      source: "shell-placeholder",
-      contactRepRequired: true,
-    },
+    timelineAccess,
     lifecycleCompatibility: {
       status: "supported-internally",
       stagedMapsTo: lifecyclePolicy.compatibility.staged,
@@ -205,10 +260,12 @@ function timelineModelFor({ actualRole, projectDates }) {
       availableApprovedLiveMapTo: "live",
       writeEnabled: false,
     },
+    moduleConsumption,
     internalHints: canSeeInternalHints
       ? [
-          "Shell owns identity, project context, project requirement date, Timeline access state, and later special parts opt-in state.",
-          "Modules will consume shell Timeline context later; no CS Selector filtering is active in this stage.",
+          "Shell owns identity, project context, project requirement date, Timeline access state, lifecycle status compatibility, special-parts entitlement, and later special-parts project opt-in state.",
+          "CS Selector will consume shell Timeline/special-parts context later but keeps selection compatibility checks module-local.",
+          "No CS Selector filtering, warning UI, special-parts entitlement lookup, or project write is active in this contract stage.",
           "NVB may still store staged; runtime compatibility presents this as Scheduled.",
         ]
       : [],
@@ -220,6 +277,7 @@ function timelineModelFor({ actualRole, projectDates }) {
       selectorFiltering: false,
       backendRoutes: false,
       authorityWriteback: false,
+      moduleBehaviourChanges: false,
     },
   };
 }
@@ -276,7 +334,19 @@ export function createTimelinePolicyService({ eventBus } = {}) {
     const diagnosticsVisible = diagnosticsVisibleFor({ role: actualRole, visibility });
     const defaultWindow = defaultWindowForRole(actualRole);
     const projectDates = projectDateContext(project);
-    const timelineModel = timelineModelFor({ actualRole, projectDates });
+    const projectRequirementDate = projectRequirementDateContract(projectDates);
+    const timelineAccess = timelineAccessContract();
+    const specialPartsEntitlement = specialPartsEntitlementContract();
+    const specialPartsOptIn = specialPartsOptInContract();
+    const moduleConsumption = moduleConsumptionContract();
+    const timelineModel = timelineModelFor({
+      actualRole,
+      projectRequirementDate,
+      timelineAccess,
+      specialPartsEntitlement,
+      specialPartsOptIn,
+      moduleConsumption,
+    });
     const gateBehavior = gateBehaviorFor({ authority, visibility, project });
     const snapshot = {
       owner: state.owner,
@@ -311,6 +381,11 @@ export function createTimelinePolicyService({ eventBus } = {}) {
         selectorOwnsStatusRules: false,
       },
       lifecycleStatusPolicy: getTimelineLifecycleStatusPolicy(),
+      projectRequirementDate,
+      timelineAccess,
+      specialPartsEntitlement,
+      specialPartsOptIn,
+      moduleConsumption,
       timelineModel,
       controls: {
         visible: controlsVisible,
@@ -329,9 +404,27 @@ export function createTimelinePolicyService({ eventBus } = {}) {
         selectorPersistenceOwner: false,
         saveRestoreOwner: "shell-project-services",
       },
+      ownership: {
+        shellOwns: [
+          "identity",
+          "project-context",
+          "project-requirement-date",
+          "timeline-access",
+          "special-parts-entitlement",
+          "special-parts-project-opt-in",
+          "lifecycle-status-compatibility",
+        ],
+        csSelectorOwnsLater: [
+          "part-applies-to-selected-system",
+          "variant-compatibility",
+          "ip-class-compatibility",
+          "warning-compatibility-display",
+          "clear-or-keep-anyway-ui",
+        ],
+      },
       writePolicy: {
         enabled: false,
-        reason: "Timeline policy is read-only shell policy. History/review persistence is deferred.",
+        reason: "Timeline and special-parts context contract is read-only. Entitlement lookup, opt-in persistence, filtering, and project writes are deferred.",
       },
     };
     eventBus?.emit?.("timeline-policy:read", { timelinePolicy: clone(snapshot) });
