@@ -301,9 +301,8 @@ function setAssistiveCompanyTextMode({ focus = false } = {}) {
 function setAssistiveCompanyLogoMode(domain, url) {
   if (companyIdentityState.userLocked || companyIdentityState.companyNameSource === "user") return;
   if (!assistiveCompanyLogoImage || !assistiveCompanyLogoButton || !assistiveCompanyNameInput) return;
-  const logoAlt = assistiveCompanyNameInput.value.trim() || domain;
   assistiveCompanyLogoImage.src = url;
-  assistiveCompanyLogoImage.alt = logoAlt;
+  assistiveCompanyLogoImage.alt = "";
   assistiveCompanyNameInput.hidden = true;
   assistiveCompanyLogoButton.hidden = false;
   if (assistiveCompanyPill) assistiveCompanyPill.dataset.mode = "logo";
