@@ -6,6 +6,7 @@ import { csSelectorModule } from "/packages/modules/cs-selector/index.js";
 import { emergenceModule } from "/packages/modules/emergence/index.js";
 import { sceneBuilderModule } from "/packages/modules/scene-builder/index.js";
 
+const shellRoot = document.getElementById("cs-shell-root");
 const statusEl = document.getElementById("cs-shell-status");
 const moduleHost = document.getElementById("cs-shell-module-host");
 const pluginHost = document.getElementById("cs-shell-plugin-host");
@@ -71,6 +72,8 @@ const assistiveCompanyLogoImage = document.getElementById("cs-shell-assist-compa
 const assistiveCompanyStatus = document.getElementById("cs-shell-assist-company-status");
 
 const SHELL_ROLE_ORDER = Object.freeze(["external_user", "internal_user", "internal_engineer", "developer", "admin"]);
+const NOVON_WEBSITE_MODULE_ID = "novon_website";
+const NOVON_WEBSITE_URL = "https://www.novonlighting.com.au/";
 const SHELL_DEVELOPER_DIAGNOSTICS_CONTRACT = Object.freeze({
   heading: "DEV ORIENTATION",
   module: "Workspace Shell",
@@ -1227,6 +1230,7 @@ function moduleLabel(moduleId) {
     scene_builder: "Scene Builder",
     emergence: "Emergency / EGRES",
     workspace_home: "Home",
+    novon_website: "Novon website",
   };
   return labels[moduleId] || moduleId;
 }
@@ -1281,6 +1285,21 @@ function renderUnknownModuleFallback({ route, registry }) {
     ["Known modules", registry.list().join(", ") || "none"],
   ]);
   article.append(eyebrow, heading, body, diagnostics);
+  moduleHost.append(article);
+}
+
+function renderNovonWebsiteView() {
+  if (!moduleHost) return;
+  shellRoot?.setAttribute("data-shell-special-view", NOVON_WEBSITE_MODULE_ID);
+  moduleHost.classList.add("cs-shell__module-host--website-viewer");
+  clearElement(moduleHost);
+  const article = document.createElement("article");
+  article.className = "cs-shell__website-viewer";
+  article.innerHTML = `
+    <div class="cs-shell__website-frame-wrap">
+      <iframe class="cs-shell__website-frame" title="Novon website" src="${NOVON_WEBSITE_URL}" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+    </div>
+  `;
   moduleHost.append(article);
 }
 
@@ -1608,6 +1627,15 @@ function bootWorkspaceShell() {
     const nextContext = refreshContext("crm-read-completed");
     setStatus(`CRM read ${crmRead?.status || nextContext.crm?.hubspot?.status || "updated"}. Writes remain ${nextContext.crm.writePolicy?.enabled ? "enabled" : "disabled"}.`);
   });
+
+  if (route.moduleId === NOVON_WEBSITE_MODULE_ID) {
+    if (homePanel) homePanel.hidden = true;
+    if (moduleHost) moduleHost.hidden = false;
+    renderNovonWebsiteView();
+    setStatus("Novon website mounted as a shell-owned special view. Authority is shell-owned and read-only; NVB is used when available.");
+    scheduleOptionalDiagnosticsPlugin({ services, getContext: () => context, registry, onPluginReady: rememberDiagnosticsPlugin });
+    return;
+  }
 
   if (showHomeIfRequested(route.moduleId)) {
     setStatus("Workspace home mounted. Authority is shell-owned and read-only; NVB is used when available.");
