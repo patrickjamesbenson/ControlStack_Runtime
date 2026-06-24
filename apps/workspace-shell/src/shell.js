@@ -301,8 +301,9 @@ function setAssistiveCompanyTextMode({ focus = false } = {}) {
 function setAssistiveCompanyLogoMode(domain, url) {
   if (companyIdentityState.userLocked || companyIdentityState.companyNameSource === "user") return;
   if (!assistiveCompanyLogoImage || !assistiveCompanyLogoButton || !assistiveCompanyNameInput) return;
+  const logoAlt = assistiveCompanyNameInput.value.trim() || domain;
   assistiveCompanyLogoImage.src = url;
-  assistiveCompanyLogoImage.alt = "";
+  assistiveCompanyLogoImage.alt = logoAlt;
   assistiveCompanyNameInput.hidden = true;
   assistiveCompanyLogoButton.hidden = false;
   if (assistiveCompanyPill) assistiveCompanyPill.dataset.mode = "logo";
@@ -362,9 +363,14 @@ function handleAssistiveEmailDomainChange() {
   }
   const suggestion = deriveCompanyNameFromDomain(domain);
   writeAssistiveCompanySuggestion(suggestion);
-  setAssistiveCompanyTextMode();
-  setAssistiveCompanyStatus(suggestion ? `Suggested ${suggestion} from ${domain}.` : `No company suggestion derived from ${domain}.`);
-  if (!suggestion) return;
+  const cachedLogo = companyIdentityState.logoCache.get(domain);
+  if (!suggestion) {
+    setAssistiveCompanyTextMode();
+    setAssistiveCompanyStatus(`No company suggestion derived from ${domain}.`);
+    return;
+  }
+  if (!cachedLogo?.found) setAssistiveCompanyTextMode();
+  setAssistiveCompanyStatus(`Suggested ${suggestion} from ${domain}.`);
   lookupCompanyLogo(domain);
 }
 
