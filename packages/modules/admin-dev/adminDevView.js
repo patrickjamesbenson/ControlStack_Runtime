@@ -145,6 +145,147 @@ function appendSyncWorkflow(parent, syncWorkflow, actions = {}) {
   parent.appendChild(section);
 }
 
+function appendArchiveList(parent, archiveInspection, actions = {}) {
+  const panel = document.createElement("section");
+  panel.className = "cs-admin-dev__sync-panel";
+  appendText(panel, "h4", "Archive list");
+  appendText(panel, "p", "Basename metadata only. Entries expose name, size, and modified time; no absolute paths or raw file content are returned.");
+  appendDefinitionList(panel, archiveInspection.list.rows);
+
+  const archives = archiveInspection.list.archives || [];
+  if (!archives.length) {
+    appendText(panel, "p", "No archive files are currently available in the runtime archive location.");
+    parent.appendChild(panel);
+    return;
+  }
+
+  const list = document.createElement("ul");
+  list.className = "cs-admin-dev__endpoint-list";
+  for (const archive of archives) {
+    const item = document.createElement("li");
+    appendText(item, "strong", archive.name);
+    appendText(item, "span", `${archive.size} · modified ${archive.modifiedAt}`);
+    const actionsRow = document.createElement("div");
+    actionsRow.className = "cs-admin-dev__actions";
+    appendActionButton(actionsRow, archiveInspection.diff.running && archiveInspection.diff.selectedArchiveName === archive.name ? "Computing diff…" : "Compute diff summary", {
+      disabled: archiveInspection.diff.running,
+      onClick: () => actions.onRunArchiveDiff?.(archive.name),
+    });
+    item.appendChild(actionsRow);
+    list.appendChild(item);
+  }
+  panel.appendChild(list);
+  parent.appendChild(panel);
+}
+
+function appendDiffKeyEntries(parent, title, summary, { archiveName, section, inspectable = false } = {}, actions = {}) {
+  const block = document.createElement("div");
+  block.className = "cs-admin-dev__notice";
+  appendText(block, "h5", `${title} (${summary.total || 0}${summary.truncated ? "+ truncated" : ""})`);
+  const entries = summary.entries || [];
+  if (!entries.length) {
+    appendText(block, "p", "None reported.");
+    parent.appendChild(block);
+    return;
+  }
+
+  const list = document.createElement("ul");
+  list.className = "cs-admin-dev__endpoint-list";
+  for (const entry of entries) {
+    const item = document.createElement("li");
+    appendText(item, "strong", entry.displayKey || entry.inspectKey || "key");
+    const fieldSummary = entry.changedFields?.length
+      ? `fields: ${entry.changedFields.join(", ")}${entry.changedFieldsTruncated ? ", …" : ""}`
+      : entry.changeType || "change";
+    appendText(item, "span", fieldSummary);
+    if (inspectable && entry.inspectKey) {
+      const actionsRow = document.createElement("div");
+      actionsRow.className = "cs-admin-dev__actions";
+      appendActionButton(actionsRow, "Show field-level diff", {
+        disabled: false,
+        onClick: () => actions.onRunArchiveDiffDetail?.({ archiveName, section, inspectKey: entry.inspectKey }),
+      });
+      item.appendChild(actionsRow);
+    }
+    list.appendChild(item);
+  }
+  block.appendChild(list);
+  parent.appendChild(block);
+}
+
+function appendDiffSummary(parent, archiveInspection, actions = {}) {
+  const panel = document.createElement("section");
+  panel.className = "cs-admin-dev__sync-panel";
+  appendText(panel, "h4", "Diff summary");
+  appendText(panel, "p", "Compares the selected archive against the current authority/reference snapshot. Summary is section/table-level and never returns full DB JSON.");
+  appendDefinitionList(panel, archiveInspection.diff.totalsRows);
+  if (archiveInspection.diff.error) appendErrors(panel, "Diff summary endpoint error", [archiveInspection.diff.error]);
+
+  const archiveName = archiveInspection.diff.selectedArchiveName;
+  const sections = archiveInspection.diff.sections || [];
+  if (!sections.length) {
+    appendText(panel, "p", archiveInspection.diff.status === "complete" ? "No section diffs were returned." : "Select an archive to compute a diff summary.");
+    parent.appendChild(panel);
+    return;
+  }
+
+  for (const sectionModel of sections) {
+    const sectionBlock = document.createElement("section");
+    sectionBlock.className = "cs-admin-dev__card";
+    appendText(sectionBlock, "h5", sectionModel.section);
+    appendDefinitionList(sectionBlock, sectionModel.rows);
+    appendDiffKeyEntries(sectionBlock, "Changed keys", sectionModel.changed, {
+      archiveName,
+      section: sectionModel.section,
+      inspectable: true,
+    }, actions);
+    appendDiffKeyEntries(sectionBlock, "Added keys", sectionModel.added, {
+      archiveName,
+      section: sectionModel.section,
+      inspectable: false,
+    }, actions);
+    appendDiffKeyEntries(sectionBlock, "Removed keys", sectionModel.removed, {
+      archiveName,
+      section: sectionModel.section,
+      inspectable: false,
+    }, actions);
+    panel.appendChild(sectionBlock);
+  }
+
+  parent.appendChild(panel);
+}
+
+function appendFieldLevelDetail(parent, archiveInspection) {
+  const panel = document.createElement("section");
+  panel.className = "cs-admin-dev__sync-panel";
+  appendText(panel, "h4", "Field-level diff detail");
+  appendText(panel, "p", "On-demand changed-field inspection only. This panel shows changed fields as old/new pairs and confirms no full row was returned.");
+  appendDefinitionList(panel, archiveInspection.detail.rows);
+  if (archiveInspection.detail.error) appendErrors(panel, "Field-level diff endpoint error", [archiveInspection.detail.error]);
+  if (archiveInspection.detail.fieldRows?.length) {
+    appendText(panel, "h5", "Changed fields");
+    appendDefinitionList(panel, archiveInspection.detail.fieldRows);
+  } else {
+    appendText(panel, "p", archiveInspection.detail.status === "complete" ? "No changed fields returned for this key." : "Choose a changed key from the diff summary to inspect field-level differences.");
+  }
+  parent.appendChild(panel);
+}
+
+function appendArchiveInspection(parent, archiveInspection, actions = {}) {
+  const section = document.createElement("section");
+  section.className = "cs-admin-dev__card cs-admin-dev__sync";
+  appendText(section, "h3", archiveInspection.title);
+  appendText(section, "p", archiveInspection.description);
+
+  const grid = document.createElement("div");
+  grid.className = "cs-admin-dev__sync-grid";
+  appendArchiveList(grid, archiveInspection, actions);
+  appendDiffSummary(grid, archiveInspection, actions);
+  appendFieldLevelDetail(grid, archiveInspection);
+  section.appendChild(grid);
+  parent.appendChild(section);
+}
+
 function renderProtectedFallback(container, viewModel) {
   const article = document.createElement("article");
   article.className = "cs-admin-dev";
@@ -153,7 +294,7 @@ function renderProtectedFallback(container, viewModel) {
   header.className = "cs-admin-dev__header";
   appendText(header, "p", viewModel.label, "cs-shell__eyebrow");
   appendText(header, "h2", viewModel.title);
-  appendText(header, "p", "This protected shell module requires developer/admin authority. No runtime status endpoints were read for the current user, and no sync controls are shown.");
+  appendText(header, "p", "This protected shell module requires developer/admin authority. No runtime status endpoints were read for the current user, and no sync/archive controls are shown.");
   appendDefinitionList(header, [
     ["module id", viewModel.moduleId],
     ["route", "/workspace?module=admin_dev"],
@@ -167,7 +308,7 @@ function renderProtectedFallback(container, viewModel) {
   const notice = document.createElement("section");
   notice.className = "cs-admin-dev__notice cs-admin-dev__notice--warning";
   appendText(notice, "h3", "Protected module");
-  appendText(notice, "p", "Admin / Dev is intentionally hidden from normal users and normal workflow use. Ask a developer/admin to use this route for authority/reference status and sync inspection.");
+  appendText(notice, "p", "Admin / Dev is intentionally hidden from normal users and normal workflow use. Ask a developer/admin to use this route for authority/reference status, sync, and archive diff inspection.");
   article.appendChild(notice);
 
   container.appendChild(article);
@@ -190,7 +331,7 @@ export function renderAdminDevView(container, viewModel, actions = {}) {
   header.className = "cs-admin-dev__header";
   appendText(header, "p", viewModel.label, "cs-shell__eyebrow");
   appendText(header, "h2", viewModel.title);
-  appendText(header, "p", "Protected authority/reference status and sync workflow for developer/admin inspection. The only write-capable action is the explicit SYNC-confirmed authority/reference sync POST.");
+  appendText(header, "p", "Protected authority/reference status, sync workflow, and read-only archive diff inspection for developer/admin use. Restore, restore preview, row editing, and raw DB browsing are not present.");
   appendDefinitionList(header, viewModel.headerRows);
   article.appendChild(header);
 
@@ -208,6 +349,7 @@ export function renderAdminDevView(container, viewModel, actions = {}) {
   article.appendChild(statusNotice);
 
   appendSyncWorkflow(article, viewModel.syncWorkflow, actions);
+  appendArchiveInspection(article, viewModel.archiveInspection, actions);
 
   const grid = document.createElement("div");
   grid.className = "cs-admin-dev__grid";
@@ -217,7 +359,7 @@ export function renderAdminDevView(container, viewModel, actions = {}) {
   const endpoints = document.createElement("section");
   endpoints.className = "cs-admin-dev__card";
   appendText(endpoints, "h3", "Approved status endpoints");
-  appendText(endpoints, "p", "Status refreshes use same-origin GET requests. The sync workflow above is the only place this module may call the approved authority/reference sync POST endpoints.");
+  appendText(endpoints, "p", "Status refreshes use same-origin GET requests. Archive diff/detail and sync actions are limited to the approved authority/reference endpoints only.");
   appendEndpointList(endpoints, viewModel.endpoints);
   article.appendChild(endpoints);
 

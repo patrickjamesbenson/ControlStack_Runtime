@@ -1,7 +1,7 @@
 import { createReadStream } from "node:fs";
-import { access, copyFile, mkdir, readFile, stat } from "node:fs/promises";
+import { access, copyFile, mkdir, readFile, readdir, stat } from "node:fs/promises";
 import { createServer } from "node:http";
-import { extname, join, normalize, resolve, sep } from "node:path";
+import { basename, extname, isAbsolute, join, normalize, resolve, sep } from "node:path";
 
 const PORT = Number.parseInt(process.env.CONTROLSTACK_RUNTIME_PORT || "8787", 10);
 const HOST = process.env.CONTROLSTACK_RUNTIME_HOST || "127.0.0.1";
@@ -13,7 +13,16 @@ const HUBSPOT_DEAL_PREFLIGHT_PATH = "/api/hubspot/deal-writeback/preflight";
 const AUTH_REF_STATUS_PATH = "/api/" + "authority-reference" + "/status";
 const AUTH_REF_SYNC_PATH = "/api/" + "authority-reference" + "/sync";
 const AUTH_REF_SOURCE_MATERIALISATION_PATH = "/api/" + "authority-reference" + "/source-materialisation";
+const AUTH_REF_ARCHIVES_PATH = "/api/" + "authority-reference" + "/archives";
+const AUTH_REF_DIFF_PATH = "/api/" + "authority-reference" + "/diff";
+const AUTH_REF_DIFF_DETAIL_PATH = "/api/" + "authority-reference" + "/diff-detail";
 const CONFIG_STATUS_PATH = "/api/runtime-config/status";
+
+const AUTH_REF_DATA_HOME = "C:\\ControlStack_RuntimeData\\authority-reference";
+const AUTH_REF_DEFAULT_SNAPSHOT_PATH = join(AUTH_REF_DATA_HOME, "novondb.json");
+const AUTH_REF_DEFAULT_MATERIALISED_SOURCE_PATH = join(AUTH_REF_DATA_HOME, "materialised", "novondb.json");
+const AUTH_REF_DEFAULT_ARCHIVE_DIR = join(AUTH_REF_DATA_HOME, "archive");
+const AUTH_REF_LEGACY_TRANSITIONAL_PATH = "C:\\ControlStack\\data\\novondb.json";
 
 const MIME_TYPES = new Map([
   [".html", "text/html; charset=utf-8"],
@@ -195,7 +204,7 @@ function readAuthorityReferenceSnapshotPath() {
     process.env.NOVONDB_PATH ||
     process.env.CONTROLSTACK_DB_PATH ||
     process.env.CENTRAL_DB_PATH ||
-    "C:\\ControlStack\\data\\novondb.json"
+    AUTH_REF_DEFAULT_SNAPSHOT_PATH
   ).trim();
 }
 
@@ -355,7 +364,11 @@ function runtimeConfigStatus() {
         valueKind: "server-file-path",
       }),
       archiveDir: envStatus({ primary: "CONTROLSTACK_AUTHORITY_REFERENCE_ARCHIVE_DIR", valueKind: "server-directory-path" }),
-      transitionalFallbackPath: "C:\\ControlStack\\data\\novondb.json",
+      runtimeDataHome: AUTH_REF_DATA_HOME,
+      defaultSnapshotPath: AUTH_REF_DEFAULT_SNAPSHOT_PATH,
+      defaultMaterialisedSourcePath: AUTH_REF_DEFAULT_MATERIALISED_SOURCE_PATH,
+      defaultArchiveDir: AUTH_REF_DEFAULT_ARCHIVE_DIR,
+      legacyTransitionalPath: AUTH_REF_LEGACY_TRANSITIONAL_PATH,
       transitionalAliasesRetained: ["NOVONDB_PATH", "CONTROLSTACK_DB_PATH", "CENTRAL_DB_PATH"],
     },
     hubspot: {
@@ -380,11 +393,13 @@ function runtimeConfigStatus() {
 }
 
 function authorityReferenceArchiveDir() {
-  return readTextEnv("CONTROLSTACK_AUTHORITY_REFERENCE_ARCHIVE_DIR");
+  return readTextEnv("CONTROLSTACK_AUTHORITY_REFERENCE_ARCHIVE_DIR") || AUTH_REF_DEFAULT_ARCHIVE_DIR;
 }
 
 function authorityReferenceMaterialisedSourcePath() {
-  return readTextEnv("CONTROLSTACK_AUTHORITY_REFERENCE_MATERIALISED_SOURCE_PATH") || readTextEnv("CONTROLSTACK_AUTHORITY_REFERENCE_SOURCE_JSON_PATH");
+  return readTextEnv("CONTROLSTACK_AUTHORITY_REFERENCE_MATERIALISED_SOURCE_PATH")
+    || readTextEnv("CONTROLSTACK_AUTHORITY_REFERENCE_SOURCE_JSON_PATH")
+    || AUTH_REF_DEFAULT_MATERIALISED_SOURCE_PATH;
 }
 
 function archiveStamp() {
@@ -462,7 +477,7 @@ async function authorityReferenceSnapshotStatus() {
       sizeBytes: info.size,
       modifiedAt: info.mtime?.toISOString?.() || null,
       source: "external-authority-reference-snapshot",
-      transitionalPath: snapshotPath === "C:\\ControlStack\\data\\novondb.json",
+      transitionalPath: snapshotPath === AUTH_REF_LEGACY_TRANSITIONAL_PATH,
     };
   } catch (error) {
     return {
@@ -472,7 +487,7 @@ async function authorityReferenceSnapshotStatus() {
       sizeBytes: null,
       modifiedAt: null,
       source: "external-authority-reference-snapshot",
-      transitionalPath: snapshotPath === "C:\\ControlStack\\data\\novondb.json",
+      transitionalPath: snapshotPath === AUTH_REF_LEGACY_TRANSITIONAL_PATH,
       reason: error?.code || "unavailable",
     };
   }
@@ -830,6 +845,543 @@ async function sendAuthorityReferenceSync(res, requestUrl) {
       repoLocalSecrets: false,
       reason: error?.message || "Authority/reference sync execution failed.",
       writePolicy: { enabled: false, archiveBeforeWriteRequired: true, archiveBeforeWriteLive: false },
+    });
+  }
+}
+
+function requestJson(req, { maxBytes = 32768 } = {}) {
+  return new Promise((resolveRequestJson, rejectRequestJson) => {
+    const chunks = [];
+    let total = 0;
+    req.on("data", (chunk) => {
+      total += chunk.length;
+      if (total > maxBytes) {
+        rejectRequestJson(new Error("request_body_too_large"));
+        req.destroy();
+        return;
+      }
+      chunks.push(chunk);
+    });
+    req.on("end", () => {
+      const text = Buffer.concat(chunks).toString("utf-8").trim();
+      if (!text) {
+        resolveRequestJson({});
+        return;
+      }
+      try {
+        const parsed = JSON.parse(text);
+        resolveRequestJson(parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {});
+      } catch (error) {
+        rejectRequestJson(new Error("invalid_json_body"));
+      }
+    });
+    req.on("error", rejectRequestJson);
+  });
+}
+
+function validateArchiveName(rawName) {
+  const name = String(rawName || "").trim();
+  if (!name) return { ok: false, reason: "archiveName is required." };
+  if (name.length > 255) return { ok: false, reason: "archiveName is too long." };
+  if (isAbsolute(name)) return { ok: false, reason: "archiveName must be a basename, not an absolute path." };
+  if (name !== basename(name) || name.includes("/") || name.includes("\\")) {
+    return { ok: false, reason: "archiveName must be a basename only." };
+  }
+  if (name === "." || name === ".." || name.includes("..")) {
+    return { ok: false, reason: "archiveName may not contain path traversal." };
+  }
+  if (!name.toLowerCase().endsWith(".json")) {
+    return { ok: false, reason: "archiveName must reference a JSON archive file." };
+  }
+  return { ok: true, name };
+}
+
+function archivePathForBasename(rawName) {
+  const validation = validateArchiveName(rawName);
+  if (!validation.ok) return validation;
+  const root = resolve(authorityReferenceArchiveDir());
+  const filePath = resolve(root, validation.name);
+  const rootPrefix = root.endsWith(sep) ? root : `${root}${sep}`;
+  if (filePath === root || !filePath.startsWith(rootPrefix)) {
+    return { ok: false, reason: "archiveName resolved outside the archive directory." };
+  }
+  return { ok: true, name: validation.name, filePath };
+}
+
+async function archivePublicMetadata(name) {
+  const resolved = archivePathForBasename(name);
+  if (!resolved.ok) return null;
+  const info = await stat(resolved.filePath);
+  if (!info.isFile()) return null;
+  return {
+    name: resolved.name,
+    sizeBytes: info.size,
+    modifiedAt: info.mtime?.toISOString?.() || null,
+  };
+}
+
+async function sendAuthorityReferenceArchives(res) {
+  const archiveDir = authorityReferenceArchiveDir();
+  try {
+    const dirInfo = await stat(archiveDir);
+    if (!dirInfo.isDirectory()) {
+      sendJson(res, 200, {
+        ok: true,
+        owner: "runtime-server",
+        status: "archive-directory-unavailable",
+        adminOnly: true,
+        basenameMetadataOnly: true,
+        archives: [],
+        count: 0,
+        reason: "Configured archive location is not a directory.",
+      });
+      return;
+    }
+
+    const entries = await readdir(archiveDir, { withFileTypes: true });
+    const archives = [];
+    for (const entry of entries) {
+      if (!entry.isFile()) continue;
+      const validation = validateArchiveName(entry.name);
+      if (!validation.ok) continue;
+      try {
+        const metadata = await archivePublicMetadata(validation.name);
+        if (metadata) archives.push(metadata);
+      } catch {
+        // Skip unreadable archive entries rather than exposing filesystem details.
+      }
+    }
+
+    archives.sort((a, b) => String(b.modifiedAt || "").localeCompare(String(a.modifiedAt || "")) || a.name.localeCompare(b.name));
+    sendJson(res, 200, {
+      ok: true,
+      owner: "runtime-server",
+      status: "archive-list-ready",
+      adminOnly: true,
+      basenameMetadataOnly: true,
+      absolutePathsExposed: false,
+      rawFileContentExposed: false,
+      archives,
+      count: archives.length,
+    });
+  } catch (error) {
+    sendJson(res, 200, {
+      ok: true,
+      owner: "runtime-server",
+      status: "archive-directory-unavailable",
+      adminOnly: true,
+      basenameMetadataOnly: true,
+      absolutePathsExposed: false,
+      rawFileContentExposed: false,
+      archives: [],
+      count: 0,
+      reason: error?.code || "archive_directory_unavailable",
+    });
+  }
+}
+
+function stableValue(value) {
+  if (Array.isArray(value)) return value.map(stableValue);
+  if (value && typeof value === "object") {
+    return Object.keys(value).sort().reduce((acc, key) => {
+      acc[key] = stableValue(value[key]);
+      return acc;
+    }, {});
+  }
+  return value;
+}
+
+function compareToken(value) {
+  try {
+    return JSON.stringify(stableValue(value));
+  } catch {
+    return String(value);
+  }
+}
+
+function isSensitiveField(field) {
+  return /(token|secret|password|api[_-]?key|bearer|private|credential|auth)/i.test(String(field || ""));
+}
+
+function safeDiffValue(value, field) {
+  if (isSensitiveField(field)) return "[redacted]";
+  if (value === undefined) return "[missing]";
+  if (value === null || typeof value === "boolean" || typeof value === "number") return value;
+  if (typeof value === "string") {
+    return value.length > 300 ? `${value.slice(0, 300)}… (${value.length} chars)` : value;
+  }
+  if (Array.isArray(value)) {
+    return { type: "array", length: value.length, fullValueReturned: false };
+  }
+  if (value && typeof value === "object") {
+    const keys = Object.keys(value);
+    return { type: "object", keyCount: keys.length, keys: keys.slice(0, 12), fullValueReturned: false };
+  }
+  return String(value);
+}
+
+const TABLE_KEY_FIELDS = Object.freeze([
+  "id",
+  "ID",
+  "recordId",
+  "record_id",
+  "uuid",
+  "key",
+  "code",
+  "CODE",
+  "slug",
+  "name",
+  "Name",
+  "email_login",
+  "email",
+  "email_address",
+  "company_id",
+  "companyId",
+  "system_component_id",
+  "sku",
+  "part_number",
+]);
+
+function baseInspectKeyForRow(row, index) {
+  if (row && typeof row === "object" && !Array.isArray(row)) {
+    for (const field of TABLE_KEY_FIELDS) {
+      const value = row[field];
+      if (value !== null && value !== undefined && String(value).trim()) return `${field}:${String(value).trim()}`;
+    }
+  }
+  return `__index:${index}`;
+}
+
+function indexTableRows(rows = []) {
+  const seen = new Map();
+  const map = new Map();
+  rows.forEach((row, index) => {
+    const baseKey = baseInspectKeyForRow(row, index);
+    const count = (seen.get(baseKey) || 0) + 1;
+    seen.set(baseKey, count);
+    const inspectKey = count === 1 ? baseKey : `${baseKey}#${count}`;
+    map.set(inspectKey, row);
+  });
+  return map;
+}
+
+function changedFieldNames(oldRow = {}, newRow = {}) {
+  if (!oldRow || !newRow || typeof oldRow !== "object" || typeof newRow !== "object" || Array.isArray(oldRow) || Array.isArray(newRow)) {
+    return compareToken(oldRow) === compareToken(newRow) ? [] : ["value"];
+  }
+  const fields = new Set([...Object.keys(oldRow), ...Object.keys(newRow)]);
+  return [...fields].filter((field) => compareToken(oldRow[field]) !== compareToken(newRow[field])).sort();
+}
+
+function limitedChangeKeys(entries, limit) {
+  return {
+    total: entries.length,
+    truncated: entries.length > limit,
+    entries: entries.slice(0, limit),
+  };
+}
+
+function sectionLimit(section) {
+  return String(section).toUpperCase() === "USERS" ? 20 : 50;
+}
+
+function diffTableSection(section, archiveRows, currentRows) {
+  const archiveMap = indexTableRows(Array.isArray(archiveRows) ? archiveRows : []);
+  const currentMap = indexTableRows(Array.isArray(currentRows) ? currentRows : []);
+  const allKeys = [...new Set([...archiveMap.keys(), ...currentMap.keys()])].sort();
+  const added = [];
+  const removed = [];
+  const changed = [];
+  let unchanged = 0;
+  for (const inspectKey of allKeys) {
+    const oldRow = archiveMap.get(inspectKey);
+    const newRow = currentMap.get(inspectKey);
+    if (oldRow === undefined) {
+      added.push({ inspectKey, displayKey: inspectKey, changeType: "added" });
+      continue;
+    }
+    if (newRow === undefined) {
+      removed.push({ inspectKey, displayKey: inspectKey, changeType: "removed" });
+      continue;
+    }
+    const fields = changedFieldNames(oldRow, newRow);
+    if (fields.length) {
+      changed.push({
+        inspectKey,
+        displayKey: inspectKey,
+        changeType: "changed",
+        changedFieldCount: fields.length,
+        changedFields: fields.slice(0, 16),
+        changedFieldsTruncated: fields.length > 16,
+      });
+    } else {
+      unchanged += 1;
+    }
+  }
+  const limit = sectionLimit(section);
+  return {
+    section,
+    type: "table",
+    counts: {
+      archiveRows: archiveMap.size,
+      currentRows: currentMap.size,
+      added: added.length,
+      removed: removed.length,
+      changed: changed.length,
+      unchanged,
+    },
+    addedKeys: limitedChangeKeys(added, limit),
+    removedKeys: limitedChangeKeys(removed, limit),
+    changedKeys: limitedChangeKeys(changed, limit),
+    fullRowsReturned: false,
+  };
+}
+
+function diffObjectSection(section, archiveObject = {}, currentObject = {}) {
+  const oldObject = archiveObject && typeof archiveObject === "object" && !Array.isArray(archiveObject) ? archiveObject : {};
+  const newObject = currentObject && typeof currentObject === "object" && !Array.isArray(currentObject) ? currentObject : {};
+  const keys = [...new Set([...Object.keys(oldObject), ...Object.keys(newObject)])].sort();
+  const added = [];
+  const removed = [];
+  const changed = [];
+  let unchanged = 0;
+  for (const key of keys) {
+    if (!(key in oldObject)) added.push({ inspectKey: key, displayKey: key, changeType: "added" });
+    else if (!(key in newObject)) removed.push({ inspectKey: key, displayKey: key, changeType: "removed" });
+    else if (compareToken(oldObject[key]) !== compareToken(newObject[key])) changed.push({ inspectKey: key, displayKey: key, changeType: "changed", changedFieldCount: 1, changedFields: [key], changedFieldsTruncated: false });
+    else unchanged += 1;
+  }
+  return {
+    section,
+    type: "object",
+    counts: {
+      archiveKeys: Object.keys(oldObject).length,
+      currentKeys: Object.keys(newObject).length,
+      added: added.length,
+      removed: removed.length,
+      changed: changed.length,
+      unchanged,
+    },
+    addedKeys: limitedChangeKeys(added, 50),
+    removedKeys: limitedChangeKeys(removed, 50),
+    changedKeys: limitedChangeKeys(changed, 50),
+    fullRowsReturned: false,
+  };
+}
+
+function diffPrimitiveSection(section, archiveValue, currentValue) {
+  const changed = compareToken(archiveValue) !== compareToken(currentValue);
+  return {
+    section,
+    type: "value",
+    counts: { changed: changed ? 1 : 0, unchanged: changed ? 0 : 1 },
+    changedKeys: limitedChangeKeys(changed ? [{ inspectKey: "__section__", displayKey: "section value", changeType: "changed", changedFieldCount: 1, changedFields: ["value"] }] : [], 1),
+    addedKeys: limitedChangeKeys([], 1),
+    removedKeys: limitedChangeKeys([], 1),
+    fullRowsReturned: false,
+  };
+}
+
+function buildAuthorityReferenceDiffSummary({ archiveName, archiveSnapshot, currentSnapshot, archiveMeta, currentMeta }) {
+  const sectionNames = [...new Set([
+    ...Object.keys(archiveSnapshot || {}),
+    ...Object.keys(currentSnapshot || {}),
+  ])].sort();
+  const sections = sectionNames.map((section) => {
+    const oldValue = archiveSnapshot?.[section];
+    const newValue = currentSnapshot?.[section];
+    if (Array.isArray(oldValue) || Array.isArray(newValue)) {
+      return diffTableSection(section, oldValue, newValue);
+    }
+    if ((oldValue && typeof oldValue === "object") || (newValue && typeof newValue === "object")) {
+      return diffObjectSection(section, oldValue, newValue);
+    }
+    return diffPrimitiveSection(section, oldValue, newValue);
+  });
+  const totals = sections.reduce((acc, section) => {
+    acc.added += section.counts?.added || 0;
+    acc.removed += section.counts?.removed || 0;
+    acc.changed += section.counts?.changed || 0;
+    return acc;
+  }, { added: 0, removed: 0, changed: 0 });
+  return {
+    ok: true,
+    owner: "runtime-server",
+    status: "diff-summary-ready",
+    adminOnly: true,
+    readOnly: true,
+    archiveName,
+    comparedAt: new Date().toISOString(),
+    archive: archiveMeta,
+    currentSnapshot: currentMeta,
+    totals,
+    sections,
+    fullDatabaseReturned: false,
+    fullUsersReturned: false,
+    absolutePathsExposed: false,
+  };
+}
+
+async function readJsonSnapshot(pathValue) {
+  const text = await readFile(pathValue, "utf-8");
+  return JSON.parse(text);
+}
+
+async function sendAuthorityReferenceDiff(res, req) {
+  try {
+    const body = await requestJson(req);
+    const archiveResolution = archivePathForBasename(body.archiveName);
+    if (!archiveResolution.ok) {
+      sendJson(res, 400, { ok: false, status: "archive-name-rejected", reason: archiveResolution.reason });
+      return;
+    }
+    const currentPath = readAuthorityReferenceSnapshotPath();
+    const [archiveSnapshot, currentSnapshot, archiveMeta, currentInfo] = await Promise.all([
+      readJsonSnapshot(archiveResolution.filePath),
+      readJsonSnapshot(currentPath),
+      archivePublicMetadata(archiveResolution.name),
+      stat(currentPath),
+    ]);
+    const currentMeta = {
+      name: "current authority/reference snapshot",
+      sizeBytes: currentInfo.size,
+      modifiedAt: currentInfo.mtime?.toISOString?.() || null,
+    };
+    sendJson(res, 200, buildAuthorityReferenceDiffSummary({
+      archiveName: archiveResolution.name,
+      archiveSnapshot,
+      currentSnapshot,
+      archiveMeta,
+      currentMeta,
+    }));
+  } catch (error) {
+    sendJson(res, 500, {
+      ok: false,
+      owner: "runtime-server",
+      status: "diff-summary-failed",
+      adminOnly: true,
+      readOnly: true,
+      reason: error?.message || "authority_reference_diff_failed",
+      fullDatabaseReturned: false,
+      fullUsersReturned: false,
+      absolutePathsExposed: false,
+    });
+  }
+}
+
+function detailForTableSection(section, inspectKey, archiveRows, currentRows) {
+  const archiveMap = indexTableRows(Array.isArray(archiveRows) ? archiveRows : []);
+  const currentMap = indexTableRows(Array.isArray(currentRows) ? currentRows : []);
+  const oldRow = archiveMap.get(inspectKey);
+  const newRow = currentMap.get(inspectKey);
+  if (oldRow === undefined && newRow === undefined) return { status: "not-found", fields: [] };
+  if (oldRow === undefined || newRow === undefined) {
+    const row = oldRow === undefined ? newRow : oldRow;
+    const fields = row && typeof row === "object" && !Array.isArray(row) ? Object.keys(row).sort() : ["value"];
+    return {
+      status: oldRow === undefined ? "added" : "removed",
+      fields: fields.slice(0, 100).map((field) => ({
+        field,
+        old: oldRow === undefined ? "[missing]" : "[present]",
+        new: newRow === undefined ? "[missing]" : "[present]",
+      })),
+      truncated: fields.length > 100,
+    };
+  }
+  const fields = changedFieldNames(oldRow, newRow);
+  return {
+    status: fields.length ? "changed" : "unchanged",
+    fields: fields.slice(0, 100).map((field) => ({
+      field,
+      old: safeDiffValue(oldRow?.[field], field),
+      new: safeDiffValue(newRow?.[field], field),
+    })),
+    truncated: fields.length > 100,
+  };
+}
+
+function detailForObjectSection(inspectKey, archiveObject, currentObject) {
+  const oldObject = archiveObject && typeof archiveObject === "object" && !Array.isArray(archiveObject) ? archiveObject : {};
+  const newObject = currentObject && typeof currentObject === "object" && !Array.isArray(currentObject) ? currentObject : {};
+  const oldHas = Object.prototype.hasOwnProperty.call(oldObject, inspectKey);
+  const newHas = Object.prototype.hasOwnProperty.call(newObject, inspectKey);
+  if (!oldHas && !newHas) return { status: "not-found", fields: [] };
+  if (!oldHas || !newHas) {
+    return {
+      status: oldHas ? "removed" : "added",
+      fields: [{ field: inspectKey, old: oldHas ? "[present]" : "[missing]", new: newHas ? "[present]" : "[missing]" }],
+      truncated: false,
+    };
+  }
+  if (compareToken(oldObject[inspectKey]) === compareToken(newObject[inspectKey])) return { status: "unchanged", fields: [], truncated: false };
+  return {
+    status: "changed",
+    fields: [{ field: inspectKey, old: safeDiffValue(oldObject[inspectKey], inspectKey), new: safeDiffValue(newObject[inspectKey], inspectKey) }],
+    truncated: false,
+  };
+}
+
+async function sendAuthorityReferenceDiffDetail(res, req) {
+  try {
+    const body = await requestJson(req);
+    const archiveResolution = archivePathForBasename(body.archiveName);
+    if (!archiveResolution.ok) {
+      sendJson(res, 400, { ok: false, status: "archive-name-rejected", reason: archiveResolution.reason });
+      return;
+    }
+    const section = String(body.section || "").trim();
+    const inspectKey = String(body.inspectKey || "").trim();
+    if (!section || !inspectKey) {
+      sendJson(res, 400, { ok: false, status: "diff-detail-rejected", reason: "archiveName, section, and inspectKey are required." });
+      return;
+    }
+
+    const [archiveSnapshot, currentSnapshot] = await Promise.all([
+      readJsonSnapshot(archiveResolution.filePath),
+      readJsonSnapshot(readAuthorityReferenceSnapshotPath()),
+    ]);
+    const oldValue = archiveSnapshot?.[section];
+    const newValue = currentSnapshot?.[section];
+    let detail;
+    if (Array.isArray(oldValue) || Array.isArray(newValue)) detail = detailForTableSection(section, inspectKey, oldValue, newValue);
+    else if ((oldValue && typeof oldValue === "object") || (newValue && typeof newValue === "object")) detail = detailForObjectSection(inspectKey, oldValue, newValue);
+    else if (inspectKey === "__section__" && compareToken(oldValue) !== compareToken(newValue)) {
+      detail = { status: "changed", fields: [{ field: "value", old: safeDiffValue(oldValue, "value"), new: safeDiffValue(newValue, "value") }], truncated: false };
+    } else {
+      detail = { status: "unchanged", fields: [], truncated: false };
+    }
+
+    sendJson(res, 200, {
+      ok: true,
+      owner: "runtime-server",
+      status: "diff-detail-ready",
+      adminOnly: true,
+      readOnly: true,
+      archiveName: archiveResolution.name,
+      section,
+      inspectKey,
+      recordStatus: detail.status,
+      fieldCount: detail.fields.length,
+      fields: detail.fields,
+      truncated: detail.truncated === true,
+      comparedAt: new Date().toISOString(),
+      fullRowReturned: false,
+      fullDatabaseReturned: false,
+      fullUsersReturned: false,
+      absolutePathsExposed: false,
+    });
+  } catch (error) {
+    sendJson(res, 500, {
+      ok: false,
+      owner: "runtime-server",
+      status: "diff-detail-failed",
+      adminOnly: true,
+      readOnly: true,
+      reason: error?.message || "authority_reference_diff_detail_failed",
+      fullRowReturned: false,
+      fullDatabaseReturned: false,
+      fullUsersReturned: false,
+      absolutePathsExposed: false,
     });
   }
 }
@@ -1374,6 +1926,9 @@ const server = createServer(async (req, res) => {
       authorityReferenceStatus: AUTH_REF_STATUS_PATH,
       authorityReferenceSync: AUTH_REF_SYNC_PATH,
       authorityReferenceSourceMaterialisation: AUTH_REF_SOURCE_MATERIALISATION_PATH,
+      authorityReferenceArchives: AUTH_REF_ARCHIVES_PATH,
+      authorityReferenceDiff: AUTH_REF_DIFF_PATH,
+      authorityReferenceDiffDetail: AUTH_REF_DIFF_DETAIL_PATH,
       configStatus: CONFIG_STATUS_PATH,
       config: runtimeConfigStatus(),
       root: ROOT,
@@ -1413,6 +1968,33 @@ const server = createServer(async (req, res) => {
 
   if (requestUrl.pathname === AUTH_REF_SOURCE_MATERIALISATION_PATH) {
     await sendAuthorityReferenceSourceMaterialisation(res);
+    return;
+  }
+
+  if (requestUrl.pathname === AUTH_REF_ARCHIVES_PATH) {
+    if (req.method !== "GET") {
+      sendJson(res, 405, { ok: false, error: "method_not_allowed", requiredMethod: "GET" });
+      return;
+    }
+    await sendAuthorityReferenceArchives(res);
+    return;
+  }
+
+  if (requestUrl.pathname === AUTH_REF_DIFF_PATH) {
+    if (req.method !== "POST") {
+      sendJson(res, 405, { ok: false, error: "method_not_allowed", requiredMethod: "POST" });
+      return;
+    }
+    await sendAuthorityReferenceDiff(res, req);
+    return;
+  }
+
+  if (requestUrl.pathname === AUTH_REF_DIFF_DETAIL_PATH) {
+    if (req.method !== "POST") {
+      sendJson(res, 405, { ok: false, error: "method_not_allowed", requiredMethod: "POST" });
+      return;
+    }
+    await sendAuthorityReferenceDiffDetail(res, req);
     return;
   }
 

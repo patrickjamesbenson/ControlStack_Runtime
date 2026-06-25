@@ -28,6 +28,13 @@ function asText(value, fallback = "none") {
   if (value === null || value === undefined || value === "") return fallback;
   if (typeof value === "boolean") return value ? "yes" : "no";
   if (Array.isArray(value)) return value.length ? value.join(", ") : fallback;
+  if (typeof value === "object") {
+    try {
+      return JSON.stringify(value);
+    } catch {
+      return String(value);
+    }
+  }
   return String(value);
 }
 
@@ -283,9 +290,153 @@ function createSyncWorkflowModel({ syncState = {}, syncEndpoints = {}, authority
   };
 }
 
-export function createAdminDevViewModel({ context = {}, endpoints = {}, syncEndpoints = {}, state = {} } = {}) {
+function archiveListRows(archiveList = {}) {
+  const archives = Array.isArray(archiveList.archives) ? archiveList.archives : [];
+  return archives.map((archive) => ({
+    name: archive.name,
+    size: bytesLabel(archive.sizeBytes),
+    sizeBytes: archive.sizeBytes,
+    modifiedAt: archive.modifiedAt || "unknown",
+  }));
+}
+
+function diffSectionRows(section = {}) {
+  const counts = section.counts || {};
+  return [
+    ["section", section.section || "unknown"],
+    ["type", section.type || "unknown"],
+    ["archive rows/keys", asText(counts.archiveRows ?? counts.archiveKeys, "n/a")],
+    ["current rows/keys", asText(counts.currentRows ?? counts.currentKeys, "n/a")],
+    ["added", asText(counts.added, "0")],
+    ["removed", asText(counts.removed, "0")],
+    ["changed", asText(counts.changed, "0")],
+    ["unchanged", asText(counts.unchanged, "0")],
+    ["full rows returned", asText(section.fullRowsReturned, "no")],
+  ];
+}
+
+function limitedEntries(list = {}) {
+  const entries = Array.isArray(list.entries) ? list.entries : [];
+  return {
+    total: list.total || entries.length,
+    truncated: list.truncated === true,
+    entries,
+  };
+}
+
+function createDiffSectionModel(section = {}) {
+  const changed = limitedEntries(section.changedKeys);
+  const added = limitedEntries(section.addedKeys);
+  const removed = limitedEntries(section.removedKeys);
+  return {
+    section: section.section || "unknown",
+    type: section.type || "unknown",
+    rows: diffSectionRows(section),
+    changed,
+    added,
+    removed,
+  };
+}
+
+function formatDiffValue(value) {
+  if (value === null || value === undefined) return "none";
+  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") return String(value);
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return String(value);
+  }
+}
+
+function createDetailFieldRows(detailBody = {}) {
+  const fields = Array.isArray(detailBody?.fields) ? detailBody.fields : [];
+  return fields.map((item) => [
+    item.field || "field",
+    `old: ${formatDiffValue(item.old)} → new: ${formatDiffValue(item.new)}`,
+  ]);
+}
+
+function createArchiveInspectionModel({ archiveState = {}, archiveEndpoints = {}, archiveList = {} }) {
+  const archives = archiveListRows(archiveList);
+  const diffBody = syncResultBody(archiveState.diffResult);
+  const detailBody = syncResultBody(archiveState.detailResult);
+  const diffSections = Array.isArray(diffBody?.sections) ? diffBody.sections.map(createDiffSectionModel) : [];
+  const selectedArchiveName = archiveState.selectedArchiveName || "";
+  return {
+    title: "Archive diff inspection",
+    description: "Read-only archive inspection. Archive entries expose basename metadata only; diff detail is fetched on demand and never returns full rows or full database JSON.",
+    endpoints: archiveEndpoints,
+    list: {
+      endpoint: archiveEndpoints.list,
+      status: archiveList.status || "unknown",
+      count: archiveList.count ?? archives.length,
+      basenameMetadataOnly: archiveList.basenameMetadataOnly === true,
+      absolutePathsExposed: archiveList.absolutePathsExposed === true,
+      rawFileContentExposed: archiveList.rawFileContentExposed === true,
+      archives,
+      rows: [
+        ["endpoint", archiveEndpoints.list || "not configured"],
+        ["status", archiveList.status || "unknown"],
+        ["archive count", asText(archiveList.count ?? archives.length, "0")],
+        ["basename metadata only", asText(archiveList.basenameMetadataOnly, "yes")],
+        ["absolute paths exposed", asText(archiveList.absolutePathsExposed, "no")],
+        ["raw file content exposed", asText(archiveList.rawFileContentExposed, "no")],
+        ["reason", archiveList.reason || "none"],
+      ],
+    },
+    diff: {
+      endpoint: archiveEndpoints.diff,
+      selectedArchiveName,
+      status: archiveState.diffStatus || "idle",
+      running: archiveState.diffStatus === "running",
+      loadedAt: archiveState.diffLoadedAt || "not run",
+      error: archiveState.diffError || null,
+      resultText: endpointResultText(archiveState.diffResult, archiveState.diffError),
+      totalsRows: [
+        ["selected archive", selectedArchiveName || "none selected"],
+        ["endpoint", archiveEndpoints.diff || "not configured"],
+        ["status", diffBody?.status || archiveState.diffStatus || "idle"],
+        ["added", asText(diffBody?.totals?.added, "0")],
+        ["removed", asText(diffBody?.totals?.removed, "0")],
+        ["changed", asText(diffBody?.totals?.changed, "0")],
+        ["full database returned", asText(diffBody?.fullDatabaseReturned, "no")],
+        ["full USERS returned", asText(diffBody?.fullUsersReturned, "no")],
+        ["absolute paths exposed", asText(diffBody?.absolutePathsExposed, "no")],
+        ["loaded at", archiveState.diffLoadedAt || "not run"],
+        ["endpoint result", endpointResultText(archiveState.diffResult, archiveState.diffError)],
+      ],
+      sections: diffSections,
+    },
+    detail: {
+      endpoint: archiveEndpoints.diffDetail,
+      status: archiveState.detailStatus || "idle",
+      running: archiveState.detailStatus === "running",
+      loadedAt: archiveState.detailLoadedAt || "not run",
+      error: archiveState.detailError || null,
+      selectedDetail: archiveState.selectedDetail || null,
+      rows: [
+        ["endpoint", archiveEndpoints.diffDetail || "not configured"],
+        ["status", detailBody?.status || archiveState.detailStatus || "idle"],
+        ["record status", detailBody?.recordStatus || "not inspected"],
+        ["section", detailBody?.section || archiveState.selectedDetail?.section || "none"],
+        ["inspect key", detailBody?.inspectKey || archiveState.selectedDetail?.inspectKey || "none"],
+        ["field count", asText(detailBody?.fieldCount, "0")],
+        ["truncated", asText(detailBody?.truncated, "no")],
+        ["full row returned", asText(detailBody?.fullRowReturned, "no")],
+        ["full database returned", asText(detailBody?.fullDatabaseReturned, "no")],
+        ["full USERS returned", asText(detailBody?.fullUsersReturned, "no")],
+        ["loaded at", archiveState.detailLoadedAt || "not run"],
+        ["endpoint result", endpointResultText(archiveState.detailResult, archiveState.detailError)],
+      ],
+      fieldRows: createDetailFieldRows(detailBody),
+    },
+  };
+}
+
+export function createAdminDevViewModel({ context = {}, endpoints = {}, syncEndpoints = {}, archiveEndpoints = {}, state = {} } = {}) {
   const authorityStatus = payloadBody(state, "authorityStatus");
   const sourceMaterialisation = payloadBody(state, "sourceMaterialisation");
+  const archiveList = payloadBody(state, "archiveList");
   const runtimeConfig = payloadBody(state, "runtimeConfig");
   const health = payloadBody(state, "health");
   const decision = decisionFor(context);
@@ -322,8 +473,9 @@ export function createAdminDevViewModel({ context = {}, endpoints = {}, syncEndp
       ["authority role", role],
       ["display role", displayRole(context)],
       ["visibility", decision?.reason || "unknown"],
-      ["read policy", "GET status reads only"],
+      ["read policy", "GET status/archive reads only"],
       ["write policy", "dry-run first; live sync requires SYNC confirmation and server approval"],
+      ["archive policy", "read-only list/diff/detail; no restore"],
     ],
     cards: [
       {
@@ -353,15 +505,17 @@ export function createAdminDevViewModel({ context = {}, endpoints = {}, syncEndp
       },
       {
         title: "Archive readiness",
-        description: "Archive status only. No archive listing, diff, restore, or file mutation is available here outside the approved sync endpoint.",
+        description: "Archive status plus read-only list/diff/detail inspection. No restore, restore preview, edit, or file mutation is present in this stage.",
         rows: [
           ["configured", asText(archive.configured, "unknown")],
           ["available", asText(archive.available, "unknown")],
           ["path", archive.path || "not configured"],
           ["planned archive", archive.plannedArchivePath || "not planned"],
+          ["archive list count", asText(archiveList.count, "0")],
+          ["archive entries basename-only", asText(archiveList.basenameMetadataOnly, "yes")],
           ["archive before write", asText(archive.archiveBeforeWriteRequired, "yes")],
           ["archive write live", asText(archive.archiveBeforeWriteLive, "no")],
-          ["reason", archive.reason || "none"],
+          ["reason", archive.reason || archiveList.reason || "none"],
         ],
       },
       {
@@ -373,9 +527,10 @@ export function createAdminDevViewModel({ context = {}, endpoints = {}, syncEndp
           ["browser secrets exposed", asText(runtimeConfig.browserSecretsExposed, "no")],
           ["repo local secrets", asText(runtimeConfig.repoLocalSecrets, "no")],
           ["optional integrations", runtimeConfig.optionalIntegrationsNonBlocking ? "non-blocking" : "unknown"],
+          ["runtime data home", runtimeConfig.authorityReference?.runtimeDataHome || "not reported"],
           ["snapshot env", runtimeConfig.authorityReference?.snapshotPath?.status || "unknown"],
           ["archive env", runtimeConfig.authorityReference?.archiveDir?.status || "unknown"],
-          ["transitional fallback", runtimeConfig.authorityReference?.transitionalFallbackPath || "none"],
+          ["legacy transitional path", runtimeConfig.authorityReference?.legacyTransitionalPath || "none"],
         ],
       },
       {
@@ -407,14 +562,25 @@ export function createAdminDevViewModel({ context = {}, endpoints = {}, syncEndp
       sourceMaterialisation,
       loadedAt: state.loadedAt,
     }),
+    archiveInspection: createArchiveInspectionModel({
+      archiveState: state.archiveInspection,
+      archiveEndpoints,
+      archiveList,
+    }),
     endpoints: endpointStatusRows,
     blockers: blockerItems(sourceMaterialisation),
     safety: [
+      "Archive list returns basename metadata only: name, sizeBytes, modifiedAt",
+      "Archive diff accepts basename archiveName only and rejects path traversal/absolute paths",
+      "Diff summary returns section/table counts and changed-key handles only",
+      "Field-level diff is on-demand only and returns changed fields only as old/new pairs",
+      "Complex or sensitive field values are summarised/redacted instead of dumping rows",
       "Only approved sync POSTs are exposed: dry-run=true and dryRun=false",
       "Live sync is disabled until a dry-run completes in the current page session",
       "Live sync requires exact SYNC confirmation text",
       "Server/env write gates are never bypassed",
       "No restore or archive restore",
+      "No restore preview",
       "No row editing or correction workflow",
       "No full DB dump or full USERS exposure",
       "No HubSpot writes",
@@ -422,7 +588,7 @@ export function createAdminDevViewModel({ context = {}, endpoints = {}, syncEndp
       "No selector or Timeline changes",
     ],
     warnings: [
-      ...(snapshot.transitionalPath ? ["Authority/reference snapshot is still using the transitional NovonDB path."] : []),
+      ...(snapshot.transitionalPath ? ["Authority/reference snapshot is using the legacy transitional NovonDB path through an env override/alias."] : []),
       ...(failedReads ? [`${failedReads} read endpoint(s) failed; module remained isolated from normal workflow.`] : []),
     ],
   };
