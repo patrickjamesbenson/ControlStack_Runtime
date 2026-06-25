@@ -16,7 +16,17 @@ const AUTH_REF_SOURCE_MATERIALISATION_PATH = "/api/" + "authority-reference" + "
 const AUTH_REF_ARCHIVES_PATH = "/api/" + "authority-reference" + "/archives";
 const AUTH_REF_DIFF_PATH = "/api/" + "authority-reference" + "/diff";
 const AUTH_REF_DIFF_DETAIL_PATH = "/api/" + "authority-reference" + "/diff-detail";
+const AUTH_REF_RESTORE_PREVIEW_PATH = "/api/" + "authority-reference" + "/restore/preview";
+const AUTH_REF_RESTORE_PATH = "/api/" + "authority-reference" + "/restore";
 const CONFIG_STATUS_PATH = "/api/runtime-config/status";
+const AUTH_REF_RESTORE_CONFIRMATION_TEXT = "RESTORE";
+const AUTH_REF_POST_PATHS = new Set([
+  AUTH_REF_SYNC_PATH,
+  AUTH_REF_DIFF_PATH,
+  AUTH_REF_DIFF_DETAIL_PATH,
+  AUTH_REF_RESTORE_PREVIEW_PATH,
+  AUTH_REF_RESTORE_PATH,
+]);
 
 const AUTH_REF_DATA_HOME = "C:\\ControlStack_RuntimeData\\authority-reference";
 const AUTH_REF_DEFAULT_SNAPSHOT_PATH = join(AUTH_REF_DATA_HOME, "novondb.json");
@@ -356,6 +366,7 @@ function runtimeConfigStatus() {
       }),
       syncEnabled: envStatus({ primary: "CONTROLSTACK_AUTHORITY_REFERENCE_SYNC_ENABLED", valueKind: "boolean" }),
       syncExecutionEnabled: envStatus({ primary: "CONTROLSTACK_AUTHORITY_REFERENCE_SYNC_EXECUTION_ENABLED", valueKind: "boolean" }),
+      restoreEnabled: envStatus({ primary: "CONTROLSTACK_AUTHORITY_REFERENCE_RESTORE_ENABLED", valueKind: "boolean" }),
       sourceType: envStatus({ primary: "CONTROLSTACK_AUTHORITY_REFERENCE_SOURCE_TYPE", valueKind: "provider-kind" }),
       googleSheetId: envStatus({ primary: "CONTROLSTACK_AUTHORITY_REFERENCE_GOOGLE_SHEET_ID", secret: true, valueKind: "external-provider-id" }),
       materialisedSourcePath: envStatus({
@@ -409,6 +420,18 @@ function archiveStamp() {
 function archiveDestinationPath(snapshotPath, archiveDir) {
   const safeName = snapshotPath.split(/[\\/]/).pop() || "authority-reference-snapshot.json";
   return resolve(archiveDir, `${archiveStamp()}-${safeName}`);
+}
+
+function authorityReferenceRestoreConfig() {
+  const enabled = readBooleanEnv("CONTROLSTACK_AUTHORITY_REFERENCE_RESTORE_ENABLED", false);
+  return {
+    owner: "runtime-server",
+    enabled,
+    envGate: "CONTROLSTACK_AUTHORITY_REFERENCE_RESTORE_ENABLED",
+    requiredValue: "true",
+    confirmationText: AUTH_REF_RESTORE_CONFIRMATION_TEXT,
+    reason: enabled ? "Archive restore is explicitly enabled for admin action." : "Archive restore live writes are disabled by default.",
+  };
 }
 
 function authorityReferenceSyncConfig() {
@@ -931,6 +954,8 @@ async function sendAuthorityReferenceArchives(res) {
         status: "archive-directory-unavailable",
         adminOnly: true,
         basenameMetadataOnly: true,
+        absolutePathsExposed: false,
+        rawFileContentExposed: false,
         archives: [],
         count: 0,
         reason: "Configured archive location is not a directory.",
@@ -1381,6 +1406,236 @@ async function sendAuthorityReferenceDiffDetail(res, req) {
       fullRowReturned: false,
       fullDatabaseReturned: false,
       fullUsersReturned: false,
+      absolutePathsExposed: false,
+    });
+  }
+}
+
+function hasAdminDevModuleAccess(req) {
+  return String(req.headers["x-controlstack-admin-dev"] || "") === "admin_dev";
+}
+
+function publicMetadataFromStat(name, info, status = "available") {
+  return {
+    name,
+    status,
+    present: info?.isFile?.() === true,
+    readable: info?.isFile?.() === true,
+    sizeBytes: typeof info?.size === "number" ? info.size : null,
+    modifiedAt: info?.mtime?.toISOString?.() || null,
+  };
+}
+
+async function publicSnapshotMetadata(pathValue) {
+  const name = basename(String(pathValue || "")) || "novondb.json";
+  try {
+    const info = await stat(pathValue);
+    return publicMetadataFromStat(name, info, info.isFile() ? "available" : "not-a-file");
+  } catch (error) {
+    return {
+      name,
+      status: "unavailable",
+      present: false,
+      readable: false,
+      sizeBytes: null,
+      modifiedAt: null,
+      reason: error?.code || "snapshot_unavailable",
+    };
+  }
+}
+
+async function safeArchiveMetadata(name) {
+  try {
+    const metadata = await archivePublicMetadata(name);
+    return metadata
+      ? { ...metadata, status: "available", present: true, readable: true }
+      : { name, status: "unavailable", present: false, readable: false, sizeBytes: null, modifiedAt: null };
+  } catch (error) {
+    return {
+      name,
+      status: "unavailable",
+      present: false,
+      readable: false,
+      sizeBytes: null,
+      modifiedAt: null,
+      reason: error?.code || "archive_unavailable",
+    };
+  }
+}
+
+async function jsonValidityForFile(pathValue) {
+  try {
+    await readJsonSnapshot(pathValue);
+    return { validJson: true, reason: null };
+  } catch (error) {
+    return { validJson: false, reason: error?.code || "invalid_json" };
+  }
+}
+
+function restoreBlockerRows({ moduleAccessAllowed, archiveResolution, archiveMeta, archiveJson, currentSnapshot, archiveAvailable, restoreConfig, confirmationMatches, requireConfirmation }) {
+  const blockers = [];
+  if (!moduleAccessAllowed) blockers.push({ code: "admin-dev-module-access-required", severity: "blocking", reason: "Restore preview/live restore must be called from the protected Admin / Dev module." });
+  if (!archiveResolution?.ok) blockers.push({ code: "archive-name-rejected", severity: "blocking", reason: archiveResolution?.reason || "archiveName was rejected." });
+  if (archiveResolution?.ok && archiveMeta?.present !== true) blockers.push({ code: "archive-unavailable", severity: "blocking", reason: "Selected archive is not available as a readable JSON file." });
+  if (archiveResolution?.ok && archiveJson?.validJson !== true) blockers.push({ code: "archive-json-invalid", severity: "blocking", reason: "Selected archive is not valid JSON." });
+  if (currentSnapshot?.present !== true || currentSnapshot?.readable !== true) blockers.push({ code: "current-snapshot-unavailable", severity: "blocking", reason: "Current authority/reference snapshot must be readable so it can be archived before restore." });
+  if (archiveAvailable !== true) blockers.push({ code: "archive-directory-unavailable", severity: "blocking", reason: "Archive directory must be available to store the pre-restore snapshot." });
+  if (restoreConfig.enabled !== true) blockers.push({ code: "restore-env-disabled", severity: "blocking", reason: "CONTROLSTACK_AUTHORITY_REFERENCE_RESTORE_ENABLED must be true for live restore." });
+  if (requireConfirmation && confirmationMatches !== true) blockers.push({ code: "restore-confirmation-required", severity: "blocking", reason: `Confirmation text must exactly equal ${AUTH_REF_RESTORE_CONFIRMATION_TEXT}.` });
+  return blockers;
+}
+
+async function authorityReferenceRestorePreflight({ archiveName, confirmation = "", moduleAccessAllowed = false, requireConfirmation = false } = {}) {
+  const archiveResolution = archivePathForBasename(archiveName);
+  const restoreConfig = authorityReferenceRestoreConfig();
+  const currentPath = readAuthorityReferenceSnapshotPath();
+  const archiveDir = authorityReferenceArchiveDir();
+  const archiveStatus = await authorityReferenceArchiveStatus();
+  const currentSnapshot = await publicSnapshotMetadata(currentPath);
+  const archiveMeta = archiveResolution.ok
+    ? await safeArchiveMetadata(archiveResolution.name)
+    : { name: String(archiveName || "").trim() || "none", status: "rejected", present: false, readable: false, sizeBytes: null, modifiedAt: null };
+  const archiveJson = archiveResolution.ok && archiveMeta.present === true
+    ? await jsonValidityForFile(archiveResolution.filePath)
+    : { validJson: false, reason: archiveResolution.reason || "archive_unavailable" };
+  const plannedPreRestoreArchivePath = currentPath && archiveDir ? archiveDestinationPath(currentPath, archiveDir) : null;
+  const plannedPreRestoreArchive = plannedPreRestoreArchivePath
+    ? { name: basename(plannedPreRestoreArchivePath), status: "planned", absolutePathExposed: false }
+    : { name: null, status: "not-planned", absolutePathExposed: false };
+  const confirmationMatches = confirmation === AUTH_REF_RESTORE_CONFIRMATION_TEXT;
+  const blockers = restoreBlockerRows({
+    moduleAccessAllowed,
+    archiveResolution,
+    archiveMeta,
+    archiveJson,
+    currentSnapshot,
+    archiveAvailable: archiveStatus.available === true,
+    restoreConfig,
+    confirmationMatches,
+    requireConfirmation,
+  });
+  const restoreAllowed = blockers.length === 0;
+  const payload = {
+    ok: archiveResolution.ok === true,
+    owner: "runtime-server",
+    status: restoreAllowed ? "restore-preview-ready" : "restore-preview-blocked",
+    adminOnly: true,
+    readOnly: true,
+    archiveName: archiveResolution.ok ? archiveResolution.name : null,
+    archive: archiveMeta,
+    currentSnapshot,
+    archiveJsonValid: archiveJson.validJson === true,
+    archiveJsonReason: archiveJson.reason,
+    restoreWouldBeAllowed: restoreAllowed,
+    restoreAllowed,
+    plannedPreRestoreArchive,
+    blockers,
+    mutationAttempted: false,
+    fullDatabaseReturned: false,
+    fullUsersReturned: false,
+    rawUsersReturned: false,
+    absolutePathsExposed: false,
+    restoreConfig: {
+      enabled: restoreConfig.enabled,
+      envGate: restoreConfig.envGate,
+      requiredValue: restoreConfig.requiredValue,
+      confirmationText: restoreConfig.confirmationText,
+    },
+    checkedAt: new Date().toISOString(),
+  };
+  return { payload, archiveResolution, currentPath, plannedPreRestoreArchivePath, blockers, restoreAllowed };
+}
+
+async function sendAuthorityReferenceRestorePreview(res, req) {
+  try {
+    const body = await requestJson(req);
+    const preflight = await authorityReferenceRestorePreflight({
+      archiveName: body.archiveName,
+      moduleAccessAllowed: hasAdminDevModuleAccess(req),
+      requireConfirmation: false,
+    });
+    sendJson(res, preflight.archiveResolution.ok ? 200 : 400, preflight.payload);
+  } catch (error) {
+    sendJson(res, 500, {
+      ok: false,
+      owner: "runtime-server",
+      status: "restore-preview-failed",
+      adminOnly: true,
+      readOnly: true,
+      reason: error?.code || "authority_reference_restore_preview_failed",
+      mutationAttempted: false,
+      fullDatabaseReturned: false,
+      fullUsersReturned: false,
+      rawUsersReturned: false,
+      absolutePathsExposed: false,
+    });
+  }
+}
+
+async function sendAuthorityReferenceRestore(res, req) {
+  let archiveName = "";
+  try {
+    const body = await requestJson(req);
+    archiveName = body.archiveName;
+    const preflight = await authorityReferenceRestorePreflight({
+      archiveName,
+      confirmation: body.confirmation,
+      moduleAccessAllowed: hasAdminDevModuleAccess(req),
+      requireConfirmation: true,
+    });
+    if (!preflight.restoreAllowed) {
+      sendJson(res, preflight.archiveResolution.ok ? 409 : 400, {
+        ...preflight.payload,
+        status: "restore-blocked",
+        readOnly: false,
+        mutationAttempted: false,
+      });
+      return;
+    }
+
+    await mkdir(authorityReferenceArchiveDir(), { recursive: true });
+    await copyFile(preflight.currentPath, preflight.plannedPreRestoreArchivePath);
+    const preRestoreArchiveInfo = await stat(preflight.plannedPreRestoreArchivePath);
+    const preRestoreArchive = publicMetadataFromStat(basename(preflight.plannedPreRestoreArchivePath), preRestoreArchiveInfo, "created");
+    await copyFile(preflight.archiveResolution.filePath, preflight.currentPath);
+    const targetSnapshot = await publicSnapshotMetadata(preflight.currentPath);
+    sendJson(res, 200, {
+      ok: true,
+      owner: "runtime-server",
+      status: "restore-completed",
+      adminOnly: true,
+      readOnly: false,
+      executionLive: true,
+      restoredArchiveName: preflight.archiveResolution.name,
+      targetSnapshot,
+      preRestoreArchive,
+      completedAt: new Date().toISOString(),
+      blockers: [],
+      failures: [],
+      statusRefreshed: true,
+      archiveBeforeWriteRequired: true,
+      archiveBeforeWriteLive: true,
+      fullDatabaseReturned: false,
+      fullUsersReturned: false,
+      rawUsersReturned: false,
+      absolutePathsExposed: false,
+    });
+  } catch (error) {
+    const validation = validateArchiveName(archiveName);
+    sendJson(res, 500, {
+      ok: false,
+      owner: "runtime-server",
+      status: "restore-failed",
+      adminOnly: true,
+      readOnly: false,
+      archiveName: validation.ok ? validation.name : null,
+      completedAt: new Date().toISOString(),
+      blockers: [],
+      failures: [{ code: "restore-exception", severity: "blocking", reason: error?.code || "authority_reference_restore_failed" }],
+      mutationAttempted: true,
+      fullDatabaseReturned: false,
+      fullUsersReturned: false,
+      rawUsersReturned: false,
       absolutePathsExposed: false,
     });
   }
@@ -1901,8 +2156,8 @@ async function serveFile(res, absolutePath) {
 const server = createServer(async (req, res) => {
   const requestUrl = new URL(req.url || "/", `http://${req.headers.host || `${HOST}:${PORT}`}`);
 
-  const isAuthorityReferenceSyncPost = req.method === "POST" && requestUrl.pathname === AUTH_REF_SYNC_PATH;
-  if (req.method !== "GET" && req.method !== "HEAD" && !isAuthorityReferenceSyncPost) {
+  const isAllowedAuthorityReferencePost = req.method === "POST" && AUTH_REF_POST_PATHS.has(requestUrl.pathname);
+  if (req.method !== "GET" && req.method !== "HEAD" && !isAllowedAuthorityReferencePost) {
     sendJson(res, 405, { ok: false, error: "method_not_allowed" });
     return;
   }
@@ -1929,6 +2184,8 @@ const server = createServer(async (req, res) => {
       authorityReferenceArchives: AUTH_REF_ARCHIVES_PATH,
       authorityReferenceDiff: AUTH_REF_DIFF_PATH,
       authorityReferenceDiffDetail: AUTH_REF_DIFF_DETAIL_PATH,
+      authorityReferenceRestorePreview: AUTH_REF_RESTORE_PREVIEW_PATH,
+      authorityReferenceRestore: AUTH_REF_RESTORE_PATH,
       configStatus: CONFIG_STATUS_PATH,
       config: runtimeConfigStatus(),
       root: ROOT,
@@ -1995,6 +2252,24 @@ const server = createServer(async (req, res) => {
       return;
     }
     await sendAuthorityReferenceDiffDetail(res, req);
+    return;
+  }
+
+  if (requestUrl.pathname === AUTH_REF_RESTORE_PREVIEW_PATH) {
+    if (req.method !== "POST") {
+      sendJson(res, 405, { ok: false, error: "method_not_allowed", requiredMethod: "POST" });
+      return;
+    }
+    await sendAuthorityReferenceRestorePreview(res, req);
+    return;
+  }
+
+  if (requestUrl.pathname === AUTH_REF_RESTORE_PATH) {
+    if (req.method !== "POST") {
+      sendJson(res, 405, { ok: false, error: "method_not_allowed", requiredMethod: "POST" });
+      return;
+    }
+    await sendAuthorityReferenceRestore(res, req);
     return;
   }
 

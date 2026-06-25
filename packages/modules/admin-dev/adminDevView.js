@@ -171,6 +171,10 @@ function appendArchiveList(parent, archiveInspection, actions = {}) {
       disabled: archiveInspection.diff.running,
       onClick: () => actions.onRunArchiveDiff?.(archive.name),
     });
+    appendActionButton(actionsRow, archiveInspection.restore?.preview?.running && archiveInspection.restore?.preview?.selectedArchiveName === archive.name ? "Previewing restore…" : "Preview restore", {
+      disabled: archiveInspection.restore?.preview?.running || archiveInspection.restore?.live?.running,
+      onClick: () => actions.onRunRestorePreview?.(archive.name),
+    });
     item.appendChild(actionsRow);
     list.appendChild(item);
   }
@@ -271,6 +275,73 @@ function appendFieldLevelDetail(parent, archiveInspection) {
   parent.appendChild(panel);
 }
 
+function appendArchiveRestore(parent, archiveInspection, actions = {}) {
+  const restore = archiveInspection.restore || {};
+  const preview = restore.preview || {};
+  const live = restore.live || {};
+  const proof = restore.postRestoreProof || {};
+
+  const panel = document.createElement("section");
+  panel.className = "cs-admin-dev__sync-panel";
+  appendText(panel, "h4", "Archive restore workflow");
+  appendText(panel, "p", live.warning || "This overwrites the current authority/reference snapshot from the selected archive.", "cs-admin-dev__danger-copy");
+
+  const previewActions = document.createElement("div");
+  previewActions.className = "cs-admin-dev__actions";
+  appendActionButton(previewActions, preview.running ? "Running restore preview…" : "Run restore preview", {
+    disabled: preview.running || live.running || !preview.selectedArchiveName,
+    onClick: () => actions.onRunRestorePreview?.(preview.selectedArchiveName),
+  });
+  panel.appendChild(previewActions);
+
+  appendText(panel, "h5", "Restore preview");
+  appendDefinitionList(panel, preview.rows || []);
+  appendText(panel, "h5", "Preview blockers");
+  appendPillList(panel, preview.blockers || []);
+  appendErrors(panel, "Restore preview endpoint error", preview.errors || []);
+
+  const confirmField = document.createElement("label");
+  confirmField.className = "cs-admin-dev__confirm";
+  appendText(confirmField, "span", "Type RESTORE to enable confirmed restore");
+  const confirmInput = document.createElement("input");
+  confirmInput.type = "text";
+  confirmInput.autocomplete = "off";
+  confirmInput.spellcheck = false;
+  confirmInput.placeholder = live.requiredConfirmation || "RESTORE";
+  confirmInput.value = live.confirmationValue || "";
+  confirmField.appendChild(confirmInput);
+  panel.appendChild(confirmField);
+
+  const liveActions = document.createElement("div");
+  liveActions.className = "cs-admin-dev__actions";
+  const liveButton = appendActionButton(liveActions, live.running ? "Running confirmed restore…" : "Run confirmed restore", {
+    disabled: live.disabled,
+    onClick: actions.onRunConfirmedRestore,
+  });
+  confirmInput.addEventListener("input", () => {
+    actions.onRestoreConfirmationInput?.(confirmInput.value);
+    liveButton.disabled = !(live.previewCompleted && live.archiveSelected && live.serverRestoreAllowed && confirmInput.value === live.requiredConfirmation) || live.running;
+  });
+  panel.appendChild(liveActions);
+
+  appendText(panel, "h5", "Confirmed restore");
+  appendDefinitionList(panel, live.rows || []);
+  appendText(panel, "h5", "Restore blockers / failures");
+  appendPillList(panel, [...(live.blockers || []), ...(live.failures || [])]);
+  appendErrors(panel, "Restore endpoint error", live.errors || []);
+
+  if (proof.visible) {
+    const proofPanel = document.createElement("section");
+    proofPanel.className = "cs-admin-dev__notice";
+    appendText(proofPanel, "h4", proof.title || "Post-restore proof");
+    appendText(proofPanel, "p", proof.description || "Restore proof metadata only.");
+    appendDefinitionList(proofPanel, proof.rows || []);
+    panel.appendChild(proofPanel);
+  }
+
+  parent.appendChild(panel);
+}
+
 function appendArchiveInspection(parent, archiveInspection, actions = {}) {
   const section = document.createElement("section");
   section.className = "cs-admin-dev__card cs-admin-dev__sync";
@@ -282,6 +353,7 @@ function appendArchiveInspection(parent, archiveInspection, actions = {}) {
   appendArchiveList(grid, archiveInspection, actions);
   appendDiffSummary(grid, archiveInspection, actions);
   appendFieldLevelDetail(grid, archiveInspection);
+  appendArchiveRestore(grid, archiveInspection, actions);
   section.appendChild(grid);
   parent.appendChild(section);
 }
@@ -308,7 +380,7 @@ function renderProtectedFallback(container, viewModel) {
   const notice = document.createElement("section");
   notice.className = "cs-admin-dev__notice cs-admin-dev__notice--warning";
   appendText(notice, "h3", "Protected module");
-  appendText(notice, "p", "Admin / Dev is intentionally hidden from normal users and normal workflow use. Ask a developer/admin to use this route for authority/reference status, sync, and archive diff inspection.");
+  appendText(notice, "p", "Admin / Dev is intentionally hidden from normal users and normal workflow use. Ask a developer/admin to use this route for authority/reference status, sync, archive diff, and restore inspection.");
   article.appendChild(notice);
 
   container.appendChild(article);
@@ -331,7 +403,7 @@ export function renderAdminDevView(container, viewModel, actions = {}) {
   header.className = "cs-admin-dev__header";
   appendText(header, "p", viewModel.label, "cs-shell__eyebrow");
   appendText(header, "h2", viewModel.title);
-  appendText(header, "p", "Protected authority/reference status, sync workflow, and read-only archive diff inspection for developer/admin use. Restore, restore preview, row editing, and raw DB browsing are not present.");
+  appendText(header, "p", "Protected authority/reference status, sync workflow, archive diff inspection, and preview-first archive restore for developer/admin use. Row editing and database browsing are not present.");
   appendDefinitionList(header, viewModel.headerRows);
   article.appendChild(header);
 
@@ -359,14 +431,14 @@ export function renderAdminDevView(container, viewModel, actions = {}) {
   const endpoints = document.createElement("section");
   endpoints.className = "cs-admin-dev__card";
   appendText(endpoints, "h3", "Approved status endpoints");
-  appendText(endpoints, "p", "Status refreshes use same-origin GET requests. Archive diff/detail and sync actions are limited to the approved authority/reference endpoints only.");
+  appendText(endpoints, "p", "Status refreshes use same-origin GET requests. Sync, archive diff/detail, and restore actions are limited to the approved authority/reference endpoints only.");
   appendEndpointList(endpoints, viewModel.endpoints);
   article.appendChild(endpoints);
 
   const blockers = document.createElement("section");
   blockers.className = "cs-admin-dev__card";
   appendText(blockers, "h3", "Blockers and guardrails");
-  appendText(blockers, "p", "Runtime-reported blockers are shown as status only. The module does not provide actions to clear, edit, restore, or expose raw authority/reference data.");
+  appendText(blockers, "p", "Runtime-reported blockers are shown as status only. The module does not provide actions to clear, edit, delete archives, or expose authority/reference data dumps.");
   appendPillList(blockers, viewModel.blockers);
   article.appendChild(blockers);
 

@@ -1,5 +1,6 @@
 const ROLE_ORDER = Object.freeze(["external_user", "internal_user", "internal_engineer", "developer", "admin"]);
 const LIVE_CONFIRMATION_TEXT = "SYNC";
+const RESTORE_CONFIRMATION_TEXT = "RESTORE";
 
 function roleRank(role) {
   const index = ROLE_ORDER.indexOf(role);
@@ -356,15 +357,133 @@ function createDetailFieldRows(detailBody = {}) {
   ]);
 }
 
-function createArchiveInspectionModel({ archiveState = {}, archiveEndpoints = {}, archiveList = {} }) {
+function restoreBlockers(body) {
+  const blockers = Array.isArray(body?.blockers) ? body.blockers.map((item) => `${item.code || "blocker"}: ${item.reason || item.severity || "reported"}`) : [];
+  if (!body) return ["Run restore preview for a selected archive to ask the server for restore blockers."];
+  if (body.restoreAllowed === false && !blockers.length) blockers.push(`${body.status || "restore-blocked"}: Server did not allow restore.`);
+  return blockers.length ? blockers : ["No blockers reported by restore endpoint."];
+}
+
+function restoreFailureRows(body) {
+  const failures = Array.isArray(body?.failures) ? body.failures : [];
+  return failures.map((item) => `${item.code || "failure"}: ${item.reason || item.severity || "reported"}`);
+}
+
+function createRestorePreviewModel({ archiveState = {}, archiveEndpoints = {} }) {
+  const body = syncResultBody(archiveState.restorePreviewResult);
+  const selectedArchiveName = archiveState.selectedArchiveName || archiveState.restorePreviewArchiveName || "";
+  return {
+    endpoint: archiveEndpoints.restorePreview,
+    selectedArchiveName,
+    status: archiveState.restorePreviewStatus || "idle",
+    running: archiveState.restorePreviewStatus === "running",
+    completed: archiveState.restorePreviewCompleted === true,
+    loadedAt: archiveState.restorePreviewLoadedAt || "not run",
+    error: archiveState.restorePreviewError || null,
+    resultText: endpointResultText(archiveState.restorePreviewResult, archiveState.restorePreviewError),
+    serverRestoreAllowed: body?.restoreAllowed === true,
+    plannedPreRestoreArchiveName: body?.plannedPreRestoreArchive?.name || "not planned",
+    rows: [
+      ["selected archive", selectedArchiveName || "none selected"],
+      ["endpoint", archiveEndpoints.restorePreview || "not configured"],
+      ["status", body?.status || archiveState.restorePreviewStatus || "idle"],
+      ["archive valid JSON", asText(body?.archiveJsonValid, "unknown")],
+      ["archive name", body?.archive?.name || "not checked"],
+      ["archive size", bytesLabel(body?.archive?.sizeBytes)],
+      ["archive modified", body?.archive?.modifiedAt || "unknown"],
+      ["current snapshot", body?.currentSnapshot?.name || "not checked"],
+      ["current status", body?.currentSnapshot?.status || "unknown"],
+      ["current size", bytesLabel(body?.currentSnapshot?.sizeBytes)],
+      ["current modified", body?.currentSnapshot?.modifiedAt || "unknown"],
+      ["planned pre-restore archive", body?.plannedPreRestoreArchive?.name || "not planned"],
+      ["server restore gate", body?.restoreConfig?.enabled === true ? "enabled" : "disabled"],
+      ["restore would be allowed", asText(body?.restoreAllowed, "no")],
+      ["absolute paths exposed", asText(body?.absolutePathsExposed, "no")],
+      ["full DB returned", asText(body?.fullDatabaseReturned, "no")],
+      ["full USERS returned", asText(body?.fullUsersReturned, "no")],
+      ["mutation attempted", asText(body?.mutationAttempted, "no")],
+      ["loaded at", archiveState.restorePreviewLoadedAt || "not run"],
+      ["endpoint result", endpointResultText(archiveState.restorePreviewResult, archiveState.restorePreviewError)],
+    ],
+    blockers: restoreBlockers(body),
+    errors: archiveState.restorePreviewError ? [archiveState.restorePreviewError] : [],
+  };
+}
+
+function createRestoreLiveModel({ archiveState = {}, archiveEndpoints = {}, previewModel = {} }) {
+  const body = syncResultBody(archiveState.restoreResult);
+  const confirmationMatches = archiveState.restoreConfirmation === RESTORE_CONFIRMATION_TEXT;
+  const previewCompleted = archiveState.restorePreviewCompleted === true;
+  const archiveSelected = Boolean(archiveState.restorePreviewArchiveName || archiveState.selectedArchiveName);
+  const serverRestoreAllowed = previewModel.serverRestoreAllowed === true;
+  const running = archiveState.restoreStatus === "running";
+  return {
+    endpoint: archiveEndpoints.restore,
+    requiredConfirmation: RESTORE_CONFIRMATION_TEXT,
+    confirmationValue: archiveState.restoreConfirmation || "",
+    previewCompleted,
+    archiveSelected,
+    serverRestoreAllowed,
+    running,
+    disabled: !(previewCompleted && archiveSelected && confirmationMatches && serverRestoreAllowed) || running,
+    status: archiveState.restoreStatus || "idle",
+    attempted: archiveState.restoreAttempted === true,
+    loadedAt: archiveState.restoreLoadedAt || "not run",
+    warning: "This overwrites the current authority/reference snapshot from the selected archive.",
+    rows: [
+      ["write warning", "This overwrites the current authority/reference snapshot from the selected archive."],
+      ["endpoint", archiveEndpoints.restore || "not configured"],
+      ["selected archive", archiveState.restorePreviewArchiveName || archiveState.selectedArchiveName || "none selected"],
+      ["preview completed this session", asText(previewCompleted, "no")],
+      ["server restore allowed", asText(serverRestoreAllowed, "no")],
+      ["confirmation required", RESTORE_CONFIRMATION_TEXT],
+      ["restore result status", body?.status || archiveState.restoreStatus || "not run"],
+      ["restored archive", body?.restoredArchiveName || "not restored"],
+      ["target snapshot", body?.targetSnapshot?.name || "not reported"],
+      ["target modified", body?.targetSnapshot?.modifiedAt || "unknown"],
+      ["pre-restore archive", body?.preRestoreArchive?.name || previewModel.plannedPreRestoreArchiveName || "not reported"],
+      ["status refreshed", asText(body?.statusRefreshed, "not reported")],
+      ["absolute paths exposed", asText(body?.absolutePathsExposed, "no")],
+      ["full DB returned", asText(body?.fullDatabaseReturned, "no")],
+      ["full USERS returned", asText(body?.fullUsersReturned, "no")],
+      ["loaded at", archiveState.restoreLoadedAt || "not run"],
+      ["endpoint result", endpointResultText(archiveState.restoreResult, archiveState.restoreError)],
+    ],
+    blockers: restoreBlockers(body),
+    failures: restoreFailureRows(body),
+    errors: archiveState.restoreError ? [archiveState.restoreError] : [],
+  };
+}
+
+function createPostRestoreProof({ archiveState = {}, loadedAt }) {
+  const body = syncResultBody(archiveState.restoreResult);
+  return {
+    visible: archiveState.restoreAttempted === true,
+    title: "Post-restore proof",
+    description: "Status is refreshed after each restore attempt. The proof stays limited to metadata, blocker/failure status, and archive names only.",
+    rows: [
+      ["restore result status", body?.status || archiveState.restoreStatus || "not attempted"],
+      ["restored archive", body?.restoredArchiveName || "not restored"],
+      ["target snapshot", body?.targetSnapshot?.name || "not reported"],
+      ["target modified", body?.targetSnapshot?.modifiedAt || "unknown"],
+      ["pre-restore archive", body?.preRestoreArchive?.name || "not reported"],
+      ["blockers/failures", [...restoreBlockers(body), ...restoreFailureRows(body)].join(" · ")],
+      ["loaded/refreshed timestamp", loadedAt || "not refreshed"],
+    ],
+  };
+}
+
+function createArchiveInspectionModel({ archiveState = {}, archiveEndpoints = {}, archiveList = {}, loadedAt }) {
   const archives = archiveListRows(archiveList);
   const diffBody = syncResultBody(archiveState.diffResult);
   const detailBody = syncResultBody(archiveState.detailResult);
   const diffSections = Array.isArray(diffBody?.sections) ? diffBody.sections.map(createDiffSectionModel) : [];
   const selectedArchiveName = archiveState.selectedArchiveName || "";
+  const restorePreview = createRestorePreviewModel({ archiveState, archiveEndpoints });
+  const restoreLive = createRestoreLiveModel({ archiveState, archiveEndpoints, previewModel: restorePreview });
   return {
-    title: "Archive diff inspection",
-    description: "Read-only archive inspection. Archive entries expose basename metadata only; diff detail is fetched on demand and never returns full rows or full database JSON.",
+    title: "Archive diff and restore inspection",
+    description: "Archive entries expose basename metadata only. Diff detail is fetched on demand; restore is preview-first and never returns full rows or full database JSON.",
     endpoints: archiveEndpoints,
     list: {
       endpoint: archiveEndpoints.list,
@@ -430,6 +549,11 @@ function createArchiveInspectionModel({ archiveState = {}, archiveEndpoints = {}
       ],
       fieldRows: createDetailFieldRows(detailBody),
     },
+    restore: {
+      preview: restorePreview,
+      live: restoreLive,
+      postRestoreProof: createPostRestoreProof({ archiveState, loadedAt }),
+    },
   };
 }
 
@@ -475,7 +599,7 @@ export function createAdminDevViewModel({ context = {}, endpoints = {}, syncEndp
       ["visibility", decision?.reason || "unknown"],
       ["read policy", "GET status/archive reads only"],
       ["write policy", "dry-run first; live sync requires SYNC confirmation and server approval"],
-      ["archive policy", "read-only list/diff/detail; no restore"],
+      ["archive policy", "list/diff/detail plus preview-first RESTORE workflow behind server env gate"],
     ],
     cards: [
       {
@@ -505,7 +629,7 @@ export function createAdminDevViewModel({ context = {}, endpoints = {}, syncEndp
       },
       {
         title: "Archive readiness",
-        description: "Archive status plus read-only list/diff/detail inspection. No restore, restore preview, edit, or file mutation is present in this stage.",
+        description: "Archive status plus list/diff/detail inspection and a gated restore workflow. Restore remains preview-first, confirmation-gated, and server/env-gated.",
         rows: [
           ["configured", asText(archive.configured, "unknown")],
           ["available", asText(archive.available, "unknown")],
@@ -530,6 +654,7 @@ export function createAdminDevViewModel({ context = {}, endpoints = {}, syncEndp
           ["runtime data home", runtimeConfig.authorityReference?.runtimeDataHome || "not reported"],
           ["snapshot env", runtimeConfig.authorityReference?.snapshotPath?.status || "unknown"],
           ["archive env", runtimeConfig.authorityReference?.archiveDir?.status || "unknown"],
+          ["restore env", runtimeConfig.authorityReference?.restoreEnabled?.status || "unknown"],
           ["legacy transitional path", runtimeConfig.authorityReference?.legacyTransitionalPath || "none"],
         ],
       },
@@ -566,6 +691,7 @@ export function createAdminDevViewModel({ context = {}, endpoints = {}, syncEndp
       archiveState: state.archiveInspection,
       archiveEndpoints,
       archiveList,
+      loadedAt: state.loadedAt,
     }),
     endpoints: endpointStatusRows,
     blockers: blockerItems(sourceMaterialisation),
@@ -574,13 +700,15 @@ export function createAdminDevViewModel({ context = {}, endpoints = {}, syncEndp
       "Archive diff accepts basename archiveName only and rejects path traversal/absolute paths",
       "Diff summary returns section/table counts and changed-key handles only",
       "Field-level diff is on-demand only and returns changed fields only as old/new pairs",
+      "Restore preview returns metadata/blockers only and performs no file mutation",
+      "Live restore requires selected archive, preview in this page session, exact RESTORE text, and server env gate",
+      "Live restore archives the current snapshot before overwriting it from the selected archive",
       "Complex or sensitive field values are summarised/redacted instead of dumping rows",
       "Only approved sync POSTs are exposed: dry-run=true and dryRun=false",
       "Live sync is disabled until a dry-run completes in the current page session",
       "Live sync requires exact SYNC confirmation text",
       "Server/env write gates are never bypassed",
-      "No restore or archive restore",
-      "No restore preview",
+      "No archive deletion",
       "No row editing or correction workflow",
       "No full DB dump or full USERS exposure",
       "No HubSpot writes",

@@ -18,7 +18,11 @@ const ARCHIVE_ENDPOINTS = Object.freeze({
   list: "/api/authority-reference/archives",
   diff: "/api/authority-reference/diff",
   diffDetail: "/api/authority-reference/diff-detail",
+  restorePreview: "/api/authority-reference/restore/preview",
+  restore: "/api/authority-reference/restore",
 });
+
+const RESTORE_CONFIRMATION_TEXT = "RESTORE";
 
 let mountedContainer = null;
 let mountedContext = null;
@@ -55,6 +59,18 @@ function createArchiveInspectionState() {
     detailError: null,
     detailLoadedAt: null,
     selectedDetail: null,
+    restorePreviewStatus: "idle",
+    restorePreviewResult: null,
+    restorePreviewError: null,
+    restorePreviewLoadedAt: null,
+    restorePreviewCompleted: false,
+    restorePreviewArchiveName: "",
+    restoreStatus: "idle",
+    restoreResult: null,
+    restoreError: null,
+    restoreLoadedAt: null,
+    restoreAttempted: false,
+    restoreConfirmation: "",
   };
 }
 
@@ -119,6 +135,9 @@ function renderCurrentView() {
     onConfirmationInput: updateSyncConfirmation,
     onRunArchiveDiff: runArchiveDiff,
     onRunArchiveDiffDetail: runArchiveDiffDetail,
+    onRunRestorePreview: runRestorePreview,
+    onRestoreConfirmationInput: updateRestoreConfirmation,
+    onRunConfirmedRestore: runConfirmedRestore,
   });
 }
 
@@ -154,6 +173,7 @@ async function postJson(endpoint, payload = null) {
     method: "POST",
     headers: {
       Accept: "application/json",
+      "X-ControlStack-Admin-Dev": "admin_dev",
       ...(payload ? { "Content-Type": "application/json" } : {}),
     },
     credentials: "same-origin",
@@ -216,6 +236,11 @@ async function loadReadOnlyStatus() {
 function updateSyncConfirmation(value) {
   if (!canUseAdminDevActions()) return;
   mergeSyncState({ confirmation: String(value || "") });
+}
+
+function updateRestoreConfirmation(value) {
+  if (!canUseAdminDevActions()) return;
+  mergeArchiveInspectionState({ restoreConfirmation: String(value || "") });
 }
 
 async function runDryRunSyncPreview() {
@@ -319,6 +344,18 @@ async function runArchiveDiff(archiveName) {
     diffResult: null,
     diffError: null,
     diffLoadedAt: null,
+    restorePreviewStatus: "idle",
+    restorePreviewResult: null,
+    restorePreviewError: null,
+    restorePreviewLoadedAt: null,
+    restorePreviewCompleted: false,
+    restorePreviewArchiveName: "",
+    restoreStatus: "idle",
+    restoreResult: null,
+    restoreError: null,
+    restoreLoadedAt: null,
+    restoreAttempted: false,
+    restoreConfirmation: "",
     detailStatus: "idle",
     detailResult: null,
     detailError: null,
@@ -409,6 +446,136 @@ async function runArchiveDiffDetail({ archiveName, section, inspectKey } = {}) {
   renderCurrentView();
 }
 
+async function runRestorePreview(archiveName) {
+  if (!canUseAdminDevActions()) return;
+  const selectedArchiveName = String(archiveName || state.archiveInspection?.selectedArchiveName || "").trim();
+  if (!selectedArchiveName || state.archiveInspection?.restorePreviewStatus === "running") return;
+
+  const thisArchiveRequest = ++archiveRequestId;
+  mergeArchiveInspectionState({
+    selectedArchiveName,
+    restorePreviewStatus: "running",
+    restorePreviewResult: null,
+    restorePreviewError: null,
+    restorePreviewLoadedAt: null,
+    restorePreviewCompleted: false,
+    restorePreviewArchiveName: selectedArchiveName,
+    restoreStatus: "idle",
+    restoreResult: null,
+    restoreError: null,
+    restoreLoadedAt: null,
+    restoreAttempted: false,
+    restoreConfirmation: "",
+  });
+  renderCurrentView();
+
+  try {
+    const result = await postJson(ARCHIVE_ENDPOINTS.restorePreview, { archiveName: selectedArchiveName });
+    if (thisArchiveRequest !== archiveRequestId || !mountedContainer) return;
+    mergeArchiveInspectionState({
+      selectedArchiveName,
+      restorePreviewStatus: result.ok ? "complete" : "endpoint-error",
+      restorePreviewResult: result,
+      restorePreviewError: result.ok ? null : `${ARCHIVE_ENDPOINTS.restorePreview} returned HTTP ${result.httpStatus}`,
+      restorePreviewLoadedAt: new Date().toISOString(),
+      restorePreviewCompleted: result.ok === true,
+      restorePreviewArchiveName: selectedArchiveName,
+      restoreStatus: "idle",
+      restoreResult: null,
+      restoreError: null,
+      restoreLoadedAt: null,
+      restoreAttempted: false,
+      restoreConfirmation: "",
+    });
+  } catch (error) {
+    if (thisArchiveRequest !== archiveRequestId || !mountedContainer) return;
+    mergeArchiveInspectionState({
+      selectedArchiveName,
+      restorePreviewStatus: "endpoint-error",
+      restorePreviewResult: null,
+      restorePreviewError: error?.message || "Archive restore preview failed.",
+      restorePreviewLoadedAt: new Date().toISOString(),
+      restorePreviewCompleted: false,
+      restorePreviewArchiveName: selectedArchiveName,
+      restoreStatus: "idle",
+      restoreResult: null,
+      restoreError: null,
+      restoreLoadedAt: null,
+      restoreAttempted: false,
+      restoreConfirmation: "",
+    });
+  }
+
+  renderCurrentView();
+}
+
+async function runConfirmedRestore() {
+  if (!canUseAdminDevActions()) return;
+
+  const archiveState = state.archiveInspection || createArchiveInspectionState();
+  const selectedArchiveName = String(archiveState.restorePreviewArchiveName || archiveState.selectedArchiveName || "").trim();
+  const previewBody = archiveState.restorePreviewResult?.body || {};
+  const serverRestoreAllowed = previewBody.restoreAllowed === true;
+  if (
+    !selectedArchiveName ||
+    archiveState.restorePreviewCompleted !== true ||
+    archiveState.restoreConfirmation !== RESTORE_CONFIRMATION_TEXT ||
+    serverRestoreAllowed !== true ||
+    archiveState.restoreStatus === "running"
+  ) {
+    renderCurrentView();
+    return;
+  }
+
+  const thisArchiveRequest = ++archiveRequestId;
+  mergeArchiveInspectionState({
+    selectedArchiveName,
+    restoreStatus: "running",
+    restoreResult: null,
+    restoreError: null,
+    restoreLoadedAt: null,
+    restoreAttempted: true,
+  });
+  renderCurrentView();
+
+  try {
+    const result = await postJson(ARCHIVE_ENDPOINTS.restore, {
+      archiveName: selectedArchiveName,
+      confirmation: archiveState.restoreConfirmation,
+    });
+    if (thisArchiveRequest !== archiveRequestId || !mountedContainer) return;
+    const serverStatus = String(result.body?.status || "").toLowerCase();
+    const restoreStatus = result.ok && serverStatus === "restore-completed"
+      ? "complete"
+      : result.ok
+        ? "complete-with-warning"
+        : "blocked-or-failed";
+    mergeArchiveInspectionState({
+      selectedArchiveName,
+      restoreStatus,
+      restoreResult: result,
+      restoreError: result.ok ? null : `${ARCHIVE_ENDPOINTS.restore} returned HTTP ${result.httpStatus}`,
+      restoreLoadedAt: new Date().toISOString(),
+      restoreAttempted: true,
+    });
+  } catch (error) {
+    if (thisArchiveRequest !== archiveRequestId || !mountedContainer) return;
+    mergeArchiveInspectionState({
+      selectedArchiveName,
+      restoreStatus: "endpoint-error",
+      restoreResult: null,
+      restoreError: error?.message || "Confirmed archive restore failed.",
+      restoreLoadedAt: new Date().toISOString(),
+      restoreAttempted: true,
+    });
+  }
+
+  renderCurrentView();
+  if (mountedContainer && canViewAdminDev(mountedContext)) {
+    await loadReadOnlyStatus();
+  }
+}
+
 function maybeLoadReadOnlyStatus() {
   if (!canViewAdminDev(mountedContext)) {
     requestId += 1;
@@ -445,7 +612,7 @@ export const adminDevModule = {
       readOnly: false,
       nonBootCritical: true,
       endpoints: [...Object.values(READ_ENDPOINTS), ...Object.values(SYNC_ENDPOINTS), ...Object.values(ARCHIVE_ENDPOINTS)],
-      mutationPolicy: "dry-run-first-sync-confirmation-only-plus-readonly-archive-diff-inspection",
+      mutationPolicy: "dry-run-first-sync-plus-preview-first-restore-confirmation-with-server-env-gates",
     });
   },
 
