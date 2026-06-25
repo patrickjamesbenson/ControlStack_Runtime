@@ -31,6 +31,8 @@ const userMenuPanel = document.getElementById("cs-shell-user-menu-panel");
 const userAvatar = document.getElementById("cs-shell-user-avatar");
 const userName = document.getElementById("cs-shell-user-name");
 const userMeta = document.getElementById("cs-shell-user-meta");
+const userCompanyLogo = document.getElementById("cs-shell-user-company-logo");
+const userCompanyName = document.getElementById("cs-shell-user-company-name");
 const developerDiagnosticsDetails = document.getElementById("shell_developer_diagnostics");
 const identitySelect = document.getElementById("cs-shell-identity-select");
 const resolvedIdentitySummary = document.getElementById("cs-shell-resolved-identity-summary");
@@ -104,6 +106,8 @@ const companyIdentityState = {
   companyNameSource: "empty",
   userLocked: false,
   currentDomain: null,
+  currentLogoUrl: "",
+  currentLogoDomain: "",
   logoRequestId: 0,
   derivedNameCache: new Map(),
   logoCache: new Map(),
@@ -228,6 +232,80 @@ function dispatchLegacyChange(select, value) {
   select.dispatchEvent(new Event("change", { bubbles: true }));
 }
 
+function resolvedUserEmail(context = {}) {
+  return context.auth?.session?.email || context.auth?.user?.email || context.identity?.currentUser?.email || "";
+}
+
+function hubSpotUserCompanyName(context = {}) {
+  const readCompany = context.crm?.crmRead?.company;
+  if (readCompany?.found && readCompany.companyName) return String(readCompany.companyName).trim();
+  const crmCompany = context.crm?.company;
+  if (crmCompany?.source === "crm-read-only" && crmCompany.companyName) return String(crmCompany.companyName).trim();
+  return "";
+}
+
+function currentUserCompanyName(context = {}) {
+  const manualValue = assistiveCompanyNameInput?.value?.trim() || "";
+  if (companyIdentityState.companyNameSource === "user" && manualValue) return manualValue;
+  const hubSpotName = hubSpotUserCompanyName(context);
+  if (hubSpotName) {
+    if (assistiveCompanyNameInput && companyIdentityState.companyNameSource !== "user") {
+      assistiveCompanyNameInput.value = hubSpotName;
+      companyIdentityState.companyNameSource = "hubspot";
+    }
+    return hubSpotName;
+  }
+  const domain = parseEmailDomain(resolvedUserEmail(context) || assistiveEmailInput?.value || "");
+  if (!domain) return "";
+  const { freemailBlocklist } = companyIdentityRuntimeSets();
+  if (freemailBlocklist.has(domain)) return "";
+  return deriveCompanyNameFromDomain(domain);
+}
+
+function renderUserCompanyIdentity(context = {}) {
+  const companyName = currentUserCompanyName(context);
+  const hasCompanyName = Boolean(companyName);
+  if (userCompanyName) {
+    userCompanyName.textContent = companyName;
+    userCompanyName.hidden = !hasCompanyName;
+  }
+  if (userMeta) userMeta.hidden = !hasCompanyName;
+  if (!userCompanyLogo) return;
+  if (hasCompanyName && companyIdentityState.currentLogoUrl) {
+    userCompanyLogo.src = companyIdentityState.currentLogoUrl;
+    userCompanyLogo.alt = companyName;
+    userCompanyLogo.hidden = false;
+  } else {
+    userCompanyLogo.removeAttribute("src");
+    userCompanyLogo.alt = "";
+    userCompanyLogo.hidden = true;
+  }
+}
+
+function syncUserCompanyLogoLookup(context = {}) {
+  const email = resolvedUserEmail(context);
+  if (assistiveEmailInput && email && !assistiveEmailInput.value) assistiveEmailInput.value = email;
+  const domain = parseEmailDomain(email || assistiveEmailInput?.value || "");
+  if (!domain) {
+    renderUserCompanyIdentity(context);
+    return;
+  }
+  const { freemailBlocklist } = companyIdentityRuntimeSets();
+  if (freemailBlocklist.has(domain)) {
+    companyIdentityState.currentDomain = domain;
+    companyIdentityState.currentLogoUrl = "";
+    companyIdentityState.currentLogoDomain = "";
+    renderUserCompanyIdentity(context);
+    return;
+  }
+  if (companyIdentityState.currentDomain !== domain) {
+    companyIdentityState.currentDomain = domain;
+    companyIdentityState.logoRequestId += 1;
+  }
+  renderUserCompanyIdentity(context);
+  lookupCompanyLogo(domain);
+}
+
 function companyIdentityConfig() {
   return globalThis.__CONTROLSTACK_RUNTIME_CONFIG__?.companyIdentity || {};
 }
@@ -302,14 +380,16 @@ function setAssistiveCompanyTextMode({ focus = false } = {}) {
 }
 
 function setAssistiveCompanyLogoMode(domain, url) {
-  if (companyIdentityState.userLocked || companyIdentityState.companyNameSource === "user") return;
   if (!assistiveCompanyLogoImage || !assistiveCompanyLogoButton || !assistiveCompanyNameInput) return;
-  const logoAlt = assistiveCompanyNameInput.value.trim() || domain;
+  const logoAlt = currentUserCompanyName(window.__csLatestShellContext || {}) || assistiveCompanyNameInput.value.trim() || domain;
+  companyIdentityState.currentLogoUrl = url;
+  companyIdentityState.currentLogoDomain = domain;
   assistiveCompanyLogoImage.src = url;
   assistiveCompanyLogoImage.alt = logoAlt;
   assistiveCompanyNameInput.hidden = true;
   assistiveCompanyLogoButton.hidden = false;
   if (assistiveCompanyPill) assistiveCompanyPill.dataset.mode = "logo";
+  renderUserCompanyIdentity(window.__csLatestShellContext || {});
   setAssistiveCompanyStatus("Logo found. This is a visual hint only; click the logo to edit the company name.");
 }
 
@@ -323,7 +403,7 @@ function writeAssistiveCompanySuggestion(suggestion) {
 
 function lookupCompanyLogo(domain) {
   const { logoDevPublishableKey } = companyIdentityRuntimeSets();
-  if (!logoDevPublishableKey || companyIdentityState.userLocked || companyIdentityState.companyNameSource === "user") return;
+  if (!logoDevPublishableKey) return;
   if (companyIdentityState.logoCache.has(domain)) {
     const cached = companyIdentityState.logoCache.get(domain);
     if (cached?.found) setAssistiveCompanyLogoMode(domain, cached.url);
@@ -342,7 +422,10 @@ function lookupCompanyLogo(domain) {
     companyIdentityState.logoCache.set(domain, { found: false, url: null });
     if (requestId !== companyIdentityState.logoRequestId) return;
     if (companyIdentityState.currentDomain !== domain) return;
+    companyIdentityState.currentLogoUrl = "";
+    companyIdentityState.currentLogoDomain = "";
     setAssistiveCompanyTextMode();
+    renderUserCompanyIdentity(window.__csLatestShellContext || {});
     setAssistiveCompanyStatus("No logo was found. You can continue with the editable company name.");
   };
   image.src = url;
@@ -355,25 +438,16 @@ function handleAssistiveEmailDomainChange() {
   companyIdentityState.currentDomain = domain;
   companyIdentityState.logoRequestId += 1;
   if (freemailBlocklist.has(domain)) {
+    companyIdentityState.currentLogoUrl = "";
+    companyIdentityState.currentLogoDomain = "";
     setAssistiveCompanyTextMode();
+    renderUserCompanyIdentity(window.__csLatestShellContext || {});
     setAssistiveCompanyStatus("Personal or ISP email detected. No company suggestion or logo lookup was run.");
     return;
   }
-  if (companyIdentityState.userLocked || companyIdentityState.companyNameSource === "user") {
-    setAssistiveCompanyTextMode();
-    setAssistiveCompanyStatus("Company name is user-entered, so email changes will not overwrite it or swap to a logo this session.");
-    return;
-  }
-  const suggestion = deriveCompanyNameFromDomain(domain);
-  writeAssistiveCompanySuggestion(suggestion);
   const cachedLogo = companyIdentityState.logoCache.get(domain);
-  if (!suggestion) {
-    setAssistiveCompanyTextMode();
-    setAssistiveCompanyStatus(`No company suggestion derived from ${domain}.`);
-    return;
-  }
   if (!cachedLogo?.found) setAssistiveCompanyTextMode();
-  setAssistiveCompanyStatus(`Suggested ${suggestion} from ${domain}.`);
+  setAssistiveCompanyStatus(`Checking company logo for ${domain}. Company name remains manual or HubSpot-derived only.`);
   lookupCompanyLogo(domain);
 }
 
@@ -384,13 +458,13 @@ function scheduleAssistiveEmailDomainChange() {
 
 function handleAssistiveCompanyNameInput() {
   const value = assistiveCompanyNameInput?.value?.trim() || "";
-  companyIdentityState.userLocked = true;
+  companyIdentityState.userLocked = Boolean(value);
   companyIdentityState.companyNameSource = value ? "user" : "empty";
-  companyIdentityState.logoRequestId += 1;
   setAssistiveCompanyTextMode();
+  renderUserCompanyIdentity(window.__csLatestShellContext || {});
   setAssistiveCompanyStatus(value
-    ? "Company name is user-entered. It will not be overwritten by email-domain suggestions this session."
-    : "Company helper cleared. Email-domain suggestions and logo swaps remain locked for this session.");
+    ? "Company name is user-entered. HubSpot will not overwrite it unless cleared."
+    : "Company helper cleared. Auto mode is active; HubSpot email lookup may repopulate the company name.");
 }
 
 function handleAssistiveCompanyLogoOverride() {
@@ -581,13 +655,9 @@ function renderAuthControls({ services, context }) {
   const activeName = context.auth.session?.name || context.identity.currentUser?.name || "Anonymous visitor";
   const authorityRole = context.authority?.actualRole?.value || context.identity.actualRole || "external_user";
   const authoritySource = context.authority?.actualRole?.source || context.identity.actualRoleSource || "safe-fallback";
-  const activeMeta = `${authorityRole} · ${authoritySource}`;
   if (userAvatar) userAvatar.textContent = initialsFor(activeName);
   if (userName) userName.textContent = activeName;
-  if (userMeta) {
-    userMeta.textContent = "";
-    userMeta.hidden = true;
-  }
+  syncUserCompanyLogoLookup(context);
   appendDefinitionListRows(authSummary, [
     ["auth status", context.auth.status || "signed-out"],
     ["signed in", signedIn ? "yes" : "no"],
@@ -744,7 +814,6 @@ function renderProjectSelection({ services, context }) {
     ["project", readProjectTitle(context.project)],
     ["client", currentProject.client || "No client loaded"],
     ["site", currentProject.site || "No site loaded"],
-    ["company", context.company.companyName || "No company linked"],
   ]);
   renderLocalDeveloperRows({
     anchor: projectSummary,
@@ -1142,7 +1211,9 @@ function renderShellContextInspector(context) {
 
 function renderShellTopbarContext(context) {
   if (projectChipLabel) projectChipLabel.textContent = currentProjectTitle(context);
-  if (companyChipLabel) companyChipLabel.textContent = context.company?.companyName || "No company linked";
+  const companyChipWrap = companyChip?.closest?.(".cs-shell__topbar-chip-wrap");
+  if (companyChipWrap) companyChipWrap.hidden = true;
+  if (companyPopout) companyPopout.hidden = true;
   const viewToggleVisible = canViewModeToggle(context);
   if (viewChipWrap) viewChipWrap.hidden = !viewToggleVisible;
   if (!viewToggleVisible) setPopout(viewChip, viewPopout, false);

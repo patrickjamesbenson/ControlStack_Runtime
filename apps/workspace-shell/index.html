@@ -56,7 +56,7 @@
               </div>
             </div>
 
-            <div class="cs-shell__topbar-chip-wrap">
+            <div class="cs-shell__topbar-chip-wrap" data-shell-secondary-context="project-company" hidden>
               <button id="cs-shell-company-chip" class="cs-shell__context-chip" type="button" aria-expanded="false" aria-controls="cs-shell-company-popout" aria-label="Company: view or change CRM company context for this project." title="Company: view or change CRM company context. This enriches the project only; it is not login or authority.">
                 <span>Company</span>
                 <span id="cs-shell-company-chip-label">No company linked</span>
@@ -90,7 +90,10 @@
             <span id="cs-shell-user-avatar" class="cs-shell__avatar">CS</span>
             <span class="cs-shell__user-button-text">
               <strong id="cs-shell-user-name">Workspace User</strong>
-              <small id="cs-shell-user-meta">Session and view tools</small>
+              <small id="cs-shell-user-meta" class="cs-shell__user-company" hidden>
+                <img id="cs-shell-user-company-logo" class="cs-shell__user-company-logo" alt="" hidden />
+                <span id="cs-shell-user-company-name"></span>
+              </small>
             </span>
           </button>
 
@@ -236,7 +239,7 @@
               <dl id="cs-shell-project-summary"></dl>
             </section>
 
-            <section class="cs-shell__company-card cs-shell__header-card" aria-label="Company account context">
+            <section class="cs-shell__company-card cs-shell__header-card" aria-label="Company account context" hidden>
               <p class="cs-shell__section-kicker">Company context</p>
               <h3>Account context</h3>
               <p>HubSpot/company context is CRM enrichment, not authority.</p>
