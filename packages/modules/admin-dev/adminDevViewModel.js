@@ -236,6 +236,8 @@ function createLiveModel({ syncState, syncEndpoints, authorityStatus, sourceMate
       ["dry-run completed this session", asText(dryRunComplete, "no")],
       ["confirmation required", LIVE_CONFIRMATION_TEXT],
       ["sync result status", body?.status || syncState.liveStatus || "not run"],
+      ["source path", sourcePathFrom(body, sourceMaterialisation)],
+      ["validation result", validationResult(body?.sourceValidation, sourceMaterialisation)],
       ["target snapshot path", targetPathFrom(body, authorityStatus, sourceMaterialisation)],
       ["snapshot modified time", targetModifiedFrom(body, authorityStatus, sourceMaterialisation)],
       ["archive path", archivePathFrom(body, authorityStatus, sourceMaterialisation)],

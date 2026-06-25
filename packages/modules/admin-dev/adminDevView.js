@@ -13,7 +13,7 @@ function appendText(parent, tagName, text, className = "") {
 function appendDefinitionList(parent, rows, className = "cs-admin-dev__meta") {
   const list = document.createElement("dl");
   list.className = className;
-  for (const [label, value] of rows) {
+  for (const [label, value] of rows || []) {
     appendText(list, "dt", label);
     appendText(list, "dd", value ?? "none");
   }
@@ -24,7 +24,7 @@ function appendDefinitionList(parent, rows, className = "cs-admin-dev__meta") {
 function appendPillList(parent, items) {
   const list = document.createElement("ul");
   list.className = "cs-admin-dev__pill-row";
-  for (const item of items) appendText(list, "li", item);
+  for (const item of items || []) appendText(list, "li", item);
   parent.appendChild(list);
   return list;
 }
@@ -41,7 +41,7 @@ function appendCard(parent, card) {
 function appendEndpointList(parent, endpoints) {
   const list = document.createElement("ul");
   list.className = "cs-admin-dev__endpoint-list";
-  for (const endpoint of endpoints) {
+  for (const endpoint of endpoints || []) {
     const item = document.createElement("li");
     appendText(item, "strong", endpoint.endpoint);
     appendText(item, "span", `${endpoint.status} · ${endpoint.note}`);
@@ -50,10 +50,10 @@ function appendEndpointList(parent, endpoints) {
   parent.appendChild(list);
 }
 
-function appendActionButton(parent, label, { disabled = false, onClick = null } = {}) {
+function appendActionButton(parent, label, { disabled = false, onClick = null, variant = "secondary" } = {}) {
   const button = document.createElement("button");
   button.type = "button";
-  button.className = "cs-admin-dev__button";
+  button.className = `cs-admin-dev__button cs-admin-dev__button--${variant}`;
   button.textContent = label;
   button.disabled = disabled;
   if (onClick) button.addEventListener("click", onClick);
@@ -70,78 +70,304 @@ function appendErrors(parent, title, errors) {
   parent.appendChild(notice);
 }
 
-function appendSyncWorkflow(parent, syncWorkflow, actions = {}) {
+function appendDisclosure(parent, title, description, className = "cs-admin-dev__diagnostics", key = "") {
+  const details = document.createElement("details");
+  details.className = className;
+  const summary = document.createElement("summary");
+  summary.className = "cs-admin-dev__diagnostics-toggle";
+  if (key) appendText(summary, "span", key, "cs-admin-dev__diagnostics-key");
+  appendText(summary, "span", title);
+  details.appendChild(summary);
+  const body = document.createElement("div");
+  body.className = "cs-admin-dev__diagnostics-body";
+  if (description) appendText(body, "p", description);
+  details.appendChild(body);
+  parent.appendChild(details);
+  return body;
+}
+
+function rowValue(rows = [], label, fallback = "not reported") {
+  const row = (rows || []).find(([rowLabel]) => rowLabel === label);
+  return row ? row[1] : fallback;
+}
+
+function pickRows(rows = [], labels = []) {
+  return labels.map((label) => [label, rowValue(rows, label)]);
+}
+
+function filterRows(rows = [], hiddenLabels = []) {
+  const hidden = new Set(hiddenLabels);
+  return (rows || []).filter(([label]) => !hidden.has(label));
+}
+
+function findCard(viewModel, title) {
+  return (viewModel.cards || []).find((card) => card.title === title) || { rows: [] };
+}
+
+function fileLabel(value) {
+  const text = String(value || "").trim();
+  if (!text || text === "not configured" || text === "not planned" || text === "not planned/reported" || text === "not reported") return text || "not reported";
+  const parts = text.split(/[\\/]+/).filter(Boolean);
+  return parts.length ? parts[parts.length - 1] : text;
+}
+
+function uniqueItems(items = []) {
+  const seen = new Set();
+  const result = [];
+  for (const item of items || []) {
+    const key = String(item || "").trim();
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    result.push(key);
+  }
+  return result;
+}
+
+function isRealItem(item) {
+  const text = String(item || "").toLowerCase();
+  if (!text) return false;
+  if (text.startsWith("no blockers reported")) return false;
+  if (text.startsWith("run dry-run")) return false;
+  if (text.startsWith("run restore preview")) return false;
+  return true;
+}
+
+function isSetupItem(item) {
+  const text = String(item || "").toLowerCase();
+  return text.includes("sync-disabled")
+    || text.includes("execution-disabled")
+    || text.includes("source-unreadable")
+    || text.includes("materialised-source-missing")
+    || text.includes("source-validation-failed")
+    || text.includes("archive-unavailable")
+    || text.includes("archive directory")
+    || text.includes("source path is not configured")
+    || text.includes("materialised source")
+    || text.includes("write-policy-disabled");
+}
+
+function actionableItems(items = []) {
+  return uniqueItems((items || []).filter(isRealItem));
+}
+
+function syncBlockers(syncWorkflow) {
+  return actionableItems([...(syncWorkflow.dryRun?.blockers || []), ...(syncWorkflow.live?.blockers || [])]);
+}
+
+function setupBlockers(syncWorkflow) {
+  return syncBlockers(syncWorkflow).filter(isSetupItem);
+}
+
+function syncSetupIncomplete(syncWorkflow) {
+  const dryRows = syncWorkflow.dryRun?.rows || [];
+  const liveAllowed = String(rowValue(dryRows, "live sync currently allowed", "unknown")).toLowerCase();
+  return setupBlockers(syncWorkflow).length > 0 || liveAllowed === "no" || liveAllowed === "false";
+}
+
+function syncCanRun(syncWorkflow) {
+  return syncWorkflow.dryRun?.completed === true && !syncSetupIncomplete(syncWorkflow);
+}
+
+function statusLabel(viewModel) {
+  const status = viewModel.status?.value || "idle";
+  if (status === "loading") return { label: "Checking", tone: "loading" };
+  if (viewModel.status?.failedReads) return { label: "Needs attention", tone: "warning" };
+  if (status === "partial") return { label: "Needs attention", tone: "warning" };
+  if (status === "ready") return { label: "Ready", tone: "ready" };
+  return { label: "Not loaded", tone: "idle" };
+}
+
+function appendStatusBadge(parent, badge) {
+  const element = appendText(parent, "span", badge.label, `cs-admin-dev__status-badge cs-admin-dev__status-badge--${badge.tone}`);
+  element.setAttribute("aria-label", `Module state: ${badge.label}`);
+  return element;
+}
+
+function appendInfoHint(parent, label, helpText) {
+  const hint = document.createElement("button");
+  hint.type = "button";
+  hint.className = "cs-admin-dev__info-hint";
+  hint.textContent = "i";
+  hint.title = helpText;
+  hint.setAttribute("aria-label", label);
+  parent.appendChild(hint);
+  return hint;
+}
+
+function syncAttemptStarted(syncWorkflow = {}) {
+  return Boolean(
+    syncWorkflow.dryRun?.running
+    || syncWorkflow.dryRun?.completed
+    || syncWorkflow.dryRun?.errors?.length
+    || syncWorkflow.live?.running
+    || syncWorkflow.live?.attempted
+    || syncWorkflow.live?.errors?.length
+  );
+}
+
+function lastSyncLabel(syncWorkflow = {}) {
+  if (syncWorkflow.live?.status === "complete") return syncWorkflow.live.loadedAt || "not reported";
+  return "not yet";
+}
+
+function syncResultLabel(syncWorkflow = {}) {
+  if (syncWorkflow.live?.running) return "Syncing";
+  if (syncWorkflow.dryRun?.running) return "Checking";
+  if (syncWorkflow.live?.status === "complete") return "Synced";
+  if (syncWorkflow.live?.attempted && syncWorkflow.live?.status !== "complete") return "Sync blocked";
+  if (syncWorkflow.dryRun?.completed && syncSetupIncomplete(syncWorkflow)) return "Sync locked";
+  if (syncWorkflow.dryRun?.completed) return "Ready to sync";
+  return "Not checked";
+}
+
+function syncNextStep(syncWorkflow) {
+  if (syncWorkflow.dryRun?.running) return "Preview is running.";
+  if (syncWorkflow.live?.running) return "Sync is running.";
+  if (syncSetupIncomplete(syncWorkflow)) return "Sync setup is incomplete. Configure the source, archive folder, and sync gates, then preview again.";
+  if (syncWorkflow.live?.attempted) return "Review the archive and sync evidence below.";
+  if (syncWorkflow.dryRun?.completed) return "Preview complete. Type SYNC and press Sync now when ready.";
+  return "Press Preview sync. It checks the source and writes nothing.";
+}
+
+function setupRows(syncWorkflow) {
+  const dryRows = syncWorkflow.dryRun?.rows || [];
+  return [
+    ["Source JSON", fileLabel(rowValue(dryRows, "source path", "not configured"))],
+    ["Archive before sync", fileLabel(rowValue(dryRows, "planned archive path", "not planned/reported"))],
+    ["Live sync gate", rowValue(dryRows, "live sync currently allowed", "no")],
+    ["Validation", rowValue(dryRows, "validation result", "not run")],
+  ];
+}
+
+function appendSetupIncomplete(parent, syncWorkflow) {
+  if (!syncSetupIncomplete(syncWorkflow)) return;
   const section = document.createElement("section");
-  section.className = "cs-admin-dev__card cs-admin-dev__sync";
-  appendText(section, "h3", syncWorkflow.title);
-  appendText(section, "p", syncWorkflow.description);
+  section.className = "cs-admin-dev__notice cs-admin-dev__notice--warning cs-admin-dev__setup-card";
+  appendText(section, "h3", "Sync setup incomplete");
+  appendText(section, "p", "This is a backend setup issue, not an operator action. The runtime needs a materialised source JSON file, an archive folder, and live sync gates enabled before Sync now can run.");
+  appendDefinitionList(section, setupRows(syncWorkflow), "cs-admin-dev__meta cs-admin-dev__meta--operator");
+  const body = appendDisclosure(section, "Setup details", "Technical blockers reported by the runtime.", "cs-admin-dev__diagnostics cs-admin-dev__setup-details", "");
+  appendPillList(body, setupBlockers(syncWorkflow));
+  parent.appendChild(section);
+}
 
-  const grid = document.createElement("div");
-  grid.className = "cs-admin-dev__sync-grid";
+function appendHeader(parent, viewModel) {
+  const header = document.createElement("section");
+  header.className = "cs-admin-dev__header cs-admin-dev__operator-header";
 
-  const dryRunPanel = document.createElement("section");
-  dryRunPanel.className = "cs-admin-dev__sync-panel";
-  appendText(dryRunPanel, "h4", "Dry-run preview");
-  appendText(dryRunPanel, "p", "Dry-run only — no files written. This previews source readability, validation, blockers, target snapshot, and planned archive path.");
-  const dryRunActions = document.createElement("div");
-  dryRunActions.className = "cs-admin-dev__actions";
-  appendActionButton(dryRunActions, syncWorkflow.dryRun.running ? "Running dry-run sync preview…" : syncWorkflow.dryRun.buttonLabel, {
-    disabled: syncWorkflow.dryRun.running,
-    onClick: actions.onRunDryRunSync,
+  const titleRow = document.createElement("div");
+  titleRow.className = "cs-admin-dev__title-row";
+  const copy = document.createElement("div");
+  appendText(copy, "p", "Admin / Dev", "cs-shell__eyebrow");
+  const headingRow = document.createElement("div");
+  headingRow.className = "cs-admin-dev__heading-row";
+  appendText(headingRow, "h2", "Reference data sync");
+  appendInfoHint(headingRow, "About reference data sync", "Use this after editing the source sheet/reference data. The runtime checks the source first, archives the current snapshot when live sync is allowed, then refreshes the authority/reference snapshot.");
+  copy.appendChild(headingRow);
+  titleRow.appendChild(copy);
+  appendStatusBadge(titleRow, statusLabel(viewModel));
+  header.appendChild(titleRow);
+
+  appendDefinitionList(header, [
+    ["Last checked", viewModel.status.loadedAt],
+    ["Last sync", lastSyncLabel(viewModel.syncWorkflow)],
+  ], "cs-admin-dev__meta cs-admin-dev__meta--operator cs-admin-dev__meta--compact");
+  parent.appendChild(header);
+}
+
+function appendOperatorSync(parent, syncWorkflow, actions = {}) {
+  const section = document.createElement("section");
+  section.className = "cs-admin-dev__card cs-admin-dev__operator-card cs-admin-dev__sync-card";
+
+  const dryRows = syncWorkflow.dryRun.rows || [];
+  const liveRows = syncWorkflow.live.rows || [];
+  const canRunSync = syncCanRun(syncWorkflow);
+  const hasAttempt = syncAttemptStarted(syncWorkflow);
+  const sourceLabel = fileLabel(rowValue(dryRows, "source path", "not checked"));
+  const validationLabel = rowValue(dryRows, "validation result", "not checked");
+  const syncStatus = syncResultLabel(syncWorkflow);
+
+  const actionsRow = document.createElement("div");
+  actionsRow.className = "cs-admin-dev__operator-actions cs-admin-dev__operator-actions--single";
+  appendActionButton(actionsRow, syncWorkflow.live.running ? "Syncing…" : syncWorkflow.dryRun.running ? "Checking…" : "Sync Google Sheet", {
+    disabled: syncWorkflow.dryRun.running || syncWorkflow.live.running,
+    onClick: canRunSync
+      ? () => {
+          actions.onConfirmationInput?.(syncWorkflow.live.requiredConfirmation || "SYNC");
+          actions.onRunLiveSync?.();
+        }
+      : actions.onRunDryRunSync,
+    variant: "primary",
   });
-  dryRunPanel.appendChild(dryRunActions);
-  appendDefinitionList(dryRunPanel, syncWorkflow.dryRun.rows);
-  appendText(dryRunPanel, "h5", "Dry-run blockers");
-  appendPillList(dryRunPanel, syncWorkflow.dryRun.blockers);
-  appendErrors(dryRunPanel, "Dry-run endpoint error", syncWorkflow.dryRun.errors);
-  grid.appendChild(dryRunPanel);
+  appendInfoHint(actionsRow, "About sync", "Checks the materialised Google Sheet source first. If server gates allow live sync, the current snapshot is archived before the refreshed snapshot is written.");
+  section.appendChild(actionsRow);
 
-  const livePanel = document.createElement("section");
-  livePanel.className = "cs-admin-dev__sync-panel";
-  appendText(livePanel, "h4", "Confirmed live sync");
-  appendText(livePanel, "p", syncWorkflow.live.warning, "cs-admin-dev__danger-copy");
+  appendDefinitionList(section, [
+    ["Source", sourceLabel],
+    ["Status", syncStatus],
+    ["Last check", syncWorkflow.dryRun.loadedAt || "not yet"],
+  ], "cs-admin-dev__meta cs-admin-dev__meta--operator cs-admin-dev__meta--compact");
 
-  const confirmField = document.createElement("label");
-  confirmField.className = "cs-admin-dev__confirm";
-  appendText(confirmField, "span", "Type SYNC to enable live sync");
-  const confirmInput = document.createElement("input");
-  confirmInput.type = "text";
-  confirmInput.autocomplete = "off";
-  confirmInput.spellcheck = false;
-  confirmInput.placeholder = syncWorkflow.live.requiredConfirmation;
-  confirmInput.value = syncWorkflow.live.confirmationValue;
-  confirmField.appendChild(confirmInput);
-  livePanel.appendChild(confirmField);
+  if (hasAttempt) {
+    const result = document.createElement("section");
+    result.className = syncSetupIncomplete(syncWorkflow)
+      ? "cs-admin-dev__sync-result cs-admin-dev__sync-result--locked"
+      : "cs-admin-dev__sync-result";
+    appendText(result, "h3", syncSetupIncomplete(syncWorkflow) ? "Checked — source is ready" : syncStatus);
+    appendText(result, "p", syncSetupIncomplete(syncWorkflow)
+      ? "The source passed validation. Live sync is still waiting on the runtime write gate."
+      : "Sync result reported by the runtime.");
+    appendDefinitionList(result, syncSetupIncomplete(syncWorkflow) ? [
+      ["Source", sourceLabel],
+      ["Validation", validationLabel],
+      ["Live sync", "waiting for runtime gate"],
+      ["Checked", syncWorkflow.dryRun.loadedAt || "not reported"],
+    ] : [
+      ["Source", sourceLabel],
+      ["Validation", validationLabel],
+      ["Archive before sync", fileLabel(rowValue(liveRows, "archive path", rowValue(dryRows, "planned archive path", "not created")))],
+      ["Snapshot", fileLabel(rowValue(liveRows, "target snapshot path", rowValue(dryRows, "target snapshot path", "not updated")))],
+      ["Completed", syncWorkflow.live.loadedAt || syncWorkflow.dryRun.loadedAt || "not reported"],
+    ], "cs-admin-dev__meta cs-admin-dev__meta--operator");
 
-  const liveActions = document.createElement("div");
-  liveActions.className = "cs-admin-dev__actions";
-  const liveButton = appendActionButton(liveActions, syncWorkflow.live.running ? "Running confirmed live sync…" : syncWorkflow.live.buttonLabel, {
-    disabled: syncWorkflow.live.disabled,
-    onClick: actions.onRunLiveSync,
-  });
-  confirmInput.addEventListener("input", () => {
-    actions.onConfirmationInput?.(confirmInput.value);
-    liveButton.disabled = !(syncWorkflow.live.dryRunCompleted && confirmInput.value === syncWorkflow.live.requiredConfirmation) || syncWorkflow.live.running;
-  });
-  livePanel.appendChild(liveActions);
+    const blockers = setupBlockers(syncWorkflow);
+    if (blockers.length) {
+      const body = appendDisclosure(result, "Details", "Technical sync blockers reported by the runtime.", "cs-admin-dev__diagnostics cs-admin-dev__setup-details", "");
+      appendPillList(body, blockers);
+    }
 
-  appendDefinitionList(livePanel, syncWorkflow.live.rows);
-  appendText(livePanel, "h5", "Live-sync blockers / failures");
-  appendPillList(livePanel, syncWorkflow.live.blockers);
-  appendErrors(livePanel, "Live sync endpoint error", syncWorkflow.live.errors);
-  grid.appendChild(livePanel);
-
-  section.appendChild(grid);
-
-  if (syncWorkflow.postSyncProof.visible) {
-    const proof = document.createElement("section");
-    proof.className = "cs-admin-dev__notice";
-    appendText(proof, "h3", syncWorkflow.postSyncProof.title);
-    appendText(proof, "p", syncWorkflow.postSyncProof.description);
-    appendDefinitionList(proof, syncWorkflow.postSyncProof.rows);
-    section.appendChild(proof);
+    appendErrors(result, "Check error", syncWorkflow.dryRun.errors);
+    appendErrors(result, "Sync error", syncWorkflow.live.errors);
+    section.appendChild(result);
   }
 
+  parent.appendChild(section);
+}
+
+function appendSyncEvidence(parent, syncWorkflow) {
+  const dryRows = syncWorkflow.dryRun.rows || [];
+  const liveRows = syncWorkflow.live.rows || [];
+  const postRows = syncWorkflow.postSyncProof?.rows || [];
+  const status = rowValue(liveRows, "sync result status", syncWorkflow.live.status || "not run");
+  const completed = status === "live-write-completed";
+  const archivePlanned = rowValue(liveRows, "planned archive path", rowValue(dryRows, "planned archive path", "shown after preview"));
+  const archivePath = rowValue(liveRows, "archive path", "shown after sync");
+  const syncedPath = rowValue(liveRows, "target snapshot path", rowValue(dryRows, "target snapshot path", "shown after preview"));
+  const modified = rowValue(liveRows, "snapshot modified time", rowValue(postRows, "snapshot modified time", "shown after sync"));
+  const refreshed = rowValue(liveRows, "loaded/refreshed timestamp", rowValue(postRows, "loaded/refreshed timestamp", "shown after sync"));
+
+  const section = document.createElement("section");
+  section.className = "cs-admin-dev__card cs-admin-dev__evidence-card";
+  appendText(section, "h3", "Sync evidence");
+  appendText(section, "p", completed ? "The runtime reports that live sync completed." : "No live sync has completed yet. Evidence will update after setup is ready and Sync now succeeds.");
+  appendDefinitionList(section, [
+    ["Preview completed", syncWorkflow.dryRun.completed ? syncWorkflow.dryRun.loadedAt : "not yet"],
+    ["Live sync result", completed ? "Completed" : status],
+    ["Archive before sync", completed ? fileLabel(archivePath || archivePlanned) : "not created"],
+    ["Synced snapshot", completed ? fileLabel(syncedPath) : "not updated"],
+    ["Snapshot modified", completed ? modified : "not updated"],
+    ["Status refreshed", refreshed],
+  ], "cs-admin-dev__meta cs-admin-dev__meta--operator");
   parent.appendChild(section);
 }
 
@@ -149,31 +375,33 @@ function appendArchiveList(parent, archiveInspection, actions = {}) {
   const panel = document.createElement("section");
   panel.className = "cs-admin-dev__sync-panel";
   appendText(panel, "h4", "Archive list");
-  appendText(panel, "p", "Basename metadata only. Entries expose name, size, and modified time; no absolute paths or raw file content are returned.");
-  appendDefinitionList(panel, archiveInspection.list.rows);
+  appendText(panel, "p", "Use this only when you need to compare or preview a restore.");
+  appendDefinitionList(panel, pickRows(archiveInspection.list.rows, ["status", "archive count", "reason"]), "cs-admin-dev__meta cs-admin-dev__meta--user");
 
   const archives = archiveInspection.list.archives || [];
   if (!archives.length) {
-    appendText(panel, "p", "No archive files are currently available in the runtime archive location.");
+    appendText(panel, "p", "No archives are available yet.", "cs-admin-dev__empty");
     parent.appendChild(panel);
     return;
   }
 
   const list = document.createElement("ul");
-  list.className = "cs-admin-dev__endpoint-list";
+  list.className = "cs-admin-dev__endpoint-list cs-admin-dev__archive-list";
   for (const archive of archives) {
     const item = document.createElement("li");
     appendText(item, "strong", archive.name);
     appendText(item, "span", `${archive.size} · modified ${archive.modifiedAt}`);
     const actionsRow = document.createElement("div");
     actionsRow.className = "cs-admin-dev__actions";
-    appendActionButton(actionsRow, archiveInspection.diff.running && archiveInspection.diff.selectedArchiveName === archive.name ? "Computing diff…" : "Compute diff summary", {
+    appendActionButton(actionsRow, archiveInspection.diff.running && archiveInspection.diff.selectedArchiveName === archive.name ? "Comparing…" : "Compare", {
       disabled: archiveInspection.diff.running,
       onClick: () => actions.onRunArchiveDiff?.(archive.name),
+      variant: "secondary",
     });
-    appendActionButton(actionsRow, archiveInspection.restore?.preview?.running && archiveInspection.restore?.preview?.selectedArchiveName === archive.name ? "Previewing restore…" : "Preview restore", {
+    appendActionButton(actionsRow, archiveInspection.restore?.preview?.running && archiveInspection.restore?.preview?.selectedArchiveName === archive.name ? "Previewing…" : "Preview restore", {
       disabled: archiveInspection.restore?.preview?.running || archiveInspection.restore?.live?.running,
       onClick: () => actions.onRunRestorePreview?.(archive.name),
+      variant: "secondary",
     });
     item.appendChild(actionsRow);
     list.appendChild(item);
@@ -205,9 +433,10 @@ function appendDiffKeyEntries(parent, title, summary, { archiveName, section, in
     if (inspectable && entry.inspectKey) {
       const actionsRow = document.createElement("div");
       actionsRow.className = "cs-admin-dev__actions";
-      appendActionButton(actionsRow, "Show field-level diff", {
+      appendActionButton(actionsRow, "Review fields", {
         disabled: false,
         onClick: () => actions.onRunArchiveDiffDetail?.({ archiveName, section, inspectKey: entry.inspectKey }),
+        variant: "secondary",
       });
       item.appendChild(actionsRow);
     }
@@ -220,39 +449,40 @@ function appendDiffKeyEntries(parent, title, summary, { archiveName, section, in
 function appendDiffSummary(parent, archiveInspection, actions = {}) {
   const panel = document.createElement("section");
   panel.className = "cs-admin-dev__sync-panel";
-  appendText(panel, "h4", "Diff summary");
-  appendText(panel, "p", "Compares the selected archive against the current authority/reference snapshot. Summary is section/table-level and never returns full DB JSON.");
-  appendDefinitionList(panel, archiveInspection.diff.totalsRows);
-  if (archiveInspection.diff.error) appendErrors(panel, "Diff summary endpoint error", [archiveInspection.diff.error]);
+  appendText(panel, "h4", "Compare result");
+  appendText(panel, "p", "Summary only. Field detail is loaded only when requested.");
+  appendDefinitionList(panel, pickRows(archiveInspection.diff.totalsRows, [
+    "selected archive",
+    "status",
+    "added",
+    "removed",
+    "changed",
+    "loaded at",
+  ]), "cs-admin-dev__meta cs-admin-dev__meta--user");
+  if (archiveInspection.diff.error) appendErrors(panel, "Compare error", [archiveInspection.diff.error]);
 
   const archiveName = archiveInspection.diff.selectedArchiveName;
   const sections = archiveInspection.diff.sections || [];
   if (!sections.length) {
-    appendText(panel, "p", archiveInspection.diff.status === "complete" ? "No section diffs were returned." : "Select an archive to compute a diff summary.");
+    appendText(panel, "p", archiveInspection.diff.status === "complete" ? "No section changes were returned." : "Choose an archive and select Compare.", "cs-admin-dev__empty");
     parent.appendChild(panel);
     return;
   }
 
   for (const sectionModel of sections) {
     const sectionBlock = document.createElement("section");
-    sectionBlock.className = "cs-admin-dev__card";
+    sectionBlock.className = "cs-admin-dev__card cs-admin-dev__nested-card";
     appendText(sectionBlock, "h5", sectionModel.section);
-    appendDefinitionList(sectionBlock, sectionModel.rows);
-    appendDiffKeyEntries(sectionBlock, "Changed keys", sectionModel.changed, {
-      archiveName,
-      section: sectionModel.section,
-      inspectable: true,
-    }, actions);
-    appendDiffKeyEntries(sectionBlock, "Added keys", sectionModel.added, {
-      archiveName,
-      section: sectionModel.section,
-      inspectable: false,
-    }, actions);
-    appendDiffKeyEntries(sectionBlock, "Removed keys", sectionModel.removed, {
-      archiveName,
-      section: sectionModel.section,
-      inspectable: false,
-    }, actions);
+    appendDefinitionList(sectionBlock, filterRows(sectionModel.rows, [
+      "section",
+      "type",
+      "archive rows/keys",
+      "current rows/keys",
+      "full rows returned",
+    ]), "cs-admin-dev__meta cs-admin-dev__meta--user");
+    appendDiffKeyEntries(sectionBlock, "Changed", sectionModel.changed, { archiveName, section: sectionModel.section, inspectable: true }, actions);
+    appendDiffKeyEntries(sectionBlock, "Added", sectionModel.added, { archiveName, section: sectionModel.section, inspectable: false }, actions);
+    appendDiffKeyEntries(sectionBlock, "Removed", sectionModel.removed, { archiveName, section: sectionModel.section, inspectable: false }, actions);
     panel.appendChild(sectionBlock);
   }
 
@@ -262,15 +492,15 @@ function appendDiffSummary(parent, archiveInspection, actions = {}) {
 function appendFieldLevelDetail(parent, archiveInspection) {
   const panel = document.createElement("section");
   panel.className = "cs-admin-dev__sync-panel";
-  appendText(panel, "h4", "Field-level diff detail");
-  appendText(panel, "p", "On-demand changed-field inspection only. This panel shows changed fields as old/new pairs and confirms no full row was returned.");
-  appendDefinitionList(panel, archiveInspection.detail.rows);
-  if (archiveInspection.detail.error) appendErrors(panel, "Field-level diff endpoint error", [archiveInspection.detail.error]);
+  appendText(panel, "h4", "Field review");
+  appendText(panel, "p", "Only shown after selecting Review fields from a changed item.");
+  appendDefinitionList(panel, pickRows(archiveInspection.detail.rows, ["status", "record status", "section", "field count", "loaded at"]), "cs-admin-dev__meta cs-admin-dev__meta--user");
+  if (archiveInspection.detail.error) appendErrors(panel, "Field review error", [archiveInspection.detail.error]);
   if (archiveInspection.detail.fieldRows?.length) {
     appendText(panel, "h5", "Changed fields");
-    appendDefinitionList(panel, archiveInspection.detail.fieldRows);
+    appendDefinitionList(panel, archiveInspection.detail.fieldRows, "cs-admin-dev__meta cs-admin-dev__meta--user");
   } else {
-    appendText(panel, "p", archiveInspection.detail.status === "complete" ? "No changed fields returned for this key." : "Choose a changed key from the diff summary to inspect field-level differences.");
+    appendText(panel, "p", archiveInspection.detail.status === "complete" ? "No changed fields returned for this key." : "No field selected.", "cs-admin-dev__empty");
   }
   parent.appendChild(panel);
 }
@@ -282,23 +512,35 @@ function appendArchiveRestore(parent, archiveInspection, actions = {}) {
   const proof = restore.postRestoreProof || {};
 
   const panel = document.createElement("section");
-  panel.className = "cs-admin-dev__sync-panel";
-  appendText(panel, "h4", "Archive restore workflow");
-  appendText(panel, "p", live.warning || "This overwrites the current authority/reference snapshot from the selected archive.", "cs-admin-dev__danger-copy");
+  panel.className = "cs-admin-dev__sync-panel cs-admin-dev__sync-panel--danger";
+  appendText(panel, "h4", "Restore preview / restore");
+  appendText(panel, "p", "Rare use only. Restore remains preview-first, typed-confirmation gated, and server-gated.", "cs-admin-dev__danger-copy");
 
   const previewActions = document.createElement("div");
   previewActions.className = "cs-admin-dev__actions";
-  appendActionButton(previewActions, preview.running ? "Running restore preview…" : "Run restore preview", {
+  appendActionButton(previewActions, preview.running ? "Running restore preview…" : "Preview restore", {
     disabled: preview.running || live.running || !preview.selectedArchiveName,
     onClick: () => actions.onRunRestorePreview?.(preview.selectedArchiveName),
+    variant: "secondary",
   });
   panel.appendChild(previewActions);
 
-  appendText(panel, "h5", "Restore preview");
-  appendDefinitionList(panel, preview.rows || []);
-  appendText(panel, "h5", "Preview blockers");
-  appendPillList(panel, preview.blockers || []);
-  appendErrors(panel, "Restore preview endpoint error", preview.errors || []);
+  appendDefinitionList(panel, pickRows(preview.rows || [], [
+    "selected archive",
+    "status",
+    "archive modified",
+    "current modified",
+    "planned pre-restore archive",
+    "restore would be allowed",
+    "loaded at",
+  ]), "cs-admin-dev__meta cs-admin-dev__meta--user");
+
+  const previewBlockers = actionableItems(preview.blockers || []);
+  if (previewBlockers.length) {
+    appendText(panel, "h5", "Needs attention");
+    appendPillList(panel, previewBlockers);
+  }
+  appendErrors(panel, "Restore preview error", preview.errors || []);
 
   const confirmField = document.createElement("label");
   confirmField.className = "cs-admin-dev__confirm";
@@ -314,9 +556,10 @@ function appendArchiveRestore(parent, archiveInspection, actions = {}) {
 
   const liveActions = document.createElement("div");
   liveActions.className = "cs-admin-dev__actions";
-  const liveButton = appendActionButton(liveActions, live.running ? "Running confirmed restore…" : "Run confirmed restore", {
+  const liveButton = appendActionButton(liveActions, live.running ? "Running restore…" : "Run restore", {
     disabled: live.disabled,
     onClick: actions.onRunConfirmedRestore,
+    variant: "danger",
   });
   confirmInput.addEventListener("input", () => {
     actions.onRestoreConfirmationInput?.(confirmInput.value);
@@ -324,38 +567,109 @@ function appendArchiveRestore(parent, archiveInspection, actions = {}) {
   });
   panel.appendChild(liveActions);
 
-  appendText(panel, "h5", "Confirmed restore");
-  appendDefinitionList(panel, live.rows || []);
-  appendText(panel, "h5", "Restore blockers / failures");
-  appendPillList(panel, [...(live.blockers || []), ...(live.failures || [])]);
-  appendErrors(panel, "Restore endpoint error", live.errors || []);
+  appendDefinitionList(panel, pickRows(live.rows || [], [
+    "restore result status",
+    "restored archive",
+    "target modified",
+    "pre-restore archive",
+    "status refreshed",
+    "loaded at",
+  ]), "cs-admin-dev__meta cs-admin-dev__meta--user");
+
+  const restoreIssues = actionableItems([...(live.blockers || []), ...(live.failures || [])]);
+  if (restoreIssues.length) {
+    appendText(panel, "h5", "Restore blockers / failures");
+    appendPillList(panel, restoreIssues);
+  }
+  appendErrors(panel, "Restore error", live.errors || []);
 
   if (proof.visible) {
     const proofPanel = document.createElement("section");
     proofPanel.className = "cs-admin-dev__notice";
-    appendText(proofPanel, "h4", proof.title || "Post-restore proof");
-    appendText(proofPanel, "p", proof.description || "Restore proof metadata only.");
-    appendDefinitionList(proofPanel, proof.rows || []);
+    appendText(proofPanel, "h4", "Restore result");
+    appendDefinitionList(proofPanel, filterRows(proof.rows || [], ["blockers/failures"]), "cs-admin-dev__meta cs-admin-dev__meta--user");
     panel.appendChild(proofPanel);
   }
 
   parent.appendChild(panel);
 }
 
-function appendArchiveInspection(parent, archiveInspection, actions = {}) {
-  const section = document.createElement("section");
-  section.className = "cs-admin-dev__card cs-admin-dev__sync";
-  appendText(section, "h3", archiveInspection.title);
-  appendText(section, "p", archiveInspection.description);
-
+function appendArchiveTools(parent, archiveInspection, actions = {}) {
+  const body = appendDisclosure(parent, "Archive tools", "Compare and restore are rare operations. They stay collapsed unless needed.", "cs-admin-dev__diagnostics cs-admin-dev__archive-tools", "");
   const grid = document.createElement("div");
   grid.className = "cs-admin-dev__sync-grid";
   appendArchiveList(grid, archiveInspection, actions);
   appendDiffSummary(grid, archiveInspection, actions);
   appendFieldLevelDetail(grid, archiveInspection);
   appendArchiveRestore(grid, archiveInspection, actions);
-  section.appendChild(grid);
+  body.appendChild(grid);
+}
+
+function isOperatorNoiseItem(item) {
+  const text = String(item || "").toLowerCase();
+  return isSetupItem(item)
+    || text.includes("legacy transitional novondb path")
+    || text.includes("read endpoint")
+    || text.includes("module remained isolated")
+    || text.includes("write-policy-disabled");
+}
+
+function appendAttention(parent, viewModel) {
+  const items = actionableItems([...(viewModel.warnings || []), ...(viewModel.blockers || [])]).filter((item) => !isOperatorNoiseItem(item));
+  if (!items.length) return;
+  const section = document.createElement("section");
+  section.className = "cs-admin-dev__card cs-admin-dev__attention-card";
+  appendText(section, "h3", "Needs attention");
+  appendPillList(section, items);
   parent.appendChild(section);
+}
+
+function appendDiagnosticsContent(parent, viewModel) {
+  const identity = document.createElement("section");
+  identity.className = "cs-admin-dev__card";
+  appendText(identity, "h3", "Module and access");
+  appendDefinitionList(identity, viewModel.headerRows);
+  appendDefinitionList(identity, [
+    ["loaded at", viewModel.status.loadedAt],
+    ["approved endpoints", viewModel.status.endpointCount],
+    ["failed reads", viewModel.status.failedReads],
+  ]);
+  parent.appendChild(identity);
+
+  const grid = document.createElement("div");
+  grid.className = "cs-admin-dev__grid";
+  for (const card of viewModel.cards || []) appendCard(grid, card);
+  parent.appendChild(grid);
+
+  const endpoints = document.createElement("section");
+  endpoints.className = "cs-admin-dev__card";
+  appendText(endpoints, "h3", "Approved endpoints");
+  appendEndpointList(endpoints, viewModel.endpoints);
+  parent.appendChild(endpoints);
+
+  const safety = document.createElement("section");
+  safety.className = "cs-admin-dev__notice";
+  appendText(safety, "h3", "Safety contract");
+  appendPillList(safety, viewModel.safety);
+  parent.appendChild(safety);
+}
+
+function appendMoreTools(parent, viewModel, actions = {}) {
+  const body = appendDisclosure(parent, "More tools", "Archive comparison and restore preview are available here when needed.", "cs-admin-dev__diagnostics cs-admin-dev__more-tools", "");
+
+  appendText(body, "h3", "Archive tools");
+  const archiveGrid = document.createElement("div");
+  archiveGrid.className = "cs-admin-dev__sync-grid";
+  appendArchiveList(archiveGrid, viewModel.archiveInspection, actions);
+  appendDiffSummary(archiveGrid, viewModel.archiveInspection, actions);
+  appendFieldLevelDetail(archiveGrid, viewModel.archiveInspection);
+  appendArchiveRestore(archiveGrid, viewModel.archiveInspection, actions);
+  body.appendChild(archiveGrid);
+}
+
+function appendDiagnostics(parent, viewModel) {
+  const body = appendDisclosure(parent, "Diagnostics", "Developer diagnostics, endpoints, policies, and safety proof.", "cs-admin-dev__diagnostics cs-admin-dev__developer-diagnostics", "");
+  appendDiagnosticsContent(body, viewModel);
 }
 
 function renderProtectedFallback(container, viewModel) {
@@ -365,9 +679,20 @@ function renderProtectedFallback(container, viewModel) {
   const header = document.createElement("section");
   header.className = "cs-admin-dev__header";
   appendText(header, "p", viewModel.label, "cs-shell__eyebrow");
-  appendText(header, "h2", viewModel.title);
-  appendText(header, "p", "This protected shell module requires developer/admin authority. No runtime status endpoints were read for the current user, and no sync/archive controls are shown.");
-  appendDefinitionList(header, [
+  appendText(header, "h2", "Sync reference data");
+  appendText(header, "p", "This module is available only to developer/admin users.");
+  article.appendChild(header);
+
+  const notice = document.createElement("section");
+  notice.className = "cs-admin-dev__notice cs-admin-dev__notice--warning";
+  appendText(notice, "h3", "Requires approval");
+  appendText(notice, "p", "Ask a developer/admin to run sync previews, confirmed sync, archive comparison, or restore inspection.");
+  article.appendChild(notice);
+
+  const body = appendDisclosure(article, "Access diagnostics", "Authority and visibility details for this protected module.");
+  const diagnosticBody = document.createElement("section");
+  diagnosticBody.className = "cs-admin-dev__card";
+  appendDefinitionList(diagnosticBody, [
     ["module id", viewModel.moduleId],
     ["route", "/workspace?module=admin_dev"],
     ["authority role", viewModel.access.role],
@@ -375,13 +700,7 @@ function renderProtectedFallback(container, viewModel) {
     ["visibility reason", viewModel.access.reason],
     ["write policy", "not available"],
   ]);
-  article.appendChild(header);
-
-  const notice = document.createElement("section");
-  notice.className = "cs-admin-dev__notice cs-admin-dev__notice--warning";
-  appendText(notice, "h3", "Protected module");
-  appendText(notice, "p", "Admin / Dev is intentionally hidden from normal users and normal workflow use. Ask a developer/admin to use this route for authority/reference status, sync, archive diff, and restore inspection.");
-  article.appendChild(notice);
+  body.appendChild(diagnosticBody);
 
   container.appendChild(article);
 }
@@ -395,58 +714,15 @@ export function renderAdminDevView(container, viewModel, actions = {}) {
   }
 
   const article = document.createElement("article");
-  article.className = "cs-admin-dev";
+  article.className = "cs-admin-dev cs-admin-dev--operator";
   article.dataset.module = viewModel.moduleId;
   article.dataset.readOnly = "false";
 
-  const header = document.createElement("section");
-  header.className = "cs-admin-dev__header";
-  appendText(header, "p", viewModel.label, "cs-shell__eyebrow");
-  appendText(header, "h2", viewModel.title);
-  appendText(header, "p", "Protected authority/reference status, sync workflow, archive diff inspection, and preview-first archive restore for developer/admin use. Row editing and database browsing are not present.");
-  appendDefinitionList(header, viewModel.headerRows);
-  article.appendChild(header);
-
-  const statusNotice = document.createElement("section");
-  statusNotice.className = viewModel.warnings.length
-    ? "cs-admin-dev__notice cs-admin-dev__notice--warning"
-    : "cs-admin-dev__notice";
-  appendText(statusNotice, "h3", `Read status: ${viewModel.status.value}`);
-  appendDefinitionList(statusNotice, [
-    ["loaded at", viewModel.status.loadedAt],
-    ["approved endpoints", viewModel.status.endpointCount],
-    ["failed reads", viewModel.status.failedReads],
-  ]);
-  if (viewModel.warnings.length) appendPillList(statusNotice, viewModel.warnings);
-  article.appendChild(statusNotice);
-
-  appendSyncWorkflow(article, viewModel.syncWorkflow, actions);
-  appendArchiveInspection(article, viewModel.archiveInspection, actions);
-
-  const grid = document.createElement("div");
-  grid.className = "cs-admin-dev__grid";
-  for (const card of viewModel.cards) appendCard(grid, card);
-  article.appendChild(grid);
-
-  const endpoints = document.createElement("section");
-  endpoints.className = "cs-admin-dev__card";
-  appendText(endpoints, "h3", "Approved status endpoints");
-  appendText(endpoints, "p", "Status refreshes use same-origin GET requests. Sync, archive diff/detail, and restore actions are limited to the approved authority/reference endpoints only.");
-  appendEndpointList(endpoints, viewModel.endpoints);
-  article.appendChild(endpoints);
-
-  const blockers = document.createElement("section");
-  blockers.className = "cs-admin-dev__card";
-  appendText(blockers, "h3", "Blockers and guardrails");
-  appendText(blockers, "p", "Runtime-reported blockers are shown as status only. The module does not provide actions to clear, edit, delete archives, or expose authority/reference data dumps.");
-  appendPillList(blockers, viewModel.blockers);
-  article.appendChild(blockers);
-
-  const safety = document.createElement("section");
-  safety.className = "cs-admin-dev__notice";
-  appendText(safety, "h3", "Admin / Dev safety contract");
-  appendPillList(safety, viewModel.safety);
-  article.appendChild(safety);
+  appendHeader(article, viewModel);
+  appendOperatorSync(article, viewModel.syncWorkflow, actions);
+  appendAttention(article, viewModel);
+  appendMoreTools(article, viewModel, actions);
+  appendDiagnostics(article, viewModel);
 
   container.appendChild(article);
 }
