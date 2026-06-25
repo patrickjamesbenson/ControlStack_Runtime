@@ -588,7 +588,7 @@ function createStateContractRows(contract = {}) {
     ["build gate complete", boolString(contract.buildGateComplete === true)],
     ["spec slug", contract.specSlug || ""],
     ["committed spec exists", boolString(contract.committedSpecExists === true)],
-    ["preview defaults", objectFieldCount(contract.previewDefaults)],
+    ["default-preview buckets", objectFieldCount(contract.previewDefaults)],
     ["manual constraints", objectFieldCount(contract.manualConstraints)],
     ["auto consequences", objectFieldCount(contract.autoConsequences)],
     ["effective selection fields", objectFieldCount(contract.effectiveSelection)],
@@ -607,6 +607,50 @@ function createStateContractRows(contract = {}) {
   ];
 }
 
+function createDefaultPreviewBucketDiagnostics(contract = {}) {
+  const previewDefaults = contract.previewDefaults || {};
+  const requiredSections = SELECTOR_EXPANDER_SECTIONS.map((section) => section.id);
+  const missingSections = requiredSections.filter((sectionId) => !previewDefaults[sectionId]);
+  const bucketDiagnostics = SELECTOR_EXPANDER_SECTIONS.map((section) => {
+    const bucket = previewDefaults[section.id] || {};
+    return {
+      id: section.id,
+      title: section.title,
+      status: bucket.status || section.status || "not started",
+      rows: [
+        ["bucket id", section.id],
+        ["status", bucket.status || section.status || "not started"],
+        ["source", bucket.source || "module-local default preview"],
+        ["manualConstraintCount", bucket.manualConstraintCount ?? 0],
+        ["autoConsequenceCount", bucket.autoConsequenceCount ?? 0],
+        ["effectiveFieldCount", bucket.effectiveFieldCount ?? 0],
+        ["committed", boolString(bucket.committed === true)],
+        ["mutable", boolString(bucket.mutable !== false)],
+        ["writes", boolString(bucket.writes === true)],
+      ],
+    };
+  });
+
+  return {
+    summaryRows: [
+      ["default-preview buckets", objectFieldCount(previewDefaults)],
+      ["required preview/default buckets", requiredSections.length],
+      ["every section has a preview/default bucket", boolString(missingSections.length === 0)],
+      ["missing preview/default buckets", missingSections.length ? missingSections.join(", ") : "none"],
+      ["manual constraints", objectFieldCount(contract.manualConstraints)],
+      ["auto consequences", objectFieldCount(contract.autoConsequences)],
+      ["effective selection fields", objectFieldCount(contract.effectiveSelection)],
+      ["committed spec exists", boolString(contract.committedSpecExists === true)],
+      ["spec-ready", boolString(contract.specReady === true)],
+      ["build-ready", boolString(contract.buildReady === true)],
+      ["spec slug", contract.specSlug || ""],
+      ["committed spec", contract.committedSpec ? "present" : "empty/null"],
+      ["provenance entries", objectFieldCount(contract.provenanceMap)],
+    ],
+    bucketDiagnostics,
+  };
+}
+
 function createBehaviourContractRows(contract = {}) {
   const behaviourFlags = contract.behaviourFlags || {};
   return [
@@ -620,6 +664,7 @@ function createBehaviourContractRows(contract = {}) {
 
 function createSelectorExpanderShell(local = {}, selectorState) {
   const stateContract = selectorStateContractFromLocal(local);
+  const defaultPreviewBuckets = createDefaultPreviewBucketDiagnostics(stateContract);
   return {
     title: "Runtime-native CS Selector single-page expander shell",
     status: "UI/state scaffold only",
@@ -631,6 +676,8 @@ function createSelectorExpanderShell(local = {}, selectorState) {
       open: readExpanderOpen(local, section.id),
     })),
     stateContractRows: createStateContractRows(stateContract),
+    defaultPreviewSummaryRows: defaultPreviewBuckets.summaryRows,
+    defaultPreviewBucketDiagnostics: defaultPreviewBuckets.bucketDiagnostics,
     behaviourContractRows: createBehaviourContractRows(stateContract),
     setSectionOpen(sectionId, open) {
       selectorState?.setExpanderSectionOpen?.(sectionId, open);

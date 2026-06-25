@@ -149,6 +149,29 @@ function appendSelectorExpanderShell(parent, viewModel) {
     ["spec-ready", "false"],
     ["build-ready", "false"],
   ]);
+  appendSection(shellSection, "Default-preview bucket diagnostic", shell.defaultPreviewSummaryRows || [
+    ["default-preview buckets", 0],
+    ["every section has a preview/default bucket", "false"],
+    ["manual constraints", 0],
+    ["auto consequences", 0],
+    ["effective selection fields", 0],
+    ["committed spec exists", "false"],
+    ["spec-ready", "false"],
+    ["build-ready", "false"],
+  ]);
+
+  const bucketDiagnostics = Array.isArray(shell.defaultPreviewBucketDiagnostics) ? shell.defaultPreviewBucketDiagnostics : [];
+  for (const bucket of bucketDiagnostics) {
+    const bucketDetails = document.createElement("details");
+    bucketDetails.className = "cs-selector-proof__section";
+    bucketDetails.open = true;
+    const bucketSummary = document.createElement("summary");
+    bucketSummary.textContent = `${bucket.title || bucket.id} default-preview bucket — ${bucket.status || "not started"}`;
+    bucketDetails.appendChild(bucketSummary);
+    appendDefinitionList(bucketDetails, bucket.rows || [["status", bucket.status || "not started"]]);
+    shellSection.appendChild(bucketDetails);
+  }
+
   appendSection(shellSection, "Selector behaviour contract", shell.behaviourContractRows || [
     ["manual selections", "constraints"],
     ["auto selections", "consequences"],

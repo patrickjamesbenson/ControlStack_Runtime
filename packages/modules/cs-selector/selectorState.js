@@ -12,6 +12,40 @@ const DEFAULT_EXPANDER_SECTIONS = Object.freeze({
   pureReferenceDiagnosticLater: true,
 });
 
+const DEFAULT_PREVIEW_BUCKET_TEMPLATE = Object.freeze({
+  source: "module-local default preview",
+  manualConstraintCount: 0,
+  autoConsequenceCount: 0,
+  effectiveFieldCount: 0,
+  committed: false,
+  mutable: true,
+  writes: false,
+});
+
+const DEFAULT_PREVIEW_BUCKET_STATUSES = Object.freeze({
+  projectMetadata: "preview only",
+  system: "preview only",
+  environment: "not started",
+  lightControl: "not started",
+  mounting: "not started",
+  penetrationsWiring: "not started",
+  finishes: "not started",
+  egressAccessories: "diagnostic only",
+  runs: "later",
+  timelineDiagnostics: "diagnostic only",
+  pureReferenceDiagnosticLater: "later",
+});
+
+const DEFAULT_PREVIEW_DEFAULTS = Object.freeze(Object.fromEntries(
+  Object.keys(DEFAULT_EXPANDER_SECTIONS).map((sectionId) => [
+    sectionId,
+    Object.freeze({
+      status: DEFAULT_PREVIEW_BUCKET_STATUSES[sectionId] || "not started",
+      ...DEFAULT_PREVIEW_BUCKET_TEMPLATE,
+    }),
+  ])
+));
+
 const SELECTOR_STATE_CONTRACT_TEMPLATE = Object.freeze({
   source: "module-local runtime state",
   freshLoad: true,
@@ -54,10 +88,18 @@ function cloneObjectBucket(value) {
   return { ...value };
 }
 
+function clonePreviewDefaults(value = DEFAULT_PREVIEW_DEFAULTS) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  return Object.fromEntries(Object.entries(value).map(([sectionId, bucket]) => [
+    sectionId,
+    { ...bucket },
+  ]));
+}
+
 function createInitialSelectorStateContract() {
   return {
     ...SELECTOR_STATE_CONTRACT_TEMPLATE,
-    previewDefaults: {},
+    previewDefaults: clonePreviewDefaults(DEFAULT_PREVIEW_DEFAULTS),
     manualConstraints: {},
     autoConsequences: {},
     effectiveSelection: {},
@@ -71,7 +113,7 @@ function createInitialSelectorStateContract() {
 function cloneSelectorStateContract(contract = {}) {
   return {
     ...contract,
-    previewDefaults: cloneObjectBucket(contract.previewDefaults),
+    previewDefaults: clonePreviewDefaults(contract.previewDefaults),
     manualConstraints: cloneObjectBucket(contract.manualConstraints),
     autoConsequences: cloneObjectBucket(contract.autoConsequences),
     effectiveSelection: cloneObjectBucket(contract.effectiveSelection),
