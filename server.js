@@ -3,6 +3,12 @@ import { access, copyFile, mkdir, readFile, readdir, stat } from "node:fs/promis
 import { createServer } from "node:http";
 import { basename, extname, isAbsolute, join, normalize, resolve, sep } from "node:path";
 import { buildLabProofStatus, LAB_PROOF_STATUS_PATH } from "./packages/workspace-kernel/labProofStatusService.js";
+import {
+  AUTHORITY_REFERENCE_MATERIALISER_REFRESH_PATH,
+  AUTHORITY_REFERENCE_MATERIALISER_STATUS_PATH,
+  buildAuthorityReferenceMaterialiserStatus,
+  refreshAuthorityReferenceMaterialiser,
+} from "./packages/workspace-kernel/authorityReferenceMaterialiserService.js";
 import { buildSelectorReferenceStatus, SELECTOR_REFERENCE_STATUS_PATH } from "./packages/workspace-kernel/selectorReferenceService.js";
 
 const PORT = Number.parseInt(process.env.CONTROLSTACK_RUNTIME_PORT || "8787", 10);
@@ -15,6 +21,8 @@ const HUBSPOT_DEAL_PREFLIGHT_PATH = "/api/hubspot/deal-writeback/preflight";
 const AUTH_REF_STATUS_PATH = "/api/" + "authority-reference" + "/status";
 const AUTH_REF_SYNC_PATH = "/api/" + "authority-reference" + "/sync";
 const AUTH_REF_SOURCE_MATERIALISATION_PATH = "/api/" + "authority-reference" + "/source-materialisation";
+const AUTH_REF_MATERIALISER_STATUS_PATH = AUTHORITY_REFERENCE_MATERIALISER_STATUS_PATH;
+const AUTH_REF_MATERIALISER_REFRESH_PATH = AUTHORITY_REFERENCE_MATERIALISER_REFRESH_PATH;
 const AUTH_REF_ARCHIVES_PATH = "/api/" + "authority-reference" + "/archives";
 const AUTH_REF_DIFF_PATH = "/api/" + "authority-reference" + "/diff";
 const AUTH_REF_DIFF_DETAIL_PATH = "/api/" + "authority-reference" + "/diff-detail";
@@ -24,6 +32,7 @@ const CONFIG_STATUS_PATH = "/api/runtime-config/status";
 const AUTH_REF_RESTORE_CONFIRMATION_TEXT = "RESTORE";
 const AUTH_REF_POST_PATHS = new Set([
   AUTH_REF_SYNC_PATH,
+  AUTH_REF_MATERIALISER_REFRESH_PATH,
   AUTH_REF_DIFF_PATH,
   AUTH_REF_DIFF_DETAIL_PATH,
   AUTH_REF_RESTORE_PREVIEW_PATH,
@@ -730,6 +739,42 @@ async function authorityReferenceSourceMaterialisationStatus() {
 
 async function sendAuthorityReferenceSourceMaterialisation(res) {
   sendJson(res, 200, await authorityReferenceSourceMaterialisationStatus());
+}
+
+async function sendAuthorityReferenceMaterialiserStatus(res) {
+  sendJson(res, 200, await buildAuthorityReferenceMaterialiserStatus());
+}
+
+async function sendAuthorityReferenceMaterialiserRefresh(res, req, requestUrl) {
+  const dryRunParam = String(requestUrl.searchParams.get("dryRun") || "true").toLowerCase();
+  const dryRun = !["0", "false", "no", "live"].includes(dryRunParam);
+  try {
+    const body = await requestJson(req);
+    const result = await refreshAuthorityReferenceMaterialiser({ dryRun, body });
+    const httpStatus = Number.isInteger(result.httpStatus) ? result.httpStatus : dryRun ? 200 : 409;
+    const { httpStatus: _httpStatus, ...payload } = result;
+    sendJson(res, httpStatus, payload);
+  } catch (error) {
+    sendJson(res, 400, {
+      ok: false,
+      endpoint: AUTH_REF_MATERIALISER_REFRESH_PATH,
+      owner: "runtime-server",
+      status: "materialiser-refresh-request-rejected",
+      dryRun,
+      adminOnly: true,
+      nonBootCritical: true,
+      browserSecretsExposed: false,
+      repoLocalSecrets: false,
+      rawGoogleResponseExposed: false,
+      rawSheetRowsExposed: false,
+      rawRowsExposed: false,
+      fullMaterialisedJsonExposed: false,
+      activeSnapshotWriteAttempted: false,
+      materialisedWriteAttempted: false,
+      reason: error?.message === "invalid_json_body" ? "invalid_json_body" : "materialiser_refresh_request_failed",
+      writePolicy: { materialisedWriteEnabled: false, activeSnapshotWriteEnabled: false },
+    });
+  }
 }
 
 async function authorityReferenceSyncExecution({ dryRun = true } = {}) {
@@ -2197,6 +2242,8 @@ const server = createServer(async (req, res) => {
       labProofStatus: LAB_PROOF_STATUS_PATH,
       authorityReferenceSync: AUTH_REF_SYNC_PATH,
       authorityReferenceSourceMaterialisation: AUTH_REF_SOURCE_MATERIALISATION_PATH,
+      authorityReferenceMaterialiserStatus: AUTH_REF_MATERIALISER_STATUS_PATH,
+      authorityReferenceMaterialiserRefresh: AUTH_REF_MATERIALISER_REFRESH_PATH,
       authorityReferenceArchives: AUTH_REF_ARCHIVES_PATH,
       authorityReferenceDiff: AUTH_REF_DIFF_PATH,
       authorityReferenceDiffDetail: AUTH_REF_DIFF_DETAIL_PATH,
@@ -2251,6 +2298,24 @@ const server = createServer(async (req, res) => {
 
   if (requestUrl.pathname === AUTH_REF_SOURCE_MATERIALISATION_PATH) {
     await sendAuthorityReferenceSourceMaterialisation(res);
+    return;
+  }
+
+  if (requestUrl.pathname === AUTH_REF_MATERIALISER_STATUS_PATH) {
+    if (req.method !== "GET") {
+      sendJson(res, 405, { ok: false, error: "method_not_allowed", requiredMethod: "GET" });
+      return;
+    }
+    await sendAuthorityReferenceMaterialiserStatus(res);
+    return;
+  }
+
+  if (requestUrl.pathname === AUTH_REF_MATERIALISER_REFRESH_PATH) {
+    if (req.method !== "POST") {
+      sendJson(res, 405, { ok: false, error: "method_not_allowed", requiredMethod: "POST" });
+      return;
+    }
+    await sendAuthorityReferenceMaterialiserRefresh(res, req, requestUrl);
     return;
   }
 
