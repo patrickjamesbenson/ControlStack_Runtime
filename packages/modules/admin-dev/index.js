@@ -8,15 +8,39 @@ const READ_ENDPOINTS = Object.freeze({
   health: "/health",
 });
 
+const SYNC_ENDPOINTS = Object.freeze({
+  dryRun: "/api/authority-reference/sync?dryRun=true",
+  live: "/api/authority-reference/sync?dryRun=false",
+});
+
 let mountedContainer = null;
 let mountedContext = null;
 let mountedServices = null;
 let requestId = 0;
+let syncRequestId = 0;
+
+function createSyncState() {
+  return {
+    dryRunStatus: "idle",
+    dryRunResult: null,
+    dryRunError: null,
+    dryRunLoadedAt: null,
+    dryRunCompleted: false,
+    liveStatus: "idle",
+    liveResult: null,
+    liveError: null,
+    liveLoadedAt: null,
+    liveAttempted: false,
+    confirmation: "",
+  };
+}
+
 let state = {
   status: "idle",
   payloads: {},
   errors: [],
   loadedAt: null,
+  sync: createSyncState(),
 };
 
 function resetState(status = "idle") {
@@ -25,7 +49,23 @@ function resetState(status = "idle") {
     payloads: {},
     errors: [],
     loadedAt: null,
+    sync: createSyncState(),
   };
+}
+
+function mergeSyncState(nextSync) {
+  state = {
+    ...state,
+    sync: {
+      ...createSyncState(),
+      ...(state.sync || {}),
+      ...(nextSync || {}),
+    },
+  };
+}
+
+function canUseAdminDevActions() {
+  return Boolean(mountedContainer) && canViewAdminDev(mountedContext);
 }
 
 function renderCurrentView() {
@@ -33,9 +73,14 @@ function renderCurrentView() {
   const viewModel = createAdminDevViewModel({
     context: mountedContext,
     endpoints: READ_ENDPOINTS,
+    syncEndpoints: SYNC_ENDPOINTS,
     state,
   });
-  renderAdminDevView(mountedContainer, viewModel);
+  renderAdminDevView(mountedContainer, viewModel, {
+    onRunDryRunSync: runDryRunSyncPreview,
+    onRunLiveSync: runConfirmedLiveSync,
+    onConfirmationInput: updateSyncConfirmation,
+  });
 }
 
 async function fetchJson(endpoint) {
@@ -65,9 +110,34 @@ async function fetchJson(endpoint) {
   };
 }
 
+async function postJson(endpoint) {
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: { Accept: "application/json" },
+    credentials: "same-origin",
+    cache: "no-store",
+  });
+
+  let body = null;
+  try {
+    body = await response.json();
+  } catch (error) {
+    body = { parseError: error?.message || "json_parse_failed" };
+  }
+
+  return {
+    endpoint,
+    httpStatus: response.status,
+    ok: response.ok,
+    body,
+    readOnly: false,
+  };
+}
+
 async function loadReadOnlyStatus() {
   const thisRequest = ++requestId;
-  state = { ...state, status: "loading", errors: [] };
+  const currentSync = state.sync || createSyncState();
+  state = { ...state, status: "loading", errors: [], sync: currentSync };
   renderCurrentView();
 
   const results = await Promise.all(Object.entries(READ_ENDPOINTS).map(async ([key, endpoint]) => {
@@ -88,6 +158,7 @@ async function loadReadOnlyStatus() {
   }
 
   state = {
+    ...state,
     status: errors.length ? "partial" : "ready",
     payloads,
     errors,
@@ -96,9 +167,104 @@ async function loadReadOnlyStatus() {
   renderCurrentView();
 }
 
+function updateSyncConfirmation(value) {
+  if (!canUseAdminDevActions()) return;
+  mergeSyncState({ confirmation: String(value || "") });
+}
+
+async function runDryRunSyncPreview() {
+  if (!canUseAdminDevActions()) return;
+
+  const thisSyncRequest = ++syncRequestId;
+  mergeSyncState({
+    dryRunStatus: "running",
+    dryRunResult: null,
+    dryRunError: null,
+    dryRunLoadedAt: null,
+    dryRunCompleted: false,
+  });
+  renderCurrentView();
+
+  try {
+    const result = await postJson(SYNC_ENDPOINTS.dryRun);
+    if (thisSyncRequest !== syncRequestId || !mountedContainer) return;
+    mergeSyncState({
+      dryRunStatus: result.ok ? "complete" : "endpoint-error",
+      dryRunResult: result,
+      dryRunError: result.ok ? null : `${SYNC_ENDPOINTS.dryRun} returned HTTP ${result.httpStatus}`,
+      dryRunLoadedAt: new Date().toISOString(),
+      dryRunCompleted: result.ok === true,
+    });
+  } catch (error) {
+    if (thisSyncRequest !== syncRequestId || !mountedContainer) return;
+    mergeSyncState({
+      dryRunStatus: "endpoint-error",
+      dryRunResult: null,
+      dryRunError: error?.message || "Dry-run sync preview failed.",
+      dryRunLoadedAt: new Date().toISOString(),
+      dryRunCompleted: false,
+    });
+  }
+
+  renderCurrentView();
+}
+
+async function runConfirmedLiveSync() {
+  if (!canUseAdminDevActions()) return;
+
+  const sync = state.sync || createSyncState();
+  if (sync.dryRunCompleted !== true || sync.confirmation !== "SYNC" || sync.liveStatus === "running") {
+    renderCurrentView();
+    return;
+  }
+
+  const thisSyncRequest = ++syncRequestId;
+  mergeSyncState({
+    liveStatus: "running",
+    liveResult: null,
+    liveError: null,
+    liveLoadedAt: null,
+    liveAttempted: true,
+  });
+  renderCurrentView();
+
+  try {
+    const result = await postJson(SYNC_ENDPOINTS.live);
+    if (thisSyncRequest !== syncRequestId || !mountedContainer) return;
+    const serverStatus = String(result.body?.status || "").toLowerCase();
+    const liveStatus = result.ok && serverStatus === "live-write-completed"
+      ? "complete"
+      : result.ok
+        ? "complete-with-warning"
+        : "blocked-or-failed";
+    mergeSyncState({
+      liveStatus,
+      liveResult: result,
+      liveError: result.ok ? null : `${SYNC_ENDPOINTS.live} returned HTTP ${result.httpStatus}`,
+      liveLoadedAt: new Date().toISOString(),
+      liveAttempted: true,
+    });
+  } catch (error) {
+    if (thisSyncRequest !== syncRequestId || !mountedContainer) return;
+    mergeSyncState({
+      liveStatus: "endpoint-error",
+      liveResult: null,
+      liveError: error?.message || "Confirmed live sync failed.",
+      liveLoadedAt: new Date().toISOString(),
+      liveAttempted: true,
+    });
+  }
+
+  renderCurrentView();
+  if (mountedContainer && canViewAdminDev(mountedContext)) {
+    await loadReadOnlyStatus();
+  }
+}
+
 function maybeLoadReadOnlyStatus() {
   if (!canViewAdminDev(mountedContext)) {
     requestId += 1;
+    syncRequestId += 1;
     resetState("protected");
     renderCurrentView();
     return;
@@ -127,9 +293,10 @@ export const adminDevModule = {
     mountedServices?.eventBus?.emit("admin_dev:mounted", {
       moduleId: "admin_dev",
       label: "Admin / Dev",
-      readOnly: true,
+      readOnly: false,
       nonBootCritical: true,
-      endpoints: Object.values(READ_ENDPOINTS),
+      endpoints: [...Object.values(READ_ENDPOINTS), ...Object.values(SYNC_ENDPOINTS)],
+      mutationPolicy: "dry-run-first-sync-confirmation-only",
     });
   },
 
@@ -143,6 +310,7 @@ export const adminDevModule = {
 
   unmount() {
     requestId += 1;
+    syncRequestId += 1;
     if (mountedContainer) {
       while (mountedContainer.firstChild) mountedContainer.removeChild(mountedContainer.firstChild);
     }
