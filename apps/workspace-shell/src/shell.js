@@ -34,6 +34,10 @@ const userName = document.getElementById("cs-shell-user-name");
 const userMeta = document.getElementById("cs-shell-user-meta");
 const userCompanyLogo = document.getElementById("cs-shell-user-company-logo");
 const userCompanyName = document.getElementById("cs-shell-user-company-name");
+const shellSearchButton = document.getElementById("cs-shell-search-button");
+const shellSearchPanel = document.getElementById("cs-shell-search-panel");
+const shellSearchInput = document.getElementById("cs-shell-find-ask");
+const shellSearchClose = document.getElementById("cs-shell-search-close");
 const developerDiagnosticsDetails = document.getElementById("shell_developer_diagnostics");
 const identitySelect = document.getElementById("cs-shell-identity-select");
 const resolvedIdentitySummary = document.getElementById("cs-shell-resolved-identity-summary");
@@ -163,6 +167,17 @@ function displayShellRole(context) {
   return context.visibility?.inputs?.displayRole || context.identity?.displayRole || actualShellRole(context);
 }
 
+function shellRoleAbbreviation(role) {
+  const labels = {
+    external_user: "Ext.",
+    internal_user: "Int",
+    internal_engineer: "Adm",
+    admin: "Adm",
+    developer: "Dev",
+  };
+  return labels[role] || String(role || "Ext.").replace(/_/g, " ");
+}
+
 function canViewShellContractSection(contract, context) {
   const role = actualShellRole(context);
   const identityState = context.identity?.identityState || "external_anonymous";
@@ -184,7 +199,7 @@ function currentProjectId(context) {
 }
 
 function currentProjectTitle(context) {
-  return context.project?.metadata?.title || context.project?.currentProject?.title || "Select project";
+  return context.project?.metadata?.title || context.project?.currentProject?.title || "Enter project";
 }
 
 function hasProject(context) {
@@ -212,9 +227,22 @@ function closeTopbarPopouts(except = null) {
   }
 }
 
+function setShellSearchOpen(open, options = {}) {
+  if (!shellSearchButton || !shellSearchPanel) return;
+  shellSearchPanel.hidden = !open;
+  shellSearchButton.setAttribute("aria-expanded", open ? "true" : "false");
+  if (open) {
+    closeTopbarPopouts(null);
+    if (options.focusInput !== false) window.requestAnimationFrame(() => shellSearchInput?.focus?.());
+  } else if (document.activeElement === shellSearchInput && options.restoreFocus !== false) {
+    shellSearchButton.focus();
+  }
+}
+
 function toggleTopbarPopout(button, popout) {
   if (!button || !popout) return;
   const open = button.getAttribute("aria-expanded") !== "true";
+  setShellSearchOpen(false, { restoreFocus: false });
   closeTopbarPopouts(popout);
   setPopout(button, popout, open);
 }
@@ -1220,8 +1248,23 @@ function renderShellTopbarContext(context) {
   if (!viewToggleVisible) setPopout(viewChip, viewPopout, false);
   if (viewChipLabel) {
     const viewRole = displayShellRole(context);
-    const suffix = viewRole === actualShellRole(context) ? "default" : "preview";
-    viewChipLabel.textContent = `View: ${viewRole.replace(/_/g, " ")} · ${suffix}`;
+    const isDefaultView = viewRole === actualShellRole(context);
+    clearElement(viewChipLabel);
+    const roleText = document.createElement("span");
+    roleText.textContent = shellRoleAbbreviation(viewRole);
+    viewChipLabel.appendChild(roleText);
+    if (isDefaultView) {
+      const defaultDot = document.createElement("span");
+      defaultDot.className = "cs-shell__view-default-dot";
+      defaultDot.setAttribute("aria-label", "Current view");
+      defaultDot.title = "Current view";
+      viewChipLabel.appendChild(defaultDot);
+    } else {
+      const previewText = document.createElement("span");
+      previewText.className = "cs-shell__view-preview-label";
+      previewText.textContent = "preview";
+      viewChipLabel.appendChild(previewText);
+    }
   }
   if (startPanel) startPanel.hidden = isSignedIn(context) && hasProject(context);
   const developerVisible = canViewDeveloperDetails(context);
@@ -1240,6 +1283,16 @@ function renderShellTopbarContext(context) {
 function bindShellTopbarControls() {
   if (shellTopbarBound) return;
   shellTopbarBound = true;
+  shellSearchButton?.addEventListener("click", () => {
+    const open = shellSearchButton.getAttribute("aria-expanded") !== "true";
+    setShellSearchOpen(open, { focusInput: true });
+  });
+  shellSearchClose?.addEventListener("click", () => setShellSearchOpen(false, { restoreFocus: true }));
+  shellSearchInput?.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape") return;
+    event.preventDefault();
+    setShellSearchOpen(false, { restoreFocus: true });
+  });
   timelineChip?.addEventListener("click", () => toggleTopbarPopout(timelineChip, timelinePopout));
   projectChip?.addEventListener("click", () => toggleTopbarPopout(projectChip, projectPopout));
   companyChip?.addEventListener("click", () => toggleTopbarPopout(companyChip, companyPopout));
@@ -1259,9 +1312,11 @@ function bindShellTopbarControls() {
   startAccountButton?.addEventListener("click", () => userMenuButton?.click?.());
   startProjectButton?.addEventListener("click", () => toggleTopbarPopout(projectChip, projectPopout));
   document.addEventListener("click", (event) => {
+    const insideSearch = event.target.closest?.(".cs-shell__topbar-search");
     const insideTopbarPopout = event.target.closest?.(".cs-shell__topbar-chip-wrap");
     const clickedInspector = event.target.closest?.("#cs-shell-context-inspector, #cs-shell-context-inspector-button");
     const insideUserMenu = event.target.closest?.(".cs-shell__user-menu");
+    if (!insideSearch) setShellSearchOpen(false, { restoreFocus: false });
     if (!insideTopbarPopout && !clickedInspector) closeTopbarPopouts(null);
     if (!insideUserMenu) setUserMenuOpen(false);
   });
@@ -1271,7 +1326,13 @@ function bindShellTopbarControls() {
     setUserMenuOpen(false);
   });
   window.addEventListener("keydown", (event) => {
+    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
+      event.preventDefault();
+      setShellSearchOpen(true, { focusInput: true });
+      return;
+    }
     if (event.key !== "Escape") return;
+    setShellSearchOpen(false, { restoreFocus: false });
     closeTopbarPopouts(null);
     if (contextInspector) contextInspector.hidden = true;
     contextInspectorButton?.setAttribute("aria-expanded", "false");

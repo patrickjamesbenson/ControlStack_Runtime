@@ -18,16 +18,30 @@
         </a>
 
         <div class="cs-shell__topbar-search" role="search" aria-label="Find or Ask">
-          <input id="cs-shell-find-ask" type="search" placeholder="Find or Ask" aria-label="Find or Ask" autocomplete="off" spellcheck="false" />
+          <button id="cs-shell-search-button" class="cs-shell__search-trigger" type="button" aria-expanded="false" aria-controls="cs-shell-search-panel" aria-label="Open Find or Ask" title="Find or Ask">
+            <svg class="cs-shell__search-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <circle cx="10.5" cy="10.5" r="5.75"></circle>
+              <path d="M15 15l5 5"></path>
+            </svg>
+          </button>
+          <div id="cs-shell-search-panel" class="cs-shell__search-panel" role="dialog" aria-modal="false" aria-label="Find or Ask" hidden>
+            <div class="cs-shell__search-panel-header">
+              <label for="cs-shell-find-ask">Find or Ask</label>
+              <button id="cs-shell-search-close" class="cs-shell__search-close" type="button" aria-label="Close Find or Ask">×</button>
+            </div>
+            <input id="cs-shell-find-ask" type="search" placeholder="Search workspace or ask a question" aria-label="Find or Ask" autocomplete="off" spellcheck="false" />
+            <p>Search workspace tools, project context, and help. Live results are planned for a later slice.</p>
+          </div>
         </div>
 
         <div class="cs-shell__topbar-center" aria-label="Shell context controls">
           <div class="cs-shell__topbar-context" aria-label="Workspace context">
             <div class="cs-shell__topbar-chip-wrap">
-              <button id="cs-shell-timeline-chip" class="cs-shell__context-chip" type="button" aria-expanded="false" aria-controls="cs-shell-timeline-popout" aria-label="Timeline: view today's live workspace timeline. Project requirement dates and future product access are planned for later slices." title="Timeline: view today's live workspace timeline. Project requirement dates and future product access are planned for later slices.">
-                <span aria-hidden="true">◷</span>
-                <span>Timeline</span>
-                <span id="cs-shell-timeline-chip-label">Today</span>
+              <button id="cs-shell-timeline-chip" class="cs-shell__context-chip cs-shell__context-chip--icon-only" type="button" aria-expanded="false" aria-controls="cs-shell-timeline-popout" aria-label="Open timeline" title="Timeline">
+                <svg class="cs-shell__timeline-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <circle cx="12" cy="12" r="8.25"></circle>
+                  <path d="M12 7.25v5.25l3.75 2.25"></path>
+                </svg>
               </button>
               <div id="cs-shell-timeline-popout" class="cs-shell__topbar-popout" hidden>
                 <p class="cs-shell__section-kicker">Timeline</p>
@@ -44,8 +58,7 @@
 
             <div class="cs-shell__topbar-chip-wrap">
               <button id="cs-shell-project-chip" class="cs-shell__context-chip" type="button" aria-expanded="false" aria-controls="cs-shell-project-popout" aria-label="Project: select or change the current project and access project actions." title="Project: select or change the current project. Use the popout for save, restore/open, and handoff/share actions.">
-                <span>Project</span>
-                <span id="cs-shell-project-chip-label">Select project</span>
+                <span id="cs-shell-project-chip-label">Enter project</span>
               </button>
               <div id="cs-shell-project-popout" class="cs-shell__topbar-popout cs-shell__topbar-popout--wide" hidden>
                 <p class="cs-shell__section-kicker">Project</p>
@@ -212,10 +225,6 @@
               <img class="cs-shell__rail-icon" src="/apps/workspace-shell/assets/emergency-egress-rail-icon.svg" alt="" aria-hidden="true" />
               <span>Emergency / EGRES</span>
             </a>
-            <a class="cs-shell__rail-item cs-shell__rail-item--admin" href="/workspace?module=admin_dev" data-module-link="admin_dev" data-shell-protected-module="true" hidden>
-              <svg class="cs-shell__rail-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v16" /><path d="M4 12h16" /><circle cx="12" cy="12" r="7" /></svg>
-              <span>Admin / Dev</span>
-            </a>
             <button class="cs-shell__rail-item" type="button" aria-disabled="true" title="Compliance Matters is a planned workflow module.">
               <svg class="cs-shell__rail-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12l4 4L19 6" /><path d="M6 20h12" /></svg>
               <span>Compliance Matters</span>
@@ -224,6 +233,10 @@
               <svg class="cs-shell__rail-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16M8 4v16M16 4v16" /></svg>
               <span>Ceiling / Coordinated Surfaces</span>
             </button>
+            <a class="cs-shell__rail-item cs-shell__rail-item--admin" href="/workspace?module=admin_dev" data-module-link="admin_dev" data-shell-protected-module="true" hidden>
+              <svg class="cs-shell__rail-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v16" /><path d="M4 12h16" /><circle cx="12" cy="12" r="7" /></svg>
+              <span>Admin / Dev</span>
+            </a>
           </nav>
         </aside>
 
