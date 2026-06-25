@@ -1,5 +1,24 @@
 import { evaluateSpecialPartsCompatibility } from "./selectorSpecialPartsCompatibility.js";
 
+const TIMELINE_STATUS_ALIASES = Object.freeze({
+  available: "live",
+  approved: "live",
+  live: "live",
+  staged: "scheduled",
+  scheduled: "scheduled",
+  roadmap: "roadmap",
+  business_case: "business_case",
+  "business-case": "business_case",
+  "business case": "business_case",
+});
+
+const TIMELINE_STATUS_LABELS = Object.freeze({
+  live: "Live",
+  scheduled: "Scheduled",
+  roadmap: "Roadmap",
+  business_case: "Business Case",
+});
+
 function stateLabel(value) {
   if (value === true) return "yes";
   if (value === false) return "no";
@@ -72,6 +91,194 @@ function timelineRefs({ local = {}, project = {}, selectorDownstream = {} }) {
 
 function listLength(value) {
   return Array.isArray(value) ? value.length : 0;
+}
+
+function compactList(values = []) {
+  return values.map((value) => String(value || "").trim()).filter(Boolean);
+}
+
+function normaliseTimelineStatus(value) {
+  const compactKey = String(value || "").trim().toLowerCase();
+  const spacedKey = compactKey.replace(/_/g, " ").replace(/\s+/g, " ");
+  return TIMELINE_STATUS_ALIASES[compactKey] || TIMELINE_STATUS_ALIASES[spacedKey] || "live";
+}
+
+function timelineStatusLabel(value) {
+  return TIMELINE_STATUS_LABELS[normaliseTimelineStatus(value)] || "Live";
+}
+
+function parseTimelineDate(value) {
+  const raw = String(value || "").trim();
+  if (!raw || raw.toLowerCase() === "today" || raw.toLowerCase() === "not set" || raw.toLowerCase() === "none") {
+    return { raw, timestamp: null, valid: false };
+  }
+  const timestamp = Date.parse(raw);
+  return { raw, timestamp: Number.isFinite(timestamp) ? timestamp : null, valid: Number.isFinite(timestamp) };
+}
+
+function timelineAccessAllowsFuture(timelineAccess = {}) {
+  const status = String(timelineAccess.status || "").trim().toLowerCase();
+  if (timelineAccess.writeEnabled === true || timelineAccess.enabled === true || timelineAccess.accessEnabled === true) return true;
+  return ["enabled", "active", "available", "approved", "live", "granted", "access-granted"].includes(status);
+}
+
+function readRequirementDate(projectRequirementDate = {}, timelinePolicy = {}) {
+  return projectRequirementDate.value
+    || timelinePolicy.projectRequirementDate?.value
+    || timelinePolicy.projectDateContext?.projectRequirementDate
+    || null;
+}
+
+function firstValue(...values) {
+  return values.find((value) => value !== undefined && value !== null && String(value).trim() !== "") || "";
+}
+
+function normaliseTimelineItem(rawItem, index, source) {
+  if (!rawItem) return null;
+  if (typeof rawItem !== "object") {
+    return {
+      source,
+      kind: source,
+      key: String(rawItem),
+      label: String(rawItem),
+      status: "live",
+      statusLabel: "Live",
+      statusDate: "",
+      effectiveTo: "",
+      selected: false,
+      raw: rawItem,
+    };
+  }
+  const rawStatus = firstValue(rawItem.status, rawItem.lifecycleStatus, rawItem.productLifecycleStatus, rawItem.timelineLifecycleStatus, rawItem.availabilityStatus);
+  const canonicalStatus = normaliseTimelineStatus(rawStatus);
+  const key = firstValue(rawItem.key, rawItem.id, rawItem.ref, rawItem.value, rawItem.slug, rawItem.code, `${source}-${index}`);
+  const label = firstValue(rawItem.label, rawItem.name, rawItem.description, rawItem.title, key);
+  return {
+    source,
+    kind: firstValue(rawItem.kind, rawItem.type, source),
+    key: String(key),
+    label: String(label),
+    status: canonicalStatus,
+    statusLabel: timelineStatusLabel(canonicalStatus),
+    rawStatus: rawStatus || "live",
+    statusDate: firstValue(rawItem.status_date, rawItem.statusDate, rawItem.availableFrom, rawItem.available_from, rawItem.effective_from),
+    effectiveTo: firstValue(rawItem.effective_to, rawItem.effectiveTo, rawItem.expiresAt, rawItem.expiryDate),
+    selected: rawItem.selected === true || rawItem.current === true || rawItem.active === true,
+    raw: rawItem,
+  };
+}
+
+function collectTimelineArrayItems(items, source) {
+  if (!Array.isArray(items)) return [];
+  return items.map((item, index) => normaliseTimelineItem(item, index, source)).filter(Boolean);
+}
+
+function collectSelectorTimelineItems({ local = {}, selectorDownstream = {} } = {}) {
+  return [
+    ...collectTimelineArrayItems(local.timelineItems, "local.timelineItems"),
+    ...collectTimelineArrayItems(local.currentTimelineItems, "local.currentTimelineItems"),
+    ...collectTimelineArrayItems(local.selectionItems, "local.selectionItems"),
+    ...collectTimelineArrayItems(local.currentSelections, "local.currentSelections"),
+    ...collectTimelineArrayItems(local.optionRefs, "local.optionRefs"),
+    ...collectTimelineArrayItems(selectorDownstream.optionRefs, "downstream.optionRefs"),
+    ...collectTimelineArrayItems(selectorDownstream.fittingRefs, "downstream.fittingRefs"),
+    ...collectTimelineArrayItems(selectorDownstream.runRefs, "downstream.runRefs"),
+    ...collectTimelineArrayItems(selectorDownstream.emergencyCandidates, "downstream.emergencyCandidates"),
+    ...collectTimelineArrayItems(selectorDownstream.sceneBuilderCandidates, "downstream.sceneBuilderCandidates"),
+    ...collectTimelineArrayItems(selectorDownstream.complianceCandidates, "downstream.complianceCandidates"),
+    ...collectTimelineArrayItems(selectorDownstream.ceilingCandidates, "downstream.ceilingCandidates"),
+  ];
+}
+
+function evaluateTimelineItem(item, { requirementDate, timelineAccess } = {}) {
+  const reasons = [];
+  const requirement = parseTimelineDate(requirementDate);
+  const statusDate = parseTimelineDate(item.statusDate);
+  const effectiveTo = parseTimelineDate(item.effectiveTo);
+  const futureAccess = timelineAccessAllowsFuture(timelineAccess);
+  const status = normaliseTimelineStatus(item.status);
+  let allowed = true;
+  let outOfWindow = false;
+
+  if (status === "live") {
+    allowed = true;
+  } else if (status === "scheduled") {
+    if (!requirement.valid) {
+      allowed = false;
+      reasons.push("scheduled-requires-project-requirement-date");
+    }
+    if (!futureAccess) {
+      allowed = false;
+      reasons.push("scheduled-requires-timeline-access");
+    }
+    if (requirement.valid && statusDate.valid && statusDate.timestamp > requirement.timestamp) {
+      allowed = false;
+      outOfWindow = true;
+      reasons.push("scheduled-after-project-requirement-date");
+    }
+  } else if (status === "roadmap") {
+    allowed = false;
+    reasons.push("roadmap-restricted-by-shell-timeline-policy");
+  } else if (status === "business_case") {
+    allowed = false;
+    reasons.push("business-case-restricted-by-shell-timeline-policy");
+  }
+
+  if (effectiveTo.valid && effectiveTo.timestamp < Date.now()) {
+    allowed = false;
+    outOfWindow = true;
+    reasons.push("item-effective-date-expired");
+  }
+
+  return {
+    ...item,
+    status,
+    statusLabel: timelineStatusLabel(status),
+    allowed,
+    outOfWindow,
+    reasons,
+  };
+}
+
+function summarizeTimelineFiltering({ local = {}, selectorDownstream = {}, timelinePolicy = {}, selectorTimelineContext = {}, projectRequirementDate = {}, timelineAccess = {} } = {}) {
+  const requirementDate = readRequirementDate(projectRequirementDate, timelinePolicy);
+  const requirement = parseTimelineDate(requirementDate);
+  const items = collectSelectorTimelineItems({ local, selectorDownstream });
+  const evaluatedItems = items.map((item) => evaluateTimelineItem(item, { requirementDate, timelineAccess }));
+  const filteredItems = evaluatedItems.filter((item) => item.allowed !== true);
+  const outOfWindowItems = evaluatedItems.filter((item) => item.outOfWindow === true);
+  const affectedSelections = filteredItems.filter((item) => item.selected === true);
+  const allowedStatusKeys = ["live"];
+  if (requirement.valid && timelineAccessAllowsFuture(timelineAccess)) allowedStatusKeys.push("scheduled");
+  const warnings = [];
+
+  if (!items.length) warnings.push("No selector Timeline item rows are available yet; active policy is armed but has no product rows to filter.");
+  if (!requirement.valid) warnings.push("No project requirement date is set; live/current products remain usable and future products stay restricted.");
+  if (!timelineAccessAllowsFuture(timelineAccess)) warnings.push("Timeline access is not enabled; future products remain restricted by shell policy.");
+  if (affectedSelections.length) warnings.push(`Timeline filter affects current selection: ${affectedSelections.map((item) => item.label).join(", ")}.`);
+
+  return {
+    status: items.length ? "active-evaluated" : "active-no-items",
+    source: "selector-view-model-stage-t1-active-timeline-filter",
+    live: true,
+    requirementDate: requirementDate || "not set",
+    requirementDateValid: requirement.valid,
+    accessState: timelineAccess.status || "not-enabled-placeholder",
+    accessAllowsFuture: timelineAccessAllowsFuture(timelineAccess),
+    allowedStatusKeys,
+    filteredItemCount: filteredItems.length,
+    outOfWindowItemCount: outOfWindowItems.length,
+    warningCount: warnings.length,
+    warnings,
+    affectedSelections: affectedSelections.map((item) => ({
+      label: item.label,
+      key: item.key,
+      status: item.status,
+      reasons: [...item.reasons],
+    })),
+    evaluatedItems,
+    policyQuestion: selectorTimelineContext.modelQuestion || "Can this user/project use this product or special part by the project requirement date?",
+  };
 }
 
 function readSelectorTimelineContext(adapter, snapshots, timelinePolicy) {
@@ -253,6 +460,14 @@ export function createSelectorViewModel({ adapter, selectorState }) {
   const passiveSelectorSelectionContext = buildPassiveSelectorSelectionContext({ local, timelinePolicy, projectRequirementDate });
   const specialPartsCompatibilityResults = evaluateSpecialPartsCompatibility(entitledSpecialParts, passiveSelectorSelectionContext);
   const specialPartsCompatibilitySummary = summarizeSpecialPartsCompatibility(specialPartsCompatibilityResults);
+  const timelineFiltering = summarizeTimelineFiltering({
+    local,
+    selectorDownstream,
+    timelinePolicy,
+    selectorTimelineContext,
+    projectRequirementDate,
+    timelineAccess,
+  });
 
   return {
     moduleId: adapter.moduleId,
@@ -371,6 +586,18 @@ export function createSelectorViewModel({ adapter, selectorState }) {
       timelineAccessLabel: timelineAccess.label || "not enabled / placeholder",
       timelineAccessContactRepRequired: stateLabel(timelineAccess.contactRepRequired),
       timelineAccessWriteEnabled: stateLabel(timelineAccess.writeEnabled),
+      timelineFilterEvaluationLive: true,
+      timelineWarningsLive: true,
+      timelineProductCardFilteringLive: false,
+      timelineFilteringLive: false,
+      timelineFilterStatus: timelineFiltering.status,
+      timelineAllowedStatusKeys: timelineFiltering.allowedStatusKeys.join(", "),
+      timelineFilteredItemCount: timelineFiltering.filteredItemCount,
+      timelineOutOfWindowItemCount: timelineFiltering.outOfWindowItemCount,
+      timelineWarnings: timelineFiltering.warnings.join(" | ") || "none",
+      timelineAffectedSelections: timelineFiltering.affectedSelections.map((item) => item.label).join(", ") || "none",
+      timelineRequirementDate: timelineFiltering.requirementDate,
+      timelineAccessState: timelineFiltering.accessState,
       specialPartsEntitlementStatus: specialPartsEntitlement.status || "not-live-placeholder",
       specialPartsEntitlementSource: specialPartsEntitlement.source || "shell-placeholder",
       specialPartsEntitlementLive: stateLabel(specialPartsEntitlement.entitlementLive),
@@ -395,8 +622,8 @@ export function createSelectorViewModel({ adapter, selectorState }) {
       specialPartsBuildMutationLive: stateLabel(false),
       csSelectorConsumesTimelineContext: stateLabel(csSelectorConsumption.consumesTimelineContext),
       csSelectorOwnsSelectionCompatibility: stateLabel(csSelectorConsumption.ownsSelectionCompatibility),
-      filteringLive: stateLabel(csSelectorConsumption.filteringLive || selectorTimelineImplementation.filteringLive),
-      warningsLive: stateLabel(csSelectorConsumption.warningsLive || selectorTimelineImplementation.warningsLive),
+      filteringLive: stateLabel(false),
+      warningsLive: stateLabel(true),
       entitlementLookupLive: stateLabel(selectorTimelineImplementation.entitlementLookupLive),
       optInLive: stateLabel(selectorTimelineImplementation.optInLive),
       projectWritesLive: stateLabel(selectorTimelineImplementation.projectWritesLive),
@@ -405,6 +632,7 @@ export function createSelectorViewModel({ adapter, selectorState }) {
       buildMutationLive: stateLabel(selectorTimelineImplementation.buildMutationLive),
     },
     selectorTimelineContext,
+    timelineFiltering,
     specialPartsCompatibility: {
       status: specialPartsCompatibilitySummary.status,
       source: "selector-view-model-stage-3e-passive-helper-wiring",
@@ -464,9 +692,9 @@ export function createSelectorViewModel({ adapter, selectorState }) {
       "Restore is shell-owned and deferred",
       "Handoff is shell-owned and deferred",
       "CRM writes are shell-owned and deferred",
-      "Timeline and special-parts context are consumed passively only",
+      "Timeline filtering and warnings are selector-local active diagnostics",
       "Special-parts compatibility helper is wired passively into the view model only",
-      "Selector filtering, entitlement lookup, opt-in, slug mutation, and build mutation are deferred",
+      "Special-parts entitlement lookup, opt-in, slug mutation, and build mutation are deferred",
     ],
     responsiveNote: "Selector panel uses module-local sections that can stack inside the shell-owned responsive layout.",
   };

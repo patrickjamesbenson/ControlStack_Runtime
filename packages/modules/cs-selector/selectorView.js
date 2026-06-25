@@ -53,6 +53,33 @@ function readSpecialPartsDiagnosticsRows(viewModel) {
   ];
 }
 
+function readTimelineFilteringRows(viewModel) {
+  const policy = viewModel.timelinePolicy || {};
+  const filtering = viewModel.timelineFiltering || {};
+  return [
+    ["Timeline policy evaluation live", policy.timelineFilterEvaluationLive === true ? "yes" : policy.timelineFilterEvaluationLive || "no"],
+    ["Timeline warnings live", policy.timelineWarningsLive === true ? "yes" : policy.timelineWarningsLive || "no"],
+    ["Actual product-card filtering live", policy.timelineProductCardFilteringLive === true ? "yes" : policy.timelineProductCardFilteringLive || "no"],
+    ["Filter status", policy.timelineFilterStatus || filtering.status || "unknown"],
+    ["Allowed lifecycle statuses", policy.timelineAllowedStatusKeys || (filtering.allowedStatusKeys || []).join(", ") || "live"],
+    ["Project requirement date", policy.timelineRequirementDate || filtering.requirementDate || "not set"],
+    ["Timeline access", policy.timelineAccessState || filtering.accessState || "not-enabled-placeholder"],
+    ["Filtered item count", policy.timelineFilteredItemCount ?? filtering.filteredItemCount ?? 0],
+    ["Out-of-window item count", policy.timelineOutOfWindowItemCount ?? filtering.outOfWindowItemCount ?? 0],
+    ["Affected selections", policy.timelineAffectedSelections || "none"],
+    ["Slug/build mutation", "no"],
+  ];
+}
+
+function appendTimelineWarnings(parent, viewModel) {
+  const warnings = viewModel.timelineFiltering?.warnings || [];
+  const section = document.createElement("section");
+  section.className = "cs-selector-proof__section";
+  appendText(section, "h3", "Timeline warnings");
+  appendPillList(section, warnings.length ? warnings : ["No Timeline warnings reported."]);
+  parent.appendChild(section);
+}
+
 export function renderSelectorView(container, viewModel) {
   clearElement(container);
   const article = document.createElement("article");
@@ -133,6 +160,8 @@ export function renderSelectorView(container, viewModel) {
     ["local timeline refs", viewModel.timelinePolicy.itemRefs],
   ]);
 
+  appendSection(article, "Active Timeline filter diagnostics", readTimelineFilteringRows(viewModel));
+  appendTimelineWarnings(article, viewModel);
   appendSection(article, "Developer diagnostics: Timeline / Special Parts", readSpecialPartsDiagnosticsRows(viewModel));
 
   appendSection(article, "Downstream context foundation", [
