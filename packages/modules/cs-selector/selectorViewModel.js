@@ -432,7 +432,7 @@ function shellDisplayRoleClamped(authority = {}, identity = {}, visibility = {})
   return identity.displayRoleClamped;
 }
 
-export function createSelectorViewModel({ adapter, selectorState }) {
+export function createSelectorViewModel({ adapter, selectorState, selectorReferenceStatus = {} }) {
   const snapshots = adapter.readSnapshots();
   const local = selectorState.getSnapshot();
   const flags = snapshots.flags.values || {};
@@ -633,6 +633,7 @@ export function createSelectorViewModel({ adapter, selectorState }) {
     },
     selectorTimelineContext,
     timelineFiltering,
+    selectorReference: selectorReferenceStatus,
     specialPartsCompatibility: {
       status: specialPartsCompatibilitySummary.status,
       source: "selector-view-model-stage-3e-passive-helper-wiring",

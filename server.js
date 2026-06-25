@@ -2,6 +2,7 @@ import { createReadStream } from "node:fs";
 import { access, copyFile, mkdir, readFile, readdir, stat } from "node:fs/promises";
 import { createServer } from "node:http";
 import { basename, extname, isAbsolute, join, normalize, resolve, sep } from "node:path";
+import { buildSelectorReferenceStatus, SELECTOR_REFERENCE_STATUS_PATH } from "./packages/workspace-kernel/selectorReferenceService.js";
 
 const PORT = Number.parseInt(process.env.CONTROLSTACK_RUNTIME_PORT || "8787", 10);
 const HOST = process.env.CONTROLSTACK_RUNTIME_HOST || "127.0.0.1";
@@ -849,6 +850,12 @@ async function authorityReferenceSyncExecution({ dryRun = true } = {}) {
 
 async function sendAuthorityReferenceStatus(res) {
   sendJson(res, 200, await authorityReferenceAdminStatus());
+}
+
+async function sendSelectorReferenceStatus(res) {
+  sendJson(res, 200, await buildSelectorReferenceStatus({
+    sourcePath: AUTH_REF_DEFAULT_SNAPSHOT_PATH,
+  }));
 }
 
 async function sendAuthorityReferenceSync(res, requestUrl) {
@@ -2179,6 +2186,7 @@ const server = createServer(async (req, res) => {
         writePolicy: { enabled: false, reason: "HubSpot deal writeback live writes are disabled." },
       },
       authorityReferenceStatus: AUTH_REF_STATUS_PATH,
+      selectorReferenceStatus: SELECTOR_REFERENCE_STATUS_PATH,
       authorityReferenceSync: AUTH_REF_SYNC_PATH,
       authorityReferenceSourceMaterialisation: AUTH_REF_SOURCE_MATERIALISATION_PATH,
       authorityReferenceArchives: AUTH_REF_ARCHIVES_PATH,
@@ -2220,6 +2228,11 @@ const server = createServer(async (req, res) => {
 
   if (requestUrl.pathname === AUTH_REF_STATUS_PATH) {
     await sendAuthorityReferenceStatus(res);
+    return;
+  }
+
+  if (requestUrl.pathname === SELECTOR_REFERENCE_STATUS_PATH) {
+    await sendSelectorReferenceStatus(res);
     return;
   }
 

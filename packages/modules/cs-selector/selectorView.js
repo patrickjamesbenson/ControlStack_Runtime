@@ -80,6 +80,104 @@ function appendTimelineWarnings(parent, viewModel) {
   parent.appendChild(section);
 }
 
+function yesNo(value) {
+  if (value === true) return "yes";
+  if (value === false) return "no";
+  if (value === null || value === undefined) return "unknown";
+  return String(value);
+}
+
+function valueOrNone(value) {
+  if (value === null || value === undefined || value === "") return "none";
+  return String(value);
+}
+
+function selectorReferenceSourceRows(reference = {}) {
+  const source = reference.source || {};
+  return [
+    ["endpoint", reference.endpoint || "/api/selector-reference/status"],
+    ["status", reference.status || (reference.ok === true ? "loaded" : "unknown")],
+    ["ok", yesNo(reference.ok)],
+    ["source label", source.label || "runtime-authority-reference-active-snapshot"],
+    ["source path label", source.pathLabel || "C:\\ControlStack_RuntimeData\\authority-reference\\novondb.json"],
+    ["source present", yesNo(source.present)],
+    ["source readable", yesNo(source.readable)],
+    ["modified", valueOrNone(source.modifiedTime)],
+    ["file size", source.fileSize === undefined || source.fileSize === null ? "none" : `${source.fileSize} bytes`],
+    ["read only", yesNo(reference.readOnly)],
+    ["raw rows exposed", yesNo(reference.rawRowsExposed)],
+    ["raw Lab evidence exposed", yesNo(reference.rawLabEvidenceExposed)],
+  ];
+}
+
+function selectorReferenceTableRows(reference = {}) {
+  const tables = Array.isArray(reference.tableSummary) ? reference.tableSummary : [];
+  if (!tables.length) return [["tables", "loading or unavailable"]];
+  return tables.map((table) => {
+    const headers = table.headersRedacted
+      ? "redacted"
+      : (Array.isArray(table.headers) && table.headers.length ? table.headers.join(", ") : "none");
+    return [
+      table.table || "unknown",
+      `${table.present ? table.rowCount : "missing"}${table.present ? " rows" : ""}; headers: ${headers}`,
+    ];
+  });
+}
+
+function selectorReferenceProofWarnings(reference = {}) {
+  const requiredWarnings = [
+    "No approved Lab pure reference state found for this selection.",
+    "Photometry blocked. Selector resolved metadata only. PURE_REF_STATE, baseline_slug, pure_ref_lm, optic_lumen_measured, eff_optical, and driver util_curve_file are not approved photometric proof. No arbitrary IES, generic optic file, nearest-looking photometry, default photometry, or efficiency fallback may be used.",
+  ];
+  const loadedWarnings = Array.isArray(reference.warnings) ? reference.warnings : [];
+  return [...new Set([...loadedWarnings, ...requiredWarnings])];
+}
+
+function appendSelectorReferencePanel(parent, viewModel) {
+  const reference = viewModel.selectorReference || {};
+  appendSection(parent, "Runtime Selector reference snapshot", selectorReferenceSourceRows(reference));
+  appendSection(parent, "Selector-critical table counts and headers", selectorReferenceTableRows(reference));
+
+  const missingTables = Array.isArray(reference.missingTables) ? reference.missingTables : [];
+  const users = reference.usersRedactionStatus || {};
+  const pureRef = reference.pureRefStateStatus || {};
+  const userSummary = users.derivedAuthorityCapabilitySummary || {};
+  const fieldCoverage = userSummary.fieldCoverage || {};
+  appendSection(parent, "Reference safety gates", [
+    ["missing tables", missingTables.length ? missingTables.join(", ") : "none reported"],
+    ["USERS present", yesNo(users.present)],
+    ["USERS count", users.count ?? 0],
+    ["USERS raw rows exposed", yesNo(users.rawRowsExposed)],
+    ["USERS raw headers exposed", yesNo(users.rawHeadersExposed)],
+    ["USERS safe derived uses", Array.isArray(users.safeDerivedUses) ? users.safeDerivedUses.join("; ") : "redacted status only"],
+    ["USERS authority role rows", fieldCoverage.roleRows ?? 0],
+    ["USERS capability rows", fieldCoverage.capabilityRows ?? 0],
+    ["USERS special-parts entitlement rows", fieldCoverage.specialPartEntitlementRows ?? 0],
+    ["PURE_REF_STATE present", yesNo(pureRef.present)],
+    ["PURE_REF_STATE count", pureRef.count ?? 0],
+    ["PURE_REF_STATE diagnostic only", yesNo(pureRef.diagnosticOnly)],
+    ["PURE_REF_STATE production proof", yesNo(pureRef.productionProof)],
+  ]);
+
+  const riskFields = Array.isArray(reference.fallbackRiskFields) ? reference.fallbackRiskFields : [];
+  const riskSection = document.createElement("section");
+  riskSection.className = "cs-selector-proof__section";
+  appendText(riskSection, "h3", "Fake-proof / fallback-risk fields");
+  appendPillList(
+    riskSection,
+    riskFields.length
+      ? riskFields.map((field) => `${field.table}.${field.field}: ${field.present === true ? "present" : "not present"}; ${field.proofStatus || "metadata_only"} — ${field.reason || "metadata only"}`)
+      : ["No fallback-risk field metadata has loaded yet."]
+  );
+  parent.appendChild(riskSection);
+
+  const warningSection = document.createElement("section");
+  warningSection.className = "cs-selector-proof__section";
+  appendText(warningSection, "h3", "Photometry proof warning");
+  appendPillList(warningSection, selectorReferenceProofWarnings(reference));
+  parent.appendChild(warningSection);
+}
+
 export function renderSelectorView(container, viewModel) {
   clearElement(container);
   const article = document.createElement("article");
@@ -91,6 +189,8 @@ export function renderSelectorView(container, viewModel) {
   appendText(intro, "h2", "cs_selector shell context consumer");
   appendText(intro, "p", "Selector now shows a shell-owned downstream context foundation. This is contract-only: Scene Builder, EGRES, Compliance Matters, Ceiling, engine, RunTable, and payload remain out of scope.");
   article.appendChild(intro);
+
+  appendSelectorReferencePanel(article, viewModel);
 
   appendSection(article, "Identity and shell authority", [
     ["identity owner", viewModel.identity.owner],
