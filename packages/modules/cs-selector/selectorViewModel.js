@@ -564,37 +564,74 @@ function readExpanderOpen(local = {}, sectionId) {
   return openState[sectionId] !== false;
 }
 
+function boolString(value) {
+  return value === true ? "true" : "false";
+}
+
+function objectFieldCount(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return 0;
+  return Object.keys(value).length;
+}
+
+function selectorStateContractFromLocal(local = {}) {
+  return local.selectorStateContract || {};
+}
+
+function createStateContractRows(contract = {}) {
+  const sideEffectGuards = contract.sideEffectGuards || {};
+  return [
+    ["selector state contract source", contract.source || "module-local runtime state"],
+    ["fresh load is preamble/default-preview only", boolString(contract.freshLoad === true && contract.previewDefaultState === true)],
+    ["spec-ready", boolString(contract.specReady === true)],
+    ["build-ready", boolString(contract.buildReady === true)],
+    ["spec gate complete", boolString(contract.specGateComplete === true)],
+    ["build gate complete", boolString(contract.buildGateComplete === true)],
+    ["spec slug", contract.specSlug || ""],
+    ["committed spec exists", boolString(contract.committedSpecExists === true)],
+    ["preview defaults", objectFieldCount(contract.previewDefaults)],
+    ["manual constraints", objectFieldCount(contract.manualConstraints)],
+    ["auto consequences", objectFieldCount(contract.autoConsequences)],
+    ["effective selection fields", objectFieldCount(contract.effectiveSelection)],
+    ["committed spec", contract.committedSpec ? "present" : "empty/null"],
+    ["provenance entries", objectFieldCount(contract.provenanceMap)],
+    ["product cards rendered", boolString(sideEffectGuards.productCardsRendered === true)],
+    ["filtering active", boolString(sideEffectGuards.filteringActive === true)],
+    ["save/load active", boolString(sideEffectGuards.saveLoadActive === true)],
+    ["engine calls active", boolString(sideEffectGuards.engineCallsActive === true)],
+    ["Lab calls active", boolString(sideEffectGuards.labCallsActive === true)],
+    ["IES calls active", boolString(sideEffectGuards.iesCallsActive === true)],
+    ["downstream payload active", boolString(sideEffectGuards.downstreamPayloadActive === true)],
+    ["authority writes active", boolString(sideEffectGuards.authorityWritesActive === true)],
+    ["raw USERS exposed", boolString(sideEffectGuards.rawUsersExposed === true)],
+    ["raw Lab evidence exposed", boolString(sideEffectGuards.rawLabEvidenceExposed === true)],
+  ];
+}
+
+function createBehaviourContractRows(contract = {}) {
+  const behaviourFlags = contract.behaviourFlags || {};
+  return [
+    ["manual selections are constraints", boolString(behaviourFlags.manualSelectionsAreConstraints === true)],
+    ["auto selections are consequences", boolString(behaviourFlags.autoSelectionsAreConsequences === true)],
+    ["preserve compatible selections on field change", boolString(behaviourFlags.preserveCompatibleSelectionsOnFieldChange === true)],
+    ["auto-derived items remain changeable", boolString(behaviourFlags.autoDerivedItemsRemainChangeable === true)],
+    ["spec slug requires complete spec gate", boolString(behaviourFlags.specSlugRequiresCompleteSpecGate === true)],
+  ];
+}
+
 function createSelectorExpanderShell(local = {}, selectorState) {
+  const stateContract = selectorStateContractFromLocal(local);
   return {
     title: "Runtime-native CS Selector single-page expander shell",
     status: "UI/state scaffold only",
     mode: "single-page expander",
     warning: "Fresh load is preamble/default-preview state only, not spec-ready state.",
+    stateContract,
     sections: SELECTOR_EXPANDER_SECTIONS.map((section) => ({
       ...section,
       open: readExpanderOpen(local, section.id),
     })),
-    stateContractRows: [
-      ["preview/default state exists conceptually", "true"],
-      ["effective selection state exists conceptually", "true"],
-      ["committed spec state exists conceptually", "true"],
-      ["fresh load", "preamble/default-preview only"],
-      ["fresh load is spec-ready", "false"],
-      ["spec-ready", "false"],
-      ["build-ready", "false"],
-      ["product cards rendered", "false"],
-      ["filtering active", "false"],
-      ["save/load active", "false"],
-      ["engine/Lab/IES/downstream calls added by scaffold", "false"],
-    ],
-    behaviourContractRows: [
-      ["manual selections", "constraints"],
-      ["auto selections", "consequences"],
-      ["compatible selections cleared just because another field changes", "false"],
-      ["auto-derived items changeable", "true"],
-      ["spec-ready slug on fresh load", "false"],
-      ["spec-ready slug before complete spec gate", "false"],
-    ],
+    stateContractRows: createStateContractRows(stateContract),
+    behaviourContractRows: createBehaviourContractRows(stateContract),
     setSectionOpen(sectionId, open) {
       selectorState?.setExpanderSectionOpen?.(sectionId, open);
     },
