@@ -7,6 +7,7 @@ import { emergenceModule } from "/packages/modules/emergence/index.js";
 import { sceneBuilderModule } from "/packages/modules/scene-builder/index.js";
 import { adminDevModule } from "/packages/modules/admin-dev/index.js";
 import { boardDataModule } from "/packages/modules/board-data/index.js";
+import { iesBuilderModule } from "/packages/modules/ies-builder/index.js";
 
 const shellRoot = document.getElementById("cs-shell-root");
 const statusEl = document.getElementById("cs-shell-status");
@@ -1738,8 +1739,10 @@ function bootWorkspaceShell() {
   registry.register("scene_builder", sceneBuilderModule);
   registry.register("admin_dev", adminDevModule);
   registry.register("board_data", boardDataModule);
+  registry.register("ies_builder", iesBuilderModule);
   ensureModuleNavLink("scene_builder", "Scene Builder");
   ensureModuleNavLink("board_data", "Board Data");
+  ensureModuleNavLink("ies_builder", "IES Builder / Photometry");
   bindShellTopbarControls();
   bindAssistiveCompanyIdentityHelper();
 
