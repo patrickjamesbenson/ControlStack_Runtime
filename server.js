@@ -2,6 +2,7 @@ import { createReadStream } from "node:fs";
 import { access, copyFile, mkdir, readFile, readdir, stat } from "node:fs/promises";
 import { createServer } from "node:http";
 import { basename, extname, isAbsolute, join, normalize, resolve, sep } from "node:path";
+import { buildLabProofStatus, LAB_PROOF_STATUS_PATH } from "./packages/workspace-kernel/labProofStatusService.js";
 import { buildSelectorReferenceStatus, SELECTOR_REFERENCE_STATUS_PATH } from "./packages/workspace-kernel/selectorReferenceService.js";
 
 const PORT = Number.parseInt(process.env.CONTROLSTACK_RUNTIME_PORT || "8787", 10);
@@ -854,6 +855,12 @@ async function sendAuthorityReferenceStatus(res) {
 
 async function sendSelectorReferenceStatus(res) {
   sendJson(res, 200, await buildSelectorReferenceStatus({
+    sourcePath: AUTH_REF_DEFAULT_SNAPSHOT_PATH,
+  }));
+}
+
+async function sendLabProofStatus(res) {
+  sendJson(res, 200, await buildLabProofStatus({
     sourcePath: AUTH_REF_DEFAULT_SNAPSHOT_PATH,
   }));
 }
@@ -2187,6 +2194,7 @@ const server = createServer(async (req, res) => {
       },
       authorityReferenceStatus: AUTH_REF_STATUS_PATH,
       selectorReferenceStatus: SELECTOR_REFERENCE_STATUS_PATH,
+      labProofStatus: LAB_PROOF_STATUS_PATH,
       authorityReferenceSync: AUTH_REF_SYNC_PATH,
       authorityReferenceSourceMaterialisation: AUTH_REF_SOURCE_MATERIALISATION_PATH,
       authorityReferenceArchives: AUTH_REF_ARCHIVES_PATH,
@@ -2233,6 +2241,11 @@ const server = createServer(async (req, res) => {
 
   if (requestUrl.pathname === SELECTOR_REFERENCE_STATUS_PATH) {
     await sendSelectorReferenceStatus(res);
+    return;
+  }
+
+  if (requestUrl.pathname === LAB_PROOF_STATUS_PATH) {
+    await sendLabProofStatus(res);
     return;
   }
 
