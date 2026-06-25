@@ -651,6 +651,81 @@ function createDefaultPreviewBucketDiagnostics(contract = {}) {
   };
 }
 
+function readSectionFieldContract(contract = {}) {
+  return contract.sectionFieldContract || { source: "runtime selector field contract", sections: {} };
+}
+
+function fieldValueLabel(value) {
+  if (value === null) return "null";
+  if (value === undefined) return "undefined";
+  return String(value);
+}
+
+function createFieldContractRows(field = {}) {
+  return [
+    ["fieldKey", field.fieldKey || "unknown"],
+    ["label", field.label || "unknown"],
+    ["sectionId", field.sectionId || "unknown"],
+    ["status", field.status || "placeholder"],
+    ["inputType", field.inputType || "placeholder"],
+    ["source", field.source || "runtime selector field contract"],
+    ["manualConstraintEligible", boolString(field.manualConstraintEligible === true)],
+    ["autoConsequenceEligible", boolString(field.autoConsequenceEligible === true)],
+    ["effectiveSelectionEligible", boolString(field.effectiveSelectionEligible === true)],
+    ["committedSpecEligible", boolString(field.committedSpecEligible === true)],
+    ["mutable", boolString(field.mutable !== false)],
+    ["writes", boolString(field.writes === true)],
+    ["productDataBound", boolString(field.productDataBound === true)],
+    ["resolverBound", boolString(field.resolverBound === true)],
+    ["filteringBound", boolString(field.filteringBound === true)],
+    ["requiredForSpecGate", boolString(field.requiredForSpecGate === true)],
+    ["requiredForBuildGate", boolString(field.requiredForBuildGate === true)],
+    ["value", fieldValueLabel(field.value)],
+  ];
+}
+
+function createSelectorFieldContractDiagnostics(contract = {}) {
+  const sectionFieldContract = readSectionFieldContract(contract);
+  const source = sectionFieldContract.source || "runtime selector field contract";
+  const rawSections = sectionFieldContract.sections || {};
+  const sectionDiagnostics = SELECTOR_EXPANDER_SECTIONS.map((section) => {
+    const sectionContract = rawSections[section.id] || {};
+    const fields = Array.isArray(sectionContract.fields) ? sectionContract.fields : [];
+    return {
+      sectionId: section.id,
+      title: section.title,
+      status: sectionContract.status || section.status || "placeholder",
+      source: sectionContract.source || source,
+      fieldCount: fields.length,
+      fields: fields.map((field) => ({
+        fieldKey: field.fieldKey || "unknown",
+        label: field.label || field.fieldKey || "unknown",
+        status: field.status || "placeholder",
+        rows: createFieldContractRows(field),
+      })),
+    };
+  });
+  const fields = sectionDiagnostics.flatMap((section) => section.fields.flatMap((field) => field.rows.length ? [field] : []));
+  const rawFields = sectionDiagnostics.flatMap((section) => section.fields.map((field) => Object.fromEntries(field.rows.map(([key, value]) => [key, value]))));
+
+  return {
+    summaryRows: [
+      ["field contract source", source],
+      ["section count", sectionDiagnostics.length],
+      ["field count", fields.length],
+      ["manual constraint eligible fields", rawFields.filter((field) => field.manualConstraintEligible === "true").length],
+      ["auto consequence eligible fields", rawFields.filter((field) => field.autoConsequenceEligible === "true").length],
+      ["required for spec gate count", rawFields.filter((field) => field.requiredForSpecGate === "true").length],
+      ["required for build gate count", rawFields.filter((field) => field.requiredForBuildGate === "true").length],
+      ["product data bound", boolString(rawFields.some((field) => field.productDataBound === "true"))],
+      ["resolver bound", boolString(rawFields.some((field) => field.resolverBound === "true"))],
+      ["filtering bound", boolString(rawFields.some((field) => field.filteringBound === "true"))],
+      ["writes", boolString(rawFields.some((field) => field.writes === "true"))],
+    ],
+    sectionDiagnostics,
+  };
+}
+
 function createBehaviourContractRows(contract = {}) {
   const behaviourFlags = contract.behaviourFlags || {};
   return [
@@ -665,6 +740,7 @@ function createBehaviourContractRows(contract = {}) {
 function createSelectorExpanderShell(local = {}, selectorState) {
   const stateContract = selectorStateContractFromLocal(local);
   const defaultPreviewBuckets = createDefaultPreviewBucketDiagnostics(stateContract);
+  const fieldContractDiagnostics = createSelectorFieldContractDiagnostics(stateContract);
   return {
     title: "Runtime-native CS Selector single-page expander shell",
     status: "UI/state scaffold only",
@@ -678,6 +754,8 @@ function createSelectorExpanderShell(local = {}, selectorState) {
     stateContractRows: createStateContractRows(stateContract),
     defaultPreviewSummaryRows: defaultPreviewBuckets.summaryRows,
     defaultPreviewBucketDiagnostics: defaultPreviewBuckets.bucketDiagnostics,
+    fieldContractSummaryRows: fieldContractDiagnostics.summaryRows,
+    sectionFieldContractDiagnostics: fieldContractDiagnostics.sectionDiagnostics,
     behaviourContractRows: createBehaviourContractRows(stateContract),
     setSectionOpen(sectionId, open) {
       selectorState?.setExpanderSectionOpen?.(sectionId, open);

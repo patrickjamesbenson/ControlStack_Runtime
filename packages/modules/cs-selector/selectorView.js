@@ -133,6 +133,54 @@ function selectorReferenceProofWarnings(reference = {}) {
   return [...new Set([...loadedWarnings, ...requiredWarnings])];
 }
 
+function appendSelectorFieldContractDiagnostic(parent, shell = {}) {
+  appendSection(parent, "Selector field contract diagnostic", shell.fieldContractSummaryRows || [
+    ["field contract source", "runtime selector field contract"],
+    ["section count", 0],
+    ["field count", 0],
+    ["manual constraint eligible fields", 0],
+    ["auto consequence eligible fields", 0],
+    ["required for spec gate count", 0],
+    ["required for build gate count", 0],
+    ["product data bound", "false"],
+    ["resolver bound", "false"],
+    ["filtering bound", "false"],
+    ["writes", "false"],
+  ]);
+
+  const sectionDiagnostics = Array.isArray(shell.sectionFieldContractDiagnostics) ? shell.sectionFieldContractDiagnostics : [];
+  for (const section of sectionDiagnostics) {
+    const sectionDetails = document.createElement("details");
+    sectionDetails.className = "cs-selector-proof__section";
+    sectionDetails.open = true;
+
+    const sectionSummary = document.createElement("summary");
+    sectionSummary.textContent = `${section.title || section.sectionId} field contracts — ${section.fieldCount ?? 0} fields`;
+    sectionDetails.appendChild(sectionSummary);
+
+    appendDefinitionList(sectionDetails, [
+      ["sectionId", section.sectionId || "unknown"],
+      ["status", section.status || "placeholder"],
+      ["source", section.source || "runtime selector field contract"],
+      ["field count", section.fieldCount ?? 0],
+    ]);
+
+    const fields = Array.isArray(section.fields) ? section.fields : [];
+    for (const field of fields) {
+      const fieldDetails = document.createElement("details");
+      fieldDetails.className = "cs-selector-proof__section";
+      fieldDetails.open = true;
+      const fieldSummary = document.createElement("summary");
+      fieldSummary.textContent = `${field.label || field.fieldKey} — ${field.status || "placeholder"}`;
+      fieldDetails.appendChild(fieldSummary);
+      appendDefinitionList(fieldDetails, field.rows || [["fieldKey", field.fieldKey || "unknown"]]);
+      sectionDetails.appendChild(fieldDetails);
+    }
+
+    parent.appendChild(sectionDetails);
+  }
+}
+
 function appendSelectorExpanderShell(parent, viewModel) {
   const shell = viewModel.expanderShell || {};
   const shellSection = document.createElement("section");
@@ -171,6 +219,8 @@ function appendSelectorExpanderShell(parent, viewModel) {
     appendDefinitionList(bucketDetails, bucket.rows || [["status", bucket.status || "not started"]]);
     shellSection.appendChild(bucketDetails);
   }
+
+  appendSelectorFieldContractDiagnostic(shellSection, shell);
 
   appendSection(shellSection, "Selector behaviour contract", shell.behaviourContractRows || [
     ["manual selections", "constraints"],
