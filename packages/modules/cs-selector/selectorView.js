@@ -133,6 +133,50 @@ function selectorReferenceProofWarnings(reference = {}) {
   return [...new Set([...loadedWarnings, ...requiredWarnings])];
 }
 
+function appendSelectorExpanderShell(parent, viewModel) {
+  const shell = viewModel.expanderShell || {};
+  const shellSection = document.createElement("section");
+  shellSection.className = "cs-selector-proof__section";
+  appendText(shellSection, "h3", shell.title || "Runtime-native CS Selector single-page expander shell");
+  appendText(shellSection, "p", shell.status || "UI/state scaffold only");
+  appendText(shellSection, "p", shell.warning || "Fresh load is preamble/default-preview state only, not spec-ready state.");
+
+  appendSection(shellSection, "State contract diagnostic", shell.stateContractRows || [
+    ["preview/default state exists conceptually", "true"],
+    ["effective selection state exists conceptually", "true"],
+    ["committed spec state exists conceptually", "true"],
+    ["fresh load is spec-ready", "false"],
+    ["spec-ready", "false"],
+    ["build-ready", "false"],
+  ]);
+  appendSection(shellSection, "Selector behaviour contract", shell.behaviourContractRows || [
+    ["manual selections", "constraints"],
+    ["auto selections", "consequences"],
+    ["compatible selections cleared just because another field changes", "false"],
+    ["auto-derived items changeable", "true"],
+  ]);
+
+  const sections = Array.isArray(shell.sections) ? shell.sections : [];
+  for (const section of sections) {
+    const details = document.createElement("details");
+    details.className = "cs-selector-proof__section";
+    details.open = section.open !== false;
+    details.addEventListener("toggle", () => {
+      shell.setSectionOpen?.(section.id, details.open);
+    });
+
+    const summary = document.createElement("summary");
+    summary.textContent = `${section.title} — ${section.status || "not started"}`;
+    details.appendChild(summary);
+
+    if (section.description) appendText(details, "p", section.description);
+    appendDefinitionList(details, section.rows || [["status", section.status || "not started"]]);
+    shellSection.appendChild(details);
+  }
+
+  parent.appendChild(shellSection);
+}
+
 function appendSelectorReferencePanel(parent, viewModel) {
   const reference = viewModel.selectorReference || {};
   appendSection(parent, "Runtime Selector reference snapshot", selectorReferenceSourceRows(reference));
@@ -190,6 +234,7 @@ export function renderSelectorView(container, viewModel) {
   appendText(intro, "p", "Selector now shows a shell-owned downstream context foundation. This is contract-only: Scene Builder, EGRES, Compliance Matters, Ceiling, engine, RunTable, and payload remain out of scope.");
   article.appendChild(intro);
 
+  appendSelectorExpanderShell(article, viewModel);
   appendSelectorReferencePanel(article, viewModel);
 
   appendSection(article, "Identity and shell authority", [
@@ -300,6 +345,7 @@ export function renderSelectorView(container, viewModel) {
   appendText(localSection, "h3", "Selector-local UI state");
   appendPillList(localSection, [
     `category:${viewModel.local.selectedCategory}`,
+    `openSections:${Object.entries(viewModel.local.expanderSections || {}).filter(([, open]) => open !== false).map(([id]) => id).join(",") || "none"}`,
     `localDirty:${viewModel.local.localDirty}`,
     `lastAction:${viewModel.local.lastAction}`,
   ]);

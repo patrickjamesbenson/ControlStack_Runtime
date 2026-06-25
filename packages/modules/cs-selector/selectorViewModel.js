@@ -19,6 +19,132 @@ const TIMELINE_STATUS_LABELS = Object.freeze({
   business_case: "Business Case",
 });
 
+const SELECTOR_EXPANDER_SECTIONS = Object.freeze([
+  {
+    id: "projectMetadata",
+    title: "Project / metadata",
+    status: "preview only",
+    description: "Shell-owned project context is shown as preamble/default preview only. This scaffold does not save, restore, or mutate project data.",
+    rows: [
+      ["state", "preamble/default-preview"],
+      ["spec gate", "incomplete"],
+      ["writes", "none"],
+    ],
+  },
+  {
+    id: "system",
+    title: "System",
+    status: "preview only",
+    description: "Future manual system choices will become constraints. No real system selection, resolver, candidates, or filtering are active in this scaffold.",
+    rows: [
+      ["manual selections", "constraints later"],
+      ["auto selections", "consequences later"],
+      ["compatible selections cleared on field change", "no"],
+    ],
+  },
+  {
+    id: "environment",
+    title: "Environment",
+    status: "not started",
+    description: "Environment inputs are reserved for the runtime-native selector flow. No IP, IK, interior/exterior, or application filtering is active.",
+    rows: [
+      ["controls", "placeholder only"],
+      ["filtering", "inactive"],
+      ["product cards", "none"],
+    ],
+  },
+  {
+    id: "lightControl",
+    title: "Light & control",
+    status: "not started",
+    description: "Light output, optic, colour, driver, dimming, sensor, and control choices are placeholders only.",
+    rows: [
+      ["real selections", "none"],
+      ["resolver logic", "not active"],
+      ["engine / IES calls", "none"],
+    ],
+  },
+  {
+    id: "mounting",
+    title: "Mounting",
+    status: "not started",
+    description: "Mounting mode and suspension details are reserved for later runtime-native controls.",
+    rows: [
+      ["controls", "placeholder only"],
+      ["candidate logic", "not active"],
+      ["downstream payload", "none"],
+    ],
+  },
+  {
+    id: "penetrationsWiring",
+    title: "Penetrations / wiring",
+    status: "not started",
+    description: "Power entry, cable, wiring, and penetration fields are shell placeholders only.",
+    rows: [
+      ["controls", "placeholder only"],
+      ["mutation", "none"],
+      ["build-ready impact", "none"],
+    ],
+  },
+  {
+    id: "finishes",
+    title: "Finishes",
+    status: "not started",
+    description: "Finish and colour options are not connected to product data yet.",
+    rows: [
+      ["controls", "placeholder only"],
+      ["filtering", "inactive"],
+      ["real product data", "not read"],
+    ],
+  },
+  {
+    id: "egressAccessories",
+    title: "Egress & accessories",
+    status: "diagnostic only",
+    description: "Emergency, egress, special parts, and accessory concepts remain diagnostic-only. Auto-derived items may appear selected later but must remain changeable.",
+    rows: [
+      ["EGRES call", "none"],
+      ["Lab call", "none"],
+      ["auto-derived items", "changeable later"],
+    ],
+  },
+  {
+    id: "runs",
+    title: "Runs",
+    status: "later",
+    description: "Run lengths, segments, accessories, and build outputs are deferred. The scaffold does not call engine, RunTable, Lab, IES, or payload builders.",
+    rows: [
+      ["run rows", "none"],
+      ["engine call", "none"],
+      ["build-ready", "false"],
+    ],
+  },
+  {
+    id: "timelineDiagnostics",
+    title: "Timeline / diagnostics",
+    status: "diagnostic only",
+    description: "Timeline and special-parts policy diagnostics remain metadata-only. No product-card filtering or slug/build mutation is activated here.",
+    rows: [
+      ["diagnostic mode", "metadata only"],
+      ["filtering active", "no"],
+      ["slug/build mutation", "no"],
+    ],
+  },
+  {
+    id: "pureReferenceDiagnosticLater",
+    title: "Pure Reference diagnostic later",
+    status: "later",
+    description: "Pure reference proof is not approved for this scaffold. Photometry remains blocked unless an approved Lab pure reference state is introduced later.",
+    rows: [
+      ["approved Lab pure reference state", "not found"],
+      ["warning", "No approved Lab pure reference state found for this selection."],
+      ["proof status", "metadata_only"],
+      ["diagnostic only", "true"],
+      ["production proof", "false"],
+    ],
+  },
+]);
+
 function stateLabel(value) {
   if (value === true) return "yes";
   if (value === false) return "no";
@@ -432,6 +558,49 @@ function shellDisplayRoleClamped(authority = {}, identity = {}, visibility = {})
   return identity.displayRoleClamped;
 }
 
+function readExpanderOpen(local = {}, sectionId) {
+  const openState = local.expanderSections || {};
+  if (openState[sectionId] === undefined) return true;
+  return openState[sectionId] !== false;
+}
+
+function createSelectorExpanderShell(local = {}, selectorState) {
+  return {
+    title: "Runtime-native CS Selector single-page expander shell",
+    status: "UI/state scaffold only",
+    mode: "single-page expander",
+    warning: "Fresh load is preamble/default-preview state only, not spec-ready state.",
+    sections: SELECTOR_EXPANDER_SECTIONS.map((section) => ({
+      ...section,
+      open: readExpanderOpen(local, section.id),
+    })),
+    stateContractRows: [
+      ["preview/default state exists conceptually", "true"],
+      ["effective selection state exists conceptually", "true"],
+      ["committed spec state exists conceptually", "true"],
+      ["fresh load", "preamble/default-preview only"],
+      ["fresh load is spec-ready", "false"],
+      ["spec-ready", "false"],
+      ["build-ready", "false"],
+      ["product cards rendered", "false"],
+      ["filtering active", "false"],
+      ["save/load active", "false"],
+      ["engine/Lab/IES/downstream calls added by scaffold", "false"],
+    ],
+    behaviourContractRows: [
+      ["manual selections", "constraints"],
+      ["auto selections", "consequences"],
+      ["compatible selections cleared just because another field changes", "false"],
+      ["auto-derived items changeable", "true"],
+      ["spec-ready slug on fresh load", "false"],
+      ["spec-ready slug before complete spec gate", "false"],
+    ],
+    setSectionOpen(sectionId, open) {
+      selectorState?.setExpanderSectionOpen?.(sectionId, open);
+    },
+  };
+}
+
 export function createSelectorViewModel({ adapter, selectorState, selectorReferenceStatus = {} }) {
   const snapshots = adapter.readSnapshots();
   const local = selectorState.getSnapshot();
@@ -474,6 +643,7 @@ export function createSelectorViewModel({ adapter, selectorState, selectorRefere
     phase: snapshots.diagnostics?.phase || "selector-fed-downstream-context-foundation",
     route: snapshots.route,
     local,
+    expanderShell: createSelectorExpanderShell(local, selectorState),
     identity: {
       owner: identity.owner,
       status: identity.status,
