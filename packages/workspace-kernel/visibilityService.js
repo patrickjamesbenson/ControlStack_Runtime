@@ -1,4 +1,4 @@
-const REGISTERED_MODULES = Object.freeze(["workspace_home", "cs_selector", "emergence", "scene_builder"]);
+const REGISTERED_MODULES = Object.freeze(["workspace_home", "cs_selector", "emergence", "scene_builder", "admin_dev"]);
 const PLANNED_MODULES = Object.freeze(["compliance_matters", "egres", "ceiling"]);
 
 const MODULE_POLICIES = Object.freeze({
@@ -6,6 +6,7 @@ const MODULE_POLICIES = Object.freeze({
   cs_selector: Object.freeze({ label: "CS Selector", registered: true, minRole: "external_user", requiresIdentity: false, requiresProject: false }),
   emergence: Object.freeze({ label: "Emergence", registered: true, minRole: "internal_user", requiresIdentity: true, requiresProject: true }),
   scene_builder: Object.freeze({ label: "Scene Builder", registered: true, minRole: "internal_user", requiresIdentity: true, requiresProject: true }),
+  admin_dev: Object.freeze({ label: "Admin / Dev", registered: true, minRole: "developer", requiresIdentity: true, requiresProject: false }),
   compliance_matters: Object.freeze({ label: "Compliance Matters", registered: false, minRole: "internal_user", requiresIdentity: true, requiresProject: true }),
   egres: Object.freeze({ label: "Emergency / EGRES", registered: false, minRole: "internal_user", requiresIdentity: true, requiresProject: true }),
   ceiling: Object.freeze({ label: "Ceiling / Coordinated Surfaces", registered: false, minRole: "internal_user", requiresIdentity: true, requiresProject: true }),

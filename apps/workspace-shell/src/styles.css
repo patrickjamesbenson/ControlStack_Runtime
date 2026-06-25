@@ -147,6 +147,12 @@ button { cursor: pointer; }
   background: rgba(255, 255, 255, 0.16);
 }
 .cs-shell__rail-item[aria-disabled="true"] { opacity: 0.48; cursor: not-allowed; }
+.cs-shell__rail-item[hidden] { display: none; }
+.cs-shell__rail-item--admin { margin-top: 12px; }
+.cs-shell__rail-item--admin::after {
+  content: ""; position: absolute; left: 18px; right: 18px; top: -7px; height: 1px;
+  background: rgba(255, 255, 255, 0.16);
+}
 .cs-shell__rail-item--quiet { opacity: 0.8; }
 .cs-shell__rail-icon { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .cs-shell__rail-item > span:not(.cs-shell__rail-icon) {
@@ -344,6 +350,27 @@ button { cursor: pointer; }
 .cs-selector-proof__meta dt, .cs-shell__diagnostic-list dt, .cs-diagnostics__meta dt { color: var(--cs-muted); }
 .cs-selector-proof__meta dd, .cs-shell__diagnostic-list dd, .cs-diagnostics__meta dd { margin: 0; word-break: break-word; }
 .cs-diagnostics__section { min-width: 0; }
+
+.cs-admin-dev { display: grid; gap: 16px; }
+.cs-admin-dev__header,
+.cs-admin-dev__card,
+.cs-admin-dev__notice {
+  padding: 18px 20px; border: 1px solid var(--cs-border); border-radius: var(--cs-radius-lg); background: var(--cs-panel); box-shadow: var(--cs-shadow-sm);
+}
+.cs-admin-dev__header { background: linear-gradient(180deg, #ffffff 0%, #fafafa 100%); }
+.cs-admin-dev__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; }
+.cs-admin-dev__card { min-width: 0; display: grid; gap: 10px; }
+.cs-admin-dev__card h3,
+.cs-admin-dev__header h2 { margin-bottom: 6px; }
+.cs-admin-dev__meta { grid-template-columns: minmax(128px, auto) minmax(0, 1fr); }
+.cs-admin-dev__notice { background: var(--cs-panel-soft); }
+.cs-admin-dev__notice--warning { background: var(--cs-tip-bg); color: var(--cs-text); }
+.cs-admin-dev__pill-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.cs-admin-dev__pill-row li { padding: 6px 10px; border-radius: var(--cs-radius-full); background: #eef3fb; color: #33425f; font-size: 12px; }
+.cs-admin-dev__endpoint-list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.cs-admin-dev__endpoint-list li { padding: 10px 12px; border: 1px solid var(--cs-border); border-radius: var(--cs-radius-sm); background: var(--cs-panel-soft); font-size: 12px; }
+.cs-admin-dev__endpoint-list strong { display: block; margin-bottom: 2px; color: var(--cs-text); }
+.cs-admin-dev__endpoint-list span { color: var(--cs-muted); }
 
 .cs-shell__pill-list { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
 .cs-shell__pill-list li { padding: 6px 10px; border-radius: var(--cs-radius-full); background: #eef3fb; color: #33425f; font-size: 13px; }

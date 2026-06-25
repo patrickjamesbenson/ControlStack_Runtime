@@ -1,7 +1,7 @@
 import { createNvbAuthorityAdapter } from "./nvbAuthorityAdapter.js";
 
 const ROLE_ORDER = Object.freeze(["external_user", "internal_user", "internal_engineer", "developer", "admin"]);
-const MODULES = Object.freeze(["workspace_home", "cs_selector", "emergence", "scene_builder"]);
+const MODULES = Object.freeze(["workspace_home", "cs_selector", "emergence", "scene_builder", "admin_dev"]);
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
@@ -55,6 +55,7 @@ function moduleEntitlementsFor(role, restrictions = [], blacklistActive = false)
     cs_selector: rank >= roleRank("external_user"),
     emergence: rank >= roleRank("internal_user"),
     scene_builder: rank >= roleRank("internal_user"),
+    admin_dev: rank >= roleRank("developer"),
   };
   for (const moduleId of blockedModules) {
     if (Object.prototype.hasOwnProperty.call(entitlements, moduleId)) entitlements[moduleId] = false;

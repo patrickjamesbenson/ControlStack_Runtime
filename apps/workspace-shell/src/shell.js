@@ -5,6 +5,7 @@ import { createShellContext, createShellServices } from "/packages/workspace-ker
 import { csSelectorModule } from "/packages/modules/cs-selector/index.js";
 import { emergenceModule } from "/packages/modules/emergence/index.js";
 import { sceneBuilderModule } from "/packages/modules/scene-builder/index.js";
+import { adminDevModule } from "/packages/modules/admin-dev/index.js";
 
 const shellRoot = document.getElementById("cs-shell-root");
 const statusEl = document.getElementById("cs-shell-status");
@@ -1281,7 +1282,10 @@ function markActiveLink(moduleId) {
   for (const link of document.querySelectorAll("[data-module-link]")) {
     const linkModuleId = link.getAttribute("data-module-link");
     const decision = window.__csLatestShellContext?.visibility?.moduleReasons?.[linkModuleId];
-    if (decision && !decision.visible) {
+    const protectedModule = link.dataset.shellProtectedModule === "true";
+    const hiddenByVisibility = decision && !decision.visible;
+    if (protectedModule) link.hidden = Boolean(hiddenByVisibility);
+    if (hiddenByVisibility) {
       link.setAttribute("aria-disabled", "true");
       link.dataset.visibilityReason = decision.reason;
       link.title = `Hidden in current visibility preview: ${decision.reason}`;
@@ -1300,6 +1304,7 @@ function moduleLabel(moduleId) {
     cs_selector: "Selector",
     scene_builder: "Scene Builder",
     emergence: "Emergency / EGRES",
+    admin_dev: "Admin / Dev",
     workspace_home: "Home",
     novon_website: "Novon website",
   };
@@ -1665,6 +1670,7 @@ function bootWorkspaceShell() {
   registry.register("cs_selector", csSelectorModule);
   registry.register("emergence", emergenceModule);
   registry.register("scene_builder", sceneBuilderModule);
+  registry.register("admin_dev", adminDevModule);
   ensureModuleNavLink("scene_builder", "Scene Builder");
   bindShellTopbarControls();
   bindAssistiveCompanyIdentityHelper();
