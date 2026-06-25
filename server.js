@@ -11,6 +11,8 @@ import {
 } from "./packages/workspace-kernel/authorityReferenceMaterialiserService.js";
 import { buildSelectorReferenceStatus, SELECTOR_REFERENCE_STATUS_PATH } from "./packages/workspace-kernel/selectorReferenceService.js";
 
+import { buildBoardDataStatus, BOARD_DATA_STATUS_PATH } from "./packages/workspace-kernel/boardDataStatusService.js";
+
 const PORT = Number.parseInt(process.env.CONTROLSTACK_RUNTIME_PORT || "8787", 10);
 const HOST = process.env.CONTROLSTACK_RUNTIME_HOST || "127.0.0.1";
 const ROOT = resolve(process.cwd());
@@ -900,6 +902,12 @@ async function sendAuthorityReferenceStatus(res) {
 
 async function sendSelectorReferenceStatus(res) {
   sendJson(res, 200, await buildSelectorReferenceStatus({
+    sourcePath: AUTH_REF_DEFAULT_SNAPSHOT_PATH,
+  }));
+}
+
+async function sendBoardDataStatus(res) {
+  sendJson(res, 200, await buildBoardDataStatus({
     sourcePath: AUTH_REF_DEFAULT_SNAPSHOT_PATH,
   }));
 }
@@ -2239,6 +2247,7 @@ const server = createServer(async (req, res) => {
       },
       authorityReferenceStatus: AUTH_REF_STATUS_PATH,
       selectorReferenceStatus: SELECTOR_REFERENCE_STATUS_PATH,
+      boardDataStatus: BOARD_DATA_STATUS_PATH,
       labProofStatus: LAB_PROOF_STATUS_PATH,
       authorityReferenceSync: AUTH_REF_SYNC_PATH,
       authorityReferenceSourceMaterialisation: AUTH_REF_SOURCE_MATERIALISATION_PATH,
@@ -2288,6 +2297,11 @@ const server = createServer(async (req, res) => {
 
   if (requestUrl.pathname === SELECTOR_REFERENCE_STATUS_PATH) {
     await sendSelectorReferenceStatus(res);
+    return;
+  }
+
+  if (requestUrl.pathname === BOARD_DATA_STATUS_PATH) {
+    await sendBoardDataStatus(res);
     return;
   }
 

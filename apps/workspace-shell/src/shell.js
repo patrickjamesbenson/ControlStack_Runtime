@@ -6,6 +6,7 @@ import { csSelectorModule } from "/packages/modules/cs-selector/index.js";
 import { emergenceModule } from "/packages/modules/emergence/index.js";
 import { sceneBuilderModule } from "/packages/modules/scene-builder/index.js";
 import { adminDevModule } from "/packages/modules/admin-dev/index.js";
+import { boardDataModule } from "/packages/modules/board-data/index.js";
 
 const shellRoot = document.getElementById("cs-shell-root");
 const statusEl = document.getElementById("cs-shell-status");
@@ -616,8 +617,11 @@ function ensureModuleNavLink(moduleId, label) {
   if (!nav || document.querySelector(`[data-module-link="${moduleId}"]`)) return;
   const link = document.createElement("a");
   link.href = `/workspace?module=${moduleId}`;
+  link.className = "cs-shell__rail-item";
   link.dataset.moduleLink = moduleId;
-  link.textContent = label;
+  const labelElement = document.createElement("span");
+  labelElement.textContent = label;
+  link.appendChild(labelElement);
   nav.appendChild(link);
 }
 
@@ -1366,6 +1370,7 @@ function moduleLabel(moduleId) {
     scene_builder: "Scene Builder",
     emergence: "Emergency / EGRES",
     admin_dev: "Admin / Dev",
+    board_data: "Board Data",
     workspace_home: "Home",
     novon_website: "Novon website",
   };
@@ -1732,7 +1737,9 @@ function bootWorkspaceShell() {
   registry.register("emergence", emergenceModule);
   registry.register("scene_builder", sceneBuilderModule);
   registry.register("admin_dev", adminDevModule);
+  registry.register("board_data", boardDataModule);
   ensureModuleNavLink("scene_builder", "Scene Builder");
+  ensureModuleNavLink("board_data", "Board Data");
   bindShellTopbarControls();
   bindAssistiveCompanyIdentityHelper();
 
