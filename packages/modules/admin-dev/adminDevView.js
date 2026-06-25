@@ -211,30 +211,30 @@ function lastSyncLabel(syncWorkflow = {}) {
 }
 
 function syncResultLabel(syncWorkflow = {}) {
-  if (syncWorkflow.live?.running) return "Syncing";
+  if (syncWorkflow.live?.running) return "Promoting";
   if (syncWorkflow.dryRun?.running) return "Checking";
-  if (syncWorkflow.live?.status === "complete") return "Synced";
-  if (syncWorkflow.live?.attempted && syncWorkflow.live?.status !== "complete") return "Sync blocked";
-  if (syncWorkflow.dryRun?.completed && syncSetupIncomplete(syncWorkflow)) return "Sync locked";
-  if (syncWorkflow.dryRun?.completed) return "Ready to sync";
+  if (syncWorkflow.live?.status === "complete") return "Promoted";
+  if (syncWorkflow.live?.attempted && syncWorkflow.live?.status !== "complete") return "Promotion blocked";
+  if (syncWorkflow.dryRun?.completed && syncSetupIncomplete(syncWorkflow)) return "Promotion locked";
+  if (syncWorkflow.dryRun?.completed) return "Ready to promote";
   return "Not checked";
 }
 
 function syncNextStep(syncWorkflow) {
-  if (syncWorkflow.dryRun?.running) return "Preview is running.";
-  if (syncWorkflow.live?.running) return "Sync is running.";
-  if (syncSetupIncomplete(syncWorkflow)) return "Sync setup is incomplete. Configure the source, archive folder, and sync gates, then preview again.";
-  if (syncWorkflow.live?.attempted) return "Review the archive and sync evidence below.";
-  if (syncWorkflow.dryRun?.completed) return "Preview complete. Type SYNC and press Sync now when ready.";
-  return "Press Preview sync. It checks the source and writes nothing.";
+  if (syncWorkflow.dryRun?.running) return "Promotion preview is running.";
+  if (syncWorkflow.live?.running) return "Promotion is running.";
+  if (syncSetupIncomplete(syncWorkflow)) return "Promotion setup is incomplete. Configure the materialised source, archive folder, and promotion gates, then preview again.";
+  if (syncWorkflow.live?.attempted) return "Review the archive and promotion evidence below.";
+  if (syncWorkflow.dryRun?.completed) return "Preview complete. Type SYNC and press Promote when ready.";
+  return "Press Check promotion readiness. It checks the already-materialised source and writes nothing.";
 }
 
 function setupRows(syncWorkflow) {
   const dryRows = syncWorkflow.dryRun?.rows || [];
   return [
     ["Source JSON", fileLabel(rowValue(dryRows, "source path", "not configured"))],
-    ["Archive before sync", fileLabel(rowValue(dryRows, "planned archive path", "not planned/reported"))],
-    ["Live sync gate", rowValue(dryRows, "live sync currently allowed", "no")],
+    ["Archive before promotion", fileLabel(rowValue(dryRows, "planned archive path", "not planned/reported"))],
+    ["Active-snapshot promotion gate", rowValue(dryRows, "live sync currently allowed", "no")],
     ["Validation", rowValue(dryRows, "validation result", "not run")],
   ];
 }
@@ -243,8 +243,8 @@ function appendSetupIncomplete(parent, syncWorkflow) {
   if (!syncSetupIncomplete(syncWorkflow)) return;
   const section = document.createElement("section");
   section.className = "cs-admin-dev__notice cs-admin-dev__notice--warning cs-admin-dev__setup-card";
-  appendText(section, "h3", "Sync setup incomplete");
-  appendText(section, "p", "This is a backend setup issue, not an operator action. The runtime needs a materialised source JSON file, an archive folder, and live sync gates enabled before Sync now can run.");
+  appendText(section, "h3", "Promotion setup incomplete");
+  appendText(section, "p", "This is a backend setup issue, not an operator action. The runtime needs a materialised source JSON file, an archive folder, and active-snapshot promotion gates enabled before promotion can run.");
   appendDefinitionList(section, setupRows(syncWorkflow), "cs-admin-dev__meta cs-admin-dev__meta--operator");
   const body = appendDisclosure(section, "Setup details", "Technical blockers reported by the runtime.", "cs-admin-dev__diagnostics cs-admin-dev__setup-details", "");
   appendPillList(body, setupBlockers(syncWorkflow));
@@ -261,8 +261,8 @@ function appendHeader(parent, viewModel) {
   appendText(copy, "p", "Admin / Dev", "cs-shell__eyebrow");
   const headingRow = document.createElement("div");
   headingRow.className = "cs-admin-dev__heading-row";
-  appendText(headingRow, "h2", "Reference data sync");
-  appendInfoHint(headingRow, "About reference data sync", "Use this after editing the source sheet/reference data. The runtime checks the source first, archives the current snapshot when live sync is allowed, then refreshes the authority/reference snapshot.");
+  appendText(headingRow, "h2", "Authority/reference data");
+  appendInfoHint(headingRow, "About authority/reference data", "Refresh the materialised source as a dry-run-only foundation check, then use the separate promotion workflow to promote the already-materialised source to the active snapshot when server gates allow it.");
   copy.appendChild(headingRow);
   titleRow.appendChild(copy);
   appendStatusBadge(titleRow, statusLabel(viewModel));
@@ -270,9 +270,61 @@ function appendHeader(parent, viewModel) {
 
   appendDefinitionList(header, [
     ["Last checked", viewModel.status.loadedAt],
-    ["Last sync", lastSyncLabel(viewModel.syncWorkflow)],
+    ["Last active-snapshot promotion", lastSyncLabel(viewModel.syncWorkflow)],
   ], "cs-admin-dev__meta cs-admin-dev__meta--operator cs-admin-dev__meta--compact");
   parent.appendChild(header);
+}
+
+function appendMaterialiserFoundation(parent, materialiser = {}, actions = {}) {
+  const section = document.createElement("section");
+  section.className = "cs-admin-dev__card cs-admin-dev__operator-card cs-admin-dev__materialiser-card";
+
+  appendText(section, "p", "Authority Materialiser", "cs-shell__eyebrow");
+  appendText(section, "h3", materialiser.title || "Authority Materialiser");
+  appendText(section, "p", materialiser.description || "Runtime-native materialiser foundation status.");
+
+  const actionsRow = document.createElement("div");
+  actionsRow.className = "cs-admin-dev__operator-actions";
+  appendActionButton(actionsRow, materialiser.running ? "Refreshing dry-run…" : (materialiser.buttonLabel || "Refresh materialised source from Google Sheet"), {
+    disabled: materialiser.running,
+    onClick: actions.onRunMaterialiserDryRun,
+    variant: "primary",
+  });
+  appendActionButton(actionsRow, materialiser.liveRefresh?.label || "Live materialiser refresh", {
+    disabled: true,
+    onClick: null,
+    variant: "secondary",
+  });
+  appendInfoHint(actionsRow, "About materialiser refresh", materialiser.buttonNote || "Dry-run only. This does not call dryRun=false, write files, or promote the active snapshot.");
+  section.appendChild(actionsRow);
+
+  appendDefinitionList(section, materialiser.statusRows || [], "cs-admin-dev__meta cs-admin-dev__meta--operator");
+
+  const refreshPanel = document.createElement("section");
+  refreshPanel.className = "cs-admin-dev__sync-result";
+  appendText(refreshPanel, "h4", "Refresh materialised source from Google Sheet");
+  appendText(refreshPanel, "p", materialiser.buttonNote || "Dry-run only in this slice — no active snapshot promotion and no file write.");
+  appendDefinitionList(refreshPanel, materialiser.refreshRows || [], "cs-admin-dev__meta cs-admin-dev__meta--operator");
+  appendErrors(refreshPanel, "Materialiser refresh error", materialiser.errors || []);
+  section.appendChild(refreshPanel);
+
+  const blockers = actionableItems(materialiser.blockers || []);
+  if (blockers.length) {
+    const blockerPanel = document.createElement("section");
+    blockerPanel.className = "cs-admin-dev__notice cs-admin-dev__notice--warning";
+    appendText(blockerPanel, "h4", "Materialiser blockers");
+    appendPillList(blockerPanel, blockers);
+    section.appendChild(blockerPanel);
+  }
+
+  const reminder = document.createElement("section");
+  reminder.className = "cs-admin-dev__notice";
+  appendText(reminder, "h4", "Separate promotion action");
+  appendText(reminder, "p", materialiser.promoteReminder || "Promote materialised source to active snapshot remains separate.");
+  if (materialiser.liveRefresh?.note) appendText(reminder, "p", materialiser.liveRefresh.note);
+  section.appendChild(reminder);
+
+  parent.appendChild(section);
 }
 
 function appendOperatorSync(parent, syncWorkflow, actions = {}) {
@@ -289,7 +341,14 @@ function appendOperatorSync(parent, syncWorkflow, actions = {}) {
 
   const actionsRow = document.createElement("div");
   actionsRow.className = "cs-admin-dev__operator-actions cs-admin-dev__operator-actions--single";
-  appendActionButton(actionsRow, syncWorkflow.live.running ? "Syncing…" : syncWorkflow.dryRun.running ? "Checking…" : "Sync Google Sheet", {
+  const promotionLabel = syncWorkflow.live.running
+    ? "Promoting…"
+    : syncWorkflow.dryRun.running
+      ? "Checking promotion…"
+      : canRunSync
+        ? "Promote materialised source to active snapshot"
+        : "Check active snapshot promotion readiness";
+  appendActionButton(actionsRow, promotionLabel, {
     disabled: syncWorkflow.dryRun.running || syncWorkflow.live.running,
     onClick: canRunSync
       ? () => {
@@ -299,7 +358,7 @@ function appendOperatorSync(parent, syncWorkflow, actions = {}) {
       : actions.onRunDryRunSync,
     variant: "primary",
   });
-  appendInfoHint(actionsRow, "About sync", "Checks the materialised Google Sheet source first. If server gates allow live sync, the current snapshot is archived before the refreshed snapshot is written.");
+  appendInfoHint(actionsRow, "About active snapshot promotion", "This uses the existing authority/reference sync path to promote the already-materialised source to the active snapshot. It does not pull directly from Google.");
   section.appendChild(actionsRow);
 
   appendDefinitionList(section, [
@@ -313,14 +372,14 @@ function appendOperatorSync(parent, syncWorkflow, actions = {}) {
     result.className = syncSetupIncomplete(syncWorkflow)
       ? "cs-admin-dev__sync-result cs-admin-dev__sync-result--locked"
       : "cs-admin-dev__sync-result";
-    appendText(result, "h3", syncSetupIncomplete(syncWorkflow) ? "Checked — source is ready" : syncStatus);
+    appendText(result, "h3", syncSetupIncomplete(syncWorkflow) ? "Checked — materialised source is ready" : syncStatus);
     appendText(result, "p", syncSetupIncomplete(syncWorkflow)
-      ? "The source passed validation. Live sync is still waiting on the runtime write gate."
-      : "Sync result reported by the runtime.");
+      ? "The materialised source passed validation. Active-snapshot promotion is still waiting on the runtime write gate."
+      : "Promotion result reported by the runtime.");
     appendDefinitionList(result, syncSetupIncomplete(syncWorkflow) ? [
       ["Source", sourceLabel],
       ["Validation", validationLabel],
-      ["Live sync", "waiting for runtime gate"],
+      ["Active snapshot promotion", "waiting for runtime gate"],
       ["Checked", syncWorkflow.dryRun.loadedAt || "not reported"],
     ] : [
       ["Source", sourceLabel],
@@ -719,6 +778,7 @@ export function renderAdminDevView(container, viewModel, actions = {}) {
   article.dataset.readOnly = "false";
 
   appendHeader(article, viewModel);
+  appendMaterialiserFoundation(article, viewModel.materialiser, actions);
   appendOperatorSync(article, viewModel.syncWorkflow, actions);
   appendAttention(article, viewModel);
   appendMoreTools(article, viewModel, actions);

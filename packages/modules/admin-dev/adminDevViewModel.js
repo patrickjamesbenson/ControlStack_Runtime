@@ -185,7 +185,7 @@ function createDryRunModel({ syncState, syncEndpoints, authorityStatus, sourceMa
   const liveAllowed = body?.executable ?? sourceMaterialisation?.materialisation?.liveWriteReady ?? false;
 
   return {
-    buttonLabel: "Run dry-run sync preview",
+    buttonLabel: "Check active snapshot promotion readiness",
     endpoint: syncEndpoints.dryRun,
     running: syncState.dryRunStatus === "running",
     completed: syncState.dryRunCompleted === true,
@@ -219,7 +219,7 @@ function createLiveModel({ syncState, syncEndpoints, authorityStatus, sourceMate
   const running = syncState.liveStatus === "running";
 
   return {
-    buttonLabel: "Run confirmed live sync",
+    buttonLabel: "Promote materialised source to active snapshot",
     endpoint: syncEndpoints.live,
     requiredConfirmation: LIVE_CONFIRMATION_TEXT,
     confirmationValue: syncState.confirmation || "",
@@ -229,9 +229,9 @@ function createLiveModel({ syncState, syncEndpoints, authorityStatus, sourceMate
     status: syncState.liveStatus || "idle",
     attempted: syncState.liveAttempted === true,
     loadedAt: syncState.liveLoadedAt || "not run",
-    warning: "This writes/materialises the authority/reference JSON snapshot.",
+    warning: "This promotes the already-materialised authority/reference source to the active snapshot through the existing server sync path.",
     rows: [
-      ["write warning", "This writes/materialises the authority/reference JSON snapshot."],
+      ["write warning", "This promotes the already-materialised authority/reference source to the active snapshot through the existing server sync path."],
       ["endpoint", syncEndpoints.live],
       ["dry-run completed this session", asText(dryRunComplete, "no")],
       ["confirmation required", LIVE_CONFIRMATION_TEXT],
@@ -285,11 +285,97 @@ function createSyncWorkflowModel({ syncState = {}, syncEndpoints = {}, authority
   };
 
   return {
-    title: "Authority/reference sync workflow",
-    description: "Restores the old NovonDB source sync core as a protected dry-run-first workflow. The UI never bypasses server/env gates.",
+    title: "Authority/reference promotion workflow",
+    description: "Promotes the already-materialised authority/reference source to the active snapshot through the existing dry-run-first server workflow. This is separate from refreshing the materialised source.",
     dryRun: createDryRunModel({ syncState: normalisedSyncState, syncEndpoints, authorityStatus, sourceMaterialisation }),
     live: createLiveModel({ syncState: normalisedSyncState, syncEndpoints, authorityStatus, sourceMaterialisation, loadedAt }),
     postSyncProof: createPostSyncProof({ syncState: normalisedSyncState, authorityStatus, sourceMaterialisation, loadedAt }),
+  };
+}
+
+function materialiserBlockerItems(materialiserStatus = {}, refreshBody = null) {
+  const blockers = [
+    ...(Array.isArray(materialiserStatus.blockers) ? materialiserStatus.blockers : []),
+    ...(Array.isArray(refreshBody?.blockers) ? refreshBody.blockers : []),
+    ...(Array.isArray(refreshBody?.validation?.blockers) ? refreshBody.validation.blockers : []),
+  ];
+  if (!blockers.length) return ["No blockers reported by materialiser foundation."];
+  return blockers.map((item) => `${item.code || "blocker"}: ${item.reason || item.severity || "reported"}`);
+}
+
+function createMaterialiserModel({ materialiserState = {}, materialiserEndpoints = {}, materialiserStatus = {} } = {}) {
+  const normalisedState = {
+    refreshStatus: "idle",
+    refreshResult: null,
+    refreshError: null,
+    refreshLoadedAt: null,
+    refreshCompleted: false,
+    ...materialiserState,
+  };
+  const body = syncResultBody(normalisedState.refreshResult);
+  const targetFile = materialiserStatus.target?.file || {};
+  const refreshSummary = body?.validation?.summary || {};
+
+  return {
+    title: "Authority Materialiser",
+    description: "Runtime-native materialiser foundation status. It is admin-only, non-boot-critical, and this UI slice runs dry-run refresh only; it does not promote the active snapshot.",
+    endpoint: materialiserStatus.endpoint || "/api/authority-reference/materialiser/status",
+    refreshDryRunEndpoint: materialiserEndpoints.refreshDryRun || "/api/authority-reference/materialiser/refresh?dryRun=true",
+    buttonLabel: "Refresh materialised source from Google Sheet",
+    buttonNote: "Dry-run only in this slice — no active snapshot promotion and no file write.",
+    running: normalisedState.refreshStatus === "running",
+    statusRows: [
+      ["status", materialiserStatus.status || "unknown"],
+      ["source", "runtime-native materialiser foundation"],
+      ["normal boot dependency", asText(materialiserStatus.normalBootDependency, "false")],
+      ["admin only", asText(materialiserStatus.adminOnly, "true")],
+      ["non boot critical", asText(materialiserStatus.nonBootCritical, "true")],
+      ["Google network calls enabled", asText(materialiserStatus.googleNetworkCallsEnabled, "false")],
+      ["Google API dependency required", asText(materialiserStatus.googleApiDependencyRequired, "false")],
+      ["materialiser enabled", asText(materialiserStatus.materialiserEnabled ?? materialiserStatus.gates?.materialiserEnabled, "false")],
+      ["materialiser execution enabled", asText(materialiserStatus.materialiserExecutionEnabled ?? materialiserStatus.gates?.materialiserExecutionEnabled, "false")],
+      ["Google Sheet configured", asText(materialiserStatus.googleSheetConfigured ?? materialiserStatus.google?.googleSheetConfigured, "false")],
+      ["Google credentials configured", asText(materialiserStatus.googleCredentialsConfigured ?? materialiserStatus.google?.googleCredentialsConfigured, "false")],
+      ["Google credentials readable", asText(materialiserStatus.googleCredentialsReadable ?? materialiserStatus.google?.googleCredentialsReadable, "false")],
+      ["target confined", asText(materialiserStatus.target?.confined, "false")],
+      ["target label", materialiserStatus.target?.label || "runtime-authority-reference-materialised-novondb"],
+      ["target file present", asText(targetFile.present, "false")],
+      ["target file readable", asText(targetFile.readable, "false")],
+      ["target file size", bytesLabel(targetFile.sizeBytes)],
+      ["target file modified", targetFile.modifiedAt || "unknown"],
+      ["active snapshot write enabled", asText(materialiserStatus.activeSnapshotWriteEnabled ?? materialiserStatus.writePolicy?.activeSnapshotWriteEnabled, "false")],
+      ["browser secrets exposed", asText(materialiserStatus.browserSecretsExposed, "false")],
+      ["raw Google response exposed", asText(materialiserStatus.rawGoogleResponseExposed, "false")],
+      ["raw sheet rows exposed", asText(materialiserStatus.rawSheetRowsExposed, "false")],
+      ["full materialised JSON exposed", asText(materialiserStatus.fullMaterialisedJsonExposed, "false")],
+    ],
+    refreshRows: [
+      ["action", "Refresh materialised source from Google Sheet"],
+      ["mode", "Dry-run only — no files written, no active snapshot promotion"],
+      ["endpoint", materialiserEndpoints.refreshDryRun || "/api/authority-reference/materialiser/refresh?dryRun=true"],
+      ["refresh result status", body?.status || normalisedState.refreshStatus || "not run"],
+      ["dry run", asText(body?.dryRun, "not run")],
+      ["Google network call attempted", asText(body?.googleNetworkCallAttempted, "false")],
+      ["materialised write attempted", asText(body?.materialisedWriteAttempted, "false")],
+      ["active snapshot write attempted", asText(body?.activeSnapshotWriteAttempted, "false")],
+      ["active snapshot write enabled", asText(body?.activeSnapshotWriteEnabled ?? body?.writePolicy?.activeSnapshotWriteEnabled, "false")],
+      ["browser secrets exposed", asText(body?.browserSecretsExposed, "false")],
+      ["raw Google response exposed", asText(body?.rawGoogleResponseExposed ?? refreshSummary.rawGoogleResponseExposed, "false")],
+      ["raw sheet rows exposed", asText(body?.rawSheetRowsExposed ?? body?.rawRowsExposed, "false")],
+      ["full materialised JSON exposed", asText(body?.fullMaterialisedJsonExposed ?? refreshSummary.fullMaterialisedJsonExposed, "false")],
+      ["target confined", asText(body?.target?.confined ?? materialiserStatus.target?.confined, "false")],
+      ["validation", asText(body?.validation?.ok, "not run")],
+      ["endpoint result", endpointResultText(normalisedState.refreshResult, normalisedState.refreshError)],
+      ["loaded at", normalisedState.refreshLoadedAt || "not run"],
+    ],
+    blockers: materialiserBlockerItems(materialiserStatus, body),
+    errors: normalisedState.refreshError ? [normalisedState.refreshError] : [],
+    liveRefresh: {
+      label: "Live materialiser refresh",
+      enabled: false,
+      note: "Not active yet in this slice. The UI does not call dryRun=false automatically.",
+    },
+    promoteReminder: "Promote materialised source to active snapshot remains a separate authority/reference promotion action.",
   };
 }
 
@@ -559,9 +645,10 @@ function createArchiveInspectionModel({ archiveState = {}, archiveEndpoints = {}
   };
 }
 
-export function createAdminDevViewModel({ context = {}, endpoints = {}, syncEndpoints = {}, archiveEndpoints = {}, state = {} } = {}) {
+export function createAdminDevViewModel({ context = {}, endpoints = {}, syncEndpoints = {}, materialiserEndpoints = {}, archiveEndpoints = {}, state = {} } = {}) {
   const authorityStatus = payloadBody(state, "authorityStatus");
   const sourceMaterialisation = payloadBody(state, "sourceMaterialisation");
+  const materialiserStatus = payloadBody(state, "materialiserStatus");
   const archiveList = payloadBody(state, "archiveList");
   const runtimeConfig = payloadBody(state, "runtimeConfig");
   const health = payloadBody(state, "health");
@@ -600,7 +687,7 @@ export function createAdminDevViewModel({ context = {}, endpoints = {}, syncEndp
       ["display role", displayRole(context)],
       ["visibility", decision?.reason || "unknown"],
       ["read policy", "GET status/archive reads only"],
-      ["write policy", "dry-run first; live sync requires SYNC confirmation and server approval"],
+      ["write policy", "materialiser refresh dry-run only; active snapshot promotion remains separate and requires SYNC confirmation plus server approval"],
       ["archive policy", "list/diff/detail plus preview-first RESTORE workflow behind server env gate"],
     ],
     cards: [
@@ -623,6 +710,15 @@ export function createAdminDevViewModel({ context = {}, endpoints = {}, syncEndp
           ["materialisation ready", asText(sourceMaterialisation.materialisation?.ready, "unknown")],
           ["live write ready", asText(sourceMaterialisation.materialisation?.liveWriteReady, "no")],
         ],
+      },
+      {
+        title: "Authority Materialiser",
+        description: "Safe materialiser status only. Credential values, Sheet ID, raw Google responses, raw rows, USERS rows, and full materialised JSON are not exposed.",
+        rows: createMaterialiserModel({
+          materialiserState: state.materialiser,
+          materialiserEndpoints,
+          materialiserStatus,
+        }).statusRows,
       },
       {
         title: "Authority table counts",
@@ -682,6 +778,11 @@ export function createAdminDevViewModel({ context = {}, endpoints = {}, syncEndp
         ],
       },
     ],
+    materialiser: createMaterialiserModel({
+      materialiserState: state.materialiser,
+      materialiserEndpoints,
+      materialiserStatus,
+    }),
     syncWorkflow: createSyncWorkflowModel({
       syncState: state.sync,
       syncEndpoints,
@@ -706,9 +807,11 @@ export function createAdminDevViewModel({ context = {}, endpoints = {}, syncEndp
       "Live restore requires selected archive, preview in this page session, exact RESTORE text, and server env gate",
       "Live restore archives the current snapshot before overwriting it from the selected archive",
       "Complex or sensitive field values are summarised/redacted instead of dumping rows",
-      "Only approved sync POSTs are exposed: dry-run=true and dryRun=false",
-      "Live sync is disabled until a dry-run completes in the current page session",
-      "Live sync requires exact SYNC confirmation text",
+      "Materialiser refresh uses /api/authority-reference/materialiser/refresh?dryRun=true only in this slice",
+      "The materialiser card never calls dryRun=false and never promotes the active snapshot",
+      "Only approved active-snapshot promotion POSTs are exposed: dry-run=true and dryRun=false",
+      "Live active-snapshot promotion is disabled until a dry-run completes in the current page session",
+      "Active-snapshot promotion requires exact SYNC confirmation text",
       "Server/env write gates are never bypassed",
       "No archive deletion",
       "No row editing or correction workflow",

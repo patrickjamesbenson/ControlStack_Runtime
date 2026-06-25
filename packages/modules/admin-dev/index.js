@@ -4,6 +4,7 @@ import { canViewAdminDev, createAdminDevViewModel } from "./adminDevViewModel.js
 const READ_ENDPOINTS = Object.freeze({
   authorityStatus: "/api/authority-reference/status",
   sourceMaterialisation: "/api/authority-reference/source-materialisation",
+  materialiserStatus: "/api/authority-reference/materialiser/status",
   archiveList: "/api/authority-reference/archives",
   runtimeConfig: "/api/runtime-config/status",
   health: "/health",
@@ -12,6 +13,10 @@ const READ_ENDPOINTS = Object.freeze({
 const SYNC_ENDPOINTS = Object.freeze({
   dryRun: "/api/authority-reference/sync?dryRun=true",
   live: "/api/authority-reference/sync?dryRun=false",
+});
+
+const MATERIALISER_ENDPOINTS = Object.freeze({
+  refreshDryRun: "/api/authority-reference/materialiser/refresh?dryRun=true",
 });
 
 const ARCHIVE_ENDPOINTS = Object.freeze({
@@ -29,6 +34,7 @@ let mountedContext = null;
 let mountedServices = null;
 let requestId = 0;
 let syncRequestId = 0;
+let materialiserRequestId = 0;
 let archiveRequestId = 0;
 
 function createSyncState() {
@@ -44,6 +50,16 @@ function createSyncState() {
     liveLoadedAt: null,
     liveAttempted: false,
     confirmation: "",
+  };
+}
+
+function createMaterialiserState() {
+  return {
+    refreshStatus: "idle",
+    refreshResult: null,
+    refreshError: null,
+    refreshLoadedAt: null,
+    refreshCompleted: false,
   };
 }
 
@@ -80,6 +96,7 @@ let state = {
   errors: [],
   loadedAt: null,
   sync: createSyncState(),
+  materialiser: createMaterialiserState(),
   archiveInspection: createArchiveInspectionState(),
 };
 
@@ -90,6 +107,7 @@ function resetState(status = "idle") {
     errors: [],
     loadedAt: null,
     sync: createSyncState(),
+    materialiser: createMaterialiserState(),
     archiveInspection: createArchiveInspectionState(),
   };
 }
@@ -101,6 +119,17 @@ function mergeSyncState(nextSync) {
       ...createSyncState(),
       ...(state.sync || {}),
       ...(nextSync || {}),
+    },
+  };
+}
+
+function mergeMaterialiserState(nextMaterialiser) {
+  state = {
+    ...state,
+    materialiser: {
+      ...createMaterialiserState(),
+      ...(state.materialiser || {}),
+      ...(nextMaterialiser || {}),
     },
   };
 }
@@ -126,6 +155,7 @@ function renderCurrentView() {
     context: mountedContext,
     endpoints: READ_ENDPOINTS,
     syncEndpoints: SYNC_ENDPOINTS,
+    materialiserEndpoints: MATERIALISER_ENDPOINTS,
     archiveEndpoints: ARCHIVE_ENDPOINTS,
     state,
   });
@@ -133,6 +163,7 @@ function renderCurrentView() {
     onRunDryRunSync: runDryRunSyncPreview,
     onRunLiveSync: runConfirmedLiveSync,
     onConfirmationInput: updateSyncConfirmation,
+    onRunMaterialiserDryRun: runMaterialiserDryRun,
     onRunArchiveDiff: runArchiveDiff,
     onRunArchiveDiffDetail: runArchiveDiffDetail,
     onRunRestorePreview: runRestorePreview,
@@ -200,8 +231,9 @@ async function postJson(endpoint, payload = null) {
 async function loadReadOnlyStatus() {
   const thisRequest = ++requestId;
   const currentSync = state.sync || createSyncState();
+  const currentMaterialiser = state.materialiser || createMaterialiserState();
   const currentArchiveInspection = state.archiveInspection || createArchiveInspectionState();
-  state = { ...state, status: "loading", errors: [], sync: currentSync, archiveInspection: currentArchiveInspection };
+  state = { ...state, status: "loading", errors: [], sync: currentSync, materialiser: currentMaterialiser, archiveInspection: currentArchiveInspection };
   renderCurrentView();
 
   const results = await Promise.all(Object.entries(READ_ENDPOINTS).map(async ([key, endpoint]) => {
@@ -228,6 +260,7 @@ async function loadReadOnlyStatus() {
     errors,
     loadedAt: new Date().toISOString(),
     sync: currentSync,
+    materialiser: currentMaterialiser,
     archiveInspection: currentArchiveInspection,
   };
   renderCurrentView();
@@ -241,6 +274,43 @@ function updateSyncConfirmation(value) {
 function updateRestoreConfirmation(value) {
   if (!canUseAdminDevActions()) return;
   mergeArchiveInspectionState({ restoreConfirmation: String(value || "") });
+}
+
+async function runMaterialiserDryRun() {
+  if (!canUseAdminDevActions()) return;
+
+  const thisMaterialiserRequest = ++materialiserRequestId;
+  mergeMaterialiserState({
+    refreshStatus: "running",
+    refreshResult: null,
+    refreshError: null,
+    refreshLoadedAt: null,
+    refreshCompleted: false,
+  });
+  renderCurrentView();
+
+  try {
+    const result = await postJson(MATERIALISER_ENDPOINTS.refreshDryRun);
+    if (thisMaterialiserRequest !== materialiserRequestId || !mountedContainer) return;
+    mergeMaterialiserState({
+      refreshStatus: result.ok ? "complete" : "endpoint-error",
+      refreshResult: result,
+      refreshError: result.ok ? null : `${MATERIALISER_ENDPOINTS.refreshDryRun} returned HTTP ${result.httpStatus}`,
+      refreshLoadedAt: new Date().toISOString(),
+      refreshCompleted: result.ok === true,
+    });
+  } catch (error) {
+    if (thisMaterialiserRequest !== materialiserRequestId || !mountedContainer) return;
+    mergeMaterialiserState({
+      refreshStatus: "endpoint-error",
+      refreshResult: null,
+      refreshError: error?.message || "Materialised source refresh dry-run failed.",
+      refreshLoadedAt: new Date().toISOString(),
+      refreshCompleted: false,
+    });
+  }
+
+  renderCurrentView();
 }
 
 async function runDryRunSyncPreview() {
@@ -580,6 +650,7 @@ function maybeLoadReadOnlyStatus() {
   if (!canViewAdminDev(mountedContext)) {
     requestId += 1;
     syncRequestId += 1;
+    materialiserRequestId += 1;
     archiveRequestId += 1;
     resetState("protected");
     renderCurrentView();
@@ -611,8 +682,8 @@ export const adminDevModule = {
       label: "Admin / Dev",
       readOnly: false,
       nonBootCritical: true,
-      endpoints: [...Object.values(READ_ENDPOINTS), ...Object.values(SYNC_ENDPOINTS), ...Object.values(ARCHIVE_ENDPOINTS)],
-      mutationPolicy: "dry-run-first-sync-plus-preview-first-restore-confirmation-with-server-env-gates",
+      endpoints: [...Object.values(READ_ENDPOINTS), ...Object.values(MATERIALISER_ENDPOINTS), ...Object.values(SYNC_ENDPOINTS), ...Object.values(ARCHIVE_ENDPOINTS)],
+      mutationPolicy: "materialiser-refresh-dry-run-only-plus-separate-active-snapshot-promotion-and-preview-first-restore",
     });
   },
 
@@ -627,6 +698,7 @@ export const adminDevModule = {
   unmount() {
     requestId += 1;
     syncRequestId += 1;
+    materialiserRequestId += 1;
     archiveRequestId += 1;
     if (mountedContainer) {
       while (mountedContainer.firstChild) mountedContainer.removeChild(mountedContainer.firstChild);
