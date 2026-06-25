@@ -222,6 +222,18 @@ function appendSelectorExpanderShell(parent, viewModel) {
 
   appendSelectorFieldContractDiagnostic(shellSection, shell);
 
+  appendSection(shellSection, "Manual constraint scaffold", shell.manualConstraintScaffoldRows || [
+    ["source", "module-local selector scaffold"],
+    ["manual constraint eligible fields count", 0],
+    ["active manual constraints", 0],
+    ["constraint inputs active", "false"],
+    ["resolver active", "false"],
+    ["filtering active", "false"],
+    ["specReady", "false"],
+    ["buildReady", "false"],
+    ["writes", "false"],
+  ]);
+
   appendSection(shellSection, "Selector behaviour contract", shell.behaviourContractRows || [
     ["manual selections", "constraints"],
     ["auto selections", "consequences"],

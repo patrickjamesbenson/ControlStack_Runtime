@@ -726,6 +726,61 @@ function createSelectorFieldContractDiagnostics(contract = {}) {
   };
 }
 
+function countManualConstraintEligibleFields(sectionFieldContract = {}) {
+  const sections = sectionFieldContract.sections && typeof sectionFieldContract.sections === "object" && !Array.isArray(sectionFieldContract.sections)
+    ? sectionFieldContract.sections
+    : {};
+  return Object.values(sections).reduce((count, section) => {
+    const fields = Array.isArray(section.fields) ? section.fields : [];
+    return count + fields.filter((field) => field.manualConstraintEligible === true).length;
+  }, 0);
+}
+
+function readManualConstraintScaffold(contract = {}) {
+  const sectionFieldContract = readSectionFieldContract(contract);
+  const scaffold = contract.manualConstraintScaffold && typeof contract.manualConstraintScaffold === "object" && !Array.isArray(contract.manualConstraintScaffold)
+    ? contract.manualConstraintScaffold
+    : {};
+  const manualConstraints = contract.manualConstraints && typeof contract.manualConstraints === "object" && !Array.isArray(contract.manualConstraints)
+    ? contract.manualConstraints
+    : {};
+  const scaffoldConstraints = scaffold.constraints && typeof scaffold.constraints === "object" && !Array.isArray(scaffold.constraints)
+    ? scaffold.constraints
+    : manualConstraints;
+  return {
+    source: scaffold.source || "module-local selector scaffold",
+    eligibleFieldCount: Number.isFinite(scaffold.eligibleFieldCount)
+      ? scaffold.eligibleFieldCount
+      : countManualConstraintEligibleFields(sectionFieldContract),
+    activeManualConstraintCount: Object.keys(scaffoldConstraints).length,
+    placeholderActions: Array.isArray(scaffold.placeholderActions) ? scaffold.placeholderActions : ["Set constraint later"],
+    blockedReason: scaffold.blockedReason || "constraint inputs not active yet",
+    constraintInputsActive: scaffold.constraintInputsActive === true,
+    resolverActive: scaffold.resolverActive === true,
+    filteringActive: scaffold.filteringActive === true,
+    specReady: scaffold.specReady === true || contract.specReady === true,
+    buildReady: scaffold.buildReady === true || contract.buildReady === true,
+    writes: scaffold.writes === true,
+  };
+}
+
+function createManualConstraintScaffoldRows(contract = {}) {
+  const scaffold = readManualConstraintScaffold(contract);
+  return [
+    ["source", scaffold.source],
+    ["manual constraint eligible fields count", scaffold.eligibleFieldCount],
+    ["active manual constraints", scaffold.activeManualConstraintCount],
+    ["constraint inputs active", boolString(scaffold.constraintInputsActive)],
+    ["resolver active", boolString(scaffold.resolverActive)],
+    ["filtering active", boolString(scaffold.filteringActive)],
+    ["specReady", boolString(scaffold.specReady)],
+    ["buildReady", boolString(scaffold.buildReady)],
+    ["writes", boolString(scaffold.writes)],
+    ["placeholder action", scaffold.placeholderActions.join(", ") || "Set constraint later"],
+    ["blocked reason", scaffold.blockedReason],
+  ];
+}
+
 function createBehaviourContractRows(contract = {}) {
   const behaviourFlags = contract.behaviourFlags || {};
   return [
@@ -756,6 +811,7 @@ function createSelectorExpanderShell(local = {}, selectorState) {
     defaultPreviewBucketDiagnostics: defaultPreviewBuckets.bucketDiagnostics,
     fieldContractSummaryRows: fieldContractDiagnostics.summaryRows,
     sectionFieldContractDiagnostics: fieldContractDiagnostics.sectionDiagnostics,
+    manualConstraintScaffoldRows: createManualConstraintScaffoldRows(stateContract),
     behaviourContractRows: createBehaviourContractRows(stateContract),
     setSectionOpen(sectionId, open) {
       selectorState?.setExpanderSectionOpen?.(sectionId, open);

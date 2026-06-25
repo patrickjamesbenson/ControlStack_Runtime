@@ -151,6 +151,36 @@ function createSectionFieldContract() {
 
 const DEFAULT_SECTION_FIELD_CONTRACT = createSectionFieldContract();
 
+function countManualConstraintEligibleFields(sectionFieldContract = DEFAULT_SECTION_FIELD_CONTRACT) {
+  const sections = sectionFieldContract?.sections && typeof sectionFieldContract.sections === "object" && !Array.isArray(sectionFieldContract.sections)
+    ? sectionFieldContract.sections
+    : {};
+  return Object.values(sections).reduce((count, section) => {
+    const fields = Array.isArray(section.fields) ? section.fields : [];
+    return count + fields.filter((field) => field.manualConstraintEligible === true).length;
+  }, 0);
+}
+
+function createManualConstraintScaffold(sectionFieldContract = DEFAULT_SECTION_FIELD_CONTRACT) {
+  return {
+    source: "module-local selector scaffold",
+    eligibleFieldCount: countManualConstraintEligibleFields(sectionFieldContract),
+    constraints: {},
+    activeManualConstraintCount: 0,
+    placeholderActions: ["Set constraint later"],
+    actionLabels: {
+      setConstraint: "Set constraint later",
+    },
+    blockedReason: "constraint inputs not active yet",
+    constraintInputsActive: false,
+    resolverActive: false,
+    filteringActive: false,
+    specReady: false,
+    buildReady: false,
+    writes: false,
+  };
+}
+
 const SELECTOR_STATE_CONTRACT_TEMPLATE = Object.freeze({
   source: "module-local runtime state",
   freshLoad: true,
@@ -164,6 +194,7 @@ const SELECTOR_STATE_CONTRACT_TEMPLATE = Object.freeze({
   previewDefaults: Object.freeze({}),
   sectionFieldContract: Object.freeze({}),
   manualConstraints: Object.freeze({}),
+  manualConstraintScaffold: Object.freeze({}),
   autoConsequences: Object.freeze({}),
   effectiveSelection: Object.freeze({}),
   committedSpec: null,
@@ -202,6 +233,35 @@ function clonePreviewDefaults(value = DEFAULT_PREVIEW_DEFAULTS) {
   ]));
 }
 
+function cloneManualConstraintScaffold(value = {}, sectionFieldContract = DEFAULT_SECTION_FIELD_CONTRACT) {
+  const fallback = createManualConstraintScaffold(sectionFieldContract);
+  const scaffold = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+  const constraints = cloneObjectBucket(scaffold.constraints);
+  const eligibleFieldCount = Number.isFinite(scaffold.eligibleFieldCount)
+    ? scaffold.eligibleFieldCount
+    : fallback.eligibleFieldCount;
+  return {
+    ...fallback,
+    ...scaffold,
+    source: scaffold.source || fallback.source,
+    eligibleFieldCount,
+    constraints,
+    activeManualConstraintCount: Object.keys(constraints).length,
+    placeholderActions: Array.isArray(scaffold.placeholderActions) ? [...scaffold.placeholderActions] : [...fallback.placeholderActions],
+    actionLabels: {
+      ...fallback.actionLabels,
+      ...cloneObjectBucket(scaffold.actionLabels),
+    },
+    blockedReason: scaffold.blockedReason || fallback.blockedReason,
+    constraintInputsActive: false,
+    resolverActive: false,
+    filteringActive: false,
+    specReady: false,
+    buildReady: false,
+    writes: false,
+  };
+}
+
 function cloneSectionFieldContract(value = DEFAULT_SECTION_FIELD_CONTRACT) {
   if (!value || typeof value !== "object" || Array.isArray(value)) return { source: "runtime selector field contract", sections: {} };
   const sections = value.sections && typeof value.sections === "object" && !Array.isArray(value.sections) ? value.sections : {};
@@ -219,11 +279,13 @@ function cloneSectionFieldContract(value = DEFAULT_SECTION_FIELD_CONTRACT) {
 }
 
 function createInitialSelectorStateContract() {
+  const sectionFieldContract = cloneSectionFieldContract(DEFAULT_SECTION_FIELD_CONTRACT);
   return {
     ...SELECTOR_STATE_CONTRACT_TEMPLATE,
     previewDefaults: clonePreviewDefaults(DEFAULT_PREVIEW_DEFAULTS),
-    sectionFieldContract: cloneSectionFieldContract(DEFAULT_SECTION_FIELD_CONTRACT),
+    sectionFieldContract,
     manualConstraints: {},
+    manualConstraintScaffold: createManualConstraintScaffold(sectionFieldContract),
     autoConsequences: {},
     effectiveSelection: {},
     committedSpec: null,
@@ -234,11 +296,19 @@ function createInitialSelectorStateContract() {
 }
 
 function cloneSelectorStateContract(contract = {}) {
+  const sectionFieldContract = cloneSectionFieldContract(contract.sectionFieldContract);
+  const manualConstraints = cloneObjectBucket(contract.manualConstraints);
+  const manualConstraintScaffold = cloneManualConstraintScaffold(contract.manualConstraintScaffold, sectionFieldContract);
   return {
     ...contract,
     previewDefaults: clonePreviewDefaults(contract.previewDefaults),
-    sectionFieldContract: cloneSectionFieldContract(contract.sectionFieldContract),
-    manualConstraints: cloneObjectBucket(contract.manualConstraints),
+    sectionFieldContract,
+    manualConstraints,
+    manualConstraintScaffold: {
+      ...manualConstraintScaffold,
+      constraints: manualConstraints,
+      activeManualConstraintCount: Object.keys(manualConstraints).length,
+    },
     autoConsequences: cloneObjectBucket(contract.autoConsequences),
     effectiveSelection: cloneObjectBucket(contract.effectiveSelection),
     committedSpec: contract.committedSpec ? { ...contract.committedSpec } : null,
