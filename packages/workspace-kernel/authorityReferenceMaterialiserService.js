@@ -33,12 +33,17 @@ export const AUTHORITY_REFERENCE_SELECTOR_CRITICAL_TABLES = Object.freeze([
   "USERS",
 ]);
 
+export const AUTHORITY_REFERENCE_GOOGLE_EXPECTED_TABLES = AUTHORITY_REFERENCE_SELECTOR_CRITICAL_TABLES;
+
 const DEFAULT_FS_API = Object.freeze({ stat, mkdir, writeFile });
 
 const MATERIALISER_ENABLED_ENV = "CONTROLSTACK_AUTHORITY_REFERENCE_MATERIALISER_ENABLED";
 const MATERIALISER_EXECUTION_ENABLED_ENV = "CONTROLSTACK_AUTHORITY_REFERENCE_MATERIALISER_EXECUTION_ENABLED";
 const GOOGLE_SHEET_ID_ENV = "CONTROLSTACK_AUTHORITY_REFERENCE_GOOGLE_SHEET_ID";
 const GOOGLE_CREDENTIALS_ENV = "GOOGLE_APPLICATION_CREDENTIALS";
+
+const GOOGLE_SHEETS_READONLY_SCOPE = "https://www.googleapis.com/auth/spreadsheets.readonly";
+const GOOGLE_SHEETS_MAX_COLUMN_RANGE = "A:ZZ";
 
 const CREDENTIAL_FIELD_PATTERN = /(^|[_-])(private[_-]?key|client[_-]?secret|access[_-]?token|refresh[_-]?token|id[_-]?token|jwt|bearer|password|credential|credentials|api[_-]?key|service[_-]?account|oauth)([_-]|$)|google_application_credentials|client_email/i;
 
@@ -199,13 +204,36 @@ function buildSafeTableSummary(snapshot) {
   });
 }
 
-function rawGoogleResponseDetected(value) {
+function rawProviderResponseShapeDetected(value) {
   if (!isPlainObject(value)) return false;
   const keys = new Set(Object.keys(value));
   if (keys.has("range") && keys.has("majorDimension") && keys.has("values")) return true;
   if (keys.has("spreadsheetId") && keys.has("sheets")) return true;
   if (keys.has("data") && keys.has("status") && (keys.has("headers") || keys.has("config") || keys.has("request"))) return true;
+  if (keys.has("headers") && keys.has("config") && keys.has("request")) return true;
   return false;
+}
+
+function collectRawProviderResponseShapes(value, findings = []) {
+  if (findings.length >= 20) return findings;
+  if (rawProviderResponseShapeDetected(value)) {
+    findings.push("raw-provider-response-shape");
+    return findings;
+  }
+  if (Array.isArray(value)) {
+    value.slice(0, 100).forEach((item) => collectRawProviderResponseShapes(item, findings));
+    return findings;
+  }
+  if (!isPlainObject(value)) return findings;
+  for (const nestedValue of Object.values(value)) {
+    collectRawProviderResponseShapes(nestedValue, findings);
+    if (findings.length >= 20) return findings;
+  }
+  return findings;
+}
+
+function rawGoogleResponseDetected(value) {
+  return collectRawProviderResponseShapes(value).length > 0;
 }
 
 function collectCredentialLookingFields(value, path = [], findings = []) {
@@ -235,6 +263,178 @@ function topLevelArrayTables(snapshot) {
   return Object.entries(snapshot)
     .filter(([, value]) => Array.isArray(value))
     .map(([table, rows]) => ({ table, rows }));
+}
+
+function normaliseHeaderCell(value, index) {
+  const text = String(value ?? "").trim();
+  return text || `__blank_header_${index + 1}`;
+}
+
+function normaliseCellValue(value) {
+  if (value === null || value === undefined) return "";
+  if (typeof value === "string") return value.trim();
+  return value;
+}
+
+function cellHasValue(value) {
+  if (value === null || value === undefined) return false;
+  if (typeof value === "string") return value.trim() !== "";
+  return true;
+}
+
+export function normaliseGoogleSheetHeaders(headerRow = [], columnCount = headerRow.length) {
+  const headers = [];
+  const used = new Set();
+  const seenBaseCounts = new Map();
+  for (let index = 0; index < columnCount; index += 1) {
+    const base = normaliseHeaderCell(headerRow[index], index);
+    const nextCount = (seenBaseCounts.get(base) || 0) + 1;
+    seenBaseCounts.set(base, nextCount);
+    let candidate = nextCount === 1 ? base : `${base}__${nextCount}`;
+    let collisionCount = nextCount;
+    while (used.has(candidate)) {
+      collisionCount += 1;
+      candidate = `${base}__${collisionCount}`;
+    }
+    used.add(candidate);
+    headers.push(candidate);
+  }
+  return headers;
+}
+
+export function normaliseGoogleSheetRowsToObjects(values = []) {
+  if (!Array.isArray(values) || values.length === 0) return [];
+  const rows = values.map((row) => (Array.isArray(row) ? row : []));
+  const columnCount = Math.max(...rows.map((row) => row.length), 0);
+  if (columnCount === 0) return [];
+  const headers = normaliseGoogleSheetHeaders(rows[0], columnCount);
+  return rows.slice(1)
+    .filter((row) => row.some(cellHasValue))
+    .map((row) => headers.reduce((record, header, index) => {
+      record[header] = normaliseCellValue(row[index]);
+      return record;
+    }, {}));
+}
+
+function quoteGoogleSheetTitle(title) {
+  return `'${String(title || "").replace(/'/g, "''")}'!${GOOGLE_SHEETS_MAX_COLUMN_RANGE}`;
+}
+
+function canonicalTableName(value) {
+  return String(value || "").trim().toUpperCase();
+}
+
+function expectedTableLookup() {
+  return new Map(AUTHORITY_REFERENCE_GOOGLE_EXPECTED_TABLES.map((table) => [canonicalTableName(table), table]));
+}
+
+function sheetTitlesFromMetadata(metadataResponse) {
+  const sheets = Array.isArray(metadataResponse?.data?.sheets) ? metadataResponse.data.sheets : [];
+  return sheets.map((sheet) => String(sheet?.properties?.title || "").trim()).filter(Boolean);
+}
+
+export function materialiseGoogleSheetValueRanges({ sheetTitles = [], valueRanges = [] } = {}) {
+  const expectedByCanonical = expectedTableLookup();
+  const presentTabs = sheetTitles
+    .map((title) => ({ title, table: expectedByCanonical.get(canonicalTableName(title)) }))
+    .filter((item) => item.table);
+  const materialised = {};
+  presentTabs.forEach(({ table }, index) => {
+    const values = Array.isArray(valueRanges?.[index]?.values) ? valueRanges[index].values : [];
+    materialised[table] = normaliseGoogleSheetRowsToObjects(values);
+  });
+  return materialised;
+}
+
+export async function buildAuthorityReferenceGoogleReaderPreflight({
+  env = process.env,
+  fsApi = DEFAULT_FS_API,
+} = {}) {
+  const googleSheetConfigured = Boolean(readTextEnv(env, GOOGLE_SHEET_ID_ENV));
+  const googleCredentialsConfigured = Boolean(readTextEnv(env, GOOGLE_CREDENTIALS_ENV));
+  const googleCredentialsReadable = await credentialReadableStatus(env, fsApi);
+  const blockers = [
+    ...(googleSheetConfigured ? [] : [blocker("google-sheet-not-configured", "Google Sheet ID is not configured.", "configuration")]),
+    ...(googleCredentialsConfigured ? [] : [blocker("google-credentials-not-configured", "Google credentials are not configured.", "configuration")]),
+    ...(googleCredentialsConfigured && !googleCredentialsReadable ? [blocker("google-credentials-not-readable", "Configured Google credentials path is not readable.", "configuration")] : []),
+  ];
+
+  return {
+    ok: blockers.length === 0,
+    allowed: blockers.length === 0,
+    serverSideOnly: true,
+    browserCallable: false,
+    googleSheetConfigured,
+    googleCredentialsConfigured,
+    googleCredentialsReadable,
+    credentialPathReturned: false,
+    credentialValueReturned: false,
+    credentialContentsReturned: false,
+    sheetIdReturned: false,
+    rawGoogleResponseReturned: false,
+    rawSheetRowsReturned: false,
+    blockers,
+  };
+}
+
+export function createGoogleSheetsAuthorityReferenceReader({
+  env = process.env,
+  fsApi = DEFAULT_FS_API,
+  googleApiModule = null,
+} = {}) {
+  return {
+    provider: "google-sheets",
+    serverSideOnly: true,
+    async preflight() {
+      return buildAuthorityReferenceGoogleReaderPreflight({ env, fsApi });
+    },
+    async read() {
+      const preflight = await buildAuthorityReferenceGoogleReaderPreflight({ env, fsApi });
+      if (!preflight.allowed) {
+        const error = new Error("google_reader_preflight_blocked");
+        error.code = "google-reader-preflight-blocked";
+        throw error;
+      }
+
+      const sheetId = readTextEnv(env, GOOGLE_SHEET_ID_ENV);
+      const apiModule = googleApiModule || await import("googleapis");
+      const google = apiModule.google || apiModule.default?.google;
+      if (!google?.auth?.GoogleAuth || typeof google?.sheets !== "function") {
+        const error = new Error("googleapis_unavailable");
+        error.code = "googleapis-unavailable";
+        throw error;
+      }
+
+      const auth = new google.auth.GoogleAuth({
+        keyFile: readTextEnv(env, GOOGLE_CREDENTIALS_ENV),
+        scopes: [GOOGLE_SHEETS_READONLY_SCOPE],
+      });
+      const authClient = await auth.getClient();
+      const sheets = google.sheets({ version: "v4", auth: authClient });
+
+      const metadataResponse = await sheets.spreadsheets.get({
+        spreadsheetId: sheetId,
+        fields: "sheets.properties.title",
+      });
+      const sheetTitles = sheetTitlesFromMetadata(metadataResponse);
+      const expectedByCanonical = expectedTableLookup();
+      const presentExpectedTitles = sheetTitles.filter((title) => expectedByCanonical.has(canonicalTableName(title)));
+      if (presentExpectedTitles.length === 0) return {};
+
+      const valuesResponse = await sheets.spreadsheets.values.batchGet({
+        spreadsheetId: sheetId,
+        ranges: presentExpectedTitles.map(quoteGoogleSheetTitle),
+        majorDimension: "ROWS",
+        valueRenderOption: "UNFORMATTED_VALUE",
+        dateTimeRenderOption: "FORMATTED_STRING",
+      });
+
+      return materialiseGoogleSheetValueRanges({
+        sheetTitles: presentExpectedTitles,
+        valueRanges: valuesResponse?.data?.valueRanges || [],
+      });
+    },
+  };
 }
 
 export function validateMaterialisedAuthorityReferenceObject(value) {
@@ -330,8 +530,7 @@ export async function buildAuthorityReferenceMaterialiserStatus({
   targetPath = AUTHORITY_REFERENCE_MATERIALISED_TARGET_PATH,
 } = {}) {
   const targetValidation = validateMaterialiserTargetPath(targetPath);
-  const googleCredentialsConfigured = Boolean(readTextEnv(env, GOOGLE_CREDENTIALS_ENV));
-  const googleCredentialsReadable = await credentialReadableStatus(env, fsApi);
+  const googlePreflight = await buildAuthorityReferenceGoogleReaderPreflight({ env, fsApi });
   const targetFile = targetValidation.ok
     ? await safeFileMetadata(targetValidation.targetPath, fsApi)
     : { present: false, readable: false, sizeBytes: null, modifiedAt: null, reason: targetValidation.code };
@@ -340,8 +539,8 @@ export async function buildAuthorityReferenceMaterialiserStatus({
     ok: true,
     endpoint: AUTHORITY_REFERENCE_MATERIALISER_STATUS_PATH,
     owner: "runtime-server",
-    source: "authority-reference-materialiser-runtime-native-foundation",
-    status: "status-only-foundation",
+    source: "authority-reference-materialiser-google-reader-runtime-native",
+    status: googlePreflight.allowed ? "google-reader-configured" : "google-reader-unconfigured-safe",
     timestamp: safeTimestamp(now),
     normalBootDependency: false,
     adminOnly: true,
@@ -353,25 +552,35 @@ export async function buildAuthorityReferenceMaterialiserStatus({
     fullMaterialisedJsonExposed: false,
     activeSnapshotWriteEnabled: false,
     googleNetworkCallsEnabled: false,
+    googleNetworkCallPolicy: "explicit-materialiser-refresh-only-after-server-side-preflight",
     googleApiDependencyRequired: false,
+    googleApiImportPolicy: "dynamic-server-side-refresh-path-only",
     materialiserEnabled: readBooleanEnv(env, MATERIALISER_ENABLED_ENV, false),
     materialiserExecutionEnabled: readBooleanEnv(env, MATERIALISER_EXECUTION_ENABLED_ENV, false),
-    googleSheetConfigured: Boolean(readTextEnv(env, GOOGLE_SHEET_ID_ENV)),
-    googleCredentialsConfigured,
-    googleCredentialsReadable,
+    googleSheetConfigured: googlePreflight.googleSheetConfigured,
+    googleCredentialsConfigured: googlePreflight.googleCredentialsConfigured,
+    googleCredentialsReadable: googlePreflight.googleCredentialsReadable,
     gates: {
       materialiserEnabled: readBooleanEnv(env, MATERIALISER_ENABLED_ENV, false),
       materialiserExecutionEnabled: readBooleanEnv(env, MATERIALISER_EXECUTION_ENABLED_ENV, false),
     },
     google: {
-      googleSheetConfigured: Boolean(readTextEnv(env, GOOGLE_SHEET_ID_ENV)),
-      googleCredentialsConfigured,
-      googleCredentialsReadable,
+      provider: "google-sheets",
+      serverSideOnly: true,
+      browserCallable: false,
+      expectedTables: [...AUTHORITY_REFERENCE_GOOGLE_EXPECTED_TABLES],
+      googleSheetConfigured: googlePreflight.googleSheetConfigured,
+      googleCredentialsConfigured: googlePreflight.googleCredentialsConfigured,
+      googleCredentialsReadable: googlePreflight.googleCredentialsReadable,
+      credentialPathReturned: false,
       credentialValueReturned: false,
       credentialContentsRead: false,
       credentialContentsReturned: false,
       sheetIdReturned: false,
-      liveCallPolicy: "blocked-this-slice",
+      rawGoogleResponseReturned: false,
+      rawSheetRowsReturned: false,
+      liveCallPolicy: "explicit-refresh-only",
+      preflight: googlePreflight,
     },
     target: {
       label: AUTHORITY_REFERENCE_MATERIALISER_TARGET_LABEL,
@@ -387,16 +596,13 @@ export async function buildAuthorityReferenceMaterialiserStatus({
       activeSnapshotWriteEnabled: false,
       activeSnapshotWritePath: "separate-promotion-endpoint-only",
       confirmationRequired: AUTHORITY_REFERENCE_MATERIALISER_CONFIRMATION,
-      reason: "This slice exposes safe status and fake-reader refresh preflight only. It does not call Google or write the active snapshot.",
+      reason: "Google Sheets reading is server-side and refresh-only. Dry-run writes nothing; live materialised write remains gated and disabled by default.",
     },
     blockers: [
       ...(readBooleanEnv(env, MATERIALISER_ENABLED_ENV, false) ? [] : [blocker("materialiser-disabled", "Materialiser gate is disabled by default.")]),
       ...(readBooleanEnv(env, MATERIALISER_EXECUTION_ENABLED_ENV, false) ? [] : [blocker("materialiser-execution-disabled", "Materialiser execution gate is disabled by default.")]),
-      ...(readTextEnv(env, GOOGLE_SHEET_ID_ENV) ? [] : [blocker("google-sheet-not-configured", "Google Sheet ID is not configured.", "configuration")]),
-      ...(googleCredentialsConfigured ? [] : [blocker("google-credentials-not-configured", "Google credentials are not configured.", "configuration")]),
-      ...(googleCredentialsConfigured && !googleCredentialsReadable ? [blocker("google-credentials-not-readable", "Configured Google credentials path is not readable.", "configuration")] : []),
+      ...googlePreflight.blockers,
       ...(targetValidation.ok ? [] : [blocker(targetValidation.code, targetValidation.reason)]),
-      blocker("google-live-call-blocked-this-slice", "No real Google network call is implemented in this foundation slice.", "intentional-block"),
     ],
   };
 }
@@ -407,24 +613,75 @@ function exactConfirmationProvided(body) {
   return keys.length === 1 && body.confirmation === AUTHORITY_REFERENCE_MATERIALISER_CONFIRMATION;
 }
 
-async function readFromInjectedFakeReader(reader) {
-  if (!reader || typeof reader.read !== "function" || reader.fake !== true) {
-    return {
-      ok: false,
-      code: "fake-reader-required-this-slice",
-      reason: "Refresh requires an injected fake reader in this foundation slice. No Google reader is active.",
-    };
-  }
+async function readFromInjectedReader(reader) {
+  if (!reader || typeof reader.read !== "function") return null;
   try {
     const value = await reader.read();
-    return { ok: true, value };
+    return {
+      ok: true,
+      value,
+      provider: reader.fake === true ? "injected-fake-reader" : "injected-reader",
+      googleNetworkCallAttempted: false,
+    };
   } catch {
     return {
       ok: false,
-      code: "fake-reader-failed",
-      reason: "Injected fake reader failed without exposing raw rows or stack traces.",
+      code: "injected-reader-failed",
+      reason: "Injected reader failed without exposing raw rows or stack traces.",
+      provider: reader.fake === true ? "injected-fake-reader" : "injected-reader",
+      googleNetworkCallAttempted: false,
     };
   }
+}
+
+async function readFromGoogleReader({ env, fsApi, reader = null } = {}) {
+  const injected = await readFromInjectedReader(reader);
+  if (injected) return injected;
+
+  const googleReader = createGoogleSheetsAuthorityReferenceReader({ env, fsApi });
+  const preflight = await googleReader.preflight();
+  if (!preflight.allowed) {
+    return {
+      ok: false,
+      code: "google-reader-preflight-blocked",
+      reason: "Google Sheets reader preflight blocked refresh before any provider call.",
+      provider: "google-sheets",
+      googleNetworkCallAttempted: false,
+      preflight,
+    };
+  }
+
+  try {
+    const value = await googleReader.read();
+    return {
+      ok: true,
+      value,
+      provider: "google-sheets",
+      googleNetworkCallAttempted: true,
+      preflight,
+    };
+  } catch {
+    return {
+      ok: false,
+      code: "google-reader-failed",
+      reason: "Google Sheets reader failed without exposing raw provider responses, credentials, or sheet rows.",
+      provider: "google-sheets",
+      googleNetworkCallAttempted: true,
+      preflight,
+    };
+  }
+}
+
+function safeValidationForNoReader(readerResult, dryRun) {
+  return {
+    ok: false,
+    summary: {
+      rawRowsExposed: false,
+      rawGoogleResponseExposed: false,
+      fullMaterialisedJsonExposed: false,
+    },
+    blockers: [blocker(readerResult.code, readerResult.reason, dryRun ? "configuration" : "blocking")],
+  };
 }
 
 export async function refreshAuthorityReferenceMaterialiser({
@@ -439,6 +696,7 @@ export async function refreshAuthorityReferenceMaterialiser({
 } = {}) {
   const status = await buildAuthorityReferenceMaterialiserStatus({ env, fsApi, now, targetPath });
   const targetValidation = validateMaterialiserTargetPath(targetPath);
+  const googlePreflight = await buildAuthorityReferenceGoogleReaderPreflight({ env, fsApi });
   const blockers = [];
   const materialiserEnabled = status.gates.materialiserEnabled === true;
   const materialiserExecutionEnabled = status.gates.materialiserExecutionEnabled === true;
@@ -447,14 +705,17 @@ export async function refreshAuthorityReferenceMaterialiser({
     if (!materialiserEnabled) blockers.push(blocker("materialiser-disabled", "Live materialised refresh requires CONTROLSTACK_AUTHORITY_REFERENCE_MATERIALISER_ENABLED=true."));
     if (!materialiserExecutionEnabled) blockers.push(blocker("materialiser-execution-disabled", "Live materialised refresh requires CONTROLSTACK_AUTHORITY_REFERENCE_MATERIALISER_EXECUTION_ENABLED=true."));
     if (!exactConfirmationProvided(body)) blockers.push(blocker("confirmation-required", "Live materialised refresh requires exact confirmation body."));
+    blockers.push(...googlePreflight.blockers.map((item) => ({ ...item, severity: "blocking" })));
   }
 
   if (!targetValidation.ok) blockers.push(blocker(targetValidation.code, targetValidation.reason));
 
-  const readerResult = await readFromInjectedFakeReader(reader);
+  const readerResult = await readFromGoogleReader({ env, fsApi, reader });
   let validation = null;
   if (!readerResult.ok) {
-    blockers.push(blocker(readerResult.code, readerResult.reason, dryRun ? "configuration" : "blocking"));
+    if (dryRun || !readerResult.preflight?.blockers?.length) {
+      blockers.push(blocker(readerResult.code, readerResult.reason, dryRun ? "configuration" : "blocking"));
+    }
   } else {
     validation = validateMaterialisedAuthorityReferenceObject(readerResult.value);
     blockers.push(...validation.blockers);
@@ -464,13 +725,14 @@ export async function refreshAuthorityReferenceMaterialiser({
     && blockers.length === 0
     && allowMaterialisedWrite === true
     && targetValidation.ok
-    && validation?.ok === true;
+    && validation?.ok === true
+    && googlePreflight.allowed === true;
 
   if (canWriteMaterialised) {
     await fsApi.mkdir(AUTHORITY_REFERENCE_MATERIALISED_ROOT, { recursive: true });
     await fsApi.writeFile(targetValidation.targetPath, `${JSON.stringify(readerResult.value, null, 2)}\n`, "utf-8");
   } else if (!dryRun && blockers.length === 0) {
-    blockers.push(blocker("materialised-write-disabled-this-slice", "Materialised file write remains disabled unless explicitly enabled with a fake reader and controlled writer."));
+    blockers.push(blocker("materialised-write-disabled-by-default", "Materialised file write remains disabled by default for the runtime endpoint."));
   }
 
   const effectiveOk = dryRun ? true : blockers.length === 0 && canWriteMaterialised;
@@ -480,7 +742,9 @@ export async function refreshAuthorityReferenceMaterialiser({
       ? "dry-run-validation-blocked"
       : readerResult.ok
         ? "dry-run-ready"
-        : "dry-run-no-reader"
+        : readerResult.code === "google-reader-preflight-blocked"
+          ? "dry-run-configuration-blocked"
+          : "dry-run-reader-blocked"
     : effectiveOk
       ? "materialised-refresh-completed"
       : "live-refresh-blocked";
@@ -490,7 +754,7 @@ export async function refreshAuthorityReferenceMaterialiser({
     httpStatus,
     endpoint: AUTHORITY_REFERENCE_MATERIALISER_REFRESH_PATH,
     owner: "runtime-server",
-    source: "authority-reference-materialiser-runtime-native-foundation",
+    source: "authority-reference-materialiser-google-reader-runtime-native",
     status: resultStatus,
     timestamp: safeTimestamp(now),
     dryRun: Boolean(dryRun),
@@ -499,11 +763,12 @@ export async function refreshAuthorityReferenceMaterialiser({
     normalBootDependency: false,
     browserSecretsExposed: false,
     repoLocalSecrets: false,
-    googleNetworkCallAttempted: false,
-    googleNetworkCallsEnabled: false,
+    googleNetworkCallAttempted: readerResult.googleNetworkCallAttempted === true,
+    googleNetworkCallsEnabled: readerResult.googleNetworkCallAttempted === true,
+    credentialPathReturned: false,
     credentialValueReturned: false,
-    credentialContentsRead: false,
     credentialContentsReturned: false,
+    sheetIdReturned: false,
     rawGoogleResponseExposed: false,
     rawSheetRowsExposed: false,
     rawRowsExposed: false,
@@ -517,22 +782,19 @@ export async function refreshAuthorityReferenceMaterialiser({
       validationCode: targetValidation.code,
     },
     gates: status.gates,
-    google: status.google,
+    google: {
+      ...status.google,
+      readerProvider: readerResult.provider,
+      networkCallAttempted: readerResult.googleNetworkCallAttempted === true,
+      preflight: googlePreflight,
+    },
     validation: validation
       ? {
           ok: validation.ok,
           summary: validation.summary,
           blockers: validation.blockers,
         }
-      : {
-          ok: false,
-          summary: {
-            rawRowsExposed: false,
-            rawGoogleResponseExposed: false,
-            fullMaterialisedJsonExposed: false,
-          },
-          blockers: [blocker(readerResult.code, readerResult.reason, dryRun ? "configuration" : "blocking")],
-        },
+      : safeValidationForNoReader(readerResult, dryRun),
     blockers,
     writePolicy: {
       materialisedWriteEnabled: canWriteMaterialised,
@@ -543,8 +805,8 @@ export async function refreshAuthorityReferenceMaterialiser({
       reason: dryRun
         ? "Dry-run completed without writing files."
         : effectiveOk
-          ? "Materialised file write completed through controlled fake-reader path only."
-          : "Live refresh is blocked until all gates, exact confirmation, target confinement, validation, and controlled fake-reader write conditions pass.",
+          ? "Materialised file write completed through controlled server-side path only. Active snapshot was not touched."
+          : "Live refresh is blocked until all gates, exact confirmation, Google preflight, target confinement, validation, and explicit controlled write conditions pass.",
     },
   };
 }

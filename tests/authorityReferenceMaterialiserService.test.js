@@ -57,6 +57,12 @@ function fakeReader(value = minimalValidMaterialised) {
   };
 }
 
+test("service import does not require Google config", async () => {
+  const imported = await import("../packages/workspace-kernel/authorityReferenceMaterialiserService.js");
+  assert.equal(typeof imported.buildAuthorityReferenceMaterialiserStatus, "function");
+  assert.equal(typeof imported.refreshAuthorityReferenceMaterialiser, "function");
+});
+
 test("normal status does not require Google env", async () => {
   const status = await buildAuthorityReferenceMaterialiserStatus({
     env: {},
@@ -71,6 +77,7 @@ test("normal status does not require Google env", async () => {
   assert.equal(status.google.googleSheetConfigured, false);
   assert.equal(status.google.googleCredentialsConfigured, false);
   assert.equal(status.google.googleCredentialsReadable, false);
+  assert.equal(status.googleNetworkCallsEnabled, false);
 });
 
 test("status exposes no configured credential path or provider id", async () => {
@@ -89,11 +96,29 @@ test("status exposes no configured credential path or provider id", async () => 
   assert.equal(status.google.googleCredentialsReadable, true);
   assert.equal(status.google.credentialValueReturned, false);
   assert.equal(status.google.credentialContentsReturned, false);
+  assert.equal(status.google.sheetIdReturned, false);
   assert.equal(text.includes(configuredCredPath), false);
   assert.equal(text.includes(configuredSheetId), false);
 });
 
-test("dry-run refresh writes nothing and does not expose raw rows", async () => {
+test("dry-run without Google config writes nothing and does not attempt network", async () => {
+  const writes = [];
+  const result = await refreshAuthorityReferenceMaterialiser({
+    dryRun: true,
+    env: {},
+    fsApi: fakeFs({ writes }),
+    body: {},
+  });
+
+  assert.equal(result.httpStatus, 200);
+  assert.equal(result.ok, true);
+  assert.equal(result.status, "dry-run-configuration-blocked");
+  assert.equal(result.googleNetworkCallAttempted, false);
+  assert.equal(writes.length, 0);
+  assert.ok(result.blockers.some((item) => item.code === "google-reader-preflight-blocked"));
+});
+
+test("dry-run refresh writes nothing and does not expose raw USERS rows", async () => {
   const writes = [];
   const result = await refreshAuthorityReferenceMaterialiser({
     dryRun: true,
@@ -105,7 +130,9 @@ test("dry-run refresh writes nothing and does not expose raw rows", async () => 
 
   const text = JSON.stringify(result);
   assert.equal(result.httpStatus, 200);
+  assert.equal(result.status, "dry-run-ready");
   assert.equal(result.dryRun, true);
+  assert.equal(result.validation.ok, true);
   assert.equal(writes.length, 0);
   assert.equal(result.rawRowsExposed, false);
   assert.equal(result.validation.summary.users.count, 1);
@@ -144,6 +171,33 @@ test("live refresh blocks without exact confirmation", async () => {
 
   assert.equal(result.httpStatus, 409);
   assert.ok(result.blockers.some((item) => item.code === "confirmation-required"));
+});
+
+test("live refresh remains blocked by default even with gates, confirmation, Google config, and valid reader", async () => {
+  const configuredCredPath = "C:\\configured-only\\creds.json";
+  const writes = [];
+  const result = await refreshAuthorityReferenceMaterialiser({
+    dryRun: false,
+    env: {
+      CONTROLSTACK_AUTHORITY_REFERENCE_MATERIALISER_ENABLED: "true",
+      CONTROLSTACK_AUTHORITY_REFERENCE_MATERIALISER_EXECUTION_ENABLED: "true",
+      GOOGLE_APPLICATION_CREDENTIALS: configuredCredPath,
+      CONTROLSTACK_AUTHORITY_REFERENCE_GOOGLE_SHEET_ID: "configured-provider-id",
+    },
+    fsApi: fakeFs({ readablePaths: new Set([configuredCredPath]), writes }),
+    reader: fakeReader(),
+    body: { confirmation: "REFRESH_MATERIALISED_SOURCE" },
+  });
+
+  const text = JSON.stringify(result);
+  assert.equal(result.httpStatus, 409);
+  assert.equal(result.status, "live-refresh-blocked");
+  assert.ok(result.blockers.some((item) => item.code === "materialised-write-disabled-by-default"));
+  assert.equal(result.materialisedWriteAttempted, false);
+  assert.equal(result.activeSnapshotWriteAttempted, false);
+  assert.equal(writes.length, 0);
+  assert.equal(text.includes(configuredCredPath), false);
+  assert.equal(text.includes("configured-provider-id"), false);
 });
 
 test("active snapshot path is rejected as materialiser target", () => {
@@ -185,4 +239,17 @@ test("raw provider response shape is not accepted or returned", async () => {
   assert.ok(result.validation.blockers.some((item) => item.code === "raw-google-response-detected"));
   assert.equal(text.includes("hidden@example.com"), false);
   assert.equal(result.rawGoogleResponseExposed, false);
+});
+
+test("nested raw provider response shape is blocked", async () => {
+  const result = await refreshAuthorityReferenceMaterialiser({
+    dryRun: true,
+    env: {},
+    fsApi: fakeFs(),
+    reader: fakeReader({ USERS: [], SYSTEM: [{ data: { status: 200, headers: {}, config: {}, request: {} } }] }),
+  });
+
+  assert.equal(result.httpStatus, 200);
+  assert.equal(result.validation.ok, false);
+  assert.ok(result.validation.blockers.some((item) => item.code === "raw-google-response-detected"));
 });
