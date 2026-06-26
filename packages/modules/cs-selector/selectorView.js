@@ -286,6 +286,102 @@ function appendSelectorManualConstraintBehaviour(parent, shell = {}) {
   parent.appendChild(section);
 }
 
+function appendRelationshipMap(parent, relationshipMap = []) {
+  const rows = Array.isArray(relationshipMap) && relationshipMap.length
+    ? relationshipMap.map((entry) => [entry.system || "unknown", entry.role || "not specified"])
+    : [["Board Data", "metadata authority"], ["Selector", "selection and readiness reasoning"], ["Lab Proof", "production proof authority"]];
+  appendSection(parent, "Relationship map", rows);
+}
+
+function appendSelectorReadinessDiagnostics(parent, shell = {}) {
+  const diagnostics = shell.readinessDiagnostics || {};
+  const compatibility = diagnostics.compatibility || {};
+  const specGate = diagnostics.specGate || {};
+
+  const section = document.createElement("section");
+  section.className = "cs-selector-proof__section";
+  appendText(section, "h3", diagnostics.title || "Selector readiness diagnostics");
+  appendText(section, "p", diagnostics.status || "read-only diagnostic foundation");
+  appendPillList(section, diagnostics.requiredBoundaryCopy || [
+    "Selector readiness diagnostics are read-only in this slice.",
+    "Compatibility is not proof.",
+    "Spec-ready does not mean production-proven.",
+    "Slug generation remains disabled unless an approved future spec gate is complete.",
+    "A candidate may be compatible without being Lab proven.",
+    "Board Data defines metadata. Selector resolves. Lab proves.",
+    "IES Builder may create candidate photometric artefacts later.",
+    "Engine Flow explains the confidence path; it does not execute it.",
+  ]);
+  appendPillList(section, diagnostics.manualVsAuto || [
+    "Manual selections are constraints.",
+    "Auto selections are consequences.",
+    "Compatible selections must not be cleared just because another field changes.",
+    "Auto-derived items may appear selected but must remain changeable.",
+    "Fresh load is preamble/default-preview state, not spec-ready state.",
+  ]);
+  appendRelationshipMap(section, diagnostics.relationshipMap);
+
+  appendSection(section, compatibility.title || "Compatibility diagnostics", compatibility.summaryRows || [
+    ["mode", "compatibility explanation matrix only"],
+    ["compatible selections auto-cleared", "false"],
+    ["compatibility proof claim", "false"],
+    ["Lab Proof claim", "false"],
+  ]);
+  appendSection(section, "Compatibility runtime status flags", compatibility.runtimeStatusRows || [
+    ["readOnly", "true"],
+    ["diagnosticOnly", "true"],
+    ["compatibilityExplanationOnly", "true"],
+    ["activeResolverEnabled", "false"],
+    ["autoSelectionMutationEnabled", "false"],
+    ["manualConstraintMutationEnabled", "false"],
+    ["specGenerationEnabled", "false"],
+    ["slugGenerationEnabled", "false"],
+    ["boardDataWriteEnabled", "false"],
+    ["labProofAuthority", "false"],
+    ["iesGenerationEnabled", "false"],
+    ["engineExecutionEnabled", "false"],
+    ["runTableGenerationEnabled", "false"],
+    ["payloadGenerationEnabled", "false"],
+    ["drawingGenerationEnabled", "false"],
+    ["hiddenWriteBackEnabled", "false"],
+  ]);
+  appendSection(section, "Compatibility dimensions", compatibility.dimensionRows || [["product family", "unknown / candidate only"]]);
+  appendSection(section, "Compatibility reason states", compatibility.reasonStateRows || [["compatible", "available diagnostic reason state"]]);
+  appendSection(section, "Compatibility warnings", compatibility.warningRows || [["compatibility warnings", "none"]]);
+  appendSection(section, "Blocked/incompatible compatibility reasons", compatibility.blockedFieldRows || [["blocked/incompatible fields", "none"]]);
+
+  appendSection(section, specGate.title || "Spec-gate readiness diagnostics", specGate.readinessRows || [
+    ["current selector mode", "default-preview"],
+    ["spec-gate incomplete", "true"],
+    ["spec-ready", "false"],
+    ["slug generation", "disabled"],
+    ["spec generation", "disabled"],
+    ["Lab Proof status", "separated — not asserted by Selector"],
+  ]);
+  appendSection(section, "Spec-gate runtime status flags", specGate.runtimeStatusRows || [
+    ["readOnly", "true"],
+    ["diagnosticOnly", "true"],
+    ["specGateExplanationOnly", "true"],
+    ["specGenerationEnabled", "false"],
+    ["slugGenerationEnabled", "false"],
+    ["activeResolverEnabled", "false"],
+    ["boardDataWriteEnabled", "false"],
+    ["selectorMutationEnabled", "false"],
+    ["iesGenerationEnabled", "false"],
+    ["engineExecutionEnabled", "false"],
+    ["runTableGenerationEnabled", "false"],
+    ["payloadGenerationEnabled", "false"],
+    ["drawingGenerationEnabled", "false"],
+    ["labProofAuthority", "false"],
+    ["hiddenWriteBackEnabled", "false"],
+  ]);
+  appendSection(section, "Spec-gate states", specGate.gateStateRows || [["preamble / default preview", "tracked as readiness explanation only"]]);
+  appendSection(section, "Spec-gate requirements", specGate.gateRequirementRows || [["product family selected", "diagnostic requirement; no slug/spec generation"]]);
+  appendSection(section, "Missing/blocked reason categories", specGate.missingBlockedReasonRows || [["missing manual constraint", "safe fail-closed reason category"]]);
+
+  parent.appendChild(section);
+}
+
 function appendSelectorExpanderShell(parent, viewModel) {
   const shell = viewModel.expanderShell || {};
   const shellSection = document.createElement("section");
@@ -347,6 +443,7 @@ function appendSelectorExpanderShell(parent, viewModel) {
   ]);
 
   appendSelectorManualConstraintBehaviour(shellSection, shell);
+  appendSelectorReadinessDiagnostics(shellSection, shell);
 
   const sections = Array.isArray(shell.sections) ? shell.sections : [];
   for (const section of sections) {

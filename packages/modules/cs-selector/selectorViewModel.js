@@ -915,6 +915,224 @@ function createManualConstraintBehaviour(contract = {}, selectorState, onLocalSt
   };
 }
 
+const COMPATIBILITY_RUNTIME_STATUS_FLAGS = Object.freeze({
+  readOnly: true,
+  diagnosticOnly: true,
+  compatibilityExplanationOnly: true,
+  activeResolverEnabled: false,
+  autoSelectionMutationEnabled: false,
+  manualConstraintMutationEnabled: false,
+  specGenerationEnabled: false,
+  slugGenerationEnabled: false,
+  boardDataWriteEnabled: false,
+  labProofAuthority: false,
+  iesGenerationEnabled: false,
+  engineExecutionEnabled: false,
+  runTableGenerationEnabled: false,
+  payloadGenerationEnabled: false,
+  drawingGenerationEnabled: false,
+  hiddenWriteBackEnabled: false,
+});
+
+const SPEC_GATE_RUNTIME_STATUS_FLAGS = Object.freeze({
+  readOnly: true,
+  diagnosticOnly: true,
+  specGateExplanationOnly: true,
+  specGenerationEnabled: false,
+  slugGenerationEnabled: false,
+  activeResolverEnabled: false,
+  boardDataWriteEnabled: false,
+  selectorMutationEnabled: false,
+  iesGenerationEnabled: false,
+  engineExecutionEnabled: false,
+  runTableGenerationEnabled: false,
+  payloadGenerationEnabled: false,
+  drawingGenerationEnabled: false,
+  labProofAuthority: false,
+  hiddenWriteBackEnabled: false,
+});
+
+const COMPATIBILITY_DIMENSIONS = Object.freeze([
+  "product family",
+  "body/profile",
+  "board",
+  "optic",
+  "diffuser/lens",
+  "driver",
+  "electrical operating window",
+  "physical fit",
+  "IP / IK / environment",
+  "emergency / EGRES dependency",
+  "compliance dependency",
+  "special parts dependency",
+  "IES candidate readiness",
+  "Lab Proof mapping",
+  "missing metadata",
+]);
+
+const COMPATIBILITY_REASON_STATES = Object.freeze([
+  "compatible",
+  "incompatible",
+  "unknown",
+  "missing metadata",
+  "blocked by policy",
+  "candidate only",
+  "requires review",
+  "requires Lab Proof",
+]);
+
+const SPEC_GATE_STATES = Object.freeze([
+  "preamble / default preview",
+  "manually constrained",
+  "auto consequences visible",
+  "candidate-ready",
+  "spec-gate incomplete",
+  "spec-ready",
+  "blocked / requires review",
+]);
+
+const SPEC_GATE_REQUIREMENTS = Object.freeze([
+  "product family selected",
+  "system/body selected",
+  "board candidate resolved",
+  "optic/diffuser intent resolved",
+  "driver/electrical readiness resolved",
+  "accessory/special-parts policy checked",
+  "IES candidate readiness checked",
+  "compliance/EGRES dependencies checked",
+  "Board Data reference present",
+  "Lab Proof status clearly separated",
+  "required review warnings surfaced",
+]);
+
+const SPEC_GATE_MISSING_BLOCKED_REASON_CATEGORIES = Object.freeze([
+  "missing manual constraint",
+  "unresolved auto consequence",
+  "missing Board Data reference",
+  "missing IES candidate",
+  "missing Lab Proof mapping",
+  "policy warning",
+  "requires human review",
+  "future-gated downstream artefact",
+  "unsafe authority claim",
+]);
+
+const SELECTOR_READINESS_BOUNDARY_COPY = Object.freeze([
+  "Selector readiness diagnostics are read-only in this slice.",
+  "Compatibility is not proof.",
+  "Spec-ready does not mean production-proven.",
+  "Slug generation remains disabled unless an approved future spec gate is complete.",
+  "A candidate may be compatible without being Lab proven.",
+  "Board Data defines metadata. Selector resolves. Lab proves.",
+  "IES Builder may create candidate photometric artefacts later.",
+  "Engine Flow explains the confidence path; it does not execute it.",
+]);
+
+const SELECTOR_READINESS_RELATIONSHIP_MAP = Object.freeze([
+  Object.freeze({ system: "Board Data", role: "metadata authority" }),
+  Object.freeze({ system: "Selector", role: "selection and readiness reasoning" }),
+  Object.freeze({ system: "IES Builder", role: "future candidate photometric artefacts" }),
+  Object.freeze({ system: "Engine Flow", role: "confidence path explanation" }),
+  Object.freeze({ system: "Lab Proof", role: "production proof authority" }),
+  Object.freeze({ system: "Controlled Records", role: "future approval/provenance trail" }),
+]);
+
+function statusFlagRows(flags = {}) {
+  return Object.entries(flags).map(([key, value]) => [key, boolString(value === true)]);
+}
+
+function countObjectFields(value = {}) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return 0;
+  return Object.keys(value).length;
+}
+
+function compatibilityDimensionRows(diagnostics = {}) {
+  const hasWarnings = Array.isArray(diagnostics.warnings) && diagnostics.warnings.length > 0;
+  return COMPATIBILITY_DIMENSIONS.map((dimension) => {
+    if (dimension === "Lab Proof mapping") return [dimension, "requires Lab Proof — Selector does not prove"];
+    if (dimension === "IES candidate readiness") return [dimension, "candidate only — IES generation disabled"];
+    if (dimension === "missing metadata") return [dimension, "missing metadata remains an explicit reason state"];
+    if (hasWarnings && ["IP / IK / environment", "physical fit", "driver", "electrical operating window"].includes(dimension)) {
+      return [dimension, "requires review — diagnostic only; no selection cleared"];
+    }
+    return [dimension, "unknown / candidate only — explanation matrix only"];
+  });
+}
+
+function createSelectorReadinessDiagnostics(contract = {}) {
+  const diagnostics = contract.compatibilityDiagnostics || {};
+  const warningCount = Array.isArray(diagnostics.warnings) ? diagnostics.warnings.length : 0;
+  const blockedCount = Array.isArray(diagnostics.blockedIncompatibleFields) ? diagnostics.blockedIncompatibleFields.length : 0;
+  const manualConstraintCount = countObjectFields(contract.manualConstraints);
+  const autoConsequenceCount = countObjectFields(contract.autoConsequences);
+  const effectiveSelectionCount = countObjectFields(contract.effectiveSelection);
+  const specReady = contract.specReady === true && contract.specGateComplete === true;
+
+  return {
+    title: "Selector readiness diagnostics",
+    status: "read-only diagnostic foundation",
+    readOnly: true,
+    diagnosticOnly: true,
+    requiredBoundaryCopy: [...SELECTOR_READINESS_BOUNDARY_COPY],
+    relationshipMap: SELECTOR_READINESS_RELATIONSHIP_MAP.map((entry) => ({ ...entry })),
+    manualVsAuto: [
+      "Manual selections are constraints.",
+      "Auto selections are consequences.",
+      "Compatible selections must not be cleared just because another field changes.",
+      "Auto-derived items may appear selected but must remain changeable.",
+      "Fresh load is preamble/default-preview state, not spec-ready state.",
+    ],
+    compatibility: {
+      title: "Compatibility diagnostics",
+      runtimeStatusFlags: { ...COMPATIBILITY_RUNTIME_STATUS_FLAGS },
+      runtimeStatusRows: statusFlagRows(COMPATIBILITY_RUNTIME_STATUS_FLAGS),
+      dimensions: [...COMPATIBILITY_DIMENSIONS],
+      dimensionRows: compatibilityDimensionRows(diagnostics),
+      reasonStates: [...COMPATIBILITY_REASON_STATES],
+      reasonStateRows: COMPATIBILITY_REASON_STATES.map((state) => [state, "available diagnostic reason state"]),
+      summaryRows: [
+        ["mode", "compatibility explanation matrix only"],
+        ["manual constraints", manualConstraintCount],
+        ["auto consequences", autoConsequenceCount],
+        ["effective selection fields", effectiveSelectionCount],
+        ["compatibility warnings", warningCount],
+        ["blocked/incompatible diagnostics", blockedCount],
+        ["compatible selections auto-cleared", "false"],
+        ["compatibility proof claim", "false"],
+        ["Lab Proof claim", "false"],
+      ],
+      warningRows: compatibilityWarningRows(diagnostics),
+      blockedFieldRows: blockedFieldRows(diagnostics),
+    },
+    specGate: {
+      title: "Spec-gate readiness diagnostics",
+      runtimeStatusFlags: { ...SPEC_GATE_RUNTIME_STATUS_FLAGS },
+      runtimeStatusRows: statusFlagRows(SPEC_GATE_RUNTIME_STATUS_FLAGS),
+      gateStates: [...SPEC_GATE_STATES],
+      gateStateRows: SPEC_GATE_STATES.map((state) => [state, "tracked as readiness explanation only"]),
+      gateRequirements: [...SPEC_GATE_REQUIREMENTS],
+      gateRequirementRows: SPEC_GATE_REQUIREMENTS.map((requirement) => [requirement, "diagnostic requirement; no slug/spec generation"]),
+      missingBlockedReasonCategories: [...SPEC_GATE_MISSING_BLOCKED_REASON_CATEGORIES],
+      missingBlockedReasonRows: SPEC_GATE_MISSING_BLOCKED_REASON_CATEGORIES.map((category) => [category, "safe fail-closed reason category"]),
+      readinessRows: [
+        ["current selector mode", contract.selectorMode || "default-preview"],
+        ["fresh load preamble/default preview", boolString(contract.freshLoad === true || manualConstraintCount === 0)],
+        ["manually constrained", boolString(manualConstraintCount > 0)],
+        ["auto consequences visible", boolString(autoConsequenceCount > 0)],
+        ["candidate-ready", boolString(effectiveSelectionCount > 0 && warningCount === 0)],
+        ["spec-gate incomplete", boolString(!specReady)],
+        ["spec-ready", boolString(specReady)],
+        ["blocked / requires review", boolString(warningCount > 0 || blockedCount > 0)],
+        ["required review warnings", warningCount || "none"],
+        ["spec slug", contract.specSlug || "disabled"],
+        ["slug generation", "disabled"],
+        ["spec generation", "disabled"],
+        ["Lab Proof status", "separated — not asserted by Selector"],
+      ],
+    },
+  };
+}
+
 function createSelectorExpanderShell(local = {}, selectorState, onLocalStateChange) {
   const stateContract = selectorStateContractFromLocal(local);
   const defaultPreviewBuckets = createDefaultPreviewBucketDiagnostics(stateContract);
@@ -937,6 +1155,7 @@ function createSelectorExpanderShell(local = {}, selectorState, onLocalStateChan
     manualConstraintScaffoldRows: createManualConstraintScaffoldRows(stateContract),
     behaviourContractRows: createBehaviourContractRows(stateContract),
     manualConstraintBehaviour: createManualConstraintBehaviour(stateContract, selectorState, onLocalStateChange),
+    readinessDiagnostics: createSelectorReadinessDiagnostics(stateContract),
     setSectionOpen(sectionId, open) {
       selectorState?.setExpanderSectionOpen?.(sectionId, open);
     },
