@@ -149,6 +149,17 @@ const moduleStatusItems = [
     uiEvidence: "read-only diagnostic panel with route/id contract and mutation guardrails",
     nextStep: "future ceiling/surface considerations only after separate authority contract approval",
   },
+  {
+    id: "knowledge_spine",
+    label: "Knowledge Spine",
+    badge: "diagnostic",
+    group: "Knowledge / Governance",
+    contract: "read-only diagnostic Knowledge Spine / Module Cards shell",
+    runtime: "mounted shell module at /workspace?module=knowledge_spine; no active Liora, KC, CLX, ledger, HubSpot, or RepoMap writes",
+    authority: "describes runtime/module authority boundaries only; does not override code truth, Board Data, Lab proof, Selector, IES Builder, Compliance, or EGRES",
+    uiEvidence: "read-only diagnostic panels for runtime status, module card fields, KC/CLX/Ledger/Liora/RREG/Engine Flow relationships, and keep/shelve/retire decisions",
+    nextStep: "rebuild KC, CLX, Ledger, Liora, RREG, Engine Flow, and RepoMap read-only first after separate contracts",
+  },
 ];
 
 export const MODULE_STATUS_REGISTRY = Object.freeze(moduleStatusItems.map((item) => Object.freeze({ ...item })));
