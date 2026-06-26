@@ -12,6 +12,7 @@ import { complianceMattersModule } from "/packages/modules/compliance-matters/in
 import { coordinatedSurfacesModule } from "/packages/modules/coordinated-surfaces/index.js";
 import { labProofModule } from "/packages/modules/lab-proof/index.js";
 import { knowledgeSpineModule } from "/packages/modules/knowledge-spine/index.js";
+import { controlledRecordsModule } from "/packages/modules/controlled-records/index.js";
 import {
   MODULE_STATUS_REGISTRY,
   moduleStatusFor,
@@ -1467,6 +1468,7 @@ function moduleLabel(moduleId) {
     ies_builder: "IES Builder / Photometry",
     compliance_matters: "Compliance Matters",
     knowledge_spine: "Knowledge Spine",
+    controlled_records: "Controlled Records / Ledger",
     workspace_home: "Home",
     novon_website: "Novon website",
   };
@@ -1842,11 +1844,13 @@ function bootWorkspaceShell() {
   registry.register("coordinated_surfaces", coordinatedSurfacesModule);
   registry.register("lab_proof", labProofModule);
   registry.register("knowledge_spine", knowledgeSpineModule);
+  registry.register("controlled_records", controlledRecordsModule);
   ensureModuleNavLink("scene_builder", "Scene Builder");
   ensureModuleNavLink("board_data", "Board Data");
   ensureModuleNavLink("ies_builder", "IES Builder / Photometry");
   ensureModuleNavLink("lab_proof", "Lab Proof");
   ensureModuleNavLink("knowledge_spine", "Knowledge Spine");
+  ensureModuleNavLink("controlled_records", "Controlled Records / Ledger");
   bindShellTopbarControls();
   bindAssistiveCompanyIdentityHelper();
 

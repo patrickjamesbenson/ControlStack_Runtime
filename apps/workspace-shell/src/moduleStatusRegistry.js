@@ -160,6 +160,17 @@ const moduleStatusItems = [
     uiEvidence: "read-only diagnostic panels for runtime status, module card fields, KC/CLX/Ledger/Liora/RREG/Engine Flow relationships, and keep/shelve/retire decisions",
     nextStep: "rebuild KC, CLX, Ledger, Liora, RREG, Engine Flow, and RepoMap read-only first after separate contracts",
   },
+  {
+    id: "controlled_records",
+    label: "Controlled Records / Ledger",
+    badge: "diagnostic",
+    group: "Knowledge / Governance",
+    contract: "read-only diagnostic Controlled Records / Ledger Blueprint shell",
+    runtime: "mounted shell module at /workspace?module=controlled_records; no active intake, record writer, ledger writer, HubSpot write, KC write, CLX write, Lab Ledger mutation, or Liora automation",
+    authority: "evidence/disposition trail blueprint only; not a task list, auto-fix authority, approval workflow, governed truth writer, universal Lab Ledger, or derived action source of truth",
+    uiEvidence: "read-only diagnostic panels for runtime flags, controlled record lifecycle, proposed record/schema fields, old-concept mapping, and Ledger Health diagnostic checks",
+    nextStep: "future Intake Ledger and domain-specific controlled record implementations only after separate governed contracts",
+  },
 ];
 
 export const MODULE_STATUS_REGISTRY = Object.freeze(moduleStatusItems.map((item) => Object.freeze({ ...item })));
