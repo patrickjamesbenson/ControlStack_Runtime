@@ -293,6 +293,51 @@ function appendRelationshipMap(parent, relationshipMap = []) {
   appendSection(parent, "Relationship map", rows);
 }
 
+function appendSelectorCandidateStateExplainer(parent, candidateState = {}) {
+  const section = document.createElement("section");
+  section.className = "cs-selector-proof__section";
+  appendText(section, "h3", candidateState.title || "Selector candidate-state explainer");
+  appendText(section, "p", candidateState.status || "read-only candidate-state explanation over readiness chain");
+  appendPillList(section, candidateState.boundaryCopy || [
+    "Selector candidate state is read-only and diagnostic in this slice.",
+    "A candidate is not a production specification.",
+    "A compatible candidate is not Lab proven.",
+    "Spec-ready does not mean production-proven.",
+    "Selector does not generate IES, create Controlled Records, invoke RREG, or claim Lab Proof here.",
+    "Board Data defines metadata. Selector resolves. IES Builder may generate candidate artefacts later. Lab proves.",
+    "Controlled Records records provenance later. RREG maps review and custody later.",
+  ]);
+  appendSection(section, "Candidate-state runtime status flags", candidateState.runtimeStatusRows || [
+    ["readOnly", "true"],
+    ["diagnosticOnly", "true"],
+    ["candidateStateExplanationOnly", "true"],
+    ["activeResolverEnabled", "false"],
+    ["selectorMutationEnabled", "false"],
+    ["compatibleSelectionClearingEnabled", "false"],
+    ["specGenerationEnabled", "false"],
+    ["slugGenerationEnabled", "false"],
+    ["iesGenerationEnabled", "false"],
+    ["labProofAuthority", "false"],
+    ["controlledRecordWriteEnabled", "false"],
+    ["rregApprovalEnabled", "false"],
+    ["rregCustodyTransferEnabled", "false"],
+    ["boardDataWriteEnabled", "false"],
+    ["runtimeDataWriteEnabled", "false"],
+    ["hiddenWriteBackEnabled", "false"],
+  ]);
+  appendSection(section, "Candidate state categories", candidateState.categoryRows || [["default preview", "available diagnostic category"]]);
+  appendSection(section, "Candidate explainer fields", candidateState.fieldRows || [["candidate_state", "default preview"]]);
+  appendSection(section, "Readiness chain map", candidateState.readinessChainRows || [
+    ["Selector readiness", "selection/candidate reasoning"],
+    ["IES Builder readiness", "candidate artefact readiness later"],
+    ["Lab Proof readiness", "proof boundary, not active proof authority in this slice"],
+    ["Controlled Records", "future provenance/disposition trail"],
+    ["RREG", "future reviewer/approver/custody mapping"],
+    ["Engine Flow", "confidence path explanation, not execution"],
+  ]);
+  parent.appendChild(section);
+}
+
 function appendSelectorReadinessDiagnostics(parent, shell = {}) {
   const diagnostics = shell.readinessDiagnostics || {};
   const compatibility = diagnostics.compatibility || {};
@@ -320,6 +365,7 @@ function appendSelectorReadinessDiagnostics(parent, shell = {}) {
     "Fresh load is preamble/default-preview state, not spec-ready state.",
   ]);
   appendRelationshipMap(section, diagnostics.relationshipMap);
+  appendSelectorCandidateStateExplainer(section, diagnostics.candidateState);
 
   appendSection(section, compatibility.title || "Compatibility diagnostics", compatibility.summaryRows || [
     ["mode", "compatibility explanation matrix only"],

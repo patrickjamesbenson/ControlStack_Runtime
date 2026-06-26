@@ -1037,6 +1037,73 @@ const SELECTOR_READINESS_RELATIONSHIP_MAP = Object.freeze([
   Object.freeze({ system: "Controlled Records", role: "future approval/provenance trail" }),
 ]);
 
+const CANDIDATE_STATE_RUNTIME_STATUS_FLAGS = Object.freeze({
+  readOnly: true,
+  diagnosticOnly: true,
+  candidateStateExplanationOnly: true,
+  activeResolverEnabled: false,
+  selectorMutationEnabled: false,
+  compatibleSelectionClearingEnabled: false,
+  specGenerationEnabled: false,
+  slugGenerationEnabled: false,
+  iesGenerationEnabled: false,
+  labProofAuthority: false,
+  controlledRecordWriteEnabled: false,
+  rregApprovalEnabled: false,
+  rregCustodyTransferEnabled: false,
+  boardDataWriteEnabled: false,
+  runtimeDataWriteEnabled: false,
+  hiddenWriteBackEnabled: false,
+});
+
+const CANDIDATE_STATE_CATEGORIES = Object.freeze([
+  "default preview",
+  "manually constrained candidate",
+  "auto-consequence candidate",
+  "compatibility-explained candidate",
+  "candidate-ready",
+  "spec-gate incomplete",
+  "spec-ready candidate",
+  "downstream artefacts disabled",
+  "proof not established",
+  "review/provenance future-gated",
+]);
+
+const CANDIDATE_EXPLAINER_FIELDS = Object.freeze([
+  "candidate_state",
+  "manual_constraints",
+  "auto_consequences",
+  "effective_selection",
+  "compatibility_summary",
+  "spec_gate_summary",
+  "ies_candidate_readiness",
+  "lab_proof_readiness",
+  "controlled_record_expectation",
+  "rreg_review_expectation",
+  "downstream_outputs_disabled",
+  "proof_boundary",
+  "unsafe_claims_blocked",
+]);
+
+const CANDIDATE_READINESS_CHAIN_MAP = Object.freeze([
+  Object.freeze({ system: "Selector readiness", role: "selection/candidate reasoning" }),
+  Object.freeze({ system: "IES Builder readiness", role: "candidate artefact readiness later" }),
+  Object.freeze({ system: "Lab Proof readiness", role: "proof boundary, not active proof authority in this slice" }),
+  Object.freeze({ system: "Controlled Records", role: "future provenance/disposition trail" }),
+  Object.freeze({ system: "RREG", role: "future reviewer/approver/custody mapping" }),
+  Object.freeze({ system: "Engine Flow", role: "confidence path explanation, not execution" }),
+]);
+
+const CANDIDATE_STATE_BOUNDARY_COPY = Object.freeze([
+  "Selector candidate state is read-only and diagnostic in this slice.",
+  "A candidate is not a production specification.",
+  "A compatible candidate is not Lab proven.",
+  "Spec-ready does not mean production-proven.",
+  "Selector does not generate IES, create Controlled Records, invoke RREG, or claim Lab Proof here.",
+  "Board Data defines metadata. Selector resolves. IES Builder may generate candidate artefacts later. Lab proves.",
+  "Controlled Records records provenance later. RREG maps review and custody later.",
+]);
+
 function statusFlagRows(flags = {}) {
   return Object.entries(flags).map(([key, value]) => [key, boolString(value === true)]);
 }
@@ -1059,6 +1126,69 @@ function compatibilityDimensionRows(diagnostics = {}) {
   });
 }
 
+function deriveCandidateStateLabel({ manualConstraintCount = 0, autoConsequenceCount = 0, effectiveSelectionCount = 0, warningCount = 0, blockedCount = 0, specReady = false, freshLoad = false } = {}) {
+  if (freshLoad && manualConstraintCount === 0) return "default preview";
+  if (specReady) return "spec-ready candidate";
+  if (warningCount > 0 || blockedCount > 0) return "compatibility-explained candidate";
+  if (effectiveSelectionCount > 0 && manualConstraintCount > 0) return "manually constrained candidate";
+  if (effectiveSelectionCount > 0 && autoConsequenceCount > 0) return "auto-consequence candidate";
+  if (effectiveSelectionCount > 0) return "candidate-ready";
+  return "default preview";
+}
+
+function createSelectorCandidateStateExplainer(contract = {}, counts = {}) {
+  const {
+    manualConstraintCount = countObjectFields(contract.manualConstraints),
+    autoConsequenceCount = countObjectFields(contract.autoConsequences),
+    effectiveSelectionCount = countObjectFields(contract.effectiveSelection),
+    warningCount = 0,
+    blockedCount = 0,
+    specReady = false,
+    freshLoad = contract.freshLoad === true,
+  } = counts;
+  const candidateState = deriveCandidateStateLabel({
+    manualConstraintCount,
+    autoConsequenceCount,
+    effectiveSelectionCount,
+    warningCount,
+    blockedCount,
+    specReady,
+    freshLoad,
+  });
+  const reviewNeeded = warningCount > 0 || blockedCount > 0;
+
+  return {
+    title: "Selector candidate-state explainer",
+    status: "read-only candidate-state explanation over readiness chain",
+    runtimeStatusFlags: { ...CANDIDATE_STATE_RUNTIME_STATUS_FLAGS },
+    runtimeStatusRows: statusFlagRows(CANDIDATE_STATE_RUNTIME_STATUS_FLAGS),
+    categories: [...CANDIDATE_STATE_CATEGORIES],
+    categoryRows: CANDIDATE_STATE_CATEGORIES.map((category) => [
+      category,
+      category === candidateState ? "current diagnostic candidate state" : "available diagnostic category",
+    ]),
+    fields: [...CANDIDATE_EXPLAINER_FIELDS],
+    fieldRows: [
+      ["candidate_state", candidateState],
+      ["manual_constraints", manualConstraintCount],
+      ["auto_consequences", autoConsequenceCount],
+      ["effective_selection", effectiveSelectionCount],
+      ["compatibility_summary", reviewNeeded ? `${warningCount} warning(s), ${blockedCount} blocked/incompatible diagnostic(s)` : "candidate compatibility has no current warnings; not proof"],
+      ["spec_gate_summary", specReady ? "spec-ready candidate; production proof still not established" : "spec-gate incomplete or future-gated; slug/spec generation disabled"],
+      ["ies_candidate_readiness", "future-gated candidate artefact readiness; IES generation disabled here"],
+      ["lab_proof_readiness", "not established by Selector; Lab Proof remains the proof boundary"],
+      ["controlled_record_expectation", "future provenance/disposition trail only; no Controlled Records write"],
+      ["rreg_review_expectation", "future reviewer/approver/custody mapping only; no approval or custody transfer"],
+      ["downstream_outputs_disabled", "IES, payload, RunTable, drawings, records, RREG approvals, and proof are disabled"],
+      ["proof_boundary", "candidate/spec-ready is not production-proven and is not Lab Proof"],
+      ["unsafe_claims_blocked", "Lab Proof, Controlled Records, RREG approval, custody transfer, and hidden write-back claims are blocked"],
+    ],
+    readinessChainMap: CANDIDATE_READINESS_CHAIN_MAP.map((entry) => ({ ...entry })),
+    readinessChainRows: CANDIDATE_READINESS_CHAIN_MAP.map((entry) => [entry.system, entry.role]),
+    boundaryCopy: [...CANDIDATE_STATE_BOUNDARY_COPY],
+  };
+}
+
 function createSelectorReadinessDiagnostics(contract = {}) {
   const diagnostics = contract.compatibilityDiagnostics || {};
   const warningCount = Array.isArray(diagnostics.warnings) ? diagnostics.warnings.length : 0;
@@ -1067,12 +1197,21 @@ function createSelectorReadinessDiagnostics(contract = {}) {
   const autoConsequenceCount = countObjectFields(contract.autoConsequences);
   const effectiveSelectionCount = countObjectFields(contract.effectiveSelection);
   const specReady = contract.specReady === true && contract.specGateComplete === true;
+  const candidateState = createSelectorCandidateStateExplainer(contract, {
+    manualConstraintCount,
+    autoConsequenceCount,
+    effectiveSelectionCount,
+    warningCount,
+    blockedCount,
+    specReady,
+  });
 
   return {
     title: "Selector readiness diagnostics",
     status: "read-only diagnostic foundation",
     readOnly: true,
     diagnosticOnly: true,
+    candidateState,
     requiredBoundaryCopy: [...SELECTOR_READINESS_BOUNDARY_COPY],
     relationshipMap: SELECTOR_READINESS_RELATIONSHIP_MAP.map((entry) => ({ ...entry })),
     manualVsAuto: [
