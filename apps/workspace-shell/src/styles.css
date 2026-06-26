@@ -194,6 +194,9 @@ button { cursor: pointer; }
 .cs-shell__rail-item--admin::after { content: none; }
 .cs-shell__rail-item--quiet { opacity: 0.8; }
 .cs-shell__rail-icon { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+img.cs-shell__rail-icon,
+.cs-shell__rail-icon--asset { width: 24px; height: 24px; display: block; object-fit: contain; color: currentColor; }
+.cs-shell__rail-icon--selector { width: 25px; height: 25px; }
 
 .cs-shell__rail-item > span:not(.cs-shell__rail-icon),
 .cs-shell__rail-group-title > span {
