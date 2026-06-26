@@ -10,6 +10,50 @@ function valueOrNone(value) {
   return String(value);
 }
 
+const PROOF_READINESS_CATEGORIES = Object.freeze([
+  "no evidence mapped",
+  "candidate evidence expected",
+  "evidence mapped but unreviewed",
+  "evidence review required",
+  "lab approval required",
+  "production proof not established",
+  "production proof future-gated",
+]);
+
+const EVIDENCE_BOUNDARY_FIELDS = Object.freeze([
+  "candidate_ref",
+  "product_ref",
+  "board_data_ref",
+  "ies_candidate_ref",
+  "test_method_ref",
+  "lab_result_ref",
+  "evidence_summary",
+  "evidence_status",
+  "reviewer_ref",
+  "approval_status",
+  "controlled_record_ref",
+  "proof_boundary",
+  "production_claim_allowed",
+]);
+
+const BOUNDARY_COPY = Object.freeze([
+  "Lab Proof readiness is diagnostic only in this slice.",
+  "This module does not provide production proof authority in this slice.",
+  "No evidence is uploaded, parsed, exposed, approved, or certified here.",
+  "Candidate compatibility, Board Data metadata, and IES candidates are not proof.",
+  "Lab Proof is the production proof authority once an approved Lab authority contract exists.",
+]);
+
+const RELATIONSHIP_MAP_ROWS = Object.freeze([
+  ["Selector", "candidate/selection source"],
+  ["Board Data", "metadata source"],
+  ["IES Builder", "candidate photometric artefact source later"],
+  ["Compliance Matters", "risk/review mapping, not certification"],
+  ["Controlled Records", "provenance/approval/disposition trail later"],
+  ["RREG", "reviewer/approver/custody mapping later"],
+  ["Lab Proof", "production proof boundary"],
+]);
+
 function tableRows(summary = {}) {
   const tables = Array.isArray(summary?.tables) ? summary.tables : [];
   if (!tables.length) return [["tables", "none detected or unavailable"]];
@@ -30,11 +74,28 @@ function statusRows(status = {}) {
   ];
 }
 
-function boundaryRows(status = {}) {
+function runtimeStatusFlagRows(status = {}) {
   return [
     ["readOnly", yesNo(status.readOnly)],
     ["diagnosticOnly", yesNo(status.diagnosticOnly)],
+    ["proofReadinessExplanationOnly", yesNo(status.proofReadinessExplanationOnly)],
     ["productionProofAuthority", yesNo(status.productionProofAuthority)],
+    ["labApprovalEnabled", yesNo(status.labApprovalEnabled)],
+    ["evidenceUploadEnabled", yesNo(status.evidenceUploadEnabled)],
+    ["evidenceIngestionEnabled", yesNo(status.evidenceIngestionEnabled)],
+    ["pdfExposureEnabled", yesNo(status.pdfExposureEnabled)],
+    ["rawArtefactExposureEnabled", yesNo(status.rawArtefactExposureEnabled)],
+    ["selectorMutationEnabled", yesNo(status.selectorMutationEnabled)],
+    ["boardDataWriteEnabled", yesNo(status.boardDataWriteEnabled)],
+    ["iesGenerationEnabled", yesNo(status.iesGenerationEnabled)],
+    ["complianceCertificationEnabled", yesNo(status.complianceCertificationEnabled)],
+    ["hiddenWriteBackEnabled", yesNo(status.hiddenWriteBackEnabled)],
+  ];
+}
+
+function boundaryRows(status = {}) {
+  return [
+    ...runtimeStatusFlagRows(status),
     ["proofClaimsEmitted", yesNo(status.proofClaimsEmitted)],
     ["rawLabEvidenceExposed", yesNo(status.rawLabEvidenceExposed)],
     ["rawArtefactsExposed", yesNo(status.rawArtefactsExposed)],
@@ -133,6 +194,7 @@ export function createLabProofViewModel({ context, local = {}, status = {} }) {
     shellRoute: context?.route?.moduleId || "lab_proof",
     status,
     statusRows: statusRows(status),
+    runtimeStatusFlagRows: runtimeStatusFlagRows(status),
     boundaryRows: boundaryRows(status),
     healthRows: healthRows(status),
     equipmentRows: equipmentRows(status),
@@ -143,6 +205,10 @@ export function createLabProofViewModel({ context, local = {}, status = {} }) {
     referenceTableRows: tableRows(status.referenceStateSummary),
     exportManifestRows: exportManifestRows(status),
     exportManifestTableRows: tableRows(status.exportSafeManifestSummary),
+    proofReadinessCategories: [...PROOF_READINESS_CATEGORIES],
+    evidenceBoundaryFields: [...EVIDENCE_BOUNDARY_FIELDS],
+    boundaryCopy: [...BOUNDARY_COPY],
+    relationshipMapRows: RELATIONSHIP_MAP_ROWS.map(([source, role]) => [source, role]),
     warnings: Array.isArray(status.warnings) && status.warnings.length
       ? status.warnings
       : [

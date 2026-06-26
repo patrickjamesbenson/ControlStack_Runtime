@@ -7,6 +7,23 @@ const DEFAULT_WARNINGS = Object.freeze([
   "Selector, IES Builder, Board Data, Compliance, EGRES, and Coordinated Surfaces must not treat diagnostic metadata as proof.",
 ]);
 
+const LAB_PROOF_RUNTIME_FLAGS = Object.freeze({
+  readOnly: true,
+  diagnosticOnly: true,
+  proofReadinessExplanationOnly: true,
+  productionProofAuthority: false,
+  labApprovalEnabled: false,
+  evidenceUploadEnabled: false,
+  evidenceIngestionEnabled: false,
+  pdfExposureEnabled: false,
+  rawArtefactExposureEnabled: false,
+  selectorMutationEnabled: false,
+  boardDataWriteEnabled: false,
+  iesGenerationEnabled: false,
+  complianceCertificationEnabled: false,
+  hiddenWriteBackEnabled: false,
+});
+
 function arrayOrEmpty(value) {
   return Array.isArray(value) ? value : [];
 }
@@ -90,9 +107,7 @@ export function createSafeLabProofStatus(payload = {}) {
     owner: payload?.owner || "runtime-server",
     moduleId: "lab_proof",
     label: "Lab Proof",
-    readOnly: true,
-    diagnosticOnly: true,
-    productionProofAuthority: false,
+    ...LAB_PROOF_RUNTIME_FLAGS,
     proofClaimsEmitted: false,
     rawLabEvidenceExposed: false,
     rawArtefactsExposed: false,
@@ -147,4 +162,4 @@ export function createUnavailableLabProofStatus(message = "Lab Proof status is u
   });
 }
 
-export { LAB_PROOF_STATUS_ENDPOINT };
+export { LAB_PROOF_RUNTIME_FLAGS, LAB_PROOF_STATUS_ENDPOINT };
