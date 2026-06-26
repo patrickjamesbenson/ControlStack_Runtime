@@ -31,8 +31,8 @@ const LIVE_STATUS_COPY = Object.freeze([
   "Board Data / Selector Reference live status is read-only in this slice.",
   "This status bridge reports source presence, table readiness, and redaction safety only.",
   "Raw rows, raw USERS, raw Lab evidence, credentials, private paths, and secret values are not exposed.",
-  "Selector resolving remains disabled until a later approved resolver-preview slice.",
-  "Board Data defines metadata. Selector resolves later. Lab proves later.",
+  "Active authoritative Selector resolving remains disabled; this page may show a read-only resolver preview only.",
+  "Board Data defines metadata. Selector previews resolution. Lab proves later.",
 ]);
 
 function appendSection(parent, heading, rows) {
@@ -400,6 +400,72 @@ function appendSelectorCandidateStateExplainer(parent, candidateState = {}) {
   parent.appendChild(section);
 }
 
+function appendSelectorReadonlyResolverPreview(parent, preview = {}) {
+  const section = document.createElement("section");
+  section.className = "cs-selector-proof__section";
+  appendText(section, "h3", preview.title || "Selector read-only resolver preview");
+  appendText(section, "p", preview.status || "preview-only candidate readiness over safe Selector Reference metadata");
+  appendPillList(section, preview.boundaryCopy || [
+    "Selector resolver preview is read-only in this slice.",
+    "This preview explains candidate readiness; it does not commit a selection.",
+    "Manual selections remain constraints. Auto selections remain consequences.",
+    "Compatible selections are not cleared by this preview.",
+    "Preview-ready does not mean spec-ready.",
+    "Spec-ready does not mean Lab proven.",
+    "No slug, spec, IES, payload, RunTable, drawing, Lab Proof claim, Controlled Record, RREG assignment, or runtime write is created here.",
+    "Board Data defines metadata. Selector previews resolution. IES Builder may generate candidate artefacts later. Lab proves later.",
+  ]);
+
+  appendSection(section, "Resolver-preview runtime status flags", preview.runtimeStatusRows || [
+    ["readOnly", "true"],
+    ["diagnosticOnly", "true"],
+    ["resolverPreviewOnly", "true"],
+    ["activeResolverEnabled", "false"],
+    ["selectorMutationEnabled", "false"],
+    ["compatibleSelectionClearingEnabled", "false"],
+    ["boardDataWriteEnabled", "false"],
+    ["specGenerationEnabled", "false"],
+    ["slugGenerationEnabled", "false"],
+    ["slugAuthorityEnabled", "false"],
+    ["iesGenerationEnabled", "false"],
+    ["payloadGenerationEnabled", "false"],
+    ["runTableGenerationEnabled", "false"],
+    ["drawingGenerationEnabled", "false"],
+    ["labProofAuthority", "false"],
+    ["controlledRecordWriteEnabled", "false"],
+    ["rregAssignmentEnabled", "false"],
+    ["rregApprovalEnabled", "false"],
+    ["rregCustodyTransferEnabled", "false"],
+    ["runtimeDataMutationEnabled", "false"],
+    ["hiddenWriteBackEnabled", "false"],
+    ["rawRowsExposed", "false"],
+    ["rawUsersExposed", "false"],
+    ["rawLabEvidenceExposed", "false"],
+    ["credentialsExposed", "false"],
+    ["privatePathsExposed", "false"],
+  ]);
+  appendSection(section, "Resolver-preview categories", preview.categoryRows || [["default preview", "available resolver-preview category"]]);
+  appendSection(section, "Resolver-preview required fields", preview.fieldRows || [["preview_state", "default preview"]]);
+  appendSection(section, "Source readiness", preview.sourceRows || [["source_status", "source unavailable"]]);
+  appendSection(section, "Expected table readiness", preview.tableRows || [["source_tables_ready", "false"]]);
+  appendSection(section, "Current manual constraints", preview.manualConstraintRows || [["manual constraints", "none"]]);
+  appendSection(section, "Current auto consequences", preview.autoConsequenceRows || [["auto consequences", "none"]]);
+  appendSection(section, "Current effective selection", preview.effectiveSelectionRows || [["effective selection", "none"]]);
+  appendSection(section, "Compatibility summary", preview.compatibilityRows || [["compatibility_summary", "candidate readiness only"]]);
+  appendSection(section, "Unresolved / missing reasons", preview.unresolvedReasonRows || [["reason", "spec gate is incomplete"]]);
+  appendSection(section, "Downstream disabled states", preview.downstreamRows || [["downstream outputs disabled", "true"]]);
+  appendSection(section, "Resolver-preview relationship map", preview.relationshipRows || [
+    ["Board Data / Selector Reference", "safe source-readiness metadata"],
+    ["Selector", "read-only preview of candidate resolution"],
+    ["IES Builder", "downstream candidate artefact generation later"],
+    ["Lab Proof", "future proof boundary"],
+    ["Controlled Records", "future provenance/disposition trail"],
+    ["RREG", "future review/custody mapping"],
+    ["Engine Flow", "confidence path explanation only"],
+  ]);
+  parent.appendChild(section);
+}
+
 function appendSelectorReadinessDiagnostics(parent, shell = {}) {
   const diagnostics = shell.readinessDiagnostics || {};
   const compatibility = diagnostics.compatibility || {};
@@ -552,6 +618,7 @@ function appendSelectorExpanderShell(parent, viewModel) {
 
   appendSelectorManualConstraintBehaviour(shellSection, shell);
   appendSelectorReadinessDiagnostics(shellSection, shell);
+  appendSelectorReadonlyResolverPreview(shellSection, shell.readonlyResolverPreview);
 
   const sections = Array.isArray(shell.sections) ? shell.sections : [];
   for (const section of sections) {

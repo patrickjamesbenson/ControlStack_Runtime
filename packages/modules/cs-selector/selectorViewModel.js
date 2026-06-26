@@ -1104,6 +1104,91 @@ const CANDIDATE_STATE_BOUNDARY_COPY = Object.freeze([
   "Controlled Records records provenance later. RREG maps review and custody later.",
 ]);
 
+const SELECTOR_RESOLVER_PREVIEW_RUNTIME_STATUS_FLAGS = Object.freeze({
+  readOnly: true,
+  diagnosticOnly: true,
+  resolverPreviewOnly: true,
+  activeResolverEnabled: false,
+  selectorMutationEnabled: false,
+  compatibleSelectionClearingEnabled: false,
+  boardDataWriteEnabled: false,
+  specGenerationEnabled: false,
+  slugGenerationEnabled: false,
+  slugAuthorityEnabled: false,
+  iesGenerationEnabled: false,
+  payloadGenerationEnabled: false,
+  runTableGenerationEnabled: false,
+  drawingGenerationEnabled: false,
+  labProofAuthority: false,
+  controlledRecordWriteEnabled: false,
+  rregAssignmentEnabled: false,
+  rregApprovalEnabled: false,
+  rregCustodyTransferEnabled: false,
+  runtimeDataMutationEnabled: false,
+  hiddenWriteBackEnabled: false,
+  rawRowsExposed: false,
+  rawUsersExposed: false,
+  rawLabEvidenceExposed: false,
+  credentialsExposed: false,
+  privatePathsExposed: false,
+});
+
+const SELECTOR_RESOLVER_PREVIEW_CATEGORIES = Object.freeze([
+  "default preview",
+  "source unavailable",
+  "source readable",
+  "source missing required tables",
+  "manually constrained preview",
+  "auto consequence preview",
+  "compatibility explained preview",
+  "preview candidate ready",
+  "spec gate incomplete",
+  "downstream outputs disabled",
+  "proof not established",
+  "review/provenance future-gated",
+]);
+
+const SELECTOR_RESOLVER_PREVIEW_FIELD_NAMES = Object.freeze([
+  "preview_state",
+  "source_status",
+  "source_tables_ready",
+  "missing_tables",
+  "manual_constraints",
+  "auto_consequences",
+  "effective_selection",
+  "compatibility_summary",
+  "unresolved_reasons",
+  "spec_gate_status",
+  "slug_preview_status",
+  "ies_generation_status",
+  "lab_proof_status",
+  "controlled_records_status",
+  "rreg_status",
+  "downstream_outputs_disabled",
+  "unsafe_claims_blocked",
+]);
+
+const SELECTOR_RESOLVER_PREVIEW_BOUNDARY_COPY = Object.freeze([
+  "Selector resolver preview is read-only in this slice.",
+  "This preview explains candidate readiness; it does not commit a selection.",
+  "Manual selections remain constraints. Auto selections remain consequences.",
+  "Compatible selections are not cleared by this preview.",
+  "Preview-ready does not mean spec-ready.",
+  "Spec-ready does not mean Lab proven.",
+  "No slug, spec, IES, payload, RunTable, drawing, Lab Proof claim, Controlled Record, RREG assignment, or runtime write is created here.",
+  "Board Data defines metadata. Selector previews resolution. IES Builder may generate candidate artefacts later. Lab proves later.",
+]);
+
+const SELECTOR_RESOLVER_PREVIEW_RELATIONSHIP_MAP = Object.freeze([
+  Object.freeze({ system: "Board Data / Selector Reference", role: "safe source-readiness metadata" }),
+  Object.freeze({ system: "Selector", role: "read-only preview of candidate resolution" }),
+  Object.freeze({ system: "IES Builder", role: "downstream candidate artefact generation later" }),
+  Object.freeze({ system: "Lab Proof", role: "future proof boundary" }),
+  Object.freeze({ system: "Controlled Records", role: "future provenance/disposition trail" }),
+  Object.freeze({ system: "RREG", role: "future review/custody mapping" }),
+  Object.freeze({ system: "Engine Flow", role: "confidence path explanation only" }),
+]);
+
 function statusFlagRows(flags = {}) {
   return Object.entries(flags).map(([key, value]) => [key, boolString(value === true)]);
 }
@@ -1186,6 +1271,239 @@ function createSelectorCandidateStateExplainer(contract = {}, counts = {}) {
     readinessChainMap: CANDIDATE_READINESS_CHAIN_MAP.map((entry) => ({ ...entry })),
     readinessChainRows: CANDIDATE_READINESS_CHAIN_MAP.map((entry) => [entry.system, entry.role]),
     boundaryCopy: [...CANDIDATE_STATE_BOUNDARY_COPY],
+  };
+}
+
+function selectorReferenceExpectedTables(reference = {}) {
+  return Array.isArray(reference.expectedTables) && reference.expectedTables.length
+    ? reference.expectedTables
+    : (Array.isArray(reference.selectorCriticalTables) ? reference.selectorCriticalTables : []);
+}
+
+function selectorReferencePresentTables(reference = {}) {
+  if (Array.isArray(reference.presentTables)) return reference.presentTables;
+  return (Array.isArray(reference.tableSummary) ? reference.tableSummary : [])
+    .filter((table) => table.present === true)
+    .map((table) => table.table)
+    .filter(Boolean);
+}
+
+function selectorReferenceMissingTables(reference = {}) {
+  if (Array.isArray(reference.missingTables)) return reference.missingTables;
+  const expected = selectorReferenceExpectedTables(reference);
+  const present = new Set(selectorReferencePresentTables(reference));
+  return expected.filter((table) => !present.has(table));
+}
+
+function readSelectorReferenceSourceStatus(reference = {}) {
+  const source = reference.source || reference.activeSnapshot || {};
+  const status = String(reference.status || "not-requested");
+  const sourcePresent = source.present === true || reference.sourcePresent === true;
+  const sourceReadable = source.readable === true || reference.sourceReadable === true;
+  const sourceParseable = source.parseable === true || reference.sourceParseable === true;
+
+  if (["not-requested", "loading"].includes(status)) {
+    return {
+      status,
+      sourcePresent,
+      sourceReadable,
+      sourceParseable,
+      sourceUnavailable: true,
+      sourceReadableStatus: false,
+    };
+  }
+  if (!sourcePresent || !sourceReadable) {
+    return {
+      status: "source unavailable",
+      sourcePresent,
+      sourceReadable,
+      sourceParseable,
+      sourceUnavailable: true,
+      sourceReadableStatus: false,
+    };
+  }
+  if (!sourceParseable) {
+    return {
+      status: "source readable but not parseable",
+      sourcePresent,
+      sourceReadable,
+      sourceParseable,
+      sourceUnavailable: false,
+      sourceReadableStatus: true,
+    };
+  }
+  return {
+    status: "source readable",
+    sourcePresent,
+    sourceReadable,
+    sourceParseable,
+    sourceUnavailable: false,
+    sourceReadableStatus: true,
+  };
+}
+
+function createResolverPreviewCompatibilitySummary({ warningCount = 0, blockedCount = 0 } = {}) {
+  return warningCount > 0 || blockedCount > 0
+    ? `${warningCount} warning(s), ${blockedCount} blocked/incompatible diagnostic(s); compatible selections are not cleared`
+    : "no current compatibility warnings; this is candidate readiness only, not proof";
+}
+
+function deriveResolverPreviewState({
+  sourceStatus = {},
+  sourceTablesReady = false,
+  missingTables = [],
+  manualConstraintCount = 0,
+  autoConsequenceCount = 0,
+  effectiveSelectionCount = 0,
+  warningCount = 0,
+  blockedCount = 0,
+  freshLoad = false,
+} = {}) {
+  if (sourceStatus.sourceUnavailable) return "source unavailable";
+  if (missingTables.length || !sourceTablesReady) return "source missing required tables";
+  if (warningCount > 0 || blockedCount > 0) return "compatibility explained preview";
+  if (freshLoad && manualConstraintCount === 0) return "default preview";
+  if (manualConstraintCount > 0) return "manually constrained preview";
+  if (autoConsequenceCount > 0) return "auto consequence preview";
+  if (effectiveSelectionCount > 0) return "preview candidate ready";
+  return "spec gate incomplete";
+}
+
+function createResolverPreviewUnresolvedReasons({
+  sourceStatus = {},
+  missingTables = [],
+  manualConstraintCount = 0,
+  warningCount = 0,
+  blockedCount = 0,
+} = {}) {
+  const reasons = [];
+  if (!sourceStatus.sourcePresent) reasons.push("Selector Reference source is not present.");
+  if (sourceStatus.sourcePresent && !sourceStatus.sourceReadable) reasons.push("Selector Reference source is not readable.");
+  if (sourceStatus.sourceReadable && !sourceStatus.sourceParseable) reasons.push("Selector Reference source is not parseable.");
+  if (missingTables.length) reasons.push(`Missing Selector Reference table blocker(s): ${missingTables.join(", ")}.`);
+  if (manualConstraintCount === 0) reasons.push("No manual constraints have been applied; current selections remain default-preview/consequence state.");
+  if (warningCount > 0 || blockedCount > 0) reasons.push("Compatibility diagnostics require review; values are labelled and preserved, not cleared.");
+  reasons.push("Spec gate is incomplete in this preview slice.");
+  reasons.push("Lab Proof is not established by Selector resolver preview.");
+  reasons.push("Controlled Records provenance/disposition and RREG review/custody mapping are future-gated.");
+  return reasons;
+}
+
+function createSelectorReadonlyResolverPreview(contract = {}, selectorReferenceStatus = {}) {
+  const diagnostics = contract.compatibilityDiagnostics || {};
+  const warningCount = Array.isArray(diagnostics.warnings) ? diagnostics.warnings.length : 0;
+  const blockedCount = Array.isArray(diagnostics.blockedIncompatibleFields) ? diagnostics.blockedIncompatibleFields.length : 0;
+  const manualConstraintCount = countObjectFields(contract.manualConstraints);
+  const autoConsequenceCount = countObjectFields(contract.autoConsequences);
+  const effectiveSelectionCount = countObjectFields(contract.effectiveSelection);
+  const expectedTables = selectorReferenceExpectedTables(selectorReferenceStatus);
+  const presentTables = selectorReferencePresentTables(selectorReferenceStatus);
+  const missingTables = selectorReferenceMissingTables(selectorReferenceStatus);
+  const sourceStatus = readSelectorReferenceSourceStatus(selectorReferenceStatus);
+  const sourceTablesReady = sourceStatus.sourceReadableStatus === true
+    && sourceStatus.sourceParseable === true
+    && expectedTables.length > 0
+    && missingTables.length === 0;
+  const specReady = contract.specReady === true && contract.specGateComplete === true;
+  const previewState = deriveResolverPreviewState({
+    sourceStatus,
+    sourceTablesReady,
+    missingTables,
+    manualConstraintCount,
+    autoConsequenceCount,
+    effectiveSelectionCount,
+    warningCount,
+    blockedCount,
+    freshLoad: contract.freshLoad === true,
+  });
+  const unresolvedReasons = createResolverPreviewUnresolvedReasons({
+    sourceStatus,
+    missingTables,
+    manualConstraintCount,
+    warningCount,
+    blockedCount,
+  });
+  const compatibilitySummary = createResolverPreviewCompatibilitySummary({ warningCount, blockedCount });
+  const fieldValues = {
+    preview_state: previewState,
+    source_status: sourceStatus.status,
+    source_tables_ready: boolString(sourceTablesReady),
+    missing_tables: missingTables.length ? missingTables.join(", ") : "none",
+    manual_constraints: selectionListText(contract.manualConstraints, "none"),
+    auto_consequences: selectionListText(contract.autoConsequences, "none"),
+    effective_selection: selectionListText(contract.effectiveSelection, "none"),
+    compatibility_summary: compatibilitySummary,
+    unresolved_reasons: unresolvedReasons.join(" | "),
+    spec_gate_status: specReady ? "spec-ready candidate label only; Lab Proof still not established" : "incomplete — preview-ready does not mean spec-ready",
+    slug_preview_status: "disabled — no slug generated, committed, or treated as authority",
+    ies_generation_status: "disabled — IES Builder may generate candidate artefacts later only",
+    lab_proof_status: "not established — Selector preview is not production proof authority",
+    controlled_records_status: "future-gated — no provenance, disposition, audit, or record write created here",
+    rreg_status: "future-gated — no assignment, approval, or custody transfer created here",
+    downstream_outputs_disabled: "true — IES, payload, RunTable, drawings, records, RREG, proof, and runtime writes are disabled",
+    unsafe_claims_blocked: "slug/spec authority, IES generation, payload generation, RunTable generation, drawings, Lab Proof, Controlled Record, RREG approval, custody transfer, raw data exposure, and hidden write-back are blocked",
+  };
+
+  return {
+    title: "Selector read-only resolver preview",
+    status: "preview-only candidate readiness over safe Selector Reference metadata",
+    readOnly: true,
+    diagnosticOnly: true,
+    resolverPreviewOnly: true,
+    runtimeStatusFlags: { ...SELECTOR_RESOLVER_PREVIEW_RUNTIME_STATUS_FLAGS },
+    runtimeStatusRows: statusFlagRows(SELECTOR_RESOLVER_PREVIEW_RUNTIME_STATUS_FLAGS),
+    categories: [...SELECTOR_RESOLVER_PREVIEW_CATEGORIES],
+    categoryRows: SELECTOR_RESOLVER_PREVIEW_CATEGORIES.map((category) => [
+      category,
+      category === previewState || (category === "source readable" && sourceStatus.sourceReadableStatus === true) || (category === "spec gate incomplete" && !specReady)
+        ? "current resolver-preview condition"
+        : "available resolver-preview category",
+    ]),
+    fieldNames: [...SELECTOR_RESOLVER_PREVIEW_FIELD_NAMES],
+    fields: fieldValues,
+    fieldRows: SELECTOR_RESOLVER_PREVIEW_FIELD_NAMES.map((fieldName) => [fieldName, fieldValues[fieldName]]),
+    sourceRows: [
+      ["source_status", sourceStatus.status],
+      ["source present", boolString(sourceStatus.sourcePresent === true)],
+      ["source readable", boolString(sourceStatus.sourceReadable === true)],
+      ["source parseable", boolString(sourceStatus.sourceParseable === true)],
+      ["selector reference ok", selectorReferenceStatus.ok === true ? "true" : "false"],
+      ["raw rows exposed", boolString(false)],
+      ["raw USERS exposed", boolString(false)],
+      ["raw Lab evidence exposed", boolString(false)],
+      ["credentials exposed", boolString(false)],
+      ["private paths exposed", boolString(false)],
+    ],
+    tableRows: [
+      ["expected tables", expectedTables.join(", ") || "none reported"],
+      ["present tables", presentTables.join(", ") || "none reported"],
+      ["missing tables", missingTables.length ? missingTables.join(", ") : "none"],
+      ["source_tables_ready", boolString(sourceTablesReady)],
+      ["missing table blockers", missingTables.length ? missingTables.join(", ") : "none"],
+    ],
+    manualConstraintRows: selectionRows(contract.manualConstraints, "manual constraints"),
+    autoConsequenceRows: selectionRows(contract.autoConsequences, "auto consequences"),
+    effectiveSelectionRows: selectionRows(contract.effectiveSelection, "effective selection"),
+    compatibilityRows: [
+      ["compatibility_summary", compatibilitySummary],
+      ["compatibility warnings", warningCount],
+      ["blocked/incompatible diagnostics", blockedCount],
+      ["compatible selections cleared by preview", "false"],
+    ],
+    unresolvedReasonRows: unresolvedReasons.map((reason, index) => [`reason ${index + 1}`, reason]),
+    downstreamRows: [
+      ["spec gate", fieldValues.spec_gate_status],
+      ["slug preview", fieldValues.slug_preview_status],
+      ["IES generation", fieldValues.ies_generation_status],
+      ["Lab Proof", fieldValues.lab_proof_status],
+      ["Controlled Records", fieldValues.controlled_records_status],
+      ["RREG", fieldValues.rreg_status],
+      ["downstream outputs disabled", fieldValues.downstream_outputs_disabled],
+      ["unsafe claims blocked", fieldValues.unsafe_claims_blocked],
+    ],
+    relationshipMap: SELECTOR_RESOLVER_PREVIEW_RELATIONSHIP_MAP.map((entry) => ({ ...entry })),
+    relationshipRows: SELECTOR_RESOLVER_PREVIEW_RELATIONSHIP_MAP.map((entry) => [entry.system, entry.role]),
+    boundaryCopy: [...SELECTOR_RESOLVER_PREVIEW_BOUNDARY_COPY],
   };
 }
 
@@ -1272,10 +1590,11 @@ function createSelectorReadinessDiagnostics(contract = {}) {
   };
 }
 
-function createSelectorExpanderShell(local = {}, selectorState, onLocalStateChange) {
+function createSelectorExpanderShell(local = {}, selectorState, onLocalStateChange, selectorReferenceStatus = {}) {
   const stateContract = selectorStateContractFromLocal(local);
   const defaultPreviewBuckets = createDefaultPreviewBucketDiagnostics(stateContract);
   const fieldContractDiagnostics = createSelectorFieldContractDiagnostics(stateContract);
+  const readonlyResolverPreview = createSelectorReadonlyResolverPreview(stateContract, selectorReferenceStatus);
   return {
     title: "Runtime-native CS Selector single-page expander shell",
     status: "UI/state scaffold only",
@@ -1295,6 +1614,7 @@ function createSelectorExpanderShell(local = {}, selectorState, onLocalStateChan
     behaviourContractRows: createBehaviourContractRows(stateContract),
     manualConstraintBehaviour: createManualConstraintBehaviour(stateContract, selectorState, onLocalStateChange),
     readinessDiagnostics: createSelectorReadinessDiagnostics(stateContract),
+    readonlyResolverPreview,
     setSectionOpen(sectionId, open) {
       selectorState?.setExpanderSectionOpen?.(sectionId, open);
     },
@@ -1343,7 +1663,7 @@ export function createSelectorViewModel({ adapter, selectorState, selectorRefere
     phase: snapshots.diagnostics?.phase || "selector-fed-downstream-context-foundation",
     route: snapshots.route,
     local,
-    expanderShell: createSelectorExpanderShell(local, selectorState, onLocalStateChange),
+    expanderShell: createSelectorExpanderShell(local, selectorState, onLocalStateChange, selectorReferenceStatus),
     identity: {
       owner: identity.owner,
       status: identity.status,
