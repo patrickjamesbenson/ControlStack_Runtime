@@ -132,12 +132,12 @@ const moduleStatusItems = [
   {
     id: "compliance_matters",
     label: "Compliance Matters",
-    badge: "planned",
-    contract: "referenced by Selector downstream context",
-    runtime: "not mounted as a real module yet",
-    authority: "no certification/legal/code approval authority",
-    uiEvidence: "sidebar placeholder only",
-    nextStep: "Compliance Matters read-only map, then shell/status module",
+    badge: "diagnostic",
+    contract: "read-only evidence/risk/contribution map",
+    runtime: "mounted diagnostic shell module",
+    authority: "no certification/legal/code approval, NCC/BCA approval, AS/NZS approval, engineering signoff, project approval, or authority approval",
+    uiEvidence: "read-only diagnostic panel at /workspace?module=compliance_matters",
+    nextStep: "wait for EGRES package evidence before compliance readiness can progress",
   },
   {
     id: "coordinated_surfaces",

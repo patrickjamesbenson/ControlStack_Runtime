@@ -1,4 +1,4 @@
-import { createModuleRegistry } from "/packages/workspace-kernel/moduleRegistry.js";
+﻿import { createModuleRegistry } from "/packages/workspace-kernel/moduleRegistry.js";
 import { createPluginRegistry } from "/packages/workspace-kernel/pluginRegistry.js";
 import { resolveWorkspaceRoute } from "/packages/workspace-kernel/route.js";
 import { createShellContext, createShellServices } from "/packages/workspace-kernel/services.js";
@@ -8,6 +8,7 @@ import { sceneBuilderModule } from "/packages/modules/scene-builder/index.js";
 import { adminDevModule } from "/packages/modules/admin-dev/index.js";
 import { boardDataModule } from "/packages/modules/board-data/index.js";
 import { iesBuilderModule } from "/packages/modules/ies-builder/index.js";
+import { complianceMattersModule } from "/packages/modules/compliance-matters/index.js";
 import {
   MODULE_STATUS_REGISTRY,
   moduleStatusFor,
@@ -756,7 +757,7 @@ function renderAuthControls({ services, context }) {
   for (const user of users) {
     const option = document.createElement("option");
     option.value = user.id;
-    option.textContent = `${user.label} · ${user.email}`;
+    option.textContent = `${user.label} Â· ${user.email}`;
     authUserSelect.appendChild(option);
   }
   if (context.auth.session?.userId) authUserSelect.value = context.auth.session.userId;
@@ -793,7 +794,7 @@ function renderAccountOverview(context) {
   const activeEmail = context.auth.session?.email || context.auth.user?.email || "none";
   const authorityRole = context.authority?.actualRole?.value || context.identity.actualRole || "external_user";
   appendDefinitionListRows(accountSummary, [
-    ["identity", `${activeName}${activeEmail !== "none" ? ` · ${activeEmail}` : ""}`],
+    ["identity", `${activeName}${activeEmail !== "none" ? ` Â· ${activeEmail}` : ""}`],
     ["role", authorityRole],
     ["company", context.company.companyName || "No company linked"],
   ]);
@@ -836,7 +837,7 @@ function renderCompanyControls({ services, context }) {
   for (const company of companies) {
     const option = document.createElement("option");
     option.value = company.companyId;
-    option.textContent = `${company.companyName} · ${company.domain}`;
+    option.textContent = `${company.companyName} Â· ${company.domain}`;
     companySelect.appendChild(option);
   }
   companySelect.value = context.crm.selectedCompanyId || "";
@@ -1018,7 +1019,7 @@ function renderProjectBrowser({ context }) {
     item.dataset.envelopeId = project.envelopeId || project.projectId;
     item.tabIndex = 0;
     appendProjectBrowserLine(item, project.title, "strong");
-    appendProjectBrowserLine(item, `${project.client} · ${project.site}`);
+    appendProjectBrowserLine(item, `${project.client} Â· ${project.site}`);
     appendProjectBrowserLine(item, project.restoreEligible ? "Ready to open" : "Reference only");
     projectBrowserList.appendChild(item);
   }
@@ -1043,7 +1044,7 @@ function renderIdentityVisibilityControls({ services, context }) {
   clearElement(identitySelect);
   const noFixtureOption = document.createElement("option");
   noFixtureOption.value = "";
-  noFixtureOption.textContent = "No fixture active — use auth/anonymous source";
+  noFixtureOption.textContent = "No fixture active â€” use auth/anonymous source";
   identitySelect.appendChild(noFixtureOption);
   for (const identity of identities) {
     const option = document.createElement("option");
@@ -1448,6 +1449,7 @@ function moduleLabel(moduleId) {
     admin_dev: "Admin / Dev",
     board_data: "Board Data",
     ies_builder: "IES Builder / Photometry",
+    compliance_matters: "Compliance Matters",
     workspace_home: "Home",
     novon_website: "Novon website",
   };
@@ -1818,6 +1820,7 @@ function bootWorkspaceShell() {
   registry.register("admin_dev", adminDevModule);
   registry.register("board_data", boardDataModule);
   registry.register("ies_builder", iesBuilderModule);
+  registry.register("compliance_matters", complianceMattersModule);
   ensureModuleNavLink("scene_builder", "Scene Builder");
   ensureModuleNavLink("board_data", "Board Data");
   ensureModuleNavLink("ies_builder", "IES Builder / Photometry");
@@ -1894,3 +1897,4 @@ function bootWorkspaceShell() {
 }
 
 bootWorkspaceShell();
+
