@@ -1,3 +1,36 @@
+const BOARD_DATA_STATUS_ENDPOINT = "/api/board-data/status";
+
+const SAFE_STATUS_BASE = Object.freeze({
+  readOnly: true,
+  diagnosticOnly: true,
+  writeEnabled: false,
+  selectorMutationEnabled: false,
+  labProofAuthority: false,
+  iesGenerationEnabled: false,
+  googleSyncEnabled: false,
+  activeSnapshotWriteEnabled: false,
+  materialisedSnapshotWriteEnabled: false,
+  materialiserRefreshEnabled: false,
+  activeSnapshotPromotionEnabled: false,
+  rawRowsExposed: false,
+  rawHeadersExposed: false,
+  rawUsersExposed: false,
+  rawUserHeadersExposed: false,
+  rawGoogleRowsExposed: false,
+  rawLabEvidenceExposed: false,
+  donorCodeMounted: false,
+  candidateEditMode: false,
+});
+
+function safeStatusOverridesFor(payload = {}) {
+  const ok = payload?.ok === true;
+  return {
+    ...SAFE_STATUS_BASE,
+    productDataAuthority: ok,
+    approvedDataSource: ok ? "active authority-reference snapshot" : "unavailable",
+  };
+}
+
 export function createBoardDataState() {
   const state = {
     status: "not-requested",
@@ -19,7 +52,11 @@ export function createBoardDataState() {
 
     setStatusPayload(payload) {
       state.status = payload?.ok === false ? "warning" : "ready";
-      state.statusPayload = payload || null;
+      state.statusPayload = {
+        ...(payload || {}),
+        endpoint: payload?.endpoint || BOARD_DATA_STATUS_ENDPOINT,
+        ...safeStatusOverridesFor(payload),
+      };
       state.loadedAt = new Date().toISOString();
       state.lastAction = "status-loaded";
       return this.getSnapshot();
@@ -29,26 +66,19 @@ export function createBoardDataState() {
       state.status = "fetch-failed";
       state.statusPayload = {
         ok: false,
-        endpoint: "/api/board-data/status",
-        readOnly: true,
-        diagnosticOnly: true,
-        productDataAuthority: true,
-        writeEnabled: false,
-        selectorMutationEnabled: false,
-        labProofAuthority: false,
-        iesGenerationEnabled: false,
-        googleSyncEnabled: false,
-        activeSnapshotWriteEnabled: false,
-        materialisedSnapshotWriteEnabled: false,
-        rawRowsExposed: false,
-        rawUsersExposed: false,
-        rawUserHeadersExposed: false,
-        candidateEditMode: false,
-        approvedDataSource: "active authority-reference snapshot",
+        endpoint: BOARD_DATA_STATUS_ENDPOINT,
+        moduleId: "board_data",
+        label: "Board Data",
+        ...safeStatusOverridesFor({ ok: false }),
         counts: {},
         tableSummary: [],
         missingExpectedTables: [],
-        warnings: [message || "Board Data status request failed."],
+        warnings: [
+          "Board Data status unavailable",
+          message || "Board Data status request failed.",
+          "Board Data is read-only in this slice.",
+          "This inspector shows redacted summaries only.",
+        ],
       };
       state.loadedAt = new Date().toISOString();
       state.lastAction = "status-failed";

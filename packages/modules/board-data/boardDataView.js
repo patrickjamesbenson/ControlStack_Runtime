@@ -35,6 +35,32 @@ function appendSection(parent, heading, rows) {
   parent.appendChild(section);
 }
 
+function appendStatementSection(parent, statements) {
+  const section = document.createElement("section");
+  section.className = "cs-selector-proof__section";
+  appendText(section, "h3", "Board Data authority boundary");
+  appendPillList(section, statements);
+  parent.appendChild(section);
+}
+
+function appendDetailInspector(parent, categories) {
+  const section = document.createElement("section");
+  section.className = "cs-selector-proof__section";
+  appendText(section, "h3", "Redacted detail inspector");
+  appendText(section, "p", "Safe summaries only: presence, counts, readability, redaction status, proof boundary status, and warnings.");
+
+  for (const category of categories) {
+    const card = document.createElement("article");
+    card.className = "cs-selector-proof__section";
+    card.dataset.boardDataCategory = category.key;
+    appendText(card, "h4", category.label);
+    appendDefinitionList(card, category.rows);
+    section.appendChild(card);
+  }
+
+  parent.appendChild(section);
+}
+
 export function renderBoardDataView(container, viewModel) {
   clearElement(container);
 
@@ -45,12 +71,21 @@ export function renderBoardDataView(container, viewModel) {
   const intro = document.createElement("div");
   appendText(intro, "p", "Runtime product data inspector", "cs-shell__eyebrow");
   appendText(intro, "h2", "Board Data");
+  appendText(intro, "p", "Board Data is read-only in this slice.");
   appendText(intro, "p", "Board Data defines product/component metadata.");
-  appendText(intro, "p", "Lab approval is required for proof. Selector mutation is disabled. Google/materialiser writes are disabled. Raw rows are not exposed in this first slice.");
+  appendText(intro, "p", "This inspector shows redacted summaries only.");
+  appendText(intro, "p", "No raw table rows are exposed.");
+  appendText(intro, "p", "No USERS rows, USERS headers, email addresses, credentials, Google rows, or raw Lab evidence are exposed.");
+  appendText(intro, "p", "Board Data does not provide Lab proof.");
+  appendText(intro, "p", "Board Data does not mutate Selector.");
+  appendText(intro, "p", "Board Data does not generate IES files.");
+  appendText(intro, "p", "Materialiser refresh and active snapshot promotion remain separate controlled workflows.");
   article.appendChild(intro);
 
+  appendStatementSection(article, viewModel.requiredBoundaryStatements);
   appendSection(article, "Board Data source", viewModel.sourceRows);
   appendSection(article, "Board Data safety flags", viewModel.safetyRows);
+  appendDetailInspector(article, viewModel.redactedDetailCategories);
   appendSection(article, "Product/component table counts", viewModel.countRows);
   appendSection(article, "Boundary and redaction status", viewModel.boundaryRows);
   appendSection(article, "Expected table summary", viewModel.tableRows);

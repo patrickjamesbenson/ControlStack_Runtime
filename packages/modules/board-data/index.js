@@ -4,6 +4,37 @@ import { createBoardDataViewModel } from "./boardDataViewModel.js";
 
 const BOARD_DATA_STATUS_ENDPOINT = "/api/board-data/status";
 
+const SAFE_STATUS_BASE = Object.freeze({
+  readOnly: true,
+  diagnosticOnly: true,
+  writeEnabled: false,
+  selectorMutationEnabled: false,
+  labProofAuthority: false,
+  iesGenerationEnabled: false,
+  googleSyncEnabled: false,
+  activeSnapshotWriteEnabled: false,
+  materialisedSnapshotWriteEnabled: false,
+  materialiserRefreshEnabled: false,
+  activeSnapshotPromotionEnabled: false,
+  rawRowsExposed: false,
+  rawHeadersExposed: false,
+  rawUsersExposed: false,
+  rawUserHeadersExposed: false,
+  rawGoogleRowsExposed: false,
+  rawLabEvidenceExposed: false,
+  donorCodeMounted: false,
+  candidateEditMode: false,
+});
+
+function safeStatusOverridesFor(payload = {}) {
+  const ok = payload?.ok === true;
+  return {
+    ...SAFE_STATUS_BASE,
+    productDataAuthority: ok,
+    approvedDataSource: ok ? "active authority-reference snapshot" : "unavailable",
+  };
+}
+
 let mountedContainer = null;
 let mountedContext = null;
 let mountedServices = null;
@@ -15,21 +46,7 @@ const INITIAL_STATUS = Object.freeze({
   endpoint: BOARD_DATA_STATUS_ENDPOINT,
   moduleId: "board_data",
   label: "Board Data",
-  readOnly: true,
-  diagnosticOnly: true,
-  productDataAuthority: true,
-  writeEnabled: false,
-  selectorMutationEnabled: false,
-  labProofAuthority: false,
-  iesGenerationEnabled: false,
-  googleSyncEnabled: false,
-  activeSnapshotWriteEnabled: false,
-  materialisedSnapshotWriteEnabled: false,
-  rawRowsExposed: false,
-  rawUsersExposed: false,
-  rawUserHeadersExposed: false,
-  candidateEditMode: false,
-  approvedDataSource: "active authority-reference snapshot",
+  ...safeStatusOverridesFor({ ok: null }),
   counts: {},
   tableSummary: [],
   missingExpectedTables: [],
@@ -56,21 +73,7 @@ function applyBoardDataStatus(payload) {
   boardDataState.setStatusPayload({
     ...payload,
     endpoint: payload?.endpoint || BOARD_DATA_STATUS_ENDPOINT,
-    readOnly: true,
-    diagnosticOnly: true,
-    productDataAuthority: true,
-    writeEnabled: false,
-    selectorMutationEnabled: false,
-    labProofAuthority: false,
-    iesGenerationEnabled: false,
-    googleSyncEnabled: false,
-    activeSnapshotWriteEnabled: false,
-    materialisedSnapshotWriteEnabled: false,
-    rawRowsExposed: false,
-    rawUsersExposed: false,
-    rawUserHeadersExposed: false,
-    candidateEditMode: false,
-    approvedDataSource: "active authority-reference snapshot",
+    ...safeStatusOverridesFor(payload),
   });
   renderCurrentView();
 }
@@ -126,6 +129,8 @@ export const boardDataModule = {
       policyOwner: "runtime-shell",
       readOnly: true,
       diagnosticOnly: true,
+      selectorMutationEnabled: false,
+      labProofAuthority: false,
     });
   },
 
