@@ -12,6 +12,7 @@ import { complianceMattersModule } from "/packages/modules/compliance-matters/in
 import { coordinatedSurfacesModule } from "/packages/modules/coordinated-surfaces/index.js";
 import { labProofModule } from "/packages/modules/lab-proof/index.js";
 import { knowledgeSpineModule } from "/packages/modules/knowledge-spine/index.js";
+import { canonicalLanguageModule } from "/packages/modules/canonical-language/index.js";
 import { controlledRecordsModule } from "/packages/modules/controlled-records/index.js";
 import { rregModule } from "/packages/modules/rreg/index.js";
 import { lioraCockpitModule } from "/packages/modules/liora-cockpit/index.js";
@@ -1600,6 +1601,7 @@ function moduleLabel(moduleId) {
     ies_builder: "IES Builder / Photometry",
     compliance_matters: "Compliance Matters",
     knowledge_spine: "Knowledge Spine",
+    canonical_language: "Canonical Language",
     controlled_records: "Controlled Records / Ledger",
     workspace_home: "Home",
     novon_website: "Novon website",
@@ -1976,6 +1978,7 @@ function bootWorkspaceShell() {
   registry.register("coordinated_surfaces", coordinatedSurfacesModule);
   registry.register("lab_proof", labProofModule);
   registry.register("knowledge_spine", knowledgeSpineModule);
+  registry.register("canonical_language", canonicalLanguageModule);
   registry.register("controlled_records", controlledRecordsModule);
   registry.register("rreg", rregModule);
   registry.register("liora_cockpit", lioraCockpitModule);
@@ -1985,6 +1988,7 @@ function bootWorkspaceShell() {
   ensureModuleNavLink("ies_builder", "IES Builder");
   ensureModuleNavLink("lab_proof", "Lab Proof");
   ensureModuleNavLink("knowledge_spine", "Knowledge Base");
+  ensureModuleNavLink("canonical_language", "Canonical Language");
   ensureModuleNavLink("controlled_records", "Controlled Ledger");
   ensureModuleNavLink("rreg", "Roles & Responsibilities");
   ensureModuleNavLink("liora_cockpit", "Liora Cockpit");
