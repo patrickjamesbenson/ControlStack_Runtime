@@ -1,5 +1,16 @@
 const IES_BUILDER_STATUS_ENDPOINT = "/api/ies-builder/status";
 
+const SAFE_FAILURE_WARNINGS = Object.freeze([
+  "IES Builder is read-only and diagnostic in this slice.",
+  "Fixture/parser diagnostics use safe runtime summaries only.",
+  "No IES upload, export, generation, or mutation is enabled.",
+  "Any parsed or derived photometry shown here is candidate-only.",
+  "IES Builder does not provide Lab proof.",
+  "Lab Proof remains the boundary for proof authority.",
+  "Board Data may define metadata, but Board Data does not prove photometry.",
+  "Selector must not treat candidate photometry as approved proof.",
+]);
+
 const SAFE_FAILURE_FLAGS = Object.freeze({
   endpoint: IES_BUILDER_STATUS_ENDPOINT,
   owner: "runtime-shell",
@@ -7,22 +18,26 @@ const SAFE_FAILURE_FLAGS = Object.freeze({
   label: "IES Builder / Photometry",
   readOnly: true,
   diagnosticOnly: true,
+  candidateOutputOnly: true,
   productionProofAuthority: false,
   labApprovalRequired: true,
+  labProofAuthority: false,
   selectorMutationEnabled: false,
   boardDataWritesEnabled: false,
+  boardDataMutationEnabled: false,
   iesGenerationEnabled: false,
   uploadEnabled: false,
   parseEnabled: false,
+  parseUploadEnabled: false,
   exportEnabled: false,
   polarPreviewEnabled: false,
-  candidateOutputOnly: true,
   proofClaimsEmitted: false,
   rawIesExposed: false,
   rawLabEvidenceExposed: false,
   rawArtefactsExposed: false,
   rawPdfsExposed: false,
   donorPythonMounted: false,
+  donorCodeMounted: false,
   largeDependenciesAdded: false,
   googleSyncEnabled: false,
   activeSnapshotWriteEnabled: false,
@@ -30,6 +45,24 @@ const SAFE_FAILURE_FLAGS = Object.freeze({
   noWritesAttempted: true,
   postEndpointsEnabled: false,
   proofStatus: "not_proof_authority",
+  currentStatusSummary: "IES Builder status unavailable.",
+  parserCapabilityStatus: "unavailable_safe_fallback",
+  fixtureSampleReadinessStatus: "unavailable_safe_fallback",
+  candidateBoundary: "candidate_only_not_approved_proof",
+  proofBoundarySummary: "Lab Proof remains the boundary for proof authority.",
+  blockedActions: [
+    "IES upload",
+    "upload parsing",
+    "IES export",
+    "IES generation",
+    "Selector mutation",
+    "Board Data mutation",
+    "Lab proof claim",
+    "raw IES exposure",
+    "raw Lab evidence exposure",
+    "donor Python mounting",
+    "donor code mounting",
+  ],
 });
 
 export function createIesBuilderState() {
@@ -65,13 +98,8 @@ export function createIesBuilderState() {
         ok: false,
         ...SAFE_FAILURE_FLAGS,
         warnings: [
-          message || "IES Builder status endpoint is unavailable; shell is showing the locked diagnostic fallback.",
-          "IES Builder will generate candidate photometry only.",
-          "Lab approval is required before any output can be treated as proof.",
-          "Selector mutation is disabled.",
-          "Board Data writes are disabled.",
-          "Upload, parse, export, and polar preview are disabled in this first slice.",
-          "Raw IES contents are not exposed.",
+          message || "IES Builder status unavailable.",
+          ...SAFE_FAILURE_WARNINGS,
         ],
       };
       state.loadedAt = new Date().toISOString();

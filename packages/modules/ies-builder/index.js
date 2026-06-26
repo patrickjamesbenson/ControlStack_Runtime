@@ -4,6 +4,31 @@ import { createIesBuilderViewModel } from "./iesBuilderViewModel.js";
 
 const IES_BUILDER_STATUS_ENDPOINT = "/api/ies-builder/status";
 
+const SAFE_WARNINGS = Object.freeze([
+  "IES Builder is read-only and diagnostic in this slice.",
+  "Fixture/parser diagnostics use safe runtime summaries only.",
+  "No IES upload, export, generation, or mutation is enabled.",
+  "Any parsed or derived photometry shown here is candidate-only.",
+  "IES Builder does not provide Lab proof.",
+  "Lab Proof remains the boundary for proof authority.",
+  "Board Data may define metadata, but Board Data does not prove photometry.",
+  "Selector must not treat candidate photometry as approved proof.",
+]);
+
+const BLOCKED_ACTIONS = Object.freeze([
+  "IES upload",
+  "upload parsing",
+  "IES export",
+  "IES generation",
+  "Selector mutation",
+  "Board Data mutation",
+  "Lab proof claim",
+  "raw IES exposure",
+  "raw Lab evidence exposure",
+  "donor Python mounting",
+  "donor code mounting",
+]);
+
 let mountedContainer = null;
 let mountedContext = null;
 let mountedServices = null;
@@ -18,22 +43,26 @@ const INITIAL_STATUS = Object.freeze({
   label: "IES Builder / Photometry",
   readOnly: true,
   diagnosticOnly: true,
+  candidateOutputOnly: true,
   productionProofAuthority: false,
   labApprovalRequired: true,
+  labProofAuthority: false,
   selectorMutationEnabled: false,
   boardDataWritesEnabled: false,
+  boardDataMutationEnabled: false,
   iesGenerationEnabled: false,
   uploadEnabled: false,
   parseEnabled: false,
+  parseUploadEnabled: false,
   exportEnabled: false,
   polarPreviewEnabled: false,
-  candidateOutputOnly: true,
   proofClaimsEmitted: false,
   rawIesExposed: false,
   rawLabEvidenceExposed: false,
   rawArtefactsExposed: false,
   rawPdfsExposed: false,
   donorPythonMounted: false,
+  donorCodeMounted: false,
   largeDependenciesAdded: false,
   googleSyncEnabled: false,
   activeSnapshotWriteEnabled: false,
@@ -41,10 +70,23 @@ const INITIAL_STATUS = Object.freeze({
   noWritesAttempted: true,
   postEndpointsEnabled: false,
   proofStatus: "not_proof_authority",
-  warnings: ["IES Builder status is loading from the read-only runtime endpoint."],
+  currentStatusSummary: "IES Builder status is loading from the read-only runtime endpoint.",
+  parserCapabilityStatus: "safe_summary_pending",
+  fixtureSampleReadinessStatus: "safe_summary_pending",
+  candidateBoundary: "candidate_only_not_approved_proof",
+  proofBoundarySummary: "Lab Proof remains the boundary for proof authority.",
+  blockedActions: [...BLOCKED_ACTIONS],
+  warnings: [...SAFE_WARNINGS],
 });
 
 function safeStatus(payload = {}) {
+  const warnings = Array.isArray(payload?.warnings) && payload.warnings.length
+    ? payload.warnings
+    : [...SAFE_WARNINGS];
+  const blockedActions = Array.isArray(payload?.blockedActions) && payload.blockedActions.length
+    ? payload.blockedActions
+    : [...BLOCKED_ACTIONS];
+
   return {
     ...payload,
     endpoint: payload?.endpoint || IES_BUILDER_STATUS_ENDPOINT,
@@ -53,22 +95,26 @@ function safeStatus(payload = {}) {
     label: "IES Builder / Photometry",
     readOnly: true,
     diagnosticOnly: true,
+    candidateOutputOnly: true,
     productionProofAuthority: false,
     labApprovalRequired: true,
+    labProofAuthority: false,
     selectorMutationEnabled: false,
     boardDataWritesEnabled: false,
+    boardDataMutationEnabled: false,
     iesGenerationEnabled: false,
     uploadEnabled: false,
     parseEnabled: false,
+    parseUploadEnabled: false,
     exportEnabled: false,
     polarPreviewEnabled: false,
-    candidateOutputOnly: true,
     proofClaimsEmitted: false,
     rawIesExposed: false,
     rawLabEvidenceExposed: false,
     rawArtefactsExposed: false,
     rawPdfsExposed: false,
     donorPythonMounted: false,
+    donorCodeMounted: false,
     largeDependenciesAdded: false,
     googleSyncEnabled: false,
     activeSnapshotWriteEnabled: false,
@@ -76,16 +122,13 @@ function safeStatus(payload = {}) {
     noWritesAttempted: true,
     postEndpointsEnabled: false,
     proofStatus: "not_proof_authority",
-    warnings: Array.isArray(payload?.warnings) && payload.warnings.length
-      ? payload.warnings
-      : [
-          "IES Builder will generate candidate photometry only.",
-          "Lab approval is required before any output can be treated as proof.",
-          "Selector mutation is disabled.",
-          "Board Data writes are disabled.",
-          "Upload, parse, export, and polar preview are disabled in this first slice.",
-          "Raw IES contents are not exposed.",
-        ],
+    currentStatusSummary: payload?.currentStatusSummary || "Read-only fixture/parser diagnostics are available from safe runtime metadata only.",
+    parserCapabilityStatus: payload?.parserCapabilityStatus || "safe_summary_only_no_raw_ies",
+    fixtureSampleReadinessStatus: payload?.fixtureSampleReadinessStatus || "metadata_only_no_upload_enabled",
+    candidateBoundary: payload?.candidateBoundary || "candidate_only_not_approved_proof",
+    proofBoundarySummary: payload?.proofBoundarySummary || "Lab Proof remains the boundary for proof authority.",
+    blockedActions,
+    warnings,
   };
 }
 

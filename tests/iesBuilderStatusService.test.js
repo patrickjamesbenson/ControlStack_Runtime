@@ -7,25 +7,40 @@ import {
   buildIesBuilderStatus,
 } from "../packages/workspace-kernel/iesBuilderStatusService.js";
 
+const REQUIRED_BOUNDARY_WARNINGS = Object.freeze([
+  "IES Builder is read-only and diagnostic in this slice.",
+  "Fixture/parser diagnostics use safe runtime summaries only.",
+  "No IES upload, export, generation, or mutation is enabled.",
+  "Any parsed or derived photometry shown here is candidate-only.",
+  "IES Builder does not provide Lab proof.",
+  "Lab Proof remains the boundary for proof authority.",
+  "Board Data may define metadata, but Board Data does not prove photometry.",
+  "Selector must not treat candidate photometry as approved proof.",
+]);
+
 function assertSafeBoundaryFlags(status) {
   assert.equal(status.readOnly, true);
   assert.equal(status.diagnosticOnly, true);
+  assert.equal(status.candidateOutputOnly, true);
   assert.equal(status.productionProofAuthority, false);
   assert.equal(status.labApprovalRequired, true);
+  assert.equal(status.labProofAuthority, false);
   assert.equal(status.selectorMutationEnabled, false);
   assert.equal(status.boardDataWritesEnabled, false);
+  assert.equal(status.boardDataMutationEnabled, false);
   assert.equal(status.iesGenerationEnabled, false);
   assert.equal(status.uploadEnabled, false);
   assert.equal(status.parseEnabled, false);
+  assert.equal(status.parseUploadEnabled, false);
   assert.equal(status.exportEnabled, false);
   assert.equal(status.polarPreviewEnabled, false);
-  assert.equal(status.candidateOutputOnly, true);
   assert.equal(status.proofClaimsEmitted, false);
   assert.equal(status.rawIesExposed, false);
   assert.equal(status.rawLabEvidenceExposed, false);
   assert.equal(status.rawArtefactsExposed, false);
   assert.equal(status.rawPdfsExposed, false);
   assert.equal(status.donorPythonMounted, false);
+  assert.equal(status.donorCodeMounted, false);
   assert.equal(status.largeDependenciesAdded, false);
   assert.equal(status.googleSyncEnabled, false);
   assert.equal(status.activeSnapshotWriteEnabled, false);
@@ -44,11 +59,7 @@ test("/api/ies-builder/status service shape is safe", () => {
   assert.equal(status.moduleId, "ies_builder");
   assert.equal(status.label, "IES Builder / Photometry");
   assertSafeBoundaryFlags(status);
-  assert.deepEqual(status.warnings, [
-    "IES Builder produces candidate/generated photometry only.",
-    "Lab approval is required before any generated output can be treated as approved proof.",
-    "Selector mutation and Board Data writes are disabled.",
-  ]);
+  assert.deepEqual(status.warnings, REQUIRED_BOUNDARY_WARNINGS);
 });
 
 test("required IES Builder boundary flags are present and locked", () => {
@@ -57,11 +68,42 @@ test("required IES Builder boundary flags are present and locked", () => {
   assertSafeBoundaryFlags(status);
 });
 
+test("fixture/parser diagnostics use safe runtime summaries only", () => {
+  const status = buildIesBuilderStatus();
+
+  assert.equal(status.currentStatusSummary, "Read-only fixture/parser diagnostics are available from safe runtime metadata only.");
+  assert.equal(status.parserCapabilityStatus, "safe_summary_only_no_raw_ies");
+  assert.equal(status.fixtureSampleReadinessStatus, "metadata_only_no_upload_enabled");
+  assert.equal(status.candidateBoundary, "candidate_only_not_approved_proof");
+  assert.equal(status.proofBoundarySummary, "Lab Proof remains the boundary for proof authority.");
+  assert.ok(Array.isArray(status.blockedActions));
+  assert.ok(status.blockedActions.includes("IES upload"));
+  assert.ok(status.blockedActions.includes("upload parsing"));
+  assert.ok(status.blockedActions.includes("IES export"));
+  assert.ok(status.blockedActions.includes("IES generation"));
+  assert.ok(status.blockedActions.includes("Selector mutation"));
+  assert.ok(status.blockedActions.includes("Board Data mutation"));
+  assert.ok(status.blockedActions.includes("Lab proof claim"));
+  assert.ok(status.blockedActions.includes("raw IES exposure"));
+  assert.ok(status.blockedActions.includes("raw Lab evidence exposure"));
+  assert.ok(status.blockedActions.includes("donor Python mounting"));
+  assert.ok(status.blockedActions.includes("donor code mounting"));
+});
+
+test("required UI boundary wording is emitted by the status service", () => {
+  const status = buildIesBuilderStatus();
+
+  for (const warning of REQUIRED_BOUNDARY_WARNINGS) {
+    assert.ok(status.warnings.includes(warning));
+  }
+});
+
 test("IES Builder status emits no proof authority or proof claim", () => {
   const status = buildIesBuilderStatus();
 
   assert.equal(status.productionProofAuthority, false);
   assert.equal(status.labApprovalRequired, true);
+  assert.equal(status.labProofAuthority, false);
   assert.equal(status.proofClaimsEmitted, false);
   assert.equal(status.proofStatus, "not_proof_authority");
   assert.equal(status.candidateOutputOnly, true);
@@ -73,6 +115,7 @@ test("generation, upload, parse, export, and polar preview are disabled", () => 
   assert.equal(status.iesGenerationEnabled, false);
   assert.equal(status.uploadEnabled, false);
   assert.equal(status.parseEnabled, false);
+  assert.equal(status.parseUploadEnabled, false);
   assert.equal(status.exportEnabled, false);
   assert.equal(status.polarPreviewEnabled, false);
 });
@@ -82,6 +125,7 @@ test("Selector mutation and Board Data writes are disabled", () => {
 
   assert.equal(status.selectorMutationEnabled, false);
   assert.equal(status.boardDataWritesEnabled, false);
+  assert.equal(status.boardDataMutationEnabled, false);
   assert.equal(status.activeSnapshotWriteEnabled, false);
   assert.equal(status.materialisedSnapshotWriteEnabled, false);
 });
@@ -99,10 +143,11 @@ test("raw IES, Lab evidence, artefacts, and PDFs are not exposed", () => {
   assert.equal(text.includes("LAB_RAW"), false);
 });
 
-test("donor Python and large dependency hooks are not mounted", () => {
+test("donor Python, donor code, and large dependency hooks are not mounted", () => {
   const status = buildIesBuilderStatus();
 
   assert.equal(status.donorPythonMounted, false);
+  assert.equal(status.donorCodeMounted, false);
   assert.equal(status.largeDependenciesAdded, false);
   assert.equal(status.googleSyncEnabled, false);
 });

@@ -1,3 +1,30 @@
+const STATUS_ENDPOINT = "/api/ies-builder/status";
+
+const REQUIRED_BOUNDARY_STATEMENTS = Object.freeze([
+  "IES Builder is read-only and diagnostic in this slice.",
+  "Fixture/parser diagnostics use safe runtime summaries only.",
+  "No IES upload, export, generation, or mutation is enabled.",
+  "Any parsed or derived photometry shown here is candidate-only.",
+  "IES Builder does not provide Lab proof.",
+  "Lab Proof remains the boundary for proof authority.",
+  "Board Data may define metadata, but Board Data does not prove photometry.",
+  "Selector must not treat candidate photometry as approved proof.",
+]);
+
+const BLOCKED_ACTIONS = Object.freeze([
+  "IES upload",
+  "upload parsing",
+  "IES export",
+  "IES generation",
+  "Selector mutation",
+  "Board Data mutation",
+  "Lab proof claim",
+  "raw IES exposure",
+  "raw Lab evidence exposure",
+  "donor Python mounting",
+  "donor code mounting",
+]);
+
 function yesNo(value) {
   if (value === true) return "true";
   if (value === false) return "false";
@@ -10,9 +37,13 @@ function valueOrNone(value) {
   return String(value);
 }
 
+function safeList(value, fallback = []) {
+  return Array.isArray(value) && value.length ? value : fallback;
+}
+
 function statusRows(status = {}) {
   return [
-    ["endpoint", status.endpoint || "/api/ies-builder/status"],
+    ["endpoint", status.endpoint || STATUS_ENDPOINT],
     ["ok", yesNo(status.ok)],
     ["owner", valueOrNone(status.owner)],
     ["moduleId", status.moduleId || "ies_builder"],
@@ -21,26 +52,49 @@ function statusRows(status = {}) {
   ];
 }
 
+function fixtureParserDiagnosticRows(status = {}) {
+  const blockedActions = safeList(status.blockedActions, BLOCKED_ACTIONS).join(", ");
+
+  return [
+    ["endpoint", status.endpoint || STATUS_ENDPOINT],
+    ["current status summary", status.currentStatusSummary || "IES Builder status unavailable."],
+    ["parser capability status", status.parserCapabilityStatus || "unavailable_safe_fallback"],
+    ["fixture/sample readiness status", status.fixtureSampleReadinessStatus || "unavailable_safe_fallback"],
+    ["candidate-only boundary", status.candidateBoundary || "candidate_only_not_approved_proof"],
+    ["proof boundary summary", status.proofBoundarySummary || "Lab Proof remains the boundary for proof authority."],
+    ["blocked actions", blockedActions],
+  ];
+}
+
 function safetyRows(status = {}) {
   return [
     ["readOnly", yesNo(status.readOnly)],
     ["diagnosticOnly", yesNo(status.diagnosticOnly)],
-    ["productionProofAuthority", yesNo(status.productionProofAuthority)],
-    ["labApprovalRequired", yesNo(status.labApprovalRequired)],
-    ["selectorMutationEnabled", yesNo(status.selectorMutationEnabled)],
-    ["boardDataWritesEnabled", yesNo(status.boardDataWritesEnabled)],
-    ["iesGenerationEnabled", yesNo(status.iesGenerationEnabled)],
-    ["uploadEnabled", yesNo(status.uploadEnabled)],
-    ["parseEnabled", yesNo(status.parseEnabled)],
-    ["exportEnabled", yesNo(status.exportEnabled)],
-    ["polarPreviewEnabled", yesNo(status.polarPreviewEnabled)],
     ["candidateOutputOnly", yesNo(status.candidateOutputOnly)],
+    ["productionProofAuthority", yesNo(status.productionProofAuthority)],
     ["proofClaimsEmitted", yesNo(status.proofClaimsEmitted)],
+    ["uploadEnabled", yesNo(status.uploadEnabled)],
+    ["parseUploadEnabled", yesNo(status.parseUploadEnabled)],
+    ["exportEnabled", yesNo(status.exportEnabled)],
+    ["iesGenerationEnabled", yesNo(status.iesGenerationEnabled)],
+    ["selectorMutationEnabled", yesNo(status.selectorMutationEnabled)],
+    ["boardDataMutationEnabled", yesNo(status.boardDataMutationEnabled)],
+    ["labProofAuthority", yesNo(status.labProofAuthority)],
     ["rawIesExposed", yesNo(status.rawIesExposed)],
     ["rawLabEvidenceExposed", yesNo(status.rawLabEvidenceExposed)],
+    ["donorPythonMounted", yesNo(status.donorPythonMounted)],
+    ["donorCodeMounted", yesNo(status.donorCodeMounted)],
+  ];
+}
+
+function lockRows(status = {}) {
+  return [
+    ["labApprovalRequired", yesNo(status.labApprovalRequired)],
+    ["boardDataWritesEnabled", yesNo(status.boardDataWritesEnabled)],
+    ["parseEnabled", yesNo(status.parseEnabled)],
+    ["polarPreviewEnabled", yesNo(status.polarPreviewEnabled)],
     ["rawArtefactsExposed", yesNo(status.rawArtefactsExposed)],
     ["rawPdfsExposed", yesNo(status.rawPdfsExposed)],
-    ["donorPythonMounted", yesNo(status.donorPythonMounted)],
     ["largeDependenciesAdded", yesNo(status.largeDependenciesAdded)],
     ["googleSyncEnabled", yesNo(status.googleSyncEnabled)],
     ["activeSnapshotWriteEnabled", yesNo(status.activeSnapshotWriteEnabled)],
@@ -68,17 +122,11 @@ export function createIesBuilderViewModel({ context, local = {}, status = {} }) 
     shellRoute: context?.route?.moduleId || "ies_builder",
     status,
     statusRows: statusRows(status),
+    fixtureParserDiagnosticRows: fixtureParserDiagnosticRows(status),
     safetyRows: safetyRows(status),
+    lockRows: lockRows(status),
     boundaryRows: boundaryRows(status),
-    warnings: Array.isArray(status.warnings) && status.warnings.length
-      ? status.warnings
-      : [
-          "IES Builder will generate candidate photometry only.",
-          "Lab approval is required before any output can be treated as proof.",
-          "Selector mutation is disabled.",
-          "Board Data writes are disabled.",
-          "Upload, parse, export, and polar preview are disabled in this first slice.",
-          "Raw IES contents are not exposed.",
-        ],
+    boundaryStatements: [...REQUIRED_BOUNDARY_STATEMENTS],
+    warnings: safeList(status.warnings, REQUIRED_BOUNDARY_STATEMENTS),
   };
 }

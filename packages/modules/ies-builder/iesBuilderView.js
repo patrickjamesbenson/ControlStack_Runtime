@@ -43,22 +43,22 @@ export function renderIesBuilderView(container, viewModel) {
   article.dataset.module = viewModel.moduleId;
 
   const intro = document.createElement("div");
-  appendText(intro, "p", "Runtime photometry status inspector", "cs-shell__eyebrow");
+  appendText(intro, "p", "Runtime photometry fixture/parser diagnostics", "cs-shell__eyebrow");
   appendText(intro, "h2", "IES Builder / Photometry");
-  appendText(intro, "p", "IES Builder will generate candidate photometry only.");
-  appendText(intro, "p", "Lab approval is required before any output can be treated as proof.");
-  appendText(intro, "p", "Selector mutation is disabled. Board Data writes are disabled.");
-  appendText(intro, "p", "Upload, parse, export, and polar preview are disabled in this first slice.");
-  appendText(intro, "p", "Raw IES contents are not exposed.");
+  for (const statement of viewModel.boundaryStatements) {
+    appendText(intro, "p", statement);
+  }
   article.appendChild(intro);
 
   appendSection(article, "IES Builder status", viewModel.statusRows);
-  appendSection(article, "IES Builder safety flags", viewModel.safetyRows);
+  appendSection(article, "Fixture/parser diagnostics", viewModel.fixtureParserDiagnosticRows);
+  appendSection(article, "Fixture/parser diagnostic safety flags", viewModel.safetyRows);
+  appendSection(article, "Additional disabled runtime surfaces", viewModel.lockRows);
   appendSection(article, "Runtime write and proof boundary", viewModel.boundaryRows);
 
   const warningSection = document.createElement("section");
   warningSection.className = "cs-selector-proof__section";
-  appendText(warningSection, "h3", "IES Builder boundary warning");
+  appendText(warningSection, "h3", "IES Builder boundary warnings");
   appendPillList(warningSection, viewModel.warnings);
   article.appendChild(warningSection);
 
