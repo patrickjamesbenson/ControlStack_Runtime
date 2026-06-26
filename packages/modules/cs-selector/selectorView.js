@@ -400,21 +400,58 @@ function appendSelectorCandidateStateExplainer(parent, candidateState = {}) {
   parent.appendChild(section);
 }
 
+function appendPreviewResultSummary(parent, summary = {}) {
+  const section = document.createElement("section");
+  section.className = "cs-selector-proof__section cs-selector-proof__section--nested";
+  appendText(section, "h4", summary.title || "Preview result summary");
+  appendText(section, "p", summary.status || "Preview result is explanatory only.");
+  appendPillList(section, summary.boundaryCopy || [
+    "Preview result is explanatory only.",
+    "This is not a committed Selector result.",
+    "This is not a production specification.",
+    "This is not a slug authority.",
+    "This is not Lab Proof.",
+    "No downstream artefact, record, approval, custody transfer, or write is created here.",
+  ]);
+  appendSection(section, "Preview result required flags", summary.flagRows || [
+    ["previewResultSummaryOnly", "true"],
+    ["committedSelectorResult", "false"],
+    ["productionSpecification", "false"],
+    ["slugAuthorityEnabled", "false"],
+    ["downstreamArtefactCreated", "false"],
+    ["proofAuthority", "false"],
+    ["controlledRecordCreated", "false"],
+    ["rregAssignmentCreated", "false"],
+    ["writeBackCreated", "false"],
+  ]);
+  appendSection(section, "Candidate summary", summary.candidateSummaryRows || [["candidate state", "default preview"]]);
+  appendSection(section, "Why this candidate exists", summary.whyRows || [["manual constraints", "none yet"]]);
+  appendSection(section, "Blocked / missing reasons", summary.blockedMissingRows || [["spec gate incomplete", "blocked"]]);
+  appendSection(section, "Path to spec-ready later", summary.specReadyPathRows || [["spec gate completed later", "required later"]]);
+  appendSection(section, "Downstream disabled status", summary.downstreamDisabledRows || [["slug/spec generation", "disabled"]]);
+  parent.appendChild(section);
+}
+
 function appendSelectorReadonlyResolverPreview(parent, preview = {}) {
   const section = document.createElement("section");
   section.className = "cs-selector-proof__section";
   appendText(section, "h3", preview.title || "Selector read-only resolver preview");
   appendText(section, "p", preview.status || "preview-only candidate readiness over safe Selector Reference metadata");
   appendPillList(section, preview.boundaryCopy || [
-    "Selector resolver preview is read-only in this slice.",
-    "This preview explains candidate readiness; it does not commit a selection.",
+    "Preview result is explanatory only.",
+    "This is not a committed Selector result.",
+    "This is not a production specification.",
+    "This is not a slug authority.",
+    "This is not Lab Proof.",
+    "No downstream artefact, record, approval, custody transfer, or write is created here.",
     "Manual selections remain constraints. Auto selections remain consequences.",
     "Compatible selections are not cleared by this preview.",
     "Preview-ready does not mean spec-ready.",
     "Spec-ready does not mean Lab proven.",
-    "No slug, spec, IES, payload, RunTable, drawing, Lab Proof claim, Controlled Record, RREG assignment, or runtime write is created here.",
     "Board Data defines metadata. Selector previews resolution. IES Builder may generate candidate artefacts later. Lab proves later.",
   ]);
+
+  appendPreviewResultSummary(section, preview.previewResultSummary || {});
 
   appendSection(section, "Resolver-preview runtime status flags", preview.runtimeStatusRows || [
     ["readOnly", "true"],

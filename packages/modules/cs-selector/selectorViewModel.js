@@ -1108,6 +1108,10 @@ const SELECTOR_RESOLVER_PREVIEW_RUNTIME_STATUS_FLAGS = Object.freeze({
   readOnly: true,
   diagnosticOnly: true,
   resolverPreviewOnly: true,
+  previewResultSummaryOnly: true,
+  committedSelectorResult: false,
+  productionSpecification: false,
+  downstreamArtefactCreated: false,
   activeResolverEnabled: false,
   selectorMutationEnabled: false,
   compatibleSelectionClearingEnabled: false,
@@ -1120,12 +1124,16 @@ const SELECTOR_RESOLVER_PREVIEW_RUNTIME_STATUS_FLAGS = Object.freeze({
   runTableGenerationEnabled: false,
   drawingGenerationEnabled: false,
   labProofAuthority: false,
+  proofAuthority: false,
   controlledRecordWriteEnabled: false,
+  controlledRecordCreated: false,
   rregAssignmentEnabled: false,
+  rregAssignmentCreated: false,
   rregApprovalEnabled: false,
   rregCustodyTransferEnabled: false,
   runtimeDataMutationEnabled: false,
   hiddenWriteBackEnabled: false,
+  writeBackCreated: false,
   rawRowsExposed: false,
   rawUsersExposed: false,
   rawLabEvidenceExposed: false,
@@ -1169,13 +1177,16 @@ const SELECTOR_RESOLVER_PREVIEW_FIELD_NAMES = Object.freeze([
 ]);
 
 const SELECTOR_RESOLVER_PREVIEW_BOUNDARY_COPY = Object.freeze([
-  "Selector resolver preview is read-only in this slice.",
-  "This preview explains candidate readiness; it does not commit a selection.",
+  "Preview result is explanatory only.",
+  "This is not a committed Selector result.",
+  "This is not a production specification.",
+  "This is not a slug authority.",
+  "This is not Lab Proof.",
+  "No downstream artefact, record, approval, custody transfer, or write is created here.",
   "Manual selections remain constraints. Auto selections remain consequences.",
   "Compatible selections are not cleared by this preview.",
   "Preview-ready does not mean spec-ready.",
   "Spec-ready does not mean Lab proven.",
-  "No slug, spec, IES, payload, RunTable, drawing, Lab Proof claim, Controlled Record, RREG assignment, or runtime write is created here.",
   "Board Data defines metadata. Selector previews resolution. IES Builder may generate candidate artefacts later. Lab proves later.",
 ]);
 
@@ -1389,6 +1400,112 @@ function createResolverPreviewUnresolvedReasons({
   return reasons;
 }
 
+function createPreviewResultSummary({
+  previewState = "default preview",
+  sourceStatus = {},
+  sourceTablesReady = false,
+  missingTables = [],
+  manualConstraintCount = 0,
+  autoConsequenceCount = 0,
+  effectiveSelectionCount = 0,
+  manualConstraintText = "none",
+  autoConsequenceText = "none",
+  effectiveSelectionText = "none",
+  compatibilitySummary = "candidate readiness only",
+  warningCount = 0,
+  blockedCount = 0,
+  specReady = false,
+  unresolvedReasons = [],
+} = {}) {
+  const flags = {
+    previewResultSummaryOnly: true,
+    committedSelectorResult: false,
+    productionSpecification: false,
+    slugAuthorityEnabled: false,
+    downstreamArtefactCreated: false,
+    proofAuthority: false,
+    controlledRecordCreated: false,
+    rregAssignmentCreated: false,
+    writeBackCreated: false,
+  };
+  const specGateState = specReady
+    ? "candidate-labelled only — production specification and Lab Proof are still not established"
+    : "incomplete — preview-ready does not mean spec-ready";
+  const tableReadiness = sourceTablesReady
+    ? "ready for preview summary — required tables are reported present"
+    : "not ready — source/table readiness is incomplete or missing";
+  const proofState = "not established — this is not Lab Proof";
+  const missingTableText = missingTables.length ? missingTables.join(", ") : "none";
+  const sourceHealthy = sourceStatus.sourcePresent === true && sourceStatus.sourceReadable === true && sourceStatus.sourceParseable === true;
+  const constraintsReviewed = manualConstraintCount > 0 ? "manual constraints present for later validation" : "missing — no manual constraints yet";
+  const autoConsequencesReviewed = autoConsequenceCount > 0 ? "review required — auto consequences followed the current constraints" : "none yet — no auto consequences to review";
+  const compatibilityBlockersResolved = warningCount > 0 || blockedCount > 0
+    ? `${warningCount} warning(s) and ${blockedCount} blocked/incompatible diagnostic(s) require resolution`
+    : "no current warnings; still not proof";
+
+  return {
+    title: "Preview result summary",
+    status: "Preview result is explanatory only.",
+    boundaryCopy: [...SELECTOR_RESOLVER_PREVIEW_BOUNDARY_COPY],
+    flags,
+    flagRows: statusFlagRows(flags),
+    candidateSummaryRows: [
+      ["candidate state", previewState],
+      ["source state", sourceStatus.status || "source unavailable"],
+      ["table readiness", tableReadiness],
+      ["manual constraint count", manualConstraintCount],
+      ["auto consequence count", autoConsequenceCount],
+      ["effective selection count", effectiveSelectionCount],
+      ["compatibility state", compatibilitySummary],
+      ["spec gate state", specGateState],
+      ["proof state", proofState],
+    ],
+    whyRows: [
+      ["manual constraints", manualConstraintCount > 0 ? manualConstraintText : "none yet — current candidate remains default-preview/consequence shaped"],
+      ["auto consequences", autoConsequenceCount > 0 ? autoConsequenceText : "none yet — no committed consequence is produced here"],
+      ["effective selection", effectiveSelectionCount > 0 ? effectiveSelectionText : "none yet — no committed Selector result exists"],
+      ["source readiness", sourceHealthy ? "source is present, readable, and parseable for safe metadata preview" : sourceStatus.status || "source unavailable"],
+      ["compatibility diagnostics", compatibilitySummary],
+    ],
+    blockedMissingRows: [
+      ["source unavailable", sourceStatus.sourceUnavailable === true ? "blocked — Selector Reference source is unavailable" : "clear — source availability reported"],
+      ["source not readable", sourceStatus.sourceReadable === true ? "clear — source readable" : "blocked — source is not readable"],
+      ["source not parseable", sourceStatus.sourceParseable === true ? "clear — source parseable" : "blocked — source is not parseable"],
+      ["missing required tables", missingTables.length ? `blocked — ${missingTableText}` : "none"],
+      ["no manual constraints yet", manualConstraintCount === 0 ? "missing — no manual constraints have shaped this candidate" : "clear — manual constraints are present"],
+      ["compatibility warnings", warningCount > 0 ? `${warningCount} warning(s) require review` : "none"],
+      ["blocked/incompatible diagnostics", blockedCount > 0 ? `${blockedCount} blocked/incompatible diagnostic(s) require resolution` : "none"],
+      ["spec gate incomplete", specReady ? "noted — candidate label only; production spec still disabled here" : "blocked — spec gate incomplete"],
+      ["proof not established", proofState],
+      ["Controlled Records future-gated", "future-gated — no provenance, disposition, audit trail, or record write is created here"],
+      ["RREG future-gated", "future-gated — no assignment, approval, review decision, or custody transfer is created here"],
+    ],
+    specReadyPathRows: [
+      ["source present/readable/parseable", sourceHealthy ? "ready for preview" : "required before spec-ready later"],
+      ["required tables present", sourceTablesReady ? "ready for preview" : `required before spec-ready later; missing: ${missingTableText}`],
+      ["manual constraints valid", constraintsReviewed],
+      ["auto consequences reviewed", autoConsequencesReviewed],
+      ["compatibility blockers resolved", compatibilityBlockersResolved],
+      ["spec gate completed later", specReady ? "candidate-labelled only; not production authority" : "required later — incomplete here"],
+      ["slug/spec generation approved later", "future approval required — disabled here"],
+      ["Lab Proof still required later", "required later — not established here"],
+    ],
+    downstreamDisabledRows: [
+      ["slug/spec generation", "disabled"],
+      ["IES generation", "disabled"],
+      ["payload generation", "disabled"],
+      ["RunTable generation", "disabled"],
+      ["drawing generation", "disabled"],
+      ["Lab Proof", "disabled"],
+      ["Controlled Records write", "disabled"],
+      ["RREG assignment/approval/custody transfer", "disabled"],
+      ["runtime data mutation", "disabled"],
+      ["hidden write-back", "disabled"],
+    ],
+    unresolvedReasonRows: unresolvedReasons.map((reason, index) => [`reason ${index + 1}`, reason]),
+  };
+}
+
 function createSelectorReadonlyResolverPreview(contract = {}, selectorReferenceStatus = {}) {
   const diagnostics = contract.compatibilityDiagnostics || {};
   const warningCount = Array.isArray(diagnostics.warnings) ? diagnostics.warnings.length : 0;
@@ -1424,14 +1541,17 @@ function createSelectorReadonlyResolverPreview(contract = {}, selectorReferenceS
     blockedCount,
   });
   const compatibilitySummary = createResolverPreviewCompatibilitySummary({ warningCount, blockedCount });
+  const manualConstraintText = selectionListText(contract.manualConstraints, "none");
+  const autoConsequenceText = selectionListText(contract.autoConsequences, "none");
+  const effectiveSelectionText = selectionListText(contract.effectiveSelection, "none");
   const fieldValues = {
     preview_state: previewState,
     source_status: sourceStatus.status,
     source_tables_ready: boolString(sourceTablesReady),
     missing_tables: missingTables.length ? missingTables.join(", ") : "none",
-    manual_constraints: selectionListText(contract.manualConstraints, "none"),
-    auto_consequences: selectionListText(contract.autoConsequences, "none"),
-    effective_selection: selectionListText(contract.effectiveSelection, "none"),
+    manual_constraints: manualConstraintText,
+    auto_consequences: autoConsequenceText,
+    effective_selection: effectiveSelectionText,
     compatibility_summary: compatibilitySummary,
     unresolved_reasons: unresolvedReasons.join(" | "),
     spec_gate_status: specReady ? "spec-ready candidate label only; Lab Proof still not established" : "incomplete — preview-ready does not mean spec-ready",
@@ -1443,6 +1563,23 @@ function createSelectorReadonlyResolverPreview(contract = {}, selectorReferenceS
     downstream_outputs_disabled: "true — IES, payload, RunTable, drawings, records, RREG, proof, and runtime writes are disabled",
     unsafe_claims_blocked: "slug/spec authority, IES generation, payload generation, RunTable generation, drawings, Lab Proof, Controlled Record, RREG approval, custody transfer, raw data exposure, and hidden write-back are blocked",
   };
+  const previewResultSummary = createPreviewResultSummary({
+    previewState,
+    sourceStatus,
+    sourceTablesReady,
+    missingTables,
+    manualConstraintCount,
+    autoConsequenceCount,
+    effectiveSelectionCount,
+    manualConstraintText,
+    autoConsequenceText,
+    effectiveSelectionText,
+    compatibilitySummary,
+    warningCount,
+    blockedCount,
+    specReady,
+    unresolvedReasons,
+  });
 
   return {
     title: "Selector read-only resolver preview",
@@ -1452,6 +1589,7 @@ function createSelectorReadonlyResolverPreview(contract = {}, selectorReferenceS
     resolverPreviewOnly: true,
     runtimeStatusFlags: { ...SELECTOR_RESOLVER_PREVIEW_RUNTIME_STATUS_FLAGS },
     runtimeStatusRows: statusFlagRows(SELECTOR_RESOLVER_PREVIEW_RUNTIME_STATUS_FLAGS),
+    previewResultSummary,
     categories: [...SELECTOR_RESOLVER_PREVIEW_CATEGORIES],
     categoryRows: SELECTOR_RESOLVER_PREVIEW_CATEGORIES.map((category) => [
       category,

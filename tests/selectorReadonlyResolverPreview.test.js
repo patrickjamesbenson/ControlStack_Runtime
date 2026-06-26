@@ -81,13 +81,16 @@ test("Selector read-only resolver preview exposes required boundary copy, relati
   assert.equal(preview.diagnosticOnly, true);
   assert.equal(preview.resolverPreviewOnly, true);
   assert.deepEqual(preview.boundaryCopy, [
-    "Selector resolver preview is read-only in this slice.",
-    "This preview explains candidate readiness; it does not commit a selection.",
+    "Preview result is explanatory only.",
+    "This is not a committed Selector result.",
+    "This is not a production specification.",
+    "This is not a slug authority.",
+    "This is not Lab Proof.",
+    "No downstream artefact, record, approval, custody transfer, or write is created here.",
     "Manual selections remain constraints. Auto selections remain consequences.",
     "Compatible selections are not cleared by this preview.",
     "Preview-ready does not mean spec-ready.",
     "Spec-ready does not mean Lab proven.",
-    "No slug, spec, IES, payload, RunTable, drawing, Lab Proof claim, Controlled Record, RREG assignment, or runtime write is created here.",
     "Board Data defines metadata. Selector previews resolution. IES Builder may generate candidate artefacts later. Lab proves later.",
   ]);
   assert.deepEqual(preview.categories, [
