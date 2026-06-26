@@ -208,7 +208,7 @@ const moduleStatusItems = [
     id: "engine_flow",
     label: "Engine Flow",
     badge: "diagnostic",
-    group: "Knowledge / Governance",
+    group: "Knowledge & Governance",
     contract: "read-only static confidence/process map shell",
     runtime: "mounted shell module at /workspace?module=engine_flow; no engine execution, Selector firing, IES generation, RunTable generation, payload generation, drawing generation, or Lab proof claim",
     authority: "explains process, maps confidence, and maps proof boundaries only; does not resolve, execute, mutate, generate, approve, prove, or override Board Data or Lab Proof",
