@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -27,7 +27,7 @@
           <div id="cs-shell-search-panel" class="cs-shell__search-panel" role="dialog" aria-modal="false" aria-label="Find or Ask" hidden>
             <div class="cs-shell__search-panel-header">
               <label for="cs-shell-find-ask">Find or Ask</label>
-              <button id="cs-shell-search-close" class="cs-shell__search-close" type="button" aria-label="Close Find or Ask">×</button>
+              <button id="cs-shell-search-close" class="cs-shell__search-close" type="button" aria-label="Close Find or Ask">Ã—</button>
             </div>
             <input id="cs-shell-find-ask" type="search" placeholder="Search workspace or ask a question" aria-label="Find or Ask" autocomplete="off" spellcheck="false" />
             <p>Search workspace tools, project context, and help. Live results are planned for a later slice.</p>
@@ -46,7 +46,7 @@
               <div id="cs-shell-timeline-popout" class="cs-shell__topbar-popout" hidden>
                 <p class="cs-shell__section-kicker">Timeline</p>
                 <h3>Today / Live</h3>
-                <p>Use this to check today’s live workspace timeline and the active project requirement date. Future products will require Timeline access.</p>
+                <p>Use this to check todayâ€™s live workspace timeline and the active project requirement date. Future products will require Timeline access.</p>
                 <p>Compatibility foundation is in place: stored NVB status <strong>staged</strong> and future status <strong>scheduled</strong> are treated internally as Scheduled.</p>
                 <div class="cs-shell__chip-row" aria-label="Timeline placeholder filters">
                   <span class="cs-shell__filter-chip is-selected">Today / Live</span>
@@ -95,7 +95,7 @@
               </div>
             </div>
           </div>
-          <div id="cs-shell-status" class="cs-shell__status" role="status">Booting shell…</div>
+          <div id="cs-shell-status" class="cs-shell__status" role="status">Booting shellâ€¦</div>
         </div>
 
         <section class="cs-shell__user-menu" aria-label="User account and support tools">
@@ -209,7 +209,7 @@
               <svg class="cs-shell__rail-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 5h9v9" /><path d="M19 5l-9 9" /><path d="M5 8v11h11" /></svg>
               <span>Novon website</span>
             </a>
-            <a class="cs-shell__rail-item cs-shell__rail-item--section-end" href="https://app-ap1.hubspot.com/global-home/48137304" target="_blank" rel="noopener noreferrer">
+            <a class="cs-shell__rail-item cs-shell__rail-item--section-end" href="https://app-ap1.hubspot.com/global-home/48137304" target="_blank" rel="noopener noreferrer" data-module-status-key="hubspot_project_context">
               <img class="cs-shell__rail-icon" src="/apps/workspace-shell/assets/hubspot-rail-icon.svg" alt="" aria-hidden="true" />
               <span>HubSpot</span>
             </a>
@@ -225,15 +225,60 @@
               <img class="cs-shell__rail-icon" src="/apps/workspace-shell/assets/emergency-egress-rail-icon.svg" alt="" aria-hidden="true" />
               <span>Emergency / EGRES</span>
             </a>
-            <button class="cs-shell__rail-item" type="button" aria-disabled="true" title="Compliance Matters is a planned workflow module.">
+            <a class="cs-shell__rail-item" href="/workspace?module=board_data" data-module-link="board_data">
+              <svg class="cs-shell__rail-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="4" y="7" width="16" height="10" rx="2" />
+                <path d="M7 10h2.25l1 2.25L11.25 10h2.25" />
+                <path d="M7 14h10" />
+                <circle cx="16.75" cy="10.25" r="0.75" />
+                <circle cx="16.75" cy="13.75" r="0.75" />
+              </svg>
+              <span>Board Data</span>
+            </a>
+            <button class="cs-shell__rail-item" type="button" aria-disabled="true" title="Linear ECG driver is planned for a later module slice." data-module-status-key="ecg_driver">
+              <svg class="cs-shell__rail-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="4" y="7" width="16" height="10" rx="2" />
+                <path d="M7 12h2l1-2 2 4 1.5-2H17" />
+                <path d="M4 10H2.75M4 14H2.75M20 10h1.25M20 14h1.25" />
+              </svg>
+              <span>ECG Driver</span>
+            </button>
+            <a class="cs-shell__rail-item" href="/workspace?module=ies_builder" data-module-link="ies_builder">
+              <svg class="cs-shell__rail-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="12" cy="12" r="7.5" />
+                <path d="M12 4.5v15M4.5 12h15" />
+                <path d="M8.25 15.5c1.2-5.25 2.7-7 3.75-7s2.55 1.75 3.75 7" />
+              </svg>
+              <span>IES / Polar Curve</span>
+            </a>
+            <button class="cs-shell__rail-item" type="button" aria-disabled="true" title="Troffer light is planned for a later module slice." data-module-status-key="troffer_light">
+              <svg class="cs-shell__rail-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="4" y="6" width="16" height="12" rx="1.5" />
+                <path d="M8 6v12M16 6v12M4 10h16M4 14h16" />
+              </svg>
+              <span>Troffer Light</span>
+            </button>
+            <button class="cs-shell__rail-item" type="button" aria-disabled="true" title="Lab proof is planned for a later module slice." data-module-status-key="lab_proof">
+              <svg class="cs-shell__rail-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M10.5 5.5l4 2.25" />
+                <path d="M14 7l-4.5 8" />
+                <path d="M8.5 14.75h8" />
+                <path d="M6.5 19h11" />
+                <path d="M12.25 10.5l3.5 2" />
+                <circle cx="15.75" cy="12.5" r="2" />
+                <path d="M9.25 4.25l3 1.75-1.5 2.5-3-1.75z" />
+              </svg>
+              <span>Lab Proof</span>
+            </button>
+            <button class="cs-shell__rail-item" type="button" aria-disabled="true" title="Compliance Matters is a planned workflow module." data-module-status-key="compliance_matters">
               <svg class="cs-shell__rail-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12l4 4L19 6" /><path d="M6 20h12" /></svg>
               <span>Compliance Matters</span>
             </button>
-            <button class="cs-shell__rail-item" type="button" aria-disabled="true" title="Ceiling / Coordinated Surfaces is a planned workflow module.">
+            <button class="cs-shell__rail-item cs-shell__rail-item--section-end" type="button" aria-disabled="true" title="Ceiling / Coordinated Surfaces is a planned workflow module." data-module-status-key="coordinated_surfaces">
               <svg class="cs-shell__rail-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16M8 4v16M16 4v16" /></svg>
               <span>Ceiling / Coordinated Surfaces</span>
             </button>
-            <a class="cs-shell__rail-item cs-shell__rail-item--admin" href="/workspace?module=admin_dev" data-module-link="admin_dev" data-shell-protected-module="true" hidden>
+            <a class="cs-shell__rail-item cs-shell__rail-item--admin cs-shell__rail-item--section-end" href="/workspace?module=admin_dev" data-module-link="admin_dev" data-shell-protected-module="true" hidden>
               <svg class="cs-shell__rail-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v16" /><path d="M4 12h16" /><circle cx="12" cy="12" r="7" /></svg>
               <span>Admin / Dev</span>
             </a>
@@ -281,6 +326,7 @@
             <p>The topbar now carries your project, company, timeline, and view context. Module content opens here.</p>
             <div class="cs-shell__notice cs-shell__notice--info">Coming soon: cleaner project setup, release notes, and helpful prompts.</div>
             <div class="cs-shell__notice cs-shell__notice--tip">Tip: start with a project, then choose Selector, Scene Builder, Emergency / EGRES, Compliance Matters, or Ceiling / Coordinated Surfaces.</div>
+            <section id="cs-shell-module-status-panel" class="cs-shell__module-status-panel" aria-label="Module maturity status"></section>
           </section>
           <section id="cs-shell-module-host" class="cs-shell__module-host" aria-live="polite"></section>
           <section
@@ -299,7 +345,7 @@
             <p class="cs-shell__section-kicker">Developer</p>
             <h2>Shell Context Inspector</h2>
           </div>
-          <button id="cs-shell-context-inspector-close" type="button" class="cs-shell__context-inspector-close" aria-label="Close Shell Context Inspector">×</button>
+          <button id="cs-shell-context-inspector-close" type="button" class="cs-shell__context-inspector-close" aria-label="Close Shell Context Inspector">Ã—</button>
         </header>
         <div id="cs-shell-context-inspector-content" class="cs-shell__context-inspector-content"></div>
       </aside>

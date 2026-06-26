@@ -1,4 +1,4 @@
-:root {
+﻿:root {
   color-scheme: light;
   font-family: "Lexend Deca", Inter, "Segoe UI", Helvetica, Arial, sans-serif;
   background: #f5f6f8;
@@ -165,8 +165,8 @@ button { cursor: pointer; }
   content: ""; position: absolute; top: 6px; bottom: 6px; left: 12px; width: calc(100% - 24px); border-radius: var(--cs-radius-full);
   background: var(--cs-chrome-pill); opacity: 0; z-index: -1; transition: opacity var(--cs-transition-fast), background var(--cs-transition-fast);
 }
-.cs-shell__rail-item:hover::before, .cs-shell__rail-item:focus-visible::before, .cs-shell__rail-item[aria-current="page"]::before { opacity: 1; }
-.cs-shell__rail-item:hover::before, .cs-shell__rail-item:focus-visible::before, .cs-shell__rail-item[aria-current="page"]::before { background: var(--cs-chrome-pill-hover); }
+.cs-shell__rail-item:hover::before, .cs-shell__rail-item:focus-visible::before, .cs-shell__rail-item[aria-current="page"]::before { opacity: 0; }
+.cs-shell__rail-item:hover, .cs-shell__rail-item:focus-visible, .cs-shell__rail-item[aria-current="page"] { color: #ffffff; }
 .cs-shell__rail-item[aria-current="page"] { color: #ffffff; }
 .cs-shell__rail-item--section-end { margin-bottom: 12px; }
 .cs-shell__rail-item--section-end::after {
@@ -177,11 +177,17 @@ button { cursor: pointer; }
 .cs-shell__rail-item[hidden] { display: none; }
 .cs-shell__rail-item--admin { margin-top: 12px; }
 .cs-shell__rail-item--admin::after {
-  content: ""; position: absolute; left: 18px; right: 18px; top: -7px; height: 1px;
+  content: ""; position: absolute; left: 18px; right: 18px; bottom: -7px; height: 1px;
   background: rgba(255, 255, 255, 0.16);
 }
 .cs-shell__rail-item--quiet { opacity: 0.8; }
 .cs-shell__rail-icon { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.cs-shell__module-status-badge {
+  position: absolute; left: 50%; bottom: 4px; transform: translate(-50%, 100%); max-width: calc(var(--cs-left-rail-width) - 16px);
+  padding: 1px 5px; border-radius: var(--cs-radius-full); background: rgba(255, 255, 255, 0.12); color: rgba(255, 255, 255, 0.76);
+  font-size: 7.5px; font-weight: 600; line-height: 12px; letter-spacing: 0.01em; text-transform: lowercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none;
+}
+.cs-shell__rail-item[aria-current="page"] .cs-shell__module-status-badge { background: rgba(255, 255, 255, 0.2); color: #ffffff; }
 .cs-shell__rail-item > span:not(.cs-shell__rail-icon) {
   position: absolute; left: calc(100% + 8px); top: 50%; transform: translateY(-50%); min-width: 168px; max-width: 280px;
   padding: 8px 12px; border-radius: var(--cs-radius-full); background: var(--cs-chrome-bg); color: #ffffff; box-shadow: var(--cs-shadow-lg);
@@ -189,7 +195,7 @@ button { cursor: pointer; }
   transition: opacity var(--cs-transition-fast), transform var(--cs-transition-fast);
 }
 .cs-shell__rail-item:hover > span:not(.cs-shell__rail-icon), .cs-shell__rail-item:focus-visible > span:not(.cs-shell__rail-icon) { opacity: 1; transform: translate(4px, -50%); }
-.cs-shell__rail-item[aria-disabled="true"] > span:not(.cs-shell__rail-icon)::after { content: " · protected/planned"; color: rgba(255, 255, 255, 0.7); }
+.cs-shell__rail-item[aria-disabled="true"] > span:not(.cs-shell__rail-icon)::after { content: " Â· protected/planned"; color: rgba(255, 255, 255, 0.7); }
 
 .cs-shell__main {
   min-width: 0; min-height: 0; height: 100%; padding: var(--cs-workspace-pad-y) var(--cs-workspace-pad-x) 24px; overflow: auto; overscroll-behavior: contain;
@@ -281,6 +287,8 @@ button { cursor: pointer; }
   box-shadow: var(--cs-shadow-lg); z-index: 9999;
 }
 .cs-shell__user-panel[hidden] { display: none; }
+.cs-shell__user-panel .cs-shell__assistive-company-card,
+.cs-shell__user-panel #shell_developer_diagnostics { display: none !important; }
 .cs-shell__user-panel > section { padding: 16px 20px; border-bottom: 1px solid var(--cs-border); }
 .cs-shell__user-panel > section:last-child { border-bottom: 0; }
 .cs-shell__user-panel h3 { margin-bottom: 8px; }
@@ -349,6 +357,20 @@ button { cursor: pointer; }
 
 .cs-shell__plugin-host, .cs-shell__start-panel { max-width: 1240px; padding: 24px; }
 .cs-shell__module-host, .cs-shell__home { max-width: 1240px; min-height: 0; padding: 0; background: transparent; border: 0; border-radius: 0; box-shadow: none; }
+.cs-shell__module-status-panel {
+  margin-top: 16px; padding: 16px; border: 1px solid var(--cs-border); border-radius: var(--cs-radius-lg); background: #ffffff; box-shadow: var(--cs-shadow-sm);
+}
+.cs-shell__module-status-heading { display: grid; grid-template-columns: minmax(180px, 0.7fr) minmax(280px, 1fr); gap: 16px; align-items: start; margin-bottom: 12px; }
+.cs-shell__module-status-heading h3 { margin-bottom: 0; }
+.cs-shell__module-status-heading p:last-child { margin-bottom: 0; }
+.cs-shell__module-status-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px; }
+.cs-shell__module-status-card { padding: 12px; border: 1px solid var(--cs-border); border-radius: var(--cs-radius-md); background: #fafafa; }
+.cs-shell__module-status-card header { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+.cs-shell__module-status-card h4 { margin: 0; color: var(--cs-text); font-size: 13px; font-weight: 600; line-height: 18px; }
+.cs-shell__module-status-chip { flex: 0 0 auto; padding: 3px 8px; border-radius: var(--cs-radius-full); background: #eef3fb; color: #33425f; font-size: 11px; font-weight: 600; line-height: 14px; text-transform: lowercase; }
+.cs-shell__module-status-rows { display: grid; grid-template-columns: 84px minmax(0, 1fr); gap: 5px 8px; margin: 0; }
+.cs-shell__module-status-rows dt { color: var(--cs-muted); font-size: 11px; font-weight: 600; line-height: 16px; }
+.cs-shell__module-status-rows dd { margin: 0; color: var(--cs-text); font-size: 12px; font-weight: 300; line-height: 17px; }
 .cs-shell__module-host[hidden] { display: none; }
 .cs-shell__start-panel { margin-bottom: 16px; background: linear-gradient(180deg, #ffffff 0%, #fafafa 100%); }
 .cs-shell__start-panel[hidden] { display: none; }
@@ -495,6 +517,7 @@ button { cursor: pointer; }
 @media (max-width: 1040px) {
   .cs-shell__workspace-header { grid-template-columns: 1fr; }
   .cs-shell__project-browser-card { grid-column: auto; }
+  .cs-shell__module-status-heading { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 760px) {
@@ -519,3 +542,56 @@ button { cursor: pointer; }
   .cs-shell dl, .cs-selector-proof__meta, .cs-shell__diagnostic-list, .cs-diagnostics__meta, .cs-shell__context-inspector-section dl { grid-template-columns: 1fr; }
   .cs-shell__topbar-popout { left: 0; right: auto; transform: none; }
 }
+/* Rail visual ordering guard */
+.cs-shell__rail-nav > .cs-shell__rail-item { order: 700; }
+
+/* Top utility group */
+.cs-shell__rail-nav > [data-module-link="workspace_home"] { order: 100; }
+.cs-shell__rail-nav > [data-module-link="novon_website"] { order: 110; }
+.cs-shell__rail-nav > [href*="hubspot"] {
+  order: 120;
+  margin-bottom: 12px;
+}
+.cs-shell__rail-nav > [href*="hubspot"]::after {
+  content: "";
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  bottom: -7px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.24);
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* Design / workflow group */
+.cs-shell__rail-nav > [data-module-link="cs_selector"] { order: 200; }
+.cs-shell__rail-nav > [data-module-status-key="troffer_light"] { order: 210; }
+.cs-shell__rail-nav > [data-module-link="scene_builder"] { order: 220; }
+.cs-shell__rail-nav > [data-module-link="emergence"] { order: 230; }
+.cs-shell__rail-nav > [data-module-status-key="compliance_matters"] { order: 240; }
+.cs-shell__rail-nav > [data-module-status-key="coordinated_surfaces"] {
+  order: 250;
+  margin-bottom: 12px;
+}
+.cs-shell__rail-nav > [data-module-status-key="coordinated_surfaces"]::after {
+  content: "";
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  bottom: -7px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.24);
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* Authority / engineering group */
+.cs-shell__rail-nav > [data-module-status-key="lab_proof"] { order: 300; }
+.cs-shell__rail-nav > [data-module-link="board_data"] { order: 310; }
+.cs-shell__rail-nav > [data-module-status-key="ecg_driver"] { order: 320; }
+.cs-shell__rail-nav > [data-module-link="ies_builder"] { order: 330; }
+
+/* Admin last */
+.cs-shell__rail-nav > [data-module-link="admin_dev"] { order: 1000; }
+

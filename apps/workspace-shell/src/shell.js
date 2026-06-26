@@ -8,6 +8,12 @@ import { sceneBuilderModule } from "/packages/modules/scene-builder/index.js";
 import { adminDevModule } from "/packages/modules/admin-dev/index.js";
 import { boardDataModule } from "/packages/modules/board-data/index.js";
 import { iesBuilderModule } from "/packages/modules/ies-builder/index.js";
+import {
+  MODULE_STATUS_REGISTRY,
+  moduleStatusFor,
+  moduleStatusRows,
+  moduleStatusTooltip,
+} from "./moduleStatusRegistry.js";
 
 const shellRoot = document.getElementById("cs-shell-root");
 const statusEl = document.getElementById("cs-shell-status");
@@ -79,6 +85,7 @@ const assistiveCompanyNameInput = document.getElementById("cs-shell-assist-compa
 const assistiveCompanyLogoButton = document.getElementById("cs-shell-assist-company-logo-button");
 const assistiveCompanyLogoImage = document.getElementById("cs-shell-assist-company-logo-image");
 const assistiveCompanyStatus = document.getElementById("cs-shell-assist-company-status");
+const moduleStatusPanel = document.getElementById("cs-shell-module-status-panel");
 
 const SHELL_ROLE_ORDER = Object.freeze(["external_user", "internal_user", "internal_engineer", "developer", "admin"]);
 const NOVON_WEBSITE_MODULE_ID = "novon_website";
@@ -138,6 +145,74 @@ function appendDefinitionListRows(list, rows) {
     dd.textContent = String(value);
     list.append(dt, dd);
   }
+}
+
+function moduleStatusAriaLabel(status) {
+  return `${status.label}: ${status.badge}. Contract: ${status.contract}. Runtime: ${status.runtime}. Authority: ${status.authority}. UI evidence: ${status.uiEvidence}. Next step: ${status.nextStep}.`;
+}
+
+function renderModuleStatusRail() {
+  for (const item of document.querySelectorAll(".cs-shell__rail-item")) {
+    const statusId = item.dataset.moduleStatusKey || item.dataset.moduleLink || "";
+    const status = moduleStatusFor(statusId);
+    if (!status) continue;
+
+    const tooltip = moduleStatusTooltip(status);
+    item.dataset.moduleStatus = status.badge;
+    item.setAttribute("title", tooltip);
+    item.setAttribute("aria-label", moduleStatusAriaLabel(status));
+
+    let badge = item.querySelector(":scope > .cs-shell__module-status-badge");
+    if (!badge) {
+      badge = document.createElement("small");
+      badge.className = "cs-shell__module-status-badge";
+      badge.setAttribute("aria-hidden", "true");
+      item.appendChild(badge);
+    }
+    badge.textContent = status.badge;
+  }
+}
+
+function renderModuleStatusRegistryPanel() {
+  if (!moduleStatusPanel) return;
+  clearElement(moduleStatusPanel);
+
+  const headingRow = document.createElement("div");
+  headingRow.className = "cs-shell__module-status-heading";
+  const headingText = document.createElement("div");
+  const kicker = document.createElement("p");
+  kicker.className = "cs-shell__section-kicker";
+  kicker.textContent = "Build lifecycle";
+  const heading = document.createElement("h3");
+  heading.textContent = "Module maturity status";
+  headingText.append(kicker, heading);
+  const note = document.createElement("p");
+  note.textContent = "Read-only shell registry. It does not call Google, write data, mutate Selector, or imply proof, certification, legal approval, engineering signoff, or authority approval.";
+  headingRow.append(headingText, note);
+  moduleStatusPanel.appendChild(headingRow);
+
+  const list = document.createElement("div");
+  list.className = "cs-shell__module-status-list";
+  for (const status of MODULE_STATUS_REGISTRY) {
+    const card = document.createElement("article");
+    card.className = "cs-shell__module-status-card";
+    card.dataset.moduleStatus = status.badge;
+
+    const cardHeader = document.createElement("header");
+    const title = document.createElement("h4");
+    title.textContent = status.label;
+    const badge = document.createElement("span");
+    badge.className = "cs-shell__module-status-chip";
+    badge.textContent = status.badge;
+    cardHeader.append(title, badge);
+
+    const rows = document.createElement("dl");
+    rows.className = "cs-shell__module-status-rows";
+    appendDefinitionListRows(rows, moduleStatusRows(status));
+    card.append(cardHeader, rows);
+    list.appendChild(card);
+  }
+  moduleStatusPanel.appendChild(list);
 }
 
 function appendProjectBrowserLine(parent, text, tagName = "span") {
@@ -1372,6 +1447,7 @@ function moduleLabel(moduleId) {
     emergence: "Emergency / EGRES",
     admin_dev: "Admin / Dev",
     board_data: "Board Data",
+    ies_builder: "IES Builder / Photometry",
     workspace_home: "Home",
     novon_website: "Novon website",
   };
@@ -1562,8 +1638,10 @@ function bootWorkspaceShell() {
     renderProjectBrowser({ context });
     renderIdentityVisibilityControls({ services, context });
     renderShellTopbarContext(context);
+    renderModuleStatusRegistryPanel();
     renderDeveloperOnlyContainer(pluginHost, context, "Optional diagnostics panel");
     markActiveLink(route.moduleId);
+    renderModuleStatusRail();
     mountedModuleApi?.update?.(context);
     renderModuleDeveloperSurface(context);
     if (diagnosticsPluginApi && diagnosticsPluginRegistry) {

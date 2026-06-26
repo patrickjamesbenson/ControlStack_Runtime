@@ -1,0 +1,179 @@
+const moduleStatusItems = [
+  {
+    id: "workspace_home",
+    label: "Home",
+    badge: "active",
+    contract: "shell-owned workspace entry",
+    runtime: "static home panel inside the workspace shell",
+    authority: "navigation/context only; no product, proof, selector, or compliance authority",
+    uiEvidence: "home panel and module maturity registry",
+    nextStep: "keep lightweight and non-boot-critical",
+  },
+  {
+    id: "novon_website",
+    label: "Novon website",
+    badge: "read-only",
+    contract: "shell-owned special view",
+    runtime: "mounted as a shell special view",
+    authority: "read-only website reference only; no product/proof/selector authority",
+    uiEvidence: "sidebar link and shell-owned website view",
+    nextStep: "keep separate from runtime product authority",
+  },
+  {
+    id: "hubspot_project_context",
+    label: "HubSpot / Project Context",
+    badge: "context",
+    contract: "partial shell/project context integration",
+    runtime: "visible/linkage exists where already implemented",
+    authority: "project/customer context only; not product/proof/selector authority",
+    uiEvidence: "shell/project/admin surfaces",
+    nextStep: "keep separate from module status unless formalised as a module",
+  },
+  {
+    id: "cs_selector",
+    label: "Selector",
+    badge: "diagnostic",
+    contract: "accepted",
+    runtime: "mounted shell module with reference/status diagnostics",
+    authority: "resolves selections; no Lab proof authority",
+    uiEvidence: "diagnostic panels and field/state/default-preview scaffolds",
+    nextStep: "manual constraint UI / controlled resolving progression",
+  },
+  {
+    id: "board_data",
+    label: "Board Data",
+    badge: "read-only",
+    contract: "accepted",
+    runtime: "shell mounted + /api/board-data/status",
+    authority: "read-only product/component metadata authority; does not mutate Selector",
+    uiEvidence: "diagnostic status panel",
+    nextStep: "safe table summaries / redacted board detail inspector",
+  },
+  {
+    id: "ecg_driver",
+    label: "ECG Driver",
+    badge: "planned",
+    contract: "placeholder only; formal contract not accepted yet",
+    runtime: "sidebar placeholder only; no mounted module route",
+    authority: "none; does not mutate selector, board data, photometry, or proof state",
+    uiEvidence: "planned sidebar icon only",
+    nextStep: "write the ECG driver contract before mounting active behaviour",
+  },
+  {
+    id: "ies_builder",
+    label: "IES Builder / Photometry",
+    badge: "candidate-only",
+    contract: "accepted",
+    runtime: "shell mounted + /api/ies-builder/status",
+    authority: "candidate photometry only; not proof authority",
+    uiEvidence: "diagnostic status panel",
+    nextStep: "fixture-only parser diagnostics, no upload/export yet",
+  },
+  {
+    id: "troffer_light",
+    label: "Troffer Light",
+    badge: "planned",
+    contract: "placeholder only; formal contract not accepted yet",
+    runtime: "sidebar placeholder only; no mounted module route",
+    authority: "none; no product/proof/selector/compliance authority",
+    uiEvidence: "planned sidebar icon only",
+    nextStep: "write the troffer contract before mounting active behaviour",
+  },
+  {
+    id: "lab_proof",
+    label: "Lab Proof",
+    badge: "proof-required",
+    contract: "boundary accepted",
+    runtime: "/api/lab-proof/status only",
+    authority: "diagnostic-only proof boundary; no production proof claims",
+    uiEvidence: "endpoint only / needs visible inspector",
+    nextStep: "Lab proof inspector UI",
+  },
+  {
+    id: "authority_reference_materialiser",
+    label: "Authority Reference / Materialiser",
+    badge: "admin-only",
+    contract: "accepted",
+    runtime: "materialiser foundation + Google reader + Admin/Dev status",
+    authority: "server-side materialised-source refresh only; active promotion separate",
+    uiEvidence: "Admin/Dev materialiser card",
+    nextStep: "configured Google dry-run/live materialised refresh proof",
+  },
+  {
+    id: "admin_dev",
+    label: "Admin / Dev",
+    badge: "active",
+    contract: "accepted",
+    runtime: "mounted protected admin module",
+    authority: "developer/admin diagnostics and controlled tools",
+    uiEvidence: "diagnostics, archive/sync/materialiser panels",
+    nextStep: "keep stable; avoid becoming a dumping ground",
+  },
+  {
+    id: "scene_builder",
+    label: "Scene Builder",
+    badge: "diagnostic",
+    contract: "structural shell contract",
+    runtime: "mounted module",
+    authority: "contract/context consumer only",
+    uiEvidence: "structural diagnostic panel",
+    nextStep: "downstream module map before active scene behaviour",
+  },
+  {
+    id: "emergence",
+    label: "EGRES / Emergency",
+    badge: "diagnostic",
+    contract: "structural/diagnostic contract",
+    runtime: "mounted module as emergence",
+    authority: "diagnostic-only emergency/egress context; no compliance certification",
+    uiEvidence: "diagnostic panel",
+    nextStep: "EGRES contract progression after downstream map",
+  },
+  {
+    id: "compliance_matters",
+    label: "Compliance Matters",
+    badge: "planned",
+    contract: "referenced by Selector downstream context",
+    runtime: "not mounted as a real module yet",
+    authority: "no certification/legal/code approval authority",
+    uiEvidence: "sidebar placeholder only",
+    nextStep: "Compliance Matters read-only map, then shell/status module",
+  },
+  {
+    id: "coordinated_surfaces",
+    label: "Coordinated Surfaces / Ceiling",
+    badge: "planned",
+    contract: "referenced by Selector downstream context",
+    runtime: "not mounted as a real module yet",
+    authority: "context-only; does not mutate engine, RunTable, payload, or drawings",
+    uiEvidence: "sidebar placeholder only",
+    nextStep: "Coordinated Surfaces read-only map, then shell/status module",
+  },
+];
+
+export const MODULE_STATUS_REGISTRY = Object.freeze(moduleStatusItems.map((item) => Object.freeze({ ...item })));
+
+const STATUS_BY_ID = new Map(MODULE_STATUS_REGISTRY.map((item) => [item.id, item]));
+
+export function moduleStatusFor(statusId) {
+  return STATUS_BY_ID.get(statusId) || null;
+}
+
+export function moduleStatusRows(status) {
+  if (!status) return [];
+  return [
+    ["Contract", status.contract],
+    ["Runtime", status.runtime],
+    ["Authority", status.authority],
+    ["UI evidence", status.uiEvidence],
+    ["Next step", status.nextStep],
+  ];
+}
+
+export function moduleStatusTooltip(status) {
+  if (!status) return "";
+  return [
+    `${status.label} — ${status.badge}`,
+    ...moduleStatusRows(status).map(([label, value]) => `${label}: ${value}`),
+  ].join("\n");
+}
