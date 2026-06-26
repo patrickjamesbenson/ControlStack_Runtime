@@ -16,14 +16,26 @@ export function createEmergenceContractAdapter({ services, context }) {
     context,
 
     readSnapshots() {
+      const identity = safeRead(() => services.identity.getIdentitySnapshot(), context.identity);
+      const project = safeRead(() => services.project.getProjectSnapshot(), context.project);
+      const visibility = safeRead(
+        () => services.visibility.getVisibilitySnapshot({ identity, project }),
+        context.visibility,
+      );
+      const downstream = safeRead(
+        () => services.downstream.getDownstreamContextSnapshot({ identity, project, visibility }),
+        context.downstream,
+      );
+
       return {
         route: context.route,
-        identity: safeRead(() => services.identity.getIdentitySnapshot(), context.identity),
-        project: safeRead(() => services.project.getProjectSnapshot(), context.project),
+        identity,
+        project,
         company: safeRead(() => services.crm.getCompanyContext(), context.company),
         crm: safeRead(() => services.crm.getCrmSnapshot(), context.crm),
         handoff: safeRead(() => services.handoff.getHandoffSnapshot(), context.handoff),
-        visibility: safeRead(() => services.visibility.getVisibilitySnapshot(), context.visibility),
+        visibility,
+        downstream,
         flags: safeRead(() => services.flags.getFlagSnapshot(), context.flags),
         lifecycle: context.lifecycle,
         diagnostics: context.diagnostics,

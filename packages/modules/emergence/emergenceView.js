@@ -42,10 +42,22 @@ export function renderEmergenceView(container, viewModel) {
   article.dataset.module = viewModel.moduleId;
 
   const intro = document.createElement("div");
-  appendText(intro, "p", "Emergency / EGRES contract", "cs-shell__eyebrow");
+  appendText(intro, "p", "Emergency / EGRES package diagnostics", "cs-shell__eyebrow");
   appendText(intro, "h2", "Emergency / EGRES diagnostic module");
-  appendText(intro, "p", "Emergency / EGRES is diagnostic-only in this slice.");
+  appendText(intro, "p", "Emergency / EGRES package diagnostics are read-only in this slice.");
   article.appendChild(intro);
+
+  const wordingSection = document.createElement("section");
+  wordingSection.className = "cs-selector-proof__section";
+  appendText(wordingSection, "h3", "Required read-only wording");
+  for (const wording of viewModel.requiredWording) appendText(wordingSection, "p", wording);
+  article.appendChild(wordingSection);
+
+  appendSection(article, "Package/evidence readiness diagnostics", viewModel.diagnosticRows);
+
+  appendSection(article, "Safe downstream summary", viewModel.safeSummaryRows);
+
+  appendSection(article, "Safe candidate counts", viewModel.candidateCountRows);
 
   appendSection(article, "Naming and route contract", [
     ["Runtime route currently mounted", "emergence"],
@@ -59,9 +71,18 @@ export function renderEmergenceView(container, viewModel) {
   appendSection(article, "Explicit non-authority", [
     ["Workflow", "This slice does not restore EGRES row/tag workflow."],
     ["Certification", "This slice does not provide AS2293 certification, commissioning signoff, emergency compliance approval, project approval, or authority approval."],
+    ["Package readiness", "Package evidence readiness is diagnostic only."],
+    ["Compliance dependency", "Compliance Matters may depend on EGRES package evidence, but this module does not approve that evidence."],
+    ["Proof authority", "Lab Proof remains the boundary for proof authority, and this slice does not create proof authority."],
     ["Donor code", "No donor code is mounted."],
     ["Server endpoint", "No server endpoint is added."],
   ]);
+
+  const warningSection = document.createElement("section");
+  warningSection.className = "cs-selector-proof__section";
+  appendText(warningSection, "h3", "Warnings / missing items");
+  appendPillList(warningSection, viewModel.warnings);
+  article.appendChild(warningSection);
 
   appendText(article, "p", "Runtime currently mounts this module as `emergence`.");
   appendText(article, "p", "Selector/downstream language may refer to this lane as `egres`.");
@@ -117,6 +138,7 @@ export function renderEmergenceView(container, viewModel) {
   ]);
 
   const localSection = document.createElement("section");
+  localSection.className = "cs-selector-proof__section";
   appendText(localSection, "h3", "Emergence-local UI state");
   appendPillList(localSection, [
     `section:${viewModel.local.selectedSection}`,
@@ -126,6 +148,7 @@ export function renderEmergenceView(container, viewModel) {
   article.appendChild(localSection);
 
   const deferredSection = document.createElement("section");
+  deferredSection.className = "cs-selector-proof__section";
   appendText(deferredSection, "h3", "Deferred actions");
   appendPillList(deferredSection, viewModel.deferredActions);
   article.appendChild(deferredSection);
