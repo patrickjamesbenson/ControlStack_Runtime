@@ -27,119 +27,131 @@ function createModel() {
   });
 }
 
-test("Controlled Records view model includes required read-only wording", () => {
+test("Controlled Records view model includes required evidence/provenance boundary copy", () => {
   const model = createModel();
 
-  assert.deepEqual(model.requiredWording, [
-    "Controlled Records / Ledger Blueprint is read-only and diagnostic in this slice.",
-    "Controlled records are evidence/disposition trails, not task lists.",
-    "The lifecycle is capture, classify, split, route, draft/recommend, human approval where required, disposition, and audit trail.",
-    "Lab Ledger is one controlled-record implementation, not the universal ledger.",
-    "CI Inbox folds into the future Intake Ledger pattern.",
-    "MAL is shelved as a primary system and may later return only as a derived action view.",
-    "Ledger Health is a diagnostic pattern, not an auto-fix authority.",
-    "Liora may later draft, classify, route, and recommend, but must not silently approve, write, or overwrite governed truth.",
-    "No active record writing, intake automation, HubSpot write, KC write, CLX write, or Lab proof mutation is enabled.",
+  assert.deepEqual(model.boundaryCopy, [
+    "Controlled Records evidence/provenance mapping is read-only in this slice.",
+    "Controlled Records records provenance and disposition; it does not prove.",
+    "Controlled Records does not approve, certify, assign authority, or transfer custody.",
+    "Lab Proof remains the production proof authority.",
+    "RREG maps who should review or approve; it does not approve.",
+    "No controlled record is created, mutated, approved, ingested, uploaded, or written here.",
   ]);
+  assert.deepEqual(model.requiredWording, model.boundaryCopy);
 });
 
-test("Controlled Records diagnostic flags remain read-only and fail closed", () => {
+test("Controlled Records evidence/provenance flags remain read-only and fail closed", () => {
   const model = createModel();
 
-  assert.equal(model.diagnosticStatus.readOnly, true);
-  assert.equal(model.diagnosticStatus.diagnosticOnly, true);
-  assert.equal(model.diagnosticStatus.activeIntakeEnabled, false);
-  assert.equal(model.diagnosticStatus.recordWriteEnabled, false);
-  assert.equal(model.diagnosticStatus.ledgerWriteEnabled, false);
-  assert.equal(model.diagnosticStatus.lioraAutomationEnabled, false);
-  assert.equal(model.diagnosticStatus.kcWriteEnabled, false);
-  assert.equal(model.diagnosticStatus.clxWriteEnabled, false);
-  assert.equal(model.diagnosticStatus.hubSpotWriteEnabled, false);
-  assert.equal(model.diagnosticStatus.labLedgerMutationEnabled, false);
-  assert.equal(model.diagnosticStatus.governedTruthMutationEnabled, false);
-  assert.equal(model.diagnosticStatus.derivedActionViewEnabled, false);
-  assert.equal(model.guardrails.hiddenWriteBackEnabled, false);
-  assert.equal(model.guardrails.serverEndpointAdded, false);
-  assert.equal(model.guardrails.donorImportEnabled, false);
+  assert.deepEqual(model.diagnosticStatus, {
+    readOnly: true,
+    diagnosticOnly: true,
+    provenanceMapOnly: true,
+    recordCreationEnabled: false,
+    recordMutationEnabled: false,
+    evidenceIngestionEnabled: false,
+    artefactUploadEnabled: false,
+    approvalAutomationEnabled: false,
+    dispositionWriteEnabled: false,
+    labProofAuthority: false,
+    rregAuthorityEnabled: false,
+    kcWriteEnabled: false,
+    clxWriteEnabled: false,
+    runtimeDataWriteEnabled: false,
+    hiddenWriteBackEnabled: false,
+  });
+
+  assert.equal(model.local.readOnly, true);
+  assert.equal(model.local.diagnosticOnly, true);
+  assert.equal(model.local.provenanceMapOnly, true);
+  assert.equal(model.local.recordCreationEnabled, false);
+  assert.equal(model.local.recordMutationEnabled, false);
+  assert.equal(model.local.evidenceIngestionEnabled, false);
+  assert.equal(model.local.artefactUploadEnabled, false);
+  assert.equal(model.local.approvalAutomationEnabled, false);
+  assert.equal(model.local.dispositionWriteEnabled, false);
+  assert.equal(model.local.runtimeDataWriteEnabled, false);
+  assert.equal(model.local.hiddenWriteBackEnabled, false);
 });
 
-test("Controlled Records displays lifecycle, proposed types, safe schema fields, mapping, and Ledger Health checks", () => {
+test("Controlled Records displays future record types, provenance fields, lifecycle, and relationship map", () => {
   const model = createModel();
 
-  assert.deepEqual(model.lifecycle, [
+  assert.deepEqual(model.futureControlledRecordTypes, [
+    "selector_candidate_record",
+    "ies_candidate_record",
+    "lab_evidence_record",
+    "compliance_review_record",
+    "rreg_review_assignment_record",
+    "approval_disposition_record",
+    "provenance_note_record",
+    "exception_or_warning_record",
+  ]);
+
+  assert.deepEqual(model.provenanceFields, [
+    "record_ref",
+    "source_module",
+    "candidate_ref",
+    "artefact_ref",
+    "board_data_ref",
+    "lab_proof_ref",
+    "compliance_ref",
+    "rreg_ref",
+    "reviewer_ref",
+    "approver_ref",
+    "custody_ref",
+    "status",
+    "disposition",
+    "created_at",
+    "reviewed_at",
+    "approved_at",
+    "supersedes_ref",
+    "audit_trail_ref",
+  ]);
+
+  assert.deepEqual(model.lifecycleMap, [
     "capture",
     "classify",
     "split",
     "route",
-    "draft/recommend",
-    "human approval where required",
+    "review",
+    "approve or reject",
     "disposition",
+    "supersede",
     "audit trail",
   ]);
 
-  assert.deepEqual(model.proposedRecordTypes, [
-    "intake",
-    "evidence",
-    "knowledge_update",
-    "clx_update",
-    "compliance_risk",
-    "egres_package",
-    "handoff_custody",
-    "module_evidence",
-    "derived_action",
+  assert.deepEqual(model.relationshipMapRows, [
+    ["Selector", "candidate/selection source"],
+    ["IES Builder", "candidate artefact source later"],
+    ["Lab Proof", "production proof boundary"],
+    ["Compliance Matters", "evidence/risk/review map, not certification"],
+    ["RREG", "reviewer/approver/custody mapping"],
+    ["Controlled Records", "provenance, disposition, and audit trail"],
   ]);
+});
 
-  assert.deepEqual(model.baseRecordSchemaFields, [
-    "record_id",
-    "record_type",
-    "source_type",
-    "source_ref",
-    "source_hash",
-    "captured_at",
-    "captured_by",
-    "raw_content_policy",
-    "safe_summary",
-    "classification",
-    "module_or_domain",
-    "split_items",
-    "route",
-    "recommended_action",
-    "evidence_refs",
-    "kc_refs",
-    "clx_refs",
-    "repo_refs",
-    "web_refs_if_any",
-    "human_review_required",
-    "human_review_status",
-    "disposition",
-    "disposition_at",
-    "supersedes_record_id",
-    "correction_of_record_id",
-    "ledger_health_status",
-  ]);
+test("Controlled Records no-write guardrails exclude active workflow behaviour", () => {
+  const model = createModel();
 
-  assert.deepEqual(model.oldConceptMappingRows, [
-    ["CI Inbox", "Intake Ledger / intake records"],
-    ["MAL", "derived action view only"],
-    ["Ledger Health", "diagnostic checks across record surfaces"],
-    ["Lab Ledger", "Lab/evidence-specific controlled record implementation"],
-    ["Ship Audit", "retired"],
-    ["Liora Cockpit", "future read-only-first intake/recommendation cockpit"],
-  ]);
-
-  assert.deepEqual(model.ledgerHealthChecks, [
-    "record completeness",
-    "provenance present",
-    "classification present",
-    "route present",
-    "disposition present",
-    "human approval status",
-    "stale records",
-    "orphaned records",
-    "broken references",
-    "forbidden write attempts",
-    "unsafe authority claims",
-    "raw content exposure risk",
-    "derived action without source record",
-  ]);
+  assert.equal(model.guardrails.postEndpointAdded, false);
+  assert.equal(model.guardrails.serverEndpointAdded, false);
+  assert.equal(model.guardrails.dataWriteEnabled, false);
+  assert.equal(model.guardrails.recordCreationEnabled, false);
+  assert.equal(model.guardrails.recordMutationEnabled, false);
+  assert.equal(model.guardrails.evidenceIngestionEnabled, false);
+  assert.equal(model.guardrails.artefactUploadEnabled, false);
+  assert.equal(model.guardrails.approvalButtonEnabled, false);
+  assert.equal(model.guardrails.approvalWorkflowEnabled, false);
+  assert.equal(model.guardrails.dispositionWriteEnabled, false);
+  assert.equal(model.guardrails.labProofClaimEnabled, false);
+  assert.equal(model.guardrails.rregAuthorityClaimEnabled, false);
+  assert.equal(model.guardrails.kcWriteBackEnabled, false);
+  assert.equal(model.guardrails.clxWriteBackEnabled, false);
+  assert.equal(model.guardrails.runtimeDataWriteEnabled, false);
+  assert.equal(model.guardrails.hiddenBackendCallEnabled, false);
+  assert.equal(model.guardrails.exportButtonEnabled, false);
+  assert.equal(model.guardrails.sendButtonEnabled, false);
+  assert.equal(model.guardrails.activeAutomationEnabled, false);
 });

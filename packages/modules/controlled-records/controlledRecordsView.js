@@ -51,23 +51,32 @@ export function renderControlledRecordsView(container, viewModel) {
   article.dataset.module = viewModel.moduleId;
   article.dataset.readOnly = "true";
   article.dataset.diagnosticOnly = "true";
-  article.dataset.activeIntakeEnabled = "false";
-  article.dataset.recordWriteEnabled = "false";
-  article.dataset.ledgerWriteEnabled = "false";
+  article.dataset.provenanceMapOnly = "true";
+  article.dataset.recordCreationEnabled = "false";
+  article.dataset.recordMutationEnabled = "false";
+  article.dataset.evidenceIngestionEnabled = "false";
+  article.dataset.artefactUploadEnabled = "false";
+  article.dataset.approvalAutomationEnabled = "false";
+  article.dataset.dispositionWriteEnabled = "false";
+  article.dataset.runtimeDataWriteEnabled = "false";
+  article.dataset.labProofAuthority = "false";
+  article.dataset.rregAuthorityEnabled = "false";
 
   const intro = document.createElement("div");
   appendText(intro, "p", "Diagnostic shell module", "cs-shell__eyebrow");
-  appendText(intro, "h2", viewModel.label);
+  appendText(intro, "h2", viewModel.title || viewModel.label);
   appendText(intro, "p", `${viewModel.group} · ${viewModel.status} · ${viewModel.routePath}`);
-  for (const line of viewModel.requiredWording) appendText(intro, "p", line);
+  for (const line of viewModel.boundaryCopy) appendText(intro, "p", line);
   appendText(intro, "p", viewModel.derivedActionPolicy);
   article.appendChild(intro);
 
   appendSection(article, "Runtime status flags", viewModel.runtimeStatusRows);
-  appendList(article, "Controlled record lifecycle", viewModel.lifecycle);
-  appendList(article, "Proposed record types", viewModel.proposedRecordTypes);
-  appendList(article, "Proposed base record schema", viewModel.baseRecordSchemaFields);
-  appendSection(article, "Old concept mapping", viewModel.oldConceptMappingRows);
+  appendList(article, "Future controlled record types", viewModel.futureControlledRecordTypes);
+  appendList(article, "Provenance fields", viewModel.provenanceFields);
+  appendList(article, "Lifecycle map", viewModel.lifecycleMap);
+  appendSection(article, "Relationship map", viewModel.relationshipMapRows);
+  appendList(article, "Controlled Records diagnostic continuity", viewModel.legacyDiagnosticContext);
+  appendSection(article, "Legacy disabled workflow flags", viewModel.legacyDiagnosticFlagRows);
   appendList(article, "Ledger Health diagnostic model", viewModel.ledgerHealthChecks);
   appendSection(article, "Runtime context", viewModel.contextRows);
   appendSection(article, "No-write guardrails", viewModel.guardrailRows);
@@ -75,9 +84,15 @@ export function renderControlledRecordsView(container, viewModel) {
     `section:${viewModel.local.selectedSection}`,
     `readOnly:${viewModel.local.readOnly}`,
     `diagnosticOnly:${viewModel.local.diagnosticOnly}`,
+    `provenanceMapOnly:${viewModel.local.provenanceMapOnly}`,
     `localDirty:${viewModel.local.localDirty}`,
-    `activeIntakeEnabled:${viewModel.local.activeIntakeEnabled}`,
-    `recordWriteEnabled:${viewModel.local.recordWriteEnabled}`,
+    `recordCreationEnabled:${viewModel.local.recordCreationEnabled}`,
+    `recordMutationEnabled:${viewModel.local.recordMutationEnabled}`,
+    `evidenceIngestionEnabled:${viewModel.local.evidenceIngestionEnabled}`,
+    `artefactUploadEnabled:${viewModel.local.artefactUploadEnabled}`,
+    `approvalAutomationEnabled:${viewModel.local.approvalAutomationEnabled}`,
+    `dispositionWriteEnabled:${viewModel.local.dispositionWriteEnabled}`,
+    `runtimeDataWriteEnabled:${viewModel.local.runtimeDataWriteEnabled}`,
     `lastAction:${viewModel.local.lastAction}`,
   ]);
   appendSection(article, "Internal guardrail snapshot", objectRows(viewModel.guardrails));

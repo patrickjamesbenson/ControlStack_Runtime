@@ -1,12 +1,26 @@
 export function createControlledRecordsState() {
   const state = {
-    selectedSection: "runtime-status-flags",
+    selectedSection: "evidence-provenance-link-map",
     readOnly: true,
     diagnosticOnly: true,
+    provenanceMapOnly: true,
     localDirty: false,
+    recordCreationEnabled: false,
+    recordMutationEnabled: false,
+    evidenceIngestionEnabled: false,
+    artefactUploadEnabled: false,
+    approvalAutomationEnabled: false,
+    dispositionWriteEnabled: false,
+    labProofAuthority: false,
+    rregAuthorityEnabled: false,
+    kcWriteEnabled: false,
+    clxWriteEnabled: false,
+    runtimeDataWriteEnabled: false,
+    hiddenWriteBackEnabled: false,
     activeIntakeEnabled: false,
     recordWriteEnabled: false,
-    lastAction: "mounted-read-only-diagnostic",
+    ledgerWriteEnabled: false,
+    lastAction: "mounted-controlled-records-evidence-provenance-map-read-only",
   };
 
   return {

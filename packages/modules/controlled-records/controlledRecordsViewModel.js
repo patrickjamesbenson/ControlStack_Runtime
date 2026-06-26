@@ -1,92 +1,126 @@
 const MODULE_ID = "controlled_records";
 
-const REQUIRED_WORDING = Object.freeze([
-  "Controlled Records / Ledger Blueprint is read-only and diagnostic in this slice.",
-  "Controlled records are evidence/disposition trails, not task lists.",
-  "The lifecycle is capture, classify, split, route, draft/recommend, human approval where required, disposition, and audit trail.",
-  "Lab Ledger is one controlled-record implementation, not the universal ledger.",
-  "CI Inbox folds into the future Intake Ledger pattern.",
-  "MAL is shelved as a primary system and may later return only as a derived action view.",
-  "Ledger Health is a diagnostic pattern, not an auto-fix authority.",
-  "Liora may later draft, classify, route, and recommend, but must not silently approve, write, or overwrite governed truth.",
-  "No active record writing, intake automation, HubSpot write, KC write, CLX write, or Lab proof mutation is enabled.",
+const BOUNDARY_COPY = Object.freeze([
+  "Controlled Records evidence/provenance mapping is read-only in this slice.",
+  "Controlled Records records provenance and disposition; it does not prove.",
+  "Controlled Records does not approve, certify, assign authority, or transfer custody.",
+  "Lab Proof remains the production proof authority.",
+  "RREG maps who should review or approve; it does not approve.",
+  "No controlled record is created, mutated, approved, ingested, uploaded, or written here.",
 ]);
 
 const RUNTIME_STATUS_FLAGS = Object.freeze({
   readOnly: true,
   diagnosticOnly: true,
+  provenanceMapOnly: true,
+  recordCreationEnabled: false,
+  recordMutationEnabled: false,
+  evidenceIngestionEnabled: false,
+  artefactUploadEnabled: false,
+  approvalAutomationEnabled: false,
+  dispositionWriteEnabled: false,
+  labProofAuthority: false,
+  rregAuthorityEnabled: false,
+  kcWriteEnabled: false,
+  clxWriteEnabled: false,
+  runtimeDataWriteEnabled: false,
+  hiddenWriteBackEnabled: false,
+});
+
+const FUTURE_CONTROLLED_RECORD_TYPES = Object.freeze([
+  "selector_candidate_record",
+  "ies_candidate_record",
+  "lab_evidence_record",
+  "compliance_review_record",
+  "rreg_review_assignment_record",
+  "approval_disposition_record",
+  "provenance_note_record",
+  "exception_or_warning_record",
+]);
+
+const PROVENANCE_FIELDS = Object.freeze([
+  "record_ref",
+  "source_module",
+  "candidate_ref",
+  "artefact_ref",
+  "board_data_ref",
+  "lab_proof_ref",
+  "compliance_ref",
+  "rreg_ref",
+  "reviewer_ref",
+  "approver_ref",
+  "custody_ref",
+  "status",
+  "disposition",
+  "created_at",
+  "reviewed_at",
+  "approved_at",
+  "supersedes_ref",
+  "audit_trail_ref",
+]);
+
+const LIFECYCLE_MAP = Object.freeze([
+  "capture",
+  "classify",
+  "split",
+  "route",
+  "review",
+  "approve or reject",
+  "disposition",
+  "supersede",
+  "audit trail",
+]);
+
+const RELATIONSHIP_MAP = Object.freeze([
+  ["Selector", "candidate/selection source"],
+  ["IES Builder", "candidate artefact source later"],
+  ["Lab Proof", "production proof boundary"],
+  ["Compliance Matters", "evidence/risk/review map, not certification"],
+  ["RREG", "reviewer/approver/custody mapping"],
+  ["Controlled Records", "provenance, disposition, and audit trail"],
+]);
+
+const LEGACY_DIAGNOSTIC_CONTEXT = Object.freeze([
+  "Controlled records are evidence/disposition trails, not task lists.",
+  "CI Inbox folds into the future Intake Ledger pattern.",
+  "MAL is shelved as a primary system and may later return only as a derived action view.",
+  "Ledger Health is a diagnostic pattern, not an auto-fix authority.",
+  "Liora may later draft, classify, route, and recommend, but must not silently approve, write, or overwrite governed truth.",
+]);
+
+const LEGACY_DIAGNOSTIC_FLAGS = Object.freeze({
   activeIntakeEnabled: false,
   recordWriteEnabled: false,
   ledgerWriteEnabled: false,
   lioraAutomationEnabled: false,
-  kcWriteEnabled: false,
-  clxWriteEnabled: false,
   hubSpotWriteEnabled: false,
   labLedgerMutationEnabled: false,
   governedTruthMutationEnabled: false,
   derivedActionViewEnabled: false,
 });
 
-const CONTROLLED_RECORD_LIFECYCLE = Object.freeze([
-  "capture",
-  "classify",
-  "split",
-  "route",
-  "draft/recommend",
-  "human approval where required",
-  "disposition",
-  "audit trail",
-]);
-
-const PROPOSED_RECORD_TYPES = Object.freeze([
-  "intake",
-  "evidence",
-  "knowledge_update",
-  "clx_update",
-  "compliance_risk",
-  "egres_package",
-  "handoff_custody",
-  "module_evidence",
-  "derived_action",
-]);
-
-const BASE_RECORD_SCHEMA_FIELDS = Object.freeze([
-  "record_id",
-  "record_type",
-  "source_type",
-  "source_ref",
-  "source_hash",
-  "captured_at",
-  "captured_by",
-  "raw_content_policy",
-  "safe_summary",
-  "classification",
-  "module_or_domain",
-  "split_items",
-  "route",
-  "recommended_action",
-  "evidence_refs",
-  "kc_refs",
-  "clx_refs",
-  "repo_refs",
-  "web_refs_if_any",
-  "human_review_required",
-  "human_review_status",
-  "disposition",
-  "disposition_at",
-  "supersedes_record_id",
-  "correction_of_record_id",
-  "ledger_health_status",
-]);
-
-const OLD_CONCEPT_MAPPING = Object.freeze([
-  ["CI Inbox", "Intake Ledger / intake records"],
-  ["MAL", "derived action view only"],
-  ["Ledger Health", "diagnostic checks across record surfaces"],
-  ["Lab Ledger", "Lab/evidence-specific controlled record implementation"],
-  ["Ship Audit", "retired"],
-  ["Liora Cockpit", "future read-only-first intake/recommendation cockpit"],
-]);
+const CONTROLLED_RECORD_GUARDRAILS = Object.freeze({
+  postEndpointAdded: false,
+  serverEndpointAdded: false,
+  dataWriteEnabled: false,
+  recordCreationEnabled: false,
+  recordMutationEnabled: false,
+  evidenceIngestionEnabled: false,
+  artefactUploadEnabled: false,
+  approvalButtonEnabled: false,
+  approvalWorkflowEnabled: false,
+  dispositionWriteEnabled: false,
+  labProofClaimEnabled: false,
+  rregAuthorityClaimEnabled: false,
+  kcWriteBackEnabled: false,
+  clxWriteBackEnabled: false,
+  runtimeDataWriteEnabled: false,
+  hiddenBackendCallEnabled: false,
+  exportButtonEnabled: false,
+  sendButtonEnabled: false,
+  activeAutomationEnabled: false,
+  donorImportEnabled: false,
+});
 
 const LEDGER_HEALTH_CHECKS = Object.freeze([
   "record completeness",
@@ -103,27 +137,6 @@ const LEDGER_HEALTH_CHECKS = Object.freeze([
   "raw content exposure risk",
   "derived action without source record",
 ]);
-
-const GUARDRAILS = Object.freeze({
-  postEndpointAdded: false,
-  serverEndpointAdded: false,
-  dataWriteEnabled: false,
-  fileUploadEnabled: false,
-  activeIntakeQueueEnabled: false,
-  liveCiInboxEnabled: false,
-  malWriterEnabled: false,
-  hubSpotCallEnabled: false,
-  lioraAutomationEnabled: false,
-  kcEditorEnabled: false,
-  clxEditorEnabled: false,
-  labLedgerWriterEnabled: false,
-  recordWriterEnabled: false,
-  approvalWorkflowEnabled: false,
-  exportButtonEnabled: false,
-  sendButtonEnabled: false,
-  hiddenWriteBackEnabled: false,
-  donorImportEnabled: false,
-});
 
 function objectEntries(object = {}) {
   return Object.entries(object).map(([label, value]) => [label, String(value)]);
@@ -151,34 +164,41 @@ export function createControlledRecordsViewModel({ adapter, controlledRecordsSta
   return {
     moduleId: MODULE_ID,
     label: "Controlled Records / Ledger",
+    title: "Controlled Records evidence/provenance link map",
     status: "diagnostic",
     group: "Knowledge / Governance",
     routePath: "/workspace?module=controlled_records",
-    phase: "controlled-records-ledger-blueprint-read-only-diagnostic-shell",
+    phase: "controlled-records-evidence-provenance-link-map-read-only-diagnostic",
     local,
-    requiredWording: [...REQUIRED_WORDING],
+    boundaryCopy: [...BOUNDARY_COPY],
+    requiredWording: [...BOUNDARY_COPY],
     runtimeStatusFlags: { ...RUNTIME_STATUS_FLAGS },
     diagnosticStatus: { ...RUNTIME_STATUS_FLAGS },
     runtimeStatusRows: objectEntries(RUNTIME_STATUS_FLAGS),
-    lifecycle: [...CONTROLLED_RECORD_LIFECYCLE],
-    proposedRecordTypes: [...PROPOSED_RECORD_TYPES],
-    baseRecordSchemaFields: [...BASE_RECORD_SCHEMA_FIELDS],
-    oldConceptMappingRows: OLD_CONCEPT_MAPPING.map(([label, value]) => [label, value]),
+    futureControlledRecordTypes: [...FUTURE_CONTROLLED_RECORD_TYPES],
+    proposedRecordTypes: [...FUTURE_CONTROLLED_RECORD_TYPES],
+    provenanceFields: [...PROVENANCE_FIELDS],
+    lifecycle: [...LIFECYCLE_MAP],
+    lifecycleMap: [...LIFECYCLE_MAP],
+    relationshipMapRows: RELATIONSHIP_MAP.map(([label, value]) => [label, value]),
+    legacyDiagnosticContext: [...LEGACY_DIAGNOSTIC_CONTEXT],
+    legacyDiagnosticFlags: { ...LEGACY_DIAGNOSTIC_FLAGS },
+    legacyDiagnosticFlagRows: objectEntries(LEGACY_DIAGNOSTIC_FLAGS),
     ledgerHealthChecks: [...LEDGER_HEALTH_CHECKS],
     contextRows: [
       ["module_id", MODULE_ID],
       ["module_name", "Controlled Records / Ledger"],
       ["route", "/workspace?module=controlled_records"],
       ["status", "diagnostic"],
+      ["phase", "controlled-records-evidence-provenance-link-map-read-only-diagnostic"],
       ["group", "Knowledge / Governance"],
       ["project", projectTitle(project)],
       ["shell_decision", decision?.reason || "registered-by-shell-diagnostic-slice"],
       ["visible_modules", visibleModules(visibility)],
       ["hidden_modules", hiddenModules(visibility)],
     ],
-    guardrails: { ...GUARDRAILS },
-    guardrailRows: objectEntries(GUARDRAILS),
-    derivedActionPolicy: "Derived action rows must not exist without source records.",
+    guardrails: { ...CONTROLLED_RECORD_GUARDRAILS },
+    guardrailRows: objectEntries(CONTROLLED_RECORD_GUARDRAILS),
+    derivedActionPolicy: "Future derived action rows must not exist without source records and provenance links.",
   };
 }
-
