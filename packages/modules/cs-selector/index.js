@@ -24,6 +24,7 @@ function renderCurrentView() {
     adapter: selectorAdapter,
     selectorState,
     selectorReferenceStatus,
+    onLocalStateChange: renderCurrentView,
   });
   renderSelectorView(mountedContainer, viewModel);
 }

@@ -181,6 +181,111 @@ function appendSelectorFieldContractDiagnostic(parent, shell = {}) {
   }
 }
 
+function appendSelectorManualConstraintBehaviour(parent, shell = {}) {
+  const behaviour = shell.manualConstraintBehaviour || {};
+  const section = document.createElement("section");
+  section.className = "cs-selector-proof__section";
+  appendText(section, "h3", "Manual constraints and auto consequences");
+  appendPillList(section, behaviour.requiredWording || [
+    "Manual selections are constraints.",
+    "Auto selections are consequences.",
+    "Compatible manual selections are preserved when other fields change.",
+    "Auto-derived selections may appear selected, but remain changeable.",
+    "Fresh load is default-preview / preamble state, not spec-ready.",
+    "No spec-ready slug is generated in this slice.",
+    "Selector does not provide Lab proof.",
+  ]);
+
+  appendSection(section, "Diagnostic/manual constraint panel", behaviour.summaryRows || [
+    ["current mode", "default-preview"],
+    ["selected fields", "none"],
+    ["manual constraints list", "none"],
+    ["auto consequences list", "none"],
+    ["default-preview selections list", "none"],
+    ["compatibility warnings", "none"],
+    ["blocked/incompatible fields", "none"],
+    ["specReady", "false"],
+    ["slugGenerationEnabled", "false"],
+    ["selectorMutationScope", "local UI state only"],
+    ["boardDataMutationEnabled", "false"],
+    ["labProofAuthority", "false"],
+    ["iesGenerationEnabled", "false"],
+    ["payloadGenerationEnabled", "false"],
+    ["runTableMutationEnabled", "false"],
+  ]);
+  appendSection(section, "Manual constraints list", behaviour.manualConstraintRows || [["manual constraints", "none"]]);
+  appendSection(section, "Auto consequences list", behaviour.autoConsequenceRows || [["auto consequences", "none"]]);
+  appendSection(section, "Default-preview selections list", behaviour.defaultPreviewRows || [["default-preview selections", "none"]]);
+  appendSection(section, "Compatibility warnings", behaviour.compatibilityWarningRows || [["compatibility warnings", "none"]]);
+  appendSection(section, "Blocked/incompatible fields", behaviour.blockedFieldRows || [["blocked/incompatible fields", "none"]]);
+
+  const controlSections = Array.isArray(behaviour.controlSections) ? behaviour.controlSections : [];
+  const controls = document.createElement("section");
+  controls.className = "cs-selector-proof__section";
+  appendText(controls, "h3", "Local selector controls — manual constraints only");
+  appendText(controls, "p", "Changing any displayed field records a local manual constraint. Auto-derived and default-preview selections remain changeable. No backend write, slug, export, payload, RunTable, IES, Board Data mutation, or Lab proof is produced.");
+
+  for (const group of controlSections) {
+    const details = document.createElement("details");
+    details.className = "cs-selector-proof__section";
+    details.open = true;
+    const summary = document.createElement("summary");
+    summary.textContent = group.title || group.sectionId || "Selector fields";
+    details.appendChild(summary);
+
+    for (const field of group.fields || []) {
+      const row = document.createElement("div");
+      row.className = "cs-selector-proof__section";
+      const label = document.createElement("label");
+      label.textContent = `${field.label || field.fieldKey} — ${field.stateLabel || "changeable"}`;
+      label.htmlFor = `cs-selector-${field.fieldKey}`;
+      row.appendChild(label);
+
+      const select = document.createElement("select");
+      select.id = `cs-selector-${field.fieldKey}`;
+      select.dataset.fieldKey = field.fieldKey;
+      const emptyOption = document.createElement("option");
+      emptyOption.value = "";
+      emptyOption.textContent = "Clear manual constraint / return to preview consequence";
+      select.appendChild(emptyOption);
+      for (const option of field.options || []) {
+        const optionElement = document.createElement("option");
+        optionElement.value = option.value;
+        optionElement.textContent = option.label || option.value;
+        select.appendChild(optionElement);
+      }
+      select.value = field.value || "";
+      select.addEventListener("change", () => {
+        group.setFieldValue?.(field.fieldKey, select.value);
+      });
+      row.appendChild(select);
+
+      appendDefinitionList(row, [
+        ["state", field.stateLabel || "changeable"],
+        ["selected kind", field.selectedKind || "unselected"],
+        ["value", field.valueLabel || field.value || "none"],
+        ["mutable", field.mutable === false ? "false" : "true"],
+      ]);
+
+      if (field.manualConstraint) {
+        const clearButton = document.createElement("button");
+        clearButton.type = "button";
+        clearButton.textContent = "Clear manual constraint";
+        clearButton.addEventListener("click", () => {
+          group.clearManualConstraint?.(field.fieldKey);
+        });
+        row.appendChild(clearButton);
+      }
+
+      details.appendChild(row);
+    }
+    controls.appendChild(details);
+  }
+
+  section.appendChild(controls);
+  parent.appendChild(section);
+}
+
 function appendSelectorExpanderShell(parent, viewModel) {
   const shell = viewModel.expanderShell || {};
   const shellSection = document.createElement("section");
@@ -240,6 +345,8 @@ function appendSelectorExpanderShell(parent, viewModel) {
     ["compatible selections cleared just because another field changes", "false"],
     ["auto-derived items changeable", "true"],
   ]);
+
+  appendSelectorManualConstraintBehaviour(shellSection, shell);
 
   const sections = Array.isArray(shell.sections) ? shell.sections : [];
   for (const section of sections) {

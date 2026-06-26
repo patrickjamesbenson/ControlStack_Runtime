@@ -792,7 +792,130 @@ function createBehaviourContractRows(contract = {}) {
   ];
 }
 
-function createSelectorExpanderShell(local = {}, selectorState) {
+function selectionEntries(bucket = {}) {
+  if (!bucket || typeof bucket !== "object" || Array.isArray(bucket)) return [];
+  return Object.values(bucket).sort((left, right) => String(left.label || left.fieldKey).localeCompare(String(right.label || right.fieldKey)));
+}
+
+function selectionListText(bucket = {}, emptyLabel = "none") {
+  const entries = selectionEntries(bucket);
+  return entries.length
+    ? entries.map((entry) => `${entry.label || entry.fieldKey}: ${entry.valueLabel || entry.value || "none"}`).join("; ")
+    : emptyLabel;
+}
+
+function selectionRows(bucket = {}, emptyLabel = "none") {
+  const entries = selectionEntries(bucket);
+  if (!entries.length) return [[emptyLabel, "none"]];
+  return entries.map((entry) => [
+    entry.label || entry.fieldKey,
+    `${entry.valueLabel || entry.value || "none"} — ${entry.kind || "unknown"}; mutable:${boolString(entry.mutable !== false)}`,
+  ]);
+}
+
+function compatibilityWarningRows(diagnostics = {}) {
+  const warnings = Array.isArray(diagnostics.warnings) ? diagnostics.warnings : [];
+  if (!warnings.length) return [["compatibility warnings", "none"]];
+  return warnings.map((warning) => [
+    warning.label || warning.fieldKey || "field",
+    `${warning.message || "diagnostic warning"} autoCleared:${boolString(warning.autoCleared === true)}`,
+  ]);
+}
+
+function blockedFieldRows(diagnostics = {}) {
+  const fields = Array.isArray(diagnostics.blockedIncompatibleFields) ? diagnostics.blockedIncompatibleFields : [];
+  if (!fields.length) return [["blocked/incompatible fields", "none"]];
+  return fields.map((field) => [
+    field.label || field.fieldKey || "field",
+    `${field.reason || "diagnostic only"} autoCleared:${boolString(field.autoCleared === true)}`,
+  ]);
+}
+
+function createSelectionControls(contract = {}, selectorState, onLocalStateChange) {
+  const sectionFieldContract = readSectionFieldContract(contract);
+  const manualConstraints = contract.manualConstraints || {};
+  const autoConsequences = contract.autoConsequences || {};
+  const defaultPreviewSelections = contract.defaultPreviewSelections || {};
+  const effectiveSelection = contract.effectiveSelection || {};
+
+  return SELECTOR_EXPANDER_SECTIONS.map((section) => {
+    const sectionContract = sectionFieldContract.sections?.[section.id] || {};
+    const fields = Array.isArray(sectionContract.fields) ? sectionContract.fields : [];
+    return {
+      sectionId: section.id,
+      title: section.title,
+      fields: fields
+        .filter((field) => field.effectiveSelectionEligible === true && Array.isArray(field.options) && field.options.length)
+        .map((field) => {
+          const current = effectiveSelection[field.fieldKey] || defaultPreviewSelections[field.fieldKey] || autoConsequences[field.fieldKey] || null;
+          const isManual = Boolean(manualConstraints[field.fieldKey]);
+          const isAuto = Boolean(autoConsequences[field.fieldKey]) && !isManual;
+          const isDefault = Boolean(defaultPreviewSelections[field.fieldKey]) && !isManual && !isAuto;
+          return {
+            fieldKey: field.fieldKey,
+            label: field.label || field.fieldKey,
+            value: current?.value || "",
+            valueLabel: current?.valueLabel || "none",
+            stateLabel: isManual ? "manual constraint" : isAuto ? "auto consequence / changeable" : isDefault ? "default-preview / preamble" : "unselected",
+            selectedKind: current?.kind || "unselected",
+            manualConstraint: isManual,
+            autoConsequence: isAuto,
+            defaultPreview: isDefault,
+            mutable: true,
+            options: field.options.map((option) => ({ ...option })),
+          };
+        }),
+      setFieldValue(fieldKey, value) {
+        selectorState?.setSelectorFieldValue?.(fieldKey, value);
+        onLocalStateChange?.();
+      },
+      clearManualConstraint(fieldKey) {
+        selectorState?.clearSelectorFieldValue?.(fieldKey);
+        onLocalStateChange?.();
+      },
+    };
+  }).filter((section) => section.fields.length);
+}
+
+function createManualConstraintBehaviour(contract = {}, selectorState, onLocalStateChange) {
+  const diagnostics = contract.compatibilityDiagnostics || {};
+  return {
+    requiredWording: [
+      "Manual selections are constraints.",
+      "Auto selections are consequences.",
+      "Compatible manual selections are preserved when other fields change.",
+      "Auto-derived selections may appear selected, but remain changeable.",
+      "Fresh load is default-preview / preamble state, not spec-ready.",
+      "No spec-ready slug is generated in this slice.",
+      "Selector does not provide Lab proof.",
+    ],
+    summaryRows: [
+      ["current mode", contract.selectorMode || "default-preview"],
+      ["selected fields", selectionListText(contract.effectiveSelection, "none")],
+      ["manual constraints list", selectionListText(contract.manualConstraints, "none")],
+      ["auto consequences list", selectionListText(contract.autoConsequences, "none")],
+      ["default-preview selections list", selectionListText(contract.defaultPreviewSelections, "none")],
+      ["compatibility warnings", Array.isArray(diagnostics.warnings) && diagnostics.warnings.length ? diagnostics.warnings.map((warning) => warning.message).join(" | ") : "none"],
+      ["blocked/incompatible fields", Array.isArray(diagnostics.blockedIncompatibleFields) && diagnostics.blockedIncompatibleFields.length ? diagnostics.blockedIncompatibleFields.map((field) => `${field.label || field.fieldKey}: ${field.reason}`).join(" | ") : "none"],
+      ["specReady", boolString(contract.specReady === true)],
+      ["slugGenerationEnabled", boolString(contract.slugGenerationEnabled === true)],
+      ["selectorMutationScope", contract.selectorMutationScope || "local UI state only"],
+      ["boardDataMutationEnabled", boolString(contract.boardDataMutationEnabled === true)],
+      ["labProofAuthority", boolString(contract.labProofAuthority === true)],
+      ["iesGenerationEnabled", boolString(contract.iesGenerationEnabled === true)],
+      ["payloadGenerationEnabled", boolString(contract.payloadGenerationEnabled === true)],
+      ["runTableMutationEnabled", boolString(contract.runTableMutationEnabled === true)],
+    ],
+    manualConstraintRows: selectionRows(contract.manualConstraints, "manual constraints"),
+    autoConsequenceRows: selectionRows(contract.autoConsequences, "auto consequences"),
+    defaultPreviewRows: selectionRows(contract.defaultPreviewSelections, "default-preview selections"),
+    compatibilityWarningRows: compatibilityWarningRows(diagnostics),
+    blockedFieldRows: blockedFieldRows(diagnostics),
+    controlSections: createSelectionControls(contract, selectorState, onLocalStateChange),
+  };
+}
+
+function createSelectorExpanderShell(local = {}, selectorState, onLocalStateChange) {
   const stateContract = selectorStateContractFromLocal(local);
   const defaultPreviewBuckets = createDefaultPreviewBucketDiagnostics(stateContract);
   const fieldContractDiagnostics = createSelectorFieldContractDiagnostics(stateContract);
@@ -813,13 +936,14 @@ function createSelectorExpanderShell(local = {}, selectorState) {
     sectionFieldContractDiagnostics: fieldContractDiagnostics.sectionDiagnostics,
     manualConstraintScaffoldRows: createManualConstraintScaffoldRows(stateContract),
     behaviourContractRows: createBehaviourContractRows(stateContract),
+    manualConstraintBehaviour: createManualConstraintBehaviour(stateContract, selectorState, onLocalStateChange),
     setSectionOpen(sectionId, open) {
       selectorState?.setExpanderSectionOpen?.(sectionId, open);
     },
   };
 }
 
-export function createSelectorViewModel({ adapter, selectorState, selectorReferenceStatus = {} }) {
+export function createSelectorViewModel({ adapter, selectorState, selectorReferenceStatus = {}, onLocalStateChange } = {}) {
   const snapshots = adapter.readSnapshots();
   const local = selectorState.getSnapshot();
   const flags = snapshots.flags.values || {};
@@ -861,7 +985,7 @@ export function createSelectorViewModel({ adapter, selectorState, selectorRefere
     phase: snapshots.diagnostics?.phase || "selector-fed-downstream-context-foundation",
     route: snapshots.route,
     local,
-    expanderShell: createSelectorExpanderShell(local, selectorState),
+    expanderShell: createSelectorExpanderShell(local, selectorState, onLocalStateChange),
     identity: {
       owner: identity.owner,
       status: identity.status,
