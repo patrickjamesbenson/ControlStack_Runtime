@@ -17,6 +17,18 @@ import {
   moduleStatusTooltip,
 } from "./moduleStatusRegistry.js";
 
+const MODULE_ROUTE_ALIASES = Object.freeze({
+  egres: "emergence",
+});
+
+function canonicalModuleId(moduleId) {
+  return MODULE_ROUTE_ALIASES[moduleId] || moduleId;
+}
+
+function isSameModuleRoute(linkModuleId, routeModuleId) {
+  return canonicalModuleId(linkModuleId) === canonicalModuleId(routeModuleId);
+}
+
 const shellRoot = document.getElementById("cs-shell-root");
 const statusEl = document.getElementById("cs-shell-status");
 const moduleHost = document.getElementById("cs-shell-module-host");
@@ -1437,7 +1449,7 @@ function markActiveLink(moduleId) {
       delete link.dataset.visibilityReason;
       link.removeAttribute("title");
     }
-    if (linkModuleId === moduleId) link.setAttribute("aria-current", "page");
+    if (isSameModuleRoute(linkModuleId, moduleId)) link.setAttribute("aria-current", "page");
     else link.removeAttribute("aria-current");
   }
 }
@@ -1447,6 +1459,7 @@ function moduleLabel(moduleId) {
     cs_selector: "Selector",
     scene_builder: "Scene Builder",
     emergence: "Emergency / EGRES",
+    egres: "Emergency / EGRES",
     admin_dev: "Admin / Dev",
     board_data: "Board Data",
     ies_builder: "IES Builder / Photometry",
@@ -1817,6 +1830,7 @@ function bootWorkspaceShell() {
 
   registry.register("cs_selector", csSelectorModule);
   registry.register("emergence", emergenceModule);
+  registry.register("egres", emergenceModule);
   registry.register("scene_builder", sceneBuilderModule);
   registry.register("admin_dev", adminDevModule);
   registry.register("board_data", boardDataModule);

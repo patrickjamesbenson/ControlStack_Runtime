@@ -42,10 +42,29 @@ export function renderEmergenceView(container, viewModel) {
   article.dataset.module = viewModel.moduleId;
 
   const intro = document.createElement("div");
-  appendText(intro, "p", "Module expansion proof", "cs-shell__eyebrow");
-  appendText(intro, "h2", "emergence contract consumer");
-  appendText(intro, "p", "Phase 8A displays shell-owned identity lookup, derived actual role, display-role preview, project state, and visibility policy. Emergence remains a proof surface and read-only consumer.");
+  appendText(intro, "p", "Emergency / EGRES contract", "cs-shell__eyebrow");
+  appendText(intro, "h2", "Emergency / EGRES diagnostic module");
+  appendText(intro, "p", "Emergency / EGRES is diagnostic-only in this slice.");
   article.appendChild(intro);
+
+  appendSection(article, "Naming and route contract", [
+    ["Runtime route currently mounted", "emergence"],
+    ["Display label", "Emergency / EGRES"],
+    ["Downstream lane name", "egres"],
+    ["Donor/source vocabulary", "EGRES / Emergency"],
+    ["Current authority", "diagnostic-only"],
+    ["Route alias", "egres routes to this same diagnostic module only; emergence remains the runtime mount id"],
+  ]);
+
+  appendSection(article, "Explicit non-authority", [
+    ["Workflow", "This slice does not restore EGRES row/tag workflow."],
+    ["Certification", "This slice does not provide AS2293 certification, commissioning signoff, emergency compliance approval, project approval, or authority approval."],
+    ["Donor code", "No donor code is mounted."],
+    ["Server endpoint", "No server endpoint is added."],
+  ]);
+
+  appendText(article, "p", "Runtime currently mounts this module as `emergence`.");
+  appendText(article, "p", "Selector/downstream language may refer to this lane as `egres`.");
 
   appendSection(article, "Identity and derived role", [
     ["owner", viewModel.identity.owner],
