@@ -179,14 +179,7 @@ function renderModuleStatusRail() {
     item.setAttribute("title", tooltip);
     item.setAttribute("aria-label", moduleStatusAriaLabel(status));
 
-    let badge = item.querySelector(":scope > .cs-shell__module-status-badge");
-    if (!badge) {
-      badge = document.createElement("small");
-      badge.className = "cs-shell__module-status-badge";
-      badge.setAttribute("aria-hidden", "true");
-      item.appendChild(badge);
-    }
-    badge.textContent = status.badge;
+    item.querySelector(":scope > .cs-shell__module-status-badge")?.remove();
   }
 }
 
