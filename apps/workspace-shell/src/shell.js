@@ -242,6 +242,8 @@ function setRailGroupExpanded(group, expanded) {
   const defaultExpanded = group.dataset.shellNavDefault === "expanded";
   const isExpanded = defaultExpanded || Boolean(expanded);
   group.dataset.shellNavExpanded = isExpanded ? "true" : "false";
+  const trigger = group.querySelector(":scope > .cs-shell__rail-group-title");
+  if (trigger) trigger.setAttribute("aria-expanded", isExpanded ? "true" : "false");
   const items = group.querySelector(":scope > .cs-shell__rail-group-items");
   if (items) items.setAttribute("aria-hidden", isExpanded ? "false" : "true");
 
@@ -262,20 +264,93 @@ function setRailGroupExpanded(group, expanded) {
   }
 }
 
+const railGroupCloseTimers = new WeakMap();
+
+function clearRailGroupCloseTimer(group) {
+  const timerId = railGroupCloseTimers.get(group);
+  if (!timerId) return;
+  window.clearTimeout(timerId);
+  railGroupCloseTimers.delete(group);
+}
+
+function scheduleRailGroupClose(group) {
+  if (!group || group.dataset.shellNavDefault === "expanded") return;
+  clearRailGroupCloseTimer(group);
+  const timerId = window.setTimeout(() => {
+    railGroupCloseTimers.delete(group);
+    if (group.matches(":hover") || group.matches(":focus-within")) return;
+    setRailGroupExpanded(group, false);
+  }, 260);
+  railGroupCloseTimers.set(group, timerId);
+}
+
+function markRailFlyoutHover(group, control) {
+  for (const item of railGroupControls(group)) {
+    const isHovered = item === control;
+    item.classList.toggle("is-hovered", isHovered);
+    if (isHovered) item.setAttribute("aria-selected", "true");
+    else item.removeAttribute("aria-selected");
+  }
+}
+
+function clearRailFlyoutHover(group) {
+  for (const item of railGroupControls(group)) {
+    item.classList.remove("is-hovered");
+    item.removeAttribute("aria-selected");
+  }
+}
+
+function closeTransientRailGroups() {
+  for (const group of document.querySelectorAll('.cs-shell__rail-group[data-shell-nav-default="collapsed"]')) {
+    clearRailGroupCloseTimer(group);
+    clearRailFlyoutHover(group);
+    setRailGroupExpanded(group, false);
+  }
+}
+
 function bindGroupedRailNavigation() {
   for (const group of document.querySelectorAll(".cs-shell__rail-group")) {
     if (group.dataset.shellNavBound === "true") continue;
     group.dataset.shellNavBound = "true";
+    const trigger = group.querySelector(":scope > .cs-shell__rail-group-title");
+    const controls = railGroupControls(group);
     setRailGroupExpanded(group, group.dataset.shellNavDefault === "expanded");
-    group.addEventListener("mouseenter", () => setRailGroupExpanded(group, true));
-    group.addEventListener("focusin", () => setRailGroupExpanded(group, true));
+    group.addEventListener("mouseenter", () => {
+      clearRailGroupCloseTimer(group);
+      setRailGroupExpanded(group, true);
+    });
+    group.addEventListener("focusin", () => {
+      clearRailGroupCloseTimer(group);
+      setRailGroupExpanded(group, true);
+    });
+    trigger?.addEventListener("click", () => {
+      if (group.dataset.shellNavDefault === "expanded") return;
+      clearRailGroupCloseTimer(group);
+      setRailGroupExpanded(group, true);
+    });
+    for (const control of controls) {
+      control.addEventListener("mouseenter", () => markRailFlyoutHover(group, control));
+      control.addEventListener("focus", () => markRailFlyoutHover(group, control));
+    }
+    group.addEventListener("keydown", (event) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      clearRailGroupCloseTimer(group);
+      clearRailFlyoutHover(group);
+      setRailGroupExpanded(group, false);
+      trigger?.focus({ preventScroll: true });
+    });
     group.addEventListener("mouseleave", () => {
-      if (group.dataset.shellNavDefault !== "expanded" && !group.matches(":focus-within")) setRailGroupExpanded(group, false);
+      if (!group.matches(":focus-within")) {
+        clearRailFlyoutHover(group);
+        scheduleRailGroupClose(group);
+      }
     });
     group.addEventListener("focusout", (event) => {
       const nextTarget = event.relatedTarget;
       if (nextTarget && group.contains(nextTarget)) return;
-      if (group.dataset.shellNavDefault !== "expanded") setRailGroupExpanded(group, false);
+      clearRailFlyoutHover(group);
+      scheduleRailGroupClose(group);
     });
   }
 }
@@ -1479,6 +1554,7 @@ function bindShellTopbarControls() {
     if (event.key !== "Escape") return;
     setShellSearchOpen(false, { restoreFocus: false });
     closeTopbarPopouts(null);
+    closeTransientRailGroups();
     if (contextInspector) contextInspector.hidden = true;
     contextInspectorButton?.setAttribute("aria-expanded", "false");
   });
@@ -1502,6 +1578,12 @@ function markActiveLink(moduleId) {
     }
     if (isSameModuleRoute(linkModuleId, moduleId)) link.setAttribute("aria-current", "page");
     else link.removeAttribute("aria-current");
+  }
+
+  for (const group of document.querySelectorAll(".cs-shell__rail-group")) {
+    const hasActiveChild = Boolean(group.querySelector(':scope > .cs-shell__rail-group-items [aria-current="page"]'));
+    if (hasActiveChild) group.dataset.shellNavActive = "true";
+    else delete group.dataset.shellNavActive;
   }
 }
 
