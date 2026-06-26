@@ -9,6 +9,7 @@ import { adminDevModule } from "/packages/modules/admin-dev/index.js";
 import { boardDataModule } from "/packages/modules/board-data/index.js";
 import { iesBuilderModule } from "/packages/modules/ies-builder/index.js";
 import { complianceMattersModule } from "/packages/modules/compliance-matters/index.js";
+import { coordinatedSurfacesModule } from "/packages/modules/coordinated-surfaces/index.js";
 import {
   MODULE_STATUS_REGISTRY,
   moduleStatusFor,
@@ -1821,6 +1822,7 @@ function bootWorkspaceShell() {
   registry.register("board_data", boardDataModule);
   registry.register("ies_builder", iesBuilderModule);
   registry.register("compliance_matters", complianceMattersModule);
+  registry.register("coordinated_surfaces", coordinatedSurfacesModule);
   ensureModuleNavLink("scene_builder", "Scene Builder");
   ensureModuleNavLink("board_data", "Board Data");
   ensureModuleNavLink("ies_builder", "IES Builder / Photometry");

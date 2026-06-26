@@ -142,12 +142,12 @@ const moduleStatusItems = [
   {
     id: "coordinated_surfaces",
     label: "Coordinated Surfaces / Ceiling",
-    badge: "planned",
-    contract: "referenced by Selector downstream context",
-    runtime: "not mounted as a real module yet",
-    authority: "context-only; does not mutate engine, RunTable, payload, or drawings",
-    uiEvidence: "sidebar placeholder only",
-    nextStep: "Coordinated Surfaces read-only map, then shell/status module",
+    badge: "diagnostic",
+    contract: "read-only naming/context diagnostic for coordinated_surfaces / ceiling / ceiling_coord",
+    runtime: "mounted diagnostic shell module at /workspace?module=coordinated_surfaces",
+    authority: "diagnostic-only; no drawing, setout, clash, geometry, Selector, RunTable, payload, or coordination signoff authority",
+    uiEvidence: "read-only diagnostic panel with route/id contract and mutation guardrails",
+    nextStep: "future ceiling/surface considerations only after separate authority contract approval",
   },
 ];
 
