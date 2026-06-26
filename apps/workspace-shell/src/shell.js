@@ -13,6 +13,8 @@ import { coordinatedSurfacesModule } from "/packages/modules/coordinated-surface
 import { labProofModule } from "/packages/modules/lab-proof/index.js";
 import { knowledgeSpineModule } from "/packages/modules/knowledge-spine/index.js";
 import { controlledRecordsModule } from "/packages/modules/controlled-records/index.js";
+import { rregModule } from "/packages/modules/rreg/index.js";
+import { lioraCockpitModule } from "/packages/modules/liora-cockpit/index.js";
 import { engineFlowModule } from "/packages/modules/engine-flow/index.js";
 import {
   MODULE_STATUS_REGISTRY,
@@ -1975,6 +1977,8 @@ function bootWorkspaceShell() {
   registry.register("lab_proof", labProofModule);
   registry.register("knowledge_spine", knowledgeSpineModule);
   registry.register("controlled_records", controlledRecordsModule);
+  registry.register("rreg", rregModule);
+  registry.register("liora_cockpit", lioraCockpitModule);
   registry.register("engine_flow", engineFlowModule);
   ensureModuleNavLink("scene_builder", "Scene Builder");
   ensureModuleNavLink("board_data", "Board Data");
@@ -1982,6 +1986,8 @@ function bootWorkspaceShell() {
   ensureModuleNavLink("lab_proof", "Lab Proof");
   ensureModuleNavLink("knowledge_spine", "Knowledge Base");
   ensureModuleNavLink("controlled_records", "Controlled Ledger");
+  ensureModuleNavLink("rreg", "Roles & Responsibilities");
+  ensureModuleNavLink("liora_cockpit", "Liora Cockpit");
   ensureModuleNavLink("engine_flow", "Engine Flow");
   bindGroupedRailNavigation();
   bindShellTopbarControls();
