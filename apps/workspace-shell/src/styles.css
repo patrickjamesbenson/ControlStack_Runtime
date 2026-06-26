@@ -153,9 +153,36 @@ button { cursor: pointer; }
   box-shadow: inset -1px 0 0 var(--cs-chrome-seam);
 }
 
-.cs-shell__rail-nav { width: 100%; display: grid; justify-items: center; gap: 2px; }
+.cs-shell__rail-nav { width: 100%; display: grid; justify-items: stretch; align-content: start; gap: 6px; }
 .cs-shell__rail-nav--secondary { margin-top: auto; }
 .cs-shell__rail-kicker { width: 1px; height: 1px; position: absolute; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+.cs-shell__rail-group {
+  width: 100%; display: grid; justify-items: center; gap: 2px; position: relative; padding: 2px 0 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+}
+.cs-shell__rail-group:last-child { border-bottom: 0; }
+.cs-shell__rail-group-title {
+  width: var(--cs-left-rail-width); min-height: 28px; position: relative; display: flex; align-items: center; justify-content: center;
+  color: rgba(255, 255, 255, 0.68); isolation: isolate;
+}
+.cs-shell__rail-group-title > span {
+  position: absolute; left: calc(100% + 8px); top: 50%; transform: translateY(-50%); min-width: 178px; max-width: 300px;
+  padding: 8px 12px; border-radius: var(--cs-radius-full); background: var(--cs-chrome-bg); color: #ffffff; box-shadow: var(--cs-shadow-lg);
+  font-size: 13px; font-weight: 600; line-height: 20px; text-align: left; opacity: 0; pointer-events: none; white-space: nowrap;
+  transition: opacity var(--cs-transition-fast), transform var(--cs-transition-fast);
+}
+.cs-shell__rail-group:hover .cs-shell__rail-group-title > span,
+.cs-shell__rail-group:focus-within .cs-shell__rail-group-title > span { opacity: 1; transform: translate(4px, -50%); }
+.cs-shell__rail-group-items {
+  width: 100%; display: grid; justify-items: center; gap: 2px; overflow: visible;
+  max-height: 620px; opacity: 1; transform: translateY(0);
+  transition: max-height var(--cs-transition-fast), opacity var(--cs-transition-fast), transform var(--cs-transition-fast);
+}
+.cs-shell__rail-group[data-shell-nav-expanded="false"] .cs-shell__rail-group-items {
+  max-height: 0; opacity: 0; transform: translateY(-4px); overflow: hidden; pointer-events: none;
+}
+.cs-shell__rail-group[data-shell-nav-expanded="true"] .cs-shell__rail-group-items { pointer-events: auto; }
 
 .cs-shell__rail-item {
   width: var(--cs-left-rail-width); min-height: var(--cs-nav-item-height); position: relative; display: flex; align-items: center; justify-content: center;
@@ -175,11 +202,8 @@ button { cursor: pointer; }
 }
 .cs-shell__rail-item[aria-disabled="true"] { opacity: 0.48; cursor: not-allowed; }
 .cs-shell__rail-item[hidden] { display: none; }
-.cs-shell__rail-item--admin { margin-top: 12px; }
-.cs-shell__rail-item--admin::after {
-  content: ""; position: absolute; left: 18px; right: 18px; bottom: -7px; height: 1px;
-  background: rgba(255, 255, 255, 0.16);
-}
+.cs-shell__rail-item--admin { margin-top: 0; }
+.cs-shell__rail-item--admin::after { content: none; }
 .cs-shell__rail-item--quiet { opacity: 0.8; }
 .cs-shell__rail-icon { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .cs-shell__rail-item > span:not(.cs-shell__rail-icon) {
@@ -189,7 +213,7 @@ button { cursor: pointer; }
   transition: opacity var(--cs-transition-fast), transform var(--cs-transition-fast);
 }
 .cs-shell__rail-item:hover > span:not(.cs-shell__rail-icon), .cs-shell__rail-item:focus-visible > span:not(.cs-shell__rail-icon) { opacity: 1; transform: translate(4px, -50%); }
-.cs-shell__rail-item[aria-disabled="true"] > span:not(.cs-shell__rail-icon)::after { content: " Â· protected/planned"; color: rgba(255, 255, 255, 0.7); }
+.cs-shell__rail-item[aria-disabled="true"] > span:not(.cs-shell__rail-icon)::after { content: " · planned/disabled"; color: rgba(255, 255, 255, 0.7); }
 
 .cs-shell__main {
   min-width: 0; min-height: 0; height: 100%; padding: var(--cs-workspace-pad-y) var(--cs-workspace-pad-x) 24px; overflow: auto; overscroll-behavior: contain;
@@ -568,10 +592,13 @@ button { cursor: pointer; }
   .cs-shell__status { flex: 1 1 auto; max-width: none; }
   .cs-shell__body { grid-template-columns: 1fr; grid-template-rows: var(--cs-left-rail-width) minmax(0, 1fr); }
   .cs-shell__sidebar { min-height: 0; height: var(--cs-left-rail-width); flex-direction: row; align-items: center; padding: 0 8px; overflow-x: auto; overflow-y: hidden; }
-  .cs-shell__rail-nav { width: auto; display: flex; align-items: center; }
+  .cs-shell__rail-nav { width: auto; display: flex; align-items: center; gap: 4px; }
   .cs-shell__rail-nav--secondary { margin-top: 0; margin-left: auto; }
-  .cs-shell__rail-item { width: var(--cs-left-rail-width); min-width: var(--cs-left-rail-width); }
-  .cs-shell__rail-item > span:not(.cs-shell__rail-icon) { display: none; }
+  .cs-shell__rail-group { width: auto; display: flex; align-items: center; padding: 0; border-bottom: 0; border-right: 1px solid rgba(255, 255, 255, 0.14); }
+  .cs-shell__rail-group:last-child { border-right: 0; }
+  .cs-shell__rail-group-title, .cs-shell__rail-item { width: var(--cs-left-rail-width); min-width: var(--cs-left-rail-width); }
+  .cs-shell__rail-group-items { width: auto; display: flex; align-items: center; }
+  .cs-shell__rail-item > span:not(.cs-shell__rail-icon), .cs-shell__rail-group-title > span { display: none; }
   .cs-shell__main { height: 100%; padding: 14px; min-height: 0; border-top-left-radius: var(--cs-radius-md); }
   .cs-shell__plugin-host, .cs-shell__header-card, .cs-shell__project-browser-card, .cs-shell__start-panel { padding: 16px; border-radius: var(--cs-radius-md); }
   .cs-shell__module-host, .cs-shell__home { padding: 0; border-radius: 0; }
@@ -585,55 +612,9 @@ button { cursor: pointer; }
   .cs-shell__topbar-popout { left: 0; right: auto; transform: none; }
 }
 /* Rail visual ordering guard */
-.cs-shell__rail-nav > .cs-shell__rail-item { order: 700; }
-
-/* Top utility group */
-.cs-shell__rail-nav > [data-module-link="workspace_home"] { order: 100; }
-.cs-shell__rail-nav > [data-module-link="novon_website"] { order: 110; }
-.cs-shell__rail-nav > [href*="hubspot"] {
-  order: 120;
-  margin-bottom: 12px;
-}
-.cs-shell__rail-nav > [href*="hubspot"]::after {
-  content: "";
-  position: absolute;
-  left: 18px;
-  right: 18px;
-  bottom: -7px;
-  height: 1px;
-  background: rgba(255, 255, 255, 0.24);
-  z-index: 2;
-  pointer-events: none;
-}
-
-/* Design / workflow group */
-.cs-shell__rail-nav > [data-module-link="cs_selector"] { order: 200; }
-.cs-shell__rail-nav > [data-module-status-key="troffer_light"] { order: 210; }
-.cs-shell__rail-nav > [data-module-link="scene_builder"] { order: 220; }
-.cs-shell__rail-nav > [data-module-link="emergence"] { order: 230; }
-.cs-shell__rail-nav > [data-module-status-key="compliance_matters"] { order: 240; }
-.cs-shell__rail-nav > [data-module-status-key="coordinated_surfaces"] {
-  order: 250;
-  margin-bottom: 12px;
-}
-.cs-shell__rail-nav > [data-module-status-key="coordinated_surfaces"]::after {
-  content: "";
-  position: absolute;
-  left: 18px;
-  right: 18px;
-  bottom: -7px;
-  height: 1px;
-  background: rgba(255, 255, 255, 0.24);
-  z-index: 2;
-  pointer-events: none;
-}
-
-/* Authority / engineering group */
-.cs-shell__rail-nav > [data-module-status-key="lab_proof"] { order: 300; }
-.cs-shell__rail-nav > [data-module-link="board_data"] { order: 310; }
-.cs-shell__rail-nav > [data-module-status-key="ecg_driver"] { order: 320; }
-.cs-shell__rail-nav > [data-module-link="ies_builder"] { order: 330; }
-
-/* Admin last */
-.cs-shell__rail-nav > [data-module-link="admin_dev"] { order: 1000; }
+.cs-shell__rail-nav > .cs-shell__rail-group { order: 700; }
+.cs-shell__rail-nav > [data-shell-nav-group="utilities"] { order: 100; }
+.cs-shell__rail-nav > [data-shell-nav-group="model_design"] { order: 200; }
+.cs-shell__rail-nav > [data-shell-nav-group="engineering_authority"] { order: 300; }
+.cs-shell__rail-nav > [data-shell-nav-group="knowledge_governance"] { order: 400; }
 

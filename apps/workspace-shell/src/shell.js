@@ -13,6 +13,7 @@ import { coordinatedSurfacesModule } from "/packages/modules/coordinated-surface
 import { labProofModule } from "/packages/modules/lab-proof/index.js";
 import { knowledgeSpineModule } from "/packages/modules/knowledge-spine/index.js";
 import { controlledRecordsModule } from "/packages/modules/controlled-records/index.js";
+import { engineFlowModule } from "/packages/modules/engine-flow/index.js";
 import {
   MODULE_STATUS_REGISTRY,
   moduleStatusFor,
@@ -170,6 +171,12 @@ function moduleStatusAriaLabel(status) {
 
 function renderModuleStatusRail() {
   for (const item of document.querySelectorAll(".cs-shell__rail-item")) {
+    if (item.dataset.shellStatusRail === "false" || item.dataset.shellUtilityLink === "true") {
+      delete item.dataset.moduleStatus;
+      item.querySelector(":scope > .cs-shell__module-status-badge")?.remove();
+      continue;
+    }
+
     const statusId = item.dataset.moduleStatusKey || item.dataset.moduleLink || "";
     const status = moduleStatusFor(statusId);
     if (!status) continue;
@@ -204,6 +211,7 @@ function renderModuleStatusRegistryPanel() {
   const list = document.createElement("div");
   list.className = "cs-shell__module-status-list";
   for (const status of MODULE_STATUS_REGISTRY) {
+    if (["workspace_home", "novon_website", "hubspot_project_context"].includes(status.id)) continue;
     const card = document.createElement("article");
     card.className = "cs-shell__module-status-card";
     card.dataset.moduleStatus = status.badge;
@@ -223,6 +231,53 @@ function renderModuleStatusRegistryPanel() {
     list.appendChild(card);
   }
   moduleStatusPanel.appendChild(list);
+}
+
+function railGroupControls(group) {
+  return Array.from(group.querySelectorAll(":scope > .cs-shell__rail-group-items a, :scope > .cs-shell__rail-group-items button"));
+}
+
+function setRailGroupExpanded(group, expanded) {
+  if (!group) return;
+  const defaultExpanded = group.dataset.shellNavDefault === "expanded";
+  const isExpanded = defaultExpanded || Boolean(expanded);
+  group.dataset.shellNavExpanded = isExpanded ? "true" : "false";
+  const items = group.querySelector(":scope > .cs-shell__rail-group-items");
+  if (items) items.setAttribute("aria-hidden", isExpanded ? "false" : "true");
+
+  for (const control of railGroupControls(group)) {
+    if (isExpanded) {
+      if (control.dataset.shellNavOriginalTabindex) {
+        control.setAttribute("tabindex", control.dataset.shellNavOriginalTabindex);
+        delete control.dataset.shellNavOriginalTabindex;
+      } else {
+        control.removeAttribute("tabindex");
+      }
+    } else {
+      if (control.hasAttribute("tabindex") && !control.dataset.shellNavOriginalTabindex) {
+        control.dataset.shellNavOriginalTabindex = control.getAttribute("tabindex") || "";
+      }
+      control.setAttribute("tabindex", "-1");
+    }
+  }
+}
+
+function bindGroupedRailNavigation() {
+  for (const group of document.querySelectorAll(".cs-shell__rail-group")) {
+    if (group.dataset.shellNavBound === "true") continue;
+    group.dataset.shellNavBound = "true";
+    setRailGroupExpanded(group, group.dataset.shellNavDefault === "expanded");
+    group.addEventListener("mouseenter", () => setRailGroupExpanded(group, true));
+    group.addEventListener("focusin", () => setRailGroupExpanded(group, true));
+    group.addEventListener("mouseleave", () => {
+      if (group.dataset.shellNavDefault !== "expanded" && !group.matches(":focus-within")) setRailGroupExpanded(group, false);
+    });
+    group.addEventListener("focusout", (event) => {
+      const nextTarget = event.relatedTarget;
+      if (nextTarget && group.contains(nextTarget)) return;
+      if (group.dataset.shellNavDefault !== "expanded") setRailGroupExpanded(group, false);
+    });
+  }
 }
 
 function appendProjectBrowserLine(parent, text, tagName = "span") {
@@ -1838,12 +1893,15 @@ function bootWorkspaceShell() {
   registry.register("lab_proof", labProofModule);
   registry.register("knowledge_spine", knowledgeSpineModule);
   registry.register("controlled_records", controlledRecordsModule);
+  registry.register("engine_flow", engineFlowModule);
   ensureModuleNavLink("scene_builder", "Scene Builder");
   ensureModuleNavLink("board_data", "Board Data");
-  ensureModuleNavLink("ies_builder", "IES Builder / Photometry");
+  ensureModuleNavLink("ies_builder", "IES Builder");
   ensureModuleNavLink("lab_proof", "Lab Proof");
-  ensureModuleNavLink("knowledge_spine", "Knowledge Spine");
-  ensureModuleNavLink("controlled_records", "Controlled Records / Ledger");
+  ensureModuleNavLink("knowledge_spine", "Knowledge Base");
+  ensureModuleNavLink("controlled_records", "Controlled Ledger");
+  ensureModuleNavLink("engine_flow", "Engine Flow");
+  bindGroupedRailNavigation();
   bindShellTopbarControls();
   bindAssistiveCompanyIdentityHelper();
 
