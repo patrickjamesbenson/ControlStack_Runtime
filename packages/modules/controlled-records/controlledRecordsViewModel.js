@@ -158,6 +158,7 @@ export function createControlledRecordsViewModel({ adapter, controlledRecordsSta
     local,
     requiredWording: [...REQUIRED_WORDING],
     runtimeStatusFlags: { ...RUNTIME_STATUS_FLAGS },
+    diagnosticStatus: { ...RUNTIME_STATUS_FLAGS },
     runtimeStatusRows: objectEntries(RUNTIME_STATUS_FLAGS),
     lifecycle: [...CONTROLLED_RECORD_LIFECYCLE],
     proposedRecordTypes: [...PROPOSED_RECORD_TYPES],
@@ -180,3 +181,4 @@ export function createControlledRecordsViewModel({ adapter, controlledRecordsSta
     derivedActionPolicy: "Derived action rows must not exist without source records.",
   };
 }
+
