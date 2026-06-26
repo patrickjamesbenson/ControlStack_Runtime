@@ -35,6 +35,14 @@ function appendSection(parent, heading, rows) {
   parent.appendChild(section);
 }
 
+function appendListSection(parent, heading, items) {
+  const section = document.createElement("section");
+  section.className = "cs-selector-proof__section";
+  appendText(section, "h3", heading);
+  appendPillList(section, items);
+  parent.appendChild(section);
+}
+
 export function renderIesBuilderView(container, viewModel) {
   clearElement(container);
 
@@ -43,7 +51,7 @@ export function renderIesBuilderView(container, viewModel) {
   article.dataset.module = viewModel.moduleId;
 
   const intro = document.createElement("div");
-  appendText(intro, "p", "Runtime photometry fixture/parser diagnostics", "cs-shell__eyebrow");
+  appendText(intro, "p", "Runtime IES candidate readiness diagnostics", "cs-shell__eyebrow");
   appendText(intro, "h2", "IES Builder / Photometry");
   for (const statement of viewModel.boundaryStatements) {
     appendText(intro, "p", statement);
@@ -51,6 +59,11 @@ export function renderIesBuilderView(container, viewModel) {
   article.appendChild(intro);
 
   appendSection(article, "IES Builder status", viewModel.statusRows);
+  appendSection(article, "IES candidate readiness runtime status flags", viewModel.candidateReadinessFlagRows);
+  appendListSection(article, "IES candidate readiness requirements", viewModel.candidateReadinessRequirements);
+  appendListSection(article, "IES candidate states", viewModel.candidateStates);
+  appendSection(article, "IES Builder relationship map", viewModel.relationshipRows);
+  appendListSection(article, "Candidate readiness boundary copy", viewModel.boundaryStatements);
   appendSection(article, "Fixture/parser diagnostics", viewModel.fixtureParserDiagnosticRows);
   appendSection(article, "Fixture/parser diagnostic safety flags", viewModel.safetyRows);
   appendSection(article, "Additional disabled runtime surfaces", viewModel.lockRows);

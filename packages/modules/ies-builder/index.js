@@ -5,6 +5,11 @@ import { createIesBuilderViewModel } from "./iesBuilderViewModel.js";
 const IES_BUILDER_STATUS_ENDPOINT = "/api/ies-builder/status";
 
 const SAFE_WARNINGS = Object.freeze([
+  "IES Builder candidate readiness is diagnostic only in this slice.",
+  "No IES file is generated, parsed, uploaded, previewed, or exported here.",
+  "An IES candidate is not Lab Proof.",
+  "Photometric candidate output must not be treated as production proof.",
+  "Board Data defines metadata. Selector resolves. IES Builder may generate candidate artefacts later. Lab proves.",
   "IES Builder is read-only and diagnostic in this slice.",
   "Fixture/parser diagnostics use safe runtime summaries only.",
   "No IES upload, export, generation, or mutation is enabled.",
@@ -13,6 +18,41 @@ const SAFE_WARNINGS = Object.freeze([
   "Lab Proof remains the boundary for proof authority.",
   "Board Data may define metadata, but Board Data does not prove photometry.",
   "Selector must not treat candidate photometry as approved proof.",
+]);
+
+const CANDIDATE_READINESS_REQUIREMENTS = Object.freeze([
+  "Selector candidate state present",
+  "product/body intent resolved",
+  "board candidate resolved",
+  "optic/diffuser intent resolved",
+  "electrical/driver context resolved",
+  "photometric template/source identified",
+  "Board Data reference present",
+  "length/scaling policy identified",
+  "emergency/EGRES dependency checked",
+  "compliance dependency checked",
+  "Lab Proof boundary clearly separated",
+  "human review warning surfaced",
+]);
+
+const CANDIDATE_STATES = Object.freeze([
+  "not ready",
+  "missing selector candidate",
+  "missing board data reference",
+  "missing photometric source",
+  "candidate input ready",
+  "candidate-only output possible later",
+  "requires review",
+  "requires Lab Proof before production claim",
+]);
+
+const RELATIONSHIP_MAP = Object.freeze([
+  { label: "Selector", role: "selection/candidate source" },
+  { label: "Board Data", role: "metadata source" },
+  { label: "IES Builder", role: "future candidate artefact generator" },
+  { label: "Engine Flow", role: "confidence path explanation" },
+  { label: "Lab Proof", role: "production proof authority" },
+  { label: "Controlled Records", role: "future provenance/review trail" },
 ]);
 
 const BLOCKED_ACTIONS = Object.freeze([
@@ -43,19 +83,29 @@ const INITIAL_STATUS = Object.freeze({
   label: "IES Builder / Photometry",
   readOnly: true,
   diagnosticOnly: true,
+  candidateReadinessExplanationOnly: true,
   candidateOutputOnly: true,
   productionProofAuthority: false,
   labApprovalRequired: true,
   labProofAuthority: false,
   selectorMutationEnabled: false,
+  boardDataWriteEnabled: false,
   boardDataWritesEnabled: false,
   boardDataMutationEnabled: false,
   iesGenerationEnabled: false,
+  iesUploadEnabled: false,
   uploadEnabled: false,
+  iesParseEnabled: false,
   parseEnabled: false,
   parseUploadEnabled: false,
+  iesExportEnabled: false,
   exportEnabled: false,
   polarPreviewEnabled: false,
+  engineExecutionEnabled: false,
+  runTableGenerationEnabled: false,
+  payloadGenerationEnabled: false,
+  drawingGenerationEnabled: false,
+  hiddenWriteBackEnabled: false,
   proofClaimsEmitted: false,
   rawIesExposed: false,
   rawLabEvidenceExposed: false,
@@ -75,6 +125,9 @@ const INITIAL_STATUS = Object.freeze({
   fixtureSampleReadinessStatus: "safe_summary_pending",
   candidateBoundary: "candidate_only_not_approved_proof",
   proofBoundarySummary: "Lab Proof remains the boundary for proof authority.",
+  candidateReadinessRequirements: [...CANDIDATE_READINESS_REQUIREMENTS],
+  candidateStates: [...CANDIDATE_STATES],
+  relationshipMap: [...RELATIONSHIP_MAP],
   blockedActions: [...BLOCKED_ACTIONS],
   warnings: [...SAFE_WARNINGS],
 });
@@ -86,6 +139,16 @@ function safeStatus(payload = {}) {
   const blockedActions = Array.isArray(payload?.blockedActions) && payload.blockedActions.length
     ? payload.blockedActions
     : [...BLOCKED_ACTIONS];
+  const candidateReadinessRequirements = Array.isArray(payload?.candidateReadinessRequirements)
+    && payload.candidateReadinessRequirements.length
+    ? payload.candidateReadinessRequirements
+    : [...CANDIDATE_READINESS_REQUIREMENTS];
+  const candidateStates = Array.isArray(payload?.candidateStates) && payload.candidateStates.length
+    ? payload.candidateStates
+    : [...CANDIDATE_STATES];
+  const relationshipMap = Array.isArray(payload?.relationshipMap) && payload.relationshipMap.length
+    ? payload.relationshipMap
+    : [...RELATIONSHIP_MAP];
 
   return {
     ...payload,
@@ -95,19 +158,29 @@ function safeStatus(payload = {}) {
     label: "IES Builder / Photometry",
     readOnly: true,
     diagnosticOnly: true,
+    candidateReadinessExplanationOnly: true,
     candidateOutputOnly: true,
     productionProofAuthority: false,
     labApprovalRequired: true,
     labProofAuthority: false,
     selectorMutationEnabled: false,
+    boardDataWriteEnabled: false,
     boardDataWritesEnabled: false,
     boardDataMutationEnabled: false,
     iesGenerationEnabled: false,
+    iesUploadEnabled: false,
     uploadEnabled: false,
+    iesParseEnabled: false,
     parseEnabled: false,
     parseUploadEnabled: false,
+    iesExportEnabled: false,
     exportEnabled: false,
     polarPreviewEnabled: false,
+    engineExecutionEnabled: false,
+    runTableGenerationEnabled: false,
+    payloadGenerationEnabled: false,
+    drawingGenerationEnabled: false,
+    hiddenWriteBackEnabled: false,
     proofClaimsEmitted: false,
     rawIesExposed: false,
     rawLabEvidenceExposed: false,
@@ -127,6 +200,9 @@ function safeStatus(payload = {}) {
     fixtureSampleReadinessStatus: payload?.fixtureSampleReadinessStatus || "metadata_only_no_upload_enabled",
     candidateBoundary: payload?.candidateBoundary || "candidate_only_not_approved_proof",
     proofBoundarySummary: payload?.proofBoundarySummary || "Lab Proof remains the boundary for proof authority.",
+    candidateReadinessRequirements,
+    candidateStates,
+    relationshipMap,
     blockedActions,
     warnings,
   };
@@ -204,6 +280,7 @@ export const iesBuilderModule = {
       policyOwner: "runtime-shell",
       readOnly: true,
       diagnosticOnly: true,
+      candidateReadinessExplanationOnly: true,
       productionProofAuthority: false,
     });
   },

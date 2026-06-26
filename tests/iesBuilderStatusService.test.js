@@ -6,6 +6,7 @@ import {
   IES_BUILDER_STATUS_PATH,
   buildIesBuilderStatus,
 } from "../packages/workspace-kernel/iesBuilderStatusService.js";
+import { createIesBuilderViewModel } from "../packages/modules/ies-builder/iesBuilderViewModel.js";
 
 const REQUIRED_BOUNDARY_WARNINGS = Object.freeze([
   "IES Builder is read-only and diagnostic in this slice.",
@@ -16,6 +17,59 @@ const REQUIRED_BOUNDARY_WARNINGS = Object.freeze([
   "Lab Proof remains the boundary for proof authority.",
   "Board Data may define metadata, but Board Data does not prove photometry.",
   "Selector must not treat candidate photometry as approved proof.",
+]);
+
+const REQUIRED_CANDIDATE_BOUNDARY_COPY = Object.freeze([
+  "IES Builder candidate readiness is diagnostic only in this slice.",
+  "No IES file is generated, parsed, uploaded, previewed, or exported here.",
+  "An IES candidate is not Lab Proof.",
+  "Photometric candidate output must not be treated as production proof.",
+  "Board Data defines metadata. Selector resolves. IES Builder may generate candidate artefacts later. Lab proves.",
+]);
+
+const REQUIRED_CANDIDATE_READINESS_REQUIREMENTS = Object.freeze([
+  "Selector candidate state present",
+  "product/body intent resolved",
+  "board candidate resolved",
+  "optic/diffuser intent resolved",
+  "electrical/driver context resolved",
+  "photometric template/source identified",
+  "Board Data reference present",
+  "length/scaling policy identified",
+  "emergency/EGRES dependency checked",
+  "compliance dependency checked",
+  "Lab Proof boundary clearly separated",
+  "human review warning surfaced",
+]);
+
+const REQUIRED_CANDIDATE_STATES = Object.freeze([
+  "not ready",
+  "missing selector candidate",
+  "missing board data reference",
+  "missing photometric source",
+  "candidate input ready",
+  "candidate-only output possible later",
+  "requires review",
+  "requires Lab Proof before production claim",
+]);
+
+const REQUIRED_CANDIDATE_FLAG_ROWS = Object.freeze([
+  ["readOnly", "true"],
+  ["diagnosticOnly", "true"],
+  ["candidateReadinessExplanationOnly", "true"],
+  ["iesGenerationEnabled", "false"],
+  ["iesUploadEnabled", "false"],
+  ["iesParseEnabled", "false"],
+  ["iesExportEnabled", "false"],
+  ["polarPreviewEnabled", "false"],
+  ["selectorMutationEnabled", "false"],
+  ["boardDataWriteEnabled", "false"],
+  ["labProofAuthority", "false"],
+  ["engineExecutionEnabled", "false"],
+  ["runTableGenerationEnabled", "false"],
+  ["payloadGenerationEnabled", "false"],
+  ["drawingGenerationEnabled", "false"],
+  ["hiddenWriteBackEnabled", "false"],
 ]);
 
 function assertSafeBoundaryFlags(status) {
@@ -166,6 +220,38 @@ test("no write attempt is made", async () => {
   assert.equal(status.ok, true);
   assert.equal(status.noWritesAttempted, true);
   assert.equal(writes.length, 0);
+});
+
+test("IES Builder view model emits candidate readiness diagnostics", () => {
+  const viewModel = createIesBuilderViewModel({
+    context: { route: { moduleId: "ies_builder" } },
+    local: { status: "ready" },
+    status: {},
+  });
+
+  assert.deepEqual(viewModel.boundaryStatements, REQUIRED_CANDIDATE_BOUNDARY_COPY);
+  assert.deepEqual(viewModel.candidateReadinessRequirements, REQUIRED_CANDIDATE_READINESS_REQUIREMENTS);
+  assert.deepEqual(viewModel.candidateStates, REQUIRED_CANDIDATE_STATES);
+  assert.deepEqual(viewModel.candidateReadinessFlagRows, REQUIRED_CANDIDATE_FLAG_ROWS);
+  assert.deepEqual(viewModel.relationshipRows, [
+    ["Selector", "selection/candidate source"],
+    ["Board Data", "metadata source"],
+    ["IES Builder", "future candidate artefact generator"],
+    ["Engine Flow", "confidence path explanation"],
+    ["Lab Proof", "production proof authority"],
+    ["Controlled Records", "future provenance/review trail"],
+  ]);
+});
+
+test("IES Builder view source does not add active artefact controls", async () => {
+  const viewText = await readFile(new URL("../packages/modules/ies-builder/iesBuilderView.js", import.meta.url), "utf-8");
+  const indexText = await readFile(new URL("../packages/modules/ies-builder/index.js", import.meta.url), "utf-8");
+  const combined = `${viewText}\n${indexText}`;
+
+  assert.equal(/createElement\(["']button["']\)/.test(combined), false);
+  assert.equal(/method:\s*["']POST["']/.test(combined), false);
+  assert.equal(/upload/i.test(combined) && /addEventListener\(["']change["']/.test(combined), false);
+  assert.equal(/download/i.test(combined) && /createObjectURL/.test(combined), false);
 });
 
 test("no POST IES Builder endpoint is added", async () => {
