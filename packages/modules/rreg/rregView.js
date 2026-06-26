@@ -51,11 +51,19 @@ export function renderRregView(container, viewModel) {
   article.dataset.module = viewModel.moduleId;
   article.dataset.readOnly = "true";
   article.dataset.diagnosticOnly = "true";
+  article.dataset.reviewResponsibilityMapOnly = "true";
   article.dataset.responsibilityMappingOnly = "true";
-  article.dataset.custodyTransferEnabled = "false";
-  article.dataset.approvalAutomationEnabled = "false";
-  article.dataset.permissionEnforcementEnabled = "false";
   article.dataset.peopleAssignmentEnabled = "false";
+  article.dataset.permissionControlEnabled = "false";
+  article.dataset.permissionEnforcementEnabled = "false";
+  article.dataset.approvalAutomationEnabled = "false";
+  article.dataset.custodyTransferEnabled = "false";
+  article.dataset.activeRoutingEnabled = "false";
+  article.dataset.controlledRecordWriteEnabled = "false";
+  article.dataset.labProofAuthority = "false";
+  article.dataset.evidenceIngestionEnabled = "false";
+  article.dataset.runtimeDataWriteEnabled = "false";
+  article.dataset.hiddenWriteBackEnabled = "false";
   article.dataset.seedScriptEnabled = "false";
 
   const intro = document.createElement("div");
@@ -63,15 +71,15 @@ export function renderRregView(container, viewModel) {
   appendText(intro, "h2", viewModel.label);
   appendText(intro, "p", viewModel.internalLabel);
   appendText(intro, "p", `${viewModel.group} · ${viewModel.status} · ${viewModel.routePath}`);
-  for (const line of viewModel.requiredWording) appendText(intro, "p", line);
+  for (const line of viewModel.boundaryCopy) appendText(intro, "p", line);
   article.appendChild(intro);
 
   appendSection(article, "Runtime status flags", viewModel.runtimeStatusRows);
+  appendList(article, "Responsibility mapping categories", viewModel.responsibilityMappingCategories);
+  appendList(article, "Review / custody diagnostic fields", viewModel.reviewCustodyFields);
+  appendList(article, "Review path map", viewModel.reviewPathMap);
+  appendList(article, "Boundary copy", viewModel.boundaryCopy);
   appendList(article, "Role boundary", viewModel.roleBoundary);
-  appendList(article, "Responsibility concepts", viewModel.responsibilityConcepts);
-  appendList(article, "Custody concepts", viewModel.custodyConcepts);
-  appendList(article, "Approval mapping concepts", viewModel.approvalMappingConcepts);
-  appendList(article, "Proposed responsibility record schema", viewModel.proposedResponsibilitySchemaFields);
   appendList(article, "Relationship map", viewModel.relationshipMap);
   appendList(article, "Future diagnostics", viewModel.futureDiagnostics);
   appendSection(article, "Runtime context", viewModel.contextRows);
@@ -82,10 +90,18 @@ export function renderRregView(container, viewModel) {
     `diagnosticOnly:${viewModel.local.diagnosticOnly}`,
     `localDirty:${viewModel.local.localDirty}`,
     `responsibilityMappingOnly:${viewModel.local.responsibilityMappingOnly}`,
-    `custodyTransferEnabled:${viewModel.local.custodyTransferEnabled}`,
-    `approvalAutomationEnabled:${viewModel.local.approvalAutomationEnabled}`,
-    `permissionEnforcementEnabled:${viewModel.local.permissionEnforcementEnabled}`,
+    `reviewResponsibilityMapOnly:${viewModel.local.reviewResponsibilityMapOnly}`,
     `peopleAssignmentEnabled:${viewModel.local.peopleAssignmentEnabled}`,
+    `permissionControlEnabled:${viewModel.local.permissionControlEnabled}`,
+    `permissionEnforcementEnabled:${viewModel.local.permissionEnforcementEnabled}`,
+    `approvalAutomationEnabled:${viewModel.local.approvalAutomationEnabled}`,
+    `custodyTransferEnabled:${viewModel.local.custodyTransferEnabled}`,
+    `activeRoutingEnabled:${viewModel.local.activeRoutingEnabled}`,
+    `controlledRecordWriteEnabled:${viewModel.local.controlledRecordWriteEnabled}`,
+    `labProofAuthority:${viewModel.local.labProofAuthority}`,
+    `evidenceIngestionEnabled:${viewModel.local.evidenceIngestionEnabled}`,
+    `runtimeDataWriteEnabled:${viewModel.local.runtimeDataWriteEnabled}`,
+    `hiddenWriteBackEnabled:${viewModel.local.hiddenWriteBackEnabled}`,
     `seedScriptEnabled:${viewModel.local.seedScriptEnabled}`,
     `lastAction:${viewModel.local.lastAction}`,
   ]);

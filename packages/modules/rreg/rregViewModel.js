@@ -1,25 +1,36 @@
 const MODULE_ID = "rreg";
 
-const REQUIRED_WORDING = Object.freeze([
-  "Roles & Responsibilities / RREG is read-only and diagnostic in this slice.",
-  "RREG maps responsibility; it does not create authority.",
+const BOUNDARY_COPY = Object.freeze([
+  "RREG review responsibility mapping is read-only in this slice.",
+  "RREG maps responsibility; it does not grant authority.",
   "RREG maps custody; it does not transfer custody.",
   "RREG maps reviewers and approvers; it does not approve.",
-  "RREG may identify who should review or approve a change, but human approval remains explicit.",
-  "RREG does not grant write power.",
-  "RREG does not silently update KC, CLX, HubSpot, Board Data, Lab Proof, Selector, IES Builder, ledgers, or runtime data.",
-  "Old donor RREG seed scripts are not run in runtime.",
-  "Responsibility does not equal permission.",
+  "Controlled Records records provenance and disposition.",
+  "Lab Proof remains the production proof authority.",
+  "No people assignment, permission control, approval automation, custody transfer, controlled-record write, or hidden write-back is enabled.",
 ]);
+
+const REQUIRED_WORDING = BOUNDARY_COPY;
 
 const RUNTIME_STATUS_FLAGS = Object.freeze({
   readOnly: true,
   diagnosticOnly: true,
-  responsibilityMappingOnly: true,
-  custodyTransferEnabled: false,
-  approvalAutomationEnabled: false,
-  permissionEnforcementEnabled: false,
+  reviewResponsibilityMapOnly: true,
   peopleAssignmentEnabled: false,
+  permissionControlEnabled: false,
+  approvalAutomationEnabled: false,
+  custodyTransferEnabled: false,
+  activeRoutingEnabled: false,
+  controlledRecordWriteEnabled: false,
+  labProofAuthority: false,
+  evidenceIngestionEnabled: false,
+  runtimeDataWriteEnabled: false,
+  hiddenWriteBackEnabled: false,
+});
+
+const LEGACY_COMPATIBILITY_FLAGS = Object.freeze({
+  responsibilityMappingOnly: true,
+  permissionEnforcementEnabled: false,
   seedScriptEnabled: false,
   kcWriteEnabled: false,
   clxWriteEnabled: false,
@@ -28,8 +39,6 @@ const RUNTIME_STATUS_FLAGS = Object.freeze({
   boardDataWriteEnabled: false,
   selectorMutationEnabled: false,
   labProofMutationEnabled: false,
-  runtimeDataWriteEnabled: false,
-  hiddenWriteBackEnabled: false,
 });
 
 const ROLE_BOUNDARY = Object.freeze([
@@ -38,14 +47,27 @@ const ROLE_BOUNDARY = Object.freeze([
   "maps reviewers",
   "maps approvers",
   "maps evidence obligations",
-  "maps ledger obligations",
+  "maps controlled-record obligations",
   "does not grant authority",
   "does not approve",
   "does not transfer custody",
   "does not enforce permissions",
 ]);
 
-const RESPONSIBILITY_CONCEPTS = Object.freeze([
+const RESPONSIBILITY_MAPPING_CATEGORIES = Object.freeze([
+  "responsible_owner",
+  "backup_owner",
+  "technical_reviewer",
+  "evidence_reviewer",
+  "compliance_reviewer",
+  "lab_reviewer",
+  "approval_recommender",
+  "human_approver",
+  "custody_holder",
+  "escalation_contact",
+]);
+
+const LEGACY_RESPONSIBILITY_CONCEPTS = Object.freeze([
   "owner",
   "backup owner",
   "maintainer",
@@ -56,7 +78,7 @@ const RESPONSIBILITY_CONCEPTS = Object.freeze([
   "ledger obligation owner",
 ]);
 
-const CUSTODY_CONCEPTS = Object.freeze([
+const LEGACY_CUSTODY_CONCEPTS = Object.freeze([
   "no custody",
   "proposed custody",
   "active custody",
@@ -65,7 +87,7 @@ const CUSTODY_CONCEPTS = Object.freeze([
   "retired custody",
 ]);
 
-const APPROVAL_MAPPING_CONCEPTS = Object.freeze([
+const LEGACY_APPROVAL_MAPPING_CONCEPTS = Object.freeze([
   "review recommended",
   "review required",
   "approval required",
@@ -74,7 +96,7 @@ const APPROVAL_MAPPING_CONCEPTS = Object.freeze([
   "blocked pending controlled record",
 ]);
 
-const PROPOSED_RESPONSIBILITY_SCHEMA_FIELDS = Object.freeze([
+const LEGACY_PROPOSED_RESPONSIBILITY_SCHEMA_FIELDS = Object.freeze([
   "responsibility_id",
   "domain",
   "component",
@@ -96,23 +118,54 @@ const PROPOSED_RESPONSIBILITY_SCHEMA_FIELDS = Object.freeze([
   "review_cycle",
 ]);
 
+const REVIEW_CUSTODY_FIELDS = Object.freeze([
+  "responsibility_ref",
+  "controlled_record_ref",
+  "candidate_ref",
+  "artefact_ref",
+  "evidence_ref",
+  "review_domain",
+  "reviewer_role",
+  "approver_role",
+  "custody_role",
+  "backup_role",
+  "review_status",
+  "approval_required",
+  "approval_status",
+  "custody_status",
+  "escalation_condition",
+]);
+
+const REVIEW_PATH_MAP = Object.freeze([
+  "candidate identified",
+  "evidence expected",
+  "controlled record created later",
+  "reviewer role mapped",
+  "approver role mapped",
+  "custody role mapped",
+  "human review required",
+  "approval disposition recorded later",
+  "custody transfer not performed by RREG",
+]);
+
 const RELATIONSHIP_MAP = Object.freeze([
-  "Module Cards describe module boundaries.",
-  "Knowledge Spine orients governance surfaces.",
-  "Controlled Records prove decisions, evidence, disposition, and approval events.",
-  "Liora may later use RREG for routing suggestions only.",
-  "Handoff records prove custody movement.",
-  "Admin / Dev may show responsibility gaps, but RREG does not unlock admin actions.",
+  "Controlled Records: provenance/disposition/audit trail",
+  "RREG: responsibility/reviewer/approver/custody mapping",
+  "Lab Proof: production proof boundary",
+  "Compliance Matters: evidence/risk/review map, not certification",
+  "Selector: candidate/selection source",
+  "IES Builder: candidate artefact source later",
+  "Liora: future draft/recommendation/intake helper only, no approval",
 ]);
 
 const FUTURE_DIAGNOSTICS = Object.freeze([
-  "modules with no owner mapped",
-  "records with no custodian mapped",
-  "terms with no reviewer mapped",
-  "approval-required changes with no approver mapped",
-  "stale review cycles",
-  "missing source refs",
-  "handoff conditions without handoff records",
+  "records with no responsibility role mapped",
+  "candidate artefacts with no reviewer role mapped",
+  "approval-required records with no human approver role mapped",
+  "evidence references with no evidence reviewer role mapped",
+  "custody references with no custody holder role mapped",
+  "escalation conditions without escalation contact roles",
+  "review domains missing controlled-record references",
 ]);
 
 const GUARDRAILS = Object.freeze({
@@ -127,8 +180,14 @@ const GUARDRAILS = Object.freeze({
   assignControlsEnabled: false,
   manifestEditorEnabled: false,
   custodyTransferActionEnabled: false,
+  activeRoutingEnabled: false,
+  controlledRecordWriteEnabled: false,
+  evidenceIngestionEnabled: false,
   approvalButtonEnabled: false,
+  approvalAutomationEnabled: false,
+  permissionControlEnabled: false,
   permissionEnforcementEnabled: false,
+  labProofAuthority: false,
   kcEditorEnabled: false,
   clxEditorEnabled: false,
   hubSpotCallEnabled: false,
@@ -161,6 +220,10 @@ export function createRregViewModel({ adapter, rregState }) {
   const project = snapshots.project || {};
   const visibility = snapshots.visibility || {};
   const decision = adapter.getModuleDecision() || visibility.moduleReasons?.[MODULE_ID] || null;
+  const diagnosticStatus = {
+    ...RUNTIME_STATUS_FLAGS,
+    ...LEGACY_COMPATIBILITY_FLAGS,
+  };
 
   return {
     moduleId: MODULE_ID,
@@ -169,17 +232,21 @@ export function createRregViewModel({ adapter, rregState }) {
     status: "diagnostic",
     group: "Knowledge & Governance",
     routePath: "/workspace?module=rreg",
-    phase: "rreg-responsibility-registry-read-only-diagnostic-shell",
+    phase: "rreg-evidence-review-responsibility-map-read-only-diagnostic",
     local,
     requiredWording: [...REQUIRED_WORDING],
+    boundaryCopy: [...BOUNDARY_COPY],
     runtimeStatusFlags: { ...RUNTIME_STATUS_FLAGS },
-    diagnosticStatus: { ...RUNTIME_STATUS_FLAGS },
+    diagnosticStatus,
     runtimeStatusRows: objectEntries(RUNTIME_STATUS_FLAGS),
     roleBoundary: [...ROLE_BOUNDARY],
-    responsibilityConcepts: [...RESPONSIBILITY_CONCEPTS],
-    custodyConcepts: [...CUSTODY_CONCEPTS],
-    approvalMappingConcepts: [...APPROVAL_MAPPING_CONCEPTS],
-    proposedResponsibilitySchemaFields: [...PROPOSED_RESPONSIBILITY_SCHEMA_FIELDS],
+    responsibilityMappingCategories: [...RESPONSIBILITY_MAPPING_CATEGORIES],
+    reviewCustodyFields: [...REVIEW_CUSTODY_FIELDS],
+    reviewPathMap: [...REVIEW_PATH_MAP],
+    responsibilityConcepts: [...LEGACY_RESPONSIBILITY_CONCEPTS],
+    custodyConcepts: [...LEGACY_CUSTODY_CONCEPTS],
+    approvalMappingConcepts: [...LEGACY_APPROVAL_MAPPING_CONCEPTS],
+    proposedResponsibilitySchemaFields: [...LEGACY_PROPOSED_RESPONSIBILITY_SCHEMA_FIELDS],
     relationshipMap: [...RELATIONSHIP_MAP],
     futureDiagnostics: [...FUTURE_DIAGNOSTICS],
     contextRows: [

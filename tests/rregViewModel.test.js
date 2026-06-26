@@ -27,32 +27,42 @@ function createModel() {
   });
 }
 
-test("RREG view model includes required read-only wording", () => {
+const EXPECTED_BOUNDARY_COPY = [
+  "RREG review responsibility mapping is read-only in this slice.",
+  "RREG maps responsibility; it does not grant authority.",
+  "RREG maps custody; it does not transfer custody.",
+  "RREG maps reviewers and approvers; it does not approve.",
+  "Controlled Records records provenance and disposition.",
+  "Lab Proof remains the production proof authority.",
+  "No people assignment, permission control, approval automation, custody transfer, controlled-record write, or hidden write-back is enabled.",
+];
+
+test("RREG view model includes required review responsibility boundary copy", () => {
   const model = createModel();
 
-  assert.deepEqual(model.requiredWording, [
-    "Roles & Responsibilities / RREG is read-only and diagnostic in this slice.",
-    "RREG maps responsibility; it does not create authority.",
-    "RREG maps custody; it does not transfer custody.",
-    "RREG maps reviewers and approvers; it does not approve.",
-    "RREG may identify who should review or approve a change, but human approval remains explicit.",
-    "RREG does not grant write power.",
-    "RREG does not silently update KC, CLX, HubSpot, Board Data, Lab Proof, Selector, IES Builder, ledgers, or runtime data.",
-    "Old donor RREG seed scripts are not run in runtime.",
-    "Responsibility does not equal permission.",
-  ]);
+  assert.deepEqual(model.requiredWording, EXPECTED_BOUNDARY_COPY);
+  assert.deepEqual(model.boundaryCopy, EXPECTED_BOUNDARY_COPY);
 });
 
 test("RREG diagnostic flags remain read-only and fail closed", () => {
   const model = createModel();
 
-  assert.equal(model.diagnosticStatus.readOnly, true);
-  assert.equal(model.diagnosticStatus.diagnosticOnly, true);
+  assert.equal(model.runtimeStatusFlags.readOnly, true);
+  assert.equal(model.runtimeStatusFlags.diagnosticOnly, true);
+  assert.equal(model.runtimeStatusFlags.reviewResponsibilityMapOnly, true);
+  assert.equal(model.runtimeStatusFlags.peopleAssignmentEnabled, false);
+  assert.equal(model.runtimeStatusFlags.permissionControlEnabled, false);
+  assert.equal(model.runtimeStatusFlags.approvalAutomationEnabled, false);
+  assert.equal(model.runtimeStatusFlags.custodyTransferEnabled, false);
+  assert.equal(model.runtimeStatusFlags.activeRoutingEnabled, false);
+  assert.equal(model.runtimeStatusFlags.controlledRecordWriteEnabled, false);
+  assert.equal(model.runtimeStatusFlags.labProofAuthority, false);
+  assert.equal(model.runtimeStatusFlags.evidenceIngestionEnabled, false);
+  assert.equal(model.runtimeStatusFlags.runtimeDataWriteEnabled, false);
+  assert.equal(model.runtimeStatusFlags.hiddenWriteBackEnabled, false);
+
   assert.equal(model.diagnosticStatus.responsibilityMappingOnly, true);
-  assert.equal(model.diagnosticStatus.custodyTransferEnabled, false);
-  assert.equal(model.diagnosticStatus.approvalAutomationEnabled, false);
   assert.equal(model.diagnosticStatus.permissionEnforcementEnabled, false);
-  assert.equal(model.diagnosticStatus.peopleAssignmentEnabled, false);
   assert.equal(model.diagnosticStatus.seedScriptEnabled, false);
   assert.equal(model.diagnosticStatus.kcWriteEnabled, false);
   assert.equal(model.diagnosticStatus.clxWriteEnabled, false);
@@ -61,8 +71,7 @@ test("RREG diagnostic flags remain read-only and fail closed", () => {
   assert.equal(model.diagnosticStatus.boardDataWriteEnabled, false);
   assert.equal(model.diagnosticStatus.selectorMutationEnabled, false);
   assert.equal(model.diagnosticStatus.labProofMutationEnabled, false);
-  assert.equal(model.diagnosticStatus.runtimeDataWriteEnabled, false);
-  assert.equal(model.diagnosticStatus.hiddenWriteBackEnabled, false);
+
   assert.equal(model.guardrails.postEndpointAdded, false);
   assert.equal(model.guardrails.serverEndpointAdded, false);
   assert.equal(model.guardrails.donorRregImportEnabled, false);
@@ -70,10 +79,77 @@ test("RREG diagnostic flags remain read-only and fail closed", () => {
   assert.equal(model.guardrails.peopleAssignmentUiEnabled, false);
   assert.equal(model.guardrails.custodyTransferActionEnabled, false);
   assert.equal(model.guardrails.approvalButtonEnabled, false);
+  assert.equal(model.guardrails.approvalAutomationEnabled, false);
+  assert.equal(model.guardrails.permissionControlEnabled, false);
+  assert.equal(model.guardrails.activeRoutingEnabled, false);
+  assert.equal(model.guardrails.controlledRecordWriteEnabled, false);
+  assert.equal(model.guardrails.evidenceIngestionEnabled, false);
+  assert.equal(model.guardrails.labProofAuthority, false);
   assert.equal(model.guardrails.activeAutomationEnabled, false);
 });
 
-test("RREG displays boundaries, concepts, schema fields, relationships, and planned diagnostics", () => {
+test("RREG displays responsibility mapping categories and review custody fields", () => {
+  const model = createModel();
+
+  assert.deepEqual(model.responsibilityMappingCategories, [
+    "responsible_owner",
+    "backup_owner",
+    "technical_reviewer",
+    "evidence_reviewer",
+    "compliance_reviewer",
+    "lab_reviewer",
+    "approval_recommender",
+    "human_approver",
+    "custody_holder",
+    "escalation_contact",
+  ]);
+
+  assert.deepEqual(model.reviewCustodyFields, [
+    "responsibility_ref",
+    "controlled_record_ref",
+    "candidate_ref",
+    "artefact_ref",
+    "evidence_ref",
+    "review_domain",
+    "reviewer_role",
+    "approver_role",
+    "custody_role",
+    "backup_role",
+    "review_status",
+    "approval_required",
+    "approval_status",
+    "custody_status",
+    "escalation_condition",
+  ]);
+});
+
+test("RREG explains review path and relationship map", () => {
+  const model = createModel();
+
+  assert.deepEqual(model.reviewPathMap, [
+    "candidate identified",
+    "evidence expected",
+    "controlled record created later",
+    "reviewer role mapped",
+    "approver role mapped",
+    "custody role mapped",
+    "human review required",
+    "approval disposition recorded later",
+    "custody transfer not performed by RREG",
+  ]);
+
+  assert.deepEqual(model.relationshipMap, [
+    "Controlled Records: provenance/disposition/audit trail",
+    "RREG: responsibility/reviewer/approver/custody mapping",
+    "Lab Proof: production proof boundary",
+    "Compliance Matters: evidence/risk/review map, not certification",
+    "Selector: candidate/selection source",
+    "IES Builder: candidate artefact source later",
+    "Liora: future draft/recommendation/intake helper only, no approval",
+  ]);
+});
+
+test("RREG preserves role boundary and planned no-write diagnostics", () => {
   const model = createModel();
 
   assert.deepEqual(model.roleBoundary, [
@@ -82,80 +158,20 @@ test("RREG displays boundaries, concepts, schema fields, relationships, and plan
     "maps reviewers",
     "maps approvers",
     "maps evidence obligations",
-    "maps ledger obligations",
+    "maps controlled-record obligations",
     "does not grant authority",
     "does not approve",
     "does not transfer custody",
     "does not enforce permissions",
   ]);
 
-  assert.deepEqual(model.responsibilityConcepts, [
-    "owner",
-    "backup owner",
-    "maintainer",
-    "reviewer",
-    "approver",
-    "custodian",
-    "evidence owner",
-    "ledger obligation owner",
-  ]);
-
-  assert.deepEqual(model.custodyConcepts, [
-    "no custody",
-    "proposed custody",
-    "active custody",
-    "custody in handoff",
-    "transferred custody",
-    "retired custody",
-  ]);
-
-  assert.deepEqual(model.approvalMappingConcepts, [
-    "review recommended",
-    "review required",
-    "approval required",
-    "final human approval required",
-    "blocked pending evidence",
-    "blocked pending controlled record",
-  ]);
-
-  assert.deepEqual(model.proposedResponsibilitySchemaFields, [
-    "responsibility_id",
-    "domain",
-    "component",
-    "role",
-    "owner_ref",
-    "backup_owner_ref",
-    "custody_state",
-    "authority_level",
-    "decision_rights",
-    "approval_required_for",
-    "evidence_obligations",
-    "ledger_obligations",
-    "handoff_conditions",
-    "handoff_record_refs",
-    "active_from",
-    "active_until",
-    "status",
-    "source_refs",
-    "review_cycle",
-  ]);
-
-  assert.deepEqual(model.relationshipMap, [
-    "Module Cards describe module boundaries.",
-    "Knowledge Spine orients governance surfaces.",
-    "Controlled Records prove decisions, evidence, disposition, and approval events.",
-    "Liora may later use RREG for routing suggestions only.",
-    "Handoff records prove custody movement.",
-    "Admin / Dev may show responsibility gaps, but RREG does not unlock admin actions.",
-  ]);
-
   assert.deepEqual(model.futureDiagnostics, [
-    "modules with no owner mapped",
-    "records with no custodian mapped",
-    "terms with no reviewer mapped",
-    "approval-required changes with no approver mapped",
-    "stale review cycles",
-    "missing source refs",
-    "handoff conditions without handoff records",
+    "records with no responsibility role mapped",
+    "candidate artefacts with no reviewer role mapped",
+    "approval-required records with no human approver role mapped",
+    "evidence references with no evidence reviewer role mapped",
+    "custody references with no custody holder role mapped",
+    "escalation conditions without escalation contact roles",
+    "review domains missing controlled-record references",
   ]);
 });
