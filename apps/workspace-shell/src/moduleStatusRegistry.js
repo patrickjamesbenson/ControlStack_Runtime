@@ -82,12 +82,12 @@ const moduleStatusItems = [
   {
     id: "lab_proof",
     label: "Lab Proof",
-    badge: "proof-required",
+    badge: "diagnostic",
     contract: "boundary accepted",
-    runtime: "/api/lab-proof/status only",
-    authority: "diagnostic-only proof boundary; no production proof claims",
-    uiEvidence: "endpoint only / needs visible inspector",
-    nextStep: "Lab proof inspector UI",
+    runtime: "mounted shell inspector + /api/lab-proof/status",
+    authority: "read-only diagnostic proof boundary; no production proof claims or production proof authority",
+    uiEvidence: "visible diagnostic inspector with safe metadata summaries only",
+    nextStep: "future Lab authority contract required before production proof can exist",
   },
   {
     id: "authority_reference_materialiser",
