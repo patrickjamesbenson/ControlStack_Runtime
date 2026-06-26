@@ -26,6 +26,14 @@ const REQUIRED_BOUNDARY_STATEMENTS = Object.freeze([
   "Materialiser refresh and active snapshot promotion remain separate controlled workflows.",
 ]);
 
+const LIVE_STATUS_COPY = Object.freeze([
+  "Board Data / Selector Reference live status is read-only in this slice.",
+  "This status bridge reports source presence, table readiness, and redaction safety only.",
+  "Raw rows, raw USERS, raw Lab evidence, credentials, private paths, and secret values are not exposed.",
+  "Selector resolving remains disabled until a later approved resolver-preview slice.",
+  "Board Data defines metadata. Selector resolves later. Lab proves later.",
+]);
+
 function yesNo(value) {
   if (value === true) return "true";
   if (value === false) return "false";
@@ -64,16 +72,22 @@ function presentFor(status, tableName) {
 }
 
 function sourceRows(status = {}) {
-  const source = status.source || {};
+  const source = status.source || status.activeSnapshot || {};
+  const materialised = status.materialisedSnapshot || {};
   return [
     ["endpoint", status.endpoint || "/api/board-data/status"],
     ["ok", yesNo(status.ok)],
-    ["source label", source.label || "runtime-authority-reference-active-snapshot"],
-    ["source present", yesNo(source.present)],
-    ["source readable", yesNo(source.readable)],
-    ["source parseable", yesNo(source.parseable)],
-    ["modifiedTime", valueOrNone(source.modifiedTime)],
-    ["fileSize", source.fileSize === undefined || source.fileSize === null ? "none" : `${source.fileSize} bytes`],
+    ["active snapshot label", source.label || "runtime-authority-reference-active-snapshot"],
+    ["active snapshot present", yesNo(source.present)],
+    ["active snapshot readable", yesNo(source.readable)],
+    ["active snapshot parseable", yesNo(source.parseable)],
+    ["active snapshot modifiedTime", valueOrNone(source.modifiedTime)],
+    ["active snapshot fileSize", source.fileSize === undefined || source.fileSize === null ? "none" : `${source.fileSize} bytes`],
+    ["materialised snapshot label", materialised.label || "runtime-authority-reference-materialised-novondb"],
+    ["materialised snapshot present", yesNo(materialised.present)],
+    ["materialised snapshot readable", yesNo(materialised.readable)],
+    ["materialised snapshot modifiedTime", valueOrNone(materialised.modifiedTime)],
+    ["materialised snapshot fileSize", materialised.fileSize === undefined || materialised.fileSize === null ? "none" : `${materialised.fileSize} bytes`],
   ];
 }
 
@@ -81,22 +95,34 @@ function safetyRows(status = {}) {
   return [
     ["readOnly", "true"],
     ["diagnosticOnly", "true"],
+    ["source status read-only", "true"],
     ["rawRowsExposed", forcedFalse(status.rawRowsExposed)],
     ["rawHeadersExposed", forcedFalse(status.rawHeadersExposed)],
     ["rawUsersExposed", forcedFalse(status.rawUsersExposed)],
     ["rawGoogleRowsExposed", forcedFalse(status.rawGoogleRowsExposed)],
     ["rawLabEvidenceExposed", forcedFalse(status.rawLabEvidenceExposed)],
+    ["credentialsExposed", forcedFalse(status.credentialsExposed)],
+    ["privatePathsExposed", forcedFalse(status.privatePathsExposed)],
+    ["Board Data write enabled", forcedFalse(status.boardDataWriteEnabled ?? status.writeEnabled)],
+    ["materialiser write enabled", forcedFalse(status.materialiserWriteEnabled)],
+    ["materialiser refresh enabled", forcedFalse(status.materialiserRefreshEnabled)],
+    ["active snapshot write enabled", forcedFalse(status.activeSnapshotWriteEnabled)],
+    ["active snapshot promotion enabled", forcedFalse(status.activeSnapshotPromotionEnabled)],
+    ["materialised snapshot write enabled", forcedFalse(status.materialisedSnapshotWriteEnabled)],
+    ["Selector resolving enabled", forcedFalse(status.selectorResolvingEnabled ?? status.activeResolverEnabled)],
     ["selectorMutationEnabled", forcedFalse(status.selectorMutationEnabled)],
-    ["labProofAuthority", forcedFalse(status.labProofAuthority)],
-    ["iesGenerationEnabled", forcedFalse(status.iesGenerationEnabled)],
-    ["materialiserRefreshEnabled", forcedFalse(status.materialiserRefreshEnabled)],
-    ["activeSnapshotPromotionEnabled", forcedFalse(status.activeSnapshotPromotionEnabled)],
+    ["spec generation enabled", forcedFalse(status.specGenerationEnabled)],
+    ["slug generation enabled", forcedFalse(status.slugGenerationEnabled)],
+    ["Lab proof authority", forcedFalse(status.labProofAuthority)],
+    ["IES generation enabled", forcedFalse(status.iesGenerationEnabled)],
+    ["Controlled Records write enabled", forcedFalse(status.controlledRecordsWriteEnabled)],
+    ["RREG assignment enabled", forcedFalse(status.rregAssignmentEnabled)],
+    ["runtime data mutation enabled", forcedFalse(status.runtimeDataMutationEnabled)],
+    ["hidden write-back enabled", forcedFalse(status.hiddenWriteBackEnabled)],
     ["donorCodeMounted", forcedFalse(status.donorCodeMounted)],
     ["productDataAuthority", status.productDataAuthority === true ? "true" : "false"],
     ["writeEnabled", forcedFalse(status.writeEnabled)],
     ["googleSyncEnabled", forcedFalse(status.googleSyncEnabled)],
-    ["activeSnapshotWriteEnabled", forcedFalse(status.activeSnapshotWriteEnabled)],
-    ["materialisedSnapshotWriteEnabled", forcedFalse(status.materialisedSnapshotWriteEnabled)],
     ["candidateEditMode", forcedFalse(status.candidateEditMode)],
     ["approved data source", status.approvedDataSource || "active authority-reference snapshot"],
   ];
@@ -106,10 +132,52 @@ function countRows(status = {}) {
   return SAFE_DETAIL_CATEGORIES.map((tableName) => [`${tableName} count`, countFor(status, tableName)]);
 }
 
+function expectedTablesFor(status = {}) {
+  return Array.isArray(status.expectedTables) && status.expectedTables.length
+    ? status.expectedTables
+    : SAFE_DETAIL_CATEGORIES;
+}
+
+function presentTablesFor(status = {}) {
+  if (Array.isArray(status.presentTables)) return status.presentTables;
+  return tableSummary(status).filter((table) => table.present).map((table) => table.table);
+}
+
+function missingTablesFor(status = {}) {
+  if (Array.isArray(status.missingTables)) return status.missingTables;
+  if (Array.isArray(status.missingExpectedTables)) return status.missingExpectedTables;
+  return [];
+}
+
+function liveStatusRows(status = {}) {
+  const source = status.source || status.activeSnapshot || {};
+  const materialised = status.materialisedSnapshot || {};
+  const users = status.usersRedactionStatus || {};
+  return [
+    ["active snapshot present", yesNo(source.present)],
+    ["active snapshot readable", yesNo(source.readable)],
+    ["active snapshot parseable", yesNo(source.parseable)],
+    ["materialised snapshot present", yesNo(materialised.present)],
+    ["materialised snapshot readable", yesNo(materialised.readable)],
+    ["expected tables", expectedTablesFor(status).join(", ") || "none reported"],
+    ["present tables", presentTablesFor(status).join(", ") || "none reported"],
+    ["missing tables", missingTablesFor(status).join(", ") || "none reported"],
+    ["safe table counts visible", "true"],
+    ["USERS present", yesNo(users.present)],
+    ["USERS count only", users.count ?? 0],
+    ["USERS raw rows exposed", forcedFalse(users.rawRowsExposed)],
+    ["raw rows exposed", forcedFalse(status.rawRowsExposed)],
+    ["raw headers exposed", forcedFalse(status.rawHeadersExposed)],
+    ["raw Lab evidence exposed", forcedFalse(status.rawLabEvidenceExposed)],
+    ["credentials exposed", forcedFalse(status.credentialsExposed)],
+    ["private paths exposed", forcedFalse(status.privatePathsExposed)],
+  ];
+}
+
 function boundaryRows(status = {}) {
   const users = status.usersRedactionStatus || {};
   const proof = status.proofBoundary || {};
-  const missing = Array.isArray(status.missingExpectedTables) ? status.missingExpectedTables : [];
+  const missing = missingTablesFor(status);
   return [
     ["missing expected tables", missing.length ? missing.join(", ") : "none reported"],
     ["USERS present", yesNo(users.present)],
@@ -203,6 +271,8 @@ export function createBoardDataViewModel({ context, local = {}, status = {} }) {
     shellRoute: context?.route?.moduleId || "board_data",
     status,
     requiredBoundaryStatements: REQUIRED_BOUNDARY_STATEMENTS,
+    liveStatusCopy: LIVE_STATUS_COPY,
+    liveStatusRows: liveStatusRows(status),
     sourceRows: sourceRows(status),
     safetyRows: safetyRows(status),
     countRows: countRows(status),

@@ -35,10 +35,10 @@ function appendSection(parent, heading, rows) {
   parent.appendChild(section);
 }
 
-function appendStatementSection(parent, statements) {
+function appendStatementSection(parent, statements, heading = "Board Data authority boundary") {
   const section = document.createElement("section");
   section.className = "cs-selector-proof__section";
-  appendText(section, "h3", "Board Data authority boundary");
+  appendText(section, "h3", heading);
   appendPillList(section, statements);
   parent.appendChild(section);
 }
@@ -71,6 +71,11 @@ export function renderBoardDataView(container, viewModel) {
   const intro = document.createElement("div");
   appendText(intro, "p", "Runtime product data inspector", "cs-shell__eyebrow");
   appendText(intro, "h2", "Board Data");
+  appendText(intro, "p", "Board Data / Selector Reference live status is read-only in this slice.");
+  appendText(intro, "p", "This status bridge reports source presence, table readiness, and redaction safety only.");
+  appendText(intro, "p", "Raw rows, raw USERS, raw Lab evidence, credentials, private paths, and secret values are not exposed.");
+  appendText(intro, "p", "Selector resolving remains disabled until a later approved resolver-preview slice.");
+  appendText(intro, "p", "Board Data defines metadata. Selector resolves later. Lab proves later.");
   appendText(intro, "p", "Board Data is read-only in this slice.");
   appendText(intro, "p", "Board Data defines product/component metadata.");
   appendText(intro, "p", "This inspector shows redacted summaries only.");
@@ -82,7 +87,9 @@ export function renderBoardDataView(container, viewModel) {
   appendText(intro, "p", "Materialiser refresh and active snapshot promotion remain separate controlled workflows.");
   article.appendChild(intro);
 
+  appendStatementSection(article, viewModel.liveStatusCopy, "Board Data / Selector Reference live status bridge");
   appendStatementSection(article, viewModel.requiredBoundaryStatements);
+  appendSection(article, "Live source/data readiness bridge", viewModel.liveStatusRows);
   appendSection(article, "Board Data source", viewModel.sourceRows);
   appendSection(article, "Board Data safety flags", viewModel.safetyRows);
   appendDetailInspector(article, viewModel.redactedDetailCategories);

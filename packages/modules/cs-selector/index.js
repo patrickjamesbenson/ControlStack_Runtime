@@ -5,17 +5,47 @@ import { createSelectorViewModel } from "./selectorViewModel.js";
 
 const SELECTOR_REFERENCE_STATUS_ENDPOINT = "/api/selector-reference/status";
 
+const SAFE_SELECTOR_REFERENCE_STATUS_BASE = Object.freeze({
+  readOnly: true,
+  diagnosticOnly: true,
+  sourceStatusReadOnly: true,
+  rawRowsExposed: false,
+  rawHeadersExposed: false,
+  rawUsersExposed: false,
+  rawUserHeadersExposed: false,
+  rawLabEvidenceExposed: false,
+  credentialsExposed: false,
+  privatePathsExposed: false,
+  boardDataWriteEnabled: false,
+  materialiserWriteEnabled: false,
+  materialiserRefreshEnabled: false,
+  activeSnapshotWriteEnabled: false,
+  materialisedSnapshotWriteEnabled: false,
+  selectorResolvingEnabled: false,
+  activeResolverEnabled: false,
+  selectorMutationEnabled: false,
+  specGenerationEnabled: false,
+  slugGenerationEnabled: false,
+  iesGenerationEnabled: false,
+  labProofAuthority: false,
+  controlledRecordsWriteEnabled: false,
+  rregAssignmentEnabled: false,
+  runtimeDataMutationEnabled: false,
+  hiddenWriteBackEnabled: false,
+});
+
+function initialSelectorReferenceStatus() {
+  return {
+    status: "not-requested",
+    endpoint: SELECTOR_REFERENCE_STATUS_ENDPOINT,
+    ...SAFE_SELECTOR_REFERENCE_STATUS_BASE,
+  };
+}
+
 let mountedContainer = null;
 let selectorState = null;
 let selectorAdapter = null;
-let selectorReferenceStatus = {
-  status: "not-requested",
-  endpoint: SELECTOR_REFERENCE_STATUS_ENDPOINT,
-  readOnly: true,
-  rawRowsExposed: false,
-  rawUsersExposed: false,
-  rawLabEvidenceExposed: false,
-};
+let selectorReferenceStatus = initialSelectorReferenceStatus();
 let selectorReferenceRequestId = 0;
 
 function renderCurrentView() {
@@ -33,10 +63,7 @@ function applySelectorReferenceStatus(nextStatus) {
   selectorReferenceStatus = {
     ...nextStatus,
     endpoint: nextStatus?.endpoint || SELECTOR_REFERENCE_STATUS_ENDPOINT,
-    readOnly: true,
-    rawRowsExposed: false,
-    rawUsersExposed: false,
-    rawLabEvidenceExposed: false,
+    ...SAFE_SELECTOR_REFERENCE_STATUS_BASE,
   };
   renderCurrentView();
 }
@@ -96,14 +123,7 @@ export const csSelectorModule = {
     mountedContainer = container;
     selectorState = createSelectorState();
     selectorAdapter = createSelectorContractAdapter({ services, context });
-    selectorReferenceStatus = {
-      status: "not-requested",
-      endpoint: SELECTOR_REFERENCE_STATUS_ENDPOINT,
-      readOnly: true,
-      rawRowsExposed: false,
-      rawUsersExposed: false,
-      rawLabEvidenceExposed: false,
-    };
+    selectorReferenceStatus = initialSelectorReferenceStatus();
     renderCurrentView();
     loadSelectorReferenceStatus();
     services.eventBus?.emit("selector:mounted", {

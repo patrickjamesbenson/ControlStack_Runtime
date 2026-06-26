@@ -1,5 +1,10 @@
 import { readFile, stat } from "node:fs/promises";
 
+import {
+  AUTHORITY_REFERENCE_MATERIALISED_TARGET_PATH,
+  AUTHORITY_REFERENCE_MATERIALISER_TARGET_LABEL,
+} from "./authorityReferenceMaterialiserService.js";
+
 export const SELECTOR_REFERENCE_STATUS_PATH = "/api/selector-reference/status";
 
 export const SELECTOR_CRITICAL_TABLES = Object.freeze([
@@ -55,6 +60,42 @@ const USER_SAFE_DERIVED_USES = Object.freeze([
   "redacted timeline/special-parts entitlement capability status",
   "redacted blacklist/restriction status",
 ]);
+
+const SAFE_SELECTOR_REFERENCE_FLAGS = Object.freeze({
+  readOnly: true,
+  diagnosticOnly: true,
+  sourceStatusReadOnly: true,
+  activeSnapshotWriteEnabled: false,
+  activeSnapshotPromotionEnabled: false,
+  materialisedSnapshotWriteEnabled: false,
+  materialiserWriteEnabled: false,
+  materialiserRefreshEnabled: false,
+  boardDataWriteEnabled: false,
+  selectorResolvingEnabled: false,
+  activeResolverEnabled: false,
+  selectorMutationEnabled: false,
+  specGenerationEnabled: false,
+  slugGenerationEnabled: false,
+  iesGenerationEnabled: false,
+  labProofAuthority: false,
+  controlledRecordsWriteEnabled: false,
+  rregAssignmentEnabled: false,
+  rregApprovalEnabled: false,
+  runtimeDataMutationEnabled: false,
+  hiddenWriteBackEnabled: false,
+  credentialsExposed: false,
+  privatePathsExposed: false,
+  rawRowsExposed: false,
+  rawHeadersExposed: false,
+  rawUsersExposed: false,
+  rawUserHeadersExposed: false,
+  rawLabEvidenceExposed: false,
+});
+
+const DEFAULT_FS_API = Object.freeze({
+  readFile,
+  stat,
+});
 
 function isPlainObject(value) {
   return Boolean(value && typeof value === "object" && !Array.isArray(value));
@@ -196,14 +237,15 @@ function userDerivedAuthorityCapabilitySummary(users) {
 function tableSummary(snapshot, tableName) {
   const rows = tableRows(snapshot, tableName);
   const present = Array.isArray(snapshot?.[tableName]);
-  const isUsers = tableName === "USERS";
   return {
     table: tableName,
     present,
     rowCount: rows.length,
-    headers: isUsers ? [] : unionHeaders(rows),
-    headersRedacted: isUsers,
+    headers: [],
+    headersRedacted: true,
     rawRowsExposed: false,
+    rawHeadersExposed: false,
+    headersReturned: false,
   };
 }
 
@@ -224,53 +266,103 @@ function usersRedactionStatus(snapshot) {
     count: users.length,
     rawRowsExposed: false,
     rawHeadersExposed: false,
+    personalIdentifiersExposed: false,
+    credentialsExposed: false,
     safeDerivedUses: [...USER_SAFE_DERIVED_USES],
     derivedAuthorityCapabilitySummary: userDerivedAuthorityCapabilitySummary(users),
   };
 }
 
-function sourceMetadata(sourcePath, sourceStat) {
+function sourceMetadata({ sourceStat = null, present = Boolean(sourceStat), readable = false, parseable = false } = {}) {
+  const isFile = Boolean(sourceStat?.isFile?.());
   return {
     label: "runtime-authority-reference-active-snapshot",
-    pathLabel: sourcePath,
-    present: Boolean(sourceStat),
-    readable: Boolean(sourceStat?.isFile?.()),
+    present: Boolean(present && isFile),
+    readable: Boolean(readable && isFile),
+    parseable: Boolean(parseable),
     modifiedTime: sourceStat?.mtime?.toISOString?.() || null,
     fileSize: sourceStat?.size ?? null,
   };
 }
 
-function statusFailure({ sourcePath, sourceStat = null, error }) {
-  const reason = error?.message || error?.code || "selector_reference_status_failed";
+function fileMetadata({ label, fileStat = null, present = Boolean(fileStat), readable = false, parseable = null }) {
+  const isFile = Boolean(fileStat?.isFile?.());
+  return {
+    label,
+    present: Boolean(present && isFile),
+    readable: Boolean(readable && isFile),
+    parseable,
+    modifiedTime: fileStat?.mtime?.toISOString?.() || null,
+    fileSize: fileStat?.size ?? null,
+  };
+}
+
+async function safeFileMetadata({ label, pathValue, fsApi = DEFAULT_FS_API } = {}) {
+  if (!pathValue) return fileMetadata({ label, present: false, readable: false });
+  try {
+    const fileStat = await fsApi.stat(pathValue);
+    return fileMetadata({ label, fileStat, present: true, readable: true });
+  } catch (error) {
+    return {
+      label,
+      present: false,
+      readable: false,
+      parseable: null,
+      modifiedTime: null,
+      fileSize: null,
+      reason: error?.code || "unavailable",
+    };
+  }
+}
+
+function emptyTableSummary() {
+  return SELECTOR_CRITICAL_TABLES.map((table) => ({
+    table,
+    present: false,
+    rowCount: 0,
+    headers: [],
+    headersRedacted: true,
+    rawRowsExposed: false,
+    rawHeadersExposed: false,
+    headersReturned: false,
+  }));
+}
+
+function statusFailure({ sourceStat = null, materialisedSnapshot = null, readable = false, error }) {
+  const reason = error?.code || error?.name || "selector_reference_status_failed";
   const emptySnapshot = {};
+  const source = sourceMetadata({
+    sourceStat,
+    present: Boolean(sourceStat),
+    readable,
+    parseable: false,
+  });
   return {
     ok: false,
     endpoint: SELECTOR_REFERENCE_STATUS_PATH,
     owner: "runtime-server",
-    source: sourceMetadata(sourcePath, sourceStat),
-    sourcePathLabel: sourcePath,
-    sourcePresent: Boolean(sourceStat),
-    sourceReadable: Boolean(sourceStat?.isFile?.()),
-    modifiedTime: sourceStat?.mtime?.toISOString?.() || null,
-    fileSize: sourceStat?.size ?? null,
-    readOnly: true,
-    rawRowsExposed: false,
-    rawUsersExposed: false,
-    rawLabEvidenceExposed: false,
-    tableSummary: SELECTOR_CRITICAL_TABLES.map((table) => ({
-      table,
-      present: false,
-      rowCount: 0,
-      headers: [],
-      headersRedacted: table === "USERS",
-      rawRowsExposed: false,
-    })),
+    ...SAFE_SELECTOR_REFERENCE_FLAGS,
+    source,
+    activeSnapshot: source,
+    materialisedSnapshot,
+    sourcePathLabel: "runtime-authority-reference-active-snapshot",
+    sourcePresent: source.present,
+    sourceReadable: source.readable,
+    sourceParseable: source.parseable,
+    modifiedTime: source.modifiedTime,
+    fileSize: source.fileSize,
+    expectedTables: [...SELECTOR_CRITICAL_TABLES],
+    selectorCriticalTables: [...SELECTOR_CRITICAL_TABLES],
+    presentTables: [],
+    tableSummary: emptyTableSummary(),
     missingTables: [...SELECTOR_CRITICAL_TABLES],
     usersRedactionStatus: {
       present: false,
       count: 0,
       rawRowsExposed: false,
       rawHeadersExposed: false,
+      personalIdentifiersExposed: false,
+      credentialsExposed: false,
       safeDerivedUses: [...USER_SAFE_DERIVED_USES],
       derivedAuthorityCapabilitySummary: userDerivedAuthorityCapabilitySummary([]),
     },
@@ -289,36 +381,57 @@ function statusFailure({ sourcePath, sourceStat = null, error }) {
   };
 }
 
-export async function buildSelectorReferenceStatus({ sourcePath }) {
+export async function buildSelectorReferenceStatus({
+  sourcePath,
+  materialisedSnapshotPath = AUTHORITY_REFERENCE_MATERIALISED_TARGET_PATH,
+  fsApi = DEFAULT_FS_API,
+} = {}) {
+  const materialisedSnapshot = await safeFileMetadata({
+    label: AUTHORITY_REFERENCE_MATERIALISER_TARGET_LABEL,
+    pathValue: materialisedSnapshotPath,
+    fsApi,
+  });
+
   let sourceStat = null;
   try {
-    sourceStat = await stat(sourcePath);
-    const text = await readFile(sourcePath, "utf-8");
+    sourceStat = await fsApi.stat(sourcePath);
+    const text = await fsApi.readFile(sourcePath, "utf-8");
     const snapshot = JSON.parse(text);
     const safeSnapshot = isPlainObject(snapshot) ? snapshot : {};
+    const parseable = isPlainObject(snapshot);
     const tableSummaryRows = SELECTOR_CRITICAL_TABLES.map((table) => tableSummary(safeSnapshot, table));
+    const presentTables = tableSummaryRows.filter((table) => table.present).map((table) => table.table);
     const missingTables = tableSummaryRows.filter((table) => !table.present).map((table) => table.table);
     const warnings = [
+      ...(parseable ? [] : ["Selector Reference active snapshot parsed but did not contain a table object."]),
       ...missingTables.map((table) => `Missing Selector-critical table: ${table}.`),
       SELECTOR_FAKE_PROOF_WARNING,
       SELECTOR_FAKE_PROOF_WARNING_EXPANDED,
     ];
+    const source = sourceMetadata({
+      sourceStat,
+      present: true,
+      readable: true,
+      parseable,
+    });
 
     return {
-      ok: true,
+      ok: parseable,
       endpoint: SELECTOR_REFERENCE_STATUS_PATH,
       owner: "runtime-server",
-      source: sourceMetadata(sourcePath, sourceStat),
-      sourcePathLabel: sourcePath,
-      sourcePresent: Boolean(sourceStat),
-      sourceReadable: Boolean(sourceStat?.isFile?.()),
-      modifiedTime: sourceStat?.mtime?.toISOString?.() || null,
-      fileSize: sourceStat?.size ?? null,
-      readOnly: true,
-      rawRowsExposed: false,
-      rawUsersExposed: false,
-      rawLabEvidenceExposed: false,
+      ...SAFE_SELECTOR_REFERENCE_FLAGS,
+      source,
+      activeSnapshot: source,
+      materialisedSnapshot,
+      sourcePathLabel: "runtime-authority-reference-active-snapshot",
+      sourcePresent: source.present,
+      sourceReadable: source.readable,
+      sourceParseable: source.parseable,
+      modifiedTime: source.modifiedTime,
+      fileSize: source.fileSize,
+      expectedTables: [...SELECTOR_CRITICAL_TABLES],
       selectorCriticalTables: [...SELECTOR_CRITICAL_TABLES],
+      presentTables,
       tableSummary: tableSummaryRows,
       missingTables,
       usersRedactionStatus: usersRedactionStatus(safeSnapshot),
@@ -327,6 +440,11 @@ export async function buildSelectorReferenceStatus({ sourcePath }) {
       warnings,
     };
   } catch (error) {
-    return statusFailure({ sourcePath, sourceStat, error });
+    return statusFailure({
+      sourceStat,
+      materialisedSnapshot,
+      readable: error?.name === "SyntaxError",
+      error,
+    });
   }
 }

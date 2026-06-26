@@ -1,5 +1,10 @@
 import { readFile, stat } from "node:fs/promises";
 
+import {
+  AUTHORITY_REFERENCE_MATERIALISED_TARGET_PATH,
+  AUTHORITY_REFERENCE_MATERIALISER_TARGET_LABEL,
+} from "./authorityReferenceMaterialiserService.js";
+
 export const BOARD_DATA_STATUS_PATH = "/api/board-data/status";
 
 export const BOARD_DATA_EXPECTED_TABLES = Object.freeze([
@@ -28,18 +33,37 @@ const SAFE_BOUNDARY_FLAGS = Object.freeze({
   label: "Board Data",
   readOnly: true,
   diagnosticOnly: true,
+  sourceStatusReadOnly: true,
   productDataAuthority: true,
   writeEnabled: false,
+  boardDataWriteEnabled: false,
   selectorMutationEnabled: false,
+  selectorResolvingEnabled: false,
+  activeResolverEnabled: false,
+  specGenerationEnabled: false,
+  slugGenerationEnabled: false,
   labProofAuthority: false,
   iesGenerationEnabled: false,
   googleSyncEnabled: false,
+  googleSheetsWriteEnabled: false,
+  materialiserWriteEnabled: false,
+  materialiserRefreshEnabled: false,
   activeSnapshotWriteEnabled: false,
+  activeSnapshotPromotionEnabled: false,
   materialisedSnapshotWriteEnabled: false,
+  controlledRecordsWriteEnabled: false,
+  rregAssignmentEnabled: false,
+  runtimeDataMutationEnabled: false,
   rawRowsExposed: false,
+  rawHeadersExposed: false,
   rawUsersExposed: false,
   rawUserHeadersExposed: false,
+  rawGoogleRowsExposed: false,
+  rawLabEvidenceExposed: false,
+  credentialsExposed: false,
+  privatePathsExposed: false,
   candidateEditMode: false,
+  hiddenWriteBackEnabled: false,
   approvedDataSource: "active authority-reference snapshot",
 });
 
@@ -69,6 +93,38 @@ function sourceMetadata({ sourceStat = null, present = Boolean(sourceStat), read
   };
 }
 
+function fileMetadata({ label, fileStat = null, present = Boolean(fileStat), readable = false, parseable = null }) {
+  const isFile = Boolean(fileStat?.isFile?.());
+  return {
+    label,
+    present: Boolean(present && isFile),
+    readable: Boolean(readable && isFile),
+    parseable,
+    modifiedTime: fileStat?.mtime?.toISOString?.() || null,
+    fileSize: fileStat?.size ?? null,
+  };
+}
+
+async function safeFileMetadata({ label, pathValue, fsApi = DEFAULT_FS_API } = {}) {
+  if (!pathValue) {
+    return fileMetadata({ label, present: false, readable: false });
+  }
+  try {
+    const fileStat = await fsApi.stat(pathValue);
+    return fileMetadata({ label, fileStat, present: true, readable: true });
+  } catch (error) {
+    return {
+      label,
+      present: false,
+      readable: false,
+      parseable: null,
+      modifiedTime: null,
+      fileSize: null,
+      reason: error?.code || "unavailable",
+    };
+  }
+}
+
 function tableStatus(snapshot, tableName) {
   const present = Array.isArray(snapshot?.[tableName]);
   return {
@@ -76,7 +132,9 @@ function tableStatus(snapshot, tableName) {
     present,
     rowCount: rowsFor(snapshot, tableName).length,
     rawRowsExposed: false,
-    headersRedacted: false,
+    rawHeadersExposed: false,
+    headersReturned: false,
+    headersRedacted: true,
   };
 }
 
@@ -92,6 +150,8 @@ function usersRedactionStatus(snapshot) {
     count: rowsFor(snapshot, "USERS").length,
     rawRowsExposed: false,
     rawHeadersExposed: false,
+    personalIdentifiersExposed: false,
+    credentialsExposed: false,
   };
 }
 
@@ -103,8 +163,12 @@ function proofBoundary() {
   };
 }
 
-function buildStatus({ ok, source, snapshot = {}, warnings = [] }) {
+function buildStatus({ ok, source, materialisedSnapshot, snapshot = {}, warnings = [] }) {
   const tableSummary = BOARD_DATA_EXPECTED_TABLES.map((tableName) => tableStatus(snapshot, tableName));
+  const expectedTables = [...BOARD_DATA_EXPECTED_TABLES];
+  const presentTables = tableSummary
+    .filter((table) => table.present)
+    .map((table) => table.table);
   const missingExpectedTables = tableSummary
     .filter((table) => !table.present)
     .map((table) => table.table);
@@ -114,10 +178,15 @@ function buildStatus({ ok, source, snapshot = {}, warnings = [] }) {
     endpoint: BOARD_DATA_STATUS_PATH,
     ...SAFE_BOUNDARY_FLAGS,
     source,
+    activeSnapshot: source,
+    materialisedSnapshot,
+    expectedTables,
+    presentTables,
     counts: countExpectedRows(snapshot),
     tableSummary,
     usersRedactionStatus: usersRedactionStatus(snapshot),
     missingExpectedTables,
+    missingTables: missingExpectedTables,
     proofBoundary: proofBoundary(),
     warnings: [
       ...missingExpectedTables.map((table) => `Missing Board Data expected table: ${table}.`),
@@ -127,7 +196,7 @@ function buildStatus({ ok, source, snapshot = {}, warnings = [] }) {
   };
 }
 
-function failureStatus({ sourceStat = null, readable = false, reason }) {
+function failureStatus({ sourceStat = null, readable = false, materialisedSnapshot = null, reason }) {
   return buildStatus({
     ok: false,
     source: sourceMetadata({
@@ -136,14 +205,25 @@ function failureStatus({ sourceStat = null, readable = false, reason }) {
       readable,
       parseable: false,
     }),
+    materialisedSnapshot,
     snapshot: {},
     warnings: [reason || "Board Data active authority-reference snapshot could not be read."],
   });
 }
 
-export async function buildBoardDataStatus({ sourcePath, fsApi = DEFAULT_FS_API } = {}) {
+export async function buildBoardDataStatus({
+  sourcePath,
+  materialisedSnapshotPath = AUTHORITY_REFERENCE_MATERIALISED_TARGET_PATH,
+  fsApi = DEFAULT_FS_API,
+} = {}) {
+  const materialisedSnapshot = await safeFileMetadata({
+    label: AUTHORITY_REFERENCE_MATERIALISER_TARGET_LABEL,
+    pathValue: materialisedSnapshotPath,
+    fsApi,
+  });
+
   if (!sourcePath) {
-    return failureStatus({ reason: "Board Data status source path is not configured." });
+    return failureStatus({ materialisedSnapshot, reason: "Board Data status source path is not configured." });
   }
 
   let sourceStat = null;
@@ -152,6 +232,7 @@ export async function buildBoardDataStatus({ sourcePath, fsApi = DEFAULT_FS_API 
   } catch (error) {
     return failureStatus({
       sourceStat,
+      materialisedSnapshot,
       reason: `Board Data active authority-reference snapshot is missing or unavailable: ${error?.code || error?.message || "unknown error"}.`,
     });
   }
@@ -159,6 +240,7 @@ export async function buildBoardDataStatus({ sourcePath, fsApi = DEFAULT_FS_API 
   if (!sourceStat?.isFile?.()) {
     return failureStatus({
       sourceStat,
+      materialisedSnapshot,
       reason: "Board Data active authority-reference snapshot path is not a file.",
     });
   }
@@ -170,6 +252,7 @@ export async function buildBoardDataStatus({ sourcePath, fsApi = DEFAULT_FS_API 
     return failureStatus({
       sourceStat,
       readable: false,
+      materialisedSnapshot,
       reason: `Board Data active authority-reference snapshot is not readable: ${error?.code || error?.message || "unknown error"}.`,
     });
   }
@@ -181,6 +264,7 @@ export async function buildBoardDataStatus({ sourcePath, fsApi = DEFAULT_FS_API 
     return failureStatus({
       sourceStat,
       readable: true,
+      materialisedSnapshot,
       reason: `Board Data active authority-reference snapshot is not parseable JSON: ${error?.message || "parse failed"}.`,
     });
   }
@@ -197,6 +281,7 @@ export async function buildBoardDataStatus({ sourcePath, fsApi = DEFAULT_FS_API 
       readable: true,
       parseable,
     }),
+    materialisedSnapshot,
     snapshot,
     warnings,
   });

@@ -27,6 +27,14 @@ function appendPillList(parent, items) {
   parent.appendChild(list);
 }
 
+const LIVE_STATUS_COPY = Object.freeze([
+  "Board Data / Selector Reference live status is read-only in this slice.",
+  "This status bridge reports source presence, table readiness, and redaction safety only.",
+  "Raw rows, raw USERS, raw Lab evidence, credentials, private paths, and secret values are not exposed.",
+  "Selector resolving remains disabled until a later approved resolver-preview slice.",
+  "Board Data defines metadata. Selector resolves later. Lab proves later.",
+]);
+
 function appendSection(parent, heading, rows) {
   const section = document.createElement("section");
   section.className = "cs-selector-proof__section";
@@ -87,41 +95,95 @@ function yesNo(value) {
   return String(value);
 }
 
+function forcedFalse(value) {
+  return value === true ? "true" : "false";
+}
+
 function valueOrNone(value) {
   if (value === null || value === undefined || value === "") return "none";
   return String(value);
 }
 
 function selectorReferenceSourceRows(reference = {}) {
-  const source = reference.source || {};
+  const source = reference.source || reference.activeSnapshot || {};
+  const materialised = reference.materialisedSnapshot || {};
   return [
     ["endpoint", reference.endpoint || "/api/selector-reference/status"],
     ["status", reference.status || (reference.ok === true ? "loaded" : "unknown")],
     ["ok", yesNo(reference.ok)],
-    ["source label", source.label || "runtime-authority-reference-active-snapshot"],
-    ["source path label", source.pathLabel || "C:\\ControlStack_RuntimeData\\authority-reference\\novondb.json"],
-    ["source present", yesNo(source.present)],
-    ["source readable", yesNo(source.readable)],
-    ["modified", valueOrNone(source.modifiedTime)],
-    ["file size", source.fileSize === undefined || source.fileSize === null ? "none" : `${source.fileSize} bytes`],
+    ["active snapshot label", source.label || "runtime-authority-reference-active-snapshot"],
+    ["active snapshot present", yesNo(source.present)],
+    ["active snapshot readable", yesNo(source.readable)],
+    ["active snapshot parseable", yesNo(source.parseable)],
+    ["active snapshot modified", valueOrNone(source.modifiedTime)],
+    ["active snapshot file size", source.fileSize === undefined || source.fileSize === null ? "none" : `${source.fileSize} bytes`],
+    ["materialised snapshot label", materialised.label || "runtime-authority-reference-materialised-novondb"],
+    ["materialised snapshot present", yesNo(materialised.present)],
+    ["materialised snapshot readable", yesNo(materialised.readable)],
+    ["materialised snapshot modified", valueOrNone(materialised.modifiedTime)],
+    ["materialised snapshot file size", materialised.fileSize === undefined || materialised.fileSize === null ? "none" : `${materialised.fileSize} bytes`],
     ["read only", yesNo(reference.readOnly)],
-    ["raw rows exposed", yesNo(reference.rawRowsExposed)],
-    ["raw Lab evidence exposed", yesNo(reference.rawLabEvidenceExposed)],
+    ["raw rows exposed", forcedFalse(reference.rawRowsExposed)],
+    ["raw headers exposed", forcedFalse(reference.rawHeadersExposed)],
+    ["raw Lab evidence exposed", forcedFalse(reference.rawLabEvidenceExposed)],
+    ["credentials exposed", forcedFalse(reference.credentialsExposed)],
+    ["private paths exposed", forcedFalse(reference.privatePathsExposed)],
   ];
 }
 
 function selectorReferenceTableRows(reference = {}) {
   const tables = Array.isArray(reference.tableSummary) ? reference.tableSummary : [];
   if (!tables.length) return [["tables", "loading or unavailable"]];
-  return tables.map((table) => {
-    const headers = table.headersRedacted
-      ? "redacted"
-      : (Array.isArray(table.headers) && table.headers.length ? table.headers.join(", ") : "none");
-    return [
-      table.table || "unknown",
-      `${table.present ? table.rowCount : "missing"}${table.present ? " rows" : ""}; headers: ${headers}`,
-    ];
-  });
+  return tables.map((table) => [
+    table.table || "unknown",
+    `present:${yesNo(table.present)}; count:${table.present ? table.rowCount : 0}; rawRowsExposed:${forcedFalse(table.rawRowsExposed)}; rawHeadersExposed:${forcedFalse(table.rawHeadersExposed)}; headersReturned:${forcedFalse(table.headersReturned)}`,
+  ]);
+}
+
+function selectorExpectedTables(reference = {}) {
+  return Array.isArray(reference.expectedTables) && reference.expectedTables.length
+    ? reference.expectedTables
+    : (Array.isArray(reference.selectorCriticalTables) ? reference.selectorCriticalTables : []);
+}
+
+function selectorPresentTables(reference = {}) {
+  if (Array.isArray(reference.presentTables)) return reference.presentTables;
+  return (Array.isArray(reference.tableSummary) ? reference.tableSummary : [])
+    .filter((table) => table.present)
+    .map((table) => table.table);
+}
+
+function selectorReferenceBridgeRows(reference = {}) {
+  const source = reference.source || reference.activeSnapshot || {};
+  const materialised = reference.materialisedSnapshot || {};
+  const users = reference.usersRedactionStatus || {};
+  const missingTables = Array.isArray(reference.missingTables) ? reference.missingTables : [];
+  return [
+    ["active snapshot present", yesNo(source.present)],
+    ["active snapshot readable", yesNo(source.readable)],
+    ["active snapshot parseable", yesNo(source.parseable)],
+    ["materialised snapshot present", yesNo(materialised.present)],
+    ["materialised snapshot readable", yesNo(materialised.readable)],
+    ["expected tables", selectorExpectedTables(reference).join(", ") || "none reported"],
+    ["present tables", selectorPresentTables(reference).join(", ") || "none reported"],
+    ["missing tables", missingTables.length ? missingTables.join(", ") : "none reported"],
+    ["safe table counts visible", "true"],
+    ["USERS present", yesNo(users.present)],
+    ["USERS count only", users.count ?? 0],
+    ["USERS raw rows exposed", forcedFalse(users.rawRowsExposed)],
+    ["USERS raw headers exposed", forcedFalse(users.rawHeadersExposed)],
+    ["raw rows exposed", forcedFalse(reference.rawRowsExposed)],
+    ["raw headers exposed", forcedFalse(reference.rawHeadersExposed)],
+    ["raw Lab evidence exposed", forcedFalse(reference.rawLabEvidenceExposed)],
+    ["credentials exposed", forcedFalse(reference.credentialsExposed)],
+    ["private paths exposed", forcedFalse(reference.privatePathsExposed)],
+    ["source status read-only", "true"],
+    ["Board Data write enabled", forcedFalse(reference.boardDataWriteEnabled)],
+    ["materialiser write enabled", forcedFalse(reference.materialiserWriteEnabled)],
+    ["Selector resolving enabled", forcedFalse(reference.selectorResolvingEnabled ?? reference.activeResolverEnabled)],
+    ["spec generation enabled", forcedFalse(reference.specGenerationEnabled)],
+    ["Lab proof authority", forcedFalse(reference.labProofAuthority)],
+  ];
 }
 
 function selectorReferenceProofWarnings(reference = {}) {
@@ -514,8 +576,16 @@ function appendSelectorExpanderShell(parent, viewModel) {
 
 function appendSelectorReferencePanel(parent, viewModel) {
   const reference = viewModel.selectorReference || {};
+
+  const bridgeSection = document.createElement("section");
+  bridgeSection.className = "cs-selector-proof__section";
+  appendText(bridgeSection, "h3", "Board Data / Selector Reference live status bridge");
+  appendPillList(bridgeSection, LIVE_STATUS_COPY);
+  parent.appendChild(bridgeSection);
+
+  appendSection(parent, "Selector Reference live source/data readiness bridge", selectorReferenceBridgeRows(reference));
   appendSection(parent, "Runtime Selector reference snapshot", selectorReferenceSourceRows(reference));
-  appendSection(parent, "Selector-critical table counts and headers", selectorReferenceTableRows(reference));
+  appendSection(parent, "Selector-critical table counts", selectorReferenceTableRows(reference));
 
   const missingTables = Array.isArray(reference.missingTables) ? reference.missingTables : [];
   const users = reference.usersRedactionStatus || {};
@@ -526,8 +596,8 @@ function appendSelectorReferencePanel(parent, viewModel) {
     ["missing tables", missingTables.length ? missingTables.join(", ") : "none reported"],
     ["USERS present", yesNo(users.present)],
     ["USERS count", users.count ?? 0],
-    ["USERS raw rows exposed", yesNo(users.rawRowsExposed)],
-    ["USERS raw headers exposed", yesNo(users.rawHeadersExposed)],
+    ["USERS raw rows exposed", forcedFalse(users.rawRowsExposed)],
+    ["USERS raw headers exposed", forcedFalse(users.rawHeadersExposed)],
     ["USERS safe derived uses", Array.isArray(users.safeDerivedUses) ? users.safeDerivedUses.join("; ") : "redacted status only"],
     ["USERS authority role rows", fieldCoverage.roleRows ?? 0],
     ["USERS capability rows", fieldCoverage.capabilityRows ?? 0],
@@ -536,6 +606,17 @@ function appendSelectorReferencePanel(parent, viewModel) {
     ["PURE_REF_STATE count", pureRef.count ?? 0],
     ["PURE_REF_STATE diagnostic only", yesNo(pureRef.diagnosticOnly)],
     ["PURE_REF_STATE production proof", yesNo(pureRef.productionProof)],
+    ["raw rows exposed", forcedFalse(reference.rawRowsExposed)],
+    ["raw headers exposed", forcedFalse(reference.rawHeadersExposed)],
+    ["raw Lab evidence exposed", forcedFalse(reference.rawLabEvidenceExposed)],
+    ["credentials exposed", forcedFalse(reference.credentialsExposed)],
+    ["private paths exposed", forcedFalse(reference.privatePathsExposed)],
+    ["Board Data write enabled", forcedFalse(reference.boardDataWriteEnabled)],
+    ["materialiser write enabled", forcedFalse(reference.materialiserWriteEnabled)],
+    ["Selector resolving enabled", forcedFalse(reference.selectorResolvingEnabled ?? reference.activeResolverEnabled)],
+    ["spec generation enabled", forcedFalse(reference.specGenerationEnabled)],
+    ["slug generation enabled", forcedFalse(reference.slugGenerationEnabled)],
+    ["Lab proof authority", forcedFalse(reference.labProofAuthority)],
   ]);
 
   const riskFields = Array.isArray(reference.fallbackRiskFields) ? reference.fallbackRiskFields : [];

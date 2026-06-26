@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
 import {
+  BOARD_DATA_EXPECTED_TABLES,
   BOARD_DATA_STATUS_PATH,
   buildBoardDataStatus,
 } from "../packages/workspace-kernel/boardDataStatusService.js";
@@ -68,6 +69,13 @@ test("status can be generated from a valid synthetic active snapshot", async () 
   assert.equal(status.source.readable, true);
   assert.equal(status.source.parseable, true);
   assert.equal(status.source.label, "runtime-authority-reference-active-snapshot");
+  assert.deepEqual(status.activeSnapshot, status.source);
+  assert.equal(status.materialisedSnapshot.label, "runtime-authority-reference-materialised-novondb");
+  assert.equal(status.materialisedSnapshot.present, true);
+  assert.equal(status.materialisedSnapshot.readable, true);
+  assert.deepEqual(status.expectedTables, [...BOARD_DATA_EXPECTED_TABLES]);
+  assert.ok(status.presentTables.includes("BOARDS"));
+  assert.deepEqual(status.missingTables, []);
 });
 
 test("required Board Data boundary flags are present and safe", async () => {
@@ -78,17 +86,36 @@ test("required Board Data boundary flags are present and safe", async () => {
 
   assert.equal(status.readOnly, true);
   assert.equal(status.diagnosticOnly, true);
+  assert.equal(status.sourceStatusReadOnly, true);
   assert.equal(status.productDataAuthority, true);
   assert.equal(status.writeEnabled, false);
+  assert.equal(status.boardDataWriteEnabled, false);
   assert.equal(status.selectorMutationEnabled, false);
+  assert.equal(status.selectorResolvingEnabled, false);
+  assert.equal(status.activeResolverEnabled, false);
+  assert.equal(status.specGenerationEnabled, false);
+  assert.equal(status.slugGenerationEnabled, false);
   assert.equal(status.labProofAuthority, false);
   assert.equal(status.iesGenerationEnabled, false);
   assert.equal(status.googleSyncEnabled, false);
+  assert.equal(status.googleSheetsWriteEnabled, false);
+  assert.equal(status.materialiserWriteEnabled, false);
+  assert.equal(status.materialiserRefreshEnabled, false);
   assert.equal(status.activeSnapshotWriteEnabled, false);
+  assert.equal(status.activeSnapshotPromotionEnabled, false);
   assert.equal(status.materialisedSnapshotWriteEnabled, false);
+  assert.equal(status.controlledRecordsWriteEnabled, false);
+  assert.equal(status.rregAssignmentEnabled, false);
+  assert.equal(status.runtimeDataMutationEnabled, false);
   assert.equal(status.rawRowsExposed, false);
+  assert.equal(status.rawHeadersExposed, false);
   assert.equal(status.rawUsersExposed, false);
   assert.equal(status.rawUserHeadersExposed, false);
+  assert.equal(status.rawGoogleRowsExposed, false);
+  assert.equal(status.rawLabEvidenceExposed, false);
+  assert.equal(status.credentialsExposed, false);
+  assert.equal(status.privatePathsExposed, false);
+  assert.equal(status.hiddenWriteBackEnabled, false);
   assert.equal(status.candidateEditMode, false);
   assert.equal(status.approvedDataSource, "active authority-reference snapshot");
   assert.deepEqual(status.proofBoundary, {
@@ -149,9 +176,14 @@ test("raw table rows are not returned", async () => {
 
   const text = JSON.stringify(status);
   assert.equal(status.rawRowsExposed, false);
+  assert.equal(status.rawHeadersExposed, false);
   assert.equal(status.tableSummary.every((table) => table.rawRowsExposed === false), true);
+  assert.equal(status.tableSummary.every((table) => table.rawHeadersExposed === false), true);
+  assert.equal(status.tableSummary.every((table) => table.headersReturned === false), true);
   assert.equal(text.includes("board raw row value"), false);
   assert.equal(text.includes("proof-looking-but-metadata-only"), false);
+  assert.equal(text.includes("C:\\ControlStack_RuntimeData"), false);
+  assert.equal(text.includes("fixture.json"), false);
 });
 
 test("missing snapshot returns safe warning shape", async () => {
