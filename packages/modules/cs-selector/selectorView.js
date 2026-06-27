@@ -749,6 +749,82 @@ function appendBadgeList(parent, badges = []) {
   parent.appendChild(list);
 }
 
+function appendSelectorProductFieldCard(parent, field = {}, surface = {}, idPrefix = "cs-selector-product") {
+  const card = document.createElement("article");
+  card.className = "cs-selector-product__field";
+  card.dataset.fieldKey = field.fieldKey || "unknown";
+  card.dataset.fieldStatus = field.status || "unknown";
+
+  const label = document.createElement("label");
+  label.htmlFor = `${idPrefix}-${field.fieldKey}`;
+  label.textContent = field.label || field.fieldKey || "Field";
+  card.appendChild(label);
+
+  const select = document.createElement("select");
+  select.id = `${idPrefix}-${field.fieldKey}`;
+  select.dataset.fieldKey = field.fieldKey || "unknown";
+  select.disabled = field.disabled === true || field.futureMapped === true || !(field.options || []).length;
+
+  const emptyOption = document.createElement("option");
+  emptyOption.value = "";
+  emptyOption.textContent = field.disabled === true
+    ? "Disabled in this read-only slice"
+    : field.futureMapped === true
+      ? "Unavailable from current source — future mapped"
+      : "No manual constraint / keep preview consequence";
+  select.appendChild(emptyOption);
+
+  for (const option of field.options || []) {
+    const optionElement = document.createElement("option");
+    optionElement.value = option.value;
+    const suffix = option.blocked ? " — blocked / missing" : option.sourceStatus === "db-reference-backed" ? "" : ` — ${option.sourceStatus || "mapped"}`;
+    optionElement.textContent = `${option.label || option.value}${suffix}`;
+    optionElement.disabled = option.blocked === true && option.selected !== true;
+    select.appendChild(optionElement);
+  }
+  select.value = field.selectedValue || "";
+  select.addEventListener("change", () => {
+    if (select.value) surface.setFieldValue?.(field.fieldKey, select.value);
+    else surface.clearFieldValue?.(field.fieldKey);
+  });
+  card.appendChild(select);
+
+  appendDefinitionList(card, [
+    ["source", field.sourceStatus || "unavailable from current source"],
+    ["state", field.status || "unknown"],
+    ["role", field.role || "manual-constraint"],
+    ["selected", field.selectedLabel || "none"],
+    ["options", Array.isArray(field.options) ? field.options.length : 0],
+    ["reason", field.unavailableReason || "DB/reference-backed option labels only; no raw rows exposed"],
+  ]);
+  parent.appendChild(card);
+}
+
+function appendSelectorWorkflowSections(parent, surface = {}) {
+  const sections = Array.isArray(surface.workflowSections) ? surface.workflowSections : [];
+  if (!sections.length) return;
+  const wrapper = document.createElement("div");
+  wrapper.className = "cs-selector-product__workflow";
+  for (const workflowSection of sections) {
+    const section = document.createElement("section");
+    section.className = "cs-selector-product__workflow-section";
+    section.dataset.workflowSection = workflowSection.sectionKey || "unknown";
+    appendText(section, "h4", workflowSection.title || workflowSection.sectionKey || "Workflow section");
+    appendDefinitionList(section, [
+      ["status", workflowSection.status || "preview"],
+      ["mapped", workflowSection.mappedCount ?? 0],
+      ["future mapped", workflowSection.futureMappedCount ?? 0],
+      ["disabled", workflowSection.disabledCount ?? 0],
+    ]);
+    const grid = document.createElement("div");
+    grid.className = "cs-selector-product__grid";
+    for (const field of workflowSection.fields || []) appendSelectorProductFieldCard(grid, field, surface, `cs-selector-workflow-${workflowSection.sectionKey}`);
+    section.appendChild(grid);
+    wrapper.appendChild(section);
+  }
+  parent.appendChild(wrapper);
+}
+
 function appendSelectorProductSurface(parent, surface = {}) {
   const section = document.createElement("section");
   section.className = "cs-selector-product";
@@ -763,6 +839,8 @@ function appendSelectorProductSurface(parent, surface = {}) {
 
   appendText(section, "p", surface.requiredSafetyCopy || "Read-only preview. No spec, slug, IES, payload, RunTable, Lab Proof, Controlled Record, RREG approval, custody transfer, Board Data write, or hidden write-back is created here.", "cs-selector-product__safety");
   appendText(section, "p", surface.proofCopy || "Selector previews selection readiness. Lab Proof proves later.", "cs-selector-product__proof");
+
+  appendSelectorWorkflowSections(section, surface);
 
   const grid = document.createElement("div");
   grid.className = "cs-selector-product__grid";

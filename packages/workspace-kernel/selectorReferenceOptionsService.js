@@ -21,10 +21,138 @@ const TARGET_FIELDS = Object.freeze([
   { fieldKey: "specialParts", label: "Accessories / special parts", role: "auto-consequence", sourceTables: ["ACCESSORIES", "SYSTEM_COMPONENTS"] },
 ]);
 
-const TARGET_FIELD_KEYS = new Set(TARGET_FIELDS.map((field) => field.fieldKey));
+const WORKFLOW_SECTION_DEFINITIONS = Object.freeze([
+  {
+    sectionKey: "system",
+    title: "System",
+    fields: [
+      { fieldKey: "tier", label: "Tier", role: "manual-constraint", sourceTables: ["TIERS", "SYSTEM_POLICY"] },
+      { fieldKey: "system", label: "System", role: "manual-constraint", sourceTables: ["SYSTEM"] },
+      { fieldKey: "variantKey", label: "Variant", role: "auto-consequence", sourceTables: ["SYSTEM"] },
+      { fieldKey: "emission", label: "Emission / direct-indirect mode", role: "manual-constraint", sourceTables: ["SYSTEM"] },
+      { fieldKey: "directCapability", label: "Direct capability", role: "auto-consequence", sourceTables: ["SYSTEM", "OPTICS"] },
+      { fieldKey: "indirectCapability", label: "Indirect capability", role: "auto-consequence", sourceTables: ["SYSTEM", "OPTICS"] },
+    ],
+  },
+  {
+    sectionKey: "optics",
+    title: "Optics",
+    fields: [
+      { fieldKey: "optic", label: "Direct optic", role: "manual-constraint", sourceTables: ["OPTICS"] },
+      { fieldKey: "opticSub", label: "Direct optic V2 / sub-option", role: "manual-constraint", sourceTables: ["OPTICS"] },
+      { fieldKey: "opticIndirect", label: "Indirect optic", role: "manual-constraint", sourceTables: ["OPTICS"] },
+    ],
+  },
+  {
+    sectionKey: "environment",
+    title: "Environment",
+    fields: [
+      { fieldKey: "ipRating", label: "IP rating", role: "manual-constraint", sourceTables: ["OPTICS", "SYSTEM_POLICY"] },
+      { fieldKey: "ikRating", label: "IK rating", role: "manual-constraint", sourceTables: ["OPTICS", "SYSTEM_POLICY"] },
+      { fieldKey: "electricalClass", label: "Electrical class", role: "manual-constraint", sourceTables: ["TIERS", "ACCESSORIES", "SYSTEM_POLICY"] },
+      { fieldKey: "ambient", label: "Ambient temperature", role: "manual-constraint", sourceTables: ["SYSTEM_POLICY"] },
+    ],
+  },
+  {
+    sectionKey: "lightControl",
+    title: "Light & Control",
+    fields: [
+      { fieldKey: "targetLmPerM", label: "Direct lm/m", role: "manual-constraint", sourceTables: ["BOARDS"] },
+      { fieldKey: "cctCri", label: "Direct paired CCT/CRI", role: "manual-constraint", sourceTables: ["BOARDS"] },
+      { fieldKey: "controlType", label: "Direct control protocol", role: "manual-constraint", sourceTables: ["BOARDS", "DRIVERS", "SYSTEM_POLICY"] },
+      { fieldKey: "indirectMatchDirect", label: "Indirect match-direct", role: "inherited-consequence", sourceTables: ["SYSTEM", "OPTICS"] },
+      { fieldKey: "targetLmPerMIndirect", label: "Indirect lm/m", role: "manual-constraint", sourceTables: ["BOARDS"] },
+      { fieldKey: "cctCriIndirect", label: "Indirect paired CCT/CRI", role: "manual-constraint", sourceTables: ["BOARDS"] },
+      { fieldKey: "controlTypeIndirect", label: "Indirect control protocol", role: "manual-constraint", sourceTables: ["BOARDS", "DRIVERS"] },
+      { fieldKey: "driver", label: "Driver consequence", role: "auto-consequence", sourceTables: ["DRIVERS"] },
+    ],
+  },
+  {
+    sectionKey: "mounting",
+    title: "Mounting",
+    fields: [
+      { fieldKey: "mountStyle", label: "Mount style", role: "manual-constraint", sourceTables: ["SYSTEM", "ACCESSORIES", "SYSTEM_POLICY"] },
+      { fieldKey: "mountSelection", label: "Mount selection", role: "manual-constraint", sourceTables: ["ACCESSORIES"] },
+      { fieldKey: "mountParticulars", label: "Mount particulars", role: "manual-constraint", sourceTables: ["ACCESSORIES"] },
+      { fieldKey: "mountNotes", label: "Mount notes", role: "future-mapped", sourceTables: [] },
+    ],
+  },
+  {
+    sectionKey: "penetrations",
+    title: "Penetrations / Wiring",
+    fields: [
+      { fieldKey: "powerPenetration", label: "Power penetration", role: "manual-constraint", sourceTables: ["ACCESSORIES"] },
+      { fieldKey: "powerLocation", label: "Power location", role: "manual-constraint", sourceTables: ["ACCESSORIES"] },
+      { fieldKey: "flexLength", label: "Flex length", role: "manual-constraint", sourceTables: ["ACCESSORIES"] },
+      { fieldKey: "wiringType", label: "Wiring type", role: "manual-constraint", sourceTables: ["SYSTEM_POLICY", "DRIVERS"] },
+      { fieldKey: "penetrationNotes", label: "Penetration notes", role: "future-mapped", sourceTables: [] },
+    ],
+  },
+  {
+    sectionKey: "finishes",
+    title: "Finishes",
+    fields: [
+      { fieldKey: "bodyFinish", label: "Default / body finish", role: "manual-constraint", sourceTables: ["SYSTEM", "SYSTEM_POLICY"] },
+      { fieldKey: "finishCover", label: "Cover finish", role: "inherited-consequence", sourceTables: ["SYSTEM", "SYSTEM_POLICY"] },
+      { fieldKey: "finishEnd", label: "End finish", role: "inherited-consequence", sourceTables: ["SYSTEM", "SYSTEM_POLICY"] },
+      { fieldKey: "finishFlex", label: "Flex finish", role: "inherited-consequence", sourceTables: ["SYSTEM", "SYSTEM_POLICY"] },
+      { fieldKey: "inheritedFinishStatus", label: "Inherited finish status", role: "inherited-consequence", sourceTables: ["SYSTEM", "SYSTEM_POLICY"] },
+    ],
+  },
+  {
+    sectionKey: "egressAccessories",
+    title: "Egress & Accessories",
+    fields: [
+      { fieldKey: "egressLight", label: "Egress light", role: "manual-constraint", sourceTables: ["ACCESSORIES"] },
+      { fieldKey: "egressSound", label: "EWIS / sound", role: "manual-constraint", sourceTables: ["ACCESSORIES"] },
+      { fieldKey: "sensor", label: "Sensor / PIR", role: "manual-constraint", sourceTables: ["ACCESSORIES"] },
+      { fieldKey: "accessories", label: "Accessories", role: "auto-consequence", sourceTables: ["ACCESSORIES"] },
+    ],
+  },
+  {
+    sectionKey: "specialParts",
+    title: "Special Parts",
+    fields: [
+      { fieldKey: "specialPartsEntitlement", label: "Special-parts entitlement preview", role: "entitlement-gated", sourceTables: ["USERS", "SYSTEM_COMPONENTS"] },
+      { fieldKey: "specialPartsOptIn", label: "Special-parts opt-in/out preview", role: "disabled", sourceTables: ["USERS", "SYSTEM_COMPONENTS"] },
+      { fieldKey: "userEntitlementStatus", label: "User-entitlement status", role: "entitlement-gated", sourceTables: ["USERS"] },
+    ],
+  },
+  {
+    sectionKey: "runsPreview",
+    title: "Runs Preview",
+    fields: [
+      { fieldKey: "runCount", label: "Run count/list", role: "disabled", sourceTables: [] },
+      { fieldKey: "runQty", label: "Qty", role: "disabled", sourceTables: [] },
+      { fieldKey: "runLength", label: "Length", role: "disabled", sourceTables: [] },
+      { fieldKey: "runLengthMode", label: "Length mode", role: "disabled", sourceTables: [] },
+      { fieldKey: "runOverrideStatus", label: "Override status", role: "disabled", sourceTables: [] },
+      { fieldKey: "runPlacementStatus", label: "Placement status", role: "disabled", sourceTables: [] },
+    ],
+  },
+  {
+    sectionKey: "disabledWorkflow",
+    title: "Disabled Workflow",
+    fields: [
+      { fieldKey: "engineVerify", label: "Engine verify", role: "disabled", sourceTables: [] },
+      { fieldKey: "outputNavigation", label: "Output navigation", role: "disabled", sourceTables: [] },
+      { fieldKey: "saveHydrate", label: "Save / hydrate", role: "disabled", sourceTables: [] },
+      { fieldKey: "hubSpotPush", label: "HubSpot push", role: "disabled", sourceTables: [] },
+      { fieldKey: "specBuildAuthority", label: "Spec/build authority", role: "disabled", sourceTables: [] },
+      { fieldKey: "slugSpecGeneration", label: "Slug/spec generation", role: "disabled", sourceTables: [] },
+      { fieldKey: "iesGeneration", label: "IES generation", role: "disabled", sourceTables: [] },
+      { fieldKey: "payloadRunTableGeneration", label: "Payload / RunTable generation", role: "disabled", sourceTables: [] },
+    ],
+  },
+]);
+
+const DONOR_FIELD_DEFINITIONS = Object.freeze(WORKFLOW_SECTION_DEFINITIONS.flatMap((section) => section.fields.map((field) => ({ ...field, sectionKey: section.sectionKey }))));
+const ALL_FIELD_DEFINITIONS = Object.freeze([...TARGET_FIELDS, ...DONOR_FIELD_DEFINITIONS]);
+const TARGET_FIELD_KEYS = new Set(ALL_FIELD_DEFINITIONS.map((field) => field.fieldKey));
 
 const TABLE_ALIASES = Object.freeze({
   SYSTEM: ["SYSTEM", "SYSTEMS", "system", "systems"],
+  TIERS: ["TIERS", "TIER", "tiers", "tier"],
   OPTICS: ["OPTICS", "OPTIC", "optics", "optic"],
   ACCESSORIES: ["ACCESSORIES", "ACCESSORY", "accessories", "accessory"],
   SPEC_CODES: ["SPEC_CODES", "spec_codes", "specCodes"],
@@ -71,12 +199,14 @@ const HEADER_CONTAINER_KEYS = Object.freeze([
 
 const SAFE_DEBUG_TABLES = Object.freeze([
   "SYSTEM",
+  "TIERS",
   "OPTICS",
   "BOARDS",
   "DRIVERS",
   "ACCESSORIES",
   "SYSTEM_POLICY",
   "SYSTEM_COMPONENTS",
+  "USERS",
 ]);
 
 const SAFE_FLAGS = Object.freeze({
@@ -371,6 +501,62 @@ function rowOptionValues(row, keys) {
   return uniqueStrings(keys.flatMap((key) => splitOptions(fieldValue(row, key))));
 }
 
+function cctCriValues(row) {
+  const c1 = rowText(row, ["c1_cct", "cct", "cct_k"]);
+  const c2 = rowText(row, ["c2_cct"]);
+  const cct = c1 && c2 && /^\d+$/.test(c1) && /^\d+$/.test(c2) && c1 !== c2
+    ? `TW_${Math.min(Number(c1), Number(c2))}_${Math.max(Number(c1), Number(c2))}`
+    : c1;
+  const cri = rowText(row, ["c2_cri_min", "c1_cri_min", "cri", "cri_min"]);
+  if (!cct) return [];
+  const cctLabel = /^\d{4}$/.test(cct) ? `${cct}K` : cct;
+  return [`${cctLabel}${cri ? ` / CRI${cri}` : ""}`];
+}
+
+function numericOptionValues(row, keys) {
+  return uniqueStrings(keys.map((key) => safeString(fieldValue(row, key)).replace(/[^0-9.]/g, "").trim()).filter(Boolean));
+}
+
+function accessoryTypeMatches(row, type) {
+  return normaliseKey(rowText(row, ["accessory_type", "type", "category", "group"])) === normaliseKey(type);
+}
+
+function accessoryIdLabel(row) {
+  return rowText(row, ["display_choice", "label", "accessory_name", "name", "accessory_id", "id", "accessory_type"]);
+}
+
+function systemEmissionValues(row) {
+  return rowOptionValues(row, ["emission", "system_emission", "light_direction", "direction", "emission_permission"]);
+}
+
+function emissionSupportsIndirect(value) {
+  const key = normaliseKey(value);
+  return key.includes("indirect") || key.includes("both") || key.includes("direct indirect") || key.includes("di");
+}
+
+function emissionSupportsDirect(value) {
+  const key = normaliseKey(value);
+  return !key || key.includes("direct") || key.includes("both") || key.includes("di");
+}
+
+function addRedactedEntitlementOptions(bucket, snapshot) {
+  const userRows = liveTableRows(snapshot, "USERS");
+  const componentRows = liveTableRows(snapshot, "SYSTEM_COMPONENTS");
+  const entitlementRows = userRows.filter((row) => rowOptionValues(row, ["system_component_ids", "system_componrent_ids", "system_component_id"]).length > 0);
+  if (entitlementRows.length || componentRows.length) {
+    addOption(bucket, "specialPartsEntitlement", "Entitlement metadata present — redacted", {
+      value: "entitlement-metadata-present",
+      sourceTables: ["USERS", "SYSTEM_COMPONENTS"],
+      count: entitlementRows.length || componentRows.length,
+    });
+    addOption(bucket, "userEntitlementStatus", `${entitlementRows.length} entitlement row(s) — personal identifiers redacted`, {
+      value: "user-entitlement-redacted",
+      sourceTables: ["USERS"],
+      count: entitlementRows.length,
+    });
+  }
+}
+
 function policyRowsMatching(snapshot, needles) {
   const wanted = needles.map(normaliseKey).filter(Boolean);
   return liveTableRows(snapshot, "SYSTEM_POLICY").filter((row) => {
@@ -421,14 +607,44 @@ function collectOptions(snapshot) {
   for (const row of systems) {
     const tokens = systemTokens(row);
     addOption(bucket, "system", tokens.label, { value: tokens.value, sourceTables: ["SYSTEM"] });
+    if (tokens.variant) addOption(bucket, "variantKey", tokens.variant, { sourceTables: ["SYSTEM"] });
+    for (const emission of systemEmissionValues(row)) {
+      addOption(bucket, "emission", emission, { sourceTables: ["SYSTEM"] });
+      if (emissionSupportsDirect(emission)) addOption(bucket, "directCapability", "Direct supported", { value: "direct-supported", sourceTables: ["SYSTEM"] });
+      if (emissionSupportsIndirect(emission)) addOption(bucket, "indirectCapability", "Indirect supported", { value: "indirect-supported", sourceTables: ["SYSTEM"] });
+    }
+    for (const mount of rowOptionValues(row, ["mount_style", "mount_styles"])) addOption(bucket, "mountStyle", mount, { sourceTables: ["SYSTEM"] });
+    for (const finish of rowOptionValues(row, ["system_and_variant_finish", "finish", "finish_name", "colour", "color"])) {
+      addOption(bucket, "bodyFinish", finish, { sourceTables: ["SYSTEM"] });
+      addOption(bucket, "finishCover", finish, { sourceTables: ["SYSTEM"] });
+      addOption(bucket, "finishEnd", finish, { sourceTables: ["SYSTEM"] });
+    }
+    for (const flex of rowOptionValues(row, ["flex_map", "flex_colour", "flex_color", "flex"])) addOption(bucket, "finishFlex", flex, { sourceTables: ["SYSTEM"] });
   }
+
+  const tiers = liveTableRows(snapshot, "TIERS");
+  for (const row of tiers) {
+    const tier = rowText(row, ["tier", "tier_key", "name", "label", "id"]);
+    if (tier) addOption(bucket, "tier", tier, { sourceTables: ["TIERS"] });
+    for (const electrical of rowOptionValues(row, ["electrical", "electrical_options", "elect_class"])) addOption(bucket, "electricalClass", electrical, { sourceTables: ["TIERS"] });
+  }
+  for (const value of policyValues(snapshot, ["tier"])) addOption(bucket, "tier", value, { sourceTables: ["SYSTEM_POLICY"] });
 
   const optics = liveTableRows(snapshot, "OPTICS");
   for (const row of optics) {
     const optic = rowText(row, ["optic_var_1", "baseline_slug", "pure_ref_id", "optic_bom_id", "spec_code", "name", "label"]);
     const system = rowText(row, ["system", "series", "system_name"]);
     const opticLabel = [optic, system].filter(Boolean).join(" · ") || optic;
-    addOption(bucket, "optic", opticLabel, { value: [system, optic].filter(Boolean).join("|") || opticLabel, sourceTables: ["OPTICS"] });
+    const opticValue = [system, optic].filter(Boolean).join("|") || opticLabel;
+    addOption(bucket, "optic", opticLabel, { value: opticValue, sourceTables: ["OPTICS"] });
+    for (const sub of rowOptionValues(row, ["optic_var_2", "spec_code_var2"])) addOption(bucket, "opticSub", sub, { value: [optic, sub].filter(Boolean).join("|") || sub, sourceTables: ["OPTICS"] });
+    for (const emission of rowOptionValues(row, ["emission_permission", "direction", "emission", "optic_direction", "light_direction"])) {
+      if (emissionSupportsDirect(emission)) addOption(bucket, "directCapability", "Direct supported", { value: "direct-supported", sourceTables: ["OPTICS"] });
+      if (emissionSupportsIndirect(emission)) {
+        addOption(bucket, "indirectCapability", "Indirect supported", { value: "indirect-supported", sourceTables: ["OPTICS"] });
+        addOption(bucket, "opticIndirect", opticLabel, { value: opticValue, sourceTables: ["OPTICS"] });
+      }
+    }
     for (const ip of rowOptionValues(row, ["ip_option_1", "ip_options", "ip", "ip_rating"])) addOption(bucket, "ipRating", ip, { sourceTables: ["OPTICS"] });
     for (const ik of rowOptionValues(row, ["ik_option_2", "ik_options", "ik", "ik_rating"])) addOption(bucket, "ikRating", ik, { sourceTables: ["OPTICS"] });
     for (const cct of extractCctValues(row)) addOption(bucket, "cct", cct, { sourceTables: ["OPTICS"] });
@@ -439,15 +655,29 @@ function collectOptions(snapshot) {
   const boards = liveTableRows(snapshot, "BOARDS");
   for (const row of boards) {
     for (const cct of extractCctValues(row)) addOption(bucket, "cct", cct, { sourceTables: ["BOARDS"] });
+    for (const cctCri of cctCriValues(row)) {
+      addOption(bucket, "cctCri", cctCri, { sourceTables: ["BOARDS"] });
+      addOption(bucket, "cctCriIndirect", cctCri, { sourceTables: ["BOARDS"] });
+    }
+    for (const lm of numericOptionValues(row, ["board_lm_per_m", "delivered_lm_per_m", "lm_per_m", "nominal_lm_per_m"])) {
+      addOption(bucket, "targetLmPerM", `${lm} lm/m`, { value: lm, sourceTables: ["BOARDS"] });
+      addOption(bucket, "targetLmPerMIndirect", `${lm} lm/m`, { value: lm, sourceTables: ["BOARDS"] });
+    }
+    for (const control of rowOptionValues(row, ["control_type_labels", "control_type_options", "native_control_type", "control_type"])) {
+      addOption(bucket, "controlType", control, { sourceTables: ["BOARDS"] });
+      addOption(bucket, "controlTypeIndirect", control, { sourceTables: ["BOARDS"] });
+    }
   }
 
   const drivers = liveTableRows(snapshot, "DRIVERS");
   for (const row of drivers) {
     const driver = rowText(row, ["driver_id", "driver", "driver_name", "name", "label", "sku", "part_number"]);
     if (driver) addOption(bucket, "driver", driver, { sourceTables: ["DRIVERS"] });
-    for (const control of rowOptionValues(row, ["control_type", "control", "protocol", "dimming", "dimming_type", "driver_control", "control_protocol"])) {
+    for (const control of rowOptionValues(row, ["control_type", "control", "protocol", "dimming", "dimming_type", "driver_control", "control_protocol", "native_control_type"])) {
       addOption(bucket, "controlType", control, { sourceTables: ["DRIVERS"] });
+      addOption(bucket, "controlTypeIndirect", control, { sourceTables: ["DRIVERS"] });
     }
+    for (const wiring of rowOptionValues(row, ["wiring_type", "wiring", "cable_type", "control_cores"])) addOption(bucket, "wiringType", wiring, { sourceTables: ["DRIVERS"] });
   }
 
   for (const value of policyValues(snapshot, ["application", "environment", "use case", "area type"])) addOption(bucket, "application", value, { sourceTables: ["SYSTEM_POLICY"] });
@@ -457,13 +687,42 @@ function collectOptions(snapshot) {
   for (const value of policyValues(snapshot, ["ip", "ingress protection"])) addOption(bucket, "ipRating", value, { sourceTables: ["SYSTEM_POLICY"] });
   for (const value of policyValues(snapshot, ["ik", "impact rating"])) addOption(bucket, "ikRating", value, { sourceTables: ["SYSTEM_POLICY"] });
   for (const value of policyValues(snapshot, ["mount", "mounting", "suspension", "recessed", "surface"])) addOption(bucket, "mountStyle", value, { sourceTables: ["SYSTEM_POLICY"] });
-  for (const value of policyValues(snapshot, ["finish", "colour", "color", "paint"])) addOption(bucket, "bodyFinish", value, { sourceTables: ["SYSTEM_POLICY"] });
+  for (const value of policyValues(snapshot, ["finish", "colour", "color", "paint"])) {
+    addOption(bucket, "bodyFinish", value, { sourceTables: ["SYSTEM_POLICY"] });
+    addOption(bucket, "finishCover", value, { sourceTables: ["SYSTEM_POLICY"] });
+    addOption(bucket, "finishEnd", value, { sourceTables: ["SYSTEM_POLICY"] });
+  }
+  for (const value of policyValues(snapshot, ["flex", "finish", "colour", "color"])) addOption(bucket, "finishFlex", value, { sourceTables: ["SYSTEM_POLICY"] });
+  for (const value of policyValues(snapshot, ["electrical", "electrical class", "class"] )) addOption(bucket, "electricalClass", value, { sourceTables: ["SYSTEM_POLICY"] });
+  for (const value of policyValues(snapshot, ["ambient", "ambient temp", "temperature"] )) addOption(bucket, "ambient", value, { sourceTables: ["SYSTEM_POLICY"] });
+  for (const value of policyValues(snapshot, ["wiring", "cable", "control cores"] )) addOption(bucket, "wiringType", value, { sourceTables: ["SYSTEM_POLICY"] });
+  addOption(bucket, "indirectMatchDirect", "Match direct CCT/CRI and control", { value: "match-direct", sourceTables: ["SYSTEM", "OPTICS"] });
+  addOption(bucket, "inheritedFinishStatus", "Cover/end/flex inherit default until changed", { value: "inherits-default-finish", sourceTables: ["SYSTEM", "SYSTEM_POLICY"] });
 
   for (const value of accessoryLabels(snapshot, ["mount", "mounting", "suspension", "recessed", "surface"])) addOption(bucket, "mountStyle", value, { sourceTables: ["ACCESSORIES"] });
   for (const value of accessoryLabels(snapshot, ["finish", "colour", "color", "paint"])) addOption(bucket, "bodyFinish", value, { sourceTables: ["ACCESSORIES"] });
-  for (const value of accessoryLabels(snapshot, ["emergency", "egress"] )) addOption(bucket, "emergency", value, { sourceTables: ["ACCESSORIES"] });
-  for (const value of accessoryLabels(snapshot, ["sensor", "pir", "microwave", "occupancy"] )) addOption(bucket, "sensor", value, { sourceTables: ["ACCESSORIES"] });
-  for (const value of accessoryLabels(snapshot, ["accessory", "special", "kit", "end kit", "suspension", "emergency", "sensor"] )) addOption(bucket, "specialParts", value, { sourceTables: ["ACCESSORIES"] });
+
+  for (const row of liveTableRows(snapshot, "ACCESSORIES")) {
+    const label = accessoryIdLabel(row);
+    if (!label) continue;
+    if (accessoryTypeMatches(row, "mount")) {
+      addOption(bucket, "mountStyle", rowText(row, ["display_choice", "mount_style", "name", "label"], label), { sourceTables: ["ACCESSORIES"] });
+      for (const value of rowOptionValues(row, ["mount_selections", "mount_selection"])) addOption(bucket, "mountSelection", value, { sourceTables: ["ACCESSORIES"] });
+      for (const value of rowOptionValues(row, ["mount_particulars", "particulars"])) addOption(bucket, "mountParticulars", value, { sourceTables: ["ACCESSORIES"] });
+    }
+    if (accessoryTypeMatches(row, "power_penetration")) addOption(bucket, "powerPenetration", label, { sourceTables: ["ACCESSORIES"] });
+    if (accessoryTypeMatches(row, "power_location")) addOption(bucket, "powerLocation", label === "mm" ? "TBD" : label, { sourceTables: ["ACCESSORIES"] });
+    if (accessoryTypeMatches(row, "flex_length")) addOption(bucket, "flexLength", label, { sourceTables: ["ACCESSORIES"] });
+    if (accessoryTypeMatches(row, "elect_class")) addOption(bucket, "electricalClass", label, { sourceTables: ["ACCESSORIES"] });
+    if (accessoryTypeMatches(row, "egress_light")) addOption(bucket, "egressLight", label, { sourceTables: ["ACCESSORIES"] });
+    if (accessoryTypeMatches(row, "egress_sound")) addOption(bucket, "egressSound", label, { sourceTables: ["ACCESSORIES"] });
+    if (accessoryTypeMatches(row, "pir") || accessoryTypeMatches(row, "sensor")) addOption(bucket, "sensor", label, { sourceTables: ["ACCESSORIES"] });
+    if (!accessoryTypeMatches(row, "egress_light") && !accessoryTypeMatches(row, "egress_sound") && !accessoryTypeMatches(row, "pir")) {
+      addOption(bucket, "accessories", label, { sourceTables: ["ACCESSORIES"] });
+    }
+  }
+
+  addRedactedEntitlementOptions(bucket, snapshot);
 
   return bucket;
 }
@@ -701,8 +960,150 @@ function blockedItems(fields) {
   return blocked;
 }
 
+function workflowOptionAllowed(fieldKey, option, records, constraints) {
+  if (!option || option.status === "disabled") return false;
+  return optionAllowedByRecords(fieldKey, option, records, constraints);
+}
+
+function createDisabledWorkflowField(field, reason) {
+  return {
+    fieldKey: field.fieldKey,
+    label: field.label,
+    role: field.role || "disabled",
+    status: "disabled",
+    sourceStatus: "disabled by runtime boundary",
+    sourceTables: [...(field.sourceTables || [])],
+    options: [],
+    selectedValue: "",
+    selectedLabel: "",
+    unavailableReason: reason,
+    futureMapped: false,
+    disabled: true,
+    rawRowsExposed: false,
+  };
+}
+
+function createWorkflowField(field, { bucket, records, constraints, sourceReady }) {
+  const selectedValue = constraints[field.fieldKey] || "";
+  if (!sourceReady) return createUnavailableField(field, "Selector Reference source is unavailable or not parseable.");
+  if (field.role === "disabled") return createDisabledWorkflowField(field, "Disabled read-only preview. No workflow action, generation, write, proof, payload, RunTable, HubSpot push, save, or hidden write-back is available in this slice.");
+  if (field.role === "future-mapped") return createUnavailableField(field, `${field.label} is a donor workflow field but is not source-backed in this runtime slice.`);
+
+  const baseOptions = optionsFor(bucket, field.fieldKey);
+  if (!baseOptions.length) {
+    if (field.role === "entitlement-gated") {
+      return createUnavailableField(field, `${field.label} is entitlement-gated. No raw USERS data is exposed, and no entitlement option is faked.`);
+    }
+    return createUnavailableField(field, `${field.label} is represented for donor parity but unavailable from the current source; no fake values emitted.`);
+  }
+
+  const options = baseOptions.map((option) => {
+    const compatible = workflowOptionAllowed(field.fieldKey, option, records, constraints);
+    const selected = selectedValue && valuesMatch(option.value, selectedValue);
+    return {
+      ...option,
+      selected: Boolean(selected),
+      status: compatible ? "available" : "blocked",
+      blocked: !compatible,
+      blockedReason: compatible ? "" : "Blocked by current manual constraints; shown rather than silently hidden.",
+      rawRowsExposed: false,
+    };
+  });
+
+  if (selectedValue && !options.some((option) => valuesMatch(option.value, selectedValue))) {
+    options.push({
+      value: selectedValue,
+      label: selectedValue,
+      count: 0,
+      sourceStatus: "selected constraint not available from current filtered source",
+      sourceTables: [...(field.sourceTables || [])],
+      selected: true,
+      status: "blocked",
+      blocked: true,
+      blockedReason: "Manual constraint is preserved but unavailable/incompatible in the current filtered source.",
+      rawRowsExposed: false,
+    });
+  }
+
+  const availableCount = options.filter((option) => option.status === "available").length;
+  return {
+    fieldKey: field.fieldKey,
+    label: field.label,
+    role: field.role,
+    status: availableCount ? (field.role === "inherited-consequence" ? "inherited-consequence" : field.role === "auto-consequence" ? "auto-consequence" : "available") : "blocked",
+    sourceStatus: field.role === "entitlement-gated" ? "entitlement-gated-redacted" : "db-reference-backed",
+    sourceTables: [...(field.sourceTables || [])],
+    options,
+    selectedValue,
+    selectedLabel: selectedValue ? labelForValue(options, selectedValue) : "",
+    unavailableReason: availableCount ? "" : "No compatible options remain under the current manual constraints; values are shown as blocked rather than removed.",
+    futureMapped: false,
+    disabled: false,
+    rawRowsExposed: false,
+  };
+}
+
+function createWorkflowSections({ bucket, records, constraints, sourceReady }) {
+  return WORKFLOW_SECTION_DEFINITIONS.map((section) => {
+    const fields = section.fields.map((field) => createWorkflowField(field, { bucket, records, constraints, sourceReady }));
+    const mappedCount = fields.filter((field) => field.sourceStatus === "db-reference-backed" || field.sourceStatus === "entitlement-gated-redacted").length;
+    const futureMappedCount = fields.filter((field) => field.futureMapped === true).length;
+    const disabledCount = fields.filter((field) => field.disabled === true).length;
+    return {
+      sectionKey: section.sectionKey,
+      title: section.title,
+      status: disabledCount === fields.length ? "disabled" : futureMappedCount ? "preview-with-gaps" : "preview-ready",
+      mappedCount,
+      futureMappedCount,
+      disabledCount,
+      fields,
+      rawRowsExposed: false,
+    };
+  });
+}
+
+function donorFieldParity(workflowSections = []) {
+  const fields = workflowSections.flatMap((section) => (section.fields || []).map((field) => ({ ...field, sectionKey: section.sectionKey })));
+  const items = fields.map((field) => ({
+    fieldKey: field.fieldKey,
+    label: field.label,
+    sectionKey: field.sectionKey,
+    status: field.disabled ? "disabled" : field.futureMapped ? "future-mapped" : "mapped",
+    sourceStatus: field.sourceStatus,
+    reason: field.unavailableReason || (field.disabled ? "Disabled workflow item." : "Represented in donor workflow preview."),
+    rawRowsExposed: false,
+  }));
+  const counts = items.reduce((acc, item) => {
+    acc.total += 1;
+    acc[item.status] = (acc[item.status] || 0) + 1;
+    return acc;
+  }, { total: 0, mapped: 0, "future-mapped": 0, disabled: 0 });
+  return {
+    counts,
+    items,
+    allDonorFieldsRepresented: fields.length === DONOR_FIELD_DEFINITIONS.length,
+    rawRowsExposed: false,
+    rawUsersExposed: false,
+  };
+}
+
+function safeEntitlementSummary(snapshot) {
+  const users = liveTableRows(snapshot, "USERS");
+  const components = liveTableRows(snapshot, "SYSTEM_COMPONENTS");
+  const entitlementRows = users.filter((row) => rowOptionValues(row, ["system_component_ids", "system_componrent_ids", "system_component_id"]).length > 0);
+  return {
+    usersPresent: tableValueCandidates(snapshot, "USERS").length > 0,
+    userCount: users.length,
+    entitlementRowCount: entitlementRows.length,
+    systemComponentCount: components.length,
+    personalIdentifiersExposed: false,
+    rawUsersExposed: false,
+    rawRowsExposed: false,
+  };
+}
+
 function tableSummary(snapshot) {
-  return TARGET_FIELDS.flatMap((field) => field.sourceTables).filter((value, index, values) => values.indexOf(value) === index).map((table) => {
+  return ALL_FIELD_DEFINITIONS.flatMap((field) => field.sourceTables || []).filter((value, index, values) => values.indexOf(value) === index).map((table) => {
     const rows = tableRows(snapshot, table);
     return {
       table,
@@ -738,6 +1139,21 @@ function sourceMetadata({ sourceStat = null, present = Boolean(sourceStat), read
 function failurePayload({ source = {}, reason = "selector_reference_options_unavailable", constraints = {} } = {}) {
   const safeConstraints = sanitiseConstraints(constraints);
   const fields = TARGET_FIELDS.map((field) => createUnavailableField(field, reason));
+  const workflowSections = WORKFLOW_SECTION_DEFINITIONS.map((section) => ({
+    sectionKey: section.sectionKey,
+    title: section.title,
+    status: section.sectionKey === "disabledWorkflow" || section.sectionKey === "runsPreview" ? "disabled" : "source-unavailable",
+    mappedCount: 0,
+    futureMappedCount: section.sectionKey === "disabledWorkflow" || section.sectionKey === "runsPreview" ? 0 : section.fields.length,
+    disabledCount: section.sectionKey === "disabledWorkflow" || section.sectionKey === "runsPreview" ? section.fields.length : 0,
+    fields: section.fields.map((field) => (
+      section.sectionKey === "disabledWorkflow" || section.sectionKey === "runsPreview"
+        ? createDisabledWorkflowField(field, "Disabled read-only preview. No workflow action is available in this slice.")
+        : createUnavailableField(field, reason)
+    )),
+    rawRowsExposed: false,
+  }));
+  const parity = donorFieldParity(workflowSections);
   return {
     ok: false,
     endpoint: SELECTOR_REFERENCE_OPTIONS_PATH,
@@ -747,6 +1163,17 @@ function failurePayload({ source = {}, reason = "selector_reference_options_unav
     sourceReady: false,
     selectedConstraints: safeConstraints,
     fields,
+    workflowSections,
+    donorFieldParity: parity,
+    specialPartsEntitlementSummary: {
+      usersPresent: false,
+      userCount: 0,
+      entitlementRowCount: 0,
+      systemComponentCount: 0,
+      personalIdentifiersExposed: false,
+      rawUsersExposed: false,
+      rawRowsExposed: false,
+    },
     manualConstraints: [],
     autoConsequences: [],
     blockedItems: blockedItems(fields),
@@ -754,6 +1181,9 @@ function failurePayload({ source = {}, reason = "selector_reference_options_unav
       state: "source unavailable",
       optionFieldCount: 0,
       availableFieldCount: 0,
+      workflowSectionCount: workflowSections.length,
+      workflowMappedFieldCount: 0,
+      donorFieldParityCounts: parity.counts,
       manualConstraintCount: Object.keys(safeConstraints).length,
       autoConsequenceCount: 0,
       blockedCount: fields.length,
@@ -785,9 +1215,13 @@ export function deriveSelectorReferenceOptionsFromSnapshot(snapshot = {}, { cons
   const manualConstraints = createManualConstraintList(fields, safeConstraints);
   const autoConsequences = deriveAutoConsequences(fields, safeConstraints);
   const blocked = blockedItems(fields);
+  const workflowSections = createWorkflowSections({ bucket, records, constraints: safeConstraints, sourceReady });
+  const parity = donorFieldParity(workflowSections);
+  const entitlementSummary = safeEntitlementSummary(safeSnapshot);
   const availableFieldCount = fields.filter((field) => field.status === "available").length;
   const optionFieldCount = fields.filter((field) => field.options.length).length;
-  const hasMissing = fields.some((field) => field.futureMapped);
+  const workflowMappedFieldCount = parity.counts.mapped || 0;
+  const hasMissing = fields.some((field) => field.futureMapped) || (parity.counts["future-mapped"] || 0) > 0;
   const hasBlocked = blocked.length > 0;
 
   return {
@@ -799,6 +1233,9 @@ export function deriveSelectorReferenceOptionsFromSnapshot(snapshot = {}, { cons
     sourceReady: true,
     selectedConstraints: safeConstraints,
     fields,
+    workflowSections,
+    donorFieldParity: parity,
+    specialPartsEntitlementSummary: entitlementSummary,
     manualConstraints,
     autoConsequences,
     blockedItems: blocked,
@@ -806,6 +1243,9 @@ export function deriveSelectorReferenceOptionsFromSnapshot(snapshot = {}, { cons
       state: manualConstraints.length ? (hasBlocked ? "manual constraints with blockers" : "manual constraints preview") : "default preview",
       optionFieldCount,
       availableFieldCount,
+      workflowSectionCount: workflowSections.length,
+      workflowMappedFieldCount,
+      donorFieldParityCounts: parity.counts,
       manualConstraintCount: manualConstraints.length,
       autoConsequenceCount: autoConsequences.length,
       blockedCount: blocked.length,

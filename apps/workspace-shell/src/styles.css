@@ -513,6 +513,10 @@ img.cs-shell__rail-icon,
 .cs-selector-product__header p, .cs-selector-product__safety, .cs-selector-product__proof { margin: 0; color: var(--cs-muted); font-size: 13px; line-height: 20px; }
 .cs-selector-product__safety { padding: 10px 12px; border: 1px solid var(--cs-info-border); border-radius: var(--cs-radius-md); background: var(--cs-info-bg); color: var(--cs-text); }
 .cs-selector-product__proof { font-weight: 700; color: var(--cs-text); }
+.cs-selector-product__workflow { display: grid; gap: 14px; }
+.cs-selector-product__workflow-section { display: grid; gap: 10px; padding: 14px; border: 1px solid var(--cs-border); border-radius: var(--cs-radius-lg); background: var(--cs-panel-soft); }
+.cs-selector-product__workflow-section h4 { margin: 0; font-size: 16px; line-height: 22px; }
+.cs-selector-product__workflow-section > dl { margin: 0; }
 .cs-selector-product__badges { display: flex; flex-wrap: wrap; gap: 8px; padding: 0; margin: 0; list-style: none; }
 .cs-selector-product__badges li { padding: 5px 9px; border: 1px solid var(--cs-border); border-radius: var(--cs-radius-full); background: var(--cs-panel-soft); font-size: 11px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; }
 .cs-selector-product__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; }

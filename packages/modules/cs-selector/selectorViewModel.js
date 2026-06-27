@@ -984,6 +984,9 @@ function createDbBackedCandidateSummaryRows(surface = {}) {
     ["source readiness", surface.sourceReady === true ? "ready" : "unavailable"],
     ["option fields mapped", summary.optionFieldCount ?? 0],
     ["available fields", summary.availableFieldCount ?? 0],
+    ["workflow sections", summary.workflowSectionCount ?? 0],
+    ["workflow fields mapped", summary.workflowMappedFieldCount ?? 0],
+    ["donor fields represented", summary.donorFieldParityCounts?.total ?? 0],
     ["manual constraints", summary.manualConstraintCount ?? 0],
     ["auto consequences", summary.autoConsequenceCount ?? 0],
     ["blocked / missing items", summary.blockedCount ?? 0],
@@ -1074,6 +1077,42 @@ function enrichDbOptionFields(selectorReferenceStatus = {}, local = {}) {
   });
 }
 
+function dbWorkflowSections(selectorReferenceStatus = {}) {
+  const payload = dbOptionsPayload(selectorReferenceStatus);
+  return Array.isArray(payload.workflowSections) ? payload.workflowSections : [];
+}
+
+function labelFromWorkflowField(field = {}, value = "") {
+  const option = (Array.isArray(field.options) ? field.options : []).find((item) => optionValuesMatch(item.value, value));
+  return option?.label || String(value || "");
+}
+
+function enrichDbWorkflowSections(selectorReferenceStatus = {}, local = {}) {
+  const selectedConstraints = dbConstraintValueMap(local);
+  return dbWorkflowSections(selectorReferenceStatus).map((section) => ({
+    ...section,
+    fields: (Array.isArray(section.fields) ? section.fields : []).map((field) => {
+      const selectedValue = selectedConstraints[field.fieldKey] || "";
+      const options = Array.isArray(field.options) ? field.options.map((option) => {
+        const selected = selectedValue ? optionValuesMatch(option.value, selectedValue) : option.selected === true;
+        return {
+          ...option,
+          selected,
+          rawRowsExposed: false,
+        };
+      }) : [];
+      return {
+        ...field,
+        selectedValue,
+        selectedLabel: selectedValue ? labelFromWorkflowField({ ...field, options }, selectedValue) : field.selectedLabel || "",
+        options,
+        rawRowsExposed: false,
+      };
+    }),
+    rawRowsExposed: false,
+  }));
+}
+
 function createDbManualConstraints(selectorReferenceStatus = {}, local = {}) {
   const fields = enrichDbOptionFields(selectorReferenceStatus, local);
   return Object.entries(dbConstraintMap(local)).map(([fieldKey, constraint]) => {
@@ -1125,6 +1164,7 @@ function createDbBackedSelectorSurface(selectorReferenceStatus = {}, local = {},
   const payload = dbOptionsPayload(selectorReferenceStatus);
   const sourceReady = dbOptionsSourceReady(selectorReferenceStatus);
   const fields = enrichDbOptionFields(selectorReferenceStatus, local);
+  const workflowSections = enrichDbWorkflowSections(selectorReferenceStatus, local);
   const manualConstraints = createDbManualConstraints(selectorReferenceStatus, local);
   const autoConsequences = createDbAutoConsequences(fields, local);
   const blockedItems = [
@@ -1159,6 +1199,9 @@ function createDbBackedSelectorSurface(selectorReferenceStatus = {}, local = {},
     requiredSafetyCopy: "Read-only preview. No spec, slug, IES, payload, RunTable, Lab Proof, Controlled Record, RREG approval, custody transfer, Board Data write, or hidden write-back is created here.",
     proofCopy: "Selector previews selection readiness. Lab Proof proves later.",
     fields,
+    workflowSections,
+    donorFieldParity: payload.donorFieldParity || null,
+    specialPartsEntitlementSummary: payload.specialPartsEntitlementSummary || null,
     manualConstraints,
     autoConsequences,
     blockedItems,
