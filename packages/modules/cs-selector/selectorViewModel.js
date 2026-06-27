@@ -1321,10 +1321,72 @@ function flattenedWorkflowFields(workflowSections = []) {
 
 function createFieldLookup(fields = [], workflowSections = []) {
   const lookup = new Map();
-  for (const field of [...fields, ...flattenedWorkflowFields(workflowSections)]) {
+  for (const field of [...flattenedWorkflowFields(workflowSections), ...fields]) {
     if (field?.fieldKey && !lookup.has(field.fieldKey)) lookup.set(field.fieldKey, field);
   }
   return lookup;
+}
+
+function createCanonicalWorkflowSections(workflowSections = []) {
+  const fieldLocations = {};
+  const duplicateFields = [];
+  const seen = new Set();
+  const sections = workflowSections.map((section) => {
+    const sectionKey = section.sectionKey || "unknown";
+    const canonicalFields = [];
+    for (const field of Array.isArray(section.fields) ? section.fields : []) {
+      const fieldKey = field.fieldKey || "unknown";
+      if (seen.has(fieldKey)) {
+        duplicateFields.push({
+          fieldKey,
+          label: field.label || fieldKey,
+          duplicateSectionKey: sectionKey,
+          canonicalSectionKey: fieldLocations[fieldKey]?.sectionKey || "unknown",
+          primaryControl: false,
+          writes: false,
+          rawRowsExposed: false,
+        });
+        continue;
+      }
+      seen.add(fieldKey);
+      fieldLocations[fieldKey] = {
+        sectionKey,
+        sectionTitle: section.title || sectionKey,
+        primaryControl: true,
+        writes: false,
+        rawRowsExposed: false,
+      };
+      canonicalFields.push({
+        ...field,
+        canonicalSectionKey: sectionKey,
+        canonicalControl: true,
+        primaryControl: true,
+        flatFieldFallback: false,
+        writes: false,
+        rawRowsExposed: false,
+      });
+    }
+    return {
+      ...section,
+      workflowCanonical: true,
+      primaryControlSurface: true,
+      flatFieldFallback: false,
+      fields: canonicalFields,
+      canonicalFieldCount: canonicalFields.length,
+      duplicateFieldCount: duplicateFields.filter((item) => item.duplicateSectionKey === sectionKey).length,
+      rawRowsExposed: false,
+    };
+  });
+
+  return {
+    sections,
+    workflowSectionsCanonical: sections.length > 0,
+    flatFieldsPrimary: false,
+    flatFieldsDiagnosticOnly: true,
+    fieldLocations,
+    fieldCount: Object.keys(fieldLocations).length,
+    duplicateFields,
+  };
 }
 
 function createSelectionTruthSummary({
@@ -1504,8 +1566,15 @@ function createSelectionTruthSummary({
 function createDbBackedSelectorSurface(selectorReferenceStatus = {}, local = {}, selectorState, onLocalStateChange) {
   const payload = dbOptionsPayload(selectorReferenceStatus);
   const sourceReady = dbOptionsSourceReady(selectorReferenceStatus);
-  const fields = enrichDbOptionFields(selectorReferenceStatus, local);
-  const workflowSections = enrichDbWorkflowSections(selectorReferenceStatus, local);
+  const fields = enrichDbOptionFields(selectorReferenceStatus, local).map((field) => ({
+    ...field,
+    primaryControl: false,
+    flatFieldFallback: true,
+    diagnosticOnly: true,
+    rawRowsExposed: false,
+  }));
+  const canonicalWorkflow = createCanonicalWorkflowSections(enrichDbWorkflowSections(selectorReferenceStatus, local));
+  const workflowSections = canonicalWorkflow.sections;
   const manualConstraints = createDbManualConstraints(selectorReferenceStatus, local);
   const payloadConsequences = Array.isArray(payload.autoConsequences) ? payload.autoConsequences : [];
   const localConsequences = createDbAutoConsequences(fields, local);
@@ -1558,6 +1627,20 @@ function createDbBackedSelectorSurface(selectorReferenceStatus = {}, local = {},
     ],
     requiredSafetyCopy: "Read-only preview. No spec, slug, IES, payload, RunTable, Lab Proof, Controlled Record, RREG approval, custody transfer, Board Data write, or hidden write-back is created here.",
     proofCopy: "Selector previews selection readiness. Lab Proof proves later.",
+    workflowSectionsCanonical: canonicalWorkflow.workflowSectionsCanonical,
+    flatFieldsPrimary: false,
+    flatFieldsDiagnosticOnly: true,
+    canonicalWorkflowSummary: {
+      workflowSectionsCanonical: canonicalWorkflow.workflowSectionsCanonical,
+      flatFieldsPrimary: false,
+      flatFieldsDiagnosticOnly: true,
+      primaryControlFieldCount: canonicalWorkflow.fieldCount,
+      duplicatePrimaryControlCount: canonicalWorkflow.duplicateFields.length,
+      duplicateFields: canonicalWorkflow.duplicateFields,
+      fieldLocations: canonicalWorkflow.fieldLocations,
+      rawRowsExposed: false,
+      writes: false,
+    },
     fields,
     workflowSections,
     donorFieldParity: payload.donorFieldParity || null,

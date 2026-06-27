@@ -541,6 +541,9 @@ img.cs-shell__rail-icon,
 .cs-selector-truth-summary__kind { flex: 0 0 auto; padding: 3px 7px; border: 1px solid var(--cs-border); border-radius: var(--cs-radius-full); background: var(--cs-panel); font-size: 10px; font-weight: 800; line-height: 14px; text-transform: uppercase; letter-spacing: 0.04em; }
 .cs-selector-truth-summary__value { margin: 0; color: var(--cs-text); font-size: 13px; line-height: 19px; }
 .cs-selector-truth-summary__empty { margin: 0; color: var(--cs-muted); font-size: 12px; line-height: 18px; }
+.cs-selector-compatibility-fields { padding: 12px; border: 1px dashed var(--cs-border); border-radius: var(--cs-radius-md); background: var(--cs-panel); }
+.cs-selector-compatibility-fields > summary { cursor: pointer; font-weight: 800; }
+.cs-selector-compatibility-fields > p { margin: 8px 0; color: var(--cs-muted); font-size: 12px; line-height: 18px; }
 .cs-selector-diagnostics { padding: 12px 14px; border: 1px solid var(--cs-border); border-radius: var(--cs-radius-lg); background: var(--cs-panel-soft); }
 .cs-selector-diagnostics > summary { cursor: pointer; font-weight: 800; }
 .cs-selector-diagnostics__body { display: grid; gap: 14px; padding-top: 14px; }

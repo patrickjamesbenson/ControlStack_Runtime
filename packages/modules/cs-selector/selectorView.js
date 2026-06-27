@@ -805,6 +805,8 @@ function appendSelectorWorkflowSections(parent, surface = {}) {
   if (!sections.length) return;
   const wrapper = document.createElement("div");
   wrapper.className = "cs-selector-product__workflow";
+  wrapper.dataset.workflowSectionsCanonical = surface.workflowSectionsCanonical === false ? "false" : "true";
+  wrapper.dataset.flatFieldsPrimary = surface.flatFieldsPrimary === true ? "true" : "false";
   for (const workflowSection of sections) {
     const section = document.createElement("section");
     section.className = "cs-selector-product__workflow-section";
@@ -812,6 +814,9 @@ function appendSelectorWorkflowSections(parent, surface = {}) {
     appendText(section, "h4", workflowSection.title || workflowSection.sectionKey || "Workflow section");
     appendDefinitionList(section, [
       ["status", workflowSection.status || "preview"],
+      ["canonical primary controls", workflowSection.primaryControlSurface === false ? "false" : "true"],
+      ["canonical field count", workflowSection.canonicalFieldCount ?? (workflowSection.fields || []).length],
+      ["duplicate primary controls", workflowSection.duplicateFieldCount ?? 0],
       ["mapped", workflowSection.mappedCount ?? 0],
       ["future mapped", workflowSection.futureMappedCount ?? 0],
       ["disabled", workflowSection.disabledCount ?? 0],
@@ -937,59 +942,6 @@ function appendSelectorProductSurface(parent, surface = {}) {
 
   appendSelectorWorkflowSections(section, surface);
 
-  const grid = document.createElement("div");
-  grid.className = "cs-selector-product__grid";
-  for (const field of surface.fields || []) {
-    const card = document.createElement("article");
-    card.className = "cs-selector-product__field";
-    card.dataset.fieldKey = field.fieldKey;
-    card.dataset.fieldStatus = field.status || "unknown";
-
-    const label = document.createElement("label");
-    label.htmlFor = `cs-selector-product-${field.fieldKey}`;
-    label.textContent = field.label || field.fieldKey;
-    card.appendChild(label);
-
-    const select = document.createElement("select");
-    select.id = `cs-selector-product-${field.fieldKey}`;
-    select.dataset.fieldKey = field.fieldKey;
-    select.disabled = field.futureMapped === true || !(field.options || []).length;
-
-    const emptyOption = document.createElement("option");
-    emptyOption.value = "";
-    emptyOption.textContent = field.futureMapped === true
-      ? "Unavailable from current source — future mapped"
-      : "No manual constraint / keep preview consequence";
-    select.appendChild(emptyOption);
-
-    for (const option of field.options || []) {
-      const optionElement = document.createElement("option");
-      optionElement.value = option.value;
-      const suffix = option.blocked ? " — blocked / missing" : option.sourceStatus === "db-reference-backed" ? "" : ` — ${option.sourceStatus || "mapped"}`;
-      optionElement.textContent = `${option.label || option.value}${suffix}`;
-      optionElement.disabled = option.blocked === true && option.selected !== true;
-      select.appendChild(optionElement);
-    }
-    select.value = field.selectedValue || "";
-    select.addEventListener("change", () => {
-      if (select.value) surface.setFieldValue?.(field.fieldKey, select.value);
-      else surface.clearFieldValue?.(field.fieldKey);
-    });
-    card.appendChild(select);
-
-    appendDefinitionList(card, [
-      ["source", field.sourceStatus || "unavailable from current source"],
-      ["state", field.status || "unknown"],
-      ["role", field.role || "manual-constraint"],
-      ["selected", field.selectedLabel || "none"],
-      ["options", Array.isArray(field.options) ? field.options.length : 0],
-      ["reason", field.unavailableReason || "DB/reference-backed option labels only; no raw rows exposed"],
-      ["relationship", field.relationshipStatus || "safe preview"],
-    ]);
-    grid.appendChild(card);
-  }
-  section.appendChild(grid);
-
   appendSection(section, "Current candidate summary", surface.candidateSummaryRows || [["candidate state", "default preview"]]);
   appendSection(section, "Manual constraints", surface.manualConstraintRows || [["manual constraints", "none yet"]]);
   appendSection(section, "Auto consequences", surface.autoConsequenceRows || [["auto consequences", "none mapped"]]);
@@ -997,6 +949,53 @@ function appendSelectorProductSurface(parent, surface = {}) {
   appendSection(section, "Path to spec-ready later", surface.pathRows || [["future spec-ready", "requires complete spec gate later"]]);
 
   parent.appendChild(section);
+}
+
+function appendSelectorCompatibilityFieldList(parent, surface = {}) {
+  const fields = Array.isArray(surface.fields) ? surface.fields : [];
+  const details = document.createElement("details");
+  details.className = "cs-selector-compatibility-fields";
+  details.open = false;
+  const summary = document.createElement("summary");
+  summary.textContent = "Compatibility field list — diagnostic fallback only";
+  details.appendChild(summary);
+
+  appendText(details, "p", "Flat fields remain available as non-primary diagnostic metadata only. The canonical visible controls live in workflow sections, so this list does not render duplicate primary controls.");
+  appendDefinitionList(details, [
+    ["workflowSectionsCanonical", surface.workflowSectionsCanonical === false ? "false" : "true"],
+    ["flatFieldsPrimary", surface.flatFieldsPrimary === true ? "true" : "false"],
+    ["flatFieldsDiagnosticOnly", surface.flatFieldsDiagnosticOnly === false ? "false" : "true"],
+    ["flat field count", fields.length],
+    ["duplicate primary controls", surface.canonicalWorkflowSummary?.duplicatePrimaryControlCount ?? 0],
+    ["writes", "false"],
+    ["raw rows exposed", "false"],
+  ]);
+
+  for (const field of fields) {
+    const fieldDetails = document.createElement("details");
+    fieldDetails.className = "cs-selector-proof__section";
+    fieldDetails.open = false;
+    const fieldSummary = document.createElement("summary");
+    fieldSummary.textContent = `${field.label || field.fieldKey || "field"} — ${field.status || "diagnostic"}`;
+    fieldDetails.appendChild(fieldSummary);
+    appendDefinitionList(fieldDetails, [
+      ["fieldKey", field.fieldKey || "unknown"],
+      ["canonical primary control", "false"],
+      ["diagnostic only", "true"],
+      ["source", field.sourceStatus || "flat compatibility field"],
+      ["role", field.role || "manual-constraint"],
+      ["selected", field.selectedLabel || "none"],
+      ["options", Array.isArray(field.options) ? field.options.length : 0],
+      ["future mapped", field.futureMapped === true ? "true" : "false"],
+      ["disabled", field.disabled === true ? "true" : "false"],
+      ["writes", "false"],
+      ["raw rows exposed", "false"],
+    ]);
+    fieldDetails.dataset.flatFieldPrimary = "false";
+    details.appendChild(fieldDetails);
+  }
+
+  parent.appendChild(details);
 }
 
 export function renderSelectorView(container, viewModel) {
@@ -1026,6 +1025,7 @@ export function renderSelectorView(container, viewModel) {
 
   appendSelectorExpanderShell(diagnostics, viewModel);
   appendSelectorReferencePanel(diagnostics, viewModel);
+  appendSelectorCompatibilityFieldList(diagnostics, viewModel.selectorSurface || {});
 
   appendSection(diagnostics, "Identity and shell authority", [
     ["identity owner", viewModel.identity.owner],
