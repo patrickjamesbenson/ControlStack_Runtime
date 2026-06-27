@@ -825,6 +825,99 @@ function appendSelectorWorkflowSections(parent, surface = {}) {
   parent.appendChild(wrapper);
 }
 
+function truthKindLabel(kind = "") {
+  return String(kind || "unknown").replace(/-/g, " ");
+}
+
+function appendSelectionTruthSummaryItems(parent, items = []) {
+  if (!items.length) {
+    appendText(parent, "p", "No selected truth rows in this group yet.", "cs-selector-truth-summary__empty");
+    return;
+  }
+  const list = document.createElement("div");
+  list.className = "cs-selector-truth-summary__items";
+  for (const item of items) {
+    const row = document.createElement("article");
+    row.className = "cs-selector-truth-summary__item";
+    row.dataset.truthKind = item.truthKind || "unknown";
+    row.dataset.fieldKey = item.fieldKey || "unknown";
+
+    const title = document.createElement("div");
+    title.className = "cs-selector-truth-summary__item-title";
+    appendText(title, "strong", item.label || item.fieldKey || "Selection");
+    const badge = appendText(title, "span", truthKindLabel(item.truthKind), "cs-selector-truth-summary__kind");
+    badge.dataset.truthKind = item.truthKind || "unknown";
+    row.appendChild(title);
+
+    appendText(row, "p", item.valueLabel || item.value || "none", "cs-selector-truth-summary__value");
+    appendDefinitionList(row, [
+      ["status", item.status || "unknown"],
+      ["source", item.source || "selector summary"],
+      ["mutable", item.mutable === false ? "false" : "true"],
+      ["writes", item.writes === true ? "true" : "false"],
+      ["raw rows exposed", item.rawRowsExposed === true ? "true" : "false"],
+      ["blocked by", Array.isArray(item.blockedBy) && item.blockedBy.length ? item.blockedBy.map((entry) => entry.fieldKey || entry.reason || "constraint").join(", ") : "none"],
+    ]);
+    list.appendChild(row);
+  }
+  parent.appendChild(list);
+}
+
+function appendSelectorSelectionTruthSummary(parent, summary = {}) {
+  const section = document.createElement("section");
+  section.className = "cs-selector-truth-summary";
+  section.dataset.selectorTruthSummary = "read-only";
+  section.dataset.specGenerationEnabled = summary.specGenerationEnabled === true ? "true" : "false";
+  section.dataset.rawRowsExposed = summary.rawRowsExposed === true ? "true" : "false";
+
+  const header = document.createElement("div");
+  header.className = "cs-selector-truth-summary__header";
+  appendText(header, "p", "Selected truth summary", "cs-shell__eyebrow");
+  appendText(header, "h4", "Selected truth summary");
+  appendText(header, "p", "Read-only rail: manual selections are constraints; auto/default/inherited selections are consequences. Blocked values stay visible and no spec, proof, generation, record, approval, or write-back is created here.");
+  appendBadgeList(header, [
+    summary.readOnly === false ? "read-only missing" : "read-only",
+    summary.specGenerationEnabled === true ? "spec generation enabled" : "spec generation disabled",
+    summary.labProofAuthority === true ? "Lab Proof authority" : "not Lab Proof",
+    summary.controlledRecordWriteEnabled === true ? "records write enabled" : "records disabled",
+    summary.rregApprovalEnabled === true ? "RREG approval enabled" : "RREG disabled",
+    summary.hiddenWriteBackEnabled === true ? "write-back enabled" : "write-back disabled",
+  ]);
+  section.appendChild(header);
+
+  const statusRows = [
+    ["readOnly", summary.readOnly === false ? "false" : "true"],
+    ["specGenerationEnabled", summary.specGenerationEnabled === true ? "true" : "false"],
+    ["slugGenerationEnabled", summary.slugGenerationEnabled === true ? "true" : "false"],
+    ["iesGenerationEnabled", summary.iesGenerationEnabled === true ? "true" : "false"],
+    ["payloadGenerationEnabled", summary.payloadGenerationEnabled === true ? "true" : "false"],
+    ["runTableGenerationEnabled", summary.runTableGenerationEnabled === true ? "true" : "false"],
+    ["labProofAuthority", summary.labProofAuthority === true ? "true" : "false"],
+    ["controlledRecordWriteEnabled", summary.controlledRecordWriteEnabled === true ? "true" : "false"],
+    ["rregApprovalEnabled", summary.rregApprovalEnabled === true ? "true" : "false"],
+    ["hiddenWriteBackEnabled", summary.hiddenWriteBackEnabled === true ? "true" : "false"],
+    ["rawRowsExposed", summary.rawRowsExposed === true ? "true" : "false"],
+    ["rawUsersExposed", summary.rawUsersExposed === true ? "true" : "false"],
+    ["rawLabEvidenceExposed", summary.rawLabEvidenceExposed === true ? "true" : "false"],
+  ];
+  appendSection(section, "Selected truth safety gates", statusRows);
+
+  const groups = Array.isArray(summary.groups) ? summary.groups : [];
+  const grid = document.createElement("div");
+  grid.className = "cs-selector-truth-summary__groups";
+  for (const group of groups) {
+    const card = document.createElement("section");
+    card.className = "cs-selector-truth-summary__group";
+    card.dataset.truthGroup = group.groupKey || "unknown";
+    appendText(card, "h5", group.label || group.groupKey || "Summary group");
+    appendSelectionTruthSummaryItems(card, Array.isArray(group.items) ? group.items : []);
+    grid.appendChild(card);
+  }
+  section.appendChild(grid);
+
+  parent.appendChild(section);
+}
+
 function appendSelectorProductSurface(parent, surface = {}) {
   const section = document.createElement("section");
   section.className = "cs-selector-product";
@@ -839,6 +932,8 @@ function appendSelectorProductSurface(parent, surface = {}) {
 
   appendText(section, "p", surface.requiredSafetyCopy || "Read-only preview. No spec, slug, IES, payload, RunTable, Lab Proof, Controlled Record, RREG approval, custody transfer, Board Data write, or hidden write-back is created here.", "cs-selector-product__safety");
   appendText(section, "p", surface.proofCopy || "Selector previews selection readiness. Lab Proof proves later.", "cs-selector-product__proof");
+
+  appendSelectorSelectionTruthSummary(section, surface.selectionTruthSummary || {});
 
   appendSelectorWorkflowSections(section, surface);
 

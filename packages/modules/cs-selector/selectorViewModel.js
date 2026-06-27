@@ -1163,6 +1163,344 @@ function createDbAutoConsequences(fields = [], local = {}) {
   ].filter(Boolean);
 }
 
+const SELECTION_TRUTH_SUMMARY_GROUPS = Object.freeze([
+  Object.freeze({ groupKey: "project", label: "Project / source" }),
+  Object.freeze({ groupKey: "systemOptic", label: "System & optic" }),
+  Object.freeze({ groupKey: "environment", label: "Environment" }),
+  Object.freeze({ groupKey: "lightControl", label: "Light & Control" }),
+  Object.freeze({ groupKey: "wiringPower", label: "Wiring / power" }),
+  Object.freeze({ groupKey: "mountingPenetrations", label: "Mounting & penetrations" }),
+  Object.freeze({ groupKey: "finishes", label: "Finishes" }),
+  Object.freeze({ groupKey: "egressAccessories", label: "Egress & accessories" }),
+  Object.freeze({ groupKey: "specialParts", label: "Special Parts" }),
+  Object.freeze({ groupKey: "runs", label: "Runs" }),
+  Object.freeze({ groupKey: "blockers", label: "Blocked / incompatible" }),
+  Object.freeze({ groupKey: "futureHandoffs", label: "Future handoffs" }),
+]);
+
+const SELECTION_TRUTH_FIELD_GROUPS = Object.freeze({
+  tier: "systemOptic",
+  system: "systemOptic",
+  variantKey: "systemOptic",
+  emission: "systemOptic",
+  directCapability: "systemOptic",
+  indirectCapability: "systemOptic",
+  optic: "systemOptic",
+  opticSub: "systemOptic",
+  opticIndirect: "systemOptic",
+  application: "environment",
+  interiorExterior: "environment",
+  ipRating: "environment",
+  ikRating: "environment",
+  electricalClass: "environment",
+  ambient: "environment",
+  targetLmPerM: "lightControl",
+  cct: "lightControl",
+  cctCri: "lightControl",
+  controlType: "lightControl",
+  indirectMatchDirect: "lightControl",
+  targetLmPerMIndirect: "lightControl",
+  cctCriIndirect: "lightControl",
+  controlTypeIndirect: "lightControl",
+  driver: "lightControl",
+  powerPenetration: "wiringPower",
+  powerLocation: "wiringPower",
+  flexLength: "wiringPower",
+  wiringType: "wiringPower",
+  penetrationNotes: "wiringPower",
+  mountStyle: "mountingPenetrations",
+  mountSelection: "mountingPenetrations",
+  mountParticulars: "mountingPenetrations",
+  mountNotes: "mountingPenetrations",
+  bodyFinish: "finishes",
+  finishCover: "finishes",
+  finishEnd: "finishes",
+  finishFlex: "finishes",
+  inheritedFinishStatus: "finishes",
+  emergency: "egressAccessories",
+  egressLight: "egressAccessories",
+  egressSound: "egressAccessories",
+  sensor: "egressAccessories",
+  accessories: "egressAccessories",
+  specialParts: "specialParts",
+  specialPartsEntitlement: "specialParts",
+  specialPartsOptIn: "specialParts",
+  userEntitlementStatus: "specialParts",
+  runCount: "runs",
+  runQty: "runs",
+  runLength: "runs",
+  runLengthMode: "runs",
+  runOverrideStatus: "runs",
+  runPlacementStatus: "runs",
+  engineVerify: "futureHandoffs",
+  outputNavigation: "futureHandoffs",
+  saveHydrate: "futureHandoffs",
+  hubSpotPush: "futureHandoffs",
+  specBuildAuthority: "futureHandoffs",
+  slugSpecGeneration: "futureHandoffs",
+  iesGeneration: "futureHandoffs",
+  payloadRunTableGeneration: "futureHandoffs",
+});
+
+const SELECTION_TRUTH_DISABLED_HANDOFFS = Object.freeze([
+  Object.freeze({ fieldKey: "slugSpecGeneration", label: "Spec / slug generation", valueLabel: "disabled — future spec gate required" }),
+  Object.freeze({ fieldKey: "iesGeneration", label: "IES generation", valueLabel: "disabled — IES Builder candidate handoff later" }),
+  Object.freeze({ fieldKey: "payloadRunTableGeneration", label: "Payload / RunTable generation", valueLabel: "disabled — generation handoff later" }),
+  Object.freeze({ fieldKey: "labProof", label: "Lab Proof", valueLabel: "disabled — Lab proves later" }),
+  Object.freeze({ fieldKey: "controlledRecords", label: "Controlled Records", valueLabel: "disabled — provenance records later" }),
+  Object.freeze({ fieldKey: "rreg", label: "RREG review / approval / custody", valueLabel: "disabled — RREG maps responsibility later" }),
+  Object.freeze({ fieldKey: "hubSpotPush", label: "HubSpot / Liora / KC / CLX write-back", valueLabel: "disabled — no hidden write-back" }),
+]);
+
+function selectionTruthGroupForField(fieldKey = "") {
+  return SELECTION_TRUTH_FIELD_GROUPS[fieldKey] || "project";
+}
+
+function selectionTruthKindFor(item = {}, field = {}) {
+  const kind = String(item.kind || "").trim();
+  const role = String(item.role || field.role || "").trim();
+  const status = String(item.status || "").trim();
+  if (item.blocked === true || status === "blocked") return "blocked";
+  if (kind === "inherited-consequence" || role === "inherited-consequence" || status === "inherited") return "inherited-consequence";
+  if (kind === "auto-consequence" || role === "auto-consequence" || status === "auto-consequence") return "auto-consequence";
+  if (role === "disabled" || item.disabled === true) return "future-disabled";
+  if (role === "future-mapped" || item.futureMapped === true || status === "future-mapped") return "missing";
+  return "manual-constraint";
+}
+
+function createSelectionTruthItem({
+  fieldKey = "unknown",
+  label = "Selection",
+  value = "",
+  valueLabel = "none",
+  truthKind = "missing",
+  status = "unknown",
+  source = "selector view model",
+  mutable = true,
+  writes = false,
+  blockedBy = [],
+  rawRowsExposed = false,
+} = {}) {
+  return {
+    fieldKey,
+    label,
+    value,
+    valueLabel: String(valueLabel || value || "none"),
+    truthKind,
+    status,
+    source,
+    mutable: mutable !== false,
+    writes: writes === true ? false : false,
+    blockedBy: Array.isArray(blockedBy) ? blockedBy.map((item) => ({ ...item })) : [],
+    rawRowsExposed: rawRowsExposed === true ? false : false,
+  };
+}
+
+function createSelectionTruthGroups() {
+  return SELECTION_TRUTH_SUMMARY_GROUPS.map((group) => ({
+    groupKey: group.groupKey,
+    label: group.label,
+    items: [],
+  }));
+}
+
+function selectionTruthGroup(groups, groupKey) {
+  return groups.find((group) => group.groupKey === groupKey) || groups[0];
+}
+
+function addSelectionTruthItem(groups, groupKey, item) {
+  const group = selectionTruthGroup(groups, groupKey);
+  const key = `${item.fieldKey}:${item.value}:${item.truthKind}:${item.status}`;
+  if (group.items.some((existing) => `${existing.fieldKey}:${existing.value}:${existing.truthKind}:${existing.status}` === key)) return;
+  group.items.push(item);
+}
+
+function flattenedWorkflowFields(workflowSections = []) {
+  return workflowSections.flatMap((section) => Array.isArray(section.fields) ? section.fields : []);
+}
+
+function createFieldLookup(fields = [], workflowSections = []) {
+  const lookup = new Map();
+  for (const field of [...fields, ...flattenedWorkflowFields(workflowSections)]) {
+    if (field?.fieldKey && !lookup.has(field.fieldKey)) lookup.set(field.fieldKey, field);
+  }
+  return lookup;
+}
+
+function createSelectionTruthSummary({
+  sourceReady = false,
+  status = "unknown",
+  fields = [],
+  workflowSections = [],
+  manualConstraints = [],
+  autoConsequences = [],
+  blockedItems = [],
+  payload = {},
+  candidateSummary = {},
+} = {}) {
+  const groups = createSelectionTruthGroups();
+  const fieldLookup = createFieldLookup(fields, workflowSections);
+  const sourceStatus = sourceReady ? "source ready" : "source unavailable";
+
+  addSelectionTruthItem(groups, "project", createSelectionTruthItem({
+    fieldKey: "selectorSourceStatus",
+    label: "Selector Reference source",
+    value: sourceStatus,
+    valueLabel: `${sourceStatus}; ${status || "unknown"}`,
+    truthKind: "source-status",
+    status: sourceReady ? "available" : "missing",
+    source: "safe Selector Reference status",
+    mutable: false,
+    writes: false,
+  }));
+  addSelectionTruthItem(groups, "project", createSelectionTruthItem({
+    fieldKey: "selectorPreviewBoundary",
+    label: "Selector boundary",
+    value: "read-only preview",
+    valueLabel: "read-only preview — not spec, not proof, no writes",
+    truthKind: "source-status",
+    status: "read-only",
+    source: "runtime Selector boundary",
+    mutable: false,
+    writes: false,
+  }));
+
+  for (const constraint of manualConstraints) {
+    const field = fieldLookup.get(constraint.fieldKey) || {};
+    const item = createSelectionTruthItem({
+      fieldKey: constraint.fieldKey,
+      label: constraint.label || field.label || constraint.fieldKey,
+      value: constraint.value || "",
+      valueLabel: constraint.valueLabel || constraint.value || "none",
+      truthKind: constraint.blocked === true || constraint.status === "blocked" ? "blocked" : "manual-constraint",
+      status: constraint.status || "manual constraint",
+      source: constraint.source || field.sourceStatus || "manual Selector constraint",
+      mutable: constraint.mutable !== false,
+      writes: false,
+      blockedBy: constraint.blockedBy || [],
+      rawRowsExposed: false,
+    });
+    addSelectionTruthItem(groups, selectionTruthGroupForField(constraint.fieldKey), item);
+  }
+
+  for (const consequence of autoConsequences) {
+    const field = fieldLookup.get(consequence.fieldKey) || {};
+    const truthKind = selectionTruthKindFor(consequence, field);
+    const item = createSelectionTruthItem({
+      fieldKey: consequence.fieldKey,
+      label: consequence.label || field.label || consequence.fieldKey,
+      value: consequence.value || "",
+      valueLabel: consequence.valueLabel || consequence.value || "none",
+      truthKind,
+      status: consequence.status || truthKind,
+      source: consequence.source || field.sourceStatus || "safe Selector Reference consequence",
+      mutable: consequence.mutable !== false,
+      writes: false,
+      blockedBy: consequence.blockedBy || [],
+      rawRowsExposed: false,
+    });
+    addSelectionTruthItem(groups, selectionTruthGroupForField(consequence.fieldKey), item);
+  }
+
+  for (const field of [...fieldLookup.values()]) {
+    const selectedValue = field.selectedValue || "";
+    if (selectedValue) {
+      const truthKind = selectionTruthKindFor(field, field);
+      const item = createSelectionTruthItem({
+        fieldKey: field.fieldKey,
+        label: field.label || field.fieldKey,
+        value: selectedValue,
+        valueLabel: field.selectedLabel || selectedValue,
+        truthKind,
+        status: field.status || truthKind,
+        source: field.sourceStatus || "safe Selector Reference selected value",
+        mutable: field.disabled !== true,
+        writes: false,
+        blockedBy: field.blockedBy || [],
+        rawRowsExposed: false,
+      });
+      addSelectionTruthItem(groups, selectionTruthGroupForField(field.fieldKey), item);
+    }
+
+    if (!selectedValue && (field.futureMapped === true || field.disabled === true || field.status === "future-mapped")) {
+      const truthKind = field.disabled === true || field.role === "disabled" ? "future-disabled" : "missing";
+      const item = createSelectionTruthItem({
+        fieldKey: field.fieldKey,
+        label: field.label || field.fieldKey,
+        value: truthKind,
+        valueLabel: field.unavailableReason || (truthKind === "future-disabled" ? "disabled in this read-only slice" : "future mapped / missing from current source"),
+        truthKind,
+        status: field.status || truthKind,
+        source: field.sourceStatus || "safe Selector Reference field map",
+        mutable: false,
+        writes: false,
+        rawRowsExposed: false,
+      });
+      addSelectionTruthItem(groups, selectionTruthGroupForField(field.fieldKey), item);
+    }
+  }
+
+  const blockerItems = [];
+  for (const blocked of blockedItems) {
+    const field = fieldLookup.get(blocked.fieldKey) || {};
+    const item = createSelectionTruthItem({
+      fieldKey: blocked.fieldKey || "blocked",
+      label: blocked.label || field.label || blocked.fieldKey || "Blocked selection",
+      value: blocked.value || "blocked",
+      valueLabel: blocked.valueLabel || blocked.reason || blocked.status || "blocked / incompatible",
+      truthKind: "blocked",
+      status: blocked.status || "blocked",
+      source: blocked.source || field.sourceStatus || "safe Selector compatibility metadata",
+      mutable: true,
+      writes: false,
+      blockedBy: blocked.blockedBy || [],
+      rawRowsExposed: false,
+    });
+    blockerItems.push(item);
+    addSelectionTruthItem(groups, "blockers", item);
+  }
+
+  const missingItems = groups.flatMap((group) => group.items.filter((item) => item.truthKind === "missing" || item.truthKind === "future-disabled"));
+  for (const handoff of SELECTION_TRUTH_DISABLED_HANDOFFS) {
+    const item = createSelectionTruthItem({
+      fieldKey: handoff.fieldKey,
+      label: handoff.label,
+      value: "disabled",
+      valueLabel: handoff.valueLabel,
+      truthKind: "future-disabled",
+      status: "disabled",
+      source: "runtime Selector boundary",
+      mutable: false,
+      writes: false,
+      rawRowsExposed: false,
+    });
+    addSelectionTruthItem(groups, "futureHandoffs", item);
+  }
+
+  return {
+    readOnly: true,
+    specGenerationEnabled: false,
+    slugGenerationEnabled: false,
+    iesGenerationEnabled: false,
+    payloadGenerationEnabled: false,
+    runTableGenerationEnabled: false,
+    labProofAuthority: false,
+    controlledRecordWriteEnabled: false,
+    rregApprovalEnabled: false,
+    hiddenWriteBackEnabled: false,
+    rawRowsExposed: false,
+    rawUsersExposed: false,
+    rawLabEvidenceExposed: false,
+    credentialsExposed: false,
+    privatePathsExposed: false,
+    status: candidateSummary.state || payload.status || status || "default preview",
+    groups: groups.map((group) => ({ ...group, items: group.items.map((item) => ({ ...item })) })),
+    blockers: blockerItems.map((item) => ({ ...item })),
+    missing: missingItems.map((item) => ({ ...item })),
+    disabledHandoffs: SELECTION_TRUTH_DISABLED_HANDOFFS.map((item) => ({ ...item, truthKind: "future-disabled", status: "disabled", writes: false, rawRowsExposed: false })),
+  };
+}
+
 function createDbBackedSelectorSurface(selectorReferenceStatus = {}, local = {}, selectorState, onLocalStateChange) {
   const payload = dbOptionsPayload(selectorReferenceStatus);
   const sourceReady = dbOptionsSourceReady(selectorReferenceStatus);
@@ -1195,6 +1533,17 @@ function createDbBackedSelectorSurface(selectorReferenceStatus = {}, local = {},
     autoConsequenceCount: autoConsequences.length,
     blockedCount: blockedItems.length,
   };
+  const selectionTruthSummary = createSelectionTruthSummary({
+    sourceReady,
+    status: payload.status || selectorReferenceStatus.status || "not-requested",
+    fields,
+    workflowSections,
+    manualConstraints,
+    autoConsequences,
+    blockedItems,
+    payload,
+    candidateSummary: summary,
+  });
   return {
     title: "CS Selector Preview",
     subtitle: "Read-only DB-backed candidate preview. Manual selections are constraints; auto selections are consequences.",
@@ -1213,6 +1562,7 @@ function createDbBackedSelectorSurface(selectorReferenceStatus = {}, local = {},
     workflowSections,
     donorFieldParity: payload.donorFieldParity || null,
     specialPartsEntitlementSummary: payload.specialPartsEntitlementSummary || null,
+    selectionTruthSummary,
     manualConstraints,
     autoConsequences,
     blockedItems,
