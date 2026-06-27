@@ -453,6 +453,8 @@ function createOption(label, {
   runtimeImageAvailable = false,
   metadataOnly = false,
   specCodeGenerationEnabled = false,
+  systemReferenceKey = "",
+  systemVariantKey = "",
 } = {}) {
   const optionLabel = safeString(label || value);
   return {
@@ -476,6 +478,8 @@ function createOption(label, {
     specCodeGenerationEnabled: specCodeGenerationEnabled === true ? false : false,
     writes: false,
     rawRowsExposed: false,
+    systemReferenceKey: safeString(systemReferenceKey),
+    systemVariantKey: safeString(systemVariantKey),
   };
 }
 
@@ -489,7 +493,7 @@ function addOption(bucket, fieldKey, label, meta = {}) {
   if (existing) {
     existing.count += meta.count || 1;
     existing.sourceTables = uniqueStrings([...(existing.sourceTables || []), ...(meta.sourceTables || [])]);
-    for (const key of ["diffuserLayer", "parentFieldKey", "parentValue", "specCodePreview", "specCodeVar2Preview", "diffuserMaterial", "imageReadiness", "imageKey"]) {
+    for (const key of ["diffuserLayer", "parentFieldKey", "parentValue", "specCodePreview", "specCodeVar2Preview", "diffuserMaterial", "imageReadiness", "imageKey", "systemReferenceKey", "systemVariantKey"]) {
       if (!existing[key] && meta[key]) existing[key] = meta[key];
     }
     existing.visualChoice = existing.visualChoice === true || meta.visualChoice === true;
@@ -517,12 +521,9 @@ function systemTokens(row) {
 }
 
 function systemOptionFromOpticRow(systemOptions, opticRow) {
-  const rowSystem = normaliseKey(rowText(opticRow, ["system", "series", "system_name", "system_key"]));
+  const rowSystem = rowText(opticRow, ["system", "series", "system_name", "system_key"]);
   if (!rowSystem) return null;
-  return systemOptions.find((option) => {
-    const haystack = [option.value, option.label].map(normaliseKey);
-    return haystack.some((value) => value === rowSystem || value.includes(rowSystem) || rowSystem.includes(value));
-  }) || null;
+  return systemOptions.find((option) => valuesMatch(option.systemReferenceKey, rowSystem)) || null;
 }
 
 function extractCctValues(row) {
@@ -580,14 +581,28 @@ function systemEmissionValues(row) {
   return rowOptionValues(row, ["emission", "system_emission", "light_direction", "direction", "emission_permission"]);
 }
 
+function normaliseEmissionMode(value) {
+  const key = normaliseKey(value).replace(/[|+/,-]+/g, " ").replace(/\s+/g, " ").trim();
+  if (!key) return "direct";
+  const tokens = key.split(" ").filter(Boolean);
+  const tokenSet = new Set(tokens);
+  const hasBoth = tokenSet.has("both") || key === "di" || key === "d i";
+  const hasDirect = tokenSet.has("direct") || tokenSet.has("down");
+  const hasIndirect = tokenSet.has("indirect") || tokenSet.has("up");
+  if (hasBoth || (hasDirect && hasIndirect)) return "direct-indirect";
+  if (hasIndirect) return "indirect";
+  if (hasDirect) return "direct";
+  return key;
+}
+
 function emissionSupportsIndirect(value) {
-  const key = normaliseKey(value);
-  return key.includes("indirect") || key.includes("both") || key.includes("direct indirect") || key === "di" || key === "d i";
+  const mode = normaliseEmissionMode(value);
+  return mode === "direct-indirect" || mode === "indirect";
 }
 
 function emissionSupportsDirect(value) {
-  const key = normaliseKey(value);
-  return !key || key.includes("direct") || key.includes("both") || key.includes("di");
+  const mode = normaliseEmissionMode(value);
+  return !mode || mode === "direct" || mode === "direct-indirect";
 }
 
 function addRedactedEntitlementOptions(bucket, snapshot) {
@@ -657,7 +672,7 @@ function collectOptions(snapshot) {
   const systems = liveTableRows(snapshot, "SYSTEM");
   for (const row of systems) {
     const tokens = systemTokens(row);
-    addOption(bucket, "system", tokens.label, { value: tokens.value, sourceTables: ["SYSTEM"] });
+    addOption(bucket, "system", tokens.label, { value: tokens.value, sourceTables: ["SYSTEM"], systemReferenceKey: tokens.system, systemVariantKey: tokens.variant });
     if (tokens.variant) addOption(bucket, "variantKey", tokens.variant, { sourceTables: ["SYSTEM"] });
     for (const emission of systemEmissionValues(row)) {
       addOption(bucket, "emission", emission, { sourceTables: ["SYSTEM"] });
@@ -889,9 +904,7 @@ function diffuserVar1Value(row) {
 function diffuserVar2Values(row) {
   const var1 = diffuserVar1Name(row);
   const system = diffuserSystemToken(row);
-  const variants = rowOptionValues(row, ["optic_var_2"]);
-  const fallbackCodes = variants.length ? [] : rowOptionValues(row, ["spec_code_var2"]);
-  return [...variants, ...fallbackCodes].map((variant) => ({
+  return rowOptionValues(row, ["optic_var_2"]).map((variant) => ({
     label: variant,
     value: [system, var1, variant].filter(Boolean).join("|") || variant,
   }));
@@ -944,6 +957,7 @@ function diffuserOptionMeta(row, { layer, parentFieldKey = "", parentValue = "",
     specCodeGenerationEnabled: false,
     writes: false,
     rawRowsExposed: false,
+    systemReferenceKey: diffuserSystemToken(row),
   };
 }
 
@@ -952,7 +966,8 @@ function collectRecords(snapshot, bucket) {
   const systemOptions = optionsFor(bucket, "system");
 
   for (const row of liveTableRows(snapshot, "SYSTEM")) {
-    const systemValue = systemOptionValueForSource(systemOptions, row) || systemTokens(row).value;
+    const tokens = systemTokens(row);
+    const systemValue = tokens.system || systemOptionValueForSource(systemOptions, row) || tokens.value;
     const variant = rowText(row, ["system_variant_1", "variant", "family", "profile_family"]);
     const emissions = systemEmissionValues(row);
     const mountStyles = rowOptionValues(row, ["mount_style", "mount_styles"]);
@@ -974,8 +989,7 @@ function collectRecords(snapshot, bucket) {
   }
 
   for (const row of liveTableRows(snapshot, "OPTICS")) {
-    const systemOption = systemOptionFromOpticRow(systemOptions, row);
-    const systemValue = systemOption?.value || "";
+    const systemValue = diffuserSystemToken(row);
     const opticValue = opticFieldValue(row);
     const var1Value = diffuserVar1Value(row);
     const var2Values = diffuserVar2Values(row).map((item) => item.value);
@@ -1081,8 +1095,49 @@ function collectRecords(snapshot, bucket) {
   return records;
 }
 
+function stripDirectionSuffix(value) {
+  return safeString(value).replace(/\|(direct|indirect)$/i, "");
+}
+
 function valuesMatch(left, right) {
-  return normaliseKey(left) === normaliseKey(right);
+  return normaliseKey(stripDirectionSuffix(left)) === normaliseKey(stripDirectionSuffix(right));
+}
+
+function constraintValueMatches(fieldKey, candidateValue, selectedValue) {
+  return valuesMatch(candidateValue, selectedValue);
+}
+
+function normalisedTokenSet(value = "") {
+  return new Set(normaliseKey(value).split(/[^a-z0-9]+/).filter(Boolean));
+}
+
+function systemSelectionMatchesOption(option = {}, selectedValue = "") {
+  if (!safeString(selectedValue)) return false;
+  if (valuesMatch(option.value, selectedValue) || valuesMatch(option.label, selectedValue) || valuesMatch(option.systemReferenceKey, selectedValue)) return true;
+
+  const systemKey = safeString(option.systemReferenceKey || safeString(option.value).split("|")[0]);
+  if (!systemKey) return false;
+  const selectedTokens = normalisedTokenSet(selectedValue);
+  if (!selectedTokens.has(normaliseKey(systemKey))) return false;
+
+  const variant = safeString(option.systemVariantKey || safeString(option.value).split("|").slice(1).join("|"));
+  if (!variant) return true;
+  const variantKey = normaliseKey(variant);
+  const selectedKey = normaliseKey(selectedValue).replace(/[^a-z0-9]+/g, " ").trim();
+  if (selectedKey.includes(variantKey.replace(/[^a-z0-9]+/g, " ").trim())) return true;
+  return Array.from(normalisedTokenSet(variant)).every((token) => selectedTokens.has(token));
+}
+
+function systemReferenceKeyFromSelection(systemOptions = [], selectedValue = "") {
+  if (!safeString(selectedValue)) return "";
+  const match = systemOptions.find((option) => systemSelectionMatchesOption(option, selectedValue));
+  return match ? safeString(match.systemReferenceKey) || safeString(match.value).split("|")[0] || safeString(match.label) : "";
+}
+
+function cascadeConstraintsForOptions(bucket = {}, constraints = {}) {
+  const selectedSystemKey = systemReferenceKeyFromSelection(optionsFor(bucket, "system"), constraints.system || "");
+  if (!selectedSystemKey) return constraints;
+  return { ...constraints, system: selectedSystemKey };
 }
 
 function recordConstraintBlockers(record, constraints, exceptFieldKey = "") {
@@ -1090,7 +1145,7 @@ function recordConstraintBlockers(record, constraints, exceptFieldKey = "") {
   for (const [fieldKey, selected] of Object.entries(constraints)) {
     if (fieldKey === exceptFieldKey || !safeString(selected)) continue;
     const values = Array.isArray(record.fields?.[fieldKey]) ? record.fields[fieldKey] : [];
-    if (values.length && !values.some((value) => valuesMatch(value, selected))) {
+    if (values.length && !values.some((value) => constraintValueMatches(fieldKey, value, selected))) {
       blockers.push({
         fieldKey,
         selectedValue: selected,
@@ -1163,12 +1218,23 @@ function createUnavailableField(field, reason) {
   };
 }
 
-function labelForValue(options, value) {
-  const option = options.find((item) => valuesMatch(item.value, value));
+function optionSelectedByValue(fieldKey, option, value) {
+  if (!safeString(value)) return false;
+  if (valuesMatch(option.value, value)) return true;
+  if (fieldKey === "system") return systemSelectionMatchesOption(option, value);
+  return false;
+}
+
+function labelForSelectedValue(options, value, fieldKey = "") {
+  const option = options.find((item) => optionSelectedByValue(fieldKey, item, value));
   return option?.label || safeString(value);
 }
 
-function createFields({ bucket, records, constraints, sourceReady }) {
+function labelForValue(options, value) {
+  return labelForSelectedValue(options, value);
+}
+
+function createFields({ bucket, records, constraints, cascadeConstraints = constraints, sourceReady }) {
   return TARGET_FIELDS.map((field) => {
     const baseOptions = optionsFor(bucket, field.fieldKey);
     const selectedValue = constraints[field.fieldKey] || "";
@@ -1176,8 +1242,8 @@ function createFields({ bucket, records, constraints, sourceReady }) {
     if (!baseOptions.length) return createUnavailableField(field, `${field.label} is unavailable from current source and remains future mapped; no fake values emitted.`);
 
     const options = baseOptions.map((option) => {
-      const cascade = optionCascadeResult(field.fieldKey, option, records, constraints);
-      const selected = selectedValue && valuesMatch(option.value, selectedValue);
+      const cascade = optionCascadeResult(field.fieldKey, option, records, cascadeConstraints);
+      const selected = optionSelectedByValue(field.fieldKey, option, selectedValue);
       return {
         ...option,
         selected: Boolean(selected),
@@ -1195,7 +1261,7 @@ function createFields({ bucket, records, constraints, sourceReady }) {
       };
     });
 
-    if (selectedValue && !options.some((option) => valuesMatch(option.value, selectedValue))) {
+    if (selectedValue && !options.some((option) => optionSelectedByValue(field.fieldKey, option, selectedValue))) {
       options.push({
         value: selectedValue,
         label: selectedValue,
@@ -1220,7 +1286,7 @@ function createFields({ bucket, records, constraints, sourceReady }) {
       sourceTables: [...field.sourceTables],
       options,
       selectedValue,
-      selectedLabel: selectedValue ? labelForValue(options, selectedValue) : "",
+      selectedLabel: selectedValue ? labelForSelectedValue(options, selectedValue, field.fieldKey) : "",
       unavailableReason: availableCount ? "" : "No compatible options remain under the current manual constraints; values are shown as blocked rather than removed.",
       futureMapped: false,
       rawRowsExposed: false,
@@ -1335,10 +1401,22 @@ function indirectFieldRequiresSupport(fieldKey) {
 }
 
 function upstreamIndirectSupportState(records = [], constraints = {}) {
-  const upstreamSelected = Boolean(constraints.system || constraints.optic || constraints.emission);
-  if (!upstreamSelected) return { supported: true, checked: false, blockedBy: [] };
-  const indirectRecords = records.filter((record) => Array.isArray(record.fields?.indirectCapability) && record.fields.indirectCapability.some((value) => valuesMatch(value, "indirect-supported")));
-  const supported = indirectRecords.some((record) => recordMatchesConstraints(record, constraints, "indirectCapability"));
+  const upstreamSelected = Boolean(constraints.system || constraints.emission);
+  if (!upstreamSelected) {
+    return {
+      supported: false,
+      checked: false,
+      blockedBy: [{ fieldKey: "system", selectedValue: "not selected", compatibleValues: ["system with indirect emission"] }],
+    };
+  }
+  const selectedSystem = safeString(constraints.system || "");
+  const systemRecords = selectedSystem
+    ? records.filter((record) => (record.sourceTables || []).includes("SYSTEM") && Array.isArray(record.fields?.system) && record.fields.system.some((value) => valuesMatch(value, selectedSystem)))
+    : [];
+  const recordsToCheck = systemRecords.length
+    ? systemRecords
+    : records.filter((record) => Array.isArray(record.fields?.indirectCapability) && record.fields.indirectCapability.some((value) => valuesMatch(value, "indirect-supported")));
+  const supported = recordsToCheck.some((record) => Array.isArray(record.fields?.indirectCapability) && record.fields.indirectCapability.some((value) => valuesMatch(value, "indirect-supported")) && recordMatchesConstraints(record, constraints, "indirectCapability"));
   return {
     supported,
     checked: true,
@@ -1369,11 +1447,52 @@ function createDisabledWorkflowField(field, reason) {
   };
 }
 
-function createMetadataWorkflowField(field, baseOptions = [], records = [], constraints = {}) {
+function opticVar2ParentFieldKey(fieldKey = "") {
+  if (fieldKey === "directOpticVar2") return "directOpticVar1";
+  if (fieldKey === "indirectOpticVar2") return "indirectOpticVar1";
+  if (fieldKey === "diffuserVar2") return "diffuserVar1";
+  if (fieldKey === "opticSub") return "optic";
+  return "";
+}
+
+function optionsForSelectedOpticParent(fieldKey = "", baseOptions = [], constraints = {}) {
+  const parentFieldKey = opticVar2ParentFieldKey(fieldKey);
+  if (!parentFieldKey) return { options: baseOptions, parentFieldKey: "", parentValue: "", childFiltered: false };
+  const parentValue = safeString(constraints[parentFieldKey] || "");
+  if (!parentValue) return { options: [], parentFieldKey, parentValue: "", childFiltered: true };
+  return {
+    options: baseOptions.filter((option) => option.parentValue && valuesMatch(option.parentValue, parentValue)),
+    parentFieldKey,
+    parentValue,
+    childFiltered: true,
+  };
+}
+
+function createEmptyChildWorkflowField(field, parentFieldKey = "", parentValue = "") {
+  return {
+    fieldKey: field.fieldKey,
+    label: field.label,
+    role: field.role,
+    status: "blocked",
+    sourceStatus: "db-reference-backed child-of-optic-var-1",
+    sourceTables: [...(field.sourceTables || [])],
+    options: [],
+    selectedValue: "",
+    selectedLabel: "",
+    unavailableReason: parentValue
+      ? `Selected ${parentFieldKey} has no optic var-2 sub-variants in optic_var_2.`
+      : `Select ${parentFieldKey} before optic var-2 sub-variants are derived.`,
+    futureMapped: false,
+    disabled: false,
+    rawRowsExposed: false,
+  };
+}
+
+function createMetadataWorkflowField(field, baseOptions = [], records = [], constraints = {}, cascadeConstraints = constraints) {
   const selectedValue = constraints[field.fieldKey] || "";
   const options = baseOptions.map((option) => {
-    const cascade = optionCascadeResult(field.fieldKey, option, records, constraints);
-    const selected = selectedValue ? valuesMatch(option.value, selectedValue) : false;
+    const cascade = optionCascadeResult(field.fieldKey, option, records, cascadeConstraints);
+    const selected = optionSelectedByValue(field.fieldKey, option, selectedValue);
     return {
       ...option,
       selected: Boolean(selected),
@@ -1403,7 +1522,7 @@ function createMetadataWorkflowField(field, baseOptions = [], records = [], cons
     sourceTables: [...(field.sourceTables || [])],
     options,
     selectedValue: selectedValue || previewOption?.value || "",
-    selectedLabel: selectedValue ? labelForValue(options, selectedValue) : previewOption?.label || "",
+    selectedLabel: selectedValue ? labelForSelectedValue(options, selectedValue, field.fieldKey) : previewOption?.label || "",
     unavailableReason: previewOption ? "Metadata preview only. No spec code, slug, image, artefact, proof, or write is generated." : `${field.label} metadata is unavailable from the current source; no fake values emitted.`,
     futureMapped: !previewOption,
     disabled: true,
@@ -1414,14 +1533,17 @@ function createMetadataWorkflowField(field, baseOptions = [], records = [], cons
   };
 }
 
-function createWorkflowField(field, { bucket, records, constraints, sourceReady }) {
+function createWorkflowField(field, { bucket, records, constraints, cascadeConstraints = constraints, sourceReady }) {
   const selectedValue = constraints[field.fieldKey] || "";
   if (!sourceReady) return createUnavailableField(field, "Selector Reference source is unavailable or not parseable.");
   if (field.role === "disabled") return createDisabledWorkflowField(field, "Disabled read-only preview. No workflow action, generation, write, proof, payload, RunTable, HubSpot push, save, or hidden write-back is available in this slice.");
   if (field.role === "future-mapped") return createUnavailableField(field, `${field.label} is a donor workflow field but is not source-backed in this runtime slice.`);
 
-  const baseOptions = optionsFor(bucket, field.fieldKey);
-  if (field.role === "metadata-only") return createMetadataWorkflowField(field, baseOptions, records, constraints);
+  const rawBaseOptions = optionsFor(bucket, field.fieldKey);
+  const childOptions = optionsForSelectedOpticParent(field.fieldKey, rawBaseOptions, constraints);
+  const baseOptions = childOptions.options;
+  if (childOptions.childFiltered && !baseOptions.length) return createEmptyChildWorkflowField(field, childOptions.parentFieldKey, childOptions.parentValue);
+  if (field.role === "metadata-only") return createMetadataWorkflowField(field, baseOptions, records, constraints, cascadeConstraints);
   if (!baseOptions.length) {
     if (field.role === "entitlement-gated") {
       return createUnavailableField(field, `${field.label} is entitlement-gated. No raw USERS data is exposed, and no entitlement option is faked.`);
@@ -1430,12 +1552,12 @@ function createWorkflowField(field, { bucket, records, constraints, sourceReady 
   }
 
   const indirectSupport = indirectFieldRequiresSupport(field.fieldKey)
-    ? upstreamIndirectSupportState(records, constraints)
+    ? upstreamIndirectSupportState(records, cascadeConstraints)
     : { supported: true, checked: false, blockedBy: [] };
   const options = baseOptions.map((option) => {
-    const cascade = optionCascadeResult(field.fieldKey, option, records, constraints);
+    const cascade = optionCascadeResult(field.fieldKey, option, records, cascadeConstraints);
     const compatible = cascade.compatible && indirectSupport.supported;
-    const selected = selectedValue && valuesMatch(option.value, selectedValue);
+    const selected = optionSelectedByValue(field.fieldKey, option, selectedValue);
     const inherited = field.role === "inherited-consequence" && compatible;
     const consequence = field.role === "auto-consequence" && compatible;
     const blockedBy = compatible ? [] : [...(cascade.blockedBy || []), ...(indirectSupport.supported ? [] : indirectSupport.blockedBy)];
@@ -1457,7 +1579,7 @@ function createWorkflowField(field, { bucket, records, constraints, sourceReady 
     };
   });
 
-  if (selectedValue && !options.some((option) => valuesMatch(option.value, selectedValue))) {
+  if (selectedValue && !options.some((option) => optionSelectedByValue(field.fieldKey, option, selectedValue))) {
     options.push({
       value: selectedValue,
       label: selectedValue,
@@ -1482,7 +1604,7 @@ function createWorkflowField(field, { bucket, records, constraints, sourceReady 
     sourceTables: [...(field.sourceTables || [])],
     options,
     selectedValue,
-    selectedLabel: selectedValue ? labelForValue(options, selectedValue) : "",
+    selectedLabel: selectedValue ? labelForSelectedValue(options, selectedValue, field.fieldKey) : "",
     unavailableReason: availableCount ? "" : "No compatible options remain under the current manual constraints; values are shown as blocked rather than removed.",
     futureMapped: false,
     disabled: false,
@@ -1490,9 +1612,9 @@ function createWorkflowField(field, { bucket, records, constraints, sourceReady 
   };
 }
 
-function createWorkflowSections({ bucket, records, constraints, sourceReady }) {
+function createWorkflowSections({ bucket, records, constraints, cascadeConstraints = constraints, sourceReady }) {
   return WORKFLOW_SECTION_DEFINITIONS.map((section) => {
-    const fields = section.fields.map((field) => createWorkflowField(field, { bucket, records, constraints, sourceReady }));
+    const fields = section.fields.map((field) => createWorkflowField(field, { bucket, records, constraints, cascadeConstraints, sourceReady }));
     const mappedCount = fields.filter((field) => String(field.sourceStatus || "").startsWith("db-reference-backed") || field.sourceStatus === "entitlement-gated-redacted").length;
     const futureMappedCount = fields.filter((field) => field.futureMapped === true).length;
     const disabledCount = fields.filter((field) => field.disabled === true && field.metadataOnly !== true).length;
@@ -1741,8 +1863,9 @@ export function deriveSelectorReferenceOptionsFromSnapshot(snapshot = {}, { cons
 
   const bucket = collectOptions(safeSnapshot);
   const records = collectRecords(safeSnapshot, bucket);
-  const fields = createFields({ bucket, records, constraints: safeConstraints, sourceReady });
-  const workflowSections = createWorkflowSections({ bucket, records, constraints: safeConstraints, sourceReady });
+  const cascadeConstraints = cascadeConstraintsForOptions(bucket, safeConstraints);
+  const fields = createFields({ bucket, records, constraints: safeConstraints, cascadeConstraints, sourceReady });
+  const workflowSections = createWorkflowSections({ bucket, records, constraints: safeConstraints, cascadeConstraints, sourceReady });
   const manualConstraints = createManualConstraintList(fields, safeConstraints);
   const autoConsequences = [
     ...deriveAutoConsequences(fields, safeConstraints),

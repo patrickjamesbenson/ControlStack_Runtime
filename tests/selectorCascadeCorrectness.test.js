@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
 import { deriveSelectorReferenceOptionsFromSnapshot } from "../packages/workspace-kernel/selectorReferenceOptionsService.js";
+import { createSelectorViewModel } from "../packages/modules/cs-selector/selectorViewModel.js";
 
 const moduleSourceUrl = new URL("../packages/modules/cs-selector/index.js", import.meta.url);
 const serverSourceUrl = new URL("../server.js", import.meta.url);
@@ -15,20 +16,20 @@ function cascadeSnapshot() {
   return {
     SYSTEM: [
       {
-        system: "DNX",
-        system_variant_1: "60",
-        label: "DNX 60",
-        emission: "direct",
-        mount_style: "Surface",
+        system: "60",
+        system_variant_1: "Beam DI",
+        label: "DNX 60 Beam DI",
+        emission: "Both",
+        mount_style: "Suspended",
         system_and_variant_finish: "White",
         flex_colour: "White Flex",
         approved: "yes",
       },
       {
-        system: "LNX",
-        system_variant_1: "80 DI",
+        system: "80",
+        system_variant_1: "Blade DI",
         label: "LNX 80 D/I",
-        emission: "direct/indirect",
+        emission: "Both",
         mount_style: "Suspended",
         system_and_variant_finish: "Black",
         flex_colour: "Black Flex",
@@ -37,20 +38,50 @@ function cascadeSnapshot() {
     ],
     OPTICS: [
       {
-        system: "DNX",
+        system: "60",
         optic_var_1: "Opal",
         optic_var_2: "Soft;Sharp",
-        emission_permission: "direct",
+        emission_permission: "Direct, Indirect",
         ip_option_1: "IP20;IP44",
         ik_option_2: "IK07",
         cct: "3000K",
         approved: "yes",
       },
       {
-        system: "LNX",
+        system: "60",
+        optic_var_1: "Comfort",
+        optic_var_2: "Low glare",
+        emission_permission: "Direct",
+        ip_option_1: "IP20",
+        ik_option_2: "IK07",
+        cct: "3000K",
+        approved: "yes",
+      },
+      {
+        system: "60",
+        optic_var_1: "Asymmetric",
+        optic_var_2: "Wallwash",
+        emission_permission: "Direct",
+        ip_option_1: "IP20",
+        ik_option_2: "IK07",
+        cct: "3000K",
+        approved: "yes",
+      },
+      {
+        system: "60",
+        optic_var_1: "Batwing",
+        optic_var_2: "Wide",
+        emission_permission: "Indirect",
+        ip_option_1: "IP20",
+        ik_option_2: "IK07",
+        cct: "3000K",
+        approved: "yes",
+      },
+      {
+        system: "80",
         optic_var_1: "Blade",
         optic_var_2: "Wallwash",
-        emission_permission: "direct/indirect",
+        emission_permission: "Direct, Indirect",
         ip_option_1: "IP65;IP66",
         ik_option_2: "IK10",
         cct: "4000K",
@@ -59,7 +90,7 @@ function cascadeSnapshot() {
     ],
     BOARDS: [
       {
-        system: "DNX",
+        system: "60",
         optic_var_1: "Opal",
         c1_cct: "3000",
         c1_cri_min: "80",
@@ -68,7 +99,7 @@ function cascadeSnapshot() {
         approved: "yes",
       },
       {
-        system: "LNX",
+        system: "80",
         optic_var_1: "Blade",
         c1_cct: "4000",
         c1_cri_min: "90",
@@ -122,32 +153,375 @@ function option(result, fieldKey, value) {
   return found;
 }
 
-test("selecting system filters optics and derives direct/indirect capability", () => {
+function selectorViewModelFor(result, constraints = {}) {
+  const manualConstraints = Object.fromEntries(Object.entries(constraints).map(([fieldKey, value]) => [
+    fieldKey,
+    { fieldKey, label: fieldKey, value, valueLabel: value },
+  ]));
+  const selectorState = {
+    getSnapshot() {
+      return { dbBackedSelector: { manualConstraints } };
+    },
+    setDbBackedSelectorFieldValue() {},
+    clearDbBackedSelectorFieldValue() {},
+    setExpanderSectionOpen() {},
+  };
+  const adapter = {
+    moduleId: "cs_selector",
+    services: {},
+    isFlagEnabled() { return false; },
+    readSnapshots() {
+      return {
+        route: "/selector",
+        diagnostics: {},
+        flags: { owner: "test", values: {} },
+        project: { currentProject: {}, metadata: {}, selection: {} },
+        visibility: { moduleReasons: {}, inputs: {}, visibleModules: [], hiddenModules: [] },
+        handoff: {},
+        identity: { currentUser: {} },
+        authority: {},
+        company: {},
+        crm: {},
+        timelinePolicy: {},
+      };
+    },
+  };
+  return createSelectorViewModel({ adapter, selectorState, selectorReferenceStatus: result, onLocalStateChange: () => {} });
+}
+
+function viewModelField(result, fieldKey, constraints = {}) {
+  const model = selectorViewModelFor(result, constraints);
+  for (const section of model.selectorSurface.workflowSections || []) {
+    const field = (section.fields || []).find((item) => item.fieldKey === fieldKey);
+    if (field) return field;
+  }
+  assert.fail(`expected view-model field ${fieldKey}`);
+}
+
+function compatibleCount(field) {
+  return (field.options || []).filter((item) => item.blocked !== true && item.status !== "blocked").length;
+}
+
+function compatibleLabels(field) {
+  return (field.options || []).filter((item) => item.blocked !== true && item.status !== "blocked").map((item) => item.label).sort();
+}
+
+function primaryOpticVar1Controls(result, constraints = {}) {
+  return ["diffuserVar1", "directOpticVar1", "indirectOpticVar1"]
+    .map((fieldKey) => viewModelField(result, fieldKey, constraints))
+    .filter((field) => field.displayMode === "choice" || field.displayMode === "auto-chip")
+    .map((field) => field.fieldKey);
+}
+
+test("full system label resolves to size-keyed direct/down and indirect/up optic sets", () => {
+  const constraints = { system: "DNX 60 Beam DI" };
   const result = deriveSelectorReferenceOptionsFromSnapshot(cascadeSnapshot(), {
     source: sourceReady(),
-    constraints: { system: "DNX|60" },
+    constraints,
   });
 
-  assert.equal(option(result, "optic", "DNX|Opal").status, "available");
-  assert.equal(option(result, "optic", "LNX|Blade").status, "blocked");
-  assert.equal(option(result, "indirectCapability", "indirect-supported").status, "blocked");
-  assert.ok(option(result, "indirectCapability", "indirect-supported").blockedBy.some((item) => item.fieldKey === "system"));
+  const direct = workflowField(result, "directOpticVar1");
+  const indirect = workflowField(result, "indirectOpticVar1");
+  assert.deepEqual(compatibleLabels(direct), ["Asymmetric · 60", "Comfort · 60", "Opal · 60"].sort());
+  assert.deepEqual(compatibleLabels(indirect), ["Batwing · 60", "Opal · 60"].sort());
+  assert.equal(option(result, "directOpticVar1", "60|Opal").status, "available");
+  assert.equal(option(result, "indirectOpticVar1", "60|Opal").status, "available");
+  assert.equal(option(result, "directOpticVar1", "80|Blade").status, "blocked");
+  assert.equal(viewModelField(result, "directOpticVar1", constraints).compatibleOptionCount, 3);
+  assert.equal(viewModelField(result, "indirectOpticVar1", constraints).compatibleOptionCount, 2);
+  const legacy = viewModelField(result, "diffuserVar1", constraints);
+  assert.equal(legacy.primaryControl, false);
+  assert.equal(legacy.displayMode, "hidden-diagnostic");
+  assert.deepEqual(primaryOpticVar1Controls(result, constraints), ["directOpticVar1", "indirectOpticVar1"]);
 });
 
-test("selecting optic filters IP, IK, optic sub-option, and CCT/CRI pairs", () => {
-  const result = deriveSelectorReferenceOptionsFromSnapshot(cascadeSnapshot(), {
+test("direct-only system suppresses indirect/up picker against size-keyed optics", () => {
+  const snapshot = {
+    ...cascadeSnapshot(),
+    SYSTEM: [
+      {
+        system: "30",
+        system_variant_1: "Beam",
+        label: "DNX 30 Beam",
+        emission: "Direct",
+        mount_style: "Surface",
+        system_and_variant_finish: "White",
+        approved: "yes",
+      },
+    ],
+    OPTICS: [
+      {
+        system: "30",
+        optic_var_1: "Opal",
+        spec_code_var2: "Antiglare",
+        emission_permission: "Direct",
+        ip_option_1: "IP20",
+        ik_option_2: "IK07",
+        cct: "3000K",
+        approved: "yes",
+      },
+      {
+        system: "30",
+        optic_var_1: "Comfort",
+        optic_var_2: "Low glare",
+        emission_permission: "Direct",
+        ip_option_1: "IP20",
+        ik_option_2: "IK07",
+        cct: "3000K",
+        approved: "yes",
+      },
+      {
+        system: "30",
+        optic_var_1: "Batwing",
+        optic_var_2: "Wide",
+        emission_permission: "Indirect",
+        ip_option_1: "IP20",
+        ik_option_2: "IK07",
+        cct: "3000K",
+        approved: "yes",
+      },
+    ],
+  };
+  const constraints = { system: "DNX 30 Beam" };
+  const result = deriveSelectorReferenceOptionsFromSnapshot(snapshot, {
     source: sourceReady(),
-    constraints: { system: "DNX|60", optic: "DNX|Opal" },
+    constraints,
   });
 
-  assert.equal(option(result, "opticSub", "Opal|Soft").status, "available");
-  assert.equal(option(result, "opticSub", "Blade|Wallwash").status, "blocked");
-  assert.equal(option(result, "ipRating", "IP20").status, "available");
-  assert.equal(option(result, "ipRating", "IP66").status, "blocked");
-  assert.equal(option(result, "ikRating", "IK07").status, "available");
-  assert.equal(option(result, "ikRating", "IK10").status, "blocked");
-  assert.equal(option(result, "cctCri", "3000K / CRI80").status, "available");
-  assert.equal(option(result, "cctCri", "4000K / CRI90").status, "blocked");
+  const direct = viewModelField(result, "directOpticVar1", constraints);
+  assert.equal(direct.displayMode, "choice");
+  assert.equal(direct.primaryControl, true);
+  assert.equal(direct.compatibleOptionCount, compatibleCount(direct));
+  assert.equal(direct.compatibleOptionCount, 2);
+
+  const indirect = viewModelField(result, "indirectOpticVar1", constraints);
+  assert.equal(indirect.displayMode, "hidden-diagnostic");
+  assert.equal(indirect.primaryControl, false);
+  assert.equal(indirect.effectiveValue, "");
+  assert.equal(indirect.compatibleOptionCount, 0);
+  const legacy = viewModelField(result, "diffuserVar1", constraints);
+  assert.equal(legacy.primaryControl, false);
+  assert.equal(legacy.displayMode, "hidden-diagnostic");
+  assert.deepEqual(primaryOpticVar1Controls(result, constraints), ["directOpticVar1"]);
+});
+
+test("full display label DNX 80 DI resolves to size-80 optics and auto-fills the single indirect Rope", () => {
+  const snapshot = {
+    ...cascadeSnapshot(),
+    SYSTEM: [
+      {
+        system: "80",
+        system_variant_1: "DI",
+        label: "DNX 80 DI",
+        emission: "Both",
+        mount_style: "Suspended",
+        system_and_variant_finish: "Black",
+        approved: "yes",
+      },
+    ],
+    OPTICS: [
+      {
+        system: "60",
+        optic_var_1: "Comfort",
+        optic_var_2: "Low glare",
+        emission_permission: "Direct",
+        ip_option_1: "IP20",
+        ik_option_2: "IK07",
+        cct: "3000K",
+        approved: "yes",
+      },
+      {
+        system: "60",
+        optic_var_1: "Batwing",
+        optic_var_2: "Wide",
+        emission_permission: "Indirect",
+        ip_option_1: "IP20",
+        ik_option_2: "IK07",
+        cct: "3000K",
+        approved: "yes",
+      },
+      {
+        system: "80",
+        optic_var_1: "Opal",
+        spec_code_var2: "Antiglare",
+        emission_permission: "Direct",
+        ip_option_1: "IP65",
+        ik_option_2: "IK10",
+        cct: "4000K",
+        approved: "yes",
+      },
+      {
+        system: "80",
+        optic_var_1: "Comfort",
+        optic_var_2: "Antiglare;Low glare",
+        emission_permission: "Direct",
+        ip_option_1: "IP65",
+        ik_option_2: "IK10",
+        cct: "4000K",
+        approved: "yes",
+      },
+      {
+        system: "80",
+        optic_var_1: "Rope",
+        optic_var_2: "Rope",
+        emission_permission: "Indirect",
+        ip_option_1: "IP65",
+        ik_option_2: "IK10",
+        cct: "4000K",
+        approved: "yes",
+      },
+    ],
+  };
+  const constraints = { system: "DNX 80 DI", directOpticVar1: "80|Opal" };
+  const result = deriveSelectorReferenceOptionsFromSnapshot(snapshot, {
+    source: sourceReady(),
+    constraints,
+  });
+
+  const direct = viewModelField(result, "directOpticVar1", constraints);
+  const indirect = viewModelField(result, "indirectOpticVar1", constraints);
+  assert.deepEqual(compatibleLabels(workflowField(result, "directOpticVar1")), ["Comfort · 80", "Opal · 80"].sort());
+  assert.deepEqual(compatibleLabels(workflowField(result, "indirectOpticVar1")), ["Rope · 80"]);
+  assert.equal(direct.displayMode, "choice");
+  assert.equal(direct.primaryControl, true);
+  assert.equal(direct.compatibleOptionCount, 2);
+  assert.equal(indirect.displayMode, "auto-chip");
+  assert.equal(indirect.effectiveValue, "80|Rope");
+  assert.equal(indirect.compatibleOptionCount, 1);
+  assert.equal(workflowField(result, "directOpticVar2").options.length, 0);
+  const opalVar2 = viewModelField(result, "directOpticVar2", constraints);
+  assert.equal(opalVar2.displayMode, "hidden-diagnostic");
+  assert.equal(opalVar2.compatibleOptionCount, 0);
+  assert.deepEqual(primaryOpticVar1Controls(result, constraints), ["directOpticVar1", "indirectOpticVar1"]);
+
+  const noDirectSelection = deriveSelectorReferenceOptionsFromSnapshot(snapshot, {
+    source: sourceReady(),
+    constraints: { system: "DNX 80 DI" },
+  });
+  assert.equal(workflowField(noDirectSelection, "directOpticVar2").options.length, 0);
+
+  const subBearingSelection = deriveSelectorReferenceOptionsFromSnapshot(snapshot, {
+    source: sourceReady(),
+    constraints: { system: "DNX 80 DI", directOpticVar1: "80|Comfort" },
+  });
+  const directVar2 = workflowField(subBearingSelection, "directOpticVar2");
+  assert.deepEqual(compatibleLabels(directVar2), ["Antiglare", "Low glare"].sort());
+  const directVar2View = viewModelField(subBearingSelection, "directOpticVar2", { system: "DNX 80 DI", directOpticVar1: "80|Comfort" });
+  assert.equal(directVar2View.displayMode, "choice");
+  assert.equal(directVar2View.primaryControl, true);
+  assert.equal(directVar2View.compatibleOptionCount, 2);
+});
+
+test("both-emission system keeps direct/down and indirect/up options as classifier choices", () => {
+  const constraints = { system: "DNX 60 Beam DI" };
+  const result = deriveSelectorReferenceOptionsFromSnapshot(cascadeSnapshot(), {
+    source: sourceReady(),
+    constraints,
+  });
+
+  const direct = viewModelField(result, "directOpticVar1", constraints);
+  assert.equal(direct.displayMode, "choice");
+  assert.equal(direct.primaryControl, true);
+  assert.equal(direct.compatibleOptionCount, compatibleCount(direct));
+  assert.equal(direct.compatibleOptionCount, 3);
+
+  const indirect = viewModelField(result, "indirectOpticVar1", constraints);
+  assert.equal(indirect.displayMode, "choice");
+  assert.equal(indirect.primaryControl, true);
+  assert.equal(indirect.compatibleOptionCount, compatibleCount(indirect));
+  assert.equal(indirect.compatibleOptionCount, 2);
+});
+
+test("both-emission system exposes single indirect optic as auto-chip while direct remains a choice", () => {
+  const snapshot = cascadeSnapshot();
+  snapshot.OPTICS = [
+    ...snapshot.OPTICS,
+    {
+      system: "80",
+      optic_var_1: "Linear",
+      optic_var_2: "General",
+      emission_permission: "Direct",
+      ip_option_1: "IP65",
+      ik_option_2: "IK10",
+      cct: "4000K",
+      approved: "yes",
+    },
+  ];
+  const constraints = { system: "LNX 80 D/I" };
+  const result = deriveSelectorReferenceOptionsFromSnapshot(snapshot, {
+    source: sourceReady(),
+    constraints,
+  });
+
+  const direct = viewModelField(result, "directOpticVar1", constraints);
+  assert.equal(direct.displayMode, "choice");
+  assert.equal(direct.primaryControl, true);
+  assert.equal(direct.compatibleOptionCount, compatibleCount(direct));
+  assert.equal(direct.compatibleOptionCount, 2);
+
+  const indirect = viewModelField(result, "indirectOpticVar1", constraints);
+  assert.equal(indirect.displayMode, "auto-chip");
+  assert.equal(indirect.effectiveValue, "80|Blade");
+  assert.equal(indirect.compatibleOptionCount, compatibleCount(indirect));
+  assert.equal(indirect.compatibleOptionCount, 1);
+
+  const legacy = viewModelField(result, "diffuserVar1", constraints);
+  assert.equal(legacy.primaryControl, false);
+  assert.equal(legacy.displayMode, "hidden-diagnostic");
+  assert.deepEqual(primaryOpticVar1Controls(result, constraints), ["directOpticVar1", "indirectOpticVar1"]);
+});
+
+test("multiple compatible direct and indirect optics remain choices with real compatible counts", () => {
+  const snapshot = cascadeSnapshot();
+  snapshot.OPTICS = [
+    ...snapshot.OPTICS,
+    {
+      system: "80",
+      optic_var_1: "Prism",
+      optic_var_2: "Wide",
+      emission_permission: "Both",
+      ip_option_1: "IP65",
+      ik_option_2: "IK10",
+      cct: "4000K",
+      approved: "yes",
+    },
+  ];
+  const constraints = { system: "LNX 80 D/I" };
+  const result = deriveSelectorReferenceOptionsFromSnapshot(snapshot, {
+    source: sourceReady(),
+    constraints,
+  });
+
+  const direct = viewModelField(result, "directOpticVar1", constraints);
+  const indirect = viewModelField(result, "indirectOpticVar1", constraints);
+  assert.equal(direct.displayMode, "choice");
+  assert.equal(direct.primaryControl, true);
+  assert.equal(direct.compatibleOptionCount, compatibleCount(direct));
+  assert.equal(direct.compatibleOptionCount, 2);
+  assert.equal(indirect.displayMode, "choice");
+  assert.equal(indirect.primaryControl, true);
+  assert.equal(indirect.compatibleOptionCount, compatibleCount(indirect));
+  assert.equal(indirect.compatibleOptionCount, 2);
+});
+
+test("direct and indirect composite-key suffixes are stripped before optic compatibility comparison", () => {
+  const constraints = { system: "DNX 60 Beam DI", directOpticVar1: "60|Opal|Direct" };
+  const result = deriveSelectorReferenceOptionsFromSnapshot(cascadeSnapshot(), {
+    source: sourceReady(),
+    constraints,
+  });
+  const directOption = workflowField(result, "directOpticVar1").options.find((item) => item.value === "60|Opal");
+
+  assert.ok(directOption, "expected unsuffixed direct optic option to remain present");
+  assert.equal(directOption.selected, true);
+  assert.equal(directOption.status, "available");
+  assert.equal(directOption.blocked, false);
+  assert.equal(workflowField(result, "directOpticVar1").options.some((item) => item.value === "60|Opal|Direct"), false);
+
+  const field = viewModelField(result, "directOpticVar1", constraints);
+  assert.equal(field.selectedLabel, "Opal · 60");
+  assert.equal(field.selectedOptionBlocked, false);
+  assert.equal(field.compatibleOptionCount, compatibleCount(field));
 });
 
 test("CCT and CRI stay paired when source data allows", () => {
@@ -235,9 +609,9 @@ test("runs and disabled workflows stay disabled and cannot generate RunTable", (
 test("incompatible selected options are preserved and marked blocked", () => {
   const result = deriveSelectorReferenceOptionsFromSnapshot(cascadeSnapshot(), {
     source: sourceReady(),
-    constraints: { system: "DNX|60", optic: "LNX|Blade" },
+    constraints: { system: "DNX 60 Beam DI", optic: "80|Blade" },
   });
-  const selected = option(result, "optic", "LNX|Blade");
+  const selected = option(result, "optic", "80|Blade");
 
   assert.equal(selected.selected, true);
   assert.equal(selected.status, "blocked");
@@ -248,11 +622,11 @@ test("incompatible selected options are preserved and marked blocked", () => {
 test("compatible selections are not cleared", () => {
   const result = deriveSelectorReferenceOptionsFromSnapshot(cascadeSnapshot(), {
     source: sourceReady(),
-    constraints: { system: "DNX|60", optic: "DNX|Opal", cctCri: "3000K / CRI80" },
+    constraints: { system: "DNX 60 Beam DI", optic: "60|Opal", cctCri: "3000K / CRI80" },
   });
 
-  assert.equal(result.selectedConstraints.system, "DNX|60");
-  assert.equal(result.selectedConstraints.optic, "DNX|Opal");
+  assert.equal(result.selectedConstraints.system, "DNX 60 Beam DI");
+  assert.equal(result.selectedConstraints.optic, "60|Opal");
   assert.equal(result.selectedConstraints.cctCri, "3000K / CRI80");
   assert.equal(workflowField(result, "cctCri").selectedValue, "3000K / CRI80");
 });

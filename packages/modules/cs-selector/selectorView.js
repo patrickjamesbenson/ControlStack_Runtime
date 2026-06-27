@@ -765,10 +765,6 @@ const PRIMARY_HIDDEN_WORKFLOW_FIELDS = Object.freeze(new Set([
   "optic",
   "opticSub",
   "opticIndirect",
-  "directOpticVar1",
-  "directOpticVar2",
-  "indirectOpticVar1",
-  "indirectOpticVar2",
 ]));
 
 function workflowFieldIsHiddenFromPrimary(field = {}) {

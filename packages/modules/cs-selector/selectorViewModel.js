@@ -915,8 +915,12 @@ function createManualConstraintBehaviour(contract = {}, selectorState, onLocalSt
   };
 }
 
+function stripDirectionSuffix(value = "") {
+  return String(value || "").trim().replace(/\|(direct|indirect)$/i, "");
+}
+
 function optionValuesMatch(left, right) {
-  return String(left || "").trim().toLowerCase() === String(right || "").trim().toLowerCase();
+  return stripDirectionSuffix(left).toLowerCase() === stripDirectionSuffix(right).toLowerCase();
 }
 
 function dbConstraintMap(local = {}) {
@@ -1054,7 +1058,7 @@ function enrichDbOptionFields(selectorReferenceStatus = {}, local = {}) {
   return dbOptionsFields(selectorReferenceStatus).map((field) => {
     const selectedValue = selectedConstraints[field.fieldKey] || "";
     const options = Array.isArray(field.options) ? field.options.map((option) => {
-      const selected = selectedValue ? optionValuesMatch(option.value, selectedValue) : option.selected === true;
+      const selected = selectedValue ? (optionValuesMatch(option.value, selectedValue) || (field.fieldKey === "system" && systemOptionMatchesSelection(option, selectedValue))) : option.selected === true;
       const locallyCompatible = dbOptionLocallyCompatible(field.fieldKey, option, selectedConstraints, selectorReferenceStatus);
       const blocked = option.blocked === true || !locallyCompatible;
       return {
@@ -1083,12 +1087,44 @@ function dbWorkflowSections(selectorReferenceStatus = {}) {
 }
 
 function labelFromWorkflowField(field = {}, value = "") {
-  const option = (Array.isArray(field.options) ? field.options : []).find((item) => optionValuesMatch(item.value, value));
+  const option = (Array.isArray(field.options) ? field.options : []).find((item) => optionValuesMatch(item.value, value) || (field.fieldKey === "system" && systemOptionMatchesSelection(item, value)));
   return option?.label || String(value || "");
 }
 
 function systemTokenFromSelection(value = "") {
-  return String(value || "").split("|")[0] || "";
+  return stripDirectionSuffix(value).split("|")[0] || "";
+}
+
+function normalisedSelectionTokens(value = "") {
+  return new Set(String(value || "").trim().toLowerCase().split(/[^a-z0-9]+/).filter(Boolean));
+}
+
+function systemOptionMatchesSelection(option = {}, selectedSystem = "") {
+  if (!selectedSystem) return false;
+  if (optionValuesMatch(option.value, selectedSystem) || optionValuesMatch(option.label, selectedSystem) || optionValuesMatch(option.systemReferenceKey, selectedSystem)) return true;
+
+  const systemKey = String(option.systemReferenceKey || systemTokenFromSelection(option.value || "")).trim();
+  if (!systemKey) return false;
+  const selectedTokens = normalisedSelectionTokens(selectedSystem);
+  if (!selectedTokens.has(systemKey.toLowerCase())) return false;
+
+  const variant = String(option.systemVariantKey || String(option.value || "").split("|").slice(1).join("|")).trim();
+  if (!variant) return true;
+  const selectedKey = String(selectedSystem || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  const variantKey = variant.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  if (variantKey && selectedKey.includes(variantKey)) return true;
+  return Array.from(normalisedSelectionTokens(variant)).every((token) => selectedTokens.has(token));
+}
+
+function workflowSystemReferenceKey(workflowSections = [], selectedSystem = "") {
+  if (!selectedSystem) return "";
+  for (const section of workflowSections) {
+    const field = (section.fields || []).find((item) => item.fieldKey === "system");
+    if (!field) continue;
+    const option = (field.options || []).find((item) => systemOptionMatchesSelection(item, selectedSystem));
+    if (option) return option.systemReferenceKey || systemTokenFromSelection(option.value || option.label);
+  }
+  return "";
 }
 
 function diffuserParentConstraintForField(fieldKey = "", selectedConstraints = {}) {
@@ -1101,10 +1137,10 @@ function diffuserParentConstraintForField(fieldKey = "", selectedConstraints = {
 function localDiffuserRelationshipBlock(fieldKey = "", option = {}, selectedConstraints = {}) {
   const blockers = [];
   const optionValue = String(option.value || "");
-  const optionSystem = systemTokenFromSelection(option.parentValue || optionValue);
-  const selectedSystem = systemTokenFromSelection(selectedConstraints.system || "");
+  const optionSystem = String(option.systemReferenceKey || systemTokenFromSelection(option.parentValue || optionValue));
+  const selectedSystem = String(selectedConstraints.__systemReferenceKey || systemTokenFromSelection(selectedConstraints.system || ""));
   if (["diffuserVar1", "diffuserVar2", "directOpticVar1", "directOpticVar2", "indirectOpticVar1", "indirectOpticVar2", "diffuserMaterial", "diffuserSpecCodePreview", "diffuserImageReadiness"].includes(fieldKey)
-    && selectedSystem && optionSystem && optionSystem !== selectedSystem) {
+    && selectedSystem && optionSystem && !optionValuesMatch(optionSystem, selectedSystem)) {
     blockers.push({
       fieldKey: "system",
       selectedValue: selectedConstraints.system,
@@ -1132,15 +1168,18 @@ function localDiffuserRelationshipBlock(fieldKey = "", option = {}, selectedCons
 }
 
 function enrichDbWorkflowSections(selectorReferenceStatus = {}, local = {}) {
+  const workflowSections = dbWorkflowSections(selectorReferenceStatus);
   const selectedConstraints = dbConstraintValueMap(local);
-  return dbWorkflowSections(selectorReferenceStatus).map((section) => ({
+  const selectedSystemReferenceKey = workflowSystemReferenceKey(workflowSections, selectedConstraints.system || "");
+  const cascadeConstraints = selectedSystemReferenceKey ? { ...selectedConstraints, __systemReferenceKey: selectedSystemReferenceKey } : selectedConstraints;
+  return workflowSections.map((section) => ({
     ...section,
     fields: (Array.isArray(section.fields) ? section.fields : []).map((field) => {
       const selectedValue = selectedConstraints[field.fieldKey] || "";
       const optionPayloadProvided = Array.isArray(field.options);
       const options = optionPayloadProvided ? field.options.map((option) => {
-        const selected = selectedValue ? optionValuesMatch(option.value, selectedValue) : option.selected === true;
-        const localBlock = localDiffuserRelationshipBlock(field.fieldKey, option, selectedConstraints);
+        const selected = selectedValue ? (optionValuesMatch(option.value, selectedValue) || (field.fieldKey === "system" && systemOptionMatchesSelection(option, selectedValue))) : option.selected === true;
+        const localBlock = localDiffuserRelationshipBlock(field.fieldKey, option, cascadeConstraints);
         const blocked = option.blocked === true || localBlock.blocked === true;
         return {
           ...option,
@@ -1227,7 +1266,6 @@ const RUNTIME_PRESENTATION_POLICY_DEBT = Object.freeze([
 
 const RUNTIME_PRESENTATION_PRIMARY_DECISION_FIELDS = Object.freeze(new Set([
   "system",
-  "diffuserVar1",
   "mountStyle",
   "mountSelection",
   "powerPenetration",
@@ -1246,6 +1284,10 @@ const RUNTIME_PRESENTATION_PRIMARY_DECISION_FIELDS = Object.freeze(new Set([
 
 const RUNTIME_PRESENTATION_CONDITIONAL_PRIMARY_FIELDS = Object.freeze(new Set([
   "diffuserVar2",
+  "directOpticVar1",
+  "directOpticVar2",
+  "indirectOpticVar1",
+  "indirectOpticVar2",
 ]));
 
 const RUNTIME_PRESENTATION_AUTO_CHIP_FIELDS = Object.freeze(new Set([
@@ -1255,6 +1297,10 @@ const RUNTIME_PRESENTATION_AUTO_CHIP_FIELDS = Object.freeze(new Set([
   "directCapability",
   "indirectCapability",
   "diffuserVar2",
+  "directOpticVar1",
+  "directOpticVar2",
+  "indirectOpticVar1",
+  "indirectOpticVar2",
   "ipRating",
   "ikRating",
   "electricalClass",
@@ -1289,10 +1335,7 @@ const RUNTIME_PRESENTATION_HIDDEN_DIAGNOSTIC_FIELDS = Object.freeze(new Set([
   "optic",
   "opticSub",
   "opticIndirect",
-  "directOpticVar1",
-  "directOpticVar2",
-  "indirectOpticVar1",
-  "indirectOpticVar2",
+  "diffuserVar1",
   "specialPartsEntitlement",
   "userEntitlementStatus",
 ]));
