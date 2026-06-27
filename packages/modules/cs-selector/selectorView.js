@@ -32,7 +32,7 @@ const LIVE_STATUS_COPY = Object.freeze([
   "This status bridge reports source presence, table readiness, and redaction safety only.",
   "Raw rows, raw USERS, raw Lab evidence, credentials, private paths, and secret values are not exposed.",
   "Active authoritative Selector resolving remains disabled; this page may show a read-only resolver preview only.",
-  "Board Data defines metadata. Selector previews resolution. Lab proves later.",
+  "Board Data defines metadata. Selector previews selection readiness. Lab Proof proves later.",
 ]);
 
 function appendSection(parent, heading, rows) {
@@ -758,7 +758,7 @@ function fieldOptionCount(field = {}) {
 }
 
 function workflowFieldIsMetadata(field = {}) {
-  return field.metadataOnly === true || field.role === "metadata-only";
+  return field.displayMode === "metadata-chip" || field.metadataOnly === true || field.role === "metadata-only";
 }
 
 const PRIMARY_HIDDEN_WORKFLOW_FIELDS = Object.freeze(new Set([
@@ -773,10 +773,27 @@ const PRIMARY_HIDDEN_WORKFLOW_FIELDS = Object.freeze(new Set([
 
 function workflowFieldIsHiddenFromPrimary(field = {}) {
   if (!field) return true;
+  if (field.displayMode && field.displayMode !== "choice") return true;
   if (PRIMARY_HIDDEN_WORKFLOW_FIELDS.has(field.fieldKey)) return true;
   if (workflowFieldIsMetadata(field)) return true;
   if (field.disabled === true || field.futureMapped === true) return true;
   return fieldOptionCount(field) === 0;
+}
+
+function workflowFieldIsChip(field = {}) {
+  return ["auto-chip", "inherited-chip", "metadata-chip", "warning-chip"].includes(field.displayMode);
+}
+
+function workflowFieldIsCollapsedOverride(field = {}) {
+  return field.displayMode === "collapsed-override";
+}
+
+function workflowFieldIsSectionHiddenDiagnostic(field = {}) {
+  return field.displayMode === "hidden-diagnostic";
+}
+
+function workflowFieldIsDisabledHandoff(field = {}) {
+  return field.displayMode === "disabled-handoff";
 }
 
 function selectedOrPreviewOption(field = {}) {
@@ -834,6 +851,8 @@ function appendSelectorProductFieldCard(parent, field = {}, surface = {}, idPref
   card.className = "cs-selector-product__field";
   card.dataset.fieldKey = field.fieldKey || "unknown";
   card.dataset.fieldStatus = field.status || "unknown";
+  card.dataset.displayMode = field.displayMode || "choice";
+  card.dataset.provenance = field.provenance || "unknown";
 
   const label = document.createElement("label");
   label.htmlFor = `${idPrefix}-${field.fieldKey}`;
@@ -901,13 +920,58 @@ function appendWorkflowMetadataStrip(parent, fields = []) {
   strip.className = "cs-selector-product__metadata-strip";
   for (const field of metadataFields) {
     const option = selectedOrPreviewOption(field);
-    const value = field.selectedLabel || option.label || field.unavailableReason || "metadata pending";
+    const value = field.effectiveLabel || field.selectedLabel || option.label || field.unavailableReason || "metadata pending";
     const chip = document.createElement("span");
     chip.className = "cs-selector-product__metadata-chip";
+    chip.dataset.displayMode = field.displayMode || "metadata-chip";
     chip.textContent = `${field.label || field.fieldKey}: ${value}`;
     strip.appendChild(chip);
   }
   parent.appendChild(strip);
+}
+
+function workflowChipValue(field = {}) {
+  const option = selectedOrPreviewOption(field);
+  return field.effectiveLabel
+    || field.selectedLabel
+    || option.label
+    || field.unavailableReason
+    || field.classificationReason
+    || "pending";
+}
+
+function appendWorkflowChipStrip(parent, fields = []) {
+  const chipFields = fields.filter(workflowFieldIsChip);
+  if (!chipFields.length) return;
+  const strip = document.createElement("div");
+  strip.className = "cs-selector-product__workflow-chip-strip";
+  for (const field of chipFields) {
+    const chip = document.createElement("span");
+    chip.className = "cs-selector-product__workflow-chip";
+    chip.dataset.displayMode = field.displayMode || "chip";
+    chip.dataset.provenance = field.provenance || "unknown";
+    chip.dataset.fieldKey = field.fieldKey || "unknown";
+    chip.textContent = `${field.label || field.fieldKey}: ${workflowChipValue(field)}`;
+    strip.appendChild(chip);
+  }
+  parent.appendChild(strip);
+}
+
+function appendCollapsedOverrideDetails(parent, fields = [], surface = {}, idPrefix = "cs-selector-override") {
+  const overrideFields = fields.filter(workflowFieldIsCollapsedOverride);
+  if (!overrideFields.length) return;
+  const details = document.createElement("details");
+  details.className = "cs-selector-product__collapsed-overrides";
+  details.open = false;
+  const summary = document.createElement("summary");
+  summary.textContent = `${overrideFields.length} auto/inherited consequence override detail(s)`;
+  details.appendChild(summary);
+  appendText(details, "p", "These are not primary decisions in this slice. Compatible counts come from the current DB-backed option payload.", "cs-selector-product__section-summary");
+  const grid = document.createElement("div");
+  grid.className = "cs-selector-product__grid cs-selector-product__grid--collapsed";
+  for (const field of overrideFields) appendSelectorProductFieldCard(grid, field, surface, idPrefix);
+  details.appendChild(grid);
+  parent.appendChild(details);
 }
 
 function appendWorkflowHiddenDetails(parent, workflowSection = {}, hiddenFields = []) {
@@ -941,11 +1005,14 @@ function appendSelectorWorkflowSections(parent, surface = {}) {
   wrapper.dataset.flatFieldsPrimary = surface.flatFieldsPrimary === true ? "true" : "false";
   for (const workflowSection of sections) {
     const allFields = Array.isArray(workflowSection.fields) ? workflowSection.fields : [];
-    const visibleFields = allFields.filter((field) => !workflowFieldIsHiddenFromPrimary(field));
-    const hiddenFields = allFields.filter(workflowFieldIsHiddenFromPrimary);
+    const visibleFields = allFields.filter((field) => field.displayMode === "choice" && !workflowFieldIsHiddenFromPrimary(field));
+    const overrideFields = allFields.filter(workflowFieldIsCollapsedOverride);
+    const disabledFields = allFields.filter(workflowFieldIsDisabledHandoff);
+    const diagnosticHiddenCount = allFields.filter(workflowFieldIsSectionHiddenDiagnostic).length;
     const section = document.createElement("section");
     section.className = "cs-selector-product__workflow-section";
     section.dataset.workflowSection = workflowSection.sectionKey || "unknown";
+    section.dataset.hiddenDiagnosticCount = String(diagnosticHiddenCount);
 
     const header = document.createElement("div");
     header.className = "cs-selector-product__workflow-header";
@@ -954,7 +1021,8 @@ function appendSelectorWorkflowSections(parent, surface = {}) {
     section.appendChild(header);
     appendText(section, "p", workflowSelectedSummary(workflowSection), "cs-selector-product__section-summary");
 
-    appendWorkflowMetadataStrip(section, allFields);
+    appendWorkflowChipStrip(section, allFields);
+    appendCollapsedOverrideDetails(section, overrideFields, surface, `cs-selector-workflow-${workflowSection.sectionKey}-override`);
 
     if (visibleFields.length) {
       const grid = document.createElement("div");
@@ -967,7 +1035,7 @@ function appendSelectorWorkflowSections(parent, surface = {}) {
       appendText(section, "p", "No active controls in this section yet.", "cs-selector-product__section-empty");
     }
 
-    appendWorkflowHiddenDetails(section, workflowSection, hiddenFields);
+    appendWorkflowHiddenDetails(section, workflowSection, disabledFields);
     wrapper.appendChild(section);
   }
   parent.appendChild(wrapper);
@@ -1133,6 +1201,22 @@ function appendSelectorProductCompactStatus(parent, surface = {}) {
   appendSection(details, "Auto consequences", surface.autoConsequenceRows || [["auto consequences", "none mapped"]]);
   appendSection(details, "Blocked / missing / incompatible items", surface.blockedRows || [["blocked / missing", "none"]]);
   appendSection(details, "Path to spec-ready later", surface.pathRows || [["future spec-ready", "requires complete spec gate later"]]);
+  const presentation = surface.presentationClassification || {};
+  appendSection(details, "Runtime presentation classification", [
+    ["classification", presentation.name || "runtime presentation classification"],
+    ["source truth", presentation.sourceTruth || "DB/reference-backed options remain source truth"],
+    ["primary choices", presentation.primaryDecisionCount ?? 0],
+    ["auto chips", presentation.autoChipCount ?? 0],
+    ["inherited chips", presentation.inheritedChipCount ?? 0],
+    ["metadata chips", presentation.metadataChipCount ?? 0],
+    ["collapsed overrides", presentation.collapsedOverrideCount ?? 0],
+    ["warning chips", presentation.warningChipCount ?? 0],
+    ["hidden diagnostics", presentation.hiddenDiagnosticCount ?? 0],
+    ["disabled handoffs", presentation.disabledHandoffCount ?? 0],
+    ["cannot safely classify", Array.isArray(presentation.cannotSafelyClassify) && presentation.cannotSafelyClassify.length ? presentation.cannotSafelyClassify.map((field) => field.fieldKey).join(", ") : "none"],
+    ["writes", presentation.writes === true ? "true" : "false"],
+    ["raw rows exposed", presentation.rawRowsExposed === true ? "true" : "false"],
+  ]);
   parent.appendChild(details);
 }
 
@@ -1148,7 +1232,8 @@ function appendSelectorProductSurface(parent, surface = {}) {
   appendBadgeList(header, surface.badges || ["source pending", "spec gate incomplete", "not Lab Proof", "writes disabled"]);
   section.appendChild(header);
 
-  appendText(section, "p", "Read-only preview. No spec, slug, IES, payload, RunTable, proof, record, approval, custody transfer, data write, or hidden write-back is created here.", "cs-selector-product__safety");
+  appendText(section, "p", "Read-only preview. No spec, slug, IES, payload, RunTable, Lab Proof, Controlled Record, RREG approval, custody transfer, Board Data write, or hidden write-back is created here.", "cs-selector-product__safety");
+  appendText(section, "p", surface.proofCopy || "Selector previews selection readiness. Lab Proof proves later.", "cs-selector-product__safety");
 
   appendSelectorSelectionTruthSummary(section, surface.selectionTruthSummary || {});
 

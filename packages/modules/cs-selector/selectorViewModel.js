@@ -1137,7 +1137,8 @@ function enrichDbWorkflowSections(selectorReferenceStatus = {}, local = {}) {
     ...section,
     fields: (Array.isArray(section.fields) ? section.fields : []).map((field) => {
       const selectedValue = selectedConstraints[field.fieldKey] || "";
-      const options = Array.isArray(field.options) ? field.options.map((option) => {
+      const optionPayloadProvided = Array.isArray(field.options);
+      const options = optionPayloadProvided ? field.options.map((option) => {
         const selected = selectedValue ? optionValuesMatch(option.value, selectedValue) : option.selected === true;
         const localBlock = localDiffuserRelationshipBlock(field.fieldKey, option, selectedConstraints);
         const blocked = option.blocked === true || localBlock.blocked === true;
@@ -1158,6 +1159,7 @@ function enrichDbWorkflowSections(selectorReferenceStatus = {}, local = {}) {
         selectedValue,
         selectedLabel: selectedValue ? labelFromWorkflowField({ ...field, options }, selectedValue) : field.selectedLabel || "",
         options,
+        optionPayloadProvided,
         rawRowsExposed: false,
       };
     }),
@@ -1213,6 +1215,349 @@ function createDbAutoConsequences(fields = [], local = {}) {
     createDbAvailableConsequence(fields, "driver", constraints),
     createDbAvailableConsequence(fields, "specialParts", constraints),
   ].filter(Boolean);
+}
+
+const RUNTIME_PRESENTATION_CLASSIFICATION_NAME = "runtime presentation classification — derived from DB-backed options, manual constraints, and Selector field semantics; not Board Data truth";
+
+const RUNTIME_PRESENTATION_POLICY_DEBT = Object.freeze([
+  "Field-key displayMode defaults are local runtime presentation policy for this slice.",
+  "The source options remain DB/reference-backed; this policy does not create source truth.",
+  "Future Board Data metadata may replace these presentation defaults once approved.",
+]);
+
+const RUNTIME_PRESENTATION_PRIMARY_DECISION_FIELDS = Object.freeze(new Set([
+  "system",
+  "diffuserVar1",
+  "mountStyle",
+  "mountSelection",
+  "powerPenetration",
+  "powerLocation",
+  "flexLength",
+  "bodyFinish",
+  "finishDefault",
+  "egressLight",
+  "egressSound",
+  "sensor",
+  "runCount",
+  "runQty",
+  "runLength",
+  "runLengthMode",
+]));
+
+const RUNTIME_PRESENTATION_CONDITIONAL_PRIMARY_FIELDS = Object.freeze(new Set([
+  "diffuserVar2",
+]));
+
+const RUNTIME_PRESENTATION_AUTO_CHIP_FIELDS = Object.freeze(new Set([
+  "tier",
+  "variantKey",
+  "emission",
+  "directCapability",
+  "indirectCapability",
+  "diffuserVar2",
+  "ipRating",
+  "ikRating",
+  "electricalClass",
+  "ambient",
+  "targetLmPerM",
+  "cctCri",
+  "controlType",
+  "driver",
+  "mountParticulars",
+  "wiringType",
+  "accessories",
+]));
+
+const RUNTIME_PRESENTATION_INHERITED_FIELDS = Object.freeze(new Set([
+  "indirectMatchDirect",
+  "targetLmPerMIndirect",
+  "cctCriIndirect",
+  "controlTypeIndirect",
+  "finishCover",
+  "finishEnd",
+  "finishFlex",
+  "inheritedFinishStatus",
+]));
+
+const RUNTIME_PRESENTATION_METADATA_FIELDS = Object.freeze(new Set([
+  "diffuserMaterial",
+  "diffuserSpecCodePreview",
+  "diffuserImageReadiness",
+]));
+
+const RUNTIME_PRESENTATION_HIDDEN_DIAGNOSTIC_FIELDS = Object.freeze(new Set([
+  "optic",
+  "opticSub",
+  "opticIndirect",
+  "directOpticVar1",
+  "directOpticVar2",
+  "indirectOpticVar1",
+  "indirectOpticVar2",
+  "specialPartsEntitlement",
+  "userEntitlementStatus",
+]));
+
+const RUNTIME_PRESENTATION_DISABLED_HANDOFF_FIELDS = Object.freeze(new Set([
+  "specialPartsOptIn",
+  "runCount",
+  "runQty",
+  "runLength",
+  "runLengthMode",
+  "runOverrideStatus",
+  "runPlacementStatus",
+  "engineVerify",
+  "outputNavigation",
+  "saveHydrate",
+  "hubSpotPush",
+  "specBuildAuthority",
+  "slugSpecGeneration",
+  "iesGeneration",
+  "payloadRunTableGeneration",
+  "labProof",
+  "controlledRecords",
+  "rreg",
+]));
+
+function presentationCompatibleOptions(field = {}) {
+  if (field.optionPayloadProvided === false || !Array.isArray(field.options)) return null;
+  return field.options.filter((option) => option?.blocked !== true && option?.status !== "blocked");
+}
+
+function presentationSelectedOption(field = {}) {
+  const selectedValue = String(field.selectedValue || "").trim();
+  const options = Array.isArray(field.options) ? field.options : [];
+  return options.find((option) => option.selected === true || (selectedValue && optionValuesMatch(option.value, selectedValue))) || null;
+}
+
+function presentationFirstEffectiveOption(field = {}, compatibleOptions = []) {
+  return presentationSelectedOption(field) || (Array.isArray(compatibleOptions) ? compatibleOptions[0] : null) || null;
+}
+
+function presentationRole(field = {}) {
+  return String(field.role || "").trim();
+}
+
+function presentationIsMetadata(field = {}) {
+  return field.metadataOnly === true || presentationRole(field) === "metadata-only" || RUNTIME_PRESENTATION_METADATA_FIELDS.has(field.fieldKey);
+}
+
+function presentationIsDisabledHandoff(field = {}) {
+  const role = presentationRole(field);
+  return RUNTIME_PRESENTATION_DISABLED_HANDOFF_FIELDS.has(field.fieldKey)
+    || role === "disabled"
+    || role === "future-mapped"
+    || (field.disabled === true && !presentationIsMetadata(field))
+    || (field.futureMapped === true && !presentationIsMetadata(field));
+}
+
+function presentationIsHiddenDiagnostic(field = {}) {
+  const role = presentationRole(field);
+  return RUNTIME_PRESENTATION_HIDDEN_DIAGNOSTIC_FIELDS.has(field.fieldKey)
+    || role === "entitlement-gated"
+    || role === "diagnostic";
+}
+
+function presentationIsInherited(field = {}) {
+  return RUNTIME_PRESENTATION_INHERITED_FIELDS.has(field.fieldKey) || presentationRole(field) === "inherited-consequence";
+}
+
+function presentationPrimaryDecisionAtThisStep(field = {}, compatibleOptionCount, selectedOptionBlocked) {
+  const selectedValue = String(field.selectedValue || "").trim();
+  if (selectedOptionBlocked === true) return true;
+  if (RUNTIME_PRESENTATION_CONDITIONAL_PRIMARY_FIELDS.has(field.fieldKey)) {
+    return selectedValue.length > 0 || compatibleOptionCount > 1;
+  }
+  return RUNTIME_PRESENTATION_PRIMARY_DECISION_FIELDS.has(field.fieldKey);
+}
+
+function classifyRuntimePresentationField(field = {}) {
+  const compatibleOptions = presentationCompatibleOptions(field);
+  const compatibleOptionCount = compatibleOptions ? compatibleOptions.length : null;
+  const selectedOption = presentationSelectedOption(field);
+  const selectedOptionBlocked = Boolean(field.selectedValue && (selectedOption?.blocked === true || selectedOption?.status === "blocked"));
+  const hasManualConstraint = String(field.selectedValue || "").trim().length > 0;
+  const effectiveOption = presentationFirstEffectiveOption(field, compatibleOptions || []);
+  const primaryAtStep = presentationPrimaryDecisionAtThisStep(field, compatibleOptionCount, selectedOptionBlocked);
+  const optionsComputable = compatibleOptionCount !== null;
+  const safeAutoResolve = optionsComputable
+    && compatibleOptionCount === 1
+    && !hasManualConstraint
+    && selectedOptionBlocked !== true
+    && primaryAtStep !== true;
+  let displayMode = "choice";
+  let provenance = hasManualConstraint ? "manual" : "available-choice";
+  let primaryDecision = primaryAtStep;
+  let effectiveValue = hasManualConstraint ? field.selectedValue : "";
+  let effectiveLabel = hasManualConstraint ? field.selectedLabel : "";
+  let overrideAvailable = false;
+  let classificationReason = "real user decision or unresolved available choice";
+
+  if (presentationIsHiddenDiagnostic(field)) {
+    displayMode = "hidden-diagnostic";
+    provenance = "diagnostic";
+    primaryDecision = false;
+    effectiveValue = field.selectedValue || effectiveOption?.value || "";
+    effectiveLabel = field.selectedLabel || effectiveOption?.label || field.unavailableReason || "diagnostic only";
+    overrideAvailable = false;
+    classificationReason = "diagnostic/alias/internal field hidden from primary workflow";
+  } else if (presentationIsDisabledHandoff(field)) {
+    displayMode = "disabled-handoff";
+    provenance = "disabled";
+    primaryDecision = false;
+    effectiveValue = field.selectedValue || "disabled";
+    effectiveLabel = field.selectedLabel || field.unavailableReason || "disabled — future handoff";
+    overrideAvailable = false;
+    classificationReason = "disabled future handoff or future-mapped field";
+  } else if (presentationIsMetadata(field)) {
+    displayMode = "metadata-chip";
+    provenance = "metadata";
+    primaryDecision = false;
+    effectiveValue = field.selectedValue || effectiveOption?.value || "";
+    effectiveLabel = field.selectedLabel || effectiveOption?.label || field.unavailableReason || "metadata pending";
+    overrideAvailable = false;
+    classificationReason = "metadata descriptor, not a primary decision";
+  } else if (selectedOptionBlocked) {
+    displayMode = "warning-chip";
+    provenance = hasManualConstraint ? "manual" : "diagnostic";
+    primaryDecision = hasManualConstraint;
+    effectiveValue = field.selectedValue || selectedOption?.value || "";
+    effectiveLabel = field.selectedLabel || selectedOption?.label || effectiveValue || "blocked selection";
+    overrideAvailable = true;
+    classificationReason = selectedOption?.blockedReason || field.unavailableReason || "selected value is incompatible but preserved";
+  } else if (optionsComputable && compatibleOptionCount === 0 && !hasManualConstraint) {
+    displayMode = primaryAtStep ? "warning-chip" : "hidden-diagnostic";
+    provenance = "diagnostic";
+    primaryDecision = false;
+    effectiveValue = "";
+    effectiveLabel = field.unavailableReason || "no compatible options under current constraints";
+    overrideAvailable = false;
+    classificationReason = "no compatible DB-backed option is available; no dead dropdown or fake consequence is rendered";
+  } else if (presentationIsInherited(field) && !hasManualConstraint) {
+    displayMode = "inherited-chip";
+    provenance = "inherited";
+    primaryDecision = false;
+    effectiveValue = effectiveOption?.value || "";
+    effectiveLabel = effectiveOption?.label || field.unavailableReason || "inherits from direct/default selection";
+    overrideAvailable = optionsComputable && compatibleOptionCount > 1;
+    classificationReason = "inherited consequence from direct/default selection";
+  } else if (safeAutoResolve && (RUNTIME_PRESENTATION_AUTO_CHIP_FIELDS.has(field.fieldKey) || presentationRole(field) === "auto-consequence" || presentationRole(field) === "manual-constraint")) {
+    displayMode = "auto-chip";
+    provenance = presentationRole(field) === "auto-consequence" ? "auto" : "accepted";
+    primaryDecision = false;
+    effectiveValue = effectiveOption?.value || "";
+    effectiveLabel = effectiveOption?.label || "accepted consequence";
+    overrideAvailable = true;
+    classificationReason = "exactly one compatible DB-backed option; shown as accepted consequence without mutating state";
+  } else if (!primaryAtStep && (RUNTIME_PRESENTATION_AUTO_CHIP_FIELDS.has(field.fieldKey) || presentationRole(field) === "auto-consequence" || presentationIsInherited(field))) {
+    displayMode = "collapsed-override";
+    provenance = presentationIsInherited(field) ? "inherited" : "auto";
+    primaryDecision = false;
+    effectiveValue = hasManualConstraint ? field.selectedValue : "";
+    effectiveLabel = hasManualConstraint ? field.selectedLabel : (optionsComputable ? "multiple compatible options — override available" : "compatible count not available");
+    overrideAvailable = optionsComputable && compatibleOptionCount > 0;
+    classificationReason = optionsComputable
+      ? "not a primary decision in this slice; kept as collapsed override/details"
+      : "compatible option count unavailable; no auto-resolution invented";
+  } else {
+    displayMode = "choice";
+    provenance = hasManualConstraint ? "manual" : "available-choice";
+    primaryDecision = true;
+    effectiveValue = hasManualConstraint ? field.selectedValue : "";
+    effectiveLabel = hasManualConstraint ? field.selectedLabel : "";
+    overrideAvailable = true;
+  }
+
+  if (!effectiveLabel && effectiveValue) effectiveLabel = labelFromWorkflowField(field, effectiveValue);
+
+  return {
+    ...field,
+    runtimePresentationClassification: RUNTIME_PRESENTATION_CLASSIFICATION_NAME,
+    presentationPolicyDebt: [...RUNTIME_PRESENTATION_POLICY_DEBT],
+    displayMode,
+    provenance,
+    primaryDecision,
+    primaryControl: primaryDecision === true && displayMode === "choice",
+    effectiveValue,
+    effectiveLabel,
+    compatibleOptionCount,
+    selectedOptionBlocked,
+    overrideAvailable,
+    classificationReason,
+    compatibleOptionCountComputed: optionsComputable,
+    writes: false,
+    rawRowsExposed: false,
+  };
+}
+
+function applyRuntimePresentationClassificationToWorkflow(workflowSections = []) {
+  return workflowSections.map((section) => ({
+    ...section,
+    runtimePresentationClassification: RUNTIME_PRESENTATION_CLASSIFICATION_NAME,
+    fields: (Array.isArray(section.fields) ? section.fields : []).map((field) => classifyRuntimePresentationField(field)),
+    rawRowsExposed: false,
+  }));
+}
+
+function createPresentationClassificationSummary(workflowSections = []) {
+  const fields = workflowSections.flatMap((section) => Array.isArray(section.fields) ? section.fields : []);
+  const byMode = fields.reduce((acc, field) => {
+    const mode = field.displayMode || "unknown";
+    acc[mode] = (acc[mode] || 0) + 1;
+    return acc;
+  }, {});
+  const cannotSafelyClassify = fields
+    .filter((field) => field.compatibleOptionCountComputed !== true && !["metadata-chip", "hidden-diagnostic", "disabled-handoff"].includes(field.displayMode))
+    .map((field) => ({
+      fieldKey: field.fieldKey,
+      label: field.label || field.fieldKey,
+      displayMode: field.displayMode || "unknown",
+      reason: "compatibleOptionCount could not be computed from current payload; no auto-resolution invented",
+      writes: false,
+      rawRowsExposed: false,
+    }));
+  return {
+    name: RUNTIME_PRESENTATION_CLASSIFICATION_NAME,
+    policyDebt: [...RUNTIME_PRESENTATION_POLICY_DEBT],
+    sourceTruth: "DB/reference-backed option payload remains source; classification is runtime presentation policy only",
+    fieldCount: fields.length,
+    primaryDecisionCount: fields.filter((field) => field.primaryDecision === true && field.displayMode === "choice").length,
+    autoChipCount: byMode["auto-chip"] || 0,
+    inheritedChipCount: byMode["inherited-chip"] || 0,
+    metadataChipCount: byMode["metadata-chip"] || 0,
+    collapsedOverrideCount: byMode["collapsed-override"] || 0,
+    warningChipCount: byMode["warning-chip"] || 0,
+    hiddenDiagnosticCount: byMode["hidden-diagnostic"] || 0,
+    disabledHandoffCount: byMode["disabled-handoff"] || 0,
+    byMode,
+    cannotSafelyClassify,
+    writes: false,
+    rawRowsExposed: false,
+  };
+}
+
+function presentationConsequenceFromField(field = {}) {
+  if (!field.effectiveValue || field.displayMode === "choice" || field.displayMode === "warning-chip") return null;
+  if (!["auto-chip", "inherited-chip", "metadata-chip", "collapsed-override"].includes(field.displayMode)) return null;
+  return {
+    fieldKey: field.fieldKey,
+    label: field.label || field.fieldKey,
+    value: field.effectiveValue,
+    valueLabel: field.effectiveLabel || field.effectiveValue,
+    kind: field.displayMode === "inherited-chip" ? "inherited-consequence" : field.displayMode === "metadata-chip" ? "source-status" : "auto-consequence",
+    status: field.displayMode === "metadata-chip" ? "metadata-only" : field.provenance || field.displayMode,
+    source: RUNTIME_PRESENTATION_CLASSIFICATION_NAME,
+    reason: field.classificationReason || "runtime presentation consequence",
+    mutable: field.overrideAvailable === true,
+    writes: false,
+    rawRowsExposed: false,
+  };
+}
+
+function createPresentationAutoConsequences(workflowSections = []) {
+  return workflowSections
+    .flatMap((section) => Array.isArray(section.fields) ? section.fields : [])
+    .map((field) => presentationConsequenceFromField(field))
+    .filter(Boolean);
 }
 
 const SELECTION_TRUTH_SUMMARY_GROUPS = Object.freeze([
@@ -1411,14 +1756,17 @@ function createCanonicalWorkflowSections(workflowSections = []) {
         continue;
       }
       seen.add(fieldKey);
+      const primaryControl = field.primaryDecision === true && field.displayMode === "choice";
       fieldLocations[fieldKey] = {
         sectionKey,
         sectionTitle: section.title || sectionKey,
-        primaryControl: true,
+        primaryControl,
+        displayMode: field.displayMode || "choice",
+        provenance: field.provenance || "manual",
         writes: false,
         rawRowsExposed: false,
       };
-      canonicalFields.push({
+      const canonicalField = {
         ...field,
         canonicalSectionKey: sectionKey,
         canonicalControl: true,
@@ -1426,7 +1774,9 @@ function createCanonicalWorkflowSections(workflowSections = []) {
         flatFieldFallback: false,
         writes: false,
         rawRowsExposed: false,
-      });
+      };
+      if (!primaryControl) canonicalField.primaryControl = false;
+      canonicalFields.push(canonicalField);
     }
     return {
       ...section,
@@ -1635,13 +1985,16 @@ function createDbBackedSelectorSurface(selectorReferenceStatus = {}, local = {},
     diagnosticOnly: true,
     rawRowsExposed: false,
   }));
-  const canonicalWorkflow = createCanonicalWorkflowSections(enrichDbWorkflowSections(selectorReferenceStatus, local));
+  const classifiedWorkflowSections = applyRuntimePresentationClassificationToWorkflow(enrichDbWorkflowSections(selectorReferenceStatus, local));
+  const canonicalWorkflow = createCanonicalWorkflowSections(classifiedWorkflowSections);
   const workflowSections = canonicalWorkflow.sections;
+  const presentationClassification = createPresentationClassificationSummary(workflowSections);
   const manualConstraints = createDbManualConstraints(selectorReferenceStatus, local);
   const payloadConsequences = Array.isArray(payload.autoConsequences) ? payload.autoConsequences : [];
   const localConsequences = createDbAutoConsequences(fields, local);
+  const presentationConsequences = createPresentationAutoConsequences(workflowSections);
   const consequenceKeys = new Set();
-  const autoConsequences = [...payloadConsequences, ...localConsequences].filter((item) => {
+  const autoConsequences = [...payloadConsequences, ...localConsequences, ...presentationConsequences].filter((item) => {
     const key = `${item.fieldKey || ""}:${item.value || ""}:${item.kind || ""}`;
     if (consequenceKeys.has(key)) return false;
     consequenceKeys.add(key);
@@ -1707,6 +2060,7 @@ function createDbBackedSelectorSurface(selectorReferenceStatus = {}, local = {},
     workflowSections,
     donorFieldParity: payload.donorFieldParity || null,
     specialPartsEntitlementSummary: payload.specialPartsEntitlementSummary || null,
+    presentationClassification,
     selectionTruthSummary,
     manualConstraints,
     autoConsequences,

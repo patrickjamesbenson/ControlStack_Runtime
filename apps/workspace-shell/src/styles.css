@@ -520,8 +520,12 @@ img.cs-shell__rail-icon,
 .cs-selector-product__workflow-section > dl { margin: 0; }
 .cs-selector-product__status-badge { flex: 0 0 auto; padding: 4px 8px; border: 1px solid var(--cs-border); border-radius: var(--cs-radius-full); background: var(--cs-panel); color: var(--cs-muted); font-size: 10px; font-weight: 800; line-height: 14px; text-transform: uppercase; letter-spacing: 0.04em; }
 .cs-selector-product__section-summary, .cs-selector-product__section-empty { margin: 0; color: var(--cs-muted); font-size: 12px; line-height: 18px; }
-.cs-selector-product__workflow-hidden, .cs-selector-product__diagnostic-details, .cs-selector-product__field-details, .cs-selector-truth-summary__details { padding: 8px 10px; border: 1px dashed var(--cs-border); border-radius: var(--cs-radius-md); background: var(--cs-panel); }
-.cs-selector-product__workflow-hidden > summary, .cs-selector-product__diagnostic-details > summary, .cs-selector-product__field-details > summary, .cs-selector-truth-summary__details > summary { cursor: pointer; color: var(--cs-muted); font-size: 12px; font-weight: 800; line-height: 18px; }
+.cs-selector-product__workflow-hidden, .cs-selector-product__collapsed-overrides, .cs-selector-product__diagnostic-details, .cs-selector-product__field-details, .cs-selector-truth-summary__details { padding: 8px 10px; border: 1px dashed var(--cs-border); border-radius: var(--cs-radius-md); background: var(--cs-panel); }
+.cs-selector-product__workflow-hidden > summary, .cs-selector-product__collapsed-overrides > summary, .cs-selector-product__diagnostic-details > summary, .cs-selector-product__field-details > summary, .cs-selector-truth-summary__details > summary { cursor: pointer; color: var(--cs-muted); font-size: 12px; font-weight: 800; line-height: 18px; }
+.cs-selector-product__workflow-chip-strip { display: flex; flex-wrap: wrap; gap: 6px; }
+.cs-selector-product__workflow-chip { display: inline-flex; align-items: center; min-height: 26px; padding: 4px 9px; border: 1px solid var(--cs-border); border-radius: var(--cs-radius-full); background: var(--cs-panel); color: var(--cs-muted); font-size: 11px; font-weight: 800; line-height: 16px; }
+.cs-selector-product__workflow-chip[data-display-mode="warning-chip"] { border-style: dashed; color: var(--cs-text); }
+.cs-selector-product__grid--collapsed { margin-top: 8px; }
 .cs-selector-product__badges { display: flex; flex-wrap: wrap; gap: 8px; padding: 0; margin: 0; list-style: none; }
 .cs-selector-product__badges li { padding: 5px 9px; border: 1px solid var(--cs-border); border-radius: var(--cs-radius-full); background: var(--cs-panel-soft); font-size: 11px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; }
 .cs-selector-product__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
