@@ -1114,7 +1114,10 @@ function enrichDbWorkflowSections(selectorReferenceStatus = {}, local = {}) {
 }
 
 function createDbManualConstraints(selectorReferenceStatus = {}, local = {}) {
-  const fields = enrichDbOptionFields(selectorReferenceStatus, local);
+  const fields = [
+    ...enrichDbOptionFields(selectorReferenceStatus, local),
+    ...enrichDbWorkflowSections(selectorReferenceStatus, local).flatMap((section) => Array.isArray(section.fields) ? section.fields : []),
+  ];
   return Object.entries(dbConstraintMap(local)).map(([fieldKey, constraint]) => {
     const field = fields.find((item) => item.fieldKey === fieldKey);
     const option = field?.options?.find((item) => optionValuesMatch(item.value, constraint.value));
@@ -1166,7 +1169,15 @@ function createDbBackedSelectorSurface(selectorReferenceStatus = {}, local = {},
   const fields = enrichDbOptionFields(selectorReferenceStatus, local);
   const workflowSections = enrichDbWorkflowSections(selectorReferenceStatus, local);
   const manualConstraints = createDbManualConstraints(selectorReferenceStatus, local);
-  const autoConsequences = createDbAutoConsequences(fields, local);
+  const payloadConsequences = Array.isArray(payload.autoConsequences) ? payload.autoConsequences : [];
+  const localConsequences = createDbAutoConsequences(fields, local);
+  const consequenceKeys = new Set();
+  const autoConsequences = [...payloadConsequences, ...localConsequences].filter((item) => {
+    const key = `${item.fieldKey || ""}:${item.value || ""}:${item.kind || ""}`;
+    if (consequenceKeys.has(key)) return false;
+    consequenceKeys.add(key);
+    return true;
+  });
   const blockedItems = [
     ...(Array.isArray(payload.blockedItems) ? payload.blockedItems : []),
     ...manualConstraints.filter((constraint) => constraint.blocked).map((constraint) => ({

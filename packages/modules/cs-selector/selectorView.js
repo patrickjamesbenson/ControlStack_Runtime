@@ -889,6 +889,7 @@ function appendSelectorProductSurface(parent, surface = {}) {
       ["selected", field.selectedLabel || "none"],
       ["options", Array.isArray(field.options) ? field.options.length : 0],
       ["reason", field.unavailableReason || "DB/reference-backed option labels only; no raw rows exposed"],
+      ["relationship", field.relationshipStatus || "safe preview"],
     ]);
     grid.appendChild(card);
   }

@@ -531,7 +531,7 @@ function systemEmissionValues(row) {
 
 function emissionSupportsIndirect(value) {
   const key = normaliseKey(value);
-  return key.includes("indirect") || key.includes("both") || key.includes("direct indirect") || key.includes("di");
+  return key.includes("indirect") || key.includes("both") || key.includes("direct indirect") || key === "di" || key === "d i";
 }
 
 function emissionSupportsDirect(value) {
@@ -727,38 +727,147 @@ function collectOptions(snapshot) {
   return bucket;
 }
 
+function pushRelationshipRecord(records, sourceTables, fields, reason = "safe source relationship") {
+  const cleaned = Object.fromEntries(Object.entries(fields)
+    .map(([fieldKey, values]) => [fieldKey, uniqueStrings(Array.isArray(values) ? values : [values])])
+    .filter(([, values]) => values.length));
+  if (Object.keys(cleaned).length > 1) {
+    records.push({
+      sourceTables: uniqueStrings(sourceTables),
+      fields: cleaned,
+      reason,
+      rawRowsExposed: false,
+    });
+  }
+}
+
+function systemOptionForRow(systemOptions, row) {
+  const tokens = systemTokens(row);
+  if (!tokens.value && !tokens.label && !tokens.system) return null;
+  return systemOptions.find((option) => [option.value, option.label].some((value) => valuesMatch(value, tokens.value) || valuesMatch(value, tokens.label)))
+    || systemOptions.find((option) => normaliseKey(`${option.value} ${option.label}`).includes(normaliseKey(tokens.system)))
+    || null;
+}
+
+function systemOptionValueForSource(systemOptions, row) {
+  return systemOptionForRow(systemOptions, row)?.value || "";
+}
+
+function opticFieldValue(row) {
+  const optic = rowText(row, ["optic_var_1", "baseline_slug", "pure_ref_id", "optic_bom_id", "spec_code", "name", "label"]);
+  const system = rowText(row, ["system", "series", "system_name"]);
+  return [system, optic].filter(Boolean).join("|") || optic;
+}
+
 function collectRecords(snapshot, bucket) {
   const records = [];
   const systemOptions = optionsFor(bucket, "system");
 
+  for (const row of liveTableRows(snapshot, "SYSTEM")) {
+    const systemValue = systemOptionValueForSource(systemOptions, row) || systemTokens(row).value;
+    const variant = rowText(row, ["system_variant_1", "variant", "family", "profile_family"]);
+    const emissions = systemEmissionValues(row);
+    const mountStyles = rowOptionValues(row, ["mount_style", "mount_styles"]);
+    const finishes = rowOptionValues(row, ["system_and_variant_finish", "finish", "finish_name", "colour", "color"]);
+    const flexes = rowOptionValues(row, ["flex_map", "flex_colour", "flex_color", "flex"]);
+    pushRelationshipRecord(records, ["SYSTEM"], {
+      system: systemValue,
+      variantKey: variant,
+      emission: emissions,
+      directCapability: emissions.filter(emissionSupportsDirect).map(() => "direct-supported"),
+      indirectCapability: emissions.filter(emissionSupportsIndirect).map(() => "indirect-supported"),
+      mountStyle: mountStyles,
+      bodyFinish: finishes,
+      finishCover: finishes,
+      finishEnd: finishes,
+      finishFlex: flexes.length ? flexes : finishes,
+      inheritedFinishStatus: finishes.length || flexes.length ? ["inherits-default-finish"] : [],
+    }, "SYSTEM row maps system choices to variants, emission, mounting, and finishes");
+  }
+
   for (const row of liveTableRows(snapshot, "OPTICS")) {
     const systemOption = systemOptionFromOpticRow(systemOptions, row);
-    const optic = rowText(row, ["optic_var_1", "baseline_slug", "pure_ref_id", "optic_bom_id", "spec_code", "name", "label"]);
-    const system = rowText(row, ["system", "series", "system_name"]);
-    const opticValue = [system, optic].filter(Boolean).join("|") || optic;
-    const fields = {};
-    if (systemOption) fields.system = [systemOption.value];
-    if (opticValue) fields.optic = [opticValue];
+    const systemValue = systemOption?.value || "";
+    const opticValue = opticFieldValue(row);
+    const subs = rowOptionValues(row, ["optic_var_2", "spec_code_var2"]).map((sub) => [rowText(row, ["optic_var_1", "name", "label"]), sub].filter(Boolean).join("|") || sub);
+    const emissions = rowOptionValues(row, ["emission_permission", "direction", "emission", "optic_direction", "light_direction"]);
+    const direct = emissions.filter(emissionSupportsDirect).map(() => "direct-supported");
+    const indirect = emissions.filter(emissionSupportsIndirect).map(() => "indirect-supported");
     const ips = rowOptionValues(row, ["ip_option_1", "ip_options", "ip", "ip_rating"]);
     const iks = rowOptionValues(row, ["ik_option_2", "ik_options", "ik", "ik_rating"]);
     const ccts = extractCctValues(row);
-    if (ips.length) fields.ipRating = ips;
-    if (iks.length) fields.ikRating = iks;
-    if (ccts.length) fields.cct = ccts;
     const io = rowOptionValues(row, ["interior_exterior", "interiorExterior", "indoor_outdoor", "location_type"]);
-    if (io.length) fields.interiorExterior = io;
     const app = rowOptionValues(row, ["environment", "application", "application_environment"]);
-    if (app.length) fields.application = app;
-    if (Object.keys(fields).length > 1) records.push({ sourceTables: ["OPTICS"], fields });
+    pushRelationshipRecord(records, ["OPTICS"], {
+      system: systemValue,
+      optic: opticValue,
+      opticSub: subs,
+      opticIndirect: indirect.length ? [opticValue] : [],
+      directCapability: direct,
+      indirectCapability: indirect,
+      ipRating: ips,
+      ikRating: iks,
+      cct: ccts,
+      interiorExterior: io,
+      application: app,
+    }, "OPTICS row maps system/optic to sub-optic, environment, and capability options");
+  }
+
+  for (const row of liveTableRows(snapshot, "BOARDS")) {
+    const systemValue = systemOptionValueForSource(systemOptions, row);
+    const optic = opticFieldValue(row);
+    const cctCri = cctCriValues(row);
+    const ccts = extractCctValues(row);
+    const lm = numericOptionValues(row, ["board_lm_per_m", "delivered_lm_per_m", "lm_per_m", "nominal_lm_per_m"]);
+    const controls = rowOptionValues(row, ["control_type_labels", "control_type_options", "native_control_type", "control_type"]);
+    pushRelationshipRecord(records, ["BOARDS"], {
+      system: systemValue,
+      optic,
+      cct: ccts,
+      cctCri,
+      cctCriIndirect: cctCri,
+      targetLmPerM: lm,
+      targetLmPerMIndirect: lm,
+      controlType: controls,
+      controlTypeIndirect: controls,
+    }, "BOARDS row maps system/optic to paired CCT/CRI, lm/m, and control options");
   }
 
   for (const row of liveTableRows(snapshot, "DRIVERS")) {
-    const fields = {};
     const driver = rowText(row, ["driver_id", "driver", "driver_name", "name", "label", "sku", "part_number"]);
-    const control = rowOptionValues(row, ["control_type", "control", "protocol", "dimming", "dimming_type", "driver_control", "control_protocol"]);
-    if (driver) fields.driver = [driver];
-    if (control.length) fields.controlType = control;
-    if (Object.keys(fields).length > 1) records.push({ sourceTables: ["DRIVERS"], fields });
+    const control = rowOptionValues(row, ["control_type", "control", "protocol", "dimming", "dimming_type", "driver_control", "control_protocol", "native_control_type"]);
+    const wiring = rowOptionValues(row, ["wiring_type", "wiring", "cable_type", "control_cores"]);
+    pushRelationshipRecord(records, ["DRIVERS"], {
+      driver,
+      controlType: control,
+      controlTypeIndirect: control,
+      wiringType: wiring,
+    }, "DRIVERS row maps control protocol to driver and wiring consequences");
+  }
+
+  for (const row of liveTableRows(snapshot, "ACCESSORIES")) {
+    const label = accessoryIdLabel(row);
+    if (!label) continue;
+    const mountStyles = rowOptionValues(row, ["mount_style", "mount_styles", "display_choice"]).filter(Boolean);
+    const mountSelections = rowOptionValues(row, ["mount_selections", "mount_selection"]);
+    const mountParticulars = rowOptionValues(row, ["mount_particulars", "particulars"]);
+    if (accessoryTypeMatches(row, "mount")) {
+      pushRelationshipRecord(records, ["ACCESSORIES"], {
+        mountStyle: mountStyles.length ? mountStyles : [label],
+        mountSelection: mountSelections,
+        mountParticulars,
+        accessories: [label],
+      }, "ACCESSORIES mount row maps mount style to selection and particulars");
+    }
+    pushRelationshipRecord(records, ["ACCESSORIES"], {
+      powerPenetration: accessoryTypeMatches(row, "power_penetration") ? [label] : [],
+      powerLocation: accessoryTypeMatches(row, "power_location") ? [label] : [],
+      flexLength: accessoryTypeMatches(row, "flex_length") ? [label] : [],
+      egressLight: accessoryTypeMatches(row, "egress_light") ? [label] : [],
+      egressSound: accessoryTypeMatches(row, "egress_sound") ? [label] : [],
+      sensor: accessoryTypeMatches(row, "pir") || accessoryTypeMatches(row, "sensor") ? [label] : [],
+      accessories: [label],
+    }, "ACCESSORIES row maps accessory preferences to accessory preview only");
   }
 
   return records;
@@ -768,19 +877,58 @@ function valuesMatch(left, right) {
   return normaliseKey(left) === normaliseKey(right);
 }
 
-function recordMatchesConstraints(record, constraints, exceptFieldKey = "") {
+function recordConstraintBlockers(record, constraints, exceptFieldKey = "") {
+  const blockers = [];
   for (const [fieldKey, selected] of Object.entries(constraints)) {
     if (fieldKey === exceptFieldKey || !safeString(selected)) continue;
     const values = Array.isArray(record.fields?.[fieldKey]) ? record.fields[fieldKey] : [];
-    if (values.length && !values.some((value) => valuesMatch(value, selected))) return false;
+    if (values.length && !values.some((value) => valuesMatch(value, selected))) {
+      blockers.push({
+        fieldKey,
+        selectedValue: selected,
+        compatibleValues: values,
+      });
+    }
   }
-  return true;
+  return blockers;
+}
+
+function recordMatchesConstraints(record, constraints, exceptFieldKey = "") {
+  return recordConstraintBlockers(record, constraints, exceptFieldKey).length === 0;
+}
+
+function optionCascadeResult(fieldKey, option, records, constraints) {
+  const relatedRecords = records.filter((record) => Array.isArray(record.fields?.[fieldKey]) && record.fields[fieldKey].some((value) => valuesMatch(value, option.value)));
+  if (!relatedRecords.length) {
+    return {
+      compatible: true,
+      blockedBy: [],
+      relationshipStatus: "unconstrained",
+      relationshipMissingReason: "No safe source relationship record links this option to current upstream constraints.",
+    };
+  }
+  const matchingRecord = relatedRecords.find((record) => recordMatchesConstraints(record, constraints, fieldKey));
+  if (matchingRecord) {
+    return {
+      compatible: true,
+      blockedBy: [],
+      relationshipStatus: "matched",
+      cascadeSource: matchingRecord.sourceTables || [],
+      relationshipMissingReason: "",
+    };
+  }
+  const blockedBy = relatedRecords.flatMap((record) => recordConstraintBlockers(record, constraints, fieldKey));
+  return {
+    compatible: false,
+    blockedBy,
+    relationshipStatus: "blocked-by-constraints",
+    cascadeSource: uniqueStrings(relatedRecords.flatMap((record) => record.sourceTables || [])),
+    relationshipMissingReason: "Safe source relationships exist, but none match the current upstream manual constraints.",
+  };
 }
 
 function optionAllowedByRecords(fieldKey, option, records, constraints) {
-  const relatedRecords = records.filter((record) => Array.isArray(record.fields?.[fieldKey]) && record.fields[fieldKey].some((value) => valuesMatch(value, option.value)));
-  if (!relatedRecords.length) return true;
-  return relatedRecords.some((record) => recordMatchesConstraints(record, constraints, fieldKey));
+  return optionCascadeResult(fieldKey, option, records, constraints).compatible;
 }
 
 function sanitiseConstraints(constraints = {}) {
@@ -820,14 +968,22 @@ function createFields({ bucket, records, constraints, sourceReady }) {
     if (!baseOptions.length) return createUnavailableField(field, `${field.label} is unavailable from current source and remains future mapped; no fake values emitted.`);
 
     const options = baseOptions.map((option) => {
-      const compatible = optionAllowedByRecords(field.fieldKey, option, records, constraints);
+      const cascade = optionCascadeResult(field.fieldKey, option, records, constraints);
       const selected = selectedValue && valuesMatch(option.value, selectedValue);
       return {
         ...option,
         selected: Boolean(selected),
-        status: compatible ? "available" : "blocked",
-        blocked: !compatible,
-        blockedReason: compatible ? "" : "Blocked by current manual constraints; shown rather than silently hidden.",
+        status: cascade.compatible ? "available" : "blocked",
+        blocked: !cascade.compatible,
+        blockedReason: cascade.compatible ? "" : "Blocked by current manual constraints; shown rather than silently hidden.",
+        blockedBy: cascade.blockedBy,
+        cascadeSource: cascade.cascadeSource || option.sourceTables || [],
+        relationshipStatus: cascade.relationshipStatus,
+        relationshipMissingReason: cascade.relationshipMissingReason,
+        compatibleWithCurrentConstraints: cascade.compatible,
+        preservesManualConstraint: Boolean(selected),
+        writes: false,
+        rawRowsExposed: false,
       };
     });
 
@@ -960,6 +1116,28 @@ function blockedItems(fields) {
   return blocked;
 }
 
+function inheritedSourceForField(fieldKey, constraints = {}) {
+  if (["finishCover", "finishEnd", "finishFlex", "inheritedFinishStatus"].includes(fieldKey)) return constraints.bodyFinish ? "bodyFinish manual constraint" : "default/body finish preview";
+  if (["indirectMatchDirect", "cctCriIndirect", "controlTypeIndirect"].includes(fieldKey)) return "direct light/control preview";
+  return "safe DB/reference cascade preview";
+}
+
+function indirectFieldRequiresSupport(fieldKey) {
+  return ["opticIndirect", "indirectMatchDirect", "targetLmPerMIndirect", "cctCriIndirect", "controlTypeIndirect"].includes(fieldKey);
+}
+
+function upstreamIndirectSupportState(records = [], constraints = {}) {
+  const upstreamSelected = Boolean(constraints.system || constraints.optic || constraints.emission);
+  if (!upstreamSelected) return { supported: true, checked: false, blockedBy: [] };
+  const indirectRecords = records.filter((record) => Array.isArray(record.fields?.indirectCapability) && record.fields.indirectCapability.some((value) => valuesMatch(value, "indirect-supported")));
+  const supported = indirectRecords.some((record) => recordMatchesConstraints(record, constraints, "indirectCapability"));
+  return {
+    supported,
+    checked: true,
+    blockedBy: supported ? [] : [{ fieldKey: "indirectCapability", selectedValue: "unsupported by current upstream selection", compatibleValues: ["indirect-supported"] }],
+  };
+}
+
 function workflowOptionAllowed(fieldKey, option, records, constraints) {
   if (!option || option.status === "disabled") return false;
   return optionAllowedByRecords(fieldKey, option, records, constraints);
@@ -997,15 +1175,30 @@ function createWorkflowField(field, { bucket, records, constraints, sourceReady 
     return createUnavailableField(field, `${field.label} is represented for donor parity but unavailable from the current source; no fake values emitted.`);
   }
 
+  const indirectSupport = indirectFieldRequiresSupport(field.fieldKey)
+    ? upstreamIndirectSupportState(records, constraints)
+    : { supported: true, checked: false, blockedBy: [] };
   const options = baseOptions.map((option) => {
-    const compatible = workflowOptionAllowed(field.fieldKey, option, records, constraints);
+    const cascade = optionCascadeResult(field.fieldKey, option, records, constraints);
+    const compatible = cascade.compatible && indirectSupport.supported;
     const selected = selectedValue && valuesMatch(option.value, selectedValue);
+    const inherited = field.role === "inherited-consequence" && compatible;
+    const consequence = field.role === "auto-consequence" && compatible;
+    const blockedBy = compatible ? [] : [...(cascade.blockedBy || []), ...(indirectSupport.supported ? [] : indirectSupport.blockedBy)];
     return {
       ...option,
       selected: Boolean(selected),
-      status: compatible ? "available" : "blocked",
+      status: inherited ? "inherited" : consequence ? "auto-consequence" : compatible ? "available" : "blocked",
       blocked: !compatible,
-      blockedReason: compatible ? "" : "Blocked by current manual constraints; shown rather than silently hidden.",
+      blockedReason: compatible ? "" : indirectSupport.supported ? "Blocked by current manual constraints; shown rather than silently hidden." : "Indirect fields are blocked because the current system/optic path does not support indirect.",
+      blockedBy,
+      cascadeSource: cascade.cascadeSource || option.sourceTables || [],
+      inheritedFrom: inherited ? inheritedSourceForField(field.fieldKey, constraints) : "",
+      relationshipStatus: compatible ? cascade.relationshipStatus : indirectSupport.supported ? cascade.relationshipStatus : "blocked-by-indirect-capability",
+      relationshipMissingReason: compatible ? cascade.relationshipMissingReason : indirectSupport.supported ? cascade.relationshipMissingReason : "Current upstream selection does not expose indirect capability in safe relationship metadata.",
+      compatibleWithCurrentConstraints: compatible,
+      preservesManualConstraint: Boolean(selected),
+      writes: false,
       rawRowsExposed: false,
     };
   });
@@ -1025,7 +1218,7 @@ function createWorkflowField(field, { bucket, records, constraints, sourceReady 
     });
   }
 
-  const availableCount = options.filter((option) => option.status === "available").length;
+  const availableCount = options.filter((option) => option.blocked !== true).length;
   return {
     fieldKey: field.fieldKey,
     label: field.label,
@@ -1100,6 +1293,60 @@ function safeEntitlementSummary(snapshot) {
     rawUsersExposed: false,
     rawRowsExposed: false,
   };
+}
+
+function workflowFields(workflowSections = []) {
+  return workflowSections.flatMap((section) => Array.isArray(section.fields) ? section.fields : []);
+}
+
+function deriveWorkflowConsequences(workflowSections = [], constraints = {}) {
+  const consequences = [];
+  for (const field of workflowFields(workflowSections)) {
+    if (!["auto-consequence", "inherited-consequence"].includes(field.role) || constraints[field.fieldKey]) continue;
+    const option = (Array.isArray(field.options) ? field.options : []).find((item) => item.blocked !== true);
+    if (!option) continue;
+    consequences.push({
+      fieldKey: field.fieldKey,
+      label: field.label || field.fieldKey,
+      value: option.value,
+      valueLabel: option.label,
+      kind: field.role,
+      source: "safe Selector Reference cascade metadata",
+      reason: field.role === "inherited-consequence"
+        ? `${field.label || field.fieldKey} is inherited from upstream preview constraints until manually overridden.`
+        : `${field.label || field.fieldKey} is an auto consequence of current upstream constraints where mapped.`,
+      inheritedFrom: option.inheritedFrom || inheritedSourceForField(field.fieldKey, constraints),
+      mutable: true,
+      writes: false,
+      rawRowsExposed: false,
+    });
+  }
+  return consequences;
+}
+
+function workflowBlockedItems(workflowSections = []) {
+  const blocked = [];
+  for (const field of workflowFields(workflowSections)) {
+    if (field.disabled) continue;
+    if (field.futureMapped) {
+      blocked.push({ fieldKey: field.fieldKey, label: field.label, status: "future-mapped", reason: field.unavailableReason });
+      continue;
+    }
+    for (const option of field.options || []) {
+      if (option.selected && option.blocked) {
+        blocked.push({
+          fieldKey: field.fieldKey,
+          label: field.label,
+          value: option.value,
+          valueLabel: option.label,
+          status: "blocked",
+          reason: option.blockedReason,
+          blockedBy: option.blockedBy || [],
+        });
+      }
+    }
+  }
+  return blocked;
 }
 
 function tableSummary(snapshot) {
@@ -1212,10 +1459,13 @@ export function deriveSelectorReferenceOptionsFromSnapshot(snapshot = {}, { cons
   const bucket = collectOptions(safeSnapshot);
   const records = collectRecords(safeSnapshot, bucket);
   const fields = createFields({ bucket, records, constraints: safeConstraints, sourceReady });
-  const manualConstraints = createManualConstraintList(fields, safeConstraints);
-  const autoConsequences = deriveAutoConsequences(fields, safeConstraints);
-  const blocked = blockedItems(fields);
   const workflowSections = createWorkflowSections({ bucket, records, constraints: safeConstraints, sourceReady });
+  const manualConstraints = createManualConstraintList(fields, safeConstraints);
+  const autoConsequences = [
+    ...deriveAutoConsequences(fields, safeConstraints),
+    ...deriveWorkflowConsequences(workflowSections, safeConstraints),
+  ];
+  const blocked = [...blockedItems(fields), ...workflowBlockedItems(workflowSections)];
   const parity = donorFieldParity(workflowSections);
   const entitlementSummary = safeEntitlementSummary(safeSnapshot);
   const availableFieldCount = fields.filter((field) => field.status === "available").length;
