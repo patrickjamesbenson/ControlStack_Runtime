@@ -28,6 +28,12 @@ const SELECTOR_OPTION_CONSTRAINT_KEYS = Object.freeze([
   "indirectCapability",
   "opticSub",
   "opticIndirect",
+  "diffuserVar1",
+  "diffuserVar2",
+  "directOpticVar1",
+  "directOpticVar2",
+  "indirectOpticVar1",
+  "indirectOpticVar2",
   "electricalClass",
   "ambient",
   "targetLmPerM",
@@ -134,8 +140,56 @@ function activeSelectorOptionsPayload() {
   return selectorReferenceStatus.selectorOptions || selectorReferenceOptionsStatus;
 }
 
-function renderCurrentView() {
+function selectorViewportElement() {
+  return mountedContainer?.closest?.(".cs-shell__main") || document.scrollingElement || document.documentElement;
+}
+
+function captureSelectorViewportState() {
+  const scroller = selectorViewportElement();
+  const active = document.activeElement instanceof HTMLElement && mountedContainer?.contains(document.activeElement)
+    ? document.activeElement
+    : null;
+  return {
+    scrollTop: scroller?.scrollTop ?? 0,
+    scrollLeft: scroller?.scrollLeft ?? 0,
+    activeId: active?.id || "",
+    activeFieldKey: active?.dataset?.fieldKey || "",
+    activeTagName: active?.tagName || "",
+  };
+}
+
+function selectorCssEscape(value = "") {
+  if (globalThis.CSS && typeof globalThis.CSS.escape === "function") return globalThis.CSS.escape(String(value));
+  return String(value).replace(/[^a-zA-Z0-9_-]/g, "\\$&");
+}
+
+function restoreSelectorViewportState(state = {}) {
+  const scroller = selectorViewportElement();
+  if (scroller) {
+    scroller.scrollTop = state.scrollTop || 0;
+    scroller.scrollLeft = state.scrollLeft || 0;
+  }
+  const focusTarget = state.activeFieldKey
+    ? mountedContainer?.querySelector?.(`[data-field-key="${selectorCssEscape(state.activeFieldKey)}"]`)
+    : state.activeId
+      ? mountedContainer?.querySelector?.(`#${selectorCssEscape(state.activeId)}`)
+      : null;
+  if (focusTarget instanceof HTMLElement && typeof focusTarget.focus === "function") {
+    try {
+      focusTarget.focus({ preventScroll: true });
+    } catch {
+      focusTarget.focus();
+      if (scroller) {
+        scroller.scrollTop = state.scrollTop || 0;
+        scroller.scrollLeft = state.scrollLeft || 0;
+      }
+    }
+  }
+}
+
+function renderCurrentView({ preserveViewport = true } = {}) {
   if (!mountedContainer || !selectorState || !selectorAdapter) return;
+  const viewportState = preserveViewport ? captureSelectorViewportState() : null;
   const viewModel = createSelectorViewModel({
     adapter: selectorAdapter,
     selectorState,
@@ -146,6 +200,10 @@ function renderCurrentView() {
     onLocalStateChange: handleSelectorLocalStateChange,
   });
   renderSelectorView(mountedContainer, viewModel);
+  if (viewportState) {
+    restoreSelectorViewportState(viewportState);
+    requestAnimationFrame(() => restoreSelectorViewportState(viewportState));
+  }
 }
 
 function handleSelectorLocalStateChange() {

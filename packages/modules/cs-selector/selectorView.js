@@ -749,6 +749,86 @@ function appendBadgeList(parent, badges = []) {
   parent.appendChild(list);
 }
 
+function fieldSelectedText(field = {}) {
+  return field.selectedLabel || field.selectedValue || "none";
+}
+
+function fieldOptionCount(field = {}) {
+  return Array.isArray(field.options) ? field.options.length : 0;
+}
+
+function workflowFieldIsMetadata(field = {}) {
+  return field.metadataOnly === true || field.role === "metadata-only";
+}
+
+const PRIMARY_HIDDEN_WORKFLOW_FIELDS = Object.freeze(new Set([
+  "optic",
+  "opticSub",
+  "opticIndirect",
+  "directOpticVar1",
+  "directOpticVar2",
+  "indirectOpticVar1",
+  "indirectOpticVar2",
+]));
+
+function workflowFieldIsHiddenFromPrimary(field = {}) {
+  if (!field) return true;
+  if (PRIMARY_HIDDEN_WORKFLOW_FIELDS.has(field.fieldKey)) return true;
+  if (workflowFieldIsMetadata(field)) return true;
+  if (field.disabled === true || field.futureMapped === true) return true;
+  return fieldOptionCount(field) === 0;
+}
+
+function selectedOrPreviewOption(field = {}) {
+  const options = Array.isArray(field.options) ? field.options : [];
+  return options.find((option) => option.selected === true || String(option.value || "") === String(field.selectedValue || ""))
+    || options.find((option) => option.blocked !== true)
+    || options[0]
+    || {};
+}
+
+function appendCompactMetadataLine(parent, label, value) {
+  if (!value) return;
+  const row = document.createElement("span");
+  row.className = "cs-selector-product__metadata-chip";
+  row.textContent = `${label}: ${value}`;
+  parent.appendChild(row);
+}
+
+function appendFieldMetadataDetails(parent, field = {}, selectedOption = {}) {
+  const details = document.createElement("details");
+  details.className = "cs-selector-product__field-details";
+  details.open = false;
+  const summary = document.createElement("summary");
+  summary.textContent = "Field metadata";
+  details.appendChild(summary);
+  appendDefinitionList(details, [
+    ["source", field.sourceStatus || "unavailable from current source"],
+    ["state", field.status || "unknown"],
+    ["role", field.role || "manual-constraint"],
+    ["selected", field.selectedLabel || "none"],
+    ["options", fieldOptionCount(field)],
+    ["reason", field.unavailableReason || "DB/reference-backed option labels only; no raw rows exposed"],
+    ["diffuser layer", selectedOption.diffuserLayer || "none"],
+    ["parent field", selectedOption.parentFieldKey || "none"],
+    ["parent value", selectedOption.parentValue || "none"],
+    ["diffuser material", selectedOption.diffuserMaterial || "none"],
+    ["spec-code preview", selectedOption.specCodePreview || "none"],
+    ["spec-code var 2 preview", selectedOption.specCodeVar2Preview || "none"],
+    ["spec-code generation", selectedOption.specCodeGenerationEnabled === true ? "true" : "false"],
+    ["image readiness", selectedOption.imageReadiness || "not-required"],
+    ["image key", selectedOption.imageKey || "none"],
+    ["donor image reference known", selectedOption.donorImageReferenceKnown === true ? "true" : "false"],
+    ["runtime image available", selectedOption.runtimeImageAvailable === true ? "true" : "false"],
+    ["image rendered", "false"],
+    ["visual choice", selectedOption.visualChoice === true ? "true" : "false"],
+    ["metadata only", field.metadataOnly === true || selectedOption.metadataOnly === true ? "true" : "false"],
+    ["writes", "false"],
+    ["raw rows exposed", "false"],
+  ]);
+  parent.appendChild(details);
+}
+
 function appendSelectorProductFieldCard(parent, field = {}, surface = {}, idPrefix = "cs-selector-product") {
   const card = document.createElement("article");
   card.className = "cs-selector-product__field";
@@ -789,15 +869,67 @@ function appendSelectorProductFieldCard(parent, field = {}, surface = {}, idPref
   });
   card.appendChild(select);
 
-  appendDefinitionList(card, [
-    ["source", field.sourceStatus || "unavailable from current source"],
-    ["state", field.status || "unknown"],
-    ["role", field.role || "manual-constraint"],
-    ["selected", field.selectedLabel || "none"],
-    ["options", Array.isArray(field.options) ? field.options.length : 0],
-    ["reason", field.unavailableReason || "DB/reference-backed option labels only; no raw rows exposed"],
-  ]);
+  const selectedOption = selectedOrPreviewOption(field);
+  const compactMeta = document.createElement("div");
+  compactMeta.className = "cs-selector-product__field-compact-meta";
+  appendCompactMetadataLine(compactMeta, "selected", fieldSelectedText(field));
+  appendCompactMetadataLine(compactMeta, "options", fieldOptionCount(field));
+  if (selectedOption.blocked === true) appendCompactMetadataLine(compactMeta, "blocked", selectedOption.blockedReason || field.unavailableReason || "current constraints");
+  if (selectedOption.diffuserMaterial) appendCompactMetadataLine(compactMeta, "material", selectedOption.diffuserMaterial);
+  if (selectedOption.specCodePreview) appendCompactMetadataLine(compactMeta, "spec-code preview", selectedOption.specCodePreview);
+  if (selectedOption.imageReadiness) appendCompactMetadataLine(compactMeta, "image readiness", selectedOption.imageReadiness);
+  card.appendChild(compactMeta);
+
+  if (field.metadataOnly === true || selectedOption.diffuserLayer || field.unavailableReason || selectedOption.blocked === true) {
+    card.dataset.diffuserMetadata = selectedOption.diffuserLayer ? "true" : "false";
+    appendFieldMetadataDetails(card, field, selectedOption);
+  }
   parent.appendChild(card);
+}
+
+function workflowSelectedSummary(workflowSection = {}) {
+  const selected = (workflowSection.fields || [])
+    .filter((field) => field.selectedValue || field.selectedLabel)
+    .map((field) => `${field.label || field.fieldKey}: ${fieldSelectedText(field)}`);
+  return selected.length ? selected.join(" · ") : "No manual selection in this section yet.";
+}
+
+function appendWorkflowMetadataStrip(parent, fields = []) {
+  const metadataFields = fields.filter(workflowFieldIsMetadata);
+  if (!metadataFields.length) return;
+  const strip = document.createElement("div");
+  strip.className = "cs-selector-product__metadata-strip";
+  for (const field of metadataFields) {
+    const option = selectedOrPreviewOption(field);
+    const value = field.selectedLabel || option.label || field.unavailableReason || "metadata pending";
+    const chip = document.createElement("span");
+    chip.className = "cs-selector-product__metadata-chip";
+    chip.textContent = `${field.label || field.fieldKey}: ${value}`;
+    strip.appendChild(chip);
+  }
+  parent.appendChild(strip);
+}
+
+function appendWorkflowHiddenDetails(parent, workflowSection = {}, hiddenFields = []) {
+  if (!hiddenFields.length) return;
+  const details = document.createElement("details");
+  details.className = "cs-selector-product__workflow-hidden";
+  details.open = false;
+  const summary = document.createElement("summary");
+  const futureCount = hiddenFields.filter((field) => field.futureMapped === true).length;
+  const disabledCount = hiddenFields.filter((field) => field.disabled === true && field.metadataOnly !== true).length;
+  const metadataCount = hiddenFields.filter(workflowFieldIsMetadata).length;
+  summary.textContent = `${hiddenFields.length} compacted field(s): ${futureCount} future/missing, ${disabledCount} disabled, ${metadataCount} metadata`;
+  details.appendChild(summary);
+  appendDefinitionList(details, hiddenFields.map((field) => [
+    field.label || field.fieldKey,
+    field.metadataOnly === true
+      ? "metadata shown compactly above"
+      : field.disabled === true
+        ? "disabled in this read-only slice"
+        : field.unavailableReason || "hidden from primary path until source mapping exists",
+  ]));
+  parent.appendChild(details);
 }
 
 function appendSelectorWorkflowSections(parent, surface = {}) {
@@ -808,23 +940,34 @@ function appendSelectorWorkflowSections(parent, surface = {}) {
   wrapper.dataset.workflowSectionsCanonical = surface.workflowSectionsCanonical === false ? "false" : "true";
   wrapper.dataset.flatFieldsPrimary = surface.flatFieldsPrimary === true ? "true" : "false";
   for (const workflowSection of sections) {
+    const allFields = Array.isArray(workflowSection.fields) ? workflowSection.fields : [];
+    const visibleFields = allFields.filter((field) => !workflowFieldIsHiddenFromPrimary(field));
+    const hiddenFields = allFields.filter(workflowFieldIsHiddenFromPrimary);
     const section = document.createElement("section");
     section.className = "cs-selector-product__workflow-section";
     section.dataset.workflowSection = workflowSection.sectionKey || "unknown";
-    appendText(section, "h4", workflowSection.title || workflowSection.sectionKey || "Workflow section");
-    appendDefinitionList(section, [
-      ["status", workflowSection.status || "preview"],
-      ["canonical primary controls", workflowSection.primaryControlSurface === false ? "false" : "true"],
-      ["canonical field count", workflowSection.canonicalFieldCount ?? (workflowSection.fields || []).length],
-      ["duplicate primary controls", workflowSection.duplicateFieldCount ?? 0],
-      ["mapped", workflowSection.mappedCount ?? 0],
-      ["future mapped", workflowSection.futureMappedCount ?? 0],
-      ["disabled", workflowSection.disabledCount ?? 0],
-    ]);
-    const grid = document.createElement("div");
-    grid.className = "cs-selector-product__grid";
-    for (const field of workflowSection.fields || []) appendSelectorProductFieldCard(grid, field, surface, `cs-selector-workflow-${workflowSection.sectionKey}`);
-    section.appendChild(grid);
+
+    const header = document.createElement("div");
+    header.className = "cs-selector-product__workflow-header";
+    appendText(header, "h4", workflowSection.title || workflowSection.sectionKey || "Workflow section");
+    appendText(header, "span", workflowSection.status || "preview", "cs-selector-product__status-badge");
+    section.appendChild(header);
+    appendText(section, "p", workflowSelectedSummary(workflowSection), "cs-selector-product__section-summary");
+
+    appendWorkflowMetadataStrip(section, allFields);
+
+    if (visibleFields.length) {
+      const grid = document.createElement("div");
+      grid.className = workflowSection.sectionKey === "optics"
+        ? "cs-selector-product__grid cs-selector-product__grid--diffuser"
+        : "cs-selector-product__grid";
+      for (const field of visibleFields) appendSelectorProductFieldCard(grid, field, surface, `cs-selector-workflow-${workflowSection.sectionKey}`);
+      section.appendChild(grid);
+    } else {
+      appendText(section, "p", "No active controls in this section yet.", "cs-selector-product__section-empty");
+    }
+
+    appendWorkflowHiddenDetails(section, workflowSection, hiddenFields);
     wrapper.appendChild(section);
   }
   parent.appendChild(wrapper);
@@ -868,10 +1011,41 @@ function appendSelectionTruthSummaryItems(parent, items = []) {
   parent.appendChild(list);
 }
 
+function allTruthItems(summary = {}) {
+  return (Array.isArray(summary.groups) ? summary.groups : []).flatMap((group) => Array.isArray(group.items) ? group.items : []);
+}
+
+function truthItem(summary = {}, fieldKeys = []) {
+  const keys = Array.isArray(fieldKeys) ? fieldKeys : [fieldKeys];
+  return allTruthItems(summary).find((item) => keys.includes(item.fieldKey) && item.valueLabel && item.valueLabel !== "none") || null;
+}
+
+function truthCount(summary = {}, truthKinds = []) {
+  const kinds = Array.isArray(truthKinds) ? truthKinds : [truthKinds];
+  return allTruthItems(summary).filter((item) => kinds.includes(item.truthKind)).length;
+}
+
+function appendTruthMetric(parent, label, value) {
+  const metric = document.createElement("span");
+  metric.className = "cs-selector-truth-summary__metric";
+  metric.textContent = `${label}: ${value}`;
+  parent.appendChild(metric);
+}
+
+function appendCompactDisabledHandoffStrip(parent) {
+  const strip = document.createElement("div");
+  strip.className = "cs-selector-disabled-handoffs";
+  for (const label of ["Spec/slug disabled", "IES disabled", "Payload/RunTable disabled", "Lab Proof disabled", "Controlled Records disabled", "RREG disabled", "HubSpot write-back disabled"]) {
+    appendText(strip, "span", label);
+  }
+  parent.appendChild(strip);
+}
+
 function appendSelectorSelectionTruthSummary(parent, summary = {}) {
   const section = document.createElement("section");
   section.className = "cs-selector-truth-summary";
   section.dataset.selectorTruthSummary = "read-only";
+  section.dataset.compactDefault = "true";
   section.dataset.specGenerationEnabled = summary.specGenerationEnabled === true ? "true" : "false";
   section.dataset.rawRowsExposed = summary.rawRowsExposed === true ? "true" : "false";
 
@@ -879,18 +1053,33 @@ function appendSelectorSelectionTruthSummary(parent, summary = {}) {
   header.className = "cs-selector-truth-summary__header";
   appendText(header, "p", "Selected truth summary", "cs-shell__eyebrow");
   appendText(header, "h4", "Selected truth summary");
-  appendText(header, "p", "Read-only rail: manual selections are constraints; auto/default/inherited selections are consequences. Blocked values stay visible and no spec, proof, generation, record, approval, or write-back is created here.");
-  appendBadgeList(header, [
-    summary.readOnly === false ? "read-only missing" : "read-only",
-    summary.specGenerationEnabled === true ? "spec generation enabled" : "spec generation disabled",
-    summary.labProofAuthority === true ? "Lab Proof authority" : "not Lab Proof",
-    summary.controlledRecordWriteEnabled === true ? "records write enabled" : "records disabled",
-    summary.rregApprovalEnabled === true ? "RREG approval enabled" : "RREG disabled",
-    summary.hiddenWriteBackEnabled === true ? "write-back enabled" : "write-back disabled",
-  ]);
+  appendText(header, "p", "Compact read-only rail: manual selections are constraints; auto/default/inherited selections are consequences. Blocked values stay visible without turning the page into a diagnostic report.");
+  appendBadgeList(header, ["read-only", "no generation", "not Lab Proof", "writes disabled"]);
   section.appendChild(header);
 
-  const statusRows = [
+  const selected = document.createElement("div");
+  selected.className = "cs-selector-truth-summary__selected";
+  const system = truthItem(summary, "system");
+  const var1 = truthItem(summary, ["diffuserVar1", "directOpticVar1", "optic"]);
+  const var2 = truthItem(summary, ["diffuserVar2", "directOpticVar2", "opticSub"]);
+  appendTruthMetric(selected, "system", system?.valueLabel || "not selected");
+  appendTruthMetric(selected, "diffuser var 1", var1?.valueLabel || "not selected");
+  appendTruthMetric(selected, "diffuser var 2", var2?.valueLabel || "not selected");
+  appendTruthMetric(selected, "auto/inherited", truthCount(summary, ["auto-consequence", "inherited-consequence"]));
+  appendTruthMetric(selected, "blockers", Array.isArray(summary.blockers) ? summary.blockers.length : truthCount(summary, "blocked"));
+  appendTruthMetric(selected, "missing", Array.isArray(summary.missing) ? summary.missing.filter((item) => item.truthKind === "missing").length : truthCount(summary, "missing"));
+  appendTruthMetric(selected, "future disabled", Array.isArray(summary.disabledHandoffs) ? summary.disabledHandoffs.length : truthCount(summary, "future-disabled"));
+  section.appendChild(selected);
+
+  appendCompactDisabledHandoffStrip(section);
+
+  const details = document.createElement("details");
+  details.className = "cs-selector-truth-summary__details";
+  details.open = false;
+  const detailsSummary = document.createElement("summary");
+  detailsSummary.textContent = "Detailed selected-truth rows and safety flags";
+  details.appendChild(detailsSummary);
+  appendSection(details, "Selected truth safety gates", [
     ["readOnly", summary.readOnly === false ? "false" : "true"],
     ["specGenerationEnabled", summary.specGenerationEnabled === true ? "true" : "false"],
     ["slugGenerationEnabled", summary.slugGenerationEnabled === true ? "true" : "false"],
@@ -904,9 +1093,7 @@ function appendSelectorSelectionTruthSummary(parent, summary = {}) {
     ["rawRowsExposed", summary.rawRowsExposed === true ? "true" : "false"],
     ["rawUsersExposed", summary.rawUsersExposed === true ? "true" : "false"],
     ["rawLabEvidenceExposed", summary.rawLabEvidenceExposed === true ? "true" : "false"],
-  ];
-  appendSection(section, "Selected truth safety gates", statusRows);
-
+  ]);
   const groups = Array.isArray(summary.groups) ? summary.groups : [];
   const grid = document.createElement("div");
   grid.className = "cs-selector-truth-summary__groups";
@@ -918,9 +1105,35 @@ function appendSelectorSelectionTruthSummary(parent, summary = {}) {
     appendSelectionTruthSummaryItems(card, Array.isArray(group.items) ? group.items : []);
     grid.appendChild(card);
   }
-  section.appendChild(grid);
+  details.appendChild(grid);
+  section.appendChild(details);
 
   parent.appendChild(section);
+}
+
+function appendSelectorProductCompactStatus(parent, surface = {}) {
+  const summary = surface.candidateSummary || {};
+  const status = document.createElement("section");
+  status.className = "cs-selector-product__compact-status";
+  appendTruthMetric(status, "state", summary.state || "default preview");
+  appendTruthMetric(status, "manual", summary.manualConstraintCount ?? 0);
+  appendTruthMetric(status, "auto", summary.autoConsequenceCount ?? 0);
+  appendTruthMetric(status, "blocked/missing", summary.blockedCount ?? 0);
+  appendTruthMetric(status, "mapped workflow fields", summary.workflowMappedFieldCount ?? 0);
+  parent.appendChild(status);
+
+  const details = document.createElement("details");
+  details.className = "cs-selector-product__diagnostic-details";
+  details.open = false;
+  const detailsSummary = document.createElement("summary");
+  detailsSummary.textContent = "Candidate, blockers, and path details";
+  details.appendChild(detailsSummary);
+  appendSection(details, "Current candidate summary", surface.candidateSummaryRows || [["candidate state", "default preview"]]);
+  appendSection(details, "Manual constraints", surface.manualConstraintRows || [["manual constraints", "none yet"]]);
+  appendSection(details, "Auto consequences", surface.autoConsequenceRows || [["auto consequences", "none mapped"]]);
+  appendSection(details, "Blocked / missing / incompatible items", surface.blockedRows || [["blocked / missing", "none"]]);
+  appendSection(details, "Path to spec-ready later", surface.pathRows || [["future spec-ready", "requires complete spec gate later"]]);
+  parent.appendChild(details);
 }
 
 function appendSelectorProductSurface(parent, surface = {}) {
@@ -935,18 +1148,13 @@ function appendSelectorProductSurface(parent, surface = {}) {
   appendBadgeList(header, surface.badges || ["source pending", "spec gate incomplete", "not Lab Proof", "writes disabled"]);
   section.appendChild(header);
 
-  appendText(section, "p", surface.requiredSafetyCopy || "Read-only preview. No spec, slug, IES, payload, RunTable, Lab Proof, Controlled Record, RREG approval, custody transfer, Board Data write, or hidden write-back is created here.", "cs-selector-product__safety");
-  appendText(section, "p", surface.proofCopy || "Selector previews selection readiness. Lab Proof proves later.", "cs-selector-product__proof");
+  appendText(section, "p", "Read-only preview. No spec, slug, IES, payload, RunTable, proof, record, approval, custody transfer, data write, or hidden write-back is created here.", "cs-selector-product__safety");
 
   appendSelectorSelectionTruthSummary(section, surface.selectionTruthSummary || {});
 
   appendSelectorWorkflowSections(section, surface);
 
-  appendSection(section, "Current candidate summary", surface.candidateSummaryRows || [["candidate state", "default preview"]]);
-  appendSection(section, "Manual constraints", surface.manualConstraintRows || [["manual constraints", "none yet"]]);
-  appendSection(section, "Auto consequences", surface.autoConsequenceRows || [["auto consequences", "none mapped"]]);
-  appendSection(section, "Blocked / missing / incompatible items", surface.blockedRows || [["blocked / missing", "none"]]);
-  appendSection(section, "Path to spec-ready later", surface.pathRows || [["future spec-ready", "requires complete spec gate later"]]);
+  appendSelectorProductCompactStatus(section, surface);
 
   parent.appendChild(section);
 }

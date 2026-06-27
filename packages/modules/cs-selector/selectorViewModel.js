@@ -1087,6 +1087,50 @@ function labelFromWorkflowField(field = {}, value = "") {
   return option?.label || String(value || "");
 }
 
+function systemTokenFromSelection(value = "") {
+  return String(value || "").split("|")[0] || "";
+}
+
+function diffuserParentConstraintForField(fieldKey = "", selectedConstraints = {}) {
+  if (fieldKey === "directOpticVar2") return selectedConstraints.directOpticVar1 || selectedConstraints.diffuserVar1 || "";
+  if (fieldKey === "indirectOpticVar2") return selectedConstraints.indirectOpticVar1 || selectedConstraints.diffuserVar1 || "";
+  if (["diffuserVar2", "diffuserMaterial", "diffuserSpecCodePreview", "diffuserImageReadiness"].includes(fieldKey)) return selectedConstraints.diffuserVar1 || selectedConstraints.optic || "";
+  return "";
+}
+
+function localDiffuserRelationshipBlock(fieldKey = "", option = {}, selectedConstraints = {}) {
+  const blockers = [];
+  const optionValue = String(option.value || "");
+  const optionSystem = systemTokenFromSelection(option.parentValue || optionValue);
+  const selectedSystem = systemTokenFromSelection(selectedConstraints.system || "");
+  if (["diffuserVar1", "diffuserVar2", "directOpticVar1", "directOpticVar2", "indirectOpticVar1", "indirectOpticVar2", "diffuserMaterial", "diffuserSpecCodePreview", "diffuserImageReadiness"].includes(fieldKey)
+    && selectedSystem && optionSystem && optionSystem !== selectedSystem) {
+    blockers.push({
+      fieldKey: "system",
+      selectedValue: selectedConstraints.system,
+      compatibleValues: [option.parentValue || option.value].filter(Boolean),
+    });
+  }
+
+  const parentConstraint = diffuserParentConstraintForField(fieldKey, selectedConstraints);
+  const parentValue = String(option.parentValue || "");
+  if (parentConstraint && parentValue && !optionValuesMatch(parentValue, parentConstraint)) {
+    blockers.push({
+      fieldKey: option.parentFieldKey || "diffuserVar1",
+      selectedValue: parentConstraint,
+      compatibleValues: [parentValue],
+    });
+  }
+
+  return {
+    blocked: blockers.length > 0,
+    blockedBy: blockers,
+    reason: blockers.length
+      ? "Blocked by current diffuser / optic var 1 or system constraint; shown rather than silently hidden."
+      : "",
+  };
+}
+
 function enrichDbWorkflowSections(selectorReferenceStatus = {}, local = {}) {
   const selectedConstraints = dbConstraintValueMap(local);
   return dbWorkflowSections(selectorReferenceStatus).map((section) => ({
@@ -1095,9 +1139,17 @@ function enrichDbWorkflowSections(selectorReferenceStatus = {}, local = {}) {
       const selectedValue = selectedConstraints[field.fieldKey] || "";
       const options = Array.isArray(field.options) ? field.options.map((option) => {
         const selected = selectedValue ? optionValuesMatch(option.value, selectedValue) : option.selected === true;
+        const localBlock = localDiffuserRelationshipBlock(field.fieldKey, option, selectedConstraints);
+        const blocked = option.blocked === true || localBlock.blocked === true;
         return {
           ...option,
           selected,
+          status: blocked ? "blocked" : (option.status || "available"),
+          blocked,
+          blockedReason: blocked ? option.blockedReason || localBlock.reason || "Blocked by current manual constraints; shown rather than silently hidden." : option.blockedReason || "",
+          blockedBy: blocked ? [...(Array.isArray(option.blockedBy) ? option.blockedBy : []), ...localBlock.blockedBy] : (Array.isArray(option.blockedBy) ? option.blockedBy : []),
+          relationshipStatus: blocked ? "blocked-by-diffuser-relationship" : option.relationshipStatus || "matched",
+          relationshipMissingReason: blocked ? localBlock.reason : option.relationshipMissingReason || "",
           rawRowsExposed: false,
         };
       }) : [];
@@ -1188,6 +1240,15 @@ const SELECTION_TRUTH_FIELD_GROUPS = Object.freeze({
   optic: "systemOptic",
   opticSub: "systemOptic",
   opticIndirect: "systemOptic",
+  diffuserVar1: "systemOptic",
+  diffuserVar2: "systemOptic",
+  diffuserMaterial: "systemOptic",
+  diffuserSpecCodePreview: "systemOptic",
+  diffuserImageReadiness: "systemOptic",
+  directOpticVar1: "systemOptic",
+  directOpticVar2: "systemOptic",
+  indirectOpticVar1: "systemOptic",
+  indirectOpticVar2: "systemOptic",
   application: "environment",
   interiorExterior: "environment",
   ipRating: "environment",
@@ -1263,6 +1324,7 @@ function selectionTruthKindFor(item = {}, field = {}) {
   if (item.blocked === true || status === "blocked") return "blocked";
   if (kind === "inherited-consequence" || role === "inherited-consequence" || status === "inherited") return "inherited-consequence";
   if (kind === "auto-consequence" || role === "auto-consequence" || status === "auto-consequence") return "auto-consequence";
+  if (role === "metadata-only" || item.metadataOnly === true || status === "metadata-only") return "source-status";
   if (role === "disabled" || item.disabled === true) return "future-disabled";
   if (role === "future-mapped" || item.futureMapped === true || status === "future-mapped") return "missing";
   return "manual-constraint";

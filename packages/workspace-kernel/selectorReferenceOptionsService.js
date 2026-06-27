@@ -36,11 +36,20 @@ const WORKFLOW_SECTION_DEFINITIONS = Object.freeze([
   },
   {
     sectionKey: "optics",
-    title: "Optics",
+    title: "Optics / Diffusers",
     fields: [
-      { fieldKey: "optic", label: "Direct optic", role: "manual-constraint", sourceTables: ["OPTICS"] },
-      { fieldKey: "opticSub", label: "Direct optic V2 / sub-option", role: "manual-constraint", sourceTables: ["OPTICS"] },
-      { fieldKey: "opticIndirect", label: "Indirect optic", role: "manual-constraint", sourceTables: ["OPTICS"] },
+      { fieldKey: "diffuserVar1", label: "Diffuser / optic var 1", role: "manual-constraint", sourceTables: ["OPTICS"] },
+      { fieldKey: "diffuserVar2", label: "Diffuser / optic var 2", role: "manual-constraint", sourceTables: ["OPTICS"] },
+      { fieldKey: "diffuserMaterial", label: "Diffuser material", role: "metadata-only", sourceTables: ["OPTICS"] },
+      { fieldKey: "diffuserSpecCodePreview", label: "Spec-code preview", role: "metadata-only", sourceTables: ["OPTICS", "SPEC_CODES"] },
+      { fieldKey: "diffuserImageReadiness", label: "Image readiness", role: "metadata-only", sourceTables: ["OPTICS"] },
+      { fieldKey: "directOpticVar1", label: "Direct diffuser / optic var 1", role: "manual-constraint", sourceTables: ["OPTICS"] },
+      { fieldKey: "directOpticVar2", label: "Direct diffuser / optic var 2", role: "manual-constraint", sourceTables: ["OPTICS"] },
+      { fieldKey: "indirectOpticVar1", label: "Indirect diffuser / optic var 1", role: "manual-constraint", sourceTables: ["OPTICS"] },
+      { fieldKey: "indirectOpticVar2", label: "Indirect diffuser / optic var 2", role: "manual-constraint", sourceTables: ["OPTICS"] },
+      { fieldKey: "optic", label: "Direct optic compatibility alias", role: "manual-constraint", sourceTables: ["OPTICS"] },
+      { fieldKey: "opticSub", label: "Direct optic var 2 compatibility alias", role: "manual-constraint", sourceTables: ["OPTICS"] },
+      { fieldKey: "opticIndirect", label: "Indirect optic compatibility alias", role: "manual-constraint", sourceTables: ["OPTICS"] },
     ],
   },
   {
@@ -226,6 +235,7 @@ const SAFE_FLAGS = Object.freeze({
   selectorResolvingEnabled: false,
   specGenerationEnabled: false,
   slugGenerationEnabled: false,
+  specCodeGenerationEnabled: false,
   iesGenerationEnabled: false,
   payloadGenerationEnabled: false,
   runTableGenerationEnabled: false,
@@ -426,7 +436,24 @@ function optionValue(label, fallback = "") {
   return cleaned || safeString(fallback);
 }
 
-function createOption(label, { value = label, sourceTables = [], count = 1 } = {}) {
+function createOption(label, {
+  value = label,
+  sourceTables = [],
+  count = 1,
+  diffuserLayer = "",
+  parentFieldKey = "",
+  parentValue = "",
+  specCodePreview = "",
+  specCodeVar2Preview = "",
+  diffuserMaterial = "",
+  imageReadiness = "",
+  imageKey = "",
+  visualChoice = false,
+  donorImageReferenceKnown = false,
+  runtimeImageAvailable = false,
+  metadataOnly = false,
+  specCodeGenerationEnabled = false,
+} = {}) {
   const optionLabel = safeString(label || value);
   return {
     value: optionValue(value || optionLabel),
@@ -434,6 +461,20 @@ function createOption(label, { value = label, sourceTables = [], count = 1 } = {
     count,
     sourceStatus: "db-reference-backed",
     sourceTables: uniqueStrings(sourceTables),
+    diffuserLayer,
+    parentFieldKey,
+    parentValue,
+    specCodePreview,
+    specCodeVar2Preview,
+    diffuserMaterial,
+    imageReadiness,
+    imageKey,
+    visualChoice: visualChoice === true,
+    donorImageReferenceKnown: donorImageReferenceKnown === true,
+    runtimeImageAvailable: runtimeImageAvailable === true,
+    metadataOnly: metadataOnly === true,
+    specCodeGenerationEnabled: specCodeGenerationEnabled === true ? false : false,
+    writes: false,
     rawRowsExposed: false,
   };
 }
@@ -448,6 +489,16 @@ function addOption(bucket, fieldKey, label, meta = {}) {
   if (existing) {
     existing.count += meta.count || 1;
     existing.sourceTables = uniqueStrings([...(existing.sourceTables || []), ...(meta.sourceTables || [])]);
+    for (const key of ["diffuserLayer", "parentFieldKey", "parentValue", "specCodePreview", "specCodeVar2Preview", "diffuserMaterial", "imageReadiness", "imageKey"]) {
+      if (!existing[key] && meta[key]) existing[key] = meta[key];
+    }
+    existing.visualChoice = existing.visualChoice === true || meta.visualChoice === true;
+    existing.donorImageReferenceKnown = existing.donorImageReferenceKnown === true || meta.donorImageReferenceKnown === true;
+    existing.runtimeImageAvailable = false;
+    existing.metadataOnly = existing.metadataOnly === true || meta.metadataOnly === true;
+    existing.specCodeGenerationEnabled = false;
+    existing.writes = false;
+    existing.rawRowsExposed = false;
     return;
   }
   bucket[fieldKey].set(key, createOption(label, { ...meta, value }));
@@ -632,17 +683,81 @@ function collectOptions(snapshot) {
 
   const optics = liveTableRows(snapshot, "OPTICS");
   for (const row of optics) {
-    const optic = rowText(row, ["optic_var_1", "baseline_slug", "pure_ref_id", "optic_bom_id", "spec_code", "name", "label"]);
-    const system = rowText(row, ["system", "series", "system_name"]);
+    const optic = diffuserVar1Name(row);
+    const system = diffuserSystemToken(row);
     const opticLabel = [optic, system].filter(Boolean).join(" · ") || optic;
-    const opticValue = [system, optic].filter(Boolean).join("|") || opticLabel;
-    addOption(bucket, "optic", opticLabel, { value: opticValue, sourceTables: ["OPTICS"] });
-    for (const sub of rowOptionValues(row, ["optic_var_2", "spec_code_var2"])) addOption(bucket, "opticSub", sub, { value: [optic, sub].filter(Boolean).join("|") || sub, sourceTables: ["OPTICS"] });
-    for (const emission of rowOptionValues(row, ["emission_permission", "direction", "emission", "optic_direction", "light_direction"])) {
+    const opticValue = diffuserVar1Value(row);
+    const var1Meta = diffuserOptionMeta(row, { layer: "var1", visualChoice: true });
+    const emissions = rowOptionValues(row, ["emission_permission", "direction", "emission", "optic_direction", "light_direction"]);
+    const hasDirect = emissions.length ? emissions.some(emissionSupportsDirect) : true;
+    const hasIndirect = emissions.some(emissionSupportsIndirect);
+    addOption(bucket, "optic", opticLabel, { value: opticValue, sourceTables: ["OPTICS"], ...var1Meta });
+    addOption(bucket, "diffuserVar1", opticLabel, { value: opticValue, sourceTables: ["OPTICS"], ...var1Meta });
+    if (hasDirect) addOption(bucket, "directOpticVar1", opticLabel, { value: opticValue, sourceTables: ["OPTICS"], ...var1Meta });
+    if (hasIndirect) addOption(bucket, "indirectOpticVar1", opticLabel, { value: opticValue, sourceTables: ["OPTICS"], ...var1Meta });
+
+    for (const variant of diffuserVar2Values(row)) {
+      const var2Meta = diffuserOptionMeta(row, {
+        layer: "var2",
+        parentFieldKey: "diffuserVar1",
+        parentValue: opticValue,
+        var2Label: variant.label,
+        visualChoice: true,
+      });
+      const aliasValue = [optic, variant.label].filter(Boolean).join("|") || variant.label;
+      addOption(bucket, "opticSub", variant.label, { value: aliasValue, sourceTables: ["OPTICS"], ...var2Meta });
+      addOption(bucket, "diffuserVar2", variant.label, { value: variant.value, sourceTables: ["OPTICS"], ...var2Meta });
+      if (hasDirect) addOption(bucket, "directOpticVar2", variant.label, { value: variant.value, sourceTables: ["OPTICS"], ...var2Meta });
+      if (hasIndirect) addOption(bucket, "indirectOpticVar2", variant.label, { value: variant.value, sourceTables: ["OPTICS"], ...var2Meta });
+    }
+
+    const material = diffuserMaterialText(row);
+    if (material) addOption(bucket, "diffuserMaterial", material, {
+      value: [system, optic, material].filter(Boolean).join("|") || material,
+      sourceTables: ["OPTICS"],
+      ...diffuserOptionMeta(row, { layer: "material", parentFieldKey: "diffuserVar1", parentValue: opticValue, visualChoice: false, metadataOnly: true }),
+      diffuserMaterial: material,
+    });
+
+    const baseSpec = specCodePreviewFor(row);
+    if (baseSpec.combinedSpecCodePreview) addOption(bucket, "diffuserSpecCodePreview", `${optic || "Diffuser"}: ${baseSpec.combinedSpecCodePreview}`, {
+      value: [system, optic, baseSpec.combinedSpecCodePreview].filter(Boolean).join("|") || baseSpec.combinedSpecCodePreview,
+      sourceTables: ["OPTICS"],
+      ...diffuserOptionMeta(row, { layer: "spec-code-preview", parentFieldKey: "diffuserVar1", parentValue: opticValue, visualChoice: false, metadataOnly: true }),
+      specCodePreview: baseSpec.combinedSpecCodePreview,
+      specCodeVar2Preview: baseSpec.specCodeVar2Preview,
+    });
+    for (const variant of diffuserVar2Values(row)) {
+      const spec = specCodePreviewFor(row, variant.label);
+      addOption(bucket, "diffuserSpecCodePreview", `${optic || "Diffuser"} / ${variant.label}: ${spec.combinedSpecCodePreview}`, {
+        value: [system, optic, variant.label, spec.combinedSpecCodePreview].filter(Boolean).join("|") || spec.combinedSpecCodePreview,
+        sourceTables: ["OPTICS"],
+        ...diffuserOptionMeta(row, { layer: "spec-code-preview", parentFieldKey: "diffuserVar2", parentValue: variant.value, var2Label: variant.label, visualChoice: false, metadataOnly: true }),
+        specCodePreview: spec.combinedSpecCodePreview,
+        specCodeVar2Preview: spec.specCodeVar2Preview,
+      });
+    }
+
+    addOption(bucket, "diffuserImageReadiness", `${optic || "Diffuser"}: runtime manifest missing`, {
+      value: [system, optic, "runtime-manifest-missing"].filter(Boolean).join("|") || "runtime-manifest-missing",
+      sourceTables: ["OPTICS"],
+      ...diffuserOptionMeta(row, { layer: "image-readiness", parentFieldKey: "diffuserVar1", parentValue: opticValue, visualChoice: false, metadataOnly: true }),
+      imageReadiness: "runtime-manifest-missing",
+    });
+    for (const variant of diffuserVar2Values(row)) {
+      addOption(bucket, "diffuserImageReadiness", `${optic || "Diffuser"} / ${variant.label}: runtime manifest missing`, {
+        value: [system, optic, variant.label, "runtime-manifest-missing"].filter(Boolean).join("|") || "runtime-manifest-missing",
+        sourceTables: ["OPTICS"],
+        ...diffuserOptionMeta(row, { layer: "image-readiness", parentFieldKey: "diffuserVar2", parentValue: variant.value, var2Label: variant.label, visualChoice: false, metadataOnly: true }),
+        imageReadiness: "runtime-manifest-missing",
+      });
+    }
+
+    for (const emission of emissions) {
       if (emissionSupportsDirect(emission)) addOption(bucket, "directCapability", "Direct supported", { value: "direct-supported", sourceTables: ["OPTICS"] });
       if (emissionSupportsIndirect(emission)) {
         addOption(bucket, "indirectCapability", "Indirect supported", { value: "indirect-supported", sourceTables: ["OPTICS"] });
-        addOption(bucket, "opticIndirect", opticLabel, { value: opticValue, sourceTables: ["OPTICS"] });
+        addOption(bucket, "opticIndirect", opticLabel, { value: opticValue, sourceTables: ["OPTICS"], ...var1Meta });
       }
     }
     for (const ip of rowOptionValues(row, ["ip_option_1", "ip_options", "ip", "ip_rating"])) addOption(bucket, "ipRating", ip, { sourceTables: ["OPTICS"] });
@@ -759,6 +874,79 @@ function opticFieldValue(row) {
   return [system, optic].filter(Boolean).join("|") || optic;
 }
 
+function diffuserVar1Name(row) {
+  return rowText(row, ["optic_var_1", "baseline_slug", "pure_ref_id", "optic_bom_id", "spec_code", "name", "label"]);
+}
+
+function diffuserSystemToken(row) {
+  return rowText(row, ["system", "series", "system_name"]);
+}
+
+function diffuserVar1Value(row) {
+  return [diffuserSystemToken(row), diffuserVar1Name(row)].filter(Boolean).join("|") || diffuserVar1Name(row);
+}
+
+function diffuserVar2Values(row) {
+  const var1 = diffuserVar1Name(row);
+  const system = diffuserSystemToken(row);
+  const variants = rowOptionValues(row, ["optic_var_2"]);
+  const fallbackCodes = variants.length ? [] : rowOptionValues(row, ["spec_code_var2"]);
+  return [...variants, ...fallbackCodes].map((variant) => ({
+    label: variant,
+    value: [system, var1, variant].filter(Boolean).join("|") || variant,
+  }));
+}
+
+function slugifyMetadataKey(value) {
+  return safeLower(value).replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+}
+
+function diffuserImageKey(var1 = "", var2 = "") {
+  const base = slugifyMetadataKey(var1);
+  const child = slugifyMetadataKey(var2);
+  return child ? `optic_${base}_${child}` : base ? `optic_${base}` : "";
+}
+
+function diffuserMaterialText(row) {
+  return rowText(row, ["diffuser_material", "material", "diffuser", "description", "notes", "helper_text"]);
+}
+
+function specCodePreviewFor(row, var2Label = "") {
+  const base = rowText(row, ["spec_code"]);
+  const var2List = rowOptionValues(row, ["optic_var_2"]);
+  const code2List = rowOptionValues(row, ["spec_code_var2"]);
+  const index = var2List.findIndex((item) => valuesMatch(item, var2Label));
+  const var2Code = index >= 0 ? safeString(code2List[index]) : "";
+  return {
+    specCodePreview: base || "metadata pending",
+    specCodeVar2Preview: var2Code,
+    combinedSpecCodePreview: [base, var2Code].filter(Boolean).join("") || base || var2Code || "metadata pending",
+  };
+}
+
+function diffuserOptionMeta(row, { layer, parentFieldKey = "", parentValue = "", var2Label = "", visualChoice = true, metadataOnly = false } = {}) {
+  const var1 = diffuserVar1Name(row);
+  const spec = specCodePreviewFor(row, var2Label);
+  const imageKey = diffuserImageKey(var1, var2Label);
+  return {
+    diffuserLayer: layer,
+    parentFieldKey,
+    parentValue,
+    specCodePreview: spec.combinedSpecCodePreview,
+    specCodeVar2Preview: spec.specCodeVar2Preview,
+    diffuserMaterial: diffuserMaterialText(row),
+    imageReadiness: imageKey ? "runtime-manifest-missing" : "unmapped",
+    imageKey,
+    visualChoice,
+    donorImageReferenceKnown: Boolean(imageKey),
+    runtimeImageAvailable: false,
+    metadataOnly,
+    specCodeGenerationEnabled: false,
+    writes: false,
+    rawRowsExposed: false,
+  };
+}
+
 function collectRecords(snapshot, bucket) {
   const records = [];
   const systemOptions = optionsFor(bucket, "system");
@@ -789,9 +977,20 @@ function collectRecords(snapshot, bucket) {
     const systemOption = systemOptionFromOpticRow(systemOptions, row);
     const systemValue = systemOption?.value || "";
     const opticValue = opticFieldValue(row);
-    const subs = rowOptionValues(row, ["optic_var_2", "spec_code_var2"]).map((sub) => [rowText(row, ["optic_var_1", "name", "label"]), sub].filter(Boolean).join("|") || sub);
+    const var1Value = diffuserVar1Value(row);
+    const var2Values = diffuserVar2Values(row).map((item) => item.value);
+    const legacySubs = diffuserVar2Values(row).map((item) => [diffuserVar1Name(row), item.label].filter(Boolean).join("|") || item.label);
+    const material = diffuserMaterialText(row);
+    const specPreviews = [
+      specCodePreviewFor(row).combinedSpecCodePreview,
+      ...diffuserVar2Values(row).map((item) => specCodePreviewFor(row, item.label).combinedSpecCodePreview),
+    ].filter(Boolean);
+    const imageReadinessValues = [
+      [diffuserSystemToken(row), diffuserVar1Name(row), "runtime-manifest-missing"].filter(Boolean).join("|") || "runtime-manifest-missing",
+      ...diffuserVar2Values(row).map((item) => [diffuserSystemToken(row), diffuserVar1Name(row), item.label, "runtime-manifest-missing"].filter(Boolean).join("|") || "runtime-manifest-missing"),
+    ];
     const emissions = rowOptionValues(row, ["emission_permission", "direction", "emission", "optic_direction", "light_direction"]);
-    const direct = emissions.filter(emissionSupportsDirect).map(() => "direct-supported");
+    const direct = emissions.length ? emissions.filter(emissionSupportsDirect).map(() => "direct-supported") : ["direct-supported"];
     const indirect = emissions.filter(emissionSupportsIndirect).map(() => "indirect-supported");
     const ips = rowOptionValues(row, ["ip_option_1", "ip_options", "ip", "ip_rating"]);
     const iks = rowOptionValues(row, ["ik_option_2", "ik_options", "ik", "ik_rating"]);
@@ -801,8 +1000,17 @@ function collectRecords(snapshot, bucket) {
     pushRelationshipRecord(records, ["OPTICS"], {
       system: systemValue,
       optic: opticValue,
-      opticSub: subs,
+      opticSub: legacySubs,
       opticIndirect: indirect.length ? [opticValue] : [],
+      diffuserVar1: var1Value,
+      diffuserVar2: var2Values,
+      diffuserMaterial: material ? [material] : [],
+      diffuserSpecCodePreview: specPreviews,
+      diffuserImageReadiness: imageReadinessValues,
+      directOpticVar1: direct.length ? [var1Value] : [],
+      directOpticVar2: direct.length ? var2Values : [],
+      indirectOpticVar1: indirect.length ? [var1Value] : [],
+      indirectOpticVar2: indirect.length ? var2Values : [],
       directCapability: direct,
       indirectCapability: indirect,
       ipRating: ips,
@@ -810,7 +1018,7 @@ function collectRecords(snapshot, bucket) {
       cct: ccts,
       interiorExterior: io,
       application: app,
-    }, "OPTICS row maps system/optic to sub-optic, environment, and capability options");
+    }, "OPTICS row maps system to diffuser var 1, diffuser var 2, spec-code preview metadata, material, image readiness, IP/IK compatibility, and direct/indirect availability");
   }
 
   for (const row of liveTableRows(snapshot, "BOARDS")) {
@@ -1123,7 +1331,7 @@ function inheritedSourceForField(fieldKey, constraints = {}) {
 }
 
 function indirectFieldRequiresSupport(fieldKey) {
-  return ["opticIndirect", "indirectMatchDirect", "targetLmPerMIndirect", "cctCriIndirect", "controlTypeIndirect"].includes(fieldKey);
+  return ["opticIndirect", "indirectOpticVar1", "indirectOpticVar2", "indirectMatchDirect", "targetLmPerMIndirect", "cctCriIndirect", "controlTypeIndirect"].includes(fieldKey);
 }
 
 function upstreamIndirectSupportState(records = [], constraints = {}) {
@@ -1161,6 +1369,51 @@ function createDisabledWorkflowField(field, reason) {
   };
 }
 
+function createMetadataWorkflowField(field, baseOptions = [], records = [], constraints = {}) {
+  const selectedValue = constraints[field.fieldKey] || "";
+  const options = baseOptions.map((option) => {
+    const cascade = optionCascadeResult(field.fieldKey, option, records, constraints);
+    const selected = selectedValue ? valuesMatch(option.value, selectedValue) : false;
+    return {
+      ...option,
+      selected: Boolean(selected),
+      status: cascade.compatible ? "metadata-only" : "blocked",
+      blocked: !cascade.compatible,
+      blockedReason: cascade.compatible ? "" : "Metadata preview is blocked by current upstream constraints; shown rather than silently hidden.",
+      blockedBy: cascade.blockedBy,
+      cascadeSource: cascade.cascadeSource || option.sourceTables || [],
+      relationshipStatus: cascade.relationshipStatus,
+      relationshipMissingReason: cascade.relationshipMissingReason,
+      compatibleWithCurrentConstraints: cascade.compatible,
+      preservesManualConstraint: Boolean(selected),
+      metadataOnly: true,
+      visualChoice: option.visualChoice === true,
+      specCodeGenerationEnabled: false,
+      writes: false,
+      rawRowsExposed: false,
+    };
+  });
+  const previewOption = options.find((option) => option.blocked !== true) || options[0] || null;
+  return {
+    fieldKey: field.fieldKey,
+    label: field.label,
+    role: field.role,
+    status: previewOption ? "metadata-only" : "future-mapped",
+    sourceStatus: previewOption ? "db-reference-backed metadata-only" : "unavailable from current source",
+    sourceTables: [...(field.sourceTables || [])],
+    options,
+    selectedValue: selectedValue || previewOption?.value || "",
+    selectedLabel: selectedValue ? labelForValue(options, selectedValue) : previewOption?.label || "",
+    unavailableReason: previewOption ? "Metadata preview only. No spec code, slug, image, artefact, proof, or write is generated." : `${field.label} metadata is unavailable from the current source; no fake values emitted.`,
+    futureMapped: !previewOption,
+    disabled: true,
+    metadataOnly: true,
+    specCodeGenerationEnabled: false,
+    writes: false,
+    rawRowsExposed: false,
+  };
+}
+
 function createWorkflowField(field, { bucket, records, constraints, sourceReady }) {
   const selectedValue = constraints[field.fieldKey] || "";
   if (!sourceReady) return createUnavailableField(field, "Selector Reference source is unavailable or not parseable.");
@@ -1168,6 +1421,7 @@ function createWorkflowField(field, { bucket, records, constraints, sourceReady 
   if (field.role === "future-mapped") return createUnavailableField(field, `${field.label} is a donor workflow field but is not source-backed in this runtime slice.`);
 
   const baseOptions = optionsFor(bucket, field.fieldKey);
+  if (field.role === "metadata-only") return createMetadataWorkflowField(field, baseOptions, records, constraints);
   if (!baseOptions.length) {
     if (field.role === "entitlement-gated") {
       return createUnavailableField(field, `${field.label} is entitlement-gated. No raw USERS data is exposed, and no entitlement option is faked.`);
@@ -1239,9 +1493,9 @@ function createWorkflowField(field, { bucket, records, constraints, sourceReady 
 function createWorkflowSections({ bucket, records, constraints, sourceReady }) {
   return WORKFLOW_SECTION_DEFINITIONS.map((section) => {
     const fields = section.fields.map((field) => createWorkflowField(field, { bucket, records, constraints, sourceReady }));
-    const mappedCount = fields.filter((field) => field.sourceStatus === "db-reference-backed" || field.sourceStatus === "entitlement-gated-redacted").length;
+    const mappedCount = fields.filter((field) => String(field.sourceStatus || "").startsWith("db-reference-backed") || field.sourceStatus === "entitlement-gated-redacted").length;
     const futureMappedCount = fields.filter((field) => field.futureMapped === true).length;
-    const disabledCount = fields.filter((field) => field.disabled === true).length;
+    const disabledCount = fields.filter((field) => field.disabled === true && field.metadataOnly !== true).length;
     return {
       sectionKey: section.sectionKey,
       title: section.title,
@@ -1261,7 +1515,7 @@ function donorFieldParity(workflowSections = []) {
     fieldKey: field.fieldKey,
     label: field.label,
     sectionKey: field.sectionKey,
-    status: field.disabled ? "disabled" : field.futureMapped ? "future-mapped" : "mapped",
+    status: field.metadataOnly ? "mapped" : field.disabled ? "disabled" : field.futureMapped ? "future-mapped" : "mapped",
     sourceStatus: field.sourceStatus,
     reason: field.unavailableReason || (field.disabled ? "Disabled workflow item." : "Represented in donor workflow preview."),
     rawRowsExposed: false,
@@ -1327,7 +1581,7 @@ function deriveWorkflowConsequences(workflowSections = [], constraints = {}) {
 function workflowBlockedItems(workflowSections = []) {
   const blocked = [];
   for (const field of workflowFields(workflowSections)) {
-    if (field.disabled) continue;
+    if (field.disabled && field.metadataOnly !== true) continue;
     if (field.futureMapped) {
       blocked.push({ fieldKey: field.fieldKey, label: field.label, status: "future-mapped", reason: field.unavailableReason });
       continue;
@@ -1347,6 +1601,34 @@ function workflowBlockedItems(workflowSections = []) {
     }
   }
   return blocked;
+}
+
+function createDiffuserModelSummary(workflowSections = []) {
+  const fields = workflowFields(workflowSections);
+  const field = (fieldKey) => fields.find((item) => item.fieldKey === fieldKey) || { options: [] };
+  return {
+    firstClass: true,
+    var1FieldKey: "diffuserVar1",
+    var2FieldKey: "diffuserVar2",
+    materialFieldKey: "diffuserMaterial",
+    specCodePreviewFieldKey: "diffuserSpecCodePreview",
+    imageReadinessFieldKey: "diffuserImageReadiness",
+    directFields: ["directOpticVar1", "directOpticVar2"],
+    indirectFields: ["indirectOpticVar1", "indirectOpticVar2"],
+    var1OptionCount: field("diffuserVar1").options.length,
+    var2OptionCount: field("diffuserVar2").options.length,
+    materialOptionCount: field("diffuserMaterial").options.length,
+    specCodePreviewOptionCount: field("diffuserSpecCodePreview").options.length,
+    imageReadinessOptionCount: field("diffuserImageReadiness").options.length,
+    imageReadinessMetadataOnly: true,
+    runtimeImageAvailable: false,
+    productImagesRendered: false,
+    specCodeGenerationEnabled: false,
+    slugGenerationEnabled: false,
+    rawRowsExposed: false,
+    privatePathsExposed: false,
+    writes: false,
+  };
 }
 
 function tableSummary(snapshot) {
@@ -1412,6 +1694,7 @@ function failurePayload({ source = {}, reason = "selector_reference_options_unav
     fields,
     workflowSections,
     donorFieldParity: parity,
+    diffuserModelSummary: createDiffuserModelSummary(workflowSections),
     specialPartsEntitlementSummary: {
       usersPresent: false,
       userCount: 0,
@@ -1486,6 +1769,7 @@ export function deriveSelectorReferenceOptionsFromSnapshot(snapshot = {}, { cons
     workflowSections,
     donorFieldParity: parity,
     specialPartsEntitlementSummary: entitlementSummary,
+    diffuserModelSummary: createDiffuserModelSummary(workflowSections),
     manualConstraints,
     autoConsequences,
     blockedItems: blocked,

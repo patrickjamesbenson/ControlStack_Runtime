@@ -33,13 +33,13 @@ test("Selector product render order is summary, canonical workflow, cards, then 
 
   const summaryIndex = source.indexOf("appendSelectorSelectionTruthSummary(section");
   const workflowIndex = source.indexOf("appendSelectorWorkflowSections(section");
-  const candidateIndex = source.indexOf("appendSection(section, \"Current candidate summary\"");
+  const compactStatusIndex = source.indexOf("appendSelectorProductCompactStatus(section");
   const diagnosticsIndex = source.indexOf("const diagnosticsDetails = document.createElement(\"details\")");
 
   assert.ok(summaryIndex > 0, "selected-truth summary should render in the product surface");
   assert.ok(workflowIndex > summaryIndex, "canonical workflow should render after the summary");
-  assert.ok(candidateIndex > workflowIndex, "candidate/path cards should render after workflow sections");
-  assert.ok(diagnosticsIndex > candidateIndex, "Diagnostics should remain below the product path");
+  assert.ok(compactStatusIndex > workflowIndex, "compact candidate/path status should render after workflow sections");
+  assert.ok(diagnosticsIndex > compactStatusIndex, "Diagnostics should remain below the product path");
   assert.match(source, /diagnosticsDetails\.open = false/);
 });
 
@@ -58,8 +58,8 @@ test("workflow sections carry canonical control metadata and safety flags stay d
 
   assert.match(source, /dataset\.workflowSectionsCanonical/);
   assert.match(source, /dataset\.flatFieldsPrimary/);
-  assert.match(source, /canonical primary controls/);
-  assert.match(source, /duplicate primary controls/);
+  assert.match(source, /workflowSelectedSummary/);
+  assert.match(source, /appendWorkflowHiddenDetails/);
   assert.match(source, /specGenerationEnabled/);
   assert.match(source, /labProofAuthority/);
   assert.match(source, /controlledRecordWriteEnabled/);
