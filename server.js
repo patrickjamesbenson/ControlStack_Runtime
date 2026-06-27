@@ -10,6 +10,7 @@ import {
   refreshAuthorityReferenceMaterialiser,
 } from "./packages/workspace-kernel/authorityReferenceMaterialiserService.js";
 import { buildSelectorReferenceStatus, SELECTOR_REFERENCE_STATUS_PATH } from "./packages/workspace-kernel/selectorReferenceService.js";
+import { buildSelectorReferenceOptions, SELECTOR_REFERENCE_OPTIONS_PATH } from "./packages/workspace-kernel/selectorReferenceOptionsService.js";
 
 import { buildBoardDataStatus, BOARD_DATA_STATUS_PATH } from "./packages/workspace-kernel/boardDataStatusService.js";
 import { buildIesBuilderStatus, IES_BUILDER_STATUS_PATH } from "./packages/workspace-kernel/iesBuilderStatusService.js";
@@ -904,6 +905,55 @@ async function sendAuthorityReferenceStatus(res) {
 async function sendSelectorReferenceStatus(res) {
   sendJson(res, 200, await buildSelectorReferenceStatus({
     sourcePath: AUTH_REF_DEFAULT_SNAPSHOT_PATH,
+  }));
+}
+
+const SELECTOR_OPTION_CONSTRAINT_KEYS = Object.freeze([
+  "system",
+  "application",
+  "interiorExterior",
+  "cct",
+  "optic",
+  "controlType",
+  "driver",
+  "ipRating",
+  "ikRating",
+  "mountStyle",
+  "bodyFinish",
+  "emergency",
+  "sensor",
+  "specialParts",
+]);
+
+function readSelectorOptionConstraints(requestUrl) {
+  const constraints = {};
+  for (const key of SELECTOR_OPTION_CONSTRAINT_KEYS) {
+    const value = String(requestUrl.searchParams.get(key) || "").trim();
+    if (value) constraints[key] = value;
+  }
+
+  const encoded = String(requestUrl.searchParams.get("constraints") || "").trim();
+  if (encoded) {
+    try {
+      const parsed = JSON.parse(encoded);
+      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+        for (const key of SELECTOR_OPTION_CONSTRAINT_KEYS) {
+          const value = String(parsed[key] || "").trim();
+          if (value) constraints[key] = value;
+        }
+      }
+    } catch {
+      constraints.constraintsParseWarning = "ignored";
+    }
+  }
+  delete constraints.constraintsParseWarning;
+  return constraints;
+}
+
+async function sendSelectorReferenceOptions(res, requestUrl) {
+  sendJson(res, 200, await buildSelectorReferenceOptions({
+    sourcePath: AUTH_REF_DEFAULT_SNAPSHOT_PATH,
+    constraints: readSelectorOptionConstraints(requestUrl),
   }));
 }
 
@@ -2252,6 +2302,7 @@ const server = createServer(async (req, res) => {
       },
       authorityReferenceStatus: AUTH_REF_STATUS_PATH,
       selectorReferenceStatus: SELECTOR_REFERENCE_STATUS_PATH,
+      selectorReferenceOptions: SELECTOR_REFERENCE_OPTIONS_PATH,
       boardDataStatus: BOARD_DATA_STATUS_PATH,
       iesBuilderStatus: IES_BUILDER_STATUS_PATH,
       labProofStatus: LAB_PROOF_STATUS_PATH,
@@ -2303,6 +2354,11 @@ const server = createServer(async (req, res) => {
 
   if (requestUrl.pathname === SELECTOR_REFERENCE_STATUS_PATH) {
     await sendSelectorReferenceStatus(res);
+    return;
+  }
+
+  if (requestUrl.pathname === SELECTOR_REFERENCE_OPTIONS_PATH) {
+    await sendSelectorReferenceOptions(res, requestUrl);
     return;
   }
 

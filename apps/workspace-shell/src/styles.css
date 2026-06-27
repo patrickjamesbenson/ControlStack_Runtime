@@ -507,6 +507,23 @@ img.cs-shell__rail-icon,
 
 .cs-shell__fallback, .cs-shell__plugin-fallback, .cs-selector-proof, .cs-diagnostics { display: grid; gap: 14px; }
 .cs-shell__fallback, .cs-shell__plugin-fallback { padding: 18px; border: 1px dashed var(--cs-border); border-radius: var(--cs-radius-lg); background: var(--cs-panel-soft); }
+.cs-selector-product { display: grid; gap: 14px; padding: 18px; border: 1px solid var(--cs-border); border-radius: var(--cs-radius-lg); background: var(--cs-panel); box-shadow: var(--cs-shadow-sm); }
+.cs-selector-product__header { display: grid; gap: 8px; }
+.cs-selector-product__header h3 { margin: 0; font-size: 22px; line-height: 28px; }
+.cs-selector-product__header p, .cs-selector-product__safety, .cs-selector-product__proof { margin: 0; color: var(--cs-muted); font-size: 13px; line-height: 20px; }
+.cs-selector-product__safety { padding: 10px 12px; border: 1px solid var(--cs-info-border); border-radius: var(--cs-radius-md); background: var(--cs-info-bg); color: var(--cs-text); }
+.cs-selector-product__proof { font-weight: 700; color: var(--cs-text); }
+.cs-selector-product__badges { display: flex; flex-wrap: wrap; gap: 8px; padding: 0; margin: 0; list-style: none; }
+.cs-selector-product__badges li { padding: 5px 9px; border: 1px solid var(--cs-border); border-radius: var(--cs-radius-full); background: var(--cs-panel-soft); font-size: 11px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; }
+.cs-selector-product__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; }
+.cs-selector-product__field { display: grid; gap: 8px; min-width: 0; padding: 12px; border: 1px solid var(--cs-border); border-radius: var(--cs-radius-md); background: var(--cs-panel-soft); }
+.cs-selector-product__field label { font-size: 12px; font-weight: 800; line-height: 16px; text-transform: uppercase; letter-spacing: 0.04em; }
+.cs-selector-product__field select { width: 100%; min-width: 0; min-height: 36px; padding: 6px 8px; border: 1px solid var(--cs-border-strong); border-radius: var(--cs-radius-sm); background: #ffffff; color: var(--cs-text); }
+.cs-selector-product__field select:disabled { color: var(--cs-muted); background: #f0f0f0; cursor: not-allowed; }
+.cs-selector-product__field[data-field-status="future-mapped"], .cs-selector-product__field[data-field-status="blocked"] { border-style: dashed; }
+.cs-selector-diagnostics { padding: 12px 14px; border: 1px solid var(--cs-border); border-radius: var(--cs-radius-lg); background: var(--cs-panel-soft); }
+.cs-selector-diagnostics > summary { cursor: pointer; font-weight: 800; }
+.cs-selector-diagnostics__body { display: grid; gap: 14px; padding-top: 14px; }
 .cs-selector-proof__meta, .cs-shell__diagnostic-list, .cs-diagnostics__meta { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 8px 12px; margin: 0; }
 .cs-selector-proof__meta dt, .cs-shell__diagnostic-list dt, .cs-diagnostics__meta dt { color: var(--cs-muted); }
 .cs-selector-proof__meta dd, .cs-shell__diagnostic-list dd, .cs-diagnostics__meta dd { margin: 0; word-break: break-word; }

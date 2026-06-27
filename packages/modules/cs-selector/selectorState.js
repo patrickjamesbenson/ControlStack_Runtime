@@ -790,6 +790,19 @@ function createInitialSelectorStateContract() {
   });
 }
 
+function cloneDbBackedSelectorState(value = {}) {
+  const manualConstraints = value.manualConstraints && typeof value.manualConstraints === "object" && !Array.isArray(value.manualConstraints)
+    ? Object.fromEntries(Object.entries(value.manualConstraints).map(([fieldKey, constraint]) => [fieldKey, { ...constraint }]))
+    : {};
+  return {
+    source: "module-local safe DB/reference-backed selector constraints",
+    readOnly: true,
+    writes: false,
+    manualConstraints,
+    lastAction: value.lastAction || "mounted",
+  };
+}
+
 function cloneSelectorStateContract(contract = {}) {
   const sectionFieldContract = cloneSectionFieldContract(contract.sectionFieldContract);
   const manualConstraints = cloneObjectBucket(contract.manualConstraints);
@@ -825,6 +838,7 @@ export function createSelectorState() {
     localDirty: false,
     lastAction: "mounted",
     selectorStateContract: createInitialSelectorStateContract(),
+    dbBackedSelector: cloneDbBackedSelectorState(),
   };
 
   function snapshot() {
@@ -832,6 +846,7 @@ export function createSelectorState() {
       ...state,
       expanderSections: { ...state.expanderSections },
       selectorStateContract: cloneSelectorStateContract(state.selectorStateContract),
+      dbBackedSelector: cloneDbBackedSelectorState(state.dbBackedSelector),
     };
   }
 
@@ -903,6 +918,38 @@ export function createSelectorState() {
         });
         state.localDirty = true;
         state.lastAction = `manual-constraint-cleared:${fieldKey}`;
+      }
+      return this.getSnapshot();
+    },
+
+    setDbBackedSelectorFieldValue(fieldKey, value, label = "") {
+      const normalisedValue = normaliseManualValue(value);
+      if (!normalisedValue) return this.clearDbBackedSelectorFieldValue(fieldKey);
+      const next = cloneDbBackedSelectorState(state.dbBackedSelector);
+      next.manualConstraints[fieldKey] = {
+        fieldKey,
+        value: normalisedValue,
+        valueLabel: normaliseManualValue(label) || normalisedValue,
+        kind: "manual-constraint",
+        source: "module-local UI constraint over safe DB/reference options",
+        mutable: true,
+        writes: false,
+      };
+      next.lastAction = `db-backed-manual-constraint:${fieldKey}`;
+      state.dbBackedSelector = next;
+      state.localDirty = true;
+      state.lastAction = next.lastAction;
+      return this.getSnapshot();
+    },
+
+    clearDbBackedSelectorFieldValue(fieldKey) {
+      const next = cloneDbBackedSelectorState(state.dbBackedSelector);
+      if (Object.prototype.hasOwnProperty.call(next.manualConstraints, fieldKey)) {
+        delete next.manualConstraints[fieldKey];
+        next.lastAction = `db-backed-manual-constraint-cleared:${fieldKey}`;
+        state.dbBackedSelector = next;
+        state.localDirty = true;
+        state.lastAction = next.lastAction;
       }
       return this.getSnapshot();
     },

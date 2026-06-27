@@ -4,6 +4,7 @@ import {
   AUTHORITY_REFERENCE_MATERIALISED_TARGET_PATH,
   AUTHORITY_REFERENCE_MATERIALISER_TARGET_LABEL,
 } from "./authorityReferenceMaterialiserService.js";
+import { deriveSelectorReferenceOptionsFromSnapshot } from "./selectorReferenceOptionsService.js";
 
 export const SELECTOR_REFERENCE_STATUS_PATH = "/api/selector-reference/status";
 
@@ -372,6 +373,11 @@ function statusFailure({ sourceStat = null, materialisedSnapshot = null, readabl
       diagnosticOnly: true,
       productionProof: false,
     },
+    selectorOptions: deriveSelectorReferenceOptionsFromSnapshot(emptySnapshot, {
+      ok: false,
+      source,
+      constraints: {},
+    }),
     fallbackRiskFields: fallbackRiskFields(emptySnapshot),
     warnings: [
       reason,
@@ -436,6 +442,11 @@ export async function buildSelectorReferenceStatus({
       missingTables,
       usersRedactionStatus: usersRedactionStatus(safeSnapshot),
       pureRefStateStatus: pureRefStateStatus(safeSnapshot),
+      selectorOptions: deriveSelectorReferenceOptionsFromSnapshot(safeSnapshot, {
+        ok: parseable,
+        source,
+        constraints: {},
+      }),
       fallbackRiskFields: fallbackRiskFields(safeSnapshot),
       warnings,
     };

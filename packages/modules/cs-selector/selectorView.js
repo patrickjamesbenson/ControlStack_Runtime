@@ -742,6 +742,89 @@ function appendSelectorReferencePanel(parent, viewModel) {
   parent.appendChild(warningSection);
 }
 
+function appendBadgeList(parent, badges = []) {
+  const list = document.createElement("ul");
+  list.className = "cs-selector-product__badges";
+  for (const badge of badges) appendText(list, "li", badge);
+  parent.appendChild(list);
+}
+
+function appendSelectorProductSurface(parent, surface = {}) {
+  const section = document.createElement("section");
+  section.className = "cs-selector-product";
+  section.dataset.selectorSurface = "db-backed-preview";
+
+  const header = document.createElement("div");
+  header.className = "cs-selector-product__header";
+  appendText(header, "h3", surface.title || "CS Selector Preview");
+  appendText(header, "p", surface.subtitle || "Read-only DB-backed candidate preview. Manual selections are constraints; auto selections are consequences.");
+  appendBadgeList(header, surface.badges || ["source pending", "spec gate incomplete", "not Lab Proof", "writes disabled"]);
+  section.appendChild(header);
+
+  appendText(section, "p", surface.requiredSafetyCopy || "Read-only preview. No spec, slug, IES, payload, RunTable, Lab Proof, Controlled Record, RREG approval, custody transfer, Board Data write, or hidden write-back is created here.", "cs-selector-product__safety");
+  appendText(section, "p", surface.proofCopy || "Selector previews selection readiness. Lab Proof proves later.", "cs-selector-product__proof");
+
+  const grid = document.createElement("div");
+  grid.className = "cs-selector-product__grid";
+  for (const field of surface.fields || []) {
+    const card = document.createElement("article");
+    card.className = "cs-selector-product__field";
+    card.dataset.fieldKey = field.fieldKey;
+    card.dataset.fieldStatus = field.status || "unknown";
+
+    const label = document.createElement("label");
+    label.htmlFor = `cs-selector-product-${field.fieldKey}`;
+    label.textContent = field.label || field.fieldKey;
+    card.appendChild(label);
+
+    const select = document.createElement("select");
+    select.id = `cs-selector-product-${field.fieldKey}`;
+    select.dataset.fieldKey = field.fieldKey;
+    select.disabled = field.futureMapped === true || !(field.options || []).length;
+
+    const emptyOption = document.createElement("option");
+    emptyOption.value = "";
+    emptyOption.textContent = field.futureMapped === true
+      ? "Unavailable from current source — future mapped"
+      : "No manual constraint / keep preview consequence";
+    select.appendChild(emptyOption);
+
+    for (const option of field.options || []) {
+      const optionElement = document.createElement("option");
+      optionElement.value = option.value;
+      const suffix = option.blocked ? " — blocked / missing" : option.sourceStatus === "db-reference-backed" ? "" : ` — ${option.sourceStatus || "mapped"}`;
+      optionElement.textContent = `${option.label || option.value}${suffix}`;
+      optionElement.disabled = option.blocked === true && option.selected !== true;
+      select.appendChild(optionElement);
+    }
+    select.value = field.selectedValue || "";
+    select.addEventListener("change", () => {
+      if (select.value) surface.setFieldValue?.(field.fieldKey, select.value);
+      else surface.clearFieldValue?.(field.fieldKey);
+    });
+    card.appendChild(select);
+
+    appendDefinitionList(card, [
+      ["source", field.sourceStatus || "unavailable from current source"],
+      ["state", field.status || "unknown"],
+      ["role", field.role || "manual-constraint"],
+      ["selected", field.selectedLabel || "none"],
+      ["options", Array.isArray(field.options) ? field.options.length : 0],
+      ["reason", field.unavailableReason || "DB/reference-backed option labels only; no raw rows exposed"],
+    ]);
+    grid.appendChild(card);
+  }
+  section.appendChild(grid);
+
+  appendSection(section, "Current candidate summary", surface.candidateSummaryRows || [["candidate state", "default preview"]]);
+  appendSection(section, "Manual constraints", surface.manualConstraintRows || [["manual constraints", "none yet"]]);
+  appendSection(section, "Auto consequences", surface.autoConsequenceRows || [["auto consequences", "none mapped"]]);
+  appendSection(section, "Blocked / missing / incompatible items", surface.blockedRows || [["blocked / missing", "none"]]);
+  appendSection(section, "Path to spec-ready later", surface.pathRows || [["future spec-ready", "requires complete spec gate later"]]);
+
+  parent.appendChild(section);
+}
+
 export function renderSelectorView(container, viewModel) {
   clearElement(container);
   const article = document.createElement("article");
@@ -749,15 +832,28 @@ export function renderSelectorView(container, viewModel) {
   article.dataset.module = viewModel.moduleId;
 
   const intro = document.createElement("div");
-  appendText(intro, "p", "Selector migration surface", "cs-shell__eyebrow");
-  appendText(intro, "h2", "cs_selector shell context consumer");
-  appendText(intro, "p", "Selector now shows a shell-owned downstream context foundation. This is contract-only: Scene Builder, EGRES, Compliance Matters, Ceiling, engine, RunTable, and payload remain out of scope.");
+  appendText(intro, "p", "Runtime-native Selector surface", "cs-shell__eyebrow");
+  appendText(intro, "h2", "CS Selector Preview");
+  appendText(intro, "p", "Read-only DB-backed candidate preview. Manual selections are constraints; auto selections are consequences.");
   article.appendChild(intro);
 
-  appendSelectorExpanderShell(article, viewModel);
-  appendSelectorReferencePanel(article, viewModel);
+  appendSelectorProductSurface(article, viewModel.selectorSurface || {});
 
-  appendSection(article, "Identity and shell authority", [
+  const diagnosticsDetails = document.createElement("details");
+  diagnosticsDetails.className = "cs-selector-diagnostics";
+  diagnosticsDetails.open = false;
+  const diagnosticsSummary = document.createElement("summary");
+  diagnosticsSummary.textContent = "Diagnostics";
+  diagnosticsDetails.appendChild(diagnosticsSummary);
+  const diagnostics = document.createElement("div");
+  diagnostics.className = "cs-selector-diagnostics__body";
+  diagnosticsDetails.appendChild(diagnostics);
+  article.appendChild(diagnosticsDetails);
+
+  appendSelectorExpanderShell(diagnostics, viewModel);
+  appendSelectorReferencePanel(diagnostics, viewModel);
+
+  appendSection(diagnostics, "Identity and shell authority", [
     ["identity owner", viewModel.identity.owner],
     ["identity status", viewModel.identity.status],
     ["user", viewModel.identity.name],
@@ -778,7 +874,7 @@ export function renderSelectorView(container, viewModel) {
     ["selector visible", viewModel.identity.canViewSelector],
   ]);
 
-  appendSection(article, "Current project", [
+  appendSection(diagnostics, "Current project", [
     ["owner", viewModel.project.owner],
     ["status", viewModel.project.status],
     ["title", viewModel.project.title],
@@ -791,7 +887,7 @@ export function renderSelectorView(container, viewModel) {
     ["restore", viewModel.project.restoreStatus],
   ]);
 
-  appendSection(article, "Visibility", [
+  appendSection(diagnostics, "Visibility", [
     ["owner", viewModel.visibility.owner],
     ["status", viewModel.visibility.status],
     ["selector visible", viewModel.visibility.selectorVisible],
@@ -802,7 +898,7 @@ export function renderSelectorView(container, viewModel) {
     ["hidden modules", viewModel.visibility.hiddenModules],
   ]);
 
-  appendSection(article, "Timeline policy consumer", [
+  appendSection(diagnostics, "Timeline policy consumer", [
     ["owner", viewModel.timelinePolicy.owner],
     ["status", viewModel.timelinePolicy.status],
     ["source", viewModel.timelinePolicy.source],
@@ -825,11 +921,11 @@ export function renderSelectorView(container, viewModel) {
     ["local timeline refs", viewModel.timelinePolicy.itemRefs],
   ]);
 
-  appendSection(article, "Active Timeline filter diagnostics", readTimelineFilteringRows(viewModel));
-  appendTimelineWarnings(article, viewModel);
-  appendSection(article, "Developer diagnostics: Timeline / Special Parts", readSpecialPartsDiagnosticsRows(viewModel));
+  appendSection(diagnostics, "Active Timeline filter diagnostics", readTimelineFilteringRows(viewModel));
+  appendTimelineWarnings(diagnostics, viewModel);
+  appendSection(diagnostics, "Developer diagnostics: Timeline / Special Parts", readSpecialPartsDiagnosticsRows(viewModel));
 
-  appendSection(article, "Downstream context foundation", [
+  appendSection(diagnostics, "Downstream context foundation", [
     ["owner", viewModel.downstream.owner],
     ["status", viewModel.downstream.status],
     ["source", viewModel.downstream.source],
@@ -845,7 +941,7 @@ export function renderSelectorView(container, viewModel) {
     ["planned consumers", viewModel.downstream.consumers],
   ]);
 
-  appendSection(article, "Downstream readiness", [
+  appendSection(diagnostics, "Downstream readiness", [
     ["Scene Builder", viewModel.downstream.sceneBuilderReadiness],
     ["Emergency / EGRES", viewModel.downstream.egresReadiness],
     ["Compliance Matters", viewModel.downstream.complianceReadiness],
@@ -855,7 +951,7 @@ export function renderSelectorView(container, viewModel) {
     ["payload restored", viewModel.downstream.constraints.payloadRestored],
   ]);
 
-  appendSection(article, "Shared actions", [
+  appendSection(diagnostics, "Shared actions", [
     ["handoff", viewModel.handoff.status],
     ["crm", viewModel.crm.status],
     ["crm writes", viewModel.crm.writeFlowsEnabled],
@@ -869,12 +965,12 @@ export function renderSelectorView(container, viewModel) {
     `localDirty:${viewModel.local.localDirty}`,
     `lastAction:${viewModel.local.lastAction}`,
   ]);
-  article.appendChild(localSection);
+  diagnostics.appendChild(localSection);
 
   const deferredSection = document.createElement("section");
   appendText(deferredSection, "h3", "Deferred actions");
   appendPillList(deferredSection, viewModel.deferredActions);
-  article.appendChild(deferredSection);
-  appendText(article, "p", viewModel.responsiveNote, "cs-shell__eyebrow");
+  diagnostics.appendChild(deferredSection);
+  appendText(diagnostics, "p", viewModel.responsiveNote, "cs-shell__eyebrow");
   container.appendChild(article);
 }

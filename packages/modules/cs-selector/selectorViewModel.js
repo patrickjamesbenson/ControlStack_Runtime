@@ -915,6 +915,271 @@ function createManualConstraintBehaviour(contract = {}, selectorState, onLocalSt
   };
 }
 
+function optionValuesMatch(left, right) {
+  return String(left || "").trim().toLowerCase() === String(right || "").trim().toLowerCase();
+}
+
+function dbConstraintMap(local = {}) {
+  const constraints = local.dbBackedSelector?.manualConstraints;
+  if (!constraints || typeof constraints !== "object" || Array.isArray(constraints)) return {};
+  return constraints;
+}
+
+function dbConstraintValueMap(local = {}) {
+  return Object.fromEntries(Object.entries(dbConstraintMap(local)).map(([fieldKey, record]) => [fieldKey, String(record?.value || "").trim()]).filter(([, value]) => value));
+}
+
+function dbOptionsPayload(selectorReferenceStatus = {}) {
+  return selectorReferenceStatus.selectorOptions || selectorReferenceStatus.options || selectorReferenceStatus;
+}
+
+function dbOptionsFields(selectorReferenceStatus = {}) {
+  const payload = dbOptionsPayload(selectorReferenceStatus);
+  return Array.isArray(payload.fields) ? payload.fields : [];
+}
+
+function dbOptionField(selectorReferenceStatus = {}, fieldKey) {
+  return dbOptionsFields(selectorReferenceStatus).find((field) => field.fieldKey === fieldKey) || null;
+}
+
+function dbOptionFieldOptions(selectorReferenceStatus = {}, fieldKey) {
+  const field = dbOptionField(selectorReferenceStatus, fieldKey);
+  return Array.isArray(field?.options) ? field.options : [];
+}
+
+function dbOptionLabel(selectorReferenceStatus = {}, fieldKey, value) {
+  const option = dbOptionFieldOptions(selectorReferenceStatus, fieldKey).find((item) => optionValuesMatch(item.value, value));
+  return option?.label || String(value || "");
+}
+
+function dbOptionsSourceReady(selectorReferenceStatus = {}) {
+  const payload = dbOptionsPayload(selectorReferenceStatus);
+  if (payload.sourceReady === true) return true;
+  const source = payload.source || selectorReferenceStatus.source || {};
+  return selectorReferenceStatus.ok === true && source.present !== false && source.readable !== false && source.parseable !== false;
+}
+
+function dbSelectedConstraintRows(surface = {}) {
+  const constraints = Array.isArray(surface.manualConstraints) ? surface.manualConstraints : [];
+  if (!constraints.length) return [["manual constraints", "none yet"]];
+  return constraints.map((constraint) => [constraint.label || constraint.fieldKey, `${constraint.valueLabel || constraint.value} — ${constraint.status || "manual constraint"}`]);
+}
+
+function dbAutoConsequenceRows(surface = {}) {
+  const consequences = Array.isArray(surface.autoConsequences) ? surface.autoConsequences : [];
+  if (!consequences.length) return [["auto consequences", "none mapped from current source"]];
+  return consequences.map((consequence) => [consequence.label || consequence.fieldKey, `${consequence.valueLabel || consequence.value} — ${consequence.reason || "auto consequence"}`]);
+}
+
+function dbBlockedRows(surface = {}) {
+  const blocked = Array.isArray(surface.blockedItems) ? surface.blockedItems : [];
+  if (!blocked.length) return [["blocked / missing", "none"]];
+  return blocked.map((item) => [item.label || item.fieldKey || "field", item.reason || item.status || "blocked"]);
+}
+
+function createDbBackedCandidateSummaryRows(surface = {}) {
+  const summary = surface.candidateSummary || {};
+  return [
+    ["candidate state", summary.state || "default preview"],
+    ["source readiness", surface.sourceReady === true ? "ready" : "unavailable"],
+    ["option fields mapped", summary.optionFieldCount ?? 0],
+    ["available fields", summary.availableFieldCount ?? 0],
+    ["manual constraints", summary.manualConstraintCount ?? 0],
+    ["auto consequences", summary.autoConsequenceCount ?? 0],
+    ["blocked / missing items", summary.blockedCount ?? 0],
+    ["spec gate", "incomplete — preview-ready does not mean spec-ready"],
+    ["Lab Proof", "not established — Selector preview is not proof authority"],
+    ["writes", "disabled"],
+  ];
+}
+
+function createDbBackedPathRows(surface = {}) {
+  const path = Array.isArray(surface.pathToSpecReady) ? surface.pathToSpecReady : [];
+  const rows = path.length ? path.map((item, index) => [`step ${index + 1}`, item]) : [["future spec-ready", "requires complete spec gate later"]];
+  rows.push(["Selector boundary", "Selector previews selection readiness. Lab Proof proves later."]);
+  return rows;
+}
+
+function dbOptionSearchText(option = {}) {
+  return String(`${option.value || ""} ${option.label || ""}`).trim().toLowerCase();
+}
+
+function dbConstraintSearchText(value = "") {
+  return String(value || "").trim().toLowerCase();
+}
+
+function dbOptionLocallyCompatible(fieldKey, option = {}, constraints = {}, selectorReferenceStatus = {}) {
+  const text = dbOptionSearchText(option);
+  const system = dbConstraintSearchText(constraints.system);
+  const systemLabel = constraints.system ? dbConstraintSearchText(dbOptionLabel(selectorReferenceStatus, "system", constraints.system)) : "";
+  if (fieldKey === "optic" && system) {
+    const tokens = [system, ...system.split("|"), systemLabel, ...systemLabel.split("|")]
+      .map((item) => item.trim())
+      .filter((item) => item.length > 1);
+    if (tokens.some((token) => text.includes(token))) return true;
+    return false;
+  }
+
+  const io = dbConstraintSearchText(constraints.interiorExterior);
+  if (fieldKey === "ipRating" && (io.includes("exterior") || io.includes("outdoor"))) return text.includes("ip65") || text.includes("ip66") || text.includes("ip67");
+
+  const application = dbConstraintSearchText(constraints.application);
+  if (fieldKey === "ikRating" && (application.includes("school") || application.includes("education"))) return text.includes("ik10");
+
+  const control = dbConstraintSearchText(constraints.controlType);
+  if (fieldKey === "driver" && control) {
+    if (control.includes("dali")) return text.includes("dali") || text.includes("dt8");
+    if (control.includes("non") || control.includes("switch")) return text.includes("non") || text.includes("switch") || text.includes("standard");
+  }
+
+  if (fieldKey === "specialParts") {
+    const ip = dbConstraintSearchText(constraints.ipRating);
+    const mount = dbConstraintSearchText(constraints.mountStyle);
+    const emergency = dbConstraintSearchText(constraints.emergency);
+    const sensor = dbConstraintSearchText(constraints.sensor);
+    if (emergency && !(text.includes("emergency") || text.includes("egress"))) return false;
+    if (sensor && !(text.includes("sensor") || text.includes("pir") || text.includes("occupancy") || text.includes("microwave"))) return false;
+    if (ip.includes("ip65") && !(text.includes("ip65") || text.includes("kit") || text.includes("end"))) return false;
+    if (mount.includes("suspend") && !(text.includes("suspend") || text.includes("wire") || text.includes("kit"))) return false;
+  }
+
+  return true;
+}
+
+function enrichDbOptionFields(selectorReferenceStatus = {}, local = {}) {
+  const selectedConstraints = dbConstraintValueMap(local);
+  return dbOptionsFields(selectorReferenceStatus).map((field) => {
+    const selectedValue = selectedConstraints[field.fieldKey] || "";
+    const options = Array.isArray(field.options) ? field.options.map((option) => {
+      const selected = selectedValue ? optionValuesMatch(option.value, selectedValue) : option.selected === true;
+      const locallyCompatible = dbOptionLocallyCompatible(field.fieldKey, option, selectedConstraints, selectorReferenceStatus);
+      const blocked = option.blocked === true || !locallyCompatible;
+      return {
+        ...option,
+        selected,
+        status: blocked ? "blocked" : (option.status || "available"),
+        blocked,
+        blockedReason: blocked
+          ? option.blockedReason || "Blocked by current manual constraints; shown rather than silently hidden."
+          : option.blockedReason || "",
+      };
+    }) : [];
+    return {
+      ...field,
+      status: options.some((option) => option.status === "available") ? field.status || "available" : field.futureMapped ? "future-mapped" : "blocked",
+      selectedValue,
+      selectedLabel: selectedValue ? dbOptionLabel(selectorReferenceStatus, field.fieldKey, selectedValue) : "",
+      options,
+    };
+  });
+}
+
+function createDbManualConstraints(selectorReferenceStatus = {}, local = {}) {
+  const fields = enrichDbOptionFields(selectorReferenceStatus, local);
+  return Object.entries(dbConstraintMap(local)).map(([fieldKey, constraint]) => {
+    const field = fields.find((item) => item.fieldKey === fieldKey);
+    const option = field?.options?.find((item) => optionValuesMatch(item.value, constraint.value));
+    return {
+      fieldKey,
+      label: field?.label || constraint.label || fieldKey,
+      value: constraint.value,
+      valueLabel: option?.label || constraint.valueLabel || constraint.value,
+      status: option?.blocked ? "blocked" : "manual constraint",
+      blocked: option?.blocked === true,
+      reason: option?.blockedReason || "manual selection is treated as a durable constraint",
+      mutable: true,
+      writes: false,
+    };
+  });
+}
+
+function createDbAvailableConsequence(fields = [], fieldKey, constraints = {}) {
+  const field = fields.find((item) => item.fieldKey === fieldKey);
+  if (!field || constraints[fieldKey]) return null;
+  const option = (field.options || []).find((item) => item.status === "available") || null;
+  if (!option) return null;
+  return {
+    fieldKey,
+    label: field.label || fieldKey,
+    value: option.value,
+    valueLabel: option.label,
+    kind: "auto-consequence",
+    source: "safe Selector Reference option state",
+    reason: fieldKey === "driver"
+      ? "consequence of current control/system option state where mapped"
+      : "consequence of current IP, mounting, emergency, and sensor option state where mapped",
+    mutable: true,
+    writes: false,
+  };
+}
+
+function createDbAutoConsequences(fields = [], local = {}) {
+  const constraints = dbConstraintValueMap(local);
+  return [
+    createDbAvailableConsequence(fields, "driver", constraints),
+    createDbAvailableConsequence(fields, "specialParts", constraints),
+  ].filter(Boolean);
+}
+
+function createDbBackedSelectorSurface(selectorReferenceStatus = {}, local = {}, selectorState, onLocalStateChange) {
+  const payload = dbOptionsPayload(selectorReferenceStatus);
+  const sourceReady = dbOptionsSourceReady(selectorReferenceStatus);
+  const fields = enrichDbOptionFields(selectorReferenceStatus, local);
+  const manualConstraints = createDbManualConstraints(selectorReferenceStatus, local);
+  const autoConsequences = createDbAutoConsequences(fields, local);
+  const blockedItems = [
+    ...(Array.isArray(payload.blockedItems) ? payload.blockedItems : []),
+    ...manualConstraints.filter((constraint) => constraint.blocked).map((constraint) => ({
+      fieldKey: constraint.fieldKey,
+      label: constraint.label,
+      value: constraint.value,
+      valueLabel: constraint.valueLabel,
+      status: "blocked",
+      reason: constraint.reason,
+    })),
+  ];
+  const summary = {
+    ...(payload.candidateSummary || {}),
+    manualConstraintCount: manualConstraints.length,
+    autoConsequenceCount: autoConsequences.length,
+    blockedCount: blockedItems.length,
+  };
+  return {
+    title: "CS Selector Preview",
+    subtitle: "Read-only DB-backed candidate preview. Manual selections are constraints; auto selections are consequences.",
+    sourceReady,
+    status: payload.status || selectorReferenceStatus.status || "not-requested",
+    badges: [
+      sourceReady ? "source ready" : "source unavailable",
+      summary.state || (manualConstraints.length ? "manual constraints preview" : "default preview"),
+      "spec gate incomplete",
+      "not Lab Proof",
+      "writes disabled",
+    ],
+    requiredSafetyCopy: "Read-only preview. No spec, slug, IES, payload, RunTable, Lab Proof, Controlled Record, RREG approval, custody transfer, Board Data write, or hidden write-back is created here.",
+    proofCopy: "Selector previews selection readiness. Lab Proof proves later.",
+    fields,
+    manualConstraints,
+    autoConsequences,
+    blockedItems,
+    candidateSummary: summary,
+    candidateSummaryRows: createDbBackedCandidateSummaryRows({ ...payload, sourceReady, candidateSummary: summary, blockedItems }),
+    manualConstraintRows: dbSelectedConstraintRows({ manualConstraints }),
+    autoConsequenceRows: dbAutoConsequenceRows({ autoConsequences }),
+    blockedRows: dbBlockedRows({ blockedItems }),
+    pathRows: createDbBackedPathRows(payload),
+    setFieldValue(fieldKey, value) {
+      const label = dbOptionLabel(selectorReferenceStatus, fieldKey, value);
+      selectorState?.setDbBackedSelectorFieldValue?.(fieldKey, value, label);
+      onLocalStateChange?.();
+    },
+    clearFieldValue(fieldKey) {
+      selectorState?.clearDbBackedSelectorFieldValue?.(fieldKey);
+      onLocalStateChange?.();
+    },
+  };
+}
+
 const COMPATIBILITY_RUNTIME_STATUS_FLAGS = Object.freeze({
   readOnly: true,
   diagnosticOnly: true,
@@ -1801,6 +2066,7 @@ export function createSelectorViewModel({ adapter, selectorState, selectorRefere
     phase: snapshots.diagnostics?.phase || "selector-fed-downstream-context-foundation",
     route: snapshots.route,
     local,
+    selectorSurface: createDbBackedSelectorSurface(selectorReferenceStatus, local, selectorState, onLocalStateChange),
     expanderShell: createSelectorExpanderShell(local, selectorState, onLocalStateChange, selectorReferenceStatus),
     identity: {
       owner: identity.owner,
