@@ -1116,13 +1116,51 @@ function systemOptionMatchesSelection(option = {}, selectedSystem = "") {
   return Array.from(normalisedSelectionTokens(variant)).every((token) => selectedTokens.has(token));
 }
 
+function workflowOpticSystemReferenceKeys(workflowSections = []) {
+  const keys = new Set();
+  const opticFieldKeys = new Set([
+    "optic",
+    "opticSub",
+    "opticIndirect",
+    "diffuserVar1",
+    "diffuserVar2",
+    "directOpticVar1",
+    "directOpticVar2",
+    "indirectOpticVar1",
+    "indirectOpticVar2",
+  ]);
+  for (const section of workflowSections) {
+    for (const field of section.fields || []) {
+      if (!opticFieldKeys.has(field.fieldKey)) continue;
+      for (const option of field.options || []) {
+        const key = String(option.systemReferenceKey || "").trim();
+        if (key) keys.add(key.toLowerCase());
+      }
+      for (const option of field.deferredOptions || []) {
+        const key = String(option.systemReferenceKey || "").trim();
+        if (key) keys.add(key.toLowerCase());
+      }
+    }
+  }
+  return keys;
+}
+
 function workflowSystemReferenceKey(workflowSections = [], selectedSystem = "") {
   if (!selectedSystem) return "";
+  const opticSystemKeys = workflowOpticSystemReferenceKeys(workflowSections);
   for (const section of workflowSections) {
     const field = (section.fields || []).find((item) => item.fieldKey === "system");
     if (!field) continue;
     const option = (field.options || []).find((item) => systemOptionMatchesSelection(item, selectedSystem));
-    if (option) return option.systemReferenceKey || systemTokenFromSelection(option.value || option.label);
+    if (!option) continue;
+    const candidates = [
+      option.systemVariantKey,
+      option.systemReferenceKey,
+      systemTokenFromSelection(option.value || option.label),
+    ].map((item) => String(item || "").trim()).filter(Boolean);
+    const matchedOpticKey = candidates.find((candidate) => opticSystemKeys.has(candidate.toLowerCase()));
+    if (matchedOpticKey) return matchedOpticKey;
+    return option.systemReferenceKey || systemTokenFromSelection(option.value || option.label);
   }
   return "";
 }
@@ -1177,28 +1215,39 @@ function enrichDbWorkflowSections(selectorReferenceStatus = {}, local = {}) {
     fields: (Array.isArray(section.fields) ? section.fields : []).map((field) => {
       const selectedValue = selectedConstraints[field.fieldKey] || "";
       const optionPayloadProvided = Array.isArray(field.options);
-      const options = optionPayloadProvided ? field.options.map((option) => {
+      const baseOptions = optionPayloadProvided ? field.options : [];
+      const deferredOptions = Array.isArray(field.deferredOptions) ? field.deferredOptions : [];
+      const parentConstraint = diffuserParentConstraintForField(field.fieldKey, selectedConstraints);
+      const deferredChildOptionsHydrated = !baseOptions.length && parentConstraint && deferredOptions.length > 0;
+      const optionSource = deferredChildOptionsHydrated
+        ? deferredOptions.filter((option) => option.parentValue && optionValuesMatch(option.parentValue, parentConstraint))
+        : baseOptions;
+      const options = optionSource.map((option) => {
         const selected = selectedValue ? (optionValuesMatch(option.value, selectedValue) || (field.fieldKey === "system" && systemOptionMatchesSelection(option, selectedValue))) : option.selected === true;
         const localBlock = localDiffuserRelationshipBlock(field.fieldKey, option, cascadeConstraints);
         const blocked = option.blocked === true || localBlock.blocked === true;
+        const hydratedStatus = deferredChildOptionsHydrated && !blocked ? "available" : option.status;
         return {
           ...option,
+          deferredUntilParentSelected: deferredChildOptionsHydrated ? false : option.deferredUntilParentSelected === true,
           selected,
-          status: blocked ? "blocked" : (option.status || "available"),
+          status: blocked ? "blocked" : (hydratedStatus || "available"),
           blocked,
           blockedReason: blocked ? option.blockedReason || localBlock.reason || "Blocked by current manual constraints; shown rather than silently hidden." : option.blockedReason || "",
           blockedBy: blocked ? [...(Array.isArray(option.blockedBy) ? option.blockedBy : []), ...localBlock.blockedBy] : (Array.isArray(option.blockedBy) ? option.blockedBy : []),
-          relationshipStatus: blocked ? "blocked-by-diffuser-relationship" : option.relationshipStatus || "matched",
+          relationshipStatus: blocked ? "blocked-by-diffuser-relationship" : option.relationshipStatus || (deferredChildOptionsHydrated ? "matched-after-parent-selection" : "matched"),
           relationshipMissingReason: blocked ? localBlock.reason : option.relationshipMissingReason || "",
           rawRowsExposed: false,
         };
-      }) : [];
+      });
       return {
         ...field,
         selectedValue,
         selectedLabel: selectedValue ? labelFromWorkflowField({ ...field, options }, selectedValue) : field.selectedLabel || "",
         options,
-        optionPayloadProvided,
+        optionPayloadProvided: optionPayloadProvided || deferredChildOptionsHydrated,
+        deferredOptions: deferredOptions.map((option) => ({ ...option, rawRowsExposed: false })),
+        deferredChildOptionsHydrated: Boolean(deferredChildOptionsHydrated),
         rawRowsExposed: false,
       };
     }),
@@ -1362,7 +1411,7 @@ const RUNTIME_PRESENTATION_DISABLED_HANDOFF_FIELDS = Object.freeze(new Set([
 ]));
 
 function presentationCompatibleOptions(field = {}) {
-  if (field.optionPayloadProvided === false || !Array.isArray(field.options)) return null;
+  if (field.optionPayloadProvided !== true || !Array.isArray(field.options)) return null;
   return field.options.filter((option) => option?.blocked !== true && option?.status !== "blocked");
 }
 
@@ -2176,11 +2225,10 @@ function spineFieldReason(field = null) {
 }
 
 function spineSupportsIndirect(lookup) {
-  const indirectFields = ["indirectOpticVar1", "indirectOpticVar2", "opticIndirect"].map((key) => lookup.get(key)).filter(Boolean);
-  const hasSelectedOrEffectiveIndirectValue = indirectFields.some((field) => spineFieldHasDisplayValue(field));
-  const hasUsableIndirectOption = indirectFields.some((field) => Array.isArray(field.options)
-    && field.options.some((option) => option.blocked !== true && option.status !== "blocked"));
-  return hasSelectedOrEffectiveIndirectValue || hasUsableIndirectOption;
+  const systemField = lookup.get("system");
+  const selectedSystemOption = presentationSelectedOption(systemField || {});
+  if (selectedSystemOption) return selectedSystemOption.systemSupportsIndirect === true;
+  return false;
 }
 
 function createSpineStatusRow(definition = {}, { sourceReady = false, summary = {}, manualConstraints = [], autoConsequences = [], blockedItems = [] } = {}) {
@@ -2235,9 +2283,11 @@ function createSpineStatusRow(definition = {}, { sourceReady = false, summary = 
 
 function createProductSpineRow(definition = {}, lookup, context = {}) {
   const fields = (definition.fields || []).map((key) => lookup.get(key)).filter(Boolean);
-  const displayValues = fields.map(spineFieldValue).filter(Boolean);
-  const firstField = fields[0] || null;
-  const statuses = fields.length ? fields.map(spineFieldStatus) : ["missing"];
+  const displayFields = fields.filter((field) => spineFieldHasDisplayValue(field));
+  const statusFields = displayFields.length ? displayFields : fields;
+  const displayValues = displayFields.map(spineFieldValue).filter(Boolean);
+  const firstField = statusFields[0] || null;
+  const statuses = statusFields.length ? statusFields.map(spineFieldStatus) : ["missing"];
   const status = statuses.includes("blocked")
     ? "blocked"
     : statuses.includes("manual-constraint")

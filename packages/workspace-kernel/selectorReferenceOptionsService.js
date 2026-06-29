@@ -455,6 +455,7 @@ function createOption(label, {
   specCodeGenerationEnabled = false,
   systemReferenceKey = "",
   systemVariantKey = "",
+  systemSupportsIndirect = false,
 } = {}) {
   const optionLabel = safeString(label || value);
   return {
@@ -480,6 +481,7 @@ function createOption(label, {
     rawRowsExposed: false,
     systemReferenceKey: safeString(systemReferenceKey),
     systemVariantKey: safeString(systemVariantKey),
+    systemSupportsIndirect: systemSupportsIndirect === true,
   };
 }
 
@@ -496,6 +498,7 @@ function addOption(bucket, fieldKey, label, meta = {}) {
     for (const key of ["diffuserLayer", "parentFieldKey", "parentValue", "specCodePreview", "specCodeVar2Preview", "diffuserMaterial", "imageReadiness", "imageKey", "systemReferenceKey", "systemVariantKey"]) {
       if (!existing[key] && meta[key]) existing[key] = meta[key];
     }
+    existing.systemSupportsIndirect = existing.systemSupportsIndirect === true || meta.systemSupportsIndirect === true;
     existing.visualChoice = existing.visualChoice === true || meta.visualChoice === true;
     existing.donorImageReferenceKnown = existing.donorImageReferenceKnown === true || meta.donorImageReferenceKnown === true;
     existing.runtimeImageAvailable = false;
@@ -672,7 +675,8 @@ function collectOptions(snapshot) {
   const systems = liveTableRows(snapshot, "SYSTEM");
   for (const row of systems) {
     const tokens = systemTokens(row);
-    addOption(bucket, "system", tokens.label, { value: tokens.value, sourceTables: ["SYSTEM"], systemReferenceKey: tokens.system, systemVariantKey: tokens.variant });
+    const emissions = systemEmissionValues(row);
+    addOption(bucket, "system", tokens.label, { value: tokens.value, sourceTables: ["SYSTEM"], systemReferenceKey: tokens.system, systemVariantKey: tokens.variant, systemSupportsIndirect: emissions.some(emissionSupportsIndirect) });
     if (tokens.variant) addOption(bucket, "variantKey", tokens.variant, { sourceTables: ["SYSTEM"] });
     for (const emission of systemEmissionValues(row)) {
       addOption(bucket, "emission", emission, { sourceTables: ["SYSTEM"] });
@@ -1455,20 +1459,41 @@ function opticVar2ParentFieldKey(fieldKey = "") {
   return "";
 }
 
+function safeDeferredChildOptions(baseOptions = []) {
+  return baseOptions.map((option) => ({
+    ...option,
+    selected: false,
+    status: "deferred-parent-required",
+    blocked: false,
+    deferredUntilParentSelected: true,
+    writes: false,
+    rawRowsExposed: false,
+  }));
+}
+
 function optionsForSelectedOpticParent(fieldKey = "", baseOptions = [], constraints = {}) {
   const parentFieldKey = opticVar2ParentFieldKey(fieldKey);
-  if (!parentFieldKey) return { options: baseOptions, parentFieldKey: "", parentValue: "", childFiltered: false };
+  if (!parentFieldKey) return { options: baseOptions, parentFieldKey: "", parentValue: "", childFiltered: false, deferredOptions: [] };
   const parentValue = safeString(constraints[parentFieldKey] || "");
-  if (!parentValue) return { options: [], parentFieldKey, parentValue: "", childFiltered: true };
+  if (!parentValue) {
+    return {
+      options: [],
+      parentFieldKey,
+      parentValue: "",
+      childFiltered: true,
+      deferredOptions: safeDeferredChildOptions(baseOptions),
+    };
+  }
   return {
     options: baseOptions.filter((option) => option.parentValue && valuesMatch(option.parentValue, parentValue)),
     parentFieldKey,
     parentValue,
     childFiltered: true,
+    deferredOptions: safeDeferredChildOptions(baseOptions),
   };
 }
 
-function createEmptyChildWorkflowField(field, parentFieldKey = "", parentValue = "") {
+function createEmptyChildWorkflowField(field, parentFieldKey = "", parentValue = "", deferredOptions = []) {
   return {
     fieldKey: field.fieldKey,
     label: field.label,
@@ -1482,6 +1507,8 @@ function createEmptyChildWorkflowField(field, parentFieldKey = "", parentValue =
     unavailableReason: parentValue
       ? `Selected ${parentFieldKey} has no optic var-2 sub-variants in optic_var_2.`
       : `Select ${parentFieldKey} before optic var-2 sub-variants are derived.`,
+    deferredOptions: safeDeferredChildOptions(deferredOptions),
+    deferredOptionCount: Array.isArray(deferredOptions) ? deferredOptions.length : 0,
     futureMapped: false,
     disabled: false,
     rawRowsExposed: false,
@@ -1542,7 +1569,7 @@ function createWorkflowField(field, { bucket, records, constraints, cascadeConst
   const rawBaseOptions = optionsFor(bucket, field.fieldKey);
   const childOptions = optionsForSelectedOpticParent(field.fieldKey, rawBaseOptions, constraints);
   const baseOptions = childOptions.options;
-  if (childOptions.childFiltered && !baseOptions.length) return createEmptyChildWorkflowField(field, childOptions.parentFieldKey, childOptions.parentValue);
+  if (childOptions.childFiltered && !baseOptions.length) return createEmptyChildWorkflowField(field, childOptions.parentFieldKey, childOptions.parentValue, childOptions.deferredOptions);
   if (field.role === "metadata-only") return createMetadataWorkflowField(field, baseOptions, records, constraints, cascadeConstraints);
   if (!baseOptions.length) {
     if (field.role === "entitlement-gated") {
