@@ -2,26 +2,25 @@ from __future__ import annotations
 
 r"""Runtime-owned ControlStack MCP server.
 
-This MCP is intentionally scoped to fixed, named ControlStack runtime work tools.
-It does not expose arbitrary terminal execution, user-supplied command strings,
-or broad shell access.
-
-Roots:
-- runtime: C:\ControlStack_Runtime
-- donor / donor_reference: optional read-only reference at C:\ControlStack
-
-Donor-reference tools are allowed to fail if the donor repo no longer exists.
-Runtime tools must not depend on the donor repo.
+This MCP exposes a deliberately small, guarded tool surface for the local
+ControlStack runtime repo and optional donor-reference repo. It does not expose
+arbitrary terminal execution, caller-supplied shell commands, force-push, or
+unbounded filesystem access.
 """
 
+import difflib
 import fnmatch
 import json
 import logging
 import os
 import re
+import shutil
 import subprocess
 import sys
 import time
+import urllib.error
+import urllib.parse
+import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -38,24 +37,21 @@ MAX_TEXT_BYTES = 5 * 1024 * 1024
 ACTIVE_TRANSPORT = os.environ.get("CONTROLSTACK_MCP_TRANSPORT", "stdio").strip().lower()
 RUNTIME_ROOT = Path(os.environ.get("CONTROLSTACK_RUNTIME_ROOT", DEFAULT_RUNTIME_ROOT)).resolve()
 DONOR_REFERENCE_ROOT = Path(os.environ.get("CONTROLSTACK_DONOR_REFERENCE_ROOT", DEFAULT_DONOR_REFERENCE_ROOT)).resolve()
+WEBHOOK_BASE_URL = os.environ.get("CONTROLSTACK_WEBHOOK_BASE_URL", "http://127.0.0.1:8787").rstrip("/")
 
 HTTP_HOST = os.environ.get("CONTROLSTACK_MCP_HOST", "127.0.0.1")
 HTTP_PORT = int(os.environ.get("CONTROLSTACK_MCP_PORT", "8000"))
 HTTP_PATH = os.environ.get("CONTROLSTACK_MCP_PATH", DEFAULT_HTTP_PATH)
 
-logging.basicConfig(
-    level=logging.INFO,
-    stream=sys.stderr,
-    format="[%(asctime)s] %(levelname)s %(name)s: %(message)s",
-)
+logging.basicConfig(level=logging.INFO, stream=sys.stderr, format="[%(asctime)s] %(levelname)s %(name)s: %(message)s")
 logger = logging.getLogger("runtime_controlstack_mcp")
 
 mcp = FastMCP(
     "ControlStack Runtime",
     instructions=(
-        "Use these tools for the configured local ControlStack Runtime root only. "
-        "Donor-reference tools are read-only and optional. Never request or write "
-        "paths outside the selected root. Do not use arbitrary terminal execution."
+        "Use these tools for the configured local ControlStack roots only: repo and runtime. "
+        "Never request or write paths outside the selected root. Donor-reference roots are read-only. "
+        "Do not use arbitrary terminal execution."
     ),
     stateless_http=True,
     json_response=True,
@@ -64,17 +60,7 @@ mcp = FastMCP(
     streamable_http_path=HTTP_PATH,
 )
 
-EXCLUDED_DIRS = {
-    ".git",
-    ".venv",
-    "node_modules",
-    "__pycache__",
-    ".pytest_cache",
-    ".mypy_cache",
-    ".ruff_cache",
-    "dist",
-    "build",
-}
+EXCLUDED_DIRS = {".git", ".venv", "node_modules", "__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache", "dist", "build"}
 EXCLUDED_GLOBS = {"*.pyc", "*.pyo", "*.bak", "*.bak_*", "*.log"}
 GIT_INDEX_JUNK_DIRS = {"node_modules", "__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache"}
 GIT_INDEX_ARCHIVE_EXTS = {".zip", ".tar", ".tgz", ".rar", ".7z", ".gz", ".bz2", ".xz"}
@@ -101,12 +87,11 @@ def _root_label(root: str = "runtime") -> str:
         return "runtime"
     if label in {"donor", "donor_reference", "reference"}:
         return "donor"
-    raise ValueError("root must be 'runtime' or read-only 'donor'")
+    raise ValueError("root must be 'runtime'/'repo' or read-only 'donor'")
 
 
 def _root_path(root: str = "runtime") -> Path:
-    label = _root_label(root)
-    return RUNTIME_ROOT if label == "runtime" else DONOR_REFERENCE_ROOT
+    return RUNTIME_ROOT if _root_label(root) == "runtime" else DONOR_REFERENCE_ROOT
 
 
 def _require_root_exists(root: str = "runtime") -> None:
@@ -121,8 +106,7 @@ def _require_root_exists(root: str = "runtime") -> None:
 
 
 def _require_runtime(root: str = "runtime") -> None:
-    label = _root_label(root)
-    if label != "runtime":
+    if _root_label(root) != "runtime":
         raise PermissionError("This tool is runtime-only. Donor reference is read-only.")
     _require_root_exists("runtime")
 
@@ -132,25 +116,59 @@ def _require_write_enabled() -> None:
         raise PermissionError("Write tools are disabled. Set CONTROLSTACK_ENABLE_WRITE=1 to enable them.")
 
 
+def _path_has_control_chars(value: str) -> bool:
+    return any(ord(ch) < 32 or ord(ch) == 127 for ch in value)
+
+
+def _path_has_glob_chars(value: str) -> bool:
+    return any(ch in value for ch in GIT_INDEX_GLOB_CHARS)
+
+
+def _path_has_parent_traversal(value: str) -> bool:
+    return any(part == ".." for part in re.split(r"[\\/]+", value))
+
+
+def _reject_bad_path_string(value: str, *, allow_glob: bool = False) -> None:
+    if not isinstance(value, str) or not value.strip():
+        raise ValueError("path is required and must be a non-empty string")
+    if _path_has_control_chars(value):
+        raise ValueError("NUL, newline, or control characters are not allowed in paths")
+    if not allow_glob and _path_has_glob_chars(value):
+        raise ValueError("wildcards/globs are not allowed; provide an explicit path")
+    if _path_has_parent_traversal(value):
+        raise ValueError("path traversal segments such as ../ are not allowed")
+
+
 def _resolve_path(root: str = "runtime", relative_path: str = ".") -> Path:
     label = _root_label(root)
-    base = _root_path(label)
+    _require_root_exists(label)
     raw = relative_path or "."
     raw_path = Path(raw)
-    candidate = raw_path.resolve() if raw_path.is_absolute() else (base / raw).resolve()
+    candidate = raw_path.resolve() if raw_path.is_absolute() else (_root_path(label) / raw).resolve()
     try:
-        candidate.relative_to(base)
+        candidate.relative_to(_root_path(label))
     except ValueError as exc:
         raise ValueError(f"Path escapes selected root {label!r}: {relative_path!r}") from exc
     return candidate
 
 
+def _lexically_confined_runtime_path(path_value: str) -> Path:
+    _reject_bad_path_string(path_value)
+    raw_path = Path(path_value)
+    candidate = raw_path if raw_path.is_absolute() else RUNTIME_ROOT / path_value
+    candidate = Path(os.path.abspath(candidate))
+    try:
+        candidate.relative_to(RUNTIME_ROOT)
+    except ValueError as exc:
+        raise ValueError(f"Path escapes runtime root: {path_value!r}") from exc
+    return candidate
+
+
 def _rel(root: str, path: Path) -> str:
-    label = _root_label(root)
-    return str(path.resolve().relative_to(_root_path(label))).replace("\\", "/")
+    return str(path.resolve().relative_to(_root_path(root))).replace("\\", "/")
 
 
-def _clip_text(text: str, max_chars: int) -> tuple[str, bool]:
+def _clip_text(text: str, max_chars: int = DEFAULT_MAX_CHARS) -> tuple[str, bool]:
     if max_chars <= 0 or len(text) <= max_chars:
         return text, False
     return text[:max_chars], True
@@ -189,15 +207,8 @@ def _excluded(root: str, path: Path, extra: list[str] | None = None) -> bool:
     return False
 
 
-def _iter_files(
-    root: str,
-    relative_path: str = ".",
-    include_globs: list[str] | None = None,
-    exclude_globs: list[str] | None = None,
-    max_files: int = 50_000,
-):
+def _iter_files(root: str, relative_path: str = ".", include_globs: list[str] | None = None, exclude_globs: list[str] | None = None, max_files: int = 50_000):
     label = _root_label(root)
-    _require_root_exists(label)
     base = _resolve_path(label, relative_path)
     if base.is_file():
         candidates = [base]
@@ -221,10 +232,7 @@ def _iter_files(
         if not path.is_file() or _excluded(label, path, exclude_globs):
             continue
         rel = _rel(label, path)
-        if include_globs and not any(
-            fnmatch.fnmatch(path.name, glob) or fnmatch.fnmatch(rel, glob)
-            for glob in include_globs
-        ):
+        if include_globs and not any(fnmatch.fnmatch(path.name, glob) or fnmatch.fnmatch(rel, glob) for glob in include_globs):
             continue
         yielded += 1
         yield path
@@ -232,21 +240,8 @@ def _iter_files(
 
 def _safe_env_for_child() -> dict[str, str]:
     allowed_keys = {
-        "APPDATA",
-        "COMSPEC",
-        "HOME",
-        "LOCALAPPDATA",
-        "PATH",
-        "PATHEXT",
-        "PROGRAMFILES",
-        "PROGRAMFILES(X86)",
-        "PROGRAMW6432",
-        "SYSTEMDRIVE",
-        "SYSTEMROOT",
-        "TEMP",
-        "TMP",
-        "USERPROFILE",
-        "WINDIR",
+        "APPDATA", "COMSPEC", "HOME", "LOCALAPPDATA", "PATH", "PATHEXT", "PROGRAMFILES",
+        "PROGRAMFILES(X86)", "PROGRAMW6432", "SYSTEMDRIVE", "SYSTEMROOT", "TEMP", "TMP", "USERPROFILE", "WINDIR",
     }
     env = {key: value for key, value in os.environ.items() if key.upper() in allowed_keys}
     env["CI"] = "1"
@@ -256,7 +251,7 @@ def _safe_env_for_child() -> dict[str, str]:
     return env
 
 
-def _run_git(args: list[str], timeout_s: int = 30, max_chars: int = DEFAULT_MAX_CHARS) -> dict[str, Any]:
+def _run_git(args: list[str], timeout_s: int = 30, max_chars: int = DEFAULT_MAX_CHARS, input_text: str | None = None) -> dict[str, Any]:
     _require_runtime("runtime")
     started = time.monotonic()
     cmd = ["git", *args]
@@ -264,6 +259,8 @@ def _run_git(args: list[str], timeout_s: int = 30, max_chars: int = DEFAULT_MAX_
         proc = subprocess.run(
             cmd,
             cwd=str(RUNTIME_ROOT),
+            env=_safe_env_for_child(),
+            input=input_text,
             capture_output=True,
             text=True,
             encoding="utf-8",
@@ -290,29 +287,6 @@ def _run_git(args: list[str], timeout_s: int = 30, max_chars: int = DEFAULT_MAX_
     }
 
 
-def _path_has_control_chars(value: str) -> bool:
-    return any(ord(ch) < 32 or ord(ch) == 127 for ch in value)
-
-
-def _path_has_glob_chars(value: str) -> bool:
-    return any(ch in value for ch in GIT_INDEX_GLOB_CHARS)
-
-
-def _path_has_parent_traversal(value: str) -> bool:
-    return any(part == ".." for part in re.split(r"[\\/]+", value))
-
-
-def _lexically_confined_runtime_path(path_value: str) -> Path:
-    raw_path = Path(path_value)
-    candidate = raw_path if raw_path.is_absolute() else RUNTIME_ROOT / path_value
-    candidate = Path(os.path.abspath(candidate))
-    try:
-        candidate.relative_to(RUNTIME_ROOT)
-    except ValueError as exc:
-        raise ValueError(f"Path escapes runtime root: {path_value!r}") from exc
-    return candidate
-
-
 def _git_index_junk_reason(relative_path: str) -> str | None:
     relp = relative_path.replace("\\", "/")
     name = relp.rsplit("/", 1)[-1]
@@ -322,12 +296,8 @@ def _git_index_junk_reason(relative_path: str) -> str | None:
             return f"junk/cache directory rejected by default: {junk_dir}"
     if relp.startswith("dist/assets/") or "/dist/assets/" in relp:
         return "dist/assets output requires allow_junk=true after explicit review"
-    if name.endswith(".bak"):
-        return "backup artifact rejected by default: *.bak"
-    if ".bak_safe_patch_" in name:
-        return "safe-patch backup artifact rejected by default: *.bak_safe_patch_*"
-    if ".BACKUP_" in name:
-        return "backup artifact rejected by default: *.BACKUP_*"
+    if name.endswith(".bak") or ".bak_safe_patch_" in name or ".BACKUP_" in name:
+        return "backup artifact rejected by default"
     lower = name.lower()
     for ext in sorted(GIT_INDEX_ARCHIVE_EXTS, key=len, reverse=True):
         if lower.endswith(ext):
@@ -335,13 +305,7 @@ def _git_index_junk_reason(relative_path: str) -> str | None:
     return None
 
 
-def _prepare_git_index_paths(
-    paths: list[str],
-    *,
-    require_existing_files: bool,
-    allow_missing: bool,
-    allow_junk: bool,
-) -> tuple[list[str], list[dict[str, Any]]]:
+def _prepare_git_index_paths(paths: list[str], *, require_existing_files: bool, allow_missing: bool, allow_junk: bool) -> tuple[list[str], list[dict[str, Any]]]:
     if not isinstance(paths, list) or not paths:
         raise ValueError("paths[] is required and must contain at least one explicit path")
     accepted: list[str] = []
@@ -350,22 +314,10 @@ def _prepare_git_index_paths(
         requested = str(raw)
         reason = None
         resolved: Path | None = None
-        if not isinstance(raw, str):
-            reason = "path must be a string"
-        elif requested == "":
-            reason = "empty paths are not allowed"
-        elif _path_has_control_chars(requested):
-            reason = "NUL, newline, or control characters are not allowed in paths"
-        elif _path_has_glob_chars(requested):
-            reason = "wildcards/globs are not allowed; provide explicit file paths"
-        elif _path_has_parent_traversal(requested):
-            reason = "path traversal segments such as ../ are not allowed"
-        else:
-            try:
-                lexical = _lexically_confined_runtime_path(requested)
-                resolved = _resolve_path("runtime", requested) if lexical.exists() else lexical
-            except ValueError as exc:
-                reason = str(exc)
+        try:
+            resolved = _lexically_confined_runtime_path(requested)
+        except Exception as exc:
+            reason = str(exc)
         if reason is None and resolved is not None:
             exists = resolved.exists()
             if exists and resolved.is_dir():
@@ -375,7 +327,7 @@ def _prepare_git_index_paths(
             elif not allow_missing and not exists:
                 reason = "path does not exist"
         if reason is None and resolved is not None:
-            relp = _rel("runtime", resolved)
+            relp = str(resolved.relative_to(RUNTIME_ROOT)).replace("\\", "/")
             if not allow_junk:
                 reason = _git_index_junk_reason(relp)
             if reason is None and relp not in accepted:
@@ -437,16 +389,90 @@ def _normalise_paths(paths: list[str]) -> list[str]:
 
 
 def _gate_green() -> bool:
-    return bool(
-        LAST_RUNTIME_GATE_RESULT
-        and LAST_RUNTIME_GATE_RESULT.get("ok") is True
-        and LAST_RUNTIME_GATE_RESULT.get("returncode") == 0
-    )
+    return bool(LAST_RUNTIME_GATE_RESULT and LAST_RUNTIME_GATE_RESULT.get("ok") is True and LAST_RUNTIME_GATE_RESULT.get("returncode") == 0)
+
+
+def _copy_file_between(from_root: str, from_path: str, to_root: str, to_path: str, *, overwrite: bool, dry_run: bool, make_parents: bool) -> dict[str, Any]:
+    source_label = _root_label(from_root)
+    target_label = _root_label(to_root)
+    if target_label != "runtime":
+        raise PermissionError("Copy destinations must be inside the runtime root. Donor reference is read-only.")
+    _reject_bad_path_string(from_path)
+    _reject_bad_path_string(to_path)
+    source = _resolve_path(source_label, from_path)
+    target = _resolve_path(target_label, to_path)
+    if not source.exists() or not source.is_file():
+        raise FileNotFoundError(f"Source file does not exist or is not a file: {from_path}")
+    if target.exists() and target.is_dir():
+        raise IsADirectoryError(f"Destination is a directory: {to_path}")
+    if target.exists() and not overwrite:
+        raise FileExistsError(f"Destination exists and overwrite=False: {to_path}")
+    payload = {
+        "ok": True,
+        "from_root": source_label,
+        "to_root": target_label,
+        "from_path": _rel(source_label, source),
+        "to_path": _rel(target_label, target),
+        "dry_run": dry_run,
+        "overwrite": overwrite,
+        "changed": False,
+        "bytes": source.stat().st_size,
+    }
+    if dry_run:
+        return payload
+    _require_write_enabled()
+    if make_parents:
+        target.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(source, target)
+    payload["changed"] = True
+    return payload
+
+
+def _extract_diff_paths(diff_text: str) -> list[str]:
+    paths: list[str] = []
+    for line in diff_text.splitlines():
+        candidate: str | None = None
+        if line.startswith("+++ ") or line.startswith("--- "):
+            raw = line[4:].split("\t", 1)[0].strip()
+            if raw == "/dev/null":
+                continue
+            candidate = raw[2:] if raw.startswith(("a/", "b/")) else raw
+        elif line.startswith("rename from "):
+            candidate = line[len("rename from ") :].strip()
+        elif line.startswith("rename to "):
+            candidate = line[len("rename to ") :].strip()
+        if candidate:
+            _reject_bad_path_string(candidate)
+            resolved = _lexically_confined_runtime_path(candidate)
+            relp = str(resolved.relative_to(RUNTIME_ROOT)).replace("\\", "/")
+            if relp not in paths:
+                paths.append(relp)
+    return paths
+
+
+def _replace_nth(text: str, target: str, replacement: str, occurrence: int) -> tuple[str, int]:
+    if target == "":
+        raise ValueError("target is required for replace_text, insert_before, and insert_after")
+    if occurrence == 0:
+        count = text.count(target)
+        if count == 0:
+            return text, 0
+        return text.replace(target, replacement), count
+    if occurrence < 1:
+        raise ValueError("occurrence must be >= 1, or 0 to replace all occurrences")
+    start = -1
+    search_from = 0
+    for _ in range(occurrence):
+        start = text.find(target, search_from)
+        if start == -1:
+            return text, 0
+        search_from = start + len(target)
+    return text[:start] + replacement + text[start + len(target) :], 1
 
 
 @mcp.tool()
 def repo_info() -> dict[str, Any]:
-    """Return configured runtime and optional donor-reference roots."""
+    """Return both configured roots, webhook base, transport mode, and enabled flags."""
     return {
         "runtime_root": str(RUNTIME_ROOT),
         "runtime_exists": RUNTIME_ROOT.exists(),
@@ -456,20 +482,20 @@ def repo_info() -> dict[str, Any]:
         "http_host": HTTP_HOST,
         "http_port": HTTP_PORT,
         "http_path": HTTP_PATH,
+        "webhook_base_url": WEBHOOK_BASE_URL,
         "write_enabled": ENABLE_WRITE,
         "arbitrary_shell_execution": False,
-        "allowed_roots": ["runtime", "donor"],
+        "allowed_roots": ["runtime", "repo", "donor"],
         "runtime_gate_command": FIXED_GATE_COMMAND,
     }
 
 
 @mcp.tool()
 def list_repo_directory(relative_path: str = ".", recursive: bool = False, max_entries: int = DEFAULT_MAX_DIR_ENTRIES, root: str = "runtime") -> dict[str, Any]:
-    """List files and folders inside the runtime root or optional donor reference root."""
+    """List files and folders inside the selected ControlStack root."""
     if max_entries < 1:
         raise ValueError("max_entries must be >= 1")
     label = _root_label(root)
-    _require_root_exists(label)
     target = _resolve_path(label, relative_path)
     if not target.exists():
         raise FileNotFoundError(f"Directory does not exist: {target}")
@@ -489,13 +515,12 @@ def list_repo_directory(relative_path: str = ".", recursive: bool = False, max_e
 
 @mcp.tool()
 def read_repo_file(relative_path: str, start_line: int = 1, end_line: int | None = None, max_chars: int = DEFAULT_MAX_CHARS, root: str = "runtime") -> dict[str, Any]:
-    """Read a UTF-8 text file from the runtime root or optional donor reference root."""
+    """Read a UTF-8 text file from the selected root, optionally by line range."""
     if start_line < 1:
         raise ValueError("start_line must be >= 1")
     if end_line is not None and end_line < start_line:
         raise ValueError("end_line must be >= start_line")
     label = _root_label(root)
-    _require_root_exists(label)
     target = _resolve_path(label, relative_path)
     if not target.exists():
         raise FileNotFoundError(f"File does not exist: {target}")
@@ -510,9 +535,10 @@ def read_repo_file(relative_path: str, start_line: int = 1, end_line: int | None
 
 @mcp.tool()
 def write_repo_file(relative_path: str, content: str, overwrite: bool = True, make_parents: bool = True, root: str = "runtime") -> dict[str, Any]:
-    """Write a UTF-8 file inside the runtime root only."""
+    """Write a UTF-8 file inside the runtime root."""
     _require_runtime(root)
     _require_write_enabled()
+    _reject_bad_path_string(relative_path)
     target = _resolve_path("runtime", relative_path)
     if target.exists() and target.is_dir():
         raise IsADirectoryError(f"Path is a directory, not a file: {target}")
@@ -525,37 +551,157 @@ def write_repo_file(relative_path: str, content: str, overwrite: bool = True, ma
     existed = target.exists()
     before = target.stat().st_size if existed else 0
     target.write_text(content, encoding="utf-8", newline="\n")
-    return {"root": "runtime", "root_path": str(RUNTIME_ROOT), "relative_path": _rel("runtime", target), "absolute_path": str(target), "changed": True, "created": not existed, "overwritten": existed, "bytes_before": before, "bytes_written": target.stat().st_size, "newline": "\\n"}
+    return {"ok": True, "root": "runtime", "root_path": str(RUNTIME_ROOT), "relative_path": _rel("runtime", target), "absolute_path": str(target), "changed": True, "created": not existed, "overwritten": existed, "bytes_before": before, "bytes_written": target.stat().st_size, "newline": "\\n"}
+
+
+@mcp.tool()
+def compare_repo_files(left_root: str, left_path: str, right_root: str, right_path: str, max_chars: int = DEFAULT_MAX_CHARS) -> dict[str, Any]:
+    """Compare one file in one configured root with one file in another configured root."""
+    lroot = _root_label(left_root)
+    rroot = _root_label(right_root)
+    left = _resolve_path(lroot, left_path)
+    right = _resolve_path(rroot, right_path)
+    if not left.is_file() or not right.is_file():
+        raise FileNotFoundError("Both comparison targets must exist and be files")
+    left_text = _read_text_file(left)
+    right_text = _read_text_file(right)
+    diff = "".join(difflib.unified_diff(left_text.splitlines(True), right_text.splitlines(True), fromfile=f"{lroot}/{_rel(lroot, left)}", tofile=f"{rroot}/{_rel(rroot, right)}"))
+    body, truncated = _clip_text(diff, max_chars)
+    return {"ok": True, "same": left_text == right_text, "left": _rel(lroot, left), "right": _rel(rroot, right), "diff": body, "truncated": truncated}
+
+
+@mcp.tool()
+def copy_between_roots(from_root: str, from_path: str, to_root: str, to_path: str, overwrite: bool = False, dry_run: bool = True, make_parents: bool = True) -> dict[str, Any]:
+    """Copy a file from one configured root to another. Destination must be runtime."""
+    return _copy_file_between(from_root, from_path, to_root, to_path, overwrite=overwrite, dry_run=dry_run, make_parents=make_parents)
+
+
+@mcp.tool()
+def copy_repo_file(from_path: str, to_path: str, dry_run: bool = True, timeout_s: int = 30, max_chars: int = DEFAULT_MAX_CHARS, root: str = "runtime") -> dict[str, Any]:
+    """Copy one file inside the runtime root. Destination overwrite is refused."""
+    return _copy_file_between(root, from_path, root, to_path, overwrite=False, dry_run=dry_run, make_parents=True)
+
+
+@mcp.tool()
+def move_between_roots(from_root: str, from_path: str, to_root: str, to_path: str, overwrite: bool = False, dry_run: bool = True, make_parents: bool = True) -> dict[str, Any]:
+    """Move a file from one configured root to another. Non-dry moves are runtime-only."""
+    if _root_label(from_root) != "runtime" or _root_label(to_root) != "runtime":
+        if dry_run:
+            preview = _copy_file_between(from_root, from_path, to_root, to_path, overwrite=overwrite, dry_run=True, make_parents=make_parents)
+            preview["ok"] = False
+            preview["message"] = "Non-dry moves are runtime-only because donor roots are read-only."
+            return preview
+        raise PermissionError("Moves are runtime-only. Donor reference is read-only.")
+    result = _copy_file_between("runtime", from_path, "runtime", to_path, overwrite=overwrite, dry_run=dry_run, make_parents=make_parents)
+    result["operation"] = "move_between_roots"
+    if not dry_run:
+        _resolve_path("runtime", from_path).unlink()
+        result["source_deleted"] = True
+    return result
+
+
+@mcp.tool()
+def move_repo_file(from_path: str, to_path: str, dry_run: bool = True, timeout_s: int = 30, max_chars: int = DEFAULT_MAX_CHARS, root: str = "runtime") -> dict[str, Any]:
+    """Move one file inside the runtime root. Dry-run defaults to true."""
+    _require_runtime(root)
+    return move_between_roots("runtime", from_path, "runtime", to_path, overwrite=False, dry_run=dry_run, make_parents=True)
+
+
+@mcp.tool()
+def move_repo_directory(from_path: str, to_path: str, dry_run: bool = True, skip_subdirs: list[str] | None = None, timeout_s: int = 30, max_chars: int = DEFAULT_MAX_CHARS, root: str = "runtime") -> dict[str, Any]:
+    """Move one directory inside the runtime root. Dry-run defaults to true."""
+    _require_runtime(root)
+    _reject_bad_path_string(from_path)
+    _reject_bad_path_string(to_path)
+    source = _resolve_path("runtime", from_path)
+    target = _resolve_path("runtime", to_path)
+    if not source.exists() or not source.is_dir():
+        raise NotADirectoryError(f"Source directory does not exist: {from_path}")
+    if target.exists():
+        raise FileExistsError(f"Destination already exists: {to_path}")
+    skipped = set(skip_subdirs or [])
+    entries = []
+    for item in source.rglob("*"):
+        rel = item.relative_to(source).as_posix()
+        if any(rel == s or rel.startswith(s.rstrip("/") + "/") for s in skipped):
+            continue
+        entries.append(rel)
+    payload = {"ok": True, "root": "runtime", "from_path": _rel("runtime", source), "to_path": _rel("runtime", target), "dry_run": dry_run, "changed": False, "entry_count": len(entries), "skipped_subdirs": sorted(skipped)}
+    if dry_run:
+        return payload
+    _require_write_enabled()
+    shutil.move(str(source), str(target))
+    payload["changed"] = True
+    return payload
+
+
+@mcp.tool()
+def promote_to_runtime(from_path: str, to_path: str | None = None, overwrite: bool = False, dry_run: bool = True, make_parents: bool = True) -> dict[str, Any]:
+    """Promote one donor-reference file into the runtime root. Dry-run defaults to true."""
+    return _copy_file_between("donor", from_path, "runtime", to_path or from_path, overwrite=overwrite, dry_run=dry_run, make_parents=make_parents)
 
 
 @mcp.tool()
 def delete_runtime_file(relative_path: str, dry_run: bool = True) -> dict[str, Any]:
-    """Delete one explicit file inside the runtime root. Directories and path traversal are refused."""
-    _require_runtime("runtime")
+    """Legacy alias: delete one explicit file inside the runtime root."""
+    return delete_repo_file(relative_path=relative_path, root="runtime", dry_run=dry_run)
+
+
+@mcp.tool()
+def delete_repo_file(relative_path: str, dry_run: bool = True, timeout_s: int = 30, max_chars: int = DEFAULT_MAX_CHARS, root: str = "runtime") -> dict[str, Any]:
+    """Delete one explicit file inside the runtime root. Dry-run defaults to true."""
+    _require_runtime(root)
+    _reject_bad_path_string(relative_path)
     target = _resolve_path("runtime", relative_path)
-    if not target.exists() or not target.is_file():
-        raise FileNotFoundError(f"File not found: {relative_path}")
-    payload = {"ok": True, "root": "runtime", "root_path": str(RUNTIME_ROOT), "relative_path": _rel("runtime", target), "dry_run": dry_run, "changed": not dry_run, "bytes_deleted": target.stat().st_size}
+    exists = target.exists()
+    is_file = target.is_file()
+    payload: dict[str, Any] = {
+        "ok": dry_run or (exists and is_file),
+        "root": "runtime",
+        "root_path": str(RUNTIME_ROOT),
+        "relative_path": _rel("runtime", target),
+        "absolute_path": str(target),
+        "dry_run": dry_run,
+        "exists": exists,
+        "is_file": is_file,
+        "changed": False,
+        "would_delete": dry_run and exists and is_file,
+        "bytes_deleted": target.stat().st_size if exists and is_file else 0,
+    }
+    if not exists:
+        payload["message"] = "File does not exist; no deletion performed."
+        return payload
+    if not is_file:
+        payload["ok"] = False
+        payload["error"] = "path_is_not_a_file"
+        return payload
     if dry_run:
         return payload
     _require_write_enabled()
     target.unlink()
+    payload["changed"] = True
+    payload["would_delete"] = False
     return payload
 
 
 @mcp.tool()
 def repo_find_files(root: str = "runtime", pattern: str = "*", mode: str = "glob", max_results: int = 200, relative_path: str = ".") -> dict[str, Any]:
-    """Find files by glob, substring, or regex in the runtime or donor-reference root."""
+    """Find files by glob, substring, or regex in the selected root."""
     label = _root_label(root)
     if mode not in {"glob", "substring", "regex"}:
         raise ValueError("mode must be glob, substring, or regex")
     rx = re.compile(pattern) if mode == "regex" else None
     entries: list[dict[str, Any]] = []
-    for path in _iter_files(label, relative_path, None, None):
+    for path in _iter_files(label, relative_path):
         if len(entries) >= max_results:
             break
         relp = _rel(label, path)
-        matched = fnmatch.fnmatch(relp, pattern) or fnmatch.fnmatch(path.name, pattern) if mode == "glob" else (pattern.lower() in relp.lower() if mode == "substring" else bool(rx and rx.search(relp)))
+        if mode == "glob":
+            matched = fnmatch.fnmatch(relp, pattern) or fnmatch.fnmatch(path.name, pattern)
+        elif mode == "substring":
+            matched = pattern.lower() in relp.lower()
+        else:
+            matched = bool(rx and rx.search(relp))
         if matched:
             stat = path.stat()
             entries.append({"relative_path": relp, "name": path.name, "size_bytes": stat.st_size, "modified_utc": datetime.fromtimestamp(stat.st_mtime, timezone.utc).isoformat()})
@@ -564,7 +710,7 @@ def repo_find_files(root: str = "runtime", pattern: str = "*", mode: str = "glob
 
 @mcp.tool()
 def repo_grep(root: str = "runtime", query: str = "", case_sensitive: bool = False, regex: bool = False, include_globs: list[str] | None = None, exclude_globs: list[str] | None = None, max_results: int = 100, context_lines: int = 2, relative_path: str = ".") -> dict[str, Any]:
-    """Text search across runtime or donor-reference files."""
+    """Text search across files in the selected root."""
     if not query:
         raise ValueError("query is required")
     label = _root_label(root)
@@ -594,8 +740,154 @@ def repo_grep(root: str = "runtime", query: str = "", case_sensitive: bool = Fal
 
 
 @mcp.tool()
-def run_controlstack_gate(gate: str, root: str = "runtime", timeout_s: int = 1800, max_chars: int = DEFAULT_MAX_CHARS) -> dict[str, Any]:
-    """Run a fixed named runtime gate. Allowed gates: selector, test, runtime."""
+def repo_safe_patch(root: str = "runtime", relative_path: str = "", operation: str = "replace_text", target: str = "", replacement: str = "", occurrence: int = 1, dry_run: bool = True) -> dict[str, Any]:
+    """Apply or preview a structured safe edit to one selected-root file."""
+    _require_runtime(root)
+    _reject_bad_path_string(relative_path)
+    target_path = _resolve_path("runtime", relative_path)
+    if not target_path.exists() or not target_path.is_file():
+        raise FileNotFoundError(f"File does not exist or is not a file: {relative_path}")
+    if _is_binary(target_path):
+        raise ValueError("Binary files cannot be patched with repo_safe_patch")
+    op = str(operation or "").strip().lower()
+    before = _read_text_file(target_path)
+    replacements = 0
+    if op == "replace_text":
+        after, replacements = _replace_nth(before, target, replacement, int(occurrence))
+    elif op == "insert_before":
+        after, replacements = _replace_nth(before, target, replacement + target, int(occurrence))
+    elif op == "insert_after":
+        after, replacements = _replace_nth(before, target, target + replacement, int(occurrence))
+    elif op == "append_text":
+        after = before + replacement
+        replacements = 1
+    elif op == "prepend_text":
+        after = replacement + before
+        replacements = 1
+    else:
+        raise ValueError("operation must be replace_text, insert_before, insert_after, append_text, or prepend_text")
+    changed = before != after
+    preview, preview_truncated = _clip_text("".join(difflib.unified_diff(before.splitlines(True), after.splitlines(True), fromfile=f"a/{_rel('runtime', target_path)}", tofile=f"b/{_rel('runtime', target_path)}")), DEFAULT_MAX_CHARS)
+    if changed and not dry_run:
+        _require_write_enabled()
+        target_path.write_text(after, encoding="utf-8", newline="\n")
+    return {"ok": True, "root": "runtime", "root_path": str(RUNTIME_ROOT), "relative_path": _rel("runtime", target_path), "operation": op, "occurrence": occurrence, "dry_run": dry_run, "matched_replacements": replacements, "changed": changed and not dry_run, "would_change": changed and dry_run, "bytes_before": len(before.encode("utf-8")), "bytes_after": len(after.encode("utf-8")), "diff_preview": preview, "truncated": preview_truncated}
+
+
+@mcp.tool()
+def repo_scope_guard(root: str = "runtime", allowed_paths: list[str] | None = None, candidate_paths: list[str] | None = None) -> dict[str, Any]:
+    """Check whether candidate paths stay within declared glob scope."""
+    label = _root_label(root)
+    allowed = allowed_paths or []
+    candidates = candidate_paths or []
+    results = []
+    for candidate in candidates:
+        rel = _rel(label, _resolve_path(label, candidate))
+        matched = any(fnmatch.fnmatch(rel, pattern) or rel.startswith(pattern.rstrip("/") + "/") for pattern in allowed)
+        results.append({"path": candidate, "normalised": rel, "allowed": matched})
+    return {"ok": all(item["allowed"] for item in results), "root": label, "allowed_paths": allowed, "results": results}
+
+
+@mcp.tool()
+def repo_apply_unified_diff(root: str = "runtime", diff_text: str = "", dry_run: bool = True, allow_new_files: bool = True) -> dict[str, Any]:
+    """Apply or preview a unified diff in runtime with path confinement guards."""
+    _require_runtime(root)
+    if not diff_text.strip():
+        raise ValueError("diff_text is required")
+    if not allow_new_files and any(line.startswith("--- /dev/null") for line in diff_text.splitlines()):
+        raise PermissionError("New files are refused when allow_new_files=False")
+    touched_paths = _extract_diff_paths(diff_text)
+    if not touched_paths:
+        raise ValueError("No confined file paths could be extracted from diff_text")
+    check = _run_git(["apply", "--check", "--whitespace=nowarn", "-"], timeout_s=60, max_chars=DEFAULT_MAX_CHARS, input_text=diff_text)
+    if dry_run or not check.get("ok"):
+        return {"ok": bool(check.get("ok")), "root": "runtime", "root_path": str(RUNTIME_ROOT), "dry_run": dry_run, "changed": False, "touched_paths": touched_paths, "check": check, "apply": None}
+    _require_write_enabled()
+    applied = _run_git(["apply", "--whitespace=nowarn", "-"], timeout_s=60, max_chars=DEFAULT_MAX_CHARS, input_text=diff_text)
+    return {"ok": bool(applied.get("ok")), "root": "runtime", "root_path": str(RUNTIME_ROOT), "dry_run": dry_run, "changed": bool(applied.get("ok")), "touched_paths": touched_paths, "check": check, "apply": applied}
+
+
+@mcp.tool()
+def repo_affected_gate_plan(root: str = "runtime", changed_files: list[str] | None = None) -> dict[str, Any]:
+    """Suggest which whitelisted gates should run for changed files."""
+    _require_runtime(root)
+    files = changed_files or (_git_status_details().get("modified", []) + _git_status_details().get("staged", []) + _git_status_details().get("untracked", []))
+    gates = ["selector"] if any(path.startswith(("apps/", "packages/", "server/", "scripts/", "tools/")) for path in files) else ["test"]
+    return {"ok": True, "root": "runtime", "changed_files": sorted(set(files)), "recommended_gates": gates, "allowed_gates": sorted(ALLOWED_GATES)}
+
+
+@mcp.tool()
+def repo_dependency_map(root: str = "runtime", relative_path: str = "", depth: int = 2, max_nodes: int = 200) -> dict[str, Any]:
+    """Return local dependency relationships for one file or module."""
+    label = _root_label(root)
+    target = _resolve_path(label, relative_path or ".")
+    imports: list[str] = []
+    if target.is_file() and target.suffix == ".py":
+        try:
+            tree = __import__("ast").parse(_read_text_file(target))
+            for node in __import__("ast").walk(tree):
+                if node.__class__.__name__ == "Import":
+                    imports.extend(alias.name for alias in node.names)
+                elif node.__class__.__name__ == "ImportFrom" and node.module:
+                    imports.append(node.module)
+        except Exception:
+            imports = []
+    elif target.is_file():
+        text = _read_text_file(target) if not _is_binary(target) else ""
+        imports = re.findall(r"(?:from|import)\s+['\"]([^'\"]+)['\"]", text)[:max_nodes]
+    return {"ok": True, "root": label, "relative_path": _rel(label, target), "depth": depth, "max_nodes": max_nodes, "imports": imports[:max_nodes]}
+
+
+@mcp.tool()
+def repo_symbol_search(root: str = "runtime", symbol: str = "", language_hint: str | None = None, max_results: int = 100) -> dict[str, Any]:
+    """Lightweight Python and JS/TS symbol discovery."""
+    if not symbol:
+        raise ValueError("symbol is required")
+    label = _root_label(root)
+    globs = ["*.py"] if language_hint == "python" else ["*.py", "*.js", "*.jsx", "*.ts", "*.tsx"]
+    results = []
+    rx = re.compile(rf"\b(class|def|function|const|let|var|export\s+function)\s+{re.escape(symbol)}\b")
+    for path in _iter_files(label, ".", include_globs=globs):
+        if len(results) >= max_results:
+            break
+        if _is_binary(path):
+            continue
+        for idx, line in enumerate(_read_text_file(path).splitlines(), 1):
+            if rx.search(line) or symbol in line:
+                results.append({"relative_path": _rel(label, path), "line_number": idx, "line_text": line[:500]})
+                break
+    return {"ok": True, "root": label, "symbol": symbol, "count": len(results), "results": results}
+
+
+@mcp.tool()
+def repo_noise_audit(root: str = "runtime", relative_path: str = ".", max_results: int = 200) -> dict[str, Any]:
+    """Identify suspicious junk/noise files under selected root."""
+    label = _root_label(root)
+    findings = []
+    for path in _iter_files(label, relative_path, max_files=50_000):
+        if len(findings) >= max_results:
+            break
+        rel = _rel(label, path)
+        reason = _git_index_junk_reason(rel)
+        if reason or path.name.endswith((".tmp", ".orig", ".rej")):
+            findings.append({"relative_path": rel, "reason": reason or "temporary/patch artifact"})
+    return {"ok": True, "root": label, "relative_path": relative_path, "count": len(findings), "truncated": len(findings) >= max_results, "findings": findings}
+
+
+@mcp.tool()
+def repo_handoff_update(source_root: str = "runtime", target_root: str = "runtime", items: list[dict[str, Any]] | None = None, notes: str = "", write_summary_file: bool = True) -> dict[str, Any]:
+    """Track donor-to-runtime migration state in a guarded runtime summary file."""
+    _require_runtime(target_root)
+    payload = {"updated_utc": datetime.now(timezone.utc).isoformat(), "source_root": _root_label(source_root), "target_root": _root_label(target_root), "items": items or [], "notes": notes}
+    path = "docs/runtime_handoff_update.json"
+    if not write_summary_file:
+        return {"ok": True, "dry_run": True, "would_write": path, "payload": payload}
+    return write_repo_file(path, json.dumps(payload, indent=2) + "\n", overwrite=True, make_parents=True, root="runtime")
+
+
+@mcp.tool()
+def run_controlstack_gate(gate: str, changed_files: list[str] | None = None, timeout_s: int = 1800, max_chars: int = DEFAULT_MAX_CHARS, root: str = "runtime") -> dict[str, Any]:
+    """Run a named, whitelisted ControlStack quality gate in the runtime root."""
     global LAST_RUNTIME_GATE_RESULT
     _require_runtime(root)
     gate_name = str(gate or "").strip().lower()
@@ -603,13 +895,11 @@ def run_controlstack_gate(gate: str, root: str = "runtime", timeout_s: int = 180
         result = {"ok": False, "gate": gate_name, "root": str(RUNTIME_ROOT), "command": FIXED_GATE_COMMAND, "exit_code": 2, "returncode": 2, "stdout": "", "stderr": f"Unsupported gate: {gate_name}", "duration_s": 0.0, "truncated": False, "error": "disallowed_gate"}
         LAST_RUNTIME_GATE_RESULT = result
         return result
-
     script_path = RUNTIME_ROOT / "scripts" / "controlstack_gate.py"
     if not script_path.exists():
         result = {"ok": False, "gate": gate_name, "root": str(RUNTIME_ROOT), "command": [str(script_path), gate_name], "exit_code": 127, "returncode": 127, "stdout": "", "stderr": f"Gate runner not found: {script_path}", "duration_s": 0.0, "truncated": False, "error": "gate_runner_not_found"}
         LAST_RUNTIME_GATE_RESULT = result
         return result
-
     cmd = [sys.executable, str(script_path), gate_name, "--json", "--max-chars", str(max_chars)]
     started = time.monotonic()
     try:
@@ -618,7 +908,6 @@ def run_controlstack_gate(gate: str, root: str = "runtime", timeout_s: int = 180
         result = {"ok": False, "gate": gate_name, "root": str(RUNTIME_ROOT), "command": FIXED_GATE_COMMAND, "exit_code": 124, "returncode": 124, "stdout": "", "stderr": f"timeout after {timeout_s}s", "duration_s": round(time.monotonic() - started, 3), "truncated": False, "error": "timeout"}
         LAST_RUNTIME_GATE_RESULT = result
         return result
-
     stdout, stdout_truncated = _clip_text(proc.stdout or "", max_chars)
     stderr, stderr_truncated = _clip_text(proc.stderr or "", max_chars)
     parsed = _try_parse_json(stdout)
@@ -634,42 +923,54 @@ def run_controlstack_gate(gate: str, root: str = "runtime", timeout_s: int = 180
         result.setdefault("stderr", stderr)
         result.setdefault("duration_s", round(time.monotonic() - started, 3))
         result.setdefault("truncated", stdout_truncated or stderr_truncated)
-        if stderr and not result.get("stderr"):
-            result["stderr"] = stderr
     else:
         result = {"ok": proc.returncode == 0, "gate": gate_name, "root": str(RUNTIME_ROOT), "command": FIXED_GATE_COMMAND, "exit_code": proc.returncode, "returncode": proc.returncode, "stdout": stdout, "stderr": stderr, "duration_s": round(time.monotonic() - started, 3), "truncated": stdout_truncated or stderr_truncated}
-
     LAST_RUNTIME_GATE_RESULT = result
     return result
 
 
 @mcp.tool()
 def repo_git_status(root: str = "runtime") -> dict[str, Any]:
-    """Show git status for the runtime repo."""
+    """Show git status for selected root if it is a git repo."""
     _require_runtime(root)
     return _git_status_details()
 
 
 @mcp.tool()
 def repo_git_stage(paths: list[str], root: str = "runtime", dry_run: bool = True, allow_junk: bool = False) -> dict[str, Any]:
-    """Safely stage explicit runtime file paths. No globs, directories, or backup artifacts by default."""
+    """Safely stage explicit file paths in runtime. Dry-run defaults to true."""
     _require_runtime(root)
     accepted_paths, rejected_paths = _prepare_git_index_paths(paths, require_existing_files=True, allow_missing=False, allow_junk=allow_junk)
     command_args = ["add", "--", *accepted_paths]
-    command_preview = ["git", *command_args]
     git_result = None
     changed = False
     if accepted_paths and not dry_run:
         _require_write_enabled()
         git_result = _run_git(command_args, timeout_s=30, max_chars=50_000)
         changed = bool(git_result.get("ok"))
-    status_preview = _run_git(["status", "--porcelain=v1", "-b", "--", *accepted_paths], max_chars=50_000)
-    return {"ok": bool(accepted_paths) and (git_result is None or bool(git_result.get("ok"))), "root": "runtime", "root_path": str(RUNTIME_ROOT), "requested_paths": paths, "accepted_paths": accepted_paths, "rejected_paths": rejected_paths, "rejection_reasons": rejected_paths, "dry_run": dry_run, "allow_junk": allow_junk, "changed": changed, "command_preview": command_preview, "git_result": git_result, "resulting_git_status_preview": status_preview}
+    status_preview = _run_git(["status", "--porcelain=v1", "-b", "--", *accepted_paths], max_chars=50_000) if accepted_paths else None
+    return {"ok": bool(accepted_paths) and (git_result is None or bool(git_result.get("ok"))), "root": "runtime", "root_path": str(RUNTIME_ROOT), "requested_paths": paths, "accepted_paths": accepted_paths, "rejected_paths": rejected_paths, "rejection_reasons": rejected_paths, "dry_run": dry_run, "allow_junk": allow_junk, "changed": changed, "command_preview": ["git", *command_args], "git_result": git_result, "resulting_git_status_preview": status_preview}
+
+
+@mcp.tool()
+def repo_git_unstage(paths: list[str], root: str = "runtime", dry_run: bool = True) -> dict[str, Any]:
+    """Safely unstage explicit paths without touching working-tree changes."""
+    _require_runtime(root)
+    accepted_paths, rejected_paths = _prepare_git_index_paths(paths, require_existing_files=False, allow_missing=True, allow_junk=True)
+    command_args = ["restore", "--staged", "--", *accepted_paths]
+    git_result = None
+    changed = False
+    if accepted_paths and not dry_run:
+        _require_write_enabled()
+        git_result = _run_git(command_args, timeout_s=30, max_chars=50_000)
+        changed = bool(git_result.get("ok"))
+    status_preview = _run_git(["status", "--porcelain=v1", "-b", "--", *accepted_paths], max_chars=50_000) if accepted_paths else None
+    return {"ok": bool(accepted_paths) and (git_result is None or bool(git_result.get("ok"))), "root": "runtime", "root_path": str(RUNTIME_ROOT), "requested_paths": paths, "accepted_paths": accepted_paths, "rejected_paths": rejected_paths, "rejection_reasons": rejected_paths, "dry_run": dry_run, "changed": changed, "command_preview": ["git", *command_args], "git_result": git_result, "resulting_git_status_preview": status_preview}
 
 
 @mcp.tool()
 def repo_git_diff(root: str = "runtime", relative_path: str | None = None, cached: bool = False, context_lines: int = 3, max_chars: int = DEFAULT_MAX_CHARS) -> dict[str, Any]:
-    """Show runtime git diff."""
+    """Show git diff in runtime."""
     _require_runtime(root)
     args = ["diff", f"--unified={max(0, min(int(context_lines), 20))}"]
     if cached:
@@ -700,7 +1001,6 @@ def repo_git_commit(message: str, root: str = "runtime") -> dict[str, Any]:
     message_clean = str(message or "").strip()
     if not message_clean:
         return {"ok": False, "error": "empty_commit_message", "commit_hash": "", "stdout": "", "stderr": "Commit message must not be empty.", "final_git_status": _git_status_details()}
-
     status = _git_status_details()
     if status.get("modified"):
         return {"ok": False, "error": "unstaged_modified_files", "commit_hash": "", "stdout": "", "stderr": "Refusing commit because modified files are not staged.", "unstaged_modified_files": status.get("modified"), "final_git_status": status}
@@ -710,7 +1010,7 @@ def repo_git_commit(message: str, root: str = "runtime") -> dict[str, Any]:
         return {"ok": False, "error": "no_staged_changes", "commit_hash": "", "stdout": "", "stderr": "Refusing commit because no files are staged.", "final_git_status": status}
     if not _gate_green():
         return {"ok": False, "error": "last_runtime_gate_not_green", "commit_hash": "", "stdout": "", "stderr": "Refusing commit because the last runtime gate result is not green.", "last_runtime_gate_result": LAST_RUNTIME_GATE_RESULT, "final_git_status": status}
-
+    _require_write_enabled()
     commit = _run_git(["commit", "-m", message_clean], timeout_s=120, max_chars=100_000)
     commit_hash = ""
     if commit.get("ok"):
@@ -724,6 +1024,7 @@ def repo_git_commit(message: str, root: str = "runtime") -> dict[str, Any]:
 def repo_git_push(root: str = "runtime") -> dict[str, Any]:
     """Push the current runtime branch to origin. No force push."""
     _require_runtime(root)
+    _require_write_enabled()
     branch = _run_git(["rev-parse", "--abbrev-ref", "HEAD"], timeout_s=30, max_chars=2_000)
     branch_name = str(branch.get("stdout") or "").strip()
     if not branch.get("ok") or not branch_name or branch_name == "HEAD":
@@ -734,12 +1035,11 @@ def repo_git_push(root: str = "runtime") -> dict[str, Any]:
 
 @mcp.tool()
 def repo_green_commit_push(message: str, expected_staged_paths: list[str], gate: str = "selector", root: str = "runtime") -> dict[str, Any]:
-    """Run a fixed runtime gate, verify the explicit staged set, commit, and push. Does not stage files."""
+    """Run a fixed runtime gate, verify explicit staged set, commit, and push. Does not stage files."""
     _require_runtime(root)
     gate_result = run_controlstack_gate(gate=gate, root="runtime")
     if not gate_result.get("ok"):
         return {"ok": False, "stage": "gate", "gate_result": gate_result, "commit": None, "push": None, "final_git_status": _git_status_details()}
-
     expected = sorted(_normalise_paths(expected_staged_paths))
     status = _git_status_details()
     staged = sorted(status.get("staged") or [])
@@ -747,7 +1047,6 @@ def repo_green_commit_push(message: str, expected_staged_paths: list[str], gate:
         return {"ok": False, "stage": "staged_path_guard", "error": "staged_paths_do_not_match_expected", "expected_staged_paths": expected, "actual_staged_paths": staged, "commit": None, "push": None, "final_git_status": status}
     if status.get("modified") or status.get("untracked"):
         return {"ok": False, "stage": "worktree_guard", "error": "unstaged_or_untracked_files_present", "modified": status.get("modified"), "untracked": status.get("untracked"), "commit": None, "push": None, "final_git_status": status}
-
     commit = repo_git_commit(message=message, root="runtime")
     if not commit.get("ok"):
         return {"ok": False, "stage": "commit", "gate_result": gate_result, "commit": commit, "push": None, "final_git_status": _git_status_details()}
@@ -755,13 +1054,55 @@ def repo_green_commit_push(message: str, expected_staged_paths: list[str], gate:
     return {"ok": bool(push.get("ok")), "stage": "pushed" if push.get("ok") else "push", "gate_result": gate_result, "commit": commit, "push": push, "final_git_status": _git_status_details()}
 
 
+@mcp.tool()
+def webhook_get(path: str, query: dict[str, Any] | None = None, headers: dict[str, str] | None = None, timeout_s: int = 20, max_chars: int = DEFAULT_MAX_CHARS) -> dict[str, Any]:
+    """Send a GET request to the local ControlStack webhook server."""
+    if not path.startswith("/") or _path_has_control_chars(path):
+        raise ValueError("path must start with / and contain no control characters")
+    url = WEBHOOK_BASE_URL + path
+    if query:
+        url += "?" + urllib.parse.urlencode(query, doseq=True)
+    req = urllib.request.Request(url, headers=headers or {}, method="GET")
+    try:
+        with urllib.request.urlopen(req, timeout=timeout_s) as response:
+            text = response.read().decode("utf-8", errors="replace")
+            body, truncated = _clip_text(text, max_chars)
+            return {"ok": 200 <= response.status < 400, "status": response.status, "url": url, "body": body, "truncated": truncated}
+    except urllib.error.HTTPError as exc:
+        text = exc.read().decode("utf-8", errors="replace")
+        body, truncated = _clip_text(text, max_chars)
+        return {"ok": False, "status": exc.code, "url": url, "body": body, "truncated": truncated}
+
+
+@mcp.tool()
+def webhook_post(path: str, json_body: dict[str, Any] | list[Any] | None = None, text_body: str | None = None, headers: dict[str, str] | None = None, timeout_s: int = 30, max_chars: int = DEFAULT_MAX_CHARS) -> dict[str, Any]:
+    """Send a POST request to the local ControlStack webhook server."""
+    if not path.startswith("/") or _path_has_control_chars(path):
+        raise ValueError("path must start with / and contain no control characters")
+    if json_body is not None and text_body is not None:
+        raise ValueError("Provide json_body or text_body, not both")
+    url = WEBHOOK_BASE_URL + path
+    request_headers = dict(headers or {})
+    if json_body is not None:
+        data = json.dumps(json_body).encode("utf-8")
+        request_headers.setdefault("Content-Type", "application/json")
+    else:
+        data = (text_body or "").encode("utf-8")
+        request_headers.setdefault("Content-Type", "text/plain; charset=utf-8")
+    req = urllib.request.Request(url, data=data, headers=request_headers, method="POST")
+    try:
+        with urllib.request.urlopen(req, timeout=timeout_s) as response:
+            text = response.read().decode("utf-8", errors="replace")
+            body, truncated = _clip_text(text, max_chars)
+            return {"ok": 200 <= response.status < 400, "status": response.status, "url": url, "body": body, "truncated": truncated}
+    except urllib.error.HTTPError as exc:
+        text = exc.read().decode("utf-8", errors="replace")
+        body, truncated = _clip_text(text, max_chars)
+        return {"ok": False, "status": exc.code, "url": url, "body": body, "truncated": truncated}
+
+
 def _run_server() -> None:
-    logger.info(
-        "Starting runtime-owned ControlStack MCP server: runtime=%s donor_reference=%s transport=%s",
-        RUNTIME_ROOT,
-        DONOR_REFERENCE_ROOT,
-        ACTIVE_TRANSPORT,
-    )
+    logger.info("Starting runtime-owned ControlStack MCP server: runtime=%s donor_reference=%s transport=%s", RUNTIME_ROOT, DONOR_REFERENCE_ROOT, ACTIVE_TRANSPORT)
     if ACTIVE_TRANSPORT in {"http", "streamable-http", "streamable_http"}:
         mcp.run(transport="streamable-http")
     else:
