@@ -91,20 +91,82 @@ function spineRow(spine, sectionKey, rowKey) {
   return row;
 }
 
-test("Selector product surface renders checklist spine and payload preview before Diagnostics", async () => {
+test("Selector product surface renders selected-truth and canonical workflow before spine, payload, readiness, handoff, and Diagnostics", async () => {
   const source = await readFile(viewSourceUrl, "utf-8");
 
+  const truthRenderIndex = source.indexOf("appendSelectorSelectionTruthSummary(section");
+  const workflowRenderIndex = source.indexOf("appendSelectorWorkflowSections(section");
   const spineRenderIndex = source.indexOf("appendSelectorProductSpine(section");
   const payloadRenderIndex = source.indexOf("appendPayloadPreviewObject(section");
-  const truthRenderIndex = source.indexOf("appendSelectorSelectionTruthSummary(section");
+  const readinessRenderIndex = source.indexOf("appendSelectorSourceSpecReadinessExplanation(section");
+  const disabledHandoffIndex = source.indexOf("appendSelectorDisabledHandoffSummary(section");
   const diagnosticsIndex = source.indexOf("const diagnosticsDetails = document.createElement(\"details\")");
 
-  assert.ok(spineRenderIndex > 0, "product spine should render");
+  assert.ok(truthRenderIndex > 0, "selected-truth summary should render first in the product surface");
+  assert.ok(workflowRenderIndex > truthRenderIndex, "canonical workflow should render after selected-truth summary");
+  assert.ok(spineRenderIndex > workflowRenderIndex, "product spine should render after canonical workflow");
   assert.ok(payloadRenderIndex > spineRenderIndex, "payload preview should render after checklist spine");
-  assert.ok(truthRenderIndex > payloadRenderIndex, "selected-truth summary should remain after payload preview");
-  assert.ok(diagnosticsIndex > truthRenderIndex, "Diagnostics should remain below the product surface");
+  assert.ok(readinessRenderIndex > payloadRenderIndex, "source/spec readiness explanation should render after payload preview");
+  assert.ok(disabledHandoffIndex > readinessRenderIndex, "disabled handoff summary should render after source/spec readiness");
+  assert.ok(diagnosticsIndex > disabledHandoffIndex, "Diagnostics should remain below the product surface");
   assert.match(source, /dataset\.selectorProductSpine = "checklist"/);
   assert.match(source, /dataset\.selectorPayloadPreview = "skeleton"/);
+  assert.match(source, /dataset\.selectorSourceSpecReadiness = "read-only"/);
+  assert.match(source, /dataset\.selectorDisabledHandoffSummary = "read-only"/);
+});
+
+test("Selector product surface parity lock keeps summary, spine, payload, readiness, and handoffs aligned", () => {
+  const surface = createModel().selectorSurface;
+  const lock = surface.productSurfaceParityLock;
+  const readiness = surface.sourceSpecReadinessExplanation;
+  const handoffs = surface.disabledHandoffSummary;
+  const payload = surface.payloadPreview;
+
+  assert.deepEqual(lock.blockOrder, [
+    "selected-truth summary",
+    "canonical workflow sections",
+    "product spine",
+    "payload preview",
+    "source/spec readiness explanation",
+    "disabled handoff summary",
+    "collapsed diagnostics",
+  ]);
+  assert.equal(lock.selectedTruthBeforeProductSpine, true);
+  assert.equal(lock.canonicalWorkflowBeforePayloadPreview, true);
+  assert.equal(lock.productSpineBeforePayloadPreview, true);
+  assert.equal(lock.sourceSpecReadinessAfterPayloadPreview, true);
+  assert.equal(lock.disabledHandoffAfterReadiness, true);
+  assert.equal(lock.diagnosticsCollapsedBehindProductSurface, true);
+  assert.equal(lock.workflowSectionsCanonical, true);
+  assert.equal(lock.flatFieldsPrimary, false);
+  assert.equal(lock.sourceReadinessAgreesWithPayload, true);
+  assert.equal(lock.specGateAgreesWithPayload, true);
+  assert.equal(lock.disabledHandoffsAgreeWithPayload, true);
+  assert.equal(lock.allGenerationProofWriteDisabled, true);
+  assert.equal(lock.rawRowsExposed, false);
+
+  assert.equal(readiness.sourceReady, payload.sourceReady);
+  assert.equal(readiness.readinessState, payload.specGateCandidateReadiness.readinessState);
+  assert.equal(readiness.specReady, payload.specGateCandidateReadiness.specReady);
+  assert.equal(readiness.rawRowsExposed, false);
+  assert.equal(readiness.rawHeadersExposed, false);
+  assert.equal(readiness.rawUsersExposed, false);
+  assert.equal(readiness.rawLabEvidenceExposed, false);
+
+  assert.equal(handoffs.allDisabled, true);
+  assert.equal(handoffs.handoffCount, 11);
+  assert.equal(handoffs.handoffs.every((handoff) => handoff.status === "disabled"), true);
+  assert.equal(handoffs.safetyFlags.specGeneration, false);
+  assert.equal(handoffs.safetyFlags.slugGeneration, false);
+  assert.equal(handoffs.safetyFlags.iesGeneration, false);
+  assert.equal(handoffs.safetyFlags.payloadGeneration, false);
+  assert.equal(handoffs.safetyFlags.runTableGeneration, false);
+  assert.equal(handoffs.safetyFlags.drawingGeneration, false);
+  assert.equal(handoffs.safetyFlags.labProofAuthority, false);
+  assert.equal(handoffs.safetyFlags.controlledRecordsWrites, false);
+  assert.equal(handoffs.safetyFlags.rregApprovalCustodyTransfer, false);
+  assert.equal(handoffs.safetyFlags.hubSpotCrmWriteBack, false);
+  assert.equal(handoffs.safetyFlags.boardDataMutation, false);
 });
 
 test("Selector checklist sections appear in the target order", () => {
@@ -199,6 +261,8 @@ test("Runs & Disabled Outputs rows render em dash when empty and keep every outp
     rows: [],
   });
   assert.deepEqual(payload.disabledOutputs, {
+    specGeneration: false,
+    slugGeneration: false,
     runTableGeneration: false,
     payloadGeneration: false,
     iesGeneration: false,
@@ -207,6 +271,7 @@ test("Runs & Disabled Outputs rows render em dash when empty and keep every outp
     controlledRecordsWrites: false,
     rregApprovalCustodyTransfer: false,
     hubSpotCrmWriteBack: false,
+    boardDataMutation: false,
   });
 });
 
@@ -272,6 +337,7 @@ test("Payload preview exposes the expected top-level shape and safety flags", ()
   assert.equal(payload.safetyFlags.controlledRecordsWrites, false);
   assert.equal(payload.safetyFlags.rregApprovalCustodyTransfer, false);
   assert.equal(payload.safetyFlags.hubSpotCrmWriteBack, false);
+  assert.equal(payload.safetyFlags.boardDataMutation, false);
   assert.equal(payload.safetyFlags.rawRowsExposed, false);
   assert.equal(payload.safetyFlags.rawHeadersExposed, false);
   assert.equal(payload.safetyFlags.rawUsersExposed, false);

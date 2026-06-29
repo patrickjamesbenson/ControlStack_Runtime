@@ -1322,6 +1322,49 @@ function appendPayloadPreviewObject(parent, payload = {}) {
   parent.appendChild(section);
 }
 
+function appendSelectorSourceSpecReadinessExplanation(parent, readiness = {}) {
+  const section = document.createElement("section");
+  section.className = "cs-selector-readiness-lock";
+  section.dataset.selectorSourceSpecReadiness = "read-only";
+  section.dataset.readOnly = readiness.readOnly === false ? "false" : "true";
+  section.dataset.specReady = readiness.specReady === true ? "true" : "false";
+  section.dataset.rawRowsExposed = readiness.rawRowsExposed === true ? "true" : "false";
+
+  appendText(section, "h4", readiness.title || "Source readiness / spec gate explanation");
+  appendText(section, "p", "Source readiness, candidate readiness, missing requirements, blockers, and future-mapped state are repeated here so the summary, spine, and payload preview agree without exposing raw source data.");
+  appendSection(section, "Source/spec readiness", readiness.rows || [["source readiness", "unavailable / fail closed"]]);
+  appendPillList(section, readiness.boundaryCopy || ["Read-only source/spec readiness explanation."]);
+
+  parent.appendChild(section);
+}
+
+function appendSelectorDisabledHandoffSummary(parent, summary = {}) {
+  const section = document.createElement("section");
+  section.className = "cs-selector-disabled-handoff-summary";
+  section.dataset.selectorDisabledHandoffSummary = "read-only";
+  section.dataset.allDisabled = summary.allDisabled === false ? "false" : "true";
+  section.dataset.generation = summary.generation === true ? "true" : "false";
+  section.dataset.rawRowsExposed = summary.rawRowsExposed === true ? "true" : "false";
+
+  appendText(section, "h4", summary.title || "Disabled output handoff summary");
+  appendText(section, "p", "Every downstream output handoff is locked off. These rows mirror the payload preview safety flags and do not create generation, proof, records, approval, CRM, or Board Data mutation paths.");
+  const handoffRows = (Array.isArray(summary.handoffs) ? summary.handoffs : []).map((handoff) => [
+    handoff.label || handoff.key || "handoff",
+    handoff.status || (handoff.disabled === false ? "unsafe-enabled" : "disabled"),
+  ]);
+  appendSection(section, "Disabled handoffs", handoffRows.length ? handoffRows : [["handoffs", "disabled"]]);
+  appendSection(section, "Disabled handoff safety flags", [
+    ["allDisabled", summary.allDisabled === false ? "false" : "true"],
+    ["writes", summary.writes === true ? "true" : "false"],
+    ["generation", summary.generation === true ? "true" : "false"],
+    ["proof", summary.proof === true ? "true" : "false"],
+    ["rawRowsExposed", summary.rawRowsExposed === true ? "true" : "false"],
+  ]);
+  appendPillList(section, summary.boundaryCopy || ["All downstream handoffs remain disabled."]);
+
+  parent.appendChild(section);
+}
+
 function appendSelectorProductCompactStatus(parent, surface = {}) {
   const summary = surface.candidateSummary || {};
   const status = document.createElement("section");
@@ -1378,12 +1421,14 @@ function appendSelectorProductSurface(parent, surface = {}) {
   appendText(section, "p", "Read-only preview. No spec, slug, IES, payload, RunTable, Lab Proof, Controlled Record, RREG approval, custody transfer, Board Data write, or hidden write-back is created here.", "cs-selector-product__safety");
   appendText(section, "p", surface.proofCopy || "Selector previews selection readiness. Lab Proof proves later.", "cs-selector-product__safety");
 
-  appendSelectorProductSpine(section, surface.productSpine || {});
-  appendPayloadPreviewObject(section, surface.payloadPreview || {});
-
   appendSelectorSelectionTruthSummary(section, surface.selectionTruthSummary || {});
 
   appendSelectorWorkflowSections(section, surface);
+
+  appendSelectorProductSpine(section, surface.productSpine || {});
+  appendPayloadPreviewObject(section, surface.payloadPreview || {});
+  appendSelectorSourceSpecReadinessExplanation(section, surface.sourceSpecReadinessExplanation || {});
+  appendSelectorDisabledHandoffSummary(section, surface.disabledHandoffSummary || {});
 
   appendSelectorProductCompactStatus(section, surface);
 

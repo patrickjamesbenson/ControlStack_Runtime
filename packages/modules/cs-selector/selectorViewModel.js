@@ -3041,6 +3041,8 @@ function createPayloadPreviewSkeleton({ fields = [], workflowSections = [], summ
       rows: [],
     },
     disabledOutputs: {
+      specGeneration: false,
+      slugGeneration: false,
       runTableGeneration: false,
       payloadGeneration: false,
       iesGeneration: false,
@@ -3049,6 +3051,7 @@ function createPayloadPreviewSkeleton({ fields = [], workflowSections = [], summ
       controlledRecordsWrites: false,
       rregApprovalCustodyTransfer: false,
       hubSpotCrmWriteBack: false,
+      boardDataMutation: false,
     },
     specGateCandidateReadiness,
     safetyFlags: {
@@ -3065,12 +3068,225 @@ function createPayloadPreviewSkeleton({ fields = [], workflowSections = [], summ
       controlledRecordsWrites: false,
       rregApprovalCustodyTransfer: false,
       hubSpotCrmWriteBack: false,
+      boardDataMutation: false,
       rawRowsExposed: false,
       rawHeadersExposed: false,
       rawUsersExposed: false,
       credentialsExposed: false,
       privatePathsExposed: false,
     },
+  };
+}
+
+const PRODUCT_SURFACE_PARITY_ORDER = Object.freeze([
+  "selected-truth summary",
+  "canonical workflow sections",
+  "product spine",
+  "payload preview",
+  "source/spec readiness explanation",
+  "disabled handoff summary",
+  "collapsed diagnostics",
+]);
+
+const PRODUCT_SURFACE_DISABLED_HANDOFFS = Object.freeze([
+  Object.freeze({ key: "specGeneration", label: "Spec generation", safetyKey: "specGeneration", disabledKey: "specGeneration" }),
+  Object.freeze({ key: "slugGeneration", label: "Slug generation", safetyKey: "slugGeneration", disabledKey: "slugGeneration" }),
+  Object.freeze({ key: "iesGeneration", label: "IES generation", safetyKey: "iesGeneration", disabledKey: "iesGeneration" }),
+  Object.freeze({ key: "payloadGeneration", label: "Payload generation", safetyKey: "payloadGeneration", disabledKey: "payloadGeneration" }),
+  Object.freeze({ key: "runTableGeneration", label: "RunTable generation", safetyKey: "runTableGeneration", disabledKey: "runTableGeneration" }),
+  Object.freeze({ key: "drawingGeneration", label: "Drawing generation", safetyKey: "drawingGeneration", disabledKey: "drawingGeneration" }),
+  Object.freeze({ key: "labProofAuthority", label: "Lab Proof authority", safetyKey: "labProofAuthority", disabledKey: "labProofAuthority" }),
+  Object.freeze({ key: "controlledRecordsWrites", label: "Controlled Records writes", safetyKey: "controlledRecordsWrites", disabledKey: "controlledRecordsWrites" }),
+  Object.freeze({ key: "rregApprovalCustodyTransfer", label: "RREG approval / custody transfer", safetyKey: "rregApprovalCustodyTransfer", disabledKey: "rregApprovalCustodyTransfer" }),
+  Object.freeze({ key: "hubSpotCrmWriteBack", label: "HubSpot / CRM write-back", safetyKey: "hubSpotCrmWriteBack", disabledKey: "hubSpotCrmWriteBack" }),
+  Object.freeze({ key: "boardDataMutation", label: "Board Data mutation", safetyKey: "boardDataMutation", disabledKey: "boardDataMutation" }),
+]);
+
+function falseUnlessExplicitTrue(value) {
+  return value === true ? true : false;
+}
+
+function createSourceSpecReadinessExplanation({
+  sourceReady = false,
+  sourceReadiness = null,
+  referenceOptionSourceCoverage = null,
+  productSpine = {},
+  payloadPreview = {},
+  selectionTruthSummary = {},
+  summary = {},
+} = {}) {
+  const spec = productSpine.specGateCandidateReadiness || payloadPreview.specGateCandidateReadiness || {};
+  const safeSource = sourceReadiness || payloadPreview.sourceReadiness || payloadPreview.safeSnapshotState || {};
+  const coverage = referenceOptionSourceCoverage || safeSource.referenceOptionSourceCoverage || payloadPreview.referenceOptionSourceCoverage || {};
+  const missingRequirements = Array.isArray(spec.missingRequirements) ? [...spec.missingRequirements] : [];
+  const blockedItems = Array.isArray(selectionTruthSummary.blockers) ? selectionTruthSummary.blockers : [];
+  const missingItems = Array.isArray(selectionTruthSummary.missing) ? selectionTruthSummary.missing : [];
+  const sourceState = safeSource.state || (sourceReady ? "source-backed-safe-preview" : "fail-closed-source-warning");
+  const readinessState = spec.readinessState || summary.state || "default preview — not spec-ready";
+  const sourceReadyBoolean = sourceReady === true;
+  const specReady = spec.specReady === true;
+
+  return {
+    title: "Source readiness / spec gate explanation",
+    readOnly: true,
+    previewOnly: true,
+    diagnosticOnly: false,
+    sourceReady: sourceReadyBoolean,
+    sourceState,
+    completeEnoughForPreview: safeSource.completeEnoughForPreview === true,
+    readOnlyProductReference: safeSource.readOnlyProductReference === true || safeSource.safeForPreview === true,
+    failClosed: safeSource.failClosed === true || sourceReadyBoolean !== true,
+    expectedTablesPresent: safeSource.expectedTablesPresent === true,
+    sourceBackedFieldCount: coverage.sourceBackedFieldCount ?? 0,
+    futureMappedFieldCount: coverage.futureMappedFieldCount ?? 0,
+    specReady,
+    specGateComplete: spec.specGateComplete === true,
+    readinessState,
+    missingRequirements,
+    blockedIncompatibleSummary: spec.blockedIncompatibleSummary || PRODUCT_SPINE_EMPTY_VALUE,
+    manualConstraintsSummary: spec.manualConstraintsSummary || PRODUCT_SPINE_EMPTY_VALUE,
+    autoConsequencesSummary: spec.autoConsequencesSummary || PRODUCT_SPINE_EMPTY_VALUE,
+    slugSpecPreviewState: spec.slugSpecPreviewState || "disabled",
+    blockedCount: blockedItems.length,
+    missingCount: missingItems.length,
+    futureMappedFieldExplanation: payloadPreview.futureMappedFieldExplanation || safeSource.futureMappedFieldExplanation || coverage.futureMappedExplanation || "Future-mapped fields are visible and not faked.",
+    rows: [
+      ["source readiness", sourceReadyBoolean ? "ready" : "unavailable / fail closed"],
+      ["source state", sourceState],
+      ["complete enough for preview", safeSource.completeEnoughForPreview === true ? "true" : "false"],
+      ["read-only product reference", (safeSource.readOnlyProductReference === true || safeSource.safeForPreview === true) ? "true" : "false"],
+      ["spec gate state", readinessState],
+      ["spec-ready", specReady ? "read-only ready" : "disabled"],
+      ["missing requirements", missingRequirements.length ? missingRequirements.join(", ") : PRODUCT_SPINE_EMPTY_VALUE],
+      ["blocked selections", spec.blockedIncompatibleSummary || PRODUCT_SPINE_EMPTY_VALUE],
+      ["manual constraints", spec.manualConstraintsSummary || PRODUCT_SPINE_EMPTY_VALUE],
+      ["auto consequences", spec.autoConsequencesSummary || PRODUCT_SPINE_EMPTY_VALUE],
+      ["future mapped fields", String(coverage.futureMappedFieldCount ?? 0)],
+      ["slug/spec preview", spec.slugSpecPreviewState || "disabled"],
+    ],
+    boundaryCopy: [
+      "Source readiness is reported from safe snapshot/status metadata only.",
+      "Spec Gate / Candidate Readiness is read-only and follows donor Gate S requirements.",
+      "Missing, blocked, future-mapped, and disabled values stay visible without fabricated values.",
+      "Spec-ready does not activate generation, proof, records, approvals, or write-back.",
+    ],
+    agreement: {
+      payloadSourceReadyMatchesSurface: payloadPreview.sourceReady === sourceReadyBoolean,
+      payloadSpecGateMatchesSurface: (payloadPreview.specGateCandidateReadiness?.readinessState || readinessState) === readinessState,
+      selectionTruthBlockersMatchReadiness: blockedItems.length === (summary.blockedCount ?? blockedItems.length),
+    },
+    writes: false,
+    rawRowsExposed: false,
+    rawHeadersExposed: false,
+    rawUsersExposed: false,
+    rawLabEvidenceExposed: false,
+    credentialsExposed: false,
+    privatePathsExposed: false,
+  };
+}
+
+function createDisabledHandoffSummary({ payloadPreview = {}, selectionTruthSummary = {}, productSpine = {} } = {}) {
+  const safetyFlags = payloadPreview.safetyFlags || {};
+  const disabledOutputs = payloadPreview.disabledOutputs || {};
+  const handoffs = PRODUCT_SURFACE_DISABLED_HANDOFFS.map((handoff) => {
+    const safetyFlag = falseUnlessExplicitTrue(safetyFlags[handoff.safetyKey]);
+    const disabledFlag = falseUnlessExplicitTrue(disabledOutputs[handoff.disabledKey]);
+    return {
+      key: handoff.key,
+      label: handoff.label,
+      safetyFlag,
+      disabledOutputFlag: disabledFlag,
+      disabled: safetyFlag === false && disabledFlag === false,
+      status: safetyFlag === false && disabledFlag === false ? "disabled" : "unsafe-enabled",
+      source: "payload safety flags + disabled output preview",
+      writes: false,
+      rawRowsExposed: false,
+    };
+  });
+  const specGate = productSpine.specGateCandidateReadiness || payloadPreview.specGateCandidateReadiness || {};
+  const truthDisabled = Array.isArray(selectionTruthSummary.disabledHandoffs) ? selectionTruthSummary.disabledHandoffs : [];
+  return {
+    title: "Disabled output handoff summary",
+    readOnly: true,
+    allDisabled: handoffs.every((handoff) => handoff.disabled === true),
+    handoffs,
+    handoffCount: handoffs.length,
+    selectionTruthDisabledHandoffCount: truthDisabled.length,
+    specGateDisabledHandoffSummary: specGate.disabledHandoffSummary || "disabled",
+    summaryText: handoffs.map((handoff) => `${handoff.label}: ${handoff.status}`).join("; "),
+    safetyFlags: {
+      specGeneration: falseUnlessExplicitTrue(safetyFlags.specGeneration),
+      slugGeneration: falseUnlessExplicitTrue(safetyFlags.slugGeneration),
+      iesGeneration: falseUnlessExplicitTrue(safetyFlags.iesGeneration),
+      payloadGeneration: falseUnlessExplicitTrue(safetyFlags.payloadGeneration),
+      runTableGeneration: falseUnlessExplicitTrue(safetyFlags.runTableGeneration),
+      drawingGeneration: falseUnlessExplicitTrue(safetyFlags.drawingGeneration),
+      labProofAuthority: falseUnlessExplicitTrue(safetyFlags.labProofAuthority),
+      controlledRecordsWrites: falseUnlessExplicitTrue(safetyFlags.controlledRecordsWrites),
+      rregApprovalCustodyTransfer: falseUnlessExplicitTrue(safetyFlags.rregApprovalCustodyTransfer),
+      hubSpotCrmWriteBack: falseUnlessExplicitTrue(safetyFlags.hubSpotCrmWriteBack),
+      boardDataMutation: falseUnlessExplicitTrue(safetyFlags.boardDataMutation),
+    },
+    boundaryCopy: [
+      "All output handoffs remain disabled in this slice.",
+      "The preview does not generate spec, slug, IES, payload, RunTable, drawing, Lab Proof, Controlled Records, RREG, HubSpot/CRM, or Board Data mutation outputs.",
+      "Disabled handoff rows must agree with payload safety flags.",
+    ],
+    writes: false,
+    generation: false,
+    proof: false,
+    rawRowsExposed: false,
+    rawHeadersExposed: false,
+    rawUsersExposed: false,
+    rawLabEvidenceExposed: false,
+    credentialsExposed: false,
+    privatePathsExposed: false,
+  };
+}
+
+function createProductSurfaceParityLock({
+  productSpine = {},
+  payloadPreview = {},
+  selectionTruthSummary = {},
+  sourceSpecReadinessExplanation = {},
+  disabledHandoffSummary = {},
+  workflowSectionsCanonical = true,
+  flatFieldsPrimary = false,
+} = {}) {
+  const spineOrder = Array.isArray(productSpine.order) ? [...productSpine.order] : [];
+  return {
+    title: "Selector product surface parity lock",
+    readOnly: true,
+    blockOrder: [...PRODUCT_SURFACE_PARITY_ORDER],
+    selectedTruthBeforeProductSpine: true,
+    canonicalWorkflowBeforePayloadPreview: true,
+    productSpineBeforePayloadPreview: true,
+    sourceSpecReadinessAfterPayloadPreview: true,
+    disabledHandoffAfterReadiness: true,
+    diagnosticsCollapsedBehindProductSurface: true,
+    workflowSectionsCanonical: workflowSectionsCanonical !== false,
+    flatFieldsPrimary: flatFieldsPrimary === true ? false : false,
+    spineOrder,
+    payloadShapeKeys: Object.keys(payloadPreview || {}),
+    sourceReadinessAgreesWithPayload: sourceSpecReadinessExplanation.agreement?.payloadSourceReadyMatchesSurface !== false,
+    specGateAgreesWithPayload: sourceSpecReadinessExplanation.agreement?.payloadSpecGateMatchesSurface !== false,
+    disabledHandoffsAgreeWithPayload: disabledHandoffSummary.allDisabled === true,
+    selectedTruthSafetyAgrees: selectionTruthSummary.specGenerationEnabled === false
+      && selectionTruthSummary.payloadGenerationEnabled === false
+      && selectionTruthSummary.runTableGenerationEnabled === false
+      && selectionTruthSummary.labProofAuthority === false,
+    allGenerationProofWriteDisabled: disabledHandoffSummary.allDisabled === true
+      && payloadPreview.productionPayload !== true
+      && payloadPreview.safetyFlags?.writes !== true
+      && payloadPreview.safetyFlags?.generation !== true
+      && payloadPreview.safetyFlags?.labProofAuthority !== true,
+    rawRowsExposed: false,
+    rawHeadersExposed: false,
+    rawUsersExposed: false,
+    rawLabEvidenceExposed: false,
+    credentialsExposed: false,
+    privatePathsExposed: false,
+    writes: false,
   };
 }
 
@@ -3150,6 +3366,29 @@ function createDbBackedSelectorSurface(selectorReferenceStatus = {}, local = {},
     sourceReadiness,
     referenceOptionSourceCoverage,
   });
+  const sourceSpecReadinessExplanation = createSourceSpecReadinessExplanation({
+    sourceReady,
+    sourceReadiness,
+    referenceOptionSourceCoverage,
+    productSpine,
+    payloadPreview,
+    selectionTruthSummary,
+    summary,
+  });
+  const disabledHandoffSummary = createDisabledHandoffSummary({
+    payloadPreview,
+    selectionTruthSummary,
+    productSpine,
+  });
+  const productSurfaceParityLock = createProductSurfaceParityLock({
+    productSpine,
+    payloadPreview,
+    selectionTruthSummary,
+    sourceSpecReadinessExplanation,
+    disabledHandoffSummary,
+    workflowSectionsCanonical: canonicalWorkflow.workflowSectionsCanonical,
+    flatFieldsPrimary: false,
+  });
   return {
     title: "CS Selector Preview",
     subtitle: "Read-only DB-backed candidate preview. Manual selections are constraints; auto selections are consequences.",
@@ -3190,6 +3429,9 @@ function createDbBackedSelectorSurface(selectorReferenceStatus = {}, local = {},
     productSpine,
     payloadPreview,
     selectionTruthSummary,
+    sourceSpecReadinessExplanation,
+    disabledHandoffSummary,
+    productSurfaceParityLock,
     manualConstraints,
     autoConsequences,
     blockedItems,
