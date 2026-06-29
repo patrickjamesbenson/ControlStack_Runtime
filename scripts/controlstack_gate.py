@@ -165,7 +165,7 @@ def main(argv: list[str]) -> int:
 
     result = run_gate(args.gate, max(1_000, args.max_chars))
     if args.json:
-        print(json.dumps(result, ensure_ascii=False))
+        print(json.dumps(result, ensure_ascii=True))
     else:
         print(result["stdout"], end="")
         if result["stderr"]:
