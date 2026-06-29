@@ -135,14 +135,14 @@ const WORKFLOW_SECTION_DEFINITIONS = Object.freeze([
   },
   {
     sectionKey: "runsPreview",
-    title: "Runs Preview",
+    title: "Runs & Disabled Outputs",
     fields: [
       { fieldKey: "runCount", label: "Run count/list", role: "disabled", sourceTables: [] },
       { fieldKey: "runQty", label: "Qty", role: "disabled", sourceTables: [] },
       { fieldKey: "runLength", label: "Length", role: "disabled", sourceTables: [] },
       { fieldKey: "runLengthMode", label: "Length mode", role: "disabled", sourceTables: [] },
-      { fieldKey: "runOverrideStatus", label: "Override status", role: "disabled", sourceTables: [] },
-      { fieldKey: "runPlacementStatus", label: "Placement status", role: "disabled", sourceTables: [] },
+      { fieldKey: "runOverrideStatus", label: "Override status", role: "future-mapped", sourceTables: [] },
+      { fieldKey: "runPlacementStatus", label: "Placement status", role: "future-mapped", sourceTables: [] },
     ],
   },
   {
@@ -153,10 +153,16 @@ const WORKFLOW_SECTION_DEFINITIONS = Object.freeze([
       { fieldKey: "outputNavigation", label: "Output navigation", role: "disabled", sourceTables: [] },
       { fieldKey: "saveHydrate", label: "Save / hydrate", role: "disabled", sourceTables: [] },
       { fieldKey: "hubSpotPush", label: "HubSpot push", role: "disabled", sourceTables: [] },
+      { fieldKey: "hubSpotCrmWriteBack", label: "HubSpot / CRM write-back", role: "disabled", sourceTables: [] },
       { fieldKey: "specBuildAuthority", label: "Spec/build authority", role: "disabled", sourceTables: [] },
       { fieldKey: "slugSpecGeneration", label: "Slug/spec generation", role: "disabled", sourceTables: [] },
+      { fieldKey: "runTableGeneration", label: "RunTable generation", role: "disabled", sourceTables: [] },
+      { fieldKey: "payloadGeneration", label: "Payload generation", role: "disabled", sourceTables: [] },
       { fieldKey: "iesGeneration", label: "IES generation", role: "disabled", sourceTables: [] },
       { fieldKey: "payloadRunTableGeneration", label: "Payload / RunTable generation", role: "disabled", sourceTables: [] },
+      { fieldKey: "drawingGeneration", label: "Drawing generation", role: "disabled", sourceTables: [] },
+      { fieldKey: "controlledRecords", label: "Controlled Records writes", role: "disabled", sourceTables: [] },
+      { fieldKey: "rregApprovalCustody", label: "RREG approval / custody transfer", role: "disabled", sourceTables: [] },
     ],
   },
 ]);
@@ -1595,17 +1601,25 @@ function workflowOptionAllowed(fieldKey, option, records, constraints) {
   return optionAllowedByRecords(fieldKey, option, records, constraints);
 }
 
-function createDisabledWorkflowField(field, reason) {
+const DONOR_SUPPORTED_DISABLED_RUN_CONSTRAINT_FIELDS = Object.freeze(new Set([
+  "runCount",
+  "runQty",
+  "runLength",
+  "runLengthMode",
+]));
+
+function createDisabledWorkflowField(field, reason, selectedValue = "") {
+  const safeSelectedValue = DONOR_SUPPORTED_DISABLED_RUN_CONSTRAINT_FIELDS.has(field.fieldKey) ? safeString(selectedValue) : "";
   return {
     fieldKey: field.fieldKey,
     label: field.label,
     role: field.role || "disabled",
     status: "disabled",
-    sourceStatus: "disabled by runtime boundary",
+    sourceStatus: safeSelectedValue ? "disabled by runtime boundary; donor-supported run constraint preserved" : "disabled by runtime boundary",
     sourceTables: [...(field.sourceTables || [])],
     options: [],
-    selectedValue: "",
-    selectedLabel: "",
+    selectedValue: safeSelectedValue,
+    selectedLabel: safeSelectedValue,
     unavailableReason: reason,
     futureMapped: false,
     disabled: true,
@@ -1763,7 +1777,7 @@ function createMetadataWorkflowField(field, baseOptions = [], records = [], cons
 function createWorkflowField(field, { bucket, records, constraints, cascadeConstraints = constraints, sourceReady }) {
   const selectedValue = constraints[field.fieldKey] || "";
   if (!sourceReady) return createUnavailableField(field, "Selector Reference source is unavailable or not parseable.");
-  if (field.role === "disabled") return createDisabledWorkflowField(field, "Disabled read-only preview. No workflow action, generation, write, proof, payload, RunTable, HubSpot push, save, or hidden write-back is available in this slice.");
+  if (field.role === "disabled") return createDisabledWorkflowField(field, "Disabled read-only preview. No workflow action, generation, write, proof, payload, RunTable, HubSpot push, save, or hidden write-back is available in this slice.", selectedValue);
   if (field.role === "future-mapped") return createUnavailableField(field, `${field.label} is a donor workflow field but is not source-backed in this runtime slice.`);
 
   const rawBaseOptions = optionsFor(bucket, field.fieldKey);
@@ -1867,10 +1881,11 @@ function createWorkflowSections({ bucket, records, constraints, cascadeConstrain
     const mappedCount = fields.filter((field) => String(field.sourceStatus || "").startsWith("db-reference-backed") || field.sourceStatus === "entitlement-gated-redacted").length;
     const futureMappedCount = fields.filter((field) => field.futureMapped === true).length;
     const disabledCount = fields.filter((field) => field.disabled === true && field.metadataOnly !== true).length;
+    const passivePreviewCount = disabledCount + futureMappedCount;
     return {
       sectionKey: section.sectionKey,
       title: section.title,
-      status: disabledCount === fields.length ? "disabled" : futureMappedCount ? "preview-with-gaps" : "preview-ready",
+      status: disabledCount === fields.length || (section.sectionKey === "runsPreview" && passivePreviewCount === fields.length) ? "disabled" : futureMappedCount ? "preview-with-gaps" : "preview-ready",
       mappedCount,
       futureMappedCount,
       disabledCount,

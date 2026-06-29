@@ -153,7 +153,13 @@ test("special parts are entitlement-gated and disabled workflows cannot generate
   assert.equal(workflowField(result, "outputNavigation").disabled, true);
   assert.equal(workflowField(result, "saveHydrate").disabled, true);
   assert.equal(workflowField(result, "hubSpotPush").disabled, true);
+  assert.equal(workflowField(result, "hubSpotCrmWriteBack").disabled, true);
+  assert.equal(workflowField(result, "runTableGeneration").disabled, true);
+  assert.equal(workflowField(result, "payloadGeneration").disabled, true);
   assert.equal(workflowField(result, "payloadRunTableGeneration").disabled, true);
+  assert.equal(workflowField(result, "drawingGeneration").disabled, true);
+  assert.equal(workflowField(result, "controlledRecords").disabled, true);
+  assert.equal(workflowField(result, "rregApprovalCustody").disabled, true);
   assert.equal(result.runTableGenerationEnabled, false);
   assert.equal(result.payloadGenerationEnabled, false);
   assert.equal(result.specGenerationEnabled, false);

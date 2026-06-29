@@ -69,10 +69,12 @@ function selectorReferenceStatus() {
   };
 }
 
-function createModel() {
+function createModel(options = {}) {
+  const selectorState = createSelectorState();
+  options.configureState?.(selectorState);
   return createSelectorViewModel({
     adapter: createAdapter(),
-    selectorState: createSelectorState(),
+    selectorState,
     selectorReferenceStatus: selectorReferenceStatus(),
   });
 }
@@ -116,7 +118,7 @@ test("Selector checklist sections appear in the target order", () => {
     "MOUNTING",
     "FINISHES",
     "EGRESS & ACCESSORIES",
-    "RUNS",
+    "RUNS & DISABLED OUTPUTS",
     "FOOT / STATUS",
   ]);
   assert.deepEqual(spineSection(spine, "system").rows.map((row) => row.label), [
@@ -128,6 +130,22 @@ test("Selector checklist sections appear in the target order", () => {
     "EWIS/sound",
     "Sensors",
     "Accessories",
+  ]);
+  assert.deepEqual(spineSection(spine, "runs").rows.map((row) => row.label), [
+    "Run count",
+    "Run qty",
+    "Run length",
+    "Length mode",
+    "Run placement",
+    "Override status",
+    "RunTable generation",
+    "Payload generation",
+    "IES generation",
+    "Drawing generation",
+    "Lab Proof authority",
+    "Controlled Records writes",
+    "RREG approval / custody",
+    "HubSpot / CRM write-back",
   ]);
 });
 
@@ -159,6 +177,63 @@ test("Split egress, sensors, and accessories appear as separate checklist rows a
   assert.equal(payload.sensorsAccessories.accessories, null);
 });
 
+test("Runs & Disabled Outputs rows render em dash when empty and keep every output handoff disabled", () => {
+  const model = createModel();
+  const runsSection = spineSection(model.selectorSurface.productSpine, "runs");
+  const payload = model.selectorSurface.payloadPreview;
+
+  for (const row of runsSection.rows) {
+    assert.equal(row.displayValue, "—", `expected ${row.rowKey} to render empty as em dash`);
+    assert.equal(row.rawRowsExposed, false);
+    assert.equal(row.writes, false);
+  }
+
+  assert.deepEqual(payload.runs, {
+    runCount: null,
+    qty: null,
+    lengthMm: null,
+    lengthMode: null,
+    placementStatus: null,
+    overrideStatus: null,
+    rows: [],
+  });
+  assert.deepEqual(payload.disabledOutputs, {
+    runTableGeneration: false,
+    payloadGeneration: false,
+    iesGeneration: false,
+    drawingGeneration: false,
+    labProofAuthority: false,
+    controlledRecordsWrites: false,
+    rregApprovalCustodyTransfer: false,
+    hubSpotCrmWriteBack: false,
+  });
+});
+
+test("Donor-supported run manual constraints can fill preview rows without enabling generation", () => {
+  const model = createModel({
+    configureState(selectorState) {
+      selectorState.setDbBackedSelectorFieldValue("runQty", "2", "2");
+      selectorState.setDbBackedSelectorFieldValue("runLength", "3500", "3500 mm");
+      selectorState.setDbBackedSelectorFieldValue("runLengthMode", "cut_to_length", "Cut to length");
+    },
+  });
+  const spine = model.selectorSurface.productSpine;
+  const payload = model.selectorSurface.payloadPreview;
+
+  assert.equal(spineRow(spine, "runs", "runQty").displayValue, "2");
+  assert.equal(spineRow(spine, "runs", "runLength").displayValue, "3500");
+  assert.equal(spineRow(spine, "runs", "runLengthMode").displayValue, "cut_to_length");
+  assert.equal(spineRow(spine, "runs", "runTableGeneration").displayValue, "—");
+  assert.equal(payload.runs.qty, "2");
+  assert.equal(payload.runs.lengthMm, "3500");
+  assert.equal(payload.runs.lengthMode, "cut_to_length");
+  assert.equal(payload.disabledOutputs.runTableGeneration, false);
+  assert.equal(payload.safetyFlags.runTableGeneration, false);
+  assert.equal(payload.safetyFlags.payloadGeneration, false);
+  assert.equal(payload.safetyFlags.iesGeneration, false);
+  assert.equal(payload.safetyFlags.drawingGeneration, false);
+});
+
 test("Payload preview exposes the expected top-level shape and safety flags", () => {
   const payload = createModel().selectorSurface.payloadPreview;
 
@@ -176,6 +251,7 @@ test("Payload preview exposes the expected top-level shape and safety flags", ()
     "egress",
     "sensorsAccessories",
     "runs",
+    "disabledOutputs",
     "safetyFlags",
   ]) {
     assert.ok(Object.prototype.hasOwnProperty.call(payload, key), `expected payload key ${key}`);
@@ -186,7 +262,14 @@ test("Payload preview exposes the expected top-level shape and safety flags", ()
   assert.equal(payload.safetyFlags.readOnly, true);
   assert.equal(payload.safetyFlags.writes, false);
   assert.equal(payload.safetyFlags.generation, false);
+  assert.equal(payload.safetyFlags.runTableGeneration, false);
+  assert.equal(payload.safetyFlags.payloadGeneration, false);
+  assert.equal(payload.safetyFlags.iesGeneration, false);
+  assert.equal(payload.safetyFlags.drawingGeneration, false);
   assert.equal(payload.safetyFlags.labProofAuthority, false);
+  assert.equal(payload.safetyFlags.controlledRecordsWrites, false);
+  assert.equal(payload.safetyFlags.rregApprovalCustodyTransfer, false);
+  assert.equal(payload.safetyFlags.hubSpotCrmWriteBack, false);
   assert.equal(payload.safetyFlags.rawRowsExposed, false);
   assert.equal(payload.safetyFlags.rawHeadersExposed, false);
   assert.equal(payload.safetyFlags.rawUsersExposed, false);
