@@ -1280,6 +1280,48 @@ function localLightControlRelationshipBlock(fieldKey = "", option = {}, selected
   };
 }
 
+function optionStrictlyMatchesSelectedSystemReference(option = {}, selectedConstraints = {}) {
+  const selectedKeys = selectedSystemReferenceCandidates(selectedConstraints);
+  if (!selectedKeys.length) return true;
+  const optionKeys = optionSystemReferenceKeys(option);
+  if (!optionKeys.length) return false;
+  return selectedKeys.some((selected) => optionKeys.some((optionKey) => optionValuesMatch(optionKey, selected)));
+}
+
+function localMountingRelationshipBlock(fieldKey = "", option = {}, selectedConstraints = {}) {
+  const blockers = [];
+
+  if (fieldKey === "mountStyle" && !optionStrictlyMatchesSelectedSystemReference(option, selectedConstraints)) {
+    blockers.push({
+      fieldKey: "system",
+      selectedValue: selectedConstraints.system,
+      compatibleValues: optionSystemReferenceKeys(option),
+    });
+  }
+
+  if (["mountSelection", "mountParticulars"].includes(fieldKey) && selectedConstraints.mountStyle) {
+    const parentValues = [
+      option.parentValue,
+      ...(Array.isArray(option.parentValues) ? option.parentValues : []),
+    ].map((item) => String(item || "").trim()).filter(Boolean);
+    if (parentValues.length && !parentValues.some((parentValue) => optionValuesMatch(parentValue, selectedConstraints.mountStyle))) {
+      blockers.push({
+        fieldKey: "mountStyle",
+        selectedValue: selectedConstraints.mountStyle,
+        compatibleValues: parentValues,
+      });
+    }
+  }
+
+  return {
+    blocked: blockers.length > 0,
+    blockedBy: blockers,
+    reason: blockers.length
+      ? "Blocked by current Mounting manual constraints; shown rather than silently hidden."
+      : "",
+  };
+}
+
 function mergeLocalRelationshipBlocks(...blocks) {
   const blockedBy = blocks.flatMap((block) => Array.isArray(block.blockedBy) ? block.blockedBy : []);
   return {
@@ -1293,6 +1335,7 @@ function localWorkflowRelationshipBlock(fieldKey = "", option = {}, selectedCons
   return mergeLocalRelationshipBlocks(
     localDiffuserRelationshipBlock(fieldKey, option, selectedConstraints),
     localLightControlRelationshipBlock(fieldKey, option, selectedConstraints),
+    localMountingRelationshipBlock(fieldKey, option, selectedConstraints),
   );
 }
 
@@ -1420,6 +1463,7 @@ const RUNTIME_PRESENTATION_PRIMARY_DECISION_FIELDS = Object.freeze(new Set([
   "controlTypeIndirect",
   "mountStyle",
   "mountSelection",
+  "mountParticulars",
   "powerPenetration",
   "powerLocation",
   "flexLength",
@@ -1461,7 +1505,6 @@ const RUNTIME_PRESENTATION_AUTO_CHIP_FIELDS = Object.freeze(new Set([
   "cctCri",
   "controlType",
   "driver",
-  "mountParticulars",
   "wiringType",
   "accessories",
 ]));
@@ -2291,6 +2334,7 @@ function spineFieldValue(field = {}) {
   if (field.selectedLabel || field.selectedValue) return field.selectedLabel || field.selectedValue;
   if (field.provenance === "available-choice") return null;
   if (field.displayMode === "collapsed-override" && !field.selectedValue && !field.effectiveValue) return null;
+  if (field.displayMode === "warning-chip" && !field.selectedValue && !field.effectiveValue) return null;
   if (["auto-chip", "inherited-chip", "metadata-chip", "warning-chip"].includes(field.displayMode)) {
     return field.effectiveLabel || field.effectiveValue || null;
   }

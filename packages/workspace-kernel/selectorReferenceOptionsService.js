@@ -446,6 +446,7 @@ function createOption(label, {
   diffuserLayer = "",
   parentFieldKey = "",
   parentValue = "",
+  parentValues = [],
   specCodePreview = "",
   specCodeVar2Preview = "",
   diffuserMaterial = "",
@@ -470,6 +471,10 @@ function createOption(label, {
   const controlTypes = uniqueStrings((Array.isArray(compatibleControlTypes) ? compatibleControlTypes : [])
     .map(safeString)
     .filter(Boolean));
+  const compatibleParentValues = uniqueStrings([
+    parentValue,
+    ...(Array.isArray(parentValues) ? parentValues : []),
+  ].map(safeString).filter(Boolean));
   return {
     value: optionValue(value || optionLabel),
     label: optionLabel,
@@ -479,6 +484,7 @@ function createOption(label, {
     diffuserLayer,
     parentFieldKey,
     parentValue,
+    parentValues: compatibleParentValues,
     specCodePreview,
     specCodeVar2Preview,
     diffuserMaterial,
@@ -512,6 +518,11 @@ function addOption(bucket, fieldKey, label, meta = {}) {
     for (const key of ["diffuserLayer", "parentFieldKey", "parentValue", "specCodePreview", "specCodeVar2Preview", "diffuserMaterial", "imageReadiness", "imageKey", "systemReferenceKey", "systemVariantKey"]) {
       if (!existing[key] && meta[key]) existing[key] = meta[key];
     }
+    existing.parentValues = uniqueStrings([
+      ...(Array.isArray(existing.parentValues) ? existing.parentValues : []),
+      meta.parentValue,
+      ...(Array.isArray(meta.parentValues) ? meta.parentValues : []),
+    ].map(safeString).filter(Boolean));
     existing.systemReferenceKeys = uniqueStrings([
       ...(Array.isArray(existing.systemReferenceKeys) ? existing.systemReferenceKeys : []),
       meta.systemReferenceKey,
@@ -601,6 +612,30 @@ function accessoryTypeMatches(row, type) {
 
 function accessoryIdLabel(row) {
   return rowText(row, ["display_choice", "label", "accessory_name", "name", "accessory_id", "id", "accessory_type"]);
+}
+
+function canonicalMountStyle(label) {
+  const raw = safeString(label);
+  const text = raw.toLowerCase().replace(/\([^)]*\)/g, " ").replace(/\s+/g, " ").trim();
+  if (!text) return "";
+  if (/trimless/.test(text)) return "trimless";
+  if (/recess/.test(text) && /no flange/.test(text)) return "trimless";
+  if (/recess/.test(text) || /with flange/.test(text)) return "recessed";
+  if (/surface/.test(text)) return "surface mount";
+  if (/suspend/.test(text)) return "suspended";
+  return text;
+}
+
+function mountStyleLabel(row) {
+  return rowText(row, ["display_choice", "mount_style", "name", "style", "label", "accessory_id", "id"]);
+}
+
+function mountStyleSystemReferenceKeys(snapshot, style) {
+  const wanted = canonicalMountStyle(style);
+  if (!wanted) return [];
+  return uniqueStrings(liveTableRows(snapshot, "SYSTEM").filter((row) => rowOptionValues(row, ["mount_style", "mount_styles"]).some((mount) => canonicalMountStyle(mount) === wanted))
+    .map((row) => systemTokens(row).system)
+    .filter(Boolean));
 }
 
 function systemEmissionValues(row) {
@@ -721,7 +756,7 @@ function collectOptions(snapshot) {
       if (emissionSupportsDirect(emission)) addOption(bucket, "directCapability", "Direct supported", { value: "direct-supported", sourceTables: ["SYSTEM"] });
       if (emissionSupportsIndirect(emission)) addOption(bucket, "indirectCapability", "Indirect supported", { value: "indirect-supported", sourceTables: ["SYSTEM"] });
     }
-    for (const mount of rowOptionValues(row, ["mount_style", "mount_styles"])) addOption(bucket, "mountStyle", mount, { sourceTables: ["SYSTEM"] });
+    for (const mount of rowOptionValues(row, ["mount_style", "mount_styles"])) addOption(bucket, "mountStyle", mount, { sourceTables: ["SYSTEM"], systemReferenceKey: tokens.system, systemReferenceKeys: [tokens.system].filter(Boolean) });
     for (const finish of rowOptionValues(row, ["system_and_variant_finish", "finish", "finish_name", "colour", "color"])) {
       addOption(bucket, "bodyFinish", finish, { sourceTables: ["SYSTEM"] });
       addOption(bucket, "finishCover", finish, { sourceTables: ["SYSTEM"] });
@@ -880,16 +915,18 @@ function collectOptions(snapshot) {
   addOption(bucket, "indirectMatchDirect", "Match direct CCT/CRI and control", { value: "match-direct", sourceTables: ["SYSTEM", "OPTICS"] });
   addOption(bucket, "inheritedFinishStatus", "Cover/end/flex inherit default until changed", { value: "inherits-default-finish", sourceTables: ["SYSTEM", "SYSTEM_POLICY"] });
 
-  for (const value of accessoryLabels(snapshot, ["mount", "mounting", "suspension", "recessed", "surface"])) addOption(bucket, "mountStyle", value, { sourceTables: ["ACCESSORIES"] });
   for (const value of accessoryLabels(snapshot, ["finish", "colour", "color", "paint"])) addOption(bucket, "bodyFinish", value, { sourceTables: ["ACCESSORIES"] });
 
   for (const row of liveTableRows(snapshot, "ACCESSORIES")) {
     const label = accessoryIdLabel(row);
     if (!label) continue;
     if (accessoryTypeMatches(row, "mount")) {
-      addOption(bucket, "mountStyle", rowText(row, ["display_choice", "mount_style", "name", "label"], label), { sourceTables: ["ACCESSORIES"] });
-      for (const value of rowOptionValues(row, ["mount_selections", "mount_selection"])) addOption(bucket, "mountSelection", value, { sourceTables: ["ACCESSORIES"] });
-      for (const value of rowOptionValues(row, ["mount_particulars", "particulars"])) addOption(bucket, "mountParticulars", value, { sourceTables: ["ACCESSORIES"] });
+      const style = mountStyleLabel(row);
+      const systemKeys = mountStyleSystemReferenceKeys(snapshot, style);
+      const mountMeta = { sourceTables: ["ACCESSORIES"], parentFieldKey: "mountStyle", parentValue: style, systemReferenceKey: systemKeys[0] || "", systemReferenceKeys: systemKeys };
+      addOption(bucket, "mountStyle", style, { sourceTables: ["ACCESSORIES"], systemReferenceKey: systemKeys[0] || "", systemReferenceKeys: systemKeys });
+      for (const value of rowOptionValues(row, ["mount_selections", "mount_selection"])) addOption(bucket, "mountSelection", value, mountMeta);
+      for (const value of rowOptionValues(row, ["mount_particulars", "particulars"])) addOption(bucket, "mountParticulars", value, mountMeta);
     }
     if (accessoryTypeMatches(row, "power_penetration")) addOption(bucket, "powerPenetration", label, { sourceTables: ["ACCESSORIES"] });
     if (accessoryTypeMatches(row, "power_location")) addOption(bucket, "powerLocation", label === "mm" ? "TBD" : label, { sourceTables: ["ACCESSORIES"] });
@@ -1517,6 +1554,35 @@ function opticVar2ParentFieldKey(fieldKey = "") {
   return "";
 }
 
+function workflowParentRuleForField(fieldKey = "", constraints = {}) {
+  const opticParent = opticVar2ParentFieldKey(fieldKey);
+  if (opticParent) return {
+    parentFieldKey: opticParent,
+    filterValue: safeString(constraints[opticParent] || ""),
+    requiredFieldKeys: [opticParent],
+    preserveBlockedOptions: false,
+    missingReason: `Select ${opticParent} before optic var-2 sub-variants are derived.`,
+    emptyReason: `Selected ${opticParent} has no optic var-2 sub-variants in optic_var_2.`,
+  };
+  if (fieldKey === "mountSelection") return {
+    parentFieldKey: "mountStyle",
+    filterValue: safeString(constraints.mountStyle || ""),
+    requiredFieldKeys: ["mountStyle"],
+    preserveBlockedOptions: true,
+    missingReason: "Select mount style before mount selections are derived from ACCESSORIES.mount_selections.",
+    emptyReason: "Selected mount style has no mount selections in ACCESSORIES.mount_selections.",
+  };
+  if (fieldKey === "mountParticulars") return {
+    parentFieldKey: "mountStyle",
+    filterValue: safeString(constraints.mountStyle || ""),
+    requiredFieldKeys: ["mountStyle", "mountSelection"],
+    preserveBlockedOptions: true,
+    missingReason: "Select mount style and mount selection before mount particulars are derived from ACCESSORIES.mount_particulars.",
+    emptyReason: "Selected mount style has no mount particulars in ACCESSORIES.mount_particulars.",
+  };
+  return null;
+}
+
 function safeDeferredChildOptions(baseOptions = []) {
   return baseOptions.map((option) => ({
     ...option,
@@ -1529,29 +1595,38 @@ function safeDeferredChildOptions(baseOptions = []) {
   }));
 }
 
-function optionsForSelectedOpticParent(fieldKey = "", baseOptions = [], constraints = {}) {
-  const parentFieldKey = opticVar2ParentFieldKey(fieldKey);
-  if (!parentFieldKey) return { options: baseOptions, parentFieldKey: "", parentValue: "", childFiltered: false, deferredOptions: [] };
-  const parentValue = safeString(constraints[parentFieldKey] || "");
-  if (!parentValue) {
+function optionsForSelectedWorkflowParent(fieldKey = "", baseOptions = [], constraints = {}) {
+  const rule = workflowParentRuleForField(fieldKey, constraints);
+  if (!rule) return { options: baseOptions, parentFieldKey: "", parentValue: "", childFiltered: false, deferredOptions: [], unavailableReason: "" };
+  const missingRequired = rule.requiredFieldKeys.find((requiredFieldKey) => !safeString(constraints[requiredFieldKey] || ""));
+  if (missingRequired || !rule.filterValue) {
     return {
-      options: [],
-      parentFieldKey,
+      options: rule.preserveBlockedOptions ? baseOptions : [],
+      parentFieldKey: rule.parentFieldKey,
       parentValue: "",
       childFiltered: true,
       deferredOptions: safeDeferredChildOptions(baseOptions),
+      unavailableReason: rule.missingReason,
     };
   }
+  const matchingOptions = baseOptions.filter((option) => {
+    const parentValues = uniqueStrings([
+      option.parentValue,
+      ...(Array.isArray(option.parentValues) ? option.parentValues : []),
+    ].map(safeString).filter(Boolean));
+    return parentValues.some((parentValue) => valuesMatch(parentValue, rule.filterValue));
+  });
   return {
-    options: baseOptions.filter((option) => option.parentValue && valuesMatch(option.parentValue, parentValue)),
-    parentFieldKey,
-    parentValue,
+    options: rule.preserveBlockedOptions ? baseOptions : matchingOptions,
+    parentFieldKey: rule.parentFieldKey,
+    parentValue: rule.filterValue,
     childFiltered: true,
     deferredOptions: safeDeferredChildOptions(baseOptions),
+    unavailableReason: rule.emptyReason,
   };
 }
 
-function createEmptyChildWorkflowField(field, parentFieldKey = "", parentValue = "", deferredOptions = []) {
+function createEmptyChildWorkflowField(field, parentFieldKey = "", parentValue = "", deferredOptions = [], unavailableReason = "") {
   return {
     fieldKey: field.fieldKey,
     label: field.label,
@@ -1562,9 +1637,9 @@ function createEmptyChildWorkflowField(field, parentFieldKey = "", parentValue =
     options: [],
     selectedValue: "",
     selectedLabel: "",
-    unavailableReason: parentValue
-      ? `Selected ${parentFieldKey} has no optic var-2 sub-variants in optic_var_2.`
-      : `Select ${parentFieldKey} before optic var-2 sub-variants are derived.`,
+    unavailableReason: unavailableReason || (parentValue
+      ? `Selected ${parentFieldKey} has no compatible child options in current source.`
+      : `Select ${parentFieldKey} before child options are derived.`),
     deferredOptions: safeDeferredChildOptions(deferredOptions),
     deferredOptionCount: Array.isArray(deferredOptions) ? deferredOptions.length : 0,
     futureMapped: false,
@@ -1625,9 +1700,31 @@ function createWorkflowField(field, { bucket, records, constraints, cascadeConst
   if (field.role === "future-mapped") return createUnavailableField(field, `${field.label} is a donor workflow field but is not source-backed in this runtime slice.`);
 
   const rawBaseOptions = optionsFor(bucket, field.fieldKey);
-  const childOptions = optionsForSelectedOpticParent(field.fieldKey, rawBaseOptions, constraints);
+  const childOptions = optionsForSelectedWorkflowParent(field.fieldKey, rawBaseOptions, constraints);
   const baseOptions = childOptions.options;
-  if (childOptions.childFiltered && !baseOptions.length) return createEmptyChildWorkflowField(field, childOptions.parentFieldKey, childOptions.parentValue, childOptions.deferredOptions);
+  if (childOptions.childFiltered && !baseOptions.length) {
+    const emptyField = createEmptyChildWorkflowField(field, childOptions.parentFieldKey, childOptions.parentValue, childOptions.deferredOptions, childOptions.unavailableReason);
+    if (!selectedValue) return emptyField;
+    return {
+      ...emptyField,
+      selectedValue,
+      selectedLabel: selectedValue,
+      options: [{
+        value: selectedValue,
+        label: selectedValue,
+        count: 0,
+        sourceStatus: "selected constraint not available from current filtered source",
+        sourceTables: [...(field.sourceTables || [])],
+        selected: true,
+        status: "blocked",
+        blocked: true,
+        blockedReason: "Manual constraint is preserved but unavailable/incompatible in the current filtered source.",
+        writes: false,
+        rawRowsExposed: false,
+      }],
+      status: "blocked",
+    };
+  }
   if (field.role === "metadata-only") return createMetadataWorkflowField(field, baseOptions, records, constraints, cascadeConstraints);
   if (!baseOptions.length) {
     if (field.role === "entitlement-gated") {
