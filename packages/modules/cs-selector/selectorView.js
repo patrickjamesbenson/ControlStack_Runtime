@@ -812,7 +812,7 @@ const PRIMARY_HIDDEN_WORKFLOW_FIELDS = Object.freeze(new Set([
 
 function workflowFieldIsHiddenFromPrimary(field = {}) {
   if (!field) return true;
-  if (field.displayMode && field.displayMode !== "choice") return true;
+  if (field.displayMode && !["choice", "warning-chip"].includes(field.displayMode)) return true;
   if (PRIMARY_HIDDEN_WORKFLOW_FIELDS.has(field.fieldKey)) return true;
   if (workflowFieldIsMetadata(field)) return true;
   if (field.disabled === true || field.futureMapped === true) return true;
@@ -820,7 +820,7 @@ function workflowFieldIsHiddenFromPrimary(field = {}) {
 }
 
 function workflowFieldIsChip(field = {}) {
-  return ["auto-chip", "inherited-chip", "metadata-chip", "warning-chip"].includes(field.displayMode);
+  return ["auto-chip", "inherited-chip", "metadata-chip"].includes(field.displayMode);
 }
 
 function workflowFieldIsCollapsedOverride(field = {}) {
@@ -841,6 +841,50 @@ function selectedOrPreviewOption(field = {}) {
     || options.find((option) => option.blocked !== true)
     || options[0]
     || {};
+}
+
+function fieldDropdownOptions(field = {}) {
+  if (Array.isArray(field.dropdownOptions)) return field.dropdownOptions;
+  const selectedValue = String(field.selectedValue || "").trim();
+  const options = Array.isArray(field.options) ? field.options : [];
+  return options.filter((option) => {
+    const selected = option.selected === true || Boolean(selectedValue && String(option.value || "") === selectedValue);
+    return option.blocked !== true && option.status !== "blocked" || selected;
+  });
+}
+
+function fieldIncompatibleOptions(field = {}) {
+  if (Array.isArray(field.incompatibleOptions)) return field.incompatibleOptions;
+  const selectedValue = String(field.selectedValue || "").trim();
+  const options = Array.isArray(field.options) ? field.options : [];
+  return options.filter((option) => {
+    const selected = option.selected === true || Boolean(selectedValue && String(option.value || "") === selectedValue);
+    return (option.blocked === true || option.status === "blocked") && !selected;
+  });
+}
+
+function optionBlockerSummary(option = {}) {
+  const blockedBy = Array.isArray(option.blockedBy) && option.blockedBy.length
+    ? option.blockedBy.map((entry) => entry.fieldKey || entry.reason || entry.selectedValue || "constraint").join(", ")
+    : "current constraints";
+  return option.blockedReason || option.relationshipMissingReason || `blocked by ${blockedBy}`;
+}
+
+function appendIncompatibleOptionDetails(parent, field = {}) {
+  const incompatibleOptions = fieldIncompatibleOptions(field);
+  if (!incompatibleOptions.length) return;
+  const details = document.createElement("details");
+  details.className = "cs-selector-product__incompatible-options";
+  details.open = false;
+  const summary = document.createElement("summary");
+  summary.textContent = `${incompatibleOptions.length} incompatible option(s) hidden from normal dropdown`;
+  details.appendChild(summary);
+  appendText(details, "p", "Unselected blocked options are separated from the ordinary picker. A currently selected blocked value remains visible in the dropdown and is marked blocked/incompatible.", "cs-selector-product__section-summary");
+  appendDefinitionList(details, incompatibleOptions.map((option) => [
+    option.label || option.value || "incompatible option",
+    optionBlockerSummary(option),
+  ]));
+  parent.appendChild(details);
 }
 
 function appendCompactMetadataLine(parent, label, value) {
@@ -898,10 +942,14 @@ function appendSelectorProductFieldCard(parent, field = {}, surface = {}, idPref
   label.textContent = field.label || field.fieldKey || "Field";
   card.appendChild(label);
 
+  const dropdownOptions = fieldDropdownOptions(field);
+  const incompatibleOptions = fieldIncompatibleOptions(field);
   const select = document.createElement("select");
   select.id = `${idPrefix}-${field.fieldKey}`;
   select.dataset.fieldKey = field.fieldKey || "unknown";
-  select.disabled = field.disabled === true || field.futureMapped === true || !(field.options || []).length;
+  select.dataset.compatibleOptions = String(dropdownOptions.filter((option) => option.blocked !== true && option.status !== "blocked").length);
+  select.dataset.incompatibleOptionsCollapsed = String(incompatibleOptions.length);
+  select.disabled = field.disabled === true || field.futureMapped === true || !dropdownOptions.length;
 
   const emptyOption = document.createElement("option");
   emptyOption.value = "";
@@ -912,12 +960,14 @@ function appendSelectorProductFieldCard(parent, field = {}, surface = {}, idPref
       : "No manual constraint / keep preview consequence";
   select.appendChild(emptyOption);
 
-  for (const option of field.options || []) {
+  for (const option of dropdownOptions) {
     const optionElement = document.createElement("option");
     optionElement.value = option.value;
-    const suffix = option.blocked ? " — blocked / missing" : option.sourceStatus === "db-reference-backed" ? "" : ` — ${option.sourceStatus || "mapped"}`;
+    const blocked = option.blocked === true || option.status === "blocked";
+    const suffix = blocked ? " — blocked / incompatible" : option.sourceStatus === "db-reference-backed" ? "" : ` — ${option.sourceStatus || "mapped"}`;
     optionElement.textContent = `${option.label || option.value}${suffix}`;
-    optionElement.disabled = option.blocked === true && option.selected !== true;
+    optionElement.disabled = blocked && option.selected !== true;
+    optionElement.dataset.blocked = blocked ? "true" : "false";
     select.appendChild(optionElement);
   }
   select.value = field.selectedValue || "";
@@ -942,6 +992,7 @@ function appendSelectorProductFieldCard(parent, field = {}, surface = {}, idPref
     card.dataset.diffuserMetadata = selectedOption.diffuserLayer ? "true" : "false";
     appendFieldMetadataDetails(card, field, selectedOption);
   }
+  appendIncompatibleOptionDetails(card, field);
   parent.appendChild(card);
 }
 
@@ -1013,26 +1064,96 @@ function appendCollapsedOverrideDetails(parent, fields = [], surface = {}, idPre
   parent.appendChild(details);
 }
 
+function workflowDisclosureReason(field = {}) {
+  if (workflowFieldIsMetadata(field)) return "metadata shown compactly above";
+  if (field.futureMapped === true || field.status === "future-mapped") return field.unavailableReason || "future-mapped / missing from current source";
+  if (field.disabled === true || workflowFieldIsDisabledHandoff(field)) return field.unavailableReason || "disabled in this read-only slice";
+  if (workflowFieldIsSectionHiddenDiagnostic(field)) return field.classificationReason || field.unavailableReason || "hidden from the primary donor-shaped workflow";
+  if (fieldIncompatibleOptions(field).length) return `${fieldIncompatibleOptions(field).length} incompatible option(s) separated into collapsed details`;
+  return field.unavailableReason || "hidden from primary path until source mapping exists";
+}
+
+function workflowSectionDisclosureFields(fields = []) {
+  const included = new Set();
+  return fields.filter((field) => {
+    const include = workflowFieldIsDisabledHandoff(field)
+      || workflowFieldIsSectionHiddenDiagnostic(field)
+      || workflowFieldIsMetadata(field)
+      || field.futureMapped === true
+      || field.disabled === true
+      || field.status === "future-mapped"
+      || fieldIncompatibleOptions(field).length > 0;
+    if (!include || included.has(field.fieldKey)) return false;
+    included.add(field.fieldKey);
+    return true;
+  });
+}
+
 function appendWorkflowHiddenDetails(parent, workflowSection = {}, hiddenFields = []) {
   if (!hiddenFields.length) return;
   const details = document.createElement("details");
   details.className = "cs-selector-product__workflow-hidden";
   details.open = false;
   const summary = document.createElement("summary");
-  const futureCount = hiddenFields.filter((field) => field.futureMapped === true).length;
-  const disabledCount = hiddenFields.filter((field) => field.disabled === true && field.metadataOnly !== true).length;
+  const futureCount = hiddenFields.filter((field) => field.futureMapped === true || field.status === "future-mapped").length;
+  const disabledCount = hiddenFields.filter((field) => field.disabled === true && field.metadataOnly !== true || workflowFieldIsDisabledHandoff(field)).length;
   const metadataCount = hiddenFields.filter(workflowFieldIsMetadata).length;
-  summary.textContent = `${hiddenFields.length} compacted field(s): ${futureCount} future/missing, ${disabledCount} disabled, ${metadataCount} metadata`;
+  const diagnosticCount = hiddenFields.filter(workflowFieldIsSectionHiddenDiagnostic).length;
+  const incompatibleCount = hiddenFields.reduce((count, field) => count + fieldIncompatibleOptions(field).length, 0);
+  summary.textContent = `${hiddenFields.length} section disclosure item(s): ${futureCount} future/missing, ${disabledCount} disabled, ${metadataCount} metadata, ${diagnosticCount} hidden, ${incompatibleCount} incompatible`;
   details.appendChild(summary);
   appendDefinitionList(details, hiddenFields.map((field) => [
     field.label || field.fieldKey,
-    field.metadataOnly === true
-      ? "metadata shown compactly above"
-      : field.disabled === true
-        ? "disabled in this read-only slice"
-        : field.unavailableReason || "hidden from primary path until source mapping exists",
+    workflowDisclosureReason(field),
   ]));
   parent.appendChild(details);
+}
+
+const LIGHT_CONTROL_ROW_FIELDS = Object.freeze({
+  direct: Object.freeze(["targetLmPerM", "cctCri", "controlType"]),
+  indirect: Object.freeze(["targetLmPerMIndirect", "cctCriIndirect", "controlTypeIndirect"]),
+});
+
+function appendLightControlWorkflowRow(parent, label, rowKey, fieldsByKey, surface, idPrefix) {
+  const rowFields = LIGHT_CONTROL_ROW_FIELDS[rowKey] || [];
+  const availableFields = rowFields.map((fieldKey) => fieldsByKey.get(fieldKey)).filter(Boolean);
+  if (!availableFields.length) return false;
+  const row = document.createElement("div");
+  row.className = "cs-selector-product__light-control-row";
+  row.dataset.csSelectorLightControlRow = rowKey;
+  appendText(row, "div", label, "cs-selector-product__light-control-row-label");
+  for (const fieldKey of rowFields) {
+    const field = fieldsByKey.get(fieldKey);
+    if (field) {
+      appendSelectorProductFieldCard(row, field, surface, `${idPrefix}-${rowKey}`);
+    } else {
+      appendText(row, "div", "—", "cs-selector-product__light-control-empty-cell");
+    }
+  }
+  parent.appendChild(row);
+  return true;
+}
+
+function appendLightControlRowGrid(parent, visibleFields = [], surface = {}, idPrefix = "cs-selector-light-control") {
+  const rowFieldKeys = new Set([...LIGHT_CONTROL_ROW_FIELDS.direct, ...LIGHT_CONTROL_ROW_FIELDS.indirect]);
+  const fieldsByKey = new Map(visibleFields.map((field) => [field.fieldKey, field]));
+  const hasRowField = visibleFields.some((field) => rowFieldKeys.has(field.fieldKey));
+  if (!hasRowField) return false;
+  const wrapper = document.createElement("div");
+  wrapper.className = "cs-selector-product__light-control-grid";
+  wrapper.dataset.csSelectorLightControlGrid = "direct-indirect";
+  const directRendered = appendLightControlWorkflowRow(wrapper, "Direct", "direct", fieldsByKey, surface, idPrefix);
+  const indirectRendered = appendLightControlWorkflowRow(wrapper, "Indirect", "indirect", fieldsByKey, surface, idPrefix);
+  if (!directRendered && !indirectRendered) return false;
+  parent.appendChild(wrapper);
+  const extraFields = visibleFields.filter((field) => !rowFieldKeys.has(field.fieldKey));
+  if (extraFields.length) {
+    const extraGrid = document.createElement("div");
+    extraGrid.className = "cs-selector-product__grid cs-selector-product__grid--light-control-extra";
+    for (const field of extraFields) appendSelectorProductFieldCard(extraGrid, field, surface, `${idPrefix}-extra`);
+    parent.appendChild(extraGrid);
+  }
+  return true;
 }
 
 function appendSelectorWorkflowSections(parent, surface = {}) {
@@ -1044,9 +1165,9 @@ function appendSelectorWorkflowSections(parent, surface = {}) {
   wrapper.dataset.flatFieldsPrimary = surface.flatFieldsPrimary === true ? "true" : "false";
   for (const workflowSection of sections) {
     const allFields = Array.isArray(workflowSection.fields) ? workflowSection.fields : [];
-    const visibleFields = allFields.filter((field) => field.displayMode === "choice" && !workflowFieldIsHiddenFromPrimary(field));
+    const visibleFields = allFields.filter((field) => ["choice", "warning-chip"].includes(field.displayMode) && !workflowFieldIsHiddenFromPrimary(field));
     const overrideFields = allFields.filter(workflowFieldIsCollapsedOverride);
-    const disabledFields = allFields.filter(workflowFieldIsDisabledHandoff);
+    const disclosureFields = workflowSectionDisclosureFields(allFields);
     const diagnosticHiddenCount = allFields.filter(workflowFieldIsSectionHiddenDiagnostic).length;
     const section = document.createElement("section");
     section.className = "cs-selector-product__workflow-section";
@@ -1064,17 +1185,22 @@ function appendSelectorWorkflowSections(parent, surface = {}) {
     appendCollapsedOverrideDetails(section, overrideFields, surface, `cs-selector-workflow-${workflowSection.sectionKey}-override`);
 
     if (visibleFields.length) {
-      const grid = document.createElement("div");
-      grid.className = workflowSection.sectionKey === "optics"
-        ? "cs-selector-product__grid cs-selector-product__grid--diffuser"
-        : "cs-selector-product__grid";
-      for (const field of visibleFields) appendSelectorProductFieldCard(grid, field, surface, `cs-selector-workflow-${workflowSection.sectionKey}`);
-      section.appendChild(grid);
+      const renderedLightControlRows = workflowSection.sectionKey === "lightControl"
+        ? appendLightControlRowGrid(section, visibleFields, surface, `cs-selector-workflow-${workflowSection.sectionKey}`)
+        : false;
+      if (!renderedLightControlRows) {
+        const grid = document.createElement("div");
+        grid.className = workflowSection.sectionKey === "optics"
+          ? "cs-selector-product__grid cs-selector-product__grid--diffuser"
+          : "cs-selector-product__grid";
+        for (const field of visibleFields) appendSelectorProductFieldCard(grid, field, surface, `cs-selector-workflow-${workflowSection.sectionKey}`);
+        section.appendChild(grid);
+      }
     } else {
       appendText(section, "p", "No active controls in this section yet.", "cs-selector-product__section-empty");
     }
 
-    appendWorkflowHiddenDetails(section, workflowSection, disabledFields);
+    appendWorkflowHiddenDetails(section, workflowSection, disclosureFields);
     wrapper.appendChild(section);
   }
   parent.appendChild(wrapper);
@@ -1215,6 +1341,57 @@ function appendSelectorSelectionTruthSummary(parent, summary = {}) {
   details.appendChild(grid);
   section.appendChild(details);
 
+  parent.appendChild(section);
+}
+
+function scrollToDonorShapeField(fieldKey = "") {
+  if (!fieldKey) return;
+  const target = document.querySelector(`.cs-selector-product__field[data-field-key="${fieldKey}"] select`);
+  if (!target) return;
+  target.scrollIntoView({ block: "center", behavior: "smooth" });
+  target.focus?.();
+}
+
+function appendDonorShapeSelectedTileStrip(parent, tiles = []) {
+  const section = document.createElement("section");
+  section.className = "cs-selector-donor-shape-strip";
+  section.dataset.selectorDonorShapeStrip = "selected-picker";
+  section.dataset.compact = "true";
+  section.dataset.rawRowsExposed = "false";
+
+  const header = document.createElement("div");
+  header.className = "cs-selector-donor-shape-strip__header";
+  appendText(header, "p", "Donor picker shape", "cs-shell__eyebrow");
+  appendText(header, "h4", "Selected system / optic tiles");
+  appendText(header, "p", "Compact selected-tile rail only. Change buttons focus the existing safe dropdowns; they do not resolve, generate, prove, write, or expose raw data.");
+  section.appendChild(header);
+
+  const grid = document.createElement("div");
+  grid.className = "cs-selector-donor-shape-strip__tiles";
+  const safeTiles = Array.isArray(tiles) ? tiles : [];
+  for (const tile of safeTiles) {
+    const card = document.createElement("article");
+    card.className = "cs-selector-donor-shape-strip__tile";
+    card.dataset.donorShapeTile = tile.tileKey || tile.fieldKey || "unknown";
+    card.dataset.fieldKey = tile.fieldKey || "unknown";
+    card.dataset.blocked = tile.blocked === true ? "true" : "false";
+    card.dataset.safeLabelOnly = tile.safeLabelOnly === false ? "false" : "true";
+    card.dataset.rawRowsExposed = tile.rawRowsExposed === true ? "true" : "false";
+    appendText(card, "h5", tile.title || tile.fieldKey || "Selected tile");
+    appendText(card, "p", tile.valueLabel || "Not selected", "cs-selector-donor-shape-strip__value");
+    appendText(card, "span", tile.status || (tile.value ? "selected" : "not selected"), "cs-selector-donor-shape-strip__status");
+    if (tile.reason) appendText(card, "small", tile.reason);
+    if (tile.changeAvailable !== false) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "cs-selector-donor-shape-strip__change";
+      button.textContent = "Change";
+      button.addEventListener("click", () => scrollToDonorShapeField(tile.fieldKey));
+      card.appendChild(button);
+    }
+    grid.appendChild(card);
+  }
+  section.appendChild(grid);
   parent.appendChild(section);
 }
 
@@ -1472,6 +1649,7 @@ function appendSelectorProductSurface(parent, surface = {}) {
   appendText(section, "p", surface.proofCopy || "Selector previews selection readiness. Lab Proof proves later.", "cs-selector-product__safety");
 
   appendSelectorSelectionTruthSummary(section, surface.selectionTruthSummary || {});
+  appendDonorShapeSelectedTileStrip(section, surface.donorShapeSelectedTiles || []);
 
   appendSelectorWorkflowSections(section, surface);
 

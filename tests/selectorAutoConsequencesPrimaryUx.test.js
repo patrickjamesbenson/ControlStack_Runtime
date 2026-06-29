@@ -207,12 +207,68 @@ test("metadata and diagnostic fields are downgraded while incompatible manual se
   assert.equal(blocked.provenance, "manual");
 });
 
+test("donor-shape selected tiles render from safe view model data", () => {
+  const surface = surfaceFor({ system: "DNX|60", diffuserVar1: "DNX|Opal", diffuserVar2: "DNX|Opal|Soft" });
+  const tiles = surface.donorShapeSelectedTiles;
+
+  assert.equal(Array.isArray(tiles), true);
+  assert.equal(tiles.length, 5);
+  assert.deepEqual(tiles.map((tile) => tile.tileKey), [
+    "system",
+    "directOpticVar1",
+    "directOpticVar2",
+    "indirectOpticVar1",
+    "indirectOpticVar2",
+  ]);
+  assert.match(tiles.find((tile) => tile.tileKey === "system").valueLabel, /DNX 60|DNX\|60/);
+  assert.match(tiles.find((tile) => tile.tileKey === "directOpticVar1").valueLabel, /Opal/);
+  assert.match(tiles.find((tile) => tile.tileKey === "directOpticVar2").valueLabel, /Soft/);
+  for (const tile of tiles) {
+    assert.equal(tile.safeLabelOnly, true);
+    assert.equal(tile.imageRendered, false);
+    assert.equal(tile.writes, false);
+    assert.equal(tile.rawRowsExposed, false);
+  }
+});
+
+test("donor-shape dropdown split keeps selected blocked values visible and separates unselected incompatible options", () => {
+  const systemConstrainedSurface = surfaceFor({ system: "DNX|60" });
+  const directVar1 = workflowField(systemConstrainedSurface, "directOpticVar1");
+
+  assert.equal(directVar1.dropdownOptions.some((option) => option.blocked === true || option.status === "blocked"), false);
+  assert.equal(directVar1.incompatibleOptions.some((option) => /Blade/.test(option.label)), true);
+  assert.equal(directVar1.incompatibleOptions.every((option) => option.rawRowsExposed === false), true);
+
+  const blockedSelectedSurface = surfaceFor({ system: "DNX|60", diffuserVar1: "DNX|Opal", diffuserVar2: "LNX|Blade|Wallwash" });
+  const blockedSelected = workflowField(blockedSelectedSurface, "diffuserVar2");
+
+  assert.equal(blockedSelected.selectedOptionBlocked, true);
+  assert.equal(blockedSelected.selectedBlockedOptionVisible, true);
+  assert.equal(blockedSelected.dropdownOptions.some((option) => option.selected === true && (option.blocked === true || option.status === "blocked")), true);
+  assert.equal(blockedSelected.incompatibleOptions.some((option) => option.selected === true), false);
+});
+
+test("view adds donor shape strip, incompatible details, and light-control row grid without enabling outputs", async () => {
+  const view = await readFile(viewSourceUrl, "utf-8");
+  const styles = await readFile(stylesUrl, "utf-8");
+
+  assert.match(view, /appendDonorShapeSelectedTileStrip/);
+  assert.match(view, /fieldDropdownOptions/);
+  assert.match(view, /appendIncompatibleOptionDetails/);
+  assert.match(view, /appendLightControlRowGrid/);
+  assert.match(view, /selectorDonorShapeStrip/);
+  assert.match(styles, /cs-selector-donor-shape-strip/);
+  assert.match(styles, /cs-selector-product__incompatible-options/);
+  assert.match(styles, /cs-selector-product__light-control-grid/);
+  assert.equal(view.includes("createElement(\"img\")"), false);
+});
+
 test("view renders chips/collapsed overrides and keeps generation/proof/write/image paths disabled", async () => {
   const view = await readFile(viewSourceUrl, "utf-8");
   const styles = await readFile(stylesUrl, "utf-8");
   const viewModel = await readFile(viewModelSourceUrl, "utf-8");
 
-  assert.match(view, /field\.displayMode === "choice"/);
+  assert.match(view, /\["choice", "warning-chip"\]\.includes\(field\.displayMode\)/);
   assert.match(view, /appendWorkflowChipStrip/);
   assert.match(view, /appendCollapsedOverrideDetails/);
   assert.match(view, /hiddenDiagnosticCount/);

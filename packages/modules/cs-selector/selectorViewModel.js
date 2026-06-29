@@ -1608,6 +1608,39 @@ function presentationSelectedOption(field = {}) {
   return options.find((option) => option.selected === true || (selectedValue && optionValuesMatch(option.value, selectedValue))) || null;
 }
 
+function workflowOptionMatchesSelection(option = {}, field = {}) {
+  const selectedValue = String(field.selectedValue || "").trim();
+  return option.selected === true || Boolean(selectedValue && optionValuesMatch(option.value, selectedValue));
+}
+
+function createDonorShapeDropdownSplit(field = {}) {
+  const options = Array.isArray(field.options) ? field.options : [];
+  const dropdownOptions = [];
+  const incompatibleOptions = [];
+  for (const option of options) {
+    const selected = workflowOptionMatchesSelection(option, field);
+    const blocked = option.blocked === true || option.status === "blocked";
+    const safeOption = {
+      ...option,
+      selected,
+      rawRowsExposed: false,
+    };
+    if (blocked && !selected) {
+      incompatibleOptions.push(safeOption);
+    } else {
+      dropdownOptions.push(safeOption);
+    }
+  }
+  return {
+    dropdownOptions,
+    incompatibleOptions,
+    incompatibleOptionCount: incompatibleOptions.length,
+    compatibleDropdownOptionCount: dropdownOptions.filter((option) => option.blocked !== true && option.status !== "blocked").length,
+    selectedBlockedOptionVisible: dropdownOptions.some((option) => workflowOptionMatchesSelection(option, field) && (option.blocked === true || option.status === "blocked")),
+    rawRowsExposed: false,
+  };
+}
+
 function finishInheritanceContextFromWorkflow(workflowSections = []) {
   const fields = workflowSections.flatMap((section) => Array.isArray(section.fields) ? section.fields : []);
   const fieldByKey = new Map(fields.map((field) => [field.fieldKey, field]));
@@ -1794,6 +1827,11 @@ function classifyRuntimePresentationField(field = {}, finishContext = {}) {
 
   if (!effectiveLabel && effectiveValue) effectiveLabel = labelFromWorkflowField(field, effectiveValue);
 
+  const donorShapeDropdown = createDonorShapeDropdownSplit({
+    ...field,
+    selectedValue: field.selectedValue || effectiveValue || "",
+  });
+
   return {
     ...field,
     runtimePresentationClassification: RUNTIME_PRESENTATION_CLASSIFICATION_NAME,
@@ -1809,6 +1847,11 @@ function classifyRuntimePresentationField(field = {}, finishContext = {}) {
     overrideAvailable,
     classificationReason,
     compatibleOptionCountComputed: optionsComputable,
+    dropdownOptions: donorShapeDropdown.dropdownOptions,
+    incompatibleOptions: donorShapeDropdown.incompatibleOptions,
+    incompatibleOptionCount: donorShapeDropdown.incompatibleOptionCount,
+    compatibleDropdownOptionCount: donorShapeDropdown.compatibleDropdownOptionCount,
+    selectedBlockedOptionVisible: donorShapeDropdown.selectedBlockedOptionVisible,
     writes: false,
     rawRowsExposed: false,
   };
@@ -2309,6 +2352,52 @@ function createSelectionTruthSummary({
     missing: missingItems.map((item) => ({ ...item })),
     disabledHandoffs: SELECTION_TRUTH_DISABLED_HANDOFFS.map((item) => ({ ...item, truthKind: "future-disabled", status: "disabled", writes: false, rawRowsExposed: false })),
   };
+}
+
+const DONOR_SHAPE_SELECTED_TILE_DEFINITIONS = Object.freeze([
+  Object.freeze({ tileKey: "system", title: "System", fieldKeys: Object.freeze(["system"]) }),
+  Object.freeze({ tileKey: "directOpticVar1", title: "Direct optic / diffuser var 1", fieldKeys: Object.freeze(["diffuserVar1", "directOpticVar1", "optic"]) }),
+  Object.freeze({ tileKey: "directOpticVar2", title: "Direct optic / diffuser var 2", fieldKeys: Object.freeze(["diffuserVar2", "directOpticVar2", "opticSub"]) }),
+  Object.freeze({ tileKey: "indirectOpticVar1", title: "Indirect optic / diffuser var 1", fieldKeys: Object.freeze(["indirectOpticVar1", "opticIndirect"]) }),
+  Object.freeze({ tileKey: "indirectOpticVar2", title: "Indirect optic / diffuser var 2", fieldKeys: Object.freeze(["indirectOpticVar2"]) }),
+]);
+
+function donorShapeTileField(fieldLookup, fieldKeys = []) {
+  return fieldKeys.map((fieldKey) => fieldLookup.get(fieldKey)).find((field) => {
+    if (!field) return false;
+    return Boolean(field.selectedValue || field.selectedLabel || field.effectiveValue || field.effectiveLabel);
+  }) || fieldKeys.map((fieldKey) => fieldLookup.get(fieldKey)).find(Boolean) || null;
+}
+
+function createDonorShapeSelectedTiles({ fields = [], workflowSections = [] } = {}) {
+  const fieldLookup = createFieldLookup(fields, workflowSections);
+  return DONOR_SHAPE_SELECTED_TILE_DEFINITIONS.map((definition) => {
+    const field = donorShapeTileField(fieldLookup, definition.fieldKeys);
+    const selectedOption = field ? presentationSelectedOption(field) : null;
+    const value = field?.selectedValue || field?.effectiveValue || selectedOption?.value || "";
+    const valueLabel = field?.selectedLabel || field?.effectiveLabel || selectedOption?.label || "Not selected";
+    const blocked = Boolean(value && (field?.selectedOptionBlocked === true || selectedOption?.blocked === true || selectedOption?.status === "blocked"));
+    const fieldKey = field?.fieldKey || definition.fieldKeys[0];
+    return {
+      tileKey: definition.tileKey,
+      title: definition.title,
+      fieldKey,
+      value,
+      valueLabel,
+      status: blocked ? "blocked / incompatible" : value ? (field?.status || field?.displayMode || "selected") : "not selected",
+      displayMode: field?.displayMode || "empty",
+      provenance: field?.provenance || "safe-view-model",
+      blocked,
+      changeAvailable: field?.disabled === true || field?.futureMapped === true ? false : true,
+      safeLabelOnly: true,
+      imageRendered: false,
+      writes: false,
+      rawRowsExposed: false,
+      reason: blocked
+        ? selectedOption?.blockedReason || field?.classificationReason || field?.unavailableReason || "Selected value is incompatible but preserved."
+        : field?.classificationReason || field?.unavailableReason || "Donor-shape selected tile uses safe Selector view-model labels only.",
+    };
+  });
 }
 
 const PRODUCT_SPINE_EMPTY_VALUE = "—";
@@ -3551,6 +3640,7 @@ function createDbBackedSelectorSurface(selectorReferenceStatus = {}, local = {},
     workflowSectionsCanonical: canonicalWorkflow.workflowSectionsCanonical,
     flatFieldsPrimary: false,
   });
+  const donorShapeSelectedTiles = createDonorShapeSelectedTiles({ fields, workflowSections });
   return {
     title: "CS Selector Preview",
     subtitle: "Read-only DB-backed candidate preview. Manual selections are constraints; auto selections are consequences.",
@@ -3588,6 +3678,7 @@ function createDbBackedSelectorSurface(selectorReferenceStatus = {}, local = {},
     donorFieldParity: payload.donorFieldParity || null,
     specialPartsEntitlementSummary: payload.specialPartsEntitlementSummary || null,
     presentationClassification,
+    donorShapeSelectedTiles,
     productSpine,
     payloadPreview,
     selectedResultProjection: selectedEngineResultHandoff.selectedResultProjection,
