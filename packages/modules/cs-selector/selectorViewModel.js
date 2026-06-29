@@ -2018,7 +2018,409 @@ function createSelectionTruthSummary({
   };
 }
 
-function createDbBackedSelectorSurface(selectorReferenceStatus = {}, local = {}, selectorState, onLocalStateChange) {
+const PRODUCT_SPINE_EMPTY_VALUE = "—";
+
+const PRODUCT_SPINE_SECTION_DEFINITIONS = Object.freeze([
+  Object.freeze({
+    sectionKey: "system",
+    title: "SYSTEM",
+    rows: Object.freeze([
+      Object.freeze({ rowKey: "profileSystem", label: "Profile / system", fields: Object.freeze(["system"]) }),
+      Object.freeze({ rowKey: "opticDirect", label: "Optic Direct", fields: Object.freeze(["directOpticVar1", "directOpticVar2", "diffuserVar1", "diffuserVar2", "optic", "opticSub"]) }),
+      Object.freeze({ rowKey: "opticIndirect", label: "Optic Indirect", fields: Object.freeze(["indirectOpticVar1", "indirectOpticVar2", "opticIndirect"]), condition: "indirect-supported" }),
+    ]),
+  }),
+  Object.freeze({
+    sectionKey: "environment",
+    title: "ENVIRONMENT",
+    rows: Object.freeze([
+      Object.freeze({ rowKey: "ipIk", label: "IP/IK", fields: Object.freeze(["ipRating", "ikRating"]) }),
+      Object.freeze({ rowKey: "ambient", label: "Ambient", fields: Object.freeze(["ambient"]) }),
+      Object.freeze({ rowKey: "electricalClass", label: "Electrical class", fields: Object.freeze(["electricalClass"]) }),
+    ]),
+  }),
+  Object.freeze({
+    sectionKey: "lightControl",
+    title: "LIGHT & CONTROL",
+    rows: Object.freeze([
+      Object.freeze({ rowKey: "targetLmPerM", label: "Target lm/m", fields: Object.freeze(["targetLmPerM", "targetLumensPerMetre"]) }),
+      Object.freeze({ rowKey: "cctCri", label: "CCT/CRI", fields: Object.freeze(["cctCri", "cct", "cri"]) }),
+      Object.freeze({ rowKey: "control", label: "Control", fields: Object.freeze(["controlType", "controlTypeIndirect"]) }),
+      Object.freeze({ rowKey: "lexWeight", label: "Lex weight", fields: Object.freeze(["lexWeight", "lex_weight", "lex"]) }),
+      Object.freeze({ rowKey: "wiringTopology", label: "Wiring topology", fields: Object.freeze(["wiringType", "driver"]) }),
+    ]),
+  }),
+  Object.freeze({
+    sectionKey: "mounting",
+    title: "MOUNTING",
+    rows: Object.freeze([
+      Object.freeze({ rowKey: "mountStyle", label: "Mount style", fields: Object.freeze(["mountStyle"]) }),
+      Object.freeze({ rowKey: "mountSelection", label: "Mount selection", fields: Object.freeze(["mountSelection"]) }),
+      Object.freeze({ rowKey: "mountParticulars", label: "Mount particulars", fields: Object.freeze(["mountParticulars"]) }),
+      Object.freeze({ rowKey: "mountNotes", label: "Mount notes", fields: Object.freeze(["mountNotes", "mountingNotes"]), condition: "value-present" }),
+      Object.freeze({ rowKey: "powerPenetration", label: "Power penetration", fields: Object.freeze(["powerPenetration"]) }),
+      Object.freeze({ rowKey: "powerLocation", label: "Power location", fields: Object.freeze(["powerLocation"]) }),
+      Object.freeze({ rowKey: "flexLength", label: "Flex length", fields: Object.freeze(["flexLength"]) }),
+    ]),
+  }),
+  Object.freeze({
+    sectionKey: "finishes",
+    title: "FINISHES",
+    rows: Object.freeze([
+      Object.freeze({ rowKey: "bodyFinish", label: "Body finish", fields: Object.freeze(["bodyFinish", "finishDefault"]) }),
+      Object.freeze({ rowKey: "cover", label: "Cover", fields: Object.freeze(["finishCover"]) }),
+      Object.freeze({ rowKey: "endPlates", label: "End plates", fields: Object.freeze(["finishEnd"]) }),
+      Object.freeze({ rowKey: "flexColour", label: "Flex colour", fields: Object.freeze(["finishFlex"]) }),
+    ]),
+  }),
+  Object.freeze({
+    sectionKey: "egressAccessories",
+    title: "EGRESS & ACCESSORIES",
+    rows: Object.freeze([
+      Object.freeze({ rowKey: "egressLight", label: "Egress light", fields: Object.freeze(["egressLight", "emergency"]) }),
+      Object.freeze({ rowKey: "egressSound", label: "EWIS/sound", fields: Object.freeze(["egressSound"]) }),
+      Object.freeze({ rowKey: "sensors", label: "Sensors", fields: Object.freeze(["sensor", "accessories"]) }),
+    ]),
+  }),
+  Object.freeze({
+    sectionKey: "runs",
+    title: "RUNS",
+    rows: Object.freeze([
+      Object.freeze({ rowKey: "runCount", label: "Run count", fields: Object.freeze(["runCount", "runQty"]) }),
+    ]),
+  }),
+  Object.freeze({
+    sectionKey: "footStatus",
+    title: "FOOT / STATUS",
+    statusOnly: true,
+    rows: Object.freeze([
+      Object.freeze({ rowKey: "candidateState", label: "candidate state", statusValue: "candidate-state" }),
+      Object.freeze({ rowKey: "missingBlockingReasons", label: "missing/blocking reasons", statusValue: "missing-blocking" }),
+      Object.freeze({ rowKey: "sourceReadiness", label: "source readiness", statusValue: "source-readiness" }),
+      Object.freeze({ rowKey: "disabledState", label: "proof/generation/write disabled state", statusValue: "disabled-state" }),
+    ]),
+  }),
+]);
+
+function workflowFieldLookup(fields = [], workflowSections = []) {
+  const lookup = new Map();
+  for (const field of [...flattenedWorkflowFields(workflowSections), ...fields]) {
+    if (field?.fieldKey && !lookup.has(field.fieldKey)) lookup.set(field.fieldKey, field);
+  }
+  return lookup;
+}
+
+function spineField(lookup, fieldKeys = []) {
+  for (const fieldKey of fieldKeys) {
+    const field = lookup.get(fieldKey);
+    if (field) return field;
+  }
+  return null;
+}
+
+function spineFieldHasDisplayValue(field = {}) {
+  if (!field) return false;
+  if (field.selectedValue || field.selectedLabel) return true;
+  if (field.futureMapped === true || field.disabled === true || field.status === "blocked" || field.displayMode === "warning-chip" || field.displayMode === "disabled-handoff") return false;
+  if (field.provenance === "available-choice") return false;
+  if (["auto-chip", "inherited-chip", "metadata-chip"].includes(field.displayMode)) return Boolean(field.effectiveValue || field.effectiveLabel);
+  if (["auto", "inherited", "metadata"].includes(field.provenance)) return Boolean(field.effectiveValue || field.effectiveLabel);
+  return false;
+}
+
+function spineFieldValue(field = {}) {
+  if (!field) return null;
+  if (field.selectedLabel || field.selectedValue) return field.selectedLabel || field.selectedValue;
+  if (field.provenance === "available-choice") return null;
+  if (["auto-chip", "inherited-chip", "metadata-chip", "warning-chip"].includes(field.displayMode)) {
+    return field.effectiveLabel || field.effectiveValue || null;
+  }
+  if (field.provenance === "auto" || field.provenance === "inherited" || field.provenance === "metadata") {
+    return field.effectiveLabel || field.effectiveValue || null;
+  }
+  return null;
+}
+
+function spineFieldStatus(field = null) {
+  if (!field) return "missing";
+  if (field.selectedOptionBlocked === true || field.status === "blocked" || field.displayMode === "warning-chip") return "blocked";
+  if (field.futureMapped === true || field.status === "future-mapped") return "future-mapped";
+  if (field.disabled === true || field.displayMode === "disabled-handoff") return "disabled";
+  if (field.selectedValue) return "manual-constraint";
+  if (field.displayMode === "auto-chip" || field.provenance === "auto") return "auto-consequence";
+  if (field.displayMode === "inherited-chip" || field.provenance === "inherited") return "inherited-consequence";
+  if (field.displayMode === "metadata-chip" || field.provenance === "metadata") return "metadata-only";
+  return "not-selected";
+}
+
+function spineFieldIndicator(field = null) {
+  const status = spineFieldStatus(field);
+  if (status === "manual-constraint") return "manual constraint";
+  if (status === "auto-consequence") return "auto consequence";
+  if (status === "inherited-consequence") return "inherited consequence";
+  if (status === "blocked") return "blocked / preserved";
+  if (status === "future-mapped") return "future mapped";
+  if (status === "disabled") return "disabled";
+  if (status === "metadata-only") return "metadata only";
+  if (status === "missing") return "missing from current source";
+  return "not selected";
+}
+
+function spineFieldReason(field = null) {
+  if (!field) return "No mapped Selector Reference/options field is available yet; no value is faked.";
+  return field.classificationReason
+    || field.unavailableReason
+    || field.blockedReason
+    || field.sourceStatus
+    || "Value is derived from the safe Selector Reference/options surface; no raw row is exposed.";
+}
+
+function spineSupportsIndirect(lookup) {
+  const indirectFields = ["indirectOpticVar1", "indirectOpticVar2", "opticIndirect"].map((key) => lookup.get(key)).filter(Boolean);
+  const hasSelectedOrEffectiveIndirectValue = indirectFields.some((field) => spineFieldHasDisplayValue(field));
+  const hasUsableIndirectOption = indirectFields.some((field) => Array.isArray(field.options)
+    && field.options.some((option) => option.blocked !== true && option.status !== "blocked"));
+  return hasSelectedOrEffectiveIndirectValue || hasUsableIndirectOption;
+}
+
+function createSpineStatusRow(definition = {}, { sourceReady = false, summary = {}, manualConstraints = [], autoConsequences = [], blockedItems = [] } = {}) {
+  if (definition.statusValue === "candidate-state") {
+    return {
+      rowKey: definition.rowKey,
+      label: definition.label,
+      value: summary.state || "default preview",
+      displayValue: summary.state || "default preview",
+      status: "read-only",
+      indicator: "candidate state",
+      reason: "Read-only candidate state; not a production payload or proof claim.",
+      rawRowsExposed: false,
+    };
+  }
+  if (definition.statusValue === "missing-blocking") {
+    const count = (Array.isArray(blockedItems) ? blockedItems.length : 0) + (summary.blockedCount || 0);
+    return {
+      rowKey: definition.rowKey,
+      label: definition.label,
+      value: count ? `${count} item(s)` : "none",
+      displayValue: count ? `${count} item(s)` : "none",
+      status: count ? "blocked" : "clear",
+      indicator: count ? "blocked / missing" : "no blockers reported",
+      reason: "Blocked or missing values stay visible; compatible selections are not silently cleared.",
+      rawRowsExposed: false,
+    };
+  }
+  if (definition.statusValue === "source-readiness") {
+    return {
+      rowKey: definition.rowKey,
+      label: definition.label,
+      value: sourceReady ? "ready" : "unavailable",
+      displayValue: sourceReady ? "ready" : "unavailable",
+      status: sourceReady ? "ready" : "missing",
+      indicator: "source readiness",
+      reason: "Derived from Selector Reference status, not from raw rows.",
+      rawRowsExposed: false,
+    };
+  }
+  return {
+    rowKey: definition.rowKey,
+    label: definition.label,
+    value: "readOnly:true; writes:false; generation:false; labProofAuthority:false",
+    displayValue: "readOnly true · writes false · generation false · Lab Proof false",
+    status: "disabled-safe",
+    indicator: "safety flags",
+    reason: "All generation, proof, and write paths remain disabled in this slice.",
+    rawRowsExposed: false,
+  };
+}
+
+function createProductSpineRow(definition = {}, lookup, context = {}) {
+  const fields = (definition.fields || []).map((key) => lookup.get(key)).filter(Boolean);
+  const displayValues = fields.map(spineFieldValue).filter(Boolean);
+  const firstField = fields[0] || null;
+  const statuses = fields.length ? fields.map(spineFieldStatus) : ["missing"];
+  const status = statuses.includes("blocked")
+    ? "blocked"
+    : statuses.includes("manual-constraint")
+      ? "manual-constraint"
+      : statuses.includes("auto-consequence")
+        ? "auto-consequence"
+        : statuses.includes("inherited-consequence")
+          ? "inherited-consequence"
+          : statuses.includes("future-mapped")
+            ? "future-mapped"
+            : statuses.includes("disabled")
+              ? "disabled"
+              : fields.length === 0
+                ? "missing"
+                : displayValues.length
+                  ? statuses[0]
+                  : "not-selected";
+  return {
+    rowKey: definition.rowKey,
+    label: definition.label,
+    fieldKeys: [...(definition.fields || [])],
+    value: displayValues.length ? displayValues.join(" / ") : null,
+    displayValue: displayValues.length ? displayValues.join(" / ") : PRODUCT_SPINE_EMPTY_VALUE,
+    status,
+    indicator: fields.length ? spineFieldIndicator(firstField) : "missing from current source",
+    reason: fields.length ? fields.map(spineFieldReason).filter(Boolean)[0] : "No mapped Selector Reference/options field is available yet; no value is faked.",
+    manualConstraint: statuses.includes("manual-constraint"),
+    autoConsequence: statuses.includes("auto-consequence") || statuses.includes("inherited-consequence"),
+    blocked: statuses.includes("blocked"),
+    missing: fields.length === 0 || status === "future-mapped" || status === "missing",
+    mutableLater: true,
+    writes: false,
+    rawRowsExposed: false,
+  };
+}
+
+function shouldShowProductSpineRow(definition = {}, lookup) {
+  if (definition.condition === "indirect-supported") return spineSupportsIndirect(lookup);
+  if (definition.condition === "value-present") {
+    return (definition.fields || []).some((key) => spineFieldHasDisplayValue(lookup.get(key)));
+  }
+  return true;
+}
+
+function createProductSpine({ fields = [], workflowSections = [], sourceReady = false, summary = {}, manualConstraints = [], autoConsequences = [], blockedItems = [] } = {}) {
+  const lookup = workflowFieldLookup(fields, workflowSections);
+  const sections = PRODUCT_SPINE_SECTION_DEFINITIONS.map((section) => ({
+    sectionKey: section.sectionKey,
+    title: section.title,
+    rows: (section.rows || [])
+      .filter((row) => section.statusOnly || shouldShowProductSpineRow(row, lookup))
+      .map((row) => section.statusOnly
+        ? createSpineStatusRow(row, { sourceReady, summary, manualConstraints, autoConsequences, blockedItems })
+        : createProductSpineRow(row, lookup, { sourceReady, summary, manualConstraints, autoConsequences, blockedItems })),
+    readOnly: true,
+    writes: false,
+    rawRowsExposed: false,
+  }));
+  return {
+    title: "Selector checklist spine",
+    status: sourceReady ? "source-backed-preview" : "source-unavailable-preview",
+    sections,
+    order: sections.map((section) => section.title),
+    emptyValue: PRODUCT_SPINE_EMPTY_VALUE,
+    source: "safe Selector Reference/options surface",
+    readOnly: true,
+    writes: false,
+    generation: false,
+    labProofAuthority: false,
+    rawRowsExposed: false,
+  };
+}
+
+function payloadFieldValue(lookup, fieldKeys = []) {
+  const field = spineField(lookup, fieldKeys);
+  const value = spineFieldValue(field || {});
+  return value || null;
+}
+
+function payloadProjectSnapshot(project = {}) {
+  const currentProject = project.currentProject || {};
+  return {
+    id: project.metadata?.projectId || currentProject.projectId || null,
+    title: project.metadata?.title || currentProject.title || null,
+    client: currentProject.client || null,
+    site: currentProject.site || null,
+    source: project.metadata?.source || project.selection?.source || null,
+  };
+}
+
+function payloadIdentitySnapshot(identity = {}, authority = {}) {
+  return {
+    name: identity.currentUser?.name || null,
+    email: identity.currentUser?.email || null,
+    classification: identity.classification || null,
+    identityState: identity.identityState || null,
+    authorityStatus: authority.status || null,
+    authoritySource: authority.source || null,
+  };
+}
+
+function createPayloadPreviewSkeleton({ fields = [], workflowSections = [], summary = {}, snapshots = {}, sourceReady = false } = {}) {
+  const lookup = workflowFieldLookup(fields, workflowSections);
+  return {
+    previewOnly: true,
+    productionPayload: false,
+    status: summary.state || "default preview",
+    source: "safe Selector Reference/options surface",
+    sourceReady,
+    project: payloadProjectSnapshot(snapshots.project || {}),
+    identity: payloadIdentitySnapshot(snapshots.identity || {}, snapshots.authority || {}),
+    system: {
+      system: payloadFieldValue(lookup, ["system"]),
+      profile: payloadFieldValue(lookup, ["system"]),
+      tier: payloadFieldValue(lookup, ["tier"]),
+    },
+    profile: payloadFieldValue(lookup, ["system"]),
+    tier: payloadFieldValue(lookup, ["tier"]),
+    optics: {
+      direct: {
+        opticVar1: payloadFieldValue(lookup, ["directOpticVar1", "diffuserVar1", "optic"]),
+        opticVar2: payloadFieldValue(lookup, ["directOpticVar2", "diffuserVar2", "opticSub"]),
+      },
+      indirect: {
+        opticVar1: payloadFieldValue(lookup, ["indirectOpticVar1", "opticIndirect"]),
+        opticVar2: payloadFieldValue(lookup, ["indirectOpticVar2"]),
+      },
+    },
+    environment: {
+      ip: payloadFieldValue(lookup, ["ipRating"]),
+      ik: payloadFieldValue(lookup, ["ikRating"]),
+      ambient: payloadFieldValue(lookup, ["ambient"]),
+      electricalClass: payloadFieldValue(lookup, ["electricalClass"]),
+    },
+    lightControl: {
+      targetLmPerM: payloadFieldValue(lookup, ["targetLmPerM", "targetLumensPerMetre"]),
+      cctCri: payloadFieldValue(lookup, ["cctCri", "cct", "cri"]),
+      controlType: payloadFieldValue(lookup, ["controlType"]),
+      driver: payloadFieldValue(lookup, ["driver"]),
+      wiringTopology: payloadFieldValue(lookup, ["wiringType"]),
+      lexWeight: payloadFieldValue(lookup, ["lexWeight", "lex_weight", "lex"]),
+    },
+    mounting: {
+      mountStyle: payloadFieldValue(lookup, ["mountStyle"]),
+      mountSelection: payloadFieldValue(lookup, ["mountSelection"]),
+      mountParticulars: payloadFieldValue(lookup, ["mountParticulars"]),
+      mountNotes: payloadFieldValue(lookup, ["mountNotes", "mountingNotes"]),
+      powerPenetration: payloadFieldValue(lookup, ["powerPenetration"]),
+      powerLocation: payloadFieldValue(lookup, ["powerLocation"]),
+      flexLength: payloadFieldValue(lookup, ["flexLength"]),
+    },
+    finishes: {
+      bodyFinish: payloadFieldValue(lookup, ["bodyFinish", "finishDefault"]),
+      cover: payloadFieldValue(lookup, ["finishCover"]),
+      endPlates: payloadFieldValue(lookup, ["finishEnd"]),
+      flexColour: payloadFieldValue(lookup, ["finishFlex"]),
+    },
+    egress: {
+      light: payloadFieldValue(lookup, ["egressLight", "emergency"]),
+      sound: payloadFieldValue(lookup, ["egressSound"]),
+    },
+    sensorsAccessories: {
+      sensors: payloadFieldValue(lookup, ["sensor"]),
+      accessories: payloadFieldValue(lookup, ["accessories"]),
+    },
+    runs: {
+      runCount: payloadFieldValue(lookup, ["runCount", "runQty"]),
+    },
+    safetyFlags: {
+      readOnly: true,
+      writes: false,
+      generation: false,
+      labProofAuthority: false,
+      rawRowsExposed: false,
+      rawHeadersExposed: false,
+      rawUsersExposed: false,
+      credentialsExposed: false,
+      privatePathsExposed: false,
+    },
+  };
+}
+
+function createDbBackedSelectorSurface(selectorReferenceStatus = {}, local = {}, selectorState, onLocalStateChange, snapshots = {}) {
   const payload = dbOptionsPayload(selectorReferenceStatus);
   const sourceReady = dbOptionsSourceReady(selectorReferenceStatus);
   const fields = enrichDbOptionFields(selectorReferenceStatus, local).map((field) => ({
@@ -2071,6 +2473,22 @@ function createDbBackedSelectorSurface(selectorReferenceStatus = {}, local = {},
     payload,
     candidateSummary: summary,
   });
+  const productSpine = createProductSpine({
+    fields,
+    workflowSections,
+    sourceReady,
+    summary,
+    manualConstraints,
+    autoConsequences,
+    blockedItems,
+  });
+  const payloadPreview = createPayloadPreviewSkeleton({
+    fields,
+    workflowSections,
+    summary,
+    snapshots,
+    sourceReady,
+  });
   return {
     title: "CS Selector Preview",
     subtitle: "Read-only DB-backed candidate preview. Manual selections are constraints; auto selections are consequences.",
@@ -2104,6 +2522,8 @@ function createDbBackedSelectorSurface(selectorReferenceStatus = {}, local = {},
     donorFieldParity: payload.donorFieldParity || null,
     specialPartsEntitlementSummary: payload.specialPartsEntitlementSummary || null,
     presentationClassification,
+    productSpine,
+    payloadPreview,
     selectionTruthSummary,
     manualConstraints,
     autoConsequences,
@@ -3012,7 +3432,7 @@ export function createSelectorViewModel({ adapter, selectorState, selectorRefere
     phase: snapshots.diagnostics?.phase || "selector-fed-downstream-context-foundation",
     route: snapshots.route,
     local,
-    selectorSurface: createDbBackedSelectorSurface(selectorReferenceStatus, local, selectorState, onLocalStateChange),
+    selectorSurface: createDbBackedSelectorSurface(selectorReferenceStatus, local, selectorState, onLocalStateChange, snapshots),
     expanderShell: createSelectorExpanderShell(local, selectorState, onLocalStateChange, selectorReferenceStatus),
     identity: {
       owner: identity.owner,

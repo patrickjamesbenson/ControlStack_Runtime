@@ -1175,6 +1175,108 @@ function appendSelectorSelectionTruthSummary(parent, summary = {}) {
   parent.appendChild(section);
 }
 
+function appendSelectorProductSpine(parent, spine = {}) {
+  const section = document.createElement("section");
+  section.className = "cs-selector-product-spine";
+  section.dataset.selectorProductSpine = "checklist";
+  section.dataset.readOnly = spine.readOnly === false ? "false" : "true";
+  section.dataset.rawRowsExposed = spine.rawRowsExposed === true ? "true" : "false";
+
+  const header = document.createElement("div");
+  header.className = "cs-selector-product-spine__header";
+  appendText(header, "p", "Selector checklist spine", "cs-shell__eyebrow");
+  appendText(header, "h4", spine.title || "Selector checklist spine");
+  appendText(header, "p", "Product-facing sidebar/checklist order. Empty values render as em dash; missing or future-mapped values stay visible instead of being faked.");
+  appendBadgeList(header, ["read-only", "payload preview only", "no fake options", "no raw rows"]);
+  section.appendChild(header);
+
+  const sections = Array.isArray(spine.sections) ? spine.sections : [];
+  const wrapper = document.createElement("div");
+  wrapper.className = "cs-selector-product-spine__sections";
+  sections.forEach((spineSection, index) => {
+    const card = document.createElement("section");
+    card.className = "cs-selector-product-spine__section";
+    card.dataset.spineSection = spineSection.sectionKey || "unknown";
+    card.dataset.spineOrder = String(index + 1);
+    appendText(card, "h5", spineSection.title || spineSection.sectionKey || "Checklist section");
+    const rows = Array.isArray(spineSection.rows) ? spineSection.rows : [];
+    const list = document.createElement("dl");
+    list.className = "cs-selector-product-spine__rows";
+    for (const row of rows) {
+      const term = document.createElement("dt");
+      term.textContent = row.label || row.rowKey || "Checklist row";
+      term.dataset.rowKey = row.rowKey || "unknown";
+      list.appendChild(term);
+
+      const value = document.createElement("dd");
+      value.dataset.status = row.status || "unknown";
+      value.dataset.indicator = row.indicator || "none";
+      value.dataset.autoConsequence = row.autoConsequence === true ? "true" : "false";
+      value.dataset.manualConstraint = row.manualConstraint === true ? "true" : "false";
+      value.dataset.blocked = row.blocked === true ? "true" : "false";
+      value.dataset.missing = row.missing === true ? "true" : "false";
+      const display = document.createElement("span");
+      display.className = "cs-selector-product-spine__value";
+      display.textContent = row.displayValue || "—";
+      value.appendChild(display);
+      appendText(value, "span", row.indicator || "not selected", "cs-selector-product-spine__indicator");
+      appendText(value, "small", row.reason || "No raw source row exposed.");
+      list.appendChild(value);
+    }
+    card.appendChild(list);
+    wrapper.appendChild(card);
+  });
+  section.appendChild(wrapper);
+  parent.appendChild(section);
+}
+
+function appendPayloadPreviewObject(parent, payload = {}) {
+  const section = document.createElement("section");
+  section.className = "cs-selector-payload-preview";
+  section.dataset.selectorPayloadPreview = "skeleton";
+  section.dataset.productionPayload = payload.productionPayload === true ? "true" : "false";
+  section.dataset.readOnly = payload.safetyFlags?.readOnly === false ? "false" : "true";
+  section.dataset.rawRowsExposed = payload.safetyFlags?.rawRowsExposed === true ? "true" : "false";
+
+  appendText(section, "h4", "Payload preview skeleton");
+  appendText(section, "p", "Stable read-only shape preview only. This is not a production payload and does not generate spec, IES, RunTable, Lab Proof, records, approvals, or writes.");
+
+  appendSection(section, "Payload preview safety flags", [
+    ["previewOnly", payload.previewOnly === false ? "false" : "true"],
+    ["productionPayload", payload.productionPayload === true ? "true" : "false"],
+    ["readOnly", payload.safetyFlags?.readOnly === false ? "false" : "true"],
+    ["writes", payload.safetyFlags?.writes === true ? "true" : "false"],
+    ["generation", payload.safetyFlags?.generation === true ? "true" : "false"],
+    ["labProofAuthority", payload.safetyFlags?.labProofAuthority === true ? "true" : "false"],
+    ["rawRowsExposed", payload.safetyFlags?.rawRowsExposed === true ? "true" : "false"],
+    ["rawHeadersExposed", payload.safetyFlags?.rawHeadersExposed === true ? "true" : "false"],
+    ["rawUsersExposed", payload.safetyFlags?.rawUsersExposed === true ? "true" : "false"],
+    ["credentialsExposed", payload.safetyFlags?.credentialsExposed === true ? "true" : "false"],
+    ["privatePathsExposed", payload.safetyFlags?.privatePathsExposed === true ? "true" : "false"],
+  ]);
+
+  const shapeRows = [
+    ["project", Object.keys(payload.project || {}).join(", ") || "present"],
+    ["identity", Object.keys(payload.identity || {}).join(", ") || "present"],
+    ["system", Object.keys(payload.system || {}).join(", ") || "present"],
+    ["optics.direct", Object.keys(payload.optics?.direct || {}).join(", ") || "present"],
+    ["optics.indirect", Object.keys(payload.optics?.indirect || {}).join(", ") || "present"],
+    ["environment", Object.keys(payload.environment || {}).join(", ") || "present"],
+    ["lightControl", Object.keys(payload.lightControl || {}).join(", ") || "present"],
+    ["mounting", Object.keys(payload.mounting || {}).join(", ") || "present"],
+    ["finishes", Object.keys(payload.finishes || {}).join(", ") || "present"],
+    ["egress", Object.keys(payload.egress || {}).join(", ") || "present"],
+    ["sensorsAccessories", Object.keys(payload.sensorsAccessories || {}).join(", ") || "present"],
+    ["runs", Object.keys(payload.runs || {}).join(", ") || "present"],
+    ["safetyFlags", Object.keys(payload.safetyFlags || {}).join(", ") || "present"],
+  ];
+  appendSection(section, "Payload preview shape", shapeRows);
+
+  appendText(section, "p", "Payload values are held in the view model for tests and future wiring, but this UI exposes only the safe shape and safety flags in this slice.", "cs-selector-payload-preview__redaction-note");
+
+  parent.appendChild(section);
+}
+
 function appendSelectorProductCompactStatus(parent, surface = {}) {
   const summary = surface.candidateSummary || {};
   const status = document.createElement("section");
@@ -1230,6 +1332,9 @@ function appendSelectorProductSurface(parent, surface = {}) {
 
   appendText(section, "p", "Read-only preview. No spec, slug, IES, payload, RunTable, Lab Proof, Controlled Record, RREG approval, custody transfer, Board Data write, or hidden write-back is created here.", "cs-selector-product__safety");
   appendText(section, "p", surface.proofCopy || "Selector previews selection readiness. Lab Proof proves later.", "cs-selector-product__safety");
+
+  appendSelectorProductSpine(section, surface.productSpine || {});
+  appendPayloadPreviewObject(section, surface.payloadPreview || {});
 
   appendSelectorSelectionTruthSummary(section, surface.selectionTruthSummary || {});
 
