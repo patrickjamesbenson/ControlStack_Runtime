@@ -5,6 +5,7 @@ import { readFile } from "node:fs/promises";
 import { createSelectorState } from "../packages/modules/cs-selector/selectorState.js";
 import { createSelectorViewModel } from "../packages/modules/cs-selector/selectorViewModel.js";
 import { deriveSelectorReferenceOptionsFromSnapshot } from "../packages/workspace-kernel/selectorReferenceOptionsService.js";
+import { buildSelectedResultProjectionContract } from "../packages/workspace-kernel/selectedResultProjectionService.js";
 
 const viewSourceUrl = new URL("../packages/modules/cs-selector/selectorView.js", import.meta.url);
 const viewModelSourceUrl = new URL("../packages/modules/cs-selector/selectorViewModel.js", import.meta.url);
@@ -115,6 +116,8 @@ test("Selector product surface renders selected-truth and canonical workflow bef
   assert.match(source, /dataset\.selectorProductSpine = "checklist"/);
   assert.match(source, /dataset\.selectorPayloadPreview = "skeleton"/);
   assert.match(source, /dataset\.selectorSelectedEngineResult = "read-only"/);
+  assert.match(source, /dataset\.selectedResultProjectionState = handoff\.selectedResultProjectionState \|\| "no_selected_result"/);
+  assert.match(source, /Projection per-run display row shape/);
   assert.match(source, /dataset\.selectorSourceSpecReadiness = "read-only"/);
   assert.match(source, /dataset\.selectorDisabledHandoffSummary = "read-only"/);
 });
@@ -125,6 +128,19 @@ test("Selector product surface parity lock keeps summary, spine, payload, readin
   const readiness = surface.sourceSpecReadinessExplanation;
   const handoffs = surface.disabledHandoffSummary;
   const selectedEngineResult = surface.selectedEngineResultHandoff;
+  const selectedResultProjection = surface.selectedResultProjection;
+  const expectedProjection = buildSelectedResultProjectionContract();
+  const expectedProjectionSummary = {
+    source: expectedProjection.source,
+    sourceAvailable: expectedProjection.sourceAvailable,
+    sourceState: expectedProjection.sourceState,
+    state: expectedProjection.state,
+    stateEnum: expectedProjection.stateEnum,
+    approvedStateLabels: expectedProjection.approvedStateLabels,
+    staleHistoricalLabel: expectedProjection.staleHistoricalLabel,
+    staleSensitiveInputKeys: expectedProjection.staleSensitiveInputKeys,
+    redactionRuleCount: expectedProjection.redactionRules.length,
+  };
   const payload = surface.payloadPreview;
 
   assert.deepEqual(lock.blockOrder, [
@@ -162,10 +178,22 @@ test("Selector product surface parity lock keeps summary, spine, payload, readin
   assert.equal(readiness.rawUsersExposed, false);
   assert.equal(readiness.rawLabEvidenceExposed, false);
 
+  assert.deepEqual(selectedResultProjection, expectedProjectionSummary);
+  assert.deepEqual(selectedEngineResult.selectedResultProjection, expectedProjectionSummary);
+  assert.equal(selectedEngineResult.projectionConsumed, true);
+  assert.equal(selectedEngineResult.selectedResultProjectionSource, expectedProjection.source);
+  assert.equal(selectedEngineResult.selectedResultProjectionState, expectedProjection.state);
+  assert.deepEqual(selectedEngineResult.selectedResultProjection.stateEnum, expectedProjection.stateEnum);
+  assert.deepEqual(selectedEngineResult.selectedResultProjection.approvedStateLabels, expectedProjection.approvedStateLabels);
+  assert.deepEqual(selectedEngineResult.selectedResultProjection.staleSensitiveInputKeys, expectedProjection.staleSensitiveInputKeys);
   assert.equal(selectedEngineResult.selectedResultAvailable, false);
   assert.equal(selectedEngineResult.selectedResultUnavailableReason, "no selected engine result available");
   assert.equal(selectedEngineResult.resultStateLabel, "Estimated preview");
   assert.equal(selectedEngineResult.engineVerified, false);
+  assert.equal(selectedEngineResult.stale, false);
+  assert.equal(selectedEngineResult.accepted, false);
+  assert.equal(selectedEngineResult.selectedFamilySubsetLock, null);
+  assert.equal(selectedEngineResult.selectedSubsetFamilyLock, null);
   assert.equal(selectedEngineResult.engineVerificationEnabled, false);
   assert.equal(selectedEngineResult.safetyFlags.engineExecutionEnabled, false);
   assert.equal(selectedEngineResult.safetyFlags.rawSelectedPayloadExposed, false);
@@ -195,12 +223,22 @@ test("Selected engine-result handoff defaults to no selected result and Estimate
   assert.equal(handoff.readOnly, true);
   assert.equal(handoff.displayOnly, true);
   assert.equal(handoff.scaffoldOnly, true);
+  assert.equal(handoff.projectionConsumed, true);
+  assert.equal(handoff.selectedResultProjectionSource, "future Engine/RunTable selected-result projection");
+  assert.equal(handoff.selectedResultProjectionState, "no_selected_result");
+  assert.equal(handoff.selectedResultProjection.sourceState, "no_source");
+  assert.ok(handoff.selectedResultProjection.stateEnum.includes("selected_accepted"));
+  assert.ok(handoff.selectedResultProjection.approvedStateLabels.includes("Run table changed — verify again"));
   assert.equal(handoff.selectedResultAvailable, false);
   assert.equal(handoff.selectedResultUnavailableReason, "no selected engine result available");
   assert.equal(handoff.resultStateLabel, "Estimated preview");
   assert.notEqual(handoff.resultStateLabel, "Engine verified");
   assert.equal(handoff.estimatedPreviewOnly, true);
   assert.equal(handoff.engineVerified, false);
+  assert.equal(handoff.stale, false);
+  assert.equal(handoff.accepted, false);
+  assert.equal(handoff.selectedFamilySubsetLock, null);
+  assert.equal(handoff.selectedSubsetFamilyLock, null);
   assert.equal(handoff.engineVerificationEnabled, false);
   assert.equal(handoff.selectedResultIngestionEnabled, false);
   assert.equal(handoff.selectedResultPersistenceEnabled, false);
@@ -212,6 +250,9 @@ test("Selected engine-result handoff defaults to no selected result and Estimate
   assert.equal(fieldRows["run identity placeholder"], "unavailable — future read-only Engine/RunTable result source required");
   assert.equal(fieldRows["board family placeholder"], "unavailable — future read-only Engine/RunTable result source required");
   assert.equal(fieldRows["sanitised warnings placeholder"], "unavailable — future read-only Engine/RunTable result source required");
+  assert.ok(handoff.projectionFieldRows.some(([field]) => field === "runLengthMm"));
+  assert.ok(handoff.projectionFieldRows.some(([field]) => field === "boardFamily"));
+  assert.ok(handoff.projectionFieldRows.some(([field]) => field === "sanitisedWarnings"));
   assert.equal(handoff.futureRequiredShape.oneSelectedResultOnly, true);
   assert.equal(handoff.futureRequiredShape.perRunLookupKey, "run id / run number");
   assert.equal(handoff.futureRequiredShape.weightedAlternativesHiddenForNormalUsers, true);

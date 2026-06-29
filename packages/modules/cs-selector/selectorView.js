@@ -1329,14 +1329,18 @@ function appendSelectedEngineResultHandoff(parent, handoff = {}) {
   section.dataset.resultState = handoff.resultStateLabel || "Estimated preview";
   section.dataset.selectedResultAvailable = handoff.selectedResultAvailable === true ? "true" : "false";
   section.dataset.engineVerified = handoff.engineVerified === true ? "true" : "false";
+  section.dataset.stale = handoff.stale === true ? "true" : "false";
+  section.dataset.accepted = handoff.accepted === true ? "true" : "false";
+  section.dataset.selectedResultProjectionState = handoff.selectedResultProjectionState || "no_selected_result";
   section.dataset.engineVerificationEnabled = handoff.engineVerificationEnabled === true ? "true" : "false";
   section.dataset.rawSelectedPayloadExposed = handoff.safetyFlags?.rawSelectedPayloadExposed === true ? "true" : "false";
   section.dataset.rawEngineDebugPayloadExposed = handoff.safetyFlags?.rawEngineDebugPayloadExposed === true ? "true" : "false";
 
   appendText(section, "h4", handoff.title || "Selected engine result handoff");
-  appendText(section, "p", "No selected engine result is available yet. Runtime Selector remains in Estimated preview state and only documents the future read-only selected-result shape.");
+  appendText(section, "p", "No selected engine result is available yet. Runtime Selector consumes the fail-closed workspace-kernel projection contract and remains in Estimated preview state.");
   appendSection(section, "Selected engine-result state", handoff.rows || [["result state label", "Estimated preview"], ["selected result availability", "no selected engine result available"]]);
   appendSection(section, "Future selected-result shape", handoff.fieldRows || [["selected result fields", "unavailable — future read-only Engine/RunTable result source required"]]);
+  appendSection(section, "Projection per-run display row shape", handoff.projectionFieldRows || [["projection fields", "unavailable — future read-only Engine/RunTable result source required"]]);
   appendSection(section, "Selected engine-result safety flags", [
     ["engineExecutionEnabled", handoff.safetyFlags?.engineExecutionEnabled === true ? "true" : "false"],
     ["engineVerificationEnabled", handoff.safetyFlags?.engineVerificationEnabled === true ? "true" : "false"],
