@@ -110,3 +110,42 @@ test("Lab Proof readiness map describes adjacent module relationships without gr
   assert.equal(rowValue(model.runtimeStatusFlagRows, "productionProofAuthority"), "false");
   assert.equal(rowValue(model.runtimeStatusFlagRows, "complianceCertificationEnabled"), "false");
 });
+
+test("Lab Proof authority contract diagnostic map names the missing contract and field classes", () => {
+  const model = createModel();
+
+  assert.equal(model.missingAuthorityContractName, "controlstack.lab_proof.authority_contract.v1");
+  assert.equal(
+    rowValue(model.authorityContractDiagnosticRows, "missing approved Lab authority contract"),
+    "controlstack.lab_proof.authority_contract.v1"
+  );
+  assert.equal(rowValue(model.authorityContractDiagnosticRows, "productionProofAuthority"), "false");
+  assert.equal(rowValue(model.authorityContractDiagnosticRows, "proofClaimsEmitted"), "false");
+  assert.match(rowValue(model.evidenceFieldClassRows, "safe"), /evidence_id/);
+  assert.match(rowValue(model.evidenceFieldClassRows, "safe"), /downstream_allowed/);
+  assert.match(rowValue(model.evidenceFieldClassRows, "raw \/ blocked"), /raw_pdf_body/);
+  assert.match(rowValue(model.evidenceFieldClassRows, "raw \/ blocked"), /raw_selected_engine_payload/);
+  assert.ok(model.safeEvidenceFieldRows.includes("safe_summary"));
+  assert.ok(model.safeEvidenceFieldRows.includes("downstream_allowed"));
+  assert.ok(model.unsafeEvidenceFieldRows.includes("raw_selected_engine_payload"));
+  assert.ok(model.unsafeEvidenceFieldRows.includes("raw_ies_text"));
+});
+
+test("Lab Proof authority link map keeps future refs and production claims disabled", () => {
+  const model = createModel();
+
+  assert.equal(rowValue(model.authorityLinkRows, "Selector candidate ref"), "candidate/selection source only; Selector state is not proof");
+  assert.equal(rowValue(model.authorityLinkRows, "Engine / RunTable selected result ref"), "selected result reference only; Engine selected-result state is not proof");
+  assert.equal(rowValue(model.authorityLinkRows, "IES candidate ref"), "candidate photometric artefact reference only; IES Builder output is not proof");
+  assert.equal(rowValue(model.authorityLinkRows, "Board Data reference"), "metadata source reference only; Board Data metadata is not proof");
+  assert.equal(rowValue(model.productionClaimRows, "allowed claims"), "none in this slice");
+  assert.match(rowValue(model.productionClaimRows, "blocked claims"), /NATA\/lab-ratified quantitative claims/);
+  assert.equal(rowValue(model.authorityContractGuardrailRows, "post Lab Proof endpoint added"), "false");
+  assert.equal(rowValue(model.authorityContractGuardrailRows, "upload/parse/export/proof controls added"), "false");
+  assert.equal(rowValue(model.authorityContractGuardrailRows, "Controlled Records write enabled"), "false");
+  assert.equal(rowValue(model.authorityContractGuardrailRows, "RREG approval enabled"), "false");
+  assert.equal(rowValue(model.authorityContractGuardrailRows, "RREG custody transfer enabled"), "false");
+  assert.equal(rowValue(model.authorityContractGuardrailRows, "IES generation enabled"), "false");
+  assert.equal(rowValue(model.authorityContractGuardrailRows, "Selector reopening enabled"), "false");
+  assert.ok(model.rawEvidenceNonEmissionRules.some((rule) => rule.includes("raw selected Engine payloads")));
+});

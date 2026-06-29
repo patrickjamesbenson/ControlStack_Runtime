@@ -58,12 +58,23 @@ export function renderLabProofView(container, viewModel) {
   appendText(intro, "p", "No evidence is uploaded, parsed, exposed, approved, or certified here.");
   appendText(intro, "p", "Candidate compatibility, Board Data metadata, and IES candidates are not proof.");
   appendText(intro, "p", "Lab Proof is the production proof authority once an approved Lab authority contract exists.");
+  appendText(intro, "p", `Missing approved Lab authority contract: ${viewModel.missingAuthorityContractName}.`);
   appendText(intro, "p", "PURE_REF_STATE is diagnostic metadata only until a later approved Lab authority contract exists.");
-  appendText(intro, "p", "Selector, IES Builder, Board Data, Compliance Matters, Controlled Records, RREG, EGRES, and Coordinated Surfaces must not treat diagnostic metadata as proof.");
+  appendText(intro, "p", "Selector, Engine / RunTable, IES Builder, Board Data, Compliance Matters, Controlled Records, RREG, EGRES, and Coordinated Surfaces must not treat diagnostic metadata as proof.");
   article.appendChild(intro);
 
   appendSection(article, "Lab Proof endpoint", viewModel.statusRows);
   appendSection(article, "Runtime status flags", viewModel.runtimeStatusFlagRows);
+  appendSection(article, "Missing Lab authority contract", viewModel.authorityContractDiagnosticRows);
+  appendSection(article, "Required future authority contract sections", viewModel.authorityContractSectionRows);
+  appendSection(article, "Safe/internal/restricted/raw evidence field classes", viewModel.evidenceFieldClassRows);
+  appendListSection(article, "Export-safe evidence fields", viewModel.safeEvidenceFieldRows);
+  appendListSection(article, "Blocked unsafe evidence fields", viewModel.unsafeEvidenceFieldRows);
+  appendListSection(article, "Evidence status lifecycle", viewModel.evidenceStatusLifecycle);
+  appendSection(article, "Future proof authority link map", viewModel.authorityLinkRows);
+  appendSection(article, "Allowed and blocked production claims", viewModel.productionClaimRows);
+  appendListSection(article, "Raw evidence non-emission rules", viewModel.rawEvidenceNonEmissionRules);
+  appendSection(article, "Authority contract guardrails", viewModel.authorityContractGuardrailRows);
   appendListSection(article, "Proof readiness categories", viewModel.proofReadinessCategories);
   appendListSection(article, "Evidence boundary fields", viewModel.evidenceBoundaryFields);
   appendListSection(article, "Evidence boundary copy", viewModel.boundaryCopy);
