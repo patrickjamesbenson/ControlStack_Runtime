@@ -963,6 +963,21 @@ function dbOptionsSourceReady(selectorReferenceStatus = {}) {
   return selectorReferenceStatus.ok === true && source.present !== false && source.readable !== false && source.parseable !== false;
 }
 
+function dbSourceReadinessPayload(selectorReferenceStatus = {}) {
+  const payload = dbOptionsPayload(selectorReferenceStatus);
+  return payload.sourceReadiness || payload.safeSnapshotState || selectorReferenceStatus.sourceReadiness || selectorReferenceStatus.safeSnapshotState || null;
+}
+
+function dbReferenceOptionCoverage(selectorReferenceStatus = {}) {
+  const payload = dbOptionsPayload(selectorReferenceStatus);
+  const readiness = dbSourceReadinessPayload(selectorReferenceStatus) || {};
+  return payload.referenceOptionSourceCoverage || selectorReferenceStatus.referenceOptionSourceCoverage || readiness.referenceOptionSourceCoverage || null;
+}
+
+function yesNoWord(value) {
+  return value === true ? "yes" : "no";
+}
+
 function dbSelectedConstraintRows(surface = {}) {
   const constraints = Array.isArray(surface.manualConstraints) ? surface.manualConstraints : [];
   if (!constraints.length) return [["manual constraints", "none yet"]];
@@ -983,9 +998,21 @@ function dbBlockedRows(surface = {}) {
 
 function createDbBackedCandidateSummaryRows(surface = {}) {
   const summary = surface.candidateSummary || {};
+  const readiness = surface.sourceReadiness || surface.safeSnapshotState || {};
+  const coverage = surface.referenceOptionSourceCoverage || readiness.referenceOptionSourceCoverage || {};
+  const missingBlockers = Array.isArray(readiness.missingTableBlockers) ? readiness.missingTableBlockers : [];
   return [
     ["candidate state", summary.state || "default preview"],
     ["source readiness", surface.sourceReady === true ? "ready" : "unavailable"],
+    ["source readiness state", readiness.state || (surface.sourceReady === true ? "source-backed-safe-preview" : "fail-closed-source-warning")],
+    ["safe snapshot state", readiness.completeEnoughForPreview === true ? "complete enough for read-only preview" : "fail-closed or incomplete"],
+    ["active snapshot", `${yesNoWord(readiness.activeSnapshot?.present ?? surface.sourceReady)} present / ${yesNoWord(readiness.activeSnapshot?.readable ?? surface.sourceReady)} readable / ${yesNoWord(readiness.activeSnapshot?.parseable ?? surface.sourceReady)} parseable`],
+    ["materialised snapshot", `${yesNoWord(readiness.materialisedSnapshot?.present)} present / ${yesNoWord(readiness.materialisedSnapshot?.readable)} readable`],
+    ["expected tables present", yesNoWord(readiness.expectedTablesPresent)],
+    ["missing table blockers", missingBlockers.length ? missingBlockers.map((blocker) => blocker.table).join(", ") : "none"],
+    ["source-backed fields", coverage.sourceBackedFieldCount ?? 0],
+    ["future-mapped fields", coverage.futureMappedFieldCount ?? 0],
+    ["safe redaction", "raw rows, raw headers, USERS identifiers, credentials, provider IDs, and private paths redacted"],
     ["option fields mapped", summary.optionFieldCount ?? 0],
     ["available fields", summary.availableFieldCount ?? 0],
     ["workflow sections", summary.workflowSectionCount ?? 0],
@@ -2916,15 +2943,36 @@ function payloadIdentitySnapshot(identity = {}, authority = {}) {
   };
 }
 
-function createPayloadPreviewSkeleton({ fields = [], workflowSections = [], summary = {}, snapshots = {}, sourceReady = false, manualConstraints = [], autoConsequences = [], blockedItems = [] } = {}) {
+function createPayloadPreviewSkeleton({ fields = [], workflowSections = [], summary = {}, snapshots = {}, sourceReady = false, manualConstraints = [], autoConsequences = [], blockedItems = [], sourceReadiness = null, referenceOptionSourceCoverage = null } = {}) {
   const lookup = workflowFieldLookup(fields, workflowSections);
   const specGateCandidateReadiness = createSpecGateCandidateReadiness({ lookup, sourceReady, summary, manualConstraints, autoConsequences, blockedItems });
+  const safeSourceReadiness = sourceReadiness || {
+    title: "Source Readiness / Safe Snapshot State",
+    state: sourceReady ? "source-backed-safe-preview" : "fail-closed-source-warning",
+    completeEnoughForPreview: sourceReady === true,
+    safeForPreview: sourceReady === true,
+    readOnlyProductReference: sourceReady === true,
+    failClosed: sourceReady !== true,
+    safeRedaction: {
+      rawRowsExposed: false,
+      rawHeadersExposed: false,
+      rawUsersExposed: false,
+      credentialsExposed: false,
+      providerIdsExposed: false,
+      privatePathsExposed: false,
+    },
+  };
+  const safeCoverage = referenceOptionSourceCoverage || safeSourceReadiness.referenceOptionSourceCoverage || {};
   return {
     previewOnly: true,
     productionPayload: false,
     status: summary.state || "default preview",
     source: "safe Selector Reference/options surface",
     sourceReady,
+    sourceReadiness: safeSourceReadiness,
+    safeSnapshotState: safeSourceReadiness,
+    referenceOptionSourceCoverage: safeCoverage,
+    futureMappedFieldExplanation: safeSourceReadiness.futureMappedFieldExplanation || safeCoverage.futureMappedExplanation || "Future-mapped fields are visible and not faked.",
     project: payloadProjectSnapshot(snapshots.project || {}),
     identity: payloadIdentitySnapshot(snapshots.identity || {}, snapshots.authority || {}),
     system: {
@@ -3029,6 +3077,8 @@ function createPayloadPreviewSkeleton({ fields = [], workflowSections = [], summ
 function createDbBackedSelectorSurface(selectorReferenceStatus = {}, local = {}, selectorState, onLocalStateChange, snapshots = {}) {
   const payload = dbOptionsPayload(selectorReferenceStatus);
   const sourceReady = dbOptionsSourceReady(selectorReferenceStatus);
+  const sourceReadiness = dbSourceReadinessPayload(selectorReferenceStatus);
+  const referenceOptionSourceCoverage = dbReferenceOptionCoverage(selectorReferenceStatus);
   const fields = enrichDbOptionFields(selectorReferenceStatus, local).map((field) => ({
     ...field,
     primaryControl: false,
@@ -3097,11 +3147,17 @@ function createDbBackedSelectorSurface(selectorReferenceStatus = {}, local = {},
     manualConstraints,
     autoConsequences,
     blockedItems,
+    sourceReadiness,
+    referenceOptionSourceCoverage,
   });
   return {
     title: "CS Selector Preview",
     subtitle: "Read-only DB-backed candidate preview. Manual selections are constraints; auto selections are consequences.",
     sourceReady,
+    sourceReadiness,
+    safeSnapshotState: sourceReadiness,
+    referenceOptionSourceCoverage,
+    futureMappedFieldExplanation: (sourceReadiness && sourceReadiness.futureMappedFieldExplanation) || (referenceOptionSourceCoverage && referenceOptionSourceCoverage.futureMappedExplanation) || "Future-mapped fields are visible and not faked.",
     status: payload.status || selectorReferenceStatus.status || "not-requested",
     badges: [
       sourceReady ? "source ready" : "source unavailable",
@@ -3138,7 +3194,7 @@ function createDbBackedSelectorSurface(selectorReferenceStatus = {}, local = {},
     autoConsequences,
     blockedItems,
     candidateSummary: summary,
-    candidateSummaryRows: createDbBackedCandidateSummaryRows({ ...payload, sourceReady, candidateSummary: summary, blockedItems }),
+    candidateSummaryRows: createDbBackedCandidateSummaryRows({ ...payload, sourceReady, sourceReadiness, referenceOptionSourceCoverage, candidateSummary: summary, blockedItems }),
     manualConstraintRows: dbSelectedConstraintRows({ manualConstraints }),
     autoConsequenceRows: dbAutoConsequenceRows({ autoConsequences }),
     blockedRows: dbBlockedRows({ blockedItems }),

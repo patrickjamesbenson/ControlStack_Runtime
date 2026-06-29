@@ -2051,6 +2051,143 @@ function sourceMetadata({ sourceStat = null, present = Boolean(sourceStat), read
   };
 }
 
+function flattenCoverageFields({ fields = [], workflowSections = [] } = {}) {
+  const workflowFields = (Array.isArray(workflowSections) ? workflowSections : []).flatMap((section) => (
+    Array.isArray(section.fields) ? section.fields.map((field) => ({ ...field, sectionKey: section.sectionKey || section.title || "workflow" })) : []
+  ));
+  const flatFields = (Array.isArray(fields) ? fields : []).map((field) => ({ ...field, sectionKey: "flat-fields" }));
+  const seen = new Set();
+  return [...flatFields, ...workflowFields].filter((field) => {
+    const key = `${field.sectionKey || ""}:${field.fieldKey || field.label || ""}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function createReferenceOptionSourceCoverage({ fields = [], workflowSections = [] } = {}) {
+  const coverageFields = flattenCoverageFields({ fields, workflowSections }).map((field) => {
+    const options = Array.isArray(field.options) ? field.options : [];
+    const sourceStatus = safeString(field.sourceStatus || field.status || "unknown");
+    const sourceTables = Array.isArray(field.sourceTables) ? uniqueStrings(field.sourceTables) : [];
+    const futureMapped = field.futureMapped === true || sourceStatus === "future-mapped" || sourceStatus.includes("unavailable from current source");
+    const disabled = field.disabled === true || field.role === "disabled" || sourceStatus.includes("disabled");
+    const entitlementGated = field.role === "entitlement-gated" || sourceStatus.includes("entitlement-gated");
+    const sourceBacked = !futureMapped && !disabled && (sourceStatus.startsWith("db-reference-backed") || entitlementGated || options.length > 0);
+    return {
+      fieldKey: safeString(field.fieldKey || field.label || "field"),
+      label: safeString(field.label || field.fieldKey || "field"),
+      sectionKey: safeString(field.sectionKey || ""),
+      role: safeString(field.role || "unknown"),
+      sourceStatus,
+      sourceTables,
+      optionCount: options.length,
+      sourceBacked,
+      futureMapped,
+      disabled,
+      entitlementGatedRedacted: entitlementGated,
+      rawRowsExposed: false,
+      rawHeadersExposed: false,
+    };
+  });
+  const sourceBackedFields = coverageFields.filter((field) => field.sourceBacked);
+  const futureMappedFields = coverageFields.filter((field) => field.futureMapped).map((field) => ({
+    fieldKey: field.fieldKey,
+    label: field.label,
+    sectionKey: field.sectionKey,
+    sourceTables: field.sourceTables,
+    sourceStatus: field.sourceStatus,
+    reason: "Future-mapped from donor/runtime field contract; no fake option value emitted from the current source.",
+    rawRowsExposed: false,
+  }));
+  return {
+    fieldCount: coverageFields.length,
+    sourceBackedFieldCount: sourceBackedFields.length,
+    futureMappedFieldCount: futureMappedFields.length,
+    disabledFieldCount: coverageFields.filter((field) => field.disabled).length,
+    metadataOnlyFieldCount: coverageFields.filter((field) => field.role === "metadata-only").length,
+    entitlementGatedRedactedFieldCount: coverageFields.filter((field) => field.entitlementGatedRedacted).length,
+    optionCount: coverageFields.reduce((total, field) => total + field.optionCount, 0),
+    tablesCovered: [...new Set(coverageFields.flatMap((field) => field.sourceTables))].sort((left, right) => left.localeCompare(right)),
+    sourceBackedFields: sourceBackedFields.map((field) => ({
+      fieldKey: field.fieldKey,
+      label: field.label,
+      sectionKey: field.sectionKey,
+      sourceTables: field.sourceTables,
+      optionCount: field.optionCount,
+      sourceStatus: field.sourceStatus,
+      rawRowsExposed: false,
+    })),
+    futureMappedFields,
+    sourceBackedExplanation: "Source-backed option coverage is summarised from safe field metadata, source table labels, and option counts only; raw rows and headers are not returned.",
+    futureMappedExplanation: "Future-mapped fields are carried explicitly as future-mapped, not faked, until source-backed mapping exists.",
+    rawRowsExposed: false,
+    rawHeadersExposed: false,
+    rawUsersExposed: false,
+    credentialsExposed: false,
+    privatePathsExposed: false,
+  };
+}
+
+function createOptionSafeSnapshotState({ source = {}, sourceReady = false, fields = [], workflowSections = [], tableSummaryRows = [], reason = "" } = {}) {
+  const coverage = createReferenceOptionSourceCoverage({ fields, workflowSections });
+  const missingTables = tableSummaryRows.filter((table) => table.present !== true).map((table) => table.table);
+  const completeEnoughForPreview = sourceReady === true && missingTables.length === 0;
+  return {
+    title: "Source Readiness / Safe Snapshot State",
+    state: completeEnoughForPreview ? "source-backed-safe-preview" : "fail-closed-source-warning",
+    sourcePresent: source.present === true,
+    sourceReadable: source.readable !== false,
+    sourceParseable: source.parseable !== false,
+    activeSnapshot: {
+      label: source.label || "runtime-authority-reference-active-snapshot",
+      present: source.present === true,
+      readable: source.readable !== false,
+      parseable: source.parseable !== false,
+      modifiedTime: source.modifiedTime || null,
+      fileSize: source.fileSize ?? null,
+      pathReturned: false,
+      privatePathExposed: false,
+      providerIdExposed: false,
+    },
+    expectedTableCount: tableSummaryRows.length,
+    presentTableCount: tableSummaryRows.filter((table) => table.present === true).length,
+    missingTableCount: missingTables.length,
+    expectedTablesPresent: tableSummaryRows.length > 0 && missingTables.length === 0,
+    missingTables,
+    missingTableBlockers: missingTables.map((table) => ({
+      table,
+      code: "missing-selector-reference-option-table",
+      severity: "blocking",
+      reason: `Missing Selector Reference option source table: ${table}.`,
+      rawRowsExposed: false,
+      rawHeadersExposed: false,
+      privatePathsExposed: false,
+    })),
+    completeEnoughForPreview,
+    safeForPreview: completeEnoughForPreview,
+    readOnlyProductReference: completeEnoughForPreview,
+    failClosed: !completeEnoughForPreview,
+    warning: completeEnoughForPreview ? "Selector option source is ready for safe read-only preview." : (reason || "Selector option source is unavailable or incomplete; preview remains fail-closed."),
+    referenceOptionSourceCoverage: coverage,
+    sourceBackedFieldExplanation: coverage.sourceBackedExplanation,
+    futureMappedFieldExplanation: coverage.futureMappedExplanation,
+    futureMappedFields: coverage.futureMappedFields,
+    safeRedaction: {
+      rawRowsExposed: false,
+      rawHeadersExposed: false,
+      rawUsersExposed: false,
+      rawUserHeadersExposed: false,
+      usersPersonalIdentifiersExposed: false,
+      credentialsExposed: false,
+      credentialPathsExposed: false,
+      providerIdsExposed: false,
+      privatePathsExposed: false,
+      rawLabEvidenceExposed: false,
+    },
+  };
+}
+
 function failurePayload({ source = {}, reason = "selector_reference_options_unavailable", constraints = {} } = {}) {
   const safeConstraints = sanitiseConstraints(constraints);
   const fields = TARGET_FIELDS.map((field) => createUnavailableField(field, reason));
@@ -2069,6 +2206,14 @@ function failurePayload({ source = {}, reason = "selector_reference_options_unav
     rawRowsExposed: false,
   }));
   const parity = donorFieldParity(workflowSections);
+  const sourceReadiness = createOptionSafeSnapshotState({
+    source,
+    sourceReady: false,
+    fields,
+    workflowSections,
+    tableSummaryRows: [],
+    reason,
+  });
   return {
     ok: false,
     endpoint: SELECTOR_REFERENCE_OPTIONS_PATH,
@@ -2080,6 +2225,11 @@ function failurePayload({ source = {}, reason = "selector_reference_options_unav
     fields,
     workflowSections,
     donorFieldParity: parity,
+    sourceReadiness,
+    safeSnapshotState: sourceReadiness,
+    referenceOptionSourceCoverage: sourceReadiness.referenceOptionSourceCoverage,
+    futureMappedFieldExplanation: sourceReadiness.futureMappedFieldExplanation,
+    futureMappedFields: sourceReadiness.futureMappedFields,
     diffuserModelSummary: createDiffuserModelSummary(workflowSections),
     specialPartsEntitlementSummary: {
       usersPresent: false,
@@ -2143,6 +2293,15 @@ export function deriveSelectorReferenceOptionsFromSnapshot(snapshot = {}, { cons
   const workflowMappedFieldCount = parity.counts.mapped || 0;
   const hasMissing = fields.some((field) => field.futureMapped) || (parity.counts["future-mapped"] || 0) > 0;
   const hasBlocked = blocked.length > 0;
+  const tableSummaryRows = tableSummary(safeSnapshot);
+  const sourceReadiness = createOptionSafeSnapshotState({
+    source,
+    sourceReady,
+    fields,
+    workflowSections,
+    tableSummaryRows,
+    reason: hasMissing ? "Some option fields are future-mapped or unavailable from the current source; no fake values emitted." : "",
+  });
 
   return {
     ok: true,
@@ -2155,6 +2314,11 @@ export function deriveSelectorReferenceOptionsFromSnapshot(snapshot = {}, { cons
     fields,
     workflowSections,
     donorFieldParity: parity,
+    sourceReadiness,
+    safeSnapshotState: sourceReadiness,
+    referenceOptionSourceCoverage: sourceReadiness.referenceOptionSourceCoverage,
+    futureMappedFieldExplanation: sourceReadiness.futureMappedFieldExplanation,
+    futureMappedFields: sourceReadiness.futureMappedFields,
     specialPartsEntitlementSummary: entitlementSummary,
     diffuserModelSummary: createDiffuserModelSummary(workflowSections),
     manualConstraints,
@@ -2180,7 +2344,7 @@ export function deriveSelectorReferenceOptionsFromSnapshot(snapshot = {}, { cons
       "Future spec gate must complete before slug/spec generation can exist.",
       "Lab Proof proves later; this preview does not prove.",
     ],
-    tableSummary: tableSummary(safeSnapshot),
+    tableSummary: tableSummaryRows,
     sourceShapeSummary: sourceShapeSummary(safeSnapshot),
     warnings: [
       ...(hasMissing ? ["Some fields are unavailable from the current source and are future-mapped, not faked."] : []),

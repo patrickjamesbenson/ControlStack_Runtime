@@ -131,6 +131,39 @@ function selectorReferenceSourceRows(reference = {}) {
   ];
 }
 
+function safeSnapshotStateRows(state = {}, fallbackReference = {}) {
+  const readiness = state || {};
+  const coverage = readiness.referenceOptionSourceCoverage || fallbackReference.referenceOptionSourceCoverage || {};
+  const redaction = readiness.safeRedaction || fallbackReference.safeRedaction || {};
+  const active = readiness.activeSnapshot || fallbackReference.source || fallbackReference.activeSnapshot || {};
+  const materialised = readiness.materialisedSnapshot || fallbackReference.materialisedSnapshot || {};
+  const blockers = Array.isArray(readiness.missingTableBlockers) ? readiness.missingTableBlockers : [];
+  return [
+    ["state", readiness.state || (fallbackReference.ok === true ? "source status available" : "fail-closed-source-warning")],
+    ["active snapshot", `${yesNo(active.present)} present / ${yesNo(active.readable)} readable / ${yesNo(active.parseable)} parseable`],
+    ["materialised snapshot", `${yesNo(materialised.present)} present / ${yesNo(materialised.readable)} readable`],
+    ["expected tables present", yesNo(readiness.expectedTablesPresent)],
+    ["complete enough for preview", yesNo(readiness.completeEnoughForPreview)],
+    ["safe for read-only product reference", yesNo(readiness.readOnlyProductReference)],
+    ["fail closed", yesNo(readiness.failClosed)],
+    ["missing table blockers", blockers.length ? blockers.map((blocker) => blocker.table).join(", ") : "none"],
+    ["source-backed option fields", coverage.sourceBackedFieldCount ?? 0],
+    ["future-mapped fields", coverage.futureMappedFieldCount ?? 0],
+    ["source-backed explanation", readiness.sourceBackedFieldExplanation || coverage.sourceBackedExplanation || "source-backed fields are counted without raw rows"],
+    ["future-mapped explanation", readiness.futureMappedFieldExplanation || coverage.futureMappedExplanation || "future-mapped fields are visible and not faked"],
+    ["raw rows exposed", forcedFalse(redaction.rawRowsExposed)],
+    ["raw headers exposed", forcedFalse(redaction.rawHeadersExposed)],
+    ["USERS identifiers exposed", forcedFalse(redaction.usersPersonalIdentifiersExposed)],
+    ["credential paths exposed", forcedFalse(redaction.credentialPathsExposed)],
+    ["provider IDs exposed", forcedFalse(redaction.providerIdsExposed)],
+    ["private paths exposed", forcedFalse(redaction.privatePathsExposed)],
+  ];
+}
+
+function selectorReferenceSafeSnapshotRows(reference = {}) {
+  return safeSnapshotStateRows(reference.sourceReadiness || reference.safeSnapshotState || {}, reference);
+}
+
 function selectorReferenceTableRows(reference = {}) {
   const tables = Array.isArray(reference.tableSummary) ? reference.tableSummary : [];
   if (!tables.length) return [["tables", "loading or unavailable"]];
@@ -157,8 +190,17 @@ function selectorReferenceBridgeRows(reference = {}) {
   const source = reference.source || reference.activeSnapshot || {};
   const materialised = reference.materialisedSnapshot || {};
   const users = reference.usersRedactionStatus || {};
+  const readiness = reference.sourceReadiness || reference.safeSnapshotState || {};
+  const coverage = readiness.referenceOptionSourceCoverage || reference.referenceOptionSourceCoverage || {};
+  const blockers = Array.isArray(readiness.missingTableBlockers) ? readiness.missingTableBlockers : [];
   const missingTables = Array.isArray(reference.missingTables) ? reference.missingTables : [];
   return [
+    ["source readiness state", readiness.state || (reference.ok === true ? "source status available" : "fail-closed-source-warning")],
+    ["complete enough for preview", yesNo(readiness.completeEnoughForPreview)],
+    ["safe for read-only product reference", yesNo(readiness.readOnlyProductReference)],
+    ["missing table blockers", blockers.length ? blockers.map((blocker) => blocker.table).join(", ") : "none"],
+    ["source-backed option fields", coverage.sourceBackedFieldCount ?? 0],
+    ["future-mapped fields", coverage.futureMappedFieldCount ?? 0],
     ["active snapshot present", yesNo(source.present)],
     ["active snapshot readable", yesNo(source.readable)],
     ["active snapshot parseable", yesNo(source.parseable)],
@@ -688,6 +730,7 @@ function appendSelectorReferencePanel(parent, viewModel) {
   parent.appendChild(bridgeSection);
 
   appendSection(parent, "Selector Reference live source/data readiness bridge", selectorReferenceBridgeRows(reference));
+  appendSection(parent, "Source Readiness / Safe Snapshot State", selectorReferenceSafeSnapshotRows(reference));
   appendSection(parent, "Runtime Selector reference snapshot", selectorReferenceSourceRows(reference));
   appendSection(parent, "Selector-critical table counts", selectorReferenceTableRows(reference));
 
@@ -1254,6 +1297,8 @@ function appendPayloadPreviewObject(parent, payload = {}) {
     ["credentialsExposed", payload.safetyFlags?.credentialsExposed === true ? "true" : "false"],
     ["privatePathsExposed", payload.safetyFlags?.privatePathsExposed === true ? "true" : "false"],
   ]);
+
+  appendSection(section, "Payload preview source readiness", safeSnapshotStateRows(payload.sourceReadiness || payload.safeSnapshotState || {}, payload));
 
   const shapeRows = [
     ["project", Object.keys(payload.project || {}).join(", ") || "present"],
