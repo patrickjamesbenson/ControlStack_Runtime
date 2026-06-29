@@ -74,6 +74,7 @@ const WORKFLOW_SECTION_DEFINITIONS = Object.freeze([
       { fieldKey: "cctCriIndirect", label: "Indirect paired CCT/CRI", role: "manual-constraint", sourceTables: ["BOARDS"] },
       { fieldKey: "controlTypeIndirect", label: "Indirect control protocol", role: "manual-constraint", sourceTables: ["BOARDS", "DRIVERS"] },
       { fieldKey: "driver", label: "Driver consequence", role: "auto-consequence", sourceTables: ["DRIVERS"] },
+      { fieldKey: "lexWeight", label: "Lex weight", role: "metadata-only", sourceTables: ["BOARDS"] },
     ],
   },
   {
@@ -455,9 +456,18 @@ function createOption(label, {
   specCodeGenerationEnabled = false,
   systemReferenceKey = "",
   systemVariantKey = "",
+  systemReferenceKeys = [],
   systemSupportsIndirect = false,
+  compatibleControlTypes = [],
 } = {}) {
   const optionLabel = safeString(label || value);
+  const referenceKeys = uniqueStrings([
+    systemReferenceKey,
+    ...(Array.isArray(systemReferenceKeys) ? systemReferenceKeys : []),
+  ].map(safeString).filter(Boolean));
+  const controlTypes = uniqueStrings((Array.isArray(compatibleControlTypes) ? compatibleControlTypes : [])
+    .map(safeString)
+    .filter(Boolean));
   return {
     value: optionValue(value || optionLabel),
     label: optionLabel,
@@ -479,9 +489,11 @@ function createOption(label, {
     specCodeGenerationEnabled: specCodeGenerationEnabled === true ? false : false,
     writes: false,
     rawRowsExposed: false,
-    systemReferenceKey: safeString(systemReferenceKey),
+    systemReferenceKey: safeString(systemReferenceKey || referenceKeys[0] || ""),
+    systemReferenceKeys: referenceKeys,
     systemVariantKey: safeString(systemVariantKey),
     systemSupportsIndirect: systemSupportsIndirect === true,
+    compatibleControlTypes: controlTypes,
   };
 }
 
@@ -498,6 +510,15 @@ function addOption(bucket, fieldKey, label, meta = {}) {
     for (const key of ["diffuserLayer", "parentFieldKey", "parentValue", "specCodePreview", "specCodeVar2Preview", "diffuserMaterial", "imageReadiness", "imageKey", "systemReferenceKey", "systemVariantKey"]) {
       if (!existing[key] && meta[key]) existing[key] = meta[key];
     }
+    existing.systemReferenceKeys = uniqueStrings([
+      ...(Array.isArray(existing.systemReferenceKeys) ? existing.systemReferenceKeys : []),
+      meta.systemReferenceKey,
+      ...(Array.isArray(meta.systemReferenceKeys) ? meta.systemReferenceKeys : []),
+    ].map(safeString).filter(Boolean));
+    existing.compatibleControlTypes = uniqueStrings([
+      ...(Array.isArray(existing.compatibleControlTypes) ? existing.compatibleControlTypes : []),
+      ...(Array.isArray(meta.compatibleControlTypes) ? meta.compatibleControlTypes : []),
+    ].map(safeString).filter(Boolean));
     existing.systemSupportsIndirect = existing.systemSupportsIndirect === true || meta.systemSupportsIndirect === true;
     existing.visualChoice = existing.visualChoice === true || meta.visualChoice === true;
     existing.donorImageReferenceKnown = existing.donorImageReferenceKnown === true || meta.donorImageReferenceKnown === true;
@@ -692,6 +713,8 @@ function collectOptions(snapshot) {
     for (const flex of rowOptionValues(row, ["flex_map", "flex_colour", "flex_color", "flex"])) addOption(bucket, "finishFlex", flex, { sourceTables: ["SYSTEM"] });
   }
 
+  const systemOptions = optionsFor(bucket, "system");
+
   const tiers = liveTableRows(snapshot, "TIERS");
   for (const row of tiers) {
     const tier = rowText(row, ["tier", "tier_key", "name", "label", "id"]);
@@ -788,26 +811,32 @@ function collectOptions(snapshot) {
 
   const boards = liveTableRows(snapshot, "BOARDS");
   for (const row of boards) {
-    for (const cct of extractCctValues(row)) addOption(bucket, "cct", cct, { sourceTables: ["BOARDS"] });
+    const systemValue = systemOptionValueForSource(systemOptions, row);
+    const systemMeta = systemValue ? { systemReferenceKey: systemValue, systemReferenceKeys: [systemValue] } : {};
+    for (const cct of extractCctValues(row)) addOption(bucket, "cct", cct, { sourceTables: ["BOARDS"], ...systemMeta });
     for (const cctCri of cctCriValues(row)) {
-      addOption(bucket, "cctCri", cctCri, { sourceTables: ["BOARDS"] });
-      addOption(bucket, "cctCriIndirect", cctCri, { sourceTables: ["BOARDS"] });
+      addOption(bucket, "cctCri", cctCri, { sourceTables: ["BOARDS"], ...systemMeta });
+      addOption(bucket, "cctCriIndirect", cctCri, { sourceTables: ["BOARDS"], ...systemMeta });
     }
     for (const lm of numericOptionValues(row, ["board_lm_per_m", "delivered_lm_per_m", "lm_per_m", "nominal_lm_per_m"])) {
-      addOption(bucket, "targetLmPerM", `${lm} lm/m`, { value: lm, sourceTables: ["BOARDS"] });
-      addOption(bucket, "targetLmPerMIndirect", `${lm} lm/m`, { value: lm, sourceTables: ["BOARDS"] });
+      addOption(bucket, "targetLmPerM", `${lm} lm/m`, { value: lm, sourceTables: ["BOARDS"], ...systemMeta });
+      addOption(bucket, "targetLmPerMIndirect", `${lm} lm/m`, { value: lm, sourceTables: ["BOARDS"], ...systemMeta });
     }
     for (const control of rowOptionValues(row, ["control_type_labels", "control_type_options", "native_control_type", "control_type"])) {
-      addOption(bucket, "controlType", control, { sourceTables: ["BOARDS"] });
-      addOption(bucket, "controlTypeIndirect", control, { sourceTables: ["BOARDS"] });
+      addOption(bucket, "controlType", control, { sourceTables: ["BOARDS"], ...systemMeta });
+      addOption(bucket, "controlTypeIndirect", control, { sourceTables: ["BOARDS"], ...systemMeta });
+    }
+    for (const lex of rowOptionValues(row, ["lexWeight", "lex_weight", "lex_weight_g", "lex_weight_kg", "lexDirect", "lex_direct", "lex"])) {
+      addOption(bucket, "lexWeight", lex, { sourceTables: ["BOARDS"], metadataOnly: true, ...systemMeta });
     }
   }
 
   const drivers = liveTableRows(snapshot, "DRIVERS");
   for (const row of drivers) {
     const driver = rowText(row, ["driver_id", "driver", "driver_name", "name", "label", "sku", "part_number"]);
-    if (driver) addOption(bucket, "driver", driver, { sourceTables: ["DRIVERS"] });
-    for (const control of rowOptionValues(row, ["control_type", "control", "protocol", "dimming", "dimming_type", "driver_control", "control_protocol", "native_control_type"])) {
+    const controls = rowOptionValues(row, ["control_type", "control", "protocol", "dimming", "dimming_type", "driver_control", "control_protocol", "native_control_type"]);
+    if (driver) addOption(bucket, "driver", driver, { sourceTables: ["DRIVERS"], compatibleControlTypes: controls });
+    for (const control of controls) {
       addOption(bucket, "controlType", control, { sourceTables: ["DRIVERS"] });
       addOption(bucket, "controlTypeIndirect", control, { sourceTables: ["DRIVERS"] });
     }
@@ -1046,6 +1075,7 @@ function collectRecords(snapshot, bucket) {
     const ccts = extractCctValues(row);
     const lm = numericOptionValues(row, ["board_lm_per_m", "delivered_lm_per_m", "lm_per_m", "nominal_lm_per_m"]);
     const controls = rowOptionValues(row, ["control_type_labels", "control_type_options", "native_control_type", "control_type"]);
+    const lex = rowOptionValues(row, ["lexWeight", "lex_weight", "lex_weight_g", "lex_weight_kg", "lexDirect", "lex_direct", "lex"]);
     pushRelationshipRecord(records, ["BOARDS"], {
       system: systemValue,
       optic,
@@ -1056,7 +1086,8 @@ function collectRecords(snapshot, bucket) {
       targetLmPerMIndirect: lm,
       controlType: controls,
       controlTypeIndirect: controls,
-    }, "BOARDS row maps system/optic to paired CCT/CRI, lm/m, and control options");
+      lexWeight: lex,
+    }, "BOARDS row maps system/optic to paired CCT/CRI, lm/m, control options, and Lex metadata where present");
   }
 
   for (const row of liveTableRows(snapshot, "DRIVERS")) {

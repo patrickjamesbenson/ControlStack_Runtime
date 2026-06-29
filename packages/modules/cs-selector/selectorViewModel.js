@@ -1205,6 +1205,93 @@ function localDiffuserRelationshipBlock(fieldKey = "", option = {}, selectedCons
   };
 }
 
+const LIGHT_CONTROL_SYSTEM_SCOPED_FIELDS = Object.freeze(new Set([
+  "targetLmPerM",
+  "targetLmPerMIndirect",
+  "cct",
+  "cctCri",
+  "cctCriIndirect",
+  "controlType",
+  "controlTypeIndirect",
+  "lexWeight",
+]));
+
+function optionSystemReferenceKeys(option = {}) {
+  return [
+    option.systemReferenceKey,
+    ...(Array.isArray(option.systemReferenceKeys) ? option.systemReferenceKeys : []),
+  ].map((item) => String(item || "").trim()).filter(Boolean);
+}
+
+function selectedSystemReferenceCandidates(selectedConstraints = {}) {
+  return [
+    selectedConstraints.system,
+    selectedConstraints.__systemReferenceKey,
+    systemTokenFromSelection(selectedConstraints.system || ""),
+  ].map((item) => String(item || "").trim()).filter(Boolean);
+}
+
+function optionMatchesSelectedSystemReference(option = {}, selectedConstraints = {}) {
+  const optionKeys = optionSystemReferenceKeys(option);
+  const selectedKeys = selectedSystemReferenceCandidates(selectedConstraints);
+  if (!optionKeys.length || !selectedKeys.length) return true;
+  return selectedKeys.some((selected) => optionKeys.some((optionKey) => optionValuesMatch(optionKey, selected)));
+}
+
+function driverCompatibleWithSelectedControl(option = {}, selectedControl = "") {
+  const control = String(selectedControl || "").trim();
+  if (!control) return true;
+  const compatibleControlTypes = Array.isArray(option.compatibleControlTypes)
+    ? option.compatibleControlTypes.map((item) => String(item || "").trim()).filter(Boolean)
+    : [];
+  if (!compatibleControlTypes.length) return true;
+  return compatibleControlTypes.some((compatibleControlType) => optionValuesMatch(compatibleControlType, control));
+}
+
+function localLightControlRelationshipBlock(fieldKey = "", option = {}, selectedConstraints = {}) {
+  const blockers = [];
+
+  if (LIGHT_CONTROL_SYSTEM_SCOPED_FIELDS.has(fieldKey) && !optionMatchesSelectedSystemReference(option, selectedConstraints)) {
+    blockers.push({
+      fieldKey: "system",
+      selectedValue: selectedConstraints.system,
+      compatibleValues: optionSystemReferenceKeys(option),
+    });
+  }
+
+  if (fieldKey === "driver" && !driverCompatibleWithSelectedControl(option, selectedConstraints.controlType || "")) {
+    blockers.push({
+      fieldKey: "controlType",
+      selectedValue: selectedConstraints.controlType,
+      compatibleValues: Array.isArray(option.compatibleControlTypes) ? option.compatibleControlTypes : [],
+    });
+  }
+
+  return {
+    blocked: blockers.length > 0,
+    blockedBy: blockers,
+    reason: blockers.length
+      ? "Blocked by current Light & Control manual constraints; shown rather than silently hidden."
+      : "",
+  };
+}
+
+function mergeLocalRelationshipBlocks(...blocks) {
+  const blockedBy = blocks.flatMap((block) => Array.isArray(block.blockedBy) ? block.blockedBy : []);
+  return {
+    blocked: blocks.some((block) => block.blocked === true),
+    blockedBy,
+    reason: blocks.find((block) => block.reason)?.reason || "",
+  };
+}
+
+function localWorkflowRelationshipBlock(fieldKey = "", option = {}, selectedConstraints = {}) {
+  return mergeLocalRelationshipBlocks(
+    localDiffuserRelationshipBlock(fieldKey, option, selectedConstraints),
+    localLightControlRelationshipBlock(fieldKey, option, selectedConstraints),
+  );
+}
+
 function enrichDbWorkflowSections(selectorReferenceStatus = {}, local = {}) {
   const workflowSections = dbWorkflowSections(selectorReferenceStatus);
   const selectedConstraints = dbConstraintValueMap(local);
@@ -1224,7 +1311,7 @@ function enrichDbWorkflowSections(selectorReferenceStatus = {}, local = {}) {
         : baseOptions;
       const options = optionSource.map((option) => {
         const selected = selectedValue ? (optionValuesMatch(option.value, selectedValue) || (field.fieldKey === "system" && systemOptionMatchesSelection(option, selectedValue))) : option.selected === true;
-        const localBlock = localDiffuserRelationshipBlock(field.fieldKey, option, cascadeConstraints);
+        const localBlock = localWorkflowRelationshipBlock(field.fieldKey, option, cascadeConstraints);
         const blocked = option.blocked === true || localBlock.blocked === true;
         const hydratedStatus = deferredChildOptionsHydrated && !blocked ? "available" : option.status;
         return {
@@ -1315,6 +1402,12 @@ const RUNTIME_PRESENTATION_POLICY_DEBT = Object.freeze([
 
 const RUNTIME_PRESENTATION_PRIMARY_DECISION_FIELDS = Object.freeze(new Set([
   "system",
+  "targetLmPerM",
+  "targetLmPerMIndirect",
+  "cctCri",
+  "cctCriIndirect",
+  "controlType",
+  "controlTypeIndirect",
   "mountStyle",
   "mountSelection",
   "powerPenetration",
@@ -1378,6 +1471,7 @@ const RUNTIME_PRESENTATION_METADATA_FIELDS = Object.freeze(new Set([
   "diffuserMaterial",
   "diffuserSpecCodePreview",
   "diffuserImageReadiness",
+  "lexWeight",
 ]));
 
 const RUNTIME_PRESENTATION_HIDDEN_DIAGNOSTIC_FIELDS = Object.freeze(new Set([
@@ -1701,6 +1795,7 @@ const SELECTION_TRUTH_FIELD_GROUPS = Object.freeze({
   cctCriIndirect: "lightControl",
   controlTypeIndirect: "lightControl",
   driver: "lightControl",
+  lexWeight: "lightControl",
   powerPenetration: "wiringPower",
   powerLocation: "wiringPower",
   flexLength: "wiringPower",
@@ -2095,8 +2190,9 @@ const PRODUCT_SPINE_SECTION_DEFINITIONS = Object.freeze([
       Object.freeze({ rowKey: "targetLmPerM", label: "Target lm/m", fields: Object.freeze(["targetLmPerM", "targetLumensPerMetre"]) }),
       Object.freeze({ rowKey: "cctCri", label: "CCT/CRI", fields: Object.freeze(["cctCri", "cct", "cri"]) }),
       Object.freeze({ rowKey: "control", label: "Control", fields: Object.freeze(["controlType", "controlTypeIndirect"]) }),
+      Object.freeze({ rowKey: "driver", label: "Driver", fields: Object.freeze(["driver"]) }),
       Object.freeze({ rowKey: "lexWeight", label: "Lex weight", fields: Object.freeze(["lexWeight", "lex_weight", "lex"]) }),
-      Object.freeze({ rowKey: "wiringTopology", label: "Wiring topology", fields: Object.freeze(["wiringType", "driver"]) }),
+      Object.freeze({ rowKey: "wiringTopology", label: "Wiring topology", fields: Object.freeze(["wiringType"]) }),
     ]),
   }),
   Object.freeze({
@@ -2172,6 +2268,7 @@ function spineFieldHasDisplayValue(field = {}) {
   if (field.selectedValue || field.selectedLabel) return true;
   if (field.futureMapped === true || field.disabled === true || field.status === "blocked" || field.displayMode === "warning-chip" || field.displayMode === "disabled-handoff") return false;
   if (field.provenance === "available-choice") return false;
+  if (field.displayMode === "collapsed-override" && !field.selectedValue && !field.effectiveValue) return false;
   if (["auto-chip", "inherited-chip", "metadata-chip"].includes(field.displayMode)) return Boolean(field.effectiveValue || field.effectiveLabel);
   if (["auto", "inherited", "metadata"].includes(field.provenance)) return Boolean(field.effectiveValue || field.effectiveLabel);
   return false;
@@ -2181,6 +2278,7 @@ function spineFieldValue(field = {}) {
   if (!field) return null;
   if (field.selectedLabel || field.selectedValue) return field.selectedLabel || field.selectedValue;
   if (field.provenance === "available-choice") return null;
+  if (field.displayMode === "collapsed-override" && !field.selectedValue && !field.effectiveValue) return null;
   if (["auto-chip", "inherited-chip", "metadata-chip", "warning-chip"].includes(field.displayMode)) {
     return field.effectiveLabel || field.effectiveValue || null;
   }
@@ -2193,12 +2291,13 @@ function spineFieldValue(field = {}) {
 function spineFieldStatus(field = null) {
   if (!field) return "missing";
   if (field.selectedOptionBlocked === true || field.status === "blocked" || field.displayMode === "warning-chip") return "blocked";
-  if (field.futureMapped === true || field.status === "future-mapped") return "future-mapped";
-  if (field.disabled === true || field.displayMode === "disabled-handoff") return "disabled";
+  if (presentationIsMetadata(field) && (field.futureMapped === true || field.status === "future-mapped") && !spineFieldHasDisplayValue(field)) return "missing";
   if (field.selectedValue) return "manual-constraint";
   if (field.displayMode === "auto-chip" || field.provenance === "auto") return "auto-consequence";
   if (field.displayMode === "inherited-chip" || field.provenance === "inherited") return "inherited-consequence";
   if (field.displayMode === "metadata-chip" || field.provenance === "metadata") return "metadata-only";
+  if (field.futureMapped === true || field.status === "future-mapped") return "future-mapped";
+  if (field.disabled === true || field.displayMode === "disabled-handoff") return "disabled";
   return "not-selected";
 }
 
@@ -2217,6 +2316,7 @@ function spineFieldIndicator(field = null) {
 
 function spineFieldReason(field = null) {
   if (!field) return "No mapped Selector Reference/options field is available yet; no value is faked.";
+  if (presentationIsMetadata(field) && !spineFieldHasDisplayValue(field)) return "No source-backed metadata value is available yet; no value is faked.";
   return field.classificationReason
     || field.unavailableReason
     || field.blockedReason
@@ -2304,7 +2404,9 @@ function createProductSpineRow(definition = {}, lookup, context = {}) {
                 ? "missing"
                 : displayValues.length
                   ? statuses[0]
-                  : "not-selected";
+                  : statusFields.some((field) => presentationIsMetadata(field))
+                    ? "missing"
+                    : "not-selected";
   return {
     rowKey: definition.rowKey,
     label: definition.label,
