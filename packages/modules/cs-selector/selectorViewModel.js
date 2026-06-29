@@ -2372,6 +2372,22 @@ const PRODUCT_SPINE_SECTION_DEFINITIONS = Object.freeze([
     ]),
   }),
   Object.freeze({
+    sectionKey: "specGateCandidateReadiness",
+    title: "SPEC GATE / CANDIDATE READINESS",
+    statusOnly: true,
+    rows: Object.freeze([
+      Object.freeze({ rowKey: "readinessState", label: "Readiness state", statusValue: "spec-gate-readiness-state" }),
+      Object.freeze({ rowKey: "specReady", label: "Spec-ready", statusValue: "spec-ready" }),
+      Object.freeze({ rowKey: "missingRequirements", label: "Missing requirements", statusValue: "spec-missing-requirements" }),
+      Object.freeze({ rowKey: "blockedIncompatibleSelections", label: "Blocked / incompatible selections", statusValue: "spec-blocked-incompatible" }),
+      Object.freeze({ rowKey: "manualConstraints", label: "Manual constraints", statusValue: "spec-manual-constraints" }),
+      Object.freeze({ rowKey: "autoConsequences", label: "Auto consequences", statusValue: "spec-auto-consequences" }),
+      Object.freeze({ rowKey: "sourceReadiness", label: "Source readiness", statusValue: "source-readiness" }),
+      Object.freeze({ rowKey: "slugSpecPreview", label: "Slug/spec preview", statusValue: "slug-spec-preview" }),
+      Object.freeze({ rowKey: "disabledOutputHandoff", label: "Disabled output handoff", statusValue: "disabled-output-handoff" }),
+    ]),
+  }),
+  Object.freeze({
     sectionKey: "footStatus",
     title: "FOOT / STATUS",
     statusOnly: true,
@@ -2469,7 +2485,276 @@ function spineSupportsIndirect(lookup) {
   return false;
 }
 
-function createSpineStatusRow(definition = {}, { sourceReady = false, summary = {}, manualConstraints = [], autoConsequences = [], blockedItems = [] } = {}) {
+const SPEC_GATE_BASE_REQUIREMENTS = Object.freeze([
+  Object.freeze({ key: "system", label: "System", fields: Object.freeze(["system"]), gateSection: "System" }),
+  Object.freeze({ key: "directOptic", label: "Optic Direct", fields: Object.freeze(["directOpticVar1", "diffuserVar1", "optic"]), gateSection: "System" }),
+  Object.freeze({ key: "ipRating", label: "IP rating", fields: Object.freeze(["ipRating"]), gateSection: "Environment" }),
+  Object.freeze({ key: "ikRating", label: "IK rating", fields: Object.freeze(["ikRating"]), gateSection: "Environment" }),
+  Object.freeze({ key: "electricalClass", label: "Electrical class", fields: Object.freeze(["electricalClass"]), gateSection: "Environment" }),
+  Object.freeze({ key: "ambient", label: "Ambient", fields: Object.freeze(["ambient"]), gateSection: "Environment" }),
+  Object.freeze({ key: "targetLmPerM", label: "Target lm/m", fields: Object.freeze(["targetLmPerM", "targetLumensPerMetre"]), gateSection: "Light & Control" }),
+  Object.freeze({ key: "cctCri", label: "CCT/CRI", fields: Object.freeze(["cctCri", "cct", "cri"]), gateSection: "Light & Control" }),
+  Object.freeze({ key: "controlType", label: "Control", fields: Object.freeze(["controlType"]), gateSection: "Light & Control" }),
+]);
+
+const SPEC_GATE_INDIRECT_REQUIREMENTS = Object.freeze([
+  Object.freeze({ key: "indirectTargetLmPerM", label: "Indirect target lm/m", fields: Object.freeze(["targetLmPerMIndirect"]), gateSection: "Light & Control" }),
+  Object.freeze({ key: "indirectCctCri", label: "Indirect CCT/CRI", fields: Object.freeze(["cctCriIndirect"]), gateSection: "Light & Control" }),
+  Object.freeze({ key: "indirectControl", label: "Indirect control", fields: Object.freeze(["controlTypeIndirect", "indirectOpticVar1", "opticIndirect"]), gateSection: "Light & Control" }),
+]);
+
+const SPEC_GATE_DISABLED_HANDOFFS = Object.freeze([
+  Object.freeze({ key: "specGeneration", label: "spec generation" }),
+  Object.freeze({ key: "slugGeneration", label: "slug generation" }),
+  Object.freeze({ key: "iesGeneration", label: "IES" }),
+  Object.freeze({ key: "payloadGeneration", label: "payload" }),
+  Object.freeze({ key: "runTableGeneration", label: "RunTable" }),
+  Object.freeze({ key: "drawingGeneration", label: "drawing" }),
+  Object.freeze({ key: "labProofAuthority", label: "Lab Proof" }),
+  Object.freeze({ key: "controlledRecordsWrites", label: "Controlled Records" }),
+  Object.freeze({ key: "rregApprovalCustodyTransfer", label: "RREG" }),
+  Object.freeze({ key: "hubSpotCrmWriteBack", label: "HubSpot/CRM write-back" }),
+]);
+
+function summarizeReadinessItems(items = [], emptyLabel = PRODUCT_SPINE_EMPTY_VALUE) {
+  const rows = (Array.isArray(items) ? items : []).map((item) => {
+    const label = item.label || item.fieldKey || item.key || "selection";
+    const value = item.valueLabel || item.displayValue || item.value || item.status || "selected";
+    return [label, value];
+  });
+  return {
+    rows,
+    text: rows.length ? rows.map(([label, value]) => `${label}: ${value}`).join("; ") : emptyLabel,
+  };
+}
+
+function summarizeReadinessBlockers(blockedItems = [], emptyLabel = PRODUCT_SPINE_EMPTY_VALUE) {
+  const rows = (Array.isArray(blockedItems) ? blockedItems : []).map((item) => {
+    const label = item.label || item.fieldKey || "selection";
+    const value = item.valueLabel || item.value || "blocked";
+    const reason = item.reason || item.blockedReason || "blocked or incompatible selection is preserved for review";
+    return [label, `${value} — ${reason}`];
+  });
+  return {
+    rows,
+    text: rows.length ? rows.map(([label, value]) => `${label}: ${value}`).join("; ") : emptyLabel,
+  };
+}
+
+function specGateRequirementStatus(definition = {}, lookup) {
+  const field = spineField(lookup, definition.fields || []);
+  const fieldStatus = spineFieldStatus(field);
+  const value = spineFieldValue(field || {});
+  const blocked = fieldStatus === "blocked";
+  const complete = Boolean(value) && !blocked;
+  return {
+    key: definition.key,
+    label: definition.label,
+    gateSection: definition.gateSection,
+    fieldKeys: [...(definition.fields || [])],
+    value: value || null,
+    displayValue: value || PRODUCT_SPINE_EMPTY_VALUE,
+    status: blocked ? "blocked" : (complete ? "complete" : "missing"),
+    complete,
+    blocked,
+    reason: blocked
+      ? spineFieldReason(field)
+      : (complete
+        ? "Source-backed Selector field satisfies the donor Gate S requirement."
+        : "Required by donor Gate S; no value is faked."),
+    rawRowsExposed: false,
+    writes: false,
+  };
+}
+
+function createSpecGateCandidateReadiness({ lookup, sourceReady = false, summary = {}, manualConstraints = [], autoConsequences = [], blockedItems = [] } = {}) {
+  const requirements = [
+    ...SPEC_GATE_BASE_REQUIREMENTS,
+    ...(spineSupportsIndirect(lookup) ? SPEC_GATE_INDIRECT_REQUIREMENTS : []),
+  ].map((requirement) => specGateRequirementStatus(requirement, lookup));
+  const missingRequirements = requirements.filter((requirement) => !requirement.complete).map((requirement) => requirement.label);
+  const manualBlockedKeys = new Set((Array.isArray(manualConstraints) ? manualConstraints : [])
+    .filter((constraint) => constraint.blocked === true)
+    .map((constraint) => `${constraint.fieldKey || ""}:${constraint.value || ""}`));
+  const selectedBlockedItems = (Array.isArray(blockedItems) ? blockedItems : []).filter((item) => {
+    const key = `${item.fieldKey || ""}:${item.value || ""}`;
+    return item.selected === true || item.manualConstraint === true || manualBlockedKeys.has(key);
+  });
+  const blockedSummary = summarizeReadinessBlockers(selectedBlockedItems);
+  const manualSummary = summarizeReadinessItems(manualConstraints);
+  const autoSummary = summarizeReadinessItems(autoConsequences);
+  const blockedCount = selectedBlockedItems.length;
+  const manualConstraintCount = Array.isArray(manualConstraints) ? manualConstraints.length : 0;
+  const autoConsequenceCount = Array.isArray(autoConsequences) ? autoConsequences.length : 0;
+  const specReady = sourceReady === true && missingRequirements.length === 0 && blockedCount === 0;
+  const defaultPreview = manualConstraintCount === 0 && (summary.state === "default preview" || !summary.state);
+  const readinessState = specReady
+    ? "spec-ready read-only state"
+    : blockedCount > 0
+      ? "blocked/incompatible state — spec gate incomplete"
+      : defaultPreview
+        ? "default preview — not spec-ready"
+        : "constrained candidate preview — spec gate incomplete";
+  const slugSpecPreviewState = specReady
+    ? "read-only preview label state only — slug/spec generation disabled"
+    : "disabled — donor slug/spec preview appears only after the spec gate is complete";
+  const disabledHandoffRows = SPEC_GATE_DISABLED_HANDOFFS.map((handoff) => [handoff.label, "disabled"]);
+  const disabledHandoff = Object.fromEntries(SPEC_GATE_DISABLED_HANDOFFS.map((handoff) => [handoff.key, false]));
+
+  return {
+    title: "Spec Gate / Candidate Readiness",
+    readOnly: true,
+    diagnosticOnly: true,
+    previewOnly: true,
+    specReady,
+    specGateComplete: specReady,
+    buildReady: false,
+    readinessState,
+    defaultPreview,
+    candidatePreview: !specReady,
+    constrainedSelectionState: manualConstraintCount > 0,
+    blockedIncompatibleState: blockedCount > 0,
+    missingRequirements,
+    missingRequirementRows: requirements.map((requirement) => [requirement.label, requirement.status]),
+    requirementRows: requirements.map((requirement) => [requirement.label, requirement.displayValue]),
+    requirements,
+    blockedIncompatibleSelections: blockedSummary.rows,
+    blockedIncompatibleSummary: blockedSummary.text,
+    manualConstraints: manualSummary.rows,
+    manualConstraintsSummary: manualSummary.text,
+    autoConsequences: autoSummary.rows,
+    autoConsequencesSummary: autoSummary.text,
+    sourceReadinessSummary: sourceReady ? "source readable — safe Selector Reference/options surface only" : "source unavailable — spec gate fail-closed",
+    slugSpecPreviewState,
+    disabledHandoff,
+    disabledHandoffRows,
+    disabledHandoffSummary: disabledHandoffRows.map(([label, status]) => `${label} ${status}`).join("; "),
+    boundaryCopy: [
+      "Spec Gate / Candidate Readiness is read-only in this slice.",
+      "Donor Gate S requires System + Environment + Light & Control before spec-ready.",
+      "Default preview and candidate preview are not spec-ready.",
+      "Manual selections are constraints, not proof.",
+      "Auto selections are consequences, not authority.",
+      "Spec-ready does not mean Lab Proof or production proof.",
+      "Slug/spec, IES, payload, RunTable, drawing, Controlled Records, RREG, and HubSpot/CRM outputs remain disabled.",
+    ],
+    rawRowsExposed: false,
+    rawHeadersExposed: false,
+    rawUsersExposed: false,
+    rawLabEvidenceExposed: false,
+    privatePathsExposed: false,
+    writes: false,
+  };
+}
+
+function createSpineStatusRow(definition = {}, { sourceReady = false, summary = {}, manualConstraints = [], autoConsequences = [], blockedItems = [], specGateReadiness = null } = {}) {
+  const readiness = specGateReadiness || {};
+  if (definition.statusValue === "spec-gate-readiness-state") {
+    return {
+      rowKey: definition.rowKey,
+      label: definition.label,
+      value: readiness.readinessState || "default preview — not spec-ready",
+      displayValue: readiness.readinessState || "default preview — not spec-ready",
+      status: readiness.specReady ? "spec-ready-read-only" : (readiness.blockedIncompatibleState ? "blocked" : "candidate-preview"),
+      indicator: readiness.specReady ? "spec-ready read-only" : "candidate readiness",
+      reason: "Derived from donor Gate S readiness requirements; no generation or proof is enabled.",
+      writes: false,
+      rawRowsExposed: false,
+    };
+  }
+  if (definition.statusValue === "spec-ready") {
+    return {
+      rowKey: definition.rowKey,
+      label: definition.label,
+      value: readiness.specReady === true,
+      displayValue: readiness.specReady ? "read-only ready" : "disabled",
+      status: readiness.specReady ? "spec-ready-read-only" : "disabled",
+      indicator: readiness.specReady ? "donor Gate S satisfied" : "not spec-ready",
+      reason: readiness.specReady ? "System, Environment, and Light & Control are complete for a read-only readiness label." : "Default/candidate preview must not be treated as spec-ready.",
+      writes: false,
+      rawRowsExposed: false,
+    };
+  }
+  if (definition.statusValue === "spec-missing-requirements") {
+    const missing = Array.isArray(readiness.missingRequirements) ? readiness.missingRequirements : [];
+    return {
+      rowKey: definition.rowKey,
+      label: definition.label,
+      value: missing,
+      displayValue: missing.length ? missing.join(", ") : PRODUCT_SPINE_EMPTY_VALUE,
+      status: missing.length ? "missing" : "clear",
+      indicator: missing.length ? "missing donor Gate S requirement(s)" : "no missing spec-gate requirements",
+      reason: "Missing requirements are shown explicitly rather than fabricated.",
+      writes: false,
+      rawRowsExposed: false,
+    };
+  }
+  if (definition.statusValue === "spec-blocked-incompatible") {
+    return {
+      rowKey: definition.rowKey,
+      label: definition.label,
+      value: readiness.blockedIncompatibleSelections || [],
+      displayValue: readiness.blockedIncompatibleSummary || PRODUCT_SPINE_EMPTY_VALUE,
+      status: readiness.blockedIncompatibleState ? "blocked" : "clear",
+      indicator: readiness.blockedIncompatibleState ? "blocked / preserved" : "no blocked selections",
+      reason: "Blocked or incompatible selections stay visible in readiness blockers and are not silently cleared.",
+      writes: false,
+      rawRowsExposed: false,
+    };
+  }
+  if (definition.statusValue === "spec-manual-constraints") {
+    return {
+      rowKey: definition.rowKey,
+      label: definition.label,
+      value: readiness.manualConstraints || [],
+      displayValue: readiness.manualConstraintsSummary || PRODUCT_SPINE_EMPTY_VALUE,
+      status: readiness.constrainedSelectionState ? "manual-constraint" : "missing",
+      indicator: readiness.constrainedSelectionState ? "manual constraints" : "no manual constraints",
+      reason: "Manual selections are constraints, not proof or authority.",
+      writes: false,
+      rawRowsExposed: false,
+    };
+  }
+  if (definition.statusValue === "spec-auto-consequences") {
+    const hasConsequences = Array.isArray(readiness.autoConsequences) && readiness.autoConsequences.length > 0;
+    return {
+      rowKey: definition.rowKey,
+      label: definition.label,
+      value: readiness.autoConsequences || [],
+      displayValue: readiness.autoConsequencesSummary || PRODUCT_SPINE_EMPTY_VALUE,
+      status: hasConsequences ? "auto-consequence" : "missing",
+      indicator: hasConsequences ? "auto consequences" : "no auto consequences",
+      reason: "Auto selections are consequences, not authority, and remain changeable later.",
+      writes: false,
+      rawRowsExposed: false,
+    };
+  }
+  if (definition.statusValue === "slug-spec-preview") {
+    return {
+      rowKey: definition.rowKey,
+      label: definition.label,
+      value: readiness.slugSpecPreviewState || "disabled",
+      displayValue: readiness.slugSpecPreviewState || "disabled",
+      status: "disabled",
+      indicator: "slug/spec generation disabled",
+      reason: "Donor supports slug display only after the spec gate; this runtime slice does not generate or authorise a slug.",
+      writes: false,
+      rawRowsExposed: false,
+    };
+  }
+  if (definition.statusValue === "disabled-output-handoff") {
+    return {
+      rowKey: definition.rowKey,
+      label: definition.label,
+      value: readiness.disabledHandoff || {},
+      displayValue: readiness.disabledHandoffSummary || "disabled",
+      status: "disabled-safe",
+      indicator: "all output handoffs disabled",
+      reason: "Spec, slug, IES, payload, RunTable, drawing, Lab Proof, records, RREG, and CRM write-back remain disabled.",
+      writes: false,
+      rawRowsExposed: false,
+    };
+  }
   if (definition.statusValue === "candidate-state") {
     return {
       rowKey: definition.rowKey,
@@ -2574,13 +2859,14 @@ function shouldShowProductSpineRow(definition = {}, lookup) {
 
 function createProductSpine({ fields = [], workflowSections = [], sourceReady = false, summary = {}, manualConstraints = [], autoConsequences = [], blockedItems = [] } = {}) {
   const lookup = workflowFieldLookup(fields, workflowSections);
+  const specGateReadiness = createSpecGateCandidateReadiness({ lookup, sourceReady, summary, manualConstraints, autoConsequences, blockedItems });
   const sections = PRODUCT_SPINE_SECTION_DEFINITIONS.map((section) => ({
     sectionKey: section.sectionKey,
     title: section.title,
     rows: (section.rows || [])
       .filter((row) => section.statusOnly || shouldShowProductSpineRow(row, lookup))
       .map((row) => section.statusOnly
-        ? createSpineStatusRow(row, { sourceReady, summary, manualConstraints, autoConsequences, blockedItems })
+        ? createSpineStatusRow(row, { sourceReady, summary, manualConstraints, autoConsequences, blockedItems, specGateReadiness })
         : createProductSpineRow(row, lookup, { sourceReady, summary, manualConstraints, autoConsequences, blockedItems })),
     readOnly: true,
     writes: false,
@@ -2598,6 +2884,7 @@ function createProductSpine({ fields = [], workflowSections = [], sourceReady = 
     generation: false,
     labProofAuthority: false,
     rawRowsExposed: false,
+    specGateCandidateReadiness: specGateReadiness,
   };
 }
 
@@ -2629,8 +2916,9 @@ function payloadIdentitySnapshot(identity = {}, authority = {}) {
   };
 }
 
-function createPayloadPreviewSkeleton({ fields = [], workflowSections = [], summary = {}, snapshots = {}, sourceReady = false } = {}) {
+function createPayloadPreviewSkeleton({ fields = [], workflowSections = [], summary = {}, snapshots = {}, sourceReady = false, manualConstraints = [], autoConsequences = [], blockedItems = [] } = {}) {
   const lookup = workflowFieldLookup(fields, workflowSections);
+  const specGateCandidateReadiness = createSpecGateCandidateReadiness({ lookup, sourceReady, summary, manualConstraints, autoConsequences, blockedItems });
   return {
     previewOnly: true,
     productionPayload: false,
@@ -2714,10 +3002,13 @@ function createPayloadPreviewSkeleton({ fields = [], workflowSections = [], summ
       rregApprovalCustodyTransfer: false,
       hubSpotCrmWriteBack: false,
     },
+    specGateCandidateReadiness,
     safetyFlags: {
       readOnly: true,
       writes: false,
       generation: false,
+      specGeneration: false,
+      slugGeneration: false,
       runTableGeneration: false,
       payloadGeneration: false,
       iesGeneration: false,
@@ -2803,6 +3094,9 @@ function createDbBackedSelectorSurface(selectorReferenceStatus = {}, local = {},
     summary,
     snapshots,
     sourceReady,
+    manualConstraints,
+    autoConsequences,
+    blockedItems,
   });
   return {
     title: "CS Selector Preview",

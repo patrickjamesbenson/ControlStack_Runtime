@@ -119,6 +119,7 @@ test("Selector checklist sections appear in the target order", () => {
     "FINISHES",
     "EGRESS & ACCESSORIES",
     "RUNS & DISABLED OUTPUTS",
+    "SPEC GATE / CANDIDATE READINESS",
     "FOOT / STATUS",
   ]);
   assert.deepEqual(spineSection(spine, "system").rows.map((row) => row.label), [
@@ -252,6 +253,7 @@ test("Payload preview exposes the expected top-level shape and safety flags", ()
     "sensorsAccessories",
     "runs",
     "disabledOutputs",
+    "specGateCandidateReadiness",
     "safetyFlags",
   ]) {
     assert.ok(Object.prototype.hasOwnProperty.call(payload, key), `expected payload key ${key}`);
