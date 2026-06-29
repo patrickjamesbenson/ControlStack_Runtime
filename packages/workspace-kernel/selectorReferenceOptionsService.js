@@ -60,6 +60,8 @@ const WORKFLOW_SECTION_DEFINITIONS = Object.freeze([
       { fieldKey: "ikRating", label: "IK rating", role: "manual-constraint", sourceTables: ["OPTICS", "SYSTEM_POLICY"] },
       { fieldKey: "electricalClass", label: "Electrical class", role: "manual-constraint", sourceTables: ["TIERS", "ACCESSORIES", "SYSTEM_POLICY"] },
       { fieldKey: "ambient", label: "Ambient temperature", role: "manual-constraint", sourceTables: ["SYSTEM_POLICY"] },
+      { fieldKey: "application", label: "Application / environment", role: "manual-constraint", sourceTables: ["OPTICS", "SYSTEM_POLICY"] },
+      { fieldKey: "interiorExterior", label: "Interior / exterior", role: "manual-constraint", sourceTables: ["OPTICS", "SYSTEM_POLICY"] },
     ],
   },
   {
@@ -667,6 +669,21 @@ function policyValues(snapshot, needles) {
   ])).filter((value) => !needles.map(normaliseKey).includes(normaliseKey(value)));
 }
 
+function ambientPolicyValues(snapshot) {
+  const rows = policyRowsMatching(snapshot, ["ambient_temp", "ambient temp", "ambient", "temperature"]);
+  const tierColumns = ["economy", "business", "first", "charter"];
+  return uniqueStrings(rows.flatMap((row) => [
+    rowText(row, ["display_choice", "label", "name"]),
+    ...rowOptionValues(row, ["value", "values", "item", "options", "allowed_values", ...tierColumns]),
+  ]).map((value) => {
+    const text = safeString(value);
+    if (!text) return "";
+    if (["ambient", "ambient temp", "ambient_temp", "temperature"].map(normaliseKey).includes(normaliseKey(text))) return "";
+    if (/^[0-9.]+$/.test(text)) return `${text}°C`;
+    return text.replace(/^([0-9.]+)\s*(?:deg\s*)?c$/i, "$1°C");
+  })).filter(Boolean);
+}
+
 function accessoryRowsMatching(snapshot, needles) {
   const wanted = needles.map(normaliseKey).filter(Boolean);
   return liveTableRows(snapshot, "ACCESSORIES").filter((row) => {
@@ -802,11 +819,12 @@ function collectOptions(snapshot) {
         addOption(bucket, "opticIndirect", opticLabel, { value: opticValue, sourceTables: ["OPTICS"], ...var1Meta });
       }
     }
-    for (const ip of rowOptionValues(row, ["ip_option_1", "ip_options", "ip", "ip_rating"])) addOption(bucket, "ipRating", ip, { sourceTables: ["OPTICS"] });
-    for (const ik of rowOptionValues(row, ["ik_option_2", "ik_options", "ik", "ik_rating"])) addOption(bucket, "ikRating", ik, { sourceTables: ["OPTICS"] });
-    for (const cct of extractCctValues(row)) addOption(bucket, "cct", cct, { sourceTables: ["OPTICS"] });
-    for (const env of rowOptionValues(row, ["environment", "application", "application_environment"])) addOption(bucket, "application", env, { sourceTables: ["OPTICS"] });
-    for (const io of rowOptionValues(row, ["interior_exterior", "interiorExterior", "indoor_outdoor", "location_type"])) addOption(bucket, "interiorExterior", io, { sourceTables: ["OPTICS"] });
+    const opticSystemMeta = system ? { systemReferenceKey: system, systemReferenceKeys: [system] } : {};
+    for (const ip of rowOptionValues(row, ["ip_option_1", "ip_options", "ip", "ip_rating"])) addOption(bucket, "ipRating", ip, { sourceTables: ["OPTICS"], ...opticSystemMeta });
+    for (const ik of rowOptionValues(row, ["ik_option_2", "ik_options", "ik", "ik_rating"])) addOption(bucket, "ikRating", ik, { sourceTables: ["OPTICS"], ...opticSystemMeta });
+    for (const cct of extractCctValues(row)) addOption(bucket, "cct", cct, { sourceTables: ["OPTICS"], ...opticSystemMeta });
+    for (const env of rowOptionValues(row, ["environment", "application", "application_environment"])) addOption(bucket, "application", env, { sourceTables: ["OPTICS"], ...opticSystemMeta });
+    for (const io of rowOptionValues(row, ["interior_exterior", "interiorExterior", "indoor_outdoor", "location_type"])) addOption(bucket, "interiorExterior", io, { sourceTables: ["OPTICS"], ...opticSystemMeta });
   }
 
   const boards = liveTableRows(snapshot, "BOARDS");
@@ -857,7 +875,7 @@ function collectOptions(snapshot) {
   }
   for (const value of policyValues(snapshot, ["flex", "finish", "colour", "color"])) addOption(bucket, "finishFlex", value, { sourceTables: ["SYSTEM_POLICY"] });
   for (const value of policyValues(snapshot, ["electrical", "electrical class", "class"] )) addOption(bucket, "electricalClass", value, { sourceTables: ["SYSTEM_POLICY"] });
-  for (const value of policyValues(snapshot, ["ambient", "ambient temp", "temperature"] )) addOption(bucket, "ambient", value, { sourceTables: ["SYSTEM_POLICY"] });
+  for (const value of ambientPolicyValues(snapshot)) addOption(bucket, "ambient", value, { sourceTables: ["SYSTEM_POLICY"] });
   for (const value of policyValues(snapshot, ["wiring", "cable", "control cores"] )) addOption(bucket, "wiringType", value, { sourceTables: ["SYSTEM_POLICY"] });
   addOption(bucket, "indirectMatchDirect", "Match direct CCT/CRI and control", { value: "match-direct", sourceTables: ["SYSTEM", "OPTICS"] });
   addOption(bucket, "inheritedFinishStatus", "Cover/end/flex inherit default until changed", { value: "inherits-default-finish", sourceTables: ["SYSTEM", "SYSTEM_POLICY"] });
@@ -876,7 +894,7 @@ function collectOptions(snapshot) {
     if (accessoryTypeMatches(row, "power_penetration")) addOption(bucket, "powerPenetration", label, { sourceTables: ["ACCESSORIES"] });
     if (accessoryTypeMatches(row, "power_location")) addOption(bucket, "powerLocation", label === "mm" ? "TBD" : label, { sourceTables: ["ACCESSORIES"] });
     if (accessoryTypeMatches(row, "flex_length")) addOption(bucket, "flexLength", label, { sourceTables: ["ACCESSORIES"] });
-    if (accessoryTypeMatches(row, "elect_class")) addOption(bucket, "electricalClass", label, { sourceTables: ["ACCESSORIES"] });
+    if (accessoryTypeMatches(row, "elect_class")) addOption(bucket, "electricalClass", rowText(row, ["accessory_id", "id", "display_choice", "label"], label), { sourceTables: ["ACCESSORIES"] });
     if (accessoryTypeMatches(row, "egress_light")) addOption(bucket, "egressLight", label, { sourceTables: ["ACCESSORIES"] });
     if (accessoryTypeMatches(row, "egress_sound")) addOption(bucket, "egressSound", label, { sourceTables: ["ACCESSORIES"] });
     if (accessoryTypeMatches(row, "pir") || accessoryTypeMatches(row, "sensor")) addOption(bucket, "sensor", label, { sourceTables: ["ACCESSORIES"] });
@@ -997,6 +1015,15 @@ function diffuserOptionMeta(row, { layer, parentFieldKey = "", parentValue = "",
 function collectRecords(snapshot, bucket) {
   const records = [];
   const systemOptions = optionsFor(bucket, "system");
+
+  for (const row of liveTableRows(snapshot, "TIERS")) {
+    const tier = rowText(row, ["tier", "tier_key", "name", "label", "id"]);
+    const electricalClass = rowOptionValues(row, ["electrical", "electrical_options", "elect_class"]);
+    pushRelationshipRecord(records, ["TIERS"], {
+      tier,
+      electricalClass,
+    }, "TIERS row maps selected tier to electrical class options");
+  }
 
   for (const row of liveTableRows(snapshot, "SYSTEM")) {
     const tokens = systemTokens(row);

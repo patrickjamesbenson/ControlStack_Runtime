@@ -1206,6 +1206,10 @@ function localDiffuserRelationshipBlock(fieldKey = "", option = {}, selectedCons
 }
 
 const LIGHT_CONTROL_SYSTEM_SCOPED_FIELDS = Object.freeze(new Set([
+  "application",
+  "interiorExterior",
+  "ipRating",
+  "ikRating",
   "targetLmPerM",
   "targetLmPerMIndirect",
   "cct",
@@ -1402,6 +1406,12 @@ const RUNTIME_PRESENTATION_POLICY_DEBT = Object.freeze([
 
 const RUNTIME_PRESENTATION_PRIMARY_DECISION_FIELDS = Object.freeze(new Set([
   "system",
+  "application",
+  "interiorExterior",
+  "ipRating",
+  "ikRating",
+  "electricalClass",
+  "ambient",
   "targetLmPerM",
   "targetLmPerMIndirect",
   "cctCri",
@@ -2178,6 +2188,8 @@ const PRODUCT_SPINE_SECTION_DEFINITIONS = Object.freeze([
     sectionKey: "environment",
     title: "ENVIRONMENT",
     rows: Object.freeze([
+      Object.freeze({ rowKey: "application", label: "Application", fields: Object.freeze(["application"]) }),
+      Object.freeze({ rowKey: "interiorExterior", label: "Interior / exterior", fields: Object.freeze(["interiorExterior"]) }),
       Object.freeze({ rowKey: "ipIk", label: "IP/IK", fields: Object.freeze(["ipRating", "ikRating"]) }),
       Object.freeze({ rowKey: "ambient", label: "Ambient", fields: Object.freeze(["ambient"]) }),
       Object.freeze({ rowKey: "electricalClass", label: "Electrical class", fields: Object.freeze(["electricalClass"]) }),
@@ -2519,6 +2531,8 @@ function createPayloadPreviewSkeleton({ fields = [], workflowSections = [], summ
       },
     },
     environment: {
+      application: payloadFieldValue(lookup, ["application"]),
+      interiorExterior: payloadFieldValue(lookup, ["interiorExterior"]),
       ip: payloadFieldValue(lookup, ["ipRating"]),
       ik: payloadFieldValue(lookup, ["ikRating"]),
       ambient: payloadFieldValue(lookup, ["ambient"]),
