@@ -462,6 +462,7 @@ function createOption(label, {
   systemReferenceKeys = [],
   systemSupportsIndirect = false,
   compatibleControlTypes = [],
+  finishInheritanceIndex = null,
 } = {}) {
   const optionLabel = safeString(label || value);
   const referenceKeys = uniqueStrings([
@@ -475,6 +476,7 @@ function createOption(label, {
     parentValue,
     ...(Array.isArray(parentValues) ? parentValues : []),
   ].map(safeString).filter(Boolean));
+  const safeFinishInheritanceIndex = Number.isInteger(finishInheritanceIndex) && finishInheritanceIndex >= 0 ? finishInheritanceIndex : null;
   return {
     value: optionValue(value || optionLabel),
     label: optionLabel,
@@ -502,6 +504,7 @@ function createOption(label, {
     systemVariantKey: safeString(systemVariantKey),
     systemSupportsIndirect: systemSupportsIndirect === true,
     compatibleControlTypes: controlTypes,
+    finishInheritanceIndex: safeFinishInheritanceIndex,
   };
 }
 
@@ -533,6 +536,7 @@ function addOption(bucket, fieldKey, label, meta = {}) {
       ...(Array.isArray(meta.compatibleControlTypes) ? meta.compatibleControlTypes : []),
     ].map(safeString).filter(Boolean));
     existing.systemSupportsIndirect = existing.systemSupportsIndirect === true || meta.systemSupportsIndirect === true;
+    if (existing.finishInheritanceIndex == null && Number.isInteger(meta.finishInheritanceIndex) && meta.finishInheritanceIndex >= 0) existing.finishInheritanceIndex = meta.finishInheritanceIndex;
     existing.visualChoice = existing.visualChoice === true || meta.visualChoice === true;
     existing.donorImageReferenceKnown = existing.donorImageReferenceKnown === true || meta.donorImageReferenceKnown === true;
     existing.runtimeImageAvailable = false;
@@ -757,12 +761,14 @@ function collectOptions(snapshot) {
       if (emissionSupportsIndirect(emission)) addOption(bucket, "indirectCapability", "Indirect supported", { value: "indirect-supported", sourceTables: ["SYSTEM"] });
     }
     for (const mount of rowOptionValues(row, ["mount_style", "mount_styles"])) addOption(bucket, "mountStyle", mount, { sourceTables: ["SYSTEM"], systemReferenceKey: tokens.system, systemReferenceKeys: [tokens.system].filter(Boolean) });
-    for (const finish of rowOptionValues(row, ["system_and_variant_finish", "finish", "finish_name", "colour", "color"])) {
-      addOption(bucket, "bodyFinish", finish, { sourceTables: ["SYSTEM"] });
-      addOption(bucket, "finishCover", finish, { sourceTables: ["SYSTEM"] });
-      addOption(bucket, "finishEnd", finish, { sourceTables: ["SYSTEM"] });
-    }
-    for (const flex of rowOptionValues(row, ["flex_map", "flex_colour", "flex_color", "flex"])) addOption(bucket, "finishFlex", flex, { sourceTables: ["SYSTEM"] });
+    const finishValues = rowOptionValues(row, ["system_and_variant_finish", "finish", "finish_name", "colour", "color"]);
+    finishValues.forEach((finish, finishInheritanceIndex) => {
+      const finishMeta = { sourceTables: ["SYSTEM"], systemReferenceKey: tokens.system, systemReferenceKeys: [tokens.system].filter(Boolean), finishInheritanceIndex };
+      addOption(bucket, "bodyFinish", finish, finishMeta);
+      addOption(bucket, "finishCover", finish, finishMeta);
+      addOption(bucket, "finishEnd", finish, finishMeta);
+    });
+    rowOptionValues(row, ["flex_map", "flex_colour", "flex_color", "flex"]).forEach((flex, finishInheritanceIndex) => addOption(bucket, "finishFlex", flex, { sourceTables: ["SYSTEM"], systemReferenceKey: tokens.system, systemReferenceKeys: [tokens.system].filter(Boolean), finishInheritanceIndex }));
   }
 
   const systemOptions = optionsFor(bucket, "system");

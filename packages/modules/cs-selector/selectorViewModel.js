@@ -1218,6 +1218,10 @@ const LIGHT_CONTROL_SYSTEM_SCOPED_FIELDS = Object.freeze(new Set([
   "controlType",
   "controlTypeIndirect",
   "lexWeight",
+  "bodyFinish",
+  "finishCover",
+  "finishEnd",
+  "finishFlex",
 ]));
 
 function optionSystemReferenceKeys(option = {}) {
@@ -1568,8 +1572,46 @@ function presentationSelectedOption(field = {}) {
   return options.find((option) => option.selected === true || (selectedValue && optionValuesMatch(option.value, selectedValue))) || null;
 }
 
-function presentationFirstEffectiveOption(field = {}, compatibleOptions = []) {
-  return presentationSelectedOption(field) || (Array.isArray(compatibleOptions) ? compatibleOptions[0] : null) || null;
+function finishInheritanceContextFromWorkflow(workflowSections = []) {
+  const fields = workflowSections.flatMap((section) => Array.isArray(section.fields) ? section.fields : []);
+  const fieldByKey = new Map(fields.map((field) => [field.fieldKey, field]));
+  const bodyField = fieldByKey.get("bodyFinish") || fieldByKey.get("finishDefault") || null;
+  const bodyValue = String(bodyField?.selectedValue || "").trim();
+  const bodyOptions = bodyField ? (presentationCompatibleOptions(bodyField) || []) : [];
+  const bodyIndex = bodyValue
+    ? bodyOptions.findIndex((option) => optionValuesMatch(option.value, bodyValue) || optionValuesMatch(option.label, bodyValue))
+    : -1;
+  return { bodyValue, bodyOptions, bodyIndex };
+}
+
+function presentationInheritedFinishOption(field = {}, compatibleOptions = [], finishContext = {}) {
+  const selected = presentationSelectedOption(field);
+  if (selected) return selected;
+  const bodyValue = String(finishContext.bodyValue || "").trim();
+  if (!["finishCover", "finishEnd", "finishFlex", "inheritedFinishStatus"].includes(field.fieldKey)) return null;
+  if (!bodyValue) return null;
+  const options = Array.isArray(compatibleOptions) ? compatibleOptions : [];
+  if (field.fieldKey === "finishCover" || field.fieldKey === "finishEnd") {
+    return options.find((option) => optionValuesMatch(option.value, bodyValue) || optionValuesMatch(option.label, bodyValue)) || null;
+  }
+  if (field.fieldKey === "finishFlex") {
+    if (!options.length) return null;
+    const bodyOption = finishContext.bodyOptions?.find?.((option) => optionValuesMatch(option.value, bodyValue) || optionValuesMatch(option.label, bodyValue));
+    if (Number.isInteger(bodyOption?.finishInheritanceIndex)) {
+      const orderedMatch = options.find((option) => option.finishInheritanceIndex === bodyOption.finishInheritanceIndex);
+      if (orderedMatch) return orderedMatch;
+    }
+    const index = Number.isInteger(finishContext.bodyIndex) && finishContext.bodyIndex >= 0 ? finishContext.bodyIndex : 0;
+    return options[Math.min(index, options.length - 1)] || null;
+  }
+  return options[0] || null;
+}
+
+function presentationFirstEffectiveOption(field = {}, compatibleOptions = [], finishContext = {}) {
+  return presentationSelectedOption(field)
+    || presentationInheritedFinishOption(field, compatibleOptions, finishContext)
+    || (presentationIsInherited(field) ? null : (Array.isArray(compatibleOptions) ? compatibleOptions[0] : null))
+    || null;
 }
 
 function presentationRole(field = {}) {
@@ -1609,13 +1651,13 @@ function presentationPrimaryDecisionAtThisStep(field = {}, compatibleOptionCount
   return RUNTIME_PRESENTATION_PRIMARY_DECISION_FIELDS.has(field.fieldKey);
 }
 
-function classifyRuntimePresentationField(field = {}) {
+function classifyRuntimePresentationField(field = {}, finishContext = {}) {
   const compatibleOptions = presentationCompatibleOptions(field);
   const compatibleOptionCount = compatibleOptions ? compatibleOptions.length : null;
   const selectedOption = presentationSelectedOption(field);
   const selectedOptionBlocked = Boolean(field.selectedValue && (selectedOption?.blocked === true || selectedOption?.status === "blocked"));
   const hasManualConstraint = String(field.selectedValue || "").trim().length > 0;
-  const effectiveOption = presentationFirstEffectiveOption(field, compatibleOptions || []);
+  const effectiveOption = presentationFirstEffectiveOption(field, compatibleOptions || [], finishContext);
   const primaryAtStep = presentationPrimaryDecisionAtThisStep(field, compatibleOptionCount, selectedOptionBlocked);
   const optionsComputable = compatibleOptionCount !== null;
   const safeAutoResolve = optionsComputable
@@ -1677,8 +1719,16 @@ function classifyRuntimePresentationField(field = {}) {
     primaryDecision = false;
     effectiveValue = effectiveOption?.value || "";
     effectiveLabel = effectiveOption?.label || field.unavailableReason || "inherits from direct/default selection";
-    overrideAvailable = optionsComputable && compatibleOptionCount > 1;
-    classificationReason = "inherited consequence from direct/default selection";
+    if (["finishCover", "finishEnd", "finishFlex"].includes(field.fieldKey) && !finishContext.bodyValue) {
+      displayMode = "collapsed-override";
+      effectiveValue = "";
+      effectiveLabel = "";
+      overrideAvailable = false;
+      classificationReason = "donor finish inheritance is inactive until body/default finish is selected";
+    } else {
+      overrideAvailable = optionsComputable && compatibleOptionCount > 1;
+      classificationReason = "inherited consequence from direct/default selection";
+    }
   } else if (safeAutoResolve && (RUNTIME_PRESENTATION_AUTO_CHIP_FIELDS.has(field.fieldKey) || presentationRole(field) === "auto-consequence" || presentationRole(field) === "manual-constraint")) {
     displayMode = "auto-chip";
     provenance = presentationRole(field) === "auto-consequence" ? "auto" : "accepted";
@@ -1729,10 +1779,11 @@ function classifyRuntimePresentationField(field = {}) {
 }
 
 function applyRuntimePresentationClassificationToWorkflow(workflowSections = []) {
+  const finishContext = finishInheritanceContextFromWorkflow(workflowSections);
   return workflowSections.map((section) => ({
     ...section,
     runtimePresentationClassification: RUNTIME_PRESENTATION_CLASSIFICATION_NAME,
-    fields: (Array.isArray(section.fields) ? section.fields : []).map((field) => classifyRuntimePresentationField(field)),
+    fields: (Array.isArray(section.fields) ? section.fields : []).map((field) => classifyRuntimePresentationField(field, finishContext)),
     rawRowsExposed: false,
   }));
 }
