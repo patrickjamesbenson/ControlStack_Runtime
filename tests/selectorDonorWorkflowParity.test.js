@@ -28,7 +28,7 @@ function workflowSnapshot() {
       {
         system: "DNX",
         optic_var_1: "Inlay",
-        optic_var_2: "Antiglare;Rope",
+        optic_var_2: "Microprism, Antiglare",
         emission_permission: "direct/indirect",
         ip_option_1: "IP20;IP65",
         ik_option_2: "IK07;IK10",
@@ -116,10 +116,14 @@ test("options payload exposes donor workflow sections and donor field parity", (
 
 test("workflow parity includes paired CCT/CRI, direct/indirect variants, mount, penetration, finish, and egress fields", () => {
   const result = deriveSelectorReferenceOptionsFromSnapshot(workflowSnapshot(), { source: sourceReady() });
+  const opticChildResult = deriveSelectorReferenceOptionsFromSnapshot(workflowSnapshot(), {
+    source: sourceReady(),
+    constraints: { optic: "DNX|Inlay" },
+  });
 
   assert.ok(workflowField(result, "cctCri").options.some((item) => /3000K \/ CRI80/.test(item.label)));
   assert.ok(workflowField(result, "cctCriIndirect").options.some((item) => /3000K \/ CRI80/.test(item.label)));
-  assert.ok(workflowField(result, "opticSub").options.some((item) => item.label === "Antiglare"));
+  assert.ok(workflowField(opticChildResult, "opticSub").options.some((item) => item.label === "Antiglare"));
   assert.ok(workflowField(result, "opticIndirect").options.length > 0);
   assert.ok(workflowField(result, "mountSelection").options.some((item) => item.label === "Wire"));
   assert.ok(workflowField(result, "mountParticulars").options.some((item) => item.label === "1500mm drop"));

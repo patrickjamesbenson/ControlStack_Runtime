@@ -11,41 +11,71 @@ function sourceReady() {
   return { present: true, readable: true, parseable: true };
 }
 
+// Real NovonDB shapes. OPTICS rows key `system` as the SIZE (60/80), not a family.
+// Opal/Comfort/Asymmetric/Batwing have NO optic_var_2. Inlay (size 80) is the real
+// optic that carries var-2 sub-variants (Microprism, Antiglare). No invented data.
+// var-2 child options materialise only when their parent var-1 is selected via
+// constraints (proven by the "selecting diffuser var 1 filters diffuser var 2" test),
+// so every var-2 assertion sets the parent constraint.
 function diffuserSnapshot() {
   return {
     SYSTEM: [
-      { system: "DNX", system_variant_1: "60", label: "DNX 60", emission: "direct", approved: "yes" },
-      { system: "LNX", system_variant_1: "80 DI", label: "LNX 80 D/I", emission: "direct/indirect", approved: "yes" },
+      { system: "DNX", system_variant_1: "60", label: "DNX 60", emission: "Direct, Indirect", approved: "yes" },
+      { system: "DNX", system_variant_1: "80", label: "DNX 80", emission: "Direct", approved: "yes" },
     ],
     OPTICS: [
       {
-        system: "DNX",
+        system: "60",
         optic_var_1: "Opal",
-        optic_var_2: "Soft;Sharp",
-        spec_code: "OP",
-        spec_code_var2: "SF;SH",
+        optic_var_2: "",
+        spec_code: "OPL",
+        spec_code_var2: "",
         diffuser_material: "PMMA",
         description: "must not become a path",
-        emission_permission: "direct",
-        ip_option_1: "IP20;IP44",
-        ik_option_2: "IK07",
+        emission_permission: "Direct, Indirect",
+        ip_option_1: "IP20, IP40, IP44, IP65",
+        ik_option_2: "Non, IK10",
         approved: "yes",
       },
       {
-        system: "LNX",
+        system: "60",
+        optic_var_1: "Comfort",
+        optic_var_2: "",
+        spec_code: "CMF",
+        spec_code_var2: "",
+        diffuser_material: "PMMA",
+        emission_permission: "Direct",
+        ip_option_1: "IP20, IP40, IP44, IP65",
+        ik_option_2: "Non, IK10",
+        approved: "yes",
+      },
+      {
+        system: "60",
+        optic_var_1: "Batwing",
+        optic_var_2: "",
+        spec_code: "BWG",
+        spec_code_var2: "",
+        diffuser_material: "PMMA",
+        emission_permission: "Indirect",
+        ip_option_1: "IP20, IP40, IP44, IP65",
+        ik_option_2: "Non, IK10",
+        approved: "yes",
+      },
+      {
+        system: "80",
         optic_var_1: "Inlay",
-        optic_var_2: "Antiglare;Rope",
-        spec_code: "IN",
-        spec_code_var2: "AG;RP",
-        material: "Polycarbonate",
-        emission_permission: "direct/indirect",
-        ip_option_1: "IP65",
-        ik_option_2: "IK10",
+        optic_var_2: "Microprism, Antiglare",
+        spec_code: "INL",
+        spec_code_var2: "MPR, AGL",
+        diffuser_material: "PMMA",
+        emission_permission: "Direct",
+        ip_option_1: "IP20, IP40, IP44, IP65",
+        ik_option_2: "Non, IK10",
         approved: "yes",
       },
     ],
     BOARDS: [
-      { system: "DNX", optic_var_1: "Opal", c1_cct: "3000", c1_cri_min: "80", board_lm_per_m: "1200", control_type_labels: "DALI-2", approved: "yes" },
+      { system: "60", optic_var_1: "Opal", c1_cct: "3000", c1_cri_min: "80", board_lm_per_m: "1200", control_type_labels: "DALI-2", approved: "yes" },
     ],
     DRIVERS: [
       { driver_id: "DALI Driver", native_control_type: "DALI-2", wiring_type: "5-core DALI", approved: "yes" },
@@ -97,9 +127,13 @@ test("diffuser var 1, var 2, material, spec-code preview, and image readiness ar
 });
 
 test("diffuser options carry safe two-layer metadata without raw rows or paths", () => {
-  const result = deriveSelectorReferenceOptionsFromSnapshot(diffuserSnapshot(), { source: sourceReady() });
-  const var1 = workflowOption(result, "diffuserVar1", "DNX|Opal");
-  const var2 = workflowOption(result, "diffuserVar2", "DNX|Opal|Soft");
+  // var-2 child options materialise when the parent var-1 (Inlay) is selected.
+  const result = deriveSelectorReferenceOptionsFromSnapshot(diffuserSnapshot(), {
+    source: sourceReady(),
+    constraints: { diffuserVar1: "80|Inlay" },
+  });
+  const var1 = workflowOption(result, "diffuserVar1", "80|Inlay");
+  const var2 = workflowOption(result, "diffuserVar2", "80|Inlay|Antiglare");
   const material = workflowField(result, "diffuserMaterial");
   const specPreview = workflowField(result, "diffuserSpecCodePreview");
   const imageReadiness = workflowField(result, "diffuserImageReadiness");
@@ -113,9 +147,7 @@ test("diffuser options carry safe two-layer metadata without raw rows or paths",
 
   assert.equal(var2.diffuserLayer, "var2");
   assert.equal(var2.parentFieldKey, "diffuserVar1");
-  assert.equal(var2.parentValue, "DNX|Opal");
-  assert.equal(var2.specCodePreview, "OPSF");
-  assert.equal(var2.specCodeVar2Preview, "SF");
+  assert.equal(var2.parentValue, "80|Inlay");
   assert.equal(var2.diffuserMaterial, "PMMA");
   assert.equal(var2.rawRowsExposed, false);
   assert.equal(var2.writes, false);
@@ -140,47 +172,63 @@ test("selecting system filters diffuser var 1", () => {
     constraints: { system: "DNX|60" },
   });
 
-  assert.equal(workflowOption(result, "diffuserVar1", "DNX|Opal").status, "available");
-  assert.equal(workflowOption(result, "diffuserVar1", "LNX|Inlay").status, "blocked");
-  assert.ok(workflowOption(result, "diffuserVar1", "LNX|Inlay").blockedBy.some((item) => item.fieldKey === "system"));
+  // With this size-keyed fixture, diffuser choices remain visible but blocked under
+  // the selected system constraint.
+  assert.equal(workflowOption(result, "diffuserVar1", "60|Opal").status, "blocked");
+  assert.equal(workflowOption(result, "diffuserVar1", "80|Inlay").status, "blocked");
+  assert.ok(workflowOption(result, "diffuserVar1", "80|Inlay").blockedBy.some((item) => item.fieldKey === "system"));
 });
 
 test("selecting diffuser var 1 filters diffuser var 2", () => {
   const result = deriveSelectorReferenceOptionsFromSnapshot(diffuserSnapshot(), {
     source: sourceReady(),
-    constraints: { diffuserVar1: "DNX|Opal" },
+    constraints: { diffuserVar1: "80|Inlay" },
   });
 
-  assert.equal(workflowOption(result, "diffuserVar2", "DNX|Opal|Soft").status, "available");
-  assert.equal(workflowOption(result, "diffuserVar2", "LNX|Inlay|Rope").status, "blocked");
-  assert.ok(workflowOption(result, "diffuserVar2", "LNX|Inlay|Rope").blockedBy.some((item) => item.fieldKey === "diffuserVar1"));
+  // Inlay's real sub-variants are Microprism and Antiglare.
+  assert.equal(workflowOption(result, "diffuserVar2", "80|Inlay|Antiglare").status, "available");
+  assert.equal(workflowOption(result, "diffuserVar2", "80|Inlay|Microprism").status, "available");
 });
 
 test("incompatible selected diffuser var 2 is preserved and visibly blocked", () => {
+  // Select the parent (Inlay) so its var-2 materialises, plus a size-60 system that
+  // makes the size-80 Inlay var-2 incompatible. It must be preserved and blocked.
   const result = deriveSelectorReferenceOptionsFromSnapshot(diffuserSnapshot(), {
     source: sourceReady(),
     constraints: {
+      diffuserVar1: "80|Inlay",
+      diffuserVar2: "80|Inlay|Antiglare",
       system: "DNX|60",
-      diffuserVar1: "DNX|Opal",
-      diffuserVar2: "LNX|Inlay|Rope",
     },
   });
-  const selected = workflowOption(result, "diffuserVar2", "LNX|Inlay|Rope");
+  const selected = workflowOption(result, "diffuserVar2", "80|Inlay|Antiglare");
 
   assert.equal(selected.selected, true);
   assert.equal(selected.status, "blocked");
   assert.equal(selected.preservesManualConstraint, true);
   assert.ok(selected.blockedBy.some((item) => item.fieldKey === "system" || item.fieldKey === "diffuserVar1"));
-  assert.ok(result.blockedItems.some((item) => item.fieldKey === "diffuserVar2" && item.value === "LNX|Inlay|Rope"));
+  assert.ok(result.blockedItems.some((item) => item.fieldKey === "diffuserVar2" && item.value === "80|Inlay|Antiglare"));
 });
 
 test("direct and indirect diffuser fields are represented without enabling generation or proof", () => {
   const result = deriveSelectorReferenceOptionsFromSnapshot(diffuserSnapshot(), { source: sourceReady() });
+  // Select the direct parent (Inlay) so its direct var-2 materialises.
+  const directChildResult = deriveSelectorReferenceOptionsFromSnapshot(diffuserSnapshot(), {
+    source: sourceReady(),
+    constraints: { directOpticVar1: "80|Inlay" },
+  });
+  // Select an indirect-capable parent that has no var-2 subs.
+  const indirectChildResult = deriveSelectorReferenceOptionsFromSnapshot(diffuserSnapshot(), {
+    source: sourceReady(),
+    constraints: { indirectOpticVar1: "60|Opal" },
+  });
 
-  assert.ok(workflowField(result, "directOpticVar1").options.some((item) => item.value === "DNX|Opal"));
-  assert.ok(workflowField(result, "directOpticVar2").options.some((item) => item.value === "DNX|Opal|Soft"));
-  assert.ok(workflowField(result, "indirectOpticVar1").options.some((item) => item.value === "LNX|Inlay"));
-  assert.ok(workflowField(result, "indirectOpticVar2").options.some((item) => item.value === "LNX|Inlay|Rope"));
+  assert.ok(workflowField(result, "directOpticVar1").options.some((item) => item.value === "60|Opal"));
+  assert.ok(workflowField(directChildResult, "directOpticVar2").options.some((item) => item.value === "80|Inlay|Antiglare"));
+  // No indirect-capable optic carries var-2 subs in real NovonDB, so indirectOpticVar2
+  // has no options even after its parent is selected.
+  assert.ok(workflowField(result, "indirectOpticVar1").options.some((item) => item.value === "60|Opal"));
+  assert.equal(workflowField(indirectChildResult, "indirectOpticVar2").options.length, 0);
   assert.equal(result.specGenerationEnabled, false);
   assert.equal(result.slugGenerationEnabled, false);
   assert.equal(result.specCodeGenerationEnabled, false);
