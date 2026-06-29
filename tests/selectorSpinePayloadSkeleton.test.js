@@ -127,6 +127,7 @@ test("Selector checklist sections appear in the target order", () => {
     "Egress light",
     "EWIS/sound",
     "Sensors",
+    "Accessories",
   ]);
 });
 
@@ -141,16 +142,21 @@ test("Empty and unmapped values render as em dash rather than fake values", () =
   assert.match(spineRow(spine, "lightControl", "lexWeight").reason, /no value is faked/i);
 });
 
-test("Split egress appears as two separate checklist rows and payload fields", () => {
+test("Split egress, sensors, and accessories appear as separate checklist rows and payload fields", () => {
   const model = createModel();
   const spine = model.selectorSurface.productSpine;
   const payload = model.selectorSurface.payloadPreview;
 
   assert.equal(spineRow(spine, "egressAccessories", "egressLight").label, "Egress light");
   assert.equal(spineRow(spine, "egressAccessories", "egressSound").label, "EWIS/sound");
+  assert.equal(spineRow(spine, "egressAccessories", "sensors").label, "Sensors");
+  assert.equal(spineRow(spine, "egressAccessories", "accessories").label, "Accessories");
   assert.deepEqual(Object.keys(payload.egress), ["light", "sound"]);
+  assert.deepEqual(Object.keys(payload.sensorsAccessories), ["sensors", "accessories"]);
   assert.equal(payload.egress.light, null);
   assert.equal(payload.egress.sound, null);
+  assert.equal(payload.sensorsAccessories.sensors, null);
+  assert.equal(payload.sensorsAccessories.accessories, null);
 });
 
 test("Payload preview exposes the expected top-level shape and safety flags", () => {

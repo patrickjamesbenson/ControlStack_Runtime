@@ -38,7 +38,11 @@ function sampleSnapshot() {
     ACCESSORIES: [
       { accessory_type: "mounting", display_choice: "Surface mount", approved: "yes" },
       { accessory_type: "emergency", display_choice: "Emergency pack", approved: "yes" },
+      { accessory_type: "egress_light", accessory_id: "Maintained", display_choice: "Do not use display choice for egress light", approved: "yes" },
+      { accessory_type: "egress_sound", accessory_id: "EWIS", approved: "yes" },
+      { accessory_type: "pir", accessory_id: "Ceiling PIR (Daylight Sensing)", approved: "yes" },
       { accessory_type: "sensor", display_choice: "PIR sensor", approved: "yes" },
+      { accessory_type: "special_parts", display_choice: "Entitled bracket", approved: "yes" },
       { accessory_type: "accessory", display_choice: "IP65 end kit", approved: "yes" },
     ],
     SYSTEM_POLICY: [
@@ -95,6 +99,17 @@ test("selector reference option adapter emits only safe read-only option metadat
   assert.ok(field(result, "system").options.some((item) => item.label === "DNX 60"));
   assert.ok(field(result, "optic").options.some((item) => item.value === "DNX|Opal"));
   assert.ok(field(result, "cct").options.some((item) => item.value === "3000K"));
+  assert.ok(field(result, "egressLight").options.some((item) => item.value === "Maintained" && item.label === "EM — Maintained"));
+  assert.ok(field(result, "egressSound").options.some((item) => item.value === "EWIS" && item.label === "EWIS"));
+  assert.ok(field(result, "sensor").options.some((item) => item.value === "Ceiling PIR (Daylight Sensing)" && item.label === "Ceiling PIR"));
+  assert.ok(field(result, "sensor").options.some((item) => item.value === "PIR sensor" && item.label === "PIR sensor"));
+  assert.ok(field(result, "accessories").options.some((item) => item.value === "IP65 end kit"));
+  assert.equal(field(result, "accessories").options.some((item) => item.value === "Emergency pack"), false);
+  assert.equal(field(result, "accessories").options.some((item) => item.value === "Maintained"), false);
+  assert.equal(field(result, "accessories").options.some((item) => item.value === "EWIS"), false);
+  assert.equal(field(result, "accessories").options.some((item) => item.value === "Ceiling PIR (Daylight Sensing)"), false);
+  assert.equal(field(result, "accessories").options.some((item) => item.value === "PIR sensor"), false);
+  assert.equal(field(result, "accessories").options.some((item) => item.value === "Entitled bracket"), false);
   for (const item of result.fields) {
     assert.equal(typeof item.fieldKey, "string");
     assert.equal(typeof item.label, "string");

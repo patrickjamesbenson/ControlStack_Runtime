@@ -581,9 +581,12 @@ test("egress light, EWIS sound, and sensor remain separate cascades", () => {
     constraints: { egressLight: "Maintained", egressSound: "EWIS", sensor: "PIR Sensor" },
   });
 
-  assert.ok(workflowField(result, "egressLight").options.some((item) => item.label === "Maintained"));
-  assert.ok(workflowField(result, "egressSound").options.some((item) => item.label === "EWIS"));
-  assert.ok(workflowField(result, "sensor").options.some((item) => item.label === "PIR Sensor"));
+  assert.ok(workflowField(result, "egressLight").options.some((item) => item.value === "Maintained" && item.label === "EM — Maintained"));
+  assert.ok(workflowField(result, "egressSound").options.some((item) => item.value === "EWIS" && item.label === "EWIS"));
+  assert.ok(workflowField(result, "sensor").options.some((item) => item.value === "PIR Sensor" && item.label === "PIR Sensor"));
+  assert.equal(workflowField(result, "accessories").options.some((item) => item.value === "Maintained"), false);
+  assert.equal(workflowField(result, "accessories").options.some((item) => item.value === "EWIS"), false);
+  assert.equal(workflowField(result, "accessories").options.some((item) => item.value === "PIR Sensor"), false);
 });
 
 test("specialParts remains entitlement-gated and not generic accessory", () => {

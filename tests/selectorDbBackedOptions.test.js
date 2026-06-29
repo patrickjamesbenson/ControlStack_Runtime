@@ -68,8 +68,12 @@ function sampleSnapshot() {
     ],
     ACCESSORIES: [
       { accessory_type: "mounting", display_choice: "Suspension kit", approved: "yes" },
+      { accessory_type: "egress_light", accessory_id: "Maintained", approved: "yes" },
+      { accessory_type: "egress_sound", accessory_id: "EWIS", approved: "yes" },
+      { accessory_type: "pir", accessory_id: "PIR sensor", approved: "yes" },
       { accessory_type: "accessory", display_choice: "IP65 end kit", approved: "yes" },
-      { accessory_type: "sensor", display_choice: "PIR sensor", approved: "yes" },
+      { accessory_type: "sensor", display_choice: "Wall sensor", approved: "yes" },
+      { accessory_type: "special_parts", display_choice: "Special driver bracket", approved: "yes" },
     ],
     SYSTEM_POLICY: [
       { category: "application environment", item: "Office;Education", approved: "yes" },
@@ -108,6 +112,14 @@ function surfaceOption(surface, fieldKey, value) {
   const option = surfaceField(surface, fieldKey).options.find((item) => item.value === value);
   assert.ok(option, `expected ${fieldKey} option ${value}`);
   return option;
+}
+
+function spineRow(model, sectionKey, rowKey) {
+  const section = model.selectorSurface.productSpine.sections.find((item) => item.sectionKey === sectionKey);
+  assert.ok(section, `expected spine section ${sectionKey}`);
+  const row = section.rows.find((item) => item.rowKey === rowKey);
+  assert.ok(row, `expected spine row ${sectionKey}.${rowKey}`);
+  return row;
 }
 
 test("Selector view model exposes a product-facing DB-backed surface before diagnostics data", () => {
@@ -155,6 +167,43 @@ test("compatible DB-backed manual constraints are not silently cleared", () => {
   assert.equal(surfaceOption(model.selectorSurface, "optic", "DNX|Opal").status, "available");
   assert.match(model.selectorSurface.manualConstraintRows.flat().join(" "), /DNX 60/);
   assert.match(model.selectorSurface.manualConstraintRows.flat().join(" "), /3000K/);
+});
+
+test("Egress & Accessories selections stay split in product spine and payload preview", () => {
+  const selectorState = createSelectorState();
+  let model = createModel({ selectorState });
+
+  assert.equal(spineRow(model, "egressAccessories", "egressLight").displayValue, "—");
+  assert.equal(spineRow(model, "egressAccessories", "egressSound").displayValue, "—");
+  assert.equal(spineRow(model, "egressAccessories", "sensors").displayValue, "—");
+  assert.equal(spineRow(model, "egressAccessories", "accessories").displayValue, "—");
+  assert.equal(surfaceOption(model.selectorSurface, "egressLight", "Maintained").label, "EM — Maintained");
+  assert.equal(surfaceOption(model.selectorSurface, "egressSound", "EWIS").label, "EWIS");
+  assert.equal(surfaceOption(model.selectorSurface, "sensor", "PIR sensor").label, "PIR sensor");
+  assert.equal(surfaceField(model.selectorSurface, "accessories").options.some((item) => item.value === "IP65 end kit"), true);
+  assert.equal(surfaceField(model.selectorSurface, "accessories").options.some((item) => item.value === "Maintained"), false);
+  assert.equal(surfaceField(model.selectorSurface, "accessories").options.some((item) => item.value === "EWIS"), false);
+  assert.equal(surfaceField(model.selectorSurface, "accessories").options.some((item) => item.value === "PIR sensor"), false);
+  assert.equal(surfaceField(model.selectorSurface, "accessories").options.some((item) => item.value === "Wall sensor"), false);
+  assert.equal(surfaceField(model.selectorSurface, "accessories").options.some((item) => item.value === "Special driver bracket"), false);
+
+  model.selectorSurface.setFieldValue("egressLight", "Maintained");
+  model = createModel({ selectorState });
+  model.selectorSurface.setFieldValue("egressSound", "EWIS");
+  model = createModel({ selectorState });
+  model.selectorSurface.setFieldValue("sensor", "PIR sensor");
+  model = createModel({ selectorState });
+  model.selectorSurface.setFieldValue("accessories", "IP65 end kit");
+  model = createModel({ selectorState });
+
+  assert.equal(spineRow(model, "egressAccessories", "egressLight").displayValue, "EM — Maintained");
+  assert.equal(spineRow(model, "egressAccessories", "egressSound").displayValue, "EWIS");
+  assert.equal(spineRow(model, "egressAccessories", "sensors").displayValue, "PIR sensor");
+  assert.equal(spineRow(model, "egressAccessories", "accessories").displayValue, "IP65 end kit");
+  assert.equal(model.selectorSurface.payloadPreview.egress.light, "EM — Maintained");
+  assert.equal(model.selectorSurface.payloadPreview.egress.sound, "EWIS");
+  assert.equal(model.selectorSurface.payloadPreview.sensorsAccessories.sensors, "PIR sensor");
+  assert.equal(model.selectorSurface.payloadPreview.sensorsAccessories.accessories, "IP65 end kit");
 });
 
 test("auto consequences are visible as consequences and remain changeable", () => {

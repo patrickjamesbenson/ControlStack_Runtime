@@ -1510,6 +1510,9 @@ const RUNTIME_PRESENTATION_AUTO_CHIP_FIELDS = Object.freeze(new Set([
   "controlType",
   "driver",
   "wiringType",
+]));
+
+const RUNTIME_PRESENTATION_MANUAL_ONLY_FIELDS = Object.freeze(new Set([
   "accessories",
 ]));
 
@@ -1729,7 +1732,7 @@ function classifyRuntimePresentationField(field = {}, finishContext = {}) {
       overrideAvailable = optionsComputable && compatibleOptionCount > 1;
       classificationReason = "inherited consequence from direct/default selection";
     }
-  } else if (safeAutoResolve && (RUNTIME_PRESENTATION_AUTO_CHIP_FIELDS.has(field.fieldKey) || presentationRole(field) === "auto-consequence" || presentationRole(field) === "manual-constraint")) {
+  } else if (safeAutoResolve && (RUNTIME_PRESENTATION_AUTO_CHIP_FIELDS.has(field.fieldKey) || presentationRole(field) === "auto-consequence" || (presentationRole(field) === "manual-constraint" && !RUNTIME_PRESENTATION_MANUAL_ONLY_FIELDS.has(field.fieldKey)))) {
     displayMode = "auto-chip";
     provenance = presentationRole(field) === "auto-consequence" ? "auto" : "accepted";
     primaryDecision = false;
@@ -2330,7 +2333,8 @@ const PRODUCT_SPINE_SECTION_DEFINITIONS = Object.freeze([
     rows: Object.freeze([
       Object.freeze({ rowKey: "egressLight", label: "Egress light", fields: Object.freeze(["egressLight", "emergency"]) }),
       Object.freeze({ rowKey: "egressSound", label: "EWIS/sound", fields: Object.freeze(["egressSound"]) }),
-      Object.freeze({ rowKey: "sensors", label: "Sensors", fields: Object.freeze(["sensor", "accessories"]) }),
+      Object.freeze({ rowKey: "sensors", label: "Sensors", fields: Object.freeze(["sensor"]) }),
+      Object.freeze({ rowKey: "accessories", label: "Accessories", fields: Object.freeze(["accessories"]) }),
     ]),
   }),
   Object.freeze({

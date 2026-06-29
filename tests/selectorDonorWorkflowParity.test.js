@@ -133,9 +133,13 @@ test("workflow parity includes paired CCT/CRI, direct/indirect variants, mount, 
   assert.ok(workflowField(result, "finishCover").options.some((item) => item.label === "White"));
   assert.ok(workflowField(result, "finishEnd").options.some((item) => item.label === "Black"));
   assert.ok(workflowField(result, "finishFlex").options.some((item) => item.label === "White Flex"));
-  assert.ok(workflowField(result, "egressLight").options.some((item) => item.label === "Maintained"));
-  assert.ok(workflowField(result, "egressSound").options.some((item) => item.label === "EWIS"));
-  assert.ok(workflowField(result, "sensor").options.some((item) => item.label === "PIR Sensor"));
+  assert.ok(workflowField(result, "egressLight").options.some((item) => item.value === "Maintained" && item.label === "EM — Maintained"));
+  assert.ok(workflowField(result, "egressSound").options.some((item) => item.value === "EWIS" && item.label === "EWIS"));
+  assert.ok(workflowField(result, "sensor").options.some((item) => item.value === "PIR Sensor" && item.label === "PIR Sensor"));
+  assert.ok(workflowField(result, "accessories").options.some((item) => item.value === "Suspension kit"));
+  assert.equal(workflowField(result, "accessories").options.some((item) => item.value === "Maintained"), false);
+  assert.equal(workflowField(result, "accessories").options.some((item) => item.value === "EWIS"), false);
+  assert.equal(workflowField(result, "accessories").options.some((item) => item.value === "PIR Sensor"), false);
 });
 
 test("special parts are entitlement-gated and disabled workflows cannot generate", () => {

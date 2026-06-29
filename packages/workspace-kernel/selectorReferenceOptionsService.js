@@ -17,7 +17,10 @@ const TARGET_FIELDS = Object.freeze([
   { fieldKey: "mountStyle", label: "Mounting", role: "manual-constraint", sourceTables: ["ACCESSORIES", "SYSTEM_POLICY"] },
   { fieldKey: "bodyFinish", label: "Finish", role: "manual-constraint", sourceTables: ["ACCESSORIES", "SYSTEM_POLICY"] },
   { fieldKey: "emergency", label: "Emergency", role: "manual-constraint", sourceTables: ["ACCESSORIES"] },
+  { fieldKey: "egressLight", label: "Egress light", role: "manual-constraint", sourceTables: ["ACCESSORIES"] },
+  { fieldKey: "egressSound", label: "EWIS / sound", role: "manual-constraint", sourceTables: ["ACCESSORIES"] },
   { fieldKey: "sensor", label: "Sensor", role: "manual-constraint", sourceTables: ["ACCESSORIES"] },
+  { fieldKey: "accessories", label: "Accessories", role: "manual-constraint", sourceTables: ["ACCESSORIES"] },
   { fieldKey: "specialParts", label: "Accessories / special parts", role: "auto-consequence", sourceTables: ["ACCESSORIES", "SYSTEM_COMPONENTS"] },
 ]);
 
@@ -118,7 +121,7 @@ const WORKFLOW_SECTION_DEFINITIONS = Object.freeze([
       { fieldKey: "egressLight", label: "Egress light", role: "manual-constraint", sourceTables: ["ACCESSORIES"] },
       { fieldKey: "egressSound", label: "EWIS / sound", role: "manual-constraint", sourceTables: ["ACCESSORIES"] },
       { fieldKey: "sensor", label: "Sensor / PIR", role: "manual-constraint", sourceTables: ["ACCESSORIES"] },
-      { fieldKey: "accessories", label: "Accessories", role: "auto-consequence", sourceTables: ["ACCESSORIES"] },
+      { fieldKey: "accessories", label: "Accessories", role: "manual-constraint", sourceTables: ["ACCESSORIES"] },
     ],
   },
   {
@@ -618,6 +621,52 @@ function accessoryIdLabel(row) {
   return rowText(row, ["display_choice", "label", "accessory_name", "name", "accessory_id", "id", "accessory_type"]);
 }
 
+function accessorySourceId(row) {
+  return rowText(row, ["accessory_id", "id"]) || accessoryIdLabel(row);
+}
+
+function egressLightAccessoryOption(row) {
+  const id = accessorySourceId(row);
+  if (!id) return null;
+  let label = id;
+  if (id === "Maintained") label = "EM — Maintained";
+  else if (id === "Non Maintained") label = "EM — Non-Maintained";
+  else if (id === "Sustained") label = "EM — Sustained";
+  else if (id === "DC Mains") label = "EM — DC Mains";
+  return { value: id, label };
+}
+
+function sensorAccessoryOption(row) {
+  const id = accessorySourceId(row);
+  if (!id) return null;
+  const label = id.replace(" (Daylight Sensing)", "").replace("Blank Cover (res qty)", "Blank Cover");
+  return { value: id, label };
+}
+
+function accessoryTypeKey(row) {
+  return normaliseKey(rowText(row, ["accessory_type", "type", "category", "group"]));
+}
+
+function isSpecialPartsAccessoryType(row) {
+  const type = accessoryTypeKey(row);
+  return type === "special_parts" || type === "special_part" || type === "system_component" || type === "system_components" || (type.includes("special") && type.includes("part"));
+}
+
+function isExcludedFromGenericAccessoryPreview(row) {
+  return accessoryTypeMatches(row, "egress_light")
+    || accessoryTypeMatches(row, "egress_sound")
+    || accessoryTypeMatches(row, "pir")
+    || accessoryTypeMatches(row, "sensor")
+    || accessoryTypeMatches(row, "emergency")
+    || isSpecialPartsAccessoryType(row);
+}
+
+function isGenericAccessoryPreviewRow(row) {
+  if (isExcludedFromGenericAccessoryPreview(row)) return false;
+  const type = accessoryTypeKey(row);
+  return type === "accessory" || type === "standard_accessory" || type === "generic_accessory" || type === "in_cover";
+}
+
 function canonicalMountStyle(label) {
   const raw = safeString(label);
   const text = raw.toLowerCase().replace(/\([^)]*\)/g, " ").replace(/\s+/g, " ").trim();
@@ -938,10 +987,19 @@ function collectOptions(snapshot) {
     if (accessoryTypeMatches(row, "power_location")) addOption(bucket, "powerLocation", label === "mm" ? "TBD" : label, { sourceTables: ["ACCESSORIES"] });
     if (accessoryTypeMatches(row, "flex_length")) addOption(bucket, "flexLength", label, { sourceTables: ["ACCESSORIES"] });
     if (accessoryTypeMatches(row, "elect_class")) addOption(bucket, "electricalClass", rowText(row, ["accessory_id", "id", "display_choice", "label"], label), { sourceTables: ["ACCESSORIES"] });
-    if (accessoryTypeMatches(row, "egress_light")) addOption(bucket, "egressLight", label, { sourceTables: ["ACCESSORIES"] });
-    if (accessoryTypeMatches(row, "egress_sound")) addOption(bucket, "egressSound", label, { sourceTables: ["ACCESSORIES"] });
-    if (accessoryTypeMatches(row, "pir") || accessoryTypeMatches(row, "sensor")) addOption(bucket, "sensor", label, { sourceTables: ["ACCESSORIES"] });
-    if (!accessoryTypeMatches(row, "egress_light") && !accessoryTypeMatches(row, "egress_sound") && !accessoryTypeMatches(row, "pir")) {
+    if (accessoryTypeMatches(row, "egress_light")) {
+      const option = egressLightAccessoryOption(row);
+      if (option) addOption(bucket, "egressLight", option.label, { value: option.value, sourceTables: ["ACCESSORIES"] });
+    }
+    if (accessoryTypeMatches(row, "egress_sound")) {
+      const id = accessorySourceId(row);
+      if (id) addOption(bucket, "egressSound", id, { value: id, sourceTables: ["ACCESSORIES"] });
+    }
+    if (accessoryTypeMatches(row, "pir") || accessoryTypeMatches(row, "sensor")) {
+      const option = sensorAccessoryOption(row);
+      if (option) addOption(bucket, "sensor", option.label, { value: option.value, sourceTables: ["ACCESSORIES"] });
+    }
+    if (isGenericAccessoryPreviewRow(row)) {
       addOption(bucket, "accessories", label, { sourceTables: ["ACCESSORIES"] });
     }
   }
@@ -1175,6 +1233,10 @@ function collectRecords(snapshot, bucket) {
   for (const row of liveTableRows(snapshot, "ACCESSORIES")) {
     const label = accessoryIdLabel(row);
     if (!label) continue;
+    const egressLightOption = accessoryTypeMatches(row, "egress_light") ? egressLightAccessoryOption(row) : null;
+    const egressSoundId = accessoryTypeMatches(row, "egress_sound") ? accessorySourceId(row) : "";
+    const sensorOption = (accessoryTypeMatches(row, "pir") || accessoryTypeMatches(row, "sensor")) ? sensorAccessoryOption(row) : null;
+    const genericAccessoryValue = isGenericAccessoryPreviewRow(row) ? [label] : [];
     const mountStyles = rowOptionValues(row, ["mount_style", "mount_styles", "display_choice"]).filter(Boolean);
     const mountSelections = rowOptionValues(row, ["mount_selections", "mount_selection"]);
     const mountParticulars = rowOptionValues(row, ["mount_particulars", "particulars"]);
@@ -1183,18 +1245,17 @@ function collectRecords(snapshot, bucket) {
         mountStyle: mountStyles.length ? mountStyles : [label],
         mountSelection: mountSelections,
         mountParticulars,
-        accessories: [label],
       }, "ACCESSORIES mount row maps mount style to selection and particulars");
     }
     pushRelationshipRecord(records, ["ACCESSORIES"], {
       powerPenetration: accessoryTypeMatches(row, "power_penetration") ? [label] : [],
       powerLocation: accessoryTypeMatches(row, "power_location") ? [label] : [],
       flexLength: accessoryTypeMatches(row, "flex_length") ? [label] : [],
-      egressLight: accessoryTypeMatches(row, "egress_light") ? [label] : [],
-      egressSound: accessoryTypeMatches(row, "egress_sound") ? [label] : [],
-      sensor: accessoryTypeMatches(row, "pir") || accessoryTypeMatches(row, "sensor") ? [label] : [],
-      accessories: [label],
-    }, "ACCESSORIES row maps accessory preferences to accessory preview only");
+      egressLight: egressLightOption ? [egressLightOption.value] : [],
+      egressSound: egressSoundId ? [egressSoundId] : [],
+      sensor: sensorOption ? [sensorOption.value] : [],
+      accessories: genericAccessoryValue,
+    }, "ACCESSORIES row maps donor egress, EWIS/sound, sensor, and standard accessory preferences without exposing raw rows");
   }
 
   return records;
