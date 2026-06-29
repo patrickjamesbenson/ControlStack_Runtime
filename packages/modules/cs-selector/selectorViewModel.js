@@ -3078,11 +3078,121 @@ function createPayloadPreviewSkeleton({ fields = [], workflowSections = [], summ
   };
 }
 
+const SELECTED_ENGINE_RESULT_REQUIRED_FIELDS = Object.freeze([
+  "result state label",
+  "selected result availability",
+  "engine verified flag",
+  "stale result flag placeholder",
+  "selected profile/tier placeholder",
+  "run identity placeholder",
+  "run length placeholder",
+  "segment summary placeholder",
+  "board count placeholder",
+  "board family placeholder",
+  "zone count placeholder",
+  "zone plan placeholder",
+  "mechanical summary placeholder",
+  "clip/suspension summary placeholder",
+  "gear tray summary placeholder",
+  "sanitised warnings placeholder",
+]);
+
+const SELECTED_ENGINE_RESULT_BOUNDARY_COPY = Object.freeze([
+  "No selected engine result is available in this slice.",
+  "Selector shows an Estimated preview until a future read-only Engine/RunTable result source exists.",
+  "Selector does not fire the engine, generate RunTable output, persist a result, or detect stale results here.",
+  "A future selected engine result must be one accepted successful result, normalised per run and locked to one selected subset/family.",
+  "Weighted alternatives, raw engine debug, and raw selected payload are not normal-user final outputs.",
+  "Engine-verified result display is not Lab Proof. Lab Proof proves later.",
+  "No IES, payload, drawings, Controlled Records, RREG approval/custody, CRM write-back, Board Data mutation, or hidden write-back is created here.",
+]);
+
+function createSelectedEngineResultHandoffScaffold() {
+  const unavailable = "unavailable — future read-only Engine/RunTable result source required";
+  const fieldRows = SELECTED_ENGINE_RESULT_REQUIRED_FIELDS.map((field) => [field, unavailable]);
+  return {
+    title: "Selected engine result handoff",
+    readOnly: true,
+    displayOnly: true,
+    scaffoldOnly: true,
+    selectedResultAvailable: false,
+    selectedResultUnavailableReason: "no selected engine result available",
+    resultStateLabel: "Estimated preview",
+    estimatedPreviewOnly: true,
+    engineVerified: false,
+    engineVerificationEnabled: false,
+    selectedResultIngestionEnabled: false,
+    selectedResultPersistenceEnabled: false,
+    staleResult: false,
+    staleResultDetectionEnabled: false,
+    selectedProfileTier: null,
+    selectedSubsetFamilyLock: false,
+    perRunLookupNormalised: false,
+    futureResultSourceRequired: "read-only upstream Engine/RunTable selected-result source",
+    futureRequiredShape: {
+      oneSelectedResultOnly: true,
+      successfulAcceptedPayloadRequired: true,
+      perRunLookupKey: "run id / run number",
+      selectedSubsetFamilyLockRequired: true,
+      weightedAlternativesHiddenForNormalUsers: true,
+      fields: [...SELECTED_ENGINE_RESULT_REQUIRED_FIELDS],
+    },
+    rows: [
+      ["result state label", "Estimated preview"],
+      ["selected result availability", "no selected engine result available"],
+      ["engine verified", "false"],
+      ["engine verification", "disabled"],
+      ["selected result ingestion", "disabled"],
+      ["selected result persistence", "disabled"],
+      ["stale result flag", "placeholder only — false"],
+      ["selected subset/family lock", "not established"],
+      ["per-run lookup", "not available"],
+    ],
+    fieldRows,
+    safetyFlags: {
+      engineExecutionEnabled: false,
+      engineVerificationEnabled: false,
+      selectedResultIngestionEnabled: false,
+      selectedResultPersistenceEnabled: false,
+      staleResultDetectionEnabled: false,
+      runTableGenerationEnabled: false,
+      payloadGenerationEnabled: false,
+      iesGenerationEnabled: false,
+      drawingGenerationEnabled: false,
+      labProofAuthority: false,
+      controlledRecordsWriteEnabled: false,
+      rregApprovalEnabled: false,
+      rregCustodyTransferEnabled: false,
+      hubSpotCrmWriteBackEnabled: false,
+      boardDataMutationEnabled: false,
+      hiddenWriteBackEnabled: false,
+      rawSelectedPayloadExposed: false,
+      rawEngineDebugPayloadExposed: false,
+      rawCandidateAlternativesExposedAsFinalOutputs: false,
+      rawRowsExposed: false,
+      rawHeadersExposed: false,
+      rawUsersExposed: false,
+      rawLabEvidenceExposed: false,
+      rawIesExposed: false,
+      rawPdfsOrArtefactsExposed: false,
+      credentialsExposed: false,
+      privatePathsExposed: false,
+    },
+    boundaryCopy: [...SELECTED_ENGINE_RESULT_BOUNDARY_COPY],
+    writes: false,
+    generation: false,
+    proof: false,
+    routesAdded: false,
+    postEndpointsAdded: false,
+  };
+}
+
 const PRODUCT_SURFACE_PARITY_ORDER = Object.freeze([
   "selected-truth summary",
   "canonical workflow sections",
   "product spine",
   "payload preview",
+  "selected engine-result handoff",
   "source/spec readiness explanation",
   "disabled handoff summary",
   "collapsed diagnostics",
@@ -3247,6 +3357,7 @@ function createDisabledHandoffSummary({ payloadPreview = {}, selectionTruthSumma
 function createProductSurfaceParityLock({
   productSpine = {},
   payloadPreview = {},
+  selectedEngineResultHandoff = {},
   selectionTruthSummary = {},
   sourceSpecReadinessExplanation = {},
   disabledHandoffSummary = {},
@@ -3261,6 +3372,8 @@ function createProductSurfaceParityLock({
     selectedTruthBeforeProductSpine: true,
     canonicalWorkflowBeforePayloadPreview: true,
     productSpineBeforePayloadPreview: true,
+    selectedEngineResultAfterPayloadPreview: true,
+    selectedEngineResultBeforeSourceReadiness: true,
     sourceSpecReadinessAfterPayloadPreview: true,
     disabledHandoffAfterReadiness: true,
     diagnosticsCollapsedBehindProductSurface: true,
@@ -3271,11 +3384,25 @@ function createProductSurfaceParityLock({
     sourceReadinessAgreesWithPayload: sourceSpecReadinessExplanation.agreement?.payloadSourceReadyMatchesSurface !== false,
     specGateAgreesWithPayload: sourceSpecReadinessExplanation.agreement?.payloadSpecGateMatchesSurface !== false,
     disabledHandoffsAgreeWithPayload: disabledHandoffSummary.allDisabled === true,
+    selectedEngineResultSafetyAgrees: selectedEngineResultHandoff.selectedResultAvailable === false
+      && selectedEngineResultHandoff.engineVerified === false
+      && selectedEngineResultHandoff.engineVerificationEnabled === false
+      && selectedEngineResultHandoff.safetyFlags?.engineExecutionEnabled === false
+      && selectedEngineResultHandoff.safetyFlags?.runTableGenerationEnabled === false
+      && selectedEngineResultHandoff.safetyFlags?.payloadGenerationEnabled === false
+      && selectedEngineResultHandoff.safetyFlags?.iesGenerationEnabled === false
+      && selectedEngineResultHandoff.safetyFlags?.drawingGenerationEnabled === false
+      && selectedEngineResultHandoff.safetyFlags?.labProofAuthority === false
+      && selectedEngineResultHandoff.safetyFlags?.rawSelectedPayloadExposed === false
+      && selectedEngineResultHandoff.safetyFlags?.rawEngineDebugPayloadExposed === false,
     selectedTruthSafetyAgrees: selectionTruthSummary.specGenerationEnabled === false
       && selectionTruthSummary.payloadGenerationEnabled === false
       && selectionTruthSummary.runTableGenerationEnabled === false
       && selectionTruthSummary.labProofAuthority === false,
     allGenerationProofWriteDisabled: disabledHandoffSummary.allDisabled === true
+      && selectedEngineResultHandoff.generation === false
+      && selectedEngineResultHandoff.proof === false
+      && selectedEngineResultHandoff.writes === false
       && payloadPreview.productionPayload !== true
       && payloadPreview.safetyFlags?.writes !== true
       && payloadPreview.safetyFlags?.generation !== true
@@ -3366,6 +3493,7 @@ function createDbBackedSelectorSurface(selectorReferenceStatus = {}, local = {},
     sourceReadiness,
     referenceOptionSourceCoverage,
   });
+  const selectedEngineResultHandoff = createSelectedEngineResultHandoffScaffold();
   const sourceSpecReadinessExplanation = createSourceSpecReadinessExplanation({
     sourceReady,
     sourceReadiness,
@@ -3383,6 +3511,7 @@ function createDbBackedSelectorSurface(selectorReferenceStatus = {}, local = {},
   const productSurfaceParityLock = createProductSurfaceParityLock({
     productSpine,
     payloadPreview,
+    selectedEngineResultHandoff,
     selectionTruthSummary,
     sourceSpecReadinessExplanation,
     disabledHandoffSummary,
@@ -3428,6 +3557,7 @@ function createDbBackedSelectorSurface(selectorReferenceStatus = {}, local = {},
     presentationClassification,
     productSpine,
     payloadPreview,
+    selectedEngineResultHandoff,
     selectionTruthSummary,
     sourceSpecReadinessExplanation,
     disabledHandoffSummary,

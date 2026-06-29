@@ -8,6 +8,7 @@ import { deriveSelectorReferenceOptionsFromSnapshot } from "../packages/workspac
 
 const viewSourceUrl = new URL("../packages/modules/cs-selector/selectorView.js", import.meta.url);
 const viewModelSourceUrl = new URL("../packages/modules/cs-selector/selectorViewModel.js", import.meta.url);
+const serverSourceUrl = new URL("../server.js", import.meta.url);
 const testSourceUrl = new URL("./selectorSpinePayloadSkeleton.test.js", import.meta.url);
 
 function createAdapter() {
@@ -98,6 +99,7 @@ test("Selector product surface renders selected-truth and canonical workflow bef
   const workflowRenderIndex = source.indexOf("appendSelectorWorkflowSections(section");
   const spineRenderIndex = source.indexOf("appendSelectorProductSpine(section");
   const payloadRenderIndex = source.indexOf("appendPayloadPreviewObject(section");
+  const selectedEngineResultIndex = source.indexOf("appendSelectedEngineResultHandoff(section");
   const readinessRenderIndex = source.indexOf("appendSelectorSourceSpecReadinessExplanation(section");
   const disabledHandoffIndex = source.indexOf("appendSelectorDisabledHandoffSummary(section");
   const diagnosticsIndex = source.indexOf("const diagnosticsDetails = document.createElement(\"details\")");
@@ -106,11 +108,13 @@ test("Selector product surface renders selected-truth and canonical workflow bef
   assert.ok(workflowRenderIndex > truthRenderIndex, "canonical workflow should render after selected-truth summary");
   assert.ok(spineRenderIndex > workflowRenderIndex, "product spine should render after canonical workflow");
   assert.ok(payloadRenderIndex > spineRenderIndex, "payload preview should render after checklist spine");
-  assert.ok(readinessRenderIndex > payloadRenderIndex, "source/spec readiness explanation should render after payload preview");
+  assert.ok(selectedEngineResultIndex > payloadRenderIndex, "selected engine-result handoff should render after payload preview");
+  assert.ok(readinessRenderIndex > selectedEngineResultIndex, "source/spec readiness explanation should render after selected engine-result handoff");
   assert.ok(disabledHandoffIndex > readinessRenderIndex, "disabled handoff summary should render after source/spec readiness");
   assert.ok(diagnosticsIndex > disabledHandoffIndex, "Diagnostics should remain below the product surface");
   assert.match(source, /dataset\.selectorProductSpine = "checklist"/);
   assert.match(source, /dataset\.selectorPayloadPreview = "skeleton"/);
+  assert.match(source, /dataset\.selectorSelectedEngineResult = "read-only"/);
   assert.match(source, /dataset\.selectorSourceSpecReadiness = "read-only"/);
   assert.match(source, /dataset\.selectorDisabledHandoffSummary = "read-only"/);
 });
@@ -120,6 +124,7 @@ test("Selector product surface parity lock keeps summary, spine, payload, readin
   const lock = surface.productSurfaceParityLock;
   const readiness = surface.sourceSpecReadinessExplanation;
   const handoffs = surface.disabledHandoffSummary;
+  const selectedEngineResult = surface.selectedEngineResultHandoff;
   const payload = surface.payloadPreview;
 
   assert.deepEqual(lock.blockOrder, [
@@ -127,6 +132,7 @@ test("Selector product surface parity lock keeps summary, spine, payload, readin
     "canonical workflow sections",
     "product spine",
     "payload preview",
+    "selected engine-result handoff",
     "source/spec readiness explanation",
     "disabled handoff summary",
     "collapsed diagnostics",
@@ -134,6 +140,9 @@ test("Selector product surface parity lock keeps summary, spine, payload, readin
   assert.equal(lock.selectedTruthBeforeProductSpine, true);
   assert.equal(lock.canonicalWorkflowBeforePayloadPreview, true);
   assert.equal(lock.productSpineBeforePayloadPreview, true);
+  assert.equal(lock.selectedEngineResultAfterPayloadPreview, true);
+  assert.equal(lock.selectedEngineResultBeforeSourceReadiness, true);
+  assert.equal(lock.selectedEngineResultSafetyAgrees, true);
   assert.equal(lock.sourceSpecReadinessAfterPayloadPreview, true);
   assert.equal(lock.disabledHandoffAfterReadiness, true);
   assert.equal(lock.diagnosticsCollapsedBehindProductSurface, true);
@@ -153,6 +162,15 @@ test("Selector product surface parity lock keeps summary, spine, payload, readin
   assert.equal(readiness.rawUsersExposed, false);
   assert.equal(readiness.rawLabEvidenceExposed, false);
 
+  assert.equal(selectedEngineResult.selectedResultAvailable, false);
+  assert.equal(selectedEngineResult.selectedResultUnavailableReason, "no selected engine result available");
+  assert.equal(selectedEngineResult.resultStateLabel, "Estimated preview");
+  assert.equal(selectedEngineResult.engineVerified, false);
+  assert.equal(selectedEngineResult.engineVerificationEnabled, false);
+  assert.equal(selectedEngineResult.safetyFlags.engineExecutionEnabled, false);
+  assert.equal(selectedEngineResult.safetyFlags.rawSelectedPayloadExposed, false);
+  assert.equal(selectedEngineResult.safetyFlags.rawEngineDebugPayloadExposed, false);
+
   assert.equal(handoffs.allDisabled, true);
   assert.equal(handoffs.handoffCount, 11);
   assert.equal(handoffs.handoffs.every((handoff) => handoff.status === "disabled"), true);
@@ -167,6 +185,79 @@ test("Selector product surface parity lock keeps summary, spine, payload, readin
   assert.equal(handoffs.safetyFlags.rregApprovalCustodyTransfer, false);
   assert.equal(handoffs.safetyFlags.hubSpotCrmWriteBack, false);
   assert.equal(handoffs.safetyFlags.boardDataMutation, false);
+});
+
+test("Selected engine-result handoff defaults to no selected result and Estimated preview", () => {
+  const handoff = createModel().selectorSurface.selectedEngineResultHandoff;
+  const rows = Object.fromEntries(handoff.rows);
+  const fieldRows = Object.fromEntries(handoff.fieldRows);
+
+  assert.equal(handoff.readOnly, true);
+  assert.equal(handoff.displayOnly, true);
+  assert.equal(handoff.scaffoldOnly, true);
+  assert.equal(handoff.selectedResultAvailable, false);
+  assert.equal(handoff.selectedResultUnavailableReason, "no selected engine result available");
+  assert.equal(handoff.resultStateLabel, "Estimated preview");
+  assert.notEqual(handoff.resultStateLabel, "Engine verified");
+  assert.equal(handoff.estimatedPreviewOnly, true);
+  assert.equal(handoff.engineVerified, false);
+  assert.equal(handoff.engineVerificationEnabled, false);
+  assert.equal(handoff.selectedResultIngestionEnabled, false);
+  assert.equal(handoff.selectedResultPersistenceEnabled, false);
+  assert.equal(handoff.staleResult, false);
+  assert.equal(handoff.staleResultDetectionEnabled, false);
+  assert.equal(rows["selected result availability"], "no selected engine result available");
+  assert.equal(rows["engine verification"], "disabled");
+  assert.equal(rows["selected subset/family lock"], "not established");
+  assert.equal(fieldRows["run identity placeholder"], "unavailable — future read-only Engine/RunTable result source required");
+  assert.equal(fieldRows["board family placeholder"], "unavailable — future read-only Engine/RunTable result source required");
+  assert.equal(fieldRows["sanitised warnings placeholder"], "unavailable — future read-only Engine/RunTable result source required");
+  assert.equal(handoff.futureRequiredShape.oneSelectedResultOnly, true);
+  assert.equal(handoff.futureRequiredShape.perRunLookupKey, "run id / run number");
+  assert.equal(handoff.futureRequiredShape.weightedAlternativesHiddenForNormalUsers, true);
+});
+
+test("Selected engine-result scaffold keeps execution, generation, proof, writes, raw payloads, and routes disabled", async () => {
+  const handoff = createModel().selectorSurface.selectedEngineResultHandoff;
+  const serverText = await readFile(serverSourceUrl, "utf-8");
+  const flags = handoff.safetyFlags;
+  const text = JSON.stringify(handoff);
+
+  assert.equal(flags.engineExecutionEnabled, false);
+  assert.equal(flags.engineVerificationEnabled, false);
+  assert.equal(flags.selectedResultIngestionEnabled, false);
+  assert.equal(flags.selectedResultPersistenceEnabled, false);
+  assert.equal(flags.staleResultDetectionEnabled, false);
+  assert.equal(flags.runTableGenerationEnabled, false);
+  assert.equal(flags.payloadGenerationEnabled, false);
+  assert.equal(flags.iesGenerationEnabled, false);
+  assert.equal(flags.drawingGenerationEnabled, false);
+  assert.equal(flags.labProofAuthority, false);
+  assert.equal(flags.controlledRecordsWriteEnabled, false);
+  assert.equal(flags.rregApprovalEnabled, false);
+  assert.equal(flags.rregCustodyTransferEnabled, false);
+  assert.equal(flags.hubSpotCrmWriteBackEnabled, false);
+  assert.equal(flags.boardDataMutationEnabled, false);
+  assert.equal(flags.hiddenWriteBackEnabled, false);
+  assert.equal(flags.rawSelectedPayloadExposed, false);
+  assert.equal(flags.rawEngineDebugPayloadExposed, false);
+  assert.equal(flags.rawCandidateAlternativesExposedAsFinalOutputs, false);
+  assert.equal(flags.rawRowsExposed, false);
+  assert.equal(flags.rawLabEvidenceExposed, false);
+  assert.equal(flags.rawIesExposed, false);
+  assert.equal(flags.credentialsExposed, false);
+  assert.equal(flags.privatePathsExposed, false);
+  assert.equal(handoff.routesAdded, false);
+  assert.equal(handoff.postEndpointsAdded, false);
+  assert.equal(handoff.writes, false);
+  assert.equal(handoff.generation, false);
+  assert.equal(handoff.proof, false);
+  assert.equal(text.includes("rough_electrical_payload"), false);
+  assert.equal(text.includes("\"debug\":"), false);
+  assert.equal(text.includes("candidate_alternatives"), false);
+  assert.equal(serverText.includes("/api/engine/run"), false);
+  assert.equal(serverText.includes("/api/selector/run"), false);
+  assert.equal(serverText.includes("SELECTOR_POST"), false);
 });
 
 test("Selector checklist sections appear in the target order", () => {

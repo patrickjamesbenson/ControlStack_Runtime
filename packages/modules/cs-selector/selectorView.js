@@ -1322,6 +1322,52 @@ function appendPayloadPreviewObject(parent, payload = {}) {
   parent.appendChild(section);
 }
 
+function appendSelectedEngineResultHandoff(parent, handoff = {}) {
+  const section = document.createElement("section");
+  section.className = "cs-selector-selected-engine-result";
+  section.dataset.selectorSelectedEngineResult = "read-only";
+  section.dataset.resultState = handoff.resultStateLabel || "Estimated preview";
+  section.dataset.selectedResultAvailable = handoff.selectedResultAvailable === true ? "true" : "false";
+  section.dataset.engineVerified = handoff.engineVerified === true ? "true" : "false";
+  section.dataset.engineVerificationEnabled = handoff.engineVerificationEnabled === true ? "true" : "false";
+  section.dataset.rawSelectedPayloadExposed = handoff.safetyFlags?.rawSelectedPayloadExposed === true ? "true" : "false";
+  section.dataset.rawEngineDebugPayloadExposed = handoff.safetyFlags?.rawEngineDebugPayloadExposed === true ? "true" : "false";
+
+  appendText(section, "h4", handoff.title || "Selected engine result handoff");
+  appendText(section, "p", "No selected engine result is available yet. Runtime Selector remains in Estimated preview state and only documents the future read-only selected-result shape.");
+  appendSection(section, "Selected engine-result state", handoff.rows || [["result state label", "Estimated preview"], ["selected result availability", "no selected engine result available"]]);
+  appendSection(section, "Future selected-result shape", handoff.fieldRows || [["selected result fields", "unavailable — future read-only Engine/RunTable result source required"]]);
+  appendSection(section, "Selected engine-result safety flags", [
+    ["engineExecutionEnabled", handoff.safetyFlags?.engineExecutionEnabled === true ? "true" : "false"],
+    ["engineVerificationEnabled", handoff.safetyFlags?.engineVerificationEnabled === true ? "true" : "false"],
+    ["selectedResultIngestionEnabled", handoff.safetyFlags?.selectedResultIngestionEnabled === true ? "true" : "false"],
+    ["selectedResultPersistenceEnabled", handoff.safetyFlags?.selectedResultPersistenceEnabled === true ? "true" : "false"],
+    ["staleResultDetectionEnabled", handoff.safetyFlags?.staleResultDetectionEnabled === true ? "true" : "false"],
+    ["runTableGenerationEnabled", handoff.safetyFlags?.runTableGenerationEnabled === true ? "true" : "false"],
+    ["payloadGenerationEnabled", handoff.safetyFlags?.payloadGenerationEnabled === true ? "true" : "false"],
+    ["iesGenerationEnabled", handoff.safetyFlags?.iesGenerationEnabled === true ? "true" : "false"],
+    ["drawingGenerationEnabled", handoff.safetyFlags?.drawingGenerationEnabled === true ? "true" : "false"],
+    ["labProofAuthority", handoff.safetyFlags?.labProofAuthority === true ? "true" : "false"],
+    ["controlledRecordsWriteEnabled", handoff.safetyFlags?.controlledRecordsWriteEnabled === true ? "true" : "false"],
+    ["rregApprovalEnabled", handoff.safetyFlags?.rregApprovalEnabled === true ? "true" : "false"],
+    ["rregCustodyTransferEnabled", handoff.safetyFlags?.rregCustodyTransferEnabled === true ? "true" : "false"],
+    ["hubSpotCrmWriteBackEnabled", handoff.safetyFlags?.hubSpotCrmWriteBackEnabled === true ? "true" : "false"],
+    ["boardDataMutationEnabled", handoff.safetyFlags?.boardDataMutationEnabled === true ? "true" : "false"],
+    ["hiddenWriteBackEnabled", handoff.safetyFlags?.hiddenWriteBackEnabled === true ? "true" : "false"],
+    ["rawSelectedPayloadExposed", handoff.safetyFlags?.rawSelectedPayloadExposed === true ? "true" : "false"],
+    ["rawEngineDebugPayloadExposed", handoff.safetyFlags?.rawEngineDebugPayloadExposed === true ? "true" : "false"],
+    ["rawCandidateAlternativesExposedAsFinalOutputs", handoff.safetyFlags?.rawCandidateAlternativesExposedAsFinalOutputs === true ? "true" : "false"],
+    ["rawRowsExposed", handoff.safetyFlags?.rawRowsExposed === true ? "true" : "false"],
+    ["rawLabEvidenceExposed", handoff.safetyFlags?.rawLabEvidenceExposed === true ? "true" : "false"],
+    ["rawIesExposed", handoff.safetyFlags?.rawIesExposed === true ? "true" : "false"],
+    ["credentialsExposed", handoff.safetyFlags?.credentialsExposed === true ? "true" : "false"],
+    ["privatePathsExposed", handoff.safetyFlags?.privatePathsExposed === true ? "true" : "false"],
+  ]);
+  appendPillList(section, handoff.boundaryCopy || ["Selected engine-result display is read-only and unavailable in this slice."]);
+
+  parent.appendChild(section);
+}
+
 function appendSelectorSourceSpecReadinessExplanation(parent, readiness = {}) {
   const section = document.createElement("section");
   section.className = "cs-selector-readiness-lock";
@@ -1427,6 +1473,7 @@ function appendSelectorProductSurface(parent, surface = {}) {
 
   appendSelectorProductSpine(section, surface.productSpine || {});
   appendPayloadPreviewObject(section, surface.payloadPreview || {});
+  appendSelectedEngineResultHandoff(section, surface.selectedEngineResultHandoff || {});
   appendSelectorSourceSpecReadinessExplanation(section, surface.sourceSpecReadinessExplanation || {});
   appendSelectorDisabledHandoffSummary(section, surface.disabledHandoffSummary || {});
 
