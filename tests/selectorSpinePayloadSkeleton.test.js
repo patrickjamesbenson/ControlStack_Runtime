@@ -151,6 +151,7 @@ test("Selector product surface parity lock keeps summary, spine, payload, readin
     "selected engine-result handoff",
     "source/spec readiness explanation",
     "disabled handoff summary",
+    "spec-build readiness preview",
     "collapsed diagnostics",
   ]);
   assert.equal(lock.selectedTruthBeforeProductSpine, true);
@@ -161,6 +162,10 @@ test("Selector product surface parity lock keeps summary, spine, payload, readin
   assert.equal(lock.selectedEngineResultSafetyAgrees, true);
   assert.equal(lock.sourceSpecReadinessAfterPayloadPreview, true);
   assert.equal(lock.disabledHandoffAfterReadiness, true);
+  assert.equal(lock.specBuildReadinessAfterDisabledHandoff, true);
+  assert.equal(lock.specBuildReadinessBeforeCollapsedDiagnostics, true);
+  assert.equal(lock.specBuildReadinessPreviewPresent, true);
+  assert.equal(lock.specBuildReadinessSafetyAgrees, true);
   assert.equal(lock.diagnosticsCollapsedBehindProductSurface, true);
   assert.equal(lock.workflowSectionsCanonical, true);
   assert.equal(lock.flatFieldsPrimary, false);

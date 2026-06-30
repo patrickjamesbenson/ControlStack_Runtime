@@ -1592,6 +1592,38 @@ function appendSelectorDisabledHandoffSummary(parent, summary = {}) {
   parent.appendChild(section);
 }
 
+function appendSelectorSpecBuildReadinessPreview(parent, preview = {}) {
+  const section = document.createElement("section");
+  section.className = "cs-selector-proof__section cs-selector-proof__section--nested cs-selector-spec-build-readiness-preview";
+  section.dataset.selectorSpecBuildReadinessPreview = "read-only";
+  section.dataset.productFacing = preview.productFacing === false ? "false" : "true";
+  section.dataset.specReady = preview.specReady === true ? "true" : "false";
+  section.dataset.buildReady = preview.buildReady === true ? "true" : "false";
+  section.dataset.downstreamBlocked = preview.downstreamBlocked === false ? "false" : "true";
+  section.dataset.rawRowsExposed = preview.rawRowsExposed === true ? "true" : "false";
+
+  appendText(section, "h4", preview.title || "Spec-build readiness preview");
+  appendText(section, "p", "Product-facing readiness preview only. It explains whether the current Selector candidate appears ready for future slug/spec input or future build input, without generating any slug, spec, payload, IES, proof, approval, record, or write.");
+  appendPillList(section, preview.boundaryCopy || [
+    "Selector readiness is metadata only.",
+    "No slug/spec/PDF/payload/RunTable/IES/proof/approval/record/write is generated.",
+    "Downstream authorities remain separate and fail closed.",
+  ]);
+  appendSection(section, "Readiness status", preview.summaryRows || [["candidate state", preview.candidateState || "fresh/default-preview only"]]);
+  appendSection(section, "Manual constraints summary", preview.manualConstraintRows || [["manual constraints", "—"]]);
+  appendSection(section, "Auto consequences summary", preview.autoConsequenceRows || [["auto consequences", "—"]]);
+  appendSection(section, "Missing spec requirements", preview.missingSpecRequirementRows || [["spec requirements", "missing"]]);
+  appendSection(section, "Missing build/order requirements", preview.missingBuildRequirementRows || [["build requirements", "missing"]]);
+  appendSection(section, "Blocked incompatible selections", preview.blockedIncompatibleRows || [["blocked / incompatible selections", "none"]]);
+  appendSection(section, "Source readiness", preview.sourceRows || [["source readiness", "unavailable / fail closed"]]);
+  appendSection(section, "Selected-result dependency", preview.selectedResultRows || [["selected-result dependency", "blocked/fail-closed"]]);
+  appendSection(section, "Future slug/spec dependency", preview.futureSlugSpecRows || [["future slug/spec state", "blocked"]]);
+  appendSection(section, "Downstream blockers", preview.downstreamBlockerRows || [["downstream blockers", "disabled"]]);
+  appendSection(section, "Generation/proof/write safety flags", preview.safetyRows || [["generation", "false"], ["proof", "false"], ["writes", "false"]]);
+
+  parent.appendChild(section);
+}
+
 function appendSelectorProductCompactStatus(parent, surface = {}) {
   const summary = surface.candidateSummary || {};
   const status = document.createElement("section");
@@ -1658,6 +1690,7 @@ function appendSelectorProductSurface(parent, surface = {}) {
   appendSelectedEngineResultHandoff(section, surface.selectedEngineResultHandoff || {});
   appendSelectorSourceSpecReadinessExplanation(section, surface.sourceSpecReadinessExplanation || {});
   appendSelectorDisabledHandoffSummary(section, surface.disabledHandoffSummary || {});
+  appendSelectorSpecBuildReadinessPreview(section, surface.specBuildReadinessPreview || {});
 
   appendSelectorProductCompactStatus(section, surface);
 

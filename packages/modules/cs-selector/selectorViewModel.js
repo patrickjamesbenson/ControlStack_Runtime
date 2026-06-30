@@ -3378,6 +3378,7 @@ const PRODUCT_SURFACE_PARITY_ORDER = Object.freeze([
   "selected engine-result handoff",
   "source/spec readiness explanation",
   "disabled handoff summary",
+  "spec-build readiness preview",
   "collapsed diagnostics",
 ]);
 
@@ -3537,6 +3538,309 @@ function createDisabledHandoffSummary({ payloadPreview = {}, selectionTruthSumma
   };
 }
 
+const SPEC_BUILD_READINESS_BUILD_REQUIREMENTS = Object.freeze([
+  Object.freeze({
+    key: "mounting",
+    label: "Mounting",
+    donorSource: "selectorCompletionState.mountingDone",
+    rows: Object.freeze([
+      Object.freeze({ sectionKey: "mounting", rowKey: "mountStyle", label: "Mount style" }),
+      Object.freeze({ sectionKey: "mounting", rowKey: "mountSelection", label: "Mount selection" }),
+    ]),
+  }),
+  Object.freeze({
+    key: "finishes",
+    label: "Finishes",
+    donorSource: "selectorCompletionState.finishesDone",
+    rows: Object.freeze([
+      Object.freeze({ sectionKey: "finishes", rowKey: "bodyFinish", label: "Body finish" }),
+      Object.freeze({ sectionKey: "finishes", rowKey: "cover", label: "Cover" }),
+      Object.freeze({ sectionKey: "finishes", rowKey: "endPlates", label: "End plates" }),
+      Object.freeze({ sectionKey: "finishes", rowKey: "flexColour", label: "Flex colour" }),
+    ]),
+  }),
+  Object.freeze({
+    key: "runs",
+    label: "Runs",
+    donorSource: "selectorCompletionState.runsDone plus runtime run/order context preview",
+    rows: Object.freeze([
+      Object.freeze({ sectionKey: "runs", rowKey: "runQty", label: "Run qty" }),
+      Object.freeze({ sectionKey: "runs", rowKey: "runLength", label: "Run length" }),
+      Object.freeze({ sectionKey: "runs", rowKey: "runLengthMode", label: "Length mode" }),
+    ]),
+  }),
+]);
+
+const SPEC_BUILD_READINESS_DOWNSTREAM_AUTHORITIES = Object.freeze([
+  Object.freeze({ key: "selectedResult", label: "Selected-result dependency", status: "blocked/fail-closed — accepted selected Engine/RunTable result required" }),
+  Object.freeze({ key: "engineRunTable", label: "Engine / RunTable", status: "disabled — Selector does not execute Engine or generate RunTable" }),
+  Object.freeze({ key: "iesBuilder", label: "IES Builder", status: "disabled — future candidate artefact handoff only" }),
+  Object.freeze({ key: "labProof", label: "Lab Proof", status: "blocked — Lab Proof remains separate proof authority" }),
+  Object.freeze({ key: "compliance", label: "Compliance", status: "blocked — no compliance approval is created" }),
+  Object.freeze({ key: "controlledRecords", label: "Controlled Records", status: "disabled — no provenance/disposition record is written" }),
+  Object.freeze({ key: "rreg", label: "RREG", status: "disabled — no reviewer, approver, or custody assignment is created" }),
+  Object.freeze({ key: "boardData", label: "Board Data", status: "disabled — no Board Data mutation is performed" }),
+]);
+
+function productSpineSection(productSpine = {}, sectionKey = "") {
+  const sections = Array.isArray(productSpine.sections) ? productSpine.sections : [];
+  return sections.find((section) => section.sectionKey === sectionKey) || null;
+}
+
+function productSpineRow(productSpine = {}, sectionKey = "", rowKey = "") {
+  const section = productSpineSection(productSpine, sectionKey);
+  const rows = Array.isArray(section?.rows) ? section.rows : [];
+  return rows.find((row) => row.rowKey === rowKey) || null;
+}
+
+function readinessDisplayValue(row = {}) {
+  return String(row?.displayValue ?? row?.value ?? "").trim();
+}
+
+function readinessRowComplete(row = {}) {
+  const value = readinessDisplayValue(row);
+  if (!value || value === PRODUCT_SPINE_EMPTY_VALUE) return false;
+  const status = String(row?.status || "").trim().toLowerCase();
+  return !["blocked", "missing", "future-mapped", "disabled", "not-selected"].includes(status);
+}
+
+function createSpecBuildRequirementStatus(requirement = {}, productSpine = {}, manualConstraints = []) {
+  const manualConstraintMap = new Map((Array.isArray(manualConstraints) ? manualConstraints : []).map((item) => [item.fieldKey, item]));
+  const fields = (Array.isArray(requirement.rows) ? requirement.rows : []).map((definition) => {
+    const row = productSpineRow(productSpine, definition.sectionKey, definition.rowKey);
+    const candidateFieldKeys = [
+      ...(Array.isArray(definition.fieldKeys) ? definition.fieldKeys : []),
+      ...(Array.isArray(row?.fieldKeys) ? row.fieldKeys : []),
+      definition.rowKey,
+    ].filter(Boolean);
+    const manualConstraint = candidateFieldKeys.map((fieldKey) => manualConstraintMap.get(fieldKey)).find(Boolean) || null;
+    const manualDisplayValue = manualConstraint?.valueLabel || manualConstraint?.value || "";
+    const rowComplete = readinessRowComplete(row);
+    const complete = rowComplete || Boolean(manualConstraint);
+    return {
+      key: `${definition.sectionKey}.${definition.rowKey}`,
+      sectionKey: definition.sectionKey,
+      rowKey: definition.rowKey,
+      label: definition.label || definition.rowKey,
+      displayValue: rowComplete ? readinessDisplayValue(row) : (manualDisplayValue || readinessDisplayValue(row) || PRODUCT_SPINE_EMPTY_VALUE),
+      status: complete ? (row?.status || manualConstraint?.status || "manual-constraint") : (row?.status || "missing"),
+      complete,
+      reason: rowComplete
+        ? (row?.reason || "Source-backed row is present for future build-ready metadata.")
+        : manualConstraint
+          ? "Durable manual build/order constraint is present; this is readiness metadata only and does not write or generate."
+          : (row?.reason || "Required for future build-ready metadata; no value is faked."),
+      writes: false,
+      rawRowsExposed: false,
+    };
+  });
+  const missingFields = fields.filter((field) => field.complete !== true).map((field) => field.label);
+  return {
+    key: requirement.key,
+    label: requirement.label,
+    donorSource: requirement.donorSource,
+    complete: missingFields.length === 0,
+    missingFields,
+    fields,
+    status: missingFields.length === 0 ? "complete" : "missing",
+    summary: missingFields.length ? `missing ${missingFields.join(", ")}` : "complete",
+    writes: false,
+    rawRowsExposed: false,
+  };
+}
+
+function selectedResultAcceptedForSpecBuild(handoff = {}) {
+  return handoff.accepted === true && handoff.selectedResultAvailable === true;
+}
+
+function specBuildCandidateState({ specReady = false, buildReady = false, defaultPreview = false, blockedCount = 0 } = {}) {
+  if (defaultPreview) return "fresh/default-preview only";
+  if (blockedCount > 0) return "blocked by incompatible manual selections";
+  if (!specReady) return "incomplete";
+  if (!buildReady) return "spec-ready candidate";
+  return "build-ready candidate";
+}
+
+function createSpecBuildReadinessPreview({
+  sourceReady = false,
+  sourceReadiness = null,
+  referenceOptionSourceCoverage = null,
+  productSpine = {},
+  payloadPreview = {},
+  selectedEngineResultHandoff = {},
+  selectionTruthSummary = {},
+  sourceSpecReadinessExplanation = {},
+  disabledHandoffSummary = {},
+  manualConstraints = [],
+  autoConsequences = [],
+  blockedItems = [],
+  summary = {},
+} = {}) {
+  const spec = productSpine.specGateCandidateReadiness || payloadPreview.specGateCandidateReadiness || {};
+  const buildRequirements = SPEC_BUILD_READINESS_BUILD_REQUIREMENTS.map((requirement) => createSpecBuildRequirementStatus(requirement, productSpine, manualConstraints));
+  const missingBuildRequirements = buildRequirements.filter((requirement) => requirement.complete !== true).map((requirement) => requirement.label);
+  const missingSpecRequirements = Array.isArray(spec.missingRequirements) ? [...spec.missingRequirements] : [];
+  const blockedRows = Array.isArray(spec.blockedIncompatibleSelections) ? spec.blockedIncompatibleSelections : [];
+  const blockedCount = blockedRows.length;
+  const specReady = spec.specReady === true;
+  const buildReady = specReady && missingBuildRequirements.length === 0 && blockedCount === 0;
+  const defaultPreview = spec.defaultPreview === true || (manualConstraints.length === 0 && (summary.state === "default preview" || !summary.state));
+  const selectedResultAccepted = selectedResultAcceptedForSpecBuild(selectedEngineResultHandoff);
+  const downstreamBlocked = selectedResultAccepted !== true;
+  const candidateState = specBuildCandidateState({ specReady, buildReady, defaultPreview, blockedCount });
+  const downstreamBlockers = SPEC_BUILD_READINESS_DOWNSTREAM_AUTHORITIES.map((blocker) => ({
+    ...blocker,
+    blocked: blocker.key === "selectedResult" ? !selectedResultAccepted : true,
+    status: blocker.key === "selectedResult" && selectedResultAccepted
+      ? "accepted selected result available — still read-only in Selector"
+      : blocker.status,
+    writes: false,
+    rawRowsExposed: false,
+  }));
+  const safetyFlags = {
+    specGeneration: false,
+    slugGeneration: false,
+    pdfGeneration: false,
+    payloadGeneration: false,
+    engineExecution: false,
+    runTableGeneration: false,
+    iesGeneration: false,
+    labProofAuthority: false,
+    complianceApproval: false,
+    controlledRecordsMutation: false,
+    rregApprovalCustodyTransfer: false,
+    boardDataMutation: false,
+    runtimeDataMutation: false,
+    rawBoardDataExposed: false,
+    rawSelectedResultPayloadExposed: false,
+    rawEnginePayloadExposed: false,
+    rawIesExposed: false,
+    rawLabEvidenceExposed: false,
+    rawUsersExposed: false,
+    credentialsExposed: false,
+    privatePathsExposed: false,
+    rawDebugExposed: false,
+  };
+  const coverage = referenceOptionSourceCoverage || sourceReadiness?.referenceOptionSourceCoverage || payloadPreview.referenceOptionSourceCoverage || {};
+  const sourceState = sourceReadiness?.state || sourceSpecReadinessExplanation.sourceState || (sourceReady ? "source-backed-safe-preview" : "fail-closed-source-warning");
+
+  return {
+    title: "Spec-build readiness preview",
+    status: candidateState,
+    readOnly: true,
+    previewOnly: true,
+    productFacing: true,
+    diagnosticOnly: false,
+    candidateState,
+    freshDefaultPreviewOnly: defaultPreview,
+    incomplete: !specReady,
+    blockedByIncompatibleManualSelections: blockedCount > 0,
+    specReady,
+    specGateComplete: specReady,
+    specGateState: specReady ? "complete enough for future slug/spec input metadata" : "incomplete — missing or blocked spec inputs remain visible",
+    buildReady,
+    buildGateComplete: buildReady,
+    buildGateState: buildReady ? "complete enough for future build slug/spec input metadata" : "incomplete — build/order context still required",
+    downstreamBlocked,
+    selectedResultAccepted,
+    manualConstraintCount: manualConstraints.length,
+    autoConsequenceCount: autoConsequences.length,
+    manualConstraintRows: spec.manualConstraints || [["manual constraints", PRODUCT_SPINE_EMPTY_VALUE]],
+    autoConsequenceRows: spec.autoConsequences || [["auto consequences", PRODUCT_SPINE_EMPTY_VALUE]],
+    missingSpecRequirements,
+    missingSpecRequirementRows: missingSpecRequirements.length
+      ? missingSpecRequirements.map((requirement) => [requirement, "missing"])
+      : [["spec requirements", "complete"]],
+    missingBuildRequirements,
+    missingBuildRequirementRows: buildRequirements.map((requirement) => [requirement.label, requirement.summary]),
+    buildRequirements,
+    blockedIncompatibleSelections: blockedRows,
+    blockedIncompatibleRows: blockedRows.length ? blockedRows : [["blocked / incompatible selections", "none"]],
+    sourceReadinessState: sourceReady ? "ready" : "unavailable / fail closed",
+    sourceRows: [
+      ["source readiness", sourceReady ? "ready" : "unavailable / fail closed"],
+      ["source state", sourceState],
+      ["safe preview only", sourceReadiness?.completeEnoughForPreview === true ? "true" : (sourceReady ? "true" : "false")],
+      ["source-backed fields", String(coverage.sourceBackedFieldCount ?? 0)],
+      ["future-mapped fields", String(coverage.futureMappedFieldCount ?? 0)],
+    ],
+    selectedResultDependencyState: selectedResultAccepted
+      ? "accepted selected result available — still read-only in Selector"
+      : "blocked/fail-closed — accepted selected Engine/RunTable result required",
+    selectedResultRows: [
+      ["projection state", selectedEngineResultHandoff.selectedResultProjectionState || "no_selected_result"],
+      ["selected result available", selectedEngineResultHandoff.selectedResultAvailable === true ? "true" : "false"],
+      ["accepted", selectedEngineResultHandoff.accepted === true ? "true" : "false"],
+      ["engine verified", selectedEngineResultHandoff.engineVerified === true ? "true" : "false"],
+      ["dependency state", selectedResultAccepted ? "accepted selected result available" : "blocked/fail-closed"],
+    ],
+    futureSlugSpecDependencyState: buildReady
+      ? "future slug/spec input metadata appears ready; no slug or spec is generated here"
+      : specReady
+        ? "future spec input metadata appears ready; build/order context is still incomplete"
+        : "blocked until the spec gate is complete",
+    futureSlugSpecRows: [
+      ["future slug/spec state", buildReady ? "metadata-ready only" : specReady ? "spec metadata-ready only" : "blocked"],
+      ["slug generated", "false"],
+      ["spec generated", "false"],
+      ["final slug string", "none"],
+      ["descriptor source", "donor specBuildDescriptor observed; runtime preview does not call or reproduce it"],
+    ],
+    downstreamBlockers,
+    downstreamBlockerRows: downstreamBlockers.map((blocker) => [blocker.label, blocker.status]),
+    summaryRows: [
+      ["candidate state", candidateState],
+      ["spec gate state", specReady ? "ready" : "incomplete"],
+      ["build gate state", buildReady ? "ready" : "incomplete"],
+      ["manual constraints", String(manualConstraints.length)],
+      ["auto consequences", String(autoConsequences.length)],
+      ["missing spec requirements", missingSpecRequirements.length ? missingSpecRequirements.join(", ") : "none"],
+      ["missing build requirements", missingBuildRequirements.length ? missingBuildRequirements.join(", ") : "none"],
+      ["blocked incompatible selections", blockedCount ? String(blockedCount) : "none"],
+      ["selected-result dependency", selectedResultAccepted ? "accepted" : "blocked/fail-closed"],
+      ["downstream blocked", downstreamBlocked ? "true" : "false"],
+    ],
+    safetyFlags,
+    safetyRows: Object.entries(safetyFlags).map(([key, value]) => [key, value === true ? "true" : "false"]),
+    boundaryCopy: [
+      "Selector may preview whether the candidate appears spec-ready or build-ready; it does not generate a slug, spec, PDF, payload, RunTable, IES, proof, approval, record, or custody transfer.",
+      "Fresh/default-preview values are not spec authority.",
+      "Manual selections are durable constraints and incompatible manual selections stay visible as blocked.",
+      "Auto consequences are shown for review and remain changeable; they do not create authority or proof.",
+      "Build-ready means donor build/order context appears complete for future metadata only: Mounting, Finishes, and Runs are present after the spec gate.",
+      "Selected-result, Engine/RunTable, IES Builder, Compliance, Controlled Records, RREG, and Lab Proof remain separate downstream authorities and fail closed here.",
+    ],
+    generatedSlug: null,
+    finalSlugString: null,
+    specGenerated: false,
+    pdfGenerated: false,
+    payloadGenerated: false,
+    engineExecuted: false,
+    runTableGenerated: false,
+    iesGenerated: false,
+    labProofCreated: false,
+    complianceApproved: false,
+    controlledRecordMutated: false,
+    rregApprovalCreated: false,
+    boardDataMutated: false,
+    writes: false,
+    generation: false,
+    proof: false,
+    rawRowsExposed: false,
+    rawHeadersExposed: false,
+    rawUsersExposed: false,
+    rawLabEvidenceExposed: false,
+    rawBoardDataExposed: false,
+    rawSelectedResultPayloadExposed: false,
+    rawEnginePayloadExposed: false,
+    rawIesExposed: false,
+    credentialsExposed: false,
+    privatePathsExposed: false,
+    rawDebugExposed: false,
+    disabledHandoffAllDisabled: disabledHandoffSummary.allDisabled !== false,
+  };
+}
+
 function createProductSurfaceParityLock({
   productSpine = {},
   payloadPreview = {},
@@ -3544,6 +3848,7 @@ function createProductSurfaceParityLock({
   selectionTruthSummary = {},
   sourceSpecReadinessExplanation = {},
   disabledHandoffSummary = {},
+  specBuildReadinessPreview = {},
   workflowSectionsCanonical = true,
   flatFieldsPrimary = false,
 } = {}) {
@@ -3559,6 +3864,8 @@ function createProductSurfaceParityLock({
     selectedEngineResultBeforeSourceReadiness: true,
     sourceSpecReadinessAfterPayloadPreview: true,
     disabledHandoffAfterReadiness: true,
+    specBuildReadinessAfterDisabledHandoff: true,
+    specBuildReadinessBeforeCollapsedDiagnostics: true,
     diagnosticsCollapsedBehindProductSurface: true,
     workflowSectionsCanonical: workflowSectionsCanonical !== false,
     flatFieldsPrimary: flatFieldsPrimary === true ? false : false,
@@ -3567,6 +3874,18 @@ function createProductSurfaceParityLock({
     sourceReadinessAgreesWithPayload: sourceSpecReadinessExplanation.agreement?.payloadSourceReadyMatchesSurface !== false,
     specGateAgreesWithPayload: sourceSpecReadinessExplanation.agreement?.payloadSpecGateMatchesSurface !== false,
     disabledHandoffsAgreeWithPayload: disabledHandoffSummary.allDisabled === true,
+    specBuildReadinessPreviewPresent: specBuildReadinessPreview.readOnly === true && specBuildReadinessPreview.productFacing === true,
+    specBuildReadinessSafetyAgrees: specBuildReadinessPreview.safetyFlags?.specGeneration === false
+      && specBuildReadinessPreview.safetyFlags?.slugGeneration === false
+      && specBuildReadinessPreview.safetyFlags?.payloadGeneration === false
+      && specBuildReadinessPreview.safetyFlags?.engineExecution === false
+      && specBuildReadinessPreview.safetyFlags?.runTableGeneration === false
+      && specBuildReadinessPreview.safetyFlags?.iesGeneration === false
+      && specBuildReadinessPreview.safetyFlags?.labProofAuthority === false
+      && specBuildReadinessPreview.safetyFlags?.complianceApproval === false
+      && specBuildReadinessPreview.safetyFlags?.controlledRecordsMutation === false
+      && specBuildReadinessPreview.safetyFlags?.rregApprovalCustodyTransfer === false
+      && specBuildReadinessPreview.safetyFlags?.boardDataMutation === false,
     selectedEngineResultSafetyAgrees: selectedEngineResultHandoff.selectedResultAvailable === false
       && selectedEngineResultHandoff.engineVerified === false
       && selectedEngineResultHandoff.engineVerificationEnabled === false
@@ -3692,6 +4011,21 @@ function createDbBackedSelectorSurface(selectorReferenceStatus = {}, local = {},
     selectionTruthSummary,
     productSpine,
   });
+  const specBuildReadinessPreview = createSpecBuildReadinessPreview({
+    sourceReady,
+    sourceReadiness,
+    referenceOptionSourceCoverage,
+    productSpine,
+    payloadPreview,
+    selectedEngineResultHandoff,
+    selectionTruthSummary,
+    sourceSpecReadinessExplanation,
+    disabledHandoffSummary,
+    manualConstraints,
+    autoConsequences,
+    blockedItems,
+    summary,
+  });
   const productSurfaceParityLock = createProductSurfaceParityLock({
     productSpine,
     payloadPreview,
@@ -3700,6 +4034,7 @@ function createDbBackedSelectorSurface(selectorReferenceStatus = {}, local = {},
     selectionTruthSummary,
     sourceSpecReadinessExplanation,
     disabledHandoffSummary,
+    specBuildReadinessPreview,
     workflowSectionsCanonical: canonicalWorkflow.workflowSectionsCanonical,
     flatFieldsPrimary: false,
   });
@@ -3749,6 +4084,7 @@ function createDbBackedSelectorSurface(selectorReferenceStatus = {}, local = {},
     selectionTruthSummary,
     sourceSpecReadinessExplanation,
     disabledHandoffSummary,
+    specBuildReadinessPreview,
     productSurfaceParityLock,
     manualConstraints,
     autoConsequences,

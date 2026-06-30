@@ -17,6 +17,11 @@ test("Selector page renders product-facing controls before collapsed Diagnostics
   assert.ok(diagnosticsIndex > productIndex, "Diagnostics should come after the product surface");
   assert.ok(expanderDiagnosticsIndex > diagnosticsIndex, "existing diagnostics should live inside Diagnostics");
   assert.equal(source.includes("appendSelectorExpanderShell(article"), false);
+  const disabledSummaryIndex = source.indexOf("appendSelectorDisabledHandoffSummary(section");
+  const specBuildPreviewIndex = source.indexOf("appendSelectorSpecBuildReadinessPreview(section");
+  const compactStatusIndex = source.indexOf("appendSelectorProductCompactStatus(section");
+  assert.ok(specBuildPreviewIndex > disabledSummaryIndex, "spec-build readiness preview should follow disabled handoff summary inside product surface");
+  assert.ok(specBuildPreviewIndex < compactStatusIndex, "spec-build readiness preview should appear before product compact details");
   assert.match(source, /CS Selector Preview/);
   assert.match(source, /Read-only DB-backed candidate preview\. Manual selections are constraints; auto selections are consequences\./);
 });
@@ -26,6 +31,9 @@ test("Selector product surface includes required safety and proof copy", async (
 
   assert.match(source, /Read-only preview\. No spec, slug, IES, payload, RunTable, Lab Proof, Controlled Record, RREG approval, custody transfer, Board Data write, or hidden write-back is created here\./);
   assert.match(source, /Selector previews selection readiness\. Lab Proof proves later\./);
+  assert.match(source, /Spec-build readiness preview/);
+  assert.match(source, /Product-facing readiness preview only/);
+  assert.match(source, /No slug\/spec\/PDF\/payload\/RunTable\/IES\/proof\/approval\/record\/write is generated/);
   assert.match(source, /spec gate incomplete/);
   assert.match(source, /not Lab Proof/);
   assert.match(source, /writes disabled/);
