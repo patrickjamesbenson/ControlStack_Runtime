@@ -63,6 +63,64 @@ const MIME_TYPES = new Map([
   [".txt", "text/plain; charset=utf-8"],
 ]);
 
+const STATIC_DENY_FILENAMES = new Set([".DS_Store", "Thumbs.db"]);
+const STATIC_DENY_BASENAME_PATTERN = /(?:\.bak(?:_|$)|\.tmp$|\.temp$|\.orig$|\.rej$|\.patch$|\.diff$|~$)/i;
+
+function isDeniedStaticServedFile(absolutePath) {
+  return normalize(String(absolutePath || ""))
+    .split(/[\\/]+/)
+    .some((part) => STATIC_DENY_FILENAMES.has(part) || STATIC_DENY_BASENAME_PATTERN.test(part));
+}
+
+function looksLikeLocalFilesystemPath(value) {
+  const text = String(value || "");
+  return /^[A-Za-z]:[\\/]/.test(text)
+    || /^\\\\/.test(text)
+    || text.includes("\\ControlStack")
+    || text.includes("/ControlStack_Runtime")
+    || text.includes("/ControlStack/");
+}
+
+function isPublicLocalPathKey(key) {
+  return /(path|root|dir|home)$/i.test(String(key || ""));
+}
+
+function shouldRedactPublicLocalPath(key, value) {
+  if (typeof value !== "string" || !value) return false;
+  if (key === "endpoint" || key === "liveWritePath" || key === "writePath") return false;
+  return isPublicLocalPathKey(key) && looksLikeLocalFilesystemPath(value);
+}
+
+function redactPublicLocalPathFields(value) {
+  if (Array.isArray(value)) return value.map(redactPublicLocalPathFields);
+  if (!value || typeof value !== "object") return value;
+
+  let redactedPath = false;
+  let redactedRoot = false;
+  const result = {};
+  for (const [key, nestedValue] of Object.entries(value)) {
+    if (shouldRedactPublicLocalPath(key, nestedValue)) {
+      result[key] = "redacted";
+      redactedPath = true;
+      if (/root/i.test(key)) redactedRoot = true;
+      continue;
+    }
+    result[key] = redactPublicLocalPathFields(nestedValue);
+  }
+  if (redactedPath) {
+    result.pathRedacted = true;
+    result.localPathExposureEnabled = false;
+  }
+  if (redactedRoot) {
+    result.rootRedacted = true;
+  }
+  return result;
+}
+
+function sendPublicStatusJson(res, status, payload) {
+  sendJson(res, status, redactPublicLocalPathFields(payload));
+}
+
 function send(res, status, body, contentType = "text/plain; charset=utf-8") {
   res.writeHead(status, {
     "content-type": contentType,
@@ -390,11 +448,14 @@ function runtimeConfigStatus() {
         valueKind: "server-file-path",
       }),
       archiveDir: envStatus({ primary: "CONTROLSTACK_AUTHORITY_REFERENCE_ARCHIVE_DIR", valueKind: "server-directory-path" }),
-      runtimeDataHome: AUTH_REF_DATA_HOME,
-      defaultSnapshotPath: AUTH_REF_DEFAULT_SNAPSHOT_PATH,
-      defaultMaterialisedSourcePath: AUTH_REF_DEFAULT_MATERIALISED_SOURCE_PATH,
-      defaultArchiveDir: AUTH_REF_DEFAULT_ARCHIVE_DIR,
-      legacyTransitionalPath: AUTH_REF_LEGACY_TRANSITIONAL_PATH,
+      runtimeDataHome: "redacted",
+      defaultSnapshotPath: "redacted",
+      defaultMaterialisedSourcePath: "redacted",
+      defaultArchiveDir: "redacted",
+      legacyTransitionalPath: "redacted",
+      pathRedacted: true,
+      rootRedacted: true,
+      localPathExposureEnabled: false,
       transitionalAliasesRetained: ["NOVONDB_PATH", "CONTROLSTACK_DB_PATH", "CENTRAL_DB_PATH"],
     },
     hubspot: {
@@ -742,11 +803,11 @@ async function authorityReferenceSourceMaterialisationStatus() {
 }
 
 async function sendAuthorityReferenceSourceMaterialisation(res) {
-  sendJson(res, 200, await authorityReferenceSourceMaterialisationStatus());
+  sendPublicStatusJson(res, 200, await authorityReferenceSourceMaterialisationStatus());
 }
 
 async function sendAuthorityReferenceMaterialiserStatus(res) {
-  sendJson(res, 200, await buildAuthorityReferenceMaterialiserStatus());
+  sendPublicStatusJson(res, 200, await buildAuthorityReferenceMaterialiserStatus());
 }
 
 async function sendAuthorityReferenceMaterialiserRefresh(res, req, requestUrl) {
@@ -899,11 +960,11 @@ async function authorityReferenceSyncExecution({ dryRun = true } = {}) {
 }
 
 async function sendAuthorityReferenceStatus(res) {
-  sendJson(res, 200, await authorityReferenceAdminStatus());
+  sendPublicStatusJson(res, 200, await authorityReferenceAdminStatus());
 }
 
 async function sendSelectorReferenceStatus(res) {
-  sendJson(res, 200, await buildSelectorReferenceStatus({
+  sendPublicStatusJson(res, 200, await buildSelectorReferenceStatus({
     sourcePath: AUTH_REF_DEFAULT_SNAPSHOT_PATH,
   }));
 }
@@ -988,17 +1049,17 @@ async function sendSelectorReferenceOptions(res, requestUrl) {
 }
 
 async function sendBoardDataStatus(res) {
-  sendJson(res, 200, await buildBoardDataStatus({
+  sendPublicStatusJson(res, 200, await buildBoardDataStatus({
     sourcePath: AUTH_REF_DEFAULT_SNAPSHOT_PATH,
   }));
 }
 
 async function sendIesBuilderStatus(res) {
-  sendJson(res, 200, buildIesBuilderStatus());
+  sendPublicStatusJson(res, 200, buildIesBuilderStatus());
 }
 
 async function sendLabProofStatus(res) {
-  sendJson(res, 200, await buildLabProofStatus({
+  sendPublicStatusJson(res, 200, await buildLabProofStatus({
     sourcePath: AUTH_REF_DEFAULT_SNAPSHOT_PATH,
   }));
 }
@@ -2285,6 +2346,11 @@ async function serveFile(res, absolutePath) {
     return;
   }
 
+  if (isDeniedStaticServedFile(absolutePath)) {
+    sendJson(res, 404, { ok: false, error: "not_found", staticArtifactDenied: true });
+    return;
+  }
+
   try {
     const info = await stat(absolutePath);
     if (!info.isFile()) {
@@ -2315,7 +2381,7 @@ const server = createServer(async (req, res) => {
   }
 
   if (requestUrl.pathname === "/" || requestUrl.pathname === "/health") {
-    sendJson(res, 200, {
+    sendPublicStatusJson(res, 200, {
       ok: true,
       name: "controlstack-runtime-shell",
       phase: "live-nvb-authority-read",
@@ -2347,7 +2413,9 @@ const server = createServer(async (req, res) => {
       authorityReferenceRestore: AUTH_REF_RESTORE_PATH,
       configStatus: CONFIG_STATUS_PATH,
       config: runtimeConfigStatus(),
-      root: ROOT,
+      root: "redacted",
+      rootRedacted: true,
+      localPathExposureEnabled: false,
     });
     return;
   }
@@ -2358,7 +2426,7 @@ const server = createServer(async (req, res) => {
   }
 
   if (requestUrl.pathname === CONFIG_STATUS_PATH) {
-    sendJson(res, 200, runtimeConfigStatus());
+    sendPublicStatusJson(res, 200, runtimeConfigStatus());
     return;
   }
 
