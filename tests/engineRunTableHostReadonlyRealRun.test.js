@@ -115,6 +115,25 @@ test("host-local Engine evidence runner maps real-source aliases without inventi
   assert.match(runnerText, /"raw_headers_returned": False/);
 });
 
+test("host-local Engine evidence runner decouples source-backed CCT/CRI from lm/m and reports safe value diagnostics", async () => {
+  const runnerText = await readFile(runnerSourceUrl, "utf-8");
+
+  assert.match(runnerText, /find_lighting_board/);
+  assert.equal(runnerText.includes("numeric_token(lm) and normalise_cct(cct) and normalise_cri(cri)"), false);
+  assert.match(runnerText, /No approved source-backed BOARDS row with parseable CCT and CRI/);
+  assert.match(runnerText, /value_diagnostics/);
+  assert.match(runnerText, /value_diagnostic_entry/);
+  assert.match(runnerText, /parsed_usable/);
+  assert.match(runnerText, /sample_class/);
+  assert.match(runnerText, /tunable-white-token/);
+  assert.match(runnerText, /kelvin-token/);
+  assert.match(runnerText, /Board-output formula input only; not used to invent selector target_lm_per_m/);
+  assert.match(runnerText, /does not convert board maximum output into a target value/);
+  assert.match(runnerText, /c1_lumen_imax_25c/);
+  assert.match(runnerText, /length_mm/);
+  assert.match(runnerText, /c1_imax_ma/);
+});
+
 test("host-local Engine evidence runner fails closed for missing candidate fields and writes only ignored reports", async () => {
   const runnerText = await readFile(runnerSourceUrl, "utf-8");
 

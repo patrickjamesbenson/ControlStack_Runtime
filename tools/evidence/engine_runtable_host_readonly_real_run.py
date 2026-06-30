@@ -18,7 +18,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Mapping
 
-STAGE_NAME = "ENGINE-RUNTABLE-HOST-RUN-CANDIDATE-DERIVATION-FIX-1"
+STAGE_NAME = "ENGINE-RUNTABLE-SOURCE-LIGHTING-FIELD-DERIVATION-1"
 SCRIPT_PATH = Path(__file__).resolve()
 RUNTIME_ROOT = SCRIPT_PATH.parents[2]
 MCP_SOURCE_PATH = RUNTIME_ROOT / "tools" / "controlstack-mcp" / "controlstack_mcp.py"
@@ -189,10 +189,32 @@ FIELD_ALIAS_GROUPS = {
     "current_ma": ("test_ma", "current_ma", "c1_test_ma", "c1_imin_ma", "imin_ma", "nominal_current_ma"),
     "direction": ("light_direction", "direction", "light_type", "application", "emission", "optic_direction"),
     "approval": ("approved", "is_approved", "approval", "status", "state"),
+    "optic_eff": ("eff_optical", "optical_eff", "optical_efficiency", "optic_eff", "eff", "bclt"),
+    "lumen_formula": (
+        "c1_lumen_imax_25c",
+        "c2_lumen_imax_25c",
+        "length_mm",
+        "board_length_mm",
+        "c1_imax_ma",
+        "c2_imax_ma",
+    ),
 }
 
 SCHEMA_INTROSPECTION_TABLES = ("BOARDS", "OPTICS", "DRIVERS", "SYSTEM_POLICY")
-SCHEMA_INTROSPECTION_GROUPS = ("lm_per_m", "cct", "cri", "optic", "control_type", "system", "pitch", "current_ma", "direction", "approval")
+SCHEMA_INTROSPECTION_GROUPS = (
+    "lm_per_m",
+    "cct",
+    "cri",
+    "optic",
+    "control_type",
+    "system",
+    "pitch",
+    "current_ma",
+    "direction",
+    "approval",
+    "optic_eff",
+    "lumen_formula",
+)
 
 
 def utc_now() -> str:
@@ -285,19 +307,43 @@ def numeric_token(value: Any) -> str:
 
 
 def normalise_cct(value: Any) -> str:
-    raw = split_first(value)
-    match = re.search(r"\b(?:22|27|30|35|40|50|57|60|65)00\s*K?\b", raw, flags=re.IGNORECASE)
-    if match:
-        digits = re.sub(r"\D", "", match.group(0))
-        return f"{digits}K" if digits else ""
-    return raw
+    raw = safe_string(value)
+    if not raw:
+        return ""
+
+    tw = re.search(r"\bTW[_\s-]*(\d{4})[_\s-]*(\d{4})\b", raw, flags=re.IGNORECASE)
+    if tw:
+        warm = tw.group(1)
+        cool = tw.group(2)
+        return f"TW_{min(warm, cool)}_{max(warm, cool)}"
+
+    range_match = re.search(
+        r"\b((?:22|27|30|35|40|50|57|60|65)00)\s*(?:K)?\s*(?:-|–|—|to)\s*((?:22|27|30|35|40|50|57|60|65)00)\s*K?\b",
+        raw,
+        flags=re.IGNORECASE,
+    )
+    if range_match:
+        first = range_match.group(1)
+        second = range_match.group(2)
+        return f"TW_{min(first, second)}_{max(first, second)}"
+
+    parts = re.split(r"\s*(?:[,;/|]|\bor\b)\s*", raw, flags=re.IGNORECASE)
+    for part in parts:
+        match = re.search(r"\b(?:22|27|30|35|40|50|57|60|65)00\s*K?\b", safe_string(part), flags=re.IGNORECASE)
+        if match:
+            digits = re.sub(r"\D", "", match.group(0))
+            return f"{digits}K" if digits else ""
+    return ""
 
 
 def normalise_cri(value: Any) -> str:
     raw = safe_string(value)
-    preferred = re.search(r"\bCRI\s*[-:]?\s*(\d{2,3})\b", raw, flags=re.IGNORECASE)
+    if not raw:
+        return ""
+    preferred = re.search(r"\bCRI\s*[-:]?\s*(\d{2,3})\+?\b", raw, flags=re.IGNORECASE)
     if preferred:
-        return preferred.group(1)
+        number = int(preferred.group(1))
+        return preferred.group(1) if 60 <= number <= 100 else ""
     numbers = re.findall(r"\b\d{2,4}\b", raw)
     for token in numbers:
         try:
@@ -305,9 +351,8 @@ def normalise_cri(value: Any) -> str:
         except ValueError:
             continue
         if 60 <= number <= 100:
-            return token
-    raw_first = split_first(value)
-    return raw_first
+            return str(number)
+    return ""
 
 
 def normalise_table_rows(candidate: Any) -> list[Mapping[str, Any]]:
@@ -373,6 +418,148 @@ def field_map_entry(field: str, present: bool, classification: str, source: dict
         "raw_row_returned": False,
         "raw_value_returned": False,
     }
+
+
+def value_sample_class(value: Any) -> str:
+    raw = safe_string(value)
+    if not raw:
+        return "blank"
+    if re.search(r"\bTW[_\s-]*\d{4}[_\s-]*\d{4}\b", raw, flags=re.IGNORECASE):
+        return "tunable-white-token"
+    if re.search(r"\d+(?:\.\d+)?\s*(?:-|–|—|to)\s*\d+(?:\.\d+)?", raw, flags=re.IGNORECASE):
+        return "range"
+    if re.search(r"[,;/|]|\bor\b", raw, flags=re.IGNORECASE):
+        return "token-list"
+    if re.search(r"\b(?:22|27|30|35|40|50|57|60|65)00\s*K?\b", raw, flags=re.IGNORECASE):
+        return "kelvin-token"
+    if re.fullmatch(r"[-+]?\d+(?:\.\d+)?", raw):
+        return "numeric"
+    if numeric_token(raw):
+        return "text-with-numeric-token"
+    return "text-token"
+
+
+def parsed_kind(logical_field: str, value: Any) -> str:
+    if logical_field in {"target_lm_per_m", "pitch_mm", "current_ma", "lumen_formula"}:
+        return "numeric" if numeric_token(value) else "unparsed"
+    if logical_field == "cct":
+        parsed = normalise_cct(value)
+        if parsed.startswith("TW_"):
+            return "tunable-white-token"
+        return "kelvin-token" if parsed else "unparsed"
+    if logical_field == "cri":
+        return "numeric" if normalise_cri(value) else "unparsed"
+    return "text" if safe_string(value) else "unparsed"
+
+
+def parsed_usable(logical_field: str, value: Any) -> bool:
+    if logical_field in {"target_lm_per_m", "pitch_mm", "current_ma", "lumen_formula"}:
+        return bool(numeric_token(value))
+    if logical_field == "cct":
+        return bool(normalise_cct(value))
+    if logical_field == "cri":
+        return bool(normalise_cri(value))
+    return bool(safe_string(value))
+
+
+def value_diagnostic_entry(
+    table: str,
+    field: str | None,
+    row_index: int | None,
+    logical_field: str,
+    value: Any,
+    reason: str = "",
+) -> dict[str, Any]:
+    nonblank = safe_string(value) != ""
+    return {
+        "logical_field": logical_field,
+        "table": table,
+        "field": field or "",
+        "row_ref": f"{table}[{row_index}]" if isinstance(row_index, int) else table,
+        "blank": not nonblank,
+        "nonblank": nonblank,
+        "parsed_usable": parsed_usable(logical_field, value),
+        "parsed_kind": parsed_kind(logical_field, value),
+        "sample_class": value_sample_class(value),
+        "reason": reason,
+        "raw_row_returned": False,
+        "raw_value_returned": False,
+    }
+
+
+def missing_value_diagnostic(logical_field: str, table: str, reason: str) -> dict[str, Any]:
+    return {
+        "logical_field": logical_field,
+        "table": table,
+        "field": "",
+        "row_ref": table,
+        "blank": True,
+        "nonblank": False,
+        "parsed_usable": False,
+        "parsed_kind": "unavailable",
+        "sample_class": "missing-field",
+        "reason": reason,
+        "raw_row_returned": False,
+        "raw_value_returned": False,
+    }
+
+
+def candidate_value_diagnostics(board: Mapping[str, Any] | None, board_index: int | None) -> list[dict[str, Any]]:
+    if board is None:
+        return [
+            missing_value_diagnostic("cct", "BOARDS", "No approved BOARDS row with parseable CCT and CRI was found."),
+            missing_value_diagnostic("cri", "BOARDS", "No approved BOARDS row with parseable CCT and CRI was found."),
+            missing_value_diagnostic(
+                "target_lm_per_m",
+                "BOARDS",
+                "No BOARDS candidate row was available for lm/m inspection.",
+            ),
+        ]
+
+    diagnostics: list[dict[str, Any]] = []
+    for logical_field, group in (
+        ("target_lm_per_m", "lm_per_m"),
+        ("cct", "cct"),
+        ("cri", "cri"),
+        ("pitch_mm", "pitch"),
+        ("current_ma", "current_ma"),
+    ):
+        value, field = first_present(board, alias_keys(group))
+        if field:
+            diagnostics.append(value_diagnostic_entry("BOARDS", field, board_index, logical_field, value))
+        else:
+            diagnostics.append(
+                missing_value_diagnostic(
+                    logical_field,
+                    "BOARDS",
+                    f"No source-backed alias for {logical_field} matched on the candidate BOARDS row.",
+                )
+            )
+
+    formula_fields: list[str] = []
+    for field in alias_keys("lumen_formula"):
+        value, actual = first_present(board, (field,))
+        if actual:
+            formula_fields.append(safe_string(actual))
+            diagnostics.append(
+                value_diagnostic_entry(
+                    "BOARDS",
+                    actual,
+                    board_index,
+                    "lumen_formula",
+                    value,
+                    "Board-output formula input only; not used to invent selector target_lm_per_m.",
+                )
+            )
+    if formula_fields:
+        diagnostics.append(
+            missing_value_diagnostic(
+                "target_lm_per_m",
+                "BOARDS",
+                "Board lumen formula inputs are present, but donor contracts treat target_lm_per_m as a selector target/delivered lm/m input. The runner does not convert board maximum output into a target value.",
+            )
+        )
+    return diagnostics
 
 
 def table_alias_summary(snapshot: Mapping[str, Any], table: str) -> dict[str, Any]:
@@ -471,17 +658,20 @@ def find_tier(snapshot: Mapping[str, Any]) -> tuple[str, dict[str, Any] | None, 
     return "", None, [safe_blocker("candidate-tier-unavailable", "No source-backed tier column could be derived from SYSTEM_POLICY.")]
 
 
-def find_board(snapshot: Mapping[str, Any]) -> tuple[Mapping[str, Any] | None, int | None]:
+def find_lighting_board(snapshot: Mapping[str, Any]) -> tuple[Mapping[str, Any] | None, int | None]:
     for index, row in enumerate(table_rows(snapshot, "BOARDS")):
         approval_value, approval_key = first_present(row, alias_keys("approval"))
         if approval_key and explicitly_false(approval_value):
             continue
-        lm, _ = first_present(row, alias_keys("lm_per_m"))
         cct, _ = first_present(row, alias_keys("cct"))
         cri, _ = first_present(row, alias_keys("cri"))
-        if numeric_token(lm) and normalise_cct(cct) and normalise_cri(cri):
+        if normalise_cct(cct) and normalise_cri(cri):
             return row, index
     return None, None
+
+
+def find_board(snapshot: Mapping[str, Any]) -> tuple[Mapping[str, Any] | None, int | None]:
+    return find_lighting_board(snapshot)
 
 
 def find_optic(snapshot: Mapping[str, Any], system_hint: str = "", board: Mapping[str, Any] | None = None, board_index: int | None = None) -> tuple[str, dict[str, Any] | None]:
@@ -535,7 +725,8 @@ def derive_candidate_from_snapshot(snapshot: Mapping[str, Any]) -> dict[str, Any
 
     tier, tier_source, tier_blockers = find_tier(snapshot)
     blockers.extend(tier_blockers)
-    board, board_index = find_board(snapshot)
+    board, board_index = find_lighting_board(snapshot)
+    value_diagnostics = candidate_value_diagnostics(board, board_index)
     system, system_source = find_system(snapshot, board)
     optic, optic_source = find_optic(snapshot, system_hint=system, board=board, board_index=board_index)
     control_type, control_source = find_control_type(snapshot, board)
@@ -571,13 +762,13 @@ def derive_candidate_from_snapshot(snapshot: Mapping[str, Any]) -> dict[str, Any
         cri = normalise_cri(cri_value)
         pitch = numeric_token(pitch_value)
         current_ma = numeric_token(current_value)
-        lm_source = source_ref("BOARDS", lm_key, board_index)
-        cct_source = source_ref("BOARDS", cct_key, board_index)
-        cri_source = source_ref("BOARDS", cri_key, board_index)
-        pitch_source = source_ref("BOARDS", pitch_key, board_index) if pitch_key else None
-        current_source = source_ref("BOARDS", current_key, board_index) if current_key else None
+        lm_source = source_ref("BOARDS", lm_key, board_index) if lm_key and target_lm_per_m else None
+        cct_source = source_ref("BOARDS", cct_key, board_index) if cct_key and cct else None
+        cri_source = source_ref("BOARDS", cri_key, board_index) if cri_key and cri else None
+        pitch_source = source_ref("BOARDS", pitch_key, board_index) if pitch_key and pitch else None
+        current_source = source_ref("BOARDS", current_key, board_index) if current_key and current_ma else None
     else:
-        blockers.append(safe_blocker("candidate-board-unavailable", "No approved source-backed BOARDS row with lm/m, CCT, and CRI could be derived."))
+        blockers.append(safe_blocker("candidate-board-unavailable", "No approved source-backed BOARDS row with parseable CCT and CRI could be derived."))
         lm_source = cct_source = cri_source = pitch_source = current_source = None
 
     if target_lm_per_m:
@@ -650,8 +841,9 @@ def derive_candidate_from_snapshot(snapshot: Mapping[str, Any]) -> dict[str, Any
         "candidate_payload_serialized": False,
         "candidate_payload_returned": False,
         "candidate_private_values_redacted_in_report": True,
-        "candidate_source_used": "runtime-authority-reference-active-snapshot plus controlled run geometry" if board is not None else "runtime-authority-reference-active-snapshot attempted; no complete BOARDS candidate",
+        "candidate_source_used": "runtime-authority-reference-active-snapshot plus controlled run geometry; BOARDS row selected for source-backed CCT/CRI" if board is not None else "runtime-authority-reference-active-snapshot attempted; no complete BOARDS CCT/CRI candidate",
         "field_source_map": field_source_map,
+        "value_diagnostics": value_diagnostics,
         "schema_introspection": safe_schema_introspection(snapshot),
         "blockers": blockers,
         "selector_payload": selector_payload if complete else None,
