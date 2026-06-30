@@ -101,6 +101,9 @@ test("host-local Engine evidence runner maps real-source aliases without inventi
     "lens_type",
     "control_protocol",
     "driver_type",
+    "efficiency_optical",
+    "f_optical",
+    "F optical",
   ]) {
     assert.match(runnerText, new RegExp(alias.replace(/[.*+?^${}()|[\\]\\]/g, "\\$&")));
   }
@@ -110,6 +113,9 @@ test("host-local Engine evidence runner maps real-source aliases without inventi
   assert.match(runnerText, /alias_keys\("cct"\)/);
   assert.match(runnerText, /alias_keys\("cri"\)/);
   assert.match(runnerText, /alias_keys\("optic"\)/);
+  assert.match(runnerText, /optic_eff_from_row/);
+  assert.match(runnerText, /"opt" in lowered and "eff" in lowered/);
+  assert.match(runnerText, /without using the donor bridge/);
   assert.match(runnerText, /safe_schema_introspection/);
   assert.match(runnerText, /"raw_rows_returned": False/);
   assert.match(runnerText, /"raw_headers_returned": False/);
@@ -148,6 +154,35 @@ test("host-local Engine evidence runner classifies target lm/m as controlled Sel
   assert.match(runnerText, /optional-source-backed-capacity-diagnostic/);
   assert.equal(runnerText.includes('field_map_entry("target_lm_per_m", bool(target_lm_per_m), "source-backed-required"'), false);
 });
+
+test("host-local Engine evidence runner uses donor-compatible controlled run geometry", async () => {
+  const runnerText = await readFile(runnerSourceUrl, "utf-8");
+
+  assert.match(runnerText, /CONTROLLED_RUN_LENGTH_MM = 5600/);
+  assert.match(runnerText, /CONTROLLED_RUN_GEOMETRY_REASON/);
+  assert.match(runnerText, /controlled-test-geometry/);
+  assert.match(runnerText, /donor-compatible run-row/);
+  assert.match(runnerText, /field shape/);
+  assert.match(runnerText, /not product data/);
+  assert.match(runnerText, /not source-backed Board Data/);
+  assert.match(runnerText, /controlled_geometry_summary/);
+  assert.match(runnerText, /donor-selector-seed-5600mm/);
+
+  for (const field of [
+    "Run Length (mm)",
+    "Required length (mm)",
+    "run_length_mm",
+    "length_mm",
+    "lengthMm",
+    "lengthMode",
+    "requested_length_basis",
+    "length_policy_source",
+    "accessory_length_policy_source",
+  ]) {
+    assert.equal(runnerText.includes(field), true);
+  }
+});
+
 
 test("host-local Engine evidence runner fails closed for missing candidate fields and writes only ignored reports", async () => {
   const runnerText = await readFile(runnerSourceUrl, "utf-8");

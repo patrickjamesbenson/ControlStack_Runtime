@@ -18,7 +18,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Mapping
 
-STAGE_NAME = "ENGINE-RUNTABLE-TARGET-LM-PER-M-INTENT-SPLIT-1"
+STAGE_NAME = "ENGINE-RUNTABLE-HOST-RUN-GEOMETRY-FEASIBILITY-1"
 SCRIPT_PATH = Path(__file__).resolve()
 RUNTIME_ROOT = SCRIPT_PATH.parents[2]
 MCP_SOURCE_PATH = RUNTIME_ROOT / "tools" / "controlstack-mcp" / "controlstack_mcp.py"
@@ -32,11 +32,49 @@ CONTROLLED_TARGET_REASON = (
     "not source-backed product output, and not a selected Engine result."
 )
 
+CONTROLLED_RUN_LENGTH_MM = 5600
+CONTROLLED_RUN_BASIS = "cut_to_length"
+CONTROLLED_RUN_LABEL = "host-local-readonly-evidence-run-1"
+CONTROLLED_RUN_GEOMETRY_REASON = (
+    "Controlled-test-geometry for host-local evidence only; donor-compatible run-row "
+    "field shape; not product data and not source-backed Board Data."
+)
+CONTROLLED_RUN_FIELD_SHAPE = (
+    "Run",
+    "run",
+    "label",
+    "Qty",
+    "qty",
+    "run_length_mm",
+    "Run Length (mm)",
+    "Required length (mm)",
+    "length_mm",
+    "lengthMm",
+    "lengthMode",
+    "requested_length_basis",
+    "length_policy_source",
+    "accessory_length_policy_source",
+)
+
 CONTROLLED_RUN = {
-    "Run": "host-local-readonly-evidence-run-1",
+    "Run": CONTROLLED_RUN_LABEL,
+    "run": CONTROLLED_RUN_LABEL,
+    "label": CONTROLLED_RUN_LABEL,
     "Qty": 1,
-    "run_length_mm": 1200,
+    "qty": 1,
+    "run_length_mm": CONTROLLED_RUN_LENGTH_MM,
+    "Run Length (mm)": CONTROLLED_RUN_LENGTH_MM,
+    "Required length (mm)": CONTROLLED_RUN_LENGTH_MM,
+    "length_mm": CONTROLLED_RUN_LENGTH_MM,
+    "lengthMm": str(CONTROLLED_RUN_LENGTH_MM),
+    "lengthMode": CONTROLLED_RUN_BASIS,
+    "requested_length_basis": CONTROLLED_RUN_BASIS,
+    "length_policy_source": "tier_policy",
+    "accessory_length_policy_source": "tier_policy",
+    "controlled_geometry_classification": "controlled-test-geometry",
+    "controlled_geometry_note": CONTROLLED_RUN_GEOMETRY_REASON,
     "reserved_ranges": [],
+    "ancillary_requests": [],
 }
 
 RAW_EXPOSURE_CHECKS = {
@@ -200,7 +238,17 @@ FIELD_ALIAS_GROUPS = {
     "current_ma": ("test_ma", "current_ma", "c1_test_ma", "c1_imin_ma", "imin_ma", "nominal_current_ma"),
     "direction": ("light_direction", "direction", "light_type", "application", "emission", "optic_direction"),
     "approval": ("approved", "is_approved", "approval", "status", "state"),
-    "optic_eff": ("eff_optical", "optical_eff", "optical_efficiency", "optic_eff", "eff", "bclt"),
+    "optic_eff": (
+        "eff_optical",
+        "optical_eff",
+        "optical_efficiency",
+        "efficiency_optical",
+        "f_optical",
+        "F optical",
+        "optic_eff",
+        "eff",
+        "bclt",
+    ),
     "lumen_formula": (
         "c1_lumen_imax_25c",
         "c2_lumen_imax_25c",
@@ -718,6 +766,23 @@ def find_optic(snapshot: Mapping[str, Any], system_hint: str = "", board: Mappin
     return "", None
 
 
+def optic_eff_from_row(row: Mapping[str, Any], row_index: int) -> tuple[str, dict[str, Any] | None]:
+    value, key = first_present(row, alias_keys("optic_eff"))
+    token = numeric_token(value)
+    if token and key:
+        return token, source_ref("OPTICS", key, row_index)
+
+    # Mirror donor bridge semantics without using the donor bridge: accept source-backed
+    # OPTICS columns whose header contains both opt* and eff*, but never apply a fallback.
+    for raw_key, raw_value in row.items():
+        lowered = safe_string(raw_key).strip().lower()
+        if "opt" in lowered and "eff" in lowered:
+            token = numeric_token(raw_value)
+            if token:
+                return token, source_ref("OPTICS", safe_string(raw_key), row_index)
+    return "", None
+
+
 def find_optic_eff(snapshot: Mapping[str, Any], optic: str, system_hint: str = "") -> tuple[str, dict[str, Any] | None]:
     optic_lookup = safe_string(optic).lower()
     system_lookup = safe_string(system_hint).lower()
@@ -732,11 +797,26 @@ def find_optic_eff(snapshot: Mapping[str, Any], optic: str, system_hint: str = "
             system_text = safe_string(system_value).lower()
             if system_text and system_lookup not in system_text and system_text not in system_lookup:
                 continue
-        value, key = first_present(row, alias_keys("optic_eff"))
-        token = numeric_token(value)
+        token, source = optic_eff_from_row(row, index)
         if token:
-            return token, source_ref("OPTICS", key, index)
+            return token, source
     return "", None
+
+
+def controlled_geometry_summary() -> dict[str, Any]:
+    return {
+        "classification": "controlled-test-geometry",
+        "length_class": "donor-selector-seed-5600mm",
+        "length_mm": int(CONTROLLED_RUN_LENGTH_MM),
+        "qty": 1,
+        "donor_compatible_run_field_shape": list(CONTROLLED_RUN_FIELD_SHAPE),
+        "requested_length_basis": CONTROLLED_RUN_BASIS,
+        "length_policy_source": "tier_policy",
+        "accessory_length_policy_source": "tier_policy",
+        "not_product_data": True,
+        "not_source_backed_board_data": True,
+        "raw_payload_returned": False,
+    }
 
 
 def board_capacity_source(board: Mapping[str, Any] | None, board_index: int | None) -> dict[str, Any] | None:
@@ -875,7 +955,7 @@ def derive_candidate_from_snapshot(snapshot: Mapping[str, Any]) -> dict[str, Any
     field_source_map.extend([
         field_map_entry("db", True, "internal-active-source", "engine seam injects active RuntimeData snapshot in memory only", "Caller-supplied db is refused and not serialized."),
         field_map_entry("tier", bool(tier), "source-backed-required", tier_source or "unavailable"),
-        field_map_entry("runs", True, "controlled-test-geometry", "host-local runner controlled run length/quantity", "Controlled geometry only; not product data."),
+        field_map_entry("runs", True, "controlled-test-geometry", "host-local runner donor-compatible controlled run-row geometry", CONTROLLED_RUN_GEOMETRY_REASON),
         field_map_entry("lighting", bool(lighting), "mixed-controlled-intent-and-source-backed", board_source or "unavailable", "Contains controlled Selector/user target intent plus source-backed lighting options."),
         field_map_entry("target_lm_per_m", bool(target_lm_per_m), "controlled-selector-intent", "host-local runner controlled Selector/user intent", CONTROLLED_TARGET_REASON),
         field_map_entry("cct", bool(cct), "source-backed-required", cct_source or "unavailable"),
@@ -913,7 +993,8 @@ def derive_candidate_from_snapshot(snapshot: Mapping[str, Any]) -> dict[str, Any
         "candidate_payload_serialized": False,
         "candidate_payload_returned": False,
         "candidate_private_values_redacted_in_report": True,
-        "candidate_source_used": "runtime-authority-reference-active-snapshot plus controlled run geometry; BOARDS row selected for source-backed CCT/CRI" if board is not None else "runtime-authority-reference-active-snapshot attempted; no complete BOARDS CCT/CRI candidate",
+        "candidate_source_used": "runtime-authority-reference-active-snapshot plus donor-compatible controlled run geometry; BOARDS row selected for source-backed CCT/CRI" if board is not None else "runtime-authority-reference-active-snapshot attempted; no complete BOARDS CCT/CRI candidate",
+        "controlled_geometry": controlled_geometry_summary(),
         "field_source_map": field_source_map,
         "value_diagnostics": value_diagnostics,
         "schema_introspection": safe_schema_introspection(snapshot),
@@ -995,6 +1076,7 @@ def run_execute(module: Any) -> dict[str, Any]:
         "mode": "execute",
         "ok": bool(seam_result.get("engine_result_produced")),
         "candidate_derivation": {key: value for key, value in candidate.items() if key != "selector_payload"},
+        "controlled_geometry_attempted": controlled_geometry_summary(),
         "engine_execution_attempted": bool(seam_result.get("engine_execution_attempted")),
         "engine_result_produced": bool(seam_result.get("engine_result_produced")),
         "safe_engine_summary": seam_result.get("safe_engine_summary"),
