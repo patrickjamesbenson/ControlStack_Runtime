@@ -4,8 +4,11 @@ import { readFile } from "node:fs/promises";
 
 import {
   IES_BUILDER_STATUS_PATH,
+  IES_BUILDER_HANDOFF_STATES,
+  buildIesBuilderSelectedResultHandoffContract,
   buildIesBuilderStatus,
 } from "../packages/workspace-kernel/iesBuilderStatusService.js";
+import { adaptEngineRunTableSelectedResultToProjection } from "../packages/workspace-kernel/engineRunTableSelectedResultAdapter.js";
 import { createIesBuilderViewModel } from "../packages/modules/ies-builder/iesBuilderViewModel.js";
 
 const REQUIRED_BOUNDARY_WARNINGS = Object.freeze([
@@ -100,6 +103,131 @@ const REQUIRED_CANDIDATE_FLAG_ROWS = Object.freeze([
   ["drawingGenerationEnabled", "false"],
   ["hiddenWriteBackEnabled", "false"],
 ]);
+
+function completeAcceptedSelectedResultInput(overrides = {}) {
+  const base = {
+    oneSuccessfulAcceptedResult: true,
+    accepted: true,
+    engineVerified: true,
+    resultStateLabel: "Engine verified",
+    selectedTierOrProfile: "business",
+    selectedReason: "Best compliant balance of target output, thermal margin, efficiency and manufacturing simplicity.",
+    selectedFamilySubsetLock: {
+      boardFamily: "Linear 560 280 140",
+      pitchFamily: "Pitch 35",
+      opticCurrentAssumptions: "3000K 80CRI 350mA",
+      zoneSplitStrategy: "balanced zones",
+      driverFamily: "DALI driver family",
+    },
+    sourceInputFingerprint: "sha256-safe-selector-fingerprint",
+    boardDataSourceVersion: "board-data-v1",
+    perRunLookupByRunIdOrNumber: {
+      "run-1": { marker: "lookup-id-do-not-emit" },
+      "1": { marker: "lookup-number-do-not-emit" },
+      "safe-run-key": { marker: "lookup-key-do-not-emit" },
+    },
+    runs: [
+      {
+        id: "run-1",
+        runKey: "safe-run-key",
+        runNumber: 1,
+        runLabel: "Run 1",
+        runLengthMm: 1200,
+        bodyMmRequested: 1140,
+        segments: [{ marker: "segment-do-not-emit" }],
+        reservedRanges: [],
+        boardRun: {
+          strategy: "selected donor summary",
+          usedLengthMm: 1120,
+          remainderMm: 20,
+          slackMm: 20,
+          exactFill: false,
+          boards: [{ marker: "board-row-do-not-emit" }],
+        },
+        boardCount: 2,
+        boardFamily: "Linear 560 280 140",
+        sanitisedWarnings: ["safe warning"],
+        zonePlanSummary: { state: "future zone summary" },
+        mechanicalSummary: { state: "future mechanical summary" },
+      },
+    ],
+    rough_electrical_payload: { marker: "rough-electrical-payload-do-not-emit" },
+    rawEnginePayload: { marker: "raw-engine-payload-do-not-emit" },
+    rawIesText: "TILT=NONE raw-ies-do-not-emit",
+    rawCandelaGrid: [["candela-grid-do-not-emit"]],
+    rawPhotometryPayload: { marker: "photometry-payload-do-not-emit" },
+    rawLabEvidence: { marker: "lab-evidence-do-not-emit" },
+    pdfRef: "private-proof-do-not-emit.pdf",
+    base64PolarPlot: "data:image/png;base64,polar-do-not-emit",
+    privateFilePath: "C:\\ControlStack\\private\\do-not-emit.ies",
+    usersRows: [{ marker: "users-row-do-not-emit" }],
+    providerId: "provider-id-do-not-emit",
+  };
+
+  return {
+    ...base,
+    ...overrides,
+    selectedFamilySubsetLock: overrides.selectedFamilySubsetLock === undefined
+      ? base.selectedFamilySubsetLock
+      : overrides.selectedFamilySubsetLock,
+    perRunLookupByRunIdOrNumber: overrides.perRunLookupByRunIdOrNumber === undefined
+      ? base.perRunLookupByRunIdOrNumber
+      : overrides.perRunLookupByRunIdOrNumber,
+    runs: overrides.runs === undefined ? base.runs : overrides.runs,
+  };
+}
+
+function acceptedSelectedResultProjection(overrides = {}, projectionOverrides = {}) {
+  return {
+    ...adaptEngineRunTableSelectedResultToProjection(completeAcceptedSelectedResultInput(overrides)),
+    sourcePhotometryRef: projectionOverrides.sourcePhotometryRef === undefined
+      ? "opaque-photometry-ref-do-not-emit.ies"
+      : projectionOverrides.sourcePhotometryRef,
+    ...projectionOverrides,
+  };
+}
+
+function blockerCodes(contract) {
+  return contract.blockers.map((entry) => entry.code);
+}
+
+function assertHandoffSafety(contract) {
+  assert.equal(contract.readOnly, true);
+  assert.equal(contract.candidateOutputOnly, true);
+  assert.equal(contract.productionProof, false);
+  assert.equal(contract.labProofAuthority, false);
+  assert.equal(contract.safetyFlags.iesUploadEnabled, false);
+  assert.equal(contract.safetyFlags.iesParseEnabled, false);
+  assert.equal(contract.safetyFlags.iesExportEnabled, false);
+  assert.equal(contract.safetyFlags.iesGenerationEnabled, false);
+  assert.equal(contract.safetyFlags.polarPreviewEnabled, false);
+  assert.equal(contract.safetyFlags.engineExecutionEnabled, false);
+  assert.equal(contract.safetyFlags.runTableGenerationEnabled, false);
+  assert.equal(contract.safetyFlags.payloadGenerationEnabled, false);
+  assert.equal(contract.safetyFlags.selectorMutationEnabled, false);
+  assert.equal(contract.safetyFlags.boardDataMutationEnabled, false);
+  assert.equal(contract.safetyFlags.labProofMutationEnabled, false);
+  assert.equal(contract.safetyFlags.complianceApprovalEnabled, false);
+  assert.equal(contract.safetyFlags.rawExposureEnabled, false);
+  assert.equal(contract.safetyFlags.routesAdded, false);
+  assert.equal(contract.safetyFlags.postEndpointsAdded, false);
+  assert.equal(contract.redactionFlags.rawIesExposed, false);
+  assert.equal(contract.redactionFlags.rawCandelaGridExposed, false);
+  assert.equal(contract.redactionFlags.rawPhotometryPayloadExposed, false);
+  assert.equal(contract.redactionFlags.rawEnginePayloadExposed, false);
+  assert.equal(contract.redactionFlags.rawSelectedEnginePayloadExposed, false);
+  assert.equal(contract.redactionFlags.rawRoughElectricalPayloadExposed, false);
+  assert.equal(contract.redactionFlags.rawLabEvidenceExposed, false);
+  assert.equal(contract.redactionFlags.rawArtefactsExposed, false);
+  assert.equal(contract.redactionFlags.rawPdfsExposed, false);
+  assert.equal(contract.redactionFlags.base64PolarPlotsExposed, false);
+  assert.equal(contract.redactionFlags.localPathsExposed, false);
+  assert.equal(contract.redactionFlags.filenamesExposed, false);
+  assert.equal(contract.candidateArtefactRefs.opaqueRefsOnly, true);
+  assert.equal(contract.candidateArtefactRefs.iesCandidateRef, null);
+  assert.equal(contract.candidateArtefactRefs.polarPreviewRef, null);
+  assert.equal(contract.candidateArtefactRefs.pdfRef, null);
+}
 
 function assertSafeBoundaryFlags(status) {
   assert.equal(status.readOnly, true);
@@ -264,6 +392,171 @@ test("redaction flags block raw IES, candela, photometry, Engine payload, Board 
   assert.equal(status.redactionFlags.credentialsExposed, false);
   assert.equal(status.redactionFlags.usersExposed, false);
   assert.equal(status.redactionFlags.providerDetailsExposed, false);
+});
+
+test("no selected result keeps IES Builder handoff blocked", () => {
+  const status = buildIesBuilderStatus();
+  const contract = status.handoffContract;
+
+  assert.equal(status.handoffState, "waiting_for_selected_engine_runtable_result");
+  assert.equal(contract.schemaId, "controlstack.ies_builder.selected_result_handoff_contract.v1");
+  assert.equal(contract.handoffState, "waiting_for_selected_engine_runtable_result");
+  assert.equal(contract.ready, false);
+  assert.ok(IES_BUILDER_HANDOFF_STATES.includes(contract.handoffState));
+  assert.deepEqual(blockerCodes(contract), ["waiting-for-selected-engine-runtable-result"]);
+  assert.equal(contract.selectedResultStateSummary.selectedResultAvailable, false);
+  assertHandoffSafety(contract);
+});
+
+test("accepted selected-result fixture makes metadata ready for future candidate output only", () => {
+  const projection = acceptedSelectedResultProjection();
+  const status = buildIesBuilderStatus({ selectedResultProjection: projection });
+  const contract = buildIesBuilderSelectedResultHandoffContract(projection);
+
+  assert.equal(status.handoffState, "metadata_ready_for_future_candidate_output");
+  assert.equal(status.selectedResultAvailable, true);
+  assert.equal(contract.handoffState, "metadata_ready_for_future_candidate_output");
+  assert.equal(contract.ready, true);
+  assert.deepEqual(contract.blockers, []);
+  assert.equal(contract.selectedResultStateSummary.selectedResultAvailable, true);
+  assert.equal(contract.selectedResultStateSummary.accepted, true);
+  assert.equal(contract.selectedResultStateSummary.engineVerified, true);
+  assert.equal(contract.selectedResultStateSummary.stale, false);
+  assert.equal(contract.selectedResultStateSummary.runCount, 1);
+  assert.equal(contract.selectedFamilySubsetLockReadiness.ready, true);
+  assert.equal(contract.perRunLookupReadiness.ready, true);
+  assert.equal(contract.boardDataSourceVersionReadiness.ready, true);
+  assert.equal(contract.sourceInputFingerprintReadiness.ready, true);
+  assert.equal(contract.sourcePhotometryRefReadiness.ready, true);
+  assert.equal(contract.sourcePhotometryRefReadiness.sourcePhotometryRef, "opaque-source-photometry-ref-present");
+  assert.equal(contract.productionProof, false);
+  assert.equal(contract.labProofAuthority, false);
+  assertHandoffSafety(contract);
+});
+
+test("stale selected result blocks IES handoff", () => {
+  const projection = acceptedSelectedResultProjection({ stale: true });
+  const contract = buildIesBuilderSelectedResultHandoffContract(projection);
+
+  assert.equal(contract.handoffState, "blocked_selected_result_stale");
+  assert.equal(contract.ready, false);
+  assert.ok(blockerCodes(contract).includes("selected-result-stale"));
+  assert.equal(contract.sourceInputFingerprintReadiness.staleComparisonImplemented, false);
+  assert.equal(contract.sourceInputFingerprintReadiness.staleResultComparisonAttempted, false);
+  assertHandoffSafety(contract);
+});
+
+test("missing selectedFamilySubsetLock blocks IES handoff", () => {
+  const projection = acceptedSelectedResultProjection({}, { selectedFamilySubsetLock: null });
+  const contract = buildIesBuilderSelectedResultHandoffContract(projection);
+
+  assert.equal(contract.handoffState, "blocked_missing_family_subset_lock");
+  assert.equal(contract.selectedFamilySubsetLockReadiness.ready, false);
+  assert.ok(blockerCodes(contract).includes("missing-selected-family-subset-lock"));
+  assertHandoffSafety(contract);
+});
+
+test("missing perRunLookupNormalised blocks IES handoff", () => {
+  const projection = acceptedSelectedResultProjection({}, { perRunLookupNormalised: false });
+  const contract = buildIesBuilderSelectedResultHandoffContract(projection);
+
+  assert.equal(contract.handoffState, "blocked_selected_result_unavailable");
+  assert.equal(contract.perRunLookupReadiness.ready, false);
+  assert.ok(blockerCodes(contract).includes("missing-per-run-lookup-normalised"));
+  assertHandoffSafety(contract);
+});
+
+test("missing boardDataSourceVersion blocks IES handoff", () => {
+  const projection = acceptedSelectedResultProjection({ boardDataSourceVersion: null });
+  const contract = buildIesBuilderSelectedResultHandoffContract(projection);
+
+  assert.equal(contract.handoffState, "blocked_selected_result_unavailable");
+  assert.equal(contract.boardDataSourceVersionReadiness.ready, false);
+  assert.ok(blockerCodes(contract).includes("missing-board-data-source-version"));
+  assertHandoffSafety(contract);
+});
+
+test("missing sourceInputFingerprint blocks IES handoff", () => {
+  const projection = acceptedSelectedResultProjection({ sourceInputFingerprint: null });
+  const contract = buildIesBuilderSelectedResultHandoffContract(projection);
+
+  assert.equal(contract.handoffState, "blocked_selected_result_unavailable");
+  assert.equal(contract.sourceInputFingerprintReadiness.ready, false);
+  assert.ok(blockerCodes(contract).includes("missing-source-input-fingerprint"));
+  assertHandoffSafety(contract);
+});
+
+test("missing sourcePhotometryRef remains blocked and opaque-placeholder only when present", () => {
+  const missing = buildIesBuilderSelectedResultHandoffContract(acceptedSelectedResultProjection({}, { sourcePhotometryRef: null }));
+  const present = buildIesBuilderSelectedResultHandoffContract(acceptedSelectedResultProjection({}, { sourcePhotometryRef: "C:\\ControlStack\\photometry\\private-source.ies" }));
+
+  assert.equal(missing.handoffState, "blocked_missing_source_photometry_ref");
+  assert.equal(missing.sourcePhotometryRefReadiness.ready, false);
+  assert.ok(blockerCodes(missing).includes("missing-source-photometry-ref"));
+  assert.equal(present.sourcePhotometryRefReadiness.ready, true);
+  assert.equal(present.sourcePhotometryRefReadiness.sourcePhotometryRef, "opaque-source-photometry-ref-present");
+  assert.equal(JSON.stringify(present).includes("private-source.ies"), false);
+  assertHandoffSafety(missing);
+  assertHandoffSafety(present);
+});
+
+test("1mm policy remains metadata-only and candidate artefact refs remain opaque/null", () => {
+  const contract = buildIesBuilderSelectedResultHandoffContract(acceptedSelectedResultProjection());
+
+  assert.equal(contract.oneMmPolicy.oneMmNormalised, true);
+  assert.equal(contract.oneMmPolicy.baseLengthM, 0.001);
+  assert.equal(contract.oneMmPolicy.photometryMode, "normalise_1mm_candidate");
+  assert.equal(contract.oneMmPolicy.scalePolicy, "scale_to_1mm_metadata_only");
+  assert.equal(contract.oneMmPolicy.rawCandelaGridExposed, false);
+  assert.equal(contract.oneMmPolicy.rawIesContentExposed, false);
+  assert.equal(contract.oneMmPolicy.rawPhotometryPayloadExposed, false);
+  assert.equal(contract.candidateArtefactRefs.opaqueRefsOnly, true);
+  assert.equal(contract.candidateArtefactRefs.iesCandidateRef, null);
+  assert.equal(contract.candidateArtefactRefs.photometryMetadataRef, null);
+  assert.equal(contract.candidateArtefactRefs.candidateManifestRef, null);
+  assert.equal(contract.candidateArtefactRefs.polarPreviewRef, null);
+  assert.equal(contract.candidateArtefactRefs.pdfRef, null);
+  assertHandoffSafety(contract);
+});
+
+test("raw IES candela photometry Engine Lab PDF artefact base64 and private data never appear in handoff", () => {
+  const contract = buildIesBuilderSelectedResultHandoffContract(acceptedSelectedResultProjection());
+  const text = JSON.stringify(contract);
+
+  for (const marker of [
+    "rough-electrical-payload-do-not-emit",
+    "raw-engine-payload-do-not-emit",
+    "raw-ies-do-not-emit",
+    "candela-grid-do-not-emit",
+    "photometry-payload-do-not-emit",
+    "lab-evidence-do-not-emit",
+    "private-proof-do-not-emit.pdf",
+    "polar-do-not-emit",
+    "do-not-emit.ies",
+    "users-row-do-not-emit",
+    "provider-id-do-not-emit",
+    "lookup-id-do-not-emit",
+    "board-row-do-not-emit",
+    "segment-do-not-emit",
+    "TILT=NONE",
+  ]) {
+    assert.equal(text.includes(marker), false, `${marker} should not appear`);
+  }
+  assertHandoffSafety(contract);
+});
+
+test("IES Builder view model emits selected-result handoff rows", () => {
+  const status = buildIesBuilderStatus({ selectedResultProjection: acceptedSelectedResultProjection() });
+  const viewModel = createIesBuilderViewModel({
+    context: { route: { moduleId: "ies_builder" } },
+    local: { status: "ready" },
+    status,
+  });
+
+  assert.ok(viewModel.handoffContractRows.some(([label, value]) => label === "handoffState" && value === "metadata_ready_for_future_candidate_output"));
+  assert.ok(viewModel.selectedResultStateSummaryRows.some(([label, value]) => label === "selectedResultAvailable" && value === "true"));
+  assert.ok(viewModel.sourcePhotometryRefReadinessRows.some(([label, value]) => label === "sourcePhotometryRef" && value === "opaque-source-photometry-ref-present"));
+  assert.ok(viewModel.handoffOneMmPolicyRows.some(([label, value]) => label === "baseLengthM" && value === "0.001"));
 });
 
 test("fixture/parser diagnostics use safe runtime summaries only", () => {

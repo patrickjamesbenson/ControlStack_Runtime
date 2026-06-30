@@ -71,6 +71,15 @@ export function renderIesBuilderView(container, viewModel) {
   appendSection(article, "Photometry metadata shape", viewModel.photometryMetadataShapeRows);
   appendSection(article, "Opaque candidate artefact refs", viewModel.candidateArtefactRefRows);
   appendSection(article, "IES candidate redaction flags", viewModel.redactionFlagRows);
+  appendSection(article, "IES selected-result handoff contract", viewModel.handoffContractRows);
+  appendSection(article, "IES selected-result handoff blockers", viewModel.handoffBlockerRows);
+  appendSection(article, "Selected result state summary", viewModel.selectedResultStateSummaryRows);
+  appendSection(article, "Selected family/subset lock readiness", viewModel.selectedFamilySubsetLockReadinessRows);
+  appendSection(article, "Per-run lookup readiness", viewModel.perRunLookupReadinessRows);
+  appendSection(article, "Board Data source-version readiness", viewModel.boardDataSourceVersionReadinessRows);
+  appendSection(article, "Source-input fingerprint readiness", viewModel.sourceInputFingerprintReadinessRows);
+  appendSection(article, "Source photometry ref readiness", viewModel.sourcePhotometryRefReadinessRows);
+  appendSection(article, "IES handoff 1mm policy metadata", viewModel.handoffOneMmPolicyRows);
   appendSection(article, "IES candidate readiness runtime status flags", viewModel.candidateReadinessFlagRows);
   appendListSection(article, "IES candidate readiness requirements", viewModel.candidateReadinessRequirements);
   appendListSection(article, "IES candidate states", viewModel.candidateStates);

@@ -19,6 +19,16 @@ export const IES_BUILDER_CANDIDATE_OUTPUT_SCHEMA = Object.freeze({
     "photometryMetadataShape",
     "candidateArtefactRefs",
     "redactionFlags",
+    "handoffContract",
+    "handoffState",
+    "handoffBlockers",
+    "selectedResultStateSummary",
+    "selectedFamilySubsetLockReadiness",
+    "perRunLookupReadiness",
+    "boardDataSourceVersionReadiness",
+    "sourceInputFingerprintReadiness",
+    "sourcePhotometryRefReadiness",
+    "oneMmPolicy",
   ]),
 });
 
@@ -289,9 +299,393 @@ function clonePlain(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
-export function buildIesBuilderStatus() {
+export const IES_BUILDER_SELECTED_RESULT_HANDOFF_SCHEMA = Object.freeze({
+  schemaId: "controlstack.ies_builder.selected_result_handoff_contract.v1",
+  schemaVersion: "v1",
+  surface: "read_only_selected_result_handoff_status",
+  description: "Read-only scaffold that lets IES Builder decide whether safe selected-result metadata is ready for future candidate output.",
+  fields: Object.freeze([
+    "schemaId",
+    "readOnly",
+    "candidateOutputOnly",
+    "productionProof",
+    "labProofAuthority",
+    "handoffState",
+    "blockers",
+    "selectorSafeIntentSummaryPlaceholder",
+    "selectedResultStateSummary",
+    "selectedFamilySubsetLockReadiness",
+    "perRunLookupReadiness",
+    "boardDataSourceVersionReadiness",
+    "sourceInputFingerprintReadiness",
+    "sourcePhotometryRefReadiness",
+    "oneMmPolicy",
+    "candidateArtefactRefs",
+    "redactionFlags",
+  ]),
+});
+
+export const IES_BUILDER_HANDOFF_STATES = Object.freeze([
+  "waiting_for_selected_engine_runtable_result",
+  "blocked_selected_result_unavailable",
+  "blocked_selected_result_stale",
+  "blocked_missing_family_subset_lock",
+  "blocked_missing_source_photometry_ref",
+  "metadata_ready_for_future_candidate_output",
+]);
+
+const HANDOFF_BLOCKER_DEFINITIONS = Object.freeze({
+  waitingForSelectedEngineRunTableResult: Object.freeze({
+    code: "waiting-for-selected-engine-runtable-result",
+    severity: "blocking",
+    label: "Waiting for selected Engine/RunTable result",
+    reason: "IES Builder cannot receive candidate metadata until one accepted selected Engine/RunTable result exists.",
+    owner: "Engine/RunTable selected-result source",
+  }),
+  selectedResultUnavailable: Object.freeze({
+    code: "selected-result-unavailable",
+    severity: "blocking",
+    label: "Selected result unavailable",
+    reason: "The selected-result projection is not accepted, not engine verified, or not available.",
+    owner: "Engine/RunTable selected-result adapter",
+  }),
+  selectedResultStale: Object.freeze({
+    code: "selected-result-stale",
+    severity: "blocking",
+    label: "Selected result stale",
+    reason: "The selected result is stale and must be verified again before IES Builder can receive metadata.",
+    owner: "Engine/RunTable selected-result adapter",
+  }),
+  missingFamilySubsetLock: Object.freeze({
+    code: "missing-selected-family-subset-lock",
+    severity: "blocking",
+    label: "Missing selected family/subset lock",
+    reason: "The accepted selected result must lock board family, pitch family, optical/current assumptions, zone split strategy, and driver family before IES handoff.",
+    owner: "Engine/RunTable selected-result adapter",
+  }),
+  missingPerRunLookup: Object.freeze({
+    code: "missing-per-run-lookup-normalised",
+    severity: "blocking",
+    label: "Missing normalised per-run lookup",
+    reason: "IES Builder requires the safe per-run lookup summary produced by the selected-result adapter.",
+    owner: "Engine/RunTable selected-result adapter",
+  }),
+  missingBoardDataSourceVersion: Object.freeze({
+    code: "missing-board-data-source-version",
+    severity: "blocking",
+    label: "Missing Board Data source version",
+    reason: "IES Builder needs an opaque Board Data source-version readiness marker before future candidate metadata handoff.",
+    owner: "Board Data / selected-result adapter",
+  }),
+  missingSourceInputFingerprint: Object.freeze({
+    code: "missing-source-input-fingerprint",
+    severity: "blocking",
+    label: "Missing source-input fingerprint",
+    reason: "IES Builder needs a source-input fingerprint readiness marker; stale comparison remains metadata-only in this slice.",
+    owner: "Selector / selected-result adapter",
+  }),
+  missingSourcePhotometryRef: Object.freeze({
+    code: "missing-source-photometry-ref",
+    severity: "blocking",
+    label: "Missing source photometry ref",
+    reason: "IES Builder needs only an opaque source photometry ref placeholder before future candidate output metadata can be ready.",
+    owner: "future IES Builder / Board Data photometry metadata",
+  }),
+});
+
+function isRecord(value) {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+function hasOwn(source, key) {
+  return isRecord(source) && Object.prototype.hasOwnProperty.call(source, key);
+}
+
+function firstPresent(source, keys) {
+  if (!isRecord(source)) return undefined;
+  for (const key of keys) {
+    if (hasOwn(source, key)) return source[key];
+  }
+  return undefined;
+}
+
+function isPresent(value) {
+  return value !== undefined && value !== null && value !== "";
+}
+
+function asNonNegativeInteger(value, fallback = 0) {
+  if (!isPresent(value) || typeof value === "boolean") return fallback;
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed < 0) return fallback;
+  return Math.round(parsed);
+}
+
+function textLooksUnsafe(text) {
+  const value = String(text || "");
+  return /[A-Za-z]:\\/.test(value)
+    || value.includes("\\")
+    || value.includes("/ControlStack")
+    || value.includes("ControlStack\\")
+    || value.includes("data:")
+    || value.includes("base64")
+    || /\.pdf\b/i.test(value)
+    || /\.ies\b/i.test(value)
+    || /password|credential|secret|token/i.test(value)
+    || /users\b/i.test(value)
+    || /raw|candela|photometric grid|lab evidence/i.test(value);
+}
+
+function safeText(value, fallback = null, maxLength = 140) {
+  if (!isPresent(value)) return fallback;
+  const raw = String(value).trim();
+  if (!raw || textLooksUnsafe(raw)) return fallback;
+  const cleaned = raw
+    .replace(/[\u0000-\u001f\u007f]+/g, " ")
+    .replace(/[\\/]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  return cleaned ? cleaned.slice(0, maxLength) : fallback;
+}
+
+function blocker(key) {
+  return clonePlain(HANDOFF_BLOCKER_DEFINITIONS[key]);
+}
+
+function lockFieldsPresent(lock) {
+  if (!isRecord(lock)) return [];
+  return ["boardFamily", "pitchFamily", "opticCurrentAssumptions", "zoneSplitStrategy", "driverFamily"]
+    .filter((key) => isPresent(lock[key]));
+}
+
+function sourcePhotometryRefFrom(projection) {
+  return firstPresent(projection, ["sourcePhotometryRef", "source_photometry_ref"])
+    ?? firstPresent(projection.photometryMetadataShape, ["sourcePhotometryRef", "source_photometry_ref"])
+    ?? firstPresent(projection.photometryMetadata, ["sourcePhotometryRef", "source_photometry_ref"])
+    ?? firstPresent(projection.sourceRefs, ["sourcePhotometryRef", "photometryRef", "photometryMetadataRef"]);
+}
+
+function buildSelectedResultStateSummary(projection) {
+  const runs = Array.isArray(projection.runs) ? projection.runs : [];
+  const runCount = asNonNegativeInteger(firstPresent(projection.perRunLookupSummary, ["runCount", "count"]), runs.length);
+  return {
+    sourceAvailable: projection.sourceAvailable === true,
+    selectedResultAvailable: projection.selectedResultAvailable === true,
+    selectedResultUnavailableReason: safeText(projection.selectedResultUnavailableReason, null, 220),
+    accepted: projection.accepted === true,
+    engineVerified: projection.engineVerified === true,
+    stale: projection.stale === true || projection.state === "stale" || projection.resultState === "stale",
+    state: safeText(projection.state || projection.resultState, "no_selected_result", 80),
+    resultState: safeText(projection.resultState || projection.state, "no_selected_result", 80),
+    resultStateLabel: safeText(projection.resultStateLabel, "Estimated preview", 120),
+    selectedTierOrProfile: safeText(projection.selectedTierOrProfile || projection.selectedProfileTier, null, 120),
+    estimatedPreviewOnly: projection.estimatedPreviewOnly !== false,
+    runCount,
+    rawSelectedPayloadExposed: false,
+    rawEnginePayloadExposed: false,
+    rawEngineDebugPayloadExposed: false,
+  };
+}
+
+function buildLockReadiness(projection) {
+  const lock = isRecord(projection.selectedFamilySubsetLock) ? projection.selectedFamilySubsetLock : null;
+  const fieldsPresent = lockFieldsPresent(lock);
+  return {
+    ready: fieldsPresent.length === 5,
+    required: true,
+    status: fieldsPresent.length === 5 ? "ready" : "missing",
+    fieldsRequired: ["boardFamily", "pitchFamily", "opticCurrentAssumptions", "zoneSplitStrategy", "driverFamily"],
+    fieldsPresent,
+    rawLockExposed: false,
+  };
+}
+
+function buildPerRunLookupReadiness(projection) {
+  const runs = Array.isArray(projection.runs) ? projection.runs : [];
+  const runCount = asNonNegativeInteger(firstPresent(projection.perRunLookupSummary, ["runCount", "count"]), runs.length);
+  return {
+    ready: projection.perRunLookupNormalised === true && runCount > 0,
+    required: true,
+    status: projection.perRunLookupNormalised === true && runCount > 0 ? "ready" : "missing",
+    normalised: projection.perRunLookupNormalised === true,
+    lookupKey: safeText(firstPresent(projection.perRunLookupSummary, ["lookupKey"]) || projection.perRunLookupKey, "run id / run number / run key", 120),
+    runCount,
+    rawLookupExposed: false,
+  };
+}
+
+function buildBoardDataSourceVersionReadiness(projection) {
+  const present = isPresent(projection.boardDataSourceVersion)
+    || firstPresent(projection.boardDataSourceVersionMetadata, ["present"]) === true;
+  return {
+    ready: present,
+    required: true,
+    status: present ? "ready" : "missing",
+    opaqueVersionRef: present ? "opaque-board-data-source-version-present" : null,
+    rawVersionExposed: false,
+  };
+}
+
+function buildSourceInputFingerprintReadiness(projection) {
+  const present = isPresent(projection.sourceInputFingerprint)
+    || firstPresent(projection.sourceInputFingerprintMetadata, ["present"]) === true;
+  return {
+    ready: present,
+    required: true,
+    status: present ? "ready" : "missing",
+    opaqueFingerprintRef: present ? "opaque-source-input-fingerprint-present" : null,
+    staleComparisonImplemented: false,
+    staleResultComparisonAttempted: false,
+    rawFingerprintExposed: false,
+  };
+}
+
+function buildSourcePhotometryRefReadiness(projection) {
+  const present = isPresent(sourcePhotometryRefFrom(projection));
+  return {
+    ready: present,
+    required: true,
+    status: present ? "opaque_placeholder_ready" : "missing",
+    sourcePhotometryRef: present ? "opaque-source-photometry-ref-present" : null,
+    opaquePlaceholderOnly: true,
+    rawPhotometryRefExposed: false,
+    rawPhotometryPayloadExposed: false,
+    filenamesExposed: false,
+    localPathsExposed: false,
+  };
+}
+
+function buildOneMmPolicyMetadata() {
+  return {
+    oneMmNormalised: true,
+    baseLengthM: 0.001,
+    photometryMode: "normalise_1mm_candidate",
+    beamDirection: "metadata_only_pending_candidate_output",
+    mirrorPolicy: "policy_label_only",
+    regridPolicy: "policy_label_only",
+    scalePolicy: "scale_to_1mm_metadata_only",
+    rawCandelaGridExposed: false,
+    rawIesContentExposed: false,
+    rawPhotometryPayloadExposed: false,
+  };
+}
+
+export function buildIesBuilderSelectedResultHandoffContract(selectedResultProjection = null) {
+  const projection = isRecord(selectedResultProjection) ? selectedResultProjection : {};
+  const hasProjection = isRecord(selectedResultProjection);
+  const selectedResultStateSummary = buildSelectedResultStateSummary(projection);
+  const selectedFamilySubsetLockReadiness = buildLockReadiness(projection);
+  const perRunLookupReadiness = buildPerRunLookupReadiness(projection);
+  const boardDataSourceVersionReadiness = buildBoardDataSourceVersionReadiness(projection);
+  const sourceInputFingerprintReadiness = buildSourceInputFingerprintReadiness(projection);
+  const sourcePhotometryRefReadiness = buildSourcePhotometryRefReadiness(projection);
+  const blockers = [];
+
+  let handoffState = "metadata_ready_for_future_candidate_output";
+  if (!hasProjection) {
+    handoffState = "waiting_for_selected_engine_runtable_result";
+    blockers.push(blocker("waitingForSelectedEngineRunTableResult"));
+  } else if (selectedResultStateSummary.stale) {
+    handoffState = "blocked_selected_result_stale";
+    blockers.push(blocker("selectedResultStale"));
+  } else if (
+    selectedResultStateSummary.selectedResultAvailable !== true
+    || selectedResultStateSummary.accepted !== true
+    || selectedResultStateSummary.engineVerified !== true
+  ) {
+    handoffState = "blocked_selected_result_unavailable";
+    blockers.push(blocker("selectedResultUnavailable"));
+  }
+
+  if (hasProjection && selectedResultStateSummary.stale !== true) {
+    if (!selectedFamilySubsetLockReadiness.ready) {
+      if (handoffState === "metadata_ready_for_future_candidate_output") handoffState = "blocked_missing_family_subset_lock";
+      blockers.push(blocker("missingFamilySubsetLock"));
+    }
+    if (!perRunLookupReadiness.ready) {
+      if (handoffState === "metadata_ready_for_future_candidate_output") handoffState = "blocked_selected_result_unavailable";
+      blockers.push(blocker("missingPerRunLookup"));
+    }
+    if (!boardDataSourceVersionReadiness.ready) {
+      if (handoffState === "metadata_ready_for_future_candidate_output") handoffState = "blocked_selected_result_unavailable";
+      blockers.push(blocker("missingBoardDataSourceVersion"));
+    }
+    if (!sourceInputFingerprintReadiness.ready) {
+      if (handoffState === "metadata_ready_for_future_candidate_output") handoffState = "blocked_selected_result_unavailable";
+      blockers.push(blocker("missingSourceInputFingerprint"));
+    }
+    if (!sourcePhotometryRefReadiness.ready) {
+      if (handoffState === "metadata_ready_for_future_candidate_output") handoffState = "blocked_missing_source_photometry_ref";
+      blockers.push(blocker("missingSourcePhotometryRef"));
+    }
+  }
+
+  const redactionFlags = {
+    ...clonePlain(REDACTION_FLAGS),
+    rawRoughElectricalPayloadExposed: false,
+    rawEngineDebugPayloadExposed: false,
+    rawPhotometryRefExposed: false,
+    rawSourceInputFingerprintExposed: false,
+    rawBoardDataSourceVersionExposed: false,
+    rawSelectedResultProjectionExposed: false,
+  };
+
+  return {
+    schema: clonePlain(IES_BUILDER_SELECTED_RESULT_HANDOFF_SCHEMA),
+    schemaId: IES_BUILDER_SELECTED_RESULT_HANDOFF_SCHEMA.schemaId,
+    schemaVersion: IES_BUILDER_SELECTED_RESULT_HANDOFF_SCHEMA.schemaVersion,
+    readOnly: true,
+    diagnosticOnly: true,
+    candidateOutputOnly: true,
+    productionProof: false,
+    labProofAuthority: false,
+    handoffState,
+    handoffStates: [...IES_BUILDER_HANDOFF_STATES],
+    ready: handoffState === "metadata_ready_for_future_candidate_output",
+    blockers,
+    selectorSafeIntentSummaryPlaceholder: clonePlain(PRODUCT_INTENT_SUMMARY),
+    selectedResultStateSummary,
+    selectedFamilySubsetLockReadiness,
+    perRunLookupReadiness,
+    boardDataSourceVersionReadiness,
+    sourceInputFingerprintReadiness,
+    sourcePhotometryRefReadiness,
+    oneMmPolicy: buildOneMmPolicyMetadata(),
+    candidateArtefactRefs: clonePlain(CANDIDATE_ARTEFACT_REFS),
+    redactionFlags,
+    safetyFlags: {
+      readOnly: true,
+      candidateOutputOnly: true,
+      productionProof: false,
+      labProofAuthority: false,
+      iesUploadEnabled: false,
+      iesParseEnabled: false,
+      iesExportEnabled: false,
+      iesGenerationEnabled: false,
+      polarPreviewEnabled: false,
+      engineExecutionEnabled: false,
+      runTableGenerationEnabled: false,
+      payloadGenerationEnabled: false,
+      selectorMutationEnabled: false,
+      boardDataMutationEnabled: false,
+      labProofMutationEnabled: false,
+      complianceApprovalEnabled: false,
+      rawExposureEnabled: false,
+      routesAdded: false,
+      postEndpointsAdded: false,
+    },
+  };
+}
+
+export function buildIesBuilderStatus(options = {}) {
+  const handoffContract = buildIesBuilderSelectedResultHandoffContract(
+    isRecord(options) ? (options.selectedResultProjection || options.selectedResultAdapterProjection || null) : null,
+  );
+
   return {
     ...SAFE_IES_BUILDER_STATUS,
+    selectedResultAvailable: handoffContract.selectedResultStateSummary.selectedResultAvailable,
+    handoffState: handoffContract.handoffState,
+    handoffBlockers: clonePlain(handoffContract.blockers),
     schema: clonePlain(IES_BUILDER_CANDIDATE_OUTPUT_SCHEMA),
     candidateState: clonePlain(CANDIDATE_STATE),
     readinessBlockers: clonePlain(READINESS_BLOCKERS),
@@ -302,6 +696,14 @@ export function buildIesBuilderStatus() {
     runSummaryShape: clonePlain(RUN_SUMMARY_SHAPE),
     photometryMetadataShape: clonePlain(PHOTOMETRY_METADATA_SHAPE),
     candidateArtefactRefs: clonePlain(CANDIDATE_ARTEFACT_REFS),
+    handoffContract,
+    selectedResultStateSummary: clonePlain(handoffContract.selectedResultStateSummary),
+    selectedFamilySubsetLockReadiness: clonePlain(handoffContract.selectedFamilySubsetLockReadiness),
+    perRunLookupReadiness: clonePlain(handoffContract.perRunLookupReadiness),
+    boardDataSourceVersionReadiness: clonePlain(handoffContract.boardDataSourceVersionReadiness),
+    sourceInputFingerprintReadiness: clonePlain(handoffContract.sourceInputFingerprintReadiness),
+    sourcePhotometryRefReadiness: clonePlain(handoffContract.sourcePhotometryRefReadiness),
+    oneMmPolicy: clonePlain(handoffContract.oneMmPolicy),
     redactionFlags: clonePlain(REDACTION_FLAGS),
     redactionRules: [...REDACTION_RULES],
     contractBoundaryCopy: [...CANDIDATE_CONTRACT_BOUNDARY_COPY],

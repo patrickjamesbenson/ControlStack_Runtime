@@ -261,6 +261,17 @@ const REDACTION_FLAGS_FALLBACK = Object.freeze({
   providerDetailsExposed: false,
 });
 
+const HANDOFF_CONTRACT_FALLBACK = Object.freeze({
+  schemaId: "controlstack.ies_builder.selected_result_handoff_contract.v1",
+  schemaVersion: "v1",
+  readOnly: true,
+  candidateOutputOnly: true,
+  productionProof: false,
+  labProofAuthority: false,
+  handoffState: "waiting_for_selected_engine_runtable_result",
+  ready: false,
+});
+
 function yesNo(value) {
   if (value === true) return "true";
   if (value === false) return "false";
@@ -470,6 +481,14 @@ export function createIesBuilderViewModel({ context, local = {}, status = {} }) 
   const photometryMetadataShape = safeObject(status.photometryMetadataShape, PHOTOMETRY_METADATA_SHAPE_FALLBACK);
   const candidateArtefactRefs = safeObject(status.candidateArtefactRefs, CANDIDATE_ARTEFACT_REFS_FALLBACK);
   const redactionFlags = safeObject(status.redactionFlags, REDACTION_FLAGS_FALLBACK);
+  const handoffContract = safeObject(status.handoffContract, HANDOFF_CONTRACT_FALLBACK);
+  const selectedResultStateSummary = safeObject(status.selectedResultStateSummary || handoffContract.selectedResultStateSummary, {});
+  const selectedFamilySubsetLockReadiness = safeObject(status.selectedFamilySubsetLockReadiness || handoffContract.selectedFamilySubsetLockReadiness, {});
+  const perRunLookupReadiness = safeObject(status.perRunLookupReadiness || handoffContract.perRunLookupReadiness, {});
+  const boardDataSourceVersionReadiness = safeObject(status.boardDataSourceVersionReadiness || handoffContract.boardDataSourceVersionReadiness, {});
+  const sourceInputFingerprintReadiness = safeObject(status.sourceInputFingerprintReadiness || handoffContract.sourceInputFingerprintReadiness, {});
+  const sourcePhotometryRefReadiness = safeObject(status.sourcePhotometryRefReadiness || handoffContract.sourcePhotometryRefReadiness, {});
+  const oneMmPolicy = safeObject(status.oneMmPolicy || handoffContract.oneMmPolicy, {});
   const contractBoundaryCopy = safeList(status.contractBoundaryCopy, CANDIDATE_OUTPUT_CONTRACT_BOUNDARY_COPY);
   const boundaryStatements = [
     ...CANDIDATE_READINESS_BOUNDARY_STATEMENTS,
@@ -497,6 +516,15 @@ export function createIesBuilderViewModel({ context, local = {}, status = {} }) 
     photometryMetadataShapeRows: objectRows(photometryMetadataShape, PHOTOMETRY_METADATA_SHAPE_FALLBACK),
     candidateArtefactRefRows: objectRows(candidateArtefactRefs, CANDIDATE_ARTEFACT_REFS_FALLBACK),
     redactionFlagRows: objectRows(redactionFlags, REDACTION_FLAGS_FALLBACK),
+    handoffContractRows: objectRows(handoffContract, HANDOFF_CONTRACT_FALLBACK),
+    handoffBlockerRows: readinessBlockerRows(handoffContract.blockers || status.handoffBlockers),
+    selectedResultStateSummaryRows: objectRows(selectedResultStateSummary),
+    selectedFamilySubsetLockReadinessRows: objectRows(selectedFamilySubsetLockReadiness),
+    perRunLookupReadinessRows: objectRows(perRunLookupReadiness),
+    boardDataSourceVersionReadinessRows: objectRows(boardDataSourceVersionReadiness),
+    sourceInputFingerprintReadinessRows: objectRows(sourceInputFingerprintReadiness),
+    sourcePhotometryRefReadinessRows: objectRows(sourcePhotometryRefReadiness),
+    handoffOneMmPolicyRows: objectRows(oneMmPolicy),
     fixtureParserDiagnosticRows: fixtureParserDiagnosticRows(status),
     candidateReadinessFlagRows: candidateReadinessFlagRows(status),
     candidateReadinessRequirements: [...safeList(status.candidateReadinessRequirements, CANDIDATE_READINESS_REQUIREMENTS)],
