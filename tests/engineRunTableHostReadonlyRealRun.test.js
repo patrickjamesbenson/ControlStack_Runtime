@@ -85,6 +85,36 @@ test("host-local Engine evidence runner does not serialise raw source rows, USER
   assert.equal(runnerText.includes("json.dumps(selector_payload"), false);
 });
 
+test("host-local Engine evidence runner maps real-source aliases without inventing lighting values", async () => {
+  const runnerText = await readFile(runnerSourceUrl, "utf-8");
+
+  for (const alias of [
+    "lumens_per_m",
+    "LUMENS_PER_M",
+    "lumens per metre",
+    "output per m",
+    "colour_temperature",
+    "kelvin",
+    "cct_cri",
+    "optic_var_1",
+    "diffuser_var_1",
+    "lens_type",
+    "control_protocol",
+    "driver_type",
+  ]) {
+    assert.match(runnerText, new RegExp(alias.replace(/[.*+?^${}()|[\\]\\]/g, "\\$&")));
+  }
+
+  assert.match(runnerText, /normalise_field_name/);
+  assert.match(runnerText, /alias_keys\("lm_per_m"\)/);
+  assert.match(runnerText, /alias_keys\("cct"\)/);
+  assert.match(runnerText, /alias_keys\("cri"\)/);
+  assert.match(runnerText, /alias_keys\("optic"\)/);
+  assert.match(runnerText, /safe_schema_introspection/);
+  assert.match(runnerText, /"raw_rows_returned": False/);
+  assert.match(runnerText, /"raw_headers_returned": False/);
+});
+
 test("host-local Engine evidence runner fails closed for missing candidate fields and writes only ignored reports", async () => {
   const runnerText = await readFile(runnerSourceUrl, "utf-8");
 

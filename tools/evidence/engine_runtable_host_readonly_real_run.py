@@ -18,7 +18,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Mapping
 
-STAGE_NAME = "ENGINE-RUNTABLE-HOST-LOCAL-READONLY-REAL-RUN-1"
+STAGE_NAME = "ENGINE-RUNTABLE-HOST-RUN-CANDIDATE-DERIVATION-FIX-1"
 SCRIPT_PATH = Path(__file__).resolve()
 RUNTIME_ROOT = SCRIPT_PATH.parents[2]
 MCP_SOURCE_PATH = RUNTIME_ROOT / "tools" / "controlstack-mcp" / "controlstack_mcp.py"
@@ -93,6 +93,107 @@ REQUIRED_CANDIDATE_FIELDS = (
     "control_type",
 )
 
+FIELD_ALIAS_GROUPS = {
+    "lm_per_m": (
+        "target_lm_per_m",
+        "targetLmPerM",
+        "board_lm_per_m",
+        "delivered_lm_per_m",
+        "lumens_per_m",
+        "LUMENS_PER_M",
+        "lumens per m",
+        "lumens per metre",
+        "lumens per meter",
+        "lm_per_m",
+        "lm/m",
+        "lm per m",
+        "output_per_m",
+        "output per m",
+        "nominal_lm_per_m",
+        "direct_lm_per_m",
+    ),
+    "cct": (
+        "cct",
+        "CCT",
+        "c1_cct",
+        "c2_cct",
+        "cct_k",
+        "cct kelvin",
+        "colour_temperature",
+        "color_temperature",
+        "colour temperature",
+        "color temperature",
+        "kelvin",
+        "led_cct",
+        "cct_cri",
+        "CCT_CRI",
+    ),
+    "cri": (
+        "cri",
+        "CRI",
+        "c1_cri_min",
+        "c2_cri_min",
+        "cri_min",
+        "cri rating",
+        "cri_rating",
+        "ra",
+        "cct_cri",
+        "CCT_CRI",
+    ),
+    "optic": (
+        "optic",
+        "optic_key",
+        "optic_name",
+        "optic_var_1",
+        "optic var 1",
+        "directOpticVar1",
+        "diffuser",
+        "diffuser_var_1",
+        "diffuser var 1",
+        "diffuserVar1",
+        "lens",
+        "lens_type",
+        "optical_code",
+        "optic_bom_id",
+        "baseline_slug",
+        "pure_ref_id",
+        "spec_code",
+        "name",
+        "label",
+    ),
+    "control_type": (
+        "control_type_labels",
+        "control_type_options",
+        "native_control_type",
+        "control_type",
+        "control type",
+        "control",
+        "protocol",
+        "control_protocol",
+        "driver_control",
+        "dimming",
+        "dimming_type",
+        "driver_type",
+    ),
+    "system": (
+        "system",
+        "series",
+        "system_name",
+        "system_key",
+        "profile_family",
+        "prepend_d",
+        "family",
+        "profile",
+    ),
+    "pitch": ("pitch_mm", "pitch", "board_pitch", "led_pitch_mm"),
+    "current_ma": ("test_ma", "current_ma", "c1_test_ma", "c1_imin_ma", "imin_ma", "nominal_current_ma"),
+    "direction": ("light_direction", "direction", "light_type", "application", "emission", "optic_direction"),
+    "approval": ("approved", "is_approved", "approval", "status", "state"),
+}
+
+SCHEMA_INTROSPECTION_TABLES = ("BOARDS", "OPTICS", "DRIVERS", "SYSTEM_POLICY")
+SCHEMA_INTROSPECTION_GROUPS = ("lm_per_m", "cct", "cri", "optic", "control_type", "system", "pitch", "current_ma", "direction", "approval")
+
 
 def utc_now() -> str:
     return datetime.now(timezone.utc).isoformat()
@@ -138,16 +239,33 @@ def is_mapping(value: Any) -> bool:
 
 
 def truthy(value: Any) -> bool:
-    return safe_string(value).upper() in {"TRUE", "YES", "Y", "1", "T", "APPROVED"} or value is True
+    return safe_string(value).upper() in {"TRUE", "YES", "Y", "1", "T", "APPROVED", "ACTIVE", "LIVE", "CURRENT", "RELEASED", "OK"} or value is True
+
+
+def explicitly_false(value: Any) -> bool:
+    return safe_string(value).upper() in {"FALSE", "NO", "N", "0", "F", "INACTIVE", "OBSOLETE", "RETIRED"} or value is False
+
+
+def normalise_field_name(value: Any) -> str:
+    return re.sub(r"[^a-z0-9]+", "", safe_string(value).lower())
+
+
+def alias_keys(group: str) -> tuple[str, ...]:
+    return tuple(FIELD_ALIAS_GROUPS.get(group, ()))
 
 
 def first_present(mapping: Mapping[str, Any], keys: tuple[str, ...] | list[str]) -> tuple[Any, str | None]:
     for key in keys:
         if key in mapping and mapping.get(key) not in (None, "", [], {}):
             return mapping.get(key), key
-    lower_lookup = {safe_string(key).lower(): key for key in mapping.keys()}
+    lower_lookup: dict[str, str] = {}
+    normalised_lookup: dict[str, str] = {}
+    for existing_key in mapping.keys():
+        existing_key_text = safe_string(existing_key)
+        lower_lookup[existing_key_text.lower()] = existing_key
+        normalised_lookup[normalise_field_name(existing_key_text)] = existing_key
     for key in keys:
-        actual = lower_lookup.get(safe_string(key).lower())
+        actual = lower_lookup.get(safe_string(key).lower()) or normalised_lookup.get(normalise_field_name(key))
         if actual and mapping.get(actual) not in (None, "", [], {}):
             return mapping.get(actual), actual
     return None, None
@@ -176,25 +294,63 @@ def normalise_cct(value: Any) -> str:
 
 
 def normalise_cri(value: Any) -> str:
-    raw = split_first(value)
-    match = re.search(r"(?:CRI\s*)?(\d{2,3})", raw, flags=re.IGNORECASE)
-    return match.group(1) if match else raw
+    raw = safe_string(value)
+    preferred = re.search(r"\bCRI\s*[-:]?\s*(\d{2,3})\b", raw, flags=re.IGNORECASE)
+    if preferred:
+        return preferred.group(1)
+    numbers = re.findall(r"\b\d{2,4}\b", raw)
+    for token in numbers:
+        try:
+            number = int(token)
+        except ValueError:
+            continue
+        if 60 <= number <= 100:
+            return token
+    raw_first = split_first(value)
+    return raw_first
 
 
-def table_rows(snapshot: Any, table_name: str) -> list[Mapping[str, Any]]:
-    if not isinstance(snapshot, dict):
+def normalise_table_rows(candidate: Any) -> list[Mapping[str, Any]]:
+    if isinstance(candidate, Mapping):
+        for key in ("rows", "data", "values", "records", "items", "tableRows"):
+            if isinstance(candidate.get(key), list):
+                return normalise_table_rows(candidate.get(key))
         return []
-    candidate = snapshot.get(table_name)
     if not isinstance(candidate, list):
         return []
     if candidate and all(isinstance(item, list) for item in candidate):
         headers = [safe_string(item) for item in candidate[0]]
         rows: list[Mapping[str, Any]] = []
         for raw_row in candidate[1:]:
-            row = {header: raw_row[index] if index < len(raw_row) else "" for index, header in enumerate(headers) if header}
+            row: dict[str, Any] = {}
+            for index, header in enumerate(headers):
+                if header:
+                    row[header] = raw_row[index] if index < len(raw_row) else ""
             rows.append(row)
         return rows
     return [row for row in candidate if isinstance(row, Mapping)]
+
+
+def table_rows(snapshot: Any, table_name: str) -> list[Mapping[str, Any]]:
+    if not isinstance(snapshot, dict):
+        return []
+    candidates = [snapshot]
+    for container_key in ("data", "tables", "novondb", "sheets", "snapshot", "activeSnapshot", "authorityReference"):
+        container = snapshot.get(container_key)
+        if isinstance(container, Mapping):
+            candidates.append(container)
+    for container in candidates:
+        if table_name in container:
+            rows = normalise_table_rows(container.get(table_name))
+            if rows:
+                return rows
+        wanted = normalise_field_name(table_name)
+        for key, value in container.items():
+            if normalise_field_name(key) == wanted:
+                rows = normalise_table_rows(value)
+                if rows:
+                    return rows
+    return []
 
 
 def source_ref(table: str, field: str | None, row_index: int | None = None) -> dict[str, Any]:
@@ -217,6 +373,46 @@ def field_map_entry(field: str, present: bool, classification: str, source: dict
         "raw_row_returned": False,
         "raw_value_returned": False,
     }
+
+
+def table_alias_summary(snapshot: Mapping[str, Any], table: str) -> dict[str, Any]:
+    rows = table_rows(snapshot, table)
+    groups: dict[str, Any] = {}
+    for group in SCHEMA_INTROSPECTION_GROUPS:
+        aliases = alias_keys(group)
+        matched_fields: list[str] = []
+        matched_refs: list[str] = []
+        for index, row in enumerate(rows):
+            _value, field = first_present(row, aliases)
+            if not field:
+                continue
+            field_text = safe_string(field)
+            if field_text not in matched_fields:
+                matched_fields.append(field_text)
+            row_ref = f"{table}[{index}]"
+            if row_ref not in matched_refs:
+                matched_refs.append(row_ref)
+            if len(matched_refs) >= 5:
+                break
+        groups[group] = {
+            "candidate_aliases": list(aliases),
+            "matched": bool(matched_fields),
+            "matched_field_names": matched_fields[:5],
+            "matched_row_refs": matched_refs[:5],
+            "raw_rows_returned": False,
+            "raw_headers_returned": False,
+        }
+    return {
+        "table": table,
+        "row_count": len(rows),
+        "alias_groups": groups,
+        "raw_rows_returned": False,
+        "raw_headers_returned": False,
+    }
+
+
+def safe_schema_introspection(snapshot: Mapping[str, Any]) -> list[dict[str, Any]]:
+    return [table_alias_summary(snapshot, table) for table in SCHEMA_INTROSPECTION_TABLES]
 
 
 def load_mcp_module() -> Any:
@@ -277,29 +473,33 @@ def find_tier(snapshot: Mapping[str, Any]) -> tuple[str, dict[str, Any] | None, 
 
 def find_board(snapshot: Mapping[str, Any]) -> tuple[Mapping[str, Any] | None, int | None]:
     for index, row in enumerate(table_rows(snapshot, "BOARDS")):
-        approved_value, approved_key = first_present(row, ("approved", "is_approved", "status"))
-        if approved_key and not truthy(approved_value):
+        approval_value, approval_key = first_present(row, alias_keys("approval"))
+        if approval_key and explicitly_false(approval_value):
             continue
-        lm, _ = first_present(row, ("board_lm_per_m", "delivered_lm_per_m", "lm_per_m", "nominal_lm_per_m"))
-        cct, _ = first_present(row, ("c1_cct", "cct", "cct_k", "cct_range"))
-        cri, _ = first_present(row, ("c1_cri_min", "cri", "cri_rating", "cri_min"))
+        lm, _ = first_present(row, alias_keys("lm_per_m"))
+        cct, _ = first_present(row, alias_keys("cct"))
+        cri, _ = first_present(row, alias_keys("cri"))
         if numeric_token(lm) and normalise_cct(cct) and normalise_cri(cri):
             return row, index
     return None, None
 
 
-def find_optic(snapshot: Mapping[str, Any], system_hint: str = "") -> tuple[str, dict[str, Any] | None]:
+def find_optic(snapshot: Mapping[str, Any], system_hint: str = "", board: Mapping[str, Any] | None = None, board_index: int | None = None) -> tuple[str, dict[str, Any] | None]:
+    if board is not None:
+        value, key = first_present(board, alias_keys("optic"))
+        if safe_string(value):
+            return split_first(value), source_ref("BOARDS", key, board_index)
     rows = table_rows(snapshot, "OPTICS")
     for index, row in enumerate(rows):
         if system_hint:
-            system_value, _ = first_present(row, ("system", "series", "system_name", "system_key"))
+            system_value, _ = first_present(row, alias_keys("system"))
             if system_value and safe_string(system_hint).lower() not in safe_string(system_value).lower() and safe_string(system_value).lower() not in safe_string(system_hint).lower():
                 continue
-        value, key = first_present(row, ("optic", "optic_key", "optic_name", "diffuser", "diffuser_var_1", "var_1", "label", "name"))
+        value, key = first_present(row, alias_keys("optic"))
         if safe_string(value):
             return split_first(value), source_ref("OPTICS", key, index)
     for index, row in enumerate(rows):
-        value, key = first_present(row, ("optic", "optic_key", "optic_name", "diffuser", "diffuser_var_1", "var_1", "label", "name"))
+        value, key = first_present(row, alias_keys("optic"))
         if safe_string(value):
             return split_first(value), source_ref("OPTICS", key, index)
     return "", None
@@ -307,11 +507,11 @@ def find_optic(snapshot: Mapping[str, Any], system_hint: str = "") -> tuple[str,
 
 def find_control_type(snapshot: Mapping[str, Any], board: Mapping[str, Any] | None) -> tuple[str, dict[str, Any] | None]:
     if board is not None:
-        value, key = first_present(board, ("control_type_labels", "control_type_options", "native_control_type", "control_type"))
+        value, key = first_present(board, alias_keys("control_type"))
         if safe_string(value):
             return split_first(value), source_ref("BOARDS", key, None)
     for index, row in enumerate(table_rows(snapshot, "DRIVERS")):
-        value, key = first_present(row, ("control_type_labels", "control_type_options", "native_control_type", "control_type", "protocol"))
+        value, key = first_present(row, alias_keys("control_type"))
         if safe_string(value):
             return split_first(value), source_ref("DRIVERS", key, index)
     return "", None
@@ -319,11 +519,11 @@ def find_control_type(snapshot: Mapping[str, Any], board: Mapping[str, Any] | No
 
 def find_system(snapshot: Mapping[str, Any], board: Mapping[str, Any] | None) -> tuple[str, dict[str, Any] | None]:
     if board is not None:
-        value, key = first_present(board, ("system", "series", "system_name", "system_key", "profile_family"))
+        value, key = first_present(board, alias_keys("system"))
         if safe_string(value):
             return split_first(value), source_ref("BOARDS", key, None)
     for index, row in enumerate(table_rows(snapshot, "SYSTEM")):
-        value, key = first_present(row, ("system", "series", "system_name", "label", "name", "display_name", "system_key"))
+        value, key = first_present(row, alias_keys("system"))
         if safe_string(value):
             return split_first(value), source_ref("SYSTEM", key, index)
     return "", None
@@ -337,7 +537,7 @@ def derive_candidate_from_snapshot(snapshot: Mapping[str, Any]) -> dict[str, Any
     blockers.extend(tier_blockers)
     board, board_index = find_board(snapshot)
     system, system_source = find_system(snapshot, board)
-    optic, optic_source = find_optic(snapshot, system_hint=system)
+    optic, optic_source = find_optic(snapshot, system_hint=system, board=board, board_index=board_index)
     control_type, control_source = find_control_type(snapshot, board)
 
     lighting: dict[str, Any] = {}
@@ -353,12 +553,12 @@ def derive_candidate_from_snapshot(snapshot: Mapping[str, Any]) -> dict[str, Any
     board_source = None
     if board is not None:
         board_source = source_ref("BOARDS", "candidate-row", board_index)
-        lm_value, lm_key = first_present(board, ("board_lm_per_m", "delivered_lm_per_m", "lm_per_m", "nominal_lm_per_m"))
-        cct_value, cct_key = first_present(board, ("c1_cct", "cct", "cct_k", "cct_range"))
-        cri_value, cri_key = first_present(board, ("c1_cri_min", "cri", "cri_rating", "cri_min"))
-        pitch_value, pitch_key = first_present(board, ("pitch_mm", "pitch"))
-        current_value, current_key = first_present(board, ("test_ma", "current_ma", "c1_test_ma", "c1_imin_ma", "imin_ma"))
-        direction_value, direction_key = first_present(board, ("light_direction", "direction", "light_type", "application"))
+        lm_value, lm_key = first_present(board, alias_keys("lm_per_m"))
+        cct_value, cct_key = first_present(board, alias_keys("cct"))
+        cri_value, cri_key = first_present(board, alias_keys("cri"))
+        pitch_value, pitch_key = first_present(board, alias_keys("pitch"))
+        current_value, current_key = first_present(board, alias_keys("current_ma"))
+        direction_value, direction_key = first_present(board, alias_keys("direction"))
         direction_text = safe_string(direction_value).lower()
         if "indirect" in direction_text or "uplight" in direction_text or re.search(r"\bup\b", direction_text):
             light_direction = "Indirect"
@@ -452,6 +652,7 @@ def derive_candidate_from_snapshot(snapshot: Mapping[str, Any]) -> dict[str, Any
         "candidate_private_values_redacted_in_report": True,
         "candidate_source_used": "runtime-authority-reference-active-snapshot plus controlled run geometry" if board is not None else "runtime-authority-reference-active-snapshot attempted; no complete BOARDS candidate",
         "field_source_map": field_source_map,
+        "schema_introspection": safe_schema_introspection(snapshot),
         "blockers": blockers,
         "selector_payload": selector_payload if complete else None,
     }
