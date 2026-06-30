@@ -10,6 +10,7 @@ unbounded filesystem access.
 
 import difflib
 import fnmatch
+import hashlib
 import json
 import logging
 import os
@@ -29,14 +30,19 @@ from mcp.server.fastmcp import FastMCP
 
 DEFAULT_RUNTIME_ROOT = r"C:\ControlStack_Runtime"
 DEFAULT_DONOR_REFERENCE_ROOT = r"C:\ControlStack"
+DEFAULT_RUNTIMEDATA_ROOT = r"C:\ControlStack_RuntimeData"
 DEFAULT_MAX_CHARS = 50_000
 DEFAULT_MAX_DIR_ENTRIES = 200
 DEFAULT_HTTP_PATH = "/mcp"
 MAX_TEXT_BYTES = 5 * 1024 * 1024
+MAX_RUNTIMEDATA_SOURCE_BYTES = 25 * 1024 * 1024
 
 ACTIVE_TRANSPORT = os.environ.get("CONTROLSTACK_MCP_TRANSPORT", "stdio").strip().lower()
 RUNTIME_ROOT = Path(os.environ.get("CONTROLSTACK_RUNTIME_ROOT", DEFAULT_RUNTIME_ROOT)).resolve()
 DONOR_REFERENCE_ROOT = Path(os.environ.get("CONTROLSTACK_DONOR_REFERENCE_ROOT", DEFAULT_DONOR_REFERENCE_ROOT)).resolve()
+RUNTIMEDATA_ROOT = Path(os.environ.get("CONTROLSTACK_RUNTIMEDATA_ROOT", DEFAULT_RUNTIMEDATA_ROOT)).resolve()
+RUNTIMEDATA_AUTHORITY_REFERENCE_ROOT = RUNTIMEDATA_ROOT / "authority-reference"
+RUNTIMEDATA_ACTIVE_SOURCE_PATH = RUNTIMEDATA_AUTHORITY_REFERENCE_ROOT / "novondb.json"
 WEBHOOK_BASE_URL = os.environ.get("CONTROLSTACK_WEBHOOK_BASE_URL", "http://127.0.0.1:8787").rstrip("/")
 
 HTTP_HOST = os.environ.get("CONTROLSTACK_MCP_HOST", "127.0.0.1")
@@ -51,6 +57,7 @@ mcp = FastMCP(
     instructions=(
         "Use these tools for the configured local ControlStack roots only: repo and runtime. "
         "Never request or write paths outside the selected root. Donor-reference roots are read-only. "
+        "A dedicated RuntimeData probe may read only the approved active source DB and returns redacted metadata/counts only. "
         "Do not use arbitrary terminal execution."
     ),
     stateless_http=True,
@@ -67,6 +74,23 @@ GIT_INDEX_ARCHIVE_EXTS = {".zip", ".tar", ".tgz", ".rar", ".7z", ".gz", ".bz2", 
 GIT_INDEX_GLOB_CHARS = {"*", "?", "[", "]"}
 ALLOWED_GATES = {"selector", "test", "runtime"}
 FIXED_GATE_COMMAND = ["npm.cmd", "test"]
+RUNTIMEDATA_SELECTOR_CRITICAL_TABLES = [
+    "SYSTEM",
+    "OPTICS",
+    "ACCESSORIES",
+    "SPEC_CODES",
+    "BOARDS",
+    "DRIVERS",
+    "PURE_REF_STATE",
+    "SYSTEM_COMPONENTS",
+    "SYSTEM_BOM_DEFAULTS",
+    "SYSTEM_POLICY",
+    "FIELD_EDITABILITY",
+    "ROLES_AND_LANES",
+    "CODE_POLICY",
+    "MESSAGES",
+    "USERS",
+]
 
 LAST_RUNTIME_GATE_RESULT: dict[str, Any] | None = None
 
@@ -470,6 +494,184 @@ def _replace_nth(text: str, target: str, replacement: str, occurrence: int) -> t
     return text[:start] + replacement + text[start + len(target) :], 1
 
 
+def _runtime_data_blocker(code: str, reason: str, severity: str = "blocking") -> dict[str, Any]:
+    return {"code": code, "severity": severity, "reason": reason}
+
+
+def _runtime_data_rows(snapshot: Any, table_name: str) -> list[Any]:
+    if isinstance(snapshot, dict) and isinstance(snapshot.get(table_name), list):
+        return snapshot[table_name]
+    return []
+
+
+def _runtime_data_table_summary(snapshot: Any) -> list[dict[str, Any]]:
+    return [
+        {
+            "table": table_name,
+            "present": isinstance(snapshot, dict) and isinstance(snapshot.get(table_name), list),
+            "row_count": len(_runtime_data_rows(snapshot, table_name)),
+            "raw_rows_exposed": False,
+            "raw_headers_exposed": False,
+            "headers_returned": False,
+            "headers_redacted": True,
+        }
+        for table_name in RUNTIMEDATA_SELECTOR_CRITICAL_TABLES
+    ]
+
+
+def _runtime_data_source_metadata(path: Path, *, readable: bool = False, parseable: bool = False, source_fingerprint: str | None = None) -> dict[str, Any]:
+    try:
+        info = path.stat()
+        present = path.is_file()
+        return {
+            "label": "runtime-authority-reference-active-snapshot",
+            "present": present,
+            "readable": bool(readable and present),
+            "parseable": bool(parseable and present),
+            "size_bytes": info.st_size if present else None,
+            "modified_at": datetime.fromtimestamp(info.st_mtime, tz=timezone.utc).isoformat() if present else None,
+            "source_fingerprint": source_fingerprint,
+            "path_returned": False,
+            "local_path_exposure_enabled": False,
+        }
+    except OSError as exc:
+        return {
+            "label": "runtime-authority-reference-active-snapshot",
+            "present": False,
+            "readable": False,
+            "parseable": False,
+            "size_bytes": None,
+            "modified_at": None,
+            "source_fingerprint": None,
+            "path_returned": False,
+            "local_path_exposure_enabled": False,
+            "reason": getattr(exc, "errno", None) or exc.__class__.__name__,
+        }
+
+
+def _runtime_data_users_redaction_status(snapshot: Any) -> dict[str, Any]:
+    users = _runtime_data_rows(snapshot, "USERS")
+    return {
+        "present": isinstance(snapshot, dict) and isinstance(snapshot.get("USERS"), list),
+        "count": len(users),
+        "raw_rows_exposed": False,
+        "raw_headers_exposed": False,
+        "personal_identifiers_exposed": False,
+        "credentials_exposed": False,
+    }
+
+
+def _runtime_data_probe_base(**overrides: Any) -> dict[str, Any]:
+    snapshot: dict[str, Any] = {}
+    table_summary = _runtime_data_table_summary(snapshot)
+    result: dict[str, Any] = {
+        "ok": False,
+        "source": _runtime_data_source_metadata(RUNTIMEDATA_ACTIVE_SOURCE_PATH),
+        "loaded_read_only": False,
+        "active_source_db_loaded_read_only": False,
+        "server_side_only": True,
+        "internal_probe_only": True,
+        "public_route_added": False,
+        "post_endpoint_added": False,
+        "write_enabled": False,
+        "write_attempted": False,
+        "runtime_data_mutation_enabled": False,
+        "raw_rows_exposed": False,
+        "raw_headers_exposed": False,
+        "raw_users_exposed": False,
+        "raw_snapshot_returned": False,
+        "raw_snapshot_serialized": False,
+        "path_returned": False,
+        "local_path_exposure_enabled": False,
+        "source_path_label": "runtime-authority-reference-active-snapshot",
+        "expected_tables": list(RUNTIMEDATA_SELECTOR_CRITICAL_TABLES),
+        "present_tables": [],
+        "missing_tables": list(RUNTIMEDATA_SELECTOR_CRITICAL_TABLES),
+        "table_summary": table_summary,
+        "users_redaction_status": _runtime_data_users_redaction_status(snapshot),
+        "top_level_array_table_count": 0,
+        "source_fingerprint_available": False,
+        "blockers": [],
+        "warnings": [],
+    }
+    result.update(overrides)
+    return result
+
+
+@mcp.tool()
+def runtime_data_active_source_probe() -> dict[str, Any]:
+    """Load the active RuntimeData source DB read-only and return only redacted metadata/counts."""
+    path = RUNTIMEDATA_ACTIVE_SOURCE_PATH
+    try:
+        info = path.stat()
+    except OSError as exc:
+        return _runtime_data_probe_base(
+            source=_runtime_data_source_metadata(path),
+            blockers=[_runtime_data_blocker("runtime-data-active-source-unavailable", "Active RuntimeData source DB is missing or unavailable.")],
+            warnings=[getattr(exc, "strerror", None) or exc.__class__.__name__],
+        )
+
+    if not path.is_file():
+        return _runtime_data_probe_base(
+            source=_runtime_data_source_metadata(path),
+            blockers=[_runtime_data_blocker("runtime-data-active-source-not-file", "Active RuntimeData source path is not a file.")],
+        )
+
+    if info.st_size > MAX_RUNTIMEDATA_SOURCE_BYTES:
+        return _runtime_data_probe_base(
+            source=_runtime_data_source_metadata(path),
+            blockers=[_runtime_data_blocker("runtime-data-active-source-too-large", "Active RuntimeData source DB exceeds the controlled probe byte limit.")],
+        )
+
+    try:
+        text = path.read_text(encoding="utf-8", errors="strict")
+    except UnicodeError:
+        return _runtime_data_probe_base(
+            source=_runtime_data_source_metadata(path),
+            blockers=[_runtime_data_blocker("runtime-data-active-source-not-utf8", "Active RuntimeData source DB is not readable as UTF-8 JSON.")],
+        )
+    except OSError as exc:
+        return _runtime_data_probe_base(
+            source=_runtime_data_source_metadata(path),
+            blockers=[_runtime_data_blocker("runtime-data-active-source-not-readable", "Active RuntimeData source DB is not readable.")],
+            warnings=[getattr(exc, "strerror", None) or exc.__class__.__name__],
+        )
+
+    source_fingerprint = hashlib.sha256(text.encode("utf-8")).hexdigest()
+    try:
+        snapshot = json.loads(text)
+    except json.JSONDecodeError:
+        return _runtime_data_probe_base(
+            source=_runtime_data_source_metadata(path, readable=True, source_fingerprint=source_fingerprint),
+            source_fingerprint_available=True,
+            blockers=[_runtime_data_blocker("runtime-data-active-source-not-json", "Active RuntimeData source DB is not parseable JSON.")],
+        )
+
+    if not isinstance(snapshot, dict):
+        return _runtime_data_probe_base(
+            source=_runtime_data_source_metadata(path, readable=True, source_fingerprint=source_fingerprint),
+            source_fingerprint_available=True,
+            blockers=[_runtime_data_blocker("runtime-data-active-source-not-table-object", "Active RuntimeData source DB parsed but did not contain a table object.")],
+        )
+
+    table_summary = _runtime_data_table_summary(snapshot)
+    present_tables = [item["table"] for item in table_summary if item["present"]]
+    missing_tables = [item["table"] for item in table_summary if not item["present"]]
+    return _runtime_data_probe_base(
+        ok=True,
+        source=_runtime_data_source_metadata(path, readable=True, parseable=True, source_fingerprint=source_fingerprint),
+        loaded_read_only=True,
+        active_source_db_loaded_read_only=True,
+        present_tables=present_tables,
+        missing_tables=missing_tables,
+        table_summary=table_summary,
+        users_redaction_status=_runtime_data_users_redaction_status(snapshot),
+        top_level_array_table_count=len([value for value in snapshot.values() if isinstance(value, list)]),
+        source_fingerprint_available=True,
+        warnings=[f"Missing selector-critical RuntimeData table: {table}." for table in missing_tables],
+    )
+
+
 @mcp.tool()
 def repo_info() -> dict[str, Any]:
     """Return both configured roots, webhook base, transport mode, and enabled flags."""
@@ -478,6 +680,9 @@ def repo_info() -> dict[str, Any]:
         "runtime_exists": RUNTIME_ROOT.exists(),
         "donor_reference_root": str(DONOR_REFERENCE_ROOT),
         "donor_reference_exists": DONOR_REFERENCE_ROOT.exists(),
+        "runtime_data_active_source_probe_available": True,
+        "runtime_data_active_source_exists": RUNTIMEDATA_ACTIVE_SOURCE_PATH.exists(),
+        "runtime_data_active_source_path_returned": False,
         "transport": ACTIVE_TRANSPORT,
         "http_host": HTTP_HOST,
         "http_port": HTTP_PORT,
