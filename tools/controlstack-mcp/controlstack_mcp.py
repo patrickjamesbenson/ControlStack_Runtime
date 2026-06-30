@@ -24,7 +24,7 @@ import urllib.parse
 import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Mapping
 
 from mcp.server.fastmcp import FastMCP
 
@@ -598,6 +598,86 @@ def _runtime_data_probe_base(**overrides: Any) -> dict[str, Any]:
     return result
 
 
+
+def _load_runtime_data_active_source_internal() -> tuple[dict[str, Any] | None, dict[str, Any]]:
+    """Load the approved active RuntimeData source DB for internal probes only.
+
+    The raw snapshot is returned to the caller in memory, but never included in
+    the public metadata result. This mirrors runtime_data_active_source_probe()
+    redaction rules while giving local-only evidence tools a controlled way to
+    supply run_engine(selector_payload) with selector_payload.db.
+    """
+    path = RUNTIMEDATA_ACTIVE_SOURCE_PATH
+    try:
+        info = path.stat()
+    except OSError as exc:
+        return None, _runtime_data_probe_base(
+            source=_runtime_data_source_metadata(path),
+            blockers=[_runtime_data_blocker("runtime-data-active-source-unavailable", "Active RuntimeData source DB is missing or unavailable.")],
+            warnings=[getattr(exc, "strerror", None) or exc.__class__.__name__],
+        )
+
+    if not path.is_file():
+        return None, _runtime_data_probe_base(
+            source=_runtime_data_source_metadata(path),
+            blockers=[_runtime_data_blocker("runtime-data-active-source-not-file", "Active RuntimeData source path is not a file.")],
+        )
+
+    if info.st_size > MAX_RUNTIMEDATA_SOURCE_BYTES:
+        return None, _runtime_data_probe_base(
+            source=_runtime_data_source_metadata(path),
+            blockers=[_runtime_data_blocker("runtime-data-active-source-too-large", "Active RuntimeData source DB exceeds the controlled probe byte limit.")],
+        )
+
+    try:
+        text = path.read_text(encoding="utf-8", errors="strict")
+    except UnicodeError:
+        return None, _runtime_data_probe_base(
+            source=_runtime_data_source_metadata(path),
+            blockers=[_runtime_data_blocker("runtime-data-active-source-not-utf8", "Active RuntimeData source DB is not readable as UTF-8 JSON.")],
+        )
+    except OSError as exc:
+        return None, _runtime_data_probe_base(
+            source=_runtime_data_source_metadata(path),
+            blockers=[_runtime_data_blocker("runtime-data-active-source-not-readable", "Active RuntimeData source DB is not readable.")],
+            warnings=[getattr(exc, "strerror", None) or exc.__class__.__name__],
+        )
+
+    source_fingerprint = hashlib.sha256(text.encode("utf-8")).hexdigest()
+    try:
+        snapshot = json.loads(text)
+    except json.JSONDecodeError:
+        return None, _runtime_data_probe_base(
+            source=_runtime_data_source_metadata(path, readable=True, source_fingerprint=source_fingerprint),
+            source_fingerprint_available=True,
+            blockers=[_runtime_data_blocker("runtime-data-active-source-not-json", "Active RuntimeData source DB is not parseable JSON.")],
+        )
+
+    if not isinstance(snapshot, dict):
+        return None, _runtime_data_probe_base(
+            source=_runtime_data_source_metadata(path, readable=True, source_fingerprint=source_fingerprint),
+            source_fingerprint_available=True,
+            blockers=[_runtime_data_blocker("runtime-data-active-source-not-table-object", "Active RuntimeData source DB parsed but did not contain a table object.")],
+        )
+
+    table_summary = _runtime_data_table_summary(snapshot)
+    present_tables = [item["table"] for item in table_summary if item["present"]]
+    missing_tables = [item["table"] for item in table_summary if not item["present"]]
+    metadata = _runtime_data_probe_base(
+        ok=True,
+        source=_runtime_data_source_metadata(path, readable=True, parseable=True, source_fingerprint=source_fingerprint),
+        loaded_read_only=True,
+        active_source_db_loaded_read_only=True,
+        present_tables=present_tables,
+        missing_tables=missing_tables,
+        table_summary=table_summary,
+        users_redaction_status=_runtime_data_users_redaction_status(snapshot),
+        top_level_array_table_count=len([value for value in snapshot.values() if isinstance(value, list)]),
+        source_fingerprint_available=True,
+        warnings=[f"Missing selector-critical RuntimeData table: {table}." for table in missing_tables],
+    )
+    return snapshot, metadata
+
 @mcp.tool()
 def runtime_data_active_source_probe() -> dict[str, Any]:
     """Load the active RuntimeData source DB read-only and return only redacted metadata/counts."""
@@ -672,6 +752,312 @@ def runtime_data_active_source_probe() -> dict[str, Any]:
     )
 
 
+
+def _engine_readonly_invoke_base(**overrides: Any) -> dict[str, Any]:
+    result: dict[str, Any] = {
+        "ok": False,
+        "seam": "engine-runtable-internal-readonly-invoke",
+        "seam_version": "engine_runtable_internal_readonly_invoke.v1",
+        "internal_mcp_diagnostic_only": True,
+        "server_side_only": True,
+        "public_route_added": False,
+        "post_endpoint_added": False,
+        "caller_supplied_file_path_allowed": False,
+        "caller_supplied_db_allowed": False,
+        "active_source_db_loaded_read_only": False,
+        "active_source_db_passed_in_memory_only": False,
+        "donor_bridge_used": False,
+        "donor_bridge_audit_jsonl_write_enabled": False,
+        "audit_jsonl_write_attempted": False,
+        "write_attempted": False,
+        "runtime_data_mutation_enabled": False,
+        "donor_data_mutation_enabled": False,
+        "selected_result_persistence_enabled": False,
+        "engine_execution_attempted": False,
+        "engine_result_produced": False,
+        "selected_result_created": False,
+        "synthetic_success_fixture_created": False,
+        "product_data_invented": False,
+        "raw_rows_exposed": False,
+        "raw_headers_exposed": False,
+        "raw_users_exposed": False,
+        "raw_snapshot_returned": False,
+        "raw_snapshot_serialized": False,
+        "raw_engine_payload_exposed": False,
+        "raw_engine_debug_payload_exposed": False,
+        "raw_rough_electrical_payload_exposed": False,
+        "raw_ies_exposed": False,
+        "raw_candela_exposed": False,
+        "raw_lab_evidence_exposed": False,
+        "raw_pdfs_exposed": False,
+        "base64_artifacts_exposed": False,
+        "credentials_exposed": False,
+        "provider_ids_exposed": False,
+        "private_paths_exposed": False,
+        "source_path_returned": False,
+        "source_path_label": "runtime-authority-reference-active-snapshot",
+        "source": _runtime_data_source_metadata(RUNTIMEDATA_ACTIVE_SOURCE_PATH),
+        "source_summary": None,
+        "candidate_field_status": [],
+        "safe_engine_summary": None,
+        "blockers": [],
+        "warnings": [],
+    }
+    result.update(overrides)
+    return result
+
+
+def _engine_blocker(code: str, reason: str, severity: str = "blocking") -> dict[str, Any]:
+    return {"code": code, "severity": severity, "reason": reason}
+
+
+def _first_present(mapping: Mapping[str, Any], keys: list[str]) -> Any:
+    for key in keys:
+        value = mapping.get(key)
+        if value not in (None, "", [], {}):
+            return value
+    return None
+
+
+def _candidate_field_status(selector_payload: Mapping[str, Any]) -> list[dict[str, Any]]:
+    lighting = selector_payload.get("lighting") if isinstance(selector_payload.get("lighting"), Mapping) else {}
+    electrical = selector_payload.get("electrical") if isinstance(selector_payload.get("electrical"), Mapping) else {}
+    tier_strategy = selector_payload.get("tier_strategy") if isinstance(selector_payload.get("tier_strategy"), Mapping) else {}
+    runs = selector_payload.get("runs")
+
+    tier_value = _first_present(selector_payload, ["tier", "tier_name"]) or _first_present(tier_strategy, ["selected_tier"])
+    target_value = _first_present(lighting, ["target_lm_per_m", "lm_per_m", "Lumens per m", "targetLmPerM"])
+    cct_value = _first_present(lighting, ["cct", "cct_direct", "cct_k"])
+    cri_value = _first_present(lighting, ["cri", "cri_direct", "cri_rating"])
+    optic_map = selector_payload.get("optic", {}) if isinstance(selector_payload.get("optic"), Mapping) else {}
+    optic_value = _first_present(optic_map, ["key", "label"])
+    optic_value = optic_value or _first_present(lighting, ["opticKey", "optic_key", "selected_optic_key"])
+    control_value = _first_present(selector_payload, ["control_type"]) or _first_present(lighting, ["control_type", "controlType"])
+    current_value = _first_present(electrical, ["current_ma", "currentMa"])
+
+    def row(field: str, classification: str, present: bool, source: str, reason: str = "") -> dict[str, Any]:
+        return {
+            "field": field,
+            "classification": classification,
+            "present": bool(present),
+            "source": source,
+            "reason": reason,
+            "raw_value_returned": False,
+        }
+
+    return [
+        row("db", "internal-active-source", False, "runtimeDataReadOnlySourceAccessService", "Injected internally only; never caller supplied or returned."),
+        row("tier", "candidate-supplied-source-backed-required", bool(tier_value), "selector_payload.tier or tier_strategy.selected_tier"),
+        row("runs", "controlled-test-input-required", isinstance(runs, list) and len(runs) > 0, "selector_payload.runs"),
+        row("lighting", "candidate-supplied-source-backed-required", isinstance(lighting, Mapping) and bool(lighting), "selector_payload.lighting"),
+        row("target_lm_per_m", "candidate-supplied-source-backed-required", target_value is not None, "selector_payload.lighting"),
+        row("cct", "candidate-supplied-source-backed-required", cct_value is not None, "selector_payload.lighting"),
+        row("cri", "candidate-supplied-source-backed-required", cri_value is not None, "selector_payload.lighting"),
+        row("optic", "candidate-supplied-source-backed-required", optic_value is not None, "selector_payload.optic or lighting"),
+        row("control_type", "candidate-supplied-source-backed-required", control_value is not None, "selector_payload.control_type or lighting"),
+        row("current_ma", "optional-engine-derivable", current_value is not None, "selector_payload.electrical", "May be derived by donor Engine only when source data supports it."),
+    ]
+
+
+def _candidate_blockers(selector_payload: Any) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    if not isinstance(selector_payload, Mapping):
+        return [], [_engine_blocker("selector-payload-required", "selector_payload must be a JSON object.")]
+    if "db" in selector_payload:
+        return _candidate_field_status(selector_payload), [
+            _engine_blocker("caller-supplied-db-refused", "The internal seam loads the active source DB itself; caller-supplied db is refused."),
+        ]
+
+    status = _candidate_field_status(selector_payload)
+    blockers = [
+        _engine_blocker(f"missing-candidate-field-{item['field']}", f"Required Engine candidate field is missing: {item['field']}.")
+        for item in status
+        if item["classification"].endswith("required") and not item["present"]
+    ]
+    return status, blockers
+
+
+def _safe_count(value: Any) -> int:
+    return len(value) if isinstance(value, list) else 0
+
+
+def _safe_engine_runs(engine_result: Mapping[str, Any]) -> list[Any]:
+    rough_payload = engine_result.get("rough_electrical_payload")
+    if isinstance(rough_payload, Mapping) and isinstance(rough_payload.get("runs"), list):
+        return rough_payload.get("runs") or []
+    payload = engine_result.get("payload")
+    if isinstance(payload, Mapping) and isinstance(payload.get("runs"), list):
+        return payload.get("runs") or []
+    runs = engine_result.get("runs")
+    return runs if isinstance(runs, list) else []
+
+
+def _safe_engine_result_summary(engine_result: Any) -> dict[str, Any]:
+    if not isinstance(engine_result, Mapping):
+        return {
+            "success": False,
+            "run_count": 0,
+            "error_count": 1,
+            "warning_count": 0,
+            "first_error": "Engine did not return an object.",
+            "first_warning": "",
+            "runs": [],
+        }
+
+    errors = engine_result.get("errors") if isinstance(engine_result.get("errors"), list) else []
+    warnings = engine_result.get("warnings") if isinstance(engine_result.get("warnings"), list) else []
+    runs = _safe_engine_runs(engine_result)
+    safe_runs: list[dict[str, Any]] = []
+    for index, run in enumerate(runs[:50]):
+        run_map = run if isinstance(run, Mapping) else {}
+        mechanical = run_map.get("mechanical") if isinstance(run_map.get("mechanical"), Mapping) else {}
+        zone_plan = run_map.get("zone_plan") if isinstance(run_map.get("zone_plan"), Mapping) else {}
+        safe_runs.append({
+            "index": index,
+            "has_body_requested": "body_mm_requested" in run_map,
+            "segments_count": _safe_count(run_map.get("segments")),
+            "reserved_ranges_count": _safe_count(run_map.get("reserved_ranges")),
+            "boards_count": _safe_count(run_map.get("boards")),
+            "gear_tray_plan_count": _safe_count(run_map.get("gear_tray_plan")),
+            "suspension_points_count": _safe_count(run_map.get("suspension_points_mm") or mechanical.get("suspension_points_mm")),
+            "clip_points_count": _safe_count(run_map.get("clip_points_mm") or mechanical.get("clip_points_mm")),
+            "zone_count": _safe_count(zone_plan.get("zones")),
+            "raw_run_returned": False,
+        })
+
+    tier_evaluation = engine_result.get("tier_evaluation") if isinstance(engine_result.get("tier_evaluation"), Mapping) else {}
+    selected_solution = engine_result.get("selected_solution") if isinstance(engine_result.get("selected_solution"), Mapping) else {}
+    return {
+        "success": bool(engine_result.get("success", False)),
+        "run_count": len(runs),
+        "error_count": len(errors),
+        "warning_count": len(warnings),
+        "first_error": str(errors[0])[:240] if errors else "",
+        "first_warning": str(warnings[0])[:240] if warnings else "",
+        "selected_tier": str(tier_evaluation.get("selected_tier") or selected_solution.get("tier") or "")[:80],
+        "output_contract_ready": bool(engine_result.get("output_contract_ready", False)),
+        "runs": safe_runs,
+        "raw_result_returned": False,
+        "raw_debug_returned": False,
+        "raw_rough_electrical_payload_returned": False,
+    }
+
+
+@mcp.tool()
+def engine_runtable_internal_readonly_invoke_probe(selector_payload: dict[str, Any] | None = None, execute: bool = False) -> dict[str, Any]:
+    """Internal evidence-only seam for donor run_engine with active RuntimeData DB in memory.
+
+    No public route or POST endpoint is added. The caller may provide a candidate
+    selector payload but not a db object or file path. The approved active source
+    DB is loaded internally and passed to donor run_engine only in process memory
+    when execute=True and required candidate fields are present. Only safe
+    summaries/blockers are returned.
+    """
+    candidate = selector_payload if isinstance(selector_payload, dict) else {}
+    candidate_status, candidate_blockers = _candidate_blockers(candidate)
+    snapshot, source_meta = _load_runtime_data_active_source_internal()
+
+    source_summary = {
+        "ok": bool(source_meta.get("ok")),
+        "source": source_meta.get("source"),
+        "present_tables": source_meta.get("present_tables", []),
+        "missing_tables": source_meta.get("missing_tables", []),
+        "table_summary": source_meta.get("table_summary", []),
+        "users_redaction_status": source_meta.get("users_redaction_status", {}),
+        "source_fingerprint_available": bool(source_meta.get("source_fingerprint_available")),
+        "raw_rows_exposed": False,
+        "raw_users_exposed": False,
+        "raw_snapshot_returned": False,
+    }
+
+    blockers = []
+    blockers.extend(source_meta.get("blockers", []))
+    blockers.extend(candidate_blockers)
+    if not execute:
+        blockers.append(_engine_blocker("execute-flag-not-set", "The seam is available but Engine execution was not requested."))
+
+    base = _engine_readonly_invoke_base(
+        ok=False,
+        source=source_meta.get("source"),
+        source_summary=source_summary,
+        active_source_db_loaded_read_only=bool(source_meta.get("active_source_db_loaded_read_only")),
+        candidate_field_status=candidate_status,
+        blockers=blockers,
+        warnings=[
+            "Donor bridge is deliberately avoided because it writes audit JSONL.",
+            "Raw active DB rows are held only in local process memory and are never returned.",
+        ],
+    )
+
+    if blockers:
+        return base
+
+    if snapshot is None:
+        return _engine_readonly_invoke_base(
+            source_summary=source_summary,
+            blockers=[_engine_blocker("active-source-snapshot-unavailable", "Active source snapshot was not available for in-memory invocation.")],
+        )
+
+    donor_root = DONOR_REFERENCE_ROOT
+    if not donor_root.exists():
+        return _engine_readonly_invoke_base(
+            source_summary=source_summary,
+            candidate_field_status=candidate_status,
+            blockers=[_engine_blocker("donor-reference-root-unavailable", "Donor reference root is unavailable, so direct run_engine cannot be imported.")],
+        )
+
+    payload = dict(candidate)
+    payload["db"] = snapshot
+    payload.setdefault("disable_run_memo", True)
+
+    inserted = False
+    donor_root_text = str(donor_root)
+    if donor_root_text not in sys.path:
+        sys.path.insert(0, donor_root_text)
+        inserted = True
+
+    started = time.monotonic()
+    try:
+        from lib.planning.run_engine import run_engine  # type: ignore
+
+        engine_result = run_engine(payload)
+    except Exception as exc:  # noqa: BLE001 - safe diagnostic summary only
+        return _engine_readonly_invoke_base(
+            ok=False,
+            source=source_meta.get("source"),
+            source_summary=source_summary,
+            active_source_db_loaded_read_only=True,
+            active_source_db_passed_in_memory_only=True,
+            candidate_field_status=candidate_status,
+            engine_execution_attempted=True,
+            blockers=[_engine_blocker("direct-run-engine-exception", f"Direct donor run_engine raised {exc.__class__.__name__}.")],
+            warnings=["Exception message redacted to avoid leaking raw payload/source details."],
+        )
+    finally:
+        if inserted:
+            try:
+                sys.path.remove(donor_root_text)
+            except ValueError:
+                pass
+
+    duration_ms = int((time.monotonic() - started) * 1000)
+    safe_summary = _safe_engine_result_summary(engine_result)
+    result_blockers = [] if safe_summary.get("success") else [
+        _engine_blocker("direct-run-engine-no-success", "Direct donor run_engine executed but did not produce a successful Engine result."),
+    ]
+    return _engine_readonly_invoke_base(
+        ok=bool(safe_summary.get("success")),
+        source=source_meta.get("source"),
+        source_summary=source_summary,
+        active_source_db_loaded_read_only=True,
+        active_source_db_passed_in_memory_only=True,
+        candidate_field_status=candidate_status,
+        engine_execution_attempted=True,
+        engine_result_produced=bool(safe_summary.get("success")),
+        safe_engine_summary={**safe_summary, "duration_ms": duration_ms},
+        blockers=result_blockers,
+        warnings=["Direct donor run_engine was invoked without donor bridge or audit JSONL write."],
+    )
+
 @mcp.tool()
 def repo_info() -> dict[str, Any]:
     """Return both configured roots, webhook base, transport mode, and enabled flags."""
@@ -681,6 +1067,7 @@ def repo_info() -> dict[str, Any]:
         "donor_reference_root": str(DONOR_REFERENCE_ROOT),
         "donor_reference_exists": DONOR_REFERENCE_ROOT.exists(),
         "runtime_data_active_source_probe_available": True,
+        "engine_runtable_internal_readonly_invoke_probe_available": True,
         "runtime_data_active_source_exists": RUNTIMEDATA_ACTIVE_SOURCE_PATH.exists(),
         "runtime_data_active_source_path_returned": False,
         "transport": ACTIVE_TRANSPORT,
