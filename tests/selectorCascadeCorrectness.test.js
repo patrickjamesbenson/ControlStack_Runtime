@@ -213,6 +213,101 @@ function primaryOpticVar1Controls(result, constraints = {}) {
     .map((field) => field.fieldKey);
 }
 
+function identityCascadeSnapshot() {
+  return {
+    SYSTEM: [
+      { system: "60", system_variant_1: "Direct", label: "DNX 60 Direct", emission: "Direct", approved: "yes" },
+      { system: "60", system_variant_1: "Beam_DI", label: "DNX 60 Beam D/I", emission: "Both", approved: "yes" },
+      { system: "80", system_variant_1: "Square", label: "DNX 80 Direct", emission: "Direct", approved: "yes" },
+      { system: "80", system_variant_1: "Square_DI", label: "DNX 80 DI", emission: "Both", approved: "yes" },
+    ],
+    OPTICS: [
+      { system: "60", optic_var_1: "Opal", optic_var_2: "Soft", emission_permission: "Direct", approved: "yes" },
+      { system: "60", optic_var_1: "Rope", optic_var_2: "Rope", emission_permission: "Indirect", approved: "yes" },
+      { system: "80", optic_var_1: "Inlay", optic_var_2: "Var1;Var2", spec_code: "IN", spec_code_var2: "V1;V2", emission_permission: "Direct", approved: "yes" },
+      { system: "80", optic_var_1: "Rope", optic_var_2: "Rope", emission_permission: "Indirect", approved: "yes" },
+    ],
+    BOARDS: [
+      { system: "60", optic_var_1: "Opal", c1_cct: "3000", c1_cri_min: "80", board_lm_per_m: "900", control_type_labels: "Non-dim", approved: "yes" },
+      { system: "80", optic_var_1: "Inlay", c1_cct: "4000", c1_cri_min: "90", board_lm_per_m: "1500", control_type_labels: "DALI-2", approved: "yes" },
+    ],
+    DRIVERS: [
+      { driver_id: "DALI Driver", native_control_type: "DALI-2", wiring_type: "5-core DALI", approved: "yes" },
+      { driver_id: "Standard Driver", native_control_type: "Non-dim", wiring_type: "3-core switched", approved: "yes" },
+    ],
+  };
+}
+
+test("DNX60 direct-only suppresses indirect optics while DNX60 Beam D/I keeps both paths", () => {
+  const snapshot = identityCascadeSnapshot();
+  const directOnlyConstraints = { system: "DNX 60 Direct" };
+  const directOnly = deriveSelectorReferenceOptionsFromSnapshot(snapshot, { source: sourceReady(), constraints: directOnlyConstraints });
+
+  assert.equal(option(directOnly, "directOpticVar1", "60|Opal").status, "available");
+  assert.equal(option(directOnly, "indirectOpticVar1", "60|Rope").status, "blocked");
+  const directOnlyIndirect = viewModelField(directOnly, "indirectOpticVar1", directOnlyConstraints);
+  assert.equal(directOnlyIndirect.displayMode, "hidden-diagnostic");
+  assert.equal(directOnlyIndirect.compatibleOptionCount, 0);
+  assert.deepEqual(primaryOpticVar1Controls(directOnly, directOnlyConstraints), ["directOpticVar1"]);
+
+  const beamDiConstraints = { system: "DNX 60 Beam D/I" };
+  const beamDi = deriveSelectorReferenceOptionsFromSnapshot(snapshot, { source: sourceReady(), constraints: beamDiConstraints });
+  assert.equal(option(beamDi, "directOpticVar1", "60|Opal").status, "available");
+  assert.equal(option(beamDi, "indirectOpticVar1", "60|Rope").status, "available");
+  assert.deepEqual(primaryOpticVar1Controls(beamDi, beamDiConstraints), ["directOpticVar1", "indirectOpticVar1"]);
+});
+
+test("DNX80 direct-only and DNX80 DI remain distinct while DI exposes source-backed direct Var1/Var2 and single indirect Rope", () => {
+  const snapshot = identityCascadeSnapshot();
+  const directOnlyConstraints = { system: "DNX 80 Direct" };
+  const directOnly = deriveSelectorReferenceOptionsFromSnapshot(snapshot, { source: sourceReady(), constraints: directOnlyConstraints });
+
+  assert.equal(option(directOnly, "directOpticVar1", "80|Inlay").status, "available");
+  assert.equal(option(directOnly, "indirectOpticVar1", "80|Rope").status, "blocked");
+  assert.equal(viewModelField(directOnly, "indirectOpticVar1", directOnlyConstraints).compatibleOptionCount, 0);
+  assert.deepEqual(primaryOpticVar1Controls(directOnly, directOnlyConstraints), ["directOpticVar1"]);
+
+  const diConstraints = { system: "DNX 80 DI" };
+  const di = deriveSelectorReferenceOptionsFromSnapshot(snapshot, { source: sourceReady(), constraints: diConstraints });
+  assert.deepEqual(compatibleLabels(workflowField(di, "directOpticVar1")), ["Inlay · 80"]);
+  assert.deepEqual(compatibleLabels(workflowField(di, "indirectOpticVar1")), ["Rope · 80"]);
+  const indirect = viewModelField(di, "indirectOpticVar1", diConstraints);
+  assert.equal(indirect.displayMode, "auto-chip");
+  assert.equal(indirect.effectiveValue, "80|Rope");
+
+  const diWithDirect = deriveSelectorReferenceOptionsFromSnapshot(snapshot, { source: sourceReady(), constraints: { ...diConstraints, directOpticVar1: "80|Inlay" } });
+  assert.deepEqual(compatibleLabels(workflowField(diWithDirect, "directOpticVar2")), ["Var1", "Var2"]);
+});
+
+test("indirect lm/m is independent and topology consequence rows render as read-only metadata", () => {
+  const constraints = { system: "DNX 80 DI", controlType: "DALI-2" };
+  const result = deriveSelectorReferenceOptionsFromSnapshot(identityCascadeSnapshot(), { source: sourceReady(), constraints });
+  const model = selectorViewModelFor(result, constraints);
+  const indirectLm = viewModelField(result, "targetLmPerMIndirect", constraints);
+
+  assert.equal(indirectLm.displayMode, "choice");
+  assert.equal(indirectLm.primaryControl, true);
+  assert.notEqual(indirectLm.provenance, "inherited");
+
+  const lightRows = model.selectorSurface.productSpine.sections.find((section) => section.sectionKey === "lightControl").rows;
+  const topology = lightRows.find((row) => row.rowKey === "topologyConsequence");
+  const cores = lightRows.find((row) => row.rowKey === "coresConsequence");
+  const notes = lightRows.find((row) => row.rowKey === "topologyNotes");
+  assert.ok(topology, "expected Topology consequence row");
+  assert.ok(cores, "expected Cores consequence row");
+  assert.ok(notes, "expected Notes consequence row");
+  assert.notEqual(topology.displayValue, "—");
+  assert.equal(topology.status, "metadata-only");
+  assert.match(topology.displayValue, /topology/i);
+  assert.notEqual(cores.displayValue, "—");
+  assert.equal(cores.status, "metadata-only");
+  assert.match(cores.displayValue, /core/i);
+  assert.match(notes.displayValue, /not proof/i);
+  assert.equal(topology.rawRowsExposed, false);
+  assert.equal(cores.rawRowsExposed, false);
+  assert.equal(notes.rawRowsExposed, false);
+});
+
 test("full system label resolves to size-keyed direct/down and indirect/up optic sets", () => {
   const constraints = { system: "DNX 60 Beam DI" };
   const result = deriveSelectorReferenceOptionsFromSnapshot(cascadeSnapshot(), {

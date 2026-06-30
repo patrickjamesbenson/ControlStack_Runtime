@@ -1038,7 +1038,26 @@ function systemOptionForRow(systemOptions, row) {
 }
 
 function systemOptionValueForSource(systemOptions, row) {
-  return systemOptionForRow(systemOptions, row)?.value || "";
+  const rowSystem = rowText(row, ["system", "series", "system_name", "system_key"]);
+  const option = systemOptionForRow(systemOptions, row);
+  return rowSystem || option?.systemReferenceKey || safeString(option?.value).split("|")[0] || "";
+}
+
+function systemOptionIdentityValue(option = {}) {
+  const value = safeString(option.value);
+  const referenceKey = safeString(option.systemReferenceKey || value.split("|")[0]);
+  const variantKey = safeString(option.systemVariantKey || value.split("|").slice(1).join("|"));
+  return [referenceKey, variantKey].filter(Boolean).join("|") || value || safeString(option.label);
+}
+
+function systemIdentityValuesForSourceSystem(systemOptions = [], sourceSystem = "") {
+  const source = safeString(sourceSystem);
+  if (!source) return [];
+  const matches = systemOptions.filter((option) => {
+    const optionReference = safeString(option.systemReferenceKey || safeString(option.value).split("|")[0]);
+    return valuesMatch(optionReference, source) || valuesMatch(option.value, source) || valuesMatch(option.label, source);
+  }).map(systemOptionIdentityValue);
+  return uniqueStrings(matches.length ? matches : [source]);
 }
 
 function opticFieldValue(row) {
@@ -1134,7 +1153,13 @@ function collectRecords(snapshot, bucket) {
 
   for (const row of liveTableRows(snapshot, "SYSTEM")) {
     const tokens = systemTokens(row);
-    const systemValue = tokens.system || systemOptionValueForSource(systemOptions, row) || tokens.value;
+    const matchedSystemOption = systemOptionForRow(systemOptions, row);
+    const systemValue = systemOptionIdentityValue(matchedSystemOption || {
+      value: tokens.value,
+      label: tokens.label,
+      systemReferenceKey: tokens.system,
+      systemVariantKey: tokens.variant,
+    });
     const variant = rowText(row, ["system_variant_1", "variant", "family", "profile_family"]);
     const emissions = systemEmissionValues(row);
     const mountStyles = rowOptionValues(row, ["mount_style", "mount_styles"]);
@@ -1156,7 +1181,7 @@ function collectRecords(snapshot, bucket) {
   }
 
   for (const row of liveTableRows(snapshot, "OPTICS")) {
-    const systemValue = diffuserSystemToken(row);
+    const systemValue = systemIdentityValuesForSourceSystem(systemOptions, diffuserSystemToken(row));
     const opticValue = opticFieldValue(row);
     const var1Value = diffuserVar1Value(row);
     const var2Values = diffuserVar2Values(row).map((item) => item.value);
@@ -1203,7 +1228,8 @@ function collectRecords(snapshot, bucket) {
   }
 
   for (const row of liveTableRows(snapshot, "BOARDS")) {
-    const systemValue = systemOptionValueForSource(systemOptions, row);
+    const sourceSystem = systemOptionValueForSource(systemOptions, row) || rowText(row, ["system", "series", "system_name", "system_key"]);
+    const systemValue = systemIdentityValuesForSourceSystem(systemOptions, sourceSystem);
     const optic = opticFieldValue(row);
     const cctCri = cctCriValues(row);
     const ccts = extractCctValues(row);
@@ -1300,16 +1326,31 @@ function systemSelectionMatchesOption(option = {}, selectedValue = "") {
   return Array.from(normalisedTokenSet(variant)).every((token) => selectedTokens.has(token));
 }
 
+function systemOptionFromSelection(systemOptions = [], selectedValue = "") {
+  if (!safeString(selectedValue)) return null;
+  return systemOptions.find((option) => systemSelectionMatchesOption(option, selectedValue)) || null;
+}
+
 function systemReferenceKeyFromSelection(systemOptions = [], selectedValue = "") {
-  if (!safeString(selectedValue)) return "";
-  const match = systemOptions.find((option) => systemSelectionMatchesOption(option, selectedValue));
+  const match = systemOptionFromSelection(systemOptions, selectedValue);
   return match ? safeString(match.systemReferenceKey) || safeString(match.value).split("|")[0] || safeString(match.label) : "";
 }
 
+function systemIdentityKeyFromSelection(systemOptions = [], selectedValue = "") {
+  const match = systemOptionFromSelection(systemOptions, selectedValue);
+  return match ? systemOptionIdentityValue(match) : safeString(selectedValue);
+}
+
 function cascadeConstraintsForOptions(bucket = {}, constraints = {}) {
-  const selectedSystemKey = systemReferenceKeyFromSelection(optionsFor(bucket, "system"), constraints.system || "");
-  if (!selectedSystemKey) return constraints;
-  return { ...constraints, system: selectedSystemKey };
+  const systemOptions = optionsFor(bucket, "system");
+  const selectedSystemKey = systemReferenceKeyFromSelection(systemOptions, constraints.system || "");
+  const selectedSystemIdentity = systemIdentityKeyFromSelection(systemOptions, constraints.system || "");
+  if (!selectedSystemKey && !selectedSystemIdentity) return constraints;
+  return {
+    ...constraints,
+    system: selectedSystemIdentity || constraints.system,
+    __systemReferenceKey: selectedSystemKey,
+  };
 }
 
 function recordConstraintBlockers(record, constraints, exceptFieldKey = "") {

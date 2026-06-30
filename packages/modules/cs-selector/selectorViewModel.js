@@ -1546,7 +1546,6 @@ const RUNTIME_PRESENTATION_MANUAL_ONLY_FIELDS = Object.freeze(new Set([
 
 const RUNTIME_PRESENTATION_INHERITED_FIELDS = Object.freeze(new Set([
   "indirectMatchDirect",
-  "targetLmPerMIndirect",
   "cctCriIndirect",
   "controlTypeIndirect",
   "finishCover",
@@ -2433,6 +2432,9 @@ const PRODUCT_SPINE_SECTION_DEFINITIONS = Object.freeze([
       Object.freeze({ rowKey: "driver", label: "Driver", fields: Object.freeze(["driver"]) }),
       Object.freeze({ rowKey: "lexWeight", label: "Lex weight", fields: Object.freeze(["lexWeight", "lex_weight", "lex"]) }),
       Object.freeze({ rowKey: "wiringTopology", label: "Wiring topology", fields: Object.freeze(["wiringType"]) }),
+      Object.freeze({ rowKey: "topologyConsequence", label: "Topology", fields: Object.freeze(["topologyConsequence"]) }),
+      Object.freeze({ rowKey: "coresConsequence", label: "Cores", fields: Object.freeze(["coresConsequence"]) }),
+      Object.freeze({ rowKey: "topologyNotes", label: "Notes", fields: Object.freeze(["topologyNotes"]) }),
     ]),
   }),
   Object.freeze({
@@ -2974,8 +2976,69 @@ function shouldShowProductSpineRow(definition = {}, lookup) {
   return true;
 }
 
+function topologySourceValue(lookup, fieldKeys = []) {
+  const field = spineField(lookup, fieldKeys);
+  return String(spineFieldValue(field || {}) || field?.selectedLabel || field?.effectiveLabel || field?.selectedValue || field?.effectiveValue || "").trim();
+}
+
+function topologyMetadataField(fieldKey, label, value, reason) {
+  return {
+    fieldKey,
+    label,
+    role: "metadata-only",
+    status: "metadata-only",
+    sourceStatus: "selection-driven read-only consequence metadata",
+    selectedValue: "",
+    selectedLabel: "",
+    effectiveValue: value,
+    effectiveLabel: value,
+    displayMode: "metadata-chip",
+    provenance: "metadata",
+    primaryDecision: false,
+    primaryControl: false,
+    metadataOnly: true,
+    disabled: false,
+    futureMapped: false,
+    options: [{ value, label: value, status: "metadata-only", blocked: false, metadataOnly: true, writes: false, rawRowsExposed: false }],
+    compatibleOptionCount: value ? 1 : 0,
+    classificationReason: reason,
+    unavailableReason: reason,
+    writes: false,
+    rawRowsExposed: false,
+  };
+}
+
+function deriveTopologyConsequenceFields(lookup) {
+  const directControl = topologySourceValue(lookup, ["controlType"]);
+  const indirectControl = topologySourceValue(lookup, ["controlTypeIndirect"]);
+  const wiring = topologySourceValue(lookup, ["wiringType"]);
+  const driver = topologySourceValue(lookup, ["driver"]);
+  const combined = `${directControl} ${indirectControl} ${wiring} ${driver}`.toLowerCase();
+  const splitDirectIndirect = directControl && indirectControl && directControl !== indirectControl;
+  const topology = splitDirectIndirect
+    ? "Split direct/indirect control topology"
+    : combined.includes("dali") || combined.includes("dt8") || combined.includes("5-core")
+      ? "DALI control bus topology"
+      : combined.includes("non") || combined.includes("switch") || combined.includes("3-core")
+        ? "Switched/non-dim topology"
+        : "Source-backed topology pending";
+  const cores = combined.includes("5-core") || combined.includes("dali") || combined.includes("dt8")
+    ? "5-core"
+    : combined.includes("3-core") || combined.includes("switch") || combined.includes("non")
+      ? "3-core"
+      : "Source-backed cores pending";
+  const notes = "Read-only consequence metadata from current safe selections; not proof, generation, payload, RunTable, IES, or Board Data mutation.";
+  const reason = "Derived from visible Selector control/driver/wiring selections only; no raw source rows or generated output are exposed.";
+  return [
+    topologyMetadataField("topologyConsequence", "Topology", topology, reason),
+    topologyMetadataField("coresConsequence", "Cores", cores, reason),
+    topologyMetadataField("topologyNotes", "Notes", notes, notes),
+  ];
+}
+
 function createProductSpine({ fields = [], workflowSections = [], sourceReady = false, summary = {}, manualConstraints = [], autoConsequences = [], blockedItems = [] } = {}) {
   const lookup = workflowFieldLookup(fields, workflowSections);
+  for (const topologyField of deriveTopologyConsequenceFields(lookup)) lookup.set(topologyField.fieldKey, topologyField);
   const specGateReadiness = createSpecGateCandidateReadiness({ lookup, sourceReady, summary, manualConstraints, autoConsequences, blockedItems });
   const sections = PRODUCT_SPINE_SECTION_DEFINITIONS.map((section) => ({
     sectionKey: section.sectionKey,
