@@ -89,9 +89,9 @@ test("host-local Engine evidence runner maps real-source aliases without inventi
   const runnerText = await readFile(runnerSourceUrl, "utf-8");
 
   for (const alias of [
+    "board_capacity_lm_per_m",
     "lumens_per_m",
     "LUMENS_PER_M",
-    "lumens per metre",
     "output per m",
     "colour_temperature",
     "kelvin",
@@ -106,7 +106,7 @@ test("host-local Engine evidence runner maps real-source aliases without inventi
   }
 
   assert.match(runnerText, /normalise_field_name/);
-  assert.match(runnerText, /alias_keys\("lm_per_m"\)/);
+  assert.match(runnerText, /alias_keys\("board_capacity_lm_per_m"\)/);
   assert.match(runnerText, /alias_keys\("cct"\)/);
   assert.match(runnerText, /alias_keys\("cri"\)/);
   assert.match(runnerText, /alias_keys\("optic"\)/);
@@ -127,11 +127,26 @@ test("host-local Engine evidence runner decouples source-backed CCT/CRI from lm/
   assert.match(runnerText, /sample_class/);
   assert.match(runnerText, /tunable-white-token/);
   assert.match(runnerText, /kelvin-token/);
-  assert.match(runnerText, /Board-output formula input only; not used to invent selector target_lm_per_m/);
-  assert.match(runnerText, /does not convert board maximum output into a target value/);
+  assert.match(runnerText, /Board capacity formula input only; not used as Selector target_lm_per_m/);
+  assert.match(runnerText, /Diagnostic only; not used as the controlled Selector\/user target/);
   assert.match(runnerText, /c1_lumen_imax_25c/);
   assert.match(runnerText, /length_mm/);
   assert.match(runnerText, /c1_imax_ma/);
+});
+
+test("host-local Engine evidence runner classifies target lm/m as controlled Selector intent", async () => {
+  const runnerText = await readFile(runnerSourceUrl, "utf-8");
+
+  assert.match(runnerText, /CONTROLLED_TARGET_LM_PER_M = 1000/);
+  assert.match(runnerText, /CONTROLLED_TARGET_REASON/);
+  assert.match(runnerText, /controlled-selector-intent/);
+  assert.match(runnerText, /not Board Data/);
+  assert.match(runnerText, /not source-backed product output/);
+  assert.match(runnerText, /host-local runner controlled Selector\/user intent/);
+  assert.match(runnerText, /lighting\["target_lm_per_m"\] = target_lm_per_m/);
+  assert.match(runnerText, /lighting\["lm_per_m"\] = target_lm_per_m/);
+  assert.match(runnerText, /optional-source-backed-capacity-diagnostic/);
+  assert.equal(runnerText.includes('field_map_entry("target_lm_per_m", bool(target_lm_per_m), "source-backed-required"'), false);
 });
 
 test("host-local Engine evidence runner fails closed for missing candidate fields and writes only ignored reports", async () => {

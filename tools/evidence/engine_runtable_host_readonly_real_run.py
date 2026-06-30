@@ -18,13 +18,19 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Mapping
 
-STAGE_NAME = "ENGINE-RUNTABLE-SOURCE-LIGHTING-FIELD-DERIVATION-1"
+STAGE_NAME = "ENGINE-RUNTABLE-TARGET-LM-PER-M-INTENT-SPLIT-1"
 SCRIPT_PATH = Path(__file__).resolve()
 RUNTIME_ROOT = SCRIPT_PATH.parents[2]
 MCP_SOURCE_PATH = RUNTIME_ROOT / "tools" / "controlstack-mcp" / "controlstack_mcp.py"
 REPORT_DIR = RUNTIME_ROOT / "_worker_reports"
 STAGE_REPORT_PATH = REPORT_DIR / f"{STAGE_NAME}.json"
 LATEST_REPORT_PATH = REPORT_DIR / "latest_engine_runtable_host_readonly_real_run.json"
+
+CONTROLLED_TARGET_LM_PER_M = 1000
+CONTROLLED_TARGET_REASON = (
+    "Controlled Selector/user intent for host-local evidence only; not Board Data, "
+    "not source-backed product output, and not a selected Engine result."
+)
 
 CONTROLLED_RUN = {
     "Run": "host-local-readonly-evidence-run-1",
@@ -97,16 +103,21 @@ FIELD_ALIAS_GROUPS = {
     "lm_per_m": (
         "target_lm_per_m",
         "targetLmPerM",
+        "lm_per_m",
+        "Lumens per m",
+        "lumens per m",
+        "lumens per metre",
+        "lumens per meter",
+        "lm/m",
+        "lm per m",
+    ),
+    "board_capacity_lm_per_m": (
         "board_lm_per_m",
         "delivered_lm_per_m",
         "lumens_per_m",
         "LUMENS_PER_M",
-        "lumens per m",
         "lumens per metre",
         "lumens per meter",
-        "lm_per_m",
-        "lm/m",
-        "lm per m",
         "output_per_m",
         "output per m",
         "nominal_lm_per_m",
@@ -203,6 +214,7 @@ FIELD_ALIAS_GROUPS = {
 SCHEMA_INTROSPECTION_TABLES = ("BOARDS", "OPTICS", "DRIVERS", "SYSTEM_POLICY")
 SCHEMA_INTROSPECTION_GROUPS = (
     "lm_per_m",
+    "board_capacity_lm_per_m",
     "cct",
     "cri",
     "optic",
@@ -440,7 +452,7 @@ def value_sample_class(value: Any) -> str:
 
 
 def parsed_kind(logical_field: str, value: Any) -> str:
-    if logical_field in {"target_lm_per_m", "pitch_mm", "current_ma", "lumen_formula"}:
+    if logical_field in {"target_lm_per_m", "board_capacity_lm_per_m", "board_capacity_formula_input", "pitch_mm", "current_ma", "lumen_formula"}:
         return "numeric" if numeric_token(value) else "unparsed"
     if logical_field == "cct":
         parsed = normalise_cct(value)
@@ -453,7 +465,7 @@ def parsed_kind(logical_field: str, value: Any) -> str:
 
 
 def parsed_usable(logical_field: str, value: Any) -> bool:
-    if logical_field in {"target_lm_per_m", "pitch_mm", "current_ma", "lumen_formula"}:
+    if logical_field in {"target_lm_per_m", "board_capacity_lm_per_m", "board_capacity_formula_input", "pitch_mm", "current_ma", "lumen_formula"}:
         return bool(numeric_token(value))
     if logical_field == "cct":
         return bool(normalise_cct(value))
@@ -510,19 +522,19 @@ def candidate_value_diagnostics(board: Mapping[str, Any] | None, board_index: in
             missing_value_diagnostic("cct", "BOARDS", "No approved BOARDS row with parseable CCT and CRI was found."),
             missing_value_diagnostic("cri", "BOARDS", "No approved BOARDS row with parseable CCT and CRI was found."),
             missing_value_diagnostic(
-                "target_lm_per_m",
+                "board_capacity_lm_per_m",
                 "BOARDS",
-                "No BOARDS candidate row was available for lm/m inspection.",
+                "No BOARDS candidate row was available for board capacity inspection.",
             ),
         ]
 
     diagnostics: list[dict[str, Any]] = []
     for logical_field, group in (
-        ("target_lm_per_m", "lm_per_m"),
         ("cct", "cct"),
         ("cri", "cri"),
         ("pitch_mm", "pitch"),
         ("current_ma", "current_ma"),
+        ("board_capacity_lm_per_m", "board_capacity_lm_per_m"),
     ):
         value, field = first_present(board, alias_keys(group))
         if field:
@@ -537,27 +549,38 @@ def candidate_value_diagnostics(board: Mapping[str, Any] | None, board_index: in
             )
 
     formula_fields: list[str] = []
+    formula_sources: list[dict[str, Any]] = []
     for field in alias_keys("lumen_formula"):
         value, actual = first_present(board, (field,))
         if actual:
-            formula_fields.append(safe_string(actual))
+            actual_text = safe_string(actual)
+            formula_fields.append(actual_text)
+            formula_sources.append(source_ref("BOARDS", actual_text, board_index))
             diagnostics.append(
                 value_diagnostic_entry(
                     "BOARDS",
                     actual,
                     board_index,
-                    "lumen_formula",
+                    "board_capacity_formula_input",
                     value,
-                    "Board-output formula input only; not used to invent selector target_lm_per_m.",
+                    "Board capacity formula input only; not used as Selector target_lm_per_m.",
                 )
             )
-    if formula_fields:
+    if {"c1_lumen_imax_25c", "length_mm"}.issubset(set(formula_fields)) or {"c1_lumen_imax_25c", "board_length_mm"}.issubset(set(formula_fields)):
         diagnostics.append(
-            missing_value_diagnostic(
-                "target_lm_per_m",
-                "BOARDS",
-                "Board lumen formula inputs are present, but donor contracts treat target_lm_per_m as a selector target/delivered lm/m input. The runner does not convert board maximum output into a target value.",
-            )
+            {
+                "logical_field": "board_capacity_lm_per_m",
+                "table": "BOARDS",
+                "field": "c1_lumen_imax_25c + length_mm|board_length_mm",
+                "row_ref": f"BOARDS[{board_index}]" if isinstance(board_index, int) else "BOARDS",
+                "formula": "c1_lumen_imax_25c / length_mm * 1000",
+                "contract": "Donor board_lumen_util fallback capacity calculation; diagnostic only, not Selector/user target.",
+                "source_fields": formula_sources,
+                "parsed_usable": True,
+                "sample_class": "formula-backed-capacity-diagnostic",
+                "raw_row_returned": False,
+                "raw_value_returned": False,
+            }
         )
     return diagnostics
 
@@ -695,6 +718,52 @@ def find_optic(snapshot: Mapping[str, Any], system_hint: str = "", board: Mappin
     return "", None
 
 
+def find_optic_eff(snapshot: Mapping[str, Any], optic: str, system_hint: str = "") -> tuple[str, dict[str, Any] | None]:
+    optic_lookup = safe_string(optic).lower()
+    system_lookup = safe_string(system_hint).lower()
+    for index, row in enumerate(table_rows(snapshot, "OPTICS")):
+        if optic_lookup:
+            optic_value, _ = first_present(row, alias_keys("optic"))
+            optic_text = safe_string(optic_value).lower()
+            if optic_text and optic_lookup not in optic_text and optic_text not in optic_lookup:
+                continue
+        if system_lookup:
+            system_value, _ = first_present(row, alias_keys("system"))
+            system_text = safe_string(system_value).lower()
+            if system_text and system_lookup not in system_text and system_text not in system_lookup:
+                continue
+        value, key = first_present(row, alias_keys("optic_eff"))
+        token = numeric_token(value)
+        if token:
+            return token, source_ref("OPTICS", key, index)
+    return "", None
+
+
+def board_capacity_source(board: Mapping[str, Any] | None, board_index: int | None) -> dict[str, Any] | None:
+    if board is None:
+        return None
+    capacity_value, capacity_key = first_present(board, alias_keys("board_capacity_lm_per_m"))
+    if capacity_key and numeric_token(capacity_value):
+        return source_ref("BOARDS", capacity_key, board_index)
+    lumen_value, lumen_key = first_present(board, ("c1_lumen_imax_25c",))
+    length_value, length_key = first_present(board, ("length_mm", "board_length_mm"))
+    if numeric_token(lumen_value) and numeric_token(length_value):
+        return {
+            "table": "BOARDS",
+            "field": "c1_lumen_imax_25c + length_mm|board_length_mm",
+            "row_ref": f"BOARDS[{board_index}]" if isinstance(board_index, int) else "BOARDS",
+            "formula": "c1_lumen_imax_25c / length_mm * 1000",
+            "contract": "Donor board_lumen_util fallback capacity calculation; diagnostic only, not Selector/user target.",
+            "source_fields": [
+                source_ref("BOARDS", lumen_key, board_index),
+                source_ref("BOARDS", length_key, board_index),
+            ],
+            "raw_row_returned": False,
+            "raw_value_returned": False,
+        }
+    return None
+
+
 def find_control_type(snapshot: Mapping[str, Any], board: Mapping[str, Any] | None) -> tuple[str, dict[str, Any] | None]:
     if board is not None:
         value, key = first_present(board, alias_keys("control_type"))
@@ -729,12 +798,14 @@ def derive_candidate_from_snapshot(snapshot: Mapping[str, Any]) -> dict[str, Any
     value_diagnostics = candidate_value_diagnostics(board, board_index)
     system, system_source = find_system(snapshot, board)
     optic, optic_source = find_optic(snapshot, system_hint=system, board=board, board_index=board_index)
+    optic_eff, optic_eff_source = find_optic_eff(snapshot, optic, system_hint=system)
     control_type, control_source = find_control_type(snapshot, board)
+    capacity_source = board_capacity_source(board, board_index)
 
     lighting: dict[str, Any] = {}
     electrical: dict[str, Any] = {}
 
-    target_lm_per_m = ""
+    target_lm_per_m = str(CONTROLLED_TARGET_LM_PER_M)
     cct = ""
     cri = ""
     pitch = ""
@@ -744,7 +815,6 @@ def derive_candidate_from_snapshot(snapshot: Mapping[str, Any]) -> dict[str, Any
     board_source = None
     if board is not None:
         board_source = source_ref("BOARDS", "candidate-row", board_index)
-        lm_value, lm_key = first_present(board, alias_keys("lm_per_m"))
         cct_value, cct_key = first_present(board, alias_keys("cct"))
         cri_value, cri_key = first_present(board, alias_keys("cri"))
         pitch_value, pitch_key = first_present(board, alias_keys("pitch"))
@@ -757,19 +827,17 @@ def derive_candidate_from_snapshot(snapshot: Mapping[str, Any]) -> dict[str, Any
         elif "direct" in direction_text or "downlight" in direction_text or re.search(r"\bdown\b", direction_text):
             light_direction = "Direct"
             light_direction_source = source_ref("BOARDS", direction_key, board_index)
-        target_lm_per_m = numeric_token(lm_value)
         cct = normalise_cct(cct_value)
         cri = normalise_cri(cri_value)
         pitch = numeric_token(pitch_value)
         current_ma = numeric_token(current_value)
-        lm_source = source_ref("BOARDS", lm_key, board_index) if lm_key and target_lm_per_m else None
         cct_source = source_ref("BOARDS", cct_key, board_index) if cct_key and cct else None
         cri_source = source_ref("BOARDS", cri_key, board_index) if cri_key and cri else None
         pitch_source = source_ref("BOARDS", pitch_key, board_index) if pitch_key and pitch else None
         current_source = source_ref("BOARDS", current_key, board_index) if current_key and current_ma else None
     else:
         blockers.append(safe_blocker("candidate-board-unavailable", "No approved source-backed BOARDS row with parseable CCT and CRI could be derived."))
-        lm_source = cct_source = cri_source = pitch_source = current_source = None
+        cct_source = cri_source = pitch_source = current_source = None
 
     if target_lm_per_m:
         lighting["target_lm_per_m"] = target_lm_per_m
@@ -782,6 +850,8 @@ def derive_candidate_from_snapshot(snapshot: Mapping[str, Any]) -> dict[str, Any
         lighting["pitch_mm"] = pitch
     if optic:
         lighting["optic_key"] = optic
+    if optic_eff:
+        lighting["eff_optical"] = optic_eff
     if light_direction:
         lighting["light_direction"] = light_direction
     if control_type:
@@ -806,14 +876,16 @@ def derive_candidate_from_snapshot(snapshot: Mapping[str, Any]) -> dict[str, Any
         field_map_entry("db", True, "internal-active-source", "engine seam injects active RuntimeData snapshot in memory only", "Caller-supplied db is refused and not serialized."),
         field_map_entry("tier", bool(tier), "source-backed-required", tier_source or "unavailable"),
         field_map_entry("runs", True, "controlled-test-geometry", "host-local runner controlled run length/quantity", "Controlled geometry only; not product data."),
-        field_map_entry("lighting", bool(lighting), "source-backed-required", board_source or "unavailable"),
-        field_map_entry("target_lm_per_m", bool(target_lm_per_m), "source-backed-required", lm_source or "unavailable"),
+        field_map_entry("lighting", bool(lighting), "mixed-controlled-intent-and-source-backed", board_source or "unavailable", "Contains controlled Selector/user target intent plus source-backed lighting options."),
+        field_map_entry("target_lm_per_m", bool(target_lm_per_m), "controlled-selector-intent", "host-local runner controlled Selector/user intent", CONTROLLED_TARGET_REASON),
         field_map_entry("cct", bool(cct), "source-backed-required", cct_source or "unavailable"),
         field_map_entry("cri", bool(cri), "source-backed-required", cri_source or "unavailable"),
         field_map_entry("optic", bool(optic), "source-backed-required", optic_source or "unavailable"),
+        field_map_entry("optic_eff", bool(optic_eff), "optional-source-backed-engine-helper", optic_eff_source or "unavailable", "Used only if donor Engine needs source-backed optical efficiency for current derivation."),
         field_map_entry("control_type", bool(control_type), "source-backed-required", control_source or "unavailable"),
         field_map_entry("current_ma", bool(current_ma), "optional-source-backed", current_source or "unavailable", "Optional; donor Engine may derive current only where source data supports it."),
         field_map_entry("pitch_mm", bool(pitch), "source-backed-engine-helper", pitch_source or "unavailable", "Not part of the seam completeness gate but used by donor board selection when present."),
+        field_map_entry("board_capacity_lm_per_m", bool(capacity_source), "optional-source-backed-capacity-diagnostic", capacity_source or "unavailable", "Diagnostic only; not used as the controlled Selector/user target."),
         field_map_entry("light_direction", bool(light_direction), "optional-source-backed-engine-helper", light_direction_source or "unavailable", "Optional; no default direction is invented by the runner."),
         field_map_entry("system", bool(system), "source-backed-context", system_source or "unavailable"),
     ])
