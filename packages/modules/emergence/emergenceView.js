@@ -55,6 +55,18 @@ export function renderEmergenceView(container, viewModel) {
 
   appendSection(article, "Package/evidence readiness diagnostics", viewModel.diagnosticRows);
 
+  appendSection(article, "EGRES package evidence readiness map", viewModel.egresPackageEvidenceReadinessRows);
+
+  appendSection(article, "Selector emergency/egress intent is input only", viewModel.selectorIntentRows);
+
+  appendSection(article, "Engine / RunTable blocked dependency fields", viewModel.engineRunTableBlockedFieldRows);
+
+  appendSection(article, "Downstream readiness dependencies", viewModel.egresDependencyRows);
+
+  appendSection(article, "Raw evidence redaction state", viewModel.egresRedactionRows);
+
+  appendSection(article, "Production claim blocked state", viewModel.egresProductionClaimRows);
+
   appendSection(article, "Safe downstream summary", viewModel.safeSummaryRows);
 
   appendSection(article, "Safe candidate counts", viewModel.candidateCountRows);
