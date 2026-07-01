@@ -91,14 +91,89 @@ function mountingSnapshot({ includeFlex = true } = {}) {
   };
 }
 
-function selectorReferenceStatus(snapshot = mountingSnapshot()) {
+function mountPolicySnapshot() {
+  return {
+    SYSTEM: [
+      {
+        system: "DNX80",
+        system_variant_1: "DI",
+        label: "DNX80DI direct-indirect",
+        emission: "Both",
+        mount_style: "Surface Mount;Suspended",
+        approved: "yes",
+      },
+      {
+        system: "DNX60",
+        system_variant_1: "Direct",
+        label: "DNX60 direct-only",
+        emission: "Direct",
+        mount_style: "Surface Mount;Suspended",
+        approved: "yes",
+      },
+    ],
+    OPTICS: [
+      {
+        system: "DNX80",
+        optic_var_1: "Linear Downlight",
+        optic_var_2: "Opal",
+        emission_permission: "Direct",
+        approved: "yes",
+      },
+      {
+        system: "DNX80",
+        optic_var_1: "Linear Uplight",
+        optic_var_2: "Uplight",
+        emission_permission: "Indirect",
+        approved: "yes",
+      },
+      {
+        system: "DNX60",
+        optic_var_1: "Direct Lens",
+        optic_var_2: "Opal",
+        emission_permission: "Direct",
+        approved: "yes",
+      },
+    ],
+    ACCESSORIES: [
+      {
+        accessory_type: "mount",
+        display_choice: "Surface Mount",
+        mount_selections: "Surface bracket",
+        mount_particulars: "Direct fix",
+        approved: "yes",
+      },
+      {
+        accessory_type: "mount",
+        display_choice: "Suspended",
+        mount_selections: "Wire",
+        mount_particulars: "1500mm drop",
+        approved: "yes",
+      },
+    ],
+    CODE_POLICY: [
+      {
+        rule_id: "SURFACE_MOUNT_DI_BLOCK",
+        area: "selector.mounting",
+        approved: "yes",
+        user_visible_ui: "Surface Mount is unavailable for direct-indirect/uplight systems because the ceiling blocks the indirect light component.",
+      },
+    ],
+  };
+}
+
+function currentDbConstraints(selectorState = createSelectorState()) {
+  const constraints = selectorState.getSnapshot?.().dbBackedSelector?.manualConstraints || {};
+  return Object.fromEntries(Object.entries(constraints).map(([fieldKey, record]) => [fieldKey, String(record?.value || "").trim()]).filter(([, value]) => value));
+}
+
+function selectorReferenceStatus(snapshot = mountingSnapshot(), constraints = {}) {
   return {
     ok: true,
     status: "loaded",
     readOnly: true,
     diagnosticOnly: true,
     source: sourceReady(),
-    selectorOptions: deriveSelectorReferenceOptionsFromSnapshot(snapshot, { source: sourceReady() }),
+    selectorOptions: deriveSelectorReferenceOptionsFromSnapshot(snapshot, { source: sourceReady(), constraints }),
   };
 }
 
@@ -106,7 +181,7 @@ function createModel({ selectorState = createSelectorState(), snapshot = mountin
   return createSelectorViewModel({
     adapter: createAdapter(),
     selectorState,
-    selectorReferenceStatus: selectorReferenceStatus(snapshot),
+    selectorReferenceStatus: selectorReferenceStatus(snapshot, currentDbConstraints(selectorState)),
   });
 }
 
@@ -283,4 +358,75 @@ test("Mounting payload preview keeps safety flags disabled and exposes no raw so
   const usersTableLiteral = ["US", "ERS:"].join("");
   assert.equal(source.includes(atSignLiteral), false);
   assert.equal(source.includes(usersTableLiteral), false);
+});
+
+test("SURFACE_MOUNT_DI_BLOCK blocks Surface Mount for direct-indirect/uplight systems and keeps Suspended", () => {
+  const selectorState = createSelectorState();
+  const snapshot = mountPolicySnapshot();
+  const model = selectAndReload(selectorState, "system", "DNX80|DI", snapshot);
+
+  const surface = workflowOption(model, "mountStyle", "Surface Mount");
+  assert.equal(surface.status, "blocked");
+  assert.equal(surface.blocked, true);
+  assert.match(surface.blockedReason, /Surface Mount.*direct-indirect|ceiling blocks.*indirect/i);
+  assert.equal(surface.relationshipStatus, "blocked-by-code-policy");
+  assert.deepEqual(surface.codePolicyIds, ["SURFACE_MOUNT_DI_BLOCK"]);
+  assert.equal(workflowOption(model, "mountStyle", "Suspended").status, "available");
+});
+
+test("selected incompatible Surface Mount is preserved as blocked by donor policy", () => {
+  const selectorState = createSelectorState();
+  const snapshot = mountPolicySnapshot();
+  let model = selectAndReload(selectorState, "system", "DNX80|DI", snapshot);
+  model = selectAndReload(selectorState, "mountStyle", "Surface Mount", snapshot);
+
+  const row = mountingRow(model.selectorSurface.productSpine, "mountStyle");
+  assert.equal(row.displayValue, "Surface Mount");
+  assert.equal(row.status, "blocked");
+  assert.equal(row.blocked, true);
+  assert.match(row.reason, /ceiling blocks.*indirect|direct-indirect/i);
+  assert.equal(selectorState.getSnapshot().dbBackedSelector.manualConstraints.mountStyle.value, "Surface Mount");
+  assert.equal(model.selectorSurface.payloadPreview.mounting.mountStyle, "Surface Mount");
+});
+
+test("indirect optic remains visible as accepted implicit consequence without mutating state", () => {
+  const selectorState = createSelectorState();
+  const snapshot = mountPolicySnapshot();
+  const model = selectAndReload(selectorState, "system", "DNX80|DI", snapshot);
+
+  const indirect = workflowField(model, "indirectOpticVar1");
+  assert.equal(indirect.displayMode, "auto-chip");
+  assert.equal(indirect.effectiveValue, "DNX80|Linear Uplight");
+  assert.equal(indirect.effectiveLabel, "Linear Uplight · DNX80");
+  assert.equal(indirect.compatibleOptionCount, 1);
+  assert.equal(selectorState.getSnapshot().dbBackedSelector.manualConstraints.indirectOpticVar1, undefined);
+});
+
+test("direct-only product does not trigger SURFACE_MOUNT_DI_BLOCK", () => {
+  const selectorState = createSelectorState();
+  const snapshot = mountPolicySnapshot();
+  const model = selectAndReload(selectorState, "system", "DNX60|Direct", snapshot);
+
+  const surface = workflowOption(model, "mountStyle", "Surface Mount");
+  assert.equal(surface.status, "available");
+  assert.equal(surface.blocked, false);
+  assert.equal(workflowOption(model, "mountStyle", "Suspended").status, "available");
+});
+
+test("mount policy compatibility keeps runtime safety boundaries closed", async () => {
+  const result = deriveSelectorReferenceOptionsFromSnapshot(mountPolicySnapshot(), {
+    source: sourceReady(),
+    constraints: { system: "DNX80|DI" },
+  });
+
+  assert.equal(result.rawRowsExposed, false);
+  assert.equal(result.runtimeDataMutationEnabled, false);
+  assert.equal(result.runTableGenerationEnabled, false);
+  assert.equal(result.iesGenerationEnabled, false);
+  assert.equal(result.payloadGenerationEnabled, false);
+  assert.equal(result.hiddenWriteBackEnabled, false);
+
+  const source = await readFile(new URL("../packages/workspace-kernel/selectorReferenceOptionsService.js", import.meta.url), "utf-8");
+  assert.equal(/\b(?:app|router)\.post\s*\(/.test(source), false);
+  assert.equal(/donorEngine\.run|run_engine|generateRunTable|generateIES/.test(source), false);
 });

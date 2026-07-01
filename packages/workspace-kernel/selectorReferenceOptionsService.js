@@ -230,6 +230,9 @@ const SAFE_DEBUG_TABLES = Object.freeze([
   "USERS",
 ]);
 
+const SURFACE_MOUNT_DI_BLOCK_POLICY_ID = "SURFACE_MOUNT_DI_BLOCK";
+const SURFACE_MOUNT_DI_BLOCK_DEFAULT_REASON = "Surface Mount is blocked for direct-indirect/uplight systems because the ceiling would block the indirect light component.";
+
 const SAFE_FLAGS = Object.freeze({
   readOnly: true,
   diagnosticOnly: true,
@@ -443,6 +446,27 @@ function liveTableRows(snapshot, tableName) {
   return tableRows(snapshot, tableName).filter(sourceRowIsLive);
 }
 
+function activeCodePolicyRow(snapshot, policyId) {
+  const wanted = normaliseKey(policyId);
+  if (!wanted) return null;
+  return liveTableRows(snapshot, "CODE_POLICY").find((row) => {
+    const ids = [
+      rowText(row, ["rule_id"]),
+      rowText(row, ["policy_id"]),
+      rowText(row, ["code_policy_id"]),
+      rowText(row, ["id"]),
+      rowText(row, ["key"]),
+      rowText(row, ["name"]),
+      rowText(row, ["item"]),
+    ];
+    return ids.some((id) => normaliseKey(id) === wanted);
+  }) || null;
+}
+
+function codePolicyReason(row, fallback = "") {
+  return rowText(row, ["user_visible_ui", "user_visible_reason", "ui_reason", "reason", "effect", "description", "notes"], fallback);
+}
+
 function optionValue(label, fallback = "") {
   const cleaned = safeString(label || fallback);
   return cleaned || safeString(fallback);
@@ -472,6 +496,8 @@ function createOption(label, {
   systemSupportsIndirect = false,
   compatibleControlTypes = [],
   finishInheritanceIndex = null,
+  codePolicyIds = [],
+  codePolicyReason = "",
 } = {}) {
   const optionLabel = safeString(label || value);
   const referenceKeys = uniqueStrings([
@@ -486,6 +512,7 @@ function createOption(label, {
     ...(Array.isArray(parentValues) ? parentValues : []),
   ].map(safeString).filter(Boolean));
   const safeFinishInheritanceIndex = Number.isInteger(finishInheritanceIndex) && finishInheritanceIndex >= 0 ? finishInheritanceIndex : null;
+  const safeCodePolicyIds = uniqueStrings((Array.isArray(codePolicyIds) ? codePolicyIds : [codePolicyIds]).map(safeString).filter(Boolean));
   return {
     value: optionValue(value || optionLabel),
     label: optionLabel,
@@ -514,6 +541,8 @@ function createOption(label, {
     systemSupportsIndirect: systemSupportsIndirect === true,
     compatibleControlTypes: controlTypes,
     finishInheritanceIndex: safeFinishInheritanceIndex,
+    codePolicyIds: safeCodePolicyIds,
+    codePolicyReason: safeString(codePolicyReason),
   };
 }
 
@@ -546,6 +575,11 @@ function addOption(bucket, fieldKey, label, meta = {}) {
     ].map(safeString).filter(Boolean));
     existing.systemSupportsIndirect = existing.systemSupportsIndirect === true || meta.systemSupportsIndirect === true;
     if (existing.finishInheritanceIndex == null && Number.isInteger(meta.finishInheritanceIndex) && meta.finishInheritanceIndex >= 0) existing.finishInheritanceIndex = meta.finishInheritanceIndex;
+    existing.codePolicyIds = uniqueStrings([
+      ...(Array.isArray(existing.codePolicyIds) ? existing.codePolicyIds : []),
+      ...(Array.isArray(meta.codePolicyIds) ? meta.codePolicyIds : [meta.codePolicyIds]),
+    ].map(safeString).filter(Boolean));
+    if (!existing.codePolicyReason && meta.codePolicyReason) existing.codePolicyReason = safeString(meta.codePolicyReason);
     existing.visualChoice = existing.visualChoice === true || meta.visualChoice === true;
     existing.donorImageReferenceKnown = existing.donorImageReferenceKnown === true || meta.donorImageReferenceKnown === true;
     existing.runtimeImageAvailable = false;
@@ -692,7 +726,10 @@ function mountStyleLabel(row) {
 function mountStyleSystemReferenceKeys(snapshot, style) {
   const wanted = canonicalMountStyle(style);
   if (!wanted) return [];
-  return uniqueStrings(liveTableRows(snapshot, "SYSTEM").filter((row) => rowOptionValues(row, ["mount_style", "mount_styles"]).some((mount) => canonicalMountStyle(mount) === wanted))
+  return uniqueStrings(liveTableRows(snapshot, "SYSTEM").filter((row) => {
+    const styleAllowedBySystem = rowOptionValues(row, ["mount_style", "mount_styles"]).some((mount) => canonicalMountStyle(mount) === wanted);
+    return styleAllowedBySystem && !surfaceMountDiPolicyBlocksSystemMount(snapshot, row, style);
+  })
     .map((row) => systemTokens(row).system)
     .filter(Boolean));
 }
@@ -723,6 +760,27 @@ function emissionSupportsIndirect(value) {
 function emissionSupportsDirect(value) {
   const mode = normaliseEmissionMode(value);
   return !mode || mode === "direct" || mode === "direct-indirect";
+}
+
+function systemRowSupportsIndirect(row) {
+  return systemEmissionValues(row).some(emissionSupportsIndirect);
+}
+
+function surfaceMountDiPolicyRow(snapshot) {
+  return activeCodePolicyRow(snapshot, SURFACE_MOUNT_DI_BLOCK_POLICY_ID);
+}
+
+function surfaceMountPolicyMeta(snapshot, style) {
+  const row = canonicalMountStyle(style) === "surface mount" ? surfaceMountDiPolicyRow(snapshot) : null;
+  if (!row) return {};
+  return {
+    codePolicyIds: [SURFACE_MOUNT_DI_BLOCK_POLICY_ID],
+    codePolicyReason: codePolicyReason(row, SURFACE_MOUNT_DI_BLOCK_DEFAULT_REASON),
+  };
+}
+
+function surfaceMountDiPolicyBlocksSystemMount(snapshot, systemRow, style) {
+  return canonicalMountStyle(style) === "surface mount" && Boolean(surfaceMountDiPolicyRow(snapshot)) && systemRowSupportsIndirect(systemRow);
 }
 
 function addRedactedEntitlementOptions(bucket, snapshot) {
@@ -815,7 +873,15 @@ function collectOptions(snapshot) {
       if (emissionSupportsDirect(emission)) addOption(bucket, "directCapability", "Direct supported", { value: "direct-supported", sourceTables: ["SYSTEM"] });
       if (emissionSupportsIndirect(emission)) addOption(bucket, "indirectCapability", "Indirect supported", { value: "indirect-supported", sourceTables: ["SYSTEM"] });
     }
-    for (const mount of rowOptionValues(row, ["mount_style", "mount_styles"])) addOption(bucket, "mountStyle", mount, { sourceTables: ["SYSTEM"], systemReferenceKey: tokens.system, systemReferenceKeys: [tokens.system].filter(Boolean) });
+    for (const mount of rowOptionValues(row, ["mount_style", "mount_styles"])) {
+      if (surfaceMountDiPolicyBlocksSystemMount(snapshot, row, mount)) continue;
+      addOption(bucket, "mountStyle", mount, {
+        sourceTables: ["SYSTEM"],
+        systemReferenceKey: tokens.system,
+        systemReferenceKeys: [tokens.system].filter(Boolean),
+        ...surfaceMountPolicyMeta(snapshot, mount),
+      });
+    }
     const finishValues = rowOptionValues(row, ["system_and_variant_finish", "finish", "finish_name", "colour", "color"]);
     finishValues.forEach((finish, finishInheritanceIndex) => {
       const finishMeta = { sourceTables: ["SYSTEM"], systemReferenceKey: tokens.system, systemReferenceKeys: [tokens.system].filter(Boolean), finishInheritanceIndex };
@@ -963,7 +1029,9 @@ function collectOptions(snapshot) {
   for (const value of policyValues(snapshot, ["control", "dimming", "protocol"])) addOption(bucket, "controlType", value, { sourceTables: ["SYSTEM_POLICY"] });
   for (const value of policyValues(snapshot, ["ip", "ingress protection"])) addOption(bucket, "ipRating", value, { sourceTables: ["SYSTEM_POLICY"] });
   for (const value of policyValues(snapshot, ["ik", "impact rating"])) addOption(bucket, "ikRating", value, { sourceTables: ["SYSTEM_POLICY"] });
-  for (const value of policyValues(snapshot, ["mount", "mounting", "suspension", "recessed", "surface"])) addOption(bucket, "mountStyle", value, { sourceTables: ["SYSTEM_POLICY"] });
+  for (const value of policyValues(snapshot, ["mount", "mounting", "suspension", "recessed", "surface"])) {
+    addOption(bucket, "mountStyle", value, { sourceTables: ["SYSTEM_POLICY"], ...surfaceMountPolicyMeta(snapshot, value) });
+  }
   for (const value of policyValues(snapshot, ["finish", "colour", "color", "paint"])) {
     addOption(bucket, "bodyFinish", value, { sourceTables: ["SYSTEM_POLICY"] });
     addOption(bucket, "finishCover", value, { sourceTables: ["SYSTEM_POLICY"] });
@@ -985,7 +1053,12 @@ function collectOptions(snapshot) {
       const style = mountStyleLabel(row);
       const systemKeys = mountStyleSystemReferenceKeys(snapshot, style);
       const mountMeta = { sourceTables: ["ACCESSORIES"], parentFieldKey: "mountStyle", parentValue: style, systemReferenceKey: systemKeys[0] || "", systemReferenceKeys: systemKeys };
-      addOption(bucket, "mountStyle", style, { sourceTables: ["ACCESSORIES"], systemReferenceKey: systemKeys[0] || "", systemReferenceKeys: systemKeys });
+      addOption(bucket, "mountStyle", style, {
+        sourceTables: ["ACCESSORIES"],
+        systemReferenceKey: systemKeys[0] || "",
+        systemReferenceKeys: systemKeys,
+        ...surfaceMountPolicyMeta(snapshot, style),
+      });
       for (const value of rowOptionValues(row, ["mount_selections", "mount_selection"])) addOption(bucket, "mountSelection", value, mountMeta);
       for (const value of rowOptionValues(row, ["mount_particulars", "particulars"])) addOption(bucket, "mountParticulars", value, mountMeta);
     }
@@ -1162,7 +1235,7 @@ function collectRecords(snapshot, bucket) {
     });
     const variant = rowText(row, ["system_variant_1", "variant", "family", "profile_family"]);
     const emissions = systemEmissionValues(row);
-    const mountStyles = rowOptionValues(row, ["mount_style", "mount_styles"]);
+    const mountStyles = rowOptionValues(row, ["mount_style", "mount_styles"]).filter((mount) => !surfaceMountDiPolicyBlocksSystemMount(snapshot, row, mount));
     const finishes = rowOptionValues(row, ["system_and_variant_finish", "finish", "finish_name", "colour", "color"]);
     const flexes = rowOptionValues(row, ["flex_map", "flex_colour", "flex_color", "flex"]);
     pushRelationshipRecord(records, ["SYSTEM"], {
@@ -1407,11 +1480,41 @@ function optionAllowedByRecords(fieldKey, option, records, constraints) {
   return optionCascadeResult(fieldKey, option, records, constraints).compatible;
 }
 
+function optionCodePolicyIds(option = {}) {
+  return uniqueStrings((Array.isArray(option.codePolicyIds) ? option.codePolicyIds : [option.codePolicyIds]).map(safeString).filter(Boolean));
+}
+
+function optionHasCodePolicy(option = {}, policyId = "") {
+  const wanted = normaliseKey(policyId);
+  return optionCodePolicyIds(option).some((id) => normaliseKey(id) === wanted);
+}
+
+function mountCodePolicyBlock(fieldKey = "", option = {}, records = [], constraints = {}) {
+  if (fieldKey !== "mountStyle") return { blocked: false, blockedBy: [], reason: "" };
+  const style = canonicalMountStyle(option.value || option.label);
+  if (style !== "surface mount" || !optionHasCodePolicy(option, SURFACE_MOUNT_DI_BLOCK_POLICY_ID)) {
+    return { blocked: false, blockedBy: [], reason: "" };
+  }
+  const indirectSupport = upstreamIndirectSupportState(records, constraints);
+  if (!indirectSupport.checked || !indirectSupport.supported) {
+    return { blocked: false, blockedBy: [], reason: "" };
+  }
+  return {
+    blocked: true,
+    blockedBy: [{
+      fieldKey: "CODE_POLICY",
+      selectedValue: SURFACE_MOUNT_DI_BLOCK_POLICY_ID,
+      compatibleValues: ["Suspended", "other donor-compatible mount styles"],
+    }],
+    reason: option.codePolicyReason || SURFACE_MOUNT_DI_BLOCK_DEFAULT_REASON,
+  };
+}
+
 function sanitiseConstraints(constraints = {}) {
   if (!isPlainObject(constraints)) return {};
   return Object.fromEntries(Object.entries(constraints)
-    .map(([fieldKey, value]) => [fieldKey, safeString(value)])
-    .filter(([fieldKey, value]) => TARGET_FIELD_KEYS.has(fieldKey) && value));
+    .map(([fieldKey, value]) => [normaliseFinishConstraintFieldKey(fieldKey), safeString(value)])
+    .filter(([fieldKey, value]) => TARGET_FIELD_KEYS.has(fieldKey) && value && !isInheritedFinishSentinel(fieldKey, value)));
 }
 
 function createUnavailableField(field, reason) {
@@ -1447,6 +1550,347 @@ function labelForValue(options, value) {
   return labelForSelectedValue(options, value);
 }
 
+const FINISH_DEPENDENT_FIELD_KEYS = Object.freeze(["finishCover", "finishEnd", "finishFlex"]);
+const FINISH_INHERITANCE_SENTINELS = Object.freeze(new Set([
+  "auto",
+  "auto from default",
+  "default",
+  "derived default",
+  "inherit",
+  "inherited",
+  "inherit body finish",
+  "inherits body finish",
+  "mapped from body finish",
+]));
+
+function normaliseFinishConstraintFieldKey(fieldKey = "") {
+  return fieldKey === "finishDefault" ? "bodyFinish" : fieldKey;
+}
+
+function isInheritedFinishSentinel(fieldKey = "", value = "") {
+  const normalisedFieldKey = normaliseFinishConstraintFieldKey(fieldKey);
+  if (!FINISH_DEPENDENT_FIELD_KEYS.includes(normalisedFieldKey)) return false;
+  const key = normaliseKey(value);
+  return !key || FINISH_INHERITANCE_SENTINELS.has(key);
+}
+
+function finishOptionList(options = []) {
+  if (!Array.isArray(options)) return [];
+  return options.map((option, index) => {
+    if (isPlainObject(option)) return { ...option };
+    const label = safeString(option);
+    return {
+      value: label,
+      label,
+      finishInheritanceIndex: index,
+      rawRowsExposed: false,
+    };
+  }).filter((option) => safeString(option.value || option.label));
+}
+
+function selectableFinishOptions(options = []) {
+  return finishOptionList(options).filter((option) => option.blocked !== true && option.status !== "blocked");
+}
+
+function finishOptionMatches(option = {}, value = "") {
+  const wanted = safeString(value);
+  if (!wanted) return false;
+  return valuesMatch(option.value, wanted) || valuesMatch(option.label, wanted);
+}
+
+function findFinishOption(options = [], value = "") {
+  return selectableFinishOptions(options).find((option) => finishOptionMatches(option, value)) || null;
+}
+
+function firstFinishInheritanceIndex(option = {}, fallbackIndex = -1) {
+  if (Number.isInteger(option.finishInheritanceIndex) && option.finishInheritanceIndex >= 0) return option.finishInheritanceIndex;
+  return Number.isInteger(fallbackIndex) && fallbackIndex >= 0 ? fallbackIndex : null;
+}
+
+function bodyFinishFallbackFlexValue(bodyFinish = "") {
+  const key = normaliseKey(bodyFinish);
+  if (key === "white textured" || key === "white") return "White";
+  if (key === "black textured" || key === "black") return "Black";
+  if (key === "silver kinetic") return "Grey";
+  return "";
+}
+
+function finishOutcome({ fieldKey, mode, value = "", label = "", inheritedFrom = "", reason = "", sourceOption = null, missing = false } = {}) {
+  return {
+    fieldKey,
+    mode,
+    value: safeString(value),
+    label: safeString(label || value),
+    inheritedFrom,
+    reason,
+    sourceOption: sourceOption ? {
+      value: safeString(sourceOption.value),
+      label: safeString(sourceOption.label || sourceOption.value),
+      finishInheritanceIndex: Number.isInteger(sourceOption.finishInheritanceIndex) ? sourceOption.finishInheritanceIndex : null,
+      sourceTables: Array.isArray(sourceOption.sourceTables) ? [...sourceOption.sourceTables] : [],
+      rawRowsExposed: false,
+    } : null,
+    manualOverride: mode === "manual-override",
+    inherited: mode === "inherited",
+    missing: missing === true,
+    mutable: true,
+    writes: false,
+    rawRowsExposed: false,
+  };
+}
+
+function resolveBodyFinishOption(bodyValue = "", bodyOptions = []) {
+  const options = selectableFinishOptions(bodyOptions);
+  const option = findFinishOption(options, bodyValue);
+  const optionIndex = option ? options.findIndex((item) => item === option || finishOptionMatches(item, option.value)) : -1;
+  const inheritanceIndex = option ? firstFinishInheritanceIndex(option, optionIndex) : null;
+  return { option, inheritanceIndex, options };
+}
+
+function resolveFinishMatch({ fieldKey, value, options, inheritedFrom, reason }) {
+  const option = findFinishOption(options, value);
+  if (!option) {
+    return finishOutcome({
+      fieldKey,
+      mode: "unresolved",
+      inheritedFrom,
+      reason: `${reason}; source option is unavailable so no value was invented.`,
+      missing: true,
+    });
+  }
+  return finishOutcome({
+    fieldKey,
+    mode: "inherited",
+    value: option.value,
+    label: option.label || option.value,
+    inheritedFrom,
+    reason,
+    sourceOption: option,
+  });
+}
+
+function resolveFlexFinish({ bodyValue = "", bodyInheritanceIndex = null, flexOptions = [] } = {}) {
+  const options = selectableFinishOptions(flexOptions);
+  if (!bodyValue) {
+    return finishOutcome({
+      fieldKey: "finishFlex",
+      mode: "unresolved",
+      inheritedFrom: "bodyFinish",
+      reason: "Flex/lead/cable colour waits for a body/default finish before inheriting.",
+      missing: true,
+    });
+  }
+
+  if (Number.isInteger(bodyInheritanceIndex) && bodyInheritanceIndex >= 0) {
+    const indexed = options.find((option) => option.finishInheritanceIndex === bodyInheritanceIndex);
+    if (indexed) {
+      return finishOutcome({
+        fieldKey: "finishFlex",
+        mode: "inherited",
+        value: indexed.value,
+        label: indexed.label || indexed.value,
+        inheritedFrom: "bodyFinish flex map/index",
+        reason: "Flex/lead/cable colour follows the body/default finish inheritance index where source flex_map metadata is available.",
+        sourceOption: indexed,
+      });
+    }
+  }
+
+  const fallback = bodyFinishFallbackFlexValue(bodyValue);
+  if (fallback) {
+    const option = findFinishOption(options, fallback);
+    if (option) {
+      return finishOutcome({
+        fieldKey: "finishFlex",
+        mode: "inherited",
+        value: option.value,
+        label: option.label || option.value,
+        inheritedFrom: "bodyFinish bounded fallback",
+        reason: `Flex/lead/cable colour uses donor fallback ${bodyValue} -> ${fallback}.`,
+        sourceOption: option,
+      });
+    }
+    return finishOutcome({
+      fieldKey: "finishFlex",
+      mode: "unresolved",
+      inheritedFrom: "bodyFinish bounded fallback",
+      reason: `Flex/lead/cable donor fallback ${bodyValue} -> ${fallback} is not present in available flex options; no value was invented.`,
+      missing: true,
+    });
+  }
+
+  return finishOutcome({
+    fieldKey: "finishFlex",
+    mode: "unresolved",
+    inheritedFrom: "bodyFinish flex map/index",
+    reason: "No source flex_map/index match or approved bounded fallback exists for this body/default finish.",
+    missing: true,
+  });
+}
+
+export function deriveRuntimeSelectorFinishCascade({
+  bodyFinish = "",
+  finishDefault = "",
+  finishCover = "",
+  finishEnd = "",
+  finishFlex = "",
+  bodyOptions = [],
+  finishCoverOptions = [],
+  finishEndOptions = [],
+  finishFlexOptions = [],
+} = {}) {
+  const bodyValue = safeString(bodyFinish || finishDefault);
+  const body = resolveBodyFinishOption(bodyValue, bodyOptions);
+
+  const resolveDependent = (fieldKey, manualValue, options) => {
+    const safeManual = safeString(manualValue);
+    if (safeManual && !isInheritedFinishSentinel(fieldKey, safeManual)) {
+      const sourceOption = findFinishOption(options, safeManual);
+      return finishOutcome({
+        fieldKey,
+        mode: "manual-override",
+        value: safeManual,
+        label: sourceOption?.label || safeManual,
+        inheritedFrom: "manual override",
+        reason: "Manual dependent finish override is preserved across body/default finish changes.",
+        sourceOption,
+      });
+    }
+    if (!bodyValue) {
+      return finishOutcome({
+        fieldKey,
+        mode: "unresolved",
+        inheritedFrom: "bodyFinish",
+        reason: "Dependent finish waits for a body/default finish before inheriting.",
+        missing: true,
+      });
+    }
+    return resolveFinishMatch({
+      fieldKey,
+      value: bodyValue,
+      options,
+      inheritedFrom: "bodyFinish",
+      reason: "Cover/end finish inherits the body/default finish while blank, auto, or inherited.",
+    });
+  };
+
+  const flexManual = safeString(finishFlex);
+  const flex = flexManual && !isInheritedFinishSentinel("finishFlex", flexManual)
+    ? finishOutcome({
+      fieldKey: "finishFlex",
+      mode: "manual-override",
+      value: flexManual,
+      label: findFinishOption(finishFlexOptions, flexManual)?.label || flexManual,
+      inheritedFrom: "manual override",
+      reason: "Manual flex/lead/cable colour override is preserved across body/default finish changes.",
+      sourceOption: findFinishOption(finishFlexOptions, flexManual),
+    })
+    : resolveFlexFinish({ bodyValue, bodyInheritanceIndex: body.inheritanceIndex, flexOptions: finishFlexOptions });
+
+  return {
+    bodyValue,
+    bodyLabel: body.option?.label || bodyValue,
+    bodyFinishSourceOption: body.option ? {
+      value: safeString(body.option.value),
+      label: safeString(body.option.label || body.option.value),
+      finishInheritanceIndex: body.inheritanceIndex,
+      rawRowsExposed: false,
+    } : null,
+    fields: {
+      finishCover: resolveDependent("finishCover", finishCover, finishCoverOptions),
+      finishEnd: resolveDependent("finishEnd", finishEnd, finishEndOptions),
+      finishFlex: flex,
+    },
+    fallbackPolicy: {
+      whiteTextured: "White",
+      blackTextured: "Black",
+      silverKinetic: "Grey",
+      customTbdInvented: false,
+      rawRowsExposed: false,
+    },
+    safety: {
+      rawRowsExposed: false,
+      donorEngineInvoked: false,
+      runtimeDataMutated: false,
+      runTableGenerated: false,
+      iesGenerated: false,
+      selectedResultPersisted: false,
+      routesAdded: false,
+      postEndpointsAdded: false,
+      writes: false,
+    },
+    rawRowsExposed: false,
+  };
+}
+
+function finishCascadeValueForField(finishCascade = {}, fieldKey = "") {
+  return finishCascade.fields?.[fieldKey] || null;
+}
+
+function applyFinishCascadeToField(field = {}, finishCascade = {}) {
+  if (!FINISH_DEPENDENT_FIELD_KEYS.includes(field.fieldKey)) return field;
+  const outcome = finishCascadeValueForField(finishCascade, field.fieldKey);
+  if (!outcome) return field;
+  const inheritedValue = outcome.mode === "inherited" ? outcome.value : "";
+  const manualOverride = outcome.mode === "manual-override";
+  const missing = outcome.missing === true;
+  return {
+    ...field,
+    inheritanceStatus: outcome.mode,
+    inheritedValue,
+    inheritedLabel: outcome.mode === "inherited" ? outcome.label : "",
+    inheritedFrom: outcome.inheritedFrom,
+    inheritanceReason: outcome.reason,
+    inheritedMissing: missing,
+    manualOverridePreserved: manualOverride,
+    unavailableReason: missing ? outcome.reason : field.unavailableReason,
+    options: (Array.isArray(field.options) ? field.options : []).map((option) => {
+      const inheritedSelected = Boolean(inheritedValue && finishOptionMatches(option, inheritedValue));
+      const manualSelected = Boolean(manualOverride && finishOptionMatches(option, outcome.value));
+      return {
+        ...option,
+        inheritedSelected,
+        selected: option.selected === true || manualSelected,
+        status: inheritedSelected && option.blocked !== true ? "inherited" : option.status,
+        inheritedFrom: inheritedSelected ? outcome.inheritedFrom : option.inheritedFrom || "",
+        relationshipStatus: inheritedSelected ? "finish-inheritance-matched" : option.relationshipStatus,
+        rawRowsExposed: false,
+      };
+    }),
+    rawRowsExposed: false,
+  };
+}
+
+function finishFieldOptionsFromWorkflow(fieldsByKey = {}, fieldKey = "") {
+  const field = fieldsByKey.get(fieldKey) || {};
+  return selectableFinishOptions(field.options || []);
+}
+
+function applySelectorFinishCascadeToWorkflowSections(workflowSections = [], constraints = {}) {
+  const fields = workflowSections.flatMap((section) => Array.isArray(section.fields) ? section.fields : []);
+  const fieldsByKey = new Map(fields.map((field) => [field.fieldKey, field]));
+  const bodyField = fieldsByKey.get("bodyFinish") || fieldsByKey.get("finishDefault") || {};
+  const finishCascade = deriveRuntimeSelectorFinishCascade({
+    bodyFinish: constraints.bodyFinish || constraints.finishDefault || bodyField.selectedValue || "",
+    finishDefault: constraints.finishDefault || "",
+    finishCover: constraints.finishCover || "",
+    finishEnd: constraints.finishEnd || "",
+    finishFlex: constraints.finishFlex || "",
+    bodyOptions: finishFieldOptionsFromWorkflow(fieldsByKey, bodyField.fieldKey || "bodyFinish"),
+    finishCoverOptions: finishFieldOptionsFromWorkflow(fieldsByKey, "finishCover"),
+    finishEndOptions: finishFieldOptionsFromWorkflow(fieldsByKey, "finishEnd"),
+    finishFlexOptions: finishFieldOptionsFromWorkflow(fieldsByKey, "finishFlex"),
+  });
+  return {
+    workflowSections: workflowSections.map((section) => ({
+      ...section,
+      fields: (Array.isArray(section.fields) ? section.fields : []).map((field) => applyFinishCascadeToField(field, finishCascade)),
+      rawRowsExposed: false,
+    })),
+    finishCascade,
+  };
+}
+
 function createFields({ bucket, records, constraints, cascadeConstraints = constraints, sourceReady }) {
   return TARGET_FIELDS.map((field) => {
     const baseOptions = optionsFor(bucket, field.fieldKey);
@@ -1456,18 +1900,20 @@ function createFields({ bucket, records, constraints, cascadeConstraints = const
 
     const options = baseOptions.map((option) => {
       const cascade = optionCascadeResult(field.fieldKey, option, records, cascadeConstraints);
+      const policyBlock = mountCodePolicyBlock(field.fieldKey, option, records, cascadeConstraints);
+      const compatible = cascade.compatible && policyBlock.blocked !== true;
       const selected = optionSelectedByValue(field.fieldKey, option, selectedValue);
       return {
         ...option,
         selected: Boolean(selected),
-        status: cascade.compatible ? "available" : "blocked",
-        blocked: !cascade.compatible,
-        blockedReason: cascade.compatible ? "" : "Blocked by current manual constraints; shown rather than silently hidden.",
-        blockedBy: cascade.blockedBy,
+        status: compatible ? "available" : "blocked",
+        blocked: !compatible,
+        blockedReason: compatible ? "" : policyBlock.reason || "Blocked by current manual constraints; shown rather than silently hidden.",
+        blockedBy: compatible ? [] : [...(cascade.blockedBy || []), ...(policyBlock.blockedBy || [])],
         cascadeSource: cascade.cascadeSource || option.sourceTables || [],
-        relationshipStatus: cascade.relationshipStatus,
-        relationshipMissingReason: cascade.relationshipMissingReason,
-        compatibleWithCurrentConstraints: cascade.compatible,
+        relationshipStatus: policyBlock.blocked ? "blocked-by-code-policy" : cascade.relationshipStatus,
+        relationshipMissingReason: policyBlock.blocked ? policyBlock.reason : cascade.relationshipMissingReason,
+        compatibleWithCurrentConstraints: compatible,
         preservesManualConstraint: Boolean(selected),
         writes: false,
         rawRowsExposed: false,
@@ -1860,22 +2306,23 @@ function createWorkflowField(field, { bucket, records, constraints, cascadeConst
     : { supported: true, checked: false, blockedBy: [] };
   const options = baseOptions.map((option) => {
     const cascade = optionCascadeResult(field.fieldKey, option, records, cascadeConstraints);
-    const compatible = cascade.compatible && indirectSupport.supported;
+    const policyBlock = mountCodePolicyBlock(field.fieldKey, option, records, cascadeConstraints);
+    const compatible = cascade.compatible && indirectSupport.supported && policyBlock.blocked !== true;
     const selected = optionSelectedByValue(field.fieldKey, option, selectedValue);
     const inherited = field.role === "inherited-consequence" && compatible;
     const consequence = field.role === "auto-consequence" && compatible;
-    const blockedBy = compatible ? [] : [...(cascade.blockedBy || []), ...(indirectSupport.supported ? [] : indirectSupport.blockedBy)];
+    const blockedBy = compatible ? [] : [...(cascade.blockedBy || []), ...(indirectSupport.supported ? [] : indirectSupport.blockedBy), ...(policyBlock.blockedBy || [])];
     return {
       ...option,
       selected: Boolean(selected),
       status: inherited ? "inherited" : consequence ? "auto-consequence" : compatible ? "available" : "blocked",
       blocked: !compatible,
-      blockedReason: compatible ? "" : indirectSupport.supported ? "Blocked by current manual constraints; shown rather than silently hidden." : "Indirect fields are blocked because the current system/optic path does not support indirect.",
+      blockedReason: compatible ? "" : policyBlock.reason || (indirectSupport.supported ? "Blocked by current manual constraints; shown rather than silently hidden." : "Indirect fields are blocked because the current system/optic path does not support indirect."),
       blockedBy,
       cascadeSource: cascade.cascadeSource || option.sourceTables || [],
       inheritedFrom: inherited ? inheritedSourceForField(field.fieldKey, constraints) : "",
-      relationshipStatus: compatible ? cascade.relationshipStatus : indirectSupport.supported ? cascade.relationshipStatus : "blocked-by-indirect-capability",
-      relationshipMissingReason: compatible ? cascade.relationshipMissingReason : indirectSupport.supported ? cascade.relationshipMissingReason : "Current upstream selection does not expose indirect capability in safe relationship metadata.",
+      relationshipStatus: compatible ? cascade.relationshipStatus : policyBlock.blocked ? "blocked-by-code-policy" : indirectSupport.supported ? cascade.relationshipStatus : "blocked-by-indirect-capability",
+      relationshipMissingReason: compatible ? cascade.relationshipMissingReason : policyBlock.blocked ? policyBlock.reason : indirectSupport.supported ? cascade.relationshipMissingReason : "Current upstream selection does not expose indirect capability in safe relationship metadata.",
       compatibleWithCurrentConstraints: compatible,
       preservesManualConstraint: Boolean(selected),
       writes: false,
@@ -1984,6 +2431,26 @@ function deriveWorkflowConsequences(workflowSections = [], constraints = {}) {
   const consequences = [];
   for (const field of workflowFields(workflowSections)) {
     if (!["auto-consequence", "inherited-consequence"].includes(field.role) || constraints[field.fieldKey]) continue;
+
+    if (FINISH_DEPENDENT_FIELD_KEYS.includes(field.fieldKey)) {
+      if (!field.inheritedValue || field.inheritedMissing === true) continue;
+      consequences.push({
+        fieldKey: field.fieldKey,
+        label: field.label || field.fieldKey,
+        value: field.inheritedValue,
+        valueLabel: field.inheritedLabel || field.inheritedValue,
+        kind: "inherited-consequence",
+        status: field.inheritanceStatus || "inherited",
+        source: "safe Selector Reference finish inheritance cascade",
+        reason: field.inheritanceReason || `${field.label || field.fieldKey} inherits from the body/default finish until manually overridden.`,
+        inheritedFrom: field.inheritedFrom || inheritedSourceForField(field.fieldKey, constraints),
+        mutable: true,
+        writes: false,
+        rawRowsExposed: false,
+      });
+      continue;
+    }
+
     const option = (Array.isArray(field.options) ? field.options : []).find((item) => item.blocked !== true);
     if (!option) continue;
     consequences.push({
@@ -2265,6 +2732,7 @@ function failurePayload({ source = {}, reason = "selector_reference_options_unav
     selectedConstraints: safeConstraints,
     fields,
     workflowSections,
+    finishCascade: deriveRuntimeSelectorFinishCascade({}),
     donorFieldParity: parity,
     sourceReadiness,
     safeSnapshotState: sourceReadiness,
@@ -2320,7 +2788,9 @@ export function deriveSelectorReferenceOptionsFromSnapshot(snapshot = {}, { cons
   const records = collectRecords(safeSnapshot, bucket);
   const cascadeConstraints = cascadeConstraintsForOptions(bucket, safeConstraints);
   const fields = createFields({ bucket, records, constraints: safeConstraints, cascadeConstraints, sourceReady });
-  const workflowSections = createWorkflowSections({ bucket, records, constraints: safeConstraints, cascadeConstraints, sourceReady });
+  const workflowSectionsBase = createWorkflowSections({ bucket, records, constraints: safeConstraints, cascadeConstraints, sourceReady });
+  const finishCascadeResult = applySelectorFinishCascadeToWorkflowSections(workflowSectionsBase, safeConstraints);
+  const workflowSections = finishCascadeResult.workflowSections;
   const manualConstraints = createManualConstraintList(fields, safeConstraints);
   const autoConsequences = [
     ...deriveAutoConsequences(fields, safeConstraints),
@@ -2354,6 +2824,7 @@ export function deriveSelectorReferenceOptionsFromSnapshot(snapshot = {}, { cons
     selectedConstraints: safeConstraints,
     fields,
     workflowSections,
+    finishCascade: finishCascadeResult.finishCascade,
     donorFieldParity: parity,
     sourceReadiness,
     safeSnapshotState: sourceReadiness,

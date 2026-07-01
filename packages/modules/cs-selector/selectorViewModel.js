@@ -924,6 +924,29 @@ function optionValuesMatch(left, right) {
   return stripDirectionSuffix(left).toLowerCase() === stripDirectionSuffix(right).toLowerCase();
 }
 
+const SURFACE_MOUNT_DI_BLOCK_POLICY_ID = "SURFACE_MOUNT_DI_BLOCK";
+const SURFACE_MOUNT_DI_BLOCK_DEFAULT_REASON = "Surface Mount is blocked for direct-indirect/uplight systems because the ceiling would block the indirect light component.";
+
+function canonicalMountStyleValue(label) {
+  const text = String(label || "").trim().toLowerCase().replace(/\([^)]*\)/g, " ").replace(/\s+/g, " ").trim();
+  if (!text) return "";
+  if (/trimless/.test(text)) return "trimless";
+  if (/recess/.test(text) && /no flange/.test(text)) return "trimless";
+  if (/recess/.test(text) || /with flange/.test(text)) return "recessed";
+  if (/surface/.test(text)) return "surface mount";
+  if (/suspend/.test(text)) return "suspended";
+  return text;
+}
+
+function optionCodePolicyIds(option = {}) {
+  return (Array.isArray(option.codePolicyIds) ? option.codePolicyIds : [option.codePolicyIds]).map((id) => String(id || "").trim()).filter(Boolean);
+}
+
+function optionHasCodePolicy(option = {}, policyId = "") {
+  const wanted = String(policyId || "").trim().toLowerCase();
+  return optionCodePolicyIds(option).some((id) => id.toLowerCase() === wanted);
+}
+
 function dbConstraintMap(local = {}) {
   const constraints = local.dbBackedSelector?.manualConstraints;
   if (!constraints || typeof constraints !== "object" || Array.isArray(constraints)) return {};
@@ -1193,6 +1216,21 @@ function workflowSystemReferenceKey(workflowSections = [], selectedSystem = "") 
   return "";
 }
 
+function workflowSelectedSystemOption(workflowSections = [], selectedSystem = "") {
+  if (!selectedSystem) return null;
+  for (const section of workflowSections) {
+    const field = (section.fields || []).find((item) => item.fieldKey === "system");
+    if (!field) continue;
+    const option = (field.options || []).find((item) => systemOptionMatchesSelection(item, selectedSystem));
+    if (option) return option;
+  }
+  return null;
+}
+
+function workflowSystemSupportsIndirect(workflowSections = [], selectedSystem = "") {
+  return workflowSelectedSystemOption(workflowSections, selectedSystem)?.systemSupportsIndirect === true;
+}
+
 function diffuserParentConstraintForField(fieldKey = "", selectedConstraints = {}) {
   if (fieldKey === "directOpticVar2") return selectedConstraints.directOpticVar1 || selectedConstraints.diffuserVar1 || "";
   if (fieldKey === "indirectOpticVar2") return selectedConstraints.indirectOpticVar1 || selectedConstraints.diffuserVar1 || "";
@@ -1322,12 +1360,27 @@ function optionStrictlyMatchesSelectedSystemReference(option = {}, selectedConst
 
 function localMountingRelationshipBlock(fieldKey = "", option = {}, selectedConstraints = {}) {
   const blockers = [];
+  let codePolicyReason = "";
 
   if (fieldKey === "mountStyle" && !optionStrictlyMatchesSelectedSystemReference(option, selectedConstraints)) {
     blockers.push({
       fieldKey: "system",
       selectedValue: selectedConstraints.system,
       compatibleValues: optionSystemReferenceKeys(option),
+    });
+  }
+
+  if (
+    fieldKey === "mountStyle"
+    && selectedConstraints.__systemSupportsIndirect === true
+    && canonicalMountStyleValue(option.value || option.label) === "surface mount"
+    && optionHasCodePolicy(option, SURFACE_MOUNT_DI_BLOCK_POLICY_ID)
+  ) {
+    codePolicyReason = option.codePolicyReason || SURFACE_MOUNT_DI_BLOCK_DEFAULT_REASON;
+    blockers.push({
+      fieldKey: "CODE_POLICY",
+      selectedValue: SURFACE_MOUNT_DI_BLOCK_POLICY_ID,
+      compatibleValues: ["Suspended", "other donor-compatible mount styles"],
     });
   }
 
@@ -1349,7 +1402,7 @@ function localMountingRelationshipBlock(fieldKey = "", option = {}, selectedCons
     blocked: blockers.length > 0,
     blockedBy: blockers,
     reason: blockers.length
-      ? "Blocked by current Mounting manual constraints; shown rather than silently hidden."
+      ? codePolicyReason || "Blocked by current Mounting manual constraints; shown rather than silently hidden."
       : "",
   };
 }
@@ -1375,7 +1428,14 @@ function enrichDbWorkflowSections(selectorReferenceStatus = {}, local = {}) {
   const workflowSections = dbWorkflowSections(selectorReferenceStatus);
   const selectedConstraints = dbConstraintValueMap(local);
   const selectedSystemReferenceKey = workflowSystemReferenceKey(workflowSections, selectedConstraints.system || "");
-  const cascadeConstraints = selectedSystemReferenceKey ? { ...selectedConstraints, __systemReferenceKey: selectedSystemReferenceKey } : selectedConstraints;
+  const selectedSystemSupportsIndirect = workflowSystemSupportsIndirect(workflowSections, selectedConstraints.system || "");
+  const cascadeConstraints = selectedSystemReferenceKey || selectedSystemSupportsIndirect
+    ? {
+      ...selectedConstraints,
+      ...(selectedSystemReferenceKey ? { __systemReferenceKey: selectedSystemReferenceKey } : {}),
+      __systemSupportsIndirect: selectedSystemSupportsIndirect,
+    }
+    : selectedConstraints;
   return workflowSections.map((section) => ({
     ...section,
     fields: (Array.isArray(section.fields) ? section.fields : []).map((field) => {
@@ -1392,6 +1452,7 @@ function enrichDbWorkflowSections(selectorReferenceStatus = {}, local = {}) {
         const selected = selectedValue ? (optionValuesMatch(option.value, selectedValue) || (field.fieldKey === "system" && systemOptionMatchesSelection(option, selectedValue))) : option.selected === true;
         const localBlock = localWorkflowRelationshipBlock(field.fieldKey, option, cascadeConstraints);
         const blocked = option.blocked === true || localBlock.blocked === true;
+        const localPolicyBlocked = Array.isArray(localBlock.blockedBy) && localBlock.blockedBy.some((blocker) => blocker.fieldKey === "CODE_POLICY");
         const hydratedStatus = deferredChildOptionsHydrated && !blocked ? "available" : option.status;
         return {
           ...option,
@@ -1401,7 +1462,7 @@ function enrichDbWorkflowSections(selectorReferenceStatus = {}, local = {}) {
           blocked,
           blockedReason: blocked ? option.blockedReason || localBlock.reason || "Blocked by current manual constraints; shown rather than silently hidden." : option.blockedReason || "",
           blockedBy: blocked ? [...(Array.isArray(option.blockedBy) ? option.blockedBy : []), ...localBlock.blockedBy] : (Array.isArray(option.blockedBy) ? option.blockedBy : []),
-          relationshipStatus: blocked ? "blocked-by-diffuser-relationship" : option.relationshipStatus || (deferredChildOptionsHydrated ? "matched-after-parent-selection" : "matched"),
+          relationshipStatus: blocked ? (localPolicyBlocked ? "blocked-by-code-policy" : "blocked-by-diffuser-relationship") : option.relationshipStatus || (deferredChildOptionsHydrated ? "matched-after-parent-selection" : "matched"),
           relationshipMissingReason: blocked ? localBlock.reason : option.relationshipMissingReason || "",
           rawRowsExposed: false,
         };
@@ -1655,10 +1716,22 @@ function finishInheritanceContextFromWorkflow(workflowSections = []) {
 function presentationInheritedFinishOption(field = {}, compatibleOptions = [], finishContext = {}) {
   const selected = presentationSelectedOption(field);
   if (selected) return selected;
+  const options = Array.isArray(compatibleOptions) ? compatibleOptions : [];
+  const inheritedValue = String(field.inheritedValue || "").trim();
+  if (inheritedValue) {
+    return options.find((option) => optionValuesMatch(option.value, inheritedValue) || optionValuesMatch(option.label, inheritedValue)) || {
+      value: inheritedValue,
+      label: field.inheritedLabel || inheritedValue,
+      status: field.inheritedMissing === true ? "blocked" : "inherited",
+      blocked: field.inheritedMissing === true,
+      inheritedSelected: true,
+      inheritedFrom: field.inheritedFrom || "bodyFinish",
+      rawRowsExposed: false,
+    };
+  }
   const bodyValue = String(finishContext.bodyValue || "").trim();
   if (!["finishCover", "finishEnd", "finishFlex", "inheritedFinishStatus"].includes(field.fieldKey)) return null;
   if (!bodyValue) return null;
-  const options = Array.isArray(compatibleOptions) ? compatibleOptions : [];
   if (field.fieldKey === "finishCover" || field.fieldKey === "finishEnd") {
     return options.find((option) => optionValuesMatch(option.value, bodyValue) || optionValuesMatch(option.label, bodyValue)) || null;
   }
@@ -1782,20 +1855,23 @@ function classifyRuntimePresentationField(field = {}, finishContext = {}) {
     overrideAvailable = false;
     classificationReason = "no compatible DB-backed option is available; no dead dropdown or fake consequence is rendered";
   } else if (presentationIsInherited(field) && !hasManualConstraint) {
-    displayMode = "inherited-chip";
+    const visibleInheritedFinishField = ["finishCover", "finishEnd", "finishFlex"].includes(field.fieldKey);
+    displayMode = visibleInheritedFinishField ? "choice" : "inherited-chip";
     provenance = "inherited";
     primaryDecision = false;
     effectiveValue = effectiveOption?.value || "";
-    effectiveLabel = effectiveOption?.label || field.unavailableReason || "inherits from direct/default selection";
-    if (["finishCover", "finishEnd", "finishFlex"].includes(field.fieldKey) && !finishContext.bodyValue) {
+    effectiveLabel = effectiveOption?.label || field.inheritedLabel || field.unavailableReason || "inherits from direct/default selection";
+    if (visibleInheritedFinishField && !finishContext.bodyValue && !field.inheritedValue) {
       displayMode = "collapsed-override";
       effectiveValue = "";
       effectiveLabel = "";
       overrideAvailable = false;
       classificationReason = "donor finish inheritance is inactive until body/default finish is selected";
     } else {
-      overrideAvailable = optionsComputable && compatibleOptionCount > 1;
-      classificationReason = "inherited consequence from direct/default selection";
+      overrideAvailable = optionsComputable && compatibleOptionCount > 0;
+      classificationReason = visibleInheritedFinishField
+        ? "visible inherited finish control; selecting a value creates a manual override and clearing returns to inherited body/default cascade"
+        : "inherited consequence from direct/default selection";
     }
   } else if (safeAutoResolve && (RUNTIME_PRESENTATION_AUTO_CHIP_FIELDS.has(field.fieldKey) || presentationRole(field) === "auto-consequence" || (presentationRole(field) === "manual-constraint" && !RUNTIME_PRESENTATION_MANUAL_ONLY_FIELDS.has(field.fieldKey)))) {
     displayMode = "auto-chip";

@@ -175,7 +175,7 @@ test("diffuser var 2 is a chip for one compatible option and a choice for multip
   assert.equal(multipleVar2.primaryDecision, true);
 });
 
-test("variant, direct/indirect capability, driver, and inherited finishes are not primary dropdowns", () => {
+test("variant, direct/indirect capability, and driver are not primary dropdowns while inherited finishes stay selectable", () => {
   const surface = surfaceFor({ system: "DNX|60", bodyFinish: "White", controlType: "DALI-2" });
 
   for (const key of ["variantKey", "directCapability", "indirectCapability", "driver"]) {
@@ -186,8 +186,10 @@ test("variant, direct/indirect capability, driver, and inherited finishes are no
 
   for (const key of ["finishCover", "finishEnd", "finishFlex"]) {
     const field = workflowField(surface, key);
-    assert.equal(field.displayMode, "inherited-chip", `${key} should render as inherited chip`);
+    assert.equal(field.displayMode, "choice", `${key} should remain a visible selectable inherited finish control`);
     assert.equal(field.provenance, "inherited");
+    assert.equal(field.primaryDecision, false);
+    assert.equal(field.overrideAvailable, true);
   }
 });
 

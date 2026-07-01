@@ -957,7 +957,9 @@ function appendSelectorProductFieldCard(parent, field = {}, surface = {}, idPref
     ? "Disabled in this read-only slice"
     : field.futureMapped === true
       ? "Unavailable from current source — future mapped"
-      : "No manual constraint / keep preview consequence";
+      : field.provenance === "inherited" && field.effectiveLabel
+        ? `Auto / inherit: ${field.effectiveLabel}`
+        : "No manual constraint / keep preview consequence";
   select.appendChild(emptyOption);
 
   for (const option of dropdownOptions) {
@@ -980,7 +982,7 @@ function appendSelectorProductFieldCard(parent, field = {}, surface = {}, idPref
   const selectedOption = selectedOrPreviewOption(field);
   const compactMeta = document.createElement("div");
   compactMeta.className = "cs-selector-product__field-compact-meta";
-  appendCompactMetadataLine(compactMeta, "selected", fieldSelectedText(field));
+  appendCompactMetadataLine(compactMeta, field.provenance === "inherited" && !field.selectedValue ? "inherited" : "selected", field.provenance === "inherited" && !field.selectedValue ? field.effectiveLabel || fieldSelectedText(field) : fieldSelectedText(field));
   appendCompactMetadataLine(compactMeta, "options", fieldOptionCount(field));
   if (selectedOption.blocked === true) appendCompactMetadataLine(compactMeta, "blocked", selectedOption.blockedReason || field.unavailableReason || "current constraints");
   if (selectedOption.diffuserMaterial) appendCompactMetadataLine(compactMeta, "material", selectedOption.diffuserMaterial);
