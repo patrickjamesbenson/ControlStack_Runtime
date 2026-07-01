@@ -18,7 +18,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Mapping
 
-STAGE_NAME = "ENGINE-RUNTABLE-TIER-LENGTH-POLICY-RESOLUTION-1"
+STAGE_NAME = "ENGINE-RUNTABLE-OPTIC-EFF-CURRENT-FEASIBILITY-1"
 SCRIPT_PATH = Path(__file__).resolve()
 RUNTIME_ROOT = SCRIPT_PATH.parents[2]
 MCP_SOURCE_PATH = RUNTIME_ROOT / "tools" / "controlstack-mcp" / "controlstack_mcp.py"
@@ -790,41 +790,129 @@ def find_optic(snapshot: Mapping[str, Any], system_hint: str = "", board: Mappin
     return "", None
 
 
-def optic_eff_from_row(row: Mapping[str, Any], row_index: int) -> tuple[str, dict[str, Any] | None]:
+def donor_float_token(value: Any) -> str:
+    try:
+        parsed = float(value)
+    except (TypeError, ValueError):
+        return ""
+    if parsed <= 0.0:
+        return ""
+    return f"{parsed:g}"
+
+
+def optic_eff_parse_class(value: Any) -> str:
+    raw = safe_string(value)
+    if not raw:
+        return "blank"
+    if donor_float_token(value):
+        return "numeric"
+    if "%" in raw and numeric_token(raw):
+        return "percent-like-unbound"
+    if numeric_token(raw):
+        return "string-with-number-unbound"
+    return "unparseable"
+
+
+def optic_eff_from_row(row: Mapping[str, Any], row_index: int) -> tuple[str, dict[str, Any] | None, str]:
     value, key = first_present(row, alias_keys("optic_eff"))
-    token = numeric_token(value)
+    token = donor_float_token(value)
     if token and key:
-        return token, source_ref("OPTICS", key, row_index)
+        return token, source_ref("OPTICS", key, row_index), optic_eff_parse_class(value)
 
     # Mirror donor bridge semantics without using the donor bridge: accept source-backed
     # OPTICS columns whose header contains both opt* and eff*, but never apply a fallback.
     for raw_key, raw_value in row.items():
         lowered = safe_string(raw_key).strip().lower()
         if "opt" in lowered and "eff" in lowered:
-            token = numeric_token(raw_value)
+            token = donor_float_token(raw_value)
             if token:
-                return token, source_ref("OPTICS", safe_string(raw_key), row_index)
-    return "", None
+                return token, source_ref("OPTICS", safe_string(raw_key), row_index), optic_eff_parse_class(raw_value)
+    return "", None, "unavailable"
 
 
-def find_optic_eff(snapshot: Mapping[str, Any], optic: str, system_hint: str = "") -> tuple[str, dict[str, Any] | None]:
+def optic_row_match_reason(row: Mapping[str, Any], optic: str, system_hint: str = "") -> str:
+    wanted = [safe_string(optic)]
+    wanted = [item for item in wanted if item]
+    wanted_l = {item.lower() for item in wanted}
+    if wanted_l:
+        cells = {safe_string(value).lower() for value in row.values() if safe_string(value)}
+        if wanted_l & cells:
+            return "exact-whole-cell-match"
+
+    split_pairs: list[tuple[str, str]] = []
+    for wanted_key in wanted:
+        parts = [part.strip() for part in wanted_key.replace("/", "|").split("|") if part.strip()]
+        if len(parts) >= 2:
+            split_pairs.append((parts[0].lower(), parts[1].lower()))
+    if split_pairs:
+        system_value, _ = first_present(row, alias_keys("system"))
+        optic_value, _ = first_present(row, alias_keys("optic"))
+        row_system = safe_string(system_value).lower()
+        row_optic = safe_string(optic_value).lower()
+        for sys_key, optic_key in split_pairs:
+            if row_system == sys_key and row_optic == optic_key:
+                return "split-system-optic-match"
+
     optic_lookup = safe_string(optic).lower()
-    system_lookup = safe_string(system_hint).lower()
+    if optic_lookup:
+        optic_value, _ = first_present(row, alias_keys("optic"))
+        optic_text = safe_string(optic_value).lower()
+        if optic_text and (optic_lookup in optic_text or optic_text in optic_lookup):
+            if system_hint:
+                system_value, _ = first_present(row, alias_keys("system"))
+                system_text = safe_string(system_value).lower()
+                if system_text and safe_string(system_hint).lower() not in system_text and system_text not in safe_string(system_hint).lower():
+                    return ""
+            return "optic-alias-compatible-match"
+    return ""
+
+
+def missing_optic_eff_resolution(optic: str, system_hint: str) -> dict[str, Any]:
+    return {
+        "classification": "source-backed-optic-efficiency-resolution",
+        "selected_optic_present": bool(safe_string(optic)),
+        "system_hint_present": bool(safe_string(system_hint)),
+        "matched": False,
+        "bound_to_lighting": False,
+        "donor_received_aliases": [],
+        "source_table": "OPTICS",
+        "matched_field_name": "",
+        "row_ref": "OPTICS",
+        "parsed_class": "unavailable",
+        "raw_row_returned": False,
+        "raw_value_returned": False,
+        "raw_payload_returned": False,
+    }
+
+
+def find_optic_eff(snapshot: Mapping[str, Any], optic: str, system_hint: str = "") -> tuple[str, dict[str, Any] | None, dict[str, Any]]:
+    fallback_unmatched: dict[str, Any] | None = None
     for index, row in enumerate(table_rows(snapshot, "OPTICS")):
-        if optic_lookup:
-            optic_value, _ = first_present(row, alias_keys("optic"))
-            optic_text = safe_string(optic_value).lower()
-            if optic_text and optic_lookup not in optic_text and optic_text not in optic_lookup:
-                continue
-        if system_lookup:
-            system_value, _ = first_present(row, alias_keys("system"))
-            system_text = safe_string(system_value).lower()
-            if system_text and system_lookup not in system_text and system_text not in system_lookup:
-                continue
-        token, source = optic_eff_from_row(row, index)
+        reason = optic_row_match_reason(row, optic, system_hint)
+        if not reason:
+            continue
+        token, source, parsed_class = optic_eff_from_row(row, index)
+        source_map = source if isinstance(source, Mapping) else source_ref("OPTICS", "", index)
+        diagnostic = {
+            "classification": "source-backed-optic-efficiency-resolution",
+            "selected_optic_present": bool(safe_string(optic)),
+            "system_hint_present": bool(safe_string(system_hint)),
+            "matched": True,
+            "match_reason": reason,
+            "bound_to_lighting": bool(token),
+            "donor_received_aliases": ["lighting.eff_optical", "lighting.optical_eff", "lighting.optical_efficiency"] if token else [],
+            "source_table": "OPTICS",
+            "matched_field_name": safe_string(source_map.get("field")) if isinstance(source_map, Mapping) else "",
+            "row_ref": safe_string(source_map.get("row_ref")) if isinstance(source_map, Mapping) else f"OPTICS[{index}]",
+            "parsed_class": parsed_class,
+            "raw_row_returned": False,
+            "raw_value_returned": False,
+            "raw_payload_returned": False,
+        }
         if token:
-            return token, source
-    return "", None
+            return token, source, diagnostic
+        fallback_unmatched = diagnostic
+    return "", None, fallback_unmatched or missing_optic_eff_resolution(optic, system_hint)
 
 
 def controlled_geometry_summary() -> dict[str, Any]:
@@ -931,6 +1019,29 @@ def tier_length_policy_diagnostics(
     }
 
 
+def current_feasibility_summary(
+    current_ma: str,
+    current_source: dict[str, Any] | None,
+    optic_eff_resolution: Mapping[str, Any],
+) -> dict[str, Any]:
+    return {
+        "classification": "source-backed-current-feasibility-resolution",
+        "source_backed_current_available": bool(current_ma and current_source),
+        "source_backed_current_bound": bool(current_ma and current_source),
+        "current_derivation_allowed": not bool(current_ma and current_source),
+        "derivation_inputs_available": bool(optic_eff_resolution.get("bound_to_lighting")),
+        "derivation_path": "target_lm_per_m plus source-backed OPTICS optical efficiency plus source-backed board curve data" if optic_eff_resolution.get("bound_to_lighting") and not current_ma else "",
+        "missing_blocker": "" if current_ma or optic_eff_resolution.get("bound_to_lighting") else "missing-source-backed-optic-efficiency-for-current-derivation",
+        "current_invented": False,
+        "fallback_optical_efficiency_used": False,
+        "fallback_current_used": False,
+        "source": current_source or "unavailable",
+        "raw_value_returned": False,
+        "raw_row_returned": False,
+        "raw_payload_returned": False,
+    }
+
+
 def board_capacity_source(board: Mapping[str, Any] | None, board_index: int | None) -> dict[str, Any] | None:
     if board is None:
         return None
@@ -990,7 +1101,7 @@ def derive_candidate_from_snapshot(snapshot: Mapping[str, Any]) -> dict[str, Any
     value_diagnostics = candidate_value_diagnostics(board, board_index)
     system, system_source = find_system(snapshot, board)
     optic, optic_source = find_optic(snapshot, system_hint=system, board=board, board_index=board_index)
-    optic_eff, optic_eff_source = find_optic_eff(snapshot, optic, system_hint=system)
+    optic_eff, optic_eff_source, optic_eff_resolution = find_optic_eff(snapshot, optic, system_hint=system)
     control_type, control_source = find_control_type(snapshot, board)
     capacity_source = board_capacity_source(board, board_index)
 
@@ -1042,8 +1153,12 @@ def derive_candidate_from_snapshot(snapshot: Mapping[str, Any]) -> dict[str, Any
         lighting["pitch_mm"] = pitch
     if optic:
         lighting["optic_key"] = optic
+        lighting["selected_optic_key"] = optic
     if optic_eff:
         lighting["eff_optical"] = optic_eff
+        lighting["optical_eff"] = optic_eff
+        lighting["optical_efficiency"] = optic_eff
+        lighting["optical_eff_source"] = f"OPTICS.{safe_string(optic_eff_source.get('field'))}" if isinstance(optic_eff_source, Mapping) else "OPTICS"
     if light_direction:
         lighting["light_direction"] = light_direction
     if control_type:
@@ -1083,6 +1198,14 @@ def derive_candidate_from_snapshot(snapshot: Mapping[str, Any]) -> dict[str, Any
         field_map_entry("system", bool(system), "source-backed-context", system_source or "unavailable"),
     ])
 
+    if target_lm_per_m and not current_ma and not optic_eff:
+        blockers.append(
+            safe_blocker(
+                "missing-source-backed-optic-efficiency-for-current-derivation",
+                "Controlled target_lm_per_m requires donor current derivation, but no selected source-backed OPTICS optical efficiency was bound and no source-backed current_ma was available.",
+            )
+        )
+
     for required_field in REQUIRED_CANDIDATE_FIELDS:
         if required_field == "runs":
             present = bool(selector_payload.get("runs"))
@@ -1110,6 +1233,8 @@ def derive_candidate_from_snapshot(snapshot: Mapping[str, Any]) -> dict[str, Any
         "controlled_geometry": controlled_geometry_summary(),
         "tier_strategy": tier_strategy_summary(tier),
         "tier_length_policy_resolution": tier_length_policy_diagnostics(snapshot, tier, selector_payload),
+        "optic_eff_resolution": optic_eff_resolution,
+        "current_feasibility": current_feasibility_summary(current_ma, current_source, optic_eff_resolution),
         "field_source_map": field_source_map,
         "value_diagnostics": value_diagnostics,
         "schema_introspection": safe_schema_introspection(snapshot),

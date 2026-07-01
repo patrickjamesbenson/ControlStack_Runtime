@@ -158,7 +158,7 @@ test("host-local Engine evidence runner classifies target lm/m as controlled Sel
 test("host-local Engine evidence runner passes donor-compatible manual tier strategy and length policy diagnostics", async () => {
   const runnerText = await readFile(runnerSourceUrl, "utf-8");
 
-  assert.match(runnerText, /ENGINE-RUNTABLE-TIER-LENGTH-POLICY-RESOLUTION-1/);
+  assert.match(runnerText, /ENGINE-RUNTABLE-OPTIC-EFF-CURRENT-FEASIBILITY-1/);
   assert.match(runnerText, /TIER_STRATEGY_FIELD_SHAPE/);
   assert.match(runnerText, /tier_strategy\.selected_tier/);
   assert.match(runnerText, /tier_strategy\.candidate_tiers/);
@@ -175,6 +175,33 @@ test("host-local Engine evidence runner passes donor-compatible manual tier stra
   assert.match(runnerText, /raw_values_returned\": False/);
   assert.match(runnerText, /raw_payload_returned\": False/);
   assert.match(runnerText, /tier_length_policy_resolution_after_execute/);
+  assert.equal(runnerText.includes("from lib.engine_bridge"), false);
+});
+
+
+test("host-local Engine evidence runner binds source-backed OPTICS optical efficiency without fallback", async () => {
+  const runnerText = await readFile(runnerSourceUrl, "utf-8");
+
+  assert.match(runnerText, /donor_float_token/);
+  assert.match(runnerText, /optic_eff_parse_class/);
+  assert.match(runnerText, /percent-like-unbound/);
+  assert.match(runnerText, /optic_row_match_reason/);
+  assert.match(runnerText, /exact-whole-cell-match/);
+  assert.match(runnerText, /split-system-optic-match/);
+  assert.match(runnerText, /selected_optic_key/);
+  assert.match(runnerText, /lighting\["eff_optical"\] = optic_eff/);
+  assert.match(runnerText, /lighting\["optical_eff"\] = optic_eff/);
+  assert.match(runnerText, /lighting\["optical_efficiency"\] = optic_eff/);
+  assert.match(runnerText, /source-backed-optic-efficiency-resolution/);
+  assert.match(runnerText, /optic_eff_resolution/);
+  assert.match(runnerText, /bound_to_lighting/);
+  assert.match(runnerText, /donor_received_aliases/);
+  assert.match(runnerText, /fallback_optical_efficiency_used\": False/);
+  assert.match(runnerText, /fallback_current_used\": False/);
+  assert.match(runnerText, /missing-source-backed-optic-efficiency-for-current-derivation/);
+  assert.equal(runnerText.includes("lighting[\"eff_optical\"] = \"1.0\""), false);
+  assert.equal(runnerText.includes("lighting[\"optical_eff\"] = 1.0"), false);
+  assert.equal(runnerText.includes("electrical[\"current_ma\"] = 350"), false);
   assert.equal(runnerText.includes("from lib.engine_bridge"), false);
 });
 
