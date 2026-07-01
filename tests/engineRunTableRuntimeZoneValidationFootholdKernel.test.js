@@ -137,6 +137,24 @@ test("accepts sealed segment-zone bridge summary", () => {
   assert.equal(result.segmentZoneBridgeFingerprint, footholdInput().segmentZoneBridgeSummary.segmentZoneBridgeFingerprint);
 });
 
+test("consumes sealed bridge and driver summaries without upstream bypass inputs", () => {
+  const input = {
+    policyFingerprint: POLICY_FINGERPRINT,
+    sourceFingerprint: SOURCE_FINGERPRINT,
+    segmentZoneBridgeSummary: bridgeSummary(),
+    driverSizerSummary: driverSizerSummary(),
+  };
+
+  const result = buildRuntimeZoneValidationFootholdSummary(input);
+
+  assert.equal(result.ok, true);
+  assert.equal(result.zoneValidationFootholdReady, true);
+  assert.equal(result.noCrossValidationSummary.validationMode, "sealed-no-cross-containment-only");
+  assert.equal(result.segmentContainmentSummary.physicalLayoutSource, "sealed-physical-board-placement-summary");
+  assert.equal(result.rawBoardRowsReturned, false);
+  assert.equal(result.rawReservationGridReturned, false);
+});
+
 test("aliases call the same runtime zone validation foothold helper", () => {
   const input = footholdInput();
   assert.deepEqual(buildRuntimeNativeZoneValidationFootholdSummary(input), buildRuntimeZoneValidationFootholdSummary(input));
