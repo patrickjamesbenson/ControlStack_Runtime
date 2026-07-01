@@ -2753,6 +2753,28 @@ function createReferenceOptionSourceCoverage({ fields = [], workflowSections = [
   };
 }
 
+function createTimelineStatusFilteringSummary({ fields = [], workflowSections = [] } = {}) {
+  const allOptions = [
+    ...(Array.isArray(fields) ? fields : []).flatMap((field) => Array.isArray(field.options) ? field.options : []),
+    ...workflowFields(workflowSections).flatMap((field) => Array.isArray(field.options) ? field.options : []),
+  ];
+  const blockedByStatusPolicyCount = allOptions.filter((option) => option.blockedByStatusPolicy === true || option.relationshipStatus === "blocked-by-status-policy").length;
+  const reviewRequiredCount = allOptions.filter((option) => option.statusPolicyReviewRequired === true || option.timelineAvailability === "review-required").length;
+  return {
+    statusClasses: [...SELECTOR_STATUS_CLASSES],
+    visibleToExternalDefault: ["available", "approved"],
+    hiddenOrBlockedToExternalDefault: ["staged", "roadmap", "obsolete"],
+    reviewRequired: ["unknown"],
+    externalDefaultPolicy: "available/approved options are shown; staged/roadmap/obsolete are hidden unless already selected; unknown fails safe as review-required.",
+    selectedBlockedValuesPreserved: true,
+    blockedByStatusPolicyCount,
+    reviewRequiredCount,
+    rawRowsReturned: false,
+    rawUsersReturned: false,
+    privatePathsReturned: false,
+  };
+}
+
 function createOptionSafeSnapshotState({ source = {}, sourceReady = false, fields = [], workflowSections = [], tableSummaryRows = [], reason = "" } = {}) {
   const coverage = createReferenceOptionSourceCoverage({ fields, workflowSections });
   const missingTables = tableSummaryRows.filter((table) => table.present !== true).map((table) => table.table);
@@ -2838,6 +2860,7 @@ function failurePayload({ source = {}, reason = "selector_reference_options_unav
     tableSummaryRows: [],
     reason,
   });
+  const timelineStatusFiltering = createTimelineStatusFilteringSummary({ fields, workflowSections });
   return {
     ok: false,
     endpoint: SELECTOR_REFERENCE_OPTIONS_PATH,
@@ -2850,6 +2873,7 @@ function failurePayload({ source = {}, reason = "selector_reference_options_unav
     workflowSections,
     finishCascade: deriveRuntimeSelectorFinishCascade({}),
     donorFieldParity: parity,
+    timelineStatusFiltering,
     sourceReadiness,
     safeSnapshotState: sourceReadiness,
     referenceOptionSourceCoverage: sourceReadiness.referenceOptionSourceCoverage,
@@ -2929,6 +2953,7 @@ export function deriveSelectorReferenceOptionsFromSnapshot(snapshot = {}, { cons
     tableSummaryRows,
     reason: hasMissing ? "Some option fields are future-mapped or unavailable from the current source; no fake values emitted." : "",
   });
+  const timelineStatusFiltering = createTimelineStatusFilteringSummary({ fields, workflowSections });
 
   return {
     ok: true,
@@ -2942,6 +2967,7 @@ export function deriveSelectorReferenceOptionsFromSnapshot(snapshot = {}, { cons
     workflowSections,
     finishCascade: finishCascadeResult.finishCascade,
     donorFieldParity: parity,
+    timelineStatusFiltering,
     sourceReadiness,
     safeSnapshotState: sourceReadiness,
     referenceOptionSourceCoverage: sourceReadiness.referenceOptionSourceCoverage,
