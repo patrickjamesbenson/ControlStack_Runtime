@@ -926,6 +926,10 @@ def _safe_engine_result_summary(engine_result: Any) -> dict[str, Any]:
 
     tier_evaluation = engine_result.get("tier_evaluation") if isinstance(engine_result.get("tier_evaluation"), Mapping) else {}
     selected_solution = engine_result.get("selected_solution") if isinstance(engine_result.get("selected_solution"), Mapping) else {}
+    rough_payload = engine_result.get("rough_electrical_payload") if isinstance(engine_result.get("rough_electrical_payload"), Mapping) else {}
+    debug = engine_result.get("debug") if isinstance(engine_result.get("debug"), Mapping) else {}
+    policy_sources = debug.get("policy_sources") if isinstance(debug.get("policy_sources"), Mapping) else {}
+    selected_tier = tier_evaluation.get("selected_tier") or selected_solution.get("tier") or rough_payload.get("tier") or policy_sources.get("tier") or ""
     return {
         "success": bool(engine_result.get("success", False)),
         "run_count": len(runs),
@@ -933,7 +937,7 @@ def _safe_engine_result_summary(engine_result: Any) -> dict[str, Any]:
         "warning_count": len(warnings),
         "first_error": str(errors[0])[:240] if errors else "",
         "first_warning": str(warnings[0])[:240] if warnings else "",
-        "selected_tier": str(tier_evaluation.get("selected_tier") or selected_solution.get("tier") or "")[:80],
+        "selected_tier": str(selected_tier)[:80],
         "output_contract_ready": bool(engine_result.get("output_contract_ready", False)),
         "runs": safe_runs,
         "raw_result_returned": False,

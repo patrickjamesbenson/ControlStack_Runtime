@@ -155,6 +155,30 @@ test("host-local Engine evidence runner classifies target lm/m as controlled Sel
   assert.equal(runnerText.includes('field_map_entry("target_lm_per_m", bool(target_lm_per_m), "source-backed-required"'), false);
 });
 
+test("host-local Engine evidence runner passes donor-compatible manual tier strategy and length policy diagnostics", async () => {
+  const runnerText = await readFile(runnerSourceUrl, "utf-8");
+
+  assert.match(runnerText, /ENGINE-RUNTABLE-TIER-LENGTH-POLICY-RESOLUTION-1/);
+  assert.match(runnerText, /TIER_STRATEGY_FIELD_SHAPE/);
+  assert.match(runnerText, /tier_strategy\.selected_tier/);
+  assert.match(runnerText, /tier_strategy\.candidate_tiers/);
+  assert.match(runnerText, /tier_strategy_payload/);
+  assert.match(runnerText, /\"tier_strategy\": tier_strategy_payload\(tier\)/);
+  assert.match(runnerText, /\"mode\": \"manual\"/);
+  assert.match(runnerText, /\"optimisation_intent\": \"locked_manual\"/);
+  assert.match(runnerText, /tier_length_policy_diagnostics/);
+  assert.match(runnerText, /LENGTH_POLICY_DIAGNOSTIC_ITEMS/);
+  assert.match(runnerText, /length_pref/);
+  assert.match(runnerText, /max_board_gap_mm/);
+  assert.match(runnerText, /gap_mode/);
+  assert.match(runnerText, /raw_rows_returned\": False/);
+  assert.match(runnerText, /raw_values_returned\": False/);
+  assert.match(runnerText, /raw_payload_returned\": False/);
+  assert.match(runnerText, /tier_length_policy_resolution_after_execute/);
+  assert.equal(runnerText.includes("from lib.engine_bridge"), false);
+});
+
+
 test("host-local Engine evidence runner uses donor-compatible controlled run geometry", async () => {
   const runnerText = await readFile(runnerSourceUrl, "utf-8");
 

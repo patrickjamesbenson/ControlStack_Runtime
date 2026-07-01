@@ -82,3 +82,16 @@ test("internal seam fails closed for incomplete candidates and does not create s
   assert.match(mcpText, /selected_result_persistence_enabled["']:\s*False/);
   assert.match(mcpText, /engine_result_produced=bool\(safe_summary\.get\("success"\)\)/);
 });
+
+test("internal seam safe summary preserves manual-path selected tier diagnostics", async () => {
+  const mcpText = await readFile(mcpSourceUrl, "utf-8");
+
+  assert.match(mcpText, /rough_payload = engine_result\.get\("rough_electrical_payload"\)/);
+  assert.match(mcpText, /policy_sources = debug\.get\("policy_sources"\)/);
+  assert.match(mcpText, /rough_payload\.get\("tier"\)/);
+  assert.match(mcpText, /policy_sources\.get\("tier"\)/);
+  assert.match(mcpText, /"selected_tier": str\(selected_tier\)\[:80\]/);
+  assert.match(mcpText, /raw_result_returned["']:\s*False/);
+  assert.match(mcpText, /raw_debug_returned["']:\s*False/);
+  assert.match(mcpText, /raw_rough_electrical_payload_returned["']:\s*False/);
+});

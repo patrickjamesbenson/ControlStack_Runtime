@@ -18,7 +18,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Mapping
 
-STAGE_NAME = "ENGINE-RUNTABLE-HOST-RUN-GEOMETRY-FEASIBILITY-1"
+STAGE_NAME = "ENGINE-RUNTABLE-TIER-LENGTH-POLICY-RESOLUTION-1"
 SCRIPT_PATH = Path(__file__).resolve()
 RUNTIME_ROOT = SCRIPT_PATH.parents[2]
 MCP_SOURCE_PATH = RUNTIME_ROOT / "tools" / "controlstack-mcp" / "controlstack_mcp.py"
@@ -54,6 +54,30 @@ CONTROLLED_RUN_FIELD_SHAPE = (
     "requested_length_basis",
     "length_policy_source",
     "accessory_length_policy_source",
+)
+
+TIER_STRATEGY_FIELD_SHAPE = (
+    "tier",
+    "tier_strategy.mode",
+    "tier_strategy.selected_tier",
+    "tier_strategy.candidate_tiers",
+    "tier_strategy.optimisation_intent",
+)
+
+LENGTH_POLICY_DIAGNOSTIC_ITEMS = (
+    "length_pref",
+    "max_board_gap_mm",
+    "max_board_gap",
+    "gap_mode",
+    "start_board_gap",
+    "start_board_gap_mm",
+    "start_gap_mm",
+    "end_board_gap",
+    "end_board_gap_mm",
+    "end_gap_mm",
+    "segment_max_board_split_qty",
+    "electrical_zone_mode",
+    "secondary_across_segment",
 )
 
 CONTROLLED_RUN = {
@@ -819,6 +843,94 @@ def controlled_geometry_summary() -> dict[str, Any]:
     }
 
 
+def tier_strategy_payload(tier: str) -> dict[str, Any]:
+    tier_text = safe_string(tier)
+    return {
+        "mode": "manual",
+        "selected_tier": tier_text,
+        "candidate_tiers": [tier_text] if tier_text else [],
+        "optimisation_intent": "locked_manual",
+    }
+
+
+def tier_strategy_summary(tier: str) -> dict[str, Any]:
+    tier_text = safe_string(tier)
+    return {
+        "classification": "source-backed-tier-resolution-shape",
+        "donor_compatible_tier_field_shape": list(TIER_STRATEGY_FIELD_SHAPE),
+        "top_level_tier_passed": bool(tier_text),
+        "tier_strategy_selected_tier_passed": bool(tier_text),
+        "tier_strategy_candidate_tiers_passed": bool(tier_text),
+        "tier_strategy_mode": "manual",
+        "tier_value_returned": False,
+        "raw_payload_returned": False,
+    }
+
+
+def system_policy_item_diagnostic(snapshot: Mapping[str, Any], tier: str, item_name: str) -> dict[str, Any]:
+    tier_text = safe_string(tier)
+    for index, row in enumerate(table_rows(snapshot, "SYSTEM_POLICY")):
+        if safe_string(row.get("item")) != item_name:
+            continue
+        value, field = first_present(row, (tier_text, tier_text.lower(), tier_text.title(), tier_text.capitalize()))
+        return {
+            "logical_field": item_name,
+            "table": "SYSTEM_POLICY",
+            "row_ref": f"SYSTEM_POLICY[{index}]",
+            "matched_field_name": safe_string(field),
+            "source_backed_policy_cell_present": bool(field),
+            "source_backed_policy_cell_nonblank": bool(field and safe_string(value)),
+            "value_sample_class": value_sample_class(value),
+            "raw_row_returned": False,
+            "raw_value_returned": False,
+        }
+    return {
+        "logical_field": item_name,
+        "table": "SYSTEM_POLICY",
+        "row_ref": "SYSTEM_POLICY",
+        "matched_field_name": "",
+        "source_backed_policy_cell_present": False,
+        "source_backed_policy_cell_nonblank": False,
+        "value_sample_class": "missing-field",
+        "raw_row_returned": False,
+        "raw_value_returned": False,
+    }
+
+
+def tier_length_policy_diagnostics(
+    snapshot: Mapping[str, Any],
+    tier: str,
+    selector_payload: Mapping[str, Any],
+    safe_engine_summary: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
+    tier_text = safe_string(tier)
+    tier_strategy = selector_payload.get("tier_strategy") if isinstance(selector_payload.get("tier_strategy"), Mapping) else {}
+    policy_items = [
+        system_policy_item_diagnostic(snapshot, tier_text, item)
+        for item in LENGTH_POLICY_DIAGNOSTIC_ITEMS
+    ]
+    summary = safe_engine_summary if isinstance(safe_engine_summary, Mapping) else {}
+    return {
+        "classification": "safe-tier-length-policy-resolution-diagnostic",
+        "source_backed_tier_present": bool(tier_text),
+        "donor_expected_tier_aliases": list(TIER_STRATEGY_FIELD_SHAPE),
+        "top_level_tier_passed": bool(selector_payload.get("tier")),
+        "tier_strategy_selected_tier_passed": bool(tier_strategy.get("selected_tier")),
+        "tier_strategy_candidate_tiers_passed": bool(tier_strategy.get("candidate_tiers")),
+        "tier_strategy_mode": safe_string(tier_strategy.get("mode")),
+        "length_policy_items": policy_items,
+        "length_pref_policy_present": any(item["logical_field"] == "length_pref" and item["source_backed_policy_cell_nonblank"] for item in policy_items),
+        "max_board_gap_policy_present": any(item["logical_field"] in {"max_board_gap_mm", "max_board_gap"} and item["source_backed_policy_cell_nonblank"] for item in policy_items),
+        "gap_mode_policy_present": any(item["logical_field"] == "gap_mode" and item["source_backed_policy_cell_nonblank"] for item in policy_items),
+        "donor_selected_tier_returned_nonblank": bool(summary.get("selected_tier")),
+        "donor_selected_tier_blank": bool(summary) and not bool(summary.get("selected_tier")),
+        "selected_tier_blank_diagnostic": "If manual-path errors omit tier_evaluation/selected_solution, the seam must fall back to rough_electrical_payload.tier or debug.policy_sources.tier; the host payload still passes top-level tier and tier_strategy.selected_tier." if summary and not summary.get("selected_tier") else "",
+        "raw_rows_returned": False,
+        "raw_values_returned": False,
+        "raw_payload_returned": False,
+    }
+
+
 def board_capacity_source(board: Mapping[str, Any] | None, board_index: int | None) -> dict[str, Any] | None:
     if board is None:
         return None
@@ -942,6 +1054,7 @@ def derive_candidate_from_snapshot(snapshot: Mapping[str, Any]) -> dict[str, Any
 
     selector_payload: dict[str, Any] = {
         "tier": tier,
+        "tier_strategy": tier_strategy_payload(tier),
         "runs": [dict(CONTROLLED_RUN)],
         "lighting": lighting,
         "optic": {"key": optic} if optic else {},
@@ -995,6 +1108,8 @@ def derive_candidate_from_snapshot(snapshot: Mapping[str, Any]) -> dict[str, Any
         "candidate_private_values_redacted_in_report": True,
         "candidate_source_used": "runtime-authority-reference-active-snapshot plus donor-compatible controlled run geometry; BOARDS row selected for source-backed CCT/CRI" if board is not None else "runtime-authority-reference-active-snapshot attempted; no complete BOARDS CCT/CRI candidate",
         "controlled_geometry": controlled_geometry_summary(),
+        "tier_strategy": tier_strategy_summary(tier),
+        "tier_length_policy_resolution": tier_length_policy_diagnostics(snapshot, tier, selector_payload),
         "field_source_map": field_source_map,
         "value_diagnostics": value_diagnostics,
         "schema_introspection": safe_schema_introspection(snapshot),
@@ -1072,6 +1187,7 @@ def run_execute(module: Any) -> dict[str, Any]:
         }
 
     seam_result = module.engine_runtable_internal_readonly_invoke_probe(selector_payload=selector_payload, execute=True)
+    safe_engine_summary = seam_result.get("safe_engine_summary")
     return {
         "mode": "execute",
         "ok": bool(seam_result.get("engine_result_produced")),
@@ -1079,7 +1195,8 @@ def run_execute(module: Any) -> dict[str, Any]:
         "controlled_geometry_attempted": controlled_geometry_summary(),
         "engine_execution_attempted": bool(seam_result.get("engine_execution_attempted")),
         "engine_result_produced": bool(seam_result.get("engine_result_produced")),
-        "safe_engine_summary": seam_result.get("safe_engine_summary"),
+        "safe_engine_summary": safe_engine_summary,
+        "tier_length_policy_resolution_after_execute": tier_length_policy_diagnostics(snapshot, safe_string(selector_payload.get("tier")), selector_payload, safe_engine_summary if isinstance(safe_engine_summary, Mapping) else None),
         "adapter_projection_ies_handoff": {
             "attempted": False,
             "available": False,
