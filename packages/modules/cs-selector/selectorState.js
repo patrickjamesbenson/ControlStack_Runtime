@@ -1,3 +1,5 @@
+import { cloneSelectorRunIntakeState, createInitialSelectorRunIntakeState } from "./selectorRunIntakePreview.js";
+
 const DEFAULT_EXPANDER_SECTIONS = Object.freeze({
   projectMetadata: true,
   system: true,
@@ -839,6 +841,7 @@ export function createSelectorState() {
     lastAction: "mounted",
     selectorStateContract: createInitialSelectorStateContract(),
     dbBackedSelector: cloneDbBackedSelectorState(),
+    runIntake: createInitialSelectorRunIntakeState(),
   };
 
   function snapshot() {
@@ -847,6 +850,7 @@ export function createSelectorState() {
       expanderSections: { ...state.expanderSections },
       selectorStateContract: cloneSelectorStateContract(state.selectorStateContract),
       dbBackedSelector: cloneDbBackedSelectorState(state.dbBackedSelector),
+      runIntake: cloneSelectorRunIntakeState(state.runIntake),
     };
   }
 
@@ -951,6 +955,36 @@ export function createSelectorState() {
         state.localDirty = true;
         state.lastAction = next.lastAction;
       }
+      return this.getSnapshot();
+    },
+
+    setRunIntakeRows(runs = []) {
+      state.runIntake = cloneSelectorRunIntakeState({ runs });
+      state.localDirty = true;
+      state.lastAction = "run-intake-preview:set-rows";
+      return this.getSnapshot();
+    },
+
+    updateRunIntakeRun(runId, patch = {}) {
+      const current = cloneSelectorRunIntakeState(state.runIntake);
+      const wanted = normaliseManualValue(runId);
+      const index = current.runs.findIndex((run) => run.id === wanted || String(run.runNumber) === wanted);
+      if (index < 0) {
+        const runNumber = current.runs.length + 1;
+        current.runs.push({ id: wanted || `run-${runNumber}`, runNumber, ...patch });
+      } else {
+        current.runs[index] = { ...current.runs[index], ...patch };
+      }
+      state.runIntake = cloneSelectorRunIntakeState(current);
+      state.localDirty = true;
+      state.lastAction = `run-intake-preview:update:${wanted || "new"}`;
+      return this.getSnapshot();
+    },
+
+    clearRunIntakeRows() {
+      state.runIntake = createInitialSelectorRunIntakeState();
+      state.localDirty = true;
+      state.lastAction = "run-intake-preview:clear";
       return this.getSnapshot();
     },
 

@@ -1,5 +1,6 @@
 import { buildSelectedResultProjectionContract } from "../../workspace-kernel/selectedResultProjectionService.js";
 import { evaluateSpecialPartsCompatibility } from "./selectorSpecialPartsCompatibility.js";
+import { buildSelectorRunIntakePreview } from "./selectorRunIntakePreview.js";
 
 const TIMELINE_STATUS_ALIASES = Object.freeze({
   available: "live",
@@ -4087,6 +4088,7 @@ function createDbBackedSelectorSurface(selectorReferenceStatus = {}, local = {},
     selectionTruthSummary,
     productSpine,
   });
+  const runIntakePreview = buildSelectorRunIntakePreview(local.runIntake?.runs || []);
   const specBuildReadinessPreview = createSpecBuildReadinessPreview({
     sourceReady,
     sourceReadiness,
@@ -4160,6 +4162,17 @@ function createDbBackedSelectorSurface(selectorReferenceStatus = {}, local = {},
     selectionTruthSummary,
     sourceSpecReadinessExplanation,
     disabledHandoffSummary,
+    runIntakePreview,
+    runIntakePreviewReady: runIntakePreview.runIntakePreviewReady,
+    runCount: runIntakePreview.runCount,
+    totalQuantity: runIntakePreview.totalQuantity,
+    completedRunCount: runIntakePreview.completedRunCount,
+    incompleteRunCount: runIntakePreview.incompleteRunCount,
+    safeRunIntentSummaries: runIntakePreview.safeRunIntentSummaries,
+    enginePayloadReady: false,
+    engineVerifyReady: false,
+    runTableReady: false,
+    iesReady: false,
     specBuildReadinessPreview,
     productSurfaceParityLock,
     manualConstraints,

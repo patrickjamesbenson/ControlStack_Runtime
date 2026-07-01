@@ -1594,6 +1594,42 @@ function appendSelectorDisabledHandoffSummary(parent, summary = {}) {
   parent.appendChild(section);
 }
 
+function runIntentRows(preview = {}) {
+  const intents = Array.isArray(preview.safeRunIntentSummaries) ? preview.safeRunIntentSummaries : [];
+  if (!intents.length) return [["run intents", "none captured yet"]];
+  return intents.map((intent) => [
+    intent.label || intent.id || "run",
+    `qty:${intent.quantity}; length:${intent.runLengthMm}mm; mode:${intent.lengthMode || "none"}; complete:${intent.status || "unknown"}; sameLengthIntent:${intent.sameLengthQuantityIntent === true ? "true" : "false"}`,
+  ]);
+}
+
+function appendSelectorRunIntakePreview(parent, preview = {}) {
+  const section = document.createElement("section");
+  section.className = "cs-selector-proof__section cs-selector-proof__section--nested cs-selector-run-intake-preview";
+  section.dataset.selectorRunIntakePreview = "read-only";
+  section.dataset.previewReady = preview.runIntakePreviewReady === true ? "true" : "false";
+  section.dataset.enginePayloadReady = "false";
+  section.dataset.engineVerifyReady = "false";
+  section.dataset.runTableReady = "false";
+  section.dataset.iesReady = "false";
+  section.dataset.rawEnginePayloadExposed = "false";
+  section.dataset.donorEngineInvoked = "false";
+  section.dataset.runtimeDataMutated = "false";
+
+  appendText(section, "h4", preview.title || "Selector run intake preview");
+  appendText(section, "p", "Run label, quantity, length, and length mode are previewed as local safe intent only. This panel does not expose raw Engine payload, call Engine, generate RunTable or IES, persist selected results, mutate RuntimeData, add routes, or add POST actions.");
+  appendPillList(section, preview.boundaryCopy || [
+    "Run intake is safe local intent only.",
+    "Engine verify, RunTable, and IES remain disabled.",
+  ]);
+  appendSection(section, "Run intake readiness", preview.summaryRows || [["runIntakePreviewReady", "false"]]);
+  appendSection(section, "Safe run intent summaries", runIntentRows(preview));
+  appendSection(section, "Run intake diagnostics", (Array.isArray(preview.diagnostics) && preview.diagnostics.length ? preview.diagnostics : ["no run intake captured yet"]).map((item, index) => [`diagnostic ${index + 1}`, item]));
+  appendSection(section, "Blocked downstream behaviour", preview.safetyRows || [["rawEnginePayloadExposed", "false"], ["donorEngineInvoked", "false"], ["runTableGenerated", "false"], ["iesGenerated", "false"]]);
+
+  parent.appendChild(section);
+}
+
 function appendSelectorSpecBuildReadinessPreview(parent, preview = {}) {
   const section = document.createElement("section");
   section.className = "cs-selector-proof__section cs-selector-proof__section--nested cs-selector-spec-build-readiness-preview";
@@ -1692,6 +1728,7 @@ function appendSelectorProductSurface(parent, surface = {}) {
   appendSelectedEngineResultHandoff(section, surface.selectedEngineResultHandoff || {});
   appendSelectorSourceSpecReadinessExplanation(section, surface.sourceSpecReadinessExplanation || {});
   appendSelectorDisabledHandoffSummary(section, surface.disabledHandoffSummary || {});
+  appendSelectorRunIntakePreview(section, surface.runIntakePreview || {});
   appendSelectorSpecBuildReadinessPreview(section, surface.specBuildReadinessPreview || {});
 
   appendSelectorProductCompactStatus(section, surface);
