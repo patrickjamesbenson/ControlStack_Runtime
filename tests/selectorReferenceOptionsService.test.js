@@ -240,3 +240,87 @@ test("buildSelectorReferenceOptions reads a snapshot through a safe fs adapter w
   assert.equal(serialised.includes("C:/secret/private/novondb.json"), false);
   assert.equal(serialised.includes("must not leak"), false);
 });
+
+function timelineStatusSnapshot() {
+  return {
+    SYSTEM: [
+      { system: "AVL", system_variant_1: "60", label: "Available 60", approved: "yes", status: "available", raw_secret: "must not leak" },
+      { system: "APR", system_variant_1: "60", label: "Approved 60", approved: "yes", status: "approved" },
+      { system: "STG", system_variant_1: "60", label: "Staged 60", approved: "yes", status: "staged" },
+      { system: "RDM", system_variant_1: "60", label: "Roadmap 60", approved: "yes", status: "roadmap" },
+      { system: "OBS", system_variant_1: "60", label: "Obsolete 60", approved: "yes", status: "obsolete" },
+      { system: "UNK", system_variant_1: "60", label: "Unknown 60", approved: "yes", status: "mystery" },
+    ],
+    USERS: [
+      { email: "timeline-private@example.com", token: "must not leak" },
+    ],
+  };
+}
+
+test("timeline/status policy shows only available and approved options to external default preview", () => {
+  const result = deriveSelectorReferenceOptionsFromSnapshot(timelineStatusSnapshot(), { source: sourceReady() });
+  const system = field(result, "system");
+  const values = system.options.map((item) => item.value);
+  const available = option(result, "system", "AVL|60");
+  const approved = option(result, "system", "APR|60");
+  const serialised = JSON.stringify(result);
+
+  assert.deepEqual(values.sort(), ["APR|60", "AVL|60"].sort());
+  assert.equal(available.optionStatusClass, "available");
+  assert.equal(approved.optionStatusClass, "approved");
+  assert.equal(available.timelineAvailability, "visible-to-external-default");
+  assert.equal(approved.blockedByStatusPolicy, false);
+  assert.equal(available.rawRowsReturned, false);
+  assert.equal(available.rawUsersReturned, false);
+  assert.equal(available.privatePathsReturned, false);
+  assert.deepEqual(result.timelineStatusFiltering.visibleToExternalDefault, ["available", "approved"]);
+  assert.deepEqual(result.timelineStatusFiltering.hiddenOrBlockedToExternalDefault, ["staged", "roadmap", "obsolete"]);
+  assert.equal(result.rawRowsReturned, false);
+  assert.equal(result.rawUsersReturned, false);
+  assert.equal(result.privatePathsReturned, false);
+  assert.equal(serialised.includes("must not leak"), false);
+  assert.equal(serialised.includes("timeline-private@example.com"), false);
+});
+
+test("selected staged/roadmap/obsolete status values are preserved visibly as blocked", () => {
+  const result = deriveSelectorReferenceOptionsFromSnapshot(timelineStatusSnapshot(), {
+    source: sourceReady(),
+    constraints: { system: "STG|60" },
+  });
+  const selected = option(result, "system", "STG|60");
+
+  assert.equal(selected.selected, true);
+  assert.equal(selected.status, "blocked");
+  assert.equal(selected.blocked, true);
+  assert.equal(selected.optionStatusClass, "staged");
+  assert.equal(selected.timelineAvailability, "hidden-from-external-default");
+  assert.equal(selected.blockedByStatusPolicy, true);
+  assert.match(selected.blockedReason, /status policy/i);
+  assert.equal(result.blockedItems.some((item) => item.fieldKey === "system" && item.value === "STG|60"), true);
+});
+
+test("unknown timeline/status fails safe as review-required without unsafe side effects", () => {
+  const result = deriveSelectorReferenceOptionsFromSnapshot(timelineStatusSnapshot(), {
+    source: sourceReady(),
+    constraints: { system: "UNK|60" },
+  });
+  const selected = option(result, "system", "UNK|60");
+
+  assert.equal(selected.selected, true);
+  assert.equal(selected.status, "blocked");
+  assert.equal(selected.optionStatusClass, "unknown");
+  assert.equal(selected.timelineAvailability, "review-required");
+  assert.equal(selected.blockedByStatusPolicy, true);
+  assert.equal(selected.statusPolicyReviewRequired, true);
+  assert.match(selected.blockedReason, /unknown|review/i);
+  assert.equal(result.donorEngineInvoked, false);
+  assert.equal(result.runtimeDataMutated, false);
+  assert.equal(result.runTableGenerated, false);
+  assert.equal(result.iesGenerated, false);
+  assert.equal(result.selectedResultPersisted, false);
+  assert.equal(result.routesAdded, false);
+  assert.equal(result.postEndpointsAdded, false);
+  assert.equal(result.rawRowsReturned, false);
+  assert.equal(result.rawUsersReturned, false);
+  assert.equal(result.privatePathsReturned, false);
+});

@@ -238,12 +238,16 @@ const SAFE_FLAGS = Object.freeze({
   diagnosticOnly: true,
   optionFilteringReadOnly: true,
   rawRowsExposed: false,
+  rawRowsReturned: false,
   rawHeadersExposed: false,
   rawUsersExposed: false,
+  rawUsersReturned: false,
   rawUserHeadersExposed: false,
   rawLabEvidenceExposed: false,
   credentialsExposed: false,
   privatePathsExposed: false,
+  privatePathsReturned: false,
+  donorEngineInvoked: false,
   boardDataWriteEnabled: false,
   selectorMutationEnabled: false,
   activeResolverEnabled: false,
@@ -252,15 +256,21 @@ const SAFE_FLAGS = Object.freeze({
   slugGenerationEnabled: false,
   specCodeGenerationEnabled: false,
   iesGenerationEnabled: false,
+  iesGenerated: false,
   payloadGenerationEnabled: false,
   runTableGenerationEnabled: false,
+  runTableGenerated: false,
   drawingGenerationEnabled: false,
+  selectedResultPersisted: false,
+  routesAdded: false,
+  postEndpointsAdded: false,
   labProofAuthority: false,
   controlledRecordsWriteEnabled: false,
   rregAssignmentEnabled: false,
   rregApprovalEnabled: false,
   rregCustodyTransferEnabled: false,
   runtimeDataMutationEnabled: false,
+  runtimeDataMutated: false,
   hiddenWriteBackEnabled: false,
 });
 
@@ -436,10 +446,99 @@ function tableRows(snapshot, tableName) {
   return rows;
 }
 
+const SELECTOR_STATUS_CLASSES = Object.freeze(["available", "approved", "staged", "roadmap", "obsolete", "unknown"]);
+const STATUS_VISIBLE_CLASSES = Object.freeze(new Set(["available", "approved"]));
+const STATUS_REVIEW_CLASSES = Object.freeze(new Set(["unknown"]));
+
+function sourceRowPassesApprovalGate(row) {
+  const approved = safeLower(rowText(row, ["approved", "is_approved", "approved_for_selector"], "yes"));
+  return !["false", "no", "0", "n", "rejected"].includes(approved);
+}
+
+function rawStatusText(row) {
+  return rowText(row, ["timeline_status", "status", "availability", "lifecycle_status", "product_status", "option_status", "effective_status"]);
+}
+
+function optionStatusClassFromValue(value, approvedValue = "") {
+  const key = normaliseKey(value);
+  if (!key) {
+    const approved = safeLower(approvedValue);
+    if (["approved", "yes", "true", "1", "y"].includes(approved)) return "approved";
+    return "unknown";
+  }
+  if (["available", "active", "current", "live", "released", "release", "sellable", "orderable"].includes(key)) return "available";
+  if (["approved", "approved available", "approved for use", "approved for selector"].includes(key)) return "approved";
+  if (["staged", "stage", "pilot", "preview", "pre release", "preproduction", "pre production", "pending release", "business case"].includes(key)) return "staged";
+  if (["roadmap", "future", "planned", "concept", "proposed", "under development", "development"].includes(key)) return "roadmap";
+  if (["obsolete", "retired", "deleted", "inactive", "discontinued", "superseded", "end of life", "eol"].includes(key)) return "obsolete";
+  return "unknown";
+}
+
+function optionStatusClassForRow(row) {
+  const approved = rowText(row, ["approved", "is_approved", "approved_for_selector"], "");
+  return optionStatusClassFromValue(rawStatusText(row), approved);
+}
+
+function statusPolicyForClass(optionStatusClass = "unknown") {
+  const safeClass = SELECTOR_STATUS_CLASSES.includes(optionStatusClass) ? optionStatusClass : "unknown";
+  if (STATUS_VISIBLE_CLASSES.has(safeClass)) return { optionStatusClass: safeClass, timelineAvailability: "visible-to-external-default", blockedByStatusPolicy: false, reviewRequired: false, blockedReason: "" };
+  return {
+    optionStatusClass: safeClass,
+    timelineAvailability: STATUS_REVIEW_CLASSES.has(safeClass) ? "review-required" : "hidden-from-external-default",
+    blockedByStatusPolicy: true,
+    reviewRequired: STATUS_REVIEW_CLASSES.has(safeClass),
+    blockedReason: STATUS_REVIEW_CLASSES.has(safeClass) ? "Status is unknown; external default view fails safe and requires review." : `${safeClass} status is blocked by external default timeline/status policy.`,
+  };
+}
+
+function rowStatusOptionMeta(row) {
+  return statusPolicyForClass(optionStatusClassForRow(row));
+}
+
+function optionStatusPolicy(option = {}) {
+  return statusPolicyForClass(option.optionStatusClass || "unknown");
+}
+
+function optionStatusVisibility(option = {}, selected = false) {
+  const policy = optionStatusPolicy(option);
+  return {
+    policy,
+    hidden: policy.blockedByStatusPolicy === true && selected !== true,
+    blocked: policy.blockedByStatusPolicy === true,
+    blockedBy: policy.blockedByStatusPolicy === true ? [{ fieldKey: "timelineStatus", selectedValue: policy.optionStatusClass, compatibleValues: ["available", "approved"] }] : [],
+  };
+}
+
+function selectedStatusBlockedOption(field = {}, selectedValue = "", reason = "Manual constraint is preserved but unavailable/incompatible in the current filtered source.") {
+  const policy = statusPolicyForClass("unknown");
+  return {
+    value: selectedValue,
+    label: selectedValue,
+    count: 0,
+    sourceStatus: "selected constraint not available from current filtered source",
+    sourceTables: [...(field.sourceTables || [])],
+    selected: true,
+    status: "blocked",
+    blocked: true,
+    blockedReason: reason,
+    blockedBy: [{ fieldKey: "timelineStatus", selectedValue: policy.optionStatusClass, compatibleValues: ["available", "approved"] }],
+    optionStatusClass: policy.optionStatusClass,
+    timelineAvailability: policy.timelineAvailability,
+    blockedByStatusPolicy: true,
+    statusPolicyReviewRequired: true,
+    rawRowsExposed: false,
+    rawRowsReturned: false,
+    rawUsersReturned: false,
+    privatePathsReturned: false,
+  };
+}
+
 function sourceRowIsLive(row) {
-  const approved = safeLower(rowText(row, ["approved"], "yes"));
-  const status = safeLower(rowText(row, ["status", "lifecycle_status", "product_status"], "available"));
-  return !["false", "no", "0"].includes(approved) && !["retired", "obsolete", "deleted", "inactive"].includes(status);
+  return sourceRowPassesApprovalGate(row) && optionStatusPolicy({ optionStatusClass: optionStatusClassForRow(row) }).blockedByStatusPolicy !== true;
+}
+
+function selectorOptionRows(snapshot, tableName) {
+  return tableRows(snapshot, tableName).filter(sourceRowPassesApprovalGate);
 }
 
 function liveTableRows(snapshot, tableName) {
@@ -498,6 +597,10 @@ function createOption(label, {
   finishInheritanceIndex = null,
   codePolicyIds = [],
   codePolicyReason = "",
+  optionStatusClass = "available",
+  timelineAvailability = "",
+  blockedByStatusPolicy = false,
+  reviewRequired = false,
 } = {}) {
   const optionLabel = safeString(label || value);
   const referenceKeys = uniqueStrings([
@@ -513,6 +616,8 @@ function createOption(label, {
   ].map(safeString).filter(Boolean));
   const safeFinishInheritanceIndex = Number.isInteger(finishInheritanceIndex) && finishInheritanceIndex >= 0 ? finishInheritanceIndex : null;
   const safeCodePolicyIds = uniqueStrings((Array.isArray(codePolicyIds) ? codePolicyIds : [codePolicyIds]).map(safeString).filter(Boolean));
+  const statusPolicy = statusPolicyForClass(optionStatusClass);
+  const safeTimelineAvailability = safeString(timelineAvailability || statusPolicy.timelineAvailability);
   return {
     value: optionValue(value || optionLabel),
     label: optionLabel,
@@ -535,6 +640,14 @@ function createOption(label, {
     specCodeGenerationEnabled: specCodeGenerationEnabled === true ? false : false,
     writes: false,
     rawRowsExposed: false,
+    rawRowsReturned: false,
+    rawUsersReturned: false,
+    privatePathsReturned: false,
+    optionStatusClass: statusPolicy.optionStatusClass,
+    timelineAvailability: safeTimelineAvailability,
+    blockedByStatusPolicy: blockedByStatusPolicy === true || statusPolicy.blockedByStatusPolicy === true,
+    statusPolicyReviewRequired: reviewRequired === true || statusPolicy.reviewRequired === true,
+    statusPolicyBlockedReason: statusPolicy.blockedReason,
     systemReferenceKey: safeString(systemReferenceKey || referenceKeys[0] || ""),
     systemReferenceKeys: referenceKeys,
     systemVariantKey: safeString(systemVariantKey),
@@ -862,11 +975,11 @@ function accessoryLabels(snapshot, needles) {
 
 function collectOptions(snapshot) {
   const bucket = {};
-  const systems = liveTableRows(snapshot, "SYSTEM");
+  const systems = selectorOptionRows(snapshot, "SYSTEM");
   for (const row of systems) {
     const tokens = systemTokens(row);
     const emissions = systemEmissionValues(row);
-    addOption(bucket, "system", tokens.label, { value: tokens.value, sourceTables: ["SYSTEM"], systemReferenceKey: tokens.system, systemVariantKey: tokens.variant, systemSupportsIndirect: emissions.some(emissionSupportsIndirect) });
+    addOption(bucket, "system", tokens.label, { value: tokens.value, sourceTables: ["SYSTEM"], systemReferenceKey: tokens.system, systemVariantKey: tokens.variant, systemSupportsIndirect: emissions.some(emissionSupportsIndirect), ...rowStatusOptionMeta(row) });
     if (tokens.variant) addOption(bucket, "variantKey", tokens.variant, { sourceTables: ["SYSTEM"] });
     for (const emission of systemEmissionValues(row)) {
       addOption(bucket, "emission", emission, { sourceTables: ["SYSTEM"] });
@@ -1899,26 +2012,29 @@ function createFields({ bucket, records, constraints, cascadeConstraints = const
     if (!baseOptions.length) return createUnavailableField(field, `${field.label} is unavailable from current source and remains future mapped; no fake values emitted.`);
 
     const options = baseOptions.map((option) => {
+      const selected = optionSelectedByValue(field.fieldKey, option, selectedValue);
+      const visibility = optionStatusVisibility(option, selected);
+      if (visibility.hidden) return null;
       const cascade = optionCascadeResult(field.fieldKey, option, records, cascadeConstraints);
       const policyBlock = mountCodePolicyBlock(field.fieldKey, option, records, cascadeConstraints);
-      const compatible = cascade.compatible && policyBlock.blocked !== true;
-      const selected = optionSelectedByValue(field.fieldKey, option, selectedValue);
+      const compatible = visibility.blocked !== true && cascade.compatible && policyBlock.blocked !== true;
+      const blockedReason = visibility.blocked ? visibility.policy.blockedReason : policyBlock.reason || "Blocked by current manual constraints; shown rather than silently hidden.";
       return {
         ...option,
         selected: Boolean(selected),
         status: compatible ? "available" : "blocked",
         blocked: !compatible,
-        blockedReason: compatible ? "" : policyBlock.reason || "Blocked by current manual constraints; shown rather than silently hidden.",
-        blockedBy: compatible ? [] : [...(cascade.blockedBy || []), ...(policyBlock.blockedBy || [])],
+        blockedReason: compatible ? "" : blockedReason,
+        blockedBy: compatible ? [] : [...visibility.blockedBy, ...(cascade.blockedBy || []), ...(policyBlock.blockedBy || [])],
         cascadeSource: cascade.cascadeSource || option.sourceTables || [],
-        relationshipStatus: policyBlock.blocked ? "blocked-by-code-policy" : cascade.relationshipStatus,
-        relationshipMissingReason: policyBlock.blocked ? policyBlock.reason : cascade.relationshipMissingReason,
+        relationshipStatus: visibility.blocked ? "blocked-by-status-policy" : policyBlock.blocked ? "blocked-by-code-policy" : cascade.relationshipStatus,
+        relationshipMissingReason: visibility.blocked ? visibility.policy.blockedReason : policyBlock.blocked ? policyBlock.reason : cascade.relationshipMissingReason,
         compatibleWithCurrentConstraints: compatible,
         preservesManualConstraint: Boolean(selected),
         writes: false,
         rawRowsExposed: false,
       };
-    });
+    }).filter(Boolean);
 
     if (selectedValue && !options.some((option) => optionSelectedByValue(field.fieldKey, option, selectedValue))) {
       options.push({
