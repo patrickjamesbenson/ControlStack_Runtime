@@ -1,5 +1,6 @@
 import { buildSelectedResultProjectionContract } from "../../workspace-kernel/selectedResultProjectionService.js";
 import { evaluateSpecialPartsCompatibility } from "./selectorSpecialPartsCompatibility.js";
+import { buildSelectorRunAccessoryPlacementPreview } from "./selectorRunAccessoryPlacementPreview.js";
 import { buildSelectorRunIntakePreview } from "./selectorRunIntakePreview.js";
 
 const TIMELINE_STATUS_ALIASES = Object.freeze({
@@ -4089,6 +4090,10 @@ function createDbBackedSelectorSurface(selectorReferenceStatus = {}, local = {},
     productSpine,
   });
   const runIntakePreview = buildSelectorRunIntakePreview(local.runIntake?.runs || []);
+  const runAccessoryPlacementPreview = buildSelectorRunAccessoryPlacementPreview({
+    runs: local.runIntake?.runs || [],
+    intents: local.runAccessoryPlacement?.intents || [],
+  });
   const specBuildReadinessPreview = createSpecBuildReadinessPreview({
     sourceReady,
     sourceReadiness,
@@ -4169,6 +4174,13 @@ function createDbBackedSelectorSurface(selectorReferenceStatus = {}, local = {},
     completedRunCount: runIntakePreview.completedRunCount,
     incompleteRunCount: runIntakePreview.incompleteRunCount,
     safeRunIntentSummaries: runIntakePreview.safeRunIntentSummaries,
+    runAccessoryPlacementPreview,
+    runAccessoryPlacementPreviewReady: runAccessoryPlacementPreview.runAccessoryPlacementPreviewReady,
+    accessoryIntentCount: runAccessoryPlacementPreview.accessoryIntentCount,
+    runsWithAccessoryIntentCount: runAccessoryPlacementPreview.runsWithAccessoryIntentCount,
+    unresolvedAccessoryIntentCount: runAccessoryPlacementPreview.unresolvedAccessoryIntentCount,
+    safeRunAccessoryIntentSummaries: runAccessoryPlacementPreview.safeRunAccessoryIntentSummaries,
+    accessoryReservationReady: false,
     enginePayloadReady: false,
     engineVerifyReady: false,
     runTableReady: false,

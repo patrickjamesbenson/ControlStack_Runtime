@@ -1,3 +1,4 @@
+import { cloneSelectorRunAccessoryPlacementState, createInitialSelectorRunAccessoryPlacementState } from "./selectorRunAccessoryPlacementPreview.js";
 import { cloneSelectorRunIntakeState, createInitialSelectorRunIntakeState } from "./selectorRunIntakePreview.js";
 
 const DEFAULT_EXPANDER_SECTIONS = Object.freeze({
@@ -842,6 +843,7 @@ export function createSelectorState() {
     selectorStateContract: createInitialSelectorStateContract(),
     dbBackedSelector: cloneDbBackedSelectorState(),
     runIntake: createInitialSelectorRunIntakeState(),
+    runAccessoryPlacement: createInitialSelectorRunAccessoryPlacementState(),
   };
 
   function snapshot() {
@@ -851,6 +853,7 @@ export function createSelectorState() {
       selectorStateContract: cloneSelectorStateContract(state.selectorStateContract),
       dbBackedSelector: cloneDbBackedSelectorState(state.dbBackedSelector),
       runIntake: cloneSelectorRunIntakeState(state.runIntake),
+      runAccessoryPlacement: cloneSelectorRunAccessoryPlacementState(state.runAccessoryPlacement),
     };
   }
 
@@ -985,6 +988,35 @@ export function createSelectorState() {
       state.runIntake = createInitialSelectorRunIntakeState();
       state.localDirty = true;
       state.lastAction = "run-intake-preview:clear";
+      return this.getSnapshot();
+    },
+
+    setRunAccessoryPlacementIntents(intents = []) {
+      state.runAccessoryPlacement = cloneSelectorRunAccessoryPlacementState({ intents });
+      state.localDirty = true;
+      state.lastAction = "run-accessory-placement-preview:set-intents";
+      return this.getSnapshot();
+    },
+
+    updateRunAccessoryPlacementIntent(intentId, patch = {}) {
+      const current = cloneSelectorRunAccessoryPlacementState(state.runAccessoryPlacement);
+      const wanted = normaliseManualValue(intentId);
+      const index = current.intents.findIndex((intent) => intent.intentId === wanted);
+      if (index < 0) {
+        current.intents.push({ intentId: wanted || `accessory-intent-${current.intents.length + 1}`, ...patch });
+      } else {
+        current.intents[index] = { ...current.intents[index], ...patch };
+      }
+      state.runAccessoryPlacement = cloneSelectorRunAccessoryPlacementState(current);
+      state.localDirty = true;
+      state.lastAction = `run-accessory-placement-preview:update:${wanted || "new"}`;
+      return this.getSnapshot();
+    },
+
+    clearRunAccessoryPlacementIntents() {
+      state.runAccessoryPlacement = createInitialSelectorRunAccessoryPlacementState();
+      state.localDirty = true;
+      state.lastAction = "run-accessory-placement-preview:clear";
       return this.getSnapshot();
     },
 

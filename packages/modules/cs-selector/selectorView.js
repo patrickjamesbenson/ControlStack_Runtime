@@ -1630,6 +1630,53 @@ function appendSelectorRunIntakePreview(parent, preview = {}) {
   parent.appendChild(section);
 }
 
+function accessoryIntentRows(preview = {}) {
+  const groups = Array.isArray(preview.safeRunAccessoryIntentSummaries) ? preview.safeRunAccessoryIntentSummaries : [];
+  if (!groups.length) return [["accessory intents", "none captured yet"]];
+  return groups.map((group) => {
+    const intents = Array.isArray(group.intents) ? group.intents : [];
+    const summary = intents.map((intent) => {
+      const placement = intent.placementPreference === "specific-mm" ? `${intent.placementPreference}:${intent.placementMm ?? "missing"}mm` : intent.placementPreference || "none";
+      const width = intent.reservationWidthMm ? `; widthIntent:${intent.reservationWidthMm}mm` : "";
+      const band = intent.reservationIntentBand ? `; band:${intent.reservationIntentBand}` : "";
+      return `${intent.accessoryTypeToken || "missing-type"} qty:${intent.quantityReceivingAccessory}; place:${placement}; status:${intent.status || "draft"}; complete:${intent.complete === true ? "true" : "false"}${width}${band}`;
+    }).join(" | ");
+    return [
+      group.runLabel || group.runReference || "run",
+      summary || `intentCount:${group.intentCount || 0}; unresolved:${group.unresolvedIntentCount || 0}`,
+    ];
+  });
+}
+
+function appendSelectorRunAccessoryPlacementPreview(parent, preview = {}) {
+  const section = document.createElement("section");
+  section.className = "cs-selector-proof__section cs-selector-proof__section--nested cs-selector-run-accessory-placement-preview";
+  section.dataset.selectorRunAccessoryPlacementPreview = "read-only";
+  section.dataset.previewReady = preview.runAccessoryPlacementPreviewReady === true ? "true" : "false";
+  section.dataset.accessoryReservationReady = "false";
+  section.dataset.enginePayloadReady = "false";
+  section.dataset.engineVerifyReady = "false";
+  section.dataset.runTableReady = "false";
+  section.dataset.iesReady = "false";
+  section.dataset.rawAccessoryRowsExposed = "false";
+  section.dataset.rawEnginePayloadExposed = "false";
+  section.dataset.donorEngineInvoked = "false";
+  section.dataset.runtimeDataMutated = "false";
+
+  appendText(section, "h4", preview.title || "Selector run accessory placement preview");
+  appendText(section, "p", "Run accessory placement is previewed as safe local intent only. It captures run reference, accessory type token, quantity, placement preference, optional specific millimetre intent, optional width/band intent, status, and display notes without computing reservations, coordinates, covers, holes, zones, Engine payload, RunTable, or IES.");
+  appendPillList(section, preview.boundaryCopy || [
+    "Accessory placement is safe local intent only.",
+    "Accessory reservation, Engine verify, RunTable, and IES remain disabled.",
+  ]);
+  appendSection(section, "Run accessory placement readiness", preview.summaryRows || [["runAccessoryPlacementPreviewReady", "false"]]);
+  appendSection(section, "Safe accessory intent rows grouped by run", accessoryIntentRows(preview));
+  appendSection(section, "Unresolved / fail-closed diagnostics", (Array.isArray(preview.diagnostics) && preview.diagnostics.length ? preview.diagnostics : ["no run accessory placement intent captured yet"]).map((item, index) => [`diagnostic ${index + 1}`, item]));
+  appendSection(section, "Blocked downstream behaviour", preview.safetyRows || [["rawAccessoryRowsExposed", "false"], ["rawEnginePayloadExposed", "false"], ["accessoryReservationExecuted", "false"], ["runTableGenerated", "false"], ["iesGenerated", "false"]]);
+
+  parent.appendChild(section);
+}
+
 function appendSelectorSpecBuildReadinessPreview(parent, preview = {}) {
   const section = document.createElement("section");
   section.className = "cs-selector-proof__section cs-selector-proof__section--nested cs-selector-spec-build-readiness-preview";
@@ -1729,6 +1776,7 @@ function appendSelectorProductSurface(parent, surface = {}) {
   appendSelectorSourceSpecReadinessExplanation(section, surface.sourceSpecReadinessExplanation || {});
   appendSelectorDisabledHandoffSummary(section, surface.disabledHandoffSummary || {});
   appendSelectorRunIntakePreview(section, surface.runIntakePreview || {});
+  appendSelectorRunAccessoryPlacementPreview(section, surface.runAccessoryPlacementPreview || {});
   appendSelectorSpecBuildReadinessPreview(section, surface.specBuildReadinessPreview || {});
 
   appendSelectorProductCompactStatus(section, surface);
