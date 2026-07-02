@@ -109,6 +109,13 @@ const OPTIONAL_REFERENCE_SUMMARIES = Object.freeze([
     unsafe: "curve-reference-not-safe",
     fingerprintKeys: ["curveParseInterpolationFingerprint", "curveInterpolationFingerprint", "summaryFingerprint", "fingerprint"],
   },
+  {
+    key: "safeCurveReferenceSummary",
+    label: "safe curve reference summary",
+    unsafe: "curve-reference-not-safe",
+    readyKey: "curveReferenceSummaryReady",
+    fingerprintKeys: ["curveReferenceFingerprint", "summaryFingerprint", "fingerprint"],
+  },
 ]);
 
 const UNSAFE_TRUE_FLAG_BLOCKERS = Object.freeze([
@@ -373,6 +380,8 @@ function buildIesReadinessSummary(extra = {}) {
     safeDraftProjectEnvelopeReady: extra.safeDraftProjectEnvelopeReady === true,
     curveLookupReferenceReady: extra.curveLookupReferenceReady === true,
     curveParseInterpolationReferenceReady: extra.curveParseInterpolationReferenceReady === true,
+    safeCurveReferenceSummaryReady: extra.safeCurveReferenceSummaryReady === true,
+    curveReferenceSummaryReady: extra.safeCurveReferenceSummaryReady === true,
     readyForFutureIesHandoff: extra.ready === true,
     iesGenerationReady: false,
     iesGenerated: false,
@@ -393,8 +402,11 @@ function buildPhotometryReadinessSummary(extra = {}) {
     summaryOnlyReferences: true,
     curveLookupReferenceSupplied: extra.curveLookupReferenceSupplied === true,
     curveParseInterpolationReferenceSupplied: extra.curveParseInterpolationReferenceSupplied === true,
+    safeCurveReferenceSummarySupplied: extra.safeCurveReferenceSummarySupplied === true,
     curveLookupReferenceReady: extra.curveLookupReferenceReady === true,
     curveParseInterpolationReferenceReady: extra.curveParseInterpolationReferenceReady === true,
+    safeCurveReferenceSummaryReady: extra.safeCurveReferenceSummaryReady === true,
+    curveReferenceSummaryReady: extra.safeCurveReferenceSummaryReady === true,
     photometryReferenceReady: extra.ready === true,
     rawPhotometryReady: false,
     candelaArraysReady: false,
@@ -597,6 +609,7 @@ export function buildRuntimeIesHandoffReadinessScaffoldSummary(input = {}) {
   const safeDraftSupplied = optionalStates.safeDraftProjectEnvelopePreviewSummary?.supplied === true;
   const curveLookupSupplied = optionalStates.curveLookupSummary?.supplied === true;
   const curveParseSupplied = optionalStates.curveParseInterpolationSummary?.supplied === true;
+  const safeCurveReferenceSupplied = optionalStates.safeCurveReferenceSummary?.supplied === true;
 
   const iesReadinessSummary = buildIesReadinessSummary({
     ready: true,
@@ -607,13 +620,16 @@ export function buildRuntimeIesHandoffReadinessScaffoldSummary(input = {}) {
     safeDraftProjectEnvelopeReady: safeDraftSupplied,
     curveLookupReferenceReady: curveLookupSupplied,
     curveParseInterpolationReferenceReady: curveParseSupplied,
+    safeCurveReferenceSummaryReady: safeCurveReferenceSupplied,
   });
   const photometryReadinessSummary = buildPhotometryReadinessSummary({
     ready: true,
     curveLookupReferenceSupplied: curveLookupSupplied,
     curveParseInterpolationReferenceSupplied: curveParseSupplied,
+    safeCurveReferenceSummarySupplied: safeCurveReferenceSupplied,
     curveLookupReferenceReady: curveLookupSupplied,
     curveParseInterpolationReferenceReady: curveParseSupplied,
+    safeCurveReferenceSummaryReady: safeCurveReferenceSupplied,
   });
   const selectedResultReadinessSummary = buildSelectedResultReadinessSummary(source);
   const runTableDomainReadinessSummary = buildRunTableDomainReadinessSummary(source);
