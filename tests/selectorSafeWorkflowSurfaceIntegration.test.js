@@ -140,7 +140,7 @@ test("Selector view-model exposes a safe workflow preview and downstream readine
   assert.strictEqual(model.selectorWorkflowStageSummaries, workflow.selectorWorkflowStageSummaries);
   assert.strictEqual(model.selectorWorkflowBlockedSummary, workflow.selectorWorkflowBlockedSummary);
   assert.strictEqual(model.selectorDownstreamReadinessSummary, workflow.selectorDownstreamReadinessSummary);
-  assert.equal(workflow.title, "Selector workflow");
+  assert.equal(workflow.title, "Selector workflow readiness — preview only");
   assert.equal(workflow.previewOnly, true);
   assert.equal(workflow.diagnosticOnly, true);
   assert.equal(workflow.safeSummaryOnly, true);
@@ -178,6 +178,7 @@ test("downstream readiness is displayed but production actions remain disabled",
   const downstream = workflow.selectorDownstreamReadinessSummary;
   const downstreamIds = downstream.stages.map((stage) => stage.id);
   const actions = actionMap(workflow);
+  const evidence = downstream.controlledRealSourceEvidenceStatus;
 
   assert.deepEqual(downstreamIds, [
     "sealed-candidate-assembly",
@@ -197,6 +198,13 @@ test("downstream readiness is displayed but production actions remain disabled",
   assert.equal(actions.get("selectedResultPersistence").label, "selected-result persistence disabled");
   assert.equal(actions.get("hubSpotProjectWrites").label, "HubSpot/project writes disabled");
   assert.equal(actions.get("runEngine").enabled, false);
+  assert.equal(evidence.status, "diagnostic-only-available-not-invoked");
+  assert.equal(evidence.helperAvailable, true);
+  assert.equal(evidence.runtimeDataRead, false);
+  assert.equal(evidence.runtimeDataMutated, false);
+  assert.equal(evidence.donorEngineInvoked, false);
+  assert.equal(evidence.rawRowsReturned, false);
+  assert.equal(evidence.rawPayloadsReturned, false);
 });
 
 test("workflow preview exposes no raw rows, payloads, USERS, CRM, private data, generation, routes, or POST endpoint flags", () => {
@@ -213,6 +221,11 @@ test("workflow preview exposes no raw rows, payloads, USERS, CRM, private data, 
   assert.equal(unsafe.rawContactsReturned, false);
   assert.equal(unsafe.privatePathsReturned, false);
   assert.equal(unsafe.credentialsReturned, false);
+  assert.equal(unsafe.exactElectricalValuesReturned, false);
+  assert.equal(unsafe.rawIesContentReturned, false);
+  assert.equal(unsafe.rawPhotometryReturned, false);
+  assert.equal(unsafe.candelaArraysReturned, false);
+  assert.equal(unsafe.base64ArtifactsReturned, false);
   assert.equal(unsafe.donorEngineInvoked, false);
   assert.equal(unsafe.runtimeDataMutated, false);
   assert.equal(unsafe.selectedResultPersisted, false);
@@ -233,6 +246,13 @@ test("Selector view source renders the workflow panel and does not add routes or
 
   assert.match(view, /appendSelectorWorkflowPreview\(section, surface\.selectorWorkflowPreview/);
   assert.match(view, /Selector workflow/);
+  assert.match(view, /Selector workflow readiness — preview only/);
+  assert.match(view, /cs-selector-workflow-preview__stage-card/);
+  assert.match(view, /cs-selector-workflow-preview__action-card/);
+  assert.match(view, /dataset\.controlledRealSourceEvidence = "status-only"/);
+  assert.match(view, /dataset\.evidenceInvokedByUi = "false"/);
+  assert.match(view, /Controlled real-source evidence is status-only and not invoked by the UI/);
+  assert.match(view, /button\.disabled = true/);
   assert.match(view, /Run Engine disabled/);
   assert.match(view, /RunTable generation disabled/);
   assert.match(view, /IES generation disabled/);

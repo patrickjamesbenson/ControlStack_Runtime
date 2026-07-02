@@ -67,5 +67,10 @@ test("Selector product UI has dedicated styling for the working surface", async 
   assert.match(styles, /\.cs-selector-product__grid/);
   assert.match(styles, /\.cs-selector-product__field/);
   assert.match(styles, /\.cs-selector-product__badges/);
+  assert.match(styles, /\.cs-selector-workflow-preview \{/);
+  assert.match(styles, /\.cs-selector-workflow-preview__stage-card/);
+  assert.match(styles, /\.cs-selector-workflow-preview__action-card/);
+  assert.match(styles, /\.cs-selector-workflow-preview__evidence-status/);
+  assert.match(styles, /data-workflow-stage-status=\"blocked\"/);
   assert.match(styles, /\.cs-selector-diagnostics/);
 });

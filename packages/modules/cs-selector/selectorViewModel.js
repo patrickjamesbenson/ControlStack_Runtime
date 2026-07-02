@@ -4529,7 +4529,7 @@ function createSelectorWorkflowPreview({
   };
 
   return {
-    title: "Selector workflow",
+    title: "Selector workflow readiness — preview only",
     status: blockedSummary.blocked ? "blocked" : reviewStages.length ? "review-required" : "ready",
     selectorWorkflowPreviewReady: stageSummaries.every((stage) => stage.ready) && downstreamStages.every((stage) => stage.ready),
     previewOnly: true,

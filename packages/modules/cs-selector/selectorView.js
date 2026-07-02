@@ -1738,17 +1738,143 @@ function appendSelectorSpecBuildReadinessPreview(parent, preview = {}) {
   parent.appendChild(section);
 }
 
+function workflowStatusLabel(stage = {}) {
+  if (stage.blocked === true || stage.status === "blocked") return "blocked";
+  if (stage.reviewRequired === true || stage.status === "review-required") return "review-required";
+  if (stage.ready === true || stage.status === "ready") return "ready";
+  return stage.status || "review-required";
+}
+
+function workflowStatusCopy(status = "") {
+  return String(status || "unknown").replace(/-/g, " ");
+}
+
 function workflowStageRows(stages = []) {
   if (!Array.isArray(stages) || !stages.length) return [["stages", "none"]];
   return stages.map((stage) => [
     stage.label || stage.id || "stage",
-    `${stage.status || "unknown"}; ready:${stage.ready === true ? "true" : "false"}; preview-only:${stage.previewOnly === false ? "false" : "true"}; diagnostic-only:${stage.diagnosticOnly === false ? "false" : "true"}; blocker:${stage.blocker || "none"}`,
+    `${workflowStatusLabel(stage)}; ready:${stage.ready === true ? "true" : "false"}; preview-only:${stage.previewOnly === false ? "false" : "true"}; diagnostic-only:${stage.diagnosticOnly === false ? "false" : "true"}; blocker:${stage.blocker || "none"}`,
   ]);
 }
 
 function workflowActionRows(actions = []) {
   if (!Array.isArray(actions) || !actions.length) return [["production actions", "disabled"]];
   return actions.map((action) => [action.label || action.id || "action", action.enabled === true ? "enabled" : "disabled"]);
+}
+
+function workflowStageSafeCountRows(stage = {}) {
+  const counts = stage.safeCounts && typeof stage.safeCounts === "object" ? stage.safeCounts : {};
+  const rows = Object.entries(counts).map(([key, value]) => [key, value]);
+  return rows.length ? rows : [["safe count", "none"]];
+}
+
+function workflowStageDetailRows(stage = {}) {
+  const rows = Array.isArray(stage.rows) ? stage.rows : [];
+  return rows.length ? rows : [["details", stage.reason || stage.blocker || "safe summary only"]];
+}
+
+function appendWorkflowStageCard(parent, stage = {}, index = 0, { compact = false } = {}) {
+  const status = workflowStatusLabel(stage);
+  const card = document.createElement("article");
+  card.className = compact ? "cs-selector-workflow-preview__stage-card cs-selector-workflow-preview__stage-card--compact" : "cs-selector-workflow-preview__stage-card";
+  card.dataset.workflowStage = stage.id || `stage-${index + 1}`;
+  card.dataset.workflowStageStatus = status;
+  card.dataset.previewOnly = stage.previewOnly === false ? "false" : "true";
+  card.dataset.diagnosticOnly = stage.diagnosticOnly === false ? "false" : "true";
+  card.dataset.ready = stage.ready === true ? "true" : "false";
+  card.dataset.blocked = stage.blocked === true ? "true" : "false";
+  card.dataset.reviewRequired = stage.reviewRequired === true ? "true" : "false";
+  if (stage.id === "controlled-real-source-evidence") card.dataset.evidenceStatusOnly = "true";
+
+  const header = document.createElement("div");
+  header.className = "cs-selector-workflow-preview__stage-head";
+  appendText(header, "span", String(index + 1).padStart(2, "0"), "cs-selector-workflow-preview__stage-index");
+  appendText(header, "h5", stage.label || stage.id || "Workflow stage");
+  appendText(header, "span", workflowStatusCopy(status), "cs-selector-workflow-preview__status-pill");
+  card.appendChild(header);
+
+  appendText(card, "p", stage.reason || stage.blocker || "Safe summary only.", "cs-selector-workflow-preview__stage-reason");
+  appendDefinitionList(card, [
+    ["ready", stage.ready === true ? "true" : "false"],
+    ["preview-only", stage.previewOnly === false ? "false" : "true"],
+    ["diagnostic-only", stage.diagnosticOnly === false ? "false" : "true"],
+    ["blocker", stage.blocker || "none"],
+  ]);
+  appendDefinitionList(card, workflowStageSafeCountRows(stage));
+
+  const details = document.createElement("details");
+  details.className = "cs-selector-workflow-preview__stage-details";
+  details.open = false;
+  const summary = document.createElement("summary");
+  summary.textContent = "Safe stage rows";
+  details.appendChild(summary);
+  appendDefinitionList(details, workflowStageDetailRows(stage));
+  card.appendChild(details);
+
+  parent.appendChild(card);
+}
+
+function appendWorkflowStageCardGrid(parent, heading, intro, stages = [], options = {}) {
+  const group = document.createElement("section");
+  group.className = options.compact ? "cs-selector-workflow-preview__group cs-selector-workflow-preview__group--compact" : "cs-selector-workflow-preview__group";
+  appendText(group, "h5", heading, "cs-selector-workflow-preview__group-title");
+  appendText(group, "p", intro, "cs-selector-workflow-preview__group-copy");
+  const grid = document.createElement("div");
+  grid.className = "cs-selector-workflow-preview__stage-grid";
+  const safeStages = Array.isArray(stages) ? stages : [];
+  if (safeStages.length) {
+    safeStages.forEach((stage, index) => appendWorkflowStageCard(grid, stage, index, options));
+  } else {
+    appendText(grid, "p", "No workflow stages reported.", "cs-selector-workflow-preview__empty");
+  }
+  group.appendChild(grid);
+  parent.appendChild(group);
+}
+
+function appendWorkflowDisabledActions(parent, actions = []) {
+  const group = document.createElement("section");
+  group.className = "cs-selector-workflow-preview__group cs-selector-workflow-preview__group--locked-actions";
+  group.dataset.productionActions = "disabled";
+  appendText(group, "h5", "Disabled production actions", "cs-selector-workflow-preview__group-title");
+  appendText(group, "p", "Production handoffs are deliberately visible and locked. These controls are display-only and do not call Engine, create RunTable, create IES, persist selected results, or write HubSpot/project records.", "cs-selector-workflow-preview__group-copy");
+  const list = document.createElement("div");
+  list.className = "cs-selector-workflow-preview__action-grid";
+  const safeActions = Array.isArray(actions) ? actions : [];
+  for (const action of safeActions.length ? safeActions : [{ id: "production-actions", label: "Production actions disabled", enabled: false, reason: "No production actions are enabled in this slice." }]) {
+    const item = document.createElement("article");
+    item.className = "cs-selector-workflow-preview__action-card";
+    item.dataset.productionAction = action.id || "action";
+    item.dataset.enabled = action.enabled === true ? "true" : "false";
+    const button = document.createElement("button");
+    button.type = "button";
+    button.disabled = true;
+    button.textContent = action.label || action.id || "Production action disabled";
+    item.appendChild(button);
+    appendText(item, "small", action.reason || "Preview-only Selector workflow; production action disabled.");
+    list.appendChild(item);
+  }
+  group.appendChild(list);
+  parent.appendChild(group);
+}
+
+function appendWorkflowEvidenceStatus(parent, evidence = {}) {
+  const group = document.createElement("section");
+  group.className = "cs-selector-workflow-preview__evidence-status";
+  group.dataset.controlledRealSourceEvidence = "status-only";
+  group.dataset.evidenceInvokedByUi = "false";
+  appendText(group, "h5", evidence.label || "Controlled real-source evidence status", "cs-selector-workflow-preview__group-title");
+  appendText(group, "p", evidence.reason || "Controlled real-source evidence is status-only and not invoked by the UI.", "cs-selector-workflow-preview__group-copy");
+  appendBadgeList(group, ["status-only", "not invoked by UI", "RuntimeData not mutated", "donor Engine not invoked"]);
+  appendDefinitionList(group, [
+    ["status", evidence.status || "diagnostic-only-available-not-invoked"],
+    ["helper available", evidence.helperAvailable === true ? "true" : "false"],
+    ["runtime data read", evidence.runtimeDataRead === true ? "true" : "false"],
+    ["runtime data mutated", evidence.runtimeDataMutated === true ? "true" : "false"],
+    ["donor Engine invoked", evidence.donorEngineInvoked === true ? "true" : "false"],
+    ["raw rows returned", evidence.rawRowsReturned === true ? "true" : "false"],
+    ["raw payloads returned", evidence.rawPayloadsReturned === true ? "true" : "false"],
+  ]);
+  parent.appendChild(group);
 }
 
 function appendSelectorWorkflowPreview(parent, workflow = {}) {
@@ -1768,19 +1894,39 @@ function appendSelectorWorkflowPreview(parent, workflow = {}) {
   section.dataset.hubSpotProjectWritesEnabled = downstream.hubSpotProjectWritesEnabled === true ? "true" : "false";
   section.dataset.rawRowsPayloadsPrivateDataExposed = unsafe.rawRowsPayloadsPrivateDataExposed === true ? "true" : "false";
 
-  appendText(section, "h4", workflow.title || "Selector workflow");
-  appendText(section, "p", "Preview-only workflow and downstream readiness chain. It shows safe selected values, run/accessory intent, entitlement, draft/hydrate readiness, and Engine/RunTable/IES readiness without exposing raw payloads or enabling production actions.");
-  appendBadgeList(section, workflow.markers || ["preview-only", "diagnostic-only", "safe summaries only", "production actions disabled"]);
-  appendSection(section, "Workflow readiness", [
-    ["status", workflow.status || "blocked"],
-    ["selectorWorkflowPreviewReady", workflow.selectorWorkflowPreviewReady === true ? "true" : "false"],
-    ["blocked stage count", blocked.blockedStageCount ?? 0],
-    ["review-required stage count", blocked.reviewRequiredStageCount ?? 0],
-    ["downstream blocked stage count", blocked.downstreamBlockedStageCount ?? 0],
-  ]);
-  appendSection(section, "Selector workflow stages", workflowStageRows(workflow.stageSummaries || workflow.selectorWorkflowStageSummaries));
-  appendSection(section, "Downstream readiness display", workflowStageRows(downstream.stages));
-  appendSection(section, "Disabled production actions", workflowActionRows(workflow.disabledProductionActions || downstream.productionActions));
+  const header = document.createElement("div");
+  header.className = "cs-selector-workflow-preview__header";
+  appendText(header, "p", "Workflow readiness", "cs-shell__eyebrow");
+  appendText(header, "h4", workflow.title || "Selector workflow readiness — preview only");
+  appendText(header, "p", "Safe workflow cards show selected/reference values, compatibility, timeline, run intent, accessory intent, entitlement, draft/hydrate readiness, and downstream Engine/RunTable/IES state without exposing raw payloads or enabling production actions.");
+  appendBadgeList(header, workflow.markers || ["preview-only", "diagnostic-only", "safe summaries only", "production actions disabled"]);
+  section.appendChild(header);
+
+  const summary = document.createElement("div");
+  summary.className = "cs-selector-workflow-preview__summary-strip";
+  appendTruthMetric(summary, "status", workflow.status || "blocked");
+  appendTruthMetric(summary, "workflow ready", workflow.selectorWorkflowPreviewReady === true ? "true" : "false");
+  appendTruthMetric(summary, "blocked", blocked.blockedStageCount ?? 0);
+  appendTruthMetric(summary, "review required", blocked.reviewRequiredStageCount ?? 0);
+  appendTruthMetric(summary, "downstream blocked", blocked.downstreamBlockedStageCount ?? 0);
+  section.appendChild(summary);
+
+  appendWorkflowStageCardGrid(
+    section,
+    "Selector workflow stages",
+    "Readable stage cards use ready, blocked, and review-required labels while keeping every value as a safe count, label, or status.",
+    workflow.stageSummaries || workflow.selectorWorkflowStageSummaries,
+  );
+  appendWorkflowStageCardGrid(
+    section,
+    "Downstream readiness group",
+    "Engine, RunTable, selected-result, IES, and controlled evidence readiness are shown as preview-only downstream status, not production execution.",
+    downstream.stages,
+    { compact: true },
+  );
+  appendWorkflowDisabledActions(section, workflow.disabledProductionActions || downstream.productionActions);
+  appendWorkflowEvidenceStatus(section, downstream.controlledRealSourceEvidenceStatus || {});
+
   appendSection(section, "Blocked production outputs", [
     ["Run Engine disabled", downstream.runEngineEnabled === true ? "false" : "true"],
     ["RunTable generation disabled", downstream.runTableGenerationEnabled === true ? "false" : "true"],
@@ -1794,8 +1940,11 @@ function appendSelectorWorkflowPreview(parent, workflow = {}) {
     ["raw Engine payload returned", unsafe.rawEnginePayloadReturned === true ? "true" : "false"],
     ["raw Engine result returned", unsafe.rawEngineResultReturned === true ? "true" : "false"],
     ["USERS/CRM/contact/private data returned", unsafe.rawUsersReturned === true || unsafe.rawCrmReturned === true || unsafe.rawContactsReturned === true || unsafe.privatePathsReturned === true ? "true" : "false"],
+    ["exact electrical values returned", unsafe.exactElectricalValuesReturned === true ? "true" : "false"],
+    ["IES/candela/base64 artefacts returned", unsafe.rawIesContentReturned === true || unsafe.candelaArraysReturned === true || unsafe.base64ArtifactsReturned === true ? "true" : "false"],
     ["donor Engine invoked", unsafe.donorEngineInvoked === true ? "true" : "false"],
     ["RuntimeData mutated", unsafe.runtimeDataMutated === true ? "true" : "false"],
+    ["selected result persisted", unsafe.selectedResultPersisted === true ? "true" : "false"],
     ["RunTable generated", unsafe.runTableGenerated === true ? "true" : "false"],
     ["IES generated", unsafe.iesGenerated === true ? "true" : "false"],
     ["routes added", unsafe.routesAdded === true ? "true" : "false"],
