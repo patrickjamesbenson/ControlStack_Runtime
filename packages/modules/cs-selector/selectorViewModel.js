@@ -1,5 +1,5 @@
 import { buildSelectedResultProjectionContract } from "../../workspace-kernel/selectedResultProjectionService.js";
-import { evaluateSpecialPartsCompatibility } from "./selectorSpecialPartsCompatibility.js";
+import { buildSelectorSpecialPartsEntitlementPreview } from "./selectorSpecialPartsEntitlementPreview.js";
 import { buildSelectorRunAccessoryPlacementPreview } from "./selectorRunAccessoryPlacementPreview.js";
 import { buildSelectorRunIntakePreview } from "./selectorRunIntakePreview.js";
 
@@ -476,6 +476,64 @@ function readSelectorTimelineContext(adapter, snapshots, timelinePolicy) {
 
 function readEntitledSpecialParts(specialPartsEntitlement = {}) {
   return Array.isArray(specialPartsEntitlement.entitledParts) ? specialPartsEntitlement.entitledParts : [];
+}
+
+function safeRedactedSpecialPartCandidate(part = {}, index = 0) {
+  if (!part || typeof part !== "object" || Array.isArray(part)) {
+    return { redactedRef: `redacted-special-part-${index + 1}`, redacted: true };
+  }
+  return {
+    redactedRef: String(part.redactedRef || part.safeRef || part.redactedReference || `redacted-special-part-${index + 1}`),
+    redacted: true,
+    system: part.system || "",
+    variants_all: part.variants_all || part.variantsAll || "",
+    ip_class: part.ip_class || part.ipClass || "",
+    effective_to: part.effective_to || part.effectiveTo || "",
+    status_date: part.status_date || part.statusDate || "",
+    status: part.status || part.timelineStatus || part.optionStatusClass || "available",
+    timelineStatus: part.timelineStatus || part.status || part.optionStatusClass || "available",
+    safelyEntitled: part.safelyEntitled !== false,
+    previewApproved: part.previewApproved === true || part.approvedForPreview === true || part.safePreviewApproved === true,
+  };
+}
+
+function safeRedactedEntitlementProjection(specialPartsEntitlement = {}) {
+  const entitledParts = readEntitledSpecialParts(specialPartsEntitlement);
+  const redactedCandidates = Array.isArray(specialPartsEntitlement.redactedCandidates)
+    ? specialPartsEntitlement.redactedCandidates.map(safeRedactedSpecialPartCandidate)
+    : entitledParts.map(safeRedactedSpecialPartCandidate);
+  const redactedEntitlementCount = Number.isFinite(Number(specialPartsEntitlement.redactedEntitlementCount))
+    ? Number(specialPartsEntitlement.redactedEntitlementCount)
+    : Number.isFinite(Number(specialPartsEntitlement.entitledCount))
+      ? Number(specialPartsEntitlement.entitledCount)
+      : Math.max(redactedCandidates.length, listLength(specialPartsEntitlement.userComponentIds));
+  return {
+    redacted: true,
+    source: specialPartsEntitlement.source || "shell-fed-redacted-entitlement-projection",
+    status: specialPartsEntitlement.status || "not-live-placeholder",
+    identityAuthority: specialPartsEntitlement.identityAuthority || (specialPartsEntitlement.userEmailMatched === true ? "matched-redacted" : "external-anonymous"),
+    matchedRedacted: specialPartsEntitlement.matchedRedacted === true || specialPartsEntitlement.userEmailMatched === true,
+    identityCandidate: specialPartsEntitlement.identityCandidate === true,
+    previewApproved: specialPartsEntitlement.previewApproved === true || specialPartsEntitlement.safePreviewApproved === true,
+    redactedEntitlementCount,
+    redactedCandidates,
+    rawUsersReturned: false,
+    rawContactsReturned: false,
+    rawCrmReturned: false,
+    rawProductRowsReturned: false,
+    rawComponentRowsReturned: false,
+    privatePathsReturned: false,
+    credentialsReturned: false,
+  };
+}
+
+function safeSelectedBlockedValues(local = {}, selectorReferenceStatus = {}) {
+  const payload = dbOptionsPayload(selectorReferenceStatus);
+  const blocked = Array.isArray(payload.blockedItems) ? payload.blockedItems : [];
+  return blocked.map((item, index) => ({
+    redactedRef: item.redactedRef || item.safeRef || `redacted-selected-blocked-value-${index + 1}`,
+    value: item.valueLabel || item.value || item.label || `blocked-${index + 1}`,
+  })).concat(Array.isArray(local.selectedBlockedValues) ? local.selectedBlockedValues : []);
 }
 
 function buildPassiveSelectorSelectionContext({ local = {}, timelinePolicy = {}, projectRequirementDate = {} } = {}) {
@@ -5076,10 +5134,49 @@ export function createSelectorViewModel({ adapter, selectorState, selectorRefere
   const moduleConsumption = selectorTimelineContext.moduleConsumption || {};
   const csSelectorConsumption = moduleConsumption.csSelector || {};
   const selectorTimelineImplementation = selectorTimelineContext.implementation || {};
-  const entitledSpecialParts = readEntitledSpecialParts(specialPartsEntitlement);
   const passiveSelectorSelectionContext = buildPassiveSelectorSelectionContext({ local, timelinePolicy, projectRequirementDate });
-  const specialPartsCompatibilityResults = evaluateSpecialPartsCompatibility(entitledSpecialParts, passiveSelectorSelectionContext);
-  const specialPartsCompatibilitySummary = summarizeSpecialPartsCompatibility(specialPartsCompatibilityResults);
+  const safeRoleContext = {
+    displayRole: shellDisplayRole(authority, identity, snapshots.visibility),
+    requestedDisplayRole: shellRequestedDisplayRole(authority, identity, snapshots.visibility),
+    actualRole: authorityActualRole(authority, identity),
+    roleAuthority: authorityActualRoleSource(authority, identity),
+    displayRoleClamped: shellDisplayRoleClamped(authority, identity, snapshots.visibility) === true,
+    source: authority.source || "shell-safe-fallback",
+  };
+  const safeIdentityContext = {
+    status: identity.status || "unknown",
+    identityState: identity.identityState || "external_anonymous",
+    classification: identity.classification || "anonymous",
+    authorityStatus: authority.status || "fallback",
+    identityAuthority: specialPartsEntitlement.identityAuthority || (specialPartsEntitlement.userEmailMatched === true ? "matched-redacted" : identity.identityState || "external_anonymous"),
+    matchedRedacted: specialPartsEntitlement.matchedRedacted === true || specialPartsEntitlement.userEmailMatched === true,
+    candidate: specialPartsEntitlement.identityCandidate === true,
+  };
+  const specialPartsEntitlementPreview = buildSelectorSpecialPartsEntitlementPreview({
+    safeRoleContext,
+    safeIdentityContext,
+    redactedEntitlementProjection: safeRedactedEntitlementProjection(specialPartsEntitlement),
+    specialPartsOptInPreview: specialPartsOptIn,
+    selectedBlockedValues: safeSelectedBlockedValues(local, selectorReferenceStatus),
+    selectorSelectionContext: passiveSelectorSelectionContext,
+    timelineStatusMetadata: {
+      status: timelinePolicy.status || "unavailable",
+      allowedStatuses: timelinePolicy.statusPolicy?.allowedStatuses || [],
+      selectorTimelineStatus: selectorTimelineContext.status || "passive-consumer",
+    },
+    downstreamWriteFlags: {
+      activeBuildMutationEnabled: false,
+      hubSpotWriteEnabled: readWriteEnabled(crmWritePolicy) === true,
+      contactCreationEnabled: crm.contactCreation?.enabled === true,
+    },
+  });
+  const specialPartsCompatibilityResults = specialPartsEntitlementPreview.safeCompatibilityResults || [];
+  const specialPartsCompatibilitySummary = {
+    status: specialPartsEntitlementPreview.entitlementStatus === "none" ? "empty" : specialPartsEntitlementPreview.entitlementStatus,
+    compatibleCount: specialPartsEntitlementPreview.compatibleRedactedCandidateCount,
+    incompatibleCount: specialPartsEntitlementPreview.blockedRedactedCandidateCount,
+    unknownCount: specialPartsEntitlementPreview.reviewRequiredCount,
+  };
   const timelineFiltering = summarizeTimelineFiltering({
     local,
     selectorDownstream,
@@ -5225,8 +5322,22 @@ export function createSelectorViewModel({ adapter, selectorState, selectorRefere
       specialPartsEntitlementLive: stateLabel(specialPartsEntitlement.entitlementLive),
       specialPartsUserEmailMatched: stateLabel(specialPartsEntitlement.userEmailMatched),
       specialPartsComponentIds: listLength(specialPartsEntitlement.userComponentIds),
-      specialPartsEntitledCount: listLength(specialPartsEntitlement.entitledParts),
-      specialPartsReadOnly: stateLabel(specialPartsEntitlement.readOnly),
+      specialPartsEntitledCount: specialPartsEntitlementPreview.redactedEntitlementCount,
+      specialPartsReadOnly: stateLabel(specialPartsEntitlement.readOnly !== false),
+      specialPartsEntitlementPreviewReady: stateLabel(specialPartsEntitlementPreview.specialPartsEntitlementPreviewReady),
+      specialPartsEntitlementPreviewStatus: specialPartsEntitlementPreview.entitlementStatus,
+      specialPartsDisplayRole: specialPartsEntitlementPreview.displayRole,
+      specialPartsRoleAuthority: specialPartsEntitlementPreview.roleAuthority,
+      specialPartsRedactedEntitlementCount: specialPartsEntitlementPreview.redactedEntitlementCount,
+      specialPartsCompatibleRedactedCandidateCount: specialPartsEntitlementPreview.compatibleRedactedCandidateCount,
+      specialPartsBlockedRedactedCandidateCount: specialPartsEntitlementPreview.blockedRedactedCandidateCount,
+      specialPartsReviewRequiredCount: specialPartsEntitlementPreview.reviewRequiredCount,
+      specialPartsRawUsersReturned: stateLabel(specialPartsEntitlementPreview.rawUsersReturned),
+      specialPartsRawContactsReturned: stateLabel(specialPartsEntitlementPreview.rawContactsReturned),
+      specialPartsRawCrmReturned: stateLabel(specialPartsEntitlementPreview.rawCrmReturned),
+      specialPartsRawComponentRowsReturned: stateLabel(specialPartsEntitlementPreview.rawComponentRowsReturned),
+      specialPartsPrivatePathsReturned: stateLabel(specialPartsEntitlementPreview.privatePathsReturned),
+      specialPartsCredentialsReturned: stateLabel(specialPartsEntitlementPreview.credentialsReturned),
       specialPartsOptInOwner: specialPartsOptIn.owner || "shell",
       specialPartsOptInStatus: specialPartsOptIn.status || "not-live-placeholder",
       specialPartsOptInSource: specialPartsOptIn.source || "shell-project-context-placeholder",
@@ -5256,14 +5367,19 @@ export function createSelectorViewModel({ adapter, selectorState, selectorRefere
     selectorTimelineContext,
     timelineFiltering,
     selectorReference: selectorReferenceStatus,
+    specialPartsEntitlementPreview,
+    specialPartsEntitlementPreviewReady: specialPartsEntitlementPreview.specialPartsEntitlementPreviewReady,
+    specialPartsEntitlementDiagnostics: specialPartsEntitlementPreview.diagnostics,
+    blockedDownstreamWriteFlags: specialPartsEntitlementPreview.blockedDownstreamWriteFlags,
     specialPartsCompatibility: {
       status: specialPartsCompatibilitySummary.status,
-      source: "selector-view-model-stage-3e-passive-helper-wiring",
+      source: "selector-view-model-safe-entitlement-preview",
       live: "passive",
       filteringLive: false,
       optInLive: false,
       buildMutationLive: false,
-      entitledCount: entitledSpecialParts.length,
+      entitledCount: specialPartsEntitlementPreview.redactedEntitlementCount,
+      redactedEntitlementCount: specialPartsEntitlementPreview.redactedEntitlementCount,
       compatibleCount: specialPartsCompatibilitySummary.compatibleCount,
       incompatibleCount: specialPartsCompatibilitySummary.incompatibleCount,
       unknownCount: specialPartsCompatibilitySummary.unknownCount,

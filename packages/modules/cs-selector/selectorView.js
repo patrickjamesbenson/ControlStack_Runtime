@@ -47,18 +47,47 @@ function readSpecialPartsDiagnosticsRows(viewModel) {
   const timelinePolicy = viewModel.timelinePolicy || {};
   const selectorTimelineContext = viewModel.selectorTimelineContext || {};
   const compatibility = viewModel.specialPartsCompatibility || {};
+  const preview = viewModel.specialPartsEntitlementPreview || {};
+  const diagnostics = viewModel.specialPartsEntitlementDiagnostics || preview.diagnostics || {};
+  const failClosedReasons = Array.isArray(diagnostics.failClosedReasons) ? diagnostics.failClosedReasons : [];
   return [
     ["Timeline context", selectorTimelineContext.status || timelinePolicy.selectorConsumptionStatus || "passive-consumer"],
+    ["Entitlement preview status", preview.entitlementStatus || timelinePolicy.specialPartsEntitlementPreviewStatus || "none"],
+    ["Entitlement preview ready", yesNo(preview.specialPartsEntitlementPreviewReady ?? viewModel.specialPartsEntitlementPreviewReady)],
+    ["Display role", preview.displayRole || timelinePolicy.specialPartsDisplayRole || "external_user"],
+    ["Role authority", preview.roleAuthority || timelinePolicy.specialPartsRoleAuthority || "safe-fallback"],
+    ["Redacted entitlement count", preview.redactedEntitlementCount ?? timelinePolicy.specialPartsRedactedEntitlementCount ?? compatibility.redactedEntitlementCount ?? 0],
+    ["Compatible redacted candidates", preview.compatibleRedactedCandidateCount ?? timelinePolicy.specialPartsCompatibleRedactedCandidateCount ?? compatibility.compatibleCount ?? 0],
+    ["Blocked redacted candidates", preview.blockedRedactedCandidateCount ?? timelinePolicy.specialPartsBlockedRedactedCandidateCount ?? compatibility.incompatibleCount ?? 0],
+    ["Review required count", preview.reviewRequiredCount ?? timelinePolicy.specialPartsReviewRequiredCount ?? compatibility.unknownCount ?? 0],
+    ["Selected blocked values preserved", yesNo(preview.selectedBlockedValuesPreserved)],
+    ["Fail-closed reasons", failClosedReasons.length ? failClosedReasons.join(", ") : "none"],
     ["Special parts compatibility", compatibility.live || timelinePolicy.specialPartsCompatibilityLive || "passive"],
-    ["Entitled parts count", compatibility.entitledCount ?? timelinePolicy.specialPartsEntitledCount ?? 0],
-    ["Compatible count", compatibility.compatibleCount ?? timelinePolicy.specialPartsCompatibleCount ?? 0],
-    ["Incompatible count", compatibility.incompatibleCount ?? timelinePolicy.specialPartsIncompatibleCount ?? 0],
-    ["Unknown count", compatibility.unknownCount ?? timelinePolicy.specialPartsUnknownCount ?? 0],
     ["Filtering live", timelinePolicy.specialPartsFilteringLive || "no"],
-    ["Opt-in live", timelinePolicy.specialPartsOptInLive || "no"],
-    ["Build mutation live", timelinePolicy.specialPartsBuildMutationLive || "no"],
-    ["Display mode", "developer diagnostics only"],
+    ["Opt-in preview enabled", yesNo(preview.specialPartsOptInPreviewEnabled)],
+    ["Opt-in active/live", timelinePolicy.specialPartsOptInLive || forcedFalse(preview.specialPartsOptInActiveEnabled)],
+    ["Build mutation live", timelinePolicy.specialPartsBuildMutationLive || forcedFalse(preview.activeBuildMutationEnabled)],
+    ["HubSpot write enabled", forcedFalse(preview.hubSpotWriteEnabled)],
+    ["Contact creation enabled", forcedFalse(preview.contactCreationEnabled)],
+    ["raw USERS returned", forcedFalse(preview.rawUsersReturned)],
+    ["raw contacts returned", forcedFalse(preview.rawContactsReturned)],
+    ["raw CRM returned", forcedFalse(preview.rawCrmReturned)],
+    ["raw product rows returned", forcedFalse(preview.rawProductRowsReturned)],
+    ["raw component rows returned", forcedFalse(preview.rawComponentRowsReturned)],
+    ["private paths returned", forcedFalse(preview.privatePathsReturned)],
+    ["credentials returned", forcedFalse(preview.credentialsReturned)],
+    ["Display mode", "safe redacted preview diagnostics only"],
   ];
+}
+
+function readSpecialPartsEntitlementCandidateRows(viewModel) {
+  const preview = viewModel.specialPartsEntitlementPreview || {};
+  const rows = Array.isArray(preview.candidateRows) ? preview.candidateRows : [];
+  if (!rows.length) return [["redacted candidates", "none"]];
+  return rows.map((row) => [
+    row.redactedRef || "redacted-special-part",
+    `${row.status || "unknown"}; ${row.reason || "safe redacted preview only"}; rawRowsReturned:${forcedFalse(row.rawRowsReturned)}`,
+  ]);
 }
 
 function readTimelineFilteringRows(viewModel) {
@@ -1931,6 +1960,7 @@ export function renderSelectorView(container, viewModel) {
   appendSection(diagnostics, "Active Timeline filter diagnostics", readTimelineFilteringRows(viewModel));
   appendTimelineWarnings(diagnostics, viewModel);
   appendSection(diagnostics, "Developer diagnostics: Timeline / Special Parts", readSpecialPartsDiagnosticsRows(viewModel));
+  appendSection(diagnostics, "Special-parts entitlement preview candidates", readSpecialPartsEntitlementCandidateRows(viewModel));
 
   appendSection(diagnostics, "Downstream context foundation", [
     ["owner", viewModel.downstream.owner],
