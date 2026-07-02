@@ -98,6 +98,7 @@ const EXPECTED_STAGE_NAMES = Object.freeze([
   "runtime-board-fill",
   "runtime-board-electrical",
   "runtime-driver-sizer",
+  "runtime-safe-physical-placement-summary",
   "runtime-sealed-segment-zone-bridge",
   "runtime-zone-validation-foothold",
   "runtime-emergency-zone-picker-marker-only",
@@ -202,11 +203,21 @@ test("controlled real-source sealed evidence probe reaches safe sealed stages an
   assert.equal(summary.safeDriverCandidateProjectionSummary.exactElectricalValuesReturned, false);
   assert.equal(summary.safeCurveReferenceSummary.rawIesContentReturned, false);
   assert.equal(summary.safePhysicalPlacementRequirementSummary.rawCoordinatesReturned, false);
+  assert.equal(summary.physicalPlacementSummaryReady, true);
+  assert.equal(summary.safePhysicalPlacementSummary.ok, true);
+  assert.equal(summary.safePhysicalPlacementSummary.physicalPlacementSummaryReady, true);
+  assert.match(summary.safePhysicalPlacementSummary.placementSummaryFingerprint, /^safe-physical-placement:/);
+  assert.equal(summary.safePhysicalPlacementSummary.rawBoardRowsReturned, false);
+  assert.equal(summary.safePhysicalPlacementSummary.rawAccessoryRowsReturned, false);
+  assert.equal(summary.safePhysicalPlacementSummary.rawReservationGridReturned, false);
+  assert.equal(summary.safePhysicalPlacementSummary.exactCoordinatesReturned, false);
+  assert.equal(summary.safePhysicalPlacementSummary.exactBoundaryCoordinatesReturned, false);
+  assert.equal(summary.safePhysicalPlacementSummary.exactElectricalValuesReturned, false);
 
   const stageNames = summary.stageReadinessSummary.map((stage) => stage.stage);
   assert.deepEqual(stageNames, [...EXPECTED_STAGE_NAMES]);
-  const readyStages = summary.stageReadinessSummary.slice(0, 14);
-  const blockedStages = summary.stageReadinessSummary.slice(14);
+  const readyStages = summary.stageReadinessSummary.slice(0, 15);
+  const blockedStages = summary.stageReadinessSummary.slice(15);
   for (const stage of readyStages) {
     assert.equal(stage.reached, true, stage.stage);
     assert.equal(stage.ready, true, stage.stage);
@@ -224,7 +235,7 @@ test("controlled real-source sealed evidence probe reaches safe sealed stages an
   }
 
   assert.equal(summary.sealedChainReadinessSummary.chainComposed, false);
-  assert.equal(summary.sealedChainReadinessSummary.readyStageCount, 14);
+  assert.equal(summary.sealedChainReadinessSummary.readyStageCount, 15);
   assert.equal(summary.sealedChainReadinessSummary.selectedResultSourceBodyAvailable, false);
   assert.equal(summary.sealedChainReadinessSummary.selectedResultSourceBodyBlocker, "donor-engine-invocation-not-approved");
   assert.equal(summary.sealedChainReadinessSummary.productionRunTableReady, false);

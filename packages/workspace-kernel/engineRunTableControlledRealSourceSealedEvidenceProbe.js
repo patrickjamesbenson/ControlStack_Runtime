@@ -2,6 +2,7 @@ import { stableSha1 } from "./engineRunTableRuntimePolicyIndexKernel.js";
 import { loadRuntimeDataReadOnlySource } from "./runtimeDataReadOnlySourceAccessService.js";
 import { buildRuntimeSafeBoardFamilyProjectionSummary } from "./runtimeSafeBoardFamilyProjection.js";
 import { buildRuntimeSafeDriverCandidateProjectionSummary } from "./runtimeSafeDriverCandidateProjection.js";
+import { buildRuntimeSafePhysicalPlacementSummary } from "./runtimeSafePhysicalPlacementSummary.js";
 
 import { buildSelectorRunIntakePreview } from "../modules/cs-selector/selectorRunIntakePreview.js";
 import { buildSelectorRunAccessoryPlacementPreview } from "../modules/cs-selector/selectorRunAccessoryPlacementPreview.js";
@@ -169,6 +170,8 @@ function baseProbe(extra = {}) {
     safeAccessoryPolicySummary: extra.safeAccessoryPolicySummary || null,
     safeDriverCandidateProjectionSummary: extra.safeDriverCandidateProjectionSummary || null,
     safePhysicalPlacementRequirementSummary: extra.safePhysicalPlacementRequirementSummary || null,
+    safePhysicalPlacementSummary: extra.safePhysicalPlacementSummary || null,
+    physicalPlacementSummaryReady: extra.physicalPlacementSummaryReady === true,
     safeCurveReferenceSummary: extra.safeCurveReferenceSummary || null,
     sealedChainReadinessSummary: extra.sealedChainReadinessSummary || null,
     stageReadinessSummary: Array.isArray(extra.stageReadinessSummary) ? extra.stageReadinessSummary : [],
@@ -750,6 +753,52 @@ function safeDriverCandidate() {
   };
 }
 
+function safePhysicalPlacementProofSummary({ accessoryReservationSummary }) {
+  return {
+    safePlacementProofMarker: "sealed-safe-physical-placement-proof",
+    sourceBacked: true,
+    chainBacked: true,
+    placeholderOnly: false,
+    syntheticFixtureOnly: false,
+    boardPlacementBandSummary: {
+      boardPlacementCountBand: "2-5",
+      boardPlacementLengthBands: ["1000-1999mm"],
+      boardPlacementSpanBand: "4000-7999mm",
+      placementCategoryTokens: ["source-backed-board-run"],
+      boardRefs: ["safe-board-ref-controlled-001", "safe-board-ref-controlled-002", "safe-board-ref-controlled-003"],
+    },
+    segmentBoundaryBandSummary: {
+      segmentBoundaryCountBand: "1-2",
+      segmentSpanBands: ["1000-1999mm", "2000-3999mm"],
+      segmentRefs: ["safe-segment-ref-controlled-001", "safe-segment-ref-controlled-002"],
+      boundarySource: "safe-board-end-band-proof",
+    },
+    reservedRangeBandSummary: {
+      reservedRangeCountBand: "0",
+      reservedRangeLengthBands: [],
+      reservedRangeSpanBand: "0mm",
+      reservedRangeRefs: [],
+      reservationPolicyToken: "accessory-reservation-linked",
+    },
+    accessoryReservationLinkSummary: {
+      accessoryReservationLinked: true,
+      reservationIntentRef: "safe-accessory-reservation-intent-controlled-source",
+      accessoryReservationFingerprint: accessoryReservationSummary.accessoryReservationFingerprint,
+    },
+    emergencyMarkerPlacementSummary: {
+      emergencyMarkerCountBand: "1",
+      emergencyPlacementCategoryTokens: ["marker-only"],
+      emergencyZoneRefs: ["safe-zone-ref-controlled-001"],
+    },
+    noCrossContainmentSummary: {
+      noCrossContainmentProven: true,
+      zonesCrossSegmentJoin: false,
+      zoneCountBand: "2-5",
+      zoneRefs: ["safe-zone-ref-controlled-001", "safe-zone-ref-controlled-002"],
+    },
+  };
+}
+
 function sealedPhysicalBoardPlacementSummary(fingerprints) {
   return safeEngineBase(fingerprints, {
     safeSummaryOnly: true,
@@ -1117,6 +1166,18 @@ function composeSealedChain(projection) {
     requireDali: true,
   });
 
+  const safePhysicalPlacementSummary = buildRuntimeSafePhysicalPlacementSummary({
+    ...fingerprints,
+    sourceBacked: true,
+    chainBacked: true,
+    accessoryReservationFingerprint: accessoryReservationSummary.accessoryReservationFingerprint,
+    boardFillInputFingerprint: boardFillInputSummary.boardFillInputFingerprint,
+    boardFillFingerprint: boardFillSummary.sourceFingerprint,
+    boardElectricalSummaryFingerprint: boardElectricalSummary.summaryFingerprint,
+    driverSizerFingerprint: driverSizerSummary.driverSizerFingerprint,
+    safePlacementProofSummary: safePhysicalPlacementProofSummary({ accessoryReservationSummary }),
+  });
+
   const segmentZoneBridgeSummary = buildRuntimeSealedSegmentZoneBridgeSummary({
     ...fingerprints,
     boardFillInputSummary,
@@ -1229,6 +1290,9 @@ function composeSealedChain(projection) {
     summariseStage("runtime-driver-sizer", driverSizerSummary, "driverSizerReady", {
       fingerprint: driverSizerSummary.driverSizerFingerprint,
     }),
+    summariseStage("runtime-safe-physical-placement-summary", safePhysicalPlacementSummary, "physicalPlacementSummaryReady", {
+      fingerprint: safePhysicalPlacementSummary.placementSummaryFingerprint,
+    }),
     summariseStage("runtime-sealed-segment-zone-bridge", segmentZoneBridgeSummary, "segmentZoneBridgeReady", {
       fingerprint: segmentZoneBridgeSummary.segmentZoneBridgeFingerprint,
     }),
@@ -1256,6 +1320,8 @@ function composeSealedChain(projection) {
     ok: false,
     blocker: "donor-engine-invocation-not-approved",
     ...fingerprints,
+    safePhysicalPlacementSummary,
+    physicalPlacementSummaryReady: safePhysicalPlacementSummary.physicalPlacementSummaryReady === true,
     sealedChainReadinessSummary: {
       readOnly: true,
       diagnosticOnly: true,
@@ -1358,6 +1424,9 @@ function composeSealedChain(projection) {
     summariseStage("runtime-driver-sizer", driverSizerSummary, "driverSizerReady", {
       fingerprint: driverSizerSummary.driverSizerFingerprint,
     }),
+    summariseStage("runtime-safe-physical-placement-summary", safePhysicalPlacementSummary, "physicalPlacementSummaryReady", {
+      fingerprint: safePhysicalPlacementSummary.placementSummaryFingerprint,
+    }),
     summariseStage("runtime-sealed-segment-zone-bridge", segmentZoneBridgeSummary, "segmentZoneBridgeReady", {
       fingerprint: segmentZoneBridgeSummary.segmentZoneBridgeFingerprint,
     }),
@@ -1396,6 +1465,8 @@ function composeSealedChain(projection) {
     ok: !firstFailed,
     blocker: firstFailed?.blocker || (firstFailed ? `${firstFailed.stage}-not-ready` : null),
     ...fingerprints,
+    safePhysicalPlacementSummary,
+    physicalPlacementSummaryReady: safePhysicalPlacementSummary.physicalPlacementSummaryReady === true,
     sealedChainReadinessSummary: {
       readOnly: true,
       diagnosticOnly: true,
@@ -1434,6 +1505,8 @@ function finaliseEvidenceFingerprint(summary) {
     safeAccessoryPolicySummary: summary.safeAccessoryPolicySummary,
     safeDriverCandidateProjectionSummary: summary.safeDriverCandidateProjectionSummary,
     safePhysicalPlacementRequirementSummary: summary.safePhysicalPlacementRequirementSummary,
+    safePhysicalPlacementSummary: summary.safePhysicalPlacementSummary,
+    physicalPlacementSummaryReady: summary.physicalPlacementSummaryReady === true,
     safeCurveReferenceSummary: summary.safeCurveReferenceSummary,
     blocker: summary.blocker,
   };
@@ -1481,6 +1554,8 @@ export function buildControlledRealSourceSealedEvidenceProbeSummary(input = {}) 
       safeAccessoryPolicySummary: projection.safeAccessoryPolicySummary,
       safeDriverCandidateProjectionSummary: projection.safeDriverCandidateProjectionSummary,
       safePhysicalPlacementRequirementSummary: projection.safePhysicalPlacementRequirementSummary,
+      safePhysicalPlacementSummary: chain.safePhysicalPlacementSummary || null,
+      physicalPlacementSummaryReady: chain.physicalPlacementSummaryReady === true,
       safeCurveReferenceSummary: projection.safeCurveReferenceSummary,
       sealedChainReadinessSummary: chain.sealedChainReadinessSummary,
       stageReadinessSummary: chain.stageReadinessSummary,
@@ -1507,6 +1582,8 @@ export function buildControlledRealSourceSealedEvidenceProbeSummary(input = {}) 
     safeAccessoryPolicySummary: projection.safeAccessoryPolicySummary,
     safeDriverCandidateProjectionSummary: projection.safeDriverCandidateProjectionSummary,
     safePhysicalPlacementRequirementSummary: projection.safePhysicalPlacementRequirementSummary,
+    safePhysicalPlacementSummary: chain.safePhysicalPlacementSummary || null,
+    physicalPlacementSummaryReady: chain.physicalPlacementSummaryReady === true,
     safeCurveReferenceSummary: projection.safeCurveReferenceSummary,
     sealedChainReadinessSummary: chain.sealedChainReadinessSummary,
     stageReadinessSummary: chain.stageReadinessSummary,
