@@ -1,5 +1,6 @@
 import { stableSha1 } from "./engineRunTableRuntimePolicyIndexKernel.js";
 import { loadRuntimeDataReadOnlySource } from "./runtimeDataReadOnlySourceAccessService.js";
+import { buildRuntimeSafeBoardFamilyProjectionSummary } from "./runtimeSafeBoardFamilyProjection.js";
 
 import { buildSelectorRunIntakePreview } from "../modules/cs-selector/selectorRunIntakePreview.js";
 import { buildSelectorRunAccessoryPlacementPreview } from "../modules/cs-selector/selectorRunAccessoryPlacementPreview.js";
@@ -162,6 +163,7 @@ function baseProbe(extra = {}) {
     safeSelectorTokenSummary: extra.safeSelectorTokenSummary || null,
     safeRunIntentSummary: extra.safeRunIntentSummary || null,
     safeBoardFamilySummary: extra.safeBoardFamilySummary || null,
+    boardFamilyProjectionSummary: extra.boardFamilyProjectionSummary || null,
     safeAccessoryPolicySummary: extra.safeAccessoryPolicySummary || null,
     safeDriverCandidateProjectionSummary: extra.safeDriverCandidateProjectionSummary || null,
     safePhysicalPlacementRequirementSummary: extra.safePhysicalPlacementRequirementSummary || null,
@@ -246,6 +248,20 @@ function buildSafeRealSourceProjection(sourceAccessSummary = {}) {
       sourceFingerprint,
     };
   }
+
+  const boardFamilyProjectionSummary = buildRuntimeSafeBoardFamilyProjectionSummary({ sourceAccessSummary });
+  if (boardFamilyProjectionSummary.ok !== true || boardFamilyProjectionSummary.boardFamilyProjectionReady !== true) {
+    return {
+      ok: false,
+      blocker: boardFamilyProjectionSummary.blocker === "missing-board-family-source-marker"
+        ? "missing-safe-board-family-projection"
+        : boardFamilyProjectionSummary.blocker || "missing-safe-board-family-projection",
+      reason: "The active source did not expose a ready safe BOARDS-derived board-family projection.",
+      sourceFingerprint,
+      boardFamilyProjectionSummary,
+    };
+  }
+
   if (missingTables.includes("DRIVERS")) {
     return {
       ok: false,
@@ -322,18 +338,8 @@ function buildSafeRealSourceProjection(sourceAccessSummary = {}) {
       rawSelectorPayloadReturned: false,
       rawEnginePayloadReturned: false,
     },
-    safeBoardFamilySummary: {
-      readOnly: true,
-      diagnosticOnly: true,
-      safeSummaryOnly: true,
-      boardFamilyToken: "source-backed-board-family-token",
-      boardCandidateCountBand: safeCountBand(boardCount),
-      boardLengthBand: "1000-1999mm",
-      boardPitchBand: "1-99mm",
-      sourceFingerprint,
-      rawBoardRowsReturned: false,
-      exactElectricalValuesReturned: false,
-    },
+    safeBoardFamilySummary: boardFamilyProjectionSummary.boardFamilySummary,
+    boardFamilyProjectionSummary,
     safeAccessoryPolicySummary: {
       readOnly: true,
       diagnosticOnly: true,
@@ -1419,6 +1425,7 @@ function finaliseEvidenceFingerprint(summary) {
     safeSelectorTokenSummary: summary.safeSelectorTokenSummary,
     safeRunIntentSummary: summary.safeRunIntentSummary,
     safeBoardFamilySummary: summary.safeBoardFamilySummary,
+    boardFamilyProjectionSummary: summary.boardFamilyProjectionSummary,
     safeAccessoryPolicySummary: summary.safeAccessoryPolicySummary,
     safeDriverCandidateProjectionSummary: summary.safeDriverCandidateProjectionSummary,
     safePhysicalPlacementRequirementSummary: summary.safePhysicalPlacementRequirementSummary,
@@ -1446,6 +1453,7 @@ export function buildControlledRealSourceSealedEvidenceProbeSummary(input = {}) 
         privatePathsReturned: false,
         credentialsReturned: false,
       } : null,
+      boardFamilyProjectionSummary: projection.boardFamilyProjectionSummary || null,
     });
     return {
       ...failed,
@@ -1462,6 +1470,7 @@ export function buildControlledRealSourceSealedEvidenceProbeSummary(input = {}) 
       safeSelectorTokenSummary: projection.safeSelectorTokenSummary,
       safeRunIntentSummary: projection.safeRunIntentSummary,
       safeBoardFamilySummary: projection.safeBoardFamilySummary,
+      boardFamilyProjectionSummary: projection.boardFamilyProjectionSummary,
       safeAccessoryPolicySummary: projection.safeAccessoryPolicySummary,
       safeDriverCandidateProjectionSummary: projection.safeDriverCandidateProjectionSummary,
       safePhysicalPlacementRequirementSummary: projection.safePhysicalPlacementRequirementSummary,
@@ -1486,6 +1495,7 @@ export function buildControlledRealSourceSealedEvidenceProbeSummary(input = {}) 
     safeSelectorTokenSummary: projection.safeSelectorTokenSummary,
     safeRunIntentSummary: projection.safeRunIntentSummary,
     safeBoardFamilySummary: projection.safeBoardFamilySummary,
+    boardFamilyProjectionSummary: projection.boardFamilyProjectionSummary,
     safeAccessoryPolicySummary: projection.safeAccessoryPolicySummary,
     safeDriverCandidateProjectionSummary: projection.safeDriverCandidateProjectionSummary,
     safePhysicalPlacementRequirementSummary: projection.safePhysicalPlacementRequirementSummary,

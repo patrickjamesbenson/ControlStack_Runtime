@@ -49,7 +49,18 @@ function validSnapshot(overrides = {}) {
     OPTICS: [{ optic: "raw-optic-value-redacted-by-probe" }],
     ACCESSORIES: [{ accessory: "raw-accessory-value-redacted-by-probe" }],
     SPEC_CODES: [{ code: "raw-spec-code-value-redacted-by-probe" }],
-    BOARDS: [{ board: "raw-board-value-redacted-by-probe" }],
+    BOARDS: [
+      {
+        board_family: "raw-board-value-redacted-by-probe",
+        length_mm: 1400,
+        pitch_mm: 70,
+        approved: "TRUE",
+        light_direction: "Direct",
+        control_type: "DALI-2",
+        c1_vmax_v: 22.4,
+        c1_pmax_w: 11.2,
+      },
+    ],
     DRIVERS: [{ driver: "raw-driver-value-redacted-by-probe" }],
     PURE_REF_STATE: [{ pure: "raw-pure-value-redacted-by-probe" }],
     SYSTEM_COMPONENTS: [{ component: "raw-component-value-redacted-by-probe" }],
@@ -156,6 +167,12 @@ test("controlled real-source sealed evidence probe reaches safe sealed stages an
   assert.equal(summary.safeCandidateSourceSummary.activeSourceDbLoadedReadOnly, true);
   assert.equal(summary.safeCandidateSourceSummary.usersRedacted, true);
   assert.equal(summary.safeSelectorTokenSummary.rawSelectorPayloadReturned, false);
+  assert.equal(summary.boardFamilyProjectionSummary.sourceBacked, true);
+  assert.equal(summary.boardFamilyProjectionSummary.boardFamilyProjectionReady, true);
+  assert.match(summary.boardFamilyProjectionSummary.boardFamilyProjectionFingerprint, /^safe-board-family-projection:/);
+  assert.equal(summary.boardFamilyProjectionSummary.rawBoardRowsReturned, false);
+  assert.equal(summary.safeBoardFamilySummary.sourceBacked, true);
+  assert.match(summary.safeBoardFamilySummary.boardFamilyProjectionFingerprint, /^safe-board-family-projection:/);
   assert.equal(summary.safeBoardFamilySummary.rawBoardRowsReturned, false);
   assert.equal(summary.safeAccessoryPolicySummary.rawAccessoryRowsReturned, false);
   assert.equal(summary.safeDriverCandidateProjectionSummary.rawDriverRowsReturned, false);
@@ -209,6 +226,7 @@ test("controlled real-source sealed evidence probe fingerprint is deterministic"
   assert.equal(first.evidenceFingerprint, second.evidenceFingerprint);
   assert.equal(first.sourceFingerprint, second.sourceFingerprint);
   assert.equal(first.policyFingerprint, second.policyFingerprint);
+  assert.equal(first.boardFamilyProjectionSummary.boardFamilyProjectionFingerprint, second.boardFamilyProjectionSummary.boardFamilyProjectionFingerprint);
   assert.deepEqual(first.stageReadinessSummary, second.stageReadinessSummary);
 });
 
