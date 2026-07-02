@@ -1738,6 +1738,73 @@ function appendSelectorSpecBuildReadinessPreview(parent, preview = {}) {
   parent.appendChild(section);
 }
 
+function workflowStageRows(stages = []) {
+  if (!Array.isArray(stages) || !stages.length) return [["stages", "none"]];
+  return stages.map((stage) => [
+    stage.label || stage.id || "stage",
+    `${stage.status || "unknown"}; ready:${stage.ready === true ? "true" : "false"}; preview-only:${stage.previewOnly === false ? "false" : "true"}; diagnostic-only:${stage.diagnosticOnly === false ? "false" : "true"}; blocker:${stage.blocker || "none"}`,
+  ]);
+}
+
+function workflowActionRows(actions = []) {
+  if (!Array.isArray(actions) || !actions.length) return [["production actions", "disabled"]];
+  return actions.map((action) => [action.label || action.id || "action", action.enabled === true ? "enabled" : "disabled"]);
+}
+
+function appendSelectorWorkflowPreview(parent, workflow = {}) {
+  const downstream = workflow.downstreamReadinessSummary || {};
+  const blocked = workflow.blockedSummary || {};
+  const unsafe = workflow.unsafeOutputsBlocked || {};
+  const section = document.createElement("section");
+  section.className = "cs-selector-workflow-preview";
+  section.dataset.selectorWorkflowPreview = "read-only";
+  section.dataset.previewReady = workflow.selectorWorkflowPreviewReady === true ? "true" : "false";
+  section.dataset.previewOnly = workflow.previewOnly === false ? "false" : "true";
+  section.dataset.diagnosticOnly = workflow.diagnosticOnly === false ? "false" : "true";
+  section.dataset.runEngineEnabled = downstream.runEngineEnabled === true ? "true" : "false";
+  section.dataset.runTableGenerationEnabled = downstream.runTableGenerationEnabled === true ? "true" : "false";
+  section.dataset.iesGenerationEnabled = downstream.iesGenerationEnabled === true ? "true" : "false";
+  section.dataset.selectedResultPersistenceEnabled = downstream.selectedResultPersistenceEnabled === true ? "true" : "false";
+  section.dataset.hubSpotProjectWritesEnabled = downstream.hubSpotProjectWritesEnabled === true ? "true" : "false";
+  section.dataset.rawRowsPayloadsPrivateDataExposed = unsafe.rawRowsPayloadsPrivateDataExposed === true ? "true" : "false";
+
+  appendText(section, "h4", workflow.title || "Selector workflow");
+  appendText(section, "p", "Preview-only workflow and downstream readiness chain. It shows safe selected values, run/accessory intent, entitlement, draft/hydrate readiness, and Engine/RunTable/IES readiness without exposing raw payloads or enabling production actions.");
+  appendBadgeList(section, workflow.markers || ["preview-only", "diagnostic-only", "safe summaries only", "production actions disabled"]);
+  appendSection(section, "Workflow readiness", [
+    ["status", workflow.status || "blocked"],
+    ["selectorWorkflowPreviewReady", workflow.selectorWorkflowPreviewReady === true ? "true" : "false"],
+    ["blocked stage count", blocked.blockedStageCount ?? 0],
+    ["review-required stage count", blocked.reviewRequiredStageCount ?? 0],
+    ["downstream blocked stage count", blocked.downstreamBlockedStageCount ?? 0],
+  ]);
+  appendSection(section, "Selector workflow stages", workflowStageRows(workflow.stageSummaries || workflow.selectorWorkflowStageSummaries));
+  appendSection(section, "Downstream readiness display", workflowStageRows(downstream.stages));
+  appendSection(section, "Disabled production actions", workflowActionRows(workflow.disabledProductionActions || downstream.productionActions));
+  appendSection(section, "Blocked production outputs", [
+    ["Run Engine disabled", downstream.runEngineEnabled === true ? "false" : "true"],
+    ["RunTable generation disabled", downstream.runTableGenerationEnabled === true ? "false" : "true"],
+    ["IES generation disabled", downstream.iesGenerationEnabled === true ? "false" : "true"],
+    ["selected-result persistence disabled", downstream.selectedResultPersistenceEnabled === true ? "false" : "true"],
+    ["HubSpot/project writes disabled", downstream.hubSpotProjectWritesEnabled === true ? "false" : "true"],
+  ]);
+  appendSection(section, "Unsafe output guards", [
+    ["raw rows/payloads/private data exposed", unsafe.rawRowsPayloadsPrivateDataExposed === true ? "true" : "false"],
+    ["raw Selector payload returned", unsafe.rawSelectorPayloadReturned === true ? "true" : "false"],
+    ["raw Engine payload returned", unsafe.rawEnginePayloadReturned === true ? "true" : "false"],
+    ["raw Engine result returned", unsafe.rawEngineResultReturned === true ? "true" : "false"],
+    ["USERS/CRM/contact/private data returned", unsafe.rawUsersReturned === true || unsafe.rawCrmReturned === true || unsafe.rawContactsReturned === true || unsafe.privatePathsReturned === true ? "true" : "false"],
+    ["donor Engine invoked", unsafe.donorEngineInvoked === true ? "true" : "false"],
+    ["RuntimeData mutated", unsafe.runtimeDataMutated === true ? "true" : "false"],
+    ["RunTable generated", unsafe.runTableGenerated === true ? "true" : "false"],
+    ["IES generated", unsafe.iesGenerated === true ? "true" : "false"],
+    ["routes added", unsafe.routesAdded === true ? "true" : "false"],
+    ["POST endpoints added", unsafe.postEndpointsAdded === true ? "true" : "false"],
+  ]);
+
+  parent.appendChild(section);
+}
+
 function appendSelectorProductCompactStatus(parent, surface = {}) {
   const summary = surface.candidateSummary || {};
   const status = document.createElement("section");
@@ -1796,6 +1863,7 @@ function appendSelectorProductSurface(parent, surface = {}) {
 
   appendSelectorSelectionTruthSummary(section, surface.selectionTruthSummary || {});
   appendDonorShapeSelectedTileStrip(section, surface.donorShapeSelectedTiles || []);
+  appendSelectorWorkflowPreview(section, surface.selectorWorkflowPreview || {});
 
   appendSelectorWorkflowSections(section, surface);
 

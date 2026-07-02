@@ -2,6 +2,17 @@ import { buildSelectedResultProjectionContract } from "../../workspace-kernel/se
 import { buildSelectorSpecialPartsEntitlementPreview } from "./selectorSpecialPartsEntitlementPreview.js";
 import { buildSelectorRunAccessoryPlacementPreview } from "./selectorRunAccessoryPlacementPreview.js";
 import { buildSelectorRunIntakePreview } from "./selectorRunIntakePreview.js";
+import { buildSelectorSafeDraftProjectEnvelopePreview } from "./selectorSafeDraftProjectEnvelopePreview.js";
+import { buildSelectorSafeHydrateValidationPreview } from "./selectorSafeHydrateValidationPreview.js";
+import { buildRuntimeSealedCandidateAssemblyPreviewSummary } from "../../workspace-kernel/engineRunTableSealedCandidateAssemblyPreview.js";
+import { buildRuntimeRunTableDomainOutputScaffoldSummary } from "../../workspace-kernel/engineRunTableRuntimeRunTableDomainOutputScaffold.js";
+import { buildRuntimeSelectedResultHandoffScaffoldSummary } from "../../workspace-kernel/engineRunTableSelectedResultHandoffScaffold.js";
+import { buildRuntimeIesHandoffReadinessScaffoldSummary } from "../../workspace-kernel/engineRunTableIesHandoffReadinessScaffold.js";
+
+const SELECTOR_WORKFLOW_POLICY_FINGERPRINT = "safe-policy:selector-workflow-preview";
+const SELECTOR_WORKFLOW_SOURCE_FINGERPRINT = "safe-source:selector-workflow-preview";
+const SELECTOR_WORKFLOW_REFERENCE_OPTIONS_FINGERPRINT = "safe-reference-options:selector-workflow-preview";
+const SELECTOR_WORKFLOW_STATE_FINGERPRINT = "safe-selector-state:selector-workflow-preview";
 
 const TIMELINE_STATUS_ALIASES = Object.freeze({
   available: "live",
@@ -4055,7 +4066,525 @@ function createProductSurfaceParityLock({
   };
 }
 
-function createDbBackedSelectorSurface(selectorReferenceStatus = {}, local = {}, selectorState, onLocalStateChange, snapshots = {}) {
+function selectorWorkflowString(value, fallback = "none") {
+  const text = String(value ?? "").trim();
+  if (!text) return fallback;
+  return text.replace(/[^0-9A-Za-z _./:-]+/g, " ").replace(/\s+/g, " ").slice(0, 180) || fallback;
+}
+
+function selectorWorkflowToken(value, fallback = "unresolved") {
+  return selectorWorkflowString(value, fallback)
+    .toLowerCase()
+    .replace(/[\s_]+/g, "-")
+    .replace(/[^0-9a-z_.:-]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-+|-+$/g, "") || fallback;
+}
+
+function selectorWorkflowCount(value) {
+  const number = Number(value);
+  if (!Number.isFinite(number) || number < 0) return 0;
+  return Math.round(number);
+}
+
+function selectorWorkflowRows(rows = []) {
+  return Array.isArray(rows) && rows.length ? rows : [["status", "not available"]];
+}
+
+function selectorWorkflowSelectedValuesSummary(local = {}, selectionTruthSummary = {}) {
+  const contract = local.selectorStateContract || {};
+  const effective = selectionEntries(contract.effectiveSelection || {});
+  const selectedValues = effective.slice(0, 40).map((entry) => ({
+    fieldKey: selectorWorkflowToken(entry.fieldKey || entry.label, "field"),
+    label: selectorWorkflowString(entry.label || entry.fieldKey, "Field"),
+    valueToken: selectorWorkflowToken(entry.value || entry.valueLabel, "unresolved"),
+    valueLabel: selectorWorkflowString(entry.valueLabel || entry.value, "unresolved"),
+    provenance: selectorWorkflowString(entry.provenance || entry.kind || "preview", "preview"),
+    safeLabelOnly: true,
+    rawRowsReturned: false,
+  }));
+  return {
+    readOnly: true,
+    previewOnly: true,
+    diagnosticOnly: true,
+    safeSummaryOnly: true,
+    status: selectedValues.length ? "safe-selected-values-visible" : "safe-selected-values-empty",
+    selectedValueCount: selectedValues.length,
+    referenceValueCount: selectorWorkflowCount(selectionTruthSummary.selectedItemCount ?? selectedValues.length),
+    manualConstraintCount: countObjectFields(contract.manualConstraints || {}),
+    autoConsequenceCount: countObjectFields(contract.autoConsequences || {}),
+    defaultPreviewCount: countObjectFields(contract.defaultPreviewSelections || {}),
+    selectedValues,
+    rawSelectorPayloadReturned: false,
+    rawProductRowsReturned: false,
+    rawUsersReturned: false,
+    rawCrmReturned: false,
+    rawContactsReturned: false,
+    privatePathsReturned: false,
+    credentialsReturned: false,
+  };
+}
+
+function selectorWorkflowReferenceSummary(selectorReferenceStatus = {}, sourceReady = false, referenceOptionSourceCoverage = {}) {
+  const fields = dbOptionsFields(selectorReferenceStatus);
+  const sections = dbWorkflowSections(selectorReferenceStatus);
+  const coverage = referenceOptionSourceCoverage && typeof referenceOptionSourceCoverage === "object" && !Array.isArray(referenceOptionSourceCoverage)
+    ? referenceOptionSourceCoverage
+    : {};
+  return {
+    readOnly: true,
+    previewOnly: true,
+    diagnosticOnly: true,
+    safeSummaryOnly: true,
+    referenceOptionsReady: sourceReady === true,
+    sourceReady: sourceReady === true,
+    optionFieldCount: fields.length,
+    workflowSectionCount: sections.length,
+    sourceBackedFieldCount: selectorWorkflowCount(coverage.sourceBackedFieldCount),
+    futureMappedFieldCount: selectorWorkflowCount(coverage.futureMappedFieldCount),
+    rawProductRowsReturned: false,
+    rawSelectorPayloadReturned: false,
+    rawUsersReturned: false,
+    rawCrmReturned: false,
+    rawContactsReturned: false,
+    privatePathsReturned: false,
+    credentialsReturned: false,
+  };
+}
+
+function selectorWorkflowCompatibilitySummary(local = {}, workflowSections = [], blockedItems = []) {
+  const diagnostics = local.selectorStateContract?.compatibilityDiagnostics || {};
+  const warnings = Array.isArray(diagnostics.warnings) ? diagnostics.warnings : [];
+  const blocked = Array.isArray(blockedItems) ? blockedItems : [];
+  const hasIndirect = selectionEntries(local.selectorStateContract?.effectiveSelection || {})
+    .some((entry) => /indirect|uplight/i.test(String(entry.fieldKey || entry.label || "")) && String(entry.value || "").trim());
+  return {
+    readOnly: true,
+    previewOnly: true,
+    diagnosticOnly: true,
+    mountCompatibilityReady: !warnings.length && !blocked.length,
+    mountStatus: blocked.length ? "blocked" : warnings.length ? "review-required" : "compatible",
+    opticCompatibilityStatus: blocked.length ? "blocked" : "compatible",
+    uplightCompatibilityStatus: hasIndirect ? "review-current-selection" : "not-required",
+    warningCount: warnings.length,
+    blockedCount: blocked.length,
+    workflowSectionCount: Array.isArray(workflowSections) ? workflowSections.length : 0,
+    rawProductRowsReturned: false,
+    rawSelectorPayloadReturned: false,
+  };
+}
+
+function selectorWorkflowFinishCascadeSummary(local = {}) {
+  const effective = local.selectorStateContract?.effectiveSelection || {};
+  const readField = (fieldKey, fallback = "unresolved") => {
+    const item = effective[fieldKey] || {};
+    return selectorWorkflowString(item.valueLabel || item.value, fallback);
+  };
+  const body = readField("bodyFinish", "unresolved");
+  const cover = readField("diffuserFinish", body);
+  const end = readField("trimFinish", body);
+  const flex = readField("trimFinish", body);
+  const ready = body !== "unresolved" && cover !== "unresolved" && end !== "unresolved" && flex !== "unresolved";
+  return {
+    readOnly: true,
+    previewOnly: true,
+    diagnosticOnly: true,
+    finishCascadeReady: ready,
+    body: { value: selectorWorkflowToken(body), label: body, provenance: "effective-selection", resolved: body !== "unresolved" },
+    cover: { value: selectorWorkflowToken(cover), label: cover, provenance: cover === body ? "inherited" : "effective-selection", resolved: cover !== "unresolved" },
+    end: { value: selectorWorkflowToken(end), label: end, provenance: end === body ? "inherited" : "effective-selection", resolved: end !== "unresolved" },
+    flex: { value: selectorWorkflowToken(flex), label: flex, provenance: flex === body ? "inherited" : "effective-selection", resolved: flex !== "unresolved" },
+    rawProductRowsReturned: false,
+    rawSelectorPayloadReturned: false,
+  };
+}
+
+function selectorWorkflowTimelineStatusSummary(timelineFiltering = {}) {
+  const filtered = selectorWorkflowCount(timelineFiltering.filteredItemCount);
+  const outOfWindow = selectorWorkflowCount(timelineFiltering.outOfWindowItemCount);
+  const warnings = Array.isArray(timelineFiltering.warnings) ? timelineFiltering.warnings : [];
+  return {
+    readOnly: true,
+    previewOnly: true,
+    diagnosticOnly: true,
+    timelineStatusReady: filtered === 0 && outOfWindow === 0,
+    timelineGateReady: filtered === 0 && outOfWindow === 0,
+    status: selectorWorkflowString(timelineFiltering.status, "safe-timeline-gate"),
+    gate: filtered || outOfWindow ? "blocked" : warnings.length ? "review-required" : "allowed",
+    filteredItemCount: filtered,
+    outOfWindowItemCount: outOfWindow,
+    warningCount: warnings.length,
+    rawProductRowsReturned: false,
+    rawSelectorPayloadReturned: false,
+  };
+}
+
+function selectorWorkflowStage({ id, label, ready = false, blocked = false, reviewRequired = false, blocker = null, reason = "preview-only diagnostic stage", safeCounts = {}, rows = [] }) {
+  const status = ready ? "ready" : blocked ? "blocked" : reviewRequired ? "review-required" : "blocked";
+  return {
+    id,
+    label,
+    status,
+    ready: ready === true,
+    blocked: status === "blocked",
+    reviewRequired: status === "review-required",
+    blocker: blocker || (status === "blocked" ? `${id}-not-ready` : null),
+    reason: selectorWorkflowString(reason, "preview-only diagnostic stage"),
+    previewOnly: true,
+    diagnosticOnly: true,
+    safeSummaryOnly: true,
+    safeCounts,
+    rows: selectorWorkflowRows(rows),
+    rawRowsReturned: false,
+    rawSelectorPayloadReturned: false,
+    rawEnginePayloadReturned: false,
+    rawEngineResultReturned: false,
+    rawUsersReturned: false,
+    rawCrmReturned: false,
+    rawContactsReturned: false,
+    privatePathsReturned: false,
+    credentialsReturned: false,
+    generated: false,
+  };
+}
+
+function selectorWorkflowDownstreamStage(id, label, summary = {}, readyKey = "ok") {
+  const ready = summary?.[readyKey] === true || (readyKey === "ok" && summary?.ok === true);
+  return {
+    id,
+    label,
+    status: ready ? "ready" : "blocked",
+    ready,
+    blocked: !ready,
+    blocker: summary?.blocker || (!ready ? `${id}-not-ready` : null),
+    previewOnly: true,
+    diagnosticOnly: true,
+    safeSummaryOnly: true,
+    fingerprint: summary?.sealedCandidateAssemblyPreviewFingerprint
+      || summary?.runTableDomainOutputScaffoldFingerprint
+      || summary?.selectedResultHandoffScaffoldFingerprint
+      || summary?.iesHandoffReadinessScaffoldFingerprint
+      || null,
+    rawRowsReturned: false,
+    rawSelectorPayloadReturned: false,
+    rawEnginePayloadReturned: false,
+    rawEngineResultReturned: false,
+    exactElectricalValuesReturned: false,
+    generated: false,
+  };
+}
+
+function selectorWorkflowProductionActions() {
+  return [
+    ["runEngine", "Run Engine disabled"],
+    ["runTableGeneration", "RunTable generation disabled"],
+    ["iesGeneration", "IES generation disabled"],
+    ["selectedResultPersistence", "selected-result persistence disabled"],
+    ["hubSpotProjectWrites", "HubSpot/project writes disabled"],
+  ].map(([id, label]) => ({
+    id,
+    label,
+    enabled: false,
+    disabled: true,
+    reason: "Selector workflow is preview-only and diagnostic-only in this slice.",
+  }));
+}
+
+function createSelectorWorkflowPreview({
+  local = {},
+  selectorReferenceStatus = {},
+  sourceReady = false,
+  referenceOptionSourceCoverage = {},
+  workflowSections = [],
+  blockedItems = [],
+  selectionTruthSummary = {},
+  selectedEngineResultHandoff = {},
+  timelineFiltering = {},
+  runIntakePreview = {},
+  runAccessoryPlacementPreview = {},
+  specialPartsEntitlementPreview = {},
+} = {}) {
+  const fingerprints = {
+    policyFingerprint: SELECTOR_WORKFLOW_POLICY_FINGERPRINT,
+    sourceFingerprint: SELECTOR_WORKFLOW_SOURCE_FINGERPRINT,
+  };
+  const safeSelectedValuesSummary = selectorWorkflowSelectedValuesSummary(local, selectionTruthSummary);
+  const selectorReferenceOptionsSummary = selectorWorkflowReferenceSummary(selectorReferenceStatus, sourceReady, referenceOptionSourceCoverage);
+  const mountCompatibilitySummary = selectorWorkflowCompatibilitySummary(local, workflowSections, blockedItems);
+  const finishCascadeSummary = selectorWorkflowFinishCascadeSummary(local);
+  const timelineStatusSummary = selectorWorkflowTimelineStatusSummary(timelineFiltering);
+
+  const sealedCandidateAssemblyPreviewSummary = buildRuntimeSealedCandidateAssemblyPreviewSummary({
+    ...fingerprints,
+    selectorSelectionSummary: safeSelectedValuesSummary,
+    selectorRunIntakePreviewSummary: runIntakePreview,
+    selectorRunAccessoryPlacementPreviewSummary: runAccessoryPlacementPreview,
+    selectorSpecialPartsEntitlementPreviewSummary: specialPartsEntitlementPreview,
+    timelineGateSummary: timelineStatusSummary,
+    finishCascadeSummary,
+    mountCompatibilitySummary,
+  });
+  const safeDraftProjectEnvelopePreviewSummary = buildSelectorSafeDraftProjectEnvelopePreview({
+    ...fingerprints,
+    safeSelectedValuesSummary,
+    selectorReferenceOptionsSummary,
+    finishCascadeSummary,
+    timelineStatusSummary,
+    runIntakePreviewSummary: runIntakePreview,
+    runAccessoryPlacementIntentPreviewSummary: runAccessoryPlacementPreview,
+    specialPartsEntitlementPreviewSummary: specialPartsEntitlementPreview,
+    sealedCandidateAssemblyPreviewSummary,
+    selectedResultProjectionSummary: selectedEngineResultHandoff.selectedResultProjection || null,
+    projectIntentContext: {
+      projectIntentRef: "safe-selector-workflow-preview-project-intent",
+      projectLabel: "Selector workflow preview",
+      clientLabel: "redacted",
+      siteLabel: "redacted",
+      status: "draft-intent-preview-only",
+    },
+    safeWorkspaceContext: {
+      displayRole: "redacted",
+      identityState: "redacted",
+      safeProjectRef: "safe-selector-workflow-preview-project-intent",
+    },
+  });
+  const safeHydrateValidationPreviewSummary = buildSelectorSafeHydrateValidationPreview({
+    safeDraftProjectEnvelopePreviewSummary,
+    expectedPolicyFingerprint: fingerprints.policyFingerprint,
+    expectedSourceFingerprint: fingerprints.sourceFingerprint,
+    currentReferenceOptionsFingerprint: SELECTOR_WORKFLOW_REFERENCE_OPTIONS_FINGERPRINT,
+    currentSelectorStateFingerprint: SELECTOR_WORKFLOW_STATE_FINGERPRINT,
+  });
+  const runTableDomainOutputScaffoldSummary = buildRuntimeRunTableDomainOutputScaffoldSummary({
+    ...fingerprints,
+    sealedCandidateAssemblyPreviewSummary,
+  });
+  const selectedResultHandoffScaffoldSummary = buildRuntimeSelectedResultHandoffScaffoldSummary({
+    ...fingerprints,
+    sealedCandidateAssemblyPreviewSummary,
+    runTableDomainOutputScaffoldSummary,
+    selectedResultProjectionSummary: selectedEngineResultHandoff.selectedResultProjection || null,
+  });
+  const iesHandoffReadinessScaffoldSummary = buildRuntimeIesHandoffReadinessScaffoldSummary({
+    ...fingerprints,
+    selectedResultHandoffScaffoldSummary,
+    runTableDomainOutputScaffoldSummary,
+    sealedCandidateAssemblyPreviewSummary,
+    selectedResultProjectionSummary: selectedEngineResultHandoff.selectedResultProjection || null,
+    safeDraftProjectEnvelopePreviewSummary,
+  });
+  const controlledRealSourceEvidenceStatus = {
+    id: "controlled-real-source-evidence",
+    label: "Controlled real-source evidence status",
+    status: "diagnostic-only-available-not-invoked",
+    ready: false,
+    helperAvailable: true,
+    previewOnly: true,
+    diagnosticOnly: true,
+    runtimeDataRead: false,
+    runtimeDataMutated: false,
+    donorEngineInvoked: false,
+    rawRowsReturned: false,
+    rawPayloadsReturned: false,
+    reason: "Controlled real-source evidence probe is surfaced as availability status only; Selector UI does not invoke it.",
+  };
+
+  const selectedReferenceReady = safeSelectedValuesSummary.selectedValueCount > 0 && selectorReferenceOptionsSummary.referenceOptionsReady === true;
+  const stageSummaries = [
+    selectorWorkflowStage({
+      id: "selected-reference-values",
+      label: "Selected/reference values",
+      ready: selectedReferenceReady,
+      reviewRequired: !selectedReferenceReady,
+      reason: selectedReferenceReady ? "safe selected and reference values are available" : "selected values are visible but reference source readiness needs review",
+      safeCounts: {
+        selectedValueCount: safeSelectedValuesSummary.selectedValueCount,
+        optionFieldCount: selectorReferenceOptionsSummary.optionFieldCount,
+        workflowSectionCount: selectorReferenceOptionsSummary.workflowSectionCount,
+      },
+      rows: [["selected values", safeSelectedValuesSummary.selectedValueCount], ["reference options ready", boolString(selectorReferenceOptionsSummary.referenceOptionsReady)]],
+    }),
+    selectorWorkflowStage({
+      id: "mount-uplight-compatibility",
+      label: "Mount/uplight compatibility",
+      ready: mountCompatibilitySummary.mountCompatibilityReady,
+      reviewRequired: !mountCompatibilitySummary.mountCompatibilityReady,
+      reason: mountCompatibilitySummary.mountStatus,
+      safeCounts: { warningCount: mountCompatibilitySummary.warningCount, blockedCount: mountCompatibilitySummary.blockedCount },
+      rows: [["mount status", mountCompatibilitySummary.mountStatus], ["uplight status", mountCompatibilitySummary.uplightCompatibilityStatus]],
+    }),
+    selectorWorkflowStage({
+      id: "finish-cascade",
+      label: "Finish cascade",
+      ready: finishCascadeSummary.finishCascadeReady,
+      reviewRequired: !finishCascadeSummary.finishCascadeReady,
+      reason: finishCascadeSummary.finishCascadeReady ? "effective finish cascade resolved" : "finish cascade requires review",
+      safeCounts: { resolvedFinishCount: [finishCascadeSummary.body, finishCascadeSummary.cover, finishCascadeSummary.end, finishCascadeSummary.flex].filter((item) => item.resolved).length },
+      rows: [["body", finishCascadeSummary.body.label], ["cover", finishCascadeSummary.cover.label], ["end", finishCascadeSummary.end.label], ["flex", finishCascadeSummary.flex.label]],
+    }),
+    selectorWorkflowStage({
+      id: "timeline-status-gate",
+      label: "Timeline/status gate",
+      ready: timelineStatusSummary.timelineGateReady,
+      blocked: timelineStatusSummary.gate === "blocked",
+      reviewRequired: timelineStatusSummary.gate !== "allowed" && timelineStatusSummary.gate !== "blocked",
+      reason: timelineStatusSummary.gate,
+      safeCounts: { filteredItemCount: timelineStatusSummary.filteredItemCount, outOfWindowItemCount: timelineStatusSummary.outOfWindowItemCount, warningCount: timelineStatusSummary.warningCount },
+      rows: [["status", timelineStatusSummary.status], ["gate", timelineStatusSummary.gate]],
+    }),
+    selectorWorkflowStage({
+      id: "run-intake-preview",
+      label: "Run intake preview",
+      ready: runIntakePreview.runIntakePreviewReady === true,
+      blocked: runIntakePreview.runIntakePreviewReady !== true,
+      reason: runIntakePreview.runIntakePreviewReady === true ? "safe run intake captured" : runIntakePreview.blocker || "run intake incomplete",
+      safeCounts: { runCount: selectorWorkflowCount(runIntakePreview.runCount), totalQuantity: selectorWorkflowCount(runIntakePreview.totalQuantity), incompleteRunCount: selectorWorkflowCount(runIntakePreview.incompleteRunCount) },
+      rows: runIntakePreview.summaryRows,
+    }),
+    selectorWorkflowStage({
+      id: "accessory-placement-intent-preview",
+      label: "Accessory placement intent preview",
+      ready: runAccessoryPlacementPreview.runAccessoryPlacementPreviewReady === true,
+      blocked: runAccessoryPlacementPreview.runAccessoryPlacementPreviewReady !== true,
+      reason: runAccessoryPlacementPreview.runAccessoryPlacementPreviewReady === true ? "safe accessory intent captured" : runAccessoryPlacementPreview.blocker || "accessory placement intent incomplete",
+      safeCounts: { accessoryIntentCount: selectorWorkflowCount(runAccessoryPlacementPreview.accessoryIntentCount), unresolvedAccessoryIntentCount: selectorWorkflowCount(runAccessoryPlacementPreview.unresolvedAccessoryIntentCount) },
+      rows: runAccessoryPlacementPreview.summaryRows,
+    }),
+    selectorWorkflowStage({
+      id: "special-parts-entitlement-preview",
+      label: "Special-parts entitlement preview",
+      ready: specialPartsEntitlementPreview.specialPartsEntitlementPreviewReady === true,
+      reviewRequired: selectorWorkflowCount(specialPartsEntitlementPreview.reviewRequiredCount) > 0,
+      reason: specialPartsEntitlementPreview.entitlementStatus || "entitlement preview unavailable",
+      safeCounts: { redactedEntitlementCount: selectorWorkflowCount(specialPartsEntitlementPreview.redactedEntitlementCount), reviewRequiredCount: selectorWorkflowCount(specialPartsEntitlementPreview.reviewRequiredCount) },
+      rows: specialPartsEntitlementPreview.summaryRows,
+    }),
+    selectorWorkflowStage({
+      id: "safe-draft-project-envelope-preview",
+      label: "Safe draft/project envelope preview",
+      ready: safeDraftProjectEnvelopePreviewSummary.safeDraftProjectEnvelopePreviewReady === true,
+      blocked: safeDraftProjectEnvelopePreviewSummary.safeDraftProjectEnvelopePreviewReady !== true,
+      blocker: safeDraftProjectEnvelopePreviewSummary.blocker,
+      reason: safeDraftProjectEnvelopePreviewSummary.blocker || "safe draft envelope preview ready",
+      safeCounts: { envelopeReady: safeDraftProjectEnvelopePreviewSummary.safeDraftProjectEnvelopePreviewReady === true ? 1 : 0 },
+      rows: [["state", safeDraftProjectEnvelopePreviewSummary.state], ["blocker", safeDraftProjectEnvelopePreviewSummary.blocker || "none"]],
+    }),
+    selectorWorkflowStage({
+      id: "safe-hydrate-validation-preview",
+      label: "Safe hydrate validation preview",
+      ready: safeHydrateValidationPreviewSummary.hydrateValidationPreviewReady === true,
+      blocked: safeHydrateValidationPreviewSummary.hydrateValidationPreviewReady !== true,
+      blocker: safeHydrateValidationPreviewSummary.blocker,
+      reason: safeHydrateValidationPreviewSummary.blocker || "safe hydrate validation ready",
+      safeCounts: { hydrateReady: safeHydrateValidationPreviewSummary.hydrateValidationPreviewReady === true ? 1 : 0 },
+      rows: [["state", safeHydrateValidationPreviewSummary.state], ["blocker", safeHydrateValidationPreviewSummary.blocker || "none"]],
+    }),
+  ];
+
+  const downstreamStages = [
+    selectorWorkflowDownstreamStage("sealed-candidate-assembly", "Sealed candidate assembly readiness", sealedCandidateAssemblyPreviewSummary, "sealedCandidateAssemblyPreviewReady"),
+    selectorWorkflowDownstreamStage("runtable-domain", "RunTable domain readiness", runTableDomainOutputScaffoldSummary, "runTableDomainOutputScaffoldReady"),
+    selectorWorkflowDownstreamStage("selected-result-handoff", "Selected-result handoff readiness", selectedResultHandoffScaffoldSummary, "selectedResultHandoffScaffoldReady"),
+    selectorWorkflowDownstreamStage("ies-handoff", "IES handoff readiness", iesHandoffReadinessScaffoldSummary, "iesHandoffReadinessScaffoldReady"),
+    controlledRealSourceEvidenceStatus,
+  ];
+  const blockedStages = stageSummaries.filter((stage) => stage.blocked);
+  const reviewStages = stageSummaries.filter((stage) => stage.reviewRequired);
+  const disabledProductionActions = selectorWorkflowProductionActions();
+  const downstreamReadinessSummary = {
+    previewOnly: true,
+    diagnosticOnly: true,
+    safeSummaryOnly: true,
+    stages: downstreamStages,
+    sealedCandidateAssemblyPreviewSummary,
+    runTableDomainOutputScaffoldSummary,
+    selectedResultHandoffScaffoldSummary,
+    iesHandoffReadinessScaffoldSummary,
+    controlledRealSourceEvidenceStatus,
+    productionActions: disabledProductionActions,
+    runEngineEnabled: false,
+    runTableGenerationEnabled: false,
+    iesGenerationEnabled: false,
+    selectedResultPersistenceEnabled: false,
+    hubSpotProjectWritesEnabled: false,
+    donorEngineInvoked: false,
+    runtimeDataMutated: false,
+    selectedResultPersisted: false,
+    runTableGenerated: false,
+    iesGenerated: false,
+    routesAdded: false,
+    postEndpointsAdded: false,
+  };
+  const blockedSummary = {
+    blocked: blockedStages.length > 0 || downstreamStages.some((stage) => stage.blocked),
+    blockedStageCount: blockedStages.length,
+    reviewRequiredStageCount: reviewStages.length,
+    downstreamBlockedStageCount: downstreamStages.filter((stage) => stage.blocked).length,
+    blockers: [...blockedStages.map((stage) => stage.blocker).filter(Boolean), ...downstreamStages.map((stage) => stage.blocker).filter(Boolean)],
+    runEngineDisabled: true,
+    runTableGenerationDisabled: true,
+    iesGenerationDisabled: true,
+    selectedResultPersistenceDisabled: true,
+    hubSpotProjectWritesDisabled: true,
+  };
+
+  return {
+    title: "Selector workflow",
+    status: blockedSummary.blocked ? "blocked" : reviewStages.length ? "review-required" : "ready",
+    selectorWorkflowPreviewReady: stageSummaries.every((stage) => stage.ready) && downstreamStages.every((stage) => stage.ready),
+    previewOnly: true,
+    diagnosticOnly: true,
+    safeSummaryOnly: true,
+    policyFingerprint: fingerprints.policyFingerprint,
+    sourceFingerprint: fingerprints.sourceFingerprint,
+    selectedValuesSummary: safeSelectedValuesSummary,
+    selectorReferenceOptionsSummary,
+    mountCompatibilitySummary,
+    finishCascadeSummary,
+    timelineStatusSummary,
+    runIntakePreviewSummary: runIntakePreview,
+    runAccessoryPlacementPreviewSummary: runAccessoryPlacementPreview,
+    specialPartsEntitlementPreviewSummary: specialPartsEntitlementPreview,
+    safeDraftProjectEnvelopePreviewSummary,
+    safeHydrateValidationPreviewSummary,
+    stageSummaries,
+    selectorWorkflowStageSummaries: stageSummaries,
+    blockedSummary,
+    selectorWorkflowBlockedSummary: blockedSummary,
+    downstreamReadinessSummary,
+    selectorDownstreamReadinessSummary: downstreamReadinessSummary,
+    disabledProductionActions,
+    markers: ["preview-only", "diagnostic-only", "safe summaries only", "production actions disabled"],
+    unsafeOutputsBlocked: {
+      rawRowsPayloadsPrivateDataExposed: false,
+      rawProductRowsReturned: false,
+      rawSelectorPayloadReturned: false,
+      rawEnginePayloadReturned: false,
+      rawEngineResultReturned: false,
+      rawUsersReturned: false,
+      rawCrmReturned: false,
+      rawContactsReturned: false,
+      privatePathsReturned: false,
+      credentialsReturned: false,
+      exactElectricalValuesReturned: false,
+      rawIesContentReturned: false,
+      rawPhotometryReturned: false,
+      candelaArraysReturned: false,
+      base64ArtifactsReturned: false,
+      donorEngineInvoked: false,
+      runtimeDataMutated: false,
+      selectedResultPersisted: false,
+      runTableGenerated: false,
+      iesGenerated: false,
+      hubSpotWriteEnabled: false,
+      projectWriteEnabled: false,
+      routesAdded: false,
+      postEndpointsAdded: false,
+    },
+  };
+}
+
+function createDbBackedSelectorSurface(selectorReferenceStatus = {}, local = {}, selectorState, onLocalStateChange, snapshots = {}, workflowContext = {}) {
   const payload = dbOptionsPayload(selectorReferenceStatus);
   const sourceReady = dbOptionsSourceReady(selectorReferenceStatus);
   const sourceReadiness = dbSourceReadinessPayload(selectorReferenceStatus);
@@ -4152,6 +4681,20 @@ function createDbBackedSelectorSurface(selectorReferenceStatus = {}, local = {},
     runs: local.runIntake?.runs || [],
     intents: local.runAccessoryPlacement?.intents || [],
   });
+  const selectorWorkflowPreview = createSelectorWorkflowPreview({
+    local,
+    selectorReferenceStatus,
+    sourceReady,
+    referenceOptionSourceCoverage,
+    workflowSections,
+    blockedItems,
+    selectionTruthSummary,
+    selectedEngineResultHandoff,
+    timelineFiltering: workflowContext.timelineFiltering || {},
+    specialPartsEntitlementPreview: workflowContext.specialPartsEntitlementPreview || {},
+    runIntakePreview,
+    runAccessoryPlacementPreview,
+  });
   const specBuildReadinessPreview = createSpecBuildReadinessPreview({
     sourceReady,
     sourceReadiness,
@@ -4238,6 +4781,11 @@ function createDbBackedSelectorSurface(selectorReferenceStatus = {}, local = {},
     runsWithAccessoryIntentCount: runAccessoryPlacementPreview.runsWithAccessoryIntentCount,
     unresolvedAccessoryIntentCount: runAccessoryPlacementPreview.unresolvedAccessoryIntentCount,
     safeRunAccessoryIntentSummaries: runAccessoryPlacementPreview.safeRunAccessoryIntentSummaries,
+    selectorWorkflowPreview,
+    selectorWorkflowPreviewReady: selectorWorkflowPreview.selectorWorkflowPreviewReady,
+    selectorWorkflowStageSummaries: selectorWorkflowPreview.stageSummaries,
+    selectorWorkflowBlockedSummary: selectorWorkflowPreview.blockedSummary,
+    selectorDownstreamReadinessSummary: selectorWorkflowPreview.downstreamReadinessSummary,
     accessoryReservationReady: false,
     enginePayloadReady: false,
     engineVerifyReady: false,
@@ -5185,13 +5733,22 @@ export function createSelectorViewModel({ adapter, selectorState, selectorRefere
     projectRequirementDate,
     timelineAccess,
   });
+  const selectorSurface = createDbBackedSelectorSurface(selectorReferenceStatus, local, selectorState, onLocalStateChange, snapshots, {
+    timelineFiltering,
+    specialPartsEntitlementPreview,
+  });
 
   return {
     moduleId: adapter.moduleId,
     phase: snapshots.diagnostics?.phase || "selector-fed-downstream-context-foundation",
     route: snapshots.route,
     local,
-    selectorSurface: createDbBackedSelectorSurface(selectorReferenceStatus, local, selectorState, onLocalStateChange, snapshots),
+    selectorSurface,
+    selectorWorkflowPreview: selectorSurface.selectorWorkflowPreview,
+    selectorWorkflowPreviewReady: selectorSurface.selectorWorkflowPreviewReady,
+    selectorWorkflowStageSummaries: selectorSurface.selectorWorkflowStageSummaries,
+    selectorWorkflowBlockedSummary: selectorSurface.selectorWorkflowBlockedSummary,
+    selectorDownstreamReadinessSummary: selectorSurface.selectorDownstreamReadinessSummary,
     expanderShell: createSelectorExpanderShell(local, selectorState, onLocalStateChange, selectorReferenceStatus),
     identity: {
       owner: identity.owner,
