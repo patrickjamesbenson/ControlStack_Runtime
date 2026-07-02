@@ -61,7 +61,21 @@ function validSnapshot(overrides = {}) {
         c1_pmax_w: 11.2,
       },
     ],
-    DRIVERS: [{ driver: "raw-driver-value-redacted-by-probe" }],
+    DRIVERS: [
+      {
+        model: "raw-driver-value-redacted-by-probe",
+        supply: "cc",
+        iout_min_mA: 250,
+        iout_max_mA: 700,
+        vout_min_v: 12,
+        vout_max_v: 54,
+        pout_min_w: 5,
+        pout_max_w: 60,
+        native_control_type: "DALI-2",
+        approved: "TRUE",
+        driver_util_filename: "driver_util_raw_driver_value_redacted_by_probe.json",
+      },
+    ],
     PURE_REF_STATE: [{ pure: "raw-pure-value-redacted-by-probe" }],
     SYSTEM_COMPONENTS: [{ component: "raw-component-value-redacted-by-probe" }],
     SYSTEM_BOM_DEFAULTS: [{ bom: "raw-bom-value-redacted-by-probe" }],
@@ -174,8 +188,18 @@ test("controlled real-source sealed evidence probe reaches safe sealed stages an
   assert.equal(summary.safeBoardFamilySummary.sourceBacked, true);
   assert.match(summary.safeBoardFamilySummary.boardFamilyProjectionFingerprint, /^safe-board-family-projection:/);
   assert.equal(summary.safeBoardFamilySummary.rawBoardRowsReturned, false);
+  assert.equal(summary.driverCandidateProjectionSummary.sourceBacked, true);
+  assert.equal(summary.driverCandidateProjectionSummary.driverCandidateProjectionReady, true);
+  assert.match(summary.driverCandidateProjectionSummary.driverCandidateProjectionFingerprint, /^safe-driver-candidate-projection:/);
+  assert.equal(summary.driverCandidateProjectionSummary.rawDriverRowsReturned, false);
+  assert.equal(summary.driverCandidateProjectionSummary.rawCurveRowsReturned, false);
+  assert.equal(summary.driverCandidateProjectionSummary.exactElectricalValuesReturned, false);
   assert.equal(summary.safeAccessoryPolicySummary.rawAccessoryRowsReturned, false);
+  assert.equal(summary.safeDriverCandidateProjectionSummary.sourceBacked, true);
+  assert.match(summary.safeDriverCandidateProjectionSummary.driverCandidateProjectionFingerprint, /^safe-driver-candidate-projection:/);
   assert.equal(summary.safeDriverCandidateProjectionSummary.rawDriverRowsReturned, false);
+  assert.equal(summary.safeDriverCandidateProjectionSummary.rawCurveRowsReturned, false);
+  assert.equal(summary.safeDriverCandidateProjectionSummary.exactElectricalValuesReturned, false);
   assert.equal(summary.safeCurveReferenceSummary.rawIesContentReturned, false);
   assert.equal(summary.safePhysicalPlacementRequirementSummary.rawCoordinatesReturned, false);
 
@@ -227,6 +251,7 @@ test("controlled real-source sealed evidence probe fingerprint is deterministic"
   assert.equal(first.sourceFingerprint, second.sourceFingerprint);
   assert.equal(first.policyFingerprint, second.policyFingerprint);
   assert.equal(first.boardFamilyProjectionSummary.boardFamilyProjectionFingerprint, second.boardFamilyProjectionSummary.boardFamilyProjectionFingerprint);
+  assert.equal(first.driverCandidateProjectionSummary.driverCandidateProjectionFingerprint, second.driverCandidateProjectionSummary.driverCandidateProjectionFingerprint);
   assert.deepEqual(first.stageReadinessSummary, second.stageReadinessSummary);
 });
 

@@ -1,6 +1,7 @@
 import { stableSha1 } from "./engineRunTableRuntimePolicyIndexKernel.js";
 import { loadRuntimeDataReadOnlySource } from "./runtimeDataReadOnlySourceAccessService.js";
 import { buildRuntimeSafeBoardFamilyProjectionSummary } from "./runtimeSafeBoardFamilyProjection.js";
+import { buildRuntimeSafeDriverCandidateProjectionSummary } from "./runtimeSafeDriverCandidateProjection.js";
 
 import { buildSelectorRunIntakePreview } from "../modules/cs-selector/selectorRunIntakePreview.js";
 import { buildSelectorRunAccessoryPlacementPreview } from "../modules/cs-selector/selectorRunAccessoryPlacementPreview.js";
@@ -164,6 +165,7 @@ function baseProbe(extra = {}) {
     safeRunIntentSummary: extra.safeRunIntentSummary || null,
     safeBoardFamilySummary: extra.safeBoardFamilySummary || null,
     boardFamilyProjectionSummary: extra.boardFamilyProjectionSummary || null,
+    driverCandidateProjectionSummary: extra.driverCandidateProjectionSummary || null,
     safeAccessoryPolicySummary: extra.safeAccessoryPolicySummary || null,
     safeDriverCandidateProjectionSummary: extra.safeDriverCandidateProjectionSummary || null,
     safePhysicalPlacementRequirementSummary: extra.safePhysicalPlacementRequirementSummary || null,
@@ -270,6 +272,19 @@ function buildSafeRealSourceProjection(sourceAccessSummary = {}) {
       sourceFingerprint,
     };
   }
+
+  const driverCandidateProjectionSummary = buildRuntimeSafeDriverCandidateProjectionSummary({ sourceAccessSummary });
+  if (driverCandidateProjectionSummary.ok !== true || driverCandidateProjectionSummary.driverCandidateProjectionReady !== true) {
+    return {
+      ok: false,
+      blocker: "missing-safe-driver-candidate-projection",
+      reason: "The active source did not expose a ready safe DRIVERS-derived driver-candidate projection.",
+      sourceFingerprint,
+      boardFamilyProjectionSummary,
+      driverCandidateProjectionSummary,
+    };
+  }
+
   if (missingTables.includes("ACCESSORIES")) {
     return {
       ok: false,
@@ -340,6 +355,7 @@ function buildSafeRealSourceProjection(sourceAccessSummary = {}) {
     },
     safeBoardFamilySummary: boardFamilyProjectionSummary.boardFamilySummary,
     boardFamilyProjectionSummary,
+    driverCandidateProjectionSummary,
     safeAccessoryPolicySummary: {
       readOnly: true,
       diagnosticOnly: true,
@@ -350,19 +366,7 @@ function buildSafeRealSourceProjection(sourceAccessSummary = {}) {
       reservationBand: "1000-1999mm",
       rawAccessoryRowsReturned: false,
     },
-    safeDriverCandidateProjectionSummary: {
-      readOnly: true,
-      diagnosticOnly: true,
-      safeSummaryOnly: true,
-      driverCandidateCountBand: safeCountBand(driverCount),
-      selectedDriverToken: "source-backed-driver-token",
-      utilisationBand: "near-target",
-      capacityBand: "high-headroom",
-      headroomBand: "high",
-      sourceFingerprint,
-      rawDriverRowsReturned: false,
-      exactElectricalValuesReturned: false,
-    },
+    safeDriverCandidateProjectionSummary: driverCandidateProjectionSummary.driverCandidateSummary,
     safePhysicalPlacementRequirementSummary: {
       readOnly: true,
       diagnosticOnly: true,
@@ -1426,6 +1430,7 @@ function finaliseEvidenceFingerprint(summary) {
     safeRunIntentSummary: summary.safeRunIntentSummary,
     safeBoardFamilySummary: summary.safeBoardFamilySummary,
     boardFamilyProjectionSummary: summary.boardFamilyProjectionSummary,
+    driverCandidateProjectionSummary: summary.driverCandidateProjectionSummary,
     safeAccessoryPolicySummary: summary.safeAccessoryPolicySummary,
     safeDriverCandidateProjectionSummary: summary.safeDriverCandidateProjectionSummary,
     safePhysicalPlacementRequirementSummary: summary.safePhysicalPlacementRequirementSummary,
@@ -1454,6 +1459,7 @@ export function buildControlledRealSourceSealedEvidenceProbeSummary(input = {}) 
         credentialsReturned: false,
       } : null,
       boardFamilyProjectionSummary: projection.boardFamilyProjectionSummary || null,
+      driverCandidateProjectionSummary: projection.driverCandidateProjectionSummary || null,
     });
     return {
       ...failed,
@@ -1471,6 +1477,7 @@ export function buildControlledRealSourceSealedEvidenceProbeSummary(input = {}) 
       safeRunIntentSummary: projection.safeRunIntentSummary,
       safeBoardFamilySummary: projection.safeBoardFamilySummary,
       boardFamilyProjectionSummary: projection.boardFamilyProjectionSummary,
+      driverCandidateProjectionSummary: projection.driverCandidateProjectionSummary,
       safeAccessoryPolicySummary: projection.safeAccessoryPolicySummary,
       safeDriverCandidateProjectionSummary: projection.safeDriverCandidateProjectionSummary,
       safePhysicalPlacementRequirementSummary: projection.safePhysicalPlacementRequirementSummary,
@@ -1496,6 +1503,7 @@ export function buildControlledRealSourceSealedEvidenceProbeSummary(input = {}) 
     safeRunIntentSummary: projection.safeRunIntentSummary,
     safeBoardFamilySummary: projection.safeBoardFamilySummary,
     boardFamilyProjectionSummary: projection.boardFamilyProjectionSummary,
+    driverCandidateProjectionSummary: projection.driverCandidateProjectionSummary,
     safeAccessoryPolicySummary: projection.safeAccessoryPolicySummary,
     safeDriverCandidateProjectionSummary: projection.safeDriverCandidateProjectionSummary,
     safePhysicalPlacementRequirementSummary: projection.safePhysicalPlacementRequirementSummary,
