@@ -44,6 +44,7 @@ RUNTIMEDATA_ROOT = Path(os.environ.get("CONTROLSTACK_RUNTIMEDATA_ROOT", DEFAULT_
 RUNTIMEDATA_AUTHORITY_REFERENCE_ROOT = RUNTIMEDATA_ROOT / "authority-reference"
 RUNTIMEDATA_ACTIVE_SOURCE_PATH = RUNTIMEDATA_AUTHORITY_REFERENCE_ROOT / "novondb.json"
 WEBHOOK_BASE_URL = os.environ.get("CONTROLSTACK_WEBHOOK_BASE_URL", "http://127.0.0.1:8787").rstrip("/")
+MCP_SERVER_NAME = os.environ.get("CONTROLSTACK_MCP_SERVER_NAME", "ControlStack Runtime")
 
 HTTP_HOST = os.environ.get("CONTROLSTACK_MCP_HOST", "127.0.0.1")
 HTTP_PORT = int(os.environ.get("CONTROLSTACK_MCP_PORT", "8000"))
@@ -53,11 +54,12 @@ logging.basicConfig(level=logging.INFO, stream=sys.stderr, format="[%(asctime)s]
 logger = logging.getLogger("runtime_controlstack_mcp")
 
 mcp = FastMCP(
-    "ControlStack Runtime",
+    MCP_SERVER_NAME,
     instructions=(
         "Use these tools for the configured local ControlStack roots only: repo and runtime. "
         "Never request or write paths outside the selected root. Donor-reference roots are read-only. "
         "A dedicated RuntimeData probe may read only the approved active source DB and returns redacted metadata/counts only. "
+        "Git staging, commit, and push actions are separately gated by environment toggles. "
         "Do not use arbitrary terminal execution."
     ),
     stateless_http=True,
@@ -103,6 +105,9 @@ def _env_bool(name: str, default: bool) -> bool:
 
 
 ENABLE_WRITE = _env_bool("CONTROLSTACK_ENABLE_WRITE", default=ACTIVE_TRANSPORT == "stdio")
+ENABLE_GIT_STAGE = _env_bool("CONTROLSTACK_ENABLE_GIT_STAGE", default=ENABLE_WRITE)
+ENABLE_GIT_COMMIT = _env_bool("CONTROLSTACK_ENABLE_GIT_COMMIT", default=False)
+ENABLE_GIT_PUSH = _env_bool("CONTROLSTACK_ENABLE_GIT_PUSH", default=False)
 
 
 def _root_label(root: str = "runtime") -> str:
@@ -138,6 +143,30 @@ def _require_runtime(root: str = "runtime") -> None:
 def _require_write_enabled() -> None:
     if not ENABLE_WRITE:
         raise PermissionError("Write tools are disabled. Set CONTROLSTACK_ENABLE_WRITE=1 to enable them.")
+
+
+def _require_git_stage_enabled() -> None:
+    _require_write_enabled()
+    if not ENABLE_GIT_STAGE:
+        raise PermissionError("Git staging is disabled. Set CONTROLSTACK_ENABLE_GIT_STAGE=1 to enable it.")
+
+
+def _require_git_commit_enabled() -> None:
+    _require_write_enabled()
+    if not ENABLE_GIT_COMMIT:
+        raise PermissionError("Git commit is disabled. Set CONTROLSTACK_ENABLE_GIT_COMMIT=1 to enable it.")
+
+
+def _require_git_push_enabled() -> None:
+    _require_write_enabled()
+    if not ENABLE_GIT_PUSH:
+        raise PermissionError("Git push is disabled. Set CONTROLSTACK_ENABLE_GIT_PUSH=1 to enable it.")
+
+
+def _require_remote_update_enabled() -> None:
+    _require_write_enabled()
+    if not ENABLE_GIT_PUSH:
+        raise PermissionError("Git remote update is disabled. Set CONTROLSTACK_ENABLE_GIT_PUSH=1 to enable it.")
 
 
 def _path_has_control_chars(value: str) -> bool:
@@ -1079,7 +1108,11 @@ def repo_info() -> dict[str, Any]:
         "http_port": HTTP_PORT,
         "http_path": HTTP_PATH,
         "webhook_base_url": WEBHOOK_BASE_URL,
+        "mcp_server_name": MCP_SERVER_NAME,
         "write_enabled": ENABLE_WRITE,
+        "git_stage_enabled": ENABLE_GIT_STAGE,
+        "git_commit_enabled": ENABLE_GIT_COMMIT,
+        "git_push_enabled": ENABLE_GIT_PUSH,
         "arbitrary_shell_execution": False,
         "allowed_roots": ["runtime", "repo", "donor"],
         "runtime_gate_command": FIXED_GATE_COMMAND,
@@ -1541,7 +1574,7 @@ def repo_git_stage(paths: list[str], root: str = "runtime", dry_run: bool = True
     git_result = None
     changed = False
     if accepted_paths and not dry_run:
-        _require_write_enabled()
+        _require_git_stage_enabled()
         git_result = _run_git(command_args, timeout_s=30, max_chars=50_000)
         changed = bool(git_result.get("ok"))
     status_preview = _run_git(["status", "--porcelain=v1", "-b", "--", *accepted_paths], max_chars=50_000) if accepted_paths else None
@@ -1557,7 +1590,7 @@ def repo_git_unstage(paths: list[str], root: str = "runtime", dry_run: bool = Tr
     git_result = None
     changed = False
     if accepted_paths and not dry_run:
-        _require_write_enabled()
+        _require_git_stage_enabled()
         git_result = _run_git(command_args, timeout_s=30, max_chars=50_000)
         changed = bool(git_result.get("ok"))
     status_preview = _run_git(["status", "--porcelain=v1", "-b", "--", *accepted_paths], max_chars=50_000) if accepted_paths else None
@@ -1606,7 +1639,7 @@ def repo_git_commit(message: str, root: str = "runtime") -> dict[str, Any]:
         return {"ok": False, "error": "no_staged_changes", "commit_hash": "", "stdout": "", "stderr": "Refusing commit because no files are staged.", "final_git_status": status}
     if not _gate_green():
         return {"ok": False, "error": "last_runtime_gate_not_green", "commit_hash": "", "stdout": "", "stderr": "Refusing commit because the last runtime gate result is not green.", "last_runtime_gate_result": LAST_RUNTIME_GATE_RESULT, "final_git_status": status}
-    _require_write_enabled()
+    _require_git_commit_enabled()
     commit = _run_git(["commit", "-m", message_clean], timeout_s=120, max_chars=100_000)
     commit_hash = ""
     if commit.get("ok"):
@@ -1620,7 +1653,7 @@ def repo_git_commit(message: str, root: str = "runtime") -> dict[str, Any]:
 def repo_git_push(root: str = "runtime") -> dict[str, Any]:
     """Push the current runtime branch to origin. No force push."""
     _require_runtime(root)
-    _require_write_enabled()
+    _require_remote_update_enabled()
     branch = _run_git(["rev-parse", "--abbrev-ref", "HEAD"], timeout_s=30, max_chars=2_000)
     branch_name = str(branch.get("stdout") or "").strip()
     if not branch.get("ok") or not branch_name or branch_name == "HEAD":
