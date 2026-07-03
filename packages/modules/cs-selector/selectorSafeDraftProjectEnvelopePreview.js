@@ -1,4 +1,4 @@
-import { stableSha1 } from "../../workspace-kernel/engineRunTableRuntimePolicyIndexKernel.js";
+import { stableSha1 } from "../../workspace-kernel/stableFingerprint.js";
 
 export const SELECTOR_SAFE_DRAFT_PROJECT_ENVELOPE_SCHEMA_ID = "selector_safe_draft_project_intent_envelope.v1-runtime";
 export const SELECTOR_SAFE_DRAFT_PROJECT_ENVELOPE_SCHEMA_VERSION = 1;

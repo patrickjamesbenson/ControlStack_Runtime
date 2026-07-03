@@ -1,4 +1,6 @@
-import { createHash } from "node:crypto";
+import { freezeForHash, stableSha1 } from "./stableFingerprint.js";
+
+export { freezeForHash, stableSha1 };
 
 export const ENGINE_RUNTABLE_RUNTIME_POLICY_INDEX_KERNEL_STATE = "runtime_policy_index_scaffold_only";
 
@@ -95,27 +97,6 @@ function isBlank(value) {
 
 function clonePlain(value) {
   return JSON.parse(JSON.stringify(value ?? null));
-}
-
-export function freezeForHash(value) {
-  if (value === null || value === undefined) return value;
-  if (["string", "number", "boolean"].includes(typeof value)) return value;
-  if (typeof value === "bigint") return String(value);
-  if (Buffer.isBuffer(value)) return value.toString("hex");
-  if (Array.isArray(value)) return value.map((entry) => freezeForHash(entry));
-  if (value instanceof Set) {
-    return [...value].map((entry) => freezeForHash(entry)).sort((a, b) => String(a).localeCompare(String(b)));
-  }
-  if (isPlainObject(value)) {
-    return Object.keys(value)
-      .sort((a, b) => String(a).localeCompare(String(b)))
-      .map((key) => [String(key), freezeForHash(value[key])]);
-  }
-  return String(value);
-}
-
-export function stableSha1(value) {
-  return createHash("sha1").update(JSON.stringify(freezeForHash(value))).digest("hex");
 }
 
 function safeDiagnosticToken(value, fallback = "unresolved") {
