@@ -124,7 +124,7 @@ function findTrueBlockedFlags(value, path = []) {
   if (typeof value !== "object") return [];
   return Object.entries(value).flatMap(([key, nested]) => {
     const nextPath = [...path, key];
-    const blocked = /(?:raw.*(?:Returned|Exposed)|donorEngineInvoked|runtimeDataMutated|selectedResultPersisted|runTableGenerated|iesGenerated|routesAdded|postEndpointsAdded|hubSpotWriteEnabled|projectWriteEnabled|exactElectricalValuesReturned|base64ArtifactsReturned|candelaArraysReturned|rawRowsPayloadsPrivateDataExposed)$/i.test(key)
+    const blocked = /(?:raw.*(?:Returned|Exposed)|donorEngineInvoked|runtimeDataMutated|selectedResultPersisted|runTableGenerated|iesGenerated|routesAdded|postEndpointsAdded|hubSpotWriteEnabled|projectWriteEnabled|exactElectricalValuesReturned|base64ArtifactsReturned|candelaArraysReturned|rawRowsPayloadsPrivateDataExposed|realDonorPayloadAssembled|exactPlacementCoordinatesReturned)$/i.test(key)
       && nested === true;
     return blocked ? [nextPath.join(".")] : findTrueBlockedFlags(nested, nextPath);
   });
@@ -179,10 +179,12 @@ test("downstream readiness is displayed but production actions remain disabled",
   const downstreamIds = downstream.stages.map((stage) => stage.id);
   const actions = actionMap(workflow);
   const evidence = downstream.controlledRealSourceEvidenceStatus;
+  const bridge = downstream.controlledDonorEngineVerifyBridgeSummary;
 
   assert.deepEqual(downstreamIds, [
     "sealed-candidate-assembly",
     "runtable-domain",
+    "controlled-donor-engine-verify-bridge",
     "selected-result-handoff",
     "ies-handoff",
     "controlled-real-source-evidence",
@@ -198,6 +200,17 @@ test("downstream readiness is displayed but production actions remain disabled",
   assert.equal(actions.get("selectedResultPersistence").label, "selected-result persistence disabled");
   assert.equal(actions.get("hubSpotProjectWrites").label, "HubSpot/project writes disabled");
   assert.equal(actions.get("runEngine").enabled, false);
+  assert.equal(bridge.ok, false);
+  assert.equal(bridge.bridgeReady, false);
+  assert.equal(bridge.blocker, "donor-engine-invocation-not-approved");
+  assert.equal(bridge.privateBridgeOnly, true);
+  assert.equal(bridge.diagnosticOnly, true);
+  assert.equal(bridge.safeSummaryOnly, true);
+  assert.equal(bridge.safetyFlags.donorEngineInvoked, false);
+  assert.equal(bridge.safetyFlags.realDonorPayloadAssembled, false);
+  assert.equal(bridge.safetyFlags.selectedResultPersisted, false);
+  assert.equal(bridge.safetyFlags.runTableGenerated, false);
+  assert.equal(bridge.safetyFlags.iesGenerated, false);
   assert.equal(evidence.status, "diagnostic-only-available-not-invoked");
   assert.equal(evidence.helperAvailable, true);
   assert.equal(evidence.runtimeDataRead, false);
@@ -222,6 +235,8 @@ test("workflow preview exposes no raw rows, payloads, USERS, CRM, private data, 
   assert.equal(unsafe.privatePathsReturned, false);
   assert.equal(unsafe.credentialsReturned, false);
   assert.equal(unsafe.exactElectricalValuesReturned, false);
+  assert.equal(unsafe.exactPlacementCoordinatesReturned, false);
+  assert.equal(unsafe.realDonorPayloadAssembled, false);
   assert.equal(unsafe.rawIesContentReturned, false);
   assert.equal(unsafe.rawPhotometryReturned, false);
   assert.equal(unsafe.candelaArraysReturned, false);
@@ -252,6 +267,9 @@ test("Selector view source renders the workflow panel and does not add routes or
   assert.match(view, /dataset\.controlledRealSourceEvidence = "status-only"/);
   assert.match(view, /dataset\.evidenceInvokedByUi = "false"/);
   assert.match(view, /Controlled real-source evidence is status-only and not invoked by the UI/);
+  assert.match(view, /dataset\.controlledDonorEngineVerifyBridge = "status-only"/);
+  assert.match(view, /Controlled donor Engine verify bridge/);
+  assert.match(view, /synthetic\/safe preview status is surfaced/);
   assert.match(view, /button\.disabled = true/);
   assert.match(view, /Run Engine disabled/);
   assert.match(view, /RunTable generation disabled/);

@@ -105,6 +105,7 @@ const EXPECTED_STAGE_NAMES = Object.freeze([
   "runtime-gate-d-validation-scaffold",
   "runtime-sealed-candidate-assembly-preview",
   "runtime-runtable-domain-output-scaffold",
+  "runtime-controlled-donor-engine-verify-bridge",
   "runtime-selected-result-handoff-scaffold",
   "selector-safe-draft-project-envelope-preview",
   "selector-safe-hydrate-validation-preview",
@@ -125,6 +126,8 @@ const FALSE_FLAGS = Object.freeze([
   "candelaArraysReturned",
   "base64ArtifactsReturned",
   "exactElectricalValuesReturned",
+  "exactPlacementCoordinatesReturned",
+  "realDonorPayloadAssembled",
   "rawUsersReturned",
   "rawCrmReturned",
   "rawContactsReturned",
@@ -217,7 +220,8 @@ test("controlled real-source sealed evidence probe reaches safe sealed stages an
   const stageNames = summary.stageReadinessSummary.map((stage) => stage.stage);
   assert.deepEqual(stageNames, [...EXPECTED_STAGE_NAMES]);
   const readyStages = summary.stageReadinessSummary.slice(0, 15);
-  const blockedStages = summary.stageReadinessSummary.slice(15);
+  const bridgeStage = summary.stageReadinessSummary[15];
+  const blockedStages = summary.stageReadinessSummary.slice(16);
   for (const stage of readyStages) {
     assert.equal(stage.reached, true, stage.stage);
     assert.equal(stage.ready, true, stage.stage);
@@ -225,6 +229,14 @@ test("controlled real-source sealed evidence probe reaches safe sealed stages an
     assert.equal(stage.rawPayloadReturned, false, stage.stage);
     assert.equal(stage.generated, false, stage.stage);
   }
+  assert.equal(bridgeStage.stage, "runtime-controlled-donor-engine-verify-bridge");
+  assert.equal(bridgeStage.reached, true);
+  assert.equal(bridgeStage.ready, false);
+  assert.equal(bridgeStage.blocker, "donor-engine-invocation-not-approved");
+  assert.match(bridgeStage.fingerprint, /^safe-controlled-donor-engine-verify-bridge:/);
+  assert.equal(bridgeStage.rawRowsReturned, false);
+  assert.equal(bridgeStage.rawPayloadReturned, false);
+  assert.equal(bridgeStage.generated, false);
   for (const stage of blockedStages) {
     assert.equal(stage.reached, false, stage.stage);
     assert.equal(stage.ready, false, stage.stage);
@@ -234,10 +246,32 @@ test("controlled real-source sealed evidence probe reaches safe sealed stages an
     assert.equal(stage.generated, false, stage.stage);
   }
 
+  const bridge = summary.controlledDonorEngineVerifyBridgeSummary;
+  assert.equal(bridge.ok, false);
+  assert.equal(bridge.bridgeReady, false);
+  assert.equal(bridge.blocker, "donor-engine-invocation-not-approved");
+  assert.equal(bridge.privateBridgeOnly, true);
+  assert.equal(bridge.diagnosticOnly, true);
+  assert.equal(bridge.safeSummaryOnly, true);
+  assert.equal(bridge.syntheticFixtureOnly, true);
+  assert.match(bridge.bridgeFingerprint, /^safe-controlled-donor-engine-verify-bridge:/);
+  assert.equal(bridge.safetyFlags.donorEngineInvoked, false);
+  assert.equal(bridge.safetyFlags.realDonorPayloadAssembled, false);
+  assert.equal(bridge.safetyFlags.runtimeDataMutated, false);
+  assert.equal(bridge.safetyFlags.selectedResultPersisted, false);
+  assert.equal(bridge.safetyFlags.runTableGenerated, false);
+  assert.equal(bridge.safetyFlags.iesGenerated, false);
+  assert.equal(bridge.safetyFlags.routesAdded, false);
+  assert.equal(bridge.safetyFlags.postEndpointsAdded, false);
+
   assert.equal(summary.sealedChainReadinessSummary.chainComposed, false);
   assert.equal(summary.sealedChainReadinessSummary.readyStageCount, 15);
   assert.equal(summary.sealedChainReadinessSummary.selectedResultSourceBodyAvailable, false);
   assert.equal(summary.sealedChainReadinessSummary.selectedResultSourceBodyBlocker, "donor-engine-invocation-not-approved");
+  assert.equal(summary.sealedChainReadinessSummary.controlledDonorEngineVerifyBridgeReady, false);
+  assert.equal(summary.sealedChainReadinessSummary.controlledDonorEngineVerifyBridgeBlocker, "donor-engine-invocation-not-approved");
+  assert.match(summary.sealedChainReadinessSummary.controlledDonorEngineVerifyBridgeFingerprint, /^safe-controlled-donor-engine-verify-bridge:/);
+  assert.equal(summary.sealedChainReadinessSummary.privateBridgeOnly, true);
   assert.equal(summary.sealedChainReadinessSummary.productionRunTableReady, false);
   assert.equal(summary.sealedChainReadinessSummary.iesGenerationReady, false);
   assert.equal(summary.sealedChainReadinessSummary.donorEngineReady, false);

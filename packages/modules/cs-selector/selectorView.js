@@ -1877,6 +1877,35 @@ function appendWorkflowEvidenceStatus(parent, evidence = {}) {
   parent.appendChild(group);
 }
 
+function appendWorkflowDonorBridgeStatus(parent, bridge = {}) {
+  const flags = bridge.safetyFlags && typeof bridge.safetyFlags === "object" ? bridge.safetyFlags : {};
+  const group = document.createElement("section");
+  group.className = "cs-selector-workflow-preview__evidence-status";
+  group.dataset.controlledDonorEngineVerifyBridge = "status-only";
+  group.dataset.donorEngineInvoked = bridge.donorEngineInvoked === true || flags.donorEngineInvoked === true ? "true" : "false";
+  group.dataset.realDonorPayloadAssembled = bridge.realDonorPayloadAssembled === true || flags.realDonorPayloadAssembled === true ? "true" : "false";
+  appendText(group, "h5", "Controlled donor Engine verify bridge", "cs-selector-workflow-preview__group-title");
+  appendText(group, "p", "Private bridge only: synthetic/safe preview status is surfaced while donor invocation remains blocked. No selected-result persistence, RunTable generation, or IES generation is enabled.", "cs-selector-workflow-preview__group-copy");
+  appendBadgeList(group, ["private bridge only", "synthetic/safe preview only", "donor invocation blocked", "no selected-result persistence", "no RunTable generation", "no IES generation"]);
+  appendDefinitionList(group, [
+    ["status", bridge.bridgeReady === true ? "ready" : "blocked"],
+    ["blocker", bridge.blocker || "donor-engine-invocation-not-approved"],
+    ["private bridge only", bridge.privateBridgeOnly === true || flags.privateBridgeOnly === true ? "true" : "false"],
+    ["diagnostic only", bridge.diagnosticOnly === true || flags.diagnosticOnly === true ? "true" : "false"],
+    ["safe summary only", bridge.safeSummaryOnly === true || flags.safeSummaryOnly === true ? "true" : "false"],
+    ["synthetic fixture only", bridge.syntheticFixtureOnly === true || flags.syntheticFixtureOnly === true ? "true" : "false"],
+    ["bridge fingerprint", bridge.bridgeFingerprint || "none"],
+    ["donor Engine invoked", bridge.donorEngineInvoked === true || flags.donorEngineInvoked === true ? "true" : "false"],
+    ["real donor payload assembled", bridge.realDonorPayloadAssembled === true || flags.realDonorPayloadAssembled === true ? "true" : "false"],
+    ["selected result persisted", bridge.selectedResultPersisted === true || flags.selectedResultPersisted === true ? "true" : "false"],
+    ["RunTable generated", bridge.runTableGenerated === true || flags.runTableGenerated === true ? "true" : "false"],
+    ["IES generated", bridge.iesGenerated === true || flags.iesGenerated === true ? "true" : "false"],
+    ["routes added", bridge.routesAdded === true || flags.routesAdded === true ? "true" : "false"],
+    ["POST endpoints added", bridge.postEndpointsAdded === true || flags.postEndpointsAdded === true ? "true" : "false"],
+  ]);
+  parent.appendChild(group);
+}
+
 function appendSelectorWorkflowPreview(parent, workflow = {}) {
   const downstream = workflow.downstreamReadinessSummary || {};
   const blocked = workflow.blockedSummary || {};
@@ -1926,6 +1955,7 @@ function appendSelectorWorkflowPreview(parent, workflow = {}) {
   );
   appendWorkflowDisabledActions(section, workflow.disabledProductionActions || downstream.productionActions);
   appendWorkflowEvidenceStatus(section, downstream.controlledRealSourceEvidenceStatus || {});
+  appendWorkflowDonorBridgeStatus(section, downstream.controlledDonorEngineVerifyBridgeSummary || {});
 
   appendSection(section, "Blocked production outputs", [
     ["Run Engine disabled", downstream.runEngineEnabled === true ? "false" : "true"],
@@ -1941,6 +1971,8 @@ function appendSelectorWorkflowPreview(parent, workflow = {}) {
     ["raw Engine result returned", unsafe.rawEngineResultReturned === true ? "true" : "false"],
     ["USERS/CRM/contact/private data returned", unsafe.rawUsersReturned === true || unsafe.rawCrmReturned === true || unsafe.rawContactsReturned === true || unsafe.privatePathsReturned === true ? "true" : "false"],
     ["exact electrical values returned", unsafe.exactElectricalValuesReturned === true ? "true" : "false"],
+    ["exact placement coordinates returned", unsafe.exactPlacementCoordinatesReturned === true ? "true" : "false"],
+    ["real donor payload assembled", unsafe.realDonorPayloadAssembled === true ? "true" : "false"],
     ["IES/candela/base64 artefacts returned", unsafe.rawIesContentReturned === true || unsafe.candelaArraysReturned === true || unsafe.base64ArtifactsReturned === true ? "true" : "false"],
     ["donor Engine invoked", unsafe.donorEngineInvoked === true ? "true" : "false"],
     ["RuntimeData mutated", unsafe.runtimeDataMutated === true ? "true" : "false"],

@@ -18,6 +18,7 @@ import { buildRuntimeEmergencyZonePickerFootholdSummary } from "../packages/work
 import { buildRuntimeGateDValidationScaffoldSummary } from "../packages/workspace-kernel/engineRunTableRuntimeGateDValidationScaffold.js";
 import { buildRuntimeSealedCandidateAssemblyPreviewSummary } from "../packages/workspace-kernel/engineRunTableSealedCandidateAssemblyPreview.js";
 import { buildRuntimeRunTableDomainOutputScaffoldSummary } from "../packages/workspace-kernel/engineRunTableRuntimeRunTableDomainOutputScaffold.js";
+import { buildRuntimeControlledDonorEngineVerifyBridgeSummary } from "../packages/workspace-kernel/engineRunTableControlledDonorEngineVerifyBridge.js";
 import { buildRuntimeSelectedResultHandoffScaffoldSummary } from "../packages/workspace-kernel/engineRunTableSelectedResultHandoffScaffold.js";
 import { buildRuntimeIesHandoffReadinessScaffoldSummary } from "../packages/workspace-kernel/engineRunTableIesHandoffReadinessScaffold.js";
 
@@ -39,6 +40,8 @@ const REQUIRED_FALSE_FLAGS = Object.freeze([
   "candelaArraysReturned",
   "base64ArtifactsReturned",
   "exactElectricalValuesReturned",
+  "exactPlacementCoordinatesReturned",
+  "realDonorPayloadAssembled",
   "donorEngineInvoked",
   "runtimeDataMutated",
   "selectedResultPersisted",
@@ -884,6 +887,12 @@ function composeSealedChainEvidenceFixture() {
   };
   const runTableDomainOutputScaffoldSummary = buildRuntimeRunTableDomainOutputScaffoldSummary(runTableDomainInput);
 
+  const controlledDonorEngineVerifyBridgeSummary = buildRuntimeControlledDonorEngineVerifyBridgeSummary({
+    ...fingerprints,
+    sealedCandidateAssemblyPreviewSummary,
+    runTableDomainOutputScaffoldSummary,
+  });
+
   const selectedResultProjection = selectedResultProjectionSummary(fingerprints);
   const safeSelectedResultSourceObject = safeSelectedResultSourceObjectSummary(fingerprints);
   const selectedResultHandoffInput = {
@@ -966,6 +975,7 @@ function composeSealedChainEvidenceFixture() {
     gateDValidationScaffoldSummary,
     sealedCandidateAssemblyPreviewSummary,
     runTableDomainOutputScaffoldSummary,
+    controlledDonorEngineVerifyBridgeSummary,
     selectedResultHandoffScaffoldSummary,
     safeDraftProjectEnvelopePreviewSummary,
     staleHydrateValidationSummary,
@@ -996,6 +1006,7 @@ function composeSealedChainEvidenceFixture() {
       gateD: gateDValidationScaffoldSummary.gateDValidationScaffoldFingerprint,
       sealedCandidateAssembly: sealedCandidateAssemblyPreviewSummary.sealedCandidateAssemblyPreviewFingerprint,
       runTableDomain: runTableDomainOutputScaffoldSummary.runTableDomainOutputScaffoldFingerprint,
+      controlledDonorEngineVerifyBridge: controlledDonorEngineVerifyBridgeSummary.bridgeFingerprint,
       selectedResultHandoff: selectedResultHandoffScaffoldSummary.selectedResultHandoffScaffoldFingerprint,
       draftProjectEnvelope: safeDraftProjectEnvelopePreviewSummary.envelopeFingerprint,
       hydrateValidation: hydrateValidationSummary.hydrateValidationPreviewFingerprint,
@@ -1029,6 +1040,18 @@ test("synthetic sealed-chain evidence fixture composes actual helper outputs end
   assertReady(stages.gateDValidationScaffoldSummary, "gateDScaffoldReady", "Gate D scaffold");
   assertReady(stages.sealedCandidateAssemblyPreviewSummary, "sealedCandidateAssemblyPreviewReady", "sealed candidate assembly");
   assertReady(stages.runTableDomainOutputScaffoldSummary, "runTableDomainOutputScaffoldReady", "RunTable domain output");
+  assert.equal(stages.controlledDonorEngineVerifyBridgeSummary.ok, false);
+  assert.equal(stages.controlledDonorEngineVerifyBridgeSummary.bridgeReady, false);
+  assert.equal(stages.controlledDonorEngineVerifyBridgeSummary.blocker, "donor-engine-invocation-not-approved");
+  assert.equal(stages.controlledDonorEngineVerifyBridgeSummary.privateBridgeOnly, true);
+  assert.equal(stages.controlledDonorEngineVerifyBridgeSummary.diagnosticOnly, true);
+  assert.equal(stages.controlledDonorEngineVerifyBridgeSummary.safeSummaryOnly, true);
+  assert.match(stages.controlledDonorEngineVerifyBridgeSummary.bridgeFingerprint, /^safe-controlled-donor-engine-verify-bridge:/);
+  assert.equal(stages.controlledDonorEngineVerifyBridgeSummary.safetyFlags.donorEngineInvoked, false);
+  assert.equal(stages.controlledDonorEngineVerifyBridgeSummary.safetyFlags.realDonorPayloadAssembled, false);
+  assert.equal(stages.controlledDonorEngineVerifyBridgeSummary.safetyFlags.selectedResultPersisted, false);
+  assert.equal(stages.controlledDonorEngineVerifyBridgeSummary.safetyFlags.runTableGenerated, false);
+  assert.equal(stages.controlledDonorEngineVerifyBridgeSummary.safetyFlags.iesGenerated, false);
   assertReady(stages.selectedResultHandoffScaffoldSummary, "selectedResultHandoffScaffoldReady", "selected-result handoff");
   assertReady(stages.safeDraftProjectEnvelopePreviewSummary, "safeDraftProjectEnvelopePreviewReady", "safe draft project envelope");
   assert.equal(stages.staleHydrateValidationSummary.ok, false);

@@ -6,6 +6,7 @@ import { buildSelectorSafeDraftProjectEnvelopePreview } from "./selectorSafeDraf
 import { buildSelectorSafeHydrateValidationPreview } from "./selectorSafeHydrateValidationPreview.js";
 import { buildRuntimeSealedCandidateAssemblyPreviewSummary } from "../../workspace-kernel/engineRunTableSealedCandidateAssemblyPreview.js";
 import { buildRuntimeRunTableDomainOutputScaffoldSummary } from "../../workspace-kernel/engineRunTableRuntimeRunTableDomainOutputScaffold.js";
+import { buildRuntimeControlledDonorEngineVerifyBridgeSummary } from "../../workspace-kernel/engineRunTableControlledDonorEngineVerifyBridge.js";
 import { buildRuntimeSelectedResultHandoffScaffoldSummary } from "../../workspace-kernel/engineRunTableSelectedResultHandoffScaffold.js";
 import { buildRuntimeIesHandoffReadinessScaffoldSummary } from "../../workspace-kernel/engineRunTableIesHandoffReadinessScaffold.js";
 
@@ -4250,6 +4251,7 @@ function selectorWorkflowStage({ id, label, ready = false, blocked = false, revi
 
 function selectorWorkflowDownstreamStage(id, label, summary = {}, readyKey = "ok") {
   const ready = summary?.[readyKey] === true || (readyKey === "ok" && summary?.ok === true);
+  const safetyFlags = summary?.safetyFlags && typeof summary.safetyFlags === "object" ? summary.safetyFlags : {};
   return {
     id,
     label,
@@ -4257,19 +4259,41 @@ function selectorWorkflowDownstreamStage(id, label, summary = {}, readyKey = "ok
     ready,
     blocked: !ready,
     blocker: summary?.blocker || (!ready ? `${id}-not-ready` : null),
+    reason: summary?.blocker || summary?.state || "preview-only downstream status",
     previewOnly: true,
     diagnosticOnly: true,
     safeSummaryOnly: true,
+    privateBridgeOnly: summary?.privateBridgeOnly === true || safetyFlags.privateBridgeOnly === true,
+    syntheticSafePreviewOnly: summary?.syntheticFixtureOnly === true || safetyFlags.syntheticFixtureOnly === true,
     fingerprint: summary?.sealedCandidateAssemblyPreviewFingerprint
       || summary?.runTableDomainOutputScaffoldFingerprint
+      || summary?.bridgeFingerprint
       || summary?.selectedResultHandoffScaffoldFingerprint
       || summary?.iesHandoffReadinessScaffoldFingerprint
       || null,
+    safeCounts: summary?.bridgeFingerprint ? {
+      privateBridgeOnly: summary?.privateBridgeOnly === true || safetyFlags.privateBridgeOnly === true ? 1 : 0,
+      donorEngineInvoked: 0,
+      realDonorPayloadAssembled: 0,
+      selectedResultPersisted: 0,
+      runTableGenerated: 0,
+      iesGenerated: 0,
+    } : {},
+    rows: selectorWorkflowRows([
+      ["fingerprint", summary?.bridgeFingerprint || summary?.sealedCandidateAssemblyPreviewFingerprint || summary?.runTableDomainOutputScaffoldFingerprint || summary?.selectedResultHandoffScaffoldFingerprint || summary?.iesHandoffReadinessScaffoldFingerprint || "none"],
+      ["private bridge only", boolString(summary?.privateBridgeOnly === true || safetyFlags.privateBridgeOnly === true)],
+      ["synthetic/safe preview only", boolString(summary?.syntheticFixtureOnly === true || safetyFlags.syntheticFixtureOnly === true)],
+      ["donor invocation blocked", boolString((summary?.blocker || "") === "donor-engine-invocation-not-approved" || safetyFlags.donorEngineInvoked !== true)],
+      ["no selected-result persistence", boolString(summary?.selectedResultPersisted !== true && safetyFlags.selectedResultPersisted !== true)],
+      ["no RunTable generation", boolString(summary?.runTableGenerated !== true && safetyFlags.runTableGenerated !== true && safetyFlags.productionRunTableGenerated !== true)],
+      ["no IES generation", boolString(summary?.iesGenerated !== true && safetyFlags.iesGenerated !== true)],
+    ]),
     rawRowsReturned: false,
     rawSelectorPayloadReturned: false,
     rawEnginePayloadReturned: false,
     rawEngineResultReturned: false,
     exactElectricalValuesReturned: false,
+    exactPlacementCoordinatesReturned: false,
     generated: false,
   };
 }
@@ -4358,6 +4382,11 @@ function createSelectorWorkflowPreview({
   const runTableDomainOutputScaffoldSummary = buildRuntimeRunTableDomainOutputScaffoldSummary({
     ...fingerprints,
     sealedCandidateAssemblyPreviewSummary,
+  });
+  const controlledDonorEngineVerifyBridgeSummary = buildRuntimeControlledDonorEngineVerifyBridgeSummary({
+    ...fingerprints,
+    sealedCandidateAssemblyPreviewSummary,
+    runTableDomainOutputScaffoldSummary,
   });
   const selectedResultHandoffScaffoldSummary = buildRuntimeSelectedResultHandoffScaffoldSummary({
     ...fingerprints,
@@ -4484,6 +4513,7 @@ function createSelectorWorkflowPreview({
   const downstreamStages = [
     selectorWorkflowDownstreamStage("sealed-candidate-assembly", "Sealed candidate assembly readiness", sealedCandidateAssemblyPreviewSummary, "sealedCandidateAssemblyPreviewReady"),
     selectorWorkflowDownstreamStage("runtable-domain", "RunTable domain readiness", runTableDomainOutputScaffoldSummary, "runTableDomainOutputScaffoldReady"),
+    selectorWorkflowDownstreamStage("controlled-donor-engine-verify-bridge", "Controlled donor Engine verify bridge", controlledDonorEngineVerifyBridgeSummary, "bridgeReady"),
     selectorWorkflowDownstreamStage("selected-result-handoff", "Selected-result handoff readiness", selectedResultHandoffScaffoldSummary, "selectedResultHandoffScaffoldReady"),
     selectorWorkflowDownstreamStage("ies-handoff", "IES handoff readiness", iesHandoffReadinessScaffoldSummary, "iesHandoffReadinessScaffoldReady"),
     controlledRealSourceEvidenceStatus,
@@ -4498,6 +4528,7 @@ function createSelectorWorkflowPreview({
     stages: downstreamStages,
     sealedCandidateAssemblyPreviewSummary,
     runTableDomainOutputScaffoldSummary,
+    controlledDonorEngineVerifyBridgeSummary,
     selectedResultHandoffScaffoldSummary,
     iesHandoffReadinessScaffoldSummary,
     controlledRealSourceEvidenceStatus,
@@ -4554,7 +4585,7 @@ function createSelectorWorkflowPreview({
     downstreamReadinessSummary,
     selectorDownstreamReadinessSummary: downstreamReadinessSummary,
     disabledProductionActions,
-    markers: ["preview-only", "diagnostic-only", "safe summaries only", "production actions disabled"],
+    markers: ["preview-only", "diagnostic-only", "safe summaries only", "controlled donor bridge blocked", "production actions disabled"],
     unsafeOutputsBlocked: {
       rawRowsPayloadsPrivateDataExposed: false,
       rawProductRowsReturned: false,
@@ -4567,6 +4598,8 @@ function createSelectorWorkflowPreview({
       privatePathsReturned: false,
       credentialsReturned: false,
       exactElectricalValuesReturned: false,
+      exactPlacementCoordinatesReturned: false,
+      realDonorPayloadAssembled: false,
       rawIesContentReturned: false,
       rawPhotometryReturned: false,
       candelaArraysReturned: false,

@@ -21,6 +21,7 @@ import { buildRuntimeEmergencyZonePickerFootholdSummary } from "./engineRunTable
 import { buildRuntimeGateDValidationScaffoldSummary } from "./engineRunTableRuntimeGateDValidationScaffold.js";
 import { buildRuntimeSealedCandidateAssemblyPreviewSummary } from "./engineRunTableSealedCandidateAssemblyPreview.js";
 import { buildRuntimeRunTableDomainOutputScaffoldSummary } from "./engineRunTableRuntimeRunTableDomainOutputScaffold.js";
+import { buildRuntimeControlledDonorEngineVerifyBridgeSummary } from "./engineRunTableControlledDonorEngineVerifyBridge.js";
 import { buildRuntimeSelectedResultHandoffScaffoldSummary } from "./engineRunTableSelectedResultHandoffScaffold.js";
 import { buildRuntimeIesHandoffReadinessScaffoldSummary } from "./engineRunTableIesHandoffReadinessScaffold.js";
 
@@ -56,6 +57,8 @@ const FALSE_SAFETY_FLAGS = Object.freeze([
   "candelaArraysReturned",
   "base64ArtifactsReturned",
   "exactElectricalValuesReturned",
+  "exactPlacementCoordinatesReturned",
+  "realDonorPayloadAssembled",
   "rawUsersReturned",
   "rawCrmReturned",
   "rawContactsReturned",
@@ -173,6 +176,7 @@ function baseProbe(extra = {}) {
     safePhysicalPlacementSummary: extra.safePhysicalPlacementSummary || null,
     physicalPlacementSummaryReady: extra.physicalPlacementSummaryReady === true,
     safeCurveReferenceSummary: extra.safeCurveReferenceSummary || null,
+    controlledDonorEngineVerifyBridgeSummary: extra.controlledDonorEngineVerifyBridgeSummary || null,
     sealedChainReadinessSummary: extra.sealedChainReadinessSummary || null,
     stageReadinessSummary: Array.isArray(extra.stageReadinessSummary) ? extra.stageReadinessSummary : [],
     policyFingerprint: extra.policyFingerprint || null,
@@ -1254,6 +1258,17 @@ function composeSealedChain(projection) {
     accessoryReservationSummary,
   });
 
+  const controlledDonorEngineVerifyBridgeSummary = buildRuntimeControlledDonorEngineVerifyBridgeSummary({
+    ...fingerprints,
+    boardFamilyProjectionSummary: projection.boardFamilyProjectionSummary,
+    driverCandidateProjectionSummary: projection.driverCandidateProjectionSummary,
+    curveReferenceSummary: projection.safeCurveReferenceSummary,
+    physicalPlacementSummary: safePhysicalPlacementSummary,
+    gateDValidationScaffoldSummary,
+    sealedCandidateAssemblyPreviewSummary,
+    runTableDomainOutputScaffoldSummary,
+  });
+
   const blockedDownstreamStage = (stage) => ({
     stage,
     reached: false,
@@ -1311,6 +1326,9 @@ function composeSealedChain(projection) {
     summariseStage("runtime-runtable-domain-output-scaffold", runTableDomainOutputScaffoldSummary, "runTableDomainOutputScaffoldReady", {
       fingerprint: runTableDomainOutputScaffoldSummary.runTableDomainOutputScaffoldFingerprint,
     }),
+    summariseStage("runtime-controlled-donor-engine-verify-bridge", controlledDonorEngineVerifyBridgeSummary, "bridgeReady", {
+      fingerprint: controlledDonorEngineVerifyBridgeSummary.bridgeFingerprint,
+    }),
     blockedDownstreamStage("runtime-selected-result-handoff-scaffold"),
     blockedDownstreamStage("selector-safe-draft-project-envelope-preview"),
     blockedDownstreamStage("selector-safe-hydrate-validation-preview"),
@@ -1322,6 +1340,7 @@ function composeSealedChain(projection) {
     ...fingerprints,
     safePhysicalPlacementSummary,
     physicalPlacementSummaryReady: safePhysicalPlacementSummary.physicalPlacementSummaryReady === true,
+    controlledDonorEngineVerifyBridgeSummary,
     sealedChainReadinessSummary: {
       readOnly: true,
       diagnosticOnly: true,
@@ -1330,6 +1349,10 @@ function composeSealedChain(projection) {
       readyStageCount: safeStageReadinessSummary.filter((stage) => stage.ready === true).length,
       selectedResultSourceBodyAvailable: false,
       selectedResultSourceBodyBlocker: "donor-engine-invocation-not-approved",
+      controlledDonorEngineVerifyBridgeReady: controlledDonorEngineVerifyBridgeSummary.bridgeReady === true,
+      controlledDonorEngineVerifyBridgeBlocker: controlledDonorEngineVerifyBridgeSummary.blocker || null,
+      controlledDonorEngineVerifyBridgeFingerprint: controlledDonorEngineVerifyBridgeSummary.bridgeFingerprint || null,
+      privateBridgeOnly: controlledDonorEngineVerifyBridgeSummary.privateBridgeOnly === true,
       productionRunTableReady: false,
       iesGenerationReady: false,
       donorEngineReady: false,
@@ -1508,6 +1531,7 @@ function finaliseEvidenceFingerprint(summary) {
     safePhysicalPlacementSummary: summary.safePhysicalPlacementSummary,
     physicalPlacementSummaryReady: summary.physicalPlacementSummaryReady === true,
     safeCurveReferenceSummary: summary.safeCurveReferenceSummary,
+    controlledDonorEngineVerifyBridgeSummary: summary.controlledDonorEngineVerifyBridgeSummary,
     blocker: summary.blocker,
   };
   return `safe-evidence:${stableSha1(fingerprintInput)}`;
@@ -1557,6 +1581,7 @@ export function buildControlledRealSourceSealedEvidenceProbeSummary(input = {}) 
       safePhysicalPlacementSummary: chain.safePhysicalPlacementSummary || null,
       physicalPlacementSummaryReady: chain.physicalPlacementSummaryReady === true,
       safeCurveReferenceSummary: projection.safeCurveReferenceSummary,
+      controlledDonorEngineVerifyBridgeSummary: chain.controlledDonorEngineVerifyBridgeSummary || null,
       sealedChainReadinessSummary: chain.sealedChainReadinessSummary,
       stageReadinessSummary: chain.stageReadinessSummary,
       warnings: chain.warnings,
@@ -1585,6 +1610,7 @@ export function buildControlledRealSourceSealedEvidenceProbeSummary(input = {}) 
     safePhysicalPlacementSummary: chain.safePhysicalPlacementSummary || null,
     physicalPlacementSummaryReady: chain.physicalPlacementSummaryReady === true,
     safeCurveReferenceSummary: projection.safeCurveReferenceSummary,
+    controlledDonorEngineVerifyBridgeSummary: chain.controlledDonorEngineVerifyBridgeSummary || null,
     sealedChainReadinessSummary: chain.sealedChainReadinessSummary,
     stageReadinessSummary: chain.stageReadinessSummary,
     warnings: chain.warnings,
