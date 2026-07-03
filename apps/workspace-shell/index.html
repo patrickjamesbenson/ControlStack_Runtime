@@ -233,51 +233,62 @@
               <span>Coordinated Surfaces</span>
             </a>
 
-            <section class="cs-shell__rail-group cs-shell__rail-group--section-end" data-shell-nav-group="engineering_authority" data-shell-nav-mode="flyout" data-shell-nav-default="collapsed" data-shell-nav-expanded="false" aria-label="Engineering Authority">
+            <section class="cs-shell__rail-group cs-shell__rail-group--section-end cs-shell__rail-group--engineering-taxonomy" data-shell-nav-group="engineering" data-shell-nav-mode="flyout" data-shell-nav-default="collapsed" data-shell-nav-expanded="false" aria-label="Engineering">
               <button class="cs-shell__rail-group-title" type="button" aria-haspopup="menu" aria-expanded="false">
                 <img class="cs-shell__rail-icon cs-shell__rail-icon--asset" src="/apps/workspace-shell/assets/engineering-rail-icon.svg" alt="" aria-hidden="true" />
-                <span>Engineering Authority</span>
+                <span>Engineering</span>
               </button>
-              <div class="cs-shell__rail-group-items" role="menu" aria-label="Engineering Authority modules">
-                <div class="cs-shell__rail-flyout-heading" aria-hidden="true">Engineering Authority</div>
-                <a class="cs-shell__rail-item" role="menuitem" href="/workspace?module=lab_proof" title="Lab Proof is mounted as a read-only diagnostic inspector." data-module-link="lab_proof">
-                  <svg class="cs-shell__rail-icon" viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M10.5 5.5l4 2.25" />
-                    <path d="M14 7l-4.5 8" />
-                    <path d="M8.5 14.75h8" />
-                    <path d="M6.5 19h11" />
-                    <path d="M12.25 10.5l3.5 2" />
-                    <circle cx="15.75" cy="12.5" r="2" />
-                    <path d="M9.25 4.25l3 1.75-1.5 2.5-3-1.75z" />
-                  </svg>
-                  <span>Lab Proof</span>
-                </a>
-                <a class="cs-shell__rail-item" role="menuitem" href="/workspace?module=board_data" data-module-link="board_data">
-                  <svg class="cs-shell__rail-icon" viewBox="0 0 24 24" aria-hidden="true">
-                    <rect x="4" y="7" width="16" height="10" rx="2" />
-                    <path d="M7 10h2.25l1 2.25L11.25 10h2.25" />
-                    <path d="M7 14h10" />
-                    <circle cx="16.75" cy="10.25" r="0.75" />
-                    <circle cx="16.75" cy="13.75" r="0.75" />
-                  </svg>
-                  <span>Board Data</span>
-                </a>
-                <button class="cs-shell__rail-item" role="menuitem" type="button" aria-disabled="true" title="ECG Driver is planned for a later module slice." data-module-status-key="ecg_driver">
-                  <svg class="cs-shell__rail-icon" viewBox="0 0 24 24" aria-hidden="true">
-                    <rect x="4" y="7" width="16" height="10" rx="2" />
-                    <path d="M7 12h2l1-2 2 4 1.5-2H17" />
-                    <path d="M4 10H2.75M4 14H2.75M20 10h1.25M20 14h1.25" />
-                  </svg>
-                  <span>ECG Driver</span>
-                </button>
-                <a class="cs-shell__rail-item" role="menuitem" href="/workspace?module=ies_builder" data-module-link="ies_builder">
-                  <svg class="cs-shell__rail-icon" viewBox="0 0 24 24" aria-hidden="true">
-                    <circle cx="12" cy="12" r="7.5" />
-                    <path d="M12 4.5v15M4.5 12h15" />
-                    <path d="M8.25 15.5c1.2-5.25 2.7-7 3.75-7s2.55 1.75 3.75 7" />
-                  </svg>
-                  <span>IES Builder</span>
-                </a>
+              <div class="cs-shell__rail-group-items" role="menu" aria-label="Engineering photometry authority menu">
+                <div class="cs-shell__rail-flyout-heading" aria-hidden="true">Engineering</div>
+
+                <div class="cs-shell__rail-taxonomy-heading" role="presentation">Kernel Tools</div>
+                <button class="cs-shell__rail-item cs-shell__rail-taxonomy-item" role="menuitem" type="button" aria-disabled="true" title="Preview only. IES parsing is not implemented from the shell menu." data-shell-status-rail="false"><span>IES Parser</span><span class="cs-shell__rail-item-status">preview · not implemented</span></button>
+                <button class="cs-shell__rail-item cs-shell__rail-taxonomy-item" role="menuitem" type="button" aria-disabled="true" title="Preview only. 1mm canonicalisation is a deterministic kernel step, not a production shell action." data-shell-status-rail="false"><span>1mm Canonicaliser</span><span class="cs-shell__rail-item-status">preview · not implemented</span></button>
+                <button class="cs-shell__rail-item cs-shell__rail-taxonomy-item" role="menuitem" type="button" aria-disabled="true" title="Preview only. Hemisphere padding remains disabled in this menu slice." data-shell-status-rail="false"><span>Hemisphere Padder</span><span class="cs-shell__rail-item-status">preview · not implemented</span></button>
+                <button class="cs-shell__rail-item cs-shell__rail-taxonomy-item" role="menuitem" type="button" aria-disabled="true" title="Preview only. Direct/indirect combining is not exposed as a production action." data-shell-status-rail="false"><span>Direct / Indirect Combiner</span><span class="cs-shell__rail-item-status">preview · not implemented</span></button>
+                <button class="cs-shell__rail-item cs-shell__rail-taxonomy-item" role="menuitem" type="button" aria-disabled="true" title="Preview only. Candela mirroring is not exposed from the shell." data-shell-status-rail="false"><span>Candela Mirror Tool</span><span class="cs-shell__rail-item-status">preview · not implemented</span></button>
+                <button class="cs-shell__rail-item cs-shell__rail-taxonomy-item" role="menuitem" type="button" aria-disabled="true" title="Runtime IES scaling remains disabled until selected-result and Engine verification are safe." data-shell-status-rail="false"><span>Runtime IES Scaler</span><span class="cs-shell__rail-item-status">runtime generation disabled</span></button>
+                <button class="cs-shell__rail-item cs-shell__rail-taxonomy-item" role="menuitem" type="button" aria-disabled="true" title="Emergency mode photometry requires battery, inverter, and end-of-duration provenance." data-shell-status-rail="false"><span>Emergency Mode Builder</span><span class="cs-shell__rail-item-status">requires lab provenance</span></button>
+
+                <div class="cs-shell__rail-taxonomy-heading" role="presentation">Candidate Luminaires</div>
+                <button class="cs-shell__rail-item cs-shell__rail-taxonomy-item" role="menuitem" type="button" aria-disabled="true" title="Preview only. Uploaded photometry files are not ingested by this shell slice." data-shell-status-rail="false"><span>Uploaded Files</span><span class="cs-shell__rail-item-status">preview · not implemented</span></button>
+                <button class="cs-shell__rail-item cs-shell__rail-taxonomy-item" role="menuitem" type="button" aria-disabled="true" title="Preview only. 1mm draft artefacts are not pure references until approved." data-shell-status-rail="false"><span>1mm Draft Artefacts</span><span class="cs-shell__rail-item-status">preview · not implemented</span></button>
+                <button class="cs-shell__rail-item cs-shell__rail-taxonomy-item" role="menuitem" type="button" aria-disabled="true" title="Preview only. Manipulated artefacts remain candidate material only." data-shell-status-rail="false"><span>Manipulated Artefacts</span><span class="cs-shell__rail-item-status">preview · not implemented</span></button>
+                <a class="cs-shell__rail-item cs-shell__rail-taxonomy-item" role="menuitem" href="/workspace?module=ies_builder" data-module-link="ies_builder" data-shell-status-rail="false"><span>Reference Candidates</span><span class="cs-shell__rail-item-status">blocked · preview</span></a>
+                <a class="cs-shell__rail-item cs-shell__rail-taxonomy-item" role="menuitem" href="/workspace?module=ies_builder" data-module-link="ies_builder" data-shell-status-rail="false"><span>Blocked / Missing Evidence</span><span class="cs-shell__rail-item-status">blocked</span></a>
+
+                <div class="cs-shell__rail-taxonomy-heading" role="presentation">Pure References</div>
+                <a class="cs-shell__rail-item cs-shell__rail-taxonomy-item" role="menuitem" href="/workspace?module=lab_proof" data-module-link="lab_proof" data-shell-status-rail="false"><span>Lab-Provenanced Candidates</span><span class="cs-shell__rail-item-status">requires lab provenance</span></a>
+                <button class="cs-shell__rail-item cs-shell__rail-taxonomy-item" role="menuitem" type="button" aria-disabled="true" title="Only approved 1mm pure references may be used here. No approval workflow is enabled." data-shell-status-rail="false"><span>Approved 1mm Pure References</span><span class="cs-shell__rail-item-status">approved reference only</span></button>
+                <button class="cs-shell__rail-item cs-shell__rail-taxonomy-item" role="menuitem" type="button" aria-disabled="true" title="Preview only. Superseded reference browsing is not implemented." data-shell-status-rail="false"><span>Superseded References</span><span class="cs-shell__rail-item-status">preview · not implemented</span></button>
+                <button class="cs-shell__rail-item cs-shell__rail-taxonomy-item" role="menuitem" type="button" aria-disabled="true" title="Preview only. Rejected reference browsing is not implemented." data-shell-status-rail="false"><span>Rejected References</span><span class="cs-shell__rail-item-status">preview · not implemented</span></button>
+
+                <div class="cs-shell__rail-taxonomy-heading" role="presentation">Lab Provenance</div>
+                <a class="cs-shell__rail-item cs-shell__rail-taxonomy-item" role="menuitem" href="/workspace?module=lab_proof" data-module-link="lab_proof" data-shell-status-rail="false"><span>Power Reports</span><span class="cs-shell__rail-item-status">requires lab provenance</span></a>
+                <a class="cs-shell__rail-item cs-shell__rail-taxonomy-item" role="menuitem" href="/workspace?module=lab_proof" data-module-link="lab_proof" data-shell-status-rail="false"><span>Thermal Reports</span><span class="cs-shell__rail-item-status">requires lab provenance</span></a>
+                <a class="cs-shell__rail-item cs-shell__rail-taxonomy-item" role="menuitem" href="/workspace?module=lab_proof" data-module-link="lab_proof" data-shell-status-rail="false"><span>Light Performance Reports</span><span class="cs-shell__rail-item-status">requires lab provenance</span></a>
+                <a class="cs-shell__rail-item cs-shell__rail-taxonomy-item" role="menuitem" href="/workspace?module=lab_proof" data-module-link="lab_proof" data-shell-status-rail="false"><span>Supporting Documents</span><span class="cs-shell__rail-item-status">preview</span></a>
+                <a class="cs-shell__rail-item cs-shell__rail-taxonomy-item" role="menuitem" href="/workspace?module=lab_proof" data-module-link="lab_proof" data-shell-status-rail="false"><span>Evidence Bundles</span><span class="cs-shell__rail-item-status">preview</span></a>
+                <a class="cs-shell__rail-item cs-shell__rail-taxonomy-item" role="menuitem" href="/workspace?module=lab_proof" data-module-link="lab_proof" data-shell-status-rail="false"><span>Approval / Revision Status</span><span class="cs-shell__rail-item-status">preview</span></a>
+
+                <div class="cs-shell__rail-taxonomy-heading" role="presentation">Emergency Systems</div>
+                <a class="cs-shell__rail-item cs-shell__rail-taxonomy-item" role="menuitem" href="/workspace?module=emergence" data-module-link="emergence" data-shell-status-rail="false"><span>Battery Packs</span><span class="cs-shell__rail-item-status">preview</span></a>
+                <a class="cs-shell__rail-item cs-shell__rail-taxonomy-item" role="menuitem" href="/workspace?module=emergence" data-module-link="emergence" data-shell-status-rail="false"><span>Inverters / Emergency Drivers</span><span class="cs-shell__rail-item-status">preview</span></a>
+                <a class="cs-shell__rail-item cs-shell__rail-taxonomy-item" role="menuitem" href="/workspace?module=emergence" data-module-link="emergence" data-shell-status-rail="false"><span>Duration Evidence</span><span class="cs-shell__rail-item-status">requires lab provenance</span></a>
+                <button class="cs-shell__rail-item cs-shell__rail-taxonomy-item" role="menuitem" type="button" aria-disabled="true" title="Emergency reference candidates require battery, inverter, and duration evidence before promotion." data-shell-status-rail="false"><span>Emergency Reference Candidates</span><span class="cs-shell__rail-item-status">requires lab provenance</span></button>
+                <button class="cs-shell__rail-item cs-shell__rail-taxonomy-item" role="menuitem" type="button" aria-disabled="true" title="Approved emergency references are reference-only in this menu slice." data-shell-status-rail="false"><span>Approved Emergency References</span><span class="cs-shell__rail-item-status">approved reference only</span></button>
+
+                <div class="cs-shell__rail-taxonomy-heading" role="presentation">Approved Fittings</div>
+                <a class="cs-shell__rail-item cs-shell__rail-taxonomy-item" role="menuitem" href="/workspace?module=board_data" data-module-link="board_data" data-shell-status-rail="false"><span>Standard Fittings</span><span class="cs-shell__rail-item-status">approved reference only</span></a>
+                <a class="cs-shell__rail-item cs-shell__rail-taxonomy-item" role="menuitem" href="/workspace?module=emergence" data-module-link="emergence" data-shell-status-rail="false"><span>Emergency Fittings</span><span class="cs-shell__rail-item-status">approved reference only</span></a>
+                <button class="cs-shell__rail-item cs-shell__rail-taxonomy-item" role="menuitem" type="button" aria-disabled="true" title="System, optic, and reference binding requires an approved pure reference and fitting binding workflow." data-shell-status-rail="false"><span>System / Optic / Reference Bindings</span><span class="cs-shell__rail-item-status">requires approved reference</span></button>
+
+                <div class="cs-shell__rail-taxonomy-heading" role="presentation">Runtime Outputs</div>
+                <a class="cs-shell__rail-item cs-shell__rail-taxonomy-item" role="menuitem" href="/workspace?module=ies_builder" data-module-link="ies_builder" data-shell-status-rail="false"><span>Runtime IES Source</span><span class="cs-shell__rail-item-status">blocked · preview</span></a>
+                <button class="cs-shell__rail-item cs-shell__rail-taxonomy-item" role="menuitem" type="button" aria-disabled="true" title="Project IES generation remains disabled until selected-result and Engine verification are safe." data-shell-status-rail="false"><span>Generated Project IES</span><span class="cs-shell__rail-item-status">runtime generation disabled</span></button>
+                <button class="cs-shell__rail-item cs-shell__rail-taxonomy-item" role="menuitem" type="button" aria-disabled="true" title="Emergency project IES generation remains disabled until emergency provenance and Engine verification are safe." data-shell-status-rail="false"><span>Emergency Project IES</span><span class="cs-shell__rail-item-status">runtime generation disabled</span></button>
+                <button class="cs-shell__rail-item cs-shell__rail-taxonomy-item" role="menuitem" type="button" aria-disabled="true" title="Project evidence packs are blocked until runtime output generation and evidence custody are approved." data-shell-status-rail="false"><span>Project Evidence Pack</span><span class="cs-shell__rail-item-status">blocked</span></button>
+
                 <a class="cs-shell__rail-item cs-shell__rail-item--admin" role="menuitem" href="/workspace?module=admin_dev" data-module-link="admin_dev" data-shell-protected-module="true" hidden>
                   <svg class="cs-shell__rail-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v16" /><path d="M4 12h16" /><circle cx="12" cy="12" r="7" /></svg>
                   <span>Admin / Dev</span>

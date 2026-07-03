@@ -238,9 +238,25 @@ img.cs-shell__rail-icon,
 .cs-shell__rail-flyout-heading {
   position: relative; z-index: 1; padding: 4px 12px 8px; color: #ffffff; font-size: 13px; font-weight: 800; line-height: 18px; letter-spacing: 0.11em; text-transform: uppercase;
 }
+.cs-shell__rail-group--engineering-taxonomy .cs-shell__rail-group-items { width: 360px; }
+.cs-shell__rail-taxonomy-heading {
+  position: relative; z-index: 1; margin: 10px 8px 2px; padding-top: 8px; border-top: 1px solid rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.78); font-size: 11px; font-weight: 800; line-height: 16px; letter-spacing: 0.09em; text-transform: uppercase;
+}
+.cs-shell__rail-flyout-heading + .cs-shell__rail-taxonomy-heading { margin-top: 0; padding-top: 0; border-top: 0; }
 .cs-shell__rail-group-items .cs-shell__rail-item {
   width: 100%; min-height: 38px; justify-content: flex-start; padding: 7px 12px; border-radius: 8px; color: #ffffff; font-size: 14px; font-weight: 400; line-height: 22px;
 }
+.cs-shell__rail-group-items .cs-shell__rail-taxonomy-item { display: grid; gap: 1px; align-items: center; }
+.cs-shell__rail-group-items .cs-shell__rail-item > .cs-shell__rail-item-status {
+  color: rgba(255, 255, 255, 0.66); font-size: 11px; font-weight: 700; line-height: 15px; letter-spacing: 0.01em;
+}
+.cs-shell__rail-group-items .cs-shell__rail-item:hover > .cs-shell__rail-item-status,
+.cs-shell__rail-group-items .cs-shell__rail-item:focus-visible > .cs-shell__rail-item-status,
+.cs-shell__rail-group-items .cs-shell__rail-item.is-hovered > .cs-shell__rail-item-status,
+.cs-shell__rail-group-items .cs-shell__rail-item[aria-selected="true"] > .cs-shell__rail-item-status,
+.cs-shell__rail-group-items .cs-shell__rail-item[aria-current="page"] > .cs-shell__rail-item-status { font-weight: 700; }
+.cs-shell__rail-group-items .cs-shell__rail-taxonomy-item[aria-disabled="true"] { cursor: not-allowed; opacity: 0.82; }
 .cs-shell__rail-group-items .cs-shell__rail-icon { display: none; }
 .cs-shell__rail-group-items .cs-shell__rail-item::before { inset: 0; width: auto; border-radius: 8px; background: rgba(255, 255, 255, 0.11); }
 .cs-shell__rail-group-items .cs-shell__rail-item:hover::before,
@@ -781,6 +797,6 @@ img.cs-shell__rail-icon,
 }
 /* Rail visual ordering guard */
 .cs-shell__rail-nav > .cs-shell__rail-group { order: 700; }
-.cs-shell__rail-nav > [data-shell-nav-group="engineering_authority"] { order: 300; }
+.cs-shell__rail-nav > [data-shell-nav-group="engineering"] { order: 300; }
 .cs-shell__rail-nav > [data-shell-nav-group="knowledge_governance"] { order: 400; }
 
