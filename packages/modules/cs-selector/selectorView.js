@@ -899,6 +899,47 @@ function optionBlockerSummary(option = {}) {
   return option.blockedReason || option.relationshipMissingReason || `blocked by ${blockedBy}`;
 }
 
+function optionCodePolicyIds(option = {}) {
+  return (Array.isArray(option.codePolicyIds) ? option.codePolicyIds : [option.codePolicyIds])
+    .map((id) => String(id || "").trim())
+    .filter(Boolean);
+}
+
+function optionTechnicalBlockerSummary(option = {}) {
+  const blockers = Array.isArray(option.blockedBy) ? option.blockedBy : [];
+  const blockerLabels = blockers
+    .map((entry) => [entry.fieldKey, entry.selectedValue].map((item) => String(item || "").trim()).filter(Boolean).join(":"))
+    .filter(Boolean);
+  const codePolicies = optionCodePolicyIds(option).map((id) => `CODE_POLICY:${id}`);
+  const uniqueLabels = [...new Set([...blockerLabels, ...codePolicies])];
+  return uniqueLabels.length ? uniqueLabels.join(" | ") : "none";
+}
+
+function workflowCodePolicyRows(surface = {}) {
+  const rows = [];
+  for (const section of surface.workflowSections || []) {
+    for (const field of section.fields || []) {
+      for (const option of field.options || []) {
+        const codePolicyIds = optionCodePolicyIds(option);
+        const hasCodePolicyBlocker = (Array.isArray(option.blockedBy) ? option.blockedBy : [])
+          .some((entry) => String(entry.fieldKey || "") === "CODE_POLICY");
+        if (!codePolicyIds.length && !hasCodePolicyBlocker) continue;
+        rows.push([
+          `${field.label || field.fieldKey || "field"}: ${option.label || option.value || "option"}`,
+          `${optionTechnicalBlockerSummary(option)} — ${option.blockedReason || option.relationshipMissingReason || "technical blocker only"}`,
+        ]);
+      }
+    }
+  }
+  return rows;
+}
+
+function appendSelectorCodePolicyDiagnostics(parent, surface = {}) {
+  const rows = workflowCodePolicyRows(surface);
+  if (!rows.length) return;
+  appendSection(parent, "CODE_POLICY technical blockers", rows);
+}
+
 function appendIncompatibleOptionDetails(parent, field = {}) {
   const incompatibleOptions = fieldIncompatibleOptions(field);
   if (!incompatibleOptions.length) return;
@@ -2335,6 +2376,7 @@ export function renderSelectorView(container, viewModel) {
   appendSelectorRunAccessoryPlacementPreview(diagnostics, surface.runAccessoryPlacementPreview || {});
   appendSelectorSpecBuildReadinessPreview(diagnostics, surface.specBuildReadinessPreview || {});
   appendSelectorProductCompactStatus(diagnostics, surface);
+  appendSelectorCodePolicyDiagnostics(diagnostics, surface);
 
   appendSelectorExpanderShell(diagnostics, viewModel);
   appendSelectorReferencePanel(diagnostics, viewModel);

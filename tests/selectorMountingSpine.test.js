@@ -7,6 +7,7 @@ import { createSelectorViewModel } from "../packages/modules/cs-selector/selecto
 import { deriveSelectorReferenceOptionsFromSnapshot } from "../packages/workspace-kernel/selectorReferenceOptionsService.js";
 
 const testSourceUrl = new URL("./selectorMountingSpine.test.js", import.meta.url);
+const viewSourceUrl = new URL("../packages/modules/cs-selector/selectorView.js", import.meta.url);
 
 function createAdapter() {
   return {
@@ -365,12 +366,17 @@ test("SURFACE_MOUNT_DI_BLOCK blocks Surface Mount for direct-indirect/uplight sy
   const snapshot = mountPolicySnapshot();
   const model = selectAndReload(selectorState, "system", "DNX80|DI", snapshot);
 
+  const mountField = workflowField(model, "mountStyle");
   const surface = workflowOption(model, "mountStyle", "Surface Mount");
   assert.equal(surface.status, "blocked");
   assert.equal(surface.blocked, true);
   assert.match(surface.blockedReason, /Surface Mount.*direct-indirect|ceiling blocks.*indirect/i);
   assert.equal(surface.relationshipStatus, "blocked-by-code-policy");
   assert.deepEqual(surface.codePolicyIds, ["SURFACE_MOUNT_DI_BLOCK"]);
+  assert.equal(surface.blockedBy.some((item) => item.fieldKey === "CODE_POLICY" && item.selectedValue === "SURFACE_MOUNT_DI_BLOCK"), true);
+  assert.equal(mountField.dropdownOptions.some((option) => option.value === "Surface Mount"), false);
+  assert.equal(mountField.incompatibleOptions.some((option) => option.value === "Surface Mount"), true);
+  assert.equal(mountField.selectedBlockedOptionVisible, false);
   assert.equal(workflowOption(model, "mountStyle", "Suspended").status, "available");
 });
 
@@ -381,12 +387,32 @@ test("selected incompatible Surface Mount is preserved as blocked by donor polic
   model = selectAndReload(selectorState, "mountStyle", "Surface Mount", snapshot);
 
   const row = mountingRow(model.selectorSurface.productSpine, "mountStyle");
+  const mountField = workflowField(model, "mountStyle");
+  const selectedDropdown = mountField.dropdownOptions.find((option) => option.value === "Surface Mount");
   assert.equal(row.displayValue, "Surface Mount");
   assert.equal(row.status, "blocked");
   assert.equal(row.blocked, true);
   assert.match(row.reason, /ceiling blocks.*indirect|direct-indirect/i);
+  assert.equal(mountField.selectedBlockedOptionVisible, true);
+  assert.equal(selectedDropdown?.blocked, true);
+  assert.equal(selectedDropdown?.blockedBy.some((item) => item.fieldKey === "CODE_POLICY"), true);
+  assert.equal(mountField.incompatibleOptions.some((option) => option.value === "Surface Mount"), false);
+  assert.equal(model.selectorSurface.autoConsequences.some((item) => item.fieldKey === "mountStyle"), false);
   assert.equal(selectorState.getSnapshot().dbBackedSelector.manualConstraints.mountStyle.value, "Surface Mount");
   assert.equal(model.selectorSurface.payloadPreview.mounting.mountStyle, "Surface Mount");
+});
+
+test("mount CODE_POLICY plain reason stays in main flow and technical code stays in developer diagnostics", async () => {
+  const source = await readFile(viewSourceUrl, "utf-8");
+  const blockedMainIndex = source.indexOf("appendCompactMetadataLine(compactMeta, \"blocked\"");
+  const developerDrawerIndex = source.indexOf("const diagnosticsDetails = document.createElement(\"details\")");
+  const codePolicyDiagnosticsIndex = source.indexOf("appendSelectorCodePolicyDiagnostics(diagnostics, surface)");
+
+  assert.ok(blockedMainIndex > 0, "plain blocked reason should remain available on the primary field card");
+  assert.ok(developerDrawerIndex > blockedMainIndex, "developer drawer should render after the main product flow");
+  assert.ok(codePolicyDiagnosticsIndex > developerDrawerIndex, "technical CODE_POLICY details should be appended inside the developer drawer");
+  assert.match(source, /CODE_POLICY technical blockers/);
+  assert.match(source, /optionTechnicalBlockerSummary/);
 });
 
 test("indirect optic remains visible as accepted implicit consequence without mutating state", () => {
