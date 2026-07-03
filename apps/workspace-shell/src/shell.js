@@ -241,6 +241,10 @@ function railGroupControls(group) {
   return Array.from(group.querySelectorAll(":scope > .cs-shell__rail-group-items a, :scope > .cs-shell__rail-group-items button"));
 }
 
+function isDisabledRailControl(control) {
+  return control?.disabled === true || control?.getAttribute?.("aria-disabled") === "true";
+}
+
 function setRailGroupExpanded(group, expanded) {
   if (!group) return;
   const defaultExpanded = group.dataset.shellNavDefault === "expanded";
@@ -333,6 +337,11 @@ function bindGroupedRailNavigation() {
       setRailGroupExpanded(group, true);
     });
     for (const control of controls) {
+      control.addEventListener("click", (event) => {
+        if (!isDisabledRailControl(control)) return;
+        event.preventDefault();
+        event.stopPropagation();
+      });
       control.addEventListener("mouseenter", () => markRailFlyoutHover(group, control));
       control.addEventListener("focus", () => markRailFlyoutHover(group, control));
     }
@@ -1812,6 +1821,17 @@ function bootWorkspaceShell() {
     return context;
   }
 
+  function refreshContextSafely(reason = "context-refresh") {
+    try {
+      return refreshContext(reason);
+    } catch (error) {
+      console.error("[workspace-shell] context render failed", error);
+      setStatus(`Shell render recovered after ${reason}; interactions remain bound.`);
+      services.eventBus.emit("shell:context-render-failed", { reason, error });
+      return context;
+    }
+  }
+
   function rememberDiagnosticsPlugin({ diagnosticsPlugin, pluginRegistry }) {
     diagnosticsPluginApi = diagnosticsPlugin;
     diagnosticsPluginRegistry = pluginRegistry;
@@ -2000,7 +2020,7 @@ function bootWorkspaceShell() {
   bindShellTopbarControls();
   bindAssistiveCompanyIdentityHelper();
 
-  refreshContext("initial-render");
+  refreshContextSafely("initial-render");
   userMenuButton?.addEventListener("click", handleUserMenuToggle);
   signInButton?.addEventListener("click", handleAuthSignIn);
   signOutButton?.addEventListener("click", handleAuthSignOut);

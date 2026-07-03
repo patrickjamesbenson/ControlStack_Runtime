@@ -1,12 +1,18 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
+import { resolveWorkspaceRoute } from "../packages/workspace-kernel/route.js";
 
 const shellIndexUrl = new URL("../apps/workspace-shell/index.html", import.meta.url);
+const shellScriptUrl = new URL("../apps/workspace-shell/src/shell.js", import.meta.url);
 const shellStylesUrl = new URL("../apps/workspace-shell/src/styles.css", import.meta.url);
 
 async function shellIndex() {
   return readFile(shellIndexUrl, "utf-8");
+}
+
+async function shellScript() {
+  return readFile(shellScriptUrl, "utf-8");
 }
 
 function engineeringSection(source) {
@@ -27,6 +33,83 @@ test("Workspace shell content still contains the mounted shell population anchor
   assert.match(source, /id="cs-workspace-home"/);
   assert.match(source, /type="module" src="\/apps\/workspace-shell\/src\/shell\.js"/);
   assert.match(source, /data-shell-nav-group="engineering"/);
+});
+
+test("Workspace shell route resolver keeps root, Selector, and home routes safe", () => {
+  const rootRoute = resolveWorkspaceRoute({ href: "http://127.0.0.1:8787/workspace" });
+  assert.equal(rootRoute.moduleId, "cs_selector");
+  assert.equal(rootRoute.routeFallbackApplied, false);
+  assert.equal(rootRoute.goldenRoute, "/workspace?module=cs_selector");
+
+  const selectorRoute = resolveWorkspaceRoute({ href: "http://127.0.0.1:8787/workspace?module=cs_selector" });
+  assert.equal(selectorRoute.moduleId, "cs_selector");
+  assert.equal(selectorRoute.routeFallbackApplied, false);
+
+  const homeRoute = resolveWorkspaceRoute({ href: "http://127.0.0.1:8787/workspace?module=workspace_home" });
+  assert.equal(homeRoute.moduleId, "workspace_home");
+  assert.equal(homeRoute.routeFallbackApplied, false);
+  assert.equal(homeRoute.goldenRoute, "/workspace?module=workspace_home");
+});
+
+test("Workspace shell route resolver falls unknown module queries back to home", () => {
+  const route = resolveWorkspaceRoute({ href: "http://127.0.0.1:8787/workspace?module=missing_runtime_module" });
+
+  assert.equal(route.requestedModuleId, "missing_runtime_module");
+  assert.equal(route.moduleId, "workspace_home");
+  assert.equal(route.fallbackModuleId, "workspace_home");
+  assert.equal(route.routeFallbackApplied, true);
+  assert.equal(route.goldenRoute, "/workspace?module=workspace_home");
+});
+
+test("Workspace shell binds rail and topbar before initial render can isolate failures", async () => {
+  const script = await shellScript();
+
+  assert.match(script, /function bindGroupedRailNavigation\(\)/);
+  assert.match(script, /function bindShellTopbarControls\(\)/);
+  assert.match(script, /function refreshContextSafely\(reason = "context-refresh"\)/);
+  assert.match(script, /refreshContextSafely\("initial-render"\)/);
+  assert.ok(
+    script.indexOf("bindGroupedRailNavigation();") < script.indexOf('refreshContextSafely("initial-render")'),
+    "Grouped rail binding should happen before initial render isolation",
+  );
+  assert.ok(
+    script.indexOf("bindShellTopbarControls();") < script.indexOf('refreshContextSafely("initial-render")'),
+    "Topbar binding should happen before initial render isolation",
+  );
+});
+
+test("Engineering taxonomy group remains compatible with grouped flyout binding", async () => {
+  const source = await shellIndex();
+  const script = await shellScript();
+  const section = engineeringSection(source);
+
+  assert.match(section, /data-shell-nav-mode="flyout"/);
+  assert.match(section, /data-shell-nav-default="collapsed"/);
+  assert.match(section, /role="menu"/);
+  assert.match(script, /document\.querySelectorAll\("\.cs-shell__rail-group"\)/);
+  assert.match(script, /setRailGroupExpanded\(group, group\.dataset\.shellNavDefault === "expanded"\)/);
+  assert.match(script, /markRailFlyoutHover\(group, control\)/);
+});
+
+test("Selector module link remains navigable from the shell rail", async () => {
+  const source = await shellIndex();
+  const selectorLink = source.match(/<a class="cs-shell__rail-item" href="\/workspace\?module=cs_selector" data-module-link="cs_selector">/);
+
+  assert.ok(selectorLink, "Selector rail link should exist with the cs_selector route");
+  assert.doesNotMatch(selectorLink[0], /data-shell-status-rail="false"/);
+  assert.equal(resolveWorkspaceRoute({ href: "http://127.0.0.1:8787/workspace?module=cs_selector" }).moduleId, "cs_selector");
+});
+
+test("Disabled preview menu items are inert and do not block rail binding", async () => {
+  const source = await shellIndex();
+  const script = await shellScript();
+  const section = engineeringSection(source);
+  const disabledItems = Array.from(section.matchAll(/<button class="cs-shell__rail-item cs-shell__rail-taxonomy-item" role="menuitem" type="button" aria-disabled="true"[^>]*data-shell-status-rail="false">/g));
+
+  assert.ok(disabledItems.length >= 10, "Preview-only taxonomy buttons should stay visible but disabled");
+  assert.match(script, /function isDisabledRailControl\(control\)/);
+  assert.match(script, /if \(!isDisabledRailControl\(control\)\) return;/);
+  assert.match(script, /event\.preventDefault\(\);\s*event\.stopPropagation\(\);/s);
 });
 
 test("Engineering section renders the approved photometry authority groups", async () => {
