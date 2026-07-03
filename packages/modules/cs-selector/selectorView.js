@@ -2027,6 +2027,195 @@ function appendSelectorProductCompactStatus(parent, surface = {}) {
   parent.appendChild(details);
 }
 
+function railPlainValue(value, fallback = "Not selected") {
+  const text = String(value || "").trim();
+  if (!text || text === "—" || text.toLowerCase() === "none") return fallback;
+  return text;
+}
+
+function findSpineRow(spine = {}, sectionKey = "", rowKey = "") {
+  const sections = Array.isArray(spine.sections) ? spine.sections : [];
+  const section = sections.find((item) => item.sectionKey === sectionKey);
+  const rows = Array.isArray(section?.rows) ? section.rows : [];
+  return rows.find((row) => row.rowKey === rowKey) || null;
+}
+
+function railRecordFromSpine(surface = {}, sectionKey = "", rowKey = "", fieldKey = "", fallback = "Not selected") {
+  const row = findSpineRow(surface.productSpine || {}, sectionKey, rowKey);
+  return {
+    fieldKey,
+    valueLabel: railPlainValue(row?.displayValue, fallback),
+    status: row?.status || (row?.missing ? "missing" : "preview"),
+    truthKind: row?.blocked ? "blocked" : row?.manualConstraint ? "manual-constraint" : row?.autoConsequence ? "auto-consequence" : "source-status",
+    blocked: row?.blocked === true,
+    missing: row?.missing === true,
+  };
+}
+
+function railRecordFromTruth(summary = {}, fieldKeys = [], fallback = "Not selected") {
+  const item = truthItem(summary, fieldKeys);
+  return {
+    fieldKey: item?.fieldKey || (Array.isArray(fieldKeys) ? fieldKeys[0] : fieldKeys),
+    valueLabel: railPlainValue(item?.valueLabel || item?.value, fallback),
+    status: item?.status || "preview",
+    truthKind: item?.truthKind || "missing",
+    blocked: item?.truthKind === "blocked",
+    missing: item?.truthKind === "missing" || item?.truthKind === "future-disabled",
+  };
+}
+
+function appendRailRow(parent, label, record = {}, { change = true } = {}) {
+  const row = document.createElement("div");
+  row.className = "cs-selector-summary-rail__row";
+  row.dataset.truthKind = record.truthKind || "source-status";
+  row.dataset.blocked = record.blocked === true ? "true" : "false";
+  row.dataset.missing = record.missing === true ? "true" : "false";
+
+  const copy = document.createElement("div");
+  copy.className = "cs-selector-summary-rail__copy";
+  appendText(copy, "span", label, "cs-selector-summary-rail__label");
+  appendText(copy, "strong", railPlainValue(record.valueLabel || record.value, "Not selected"), "cs-selector-summary-rail__value");
+  if (record.status) appendText(copy, "small", truthKindLabel(record.truthKind || record.status), "cs-selector-summary-rail__kind");
+  row.appendChild(copy);
+
+  if (change && record.fieldKey) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "cs-selector-summary-rail__change";
+    button.textContent = "Change";
+    button.addEventListener("click", () => scrollToDonorShapeField(record.fieldKey));
+    row.appendChild(button);
+  }
+
+  parent.appendChild(row);
+}
+
+function appendRailGroup(parent, heading, rows = []) {
+  const group = document.createElement("section");
+  group.className = "cs-selector-summary-rail__group";
+  appendText(group, "h4", heading);
+  for (const row of rows) appendRailRow(group, row.label, row.record, row.options || {});
+  parent.appendChild(group);
+}
+
+function railItemsByKind(summary = {}, kinds = []) {
+  const wanted = Array.isArray(kinds) ? kinds : [kinds];
+  return allTruthItems(summary).filter((item) => wanted.includes(item.truthKind));
+}
+
+function appendRailSelectionSourceBucket(parent, label, items = []) {
+  const bucket = document.createElement("div");
+  bucket.className = "cs-selector-summary-rail__bucket";
+  appendText(bucket, "span", label, "cs-selector-summary-rail__label");
+  if (!items.length) {
+    appendText(bucket, "strong", "None", "cs-selector-summary-rail__value");
+  } else {
+    const list = document.createElement("ul");
+    list.className = "cs-selector-summary-rail__mini-list";
+    for (const item of items.slice(0, 4)) appendText(list, "li", `${item.label || item.fieldKey}: ${railPlainValue(item.valueLabel || item.value)}`);
+    if (items.length > 4) appendText(list, "li", `+${items.length - 4} more`);
+    bucket.appendChild(list);
+  }
+  parent.appendChild(bucket);
+}
+
+function appendRailSelectionSources(parent, summary = {}) {
+  const group = document.createElement("section");
+  group.className = "cs-selector-summary-rail__group cs-selector-summary-rail__group--sources";
+  appendText(group, "h4", "Selection sources");
+  appendRailSelectionSourceBucket(group, "Manual", railItemsByKind(summary, "manual-constraint"));
+  appendRailSelectionSourceBucket(group, "Auto", railItemsByKind(summary, "auto-consequence"));
+  appendRailSelectionSourceBucket(group, "Inherited", railItemsByKind(summary, "inherited-consequence"));
+  appendRailSelectionSourceBucket(group, "Blocked", railItemsByKind(summary, "blocked"));
+  parent.appendChild(group);
+}
+
+function railNextSafeAction(surface = {}) {
+  const runPreview = surface.runIntakePreview || {};
+  if (runPreview.runIntakePreviewReady !== true) return "Runs incomplete — add quantity and length before Engine readiness can be reviewed.";
+  if ((surface.blockedItems || []).length) return "Review blocked selections before any future readiness review.";
+  const workflow = surface.selectorWorkflowPreview || {};
+  const blockedStage = (workflow.stageSummaries || workflow.selectorWorkflowStageSummaries || []).find((stage) => stage.blocked || stage.reviewRequired);
+  if (blockedStage?.reason) return railPlainValue(blockedStage.reason, "Review missing inputs before next step.");
+  return "Review the selected product summary; production handoffs remain disabled.";
+}
+
+function appendSelectorSummaryRail(parent, surface = {}) {
+  const summary = surface.selectionTruthSummary || {};
+  const rail = document.createElement("details");
+  rail.className = "cs-selector-summary-rail";
+  rail.dataset.selectorSummaryRail = "persistent";
+  rail.open = true;
+
+  const railToggle = document.createElement("summary");
+  railToggle.className = "cs-selector-summary-rail__toggle";
+  railToggle.textContent = "Current selection";
+  rail.appendChild(railToggle);
+
+  const header = document.createElement("div");
+  header.className = "cs-selector-summary-rail__header";
+  appendText(header, "p", "Selected summary", "cs-shell__eyebrow");
+  appendText(header, "h3", "Current selection");
+  appendText(header, "p", "Previous choices stay visible here while the main product flow remains calm.");
+  rail.appendChild(header);
+
+  appendRailGroup(rail, "Selected product", [
+    { label: "Tier", record: railRecordFromTruth(summary, "tier") },
+    { label: "System", record: railRecordFromSpine(surface, "system", "profileSystem", "system") },
+    { label: "Direct optic", record: railRecordFromSpine(surface, "system", "opticDirect", "directOpticVar1") },
+    { label: "Indirect optic", record: railRecordFromSpine(surface, "system", "opticIndirect", "indirectOpticVar1"), options: { change: true } },
+  ]);
+
+  appendRailGroup(rail, "Performance", [
+    { label: "Direct lm/m", record: railRecordFromSpine(surface, "lightControl", "targetLmPerM", "targetLmPerM") },
+    { label: "Indirect lm/m", record: railRecordFromTruth(summary, "targetLmPerMIndirect") },
+    { label: "CCT/CRI", record: railRecordFromSpine(surface, "lightControl", "cctCri", "cctCri") },
+    { label: "Control", record: railRecordFromSpine(surface, "lightControl", "control", "controlType") },
+  ]);
+
+  appendRailGroup(rail, "Build", [
+    { label: "Mounting", record: railRecordFromSpine(surface, "mounting", "mountStyle", "mountStyle") },
+    { label: "Penetrations", record: railRecordFromSpine(surface, "mounting", "powerPenetration", "powerPenetration") },
+    { label: "Finish cascade", record: railRecordFromSpine(surface, "finishes", "bodyFinish", "bodyFinish") },
+  ]);
+
+  const runPreview = surface.runIntakePreview || {};
+  const accessoryPreview = surface.runAccessoryPlacementPreview || {};
+  appendRailGroup(rail, "Accessories / runs", [
+    { label: "Emergency", record: railRecordFromTruth(summary, ["egressLight", "emergency"]) },
+    { label: "Sensor", record: railRecordFromTruth(summary, "sensor") },
+    { label: "Special parts", record: railRecordFromTruth(summary, "specialParts") },
+    { label: "Runs", record: { valueLabel: `${runPreview.completedRunCount || 0}/${runPreview.runCount || 0} complete`, truthKind: runPreview.runIntakePreviewReady === true ? "source-status" : "missing", missing: runPreview.runIntakePreviewReady !== true, fieldKey: "runQty" } },
+    { label: "Accessory placement", record: { valueLabel: accessoryPreview.runAccessoryPlacementPreviewReady === true ? "Intent captured" : "Not captured", truthKind: accessoryPreview.runAccessoryPlacementPreviewReady === true ? "source-status" : "missing", missing: accessoryPreview.runAccessoryPlacementPreviewReady !== true, fieldKey: "accessories" } },
+  ]);
+
+  appendRailSelectionSources(rail, summary);
+
+  const missingCount = Array.isArray(summary.missing) ? summary.missing.filter((item) => item.truthKind === "missing").length : 0;
+  const blockedCount = Array.isArray(summary.blockers) ? summary.blockers.length : 0;
+  appendRailGroup(rail, "Readiness", [
+    { label: "Missing inputs", record: { valueLabel: missingCount ? `${missingCount} to review` : "None shown", truthKind: missingCount ? "missing" : "source-status", missing: missingCount > 0 }, options: { change: false } },
+    { label: "Blocked selections", record: { valueLabel: blockedCount ? `${blockedCount} blocked` : "None", truthKind: blockedCount ? "blocked" : "source-status", blocked: blockedCount > 0 }, options: { change: false } },
+    { label: "Next safe action", record: { valueLabel: railNextSafeAction(surface), truthKind: "source-status" }, options: { change: false } },
+  ]);
+
+  const badges = document.createElement("div");
+  badges.className = "cs-selector-summary-rail__badges";
+  for (const badge of ["no Engine", "no RunTable", "no IES", "not Lab Proof"]) appendText(badges, "span", badge);
+  rail.appendChild(badges);
+  parent.appendChild(rail);
+}
+
+function appendSelectorDefaultBlockerCopy(parent, surface = {}) {
+  const status = document.createElement("section");
+  status.className = "cs-selector-product__plain-readiness";
+  status.dataset.defaultReadiness = "plain-english";
+  appendText(status, "h4", "Review / safe next step");
+  appendText(status, "p", railNextSafeAction(surface));
+  appendCompactDisabledHandoffStrip(status);
+  parent.appendChild(status);
+}
+
 function appendSelectorProductSurface(parent, surface = {}) {
   const section = document.createElement("section");
   section.className = "cs-selector-product";
@@ -2042,22 +2231,17 @@ function appendSelectorProductSurface(parent, surface = {}) {
   appendText(section, "p", "Read-only preview. No spec, slug, IES, payload, RunTable, Lab Proof, Controlled Record, RREG approval, custody transfer, Board Data write, or hidden write-back is created here.", "cs-selector-product__safety");
   appendText(section, "p", surface.proofCopy || "Selector previews selection readiness. Lab Proof proves later.", "cs-selector-product__safety");
 
-  appendSelectorSelectionTruthSummary(section, surface.selectionTruthSummary || {});
-  appendDonorShapeSelectedTileStrip(section, surface.donorShapeSelectedTiles || []);
-  appendSelectorWorkflowPreview(section, surface.selectorWorkflowPreview || {});
+  appendSelectorDefaultBlockerCopy(section, surface);
 
-  appendSelectorWorkflowSections(section, surface);
-
-  appendSelectorProductSpine(section, surface.productSpine || {});
-  appendPayloadPreviewObject(section, surface.payloadPreview || {});
-  appendSelectedEngineResultHandoff(section, surface.selectedEngineResultHandoff || {});
-  appendSelectorSourceSpecReadinessExplanation(section, surface.sourceSpecReadinessExplanation || {});
-  appendSelectorDisabledHandoffSummary(section, surface.disabledHandoffSummary || {});
-  appendSelectorRunIntakePreview(section, surface.runIntakePreview || {});
-  appendSelectorRunAccessoryPlacementPreview(section, surface.runAccessoryPlacementPreview || {});
-  appendSelectorSpecBuildReadinessPreview(section, surface.specBuildReadinessPreview || {});
-
-  appendSelectorProductCompactStatus(section, surface);
+  const layout = document.createElement("div");
+  layout.className = "cs-selector-product__layout";
+  const main = document.createElement("div");
+  main.className = "cs-selector-product__main-flow";
+  main.dataset.defaultProductFlow = "product-first";
+  appendSelectorWorkflowSections(main, surface);
+  layout.appendChild(main);
+  appendSelectorSummaryRail(layout, surface);
+  section.appendChild(layout);
 
   parent.appendChild(section);
 }
@@ -2124,15 +2308,33 @@ export function renderSelectorView(container, viewModel) {
   appendSelectorProductSurface(article, viewModel.selectorSurface || {});
 
   const diagnosticsDetails = document.createElement("details");
-  diagnosticsDetails.className = "cs-selector-diagnostics";
+  diagnosticsDetails.className = "cs-selector-diagnostics cs-selector-dev-drawer";
+  diagnosticsDetails.dataset.selectorDeveloperDrawer = "closed-default";
+  diagnosticsDetails.dataset.defaultOpen = "false";
   diagnosticsDetails.open = false;
   const diagnosticsSummary = document.createElement("summary");
-  diagnosticsSummary.textContent = "Diagnostics";
+  diagnosticsSummary.className = "cs-selector-dev-drawer__summary";
+  appendText(diagnosticsSummary, "span", "d", "cs-selector-dev-drawer__key");
+  appendText(diagnosticsSummary, "span", "Developer drawer", "cs-selector-dev-drawer__label");
   diagnosticsDetails.appendChild(diagnosticsSummary);
   const diagnostics = document.createElement("div");
-  diagnostics.className = "cs-selector-diagnostics__body";
+  diagnostics.className = "cs-selector-diagnostics__body cs-selector-dev-drawer__body";
   diagnosticsDetails.appendChild(diagnostics);
   article.appendChild(diagnosticsDetails);
+
+  const surface = viewModel.selectorSurface || {};
+  appendSelectorSelectionTruthSummary(diagnostics, surface.selectionTruthSummary || {});
+  appendDonorShapeSelectedTileStrip(diagnostics, surface.donorShapeSelectedTiles || []);
+  appendSelectorWorkflowPreview(diagnostics, surface.selectorWorkflowPreview || {});
+  appendSelectorProductSpine(diagnostics, surface.productSpine || {});
+  appendPayloadPreviewObject(diagnostics, surface.payloadPreview || {});
+  appendSelectedEngineResultHandoff(diagnostics, surface.selectedEngineResultHandoff || {});
+  appendSelectorSourceSpecReadinessExplanation(diagnostics, surface.sourceSpecReadinessExplanation || {});
+  appendSelectorDisabledHandoffSummary(diagnostics, surface.disabledHandoffSummary || {});
+  appendSelectorRunIntakePreview(diagnostics, surface.runIntakePreview || {});
+  appendSelectorRunAccessoryPlacementPreview(diagnostics, surface.runAccessoryPlacementPreview || {});
+  appendSelectorSpecBuildReadinessPreview(diagnostics, surface.specBuildReadinessPreview || {});
+  appendSelectorProductCompactStatus(diagnostics, surface);
 
   appendSelectorExpanderShell(diagnostics, viewModel);
   appendSelectorReferencePanel(diagnostics, viewModel);

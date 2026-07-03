@@ -28,19 +28,22 @@ test("selected-truth summary prefers canonical workflow fields over flat fallbac
   assert.match(source, /diagnosticOnly: true/);
 });
 
-test("Selector product render order is summary, canonical workflow, cards, then collapsed Diagnostics", async () => {
+test("Selector product render order is canonical workflow plus rail, then closed developer drawer", async () => {
   const source = await readFile(viewSourceUrl, "utf-8");
 
-  const summaryIndex = source.indexOf("appendSelectorSelectionTruthSummary(section");
-  const workflowIndex = source.indexOf("appendSelectorWorkflowSections(section");
-  const compactStatusIndex = source.indexOf("appendSelectorProductCompactStatus(section");
+  const workflowIndex = source.indexOf("appendSelectorWorkflowSections(main, surface)");
+  const railIndex = source.indexOf("appendSelectorSummaryRail(layout, surface)");
   const diagnosticsIndex = source.indexOf("const diagnosticsDetails = document.createElement(\"details\")");
+  const summaryIndex = source.indexOf("appendSelectorSelectionTruthSummary(diagnostics");
+  const compactStatusIndex = source.indexOf("appendSelectorProductCompactStatus(diagnostics");
 
-  assert.ok(summaryIndex > 0, "selected-truth summary should render in the product surface");
-  assert.ok(workflowIndex > summaryIndex, "canonical workflow should render after the summary");
-  assert.ok(compactStatusIndex > workflowIndex, "compact candidate/path status should render after workflow sections");
-  assert.ok(diagnosticsIndex > compactStatusIndex, "Diagnostics should remain below the product path");
+  assert.ok(workflowIndex > 0, "canonical workflow should render in the product-first main flow");
+  assert.ok(railIndex > workflowIndex, "selected summary rail should render beside workflow controls");
+  assert.ok(diagnosticsIndex > railIndex, "developer drawer should remain below the product path");
+  assert.ok(summaryIndex > diagnosticsIndex, "detailed selected-truth summary should render inside the developer drawer");
+  assert.ok(compactStatusIndex > summaryIndex, "compact candidate/path status should render inside the developer drawer");
   assert.match(source, /diagnosticsDetails\.open = false/);
+  assert.match(source, /dataset\.selectorDeveloperDrawer = "closed-default"/);
 });
 
 test("flat field grid is not a competing primary product control surface", async () => {

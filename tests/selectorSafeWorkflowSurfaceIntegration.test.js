@@ -251,7 +251,7 @@ test("workflow preview exposes no raw rows, payloads, USERS, CRM, private data, 
   assert.deepEqual(findTrueBlockedFlags(workflow), []);
 });
 
-test("Selector view source renders the workflow panel and does not add routes or POST endpoints", () => {
+test("Selector view source keeps workflow diagnostics behind closed developer drawer and does not add routes or POST endpoints", () => {
   const files = [
     "packages/modules/cs-selector/selectorViewModel.js",
     "packages/modules/cs-selector/selectorView.js",
@@ -259,8 +259,20 @@ test("Selector view source renders the workflow panel and does not add routes or
   const combined = files.map((file) => readFileSync(new URL(`../${file}`, import.meta.url), "utf8")).join("\n");
   const view = readFileSync(new URL("../packages/modules/cs-selector/selectorView.js", import.meta.url), "utf8");
 
-  assert.match(view, /appendSelectorWorkflowPreview\(section, surface\.selectorWorkflowPreview/);
-  assert.match(view, /Selector workflow/);
+  assert.match(view, /cs-selector-summary-rail/);
+  assert.match(view, /dataset\.selectorSummaryRail = "persistent"/);
+  assert.match(view, /cs-selector-product__main-flow/);
+  assert.match(view, /dataset\.defaultProductFlow = "product-first"/);
+  assert.match(view, /dataset\.defaultReadiness = "plain-english"/);
+  assert.match(view, /Runs incomplete — add quantity and length before Engine readiness can be reviewed/);
+  assert.match(view, /cs-selector-dev-drawer/);
+  assert.match(view, /dataset\.selectorDeveloperDrawer = "closed-default"/);
+  assert.match(view, /diagnosticsDetails\.open = false/);
+  assert.match(view, /appendText\(diagnosticsSummary, "span", "d", "cs-selector-dev-drawer__key"\)/);
+  assert.match(view, /appendSelectorWorkflowPreview\(diagnostics, surface\.selectorWorkflowPreview/);
+  assert.doesNotMatch(view, /appendSelectorWorkflowPreview\(section, surface\.selectorWorkflowPreview/);
+  assert.match(view, /appendPayloadPreviewObject\(diagnostics, surface\.payloadPreview/);
+  assert.match(view, /appendSelectedEngineResultHandoff\(diagnostics, surface\.selectedEngineResultHandoff/);
   assert.match(view, /Selector workflow readiness — preview only/);
   assert.match(view, /cs-selector-workflow-preview__stage-card/);
   assert.match(view, /cs-selector-workflow-preview__action-card/);

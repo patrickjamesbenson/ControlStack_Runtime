@@ -37,6 +37,10 @@ test("Selector product path defaults to compact selected-truth and workflow meta
   const source = await readFile(viewSourceUrl, "utf-8");
 
   assert.match(source, /dataset\.compactDefault = "true"/);
+  assert.match(source, /appendSelectorSummaryRail/);
+  assert.match(source, /appendSelectorDefaultBlockerCopy/);
+  assert.match(source, /cs-selector-dev-drawer/);
+  assert.match(source, /dataset\.defaultReadiness = "plain-english"/);
   assert.match(source, /appendSelectorProductCompactStatus/);
   assert.match(source, /appendWorkflowHiddenDetails/);
   assert.match(source, /workflowFieldIsHiddenFromPrimary/);
@@ -51,6 +55,10 @@ test("Selector product path defaults to compact selected-truth and workflow meta
 test("Selector compact styling exists for stable product sections", async () => {
   const styles = await readFile(stylesUrl, "utf-8");
 
+  assert.match(styles, /\.cs-selector-product__layout/);
+  assert.match(styles, /\.cs-selector-summary-rail/);
+  assert.match(styles, /\.cs-selector-dev-drawer/);
+  assert.match(styles, /\.cs-selector-product__plain-readiness/);
   assert.match(styles, /\.cs-selector-product__workflow-header/);
   assert.match(styles, /\.cs-selector-product__section-summary/);
   assert.match(styles, /\.cs-selector-product__workflow-hidden/);

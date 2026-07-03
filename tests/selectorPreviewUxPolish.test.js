@@ -17,9 +17,9 @@ test("Selector page renders product-facing controls before collapsed Diagnostics
   assert.ok(diagnosticsIndex > productIndex, "Diagnostics should come after the product surface");
   assert.ok(expanderDiagnosticsIndex > diagnosticsIndex, "existing diagnostics should live inside Diagnostics");
   assert.equal(source.includes("appendSelectorExpanderShell(article"), false);
-  const disabledSummaryIndex = source.indexOf("appendSelectorDisabledHandoffSummary(section");
-  const specBuildPreviewIndex = source.indexOf("appendSelectorSpecBuildReadinessPreview(section");
-  const compactStatusIndex = source.indexOf("appendSelectorProductCompactStatus(section");
+  const disabledSummaryIndex = source.indexOf("appendSelectorDisabledHandoffSummary(diagnostics");
+  const specBuildPreviewIndex = source.indexOf("appendSelectorSpecBuildReadinessPreview(diagnostics");
+  const compactStatusIndex = source.indexOf("appendSelectorProductCompactStatus(diagnostics");
   assert.ok(specBuildPreviewIndex > disabledSummaryIndex, "spec-build readiness preview should follow disabled handoff summary inside product surface");
   assert.ok(specBuildPreviewIndex < compactStatusIndex, "spec-build readiness preview should appear before product compact details");
   assert.match(source, /CS Selector Preview/);
@@ -39,11 +39,13 @@ test("Selector product surface includes required safety and proof copy", async (
   assert.match(source, /writes disabled/);
 });
 
-test("Selector diagnostics remain available but are not the main page", async () => {
+test("Selector diagnostics remain available behind the small d developer drawer", async () => {
   const source = await readFile(viewSourceUrl, "utf-8");
 
   assert.match(source, /cs-selector-diagnostics/);
-  assert.match(source, /diagnosticsSummary\.textContent = "Diagnostics"/);
+  assert.match(source, /cs-selector-dev-drawer/);
+  assert.match(source, /appendText\(diagnosticsSummary, "span", "d", "cs-selector-dev-drawer__key"\)/);
+  assert.match(source, /dataset\.selectorDeveloperDrawer = "closed-default"/);
   assert.match(source, /appendSelectorReferencePanel\(diagnostics/);
   assert.match(source, /appendSelectorExpanderShell\(diagnostics/);
 });

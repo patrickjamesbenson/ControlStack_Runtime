@@ -93,26 +93,29 @@ function spineRow(spine, sectionKey, rowKey) {
   return row;
 }
 
-test("Selector product surface renders selected-truth and canonical workflow before spine, payload, readiness, handoff, and Diagnostics", async () => {
+test("Selector product surface keeps canonical workflow and rail visible while heavy detail panels move to the developer drawer", async () => {
   const source = await readFile(viewSourceUrl, "utf-8");
 
-  const truthRenderIndex = source.indexOf("appendSelectorSelectionTruthSummary(section");
-  const workflowRenderIndex = source.indexOf("appendSelectorWorkflowSections(section");
-  const spineRenderIndex = source.indexOf("appendSelectorProductSpine(section");
-  const payloadRenderIndex = source.indexOf("appendPayloadPreviewObject(section");
-  const selectedEngineResultIndex = source.indexOf("appendSelectedEngineResultHandoff(section");
-  const readinessRenderIndex = source.indexOf("appendSelectorSourceSpecReadinessExplanation(section");
-  const disabledHandoffIndex = source.indexOf("appendSelectorDisabledHandoffSummary(section");
+  const truthRenderIndex = source.indexOf("appendSelectorSelectionTruthSummary(diagnostics");
+  const workflowRenderIndex = source.indexOf("appendSelectorWorkflowSections(main, surface)");
+  const railRenderIndex = source.indexOf("appendSelectorSummaryRail(layout, surface)");
+  const spineRenderIndex = source.indexOf("appendSelectorProductSpine(diagnostics");
+  const payloadRenderIndex = source.indexOf("appendPayloadPreviewObject(diagnostics");
+  const selectedEngineResultIndex = source.indexOf("appendSelectedEngineResultHandoff(diagnostics");
+  const readinessRenderIndex = source.indexOf("appendSelectorSourceSpecReadinessExplanation(diagnostics");
+  const disabledHandoffIndex = source.indexOf("appendSelectorDisabledHandoffSummary(diagnostics");
   const diagnosticsIndex = source.indexOf("const diagnosticsDetails = document.createElement(\"details\")");
 
-  assert.ok(truthRenderIndex > 0, "selected-truth summary should render first in the product surface");
-  assert.ok(workflowRenderIndex > truthRenderIndex, "canonical workflow should render after selected-truth summary");
-  assert.ok(spineRenderIndex > workflowRenderIndex, "product spine should render after canonical workflow");
+  assert.ok(workflowRenderIndex > 0, "canonical workflow should render in the product-first main flow");
+  assert.ok(railRenderIndex > workflowRenderIndex, "selected summary rail should render beside the product workflow");
+  assert.ok(diagnosticsIndex > railRenderIndex, "developer drawer should remain below the default product surface");
+  assert.ok(truthRenderIndex > diagnosticsIndex, "detailed selected-truth summary should render inside the developer drawer");
+  assert.ok(spineRenderIndex > truthRenderIndex, "product spine should render after selected-truth detail inside the developer drawer");
   assert.ok(payloadRenderIndex > spineRenderIndex, "payload preview should render after checklist spine");
   assert.ok(selectedEngineResultIndex > payloadRenderIndex, "selected engine-result handoff should render after payload preview");
   assert.ok(readinessRenderIndex > selectedEngineResultIndex, "source/spec readiness explanation should render after selected engine-result handoff");
   assert.ok(disabledHandoffIndex > readinessRenderIndex, "disabled handoff summary should render after source/spec readiness");
-  assert.ok(diagnosticsIndex > disabledHandoffIndex, "Diagnostics should remain below the product surface");
+  assert.match(source, /dataset\.selectorSummaryRail = "persistent"/);
   assert.match(source, /dataset\.selectorProductSpine = "checklist"/);
   assert.match(source, /dataset\.selectorPayloadPreview = "skeleton"/);
   assert.match(source, /dataset\.selectorSelectedEngineResult = "read-only"/);
