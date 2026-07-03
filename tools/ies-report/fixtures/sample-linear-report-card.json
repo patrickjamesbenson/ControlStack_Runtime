@@ -1,0 +1,78 @@
+{
+  "schemaVersion": "ies-report-card/v1",
+  "reportKind": "linear-luminaire-photometric-card",
+  "defaultTheme": "datasheet-light",
+  "supportedThemes": ["screen-dark", "datasheet-light", "asset-transparent"],
+  "source": {
+    "kind": "safe-static-fixture",
+    "externalFetchRequired": false,
+    "photometricEditorDependency": false,
+    "iesParserBinding": "not-bound-yet"
+  },
+  "safetyBoundary": {
+    "previewOnly": true,
+    "reportRenderOnly": true,
+    "iesWrite": false,
+    "runtimeDataWrite": false,
+    "donorEngineCall": false,
+    "externalFetch": false,
+    "postEndpoint": false,
+    "productionPhotometry": false
+  },
+  "product": {
+    "name": "DYNAMIX 60 DIRECT CRI90 4K COMFORT 30 WM",
+    "manufacturer": "NOVON Lighting",
+    "family": "DYNAMIX 60",
+    "catalogueCode": "DNX60-D-940-C30-WM",
+    "lampType": "LED linear panel",
+    "symmetry": "C0/C180 + C90/C270"
+  },
+  "metrics": {
+    "lumens": 2943,
+    "watts": 30.8,
+    "peakCandela": 1803.2,
+    "lorPercent": 100,
+    "beamAngleDegrees": 79.7
+  },
+  "dimensions": {
+    "luminous": { "widthMm": 56, "lengthMm": 1144, "heightMm": 0 },
+    "physical": { "widthMm": 60, "lengthMm": 1200, "heightMm": 65 }
+  },
+  "photometry": {
+    "verticalAngles": [0, 5, 10, 15, 20, 25, 30, 35, 40],
+    "horizontalAngles": [0, 90, 180, 270],
+    "candelaMatrix": [
+      [1801.3, 1801.3, 1801.3, 1801.3],
+      [1778.4, 1776.0, 1778.4, 1776.0],
+      [1703.2, 1702.6, 1703.2, 1702.6],
+      [1621.4, 1619.5, 1621.4, 1619.5],
+      [1510.7, 1508.2, 1510.7, 1508.2],
+      [1365.8, 1364.9, 1365.8, 1364.9],
+      [1212.0, 1210.7, 1212.0, 1210.7],
+      [1050.9, 1051.2, 1050.9, 1051.2],
+      [912.4, 911.8, 912.4, 911.8]
+    ]
+  },
+  "planes": {
+    "c0c180": {
+      "label": "C0/C180",
+      "sourceHorizontalAngles": [0, 180],
+      "verticalAngles": [0, 5, 10, 15, 20, 25, 30, 35, 40],
+      "candela": [1801.3, 1778.4, 1703.2, 1621.4, 1510.7, 1365.8, 1212.0, 1050.9, 912.4]
+    },
+    "c90c270": {
+      "label": "C90/C270",
+      "sourceHorizontalAngles": [90, 270],
+      "verticalAngles": [0, 5, 10, 15, 20, 25, 30, 35, 40],
+      "candela": [1801.3, 1776.0, 1702.6, 1619.5, 1508.2, 1364.9, 1210.7, 1051.2, 911.8]
+    }
+  },
+  "exportSizing": {
+    "datasheetPlotWidthMm": 90,
+    "datasheetPlotHeightMm": 65,
+    "datasheetRowWidthMm": 180,
+    "screenPlotWidthPx": 360,
+    "screenPlotHeightPx": 260
+  },
+  "displayCards": ["details", "polar-plot", "linear-plot", "intensities"]
+}

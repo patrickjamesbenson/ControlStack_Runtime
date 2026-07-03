@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>IES Report Card Sample</title>
+  <link rel="stylesheet" href="./photometric-report-card.css">
+</head>
+<body class="theme-screen-dark" data-supported-themes="screen-dark datasheet-light asset-transparent">
+  <main class="ies-report-page" aria-label="Photometric report card sample">
+    <header class="ies-report-header">
+      <div>
+        <div class="ies-report-kicker">CoreStack photometric card skeleton</div>
+        <h1 class="ies-report-heading">Linear luminaire IES report preview</h1>
+      </div>
+      <div class="ies-report-safety-strip" aria-label="Safety posture">
+        <span class="ies-report-chip">Preview only</span>
+        <span class="ies-report-chip">Report render only</span>
+        <span class="ies-report-chip">No IES generation</span>
+        <span class="ies-report-chip">No external fetch</span>
+      </div>
+    </header>
+
+    <section class="ies-report-grid" aria-label="IES report card grid">
+      <article class="ies-report-card" data-card="details">
+        <header class="ies-report-card-header">
+          <h2 class="ies-report-card-title">Details</h2>
+        </header>
+        <div class="ies-report-card-body">
+          <div class="ies-detail-meter" data-score="95.56" aria-label="Sample quality meter"></div>
+          <div class="ies-detail-layout">
+            <div>
+              <dl class="ies-detail-list">
+                <dt>Output</dt><dd>2943 lm</dd>
+                <dt>Peak</dt><dd>1803 cd</dd>
+                <dt>Power</dt><dd>30.8 W</dd>
+              </dl>
+              <div class="ies-luminaire-mark" aria-label="Linear luminous aperture marker"></div>
+              <dl class="ies-detail-list">
+                <dt>Luminous width</dt><dd>56 mm</dd>
+                <dt>Luminous length</dt><dd>1144 mm</dd>
+                <dt>Luminous height</dt><dd>0 mm</dd>
+                <dt>Physical width</dt><dd>60 mm</dd>
+                <dt>Physical length</dt><dd>1200 mm</dd>
+                <dt>Physical height</dt><dd>65 mm</dd>
+              </dl>
+            </div>
+            <div class="ies-product-block">
+              <div>
+                <span class="ies-product-label">Product name:</span>
+                <div class="ies-product-value">DYNAMIX 60 DIRECT CRI90 4K COMFORT 30 WM</div>
+              </div>
+              <div>
+                <span class="ies-product-label">Manufacturer:</span>
+                <div class="ies-product-value">NOVON Lighting</div>
+              </div>
+              <div>
+                <span class="ies-product-label">Date and time:</span>
+                <div class="ies-product-value">Preview fixture</div>
+              </div>
+              <div>
+                <span class="ies-product-label">Additional information:</span>
+                <div class="ies-product-value">Static sample only</div>
+              </div>
+              <div>
+                <span class="ies-product-label">Lamp type:</span>
+                <div class="ies-product-value">LED linear panel</div>
+              </div>
+              <div>
+                <span class="ies-product-label">Symmetry:</span>
+                <div class="ies-product-value">C0/C180 + C90/C270</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="ies-report-card" data-card="polar-plot">
+        <header class="ies-report-card-header">
+          <h2 class="ies-report-card-title">Polar plot</h2>
+        </header>
+        <div class="ies-report-card-body">
+          <div class="ies-plot-wrap">
+            <svg class="ies-plot-svg" viewBox="0 0 360 260" role="img" aria-label="Sample polar plot placeholder">
+              <g transform="translate(180 132)">
+                <circle class="ies-grid-line" r="42"></circle>
+                <circle class="ies-grid-line" r="78"></circle>
+                <circle class="ies-grid-line" r="113"></circle>
+                <circle class="ies-grid-line--strong" r="126"></circle>
+                <line class="ies-axis-line" x1="-136" y1="0" x2="136" y2="0"></line>
+                <line class="ies-axis-line" x1="0" y1="-126" x2="0" y2="126"></line>
+                <line class="ies-grid-line" x1="-118" y1="-68" x2="118" y2="68"></line>
+                <line class="ies-grid-line" x1="-118" y1="68" x2="118" y2="-68"></line>
+                <line class="ies-grid-line" x1="-68" y1="-118" x2="68" y2="118"></line>
+                <line class="ies-grid-line" x1="-68" y1="118" x2="68" y2="-118"></line>
+                <path class="ies-beam-fill" d="M0,-82 C32,-78 62,-33 67,18 C60,78 25,114 0,121 C-25,114 -60,78 -67,18 C-62,-33 -32,-78 0,-82 Z"></path>
+                <path class="ies-curve-red" d="M0,-82 C30,-78 61,-31 66,18 C59,77 24,113 0,121 C-24,113 -59,77 -66,18 C-61,-31 -30,-78 0,-82 Z"></path>
+                <path class="ies-curve-blue" d="M0,-80 C35,-73 70,-27 73,23 C62,72 29,108 0,116 C-29,108 -62,72 -73,23 C-70,-27 -35,-73 0,-80 Z"></path>
+                <text class="ies-plot-tick" x="-8" y="-39">600</text>
+                <text class="ies-plot-tick" x="-13" y="-74">1200</text>
+                <text class="ies-plot-tick" x="-13" y="-109">1800</text>
+                <text class="ies-plot-label" x="-6" y="142">0°</text>
+                <text class="ies-plot-label" x="-153" y="4">90°</text>
+                <text class="ies-plot-label" x="137" y="4">90°</text>
+                <text class="ies-plot-label" x="-11" y="-139">180°</text>
+                <text class="ies-plot-label" x="-152" y="-82">105°</text>
+                <text class="ies-plot-label" x="132" y="-82">105°</text>
+                <text class="ies-plot-label" x="-146" y="88">30°</text>
+                <text class="ies-plot-label" x="130" y="88">30°</text>
+              </g>
+            </svg>
+            <div class="ies-legend" aria-label="Polar plot legend">
+              <span class="ies-legend-line ies-legend-line--red"></span><span>C0/C180</span>
+              <span class="ies-legend-line ies-legend-line--blue"></span><span>C90/C270</span>
+            </div>
+          </div>
+          <p class="ies-plot-note"><span>Beam angle: <strong>79.7°</strong></span><span>LOR: <strong>100%</strong></span></p>
+        </div>
+      </article>
+
+      <article class="ies-report-card" data-card="linear-plot">
+        <header class="ies-report-card-header">
+          <h2 class="ies-report-card-title">Linear plot</h2>
+        </header>
+        <div class="ies-report-card-body">
+          <div class="ies-plot-wrap">
+            <svg class="ies-plot-svg" viewBox="0 0 360 260" role="img" aria-label="Sample linear plot placeholder">
+              <g transform="translate(34 22)">
+                <rect x="0" y="0" width="296" height="205" fill="none" class="ies-grid-line--strong"></rect>
+                <line class="ies-grid-line ies-grid-line--dash" x1="0" y1="164" x2="296" y2="164"></line>
+                <line class="ies-grid-line ies-grid-line--dash" x1="0" y1="123" x2="296" y2="123"></line>
+                <line class="ies-grid-line ies-grid-line--dash" x1="0" y1="82" x2="296" y2="82"></line>
+                <line class="ies-grid-line ies-grid-line--dash" x1="0" y1="41" x2="296" y2="41"></line>
+                <line class="ies-grid-line ies-grid-line--dash" x1="37" y1="0" x2="37" y2="205"></line>
+                <line class="ies-grid-line ies-grid-line--dash" x1="74" y1="0" x2="74" y2="205"></line>
+                <line class="ies-grid-line ies-grid-line--dash" x1="111" y1="0" x2="111" y2="205"></line>
+                <line class="ies-grid-line ies-grid-line--dash" x1="148" y1="0" x2="148" y2="205"></line>
+                <line class="ies-grid-line ies-grid-line--dash" x1="185" y1="0" x2="185" y2="205"></line>
+                <line class="ies-grid-line ies-grid-line--dash" x1="222" y1="0" x2="222" y2="205"></line>
+                <line class="ies-grid-line ies-grid-line--dash" x1="259" y1="0" x2="259" y2="205"></line>
+                <path class="ies-beam-fill" d="M40,205 C62,199 78,177 92,141 C107,90 126,23 148,19 C170,23 189,90 204,141 C218,177 234,199 256,205 Z"></path>
+                <path class="ies-curve-red" d="M40,205 C62,199 78,177 92,141 C107,90 126,23 148,19 C170,23 189,90 204,141 C218,177 234,199 256,205"></path>
+                <path class="ies-curve-blue" d="M42,205 C64,198 80,176 94,139 C110,88 127,21 148,18 C169,21 186,88 202,139 C216,176 232,198 254,205"></path>
+                <text class="ies-plot-tick" x="-27" y="168">500</text>
+                <text class="ies-plot-tick" x="-32" y="127">1000</text>
+                <text class="ies-plot-tick" x="-32" y="86">1500</text>
+                <text class="ies-plot-tick" x="-32" y="45">2000</text>
+                <text class="ies-plot-tick" x="0" y="222">0°</text>
+                <text class="ies-plot-tick" x="137" y="222">90°</text>
+                <text class="ies-plot-tick" x="276" y="222">180°</text>
+              </g>
+            </svg>
+            <div class="ies-legend" aria-label="Linear plot legend">
+              <span class="ies-legend-line ies-legend-line--red"></span><span>C0/C180</span>
+              <span class="ies-legend-line ies-legend-line--blue"></span><span>C90/C270</span>
+            </div>
+          </div>
+          <p class="ies-plot-note"><span>Scale: <strong>candela</strong></span><span>Sample fixture</span></p>
+        </div>
+      </article>
+
+      <article class="ies-report-card ies-report-card--wide" data-card="intensities">
+        <header class="ies-report-card-header">
+          <h2 class="ies-report-card-title">Intensities (candela)</h2>
+        </header>
+        <div class="ies-intensity-table-frame">
+          <table class="ies-intensity-table" aria-label="Sample candela intensity table">
+            <thead>
+              <tr>
+                <th>V°</th>
+                <th>0°</th>
+                <th>15°</th>
+                <th>30°</th>
+                <th>45°</th>
+                <th>60°</th>
+                <th>75°</th>
+                <th>90°</th>
+                <th>105°</th>
+                <th>120°</th>
+                <th>135°</th>
+                <th>150°</th>
+                <th>165°</th>
+                <th>180°</th>
+                <th>195°</th>
+                <th>210°</th>
+                <th>225°</th>
+                <th>240°</th>
+                <th>255°</th>
+                <th>270°</th>
+                <th>285°</th>
+                <th>300°</th>
+                <th>315°</th>
+                <th>330°</th>
+                <th>345°</th>
+                <th>360°</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><th>0°</th><td data-band="high">1801.3</td><td data-band="high">1801.3</td><td data-band="high">1801.3</td><td data-band="high">1801.3</td><td data-band="high">1801.3</td><td data-band="high">1801.3</td><td data-band="high">1801.3</td><td data-band="high">1801.3</td><td data-band="high">1801.3</td><td data-band="high">1801.3</td><td data-band="high">1801.3</td><td data-band="high">1801.3</td><td data-band="high">1801.3</td><td data-band="high">1801.3</td><td data-band="high">1801.3</td><td data-band="high">1801.3</td><td data-band="high">1801.3</td><td data-band="high">1801.3</td><td data-band="high">1801.3</td><td data-band="high">1801.3</td><td data-band="high">1801.3</td><td data-band="high">1801.3</td><td data-band="high">1801.3</td><td data-band="high">1801.3</td><td data-band="high">1801.3</td></tr>
+              <tr><th>5°</th><td data-band="high">1778.4</td><td data-band="high">1780.2</td><td data-band="high">1781.0</td><td data-band="high">1779.7</td><td data-band="high">1776.4</td><td data-band="high">1774.2</td><td data-band="high">1776.0</td><td data-band="high">1779.1</td><td data-band="high">1780.4</td><td data-band="high">1779.6</td><td data-band="high">1776.5</td><td data-band="high">1774.0</td><td data-band="high">1778.4</td><td data-band="high">1780.2</td><td data-band="high">1781.0</td><td data-band="high">1779.7</td><td data-band="high">1776.4</td><td data-band="high">1774.2</td><td data-band="high">1776.0</td><td data-band="high">1779.1</td><td data-band="high">1780.4</td><td data-band="high">1779.6</td><td data-band="high">1776.5</td><td data-band="high">1774.0</td><td data-band="high">1778.4</td></tr>
+              <tr><th>10°</th><td data-band="high">1703.2</td><td data-band="high">1706.9</td><td data-band="high">1710.2</td><td data-band="high">1712.4</td><td data-band="high">1709.8</td><td data-band="high">1705.0</td><td data-band="high">1702.6</td><td data-band="high">1704.9</td><td data-band="high">1708.2</td><td data-band="high">1711.3</td><td data-band="high">1709.6</td><td data-band="high">1705.1</td><td data-band="high">1703.2</td><td data-band="high">1706.9</td><td data-band="high">1710.2</td><td data-band="high">1712.4</td><td data-band="high">1709.8</td><td data-band="high">1705.0</td><td data-band="high">1702.6</td><td data-band="high">1704.9</td><td data-band="high">1708.2</td><td data-band="high">1711.3</td><td data-band="high">1709.6</td><td data-band="high">1705.1</td><td data-band="high">1703.2</td></tr>
+              <tr><th>15°</th><td data-band="mid">1621.4</td><td data-band="mid">1624.7</td><td data-band="mid">1628.5</td><td data-band="mid">1631.2</td><td data-band="mid">1626.8</td><td data-band="mid">1622.0</td><td data-band="mid">1619.5</td><td data-band="mid">1621.7</td><td data-band="mid">1627.4</td><td data-band="mid">1630.3</td><td data-band="mid">1625.8</td><td data-band="mid">1622.6</td><td data-band="mid">1621.4</td><td data-band="mid">1624.7</td><td data-band="mid">1628.5</td><td data-band="mid">1631.2</td><td data-band="mid">1626.8</td><td data-band="mid">1622.0</td><td data-band="mid">1619.5</td><td data-band="mid">1621.7</td><td data-band="mid">1627.4</td><td data-band="mid">1630.3</td><td data-band="mid">1625.8</td><td data-band="mid">1622.6</td><td data-band="mid">1621.4</td></tr>
+              <tr><th>20°</th><td data-band="mid">1510.7</td><td data-band="mid">1513.9</td><td data-band="mid">1516.2</td><td data-band="mid">1518.6</td><td data-band="mid">1514.3</td><td data-band="mid">1511.0</td><td data-band="mid">1508.2</td><td data-band="mid">1510.5</td><td data-band="mid">1513.8</td><td data-band="mid">1517.0</td><td data-band="mid">1514.5</td><td data-band="mid">1511.8</td><td data-band="mid">1510.7</td><td data-band="mid">1513.9</td><td data-band="mid">1516.2</td><td data-band="mid">1518.6</td><td data-band="mid">1514.3</td><td data-band="mid">1511.0</td><td data-band="mid">1508.2</td><td data-band="mid">1510.5</td><td data-band="mid">1513.8</td><td data-band="mid">1517.0</td><td data-band="mid">1514.5</td><td data-band="mid">1511.8</td><td data-band="mid">1510.7</td></tr>
+              <tr><th>25°</th><td data-band="mid">1365.8</td><td data-band="mid">1369.1</td><td data-band="mid">1372.5</td><td data-band="mid">1375.8</td><td data-band="mid">1370.1</td><td data-band="mid">1367.2</td><td data-band="mid">1364.9</td><td data-band="mid">1367.6</td><td data-band="mid">1371.8</td><td data-band="mid">1374.6</td><td data-band="mid">1370.9</td><td data-band="mid">1367.5</td><td data-band="mid">1365.8</td><td data-band="mid">1369.1</td><td data-band="mid">1372.5</td><td data-band="mid">1375.8</td><td data-band="mid">1370.1</td><td data-band="mid">1367.2</td><td data-band="mid">1364.9</td><td data-band="mid">1367.6</td><td data-band="mid">1371.8</td><td data-band="mid">1374.6</td><td data-band="mid">1370.9</td><td data-band="mid">1367.5</td><td data-band="mid">1365.8</td></tr>
+              <tr><th>30°</th><td data-band="mid">1212.0</td><td data-band="mid">1215.4</td><td data-band="mid">1219.1</td><td data-band="mid">1222.5</td><td data-band="mid">1217.0</td><td data-band="mid">1213.2</td><td data-band="mid">1210.7</td><td data-band="mid">1214.1</td><td data-band="mid">1218.8</td><td data-band="mid">1221.4</td><td data-band="mid">1217.9</td><td data-band="mid">1214.0</td><td data-band="mid">1212.0</td><td data-band="mid">1215.4</td><td data-band="mid">1219.1</td><td data-band="mid">1222.5</td><td data-band="mid">1217.0</td><td data-band="mid">1213.2</td><td data-band="mid">1210.7</td><td data-band="mid">1214.1</td><td data-band="mid">1218.8</td><td data-band="mid">1221.4</td><td data-band="mid">1217.9</td><td data-band="mid">1214.0</td><td data-band="mid">1212.0</td></tr>
+              <tr><th>35°</th><td data-band="low">1050.9</td><td data-band="low">1054.6</td><td data-band="low">1058.7</td><td data-band="low">1061.2</td><td data-band="low">1056.4</td><td data-band="low">1053.0</td><td data-band="low">1051.2</td><td data-band="low">1053.8</td><td data-band="low">1058.1</td><td data-band="low">1060.3</td><td data-band="low">1056.5</td><td data-band="low">1052.8</td><td data-band="low">1050.9</td><td data-band="low">1054.6</td><td data-band="low">1058.7</td><td data-band="low">1061.2</td><td data-band="low">1056.4</td><td data-band="low">1053.0</td><td data-band="low">1051.2</td><td data-band="low">1053.8</td><td data-band="low">1058.1</td><td data-band="low">1060.3</td><td data-band="low">1056.5</td><td data-band="low">1052.8</td><td data-band="low">1050.9</td></tr>
+              <tr><th>40°</th><td data-band="low">912.4</td><td data-band="low">916.0</td><td data-band="low">919.7</td><td data-band="low">922.3</td><td data-band="low">918.1</td><td data-band="low">914.2</td><td data-band="low">911.8</td><td data-band="low">914.3</td><td data-band="low">918.6</td><td data-band="low">921.0</td><td data-band="low">917.9</td><td data-band="low">914.1</td><td data-band="low">912.4</td><td data-band="low">916.0</td><td data-band="low">919.7</td><td data-band="low">922.3</td><td data-band="low">918.1</td><td data-band="low">914.2</td><td data-band="low">911.8</td><td data-band="low">914.3</td><td data-band="low">918.6</td><td data-band="low">921.0</td><td data-band="low">917.9</td><td data-band="low">914.1</td><td data-band="low">912.4</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <footer class="ies-intensity-meta">
+          <span>Static sample candela matrix for layout only.</span>
+          <span class="ies-export-size-note">Datasheet target: 180 mm report row, 90 mm plot cards.</span>
+        </footer>
+      </article>
+    </section>
+  </main>
+</body>
+</html>

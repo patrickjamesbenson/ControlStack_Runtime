@@ -1,0 +1,468 @@
+/*
+  Runtime-owned photometric report card styling.
+  Original implementation: no PhotometricEditor code, assets, fetches, or scraping.
+  Modes:
+  - screen-dark: internal review on dark technical surface
+  - datasheet-light: default white datasheet surface
+  - asset-transparent: transparent outer asset for downstream layout tools
+*/
+
+:root {
+  --ies-report-font: "Segoe UI", Roboto, Arial, sans-serif;
+  --ies-report-mono: "Cascadia Mono", Consolas, "SFMono-Regular", monospace;
+  --ies-report-page-width: 1200px;
+  --ies-report-gap: 16px;
+  --ies-report-radius: 4px;
+  --ies-report-card-padding: 18px;
+  --ies-report-card-min-height: 315px;
+  --ies-report-small-plot-width: 360px;
+  --ies-report-small-plot-height: 260px;
+  --ies-report-datasheet-plot-width-mm: 90mm;
+  --ies-report-datasheet-plot-height-mm: 65mm;
+  --ies-report-datasheet-row-width-mm: 180mm;
+  --ies-report-curve-weight: 1.35;
+  --ies-report-grid-weight: 0.7;
+  --ies-report-axis-weight: 0.95;
+  --ies-report-table-font-size: 10px;
+  --ies-report-label-size: 11px;
+  --ies-report-title-size: 20px;
+  --ies-report-body-size: 12px;
+
+  --ies-report-plot-red: #d95660;
+  --ies-report-plot-blue: #6775f6;
+  --ies-report-beam-fill: rgba(224, 218, 125, 0.68);
+  --ies-report-peak-fill: rgba(245, 213, 105, 0.88);
+  --ies-report-status-good: #84c954;
+  --ies-report-status-warn: #f2c15b;
+}
+
+body.theme-screen-dark,
+.theme-screen-dark {
+  --ies-report-page-bg: #2e303a;
+  --ies-report-card-bg: #30323d;
+  --ies-report-card-border: #50535f;
+  --ies-report-title: #d8dbe4;
+  --ies-report-text: #d0d4df;
+  --ies-report-muted: #a8adbb;
+  --ies-report-faint: #7f8492;
+  --ies-report-grid: rgba(176, 181, 195, 0.22);
+  --ies-report-grid-strong: rgba(197, 202, 214, 0.34);
+  --ies-report-axis: rgba(205, 210, 222, 0.46);
+  --ies-report-table-header: #4a4d58;
+  --ies-report-table-row-a: #3d404b;
+  --ies-report-table-row-b: #343743;
+  --ies-report-table-cell-border: rgba(218, 222, 234, 0.08);
+  --ies-report-chip-bg: rgba(255, 255, 255, 0.05);
+}
+
+body.theme-datasheet-light,
+.theme-datasheet-light {
+  --ies-report-page-bg: #ffffff;
+  --ies-report-card-bg: #ffffff;
+  --ies-report-card-border: #d6dae3;
+  --ies-report-title: #333846;
+  --ies-report-text: #2f3542;
+  --ies-report-muted: #626b7c;
+  --ies-report-faint: #8a93a3;
+  --ies-report-grid: rgba(78, 88, 105, 0.18);
+  --ies-report-grid-strong: rgba(78, 88, 105, 0.32);
+  --ies-report-axis: rgba(64, 72, 86, 0.52);
+  --ies-report-table-header: #eef1f6;
+  --ies-report-table-row-a: #f8f9fb;
+  --ies-report-table-row-b: #ffffff;
+  --ies-report-table-cell-border: rgba(72, 80, 96, 0.14);
+  --ies-report-chip-bg: rgba(48, 56, 72, 0.06);
+  --ies-report-beam-fill: rgba(232, 223, 126, 0.48);
+}
+
+body.theme-asset-transparent,
+.theme-asset-transparent {
+  --ies-report-page-bg: transparent;
+  --ies-report-card-bg: transparent;
+  --ies-report-card-border: transparent;
+  --ies-report-title: #333846;
+  --ies-report-text: #2f3542;
+  --ies-report-muted: #626b7c;
+  --ies-report-faint: #8a93a3;
+  --ies-report-grid: rgba(78, 88, 105, 0.18);
+  --ies-report-grid-strong: rgba(78, 88, 105, 0.32);
+  --ies-report-axis: rgba(64, 72, 86, 0.52);
+  --ies-report-table-header: rgba(238, 241, 246, 0.92);
+  --ies-report-table-row-a: rgba(248, 249, 251, 0.88);
+  --ies-report-table-row-b: rgba(255, 255, 255, 0.88);
+  --ies-report-table-cell-border: rgba(72, 80, 96, 0.14);
+  --ies-report-chip-bg: rgba(48, 56, 72, 0.06);
+  --ies-report-beam-fill: rgba(232, 223, 126, 0.42);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--ies-report-page-bg);
+  color: var(--ies-report-text);
+  font-family: var(--ies-report-font);
+  font-size: var(--ies-report-body-size);
+}
+
+.ies-report-page {
+  width: min(var(--ies-report-page-width), calc(100vw - 32px));
+  margin: 0 auto;
+  padding: 14px 0 28px;
+}
+
+.ies-report-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 0 0 10px;
+}
+
+.ies-report-kicker {
+  color: var(--ies-report-muted);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.ies-report-heading {
+  margin: 2px 0 0;
+  color: var(--ies-report-title);
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.ies-report-safety-strip {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.ies-report-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 3px 8px;
+  border: 1px solid var(--ies-report-card-border);
+  border-radius: 999px;
+  background: var(--ies-report-chip-bg);
+  color: var(--ies-report-muted);
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+.ies-report-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: var(--ies-report-gap);
+}
+
+.ies-report-card {
+  min-height: var(--ies-report-card-min-height);
+  border: 1px solid var(--ies-report-card-border);
+  border-radius: var(--ies-report-radius);
+  background: var(--ies-report-card-bg);
+  overflow: hidden;
+}
+
+.ies-report-card--wide {
+  grid-column: 1 / -1;
+  min-height: 0;
+}
+
+.ies-report-card-header {
+  padding: 16px 18px 6px;
+}
+
+.ies-report-card-title {
+  margin: 0;
+  color: var(--ies-report-title);
+  font-size: var(--ies-report-title-size);
+  font-weight: 500;
+  letter-spacing: 0.015em;
+}
+
+.ies-report-card-body {
+  padding: 2px var(--ies-report-card-padding) 18px;
+}
+
+.ies-detail-meter {
+  height: 24px;
+  margin: 6px 0 12px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #f0443e 0%, #f0b93b 45%, #d9dd3f 78%, #45ba4e 100%);
+  position: relative;
+}
+
+.ies-detail-meter::after {
+  content: attr(data-score);
+  position: absolute;
+  top: 2px;
+  left: 48%;
+  color: #141720;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.ies-detail-layout {
+  display: grid;
+  grid-template-columns: 0.92fr 1.08fr;
+  gap: 12px 18px;
+}
+
+.ies-detail-list {
+  display: grid;
+  grid-template-columns: 92px 1fr;
+  gap: 7px 10px;
+  margin: 0;
+}
+
+.ies-detail-list dt {
+  color: var(--ies-report-muted);
+  font-size: 12px;
+}
+
+.ies-detail-list dd {
+  margin: 0;
+  color: var(--ies-report-text);
+  font-size: 13px;
+  text-align: right;
+}
+
+.ies-product-block {
+  display: grid;
+  gap: 13px;
+  align-content: start;
+  min-height: 205px;
+}
+
+.ies-product-label {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--ies-report-muted);
+  font-size: 11px;
+}
+
+.ies-product-value {
+  color: var(--ies-report-title);
+  font-size: 12px;
+  line-height: 1.25;
+}
+
+.ies-luminaire-mark {
+  width: 12px;
+  height: 92px;
+  margin: 10px auto 8px;
+  border-radius: 1px;
+  background: linear-gradient(180deg, #f6efa0 0%, #fff8b5 100%);
+  box-shadow: 0 0 10px rgba(247, 238, 156, 0.22);
+}
+
+.ies-plot-wrap {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+}
+
+.ies-plot-svg {
+  display: block;
+  width: 100%;
+  max-width: var(--ies-report-small-plot-width);
+  height: var(--ies-report-small-plot-height);
+  color: var(--ies-report-text);
+}
+
+.ies-grid-line {
+  stroke: var(--ies-report-grid);
+  stroke-width: var(--ies-report-grid-weight);
+  vector-effect: non-scaling-stroke;
+}
+
+.ies-grid-line--strong,
+.ies-axis-line {
+  stroke: var(--ies-report-grid-strong);
+  stroke-width: var(--ies-report-axis-weight);
+  vector-effect: non-scaling-stroke;
+}
+
+.ies-grid-line--dash {
+  stroke-dasharray: 2 3;
+}
+
+.ies-plot-label,
+.ies-plot-tick {
+  fill: var(--ies-report-muted);
+  font-family: var(--ies-report-font);
+  font-size: var(--ies-report-label-size);
+}
+
+.ies-plot-tick {
+  font-size: 10px;
+}
+
+.ies-beam-fill {
+  fill: var(--ies-report-beam-fill);
+  stroke: none;
+}
+
+.ies-curve-red,
+.ies-curve-blue {
+  fill: none;
+  stroke-width: var(--ies-report-curve-weight);
+  vector-effect: non-scaling-stroke;
+}
+
+.ies-curve-red {
+  stroke: var(--ies-report-plot-red);
+}
+
+.ies-curve-blue {
+  stroke: var(--ies-report-plot-blue);
+}
+
+.ies-legend {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 5px 7px;
+  align-items: center;
+  position: absolute;
+  right: 6px;
+  bottom: 4px;
+  color: var(--ies-report-muted);
+  font-size: 11px;
+}
+
+.ies-legend-line {
+  width: 18px;
+  height: 0;
+  border-top: 1.5px solid currentColor;
+}
+
+.ies-legend-line--red {
+  color: var(--ies-report-plot-red);
+}
+
+.ies-legend-line--blue {
+  color: var(--ies-report-plot-blue);
+}
+
+.ies-plot-note {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 0;
+  color: var(--ies-report-muted);
+  font-size: 12px;
+}
+
+.ies-plot-note strong {
+  color: var(--ies-report-title);
+  font-weight: 500;
+}
+
+.ies-intensity-table-frame {
+  max-height: 320px;
+  overflow: auto;
+  border-top: 1px solid var(--ies-report-card-border);
+}
+
+.ies-intensity-table {
+  width: 100%;
+  min-width: 1050px;
+  border-collapse: collapse;
+  font-family: var(--ies-report-mono);
+  font-size: var(--ies-report-table-font-size);
+  color: var(--ies-report-text);
+}
+
+.ies-intensity-table th,
+.ies-intensity-table td {
+  border-right: 1px solid var(--ies-report-table-cell-border);
+  border-bottom: 1px solid var(--ies-report-table-cell-border);
+  padding: 4px 6px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.ies-intensity-table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--ies-report-table-header);
+  color: var(--ies-report-title);
+  font-weight: 500;
+}
+
+.ies-intensity-table tbody tr:nth-child(odd) {
+  background: var(--ies-report-table-row-a);
+}
+
+.ies-intensity-table tbody tr:nth-child(even) {
+  background: var(--ies-report-table-row-b);
+}
+
+.ies-intensity-table td[data-band="high"] {
+  background: rgba(210, 64, 91, 0.35);
+}
+
+.ies-intensity-table td[data-band="mid"] {
+  background: rgba(211, 171, 64, 0.28);
+}
+
+.ies-intensity-table td[data-band="low"] {
+  background: rgba(55, 161, 118, 0.22);
+}
+
+.ies-intensity-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 18px 14px;
+  color: var(--ies-report-muted);
+  font-size: 11px;
+}
+
+.ies-export-size-note {
+  color: var(--ies-report-faint);
+}
+
+@media print {
+  body {
+    background: #ffffff !important;
+  }
+
+  .ies-report-page {
+    width: 180mm;
+    padding: 0;
+  }
+
+  .ies-report-grid {
+    gap: 4mm;
+  }
+
+  .ies-report-card {
+    break-inside: avoid;
+  }
+}
+
+@media (max-width: 920px) {
+  .ies-report-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ies-report-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .ies-report-safety-strip {
+    justify-content: flex-start;
+  }
+}
