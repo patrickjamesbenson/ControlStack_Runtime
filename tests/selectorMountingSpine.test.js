@@ -4,6 +4,7 @@ import { readFile } from "node:fs/promises";
 
 import { createSelectorState } from "../packages/modules/cs-selector/selectorState.js";
 import { createSelectorViewModel } from "../packages/modules/cs-selector/selectorViewModel.js";
+import { createSafeRailSelectionSourceBucketRows } from "../packages/modules/cs-selector/selectorView.js";
 import { deriveSelectorReferenceOptionsFromSnapshot } from "../packages/workspace-kernel/selectorReferenceOptionsService.js";
 
 const testSourceUrl = new URL("./selectorMountingSpine.test.js", import.meta.url);
@@ -190,6 +191,21 @@ function selectAndReload(selectorState, fieldKey, value, snapshot = mountingSnap
   let model = createModel({ selectorState, snapshot });
   model.selectorSurface.setFieldValue(fieldKey, value);
   return createModel({ selectorState, snapshot });
+}
+
+function railTruthItems(summary = {}, truthKind = "blocked") {
+  return (Array.isArray(summary.groups) ? summary.groups : [])
+    .flatMap((group) => Array.isArray(group.items) ? group.items : [])
+    .filter((item) => item.truthKind === truthKind);
+}
+
+function compactBlockedRailText(summary = {}) {
+  const bucket = createSafeRailSelectionSourceBucketRows("Blocked", railTruthItems(summary, "blocked"), { blockedReviewOnly: true });
+  return [bucket.label, bucket.valueLabel, ...bucket.rows].join("\n");
+}
+
+function detailedBlockedValueText(summary = {}) {
+  return (Array.isArray(summary.blockers) ? summary.blockers : []).map((item) => item.valueLabel || item.value || "").join("\n");
 }
 
 function mountingSection(spine) {
@@ -404,6 +420,12 @@ test("selected incompatible Surface Mount is preserved as blocked by donor polic
   assert.equal(selectorState.getSnapshot().dbBackedSelector.manualConstraints.mountStyle.value, "Surface Mount");
   assert.ok(model.selectorSurface.selectionTruthSummary.blockers.some((item) => item.fieldKey === "mountStyle"));
   assert.equal(model.selectorSurface.payloadPreview.mounting.mountStyle, null);
+
+  const railText = compactBlockedRailText(model.selectorSurface.selectionTruthSummary);
+  assert.match(railText, /review required/);
+  assert.match(railText, /blocked/);
+  assert.doesNotMatch(railText, /Surface Mount/);
+  assert.match(detailedBlockedValueText(model.selectorSurface.selectionTruthSummary), /Surface Mount/);
 });
 
 test("mount CODE_POLICY plain reason stays in main flow and technical code stays in developer diagnostics", async () => {

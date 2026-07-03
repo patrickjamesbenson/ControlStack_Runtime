@@ -78,6 +78,10 @@ test("Selector selected-truth summary feeds the rail by default and detailed row
   assert.match(source, /dataset\.selectorTruthSummary = "read-only"/);
   assert.match(source, /manual selections are constraints; auto\/default\/inherited selections are consequences/);
   assert.match(source, /Blocked values stay visible/);
+  assert.match(source, /createSafeRailSelectionSourceBucketRows/);
+  assert.match(source, /blockedReviewOnly/);
+  assert.match(source, /review required/);
+  assert.match(source, /appendRailSelectionSourceBucket\(group, "Blocked", railItemsByKind\(summary, "blocked"\), \{ blockedReviewOnly: true \}\)/);
 });
 
 test("Selector selected-truth summary UI has dedicated styles", async () => {

@@ -2144,17 +2144,41 @@ function railItemsByKind(summary = {}, kinds = []) {
   return allTruthItems(summary).filter((item) => wanted.includes(item.truthKind));
 }
 
-function appendRailSelectionSourceBucket(parent, label, items = []) {
+export function createSafeRailSelectionSourceBucketRows(label, items = [], { blockedReviewOnly = false } = {}) {
+  const sourceItems = Array.isArray(items) ? items : [];
+  if (!sourceItems.length) return { label, valueLabel: "None", rows: [], count: 0, blockedReviewOnly };
+  const visibleItems = sourceItems.slice(0, 4);
+  const overflow = sourceItems.length > 4 ? [`+${sourceItems.length - 4} more`] : [];
+  if (blockedReviewOnly) {
+    return {
+      label,
+      valueLabel: `${sourceItems.length} review required`,
+      rows: visibleItems.map((item) => `${item.label || item.fieldKey || "Selection"}: blocked`).concat(overflow),
+      count: sourceItems.length,
+      blockedReviewOnly: true,
+    };
+  }
+  return {
+    label,
+    valueLabel: "",
+    rows: visibleItems.map((item) => `${item.label || item.fieldKey}: ${railPlainValue(item.valueLabel || item.value)}`).concat(overflow),
+    count: sourceItems.length,
+    blockedReviewOnly: false,
+  };
+}
+
+function appendRailSelectionSourceBucket(parent, label, items = [], options = {}) {
+  const sourceBucket = createSafeRailSelectionSourceBucketRows(label, items, options);
   const bucket = document.createElement("div");
   bucket.className = "cs-selector-summary-rail__bucket";
-  appendText(bucket, "span", label, "cs-selector-summary-rail__label");
-  if (!items.length) {
-    appendText(bucket, "strong", "None", "cs-selector-summary-rail__value");
+  appendText(bucket, "span", sourceBucket.label, "cs-selector-summary-rail__label");
+  if (!sourceBucket.rows.length) {
+    appendText(bucket, "strong", sourceBucket.valueLabel, "cs-selector-summary-rail__value");
   } else {
+    if (sourceBucket.valueLabel) appendText(bucket, "strong", sourceBucket.valueLabel, "cs-selector-summary-rail__value");
     const list = document.createElement("ul");
     list.className = "cs-selector-summary-rail__mini-list";
-    for (const item of items.slice(0, 4)) appendText(list, "li", `${item.label || item.fieldKey}: ${railPlainValue(item.valueLabel || item.value)}`);
-    if (items.length > 4) appendText(list, "li", `+${items.length - 4} more`);
+    for (const row of sourceBucket.rows) appendText(list, "li", row);
     bucket.appendChild(list);
   }
   parent.appendChild(bucket);
@@ -2167,7 +2191,7 @@ function appendRailSelectionSources(parent, summary = {}) {
   appendRailSelectionSourceBucket(group, "Manual", railItemsByKind(summary, "manual-constraint"));
   appendRailSelectionSourceBucket(group, "Auto", railItemsByKind(summary, "auto-consequence"));
   appendRailSelectionSourceBucket(group, "Inherited", railItemsByKind(summary, "inherited-consequence"));
-  appendRailSelectionSourceBucket(group, "Blocked", railItemsByKind(summary, "blocked"));
+  appendRailSelectionSourceBucket(group, "Blocked", railItemsByKind(summary, "blocked"), { blockedReviewOnly: true });
   parent.appendChild(group);
 }
 

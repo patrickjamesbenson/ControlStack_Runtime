@@ -4,6 +4,7 @@ import { readFile } from "node:fs/promises";
 
 import { deriveSelectorReferenceOptionsFromSnapshot } from "../packages/workspace-kernel/selectorReferenceOptionsService.js";
 import { createSelectorViewModel } from "../packages/modules/cs-selector/selectorViewModel.js";
+import { createSafeRailSelectionSourceBucketRows } from "../packages/modules/cs-selector/selectorView.js";
 
 const moduleSourceUrl = new URL("../packages/modules/cs-selector/index.js", import.meta.url);
 const serverSourceUrl = new URL("../server.js", import.meta.url);
@@ -211,6 +212,21 @@ function primaryOpticVar1Controls(result, constraints = {}) {
     .map((fieldKey) => viewModelField(result, fieldKey, constraints))
     .filter((field) => field.displayMode === "choice" || field.displayMode === "auto-chip")
     .map((field) => field.fieldKey);
+}
+
+function railTruthItems(summary = {}, truthKind = "blocked") {
+  return (Array.isArray(summary.groups) ? summary.groups : [])
+    .flatMap((group) => Array.isArray(group.items) ? group.items : [])
+    .filter((item) => item.truthKind === truthKind);
+}
+
+function compactBlockedRailText(summary = {}) {
+  const bucket = createSafeRailSelectionSourceBucketRows("Blocked", railTruthItems(summary, "blocked"), { blockedReviewOnly: true });
+  return [bucket.label, bucket.valueLabel, ...bucket.rows].join("\n");
+}
+
+function detailedBlockedValueText(summary = {}) {
+  return (Array.isArray(summary.blockers) ? summary.blockers : []).map((item) => item.valueLabel || item.value || "").join("\n");
 }
 
 function identityCascadeSnapshot() {
@@ -771,6 +787,34 @@ test("system changes reconcile stale direct and indirect optics out of selected 
   assert.ok(blockers.includes("directOpticVar1"));
   assert.ok(blockers.includes("directOpticVar2"));
   assert.ok(blockers.includes("indirectOpticVar1"));
+
+  const railText = compactBlockedRailText(surface.selectionTruthSummary);
+  assert.match(railText, /review required/);
+  assert.match(railText, /blocked/);
+  assert.doesNotMatch(railText, /Inlay|Rope|Var1/);
+  assert.match(detailedBlockedValueText(surface.selectionTruthSummary), /Inlay|Rope|Var1/);
+});
+
+test("direct-only system keeps stale indirect optic out of compact blocked rail value text", () => {
+  const constraints = {
+    system: "DNX 60 Direct",
+    indirectOpticVar1: "60|Rope",
+  };
+  const result = deriveSelectorReferenceOptionsFromSnapshot(identityCascadeSnapshot(), {
+    source: sourceReady(),
+    constraints,
+  });
+  const model = selectorViewModelFor(result, constraints);
+
+  assert.equal(option(result, "indirectOpticVar1", "60|Rope").status, "blocked");
+  assert.equal(model.selectorSurface.payloadPreview.optics.indirect.opticVar1, null);
+  assert.ok(model.selectorSurface.selectionTruthSummary.blockers.some((item) => item.fieldKey === "indirectOpticVar1"));
+
+  const railText = compactBlockedRailText(model.selectorSurface.selectionTruthSummary);
+  assert.match(railText, /review required/);
+  assert.match(railText, /blocked/);
+  assert.doesNotMatch(railText, /Rope/);
+  assert.match(detailedBlockedValueText(model.selectorSurface.selectionTruthSummary), /Rope/);
 });
 
 test("direct optic var-1 changes reconcile stale var-2 from payload and keep valid child options", () => {
@@ -796,6 +840,10 @@ test("direct optic var-1 changes reconcile stale var-2 from payload and keep val
   assert.equal(viewField.effectiveValue, "");
   assert.equal(viewField.selectedOptionBlocked, true);
   assert.ok(model.selectorSurface.selectionTruthSummary.blockers.some((item) => item.fieldKey === "directOpticVar2"));
+  const railText = compactBlockedRailText(model.selectorSurface.selectionTruthSummary);
+  assert.match(railText, /review required/);
+  assert.doesNotMatch(railText, /Soft/);
+  assert.match(detailedBlockedValueText(model.selectorSurface.selectionTruthSummary), /Soft/);
 });
 
 test("compatible downstream optic survives parent changes as selected truth", () => {
