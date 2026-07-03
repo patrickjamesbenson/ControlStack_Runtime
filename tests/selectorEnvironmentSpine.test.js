@@ -222,11 +222,12 @@ test("incompatible Environment selections are preserved and blocked", () => {
   const model = selectAndReload(selectorState, "ipRating", "IP44");
   const row = environmentRow(model.selectorSurface.productSpine, "ipIk");
 
-  assert.equal(row.displayValue, "IP44");
+  assert.equal(row.displayValue, "—");
   assert.equal(row.status, "blocked");
   assert.equal(row.blocked, true);
   assert.equal(selectorState.getSnapshot().dbBackedSelector.manualConstraints.ipRating.value, "IP44");
-  assert.equal(model.selectorSurface.payloadPreview.environment.ip, "IP44");
+  assert.ok(model.selectorSurface.selectionTruthSummary.blockers.some((item) => item.fieldKey === "ipRating"));
+  assert.equal(model.selectorSurface.payloadPreview.environment.ip, null);
 });
 
 test("payload preview mirrors Environment safely and keeps write/proof flags disabled", async () => {

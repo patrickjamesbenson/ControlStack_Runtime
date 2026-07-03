@@ -222,11 +222,12 @@ test("incompatible selected Light & Control options are preserved and blocked", 
   const model = selectAndReload(selectorState, "cctCri", "2700K / CRI80");
   const row = lightRow(model.selectorSurface.productSpine, "cctCri");
 
-  assert.equal(row.displayValue, "2700K / CRI80");
+  assert.equal(row.displayValue, "—");
   assert.equal(row.status, "blocked");
   assert.equal(row.blocked, true);
   assert.equal(selectorState.getSnapshot().dbBackedSelector.manualConstraints.cctCri.value, "2700K / CRI80");
-  assert.equal(model.selectorSurface.payloadPreview.lightControl.cctCri, "2700K / CRI80");
+  assert.ok(model.selectorSurface.selectionTruthSummary.blockers.some((item) => item.fieldKey === "cctCri"));
+  assert.equal(model.selectorSurface.payloadPreview.lightControl.cctCri, null);
 });
 
 test("Lex weight appears only as a read-only source-backed consequence when reference data supports it", () => {

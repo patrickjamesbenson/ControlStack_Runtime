@@ -172,9 +172,9 @@ test("selecting system filters diffuser var 1", () => {
     constraints: { system: "DNX|60" },
   });
 
-  // With this size-keyed fixture, diffuser choices remain visible but blocked under
-  // the selected system constraint.
-  assert.equal(workflowOption(result, "diffuserVar1", "60|Opal").status, "blocked");
+  // With this size-keyed fixture, the matching size-60 diffuser remains available
+  // while the size-80 diffuser remains visible but blocked under the selected system constraint.
+  assert.equal(workflowOption(result, "diffuserVar1", "60|Opal").status, "available");
   assert.equal(workflowOption(result, "diffuserVar1", "80|Inlay").status, "blocked");
   assert.ok(workflowOption(result, "diffuserVar1", "80|Inlay").blockedBy.some((item) => item.fieldKey === "system"));
 });

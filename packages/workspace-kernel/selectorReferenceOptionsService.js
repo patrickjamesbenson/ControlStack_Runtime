@@ -1241,7 +1241,8 @@ function systemIdentityValuesForSourceSystem(systemOptions = [], sourceSystem = 
   if (!source) return [];
   const matches = systemOptions.filter((option) => {
     const optionReference = safeString(option.systemReferenceKey || safeString(option.value).split("|")[0]);
-    return valuesMatch(optionReference, source) || valuesMatch(option.value, source) || valuesMatch(option.label, source);
+    const optionVariant = safeString(option.systemVariantKey || safeString(option.value).split("|").slice(1).join("|"));
+    return valuesMatch(optionReference, source) || valuesMatch(optionVariant, source) || valuesMatch(option.value, source) || valuesMatch(option.label, source);
   }).map(systemOptionIdentityValue);
   return uniqueStrings(matches.length ? matches : [source]);
 }
@@ -1539,6 +1540,61 @@ function cascadeConstraintsForOptions(bucket = {}, constraints = {}) {
   };
 }
 
+const CASCADE_CHILD_FIELDS_BY_PARENT = Object.freeze({
+  system: Object.freeze([
+    "variantKey",
+    "emission",
+    "directCapability",
+    "indirectCapability",
+    "optic",
+    "opticSub",
+    "opticIndirect",
+    "diffuserVar1",
+    "diffuserVar2",
+    "diffuserMaterial",
+    "diffuserSpecCodePreview",
+    "diffuserImageReadiness",
+    "directOpticVar1",
+    "directOpticVar2",
+    "indirectOpticVar1",
+    "indirectOpticVar2",
+    "ipRating",
+    "ikRating",
+    "cct",
+    "cctCri",
+    "cctCriIndirect",
+    "targetLmPerM",
+    "targetLmPerMIndirect",
+    "controlType",
+    "controlTypeIndirect",
+    "lexWeight",
+    "mountStyle",
+    "mountSelection",
+    "mountParticulars",
+    "bodyFinish",
+    "finishCover",
+    "finishEnd",
+    "finishFlex",
+    "inheritedFinishStatus",
+  ]),
+  directOpticVar1: Object.freeze(["directOpticVar2"]),
+  indirectOpticVar1: Object.freeze(["indirectOpticVar2"]),
+  diffuserVar1: Object.freeze(["diffuserVar2", "diffuserMaterial", "diffuserSpecCodePreview", "diffuserImageReadiness"]),
+  optic: Object.freeze(["opticSub"]),
+  mountStyle: Object.freeze(["mountSelection", "mountParticulars"]),
+  mountSelection: Object.freeze(["mountParticulars"]),
+  bodyFinish: Object.freeze(["finishCover", "finishEnd", "finishFlex", "inheritedFinishStatus"]),
+  finishDefault: Object.freeze(["finishCover", "finishEnd", "finishFlex", "inheritedFinishStatus"]),
+  controlType: Object.freeze(["driver", "wiringType"]),
+});
+
+function cascadeScopedConstraints(fieldKey = "", constraints = {}) {
+  const childKeys = CASCADE_CHILD_FIELDS_BY_PARENT[fieldKey] || [];
+  if (!childKeys.length) return constraints;
+  const blockedChildren = new Set(childKeys);
+  return Object.fromEntries(Object.entries(constraints).filter(([key]) => !blockedChildren.has(key)));
+}
+
 function recordConstraintBlockers(record, constraints, exceptFieldKey = "") {
   const blockers = [];
   for (const [fieldKey, selected] of Object.entries(constraints)) {
@@ -1560,6 +1616,7 @@ function recordMatchesConstraints(record, constraints, exceptFieldKey = "") {
 }
 
 function optionCascadeResult(fieldKey, option, records, constraints) {
+  const scopedConstraints = cascadeScopedConstraints(fieldKey, constraints);
   const relatedRecords = records.filter((record) => Array.isArray(record.fields?.[fieldKey]) && record.fields[fieldKey].some((value) => valuesMatch(value, option.value)));
   if (!relatedRecords.length) {
     return {
@@ -1569,7 +1626,7 @@ function optionCascadeResult(fieldKey, option, records, constraints) {
       relationshipMissingReason: "No safe source relationship record links this option to current upstream constraints.",
     };
   }
-  const matchingRecord = relatedRecords.find((record) => recordMatchesConstraints(record, constraints, fieldKey));
+  const matchingRecord = relatedRecords.find((record) => recordMatchesConstraints(record, scopedConstraints, fieldKey));
   if (matchingRecord) {
     return {
       compatible: true,
@@ -1579,7 +1636,7 @@ function optionCascadeResult(fieldKey, option, records, constraints) {
       relationshipMissingReason: "",
     };
   }
-  const blockedBy = relatedRecords.flatMap((record) => recordConstraintBlockers(record, constraints, fieldKey));
+  const blockedBy = relatedRecords.flatMap((record) => recordConstraintBlockers(record, scopedConstraints, fieldKey));
   return {
     compatible: false,
     blockedBy,

@@ -729,6 +729,91 @@ test("compatible selections are not cleared", () => {
   assert.equal(workflowField(result, "cctCri").selectedValue, "3000K / CRI80");
 });
 
+test("system changes reconcile stale direct and indirect optics out of selected truth, summary rail, and payload preview", () => {
+  const staleConstraints = {
+    system: "DNX 60 Direct",
+    directOpticVar1: "80|Inlay",
+    directOpticVar2: "80|Inlay|Var1",
+    indirectOpticVar1: "80|Rope",
+  };
+  const result = deriveSelectorReferenceOptionsFromSnapshot(identityCascadeSnapshot(), {
+    source: sourceReady(),
+    constraints: staleConstraints,
+  });
+  const model = selectorViewModelFor(result, staleConstraints);
+
+  assert.equal(option(result, "directOpticVar1", "80|Inlay").status, "blocked");
+  assert.equal(option(result, "directOpticVar2", "80|Inlay|Var1").status, "blocked");
+  assert.equal(option(result, "indirectOpticVar1", "80|Rope").status, "blocked");
+
+  const surface = model.selectorSurface;
+  assert.equal(surface.payloadPreview.optics.direct.opticVar1, null);
+  assert.equal(surface.payloadPreview.optics.direct.opticVar2, null);
+  assert.equal(surface.payloadPreview.optics.indirect.opticVar1, null);
+  assert.equal(surface.payloadPreview.optics.indirect.opticVar2, null);
+
+  const directTile = surface.donorShapeSelectedTiles.find((item) => item.tileKey === "directOpticVar1");
+  const indirectTile = surface.donorShapeSelectedTiles.find((item) => item.tileKey === "indirectOpticVar1");
+  assert.equal(directTile.blocked, true);
+  assert.equal(directTile.value, "");
+  assert.equal(directTile.valueLabel, "Not selected");
+  assert.equal(indirectTile.blocked, true);
+  assert.equal(indirectTile.value, "");
+
+  const productSection = surface.productSpine.sections.find((section) => section.sectionKey === "system");
+  const directRow = productSection.rows.find((row) => row.rowKey === "opticDirect");
+  const indirectRow = productSection.rows.find((row) => row.rowKey === "opticIndirect");
+  assert.equal(directRow.status, "blocked");
+  assert.equal(directRow.displayValue, "—");
+  assert.equal(indirectRow, undefined, "direct-only system should suppress the indirect product-spine row");
+
+  const blockers = surface.selectionTruthSummary.blockers.map((item) => item.fieldKey).sort();
+  assert.ok(blockers.includes("directOpticVar1"));
+  assert.ok(blockers.includes("directOpticVar2"));
+  assert.ok(blockers.includes("indirectOpticVar1"));
+});
+
+test("direct optic var-1 changes reconcile stale var-2 from payload and keep valid child options", () => {
+  const constraints = {
+    system: "DNX 60 Beam DI",
+    directOpticVar1: "60|Comfort",
+    directOpticVar2: "60|Opal|Soft",
+  };
+  const result = deriveSelectorReferenceOptionsFromSnapshot(cascadeSnapshot(), {
+    source: sourceReady(),
+    constraints,
+  });
+  const model = selectorViewModelFor(result, constraints);
+  const directVar2 = workflowField(result, "directOpticVar2");
+
+  assert.deepEqual(compatibleLabels(directVar2), ["Low glare"]);
+  assert.equal(option(result, "directOpticVar2", "60|Opal|Soft").status, "blocked");
+  assert.equal(model.selectorSurface.payloadPreview.optics.direct.opticVar1, "Comfort · 60");
+  assert.equal(model.selectorSurface.payloadPreview.optics.direct.opticVar2, null);
+
+  const viewField = viewModelField(result, "directOpticVar2", constraints);
+  assert.equal(viewField.displayMode, "warning-chip");
+  assert.equal(viewField.effectiveValue, "");
+  assert.equal(viewField.selectedOptionBlocked, true);
+  assert.ok(model.selectorSurface.selectionTruthSummary.blockers.some((item) => item.fieldKey === "directOpticVar2"));
+});
+
+test("compatible downstream optic survives parent changes as selected truth", () => {
+  const constraints = { system: "DNX 80 DI", directOpticVar1: "80|Inlay" };
+  const result = deriveSelectorReferenceOptionsFromSnapshot(identityCascadeSnapshot(), {
+    source: sourceReady(),
+    constraints,
+  });
+  const model = selectorViewModelFor(result, constraints);
+
+  assert.equal(option(result, "directOpticVar1", "80|Inlay").status, "available");
+  assert.equal(model.selectorSurface.payloadPreview.optics.direct.opticVar1, "Inlay · 80");
+  const directTile = model.selectorSurface.donorShapeSelectedTiles.find((item) => item.tileKey === "directOpticVar1");
+  assert.equal(directTile.blocked, false);
+  assert.equal(directTile.value, "80|Inlay");
+  assert.equal(directTile.valueLabel, "Inlay · 80");
+});
+
 test("UI reloads GET options endpoint after manual constraint changes", async () => {
   const source = await readFile(moduleSourceUrl, "utf-8");
 

@@ -217,11 +217,13 @@ test("incompatible Finishes selections are preserved and blocked", () => {
   model = selectAndReload(selectorState, "bodyFinish", "ALT Black");
 
   const row = finishesRow(model.selectorSurface.productSpine, "bodyFinish");
-  assert.equal(row.displayValue, "ALT Black");
+  assert.equal(row.displayValue, "—");
   assert.equal(row.status, "blocked");
   assert.equal(row.blocked, true);
   assert.equal(workflowOption(model, "bodyFinish", "ALT Black").status, "blocked");
   assert.equal(selectorState.getSnapshot().dbBackedSelector.manualConstraints.bodyFinish.value, "ALT Black");
+  assert.ok(model.selectorSurface.selectionTruthSummary.blockers.some((item) => item.fieldKey === "bodyFinish"));
+  assert.equal(model.selectorSurface.payloadPreview.finishes.bodyFinish, null);
 });
 
 test("Finishes payload preview keeps safety flags disabled and exposes no raw source data", async () => {

@@ -305,20 +305,23 @@ test("incompatible Mounting selections are preserved and blocked", () => {
   model = selectAndReload(selectorState, "mountStyle", "Surface Mount");
 
   const styleRow = mountingRow(model.selectorSurface.productSpine, "mountStyle");
-  assert.equal(styleRow.displayValue, "Surface Mount");
+  assert.equal(styleRow.displayValue, "—");
   assert.equal(styleRow.status, "blocked");
   assert.equal(styleRow.blocked, true);
   assert.equal(selectorState.getSnapshot().dbBackedSelector.manualConstraints.mountStyle.value, "Surface Mount");
+  assert.ok(model.selectorSurface.selectionTruthSummary.blockers.some((item) => item.fieldKey === "mountStyle"));
+  assert.equal(model.selectorSurface.payloadPreview.mounting.mountStyle, null);
 
   model = selectAndReload(selectorState, "mountStyle", "Suspended");
   model = selectAndReload(selectorState, "mountSelection", "Bracket");
 
   const selectionRow = mountingRow(model.selectorSurface.productSpine, "mountSelection");
-  assert.equal(selectionRow.displayValue, "Bracket");
+  assert.equal(selectionRow.displayValue, "—");
   assert.equal(selectionRow.status, "blocked");
   assert.equal(selectionRow.blocked, true);
   assert.equal(selectorState.getSnapshot().dbBackedSelector.manualConstraints.mountSelection.value, "Bracket");
-  assert.equal(model.selectorSurface.payloadPreview.mounting.mountSelection, "Bracket");
+  assert.ok(model.selectorSurface.selectionTruthSummary.blockers.some((item) => item.fieldKey === "mountSelection"));
+  assert.equal(model.selectorSurface.payloadPreview.mounting.mountSelection, null);
 });
 
 test("Mounting payload preview keeps safety flags disabled and exposes no raw source data", async () => {
@@ -389,7 +392,7 @@ test("selected incompatible Surface Mount is preserved as blocked by donor polic
   const row = mountingRow(model.selectorSurface.productSpine, "mountStyle");
   const mountField = workflowField(model, "mountStyle");
   const selectedDropdown = mountField.dropdownOptions.find((option) => option.value === "Surface Mount");
-  assert.equal(row.displayValue, "Surface Mount");
+  assert.equal(row.displayValue, "—");
   assert.equal(row.status, "blocked");
   assert.equal(row.blocked, true);
   assert.match(row.reason, /ceiling blocks.*indirect|direct-indirect/i);
@@ -399,7 +402,8 @@ test("selected incompatible Surface Mount is preserved as blocked by donor polic
   assert.equal(mountField.incompatibleOptions.some((option) => option.value === "Surface Mount"), false);
   assert.equal(model.selectorSurface.autoConsequences.some((item) => item.fieldKey === "mountStyle"), false);
   assert.equal(selectorState.getSnapshot().dbBackedSelector.manualConstraints.mountStyle.value, "Surface Mount");
-  assert.equal(model.selectorSurface.payloadPreview.mounting.mountStyle, "Surface Mount");
+  assert.ok(model.selectorSurface.selectionTruthSummary.blockers.some((item) => item.fieldKey === "mountStyle"));
+  assert.equal(model.selectorSurface.payloadPreview.mounting.mountStyle, null);
 });
 
 test("mount CODE_POLICY plain reason stays in main flow and technical code stays in developer diagnostics", async () => {

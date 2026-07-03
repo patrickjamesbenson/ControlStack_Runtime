@@ -1370,10 +1370,13 @@ function optionSystemReferenceKeys(option = {}) {
 }
 
 function selectedSystemReferenceCandidates(selectedConstraints = {}) {
+  const selectedSystem = String(selectedConstraints.system || "").trim();
+  const selectedParts = selectedSystem.split("|").map((item) => item.trim()).filter(Boolean);
   return [
-    selectedConstraints.system,
+    selectedSystem,
     selectedConstraints.__systemReferenceKey,
-    systemTokenFromSelection(selectedConstraints.system || ""),
+    systemTokenFromSelection(selectedSystem),
+    ...selectedParts,
   ].map((item) => String(item || "").trim()).filter(Boolean);
 }
 
@@ -1886,7 +1889,15 @@ function classifyRuntimePresentationField(field = {}, finishContext = {}) {
   let overrideAvailable = false;
   let classificationReason = "real user decision or unresolved available choice";
 
-  if (presentationIsHiddenDiagnostic(field)) {
+  if (selectedOptionBlocked) {
+    displayMode = "warning-chip";
+    provenance = hasManualConstraint ? "manual" : "diagnostic";
+    primaryDecision = false;
+    effectiveValue = "";
+    effectiveLabel = "";
+    overrideAvailable = true;
+    classificationReason = selectedOption?.blockedReason || field.unavailableReason || "selected value is incompatible but preserved as a blocked constraint, not selected truth";
+  } else if (presentationIsHiddenDiagnostic(field)) {
     displayMode = "hidden-diagnostic";
     provenance = "diagnostic";
     primaryDecision = false;
@@ -1910,14 +1921,6 @@ function classifyRuntimePresentationField(field = {}, finishContext = {}) {
     effectiveLabel = field.selectedLabel || effectiveOption?.label || field.unavailableReason || "metadata pending";
     overrideAvailable = false;
     classificationReason = "metadata descriptor, not a primary decision";
-  } else if (selectedOptionBlocked) {
-    displayMode = "warning-chip";
-    provenance = hasManualConstraint ? "manual" : "diagnostic";
-    primaryDecision = hasManualConstraint;
-    effectiveValue = field.selectedValue || selectedOption?.value || "";
-    effectiveLabel = field.selectedLabel || selectedOption?.label || effectiveValue || "blocked selection";
-    overrideAvailable = true;
-    classificationReason = selectedOption?.blockedReason || field.unavailableReason || "selected value is incompatible but preserved";
   } else if (optionsComputable && compatibleOptionCount === 0 && !hasManualConstraint) {
     displayMode = primaryAtStep ? "warning-chip" : "hidden-diagnostic";
     provenance = "diagnostic";
@@ -2341,6 +2344,7 @@ function createSelectionTruthSummary({
   const groups = createSelectionTruthGroups();
   const fieldLookup = createFieldLookup(fields, workflowSections);
   const sourceStatus = sourceReady ? "source ready" : "source unavailable";
+  const blockerItems = [];
 
   addSelectionTruthItem(groups, "project", createSelectionTruthItem({
     fieldKey: "selectorSourceStatus",
@@ -2381,6 +2385,10 @@ function createSelectionTruthSummary({
       rawRowsExposed: false,
     });
     addSelectionTruthItem(groups, selectionTruthGroupForField(constraint.fieldKey), item);
+    if (item.truthKind === "blocked") {
+      blockerItems.push(item);
+      addSelectionTruthItem(groups, "blockers", item);
+    }
   }
 
   for (const consequence of autoConsequences) {
@@ -2405,21 +2413,27 @@ function createSelectionTruthSummary({
   for (const field of [...fieldLookup.values()]) {
     const selectedValue = field.selectedValue || "";
     if (selectedValue) {
-      const truthKind = selectionTruthKindFor(field, field);
+      const selectedOption = presentationSelectedOption(field);
+      const selectedBlocked = field.selectedOptionBlocked === true || selectedOption?.blocked === true || selectedOption?.status === "blocked";
+      const truthKind = selectedBlocked ? "blocked" : selectionTruthKindFor(field, field);
       const item = createSelectionTruthItem({
         fieldKey: field.fieldKey,
         label: field.label || field.fieldKey,
         value: selectedValue,
         valueLabel: field.selectedLabel || selectedValue,
         truthKind,
-        status: field.status || truthKind,
+        status: selectedBlocked ? "blocked" : field.status || truthKind,
         source: field.sourceStatus || "safe Selector Reference selected value",
         mutable: field.disabled !== true,
         writes: false,
-        blockedBy: field.blockedBy || [],
+        blockedBy: selectedBlocked ? selectedOption?.blockedBy || field.blockedBy || [] : field.blockedBy || [],
         rawRowsExposed: false,
       });
       addSelectionTruthItem(groups, selectionTruthGroupForField(field.fieldKey), item);
+      if (item.truthKind === "blocked") {
+        blockerItems.push(item);
+        addSelectionTruthItem(groups, "blockers", item);
+      }
     }
 
     if (!selectedValue && (field.futureMapped === true || field.disabled === true || field.status === "future-mapped")) {
@@ -2440,7 +2454,6 @@ function createSelectionTruthSummary({
     }
   }
 
-  const blockerItems = [];
   for (const blocked of blockedItems) {
     const field = fieldLookup.get(blocked.fieldKey) || {};
     const item = createSelectionTruthItem({
@@ -2510,10 +2523,11 @@ const DONOR_SHAPE_SELECTED_TILE_DEFINITIONS = Object.freeze([
 ]);
 
 function donorShapeTileField(fieldLookup, fieldKeys = []) {
-  return fieldKeys.map((fieldKey) => fieldLookup.get(fieldKey)).find((field) => {
-    if (!field) return false;
-    return Boolean(field.selectedValue || field.selectedLabel || field.effectiveValue || field.effectiveLabel);
-  }) || fieldKeys.map((fieldKey) => fieldLookup.get(fieldKey)).find(Boolean) || null;
+  const fields = fieldKeys.map((fieldKey) => fieldLookup.get(fieldKey)).filter(Boolean);
+  return fields.find((field) => Boolean(field.selectedValue || field.selectedLabel))
+    || fields.find((field) => Boolean(field.effectiveValue || field.effectiveLabel))
+    || fields[0]
+    || null;
 }
 
 function createDonorShapeSelectedTiles({ fields = [], workflowSections = [] } = {}) {
@@ -2521,9 +2535,9 @@ function createDonorShapeSelectedTiles({ fields = [], workflowSections = [] } = 
   return DONOR_SHAPE_SELECTED_TILE_DEFINITIONS.map((definition) => {
     const field = donorShapeTileField(fieldLookup, definition.fieldKeys);
     const selectedOption = field ? presentationSelectedOption(field) : null;
-    const value = field?.selectedValue || field?.effectiveValue || selectedOption?.value || "";
-    const valueLabel = field?.selectedLabel || field?.effectiveLabel || selectedOption?.label || "Not selected";
-    const blocked = Boolean(value && (field?.selectedOptionBlocked === true || selectedOption?.blocked === true || selectedOption?.status === "blocked"));
+    const blocked = Boolean(field?.selectedValue && (field?.selectedOptionBlocked === true || selectedOption?.blocked === true || selectedOption?.status === "blocked"));
+    const value = blocked ? "" : (field?.selectedValue || field?.effectiveValue || selectedOption?.value || "");
+    const valueLabel = blocked ? "Not selected" : (field?.selectedLabel || field?.effectiveLabel || selectedOption?.label || "Not selected");
     const fieldKey = field?.fieldKey || definition.fieldKeys[0];
     return {
       tileKey: definition.tileKey,
@@ -2685,6 +2699,7 @@ function spineField(lookup, fieldKeys = []) {
 
 function spineFieldHasDisplayValue(field = {}) {
   if (!field) return false;
+  if (field.selectedOptionBlocked === true || field.status === "blocked" || field.displayMode === "warning-chip") return false;
   if (field.selectedValue || field.selectedLabel) return true;
   if (field.futureMapped === true || field.disabled === true || field.status === "blocked" || field.displayMode === "warning-chip" || field.displayMode === "disabled-handoff") return false;
   if (field.provenance === "available-choice") return false;
@@ -2696,6 +2711,7 @@ function spineFieldHasDisplayValue(field = {}) {
 
 function spineFieldValue(field = {}) {
   if (!field) return null;
+  if (field.selectedOptionBlocked === true || field.status === "blocked" || field.displayMode === "warning-chip") return null;
   if (field.selectedLabel || field.selectedValue) return field.selectedLabel || field.selectedValue;
   if (field.provenance === "available-choice") return null;
   if (field.displayMode === "collapsed-override" && !field.selectedValue && !field.effectiveValue) return null;

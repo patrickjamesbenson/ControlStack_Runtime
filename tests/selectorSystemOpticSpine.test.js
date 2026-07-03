@@ -95,14 +95,19 @@ function systemOpticReferenceSnapshot() {
   };
 }
 
-function selectorReferenceStatus(snapshot = systemOpticReferenceSnapshot()) {
+function currentDbConstraints(selectorState = createSelectorState()) {
+  const constraints = selectorState.getSnapshot?.().dbBackedSelector?.manualConstraints || {};
+  return Object.fromEntries(Object.entries(constraints).map(([fieldKey, record]) => [fieldKey, String(record?.value || "").trim()]).filter(([, value]) => value));
+}
+
+function selectorReferenceStatus(snapshot = systemOpticReferenceSnapshot(), constraints = {}) {
   return {
     ok: true,
     status: "loaded",
     readOnly: true,
     diagnosticOnly: true,
     source: sourceReady(),
-    selectorOptions: deriveSelectorReferenceOptionsFromSnapshot(snapshot, { source: sourceReady() }),
+    selectorOptions: deriveSelectorReferenceOptionsFromSnapshot(snapshot, { source: sourceReady(), constraints }),
   };
 }
 
@@ -110,7 +115,7 @@ function createModel({ selectorState = createSelectorState(), snapshot = systemO
   return createSelectorViewModel({
     adapter: createAdapter(),
     selectorState,
-    selectorReferenceStatus: selectorReferenceStatus(snapshot),
+    selectorReferenceStatus: selectorReferenceStatus(snapshot, currentDbConstraints(selectorState)),
   });
 }
 
@@ -221,11 +226,12 @@ test("incompatible direct optic selections are preserved and blocked", () => {
   const model = selectAndReload(selectorState, "directOpticVar1", "80|Inlay");
   const row = spineRow(model.selectorSurface.productSpine, "opticDirect");
 
-  assert.match(row.displayValue, /Inlay/);
+  assert.equal(row.displayValue, "—");
   assert.equal(row.status, "blocked");
   assert.equal(row.blocked, true);
   assert.equal(selectorState.getSnapshot().dbBackedSelector.manualConstraints.directOpticVar1.value, "80|Inlay");
-  assert.equal(model.selectorSurface.payloadPreview.optics.direct.opticVar1, "Inlay · 80");
+  assert.ok(model.selectorSurface.selectionTruthSummary.blockers.some((item) => item.fieldKey === "directOpticVar1"));
+  assert.equal(model.selectorSurface.payloadPreview.optics.direct.opticVar1, null);
 });
 
 test("payload preview mirrors system, direct, and indirect optic state with safety flags disabled", () => {
