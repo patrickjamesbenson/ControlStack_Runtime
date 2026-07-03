@@ -6,6 +6,7 @@ import { resolveWorkspaceRoute } from "../packages/workspace-kernel/route.js";
 const shellIndexUrl = new URL("../apps/workspace-shell/index.html", import.meta.url);
 const shellScriptUrl = new URL("../apps/workspace-shell/src/shell.js", import.meta.url);
 const shellStylesUrl = new URL("../apps/workspace-shell/src/styles.css", import.meta.url);
+const labIconUrl = new URL("../apps/workspace-shell/assets/lab-rail-icon.svg", import.meta.url);
 
 async function shellIndex() {
   return readFile(shellIndexUrl, "utf-8");
@@ -15,14 +16,30 @@ async function shellScript() {
   return readFile(shellScriptUrl, "utf-8");
 }
 
-function engineeringSection(source) {
-  const start = source.indexOf('data-shell-nav-group="engineering"');
-  assert.ok(start > 0, "Engineering menu group should exist");
+function sectionByGroup(source, groupName, nextGroupName) {
+  const start = source.indexOf(`data-shell-nav-group="${groupName}"`);
+  assert.ok(start > 0, `${groupName} menu group should exist`);
   const sectionStart = source.lastIndexOf("<section", start);
-  const nextSection = source.indexOf('data-shell-nav-group="knowledge_governance"', start);
-  assert.ok(sectionStart > 0, "Engineering section start should be present");
-  assert.ok(nextSection > sectionStart, "Engineering section should appear before Knowledge & Governance");
+  const nextSection = source.indexOf(`data-shell-nav-group="${nextGroupName}"`, start);
+  assert.ok(sectionStart > 0, `${groupName} section start should be present`);
+  assert.ok(nextSection > sectionStart, `${groupName} section should appear before ${nextGroupName}`);
   return source.slice(sectionStart, nextSection);
+}
+
+function labSection(source) {
+  return sectionByGroup(source, "lab", "engineering");
+}
+
+function engineeringSection(source) {
+  return sectionByGroup(source, "engineering", "knowledge_governance");
+}
+
+function reportCardGroup(section) {
+  const groupStart = section.indexOf(">Report Card / Datasheet Outputs<");
+  const groupEnd = section.indexOf("</div>\n            </section>", groupStart);
+  assert.ok(groupStart > 0, "Report Card / Datasheet Outputs group should exist");
+  assert.ok(groupEnd > groupStart, "Report Card / Datasheet Outputs group should end before the Lab section closes");
+  return section.slice(groupStart, groupEnd);
 }
 
 test("Workspace shell content still contains the mounted shell population anchors", async () => {
@@ -32,6 +49,7 @@ test("Workspace shell content still contains the mounted shell population anchor
   assert.match(source, /id="cs-shell-module-host"/);
   assert.match(source, /id="cs-workspace-home"/);
   assert.match(source, /type="module" src="\/apps\/workspace-shell\/src\/shell\.js"/);
+  assert.match(source, /data-shell-nav-group="lab"/);
   assert.match(source, /data-shell-nav-group="engineering"/);
 });
 
@@ -78,14 +96,17 @@ test("Workspace shell binds rail and topbar before initial render can isolate fa
   );
 });
 
-test("Engineering taxonomy group remains compatible with grouped flyout binding", async () => {
+test("Lab and Engineering taxonomy groups remain compatible with grouped flyout binding", async () => {
   const source = await shellIndex();
   const script = await shellScript();
-  const section = engineeringSection(source);
+  const lab = labSection(source);
+  const engineering = engineeringSection(source);
 
-  assert.match(section, /data-shell-nav-mode="flyout"/);
-  assert.match(section, /data-shell-nav-default="collapsed"/);
-  assert.match(section, /role="menu"/);
+  for (const section of [lab, engineering]) {
+    assert.match(section, /data-shell-nav-mode="flyout"/);
+    assert.match(section, /data-shell-nav-default="collapsed"/);
+    assert.match(section, /role="menu"/);
+  }
   assert.match(script, /document\.querySelectorAll\("\.cs-shell__rail-group"\)/);
   assert.match(script, /setRailGroupExpanded\(group, group\.dataset\.shellNavDefault === "expanded"\)/);
   assert.match(script, /markRailFlyoutHover\(group, control\)/);
@@ -103,120 +124,156 @@ test("Selector module link remains navigable from the shell rail", async () => {
 test("Disabled preview menu items are inert and do not block rail binding", async () => {
   const source = await shellIndex();
   const script = await shellScript();
-  const section = engineeringSection(source);
+  const section = `${labSection(source)}\n${engineeringSection(source)}`;
   const disabledItems = Array.from(section.matchAll(/<button class="cs-shell__rail-item cs-shell__rail-taxonomy-item" role="menuitem" type="button" aria-disabled="true"[^>]*data-shell-status-rail="false">/g));
 
-  assert.ok(disabledItems.length >= 10, "Preview-only taxonomy buttons should stay visible but disabled");
+  assert.ok(disabledItems.length >= 30, "Preview-only taxonomy buttons should stay visible but disabled");
   assert.match(script, /function isDisabledRailControl\(control\)/);
   assert.match(script, /if \(!isDisabledRailControl\(control\)\) return;/);
   assert.match(script, /event\.preventDefault\(\);\s*event\.stopPropagation\(\);/s);
 });
 
-test("Engineering section renders the approved photometry authority groups", async () => {
+test("Lab top-level group renders with a dedicated local Lab icon", async () => {
   const source = await shellIndex();
-  const section = engineeringSection(source);
+  const lab = labSection(source);
+  const icon = await readFile(labIconUrl, "utf-8");
 
-  assert.match(section, /aria-label="Engineering"/);
-  assert.match(section, /Engineering photometry authority menu/);
+  assert.match(lab, /aria-label="Lab"/);
+  assert.match(lab, /Lab photometry authority menu/);
+  assert.match(lab, /src="\/apps\/workspace-shell\/assets\/lab-rail-icon\.svg"/);
+  assert.match(icon, /<svg[^>]+viewBox="0 0 64 64"/);
+  assert.match(icon, /stroke="#ffffff"/);
+  assert.doesNotMatch(icon, /href=|font/i);
+});
+
+test("Lab owns the photometry authority groups", async () => {
+  const source = await shellIndex();
+  const lab = labSection(source);
 
   for (const group of [
-    "Kernel Tools",
-    "Candidate Luminaires",
-    "Pure References",
-    "Lab Provenance",
-    "Emergency Systems",
-    "Approved Fittings",
-    "Runtime Outputs",
+    "Intake",
+    "Health Check",
+    "1mm JSON / Lab Records",
+    "Provenance",
+    "Emergency Modes",
+    "Approved References",
+    "Project IES Export",
     "Report Card / Datasheet Outputs",
   ]) {
-    assert.match(section, new RegExp(`>${group}<`), `${group} should render as an Engineering menu group`);
+    assert.match(lab, new RegExp(`>${group}<`), `${group} should render as a Lab menu group`);
   }
 });
 
-test("Engineering photometry taxonomy renders the approved journey entries", async () => {
+test("Lab photometry taxonomy renders the required authority entries and status labels", async () => {
   const source = await shellIndex();
-  const section = engineeringSection(source);
+  const lab = labSection(source);
 
   for (const label of [
-    "IES Parser",
-    "1mm Canonicaliser",
-    "Hemisphere Padder",
-    "Direct / Indirect Combiner",
-    "Candela Mirror Tool",
-    "Runtime IES Scaler",
-    "Emergency Mode Builder",
-    "Uploaded Files",
+    "Reference IES Intake",
+    "Uploaded Source Files",
+    "Parsed Source Review",
+    "File Stage Check",
+    "Distribution Health",
+    "Transform Readiness",
+    "Orientation / Mounting State",
+    "Downstream Eligibility",
     "1mm Draft Artefacts",
-    "Manipulated Artefacts",
-    "Reference Candidates",
-    "Blocked / Missing Evidence",
-    "Lab-Provenanced Candidates",
-    "Approved 1mm Pure References",
-    "Superseded References",
-    "Rejected References",
+    "1mm Lab Records",
+    "Transform / Mutation History",
+    "Superseded / Rejected Records",
     "Power Reports",
     "Thermal Reports",
     "Light Performance Reports",
     "Supporting Documents",
     "Evidence Bundles",
     "Approval / Revision Status",
-    "Standard Fittings",
-    "Emergency Fittings",
-    "System / Optic / Reference Bindings",
+    "Battery Packs",
+    "Inverters / Emergency Drivers",
+    "Duration Evidence",
+    "Emergency Reference Candidates",
+    "Approved Emergency References",
+    "Apply Battery to Modelled Electrical Zone",
+    "Lab-Provenanced Candidates",
+    "Approved 1mm Pure References",
+    "Standard Reference Bindings",
+    "Emergency Reference Bindings",
     "Runtime IES Source",
     "Generated Project IES",
     "Emergency Project IES",
-    "Project Evidence Pack",
+    "Project Evidence Pointer",
     "IES Report Card Generator",
     "Datasheet HTML Output",
     "Polar SVG Output",
     "Linear SVG Output",
     "Intensity Table Output",
+    "UGR Table Output",
     "Export Bundle",
   ]) {
-    assert.match(section, new RegExp(`>${label}<`), `${label} should render in the Engineering photometry menu`);
+    assert.match(lab, new RegExp(`>${label}<`), `${label} should render in the Lab photometry menu`);
   }
 
   for (const status of [
     "preview",
-    "not implemented",
-    "blocked",
-    "requires lab provenance",
+    "read-only intake",
+    "health check",
+    "requires provenance",
     "approved reference only",
-    "runtime generation disabled",
-    "read-only IES consumer",
-    "local export only",
-    "datasheet output",
-    "screen display",
+    "project export disabled",
     "no IES generation",
     "no authority",
+    "local export only",
+    "downstream display",
+    "production disabled",
   ]) {
-    assert.match(section, new RegExp(status), `${status} status should be visible`);
+    assert.match(lab, new RegExp(status), `${status} status should be visible`);
   }
 });
 
-test("Report-card datasheet output menu remains downstream status-only", async () => {
+test("Reference IES and Project IES are visibly separated in Lab", async () => {
   const source = await shellIndex();
-  const section = engineeringSection(source);
-  const groupStart = section.indexOf(">Report Card / Datasheet Outputs<");
-  const groupEnd = section.indexOf("cs-shell__rail-item--admin", groupStart);
-  assert.ok(groupStart > 0, "Report Card / Datasheet Outputs group should exist");
-  assert.ok(groupEnd > groupStart, "Report Card / Datasheet Outputs group should end before admin link");
-  const group = section.slice(groupStart, groupEnd);
+  const lab = labSection(source);
+  const referenceIndex = lab.indexOf(">Reference IES Intake<");
+  const projectHeadingIndex = lab.indexOf(">Project IES Export<");
+  const generatedIndex = lab.indexOf(">Generated Project IES<");
 
+  assert.ok(referenceIndex > 0, "Reference IES Intake should exist");
+  assert.ok(projectHeadingIndex > referenceIndex, "Project IES Export should be a later separate Lab group");
+  assert.ok(generatedIndex > projectHeadingIndex, "Generated Project IES should sit under the project-export area");
+  assert.match(lab, /Reference IES intake is source\/test\/lab intake only/);
+  assert.match(lab, /Project IES is an external project\/export artefact/);
+  assert.match(lab, /point back to lab record\/provenance IDs without carrying the full internal provenance record/);
+});
+
+test("1mm JSON / Lab Record authority wording is present", async () => {
+  const source = await shellIndex();
+  const lab = labSection(source);
+
+  assert.match(lab, />1mm JSON \/ Lab Records</);
+  assert.match(lab, />1mm Lab Records</);
+  assert.match(lab, /internal Lab authority object for provenance, fingerprints, transform history, mutation history, approval\/revision state, emergency compatibility, and downstream eligibility/);
+});
+
+test("Report-card datasheet outputs remain under Lab and status-only", async () => {
+  const source = await shellIndex();
+  const lab = labSection(source);
+  const engineering = engineeringSection(source);
+  const group = reportCardGroup(lab);
+
+  assert.doesNotMatch(engineering, />Report Card \/ Datasheet Outputs</);
   for (const [label, status] of [
-    ["IES Report Card Generator", "read-only IES consumer"],
-    ["Datasheet HTML Output", "datasheet output"],
-    ["Polar SVG Output", "screen display"],
-    ["Linear SVG Output", "screen display"],
+    ["IES Report Card Generator", "downstream display"],
+    ["Datasheet HTML Output", "downstream display"],
+    ["Polar SVG Output", "downstream display"],
+    ["Linear SVG Output", "downstream display"],
     ["Intensity Table Output", "local export only"],
-    ["Export Bundle", "no IES generation · no authority"],
+    ["UGR Table Output", "downstream display"],
+    ["Export Bundle", "local export only · no authority"],
   ]) {
     const itemPattern = new RegExp(`<button[^>]+aria-disabled="true"[^>]*><span>${label}</span><span class="cs-shell__rail-item-status">${status}</span></button>`);
     assert.match(group, itemPattern, `${label} should be disabled/status-only with ${status}`);
   }
 
-  assert.match(group, /Existing IES file → read-only parse → report-card JSON contract → datasheet and screen display assets/);
+  assert.match(group, /Existing Reference IES file → read-only parse → report-card JSON contract → datasheet and screen display assets/);
   assert.match(group, /no route, POST endpoint, or shell CLI execution is enabled/);
   assert.doesNotMatch(group, /href="/);
   assert.doesNotMatch(group, /data-module-link=/);
@@ -225,78 +282,115 @@ test("Report-card datasheet output menu remains downstream status-only", async (
   assert.doesNotMatch(group, /renderReportCardCli|confirm-write|\/api\//i);
 });
 
-test("Emergency photometry menu entries render without implying normal-photometry substitution", async () => {
+test("Engineering remains a separate design and tooling group", async () => {
   const source = await shellIndex();
-  const section = engineeringSection(source);
+  const engineering = engineeringSection(source);
 
-  for (const label of [
-    "Battery Packs",
-    "Inverters / Emergency Drivers",
-    "Duration Evidence",
-    "Emergency Reference Candidates",
-    "Approved Emergency References",
-    "Emergency Project IES",
-  ]) {
-    assert.match(section, new RegExp(`>${label}<`), `${label} should render in emergency authority areas`);
+  assert.match(engineering, /aria-label="Engineering"/);
+  assert.match(engineering, /Engineering design and tooling menu/);
+  for (const group of ["Kernel Tools", "Design Intent"]) {
+    assert.match(engineering, new RegExp(`>${group}<`), `${group} should render as an Engineering menu group`);
   }
 
-  assert.match(section, /Emergency mode photometry requires battery, inverter, and end-of-duration provenance/);
-  assert.match(section, /Emergency reference candidates require battery, inverter, and duration evidence before promotion/);
+  for (const label of [
+    "Photometry Kernel Tools",
+    "Runtime IES Scaler",
+    "Angular Interpolation Policy",
+    "Hemisphere Padding Policy",
+    "Direct / Indirect Combine Policy",
+    "Candela Mirror Policy",
+    "Optic Design",
+    "System / Board / Driver Design",
+    "Emergency System Design",
+    "Engineering Handoff to Lab",
+  ]) {
+    assert.match(engineering, new RegExp(`>${label}<`), `${label} should render in Engineering`);
+  }
+
+  for (const status of [
+    "design intent",
+    "tool preview",
+    "handoff to Lab",
+    "production disabled",
+  ]) {
+    assert.match(engineering, new RegExp(status), `${status} status should be visible`);
+  }
 });
 
-test("Engineering photometry menu does not enable production generation actions", async () => {
+test("Engineering no longer presents Lab-owned authority group headings", async () => {
   const source = await shellIndex();
-  const section = engineeringSection(source);
+  const engineering = engineeringSection(source);
 
-  assert.doesNotMatch(section, /method=["']post["']/i);
-  assert.doesNotMatch(section, /fetch\([^)]*POST/i);
-  assert.doesNotMatch(section, /\/api\/(?:ies|photometry|engine|runtable|reference)[^"']*(?:generate|create|approve|promote|run)/i);
-  assert.doesNotMatch(section, /run_engine|donor Engine|donor photometry/i);
+  for (const labOwnedHeading of [
+    "Intake",
+    "Health Check",
+    "1mm JSON / Lab Records",
+    "Provenance",
+    "Emergency Modes",
+    "Approved References",
+    "Project IES Export",
+    "Report Card / Datasheet Outputs",
+  ]) {
+    assert.doesNotMatch(engineering, new RegExp(`>${labOwnedHeading}<`), `${labOwnedHeading} should not be an Engineering heading`);
+  }
+});
+
+test("Lab and Engineering menus do not enable production generation actions", async () => {
+  const source = await shellIndex();
+  const sections = `${labSection(source)}\n${engineeringSection(source)}`;
+
+  assert.doesNotMatch(sections, /method=["']post["']/i);
+  assert.doesNotMatch(sections, /fetch\([^)]*POST/i);
+  assert.doesNotMatch(sections, /\/api\/(?:ies|photometry|engine|runtable|reference)[^"']*(?:generate|create|approve|promote|run)/i);
+  assert.doesNotMatch(sections, /run_engine|donor Engine|donor photometry/i);
 
   for (const label of [
-    "Runtime IES Scaler",
+    "Uploaded Source Files",
+    "Parsed Source Review",
     "Generated Project IES",
     "Emergency Project IES",
-    "Project Evidence Pack",
     "IES Report Card Generator",
     "Datasheet HTML Output",
     "Polar SVG Output",
     "Linear SVG Output",
     "Intensity Table Output",
+    "UGR Table Output",
     "Export Bundle",
+    "Runtime IES Scaler",
+    "Engineering Handoff to Lab",
   ]) {
     const itemPattern = new RegExp(`<button[^>]+aria-disabled="true"[^>]*><span>${label}</span>`);
-    assert.match(section, itemPattern, `${label} should be a disabled menu item`);
+    assert.match(sections, itemPattern, `${label} should be a disabled menu item where it would otherwise imply action`);
   }
 });
 
-test("Engineering photometry menu routes only to existing safe diagnostic modules", async () => {
+test("Lab and Engineering menus route only to existing safe diagnostic modules", async () => {
   const source = await shellIndex();
-  const section = engineeringSection(source);
+  const sections = `${labSection(source)}\n${engineeringSection(source)}`;
   const allowedHrefs = new Set([
     "/workspace?module=ies_builder",
     "/workspace?module=lab_proof",
     "/workspace?module=emergence",
-    "/workspace?module=board_data",
     "/workspace?module=admin_dev",
   ]);
 
-  const hrefs = Array.from(section.matchAll(/href="([^"]+)"/g), (match) => match[1]);
-  assert.ok(hrefs.length > 0, "Engineering menu should retain safe diagnostic links");
+  const hrefs = Array.from(sections.matchAll(/href="([^"]+)"/g), (match) => match[1]);
+  assert.ok(hrefs.length > 0, "Lab menu should retain safe diagnostic links");
   for (const href of hrefs) {
-    assert.ok(allowedHrefs.has(href), `Unexpected Engineering route: ${href}`);
+    assert.ok(allowedHrefs.has(href), `Unexpected Lab/Engineering route: ${href}`);
   }
 
   assert.equal(hrefs.some((href) => /generate|run|approve|promote|upload|export/i.test(href)), false);
 });
 
-test("Engineering photometry menu styling supports grouped readiness labels", async () => {
+test("Lab and Engineering taxonomy menu styling supports grouped readiness labels", async () => {
   const styles = await readFile(shellStylesUrl, "utf-8");
 
-  assert.match(styles, /\.cs-shell__rail-group--engineering-taxonomy \.cs-shell__rail-group-items/);
+  assert.match(styles, /\.cs-shell__rail-group--authority-taxonomy \.cs-shell__rail-group-items/);
   assert.match(styles, /\.cs-shell__rail-taxonomy-heading/);
   assert.match(styles, /\.cs-shell__rail-item-status/);
   assert.match(styles, /\.cs-shell__rail-taxonomy-item\[aria-disabled="true"\]/);
+  assert.match(styles, /\[data-shell-nav-group="lab"\] \{ order: 280; \}/);
   assert.match(styles, /\[data-shell-nav-group="engineering"\] \{ order: 300; \}/);
   assert.doesNotMatch(styles, /\[data-shell-nav-group="engineering_authority"\]/);
 });

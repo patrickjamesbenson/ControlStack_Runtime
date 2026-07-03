@@ -238,7 +238,7 @@ img.cs-shell__rail-icon,
 .cs-shell__rail-flyout-heading {
   position: relative; z-index: 1; padding: 4px 12px 8px; color: #ffffff; font-size: 13px; font-weight: 800; line-height: 18px; letter-spacing: 0.11em; text-transform: uppercase;
 }
-.cs-shell__rail-group--engineering-taxonomy .cs-shell__rail-group-items { width: 360px; }
+.cs-shell__rail-group--authority-taxonomy .cs-shell__rail-group-items { width: 360px; }
 .cs-shell__rail-taxonomy-heading {
   position: relative; z-index: 1; margin: 10px 8px 2px; padding-top: 8px; border-top: 1px solid rgba(255, 255, 255, 0.14);
   color: rgba(255, 255, 255, 0.78); font-size: 11px; font-weight: 800; line-height: 16px; letter-spacing: 0.09em; text-transform: uppercase;
@@ -797,6 +797,7 @@ img.cs-shell__rail-icon,
 }
 /* Rail visual ordering guard */
 .cs-shell__rail-nav > .cs-shell__rail-group { order: 700; }
+.cs-shell__rail-nav > [data-shell-nav-group="lab"] { order: 280; }
 .cs-shell__rail-nav > [data-shell-nav-group="engineering"] { order: 300; }
 .cs-shell__rail-nav > [data-shell-nav-group="knowledge_governance"] { order: 400; }
 
