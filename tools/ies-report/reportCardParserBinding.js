@@ -2,7 +2,7 @@ import { validateIesReportCardContract } from "./reportCardContract.js";
 import { parseLm63IesText } from "./reportCardIesParser.js";
 
 const DEFAULT_THEMES = ["screen-dark", "datasheet-light", "asset-transparent"];
-const DEFAULT_CARDS = ["details", "polar-plot", "linear-plot", "intensities"];
+const DEFAULT_CARDS = ["details", "polar-plot", "linear-plot", "intensities", "ugr-table"];
 
 function mmFromMetres(value) {
   return Number.isFinite(value) ? Math.round(value * 1000) : 0;

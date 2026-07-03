@@ -14,7 +14,7 @@ const REQUIRED_TOP_LEVEL_FIELDS = [
   "displayCards"
 ];
 
-const REQUIRED_DISPLAY_CARDS = ["details", "polar-plot", "linear-plot", "intensities"];
+const REQUIRED_DISPLAY_CARDS = ["details", "polar-plot", "linear-plot", "intensities", "ugr-table"];
 const REQUIRED_THEMES = ["screen-dark", "datasheet-light", "asset-transparent"];
 
 function isPlainObject(value) {

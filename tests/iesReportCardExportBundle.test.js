@@ -18,17 +18,19 @@ test("IES report export bundle builds in-memory datasheet assets", async () => {
 
   assert.equal(bundle.ok, true);
   assert.equal(bundle.writeToDisk, false);
-  assert.equal(bundle.entries.length, 4);
+  assert.equal(bundle.entries.length, 5);
   assert.deepEqual(bundle.entries.map((entry) => entry.mediaType), [
     "text/html",
     "image/svg+xml",
     "image/svg+xml",
+    "text/html",
     "text/html"
   ]);
   assert.ok(bundle.entries.some((entry) => entry.relativePath.endsWith(".report.html")));
   assert.ok(bundle.entries.some((entry) => entry.relativePath.endsWith(".polar.svg")));
   assert.ok(bundle.entries.some((entry) => entry.relativePath.endsWith(".linear.svg")));
   assert.ok(bundle.entries.some((entry) => entry.relativePath.endsWith(".intensities.html")));
+  assert.ok(bundle.entries.some((entry) => entry.relativePath.endsWith(".ugr.html")));
 });
 
 test("IES report export bundle keeps filesystem and photometry writes closed", async () => {
@@ -50,11 +52,13 @@ test("IES report export bundle content is render-ready", async () => {
   const html = bundle.entries.find((entry) => entry.relativePath.endsWith(".report.html"));
   const polar = bundle.entries.find((entry) => entry.relativePath.endsWith(".polar.svg"));
   const linear = bundle.entries.find((entry) => entry.relativePath.endsWith(".linear.svg"));
+  const ugr = bundle.entries.find((entry) => entry.relativePath.endsWith(".ugr.html"));
 
   assert.match(html.content, /theme-screen-dark/);
   assert.match(html.content, /data-card="details"/);
   assert.match(polar.content, /data-plot="polar"/);
   assert.match(linear.content, /data-plot="linear"/);
+  assert.match(ugr.content, /data-rendered="reference-ugr-estimate"/);
 });
 
 test("IES report export bundle summary is compact", async () => {
@@ -62,7 +66,7 @@ test("IES report export bundle summary is compact", async () => {
   const summary = summariseIesReportCardExportBundle(report);
 
   assert.equal(summary.ok, true);
-  assert.equal(summary.entryCount, 4);
+  assert.equal(summary.entryCount, 5);
   assert.equal(summary.writeToDisk, false);
   assert.equal(summary.filesystemWritePerformed, false);
   assert.equal(summary.iesWrite, false);

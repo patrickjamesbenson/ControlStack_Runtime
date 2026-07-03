@@ -1,5 +1,6 @@
 import { validateIesReportCardContract } from "./reportCardContract.js";
 import { renderIntensityTableHtml } from "./reportCardIntensityTableRenderer.js";
+import { renderReferenceUgrTableHtml } from "./reportCardUgrTableRenderer.js";
 import { renderLinearPlotSvg, renderPolarPlotSvg } from "./reportCardSvgRenderer.js";
 
 const THEME_CLASS = {
@@ -40,6 +41,10 @@ function renderIntensityCard(report) {
   return `<article class="ies-report-card ies-report-card--wide" data-card="intensities"><header class="ies-report-card-header"><h2 class="ies-report-card-title">Intensities (candela)</h2></header>${renderIntensityTableHtml(report)}<footer class="ies-intensity-meta"><span>Rendered from report-card JSON contract.</span><span class="ies-export-size-note">Datasheet target: ${safeText(report.exportSizing.datasheetRowWidthMm)} mm report row, ${safeText(report.exportSizing.datasheetPlotWidthMm)} mm plot cards.</span></footer></article>`;
 }
 
+function renderUgrCard(report) {
+  return `<article class="ies-report-card ies-report-card--wide" data-card="ugr-table"><header class="ies-report-card-header"><h2 class="ies-report-card-title">UGR reference table</h2></header>${renderReferenceUgrTableHtml(report)}<footer class="ies-ugr-meta"><span>Reference estimate only, not a certified UGR claim.</span><span class="ies-export-size-note">Room index columns with lengthwise and crosswise viewing directions.</span></footer></article>`;
+}
+
 export function renderIesReportCardHtml(report, options = {}) {
   const validation = validateIesReportCardContract(report);
   if (!validation.ok) return "";
@@ -49,7 +54,7 @@ export function renderIesReportCardHtml(report, options = {}) {
   const polarSvg = renderPolarPlotSvg(report);
   const linearSvg = renderLinearPlotSvg(report);
 
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${safeText(report.product.name)} IES Report Card</title><link rel="stylesheet" href="${safeText(cssHref)}"></head><body class="${themeClass}" data-supported-themes="${safeText(report.supportedThemes.join(" "))}"><main class="ies-report-page" aria-label="Photometric report card"><header class="ies-report-header"><div><div class="ies-report-kicker">CoreStack photometric report</div><h1 class="ies-report-heading">${safeText(report.product.name)}</h1></div><div class="ies-report-safety-strip" aria-label="Safety posture"><span class="ies-report-chip">Preview only</span><span class="ies-report-chip">Report render only</span><span class="ies-report-chip">No IES generation</span><span class="ies-report-chip">No external fetch</span></div></header><section class="ies-report-grid" aria-label="IES report card grid">${renderDetailsCard(report)}${renderPlotCard("Polar plot", "polar-plot", polarSvg, `Beam angle: <strong>${safeText(report.metrics.beamAngleDegrees)}°</strong>`, `LOR: <strong>${safeText(report.metrics.lorPercent)}%</strong>`)}${renderPlotCard("Linear plot", "linear-plot", linearSvg, "Scale: <strong>candela</strong>", "Rendered JSON contract")}${renderIntensityCard(report)}</section></main></body></html>`;
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${safeText(report.product.name)} IES Report Card</title><link rel="stylesheet" href="${safeText(cssHref)}"></head><body class="${themeClass}" data-supported-themes="${safeText(report.supportedThemes.join(" "))}"><main class="ies-report-page" aria-label="Photometric report card"><header class="ies-report-header"><div><div class="ies-report-kicker">CoreStack photometric report</div><h1 class="ies-report-heading">${safeText(report.product.name)}</h1></div><div class="ies-report-safety-strip" aria-label="Safety posture"><span class="ies-report-chip">Preview only</span><span class="ies-report-chip">Report render only</span><span class="ies-report-chip">No IES generation</span><span class="ies-report-chip">No external fetch</span></div></header><section class="ies-report-grid" aria-label="IES report card grid">${renderDetailsCard(report)}${renderPlotCard("Polar plot", "polar-plot", polarSvg, `Beam angle: <strong>${safeText(report.metrics.beamAngleDegrees)}°</strong>`, `LOR: <strong>${safeText(report.metrics.lorPercent)}%</strong>`)}${renderPlotCard("Linear plot", "linear-plot", linearSvg, "Scale: <strong>candela</strong>", "Rendered JSON contract")}${renderIntensityCard(report)}${renderUgrCard(report)}</section></main></body></html>`;
 }
 
 export function summariseRenderedReportHtml(report, options = {}) {
@@ -61,6 +66,7 @@ export function summariseRenderedReportHtml(report, options = {}) {
     includesDetails: html.includes('data-card="details"'),
     includesPolar: html.includes('data-card="polar-plot"'),
     includesLinear: html.includes('data-card="linear-plot"'),
-    includesIntensities: html.includes('data-card="intensities"')
+    includesIntensities: html.includes('data-card="intensities"'),
+    includesUgr: html.includes('data-card="ugr-table"')
   };
 }

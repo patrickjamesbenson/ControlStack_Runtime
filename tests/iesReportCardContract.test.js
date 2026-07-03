@@ -10,5 +10,5 @@ test("IES report card data fixture validates", async () => {
   const validation = validateIesReportCardContract(report);
   assert.equal(validation.ok, true, validation.errors.join("\n"));
   assert.equal(report.defaultTheme, "datasheet-light");
-  assert.deepEqual(report.displayCards, ["details", "polar-plot", "linear-plot", "intensities"]);
+  assert.deepEqual(report.displayCards, ["details", "polar-plot", "linear-plot", "intensities", "ugr-table"]);
 });

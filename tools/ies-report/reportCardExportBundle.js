@@ -1,6 +1,7 @@
 import { validateIesReportCardContract } from "./reportCardContract.js";
 import { renderIesReportCardHtml } from "./reportCardHtmlRenderer.js";
 import { renderIntensityTableHtml } from "./reportCardIntensityTableRenderer.js";
+import { renderReferenceUgrTableHtml } from "./reportCardUgrTableRenderer.js";
 import { renderLinearPlotSvg, renderPolarPlotSvg } from "./reportCardSvgRenderer.js";
 
 const SAFE_BASENAME_PATTERN = /[^a-z0-9._-]+/gi;
@@ -42,6 +43,7 @@ export function buildIesReportCardExportBundle(report, options = {}) {
   const polarSvg = renderPolarPlotSvg(report);
   const linearSvg = renderLinearPlotSvg(report);
   const intensityHtml = renderIntensityTableHtml(report);
+  const ugrHtml = renderReferenceUgrTableHtml(report);
 
   return {
     ok: true,
@@ -53,7 +55,8 @@ export function buildIesReportCardExportBundle(report, options = {}) {
       buildEntry(`${basename}.report.html`, "text/html", html, "Full report card HTML"),
       buildEntry(`${basename}.polar.svg`, "image/svg+xml", polarSvg, "Polar plot SVG"),
       buildEntry(`${basename}.linear.svg`, "image/svg+xml", linearSvg, "Linear plot SVG"),
-      buildEntry(`${basename}.intensities.html`, "text/html", intensityHtml, "Intensity table HTML fragment")
+      buildEntry(`${basename}.intensities.html`, "text/html", intensityHtml, "Intensity table HTML fragment"),
+      buildEntry(`${basename}.ugr.html`, "text/html", ugrHtml, "Reference UGR table HTML fragment")
     ],
     safetyBoundary: {
       previewOnly: true,

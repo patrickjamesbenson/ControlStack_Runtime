@@ -74,5 +74,5 @@
     "screenPlotWidthPx": 360,
     "screenPlotHeightPx": 260
   },
-  "displayCards": ["details", "polar-plot", "linear-plot", "intensities"]
+  "displayCards": ["details", "polar-plot", "linear-plot", "intensities", "ugr-table"]
 }

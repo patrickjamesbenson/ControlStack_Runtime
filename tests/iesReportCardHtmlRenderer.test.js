@@ -23,6 +23,9 @@ test("IES report HTML renderer composes the full report card from JSON", async (
   assert.match(html, /data-card="polar-plot"/);
   assert.match(html, /data-card="linear-plot"/);
   assert.match(html, /data-card="intensities"/);
+  assert.match(html, /data-card="ugr-table"/);
+  assert.match(html, /UGR reference table/);
+  assert.match(html, /data-rendered="reference-ugr-estimate"/);
   assert.match(html, /data-plot="polar"/);
   assert.match(html, /data-plot="linear"/);
   assert.match(html, /data-rendered="report-json"/);
@@ -68,6 +71,7 @@ test("IES report HTML renderer summary is compact", async () => {
   assert.equal(summary.includesPolar, true);
   assert.equal(summary.includesLinear, true);
   assert.equal(summary.includesIntensities, true);
+  assert.equal(summary.includesUgr, true);
   assert.ok(summary.byteLength > 1000);
 });
 

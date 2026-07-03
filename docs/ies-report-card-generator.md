@@ -8,6 +8,7 @@ Runtime-owned photometric report card generator for linear luminaire datasheet a
 - Polar plot
 - Linear plot
 - Candela intensity table
+- Reference UGR table layout and estimate
 - Datasheet-light default theme
 - Screen-dark review theme
 - Transparent asset theme
@@ -30,6 +31,7 @@ Generated report assets:
 - `.polar.svg`
 - `.linear.svg`
 - `.intensities.html`
+- `.ugr.html`
 
 ## Safety boundary
 

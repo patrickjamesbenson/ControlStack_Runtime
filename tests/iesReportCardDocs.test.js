@@ -13,6 +13,8 @@ test("IES report card generator docs describe command, outputs, and safety bound
   assert.match(source, /\.polar\.svg/);
   assert.match(source, /\.linear\.svg/);
   assert.match(source, /\.intensities\.html/);
+  assert.match(source, /\.ugr\.html/);
+  assert.match(source, /Reference UGR table/);
   assert.match(source, /No IES creation/);
   assert.match(source, /No RuntimeData writes/);
   assert.match(source, /No donor Engine call/);

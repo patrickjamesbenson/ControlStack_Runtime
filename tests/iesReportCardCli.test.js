@@ -52,6 +52,7 @@ test("IES report CLI help text describes report-only outputs", () => {
   assert.match(usage, /\.report\.html/);
   assert.match(usage, /\.polar\.svg/);
   assert.match(usage, /\.linear\.svg/);
+  assert.match(usage, /ugr/);
   assert.match(usage, /No IES files are created or modified/);
 });
 
@@ -96,11 +97,12 @@ test("IES report CLI writes report assets when explicitly confirmed", async () =
     ], io);
 
     assert.equal(code, 0, io.error());
-    assert.match(io.output(), /export complete: 4 files/);
+    assert.match(io.output(), /export complete: 5 files/);
     assert.ok(existsSync(join(directory, "cli-sample.report.html")));
     assert.ok(existsSync(join(directory, "cli-sample.polar.svg")));
     assert.ok(existsSync(join(directory, "cli-sample.linear.svg")));
     assert.ok(existsSync(join(directory, "cli-sample.intensities.html")));
+    assert.ok(existsSync(join(directory, "cli-sample.ugr.html")));
   } finally {
     await rm(directory, { recursive: true, force: true });
   }

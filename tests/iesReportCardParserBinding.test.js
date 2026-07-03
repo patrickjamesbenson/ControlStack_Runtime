@@ -42,7 +42,7 @@ test("LM-63 parser binding creates a valid report-card contract", async () => {
   assert.equal(result.report.dimensions.physical.widthMm, 56);
   assert.equal(result.report.dimensions.physical.lengthMm, 1144);
   assert.equal(result.report.dimensions.physical.heightMm, 65);
-  assert.deepEqual(result.report.displayCards, ["details", "polar-plot", "linear-plot", "intensities"]);
+  assert.deepEqual(result.report.displayCards, ["details", "polar-plot", "linear-plot", "intensities", "ugr-table"]);
 });
 
 test("LM-63 parser binding output feeds the export bundle", async () => {
@@ -50,7 +50,7 @@ test("LM-63 parser binding output feeds the export bundle", async () => {
   const bundle = buildIesReportCardExportBundle(result.report);
 
   assert.equal(bundle.ok, true);
-  assert.equal(bundle.entries.length, 4);
+  assert.equal(bundle.entries.length, 5);
   assert.ok(bundle.entries.some((entry) => entry.relativePath.endsWith(".report.html")));
   assert.ok(bundle.entries.some((entry) => entry.content.includes("data-plot=\"polar\"")));
   assert.ok(bundle.entries.some((entry) => entry.content.includes("data-plot=\"linear\"")));

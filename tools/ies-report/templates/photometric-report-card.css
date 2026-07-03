@@ -367,13 +367,15 @@ body {
   font-weight: 500;
 }
 
-.ies-intensity-table-frame {
+.ies-intensity-table-frame,
+.ies-ugr-table-frame {
   max-height: 320px;
   overflow: auto;
   border-top: 1px solid var(--ies-report-card-border);
 }
 
-.ies-intensity-table {
+.ies-intensity-table,
+.ies-ugr-table {
   width: 100%;
   min-width: 1050px;
   border-collapse: collapse;
@@ -382,8 +384,14 @@ body {
   color: var(--ies-report-text);
 }
 
+.ies-ugr-table {
+  min-width: 900px;
+}
+
 .ies-intensity-table th,
-.ies-intensity-table td {
+.ies-intensity-table td,
+.ies-ugr-table th,
+.ies-ugr-table td {
   border-right: 1px solid var(--ies-report-table-cell-border);
   border-bottom: 1px solid var(--ies-report-table-cell-border);
   padding: 4px 6px;
@@ -391,7 +399,8 @@ body {
   white-space: nowrap;
 }
 
-.ies-intensity-table th {
+.ies-intensity-table th,
+.ies-ugr-table th {
   position: sticky;
   top: 0;
   z-index: 1;
@@ -400,11 +409,18 @@ body {
   font-weight: 500;
 }
 
-.ies-intensity-table tbody tr:nth-child(odd) {
+.ies-ugr-table th:nth-child(1),
+.ies-ugr-table th:nth-child(2) {
+  text-align: left;
+}
+
+.ies-intensity-table tbody tr:nth-child(odd),
+.ies-ugr-table tbody tr:nth-child(odd) {
   background: var(--ies-report-table-row-a);
 }
 
-.ies-intensity-table tbody tr:nth-child(even) {
+.ies-intensity-table tbody tr:nth-child(even),
+.ies-ugr-table tbody tr:nth-child(even) {
   background: var(--ies-report-table-row-b);
 }
 
@@ -420,7 +436,31 @@ body {
   background: rgba(55, 161, 118, 0.22);
 }
 
-.ies-intensity-meta {
+.ies-ugr-table td[data-ugr-band="excellent"] {
+  background: rgba(68, 176, 117, 0.24);
+}
+
+.ies-ugr-table td[data-ugr-band="office"] {
+  background: rgba(132, 201, 84, 0.22);
+}
+
+.ies-ugr-table td[data-ugr-band="general"] {
+  background: rgba(242, 193, 91, 0.25);
+}
+
+.ies-ugr-table td[data-ugr-band="caution"] {
+  background: rgba(210, 64, 91, 0.28);
+}
+
+.ies-ugr-note {
+  margin: 8px 18px 0;
+  color: var(--ies-report-muted);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.ies-intensity-meta,
+.ies-ugr-meta {
   display: flex;
   justify-content: space-between;
   gap: 12px;

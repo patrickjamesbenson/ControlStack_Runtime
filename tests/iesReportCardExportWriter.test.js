@@ -43,11 +43,12 @@ test("IES report export writer writes only report assets when explicitly confirm
     assert.equal(result.runtimeDataWrite, false);
     assert.equal(result.externalFetch, false);
     assert.equal(result.postEndpoint, false);
-    assert.equal(result.writtenFiles.length, 4);
+    assert.equal(result.writtenFiles.length, 5);
     assert.ok(existsSync(join(directory, "safe-sample.report.html")));
     assert.ok(existsSync(join(directory, "safe-sample.polar.svg")));
     assert.ok(existsSync(join(directory, "safe-sample.linear.svg")));
     assert.ok(existsSync(join(directory, "safe-sample.intensities.html")));
+    assert.ok(existsSync(join(directory, "safe-sample.ugr.html")));
   } finally {
     await rm(directory, { recursive: true, force: true });
   }

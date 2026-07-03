@@ -31,7 +31,7 @@ export function reportCardCliUsage() {
     "Usage:",
     "node tools/ies-report/renderReportCardCli.js --ies <file.ies> --out <directory> --confirm-write [--basename name] [--theme datasheet-light|screen-dark|asset-transparent] [--metadata file.json]",
     "",
-    "Outputs: .report.html, .polar.svg, .linear.svg, .intensities.html",
+    "Outputs: .report.html, .polar.svg, .linear.svg, .intensities.html, .ugr.html",
     "No IES files are created or modified."
   ].join("\n");
 }
