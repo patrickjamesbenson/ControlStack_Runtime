@@ -127,6 +127,7 @@ test("Engineering section renders the approved photometry authority groups", asy
     "Emergency Systems",
     "Approved Fittings",
     "Runtime Outputs",
+    "Report Card / Datasheet Outputs",
   ]) {
     assert.match(section, new RegExp(`>${group}<`), `${group} should render as an Engineering menu group`);
   }
@@ -166,6 +167,12 @@ test("Engineering photometry taxonomy renders the approved journey entries", asy
     "Generated Project IES",
     "Emergency Project IES",
     "Project Evidence Pack",
+    "IES Report Card Generator",
+    "Datasheet HTML Output",
+    "Polar SVG Output",
+    "Linear SVG Output",
+    "Intensity Table Output",
+    "Export Bundle",
   ]) {
     assert.match(section, new RegExp(`>${label}<`), `${label} should render in the Engineering photometry menu`);
   }
@@ -177,9 +184,45 @@ test("Engineering photometry taxonomy renders the approved journey entries", asy
     "requires lab provenance",
     "approved reference only",
     "runtime generation disabled",
+    "read-only IES consumer",
+    "local export only",
+    "datasheet output",
+    "screen display",
+    "no IES generation",
+    "no authority",
   ]) {
     assert.match(section, new RegExp(status), `${status} status should be visible`);
   }
+});
+
+test("Report-card datasheet output menu remains downstream status-only", async () => {
+  const source = await shellIndex();
+  const section = engineeringSection(source);
+  const groupStart = section.indexOf(">Report Card / Datasheet Outputs<");
+  const groupEnd = section.indexOf("cs-shell__rail-item--admin", groupStart);
+  assert.ok(groupStart > 0, "Report Card / Datasheet Outputs group should exist");
+  assert.ok(groupEnd > groupStart, "Report Card / Datasheet Outputs group should end before admin link");
+  const group = section.slice(groupStart, groupEnd);
+
+  for (const [label, status] of [
+    ["IES Report Card Generator", "read-only IES consumer"],
+    ["Datasheet HTML Output", "datasheet output"],
+    ["Polar SVG Output", "screen display"],
+    ["Linear SVG Output", "screen display"],
+    ["Intensity Table Output", "local export only"],
+    ["Export Bundle", "no IES generation · no authority"],
+  ]) {
+    const itemPattern = new RegExp(`<button[^>]+aria-disabled="true"[^>]*><span>${label}</span><span class="cs-shell__rail-item-status">${status}</span></button>`);
+    assert.match(group, itemPattern, `${label} should be disabled/status-only with ${status}`);
+  }
+
+  assert.match(group, /Existing IES file → read-only parse → report-card JSON contract → datasheet and screen display assets/);
+  assert.match(group, /no route, POST endpoint, or shell CLI execution is enabled/);
+  assert.doesNotMatch(group, /href="/);
+  assert.doesNotMatch(group, /data-module-link=/);
+  assert.doesNotMatch(group, /method=["']post["']/i);
+  assert.doesNotMatch(group, /fetch\([^)]*POST/i);
+  assert.doesNotMatch(group, /renderReportCardCli|confirm-write|\/api\//i);
 });
 
 test("Emergency photometry menu entries render without implying normal-photometry substitution", async () => {
@@ -210,7 +253,18 @@ test("Engineering photometry menu does not enable production generation actions"
   assert.doesNotMatch(section, /\/api\/(?:ies|photometry|engine|runtable|reference)[^"']*(?:generate|create|approve|promote|run)/i);
   assert.doesNotMatch(section, /run_engine|donor Engine|donor photometry/i);
 
-  for (const label of ["Runtime IES Scaler", "Generated Project IES", "Emergency Project IES", "Project Evidence Pack"]) {
+  for (const label of [
+    "Runtime IES Scaler",
+    "Generated Project IES",
+    "Emergency Project IES",
+    "Project Evidence Pack",
+    "IES Report Card Generator",
+    "Datasheet HTML Output",
+    "Polar SVG Output",
+    "Linear SVG Output",
+    "Intensity Table Output",
+    "Export Bundle",
+  ]) {
     const itemPattern = new RegExp(`<button[^>]+aria-disabled="true"[^>]*><span>${label}</span>`);
     assert.match(section, itemPattern, `${label} should be a disabled menu item`);
   }
