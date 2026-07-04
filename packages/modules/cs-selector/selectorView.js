@@ -314,6 +314,51 @@ function appendSelectorFieldContractDiagnostic(parent, shell = {}) {
   }
 }
 
+function appendTimelineStatusTestControls(parent, timelineStatusTest = {}) {
+  const section = document.createElement("section");
+  section.className = "cs-selector-proof__section cs-selector-timeline-status-test";
+  appendText(section, "h3", timelineStatusTest.title || "Internal timeline/status test mode");
+  appendText(section, "p", timelineStatusTest.description || "Diagnostic GET-only timeline controls for safe cascade testing. Production outputs remain blocked.");
+
+  const modeInput = document.createElement("input");
+  modeInput.type = "checkbox";
+  modeInput.dataset.timelineControl = "internal-asof-test";
+  modeInput.checked = timelineStatusTest.internalAsOfTestMode === true;
+  modeInput.addEventListener("change", () => timelineStatusTest.setTimelineTestMode?.(modeInput.checked === true));
+  section.appendChild(modeInput);
+  appendText(section, "span", " Enable internal/as-of test mode");
+
+  const dateInput = document.createElement("input");
+  dateInput.id = "cs-selector-timeline-as-of-date";
+  dateInput.type = "date";
+  dateInput.dataset.timelineControl = "timelineAsOfDate";
+  dateInput.value = timelineStatusTest.timelineAsOfDate || "";
+  dateInput.addEventListener("change", () => timelineStatusTest.setTimelineAsOfDate?.(dateInput.value));
+  appendText(section, "h4", "Timeline as-of date");
+  section.appendChild(dateInput);
+
+  appendText(section, "h4", "Visible statuses for internal test");
+  const visibleStatuses = new Set(Array.isArray(timelineStatusTest.timelineVisibleStatuses) ? timelineStatusTest.timelineVisibleStatuses : []);
+  for (const status of timelineStatusTest.timelineVisibleStatusOptions || []) {
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.dataset.timelineStatus = status;
+    checkbox.checked = visibleStatuses.has(status);
+    checkbox.addEventListener("change", () => timelineStatusTest.setTimelineVisibleStatus?.(status, checkbox.checked === true));
+    section.appendChild(checkbox);
+    appendText(section, "span", ` ${status}`);
+  }
+
+  appendDefinitionList(section, [
+    ["mode", timelineStatusTest.timelineVisibilityMode || "external-default"],
+    ["visible status set", (timelineStatusTest.timelineVisibleStatuses || []).join(", ") || "available, approved"],
+    ["GET query params only", yesNo(timelineStatusTest.queryParamsOnly !== false)],
+    ["production outputs", timelineStatusTest.productionActionsEnabled === true ? "enabled" : "blocked"],
+    ["raw rows exposed", forcedFalse(timelineStatusTest.rawRowsExposed)],
+  ]);
+  parent.appendChild(section);
+}
+
 function appendSelectorManualConstraintBehaviour(parent, shell = {}) {
   const behaviour = shell.manualConstraintBehaviour || {};
   const section = document.createElement("section");
@@ -351,6 +396,7 @@ function appendSelectorManualConstraintBehaviour(parent, shell = {}) {
   appendSection(section, "Default-preview selections list", behaviour.defaultPreviewRows || [["default-preview selections", "none"]]);
   appendSection(section, "Compatibility warnings", behaviour.compatibilityWarningRows || [["compatibility warnings", "none"]]);
   appendSection(section, "Blocked/incompatible fields", behaviour.blockedFieldRows || [["blocked/incompatible fields", "none"]]);
+  appendTimelineStatusTestControls(section, shell.timelineStatusTest || {});
 
   const controlSections = Array.isArray(behaviour.controlSections) ? behaviour.controlSections : [];
   const controls = document.createElement("section");

@@ -39,6 +39,70 @@ const DEFAULT_PREVIEW_BUCKET_STATUSES = Object.freeze({
   pureReferenceDiagnosticLater: "later",
 });
 
+const SELECTOR_TIMELINE_VISIBILITY_MODES = Object.freeze({
+  EXTERNAL_DEFAULT: "external-default",
+  INTERNAL_ASOF_TEST: "internal-asof-test",
+});
+
+const SELECTOR_TIMELINE_STATUS_OPTIONS = Object.freeze(["available", "approved", "staged", "roadmap", "obsolete", "unknown"]);
+const DEFAULT_SELECTOR_TIMELINE_VISIBLE_STATUSES = Object.freeze(["available", "approved"]);
+
+function isoTodayDate() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function normaliseTimelineStatus(value = "") {
+  const key = String(value || "").trim().toLowerCase().replace(/[_-]+/g, " ").replace(/\s+/g, " ");
+  if (["available", "active", "current", "live", "released", "sellable", "orderable"].includes(key)) return "available";
+  if (["approved", "approved available", "approved for use", "approved for selector"].includes(key)) return "approved";
+  if (["staged", "stage", "pilot", "preview", "pre release", "preproduction", "pre production", "pending release", "business case"].includes(key)) return "staged";
+  if (["roadmap", "future", "planned", "concept", "proposed", "under development", "development"].includes(key)) return "roadmap";
+  if (["obsolete", "retired", "deleted", "inactive", "discontinued", "superseded", "end of life", "eol"].includes(key)) return "obsolete";
+  return "unknown";
+}
+
+function normaliseTimelineStatuses(value = DEFAULT_SELECTOR_TIMELINE_VISIBLE_STATUSES) {
+  const raw = Array.isArray(value) ? value : String(value || "").split(/[;,|]/);
+  const statuses = [...new Set(raw.map(normaliseTimelineStatus).filter((status) => SELECTOR_TIMELINE_STATUS_OPTIONS.includes(status)))];
+  return statuses.length ? statuses : [...DEFAULT_SELECTOR_TIMELINE_VISIBLE_STATUSES];
+}
+
+function createInitialTimelineStatusTestState() {
+  return {
+    timelineVisibilityMode: SELECTOR_TIMELINE_VISIBILITY_MODES.EXTERNAL_DEFAULT,
+    timelineAsOfDate: isoTodayDate(),
+    timelineVisibleStatuses: [...DEFAULT_SELECTOR_TIMELINE_VISIBLE_STATUSES],
+    timelineVisibleStatusOptions: [...SELECTOR_TIMELINE_STATUS_OPTIONS],
+    readOnly: true,
+    diagnosticOnly: true,
+    queryParamsOnly: true,
+    productionActionsEnabled: false,
+    rawRowsExposed: false,
+  };
+}
+
+function cloneTimelineStatusTestState(value = {}) {
+  const base = createInitialTimelineStatusTestState();
+  const mode = value.timelineVisibilityMode === SELECTOR_TIMELINE_VISIBILITY_MODES.INTERNAL_ASOF_TEST
+    ? SELECTOR_TIMELINE_VISIBILITY_MODES.INTERNAL_ASOF_TEST
+    : SELECTOR_TIMELINE_VISIBILITY_MODES.EXTERNAL_DEFAULT;
+  return {
+    ...base,
+    ...value,
+    timelineVisibilityMode: mode,
+    timelineAsOfDate: String(value.timelineAsOfDate || base.timelineAsOfDate).trim() || base.timelineAsOfDate,
+    timelineVisibleStatuses: mode === SELECTOR_TIMELINE_VISIBILITY_MODES.INTERNAL_ASOF_TEST
+      ? normaliseTimelineStatuses(value.timelineVisibleStatuses || base.timelineVisibleStatuses)
+      : [...DEFAULT_SELECTOR_TIMELINE_VISIBLE_STATUSES],
+    timelineVisibleStatusOptions: [...SELECTOR_TIMELINE_STATUS_OPTIONS],
+    readOnly: true,
+    diagnosticOnly: true,
+    queryParamsOnly: true,
+    productionActionsEnabled: false,
+    rawRowsExposed: false,
+  };
+}
+
 const DEFAULT_PREVIEW_DEFAULTS = Object.freeze(Object.fromEntries(
   Object.keys(DEFAULT_EXPANDER_SECTIONS).map((sectionId) => [
     sectionId,
@@ -914,6 +978,7 @@ export function createSelectorState() {
     lastAction: "mounted",
     selectorStateContract: createInitialSelectorStateContract(),
     dbBackedSelector: cloneDbBackedSelectorState(),
+    timelineStatusTest: createInitialTimelineStatusTestState(),
     runIntake: createInitialSelectorRunIntakeState(),
     runAccessoryPlacement: createInitialSelectorRunAccessoryPlacementState(),
   };
@@ -924,6 +989,7 @@ export function createSelectorState() {
       expanderSections: { ...state.expanderSections },
       selectorStateContract: cloneSelectorStateContract(state.selectorStateContract),
       dbBackedSelector: cloneDbBackedSelectorState(state.dbBackedSelector),
+      timelineStatusTest: cloneTimelineStatusTestState(state.timelineStatusTest),
       runIntake: cloneSelectorRunIntakeState(state.runIntake),
       runAccessoryPlacement: cloneSelectorRunAccessoryPlacementState(state.runAccessoryPlacement),
     };
@@ -1035,6 +1101,55 @@ export function createSelectorState() {
         state.localDirty = true;
         state.lastAction = next.lastAction;
       }
+      return this.getSnapshot();
+    },
+
+    setSelectorTimelineTestMode(modeOrEnabled) {
+      const mode = modeOrEnabled === true || modeOrEnabled === SELECTOR_TIMELINE_VISIBILITY_MODES.INTERNAL_ASOF_TEST
+        ? SELECTOR_TIMELINE_VISIBILITY_MODES.INTERNAL_ASOF_TEST
+        : SELECTOR_TIMELINE_VISIBILITY_MODES.EXTERNAL_DEFAULT;
+      state.timelineStatusTest = cloneTimelineStatusTestState({
+        ...state.timelineStatusTest,
+        timelineVisibilityMode: mode,
+      });
+      state.localDirty = true;
+      state.lastAction = `timeline-status-test-mode:${mode}`;
+      return this.getSnapshot();
+    },
+
+    setSelectorTimelineAsOfDate(value) {
+      state.timelineStatusTest = cloneTimelineStatusTestState({
+        ...state.timelineStatusTest,
+        timelineAsOfDate: String(value || "").trim() || isoTodayDate(),
+      });
+      state.localDirty = true;
+      state.lastAction = "timeline-status-test-as-of-date";
+      return this.getSnapshot();
+    },
+
+    setSelectorTimelineVisibleStatus(status, visible) {
+      const canonical = normaliseTimelineStatus(status);
+      const current = new Set(normaliseTimelineStatuses(state.timelineStatusTest.timelineVisibleStatuses));
+      if (visible === false) current.delete(canonical);
+      else current.add(canonical);
+      state.timelineStatusTest = cloneTimelineStatusTestState({
+        ...state.timelineStatusTest,
+        timelineVisibilityMode: SELECTOR_TIMELINE_VISIBILITY_MODES.INTERNAL_ASOF_TEST,
+        timelineVisibleStatuses: Array.from(current),
+      });
+      state.localDirty = true;
+      state.lastAction = `timeline-status-test-visible-status:${canonical}:${visible === false ? "off" : "on"}`;
+      return this.getSnapshot();
+    },
+
+    setSelectorTimelineVisibleStatuses(statuses = []) {
+      state.timelineStatusTest = cloneTimelineStatusTestState({
+        ...state.timelineStatusTest,
+        timelineVisibilityMode: SELECTOR_TIMELINE_VISIBILITY_MODES.INTERNAL_ASOF_TEST,
+        timelineVisibleStatuses: statuses,
+      });
+      state.localDirty = true;
+      state.lastAction = "timeline-status-test-visible-statuses";
       return this.getSnapshot();
     },
 

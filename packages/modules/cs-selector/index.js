@@ -6,6 +6,11 @@ import { createSelectorViewModel } from "./selectorViewModel.js";
 const SELECTOR_REFERENCE_STATUS_ENDPOINT = "/api/selector-reference/status";
 const SELECTOR_REFERENCE_OPTIONS_ENDPOINT = "/api/selector-reference/options";
 
+const SELECTOR_TIMELINE_VISIBILITY_MODES = Object.freeze({
+  EXTERNAL_DEFAULT: "external-default",
+  INTERNAL_ASOF_TEST: "internal-asof-test",
+});
+
 const SELECTOR_OPTION_CONSTRAINT_KEYS = Object.freeze([
   "system",
   "application",
@@ -253,6 +258,17 @@ function normaliseSelectorConstraintParams(query = "") {
     const value = String(params.get(key) || "").trim();
     if (value) ordered.set(key, value);
   }
+  const mode = String(params.get("timelineVisibilityMode") || "").trim();
+  if (mode === SELECTOR_TIMELINE_VISIBILITY_MODES.INTERNAL_ASOF_TEST) {
+    ordered.set("timelineVisibilityMode", mode);
+    const asOfDate = String(params.get("timelineAsOfDate") || "").trim();
+    if (asOfDate) ordered.set("timelineAsOfDate", asOfDate);
+    const statuses = [
+      ...params.getAll("timelineVisibleStatus"),
+      ...String(params.get("timelineVisibleStatuses") || "").split(/[;,|]/),
+    ].map((value) => String(value || "").trim()).filter(Boolean);
+    if (statuses.length) ordered.set("timelineVisibleStatuses", [...new Set(statuses)].join(","));
+  }
   return ordered.toString();
 }
 
@@ -271,10 +287,26 @@ export function selectorOptionConstraintQueryFromConstraints(constraints = {}) {
   return query ? `?${query}` : "";
 }
 
+function appendSelectorTimelineQueryParams(params, timelineStatusTest = {}) {
+  if (timelineStatusTest?.timelineVisibilityMode !== SELECTOR_TIMELINE_VISIBILITY_MODES.INTERNAL_ASOF_TEST) return;
+  params.set("timelineVisibilityMode", SELECTOR_TIMELINE_VISIBILITY_MODES.INTERNAL_ASOF_TEST);
+  const asOfDate = String(timelineStatusTest.timelineAsOfDate || "").trim();
+  if (asOfDate) params.set("timelineAsOfDate", asOfDate);
+  const statuses = Array.isArray(timelineStatusTest.timelineVisibleStatuses) ? timelineStatusTest.timelineVisibleStatuses : [];
+  if (statuses.length) params.set("timelineVisibleStatuses", [...new Set(statuses.map((status) => String(status || "").trim()).filter(Boolean))].join(","));
+}
+
+function selectorOptionQueryFromSnapshot(snapshot = {}) {
+  const rawConstraintQuery = selectorOptionConstraintQueryFromConstraints(snapshot.dbBackedSelector?.manualConstraints || {});
+  const params = new URLSearchParams(String(rawConstraintQuery || "").replace(/^\?/, ""));
+  appendSelectorTimelineQueryParams(params, snapshot.timelineStatusTest || {});
+  const query = normaliseSelectorConstraintParams(params.toString());
+  return query ? `?${query}` : "";
+}
+
 function selectorOptionConstraintQuery() {
   const snapshot = selectorState?.getSnapshot?.() || {};
-  const constraints = snapshot.dbBackedSelector?.manualConstraints || {};
-  return selectorOptionConstraintQueryFromConstraints(constraints);
+  return selectorOptionQueryFromSnapshot(snapshot);
 }
 
 function currentSelectorOptionConstraintSignature() {

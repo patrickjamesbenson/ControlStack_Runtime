@@ -5004,6 +5004,7 @@ function createDbBackedSelectorSurface(selectorReferenceStatus = {}, local = {},
     flatFieldsPrimary: false,
   });
   const donorShapeSelectedTiles = createDonorShapeSelectedTiles({ fields, workflowSections });
+  const timelineStatusTest = createTimelineStatusTestControls(local, selectorState, onLocalStateChange, selectorReferenceStatus);
   return {
     title: "CS Selector Preview",
     subtitle: "Read-only DB-backed candidate preview. Manual selections are constraints; auto selections are consequences.",
@@ -5038,6 +5039,7 @@ function createDbBackedSelectorSurface(selectorReferenceStatus = {}, local = {},
     },
     fields,
     workflowSections,
+    timelineStatusTest,
     donorFieldParity: payload.donorFieldParity || null,
     specialPartsEntitlementSummary: payload.specialPartsEntitlementSummary || null,
     presentationClassification,
@@ -5911,6 +5913,50 @@ function createSelectorReadinessDiagnostics(contract = {}) {
   };
 }
 
+function createTimelineStatusTestControls(local = {}, selectorState, onLocalStateChange, selectorReferenceStatus = {}) {
+  const payload = dbOptionsPayload(selectorReferenceStatus);
+  const filtering = payload.timelineStatusFiltering || {};
+  const state = local.timelineStatusTest || {};
+  const mode = state.timelineVisibilityMode || payload.timelineVisibilityMode || filtering.timelineVisibilityMode || "external-default";
+  const asOfDate = state.timelineAsOfDate || payload.timelineAsOfDate || filtering.timelineAsOfDate || "";
+  const visibleStatuses = Array.isArray(state.timelineVisibleStatuses) && state.timelineVisibleStatuses.length
+    ? state.timelineVisibleStatuses
+    : (Array.isArray(payload.timelineVisibleStatuses) ? payload.timelineVisibleStatuses : (Array.isArray(filtering.timelineVisibleStatuses) ? filtering.timelineVisibleStatuses : ["available", "approved"]));
+  const statusOptions = Array.isArray(state.timelineVisibleStatusOptions) && state.timelineVisibleStatusOptions.length
+    ? state.timelineVisibleStatusOptions
+    : (Array.isArray(filtering.timelineVisibleStatusOptions) ? filtering.timelineVisibleStatusOptions : ["available", "approved", "staged", "roadmap", "obsolete", "unknown"]);
+  return {
+    title: "Internal timeline/status test mode",
+    description: "Diagnostic GET-only controls. Future rows can appear for cascade testing only when status is selected and status_date is on/before the as-of date. Production actions remain blocked.",
+    timelineVisibilityMode: mode,
+    internalAsOfTestMode: mode === "internal-asof-test",
+    timelineAsOfDate: asOfDate,
+    timelineVisibleStatuses: [...visibleStatuses],
+    timelineVisibleStatusOptions: [...statusOptions],
+    productionActionsEnabled: false,
+    engineEnabled: false,
+    runTableGenerationEnabled: false,
+    iesGenerationEnabled: false,
+    selectedResultPersistenceEnabled: false,
+    projectExportEnabled: false,
+    hubSpotWriteEnabled: false,
+    rawRowsExposed: false,
+    queryParamsOnly: true,
+    setTimelineTestMode(enabled) {
+      selectorState?.setSelectorTimelineTestMode?.(enabled === true ? "internal-asof-test" : "external-default");
+      onLocalStateChange?.();
+    },
+    setTimelineAsOfDate(value) {
+      selectorState?.setSelectorTimelineAsOfDate?.(value);
+      onLocalStateChange?.();
+    },
+    setTimelineVisibleStatus(status, visible) {
+      selectorState?.setSelectorTimelineVisibleStatus?.(status, visible);
+      onLocalStateChange?.();
+    },
+  };
+}
+
 function createSelectorExpanderShell(local = {}, selectorState, onLocalStateChange, selectorReferenceStatus = {}, selectorSurface = null) {
   const stateContract = selectorStateContractFromLocal(local);
   const defaultPreviewBuckets = createDefaultPreviewBucketDiagnostics(stateContract);
@@ -5934,6 +5980,7 @@ function createSelectorExpanderShell(local = {}, selectorState, onLocalStateChan
     manualConstraintScaffoldRows: createManualConstraintScaffoldRows(stateContract),
     behaviourContractRows: createBehaviourContractRows(stateContract),
     manualConstraintBehaviour: createManualConstraintBehaviour(stateContract, selectorState, onLocalStateChange, selectorSurface),
+    timelineStatusTest: selectorSurface?.timelineStatusTest || createTimelineStatusTestControls(local, selectorState, onLocalStateChange, selectorReferenceStatus),
     readinessDiagnostics: createSelectorReadinessDiagnostics(stateContract),
     readonlyResolverPreview,
     setSectionOpen(sectionId, open) {

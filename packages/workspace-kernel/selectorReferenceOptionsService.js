@@ -449,6 +449,22 @@ function tableRows(snapshot, tableName) {
 const SELECTOR_STATUS_CLASSES = Object.freeze(["available", "approved", "staged", "roadmap", "obsolete", "unknown"]);
 const STATUS_VISIBLE_CLASSES = Object.freeze(new Set(["available", "approved"]));
 const STATUS_REVIEW_CLASSES = Object.freeze(new Set(["unknown"]));
+const DEFAULT_TIMELINE_VISIBLE_STATUSES = Object.freeze(["available", "approved"]);
+export const SELECTOR_TIMELINE_VISIBILITY_MODES = Object.freeze({
+  EXTERNAL_DEFAULT: "external-default",
+  INTERNAL_ASOF_TEST: "internal-asof-test",
+});
+export const SELECTOR_TIMELINE_VISIBLE_STATUS_OPTIONS = Object.freeze([...SELECTOR_STATUS_CLASSES]);
+const TIMELINE_STATUS_DATE_KEYS = Object.freeze([
+  "status_date",
+  "statusDate",
+  "available_from",
+  "availableFrom",
+  "effective_from",
+  "effectiveFrom",
+  "release_date",
+  "releaseDate",
+]);
 
 function sourceRowPassesApprovalGate(row) {
   const approved = safeLower(rowText(row, ["approved", "is_approved", "approved_for_selector"], "yes"));
@@ -479,23 +495,185 @@ function optionStatusClassForRow(row) {
   return optionStatusClassFromValue(rawStatusText(row), approved);
 }
 
-function statusPolicyForClass(optionStatusClass = "unknown") {
-  const safeClass = SELECTOR_STATUS_CLASSES.includes(optionStatusClass) ? optionStatusClass : "unknown";
-  if (STATUS_VISIBLE_CLASSES.has(safeClass)) return { optionStatusClass: safeClass, timelineAvailability: "visible-to-external-default", blockedByStatusPolicy: false, reviewRequired: false, blockedReason: "" };
+function isoTodayDate() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function parseTimelineDate(value) {
+  const raw = safeString(value);
+  if (!raw) return { raw, isoDate: "", timestamp: null, valid: false };
+  const isoMatch = raw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (isoMatch) {
+    const timestamp = Date.UTC(Number(isoMatch[1]), Number(isoMatch[2]) - 1, Number(isoMatch[3]));
+    return { raw, isoDate: raw, timestamp, valid: Number.isFinite(timestamp) };
+  }
+  const auMatch = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (auMatch) {
+    const day = Number(auMatch[1]);
+    const month = Number(auMatch[2]);
+    const year = Number(auMatch[3]);
+    const timestamp = Date.UTC(year, month - 1, day);
+    const isoDate = `${String(year).padStart(4, "0")}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    return { raw, isoDate, timestamp, valid: Number.isFinite(timestamp) };
+  }
+  const timestamp = Date.parse(raw);
+  if (!Number.isFinite(timestamp)) return { raw, isoDate: "", timestamp: null, valid: false };
+  return { raw, isoDate: new Date(timestamp).toISOString().slice(0, 10), timestamp, valid: true };
+}
+
+function rowStatusDate(row) {
+  return rowText(row, TIMELINE_STATUS_DATE_KEYS);
+}
+
+export function normaliseSelectorTimelineVisibilityMode(value = "") {
+  return safeString(value) === SELECTOR_TIMELINE_VISIBILITY_MODES.INTERNAL_ASOF_TEST
+    ? SELECTOR_TIMELINE_VISIBILITY_MODES.INTERNAL_ASOF_TEST
+    : SELECTOR_TIMELINE_VISIBILITY_MODES.EXTERNAL_DEFAULT;
+}
+
+function normaliseSelectorTimelineStatus(value = "") {
+  const status = optionStatusClassFromValue(value);
+  return SELECTOR_STATUS_CLASSES.includes(status) ? status : "unknown";
+}
+
+export function normaliseSelectorTimelineVisibleStatuses(value = DEFAULT_TIMELINE_VISIBLE_STATUSES) {
+  const rawValues = Array.isArray(value)
+    ? value
+    : safeString(value).split(/[;,|]/);
+  const statuses = uniqueStrings(rawValues
+    .map((item) => normaliseSelectorTimelineStatus(item))
+    .filter((item) => SELECTOR_STATUS_CLASSES.includes(item)));
+  return statuses.length ? statuses : [...DEFAULT_TIMELINE_VISIBLE_STATUSES];
+}
+
+export function createSelectorTimelineContext({ timelineVisibilityMode = "", timelineAsOfDate = "", timelineVisibleStatuses = DEFAULT_TIMELINE_VISIBLE_STATUSES } = {}) {
+  const mode = normaliseSelectorTimelineVisibilityMode(timelineVisibilityMode);
+  const active = mode === SELECTOR_TIMELINE_VISIBILITY_MODES.INTERNAL_ASOF_TEST;
+  const asOfInput = active ? safeString(timelineAsOfDate || isoTodayDate()) : "";
+  const parsedAsOf = parseTimelineDate(asOfInput);
+  const visibleStatuses = active
+    ? normaliseSelectorTimelineVisibleStatuses(timelineVisibleStatuses)
+    : [...DEFAULT_TIMELINE_VISIBLE_STATUSES];
   return {
-    optionStatusClass: safeClass,
-    timelineAvailability: STATUS_REVIEW_CLASSES.has(safeClass) ? "review-required" : "hidden-from-external-default",
-    blockedByStatusPolicy: true,
-    reviewRequired: STATUS_REVIEW_CLASSES.has(safeClass),
-    blockedReason: STATUS_REVIEW_CLASSES.has(safeClass) ? "Status is unknown; external default view fails safe and requires review." : `${safeClass} status is blocked by external default timeline/status policy.`,
+    timelineVisibilityMode: mode,
+    timelineAsOfDate: active ? (parsedAsOf.isoDate || asOfInput) : "",
+    timelineAsOfDateRaw: asOfInput,
+    timelineAsOfDateValid: active ? parsedAsOf.valid : true,
+    timelineAsOfTimestamp: active && parsedAsOf.valid ? parsedAsOf.timestamp : null,
+    timelineVisibleStatuses: visibleStatuses,
+    timelineVisibleStatusOptions: [...SELECTOR_TIMELINE_VISIBLE_STATUS_OPTIONS],
+    internalAsOfTestMode: active,
+    source: "selector-reference-options-timeline-policy",
+    queryParamOnly: true,
+    getQueryParamsOnly: true,
+    readOnly: true,
+    diagnosticOnly: true,
+    productionActionsEnabled: false,
+    engineEnabled: false,
+    runTableGenerationEnabled: false,
+    iesGenerationEnabled: false,
+    selectedResultPersistenceEnabled: false,
+    projectExportEnabled: false,
+    hubSpotWriteEnabled: false,
+    rawRowsExposed: false,
   };
 }
 
-function rowStatusOptionMeta(row) {
-  return statusPolicyForClass(optionStatusClassForRow(row));
+function statusPolicyForClass(optionStatusClass = "unknown", timelineContext = createSelectorTimelineContext(), statusDate = "") {
+  const safeClass = SELECTOR_STATUS_CLASSES.includes(optionStatusClass) ? optionStatusClass : "unknown";
+  const rowDate = parseTimelineDate(statusDate);
+  const visibleStatuses = new Set(normaliseSelectorTimelineVisibleStatuses(timelineContext?.timelineVisibleStatuses || DEFAULT_TIMELINE_VISIBLE_STATUSES));
+  if (STATUS_VISIBLE_CLASSES.has(safeClass)) return {
+    optionStatusClass: safeClass,
+    timelineVisibilityMode: timelineContext?.timelineVisibilityMode || SELECTOR_TIMELINE_VISIBILITY_MODES.EXTERNAL_DEFAULT,
+    timelineAvailability: timelineContext?.internalAsOfTestMode === true ? "visible-to-internal-asof-test" : "visible-to-external-default",
+    blockedByStatusPolicy: false,
+    reviewRequired: false,
+    productionBlocked: false,
+    internalTimelineTestOnly: false,
+    roadmapReviewOnly: false,
+    statusDate: rowDate.isoDate,
+    statusDateRaw: rowDate.raw,
+    blockedReason: "",
+  };
+  const asOfTimestamp = timelineContext?.timelineAsOfTimestamp;
+  const visibleStatusSelected = visibleStatuses.has(safeClass);
+  const visibleInInternalAsOf = timelineContext?.internalAsOfTestMode === true
+    && timelineContext.timelineAsOfDateValid !== false
+    && visibleStatusSelected
+    && rowDate.valid
+    && Number.isFinite(asOfTimestamp)
+    && rowDate.timestamp <= asOfTimestamp;
+  if (visibleInInternalAsOf) {
+    return {
+      optionStatusClass: safeClass,
+      timelineVisibilityMode: SELECTOR_TIMELINE_VISIBILITY_MODES.INTERNAL_ASOF_TEST,
+      timelineAvailability: "visible-to-internal-asof-test",
+      blockedByStatusPolicy: false,
+      reviewRequired: true,
+      productionBlocked: true,
+      internalTimelineTestOnly: true,
+      roadmapReviewOnly: safeClass === "roadmap" || safeClass === "staged",
+      futureOrRoadmapBlocked: true,
+      statusDate: rowDate.isoDate,
+      statusDateRaw: rowDate.raw,
+      blockedReason: `${safeClass} status is visible only for internal timeline/as-of cascade testing; it remains future / blocked / review-only for production outputs.`,
+    };
+  }
+  const missingOrFutureDateReason = timelineContext?.internalAsOfTestMode === true && visibleStatusSelected
+    ? `The ${safeClass} row is not visible because its status_date is missing, invalid, or after the selected timeline as-of date.`
+    : `${safeClass} status is not included in the selected visible status set.`;
+  return {
+    optionStatusClass: safeClass,
+    timelineVisibilityMode: timelineContext?.timelineVisibilityMode || SELECTOR_TIMELINE_VISIBILITY_MODES.EXTERNAL_DEFAULT,
+    timelineAvailability: STATUS_REVIEW_CLASSES.has(safeClass) ? "review-required" : "hidden-by-timeline-status-policy",
+    blockedByStatusPolicy: true,
+    reviewRequired: STATUS_REVIEW_CLASSES.has(safeClass),
+    productionBlocked: safeClass !== "unknown",
+    internalTimelineTestOnly: false,
+    roadmapReviewOnly: false,
+    futureOrRoadmapBlocked: safeClass === "roadmap" || safeClass === "staged",
+    statusDate: rowDate.isoDate,
+    statusDateRaw: rowDate.raw,
+    blockedReason: STATUS_REVIEW_CLASSES.has(safeClass) ? "Status is unknown; external/default view fails safe and requires review." : missingOrFutureDateReason,
+  };
+}
+
+const selectorTimelineStatusPolicyForClassBase = statusPolicyForClass;
+statusPolicyForClass = function statusPolicyForClassWithExternalDefaultParity(optionStatusClass = "unknown", timelineContext = createSelectorTimelineContext(), statusDate = "") {
+  const policy = selectorTimelineStatusPolicyForClassBase(optionStatusClass, timelineContext, statusDate);
+  const safeClass = SELECTOR_STATUS_CLASSES.includes(policy.optionStatusClass) ? policy.optionStatusClass : "unknown";
+  if (timelineContext?.internalAsOfTestMode !== true && policy.blockedByStatusPolicy === true && !STATUS_REVIEW_CLASSES.has(safeClass)) {
+    return {
+      ...policy,
+      timelineAvailability: "hidden-from-external-default",
+      blockedReason: `${safeClass} status is blocked by external default timeline/status policy.`,
+    };
+  }
+  return policy;
+};
+
+function rowStatusOptionMeta(row, timelineContext = createSelectorTimelineContext()) {
+  return statusPolicyForClass(optionStatusClassForRow(row), timelineContext, rowStatusDate(row));
 }
 
 function optionStatusPolicy(option = {}) {
+  if (option.internalTimelineTestOnly === true && option.timelineAvailability === "visible-to-internal-asof-test") {
+    return {
+      optionStatusClass: option.optionStatusClass || "roadmap",
+      timelineVisibilityMode: SELECTOR_TIMELINE_VISIBILITY_MODES.INTERNAL_ASOF_TEST,
+      timelineAvailability: option.timelineAvailability,
+      blockedByStatusPolicy: false,
+      reviewRequired: true,
+      productionBlocked: true,
+      internalTimelineTestOnly: true,
+      roadmapReviewOnly: option.roadmapReviewOnly !== false,
+      futureOrRoadmapBlocked: true,
+      statusDate: safeString(option.statusDate || ""),
+      statusDateRaw: safeString(option.statusDateRaw || ""),
+      blockedReason: option.statusPolicyBlockedReason || "Internal as-of roadmap option is review-only and blocked for production outputs.",
+    };
+  }
   return statusPolicyForClass(option.optionStatusClass || "unknown");
 }
 
@@ -533,16 +711,17 @@ function selectedStatusBlockedOption(field = {}, selectedValue = "", reason = "M
   };
 }
 
-function sourceRowIsLive(row) {
-  return sourceRowPassesApprovalGate(row) && optionStatusPolicy({ optionStatusClass: optionStatusClassForRow(row) }).blockedByStatusPolicy !== true;
+function sourceRowIsLive(row, timelineContext = createSelectorTimelineContext()) {
+  return sourceRowPassesApprovalGate(row) && rowStatusOptionMeta(row, timelineContext).blockedByStatusPolicy !== true;
 }
 
-function selectorOptionRows(snapshot, tableName) {
+function selectorOptionRows(snapshot, tableName, timelineContext = createSelectorTimelineContext()) {
+  void timelineContext;
   return tableRows(snapshot, tableName).filter(sourceRowPassesApprovalGate);
 }
 
-function liveTableRows(snapshot, tableName) {
-  return tableRows(snapshot, tableName).filter(sourceRowIsLive);
+function liveTableRows(snapshot, tableName, timelineContext = createSelectorTimelineContext()) {
+  return tableRows(snapshot, tableName).filter((row) => sourceRowIsLive(row, timelineContext));
 }
 
 function activeCodePolicyRow(snapshot, policyId) {
@@ -601,6 +780,13 @@ function createOption(label, {
   timelineAvailability = "",
   blockedByStatusPolicy = false,
   reviewRequired = false,
+  productionBlocked = false,
+  internalTimelineTestOnly = false,
+  roadmapReviewOnly = false,
+  futureOrRoadmapBlocked = false,
+  statusDate = "",
+  statusDateRaw = "",
+  blockedReason = "",
 } = {}) {
   const optionLabel = safeString(label || value);
   const referenceKeys = uniqueStrings([
@@ -616,7 +802,16 @@ function createOption(label, {
   ].map(safeString).filter(Boolean));
   const safeFinishInheritanceIndex = Number.isInteger(finishInheritanceIndex) && finishInheritanceIndex >= 0 ? finishInheritanceIndex : null;
   const safeCodePolicyIds = uniqueStrings((Array.isArray(codePolicyIds) ? codePolicyIds : [codePolicyIds]).map(safeString).filter(Boolean));
-  const statusPolicy = statusPolicyForClass(optionStatusClass);
+  const statusPolicy = optionStatusPolicy({
+    optionStatusClass,
+    timelineAvailability,
+    internalTimelineTestOnly,
+    productionBlocked,
+    roadmapReviewOnly,
+    statusDate,
+    statusDateRaw,
+    statusPolicyBlockedReason: blockedReason,
+  });
   const safeTimelineAvailability = safeString(timelineAvailability || statusPolicy.timelineAvailability);
   return {
     value: optionValue(value || optionLabel),
@@ -647,6 +842,12 @@ function createOption(label, {
     timelineAvailability: safeTimelineAvailability,
     blockedByStatusPolicy: blockedByStatusPolicy === true || statusPolicy.blockedByStatusPolicy === true,
     statusPolicyReviewRequired: reviewRequired === true || statusPolicy.reviewRequired === true,
+    productionBlocked: productionBlocked === true || statusPolicy.productionBlocked === true,
+    internalTimelineTestOnly: internalTimelineTestOnly === true || statusPolicy.internalTimelineTestOnly === true,
+    roadmapReviewOnly: roadmapReviewOnly === true || statusPolicy.roadmapReviewOnly === true,
+    futureOrRoadmapBlocked: futureOrRoadmapBlocked === true || statusPolicy.futureOrRoadmapBlocked === true,
+    statusDate: safeString(statusDate || statusPolicy.statusDate || ""),
+    statusDateRaw: safeString(statusDateRaw || statusPolicy.statusDateRaw || ""),
     statusPolicyBlockedReason: statusPolicy.blockedReason,
     systemReferenceKey: safeString(systemReferenceKey || referenceKeys[0] || ""),
     systemReferenceKeys: referenceKeys,
@@ -669,7 +870,7 @@ function addOption(bucket, fieldKey, label, meta = {}) {
   if (existing) {
     existing.count += meta.count || 1;
     existing.sourceTables = uniqueStrings([...(existing.sourceTables || []), ...(meta.sourceTables || [])]);
-    for (const key of ["diffuserLayer", "parentFieldKey", "parentValue", "specCodePreview", "specCodeVar2Preview", "diffuserMaterial", "imageReadiness", "imageKey", "systemReferenceKey", "systemVariantKey"]) {
+    for (const key of ["diffuserLayer", "parentFieldKey", "parentValue", "specCodePreview", "specCodeVar2Preview", "diffuserMaterial", "imageReadiness", "imageKey", "systemReferenceKey", "systemVariantKey", "timelineAvailability", "statusDate", "statusDateRaw"]) {
       if (!existing[key] && meta[key]) existing[key] = meta[key];
     }
     existing.parentValues = uniqueStrings([
@@ -973,13 +1174,13 @@ function accessoryLabels(snapshot, needles) {
   ])));
 }
 
-function collectOptions(snapshot) {
+function collectOptions(snapshot, timelineContext = createSelectorTimelineContext()) {
   const bucket = {};
-  const systems = selectorOptionRows(snapshot, "SYSTEM");
+  const systems = selectorOptionRows(snapshot, "SYSTEM", timelineContext);
   for (const row of systems) {
     const tokens = systemTokens(row);
     const emissions = systemEmissionValues(row);
-    addOption(bucket, "system", tokens.label, { value: tokens.value, sourceTables: ["SYSTEM"], systemReferenceKey: tokens.system, systemVariantKey: tokens.variant, systemSupportsIndirect: emissions.some(emissionSupportsIndirect), ...rowStatusOptionMeta(row) });
+    addOption(bucket, "system", tokens.label, { value: tokens.value, sourceTables: ["SYSTEM"], systemReferenceKey: tokens.system, systemVariantKey: tokens.variant, systemSupportsIndirect: emissions.some(emissionSupportsIndirect), ...rowStatusOptionMeta(row, timelineContext) });
     if (tokens.variant) addOption(bucket, "variantKey", tokens.variant, { sourceTables: ["SYSTEM"] });
     for (const emission of systemEmissionValues(row)) {
       addOption(bucket, "emission", emission, { sourceTables: ["SYSTEM"] });
@@ -1007,7 +1208,7 @@ function collectOptions(snapshot) {
 
   const systemOptions = optionsFor(bucket, "system");
 
-  const tiers = liveTableRows(snapshot, "TIERS");
+  const tiers = liveTableRows(snapshot, "TIERS", timelineContext);
   for (const row of tiers) {
     const tier = rowText(row, ["tier", "tier_key", "name", "label", "id"]);
     if (tier) addOption(bucket, "tier", tier, { sourceTables: ["TIERS"] });
@@ -1015,13 +1216,14 @@ function collectOptions(snapshot) {
   }
   for (const value of policyValues(snapshot, ["tier"])) addOption(bucket, "tier", value, { sourceTables: ["SYSTEM_POLICY"] });
 
-  const optics = liveTableRows(snapshot, "OPTICS");
+  const optics = liveTableRows(snapshot, "OPTICS", timelineContext);
   for (const row of optics) {
     const optic = diffuserVar1Name(row);
     const system = diffuserSystemToken(row);
     const opticLabel = [optic, system].filter(Boolean).join(" · ") || optic;
     const opticValue = diffuserVar1Value(row);
-    const var1Meta = diffuserOptionMeta(row, { layer: "var1", visualChoice: true });
+    const rowStatusMeta = rowStatusOptionMeta(row, timelineContext);
+    const var1Meta = { ...diffuserOptionMeta(row, { layer: "var1", visualChoice: true }), ...rowStatusMeta };
     const emissions = rowOptionValues(row, ["emission_permission", "direction", "emission", "optic_direction", "light_direction"]);
     const hasDirect = emissions.length ? emissions.some(emissionSupportsDirect) : true;
     const hasIndirect = emissions.some(emissionSupportsIndirect);
@@ -1031,13 +1233,13 @@ function collectOptions(snapshot) {
     if (hasIndirect) addOption(bucket, "indirectOpticVar1", opticLabel, { value: opticValue, sourceTables: ["OPTICS"], ...var1Meta });
 
     for (const variant of diffuserVar2Values(row)) {
-      const var2Meta = diffuserOptionMeta(row, {
+      const var2Meta = { ...diffuserOptionMeta(row, {
         layer: "var2",
         parentFieldKey: "diffuserVar1",
         parentValue: opticValue,
         var2Label: variant.label,
         visualChoice: true,
-      });
+      }), ...rowStatusMeta };
       const aliasValue = [optic, variant.label].filter(Boolean).join("|") || variant.label;
       addOption(bucket, "opticSub", variant.label, { value: aliasValue, sourceTables: ["OPTICS"], ...var2Meta });
       addOption(bucket, "diffuserVar2", variant.label, { value: variant.value, sourceTables: ["OPTICS"], ...var2Meta });
@@ -1108,7 +1310,7 @@ function collectOptions(snapshot) {
     for (const io of rowOptionValues(row, ["interior_exterior", "interiorExterior", "indoor_outdoor", "location_type"])) addOption(bucket, "interiorExterior", io, { sourceTables: ["OPTICS"], ...opticSystemMeta });
   }
 
-  const boards = liveTableRows(snapshot, "BOARDS");
+  const boards = liveTableRows(snapshot, "BOARDS", timelineContext);
   for (const row of boards) {
     const systemValue = systemOptionValueForSource(systemOptions, row);
     const systemMeta = systemValue ? { systemReferenceKey: systemValue, systemReferenceKeys: [systemValue] } : {};
@@ -1130,7 +1332,7 @@ function collectOptions(snapshot) {
     }
   }
 
-  const drivers = liveTableRows(snapshot, "DRIVERS");
+  const drivers = liveTableRows(snapshot, "DRIVERS", timelineContext);
   for (const row of drivers) {
     const driver = rowText(row, ["driver_id", "driver", "driver_name", "name", "label", "sku", "part_number"]);
     const controls = rowOptionValues(row, ["control_type", "control", "protocol", "dimming", "dimming_type", "driver_control", "control_protocol", "native_control_type"]);
@@ -1165,7 +1367,7 @@ function collectOptions(snapshot) {
 
   for (const value of accessoryLabels(snapshot, ["finish", "colour", "color", "paint"])) addOption(bucket, "bodyFinish", value, { sourceTables: ["ACCESSORIES"] });
 
-  for (const row of liveTableRows(snapshot, "ACCESSORIES")) {
+  for (const row of liveTableRows(snapshot, "ACCESSORIES", timelineContext)) {
     const label = accessoryIdLabel(row);
     if (!label) continue;
     if (accessoryTypeMatches(row, "mount")) {
@@ -1333,11 +1535,11 @@ function diffuserOptionMeta(row, { layer, parentFieldKey = "", parentValue = "",
   };
 }
 
-function collectRecords(snapshot, bucket) {
+function collectRecords(snapshot, bucket, timelineContext = createSelectorTimelineContext()) {
   const records = [];
   const systemOptions = optionsFor(bucket, "system");
 
-  for (const row of liveTableRows(snapshot, "TIERS")) {
+  for (const row of liveTableRows(snapshot, "TIERS", timelineContext)) {
     const tier = rowText(row, ["tier", "tier_key", "name", "label", "id"]);
     const electricalClass = rowOptionValues(row, ["electrical", "electrical_options", "elect_class", "electrical_class", "electrical_class_options", "electrical class", "class_options"]);
     pushRelationshipRecord(records, ["TIERS"], {
@@ -1346,7 +1548,7 @@ function collectRecords(snapshot, bucket) {
     }, "TIERS row maps selected tier to electrical class options");
   }
 
-  for (const row of liveTableRows(snapshot, "SYSTEM")) {
+  for (const row of liveTableRows(snapshot, "SYSTEM", timelineContext)) {
     const tokens = systemTokens(row);
     const matchedSystemOption = systemOptionForRow(systemOptions, row);
     const systemValue = systemOptionIdentityValue(matchedSystemOption || {
@@ -1375,7 +1577,7 @@ function collectRecords(snapshot, bucket) {
     }, "SYSTEM row maps system choices to variants, emission, mounting, and finishes");
   }
 
-  for (const row of liveTableRows(snapshot, "OPTICS")) {
+  for (const row of liveTableRows(snapshot, "OPTICS", timelineContext)) {
     const systemValue = systemIdentityValuesForSourceSystem(systemOptions, diffuserSystemToken(row));
     const opticValue = opticFieldValue(row);
     const var1Value = diffuserVar1Value(row);
@@ -1422,7 +1624,7 @@ function collectRecords(snapshot, bucket) {
     }, "OPTICS row maps system to diffuser var 1, diffuser var 2, spec-code preview metadata, material, image readiness, IP/IK compatibility, and direct/indirect availability");
   }
 
-  for (const row of liveTableRows(snapshot, "BOARDS")) {
+  for (const row of liveTableRows(snapshot, "BOARDS", timelineContext)) {
     const sourceSystem = systemOptionValueForSource(systemOptions, row) || rowText(row, ["system", "series", "system_name", "system_key"]);
     const systemValue = systemIdentityValuesForSourceSystem(systemOptions, sourceSystem);
     const optic = opticFieldValue(row);
@@ -1445,7 +1647,7 @@ function collectRecords(snapshot, bucket) {
     }, "BOARDS row maps system/optic to paired CCT/CRI, lm/m, control options, and Lex metadata where present");
   }
 
-  for (const row of liveTableRows(snapshot, "DRIVERS")) {
+  for (const row of liveTableRows(snapshot, "DRIVERS", timelineContext)) {
     const driver = rowText(row, ["driver_id", "driver", "driver_name", "name", "label", "sku", "part_number"]);
     const control = rowOptionValues(row, ["control_type", "control", "protocol", "dimming", "dimming_type", "driver_control", "control_protocol", "native_control_type"]);
     const wiring = rowOptionValues(row, ["wiring_type", "wiring", "cable_type", "control_cores"]);
@@ -1457,7 +1659,7 @@ function collectRecords(snapshot, bucket) {
     }, "DRIVERS row maps control protocol to driver and wiring consequences");
   }
 
-  for (const row of liveTableRows(snapshot, "ACCESSORIES")) {
+  for (const row of liveTableRows(snapshot, "ACCESSORIES", timelineContext)) {
     const label = accessoryIdLabel(row);
     if (!label) continue;
     const egressLightOption = accessoryTypeMatches(row, "egress_light") ? egressLightAccessoryOption(row) : null;
@@ -2869,22 +3071,39 @@ function createReferenceOptionSourceCoverage({ fields = [], workflowSections = [
   };
 }
 
-function createTimelineStatusFilteringSummary({ fields = [], workflowSections = [] } = {}) {
+function createTimelineStatusFilteringSummary({ fields = [], workflowSections = [], timelineContext = createSelectorTimelineContext() } = {}) {
   const allOptions = [
     ...(Array.isArray(fields) ? fields : []).flatMap((field) => Array.isArray(field.options) ? field.options : []),
     ...workflowFields(workflowSections).flatMap((field) => Array.isArray(field.options) ? field.options : []),
   ];
   const blockedByStatusPolicyCount = allOptions.filter((option) => option.blockedByStatusPolicy === true || option.relationshipStatus === "blocked-by-status-policy").length;
-  const reviewRequiredCount = allOptions.filter((option) => option.statusPolicyReviewRequired === true || option.timelineAvailability === "review-required").length;
+  const reviewRequiredCount = allOptions.filter((option) => option.statusPolicyReviewRequired === true || option.timelineAvailability === "review-required" || option.internalTimelineTestOnly === true).length;
+  const internalTimelineTestOnlyCount = allOptions.filter((option) => option.internalTimelineTestOnly === true).length;
+  const productionBlockedCount = allOptions.filter((option) => option.productionBlocked === true || option.internalTimelineTestOnly === true).length;
   return {
     statusClasses: [...SELECTOR_STATUS_CLASSES],
+    timelineVisibilityMode: timelineContext.timelineVisibilityMode,
+    timelineAsOfDate: timelineContext.timelineAsOfDate,
+    timelineAsOfDateValid: timelineContext.timelineAsOfDateValid,
+    timelineVisibleStatuses: [...(timelineContext.timelineVisibleStatuses || DEFAULT_TIMELINE_VISIBLE_STATUSES)],
+    timelineVisibleStatusOptions: [...SELECTOR_TIMELINE_VISIBLE_STATUS_OPTIONS],
+    internalAsOfTestMode: timelineContext.internalAsOfTestMode === true,
     visibleToExternalDefault: ["available", "approved"],
     hiddenOrBlockedToExternalDefault: ["staged", "roadmap", "obsolete"],
     reviewRequired: ["unknown"],
-    externalDefaultPolicy: "available/approved options are shown; staged/roadmap/obsolete are hidden unless already selected; unknown fails safe as review-required.",
+    externalDefaultPolicy: "available/approved options are shown; staged/roadmap/obsolete/unknown are hidden unless internal timeline/as-of test mode explicitly includes them and status_date is on or before the as-of date.",
     selectedBlockedValuesPreserved: true,
     blockedByStatusPolicyCount,
     reviewRequiredCount,
+    internalTimelineTestOnlyCount,
+    productionBlockedCount,
+    productionActionsEnabled: false,
+    engineEnabled: false,
+    runTableGenerationEnabled: false,
+    iesGenerationEnabled: false,
+    selectedResultPersistenceEnabled: false,
+    projectExportEnabled: false,
+    hubSpotWriteEnabled: false,
     rawRowsReturned: false,
     rawUsersReturned: false,
     privatePathsReturned: false,
@@ -2950,7 +3169,7 @@ function createOptionSafeSnapshotState({ source = {}, sourceReady = false, field
   };
 }
 
-function failurePayload({ source = {}, reason = "selector_reference_options_unavailable", constraints = {} } = {}) {
+function failurePayload({ source = {}, reason = "selector_reference_options_unavailable", constraints = {}, timelineContext = createSelectorTimelineContext() } = {}) {
   const safeConstraints = sanitiseConstraints(constraints);
   const fields = TARGET_FIELDS.map((field) => createUnavailableField(field, reason));
   const workflowSections = WORKFLOW_SECTION_DEFINITIONS.map((section) => ({
@@ -2976,7 +3195,7 @@ function failurePayload({ source = {}, reason = "selector_reference_options_unav
     tableSummaryRows: [],
     reason,
   });
-  const timelineStatusFiltering = createTimelineStatusFilteringSummary({ fields, workflowSections });
+  const timelineStatusFiltering = createTimelineStatusFilteringSummary({ fields, workflowSections, timelineContext });
   return {
     ok: false,
     endpoint: SELECTOR_REFERENCE_OPTIONS_PATH,
@@ -2985,6 +3204,10 @@ function failurePayload({ source = {}, reason = "selector_reference_options_unav
     source,
     sourceReady: false,
     selectedConstraints: safeConstraints,
+    timelineVisibilityMode: timelineContext.timelineVisibilityMode,
+    timelineAsOfDate: timelineContext.timelineAsOfDate,
+    timelineVisibleStatuses: [...(timelineContext.timelineVisibleStatuses || DEFAULT_TIMELINE_VISIBLE_STATUSES)],
+    internalAsOfTestMode: timelineContext.internalAsOfTestMode === true,
     fields,
     workflowSections,
     finishCascade: deriveRuntimeSelectorFinishCascade({}),
@@ -3034,14 +3257,15 @@ function failurePayload({ source = {}, reason = "selector_reference_options_unav
   };
 }
 
-export function deriveSelectorReferenceOptionsFromSnapshot(snapshot = {}, { constraints = {}, source = {}, ok = true } = {}) {
+export function deriveSelectorReferenceOptionsFromSnapshot(snapshot = {}, { constraints = {}, source = {}, ok = true, timelineVisibilityMode = "", timelineAsOfDate = "", timelineVisibleStatuses = DEFAULT_TIMELINE_VISIBLE_STATUSES } = {}) {
   const safeSnapshot = isPlainObject(snapshot) ? snapshot : {};
   const safeConstraints = sanitiseConstraints(constraints);
+  const timelineContext = createSelectorTimelineContext({ timelineVisibilityMode, timelineAsOfDate, timelineVisibleStatuses });
   const sourceReady = ok !== false && (source.readable !== false) && (source.parseable !== false);
-  if (!sourceReady) return failurePayload({ source, reason: "Selector Reference source is unavailable or not parseable.", constraints: safeConstraints });
+  if (!sourceReady) return failurePayload({ source, reason: "Selector Reference source is unavailable or not parseable.", constraints: safeConstraints, timelineContext });
 
-  const bucket = collectOptions(safeSnapshot);
-  const records = collectRecords(safeSnapshot, bucket);
+  const bucket = collectOptions(safeSnapshot, timelineContext);
+  const records = collectRecords(safeSnapshot, bucket, timelineContext);
   const cascadeConstraints = cascadeConstraintsForOptions(bucket, safeConstraints);
   const fields = createFields({ bucket, records, constraints: safeConstraints, cascadeConstraints, sourceReady });
   const workflowSectionsBase = createWorkflowSections({ bucket, records, constraints: safeConstraints, cascadeConstraints, sourceReady });
@@ -3069,7 +3293,7 @@ export function deriveSelectorReferenceOptionsFromSnapshot(snapshot = {}, { cons
     tableSummaryRows,
     reason: hasMissing ? "Some option fields are future-mapped or unavailable from the current source; no fake values emitted." : "",
   });
-  const timelineStatusFiltering = createTimelineStatusFilteringSummary({ fields, workflowSections });
+  const timelineStatusFiltering = createTimelineStatusFilteringSummary({ fields, workflowSections, timelineContext });
 
   return {
     ok: true,
@@ -3079,6 +3303,10 @@ export function deriveSelectorReferenceOptionsFromSnapshot(snapshot = {}, { cons
     source,
     sourceReady: true,
     selectedConstraints: safeConstraints,
+    timelineVisibilityMode: timelineContext.timelineVisibilityMode,
+    timelineAsOfDate: timelineContext.timelineAsOfDate,
+    timelineVisibleStatuses: [...(timelineContext.timelineVisibleStatuses || DEFAULT_TIMELINE_VISIBLE_STATUSES)],
+    internalAsOfTestMode: timelineContext.internalAsOfTestMode === true,
     fields,
     workflowSections,
     finishCascade: finishCascadeResult.finishCascade,
@@ -3125,7 +3353,7 @@ export function deriveSelectorReferenceOptionsFromSnapshot(snapshot = {}, { cons
   };
 }
 
-export async function buildSelectorReferenceOptions({ sourcePath, fsApi = DEFAULT_FS_API, constraints = {} } = {}) {
+export async function buildSelectorReferenceOptions({ sourcePath, fsApi = DEFAULT_FS_API, constraints = {}, timelineVisibilityMode = "", timelineAsOfDate = "", timelineVisibleStatuses = DEFAULT_TIMELINE_VISIBLE_STATUSES } = {}) {
   if (!sourcePath) {
     return failurePayload({ reason: "Selector Reference options source path is not configured.", constraints });
   }
@@ -3138,7 +3366,7 @@ export async function buildSelectorReferenceOptions({ sourcePath, fsApi = DEFAUL
     const parseable = isPlainObject(snapshot);
     const source = sourceMetadata({ sourceStat, present: true, readable: true, parseable });
     if (!parseable) return failurePayload({ source, reason: "Selector Reference options source parsed but did not contain a table object.", constraints });
-    return deriveSelectorReferenceOptionsFromSnapshot(snapshot, { constraints, source, ok: true });
+    return deriveSelectorReferenceOptionsFromSnapshot(snapshot, { constraints, source, ok: true, timelineVisibilityMode, timelineAsOfDate, timelineVisibleStatuses });
   } catch (error) {
     const source = sourceMetadata({ sourceStat, present: Boolean(sourceStat), readable: error?.name === "SyntaxError", parseable: false });
     return failurePayload({ source, reason: error?.code || error?.message || "Selector Reference options source could not be read.", constraints });

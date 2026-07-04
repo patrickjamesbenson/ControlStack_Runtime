@@ -1048,10 +1048,23 @@ export function readSelectorOptionConstraints(requestUrl) {
   return constraints;
 }
 
+export function readSelectorTimelineOptions(requestUrl) {
+  const timelineVisibilityMode = String(requestUrl.searchParams.get("timelineVisibilityMode") || "").trim();
+  const timelineAsOfDate = String(requestUrl.searchParams.get("timelineAsOfDate") || "").trim();
+  const repeatedStatuses = requestUrl.searchParams.getAll("timelineVisibleStatus").map((value) => String(value || "").trim()).filter(Boolean);
+  const csvStatuses = String(requestUrl.searchParams.get("timelineVisibleStatuses") || "").split(/[;,|]/).map((value) => value.trim()).filter(Boolean);
+  return {
+    timelineVisibilityMode,
+    timelineAsOfDate,
+    timelineVisibleStatuses: [...repeatedStatuses, ...csvStatuses],
+  };
+}
+
 async function sendSelectorReferenceOptions(res, requestUrl) {
   sendJson(res, 200, await buildSelectorReferenceOptions({
     sourcePath: AUTH_REF_DEFAULT_SNAPSHOT_PATH,
     constraints: readSelectorOptionConstraints(requestUrl),
+    ...readSelectorTimelineOptions(requestUrl),
   }));
 }
 
