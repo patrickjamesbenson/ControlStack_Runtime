@@ -540,6 +540,69 @@ function safeRedactedEntitlementProjection(specialPartsEntitlement = {}) {
   };
 }
 
+function emptySpecialPartsUserTestEntitlement(summary = {}) {
+  return {
+    status: summary.status || "user-test-no-visible-entitlement",
+    source: summary.source || "selector-special-parts-user-test-mode",
+    entitlementLive: false,
+    userEmailMatched: summary.entitlementFound === true,
+    matchedRedacted: false,
+    identityCandidate: summary.internalTestActive === true,
+    redactedEntitlementCount: 0,
+    redactedCandidates: [],
+    entitledParts: [],
+    readOnly: true,
+    userTestMode: true,
+  };
+}
+
+function specialPartsUserTestEntitlementProjection(summary = {}, baseEntitlement = {}) {
+  if (summary?.internalTestActive !== true) return baseEntitlement || {};
+  if (summary.specialPartsVisible !== true) return emptySpecialPartsUserTestEntitlement(summary);
+  const redactedCandidates = Array.isArray(summary.redactedCandidates) ? summary.redactedCandidates : [];
+  return {
+    status: "matched-redacted",
+    source: "selector-special-parts-user-test-mode",
+    entitlementLive: false,
+    userEmailMatched: true,
+    matchedRedacted: true,
+    identityAuthority: "matched-redacted",
+    identityCandidate: false,
+    redactedEntitlementCount: summary.redactedEntitlementCount || summary.entitlementBackedCandidateCount || redactedCandidates.length,
+    redactedCandidates,
+    entitledParts: redactedCandidates,
+    readOnly: true,
+    userTestMode: true,
+  };
+}
+
+function specialPartsUserTestRoleContext(base = {}, summary = {}) {
+  if (summary?.internalTestActive !== true) return base;
+  return {
+    ...base,
+    displayRole: "internal_user",
+    requestedDisplayRole: "internal_user",
+    actualRole: "internal_user",
+    roleAuthority: "selector-internal-user-test-mode",
+    displayRoleClamped: false,
+    source: "selector-special-parts-user-test-mode",
+  };
+}
+
+function specialPartsUserTestIdentityContext(base = {}, summary = {}) {
+  if (summary?.internalTestActive !== true) return base;
+  return {
+    ...base,
+    status: summary.entitlementFound === true ? "matched-redacted" : "no-entitlement-found",
+    identityState: summary.entitlementFound === true ? "matched-redacted" : "user-test-unentitled",
+    classification: "selector-internal-test-principal",
+    authorityStatus: "selector-internal-user-test-mode",
+    identityAuthority: summary.entitlementFound === true ? "matched-redacted" : "user-test-no-entitlement",
+    matchedRedacted: summary.specialPartsVisible === true,
+    candidate: summary.entitlementFound !== true,
+  };
+}
+
 function safeSelectedBlockedValues(local = {}, selectorReferenceStatus = {}) {
   const payload = dbOptionsPayload(selectorReferenceStatus);
   const blocked = Array.isArray(payload.blockedItems) ? payload.blockedItems : [];
@@ -5005,6 +5068,7 @@ function createDbBackedSelectorSurface(selectorReferenceStatus = {}, local = {},
   });
   const donorShapeSelectedTiles = createDonorShapeSelectedTiles({ fields, workflowSections });
   const timelineStatusTest = createTimelineStatusTestControls(local, selectorState, onLocalStateChange, selectorReferenceStatus);
+  const specialPartsUserTest = createSpecialPartsUserTestControls(local, selectorState, onLocalStateChange, selectorReferenceStatus, workflowContext.specialPartsEntitlementPreview || {});
   return {
     title: "CS Selector Preview",
     subtitle: "Read-only DB-backed candidate preview. Manual selections are constraints; auto selections are consequences.",
@@ -5040,6 +5104,7 @@ function createDbBackedSelectorSurface(selectorReferenceStatus = {}, local = {},
     fields,
     workflowSections,
     timelineStatusTest,
+    specialPartsUserTest,
     donorFieldParity: payload.donorFieldParity || null,
     specialPartsEntitlementSummary: payload.specialPartsEntitlementSummary || null,
     presentationClassification,
@@ -5957,6 +6022,52 @@ function createTimelineStatusTestControls(local = {}, selectorState, onLocalStat
   };
 }
 
+function createSpecialPartsUserTestControls(local = {}, selectorState, onLocalStateChange, selectorReferenceStatus = {}, specialPartsEntitlementPreview = {}) {
+  const payload = dbOptionsPayload(selectorReferenceStatus);
+  const summary = payload.specialPartsUserTestSummary || selectorReferenceStatus.specialPartsUserTestSummary || {};
+  const state = local.specialPartsUserTest || {};
+  const testPrincipalOptions = Array.isArray(summary.testPrincipalOptions) && summary.testPrincipalOptions.length
+    ? summary.testPrincipalOptions
+    : (Array.isArray(state.testPrincipalOptions) && state.testPrincipalOptions.length ? state.testPrincipalOptions : ["Allan Organ", "Unknown / unentitled"]);
+  const activeTestPrincipal = state.testPrincipal || summary.activeTestPrincipal || "";
+  const showEntitlementBackedSpecialParts = state.showEntitlementBackedSpecialParts === true || summary.showEntitlementBackedSpecialParts === true;
+  const entitlementFound = summary.entitlementFound === true;
+  const specialPartsVisible = summary.specialPartsVisible === true && specialPartsEntitlementPreview.entitlementStatus !== "none";
+  return {
+    title: "Internal special-parts user/principal test mode",
+    description: "Diagnostic GET-only control. Selecting a test principal does not create entitlement; special parts appear only when the safe entitlement summary finds entitlement and the toggle is enabled. Production outputs remain blocked.",
+    testPrincipalOptions: [...testPrincipalOptions],
+    activeTestPrincipal,
+    showEntitlementBackedSpecialParts,
+    entitlementFound,
+    specialPartsVisible,
+    status: summary.status || "external-default",
+    redactedEntitlementCount: summary.redactedEntitlementCount || 0,
+    entitlementBackedCandidateCount: summary.entitlementBackedCandidateCount || 0,
+    candidateRows: specialPartsVisible && Array.isArray(specialPartsEntitlementPreview.candidateRows) ? specialPartsEntitlementPreview.candidateRows : [],
+    productionActionsEnabled: false,
+    engineEnabled: false,
+    runTableGenerationEnabled: false,
+    iesGenerationEnabled: false,
+    selectedResultPersistenceEnabled: false,
+    projectExportEnabled: false,
+    hubSpotWriteEnabled: false,
+    rawRowsExposed: false,
+    rawUsersExposed: false,
+    rawContactsExposed: false,
+    rawPayloadsExposed: false,
+    queryParamsOnly: true,
+    setTestPrincipal(value) {
+      selectorState?.setSpecialPartsTestPrincipal?.(value);
+      onLocalStateChange?.();
+    },
+    setShowEntitlementBackedSpecialParts(enabled) {
+      selectorState?.setShowEntitlementBackedSpecialParts?.(enabled === true);
+      onLocalStateChange?.();
+    },
+  };
+}
+
 function createSelectorExpanderShell(local = {}, selectorState, onLocalStateChange, selectorReferenceStatus = {}, selectorSurface = null) {
   const stateContract = selectorStateContractFromLocal(local);
   const defaultPreviewBuckets = createDefaultPreviewBucketDiagnostics(stateContract);
@@ -5981,6 +6092,7 @@ function createSelectorExpanderShell(local = {}, selectorState, onLocalStateChan
     behaviourContractRows: createBehaviourContractRows(stateContract),
     manualConstraintBehaviour: createManualConstraintBehaviour(stateContract, selectorState, onLocalStateChange, selectorSurface),
     timelineStatusTest: selectorSurface?.timelineStatusTest || createTimelineStatusTestControls(local, selectorState, onLocalStateChange, selectorReferenceStatus),
+    specialPartsUserTest: selectorSurface?.specialPartsUserTest || createSpecialPartsUserTestControls(local, selectorState, onLocalStateChange, selectorReferenceStatus),
     readinessDiagnostics: createSelectorReadinessDiagnostics(stateContract),
     readonlyResolverPreview,
     setSectionOpen(sectionId, open) {
@@ -6013,8 +6125,11 @@ export function createSelectorViewModel({ adapter, selectorState, selectorRefere
   const moduleConsumption = selectorTimelineContext.moduleConsumption || {};
   const csSelectorConsumption = moduleConsumption.csSelector || {};
   const selectorTimelineImplementation = selectorTimelineContext.implementation || {};
+  const selectorReferencePayload = dbOptionsPayload(selectorReferenceStatus);
+  const specialPartsUserTestSummary = selectorReferencePayload.specialPartsUserTestSummary || selectorReferenceStatus.specialPartsUserTestSummary || {};
+  const effectiveSpecialPartsEntitlement = specialPartsUserTestEntitlementProjection(specialPartsUserTestSummary, specialPartsEntitlement);
   const passiveSelectorSelectionContext = buildPassiveSelectorSelectionContext({ local, timelinePolicy, projectRequirementDate });
-  const safeRoleContext = {
+  const baseSafeRoleContext = {
     displayRole: shellDisplayRole(authority, identity, snapshots.visibility),
     requestedDisplayRole: shellRequestedDisplayRole(authority, identity, snapshots.visibility),
     actualRole: authorityActualRole(authority, identity),
@@ -6022,19 +6137,21 @@ export function createSelectorViewModel({ adapter, selectorState, selectorRefere
     displayRoleClamped: shellDisplayRoleClamped(authority, identity, snapshots.visibility) === true,
     source: authority.source || "shell-safe-fallback",
   };
-  const safeIdentityContext = {
+  const baseSafeIdentityContext = {
     status: identity.status || "unknown",
     identityState: identity.identityState || "external_anonymous",
     classification: identity.classification || "anonymous",
     authorityStatus: authority.status || "fallback",
-    identityAuthority: specialPartsEntitlement.identityAuthority || (specialPartsEntitlement.userEmailMatched === true ? "matched-redacted" : identity.identityState || "external_anonymous"),
-    matchedRedacted: specialPartsEntitlement.matchedRedacted === true || specialPartsEntitlement.userEmailMatched === true,
-    candidate: specialPartsEntitlement.identityCandidate === true,
+    identityAuthority: effectiveSpecialPartsEntitlement.identityAuthority || (effectiveSpecialPartsEntitlement.userEmailMatched === true ? "matched-redacted" : identity.identityState || "external_anonymous"),
+    matchedRedacted: effectiveSpecialPartsEntitlement.matchedRedacted === true || effectiveSpecialPartsEntitlement.userEmailMatched === true,
+    candidate: effectiveSpecialPartsEntitlement.identityCandidate === true,
   };
+  const safeRoleContext = specialPartsUserTestRoleContext(baseSafeRoleContext, specialPartsUserTestSummary);
+  const safeIdentityContext = specialPartsUserTestIdentityContext(baseSafeIdentityContext, specialPartsUserTestSummary);
   const specialPartsEntitlementPreview = buildSelectorSpecialPartsEntitlementPreview({
     safeRoleContext,
     safeIdentityContext,
-    redactedEntitlementProjection: safeRedactedEntitlementProjection(specialPartsEntitlement),
+    redactedEntitlementProjection: safeRedactedEntitlementProjection(effectiveSpecialPartsEntitlement),
     specialPartsOptInPreview: specialPartsOptIn,
     selectedBlockedValues: safeSelectedBlockedValues(local, selectorReferenceStatus),
     selectorSelectionContext: passiveSelectorSelectionContext,
@@ -6067,6 +6184,7 @@ export function createSelectorViewModel({ adapter, selectorState, selectorRefere
   const selectorSurface = createDbBackedSelectorSurface(selectorReferenceStatus, local, selectorState, onLocalStateChange, snapshots, {
     timelineFiltering,
     specialPartsEntitlementPreview,
+    specialPartsUserTestSummary,
   });
 
   return {
@@ -6080,6 +6198,7 @@ export function createSelectorViewModel({ adapter, selectorState, selectorRefere
     selectorWorkflowStageSummaries: selectorSurface.selectorWorkflowStageSummaries,
     selectorWorkflowBlockedSummary: selectorSurface.selectorWorkflowBlockedSummary,
     selectorDownstreamReadinessSummary: selectorSurface.selectorDownstreamReadinessSummary,
+    specialPartsUserTest: selectorSurface.specialPartsUserTest,
     lmTemperatureReadinessPreview: selectorSurface.lmTemperatureReadinessPreview,
     lmTemperatureReadinessPreviewReady: false,
     expanderShell: createSelectorExpanderShell(local, selectorState, onLocalStateChange, selectorReferenceStatus, selectorSurface),
@@ -6228,6 +6347,11 @@ export function createSelectorViewModel({ adapter, selectorState, selectorRefere
       specialPartsRawComponentRowsReturned: stateLabel(specialPartsEntitlementPreview.rawComponentRowsReturned),
       specialPartsPrivatePathsReturned: stateLabel(specialPartsEntitlementPreview.privatePathsReturned),
       specialPartsCredentialsReturned: stateLabel(specialPartsEntitlementPreview.credentialsReturned),
+      specialPartsTestPrincipal: selectorSurface.specialPartsUserTest?.activeTestPrincipal || "none",
+      specialPartsTestEntitlementFound: stateLabel(selectorSurface.specialPartsUserTest?.entitlementFound),
+      specialPartsTestVisible: stateLabel(selectorSurface.specialPartsUserTest?.specialPartsVisible),
+      specialPartsTestProductionOutputs: selectorSurface.specialPartsUserTest?.productionActionsEnabled === true ? "enabled" : "blocked",
+      specialPartsTestRawUsersExposed: stateLabel(selectorSurface.specialPartsUserTest?.rawUsersExposed),
       specialPartsOptInOwner: specialPartsOptIn.owner || "shell",
       specialPartsOptInStatus: specialPartsOptIn.status || "not-live-placeholder",
       specialPartsOptInSource: specialPartsOptIn.source || "shell-project-context-placeholder",

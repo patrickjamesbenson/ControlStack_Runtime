@@ -450,6 +450,7 @@ const SELECTOR_STATUS_CLASSES = Object.freeze(["available", "approved", "staged"
 const STATUS_VISIBLE_CLASSES = Object.freeze(new Set(["available", "approved"]));
 const STATUS_REVIEW_CLASSES = Object.freeze(new Set(["unknown"]));
 const DEFAULT_TIMELINE_VISIBLE_STATUSES = Object.freeze(["available", "approved"]);
+const SPECIAL_PARTS_INTERNAL_TEST_PRINCIPALS = Object.freeze(["Allan Organ", "Unknown / unentitled"]);
 export const SELECTOR_TIMELINE_VISIBILITY_MODES = Object.freeze({
   EXTERNAL_DEFAULT: "external-default",
   INTERNAL_ASOF_TEST: "internal-asof-test",
@@ -2857,6 +2858,113 @@ function safeEntitlementSummary(snapshot) {
   };
 }
 
+function normaliseSpecialPartsTestPrincipal(value = "") {
+  const requested = safeString(value);
+  if (!requested) return "";
+  const requestedKey = normaliseKey(requested);
+  return SPECIAL_PARTS_INTERNAL_TEST_PRINCIPALS.find((principal) => normaliseKey(principal) === requestedKey) || "Unknown / unentitled";
+}
+
+function showSpecialPartsRequested(value) {
+  if (value === true) return true;
+  const key = safeLower(value);
+  return ["1", "true", "yes", "y", "on", "show", "visible"].includes(key);
+}
+
+function specialPartsUserNameCandidates(user = {}) {
+  const first = rowText(user, ["first_name", "firstname", "given_name"], "");
+  const last = rowText(user, ["last_name", "lastname", "surname", "family_name"], "");
+  return [
+    rowText(user, ["display_name", "displayName", "full_name", "fullname", "name", "user_name", "username"], ""),
+    `${first} ${last}`.trim(),
+    safeString(fieldValue(user, "email_login")).split("@")[0]?.replace(/[._-]+/g, " ") || "",
+  ].map((item) => normaliseKey(item)).filter(Boolean);
+}
+
+function findSpecialPartsTestUser(users = [], principal = "") {
+  const wanted = normaliseKey(principal);
+  if (!wanted || wanted === normaliseKey("Unknown / unentitled")) return null;
+  return users.find((user) => specialPartsUserNameCandidates(user).includes(wanted)) || null;
+}
+
+function specialPartsUserComponentIds(user = {}) {
+  return rowOptionValues(user, ["system_component_ids", "system_componrent_ids", "system_component_id"]);
+}
+
+function specialPartsComponentKey(row = {}) {
+  return normaliseKey(rowText(row, ["id", "component_id", "key"], ""));
+}
+
+function specialPartsComponentIndex(components = []) {
+  const index = new Map();
+  for (const row of components) {
+    const key = specialPartsComponentKey(row);
+    if (key && !index.has(key)) index.set(key, row);
+  }
+  return index;
+}
+
+function redactedSpecialPartsTestCandidate(component = {}, index = 0) {
+  return {
+    redactedRef: `redacted:special-parts-user-test-${index + 1}`,
+    redacted: true,
+    status: rowText(component, ["status", "timelineStatus", "optionStatusClass"], "available") || "available",
+    timelineStatus: rowText(component, ["timelineStatus", "status", "optionStatusClass"], "available") || "available",
+    system: rowText(component, ["system"], ""),
+    variants_all: rowText(component, ["variants_all", "variantsAll", "variant", "variant_key"], ""),
+    ip_class: rowText(component, ["ip_class", "ipClass", "ip", "ip_rating"], ""),
+    effective_to: rowText(component, ["effective_to", "effectiveTo"], ""),
+    status_date: rowText(component, ["status_date", "statusDate"], ""),
+    safelyEntitled: true,
+    previewApproved: ["true", "yes", "1"].includes(safeLower(rowText(component, ["previewApproved", "approvedForPreview", "safePreviewApproved"], ""))),
+    rawRowsReturned: false,
+  };
+}
+
+function safeSpecialPartsUserTestSummary(snapshot, { specialPartsTestPrincipal = "", showSpecialParts = false } = {}) {
+  const activeTestPrincipal = normaliseSpecialPartsTestPrincipal(specialPartsTestPrincipal);
+  const internalTestActive = Boolean(activeTestPrincipal);
+  const showEntitlementBackedSpecialParts = showSpecialPartsRequested(showSpecialParts);
+  const users = tableRows(snapshot, "USERS");
+  const components = tableRows(snapshot, "SYSTEM_COMPONENTS");
+  const user = internalTestActive ? findSpecialPartsTestUser(users, activeTestPrincipal) : null;
+  const componentIndex = specialPartsComponentIndex(components);
+  const componentIds = user ? specialPartsUserComponentIds(user) : [];
+  const redactedCandidates = componentIds
+    .map((id) => componentIndex.get(normaliseKey(id)) || null)
+    .filter(Boolean)
+    .map(redactedSpecialPartsTestCandidate);
+  const entitlementFound = redactedCandidates.length > 0;
+  const specialPartsVisible = internalTestActive && showEntitlementBackedSpecialParts && entitlementFound;
+
+  return {
+    source: "selector-reference-options-special-parts-user-test-summary",
+    status: internalTestActive ? (entitlementFound ? "entitlement-found" : "no-entitlement-found") : "external-default",
+    internalTestActive,
+    diagnosticOnly: true,
+    readOnly: true,
+    testPrincipalOptions: [...SPECIAL_PARTS_INTERNAL_TEST_PRINCIPALS],
+    activeTestPrincipal,
+    showEntitlementBackedSpecialParts,
+    entitlementFound,
+    specialPartsVisible,
+    redactedEntitlementCount: specialPartsVisible ? redactedCandidates.length : 0,
+    entitlementBackedCandidateCount: redactedCandidates.length,
+    redactedCandidates: specialPartsVisible ? redactedCandidates : [],
+    productionOutputsBlocked: true,
+    engineEnabled: false,
+    runTableGenerationEnabled: false,
+    iesGenerationEnabled: false,
+    selectedResultPersistenceEnabled: false,
+    projectExportEnabled: false,
+    hubSpotWriteEnabled: false,
+    rawUsersExposed: false,
+    rawRowsExposed: false,
+    rawContactsExposed: false,
+    rawPayloadsExposed: false,
+  };
+}
+
 function workflowFields(workflowSections = []) {
   return workflowSections.flatMap((section) => Array.isArray(section.fields) ? section.fields : []);
 }
@@ -3169,7 +3277,7 @@ function createOptionSafeSnapshotState({ source = {}, sourceReady = false, field
   };
 }
 
-function failurePayload({ source = {}, reason = "selector_reference_options_unavailable", constraints = {}, timelineContext = createSelectorTimelineContext() } = {}) {
+function failurePayload({ source = {}, reason = "selector_reference_options_unavailable", constraints = {}, timelineContext = createSelectorTimelineContext(), specialPartsTestPrincipal = "", showSpecialParts = false } = {}) {
   const safeConstraints = sanitiseConstraints(constraints);
   const fields = TARGET_FIELDS.map((field) => createUnavailableField(field, reason));
   const workflowSections = WORKFLOW_SECTION_DEFINITIONS.map((section) => ({
@@ -3228,6 +3336,7 @@ function failurePayload({ source = {}, reason = "selector_reference_options_unav
       rawUsersExposed: false,
       rawRowsExposed: false,
     },
+    specialPartsUserTestSummary: safeSpecialPartsUserTestSummary({}, { specialPartsTestPrincipal, showSpecialParts }),
     manualConstraints: [],
     autoConsequences: [],
     blockedItems: blockedItems(fields),
@@ -3257,12 +3366,12 @@ function failurePayload({ source = {}, reason = "selector_reference_options_unav
   };
 }
 
-export function deriveSelectorReferenceOptionsFromSnapshot(snapshot = {}, { constraints = {}, source = {}, ok = true, timelineVisibilityMode = "", timelineAsOfDate = "", timelineVisibleStatuses = DEFAULT_TIMELINE_VISIBLE_STATUSES } = {}) {
+export function deriveSelectorReferenceOptionsFromSnapshot(snapshot = {}, { constraints = {}, source = {}, ok = true, timelineVisibilityMode = "", timelineAsOfDate = "", timelineVisibleStatuses = DEFAULT_TIMELINE_VISIBLE_STATUSES, specialPartsTestPrincipal = "", showSpecialParts = false } = {}) {
   const safeSnapshot = isPlainObject(snapshot) ? snapshot : {};
   const safeConstraints = sanitiseConstraints(constraints);
   const timelineContext = createSelectorTimelineContext({ timelineVisibilityMode, timelineAsOfDate, timelineVisibleStatuses });
   const sourceReady = ok !== false && (source.readable !== false) && (source.parseable !== false);
-  if (!sourceReady) return failurePayload({ source, reason: "Selector Reference source is unavailable or not parseable.", constraints: safeConstraints, timelineContext });
+  if (!sourceReady) return failurePayload({ source, reason: "Selector Reference source is unavailable or not parseable.", constraints: safeConstraints, timelineContext, specialPartsTestPrincipal, showSpecialParts });
 
   const bucket = collectOptions(safeSnapshot, timelineContext);
   const records = collectRecords(safeSnapshot, bucket, timelineContext);
@@ -3279,6 +3388,7 @@ export function deriveSelectorReferenceOptionsFromSnapshot(snapshot = {}, { cons
   const blocked = [...blockedItems(fields), ...workflowBlockedItems(workflowSections)];
   const parity = donorFieldParity(workflowSections);
   const entitlementSummary = safeEntitlementSummary(safeSnapshot);
+  const specialPartsUserTestSummary = safeSpecialPartsUserTestSummary(safeSnapshot, { specialPartsTestPrincipal, showSpecialParts });
   const availableFieldCount = fields.filter((field) => field.status === "available").length;
   const optionFieldCount = fields.filter((field) => field.options.length).length;
   const workflowMappedFieldCount = parity.counts.mapped || 0;
@@ -3318,6 +3428,7 @@ export function deriveSelectorReferenceOptionsFromSnapshot(snapshot = {}, { cons
     futureMappedFieldExplanation: sourceReadiness.futureMappedFieldExplanation,
     futureMappedFields: sourceReadiness.futureMappedFields,
     specialPartsEntitlementSummary: entitlementSummary,
+    specialPartsUserTestSummary,
     diffuserModelSummary: createDiffuserModelSummary(workflowSections),
     manualConstraints,
     autoConsequences,
@@ -3353,9 +3464,9 @@ export function deriveSelectorReferenceOptionsFromSnapshot(snapshot = {}, { cons
   };
 }
 
-export async function buildSelectorReferenceOptions({ sourcePath, fsApi = DEFAULT_FS_API, constraints = {}, timelineVisibilityMode = "", timelineAsOfDate = "", timelineVisibleStatuses = DEFAULT_TIMELINE_VISIBLE_STATUSES } = {}) {
+export async function buildSelectorReferenceOptions({ sourcePath, fsApi = DEFAULT_FS_API, constraints = {}, timelineVisibilityMode = "", timelineAsOfDate = "", timelineVisibleStatuses = DEFAULT_TIMELINE_VISIBLE_STATUSES, specialPartsTestPrincipal = "", showSpecialParts = false } = {}) {
   if (!sourcePath) {
-    return failurePayload({ reason: "Selector Reference options source path is not configured.", constraints });
+    return failurePayload({ reason: "Selector Reference options source path is not configured.", constraints, specialPartsTestPrincipal, showSpecialParts });
   }
 
   let sourceStat = null;
@@ -3365,10 +3476,10 @@ export async function buildSelectorReferenceOptions({ sourcePath, fsApi = DEFAUL
     const snapshot = JSON.parse(text);
     const parseable = isPlainObject(snapshot);
     const source = sourceMetadata({ sourceStat, present: true, readable: true, parseable });
-    if (!parseable) return failurePayload({ source, reason: "Selector Reference options source parsed but did not contain a table object.", constraints });
-    return deriveSelectorReferenceOptionsFromSnapshot(snapshot, { constraints, source, ok: true, timelineVisibilityMode, timelineAsOfDate, timelineVisibleStatuses });
+    if (!parseable) return failurePayload({ source, reason: "Selector Reference options source parsed but did not contain a table object.", constraints, specialPartsTestPrincipal, showSpecialParts });
+    return deriveSelectorReferenceOptionsFromSnapshot(snapshot, { constraints, source, ok: true, timelineVisibilityMode, timelineAsOfDate, timelineVisibleStatuses, specialPartsTestPrincipal, showSpecialParts });
   } catch (error) {
     const source = sourceMetadata({ sourceStat, present: Boolean(sourceStat), readable: error?.name === "SyntaxError", parseable: false });
-    return failurePayload({ source, reason: error?.code || error?.message || "Selector Reference options source could not be read.", constraints });
+    return failurePayload({ source, reason: error?.code || error?.message || "Selector Reference options source could not be read.", constraints, specialPartsTestPrincipal, showSpecialParts });
   }
 }

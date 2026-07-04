@@ -1060,11 +1060,21 @@ export function readSelectorTimelineOptions(requestUrl) {
   };
 }
 
+export function readSelectorSpecialPartsUserTestOptions(requestUrl) {
+  const specialPartsTestPrincipal = String(requestUrl.searchParams.get("specialPartsTestPrincipal") || "").trim();
+  const showSpecialParts = String(requestUrl.searchParams.get("showSpecialParts") || requestUrl.searchParams.get("specialPartsTestShow") || "").trim();
+  return {
+    specialPartsTestPrincipal,
+    showSpecialParts,
+  };
+}
+
 async function sendSelectorReferenceOptions(res, requestUrl) {
   sendJson(res, 200, await buildSelectorReferenceOptions({
     sourcePath: AUTH_REF_DEFAULT_SNAPSHOT_PATH,
     constraints: readSelectorOptionConstraints(requestUrl),
     ...readSelectorTimelineOptions(requestUrl),
+    ...readSelectorSpecialPartsUserTestOptions(requestUrl),
   }));
 }
 

@@ -46,6 +46,7 @@ const SELECTOR_TIMELINE_VISIBILITY_MODES = Object.freeze({
 
 const SELECTOR_TIMELINE_STATUS_OPTIONS = Object.freeze(["available", "approved", "staged", "roadmap", "obsolete", "unknown"]);
 const DEFAULT_SELECTOR_TIMELINE_VISIBLE_STATUSES = Object.freeze(["available", "approved"]);
+const SPECIAL_PARTS_TEST_PRINCIPAL_OPTIONS = Object.freeze(["Allan Organ", "Unknown / unentitled"]);
 
 function isoTodayDate() {
   return new Date().toISOString().slice(0, 10);
@@ -95,6 +96,42 @@ function cloneTimelineStatusTestState(value = {}) {
       ? normaliseTimelineStatuses(value.timelineVisibleStatuses || base.timelineVisibleStatuses)
       : [...DEFAULT_SELECTOR_TIMELINE_VISIBLE_STATUSES],
     timelineVisibleStatusOptions: [...SELECTOR_TIMELINE_STATUS_OPTIONS],
+    readOnly: true,
+    diagnosticOnly: true,
+    queryParamsOnly: true,
+    productionActionsEnabled: false,
+    rawRowsExposed: false,
+  };
+}
+
+function normaliseSpecialPartsTestPrincipal(value = "") {
+  const requested = String(value || "").trim();
+  if (!requested) return "";
+  const key = requested.toLowerCase().replace(/[\s_./-]+/g, " ").replace(/[^a-z0-9 ]+/g, "").replace(/\s+/g, " ").trim();
+  return SPECIAL_PARTS_TEST_PRINCIPAL_OPTIONS.find((principal) => principal.toLowerCase().replace(/[\s_./-]+/g, " ").replace(/[^a-z0-9 ]+/g, "").replace(/\s+/g, " ").trim() === key) || "Unknown / unentitled";
+}
+
+function createInitialSpecialPartsUserTestState() {
+  return {
+    testPrincipal: "",
+    showEntitlementBackedSpecialParts: false,
+    testPrincipalOptions: [...SPECIAL_PARTS_TEST_PRINCIPAL_OPTIONS],
+    readOnly: true,
+    diagnosticOnly: true,
+    queryParamsOnly: true,
+    productionActionsEnabled: false,
+    rawRowsExposed: false,
+  };
+}
+
+function cloneSpecialPartsUserTestState(value = {}) {
+  const base = createInitialSpecialPartsUserTestState();
+  return {
+    ...base,
+    ...value,
+    testPrincipal: normaliseSpecialPartsTestPrincipal(value.testPrincipal || value.activeTestPrincipal || base.testPrincipal),
+    showEntitlementBackedSpecialParts: value.showEntitlementBackedSpecialParts === true,
+    testPrincipalOptions: [...SPECIAL_PARTS_TEST_PRINCIPAL_OPTIONS],
     readOnly: true,
     diagnosticOnly: true,
     queryParamsOnly: true,
@@ -979,6 +1016,7 @@ export function createSelectorState() {
     selectorStateContract: createInitialSelectorStateContract(),
     dbBackedSelector: cloneDbBackedSelectorState(),
     timelineStatusTest: createInitialTimelineStatusTestState(),
+    specialPartsUserTest: createInitialSpecialPartsUserTestState(),
     runIntake: createInitialSelectorRunIntakeState(),
     runAccessoryPlacement: createInitialSelectorRunAccessoryPlacementState(),
   };
@@ -990,6 +1028,7 @@ export function createSelectorState() {
       selectorStateContract: cloneSelectorStateContract(state.selectorStateContract),
       dbBackedSelector: cloneDbBackedSelectorState(state.dbBackedSelector),
       timelineStatusTest: cloneTimelineStatusTestState(state.timelineStatusTest),
+      specialPartsUserTest: cloneSpecialPartsUserTestState(state.specialPartsUserTest),
       runIntake: cloneSelectorRunIntakeState(state.runIntake),
       runAccessoryPlacement: cloneSelectorRunAccessoryPlacementState(state.runAccessoryPlacement),
     };
@@ -1150,6 +1189,33 @@ export function createSelectorState() {
       });
       state.localDirty = true;
       state.lastAction = "timeline-status-test-visible-statuses";
+      return this.getSnapshot();
+    },
+
+    setSpecialPartsTestPrincipal(value) {
+      state.specialPartsUserTest = cloneSpecialPartsUserTestState({
+        ...state.specialPartsUserTest,
+        testPrincipal: value,
+      });
+      state.localDirty = true;
+      state.lastAction = `special-parts-user-test-principal:${state.specialPartsUserTest.testPrincipal || "external-default"}`;
+      return this.getSnapshot();
+    },
+
+    setShowEntitlementBackedSpecialParts(enabled) {
+      state.specialPartsUserTest = cloneSpecialPartsUserTestState({
+        ...state.specialPartsUserTest,
+        showEntitlementBackedSpecialParts: enabled === true,
+      });
+      state.localDirty = true;
+      state.lastAction = `special-parts-user-test-show:${enabled === true ? "on" : "off"}`;
+      return this.getSnapshot();
+    },
+
+    setSpecialPartsUserTestState(value = {}) {
+      state.specialPartsUserTest = cloneSpecialPartsUserTestState(value);
+      state.localDirty = true;
+      state.lastAction = "special-parts-user-test-state";
       return this.getSnapshot();
     },
 

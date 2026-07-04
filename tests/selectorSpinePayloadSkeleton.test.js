@@ -515,15 +515,18 @@ test("Future or unmapped rows are shown as missing, future-mapped, or blocked, n
   assert.equal(electrical.writes, false);
 });
 
-test("The slice does not introduce a named user or authority fixture", async () => {
+test("The slice keeps named user testing diagnostic-only and out of default payload authority", async () => {
   const viewModelSource = await readFile(viewModelSourceUrl, "utf-8");
   const testSource = await readFile(testSourceUrl, "utf-8");
   const payload = createModel().selectorSurface.payloadPreview;
+  const surface = createModel().selectorSurface;
 
-  const forbiddenName = String.fromCharCode(65, 108, 108, 97, 110, 32, 79, 114, 103, 97, 110);
+  const internalTestName = String.fromCharCode(65, 108, 108, 97, 110, 32, 79, 114, 103, 97, 110);
   const usersTableLiteral = ["US", "ERS:"].join("");
-  assert.equal(viewModelSource.includes(forbiddenName), false);
-  assert.equal(testSource.includes(forbiddenName), false);
+  assert.equal(viewModelSource.includes(internalTestName), true);
+  assert.equal(surface.specialPartsUserTest.activeTestPrincipal, "");
+  assert.equal(surface.specialPartsUserTest.specialPartsVisible, false);
+  assert.equal(JSON.stringify(payload).includes(internalTestName), false);
   const atSignLiteral = String.fromCharCode(64);
   assert.equal(viewModelSource.includes(atSignLiteral), false);
   assert.equal(testSource.includes(usersTableLiteral), false);

@@ -269,6 +269,12 @@ function normaliseSelectorConstraintParams(query = "") {
     ].map((value) => String(value || "").trim()).filter(Boolean);
     if (statuses.length) ordered.set("timelineVisibleStatuses", [...new Set(statuses)].join(","));
   }
+  const specialPartsTestPrincipal = String(params.get("specialPartsTestPrincipal") || "").trim();
+  if (specialPartsTestPrincipal) {
+    ordered.set("specialPartsTestPrincipal", specialPartsTestPrincipal);
+    const showSpecialParts = String(params.get("showSpecialParts") || params.get("specialPartsTestShow") || "").trim().toLowerCase();
+    if (["1", "true", "yes", "on", "show", "visible"].includes(showSpecialParts)) ordered.set("showSpecialParts", "1");
+  }
   return ordered.toString();
 }
 
@@ -296,10 +302,20 @@ function appendSelectorTimelineQueryParams(params, timelineStatusTest = {}) {
   if (statuses.length) params.set("timelineVisibleStatuses", [...new Set(statuses.map((status) => String(status || "").trim()).filter(Boolean))].join(","));
 }
 
+function appendSelectorSpecialPartsUserTestQueryParams(params, specialPartsUserTest = {}) {
+  const principal = String(specialPartsUserTest.testPrincipal || specialPartsUserTest.activeTestPrincipal || "").trim();
+  if (!principal) return;
+  params.set("specialPartsTestPrincipal", principal);
+  if (specialPartsUserTest.showEntitlementBackedSpecialParts === true || specialPartsUserTest.showSpecialParts === true) {
+    params.set("showSpecialParts", "1");
+  }
+}
+
 function selectorOptionQueryFromSnapshot(snapshot = {}) {
   const rawConstraintQuery = selectorOptionConstraintQueryFromConstraints(snapshot.dbBackedSelector?.manualConstraints || {});
   const params = new URLSearchParams(String(rawConstraintQuery || "").replace(/^\?/, ""));
   appendSelectorTimelineQueryParams(params, snapshot.timelineStatusTest || {});
+  appendSelectorSpecialPartsUserTestQueryParams(params, snapshot.specialPartsUserTest || {});
   const query = normaliseSelectorConstraintParams(params.toString());
   return query ? `?${query}` : "";
 }

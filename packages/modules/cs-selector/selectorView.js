@@ -386,6 +386,72 @@ function appendTimelineStatusTestControls(parent, timelineStatusTest = {}, optio
   parent.appendChild(section);
 }
 
+function appendSpecialPartsUserTestControls(parent, specialPartsUserTest = {}, options = {}) {
+  const controlsSurface = options.controlsSurface || "diagnostic-manual-constraint";
+  const idSuffix = String(controlsSurface || "special-parts-user-test").replace(/[^a-z0-9_-]+/gi, "-").toLowerCase();
+  const section = document.createElement("section");
+  section.className = "cs-selector-proof__section cs-selector-special-parts-user-test";
+  section.dataset.specialPartsUserTestSurface = controlsSurface;
+  section.dataset.visibleSelectorShell = controlsSurface === "visible-shell" ? "true" : "false";
+  appendText(section, "h3", specialPartsUserTest.title || "Internal special-parts user/principal test mode");
+  appendText(section, "p", specialPartsUserTest.description || "Diagnostic GET-only principal controls for safe entitlement testing. Production outputs remain blocked.");
+
+  const principalLabel = document.createElement("label");
+  principalLabel.className = "cs-selector-special-parts-user-test__control cs-selector-special-parts-user-test__control--principal";
+  appendText(principalLabel, "span", "Test user / principal");
+  const principalSelect = document.createElement("select");
+  principalSelect.id = `cs-selector-special-parts-test-principal-${idSuffix}`;
+  principalSelect.dataset.specialPartsUserTestControl = "testPrincipal";
+  const blankOption = document.createElement("option");
+  blankOption.value = "";
+  blankOption.textContent = "No test user override";
+  principalSelect.appendChild(blankOption);
+  const activePrincipal = String(specialPartsUserTest.activeTestPrincipal || "").trim();
+  for (const principal of specialPartsUserTest.testPrincipalOptions || []) {
+    const option = document.createElement("option");
+    option.value = principal;
+    option.textContent = principal;
+    option.selected = principal === activePrincipal;
+    principalSelect.appendChild(option);
+  }
+  principalSelect.value = activePrincipal;
+  principalSelect.addEventListener("change", () => specialPartsUserTest.setTestPrincipal?.(principalSelect.value));
+  principalLabel.appendChild(principalSelect);
+  section.appendChild(principalLabel);
+
+  const toggleInput = document.createElement("input");
+  toggleInput.type = "checkbox";
+  toggleInput.dataset.specialPartsUserTestControl = "showSpecialParts";
+  toggleInput.checked = specialPartsUserTest.showEntitlementBackedSpecialParts === true;
+  toggleInput.addEventListener("change", () => specialPartsUserTest.setShowEntitlementBackedSpecialParts?.(toggleInput.checked === true));
+  appendTimelineStatusCheckboxLabel(
+    section,
+    toggleInput,
+    "Show entitlement-backed special parts",
+    "cs-selector-special-parts-user-test__control cs-selector-special-parts-user-test__control--toggle",
+  );
+
+  appendDefinitionList(section, [
+    ["active test principal", activePrincipal || "none"],
+    ["entitlement found", yesNo(specialPartsUserTest.entitlementFound)],
+    ["special parts visible", yesNo(specialPartsUserTest.specialPartsVisible)],
+    ["redacted entitlement count", specialPartsUserTest.redactedEntitlementCount ?? 0],
+    ["production outputs", specialPartsUserTest.productionActionsEnabled === true ? "enabled" : "blocked"],
+    ["raw user rows exposed", forcedFalse(specialPartsUserTest.rawUsersExposed)],
+    ["raw contacts exposed", forcedFalse(specialPartsUserTest.rawContactsExposed)],
+    ["raw payloads exposed", forcedFalse(specialPartsUserTest.rawPayloadsExposed)],
+  ]);
+
+  const candidateRows = Array.isArray(specialPartsUserTest.candidateRows) ? specialPartsUserTest.candidateRows : [];
+  if (candidateRows.length) {
+    appendSection(section, "Visible entitlement-backed special parts — redacted", candidateRows.map((row) => [
+      row.redactedRef || "redacted special part",
+      row.reason || row.status || "safe redacted candidate",
+    ]));
+  }
+  parent.appendChild(section);
+}
+
 function appendSelectorManualConstraintBehaviour(parent, shell = {}) {
   const behaviour = shell.manualConstraintBehaviour || {};
   const section = document.createElement("section");
@@ -424,6 +490,7 @@ function appendSelectorManualConstraintBehaviour(parent, shell = {}) {
   appendSection(section, "Compatibility warnings", behaviour.compatibilityWarningRows || [["compatibility warnings", "none"]]);
   appendSection(section, "Blocked/incompatible fields", behaviour.blockedFieldRows || [["blocked/incompatible fields", "none"]]);
   appendTimelineStatusTestControls(section, shell.timelineStatusTest || {});
+  appendSpecialPartsUserTestControls(section, shell.specialPartsUserTest || {});
 
   const controlSections = Array.isArray(behaviour.controlSections) ? behaviour.controlSections : [];
   const controls = document.createElement("section");
@@ -2415,6 +2482,7 @@ function appendSelectorProductSurface(parent, surface = {}) {
   appendText(section, "p", surface.proofCopy || "Selector previews selection readiness. Lab Proof proves later.", "cs-selector-product__safety");
 
   appendTimelineStatusTestControls(section, surface.timelineStatusTest || {}, { controlsSurface: "visible-shell" });
+  appendSpecialPartsUserTestControls(section, surface.specialPartsUserTest || {}, { controlsSurface: "visible-shell" });
   appendSelectorDefaultBlockerCopy(section, surface);
   appendSelectorLmTemperatureReadinessCopy(section, surface);
 
