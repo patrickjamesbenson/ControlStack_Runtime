@@ -101,7 +101,10 @@ function initialSelectorReferenceOptionsStatus() {
     ok: null,
     status: "not-requested",
     endpoint: SELECTOR_REFERENCE_OPTIONS_ENDPOINT,
+    constraintQuery: "",
+    constraintFingerprint: selectorConstraintFingerprintFromQuery(""),
     fields: [],
+    workflowSections: [],
     candidateSummary: {
       state: "not requested",
       optionFieldCount: 0,
@@ -224,9 +227,23 @@ function safeConstraintValue(record) {
   return String(record?.value || "").trim();
 }
 
-function selectorOptionConstraintQuery() {
-  const snapshot = selectorState?.getSnapshot?.() || {};
-  const constraints = snapshot.dbBackedSelector?.manualConstraints || {};
+function normaliseSelectorConstraintParams(query = "") {
+  const rawQuery = String(query || "").trim().replace(/^\?/, "");
+  const params = new URLSearchParams(rawQuery);
+  const ordered = new URLSearchParams();
+  for (const key of SELECTOR_OPTION_CONSTRAINT_KEYS) {
+    const value = String(params.get(key) || "").trim();
+    if (value) ordered.set(key, value);
+  }
+  return ordered.toString();
+}
+
+export function selectorConstraintFingerprintFromQuery(query = "") {
+  const normalised = normaliseSelectorConstraintParams(query);
+  return normalised ? `selector-options:${normalised}` : "selector-options:unconstrained";
+}
+
+export function selectorOptionConstraintQueryFromConstraints(constraints = {}) {
   const params = new URLSearchParams();
   for (const key of SELECTOR_OPTION_CONSTRAINT_KEYS) {
     const value = safeConstraintValue(constraints[key]);
@@ -236,15 +253,72 @@ function selectorOptionConstraintQuery() {
   return query ? `?${query}` : "";
 }
 
-function applySelectorReferenceOptionsStatus(nextStatus) {
-  const previousFields = Array.isArray(selectorReferenceOptionsStatus.fields)
-    ? selectorReferenceOptionsStatus.fields
-    : [];
-  selectorReferenceOptionsStatus = {
-    ...initialSelectorReferenceOptionsStatus(),
+function selectorOptionConstraintQuery() {
+  const snapshot = selectorState?.getSnapshot?.() || {};
+  const constraints = snapshot.dbBackedSelector?.manualConstraints || {};
+  return selectorOptionConstraintQueryFromConstraints(constraints);
+}
+
+function currentSelectorOptionConstraintSignature() {
+  const constraintQuery = selectorOptionConstraintQuery();
+  return {
+    constraintQuery,
+    constraintFingerprint: selectorConstraintFingerprintFromQuery(constraintQuery),
+  };
+}
+
+export function selectorReferenceOptionsResponseIsCurrent({
+  requestId = 0,
+  activeRequestId = 0,
+  responseConstraintFingerprint = "",
+  activeConstraintFingerprint = "",
+  mounted = true,
+} = {}) {
+  return mounted === true
+    && requestId === activeRequestId
+    && String(responseConstraintFingerprint || "") === String(activeConstraintFingerprint || "");
+}
+
+export function resolveSelectorReferenceOptionsStatus(
+  currentStatus = initialSelectorReferenceOptionsStatus(),
+  nextStatus = {},
+  activeConstraintFingerprint = selectorConstraintFingerprintFromQuery(""),
+  activeConstraintQuery = ""
+) {
+  const base = initialSelectorReferenceOptionsStatus();
+  const previousFields = Array.isArray(currentStatus?.fields) ? currentStatus.fields : [];
+  const previousWorkflowSections = Array.isArray(currentStatus?.workflowSections) ? currentStatus.workflowSections : [];
+  const previousFingerprint = String(currentStatus?.constraintFingerprint || "");
+  const incomingFingerprint = String(nextStatus?.constraintFingerprint || activeConstraintFingerprint || selectorConstraintFingerprintFromQuery(activeConstraintQuery));
+  const incomingQuery = typeof nextStatus?.constraintQuery === "string" ? nextStatus.constraintQuery : activeConstraintQuery;
+  const sameConstraintFingerprint = Boolean(previousFingerprint && incomingFingerprint && previousFingerprint === incomingFingerprint);
+  const fieldsFromCurrentPayload = Array.isArray(nextStatus?.fields)
+    ? nextStatus.fields
+    : sameConstraintFingerprint
+      ? previousFields
+      : [];
+  const workflowSectionsFromCurrentPayload = Array.isArray(nextStatus?.workflowSections)
+    ? nextStatus.workflowSections
+    : sameConstraintFingerprint
+      ? previousWorkflowSections
+      : [];
+  const stalePreviousFieldsCount = sameConstraintFingerprint ? 0 : previousFields.length;
+  const stalePreviousWorkflowSectionCount = sameConstraintFingerprint ? 0 : previousWorkflowSections.length;
+
+  return {
+    ...base,
     ...nextStatus,
     endpoint: nextStatus?.endpoint || SELECTOR_REFERENCE_OPTIONS_ENDPOINT,
-    fields: Array.isArray(nextStatus?.fields) ? nextStatus.fields : previousFields,
+    constraintQuery: incomingQuery || "",
+    constraintFingerprint: incomingFingerprint,
+    fields: fieldsFromCurrentPayload,
+    workflowSections: workflowSectionsFromCurrentPayload,
+    candidateSummary: nextStatus?.candidateSummary || (sameConstraintFingerprint ? currentStatus?.candidateSummary : base.candidateSummary),
+    previousFieldsReused: !Array.isArray(nextStatus?.fields) && sameConstraintFingerprint && previousFields.length > 0,
+    previousWorkflowSectionsReused: !Array.isArray(nextStatus?.workflowSections) && sameConstraintFingerprint && previousWorkflowSections.length > 0,
+    stalePreviousFieldsCount,
+    stalePreviousWorkflowSectionCount,
+    stalePreviousPayloadRetainedForDiagnostics: false,
     readOnly: true,
     diagnosticOnly: true,
     optionFilteringReadOnly: true,
@@ -255,6 +329,15 @@ function applySelectorReferenceOptionsStatus(nextStatus) {
     credentialsExposed: false,
     privatePathsExposed: false,
   };
+}
+
+function applySelectorReferenceOptionsStatus(nextStatus, activeSignature = currentSelectorOptionConstraintSignature()) {
+  selectorReferenceOptionsStatus = resolveSelectorReferenceOptionsStatus(
+    selectorReferenceOptionsStatus,
+    nextStatus,
+    activeSignature.constraintFingerprint,
+    activeSignature.constraintQuery
+  );
   renderCurrentView();
 }
 
@@ -270,38 +353,62 @@ async function loadSelectorReferenceOptions() {
     return;
   }
 
+  const activeSignature = currentSelectorOptionConstraintSignature();
   const requestId = selectorReferenceOptionsRequestId + 1;
   selectorReferenceOptionsRequestId = requestId;
   applySelectorReferenceOptionsStatus({
     ok: null,
     status: "loading",
     endpoint: SELECTOR_REFERENCE_OPTIONS_ENDPOINT,
+    constraintQuery: activeSignature.constraintQuery,
+    constraintFingerprint: activeSignature.constraintFingerprint,
+    fields: [],
+    workflowSections: [],
     warnings: ["Selector reference options are loading."],
-  });
+  }, activeSignature);
 
   try {
-    const endpoint = `${SELECTOR_REFERENCE_OPTIONS_ENDPOINT}${selectorOptionConstraintQuery()}`;
+    const endpoint = `${SELECTOR_REFERENCE_OPTIONS_ENDPOINT}${activeSignature.constraintQuery}`;
     const response = await fetchImpl(endpoint, {
       method: "GET",
       credentials: "same-origin",
       cache: "no-store",
     });
     const payload = await response.json();
-    if (requestId !== selectorReferenceOptionsRequestId || !mountedContainer) return;
+    const currentSignature = currentSelectorOptionConstraintSignature();
+    const responseConstraintFingerprint = String(payload?.constraintFingerprint || activeSignature.constraintFingerprint);
+    if (!selectorReferenceOptionsResponseIsCurrent({
+      requestId,
+      activeRequestId: selectorReferenceOptionsRequestId,
+      responseConstraintFingerprint,
+      activeConstraintFingerprint: currentSignature.constraintFingerprint,
+      mounted: Boolean(mountedContainer),
+    })) return;
     applySelectorReferenceOptionsStatus({
       ...payload,
       ok: response.ok && payload?.ok !== false,
       httpStatus: response.status,
       status: payload?.ok === false ? "unavailable" : payload?.status || "loaded",
-    });
+      constraintQuery: currentSignature.constraintQuery,
+      constraintFingerprint: responseConstraintFingerprint,
+    }, currentSignature);
   } catch (error) {
-    if (requestId !== selectorReferenceOptionsRequestId || !mountedContainer) return;
+    const currentSignature = currentSelectorOptionConstraintSignature();
+    if (!selectorReferenceOptionsResponseIsCurrent({
+      requestId,
+      activeRequestId: selectorReferenceOptionsRequestId,
+      responseConstraintFingerprint: activeSignature.constraintFingerprint,
+      activeConstraintFingerprint: currentSignature.constraintFingerprint,
+      mounted: Boolean(mountedContainer),
+    })) return;
     applySelectorReferenceOptionsStatus({
       ok: false,
       status: "fetch-failed",
       endpoint: SELECTOR_REFERENCE_OPTIONS_ENDPOINT,
+      constraintQuery: currentSignature.constraintQuery,
+      constraintFingerprint: currentSignature.constraintFingerprint,
       warnings: [`Selector reference options request failed: ${error?.message || "unknown error"}.`],
-    });
+    }, currentSignature);
   }
 }
 
@@ -385,6 +492,7 @@ export const csSelectorModule = {
 
   unmount() {
     selectorReferenceRequestId += 1;
+    selectorReferenceOptionsRequestId += 1;
     if (mountedContainer) {
       while (mountedContainer.firstChild) {
         mountedContainer.removeChild(mountedContainer.firstChild);

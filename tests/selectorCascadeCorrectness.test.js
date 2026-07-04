@@ -5,6 +5,12 @@ import { readFile } from "node:fs/promises";
 import { deriveSelectorReferenceOptionsFromSnapshot } from "../packages/workspace-kernel/selectorReferenceOptionsService.js";
 import { createSelectorViewModel } from "../packages/modules/cs-selector/selectorViewModel.js";
 import { createSafeRailSelectionSourceBucketRows, renderSelectorView } from "../packages/modules/cs-selector/selectorView.js";
+import {
+  resolveSelectorReferenceOptionsStatus,
+  selectorConstraintFingerprintFromQuery,
+  selectorOptionConstraintQueryFromConstraints,
+  selectorReferenceOptionsResponseIsCurrent,
+} from "../packages/modules/cs-selector/index.js";
 
 const moduleSourceUrl = new URL("../packages/modules/cs-selector/index.js", import.meta.url);
 const serverSourceUrl = new URL("../server.js", import.meta.url);
@@ -223,6 +229,26 @@ function railTruthItems(summary = {}, truthKind = "blocked") {
 function compactBlockedRailText(summary = {}) {
   const bucket = createSafeRailSelectionSourceBucketRows("Blocked", railTruthItems(summary, "blocked"), { blockedReviewOnly: true });
   return [bucket.label, bucket.valueLabel, ...bucket.rows].join("\n");
+}
+
+function compactManualRailText(summary = {}) {
+  const bucket = createSafeRailSelectionSourceBucketRows("Manual", railTruthItems(summary, "manual-constraint"));
+  return [bucket.label, bucket.valueLabel, ...bucket.rows].join("\n");
+}
+
+function dbConstraintRecords(values = {}) {
+  return Object.fromEntries(Object.entries(values).map(([fieldKey, value]) => [
+    fieldKey,
+    { fieldKey, label: fieldKey, value, valueLabel: value },
+  ]));
+}
+
+function constraintSignatureFor(values = {}) {
+  const constraintQuery = selectorOptionConstraintQueryFromConstraints(dbConstraintRecords(values));
+  return {
+    constraintQuery,
+    constraintFingerprint: selectorConstraintFingerprintFromQuery(constraintQuery),
+  };
 }
 
 function detailedBlockedValueText(summary = {}) {
@@ -1092,6 +1118,169 @@ test("stale optic children and indirect optics do not block IP/IK parent candida
   assert.equal(surface.payloadPreview.environment.ik, "IK07");
   assert.equal(surface.selectionTruthSummary.blockers.some((item) => item.fieldKey === "ipRating"), false);
   assert.equal(surface.selectionTruthSummary.blockers.some((item) => item.fieldKey === "ikRating"), false);
+});
+
+test("live options loading after System change drops stale previous child fields from active truth", () => {
+  const previousConstraints = {
+    system: "DNX 60 Beam DI",
+    directOpticVar1: "60|Comfort",
+    directOpticVar2: "60|Comfort|Low glare",
+    ipRating: "IP65",
+    ikRating: "IK10",
+    mountStyle: "Surface",
+    mountSelection: "Surface clip",
+    electricalClass: "Class I",
+  };
+  const nextConstraints = { system: "LNX 80 D/I" };
+  const previousSignature = constraintSignatureFor(previousConstraints);
+  const nextSignature = constraintSignatureFor(nextConstraints);
+  const previousLoaded = resolveSelectorReferenceOptionsStatus({}, {
+    ok: true,
+    status: "loaded",
+    fields: [
+      {
+        fieldKey: "directOpticVar1",
+        label: "Direct optic",
+        selectedValue: "60|Comfort",
+        selectedLabel: "Comfort · 60",
+        options: [{ value: "60|Comfort", label: "Comfort · 60", selected: true, status: "available" }],
+      },
+      {
+        fieldKey: "ipRating",
+        label: "IP rating",
+        selectedValue: "IP65",
+        selectedLabel: "IP65",
+        options: [{ value: "IP65", label: "IP65", selected: true, status: "available" }],
+      },
+      {
+        fieldKey: "ikRating",
+        label: "IK rating",
+        selectedValue: "IK10",
+        selectedLabel: "IK10",
+        options: [{ value: "IK10", label: "IK10", selected: true, status: "available" }],
+      },
+      {
+        fieldKey: "mountSelection",
+        label: "Mount selection",
+        selectedValue: "Surface clip",
+        selectedLabel: "Surface clip",
+        options: [{ value: "Surface clip", label: "Surface clip", selected: true, status: "available" }],
+      },
+      {
+        fieldKey: "electricalClass",
+        label: "Electrical Class",
+        selectedValue: "Class I",
+        selectedLabel: "Class I",
+        options: [{ value: "Class I", label: "Class I", selected: true, status: "available" }],
+      },
+    ],
+    workflowSections: [
+      {
+        sectionKey: "optics",
+        title: "Optics",
+        fields: [
+          {
+            fieldKey: "directOpticVar1",
+            label: "Direct optic",
+            selectedValue: "60|Comfort",
+            selectedLabel: "Comfort · 60",
+            options: [{ value: "60|Comfort", label: "Comfort · 60", selected: true, status: "available" }],
+          },
+        ],
+      },
+    ],
+  }, previousSignature.constraintFingerprint, previousSignature.constraintQuery);
+
+  const loading = resolveSelectorReferenceOptionsStatus(previousLoaded, {
+    ok: null,
+    status: "loading",
+    warnings: ["Selector reference options are loading."],
+  }, nextSignature.constraintFingerprint, nextSignature.constraintQuery);
+  const model = selectorViewModelFor(loading, nextConstraints);
+  const surface = model.selectorSurface;
+  const surfaceText = JSON.stringify(surface);
+
+  assert.equal(loading.constraintFingerprint, nextSignature.constraintFingerprint);
+  assert.equal(loading.stalePreviousFieldsCount, 5);
+  assert.equal(loading.stalePreviousWorkflowSectionCount, 1);
+  assert.deepEqual(loading.fields, []);
+  assert.deepEqual(loading.workflowSections, []);
+  assert.deepEqual(surface.manualConstraints.map((constraint) => constraint.fieldKey), ["system"]);
+  const loadingDirectField = optionalVisibleControlField(model, "directOpticVar1");
+  if (loadingDirectField) {
+    assert.equal(loadingDirectField.manualConstraint, false);
+    assert.doesNotMatch(JSON.stringify(loadingDirectField), /Comfort · 60|60\|Comfort/);
+  }
+  assert.doesNotMatch(surfaceText, /Comfort · 60|60\|Comfort|IP65|IK10|Surface clip|Class I/);
+  assert.equal(surface.payloadPreview.optics.direct.opticVar1, null);
+  assert.equal(surface.payloadPreview.environment.ip, null);
+  assert.equal(surface.payloadPreview.environment.ik, null);
+  const directTile = surface.donorShapeSelectedTiles.find((item) => item.tileKey === "directOpticVar1");
+  assert.equal(directTile.value, "");
+  assert.equal(directTile.valueLabel, "Not selected");
+  assert.equal(truthItemsForField(surface.selectionTruthSummary, "directOpticVar1", "manual-constraint").length, 0);
+  assert.doesNotMatch(compactManualRailText(surface.selectionTruthSummary), /Comfort|IP65|IK10|Surface|Class I/);
+});
+
+test("live option request fingerprinting rejects stale responses and accepts current fresh fields", () => {
+  const staleSignature = constraintSignatureFor({
+    system: "DNX 60 Beam DI",
+    directOpticVar1: "60|Comfort",
+    ipRating: "IP65",
+    mountStyle: "Surface",
+  });
+  const currentConstraints = { system: "LNX 80 D/I" };
+  const currentSignature = constraintSignatureFor(currentConstraints);
+
+  assert.equal(selectorReferenceOptionsResponseIsCurrent({
+    requestId: 4,
+    activeRequestId: 5,
+    responseConstraintFingerprint: staleSignature.constraintFingerprint,
+    activeConstraintFingerprint: currentSignature.constraintFingerprint,
+    mounted: true,
+  }), false);
+  assert.equal(selectorReferenceOptionsResponseIsCurrent({
+    requestId: 5,
+    activeRequestId: 5,
+    responseConstraintFingerprint: staleSignature.constraintFingerprint,
+    activeConstraintFingerprint: currentSignature.constraintFingerprint,
+    mounted: true,
+  }), false);
+  assert.equal(selectorReferenceOptionsResponseIsCurrent({
+    requestId: 5,
+    activeRequestId: 5,
+    responseConstraintFingerprint: currentSignature.constraintFingerprint,
+    activeConstraintFingerprint: currentSignature.constraintFingerprint,
+    mounted: true,
+  }), true);
+
+  const loading = resolveSelectorReferenceOptionsStatus({}, {
+    ok: null,
+    status: "loading",
+    fields: [],
+    workflowSections: [],
+  }, currentSignature.constraintFingerprint, currentSignature.constraintQuery);
+  const freshPayload = deriveSelectorReferenceOptionsFromSnapshot(cascadeSnapshot(), {
+    source: sourceReady(),
+    constraints: currentConstraints,
+  });
+  const fresh = resolveSelectorReferenceOptionsStatus(loading, {
+    ...freshPayload,
+    ok: true,
+    status: "loaded",
+    constraintFingerprint: currentSignature.constraintFingerprint,
+  }, currentSignature.constraintFingerprint, currentSignature.constraintQuery);
+  const model = selectorViewModelFor(fresh, currentConstraints);
+
+  assert.ok(fresh.fields.length > 0);
+  assert.ok(fresh.workflowSections.length > 0);
+  const liveDirectField = visibleControlField(model, "directOpticVar1");
+  assert.deepEqual(controlOptionLabels(liveDirectField), ["Blade · 80"]);
+  assert.deepEqual(model.selectorSurface.manualConstraints.map((constraint) => constraint.fieldKey), ["system"]);
+  assert.doesNotMatch(JSON.stringify(liveDirectField.options), /Comfort · 60|60\|Comfort|IP65|Surface/);
+  assert.doesNotMatch(JSON.stringify(model.selectorSurface.manualConstraints), /Comfort · 60|60\|Comfort|IP65|Surface/);
+  assert.equal(model.selectorSurface.payloadPreview.optics.direct.opticVar1, "Blade · 80");
+  assert.equal(model.selectorSurface.payloadPreview.environment.ip, null);
 });
 
 test("live main Direct Optic Var1 dropdown clears stale blocked optic while developer detail retains it", () => {
