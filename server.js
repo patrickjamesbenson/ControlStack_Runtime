@@ -2,6 +2,7 @@ import { createReadStream } from "node:fs";
 import { access, copyFile, mkdir, readFile, readdir, stat } from "node:fs/promises";
 import { createServer } from "node:http";
 import { basename, extname, isAbsolute, join, normalize, resolve, sep } from "node:path";
+import { pathToFileURL } from "node:url";
 import { buildLabProofStatus, LAB_PROOF_STATUS_PATH } from "./packages/workspace-kernel/labProofStatusService.js";
 import {
   AUTHORITY_REFERENCE_MATERIALISER_REFRESH_PATH,
@@ -991,6 +992,12 @@ const SELECTOR_OPTION_CONSTRAINT_KEYS = Object.freeze([
   "indirectCapability",
   "opticSub",
   "opticIndirect",
+  "diffuserVar1",
+  "diffuserVar2",
+  "directOpticVar1",
+  "directOpticVar2",
+  "indirectOpticVar1",
+  "indirectOpticVar2",
   "electricalClass",
   "ambient",
   "targetLmPerM",
@@ -1016,7 +1023,7 @@ const SELECTOR_OPTION_CONSTRAINT_KEYS = Object.freeze([
   "userEntitlementStatus",
 ]);
 
-function readSelectorOptionConstraints(requestUrl) {
+export function readSelectorOptionConstraints(requestUrl) {
   const constraints = {};
   for (const key of SELECTOR_OPTION_CONSTRAINT_KEYS) {
     const value = String(requestUrl.searchParams.get(key) || "").trim();
@@ -2574,6 +2581,8 @@ const server = createServer(async (req, res) => {
   });
 });
 
-server.listen(PORT, HOST, () => {
-  console.log(`ControlStack Runtime Shell listening on http://${HOST}:${PORT}/workspace?module=cs_selector`);
-});
+if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
+  server.listen(PORT, HOST, () => {
+    console.log(`ControlStack Runtime Shell listening on http://${HOST}:${PORT}/workspace?module=cs_selector`);
+  });
+}

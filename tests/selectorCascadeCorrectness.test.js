@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
 import { deriveSelectorReferenceOptionsFromSnapshot } from "../packages/workspace-kernel/selectorReferenceOptionsService.js";
+import { readSelectorOptionConstraints } from "../server.js";
 import { createSelectorState } from "../packages/modules/cs-selector/selectorState.js";
 import { createSelectorViewModel } from "../packages/modules/cs-selector/selectorViewModel.js";
 import { createSafeRailSelectionSourceBucketRows, renderSelectorView } from "../packages/modules/cs-selector/selectorView.js";
@@ -1537,6 +1538,33 @@ test("Electrical Class exposes all source-backed values and is not poisoned by s
   );
 });
 
+test("live GET options endpoint parser preserves Var1 parent constraints before deriving Var2", () => {
+  const systemOnlyUrl = new URL("http://127.0.0.1/api/selector-reference/options?system=DNX%2080%20DI");
+  const systemOnlyConstraints = readSelectorOptionConstraints(systemOnlyUrl);
+  const systemOnly = deriveSelectorReferenceOptionsFromSnapshot(identityCascadeSnapshot(), {
+    source: sourceReady(),
+    constraints: systemOnlyConstraints,
+  });
+
+  assert.deepEqual(systemOnlyConstraints, { system: "DNX 80 DI" });
+  assert.equal(systemOnly.selectedConstraints.system, "DNX 80 DI");
+  assert.deepEqual(compatibleLabels(workflowField(systemOnly, "directOpticVar1")), ["Inlay · 80"]);
+  assert.equal(workflowField(systemOnly, "directOpticVar2").options.length, 0);
+
+  const var1Url = new URL("http://127.0.0.1/api/selector-reference/options?system=DNX%2080%20DI&directOpticVar1=80%7CInlay");
+  const var1Constraints = readSelectorOptionConstraints(var1Url);
+  const result = deriveSelectorReferenceOptionsFromSnapshot(identityCascadeSnapshot(), {
+    source: sourceReady(),
+    constraints: var1Constraints,
+  });
+
+  assert.deepEqual(var1Constraints, { system: "DNX 80 DI", directOpticVar1: "80|Inlay" });
+  assert.equal(result.selectedConstraints.system, "DNX 80 DI");
+  assert.equal(result.selectedConstraints.directOpticVar1, "80|Inlay");
+  assert.deepEqual(compatibleLabels(workflowField(result, "directOpticVar2")), ["Var1", "Var2"].sort());
+  assert.deepEqual(controlOptionLabels(visibleControlField(selectorViewModelFor(result, var1Constraints), "directOpticVar2")), ["Var1", "Var2"].sort());
+});
+
 test("UI reloads GET options endpoint after manual constraint changes", async () => {
   const source = await readFile(moduleSourceUrl, "utf-8");
 
@@ -1545,7 +1573,7 @@ test("UI reloads GET options endpoint after manual constraint changes", async ()
   assert.match(source, /handleSelectorLocalStateChange/);
   assert.match(source, /loadSelectorReferenceOptions\(\)/);
   assert.match(source, /selectorOptionConstraintQuery/);
-  for (const key of ["system", "tier", "variantKey", "emission", "optic", "opticSub", "opticIndirect", "cctCri", "controlType", "mountStyle", "mountSelection", "finishCover", "egressLight", "egressSound", "specialPartsOptIn"]) {
+  for (const key of ["system", "tier", "variantKey", "emission", "optic", "opticSub", "opticIndirect", "diffuserVar1", "diffuserVar2", "directOpticVar1", "directOpticVar2", "indirectOpticVar1", "indirectOpticVar2", "ipRating", "ikRating", "electricalClass", "cctCri", "controlType", "mountStyle", "mountSelection", "mountParticulars", "powerPenetration", "powerLocation", "flexLength", "wiringType", "bodyFinish", "finishCover", "finishEnd", "finishFlex", "egressLight", "egressSound", "specialPartsOptIn"]) {
     assert.match(source, new RegExp(`"${key}"`));
   }
 });
