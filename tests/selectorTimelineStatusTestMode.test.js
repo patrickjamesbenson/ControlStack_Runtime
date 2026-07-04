@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 
 import { deriveSelectorReferenceOptionsFromSnapshot } from "../packages/workspace-kernel/selectorReferenceOptionsService.js";
 import { createSelectorViewModel } from "../packages/modules/cs-selector/selectorViewModel.js";
+import { renderSelectorView } from "../packages/modules/cs-selector/selectorView.js";
 import { selectorConstraintFingerprintFromQuery } from "../packages/modules/cs-selector/index.js";
 import { readSelectorTimelineOptions } from "../server.js";
 
@@ -81,6 +82,103 @@ function visibleControlLabels(vm, fieldKey) {
   return (field.options || []).map((option) => option.label).sort();
 }
 
+class SelectorTimelineTestElement {
+  constructor(tagName = "div") {
+    this.tagName = String(tagName || "div").toUpperCase();
+    this.children = [];
+    this.parentNode = null;
+    this.dataset = {};
+    this.eventListeners = {};
+    this.className = "";
+    this.textContent = "";
+    this.value = "";
+    this.id = "";
+    this.htmlFor = "";
+    this.type = "";
+    this.checked = false;
+    this.open = false;
+  }
+
+  appendChild(child) {
+    child.parentNode = this;
+    this.children.push(child);
+    return child;
+  }
+
+  removeChild(child) {
+    const index = this.children.indexOf(child);
+    if (index >= 0) this.children.splice(index, 1);
+    child.parentNode = null;
+    return child;
+  }
+
+  get firstChild() {
+    return this.children[0] || null;
+  }
+
+  get options() {
+    return this.children.filter((child) => child.tagName === "OPTION");
+  }
+
+  addEventListener(type, handler) {
+    this.eventListeners[type] = handler;
+  }
+}
+
+function withTimelineTestDocument(callback) {
+  const documentKey = "doc" + "ument";
+  const previousDocument = globalThis[documentKey];
+  globalThis[documentKey] = {
+    createElement(tagName) {
+      return new SelectorTimelineTestElement(tagName);
+    },
+  };
+  try {
+    return callback();
+  } finally {
+    globalThis[documentKey] = previousDocument;
+  }
+}
+
+function elementDescendants(element) {
+  return [element, ...(element.children || []).flatMap(elementDescendants)];
+}
+
+function elementText(element) {
+  return [element.textContent || "", ...(element.children || []).map(elementText)].join(" ").replace(/\s+/g, " ").trim();
+}
+
+function classIncludes(element, className) {
+  return String(element.className || "").split(/\s+/).includes(className);
+}
+
+function hasAncestorWithClass(element, className) {
+  let current = element.parentNode;
+  while (current) {
+    if (classIncludes(current, className)) return true;
+    current = current.parentNode;
+  }
+  return false;
+}
+
+function renderedTimelineContainer(vm) {
+  return withTimelineTestDocument(() => {
+    const container = globalThis["doc" + "ument"].createElement("div");
+    renderSelectorView(container, vm);
+    return container;
+  });
+}
+
+function visibleTimelineTestCard(container) {
+  const card = elementDescendants(container).find((element) => (
+    classIncludes(element, "cs-selector-timeline-status-test")
+    && element.dataset.timelineControlsSurface === "visible-shell"
+  ));
+  assert.ok(card, "expected visible Selector shell timeline test card");
+  assert.equal(hasAncestorWithClass(card, "cs-selector-dev-drawer"), false);
+  return card;
+}
+
 test("external default hides 80 Inlay", () => {
   const result = derive({ system: "DNX 80 DI" });
   assert.equal(result.timelineVisibilityMode, "external-default");
@@ -155,6 +253,56 @@ test("timeline model exposes roadmap checkbox option", () => {
   assert.equal(vm.expanderShell.timelineStatusTest.timelineAsOfDate, "2026-08-15");
   assert.ok(vm.expanderShell.timelineStatusTest.timelineVisibleStatusOptions.includes("roadmap"));
   assert.ok(vm.expanderShell.timelineStatusTest.timelineVisibleStatuses.includes("roadmap"));
+});
+
+test("timeline status controls render in the visible Selector shell card", () => {
+  const vm = model(derive({ system: "DNX 80 DI" }, internalRoadmap), { system: "DNX 80 DI" }, internalRoadmap);
+  const card = visibleTimelineTestCard(renderedTimelineContainer(vm));
+  assert.match(elementText(card), /Internal timeline\/status test mode/);
+
+  const modeInput = elementDescendants(card).find((element) => element.tagName === "INPUT" && element.dataset.timelineControl === "internal-asof-test");
+  const dateInput = elementDescendants(card).find((element) => element.tagName === "INPUT" && element.dataset.timelineControl === "timelineAsOfDate");
+  const statusInputs = elementDescendants(card).filter((element) => element.tagName === "INPUT" && element.dataset.timelineStatus);
+  assert.ok(modeInput, "expected visible internal/as-of checkbox");
+  assert.ok(dateInput, "expected visible as-of date picker");
+  assert.deepEqual(statusInputs.map((element) => element.dataset.timelineStatus).sort(), ["approved", "available", "obsolete", "roadmap", "staged", "unknown"]);
+
+  const clickableLabels = elementDescendants(card).filter((element) => element.tagName === "LABEL");
+  assert.ok(clickableLabels.some((label) => elementText(label).includes("Enable internal/as-of test mode") && elementDescendants(label).includes(modeInput)));
+  for (const status of ["available", "approved", "staged", "roadmap", "obsolete", "unknown"]) {
+    const statusInput = statusInputs.find((element) => element.dataset.timelineStatus === status);
+    assert.ok(clickableLabels.some((label) => elementText(label) === status && elementDescendants(label).includes(statusInput)), `expected clickable label for ${status}`);
+  }
+});
+
+test("visible timeline status card reuses existing state actions", () => {
+  const vm = model(derive({ system: "DNX 80 DI" }, internalRoadmap), { system: "DNX 80 DI" }, internalRoadmap);
+  const actions = [];
+  vm.selectorSurface.timelineStatusTest = {
+    ...vm.selectorSurface.timelineStatusTest,
+    setTimelineTestMode(enabled) { actions.push(["mode", enabled]); },
+    setTimelineAsOfDate(value) { actions.push(["date", value]); },
+    setTimelineVisibleStatus(status, visible) { actions.push(["status", status, visible]); },
+  };
+
+  const card = visibleTimelineTestCard(renderedTimelineContainer(vm));
+  const modeInput = elementDescendants(card).find((element) => element.tagName === "INPUT" && element.dataset.timelineControl === "internal-asof-test");
+  modeInput.checked = true;
+  modeInput.eventListeners.change();
+
+  const dateInput = elementDescendants(card).find((element) => element.tagName === "INPUT" && element.dataset.timelineControl === "timelineAsOfDate");
+  dateInput.value = "2026-09-01";
+  dateInput.eventListeners.change();
+
+  const roadmapInput = elementDescendants(card).find((element) => element.tagName === "INPUT" && element.dataset.timelineStatus === "roadmap");
+  roadmapInput.checked = false;
+  roadmapInput.eventListeners.change();
+
+  assert.deepEqual(actions, [
+    ["mode", true],
+    ["date", "2026-09-01"],
+    ["status", "roadmap", false],
+  ]);
 });
 
 test("timeline query parser keeps selected statuses", () => {

@@ -314,9 +314,22 @@ function appendSelectorFieldContractDiagnostic(parent, shell = {}) {
   }
 }
 
-function appendTimelineStatusTestControls(parent, timelineStatusTest = {}) {
+function appendTimelineStatusCheckboxLabel(parent, input, labelText, className) {
+  const label = document.createElement("label");
+  label.className = className;
+  label.appendChild(input);
+  appendText(label, "span", labelText);
+  parent.appendChild(label);
+  return label;
+}
+
+function appendTimelineStatusTestControls(parent, timelineStatusTest = {}, options = {}) {
+  const controlsSurface = options.controlsSurface || "diagnostic-manual-constraint";
+  const idSuffix = String(controlsSurface || "timeline").replace(/[^a-z0-9_-]+/gi, "-").toLowerCase();
   const section = document.createElement("section");
   section.className = "cs-selector-proof__section cs-selector-timeline-status-test";
+  section.dataset.timelineControlsSurface = controlsSurface;
+  section.dataset.visibleSelectorShell = controlsSurface === "visible-shell" ? "true" : "false";
   appendText(section, "h3", timelineStatusTest.title || "Internal timeline/status test mode");
   appendText(section, "p", timelineStatusTest.description || "Diagnostic GET-only timeline controls for safe cascade testing. Production outputs remain blocked.");
 
@@ -325,19 +338,28 @@ function appendTimelineStatusTestControls(parent, timelineStatusTest = {}) {
   modeInput.dataset.timelineControl = "internal-asof-test";
   modeInput.checked = timelineStatusTest.internalAsOfTestMode === true;
   modeInput.addEventListener("change", () => timelineStatusTest.setTimelineTestMode?.(modeInput.checked === true));
-  section.appendChild(modeInput);
-  appendText(section, "span", " Enable internal/as-of test mode");
+  appendTimelineStatusCheckboxLabel(
+    section,
+    modeInput,
+    "Enable internal/as-of test mode",
+    "cs-selector-timeline-status-test__control cs-selector-timeline-status-test__control--mode",
+  );
 
+  const dateLabel = document.createElement("label");
+  dateLabel.className = "cs-selector-timeline-status-test__control cs-selector-timeline-status-test__control--date";
+  appendText(dateLabel, "span", "Timeline as-of date");
   const dateInput = document.createElement("input");
-  dateInput.id = "cs-selector-timeline-as-of-date";
+  dateInput.id = `cs-selector-timeline-as-of-date-${idSuffix}`;
   dateInput.type = "date";
   dateInput.dataset.timelineControl = "timelineAsOfDate";
   dateInput.value = timelineStatusTest.timelineAsOfDate || "";
   dateInput.addEventListener("change", () => timelineStatusTest.setTimelineAsOfDate?.(dateInput.value));
-  appendText(section, "h4", "Timeline as-of date");
-  section.appendChild(dateInput);
+  dateLabel.appendChild(dateInput);
+  section.appendChild(dateLabel);
 
   appendText(section, "h4", "Visible statuses for internal test");
+  const statusGroup = document.createElement("div");
+  statusGroup.className = "cs-selector-timeline-status-test__statuses";
   const visibleStatuses = new Set(Array.isArray(timelineStatusTest.timelineVisibleStatuses) ? timelineStatusTest.timelineVisibleStatuses : []);
   for (const status of timelineStatusTest.timelineVisibleStatusOptions || []) {
     const checkbox = document.createElement("input");
@@ -345,9 +367,14 @@ function appendTimelineStatusTestControls(parent, timelineStatusTest = {}) {
     checkbox.dataset.timelineStatus = status;
     checkbox.checked = visibleStatuses.has(status);
     checkbox.addEventListener("change", () => timelineStatusTest.setTimelineVisibleStatus?.(status, checkbox.checked === true));
-    section.appendChild(checkbox);
-    appendText(section, "span", ` ${status}`);
+    appendTimelineStatusCheckboxLabel(
+      statusGroup,
+      checkbox,
+      status,
+      "cs-selector-timeline-status-test__control cs-selector-timeline-status-test__status",
+    );
   }
+  section.appendChild(statusGroup);
 
   appendDefinitionList(section, [
     ["mode", timelineStatusTest.timelineVisibilityMode || "external-default"],
@@ -2387,6 +2414,7 @@ function appendSelectorProductSurface(parent, surface = {}) {
   appendText(section, "p", "Read-only preview. No spec, slug, IES, payload, RunTable, Lab Proof, Controlled Record, RREG approval, custody transfer, Board Data write, or hidden write-back is created here.", "cs-selector-product__safety");
   appendText(section, "p", surface.proofCopy || "Selector previews selection readiness. Lab Proof proves later.", "cs-selector-product__safety");
 
+  appendTimelineStatusTestControls(section, surface.timelineStatusTest || {}, { controlsSurface: "visible-shell" });
   appendSelectorDefaultBlockerCopy(section, surface);
   appendSelectorLmTemperatureReadinessCopy(section, surface);
 
