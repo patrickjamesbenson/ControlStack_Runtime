@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
 import { deriveSelectorReferenceOptionsFromSnapshot } from "../packages/workspace-kernel/selectorReferenceOptionsService.js";
+import { createSelectorState } from "../packages/modules/cs-selector/selectorState.js";
 import { createSelectorViewModel } from "../packages/modules/cs-selector/selectorViewModel.js";
 import { createSafeRailSelectionSourceBucketRows, renderSelectorView } from "../packages/modules/cs-selector/selectorView.js";
 import {
@@ -194,6 +195,30 @@ function selectorViewModelFor(result, constraints = {}) {
     },
   };
   return createSelectorViewModel({ adapter, selectorState, selectorReferenceStatus: result, onLocalStateChange: () => {} });
+}
+
+function selectorViewModelForState(result, selectorState, onLocalStateChange = () => {}) {
+  const adapter = {
+    moduleId: "cs_selector",
+    services: {},
+    isFlagEnabled() { return false; },
+    readSnapshots() {
+      return {
+        route: "/selector",
+        diagnostics: {},
+        flags: { owner: "test", values: {} },
+        project: { currentProject: {}, metadata: {}, selection: {} },
+        visibility: { moduleReasons: {}, inputs: {}, visibleModules: [], hiddenModules: [] },
+        handoff: {},
+        identity: { currentUser: {} },
+        authority: {},
+        company: {},
+        crm: {},
+        timelinePolicy: {},
+      };
+    },
+  };
+  return createSelectorViewModel({ adapter, selectorState, selectorReferenceStatus: result, onLocalStateChange });
 }
 
 function viewModelField(result, fieldKey, constraints = {}) {
@@ -1220,6 +1245,77 @@ test("live options loading after System change drops stale previous child fields
   assert.equal(directTile.valueLabel, "Not selected");
   assert.equal(truthItemsForField(surface.selectionTruthSummary, "directOpticVar1", "manual-constraint").length, 0);
   assert.doesNotMatch(compactManualRailText(surface.selectionTruthSummary), /Comfort|IP65|IK10|Surface|Class I/);
+});
+
+test("visible System control paths hard-clear child manual constraints before the next render", () => {
+  for (const pathName of ["selectorSurface", "controlGroup"]) {
+    const selectorState = createSelectorState();
+    selectorState.setDbBackedSelectorFieldValue("system", "DNX 60 Beam DI");
+    selectorState.setDbBackedSelectorFieldValue("directOpticVar1", "60|Comfort");
+    selectorState.setDbBackedSelectorFieldValue("directOpticVar2", "60|Comfort|Low glare");
+    selectorState.setDbBackedSelectorFieldValue("ipRating", "IP-stale-marker");
+    selectorState.setDbBackedSelectorFieldValue("ikRating", "IK-stale-marker");
+    selectorState.setDbBackedSelectorFieldValue("mountStyle", "Surface");
+    selectorState.setDbBackedSelectorFieldValue("mountSelection", "Surface clip");
+
+    const previousPayload = deriveSelectorReferenceOptionsFromSnapshot(identityCascadeSnapshot(), {
+      source: sourceReady(),
+      constraints: {
+        system: "DNX 60 Beam DI",
+        directOpticVar1: "60|Comfort",
+      },
+    });
+    const renderSnapshots = [];
+    const model = selectorViewModelForState(previousPayload, selectorState, () => {
+      renderSnapshots.push(selectorState.getSnapshot().dbBackedSelector.manualConstraints);
+    });
+
+    if (pathName === "selectorSurface") {
+      model.selectorSurface.setFieldValue("system", "DNX 80 DI");
+    } else {
+      const group = model.expanderShell.manualConstraintBehaviour.controlSections
+        .find((section) => section.fields.some((field) => field.fieldKey === "system"));
+      assert.ok(group, "expected visible control group containing System");
+      group.setFieldValue("system", "DNX 80 DI");
+    }
+
+    const constraints = selectorState.getSnapshot().dbBackedSelector.manualConstraints;
+    assert.deepEqual(Object.keys(constraints), ["system"], `${pathName} should leave only System selected`);
+    assert.equal(constraints.system.value, "DNX 80 DI");
+    assert.deepEqual(Object.keys(renderSnapshots.at(-1) || {}), ["system"], `${pathName} render callback should see cleared children`);
+    for (const staleKey of ["directOpticVar1", "directOpticVar2", "ipRating", "ikRating", "mountStyle", "mountSelection"]) {
+      assert.equal(Object.hasOwn(constraints, staleKey), false, `${pathName} should clear ${staleKey}`);
+    }
+  }
+});
+
+test("stale selected option flags from previous System payload do not render as active child truth", () => {
+  const selectorState = createSelectorState();
+  selectorState.setDbBackedSelectorFieldValue("system", "DNX 80 DI");
+  const stalePayload = deriveSelectorReferenceOptionsFromSnapshot(identityCascadeSnapshot(), {
+    source: sourceReady(),
+    constraints: {
+      system: "DNX 60 Beam DI",
+      directOpticVar1: "60|Comfort",
+    },
+  });
+  const model = selectorViewModelForState(stalePayload, selectorState);
+  const surface = model.selectorSurface;
+  const directField = optionalVisibleControlField(model, "directOpticVar1");
+  const renderedContainer = renderedSelectorContainer(model);
+  const directSelects = renderedSelectsForField(renderedContainer, "directOpticVar1");
+  assert.deepEqual(surface.manualConstraints.map((constraint) => constraint.fieldKey), ["system"]);
+  if (directField) {
+    assert.equal(directField.value, "");
+    assert.equal(directField.valueLabel, "Not selected");
+    assert.equal(directField.manualConstraint, false);
+    assert.equal(directField.options.some((item) => item.selected === true), false);
+  }
+  for (const select of directSelects) assert.equal(select.value, "");
+  assert.equal(surface.payloadPreview.optics.direct.opticVar1, null);
+  assert.equal(productSpineRow(surface, "system", "opticDirect").displayValue, "—");
+  assert.equal(truthItemsForField(surface.selectionTruthSummary, "directOpticVar1", "manual-constraint").length, 0);
+  assert.doesNotMatch(compactManualRailText(surface.selectionTruthSummary), /Comfort|60\|Comfort/);
 });
 
 test("live option request fingerprinting rejects stale responses and accepts current fresh fields", () => {

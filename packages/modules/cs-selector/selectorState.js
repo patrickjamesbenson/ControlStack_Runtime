@@ -840,7 +840,7 @@ function cascadeChildrenForField(fieldKey, seen = new Set()) {
   return [...new Set(directChildren.flatMap((child) => [child, ...cascadeChildrenForField(child, seen)]))];
 }
 
-function clearCascadeChildConstraints(manualConstraints = {}, parentFieldKey = "") {
+export function clearDbBackedSelectorCascadeChildren(manualConstraints = {}, parentFieldKey = "") {
   const nextManualConstraints = cloneObjectBucket(manualConstraints);
   const clearedFields = [];
   for (const childKey of cascadeChildrenForField(parentFieldKey)) {
@@ -961,7 +961,7 @@ export function createSelectorState() {
       }
 
       const previousSelection = currentContract.effectiveSelection?.[fieldKey] || null;
-      const cascadeClear = clearCascadeChildConstraints(currentContract.manualConstraints, fieldKey);
+      const cascadeClear = clearDbBackedSelectorCascadeChildren(currentContract.manualConstraints, fieldKey);
       const nextManualConstraints = cascadeClear.nextManualConstraints;
       nextManualConstraints[fieldKey] = {
         ...createSelectionRecord(
@@ -1006,7 +1006,7 @@ export function createSelectorState() {
       const normalisedValue = normaliseManualValue(value);
       if (!normalisedValue) return this.clearDbBackedSelectorFieldValue(fieldKey);
       const next = cloneDbBackedSelectorState(state.dbBackedSelector);
-      const cascadeClear = clearCascadeChildConstraints(next.manualConstraints, fieldKey);
+      const cascadeClear = clearDbBackedSelectorCascadeChildren(next.manualConstraints, fieldKey);
       next.manualConstraints = cascadeClear.nextManualConstraints;
       next.manualConstraints[fieldKey] = {
         fieldKey,

@@ -1314,7 +1314,7 @@ function enrichDbOptionFields(selectorReferenceStatus = {}, local = {}) {
   return dbOptionsFields(selectorReferenceStatus).map((field) => {
     const selectedValue = selectedConstraints[field.fieldKey] || "";
     const options = Array.isArray(field.options) ? field.options.map((option) => {
-      const selected = selectedValue ? (optionValuesMatch(option.value, selectedValue) || (field.fieldKey === "system" && systemOptionMatchesSelection(option, selectedValue))) : option.selected === true;
+      const selected = selectedValue ? (optionValuesMatch(option.value, selectedValue) || (field.fieldKey === "system" && systemOptionMatchesSelection(option, selectedValue))) : false;
       const locallyCompatible = dbOptionLocallyCompatible(field.fieldKey, option, selectedConstraints, selectorReferenceStatus);
       const blocked = option.blocked === true || !locallyCompatible;
       return {
@@ -1703,7 +1703,7 @@ function enrichDbWorkflowSections(selectorReferenceStatus = {}, local = {}) {
         ? deferredOptions.filter((option) => option.parentValue && optionValuesMatch(option.parentValue, parentConstraint))
         : baseOptions;
       const options = optionSource.map((option) => {
-        const selected = selectedValue ? (optionValuesMatch(option.value, selectedValue) || (field.fieldKey === "system" && systemOptionMatchesSelection(option, selectedValue))) : option.selected === true;
+        const selected = selectedValue ? (optionValuesMatch(option.value, selectedValue) || (field.fieldKey === "system" && systemOptionMatchesSelection(option, selectedValue))) : false;
         const localBlock = localWorkflowRelationshipBlock(field.fieldKey, option, cascadeConstraints);
         const blocked = option.blocked === true || localBlock.blocked === true;
         const localPolicyBlocked = Array.isArray(localBlock.blockedBy) && localBlock.blockedBy.some((blocker) => blocker.fieldKey === "CODE_POLICY");
@@ -1724,7 +1724,11 @@ function enrichDbWorkflowSections(selectorReferenceStatus = {}, local = {}) {
       return {
         ...field,
         selectedValue,
-        selectedLabel: selectedValue ? labelFromWorkflowField({ ...field, options }, selectedValue) : field.selectedLabel || "",
+        selectedLabel: selectedValue
+          ? labelFromWorkflowField({ ...field, options }, selectedValue)
+          : presentationIsMetadata(field)
+            ? field.selectedLabel || field.effectiveLabel || ""
+            : "",
         options,
         optionPayloadProvided: optionPayloadProvided || deferredChildOptionsHydrated,
         deferredOptions: deferredOptions.map((option) => ({ ...option, rawRowsExposed: false })),

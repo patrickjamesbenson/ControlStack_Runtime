@@ -137,10 +137,29 @@ let selectorReferenceRequestId = 0;
 let selectorReferenceOptionsRequestId = 0;
 
 function activeSelectorOptionsPayload() {
-  if (selectorReferenceOptionsStatus.status !== "not-requested" || selectorReferenceOptionsStatus.fields?.length) {
-    return selectorReferenceOptionsStatus;
+  const payload = selectorReferenceOptionsStatus.status !== "not-requested" || selectorReferenceOptionsStatus.fields?.length
+    ? selectorReferenceOptionsStatus
+    : selectorReferenceStatus.selectorOptions || selectorReferenceOptionsStatus;
+  const activeSignature = currentSelectorOptionConstraintSignature();
+  const payloadFingerprint = String(payload?.constraintFingerprint || "");
+  if (payloadFingerprint && payloadFingerprint !== activeSignature.constraintFingerprint) {
+    return resolveSelectorReferenceOptionsStatus(
+      payload,
+      {
+        ok: null,
+        status: "loading",
+        endpoint: payload?.endpoint || SELECTOR_REFERENCE_OPTIONS_ENDPOINT,
+        constraintQuery: activeSignature.constraintQuery,
+        constraintFingerprint: activeSignature.constraintFingerprint,
+        fields: [],
+        workflowSections: [],
+        warnings: ["Selector reference options are loading."],
+      },
+      activeSignature.constraintFingerprint,
+      activeSignature.constraintQuery
+    );
   }
-  return selectorReferenceStatus.selectorOptions || selectorReferenceOptionsStatus;
+  return payload;
 }
 
 function selectorViewportElement() {
@@ -210,7 +229,6 @@ function renderCurrentView({ preserveViewport = true } = {}) {
 }
 
 function handleSelectorLocalStateChange() {
-  renderCurrentView();
   loadSelectorReferenceOptions();
 }
 
