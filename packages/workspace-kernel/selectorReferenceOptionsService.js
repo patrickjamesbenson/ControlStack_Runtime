@@ -952,6 +952,28 @@ function rowOptionValues(row, keys) {
   return uniqueStrings(keys.flatMap((key) => splitOptions(fieldValue(row, key))));
 }
 
+const SYSTEM_PAINT_FINISH_COLUMNS = Object.freeze([
+  "system_and_variant_finish",
+  "finish",
+  "finish_name",
+  "paint_colour",
+  "paint_color",
+  "paint_finish",
+  "body_finish",
+  "default_finish",
+]);
+const SYSTEM_FLEX_COLOUR_COLUMNS = Object.freeze(["flex_map", "flex_colour", "flex_color"]);
+const POLICY_PAINT_FINISH_NEEDLES = Object.freeze(["paint", "paint finish", "finish colour", "finish color", "body finish", "default finish"]);
+const ACCESSORY_PAINT_FINISH_NEEDLES = Object.freeze(["paint", "finish"]);
+
+function systemPaintFinishValues(row) {
+  return rowOptionValues(row, SYSTEM_PAINT_FINISH_COLUMNS);
+}
+
+function systemFlexColourValues(row) {
+  return rowOptionValues(row, SYSTEM_FLEX_COLOUR_COLUMNS);
+}
+
 function cctCriValues(row) {
   const c1 = rowText(row, ["c1_cct", "cct", "cct_k"]);
   const c2 = rowText(row, ["c2_cct"]);
@@ -1197,14 +1219,14 @@ function collectOptions(snapshot, timelineContext = createSelectorTimelineContex
         ...surfaceMountPolicyMeta(snapshot, mount),
       });
     }
-    const finishValues = rowOptionValues(row, ["system_and_variant_finish", "finish", "finish_name", "colour", "color"]);
+    const finishValues = systemPaintFinishValues(row);
     finishValues.forEach((finish, finishInheritanceIndex) => {
       const finishMeta = { sourceTables: ["SYSTEM"], systemReferenceKey: tokens.system, systemReferenceKeys: [tokens.system].filter(Boolean), finishInheritanceIndex };
       addOption(bucket, "bodyFinish", finish, finishMeta);
       addOption(bucket, "finishCover", finish, finishMeta);
       addOption(bucket, "finishEnd", finish, finishMeta);
     });
-    rowOptionValues(row, ["flex_map", "flex_colour", "flex_color", "flex"]).forEach((flex, finishInheritanceIndex) => addOption(bucket, "finishFlex", flex, { sourceTables: ["SYSTEM"], systemReferenceKey: tokens.system, systemReferenceKeys: [tokens.system].filter(Boolean), finishInheritanceIndex }));
+    systemFlexColourValues(row).forEach((flex, finishInheritanceIndex) => addOption(bucket, "finishFlex", flex, { sourceTables: ["SYSTEM"], systemReferenceKey: tokens.system, systemReferenceKeys: [tokens.system].filter(Boolean), finishInheritanceIndex }));
   }
 
   const systemOptions = optionsFor(bucket, "system");
@@ -1354,19 +1376,18 @@ function collectOptions(snapshot, timelineContext = createSelectorTimelineContex
   for (const value of policyValues(snapshot, ["mount", "mounting", "suspension", "recessed", "surface"])) {
     addOption(bucket, "mountStyle", value, { sourceTables: ["SYSTEM_POLICY"], ...surfaceMountPolicyMeta(snapshot, value) });
   }
-  for (const value of policyValues(snapshot, ["finish", "colour", "color", "paint"])) {
+  for (const value of policyValues(snapshot, POLICY_PAINT_FINISH_NEEDLES)) {
     addOption(bucket, "bodyFinish", value, { sourceTables: ["SYSTEM_POLICY"] });
     addOption(bucket, "finishCover", value, { sourceTables: ["SYSTEM_POLICY"] });
     addOption(bucket, "finishEnd", value, { sourceTables: ["SYSTEM_POLICY"] });
   }
-  for (const value of policyValues(snapshot, ["flex", "finish", "colour", "color"])) addOption(bucket, "finishFlex", value, { sourceTables: ["SYSTEM_POLICY"] });
   for (const value of policyValues(snapshot, ["electrical", "electrical class", "electrical_class", "class"] )) addOption(bucket, "electricalClass", value, { sourceTables: ["SYSTEM_POLICY"] });
   for (const value of ambientPolicyValues(snapshot)) addOption(bucket, "ambient", value, { sourceTables: ["SYSTEM_POLICY"] });
   for (const value of policyValues(snapshot, ["wiring", "cable", "control cores"] )) addOption(bucket, "wiringType", value, { sourceTables: ["SYSTEM_POLICY"] });
   addOption(bucket, "indirectMatchDirect", "Match direct CCT/CRI and control", { value: "match-direct", sourceTables: ["SYSTEM", "OPTICS"] });
   addOption(bucket, "inheritedFinishStatus", "Cover/end/flex inherit default until changed", { value: "inherits-default-finish", sourceTables: ["SYSTEM", "SYSTEM_POLICY"] });
 
-  for (const value of accessoryLabels(snapshot, ["finish", "colour", "color", "paint"])) addOption(bucket, "bodyFinish", value, { sourceTables: ["ACCESSORIES"] });
+  for (const value of accessoryLabels(snapshot, ACCESSORY_PAINT_FINISH_NEEDLES)) addOption(bucket, "bodyFinish", value, { sourceTables: ["ACCESSORIES"] });
 
   for (const row of liveTableRows(snapshot, "ACCESSORIES", timelineContext)) {
     const label = accessoryIdLabel(row);
@@ -1561,8 +1582,8 @@ function collectRecords(snapshot, bucket, timelineContext = createSelectorTimeli
     const variant = rowText(row, ["system_variant_1", "variant", "family", "profile_family"]);
     const emissions = systemEmissionValues(row);
     const mountStyles = rowOptionValues(row, ["mount_style", "mount_styles"]).filter((mount) => !surfaceMountDiPolicyBlocksSystemMount(snapshot, row, mount));
-    const finishes = rowOptionValues(row, ["system_and_variant_finish", "finish", "finish_name", "colour", "color"]);
-    const flexes = rowOptionValues(row, ["flex_map", "flex_colour", "flex_color", "flex"]);
+    const finishes = systemPaintFinishValues(row);
+    const flexes = systemFlexColourValues(row);
     pushRelationshipRecord(records, ["SYSTEM"], {
       system: systemValue,
       variantKey: variant,
@@ -1573,7 +1594,7 @@ function collectRecords(snapshot, bucket, timelineContext = createSelectorTimeli
       bodyFinish: finishes,
       finishCover: finishes,
       finishEnd: finishes,
-      finishFlex: flexes.length ? flexes : finishes,
+      finishFlex: flexes,
       inheritedFinishStatus: finishes.length || flexes.length ? ["inherits-default-finish"] : [],
     }, "SYSTEM row maps system choices to variants, emission, mounting, and finishes");
   }

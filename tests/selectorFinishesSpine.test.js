@@ -64,6 +64,8 @@ function finishesSnapshot({ includeFlex = true, includePolicy = true, includeAcc
         label: "DNX 80",
         emission: "Direct",
         system_and_variant_finish: "White (Textured);Black (Textured)",
+        colour: "White Flex;Black Flex;Grey Flex",
+        color: "Secondary White Flex;Secondary Black Flex",
         flex_map: includeFlex ? "White Flex;Black Flex" : "",
         approved: "yes",
       },
@@ -79,9 +81,11 @@ function finishesSnapshot({ includeFlex = true, includePolicy = true, includeAcc
     ],
     ACCESSORIES: includeAccessory ? [
       { accessory_type: "finish", display_choice: "Accessory Pearl", approved: "yes" },
+      { accessory_type: "flex_colour", accessory_id: "Accessory Grey Flex", display_choice: "Accessory Grey Flex", approved: "yes" },
     ] : [],
     SYSTEM_POLICY: includePolicy ? [
       { category: "finish colour", item: "Policy Silver", approved: "yes" },
+      { category: "flex colour", item: "Policy Grey Flex", approved: "yes" },
     ] : [],
   };
 }
@@ -155,7 +159,7 @@ test("empty Finishes spine rows render as em dash", () => {
   assert.equal(model.selectorSurface.payloadPreview.finishes.flexColour, null);
 });
 
-test("body finish fills from real SYSTEM, ACCESSORIES, and SYSTEM_POLICY options", () => {
+test("body finish fills from paint options only and excludes secondary flex colours", () => {
   const model = createModel();
   const values = optionValues(model, "bodyFinish");
 
@@ -163,6 +167,38 @@ test("body finish fills from real SYSTEM, ACCESSORIES, and SYSTEM_POLICY options
   assert.ok(values.includes("Black (Textured)"));
   assert.ok(values.includes("Accessory Pearl"));
   assert.ok(values.includes("Policy Silver"));
+  assert.equal(values.includes("White Flex"), false);
+  assert.equal(values.includes("Black Flex"), false);
+  assert.equal(values.includes("Grey Flex"), false);
+  assert.equal(values.includes("Secondary White Flex"), false);
+  assert.equal(values.includes("Secondary Black Flex"), false);
+  assert.equal(values.includes("Accessory Grey Flex"), false);
+  assert.equal(values.includes("Policy Grey Flex"), false);
+});
+
+test("cover, end plate, and flex dropdowns keep donor paint/flex buckets separated", () => {
+  const model = createModel();
+  const coverField = workflowField(model, "finishCover");
+  const coverValues = optionValues(model, "finishCover");
+  const endValues = optionValues(model, "finishEnd");
+  const flexValues = optionValues(model, "finishFlex");
+
+  assert.equal(coverField.futureMapped, false);
+  assert.equal(coverValues.includes("White (Textured)"), true);
+  assert.equal(coverValues.includes("Black (Textured)"), true);
+  assert.equal(endValues.includes("White (Textured)"), true);
+  assert.equal(endValues.includes("Black (Textured)"), true);
+  for (const flexValue of ["White Flex", "Black Flex", "Grey Flex", "Secondary White Flex", "Secondary Black Flex", "Accessory Grey Flex", "Policy Grey Flex"]) {
+    assert.equal(coverValues.includes(flexValue), false, `${flexValue} must not leak into cover paint choices`);
+    assert.equal(endValues.includes(flexValue), false, `${flexValue} must not leak into end plate paint choices`);
+  }
+  assert.equal(flexValues.includes("White Flex"), true);
+  assert.equal(flexValues.includes("Black Flex"), true);
+  for (const paintValue of ["White (Textured)", "Black (Textured)", "Accessory Pearl", "Policy Silver"]) {
+    assert.equal(flexValues.includes(paintValue), false, `${paintValue} must not appear as a raw flex choice`);
+  }
+  assert.equal(flexValues.includes("Accessory Grey Flex"), false);
+  assert.equal(flexValues.includes("Policy Grey Flex"), false);
 });
 
 test("cover, end plate, and flex inherit body finish where source supports inheritance", () => {
