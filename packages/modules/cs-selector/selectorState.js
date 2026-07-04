@@ -780,6 +780,78 @@ function normaliseManualValue(value) {
   return String(value ?? "").trim();
 }
 
+const DB_BACKED_CASCADE_CHILDREN_BY_PARENT = Object.freeze({
+  system: Object.freeze([
+    "variantKey",
+    "emission",
+    "directCapability",
+    "indirectCapability",
+    "optic",
+    "opticSub",
+    "opticIndirect",
+    "diffuserVar1",
+    "diffuserVar2",
+    "directOpticVar1",
+    "directOpticVar2",
+    "indirectOpticVar1",
+    "indirectOpticVar2",
+    "ipRating",
+    "ikRating",
+    "electricalClass",
+    "mountStyle",
+    "mountSelection",
+    "mountParticulars",
+    "powerPenetration",
+    "powerLocation",
+    "flexLength",
+    "wiringType",
+  ]),
+  variantKey: Object.freeze([
+    "optic",
+    "opticSub",
+    "opticIndirect",
+    "diffuserVar1",
+    "diffuserVar2",
+    "directOpticVar1",
+    "directOpticVar2",
+    "indirectOpticVar1",
+    "indirectOpticVar2",
+    "ipRating",
+    "ikRating",
+    "electricalClass",
+    "mountStyle",
+    "mountSelection",
+    "mountParticulars",
+  ]),
+  optic: Object.freeze(["opticSub", "ipRating", "ikRating"]),
+  diffuserVar1: Object.freeze(["diffuserVar2", "ipRating", "ikRating"]),
+  directOpticVar1: Object.freeze(["directOpticVar2", "ipRating", "ikRating"]),
+  indirectOpticVar1: Object.freeze(["indirectOpticVar2"]),
+  mountStyle: Object.freeze(["mountSelection", "mountParticulars"]),
+  mountSelection: Object.freeze(["mountParticulars"]),
+  controlType: Object.freeze(["driver", "wiringType"]),
+});
+
+function cascadeChildrenForField(fieldKey, seen = new Set()) {
+  const key = normaliseManualValue(fieldKey);
+  if (!key || seen.has(key)) return [];
+  seen.add(key);
+  const directChildren = DB_BACKED_CASCADE_CHILDREN_BY_PARENT[key] || [];
+  return [...new Set(directChildren.flatMap((child) => [child, ...cascadeChildrenForField(child, seen)]))];
+}
+
+function clearCascadeChildConstraints(manualConstraints = {}, parentFieldKey = "") {
+  const nextManualConstraints = cloneObjectBucket(manualConstraints);
+  const clearedFields = [];
+  for (const childKey of cascadeChildrenForField(parentFieldKey)) {
+    if (Object.prototype.hasOwnProperty.call(nextManualConstraints, childKey)) {
+      delete nextManualConstraints[childKey];
+      clearedFields.push(childKey);
+    }
+  }
+  return { nextManualConstraints, clearedFields };
+}
+
 function createInitialSelectorStateContract() {
   const sectionFieldContract = cloneSectionFieldContract(DEFAULT_SECTION_FIELD_CONTRACT);
   return recomputeSelectorStateContract({
@@ -889,7 +961,8 @@ export function createSelectorState() {
       }
 
       const previousSelection = currentContract.effectiveSelection?.[fieldKey] || null;
-      const nextManualConstraints = cloneObjectBucket(currentContract.manualConstraints);
+      const cascadeClear = clearCascadeChildConstraints(currentContract.manualConstraints, fieldKey);
+      const nextManualConstraints = cascadeClear.nextManualConstraints;
       nextManualConstraints[fieldKey] = {
         ...createSelectionRecord(
           field,
@@ -933,6 +1006,8 @@ export function createSelectorState() {
       const normalisedValue = normaliseManualValue(value);
       if (!normalisedValue) return this.clearDbBackedSelectorFieldValue(fieldKey);
       const next = cloneDbBackedSelectorState(state.dbBackedSelector);
+      const cascadeClear = clearCascadeChildConstraints(next.manualConstraints, fieldKey);
+      next.manualConstraints = cascadeClear.nextManualConstraints;
       next.manualConstraints[fieldKey] = {
         fieldKey,
         value: normalisedValue,
@@ -942,7 +1017,9 @@ export function createSelectorState() {
         mutable: true,
         writes: false,
       };
-      next.lastAction = `db-backed-manual-constraint:${fieldKey}`;
+      next.lastAction = cascadeClear.clearedFields.length
+        ? "db-backed-manual-constraint:" + fieldKey + ":cascade-cleared:" + cascadeClear.clearedFields.join("|")
+        : "db-backed-manual-constraint:" + fieldKey;
       state.dbBackedSelector = next;
       state.localDirty = true;
       state.lastAction = next.lastAction;
