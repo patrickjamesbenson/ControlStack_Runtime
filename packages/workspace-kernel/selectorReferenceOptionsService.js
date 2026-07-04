@@ -1831,6 +1831,14 @@ const CASCADE_CHILD_FIELDS_BY_PARENT = Object.freeze({
 });
 
 const ENVIRONMENT_IP_IK_FIELD_KEYS = Object.freeze(new Set(["ipRating", "ikRating"]));
+const FINISH_COMPATIBILITY_FIELD_KEYS = Object.freeze(new Set([
+  "bodyFinish",
+  "finishDefault",
+  "finishCover",
+  "finishEnd",
+  "finishFlex",
+  "inheritedFinishStatus",
+]));
 
 function selectedEnvironmentDirectOpticConstraint(constraints = {}) {
   return [
@@ -1850,8 +1858,16 @@ function environmentIpIkScopedConstraints(constraints = {}) {
   return scoped;
 }
 
+function finishScopedConstraints(constraints = {}) {
+  const scoped = {};
+  if (safeString(constraints.system || "")) scoped.system = constraints.system;
+  if (safeString(constraints.__systemReferenceKey || "")) scoped.__systemReferenceKey = constraints.__systemReferenceKey;
+  return scoped;
+}
+
 function cascadeScopedConstraints(fieldKey = "", constraints = {}) {
   if (ENVIRONMENT_IP_IK_FIELD_KEYS.has(fieldKey)) return environmentIpIkScopedConstraints(constraints);
+  if (FINISH_COMPATIBILITY_FIELD_KEYS.has(fieldKey)) return finishScopedConstraints(constraints);
   const childKeys = CASCADE_CHILD_FIELDS_BY_PARENT[fieldKey] || [];
   if (!childKeys.length) return constraints;
   const blockedChildren = new Set(childKeys);

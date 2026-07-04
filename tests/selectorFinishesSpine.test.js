@@ -90,14 +90,52 @@ function finishesSnapshot({ includeFlex = true, includePolicy = true, includeAcc
   };
 }
 
-function selectorReferenceStatus(snapshot = finishesSnapshot()) {
+function liveFinishRegressionSnapshot() {
+  return {
+    SYSTEM: [
+      {
+        system: "DNX 80 DI",
+        label: "DNX 80 DI",
+        emission: "Direct;Indirect",
+        mount_style: "Suspended",
+        system_and_variant_finish: "White (Textured);Black (Textured);Silver Kinetic;Bronze;Graphite",
+        flex_map: "White Flex;Black Flex;Grey Flex",
+        approved: "yes",
+      },
+    ],
+    OPTICS: [
+      {
+        system: "DNX 80 DI",
+        optic_var_1: "Inlay",
+        optic_var_2: "Antiglare",
+        emission_permission: "Direct",
+        ip_option_1: "IP65",
+        ik_option_2: "IK10",
+        approved: "yes",
+      },
+    ],
+    SYSTEM_POLICY: [
+      { category: "electrical class", item: "Non SELV with Earth", approved: "yes" },
+    ],
+    ACCESSORIES: [
+      { accessory_type: "mount", display_choice: "Suspended", mount_style: "Suspended", mount_selections: "Rod", mount_particulars: "2m Drop", approved: "yes" },
+      { accessory_type: "power_penetration", display_choice: "End Plate", approved: "yes" },
+      { accessory_type: "power_location", display_choice: "End", approved: "yes" },
+      { accessory_type: "flex_length", display_choice: "3.0m", approved: "yes" },
+      { accessory_type: "egress_light", accessory_id: "Maintained", display_choice: "Maintained", approved: "yes" },
+      { accessory_type: "sensor", accessory_id: "PIR Sensor", display_choice: "PIR Sensor", approved: "yes" },
+    ],
+  };
+}
+
+function selectorReferenceStatus(snapshot = finishesSnapshot(), constraints = {}) {
   return {
     ok: true,
     status: "loaded",
     readOnly: true,
     diagnosticOnly: true,
     source: sourceReady(),
-    selectorOptions: deriveSelectorReferenceOptionsFromSnapshot(snapshot, { source: sourceReady() }),
+    selectorOptions: deriveSelectorReferenceOptionsFromSnapshot(snapshot, { source: sourceReady(), constraints }),
   };
 }
 
@@ -133,6 +171,20 @@ function workflowField(model, fieldKey) {
     .find((item) => item.fieldKey === fieldKey);
   assert.ok(field, `expected workflow field ${fieldKey}`);
   return field;
+}
+
+function selectorOptionsWorkflowField(result, fieldKey) {
+  const field = result.workflowSections
+    .flatMap((section) => section.fields || [])
+    .find((item) => item.fieldKey === fieldKey);
+  assert.ok(field, `expected selector options workflow field ${fieldKey}`);
+  return field;
+}
+
+function availableSelectorOptionValues(result, fieldKey) {
+  return (selectorOptionsWorkflowField(result, fieldKey).options || [])
+    .filter((item) => item.blocked !== true && item.status !== "blocked")
+    .map((item) => item.value);
 }
 
 function workflowOption(model, fieldKey, value) {
@@ -199,6 +251,48 @@ test("cover, end plate, and flex dropdowns keep donor paint/flex buckets separat
   }
   assert.equal(flexValues.includes("Accessory Grey Flex"), false);
   assert.equal(flexValues.includes("Policy Grey Flex"), false);
+});
+
+test("paint finish choices stay visible under DNX 80 DI live-style constraints", () => {
+  const constraints = {
+    system: "DNX 80 DI",
+    directOpticVar1: "DNX 80 DI|Inlay",
+    directOpticVar2: "DNX 80 DI|Inlay|Antiglare",
+    ipRating: "IP65",
+    ikRating: "IK10",
+    electricalClass: "Non SELV with Earth",
+    mountStyle: "Suspended / Rod / 2m Drop",
+    mountSelection: "Rod",
+    mountParticulars: "2m Drop",
+    powerPenetration: "End Plate",
+    powerLocation: "End",
+    flexLength: "3.0m",
+    egressLight: "Maintained",
+    sensor: "PIR Sensor",
+  };
+  const result = deriveSelectorReferenceOptionsFromSnapshot(liveFinishRegressionSnapshot(), { source: sourceReady(), constraints });
+  const paintValues = ["White (Textured)", "Black (Textured)", "Silver Kinetic", "Bronze", "Graphite"];
+  const flexValues = ["White Flex", "Black Flex", "Grey Flex"];
+
+  for (const fieldKey of ["bodyFinish", "finishCover", "finishEnd"]) {
+    const field = selectorOptionsWorkflowField(result, fieldKey);
+    const availableValues = availableSelectorOptionValues(result, fieldKey);
+    assert.ok(availableValues.length >= paintValues.length, `${fieldKey} should keep visible paint choices`);
+    for (const paintValue of paintValues) assert.equal(availableValues.includes(paintValue), true, `${fieldKey} should include ${paintValue}`);
+    for (const flexValue of flexValues) assert.equal(availableValues.includes(flexValue), false, `${fieldKey} must not include ${flexValue}`);
+    assert.notEqual(field.status, "blocked", `${fieldKey} should not be fully blocked`);
+  }
+
+  const availableFlexValues = availableSelectorOptionValues(result, "finishFlex");
+  for (const flexValue of flexValues) assert.equal(availableFlexValues.includes(flexValue), true, `finishFlex should include ${flexValue}`);
+  for (const paintValue of paintValues) assert.equal(availableFlexValues.includes(paintValue), false, `finishFlex must not include ${paintValue}`);
+
+  const mappedFlex = deriveSelectorReferenceOptionsFromSnapshot(liveFinishRegressionSnapshot(), {
+    source: sourceReady(),
+    constraints: { ...constraints, bodyFinish: "Silver Kinetic" },
+  });
+  const inheritedFlex = selectorOptionsWorkflowField(mappedFlex, "finishFlex").options.find((item) => item.inheritedSelected === true);
+  assert.equal(inheritedFlex?.value, "Grey Flex");
 });
 
 test("cover, end plate, and flex inherit body finish where source supports inheritance", () => {
