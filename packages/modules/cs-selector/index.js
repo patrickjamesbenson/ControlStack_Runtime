@@ -1,5 +1,5 @@
 import { createSelectorContractAdapter } from "./selectorContractAdapter.js";
-import { createSelectorState } from "./selectorState.js";
+import { SELECTOR_TEST_CASE_STORAGE_KEY, createSelectorState, sanitiseSelectorTestCase } from "./selectorState.js";
 import { renderSelectorView } from "./selectorView.js";
 import { createSelectorViewModel } from "./selectorViewModel.js";
 
@@ -225,6 +225,11 @@ function renderCurrentView({ preserveViewport = true } = {}) {
       selectorOptions: activeSelectorOptionsPayload(),
     },
     onLocalStateChange: handleSelectorLocalStateChange,
+    selectorTestCaseActions: {
+      saveCurrentTestCase: saveCurrentSelectorTestCase,
+      recallSavedTestCase: recallSavedSelectorTestCase,
+      clearSavedTestCase: clearSavedSelectorTestCase,
+    },
   });
   renderSelectorView(mountedContainer, viewModel);
   if (viewportState) {
@@ -235,6 +240,60 @@ function renderCurrentView({ preserveViewport = true } = {}) {
 
 function handleSelectorLocalStateChange() {
   loadSelectorReferenceOptions();
+}
+
+function selectorTestCaseStorage() {
+  try {
+    const storage = globalThis.localStorage;
+    if (!storage || typeof storage.getItem !== "function" || typeof storage.setItem !== "function" || typeof storage.removeItem !== "function") return null;
+    return storage;
+  } catch {
+    return null;
+  }
+}
+
+function readStoredSelectorTestCase() {
+  const storage = selectorTestCaseStorage();
+  if (!storage) return null;
+  const raw = storage.getItem(SELECTOR_TEST_CASE_STORAGE_KEY);
+  if (!raw) return null;
+  try {
+    return sanitiseSelectorTestCase(JSON.parse(raw));
+  } catch {
+    return null;
+  }
+}
+
+function syncStoredSelectorTestCaseSummary(status = "saved-test-case-available") {
+  selectorState?.setSavedSelectorTestCaseSummary?.(readStoredSelectorTestCase(), status);
+}
+
+function saveCurrentSelectorTestCase() {
+  if (!selectorState) return;
+  const testCase = selectorState.captureSelectorTestCase?.() || sanitiseSelectorTestCase({});
+  const storage = selectorTestCaseStorage();
+  if (storage) storage.setItem(SELECTOR_TEST_CASE_STORAGE_KEY, JSON.stringify(testCase));
+  selectorState.recordSelectorTestCaseSave?.(testCase);
+  renderCurrentView();
+}
+
+function recallSavedSelectorTestCase() {
+  if (!selectorState) return;
+  const saved = readStoredSelectorTestCase();
+  if (!saved) {
+    selectorState.setSavedSelectorTestCaseSummary?.(null, "no-saved-test-case");
+    renderCurrentView();
+    return;
+  }
+  selectorState.recallSelectorTestCase?.(saved);
+  loadSelectorReferenceOptions();
+}
+
+function clearSavedSelectorTestCase() {
+  const storage = selectorTestCaseStorage();
+  if (storage) storage.removeItem(SELECTOR_TEST_CASE_STORAGE_KEY);
+  selectorState?.clearSavedSelectorTestCaseSummary?.();
+  renderCurrentView();
 }
 
 function applySelectorReferenceStatus(nextStatus) {
@@ -532,6 +591,7 @@ export const csSelectorModule = {
 
     mountedContainer = container;
     selectorState = createSelectorState();
+    syncStoredSelectorTestCaseSummary();
     selectorAdapter = createSelectorContractAdapter({ services, context });
     selectorReferenceStatus = initialSelectorReferenceStatus();
     selectorReferenceOptionsStatus = initialSelectorReferenceOptionsStatus();

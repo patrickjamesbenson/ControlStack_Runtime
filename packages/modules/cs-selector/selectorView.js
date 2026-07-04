@@ -386,6 +386,66 @@ function appendTimelineStatusTestControls(parent, timelineStatusTest = {}, optio
   parent.appendChild(section);
 }
 
+function appendSelectorTestCaseControls(parent, selectorTestCase = {}) {
+  const section = document.createElement("section");
+  section.className = "cs-selector-proof__section cs-selector-test-case";
+  section.dataset.selectorTestCaseControls = "visible-shell";
+  appendText(section, "h3", selectorTestCase.title || "Selector test-case save / recall");
+  appendText(section, "p", "Local Selector test case only — not a production Project save.");
+  appendPillList(section, selectorTestCase.boundaryCopy || [
+    "Browser-local storage only; no RuntimeData mutation, no server persistence, and no POST endpoint.",
+    "Recall rehydrates safe local constraints and reloads source-backed options; compatibility checks still apply.",
+    "Blocked or stale recalled values are preserved for review rather than faked as valid.",
+  ]);
+
+  const actions = document.createElement("div");
+  actions.className = "cs-selector-test-case__actions";
+
+  const saveButton = document.createElement("button");
+  saveButton.type = "button";
+  saveButton.dataset.selectorTestCaseAction = "save";
+  saveButton.textContent = "Save current Selector test case";
+  saveButton.addEventListener("click", () => selectorTestCase.saveCurrentTestCase?.());
+  actions.appendChild(saveButton);
+
+  const recallButton = document.createElement("button");
+  recallButton.type = "button";
+  recallButton.dataset.selectorTestCaseAction = "recall";
+  recallButton.textContent = "Recall saved Selector test case";
+  recallButton.disabled = selectorTestCase.savedTestCasePresent !== true;
+  recallButton.addEventListener("click", () => selectorTestCase.recallSavedTestCase?.());
+  actions.appendChild(recallButton);
+
+  const clearButton = document.createElement("button");
+  clearButton.type = "button";
+  clearButton.dataset.selectorTestCaseAction = "clear";
+  clearButton.textContent = "Clear saved test case";
+  clearButton.disabled = selectorTestCase.savedTestCasePresent !== true;
+  clearButton.addEventListener("click", () => selectorTestCase.clearSavedTestCase?.());
+  actions.appendChild(clearButton);
+
+  section.appendChild(actions);
+  appendSection(section, "Saved test case summary", selectorTestCase.summaryRows || [
+    ["saved test case", "none"],
+    ["scope", "browser-local Selector test state only"],
+    ["production Project save", "false"],
+  ]);
+  appendDefinitionList(section, [
+    ["storage", selectorTestCase.storageKind || "browser-local-storage"],
+    ["saved at", selectorTestCase.savedAt || "none"],
+    ["RuntimeData mutation", forcedFalse(selectorTestCase.runtimeDataMutationEnabled)],
+    ["server persistence", forcedFalse(selectorTestCase.serverPersistenceEnabled)],
+    ["POST endpoints", forcedFalse(selectorTestCase.postEndpointsEnabled)],
+    ["selected-result persistence", forcedFalse(selectorTestCase.selectedResultPersistenceEnabled)],
+    ["Engine readiness", forcedFalse(selectorTestCase.engineReadinessEnabled)],
+    ["RunTable generation", forcedFalse(selectorTestCase.runTableGenerationEnabled)],
+    ["IES generation", forcedFalse(selectorTestCase.iesGenerationEnabled)],
+    ["Project export", forcedFalse(selectorTestCase.projectExportEnabled)],
+    ["HubSpot/write actions", forcedFalse(selectorTestCase.hubSpotWriteEnabled)],
+  ]);
+  parent.appendChild(section);
+}
+
 function appendSpecialPartsUserTestControls(parent, specialPartsUserTest = {}, options = {}) {
   const controlsSurface = options.controlsSurface || "diagnostic-manual-constraint";
   const idSuffix = String(controlsSurface || "special-parts-user-test").replace(/[^a-z0-9_-]+/gi, "-").toLowerCase();
@@ -2481,6 +2541,7 @@ function appendSelectorProductSurface(parent, surface = {}) {
   appendText(section, "p", "Read-only preview. No spec, slug, IES, payload, RunTable, Lab Proof, Controlled Record, RREG approval, custody transfer, Board Data write, or hidden write-back is created here.", "cs-selector-product__safety");
   appendText(section, "p", surface.proofCopy || "Selector previews selection readiness. Lab Proof proves later.", "cs-selector-product__safety");
 
+  appendSelectorTestCaseControls(section, surface.selectorTestCase || {});
   appendTimelineStatusTestControls(section, surface.timelineStatusTest || {}, { controlsSurface: "visible-shell" });
   appendSpecialPartsUserTestControls(section, surface.specialPartsUserTest || {}, { controlsSurface: "visible-shell" });
   appendSelectorDefaultBlockerCopy(section, surface);

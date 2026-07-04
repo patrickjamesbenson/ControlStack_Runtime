@@ -1812,14 +1812,19 @@ function createDbManualConstraints(selectorReferenceStatus = {}, local = {}) {
   return Object.entries(dbConstraintMap(local)).map(([fieldKey, constraint]) => {
     const field = fields.find((item) => item.fieldKey === fieldKey);
     const option = field?.options?.find((item) => optionValuesMatch(item.value, constraint.value));
+    const recalledTestCaseConstraint = /test-case recall/i.test(String(constraint.source || ""));
+    const optionMissing = Boolean(recalledTestCaseConstraint && String(constraint.value || "").trim() && field && Array.isArray(field.options) && !option);
+    const blocked = option?.blocked === true || optionMissing;
     return {
       fieldKey,
       label: field?.label || constraint.label || fieldKey,
       value: constraint.value,
       valueLabel: option?.label || constraint.valueLabel || constraint.value,
-      status: option?.blocked ? "blocked" : "manual constraint",
-      blocked: option?.blocked === true,
-      reason: option?.blockedReason || "manual selection is treated as a durable constraint",
+      status: blocked ? "blocked" : "manual constraint",
+      blocked,
+      reason: option?.blockedReason || (optionMissing
+        ? "Recalled value is unavailable or incompatible under current source-backed options; preserved for review, not faked valid."
+        : "manual selection is treated as a durable constraint"),
       mutable: true,
       writes: false,
     };
@@ -5069,6 +5074,7 @@ function createDbBackedSelectorSurface(selectorReferenceStatus = {}, local = {},
   const donorShapeSelectedTiles = createDonorShapeSelectedTiles({ fields, workflowSections });
   const timelineStatusTest = createTimelineStatusTestControls(local, selectorState, onLocalStateChange, selectorReferenceStatus);
   const specialPartsUserTest = createSpecialPartsUserTestControls(local, selectorState, onLocalStateChange, selectorReferenceStatus, workflowContext.specialPartsEntitlementPreview || {});
+  const selectorTestCase = createSelectorTestCaseControls(local, workflowContext.selectorTestCaseActions || {});
   return {
     title: "CS Selector Preview",
     subtitle: "Read-only DB-backed candidate preview. Manual selections are constraints; auto selections are consequences.",
@@ -5105,6 +5111,7 @@ function createDbBackedSelectorSurface(selectorReferenceStatus = {}, local = {},
     workflowSections,
     timelineStatusTest,
     specialPartsUserTest,
+    selectorTestCase,
     donorFieldParity: payload.donorFieldParity || null,
     specialPartsEntitlementSummary: payload.specialPartsEntitlementSummary || null,
     presentationClassification,
@@ -6068,6 +6075,55 @@ function createSpecialPartsUserTestControls(local = {}, selectorState, onLocalSt
   };
 }
 
+function createSelectorTestCaseControls(local = {}, selectorTestCaseActions = {}) {
+  const state = local.selectorTestCase || {};
+  return {
+    title: state.title || "Selector test-case save / recall",
+    description: "Local Selector test case only — not a production Project save.",
+    storageKey: state.storageKey || "controlstack.cs-selector.local-test-case.v1",
+    storageKind: state.storageKind || "browser-local-storage",
+    status: state.status || "no-saved-test-case",
+    savedTestCasePresent: state.savedTestCasePresent === true,
+    savedAt: state.savedAt || "",
+    summary: state.summary || null,
+    summaryRows: Array.isArray(state.summaryRows) ? state.summaryRows.map((row) => [...row]) : [
+      ["saved test case", "none"],
+      ["scope", "browser-local Selector test state only"],
+      ["production Project save", "false"],
+      ["storage", "localStorage only when available"],
+    ],
+    boundaryCopy: Array.isArray(state.boundaryCopy) ? [...state.boundaryCopy] : [
+      "Local Selector test case only — not a production Project save.",
+      "Browser-local storage only; no RuntimeData mutation, no server persistence, and no POST endpoint.",
+      "Recall rehydrates safe local constraints and reloads source-backed options; compatibility checks still apply.",
+      "Blocked or stale recalled values are preserved for review rather than faked as valid.",
+    ],
+    localStorageOnly: true,
+    productionProjectSave: false,
+    runtimeDataMutationEnabled: false,
+    serverPersistenceEnabled: false,
+    postEndpointsEnabled: false,
+    selectedResultPersistenceEnabled: false,
+    engineReadinessEnabled: false,
+    runTableGenerationEnabled: false,
+    iesGenerationEnabled: false,
+    projectExportEnabled: false,
+    hubSpotWriteEnabled: false,
+    writes: false,
+    generation: false,
+    proof: false,
+    saveCurrentTestCase() {
+      selectorTestCaseActions.saveCurrentTestCase?.();
+    },
+    recallSavedTestCase() {
+      selectorTestCaseActions.recallSavedTestCase?.();
+    },
+    clearSavedTestCase() {
+      selectorTestCaseActions.clearSavedTestCase?.();
+    },
+  };
+}
+
 function createSelectorExpanderShell(local = {}, selectorState, onLocalStateChange, selectorReferenceStatus = {}, selectorSurface = null) {
   const stateContract = selectorStateContractFromLocal(local);
   const defaultPreviewBuckets = createDefaultPreviewBucketDiagnostics(stateContract);
@@ -6101,7 +6157,7 @@ function createSelectorExpanderShell(local = {}, selectorState, onLocalStateChan
   };
 }
 
-export function createSelectorViewModel({ adapter, selectorState, selectorReferenceStatus = {}, onLocalStateChange } = {}) {
+export function createSelectorViewModel({ adapter, selectorState, selectorReferenceStatus = {}, onLocalStateChange, selectorTestCaseActions = {} } = {}) {
   const snapshots = adapter.readSnapshots();
   const local = selectorState.getSnapshot();
   const flags = snapshots.flags.values || {};
@@ -6185,6 +6241,7 @@ export function createSelectorViewModel({ adapter, selectorState, selectorRefere
     timelineFiltering,
     specialPartsEntitlementPreview,
     specialPartsUserTestSummary,
+    selectorTestCaseActions,
   });
 
   return {
@@ -6199,6 +6256,7 @@ export function createSelectorViewModel({ adapter, selectorState, selectorRefere
     selectorWorkflowBlockedSummary: selectorSurface.selectorWorkflowBlockedSummary,
     selectorDownstreamReadinessSummary: selectorSurface.selectorDownstreamReadinessSummary,
     specialPartsUserTest: selectorSurface.specialPartsUserTest,
+    selectorTestCase: selectorSurface.selectorTestCase,
     lmTemperatureReadinessPreview: selectorSurface.lmTemperatureReadinessPreview,
     lmTemperatureReadinessPreviewReady: false,
     expanderShell: createSelectorExpanderShell(local, selectorState, onLocalStateChange, selectorReferenceStatus, selectorSurface),

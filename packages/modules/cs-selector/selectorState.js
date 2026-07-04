@@ -48,6 +48,67 @@ const SELECTOR_TIMELINE_STATUS_OPTIONS = Object.freeze(["available", "approved",
 const DEFAULT_SELECTOR_TIMELINE_VISIBLE_STATUSES = Object.freeze(["available", "approved"]);
 const SPECIAL_PARTS_TEST_PRINCIPAL_OPTIONS = Object.freeze(["Allan Organ", "Unknown / unentitled"]);
 
+export const SELECTOR_TEST_CASE_STORAGE_KEY = "controlstack.cs-selector.local-test-case.v1";
+const SELECTOR_TEST_CASE_VERSION = 1;
+const SELECTOR_TEST_CASE_KIND = "selector-local-test-case";
+
+const SAFE_SELECTOR_TEST_CASE_MANUAL_CONSTRAINT_KEYS = Object.freeze(new Set([
+  "system",
+  "application",
+  "interiorExterior",
+  "cct",
+  "optic",
+  "controlType",
+  "driver",
+  "ipRating",
+  "ikRating",
+  "mountStyle",
+  "bodyFinish",
+  "emergency",
+  "sensor",
+  "specialParts",
+  "tier",
+  "variantKey",
+  "emission",
+  "directCapability",
+  "indirectCapability",
+  "opticSub",
+  "opticIndirect",
+  "diffuserVar1",
+  "diffuserVar2",
+  "directOpticVar1",
+  "directOpticVar2",
+  "indirectOpticVar1",
+  "indirectOpticVar2",
+  "electricalClass",
+  "ambient",
+  "targetLmPerM",
+  "cctCri",
+  "indirectMatchDirect",
+  "targetLmPerMIndirect",
+  "cctCriIndirect",
+  "controlTypeIndirect",
+  "mountSelection",
+  "mountParticulars",
+  "powerPenetration",
+  "powerLocation",
+  "flexLength",
+  "wiringType",
+  "finishDefault",
+  "finishCover",
+  "finishEnd",
+  "finishFlex",
+  "egressLight",
+  "egressSound",
+  "accessories",
+  "specialPartsEntitlement",
+  "specialPartsOptIn",
+  "userEntitlementStatus",
+]));
+
+const SELECTOR_TEST_CASE_FORBIDDEN_FIELD_KEY_PATTERN = /(?:raw|payload|engine|selectedresult|ies|runtable|runtimetable|runtable|runtimeData|credential|secret|token|privatepath|exact|currentma|currentamp|voltage|watt|wattage|powerfactor|circuitwatt|electricalvalue)/i;
+const SELECTOR_TEST_CASE_FORBIDDEN_VALUE_PATTERN = /(?:C:\\|\\ControlStack|\/mnt\/|novondb|raw_rows|rawRows|rawPayload|selectedResult|engineResult|credential|secret|token|apiKey)/i;
+
 function isoTodayDate() {
   return new Date().toISOString().slice(0, 10);
 }
@@ -138,6 +199,227 @@ function cloneSpecialPartsUserTestState(value = {}) {
     productionActionsEnabled: false,
     rawRowsExposed: false,
   };
+}
+
+function safeSelectorTestCaseString(value, { allowDate = false } = {}) {
+  const text = String(value ?? "").trim();
+  if (!text) return "";
+  if (text.length > 240) return "";
+  if (SELECTOR_TEST_CASE_FORBIDDEN_VALUE_PATTERN.test(text)) return "";
+  if (allowDate && /^\d{4}-\d{2}-\d{2}$/.test(text)) return text;
+  return text.replace(/[\u0000-\u001f\u007f]+/g, " ").trim();
+}
+
+function selectorTestCaseFieldIsSafe(fieldKey = "") {
+  const key = String(fieldKey || "").trim();
+  return Boolean(
+    key
+    && SAFE_SELECTOR_TEST_CASE_MANUAL_CONSTRAINT_KEYS.has(key)
+    && !SELECTOR_TEST_CASE_FORBIDDEN_FIELD_KEY_PATTERN.test(key)
+  );
+}
+
+function cloneSafeSelectorTestCaseConstraint(fieldKey = "", constraint = {}) {
+  if (!selectorTestCaseFieldIsSafe(fieldKey)) return null;
+  const value = safeSelectorTestCaseString(constraint?.value ?? constraint);
+  if (!value) return null;
+  const valueLabel = safeSelectorTestCaseString(constraint?.valueLabel || constraint?.label || value) || value;
+  return {
+    fieldKey,
+    value,
+    valueLabel,
+    kind: "manual-constraint",
+    source: "browser-local Selector test-case recall",
+    mutable: true,
+    writes: false,
+  };
+}
+
+function cloneSafeSelectorTestCaseManualConstraints(value = {}) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  return Object.fromEntries(Object.entries(value).map(([fieldKey, constraint]) => {
+    const safe = cloneSafeSelectorTestCaseConstraint(fieldKey, constraint);
+    return safe ? [fieldKey, safe] : null;
+  }).filter(Boolean));
+}
+
+function cloneSafeTimelineStatusTestCaseState(value = {}) {
+  const safe = cloneTimelineStatusTestState(value);
+  return {
+    timelineVisibilityMode: safe.timelineVisibilityMode,
+    timelineAsOfDate: safeSelectorTestCaseString(safe.timelineAsOfDate, { allowDate: true }) || isoTodayDate(),
+    timelineVisibleStatuses: normaliseTimelineStatuses(safe.timelineVisibleStatuses),
+    readOnly: true,
+    diagnosticOnly: true,
+    queryParamsOnly: true,
+    productionActionsEnabled: false,
+  };
+}
+
+function cloneSafeSpecialPartsUserTestCaseState(value = {}) {
+  const safe = cloneSpecialPartsUserTestState(value);
+  return {
+    testPrincipal: safe.testPrincipal,
+    showEntitlementBackedSpecialParts: safe.showEntitlementBackedSpecialParts === true,
+    readOnly: true,
+    diagnosticOnly: true,
+    queryParamsOnly: true,
+    productionActionsEnabled: false,
+  };
+}
+
+function selectorTestCaseSummaryFromPayload(payload = {}) {
+  const manualConstraints = cloneSafeSelectorTestCaseManualConstraints(payload.manualConstraints || payload.dbBackedManualConstraints || payload.dbBackedSelector?.manualConstraints || {});
+  const timelineStatusTest = cloneSafeTimelineStatusTestCaseState(payload.timelineStatusTest || {});
+  const specialPartsUserTest = cloneSafeSpecialPartsUserTestCaseState(payload.specialPartsUserTest || {});
+  const manualKeys = Object.keys(manualConstraints).sort();
+  return {
+    manualConstraintCount: manualKeys.length,
+    manualConstraintKeys: manualKeys,
+    timelineMode: timelineStatusTest.timelineVisibilityMode,
+    timelineAsOfDate: timelineStatusTest.timelineAsOfDate,
+    timelineVisibleStatuses: [...timelineStatusTest.timelineVisibleStatuses],
+    specialPartsTestPrincipal: specialPartsUserTest.testPrincipal || "none",
+    showEntitlementBackedSpecialParts: specialPartsUserTest.showEntitlementBackedSpecialParts === true,
+  };
+}
+
+function createSelectorTestCaseSummaryRows(payload = null) {
+  if (!payload) {
+    return [
+      ["saved test case", "none"],
+      ["scope", "browser-local Selector test state only"],
+      ["production Project save", "false"],
+      ["storage", "localStorage only when available"],
+    ];
+  }
+  const summary = selectorTestCaseSummaryFromPayload(payload);
+  return [
+    ["saved test case", "present"],
+    ["manual constraints", String(summary.manualConstraintCount)],
+    ["constraint fields", summary.manualConstraintKeys.join(", ") || "none"],
+    ["timeline mode", summary.timelineMode],
+    ["timeline as-of date", summary.timelineAsOfDate],
+    ["timeline visible statuses", summary.timelineVisibleStatuses.join(", ") || "available, approved"],
+    ["special-parts test principal", summary.specialPartsTestPrincipal],
+    ["show entitlement-backed special parts", summary.showEntitlementBackedSpecialParts ? "true" : "false"],
+    ["production Project save", "false"],
+    ["RuntimeData mutation", "false"],
+    ["server persistence", "false"],
+    ["POST endpoints", "false"],
+  ];
+}
+
+function createSelectorTestCaseState(value = {}) {
+  const savedTestCase = value.savedTestCase ? sanitiseSelectorTestCase(value.savedTestCase) : null;
+  return {
+    title: "Selector test-case save / recall",
+    storageKey: SELECTOR_TEST_CASE_STORAGE_KEY,
+    storageKind: "browser-local-storage",
+    status: value.status || (savedTestCase ? "saved-test-case-available" : "no-saved-test-case"),
+    savedTestCasePresent: Boolean(savedTestCase),
+    savedAt: savedTestCase?.savedAt || "",
+    summary: savedTestCase ? selectorTestCaseSummaryFromPayload(savedTestCase) : null,
+    summaryRows: createSelectorTestCaseSummaryRows(savedTestCase),
+    boundaryCopy: [
+      "Local Selector test case only — not a production Project save.",
+      "Browser-local storage only; no RuntimeData mutation, no server persistence, and no POST endpoint.",
+      "Recall rehydrates safe local constraints and reloads source-backed options; compatibility checks still apply.",
+      "Blocked or stale recalled values are preserved for review rather than faked as valid.",
+    ],
+    localStorageOnly: true,
+    productionProjectSave: false,
+    runtimeDataMutationEnabled: false,
+    serverPersistenceEnabled: false,
+    postEndpointsEnabled: false,
+    selectedResultPersistenceEnabled: false,
+    engineReadinessEnabled: false,
+    runTableGenerationEnabled: false,
+    iesGenerationEnabled: false,
+    projectExportEnabled: false,
+    hubSpotWriteEnabled: false,
+    writes: false,
+    generation: false,
+    proof: false,
+  };
+}
+
+function cloneSelectorTestCaseState(value = {}) {
+  const fallback = createSelectorTestCaseState();
+  const summary = value.summary && typeof value.summary === "object" && !Array.isArray(value.summary)
+    ? {
+      ...value.summary,
+      manualConstraintKeys: Array.isArray(value.summary.manualConstraintKeys) ? [...value.summary.manualConstraintKeys] : [],
+      timelineVisibleStatuses: Array.isArray(value.summary.timelineVisibleStatuses) ? [...value.summary.timelineVisibleStatuses] : [],
+    }
+    : null;
+  return {
+    ...fallback,
+    ...value,
+    savedTestCasePresent: value.savedTestCasePresent === true,
+    summary,
+    summaryRows: Array.isArray(value.summaryRows) ? value.summaryRows.map((row) => [...row]) : [...fallback.summaryRows],
+    boundaryCopy: Array.isArray(value.boundaryCopy) ? [...value.boundaryCopy] : [...fallback.boundaryCopy],
+    localStorageOnly: true,
+    productionProjectSave: false,
+    runtimeDataMutationEnabled: false,
+    serverPersistenceEnabled: false,
+    postEndpointsEnabled: false,
+    selectedResultPersistenceEnabled: false,
+    engineReadinessEnabled: false,
+    runTableGenerationEnabled: false,
+    iesGenerationEnabled: false,
+    projectExportEnabled: false,
+    hubSpotWriteEnabled: false,
+    writes: false,
+    generation: false,
+    proof: false,
+  };
+}
+
+export function sanitiseSelectorTestCase(value = {}) {
+  const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+  const manualConstraints = cloneSafeSelectorTestCaseManualConstraints(source.manualConstraints || source.dbBackedManualConstraints || source.dbBackedSelector?.manualConstraints || {});
+  const timelineStatusTest = cloneSafeTimelineStatusTestCaseState(source.timelineStatusTest || {});
+  const specialPartsUserTest = cloneSafeSpecialPartsUserTestCaseState(source.specialPartsUserTest || {});
+  const savedAt = safeSelectorTestCaseString(source.savedAt) || new Date().toISOString();
+  const summary = selectorTestCaseSummaryFromPayload({ manualConstraints, timelineStatusTest, specialPartsUserTest });
+  return {
+    kind: SELECTOR_TEST_CASE_KIND,
+    version: SELECTOR_TEST_CASE_VERSION,
+    source: "browser-local Selector test-case state",
+    storageKind: "browser-local-storage",
+    savedAt,
+    manualConstraints,
+    timelineStatusTest,
+    specialPartsUserTest,
+    summary,
+    safety: {
+      localStorageOnly: true,
+      productionProjectSave: false,
+      runtimeDataMutationEnabled: false,
+      serverPersistenceEnabled: false,
+      postEndpointsEnabled: false,
+      selectedResultPersistenceEnabled: false,
+      engineReadinessEnabled: false,
+      runTableGenerationEnabled: false,
+      iesGenerationEnabled: false,
+      projectExportEnabled: false,
+      hubSpotWriteEnabled: false,
+      writes: false,
+      generation: false,
+      proof: false,
+    },
+  };
+}
+
+export function buildSelectorTestCaseFromSnapshot(snapshot = {}) {
+  return sanitiseSelectorTestCase({
+    savedAt: new Date().toISOString(),
+    manualConstraints: snapshot.dbBackedSelector?.manualConstraints || snapshot.selectorStateContract?.manualConstraints || {},
+    timelineStatusTest: snapshot.timelineStatusTest || {},
+    specialPartsUserTest: snapshot.specialPartsUserTest || {},
+  });
 }
 
 const DEFAULT_PREVIEW_DEFAULTS = Object.freeze(Object.fromEntries(
@@ -1017,6 +1299,7 @@ export function createSelectorState() {
     dbBackedSelector: cloneDbBackedSelectorState(),
     timelineStatusTest: createInitialTimelineStatusTestState(),
     specialPartsUserTest: createInitialSpecialPartsUserTestState(),
+    selectorTestCase: createSelectorTestCaseState(),
     runIntake: createInitialSelectorRunIntakeState(),
     runAccessoryPlacement: createInitialSelectorRunAccessoryPlacementState(),
   };
@@ -1029,6 +1312,7 @@ export function createSelectorState() {
       dbBackedSelector: cloneDbBackedSelectorState(state.dbBackedSelector),
       timelineStatusTest: cloneTimelineStatusTestState(state.timelineStatusTest),
       specialPartsUserTest: cloneSpecialPartsUserTestState(state.specialPartsUserTest),
+      selectorTestCase: cloneSelectorTestCaseState(state.selectorTestCase),
       runIntake: cloneSelectorRunIntakeState(state.runIntake),
       runAccessoryPlacement: cloneSelectorRunAccessoryPlacementState(state.runAccessoryPlacement),
     };
@@ -1216,6 +1500,53 @@ export function createSelectorState() {
       state.specialPartsUserTest = cloneSpecialPartsUserTestState(value);
       state.localDirty = true;
       state.lastAction = "special-parts-user-test-state";
+      return this.getSnapshot();
+    },
+
+    captureSelectorTestCase() {
+      return buildSelectorTestCaseFromSnapshot(this.getSnapshot());
+    },
+
+    setSavedSelectorTestCaseSummary(value = null, status = "") {
+      const savedTestCase = value ? sanitiseSelectorTestCase(value) : null;
+      state.selectorTestCase = createSelectorTestCaseState({
+        savedTestCase,
+        status: status || (savedTestCase ? "saved-test-case-available" : "no-saved-test-case"),
+      });
+      state.lastAction = savedTestCase ? "selector-test-case-summary-loaded" : "selector-test-case-summary-cleared";
+      return this.getSnapshot();
+    },
+
+    recordSelectorTestCaseSave(value = null) {
+      const savedTestCase = sanitiseSelectorTestCase(value || buildSelectorTestCaseFromSnapshot(this.getSnapshot()));
+      state.selectorTestCase = createSelectorTestCaseState({
+        savedTestCase,
+        status: "saved-current-selector-test-case",
+      });
+      state.lastAction = "selector-test-case-saved";
+      return this.getSnapshot();
+    },
+
+    recallSelectorTestCase(value = {}) {
+      const savedTestCase = sanitiseSelectorTestCase(value);
+      state.dbBackedSelector = cloneDbBackedSelectorState({
+        manualConstraints: savedTestCase.manualConstraints,
+        lastAction: "db-backed-selector-test-case-recalled",
+      });
+      state.timelineStatusTest = cloneTimelineStatusTestState(savedTestCase.timelineStatusTest);
+      state.specialPartsUserTest = cloneSpecialPartsUserTestState(savedTestCase.specialPartsUserTest);
+      state.selectorTestCase = createSelectorTestCaseState({
+        savedTestCase,
+        status: "recalled-selector-test-case",
+      });
+      state.localDirty = true;
+      state.lastAction = "selector-test-case-recalled";
+      return this.getSnapshot();
+    },
+
+    clearSavedSelectorTestCaseSummary(status = "saved-test-case-cleared") {
+      state.selectorTestCase = createSelectorTestCaseState({ status });
+      state.lastAction = "selector-test-case-cleared";
       return this.getSnapshot();
     },
 
