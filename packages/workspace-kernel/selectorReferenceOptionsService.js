@@ -1011,7 +1011,7 @@ function collectOptions(snapshot) {
   for (const row of tiers) {
     const tier = rowText(row, ["tier", "tier_key", "name", "label", "id"]);
     if (tier) addOption(bucket, "tier", tier, { sourceTables: ["TIERS"] });
-    for (const electrical of rowOptionValues(row, ["electrical", "electrical_options", "elect_class"])) addOption(bucket, "electricalClass", electrical, { sourceTables: ["TIERS"] });
+    for (const electrical of rowOptionValues(row, ["electrical", "electrical_options", "elect_class", "electrical_class", "electrical_class_options", "electrical class", "class_options"])) addOption(bucket, "electricalClass", electrical, { sourceTables: ["TIERS"] });
   }
   for (const value of policyValues(snapshot, ["tier"])) addOption(bucket, "tier", value, { sourceTables: ["SYSTEM_POLICY"] });
 
@@ -1095,8 +1095,14 @@ function collectOptions(snapshot) {
       }
     }
     const opticSystemMeta = system ? { systemReferenceKey: system, systemReferenceKeys: [system] } : {};
-    for (const ip of rowOptionValues(row, ["ip_option_1", "ip_options", "ip", "ip_rating"])) addOption(bucket, "ipRating", ip, { sourceTables: ["OPTICS"], ...opticSystemMeta });
-    for (const ik of rowOptionValues(row, ["ik_option_2", "ik_options", "ik", "ik_rating"])) addOption(bucket, "ikRating", ik, { sourceTables: ["OPTICS"], ...opticSystemMeta });
+    const opticEnvironmentMeta = {
+      ...opticSystemMeta,
+      parentFieldKey: "diffuserVar1",
+      parentValue: opticValue,
+      parentValues: [opticValue].filter(Boolean),
+    };
+    for (const ip of rowOptionValues(row, ["ip_option_1", "ip_options", "ip", "ip_rating"])) addOption(bucket, "ipRating", ip, { sourceTables: ["OPTICS"], ...opticEnvironmentMeta });
+    for (const ik of rowOptionValues(row, ["ik_option_2", "ik_options", "ik", "ik_rating"])) addOption(bucket, "ikRating", ik, { sourceTables: ["OPTICS"], ...opticEnvironmentMeta });
     for (const cct of extractCctValues(row)) addOption(bucket, "cct", cct, { sourceTables: ["OPTICS"], ...opticSystemMeta });
     for (const env of rowOptionValues(row, ["environment", "application", "application_environment"])) addOption(bucket, "application", env, { sourceTables: ["OPTICS"], ...opticSystemMeta });
     for (const io of rowOptionValues(row, ["interior_exterior", "interiorExterior", "indoor_outdoor", "location_type"])) addOption(bucket, "interiorExterior", io, { sourceTables: ["OPTICS"], ...opticSystemMeta });
@@ -1151,7 +1157,7 @@ function collectOptions(snapshot) {
     addOption(bucket, "finishEnd", value, { sourceTables: ["SYSTEM_POLICY"] });
   }
   for (const value of policyValues(snapshot, ["flex", "finish", "colour", "color"])) addOption(bucket, "finishFlex", value, { sourceTables: ["SYSTEM_POLICY"] });
-  for (const value of policyValues(snapshot, ["electrical", "electrical class", "class"] )) addOption(bucket, "electricalClass", value, { sourceTables: ["SYSTEM_POLICY"] });
+  for (const value of policyValues(snapshot, ["electrical", "electrical class", "electrical_class", "class"] )) addOption(bucket, "electricalClass", value, { sourceTables: ["SYSTEM_POLICY"] });
   for (const value of ambientPolicyValues(snapshot)) addOption(bucket, "ambient", value, { sourceTables: ["SYSTEM_POLICY"] });
   for (const value of policyValues(snapshot, ["wiring", "cable", "control cores"] )) addOption(bucket, "wiringType", value, { sourceTables: ["SYSTEM_POLICY"] });
   addOption(bucket, "indirectMatchDirect", "Match direct CCT/CRI and control", { value: "match-direct", sourceTables: ["SYSTEM", "OPTICS"] });
@@ -1178,7 +1184,7 @@ function collectOptions(snapshot) {
     if (accessoryTypeMatches(row, "power_penetration")) addOption(bucket, "powerPenetration", label, { sourceTables: ["ACCESSORIES"] });
     if (accessoryTypeMatches(row, "power_location")) addOption(bucket, "powerLocation", label === "mm" ? "TBD" : label, { sourceTables: ["ACCESSORIES"] });
     if (accessoryTypeMatches(row, "flex_length")) addOption(bucket, "flexLength", label, { sourceTables: ["ACCESSORIES"] });
-    if (accessoryTypeMatches(row, "elect_class")) addOption(bucket, "electricalClass", rowText(row, ["accessory_id", "id", "display_choice", "label"], label), { sourceTables: ["ACCESSORIES"] });
+    if (accessoryTypeMatches(row, "elect_class") || accessoryTypeMatches(row, "electrical_class") || accessoryTypeMatches(row, "electrical class") || accessoryTypeMatches(row, "electrical")) addOption(bucket, "electricalClass", rowText(row, ["accessory_id", "id", "display_choice", "label"], label), { sourceTables: ["ACCESSORIES"] });
     if (accessoryTypeMatches(row, "egress_light")) {
       const option = egressLightAccessoryOption(row);
       if (option) addOption(bucket, "egressLight", option.label, { value: option.value, sourceTables: ["ACCESSORIES"] });
@@ -1268,7 +1274,9 @@ function diffuserVar1Value(row) {
 function diffuserVar2Values(row) {
   const var1 = diffuserVar1Name(row);
   const system = diffuserSystemToken(row);
-  return rowOptionValues(row, ["optic_var_2"]).map((variant) => ({
+  const opticVar2Values = rowOptionValues(row, ["optic_var_2"]);
+  const variants = opticVar2Values.length ? opticVar2Values : rowOptionValues(row, ["spec_code_var2"]);
+  return variants.map((variant) => ({
     label: variant,
     value: [system, var1, variant].filter(Boolean).join("|") || variant,
   }));
@@ -1331,7 +1339,7 @@ function collectRecords(snapshot, bucket) {
 
   for (const row of liveTableRows(snapshot, "TIERS")) {
     const tier = rowText(row, ["tier", "tier_key", "name", "label", "id"]);
-    const electricalClass = rowOptionValues(row, ["electrical", "electrical_options", "elect_class"]);
+    const electricalClass = rowOptionValues(row, ["electrical", "electrical_options", "elect_class", "electrical_class", "electrical_class_options", "electrical class", "class_options"]);
     pushRelationshipRecord(records, ["TIERS"], {
       tier,
       electricalClass,
@@ -1641,10 +1649,35 @@ function recordMatchesConstraints(record, constraints, exceptFieldKey = "") {
   return recordConstraintBlockers(record, constraints, exceptFieldKey).length === 0;
 }
 
+function environmentIpIkStrictRelationshipRequired(fieldKey = "", constraints = {}) {
+  if (!ENVIRONMENT_IP_IK_FIELD_KEYS.has(fieldKey)) return false;
+  const scoped = environmentIpIkScopedConstraints(constraints);
+  return Boolean(scoped.system || scoped.directOpticVar1 || scoped.diffuserVar1 || scoped.optic);
+}
+
+function environmentIpIkStrictRelationshipBlock(fieldKey = "", constraints = {}) {
+  const scoped = environmentIpIkScopedConstraints(constraints);
+  return Object.entries(scoped)
+    .filter(([, value]) => safeString(value))
+    .map(([constraintFieldKey, value]) => ({
+      fieldKey: constraintFieldKey,
+      selectedValue: value,
+      compatibleValues: [`${fieldKey} values mapped by OPTICS rows for the selected System / optic`],
+    }));
+}
+
 function optionCascadeResult(fieldKey, option, records, constraints) {
   const scopedConstraints = cascadeScopedConstraints(fieldKey, constraints);
   const relatedRecords = records.filter((record) => Array.isArray(record.fields?.[fieldKey]) && record.fields[fieldKey].some((value) => valuesMatch(value, option.value)));
   if (!relatedRecords.length) {
+    if (environmentIpIkStrictRelationshipRequired(fieldKey, scopedConstraints)) {
+      return {
+        compatible: false,
+        blockedBy: environmentIpIkStrictRelationshipBlock(fieldKey, scopedConstraints),
+        relationshipStatus: "blocked-unscoped-environment-option",
+        relationshipMissingReason: "IP/IK options must be mapped by the source OPTICS rows for the selected System and selected optic/diffuser.",
+      };
+    }
     return {
       compatible: true,
       blockedBy: [],

@@ -513,10 +513,11 @@ test("full display label DNX 80 DI resolves to size-80 optics and auto-fills the
   assert.equal(indirect.displayMode, "auto-chip");
   assert.equal(indirect.effectiveValue, "80|Rope");
   assert.equal(indirect.compatibleOptionCount, 1);
-  assert.equal(workflowField(result, "directOpticVar2").options.length, 0);
+  assert.deepEqual(compatibleLabels(workflowField(result, "directOpticVar2")), ["Antiglare"]);
   const opalVar2 = viewModelField(result, "directOpticVar2", constraints);
-  assert.equal(opalVar2.displayMode, "hidden-diagnostic");
-  assert.equal(opalVar2.compatibleOptionCount, 0);
+  assert.equal(opalVar2.displayMode, "auto-chip");
+  assert.equal(opalVar2.effectiveValue, "80|Opal|Antiglare");
+  assert.equal(opalVar2.compatibleOptionCount, 1);
   assert.deepEqual(primaryOpticVar1Controls(result, constraints), ["directOpticVar1", "indirectOpticVar1"]);
 
   const noDirectSelection = deriveSelectorReferenceOptionsFromSnapshot(snapshot, {

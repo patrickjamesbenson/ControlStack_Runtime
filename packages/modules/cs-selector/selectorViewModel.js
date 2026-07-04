@@ -1397,10 +1397,56 @@ function driverCompatibleWithSelectedControl(option = {}, selectedControl = "") 
   return compatibleControlTypes.some((compatibleControlType) => optionValuesMatch(compatibleControlType, control));
 }
 
+const ENVIRONMENT_IP_IK_FIELD_KEYS = Object.freeze(new Set(["ipRating", "ikRating"]));
+
+function selectedDirectOpticConstraintValue(selectedConstraints = {}) {
+  return selectedConstraints.directOpticVar1 || selectedConstraints.diffuserVar1 || selectedConstraints.optic || "";
+}
+
+function optionParentValues(option = {}) {
+  return [
+    option.parentValue,
+    ...(Array.isArray(option.parentValues) ? option.parentValues : []),
+  ].map((item) => String(item || "").trim()).filter(Boolean);
+}
+
+function localEnvironmentIpIkRelationshipBlock(fieldKey = "", option = {}, selectedConstraints = {}) {
+  if (!ENVIRONMENT_IP_IK_FIELD_KEYS.has(fieldKey)) return { blocked: false, blockedBy: [], reason: "" };
+  const blockers = [];
+  const selectedSystem = String(selectedConstraints.system || "").trim();
+  const optionSystemKeys = optionSystemReferenceKeys(option);
+  if (selectedSystem && (!optionSystemKeys.length || !optionMatchesSelectedSystemReference(option, selectedConstraints))) {
+    blockers.push({
+      fieldKey: "system",
+      selectedValue: selectedConstraints.system,
+      compatibleValues: optionSystemKeys.length ? optionSystemKeys : ["source OPTICS row system mapping required"],
+    });
+  }
+
+  const selectedOptic = selectedDirectOpticConstraintValue(selectedConstraints);
+  const parentValues = optionParentValues(option);
+  if (selectedOptic && (!parentValues.length || !parentValues.some((parentValue) => optionValuesMatch(parentValue, selectedOptic)))) {
+    blockers.push({
+      fieldKey: "directOpticVar1",
+      selectedValue: selectedOptic,
+      compatibleValues: parentValues.length ? parentValues : ["source OPTICS row optic mapping required"],
+    });
+  }
+
+  return {
+    blocked: blockers.length > 0,
+    blockedBy: blockers,
+    reason: blockers.length
+      ? "IP/IK options are scoped to the selected System plus selected optic/diffuser; unscoped values stay diagnostic-only."
+      : "",
+  };
+}
+
 function localLightControlRelationshipBlock(fieldKey = "", option = {}, selectedConstraints = {}) {
   const blockers = [];
+  const strictEnvironmentBlock = localEnvironmentIpIkRelationshipBlock(fieldKey, option, selectedConstraints);
 
-  if (LIGHT_CONTROL_SYSTEM_SCOPED_FIELDS.has(fieldKey) && !optionMatchesSelectedSystemReference(option, selectedConstraints)) {
+  if (!ENVIRONMENT_IP_IK_FIELD_KEYS.has(fieldKey) && LIGHT_CONTROL_SYSTEM_SCOPED_FIELDS.has(fieldKey) && !optionMatchesSelectedSystemReference(option, selectedConstraints)) {
     blockers.push({
       fieldKey: "system",
       selectedValue: selectedConstraints.system,
@@ -1417,11 +1463,11 @@ function localLightControlRelationshipBlock(fieldKey = "", option = {}, selected
   }
 
   return {
-    blocked: blockers.length > 0,
-    blockedBy: blockers,
-    reason: blockers.length
+    blocked: strictEnvironmentBlock.blocked === true || blockers.length > 0,
+    blockedBy: [...strictEnvironmentBlock.blockedBy, ...blockers],
+    reason: strictEnvironmentBlock.reason || (blockers.length
       ? "Blocked by current Light & Control manual constraints; shown rather than silently hidden."
-      : "",
+      : ""),
   };
 }
 
