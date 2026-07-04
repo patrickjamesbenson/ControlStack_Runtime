@@ -63,9 +63,30 @@ function selectorReferenceStatus() {
       fields: [
         { fieldKey: "system", label: "System", options: [{ value: "source-backed-system", label: "Source backed system" }] },
         { fieldKey: "bodyFinish", label: "Body finish", options: [{ value: "white", label: "White" }] },
+        { fieldKey: "ambient", label: "Ambient temperature", sourceTables: ["SYSTEM_POLICY"], options: [{ value: "25C", label: "25°C ambient", sourceTables: ["SYSTEM_POLICY"] }] },
+        { fieldKey: "targetLmPerM", label: "Direct lm/m", sourceTables: ["BOARDS"], options: [{ value: "1200", label: "1200 lm/m", sourceTables: ["BOARDS"] }] },
+        { fieldKey: "targetLmPerMIndirect", label: "Indirect lm/m", sourceTables: ["BOARDS"], options: [{ value: "800", label: "800 lm/m", sourceTables: ["BOARDS"] }] },
+        { fieldKey: "cctCri", label: "Direct paired CCT/CRI", sourceTables: ["BOARDS"], options: [{ value: "4000K-CRI90", label: "4000K / CRI90", sourceTables: ["BOARDS"] }] },
+        { fieldKey: "cctCriIndirect", label: "Indirect paired CCT/CRI", sourceTables: ["BOARDS"], options: [{ value: "3000K-CRI90", label: "3000K / CRI90", sourceTables: ["BOARDS"] }] },
+        { fieldKey: "controlType", label: "Direct control protocol", sourceTables: ["BOARDS"], options: [{ value: "dali-2", label: "DALI-2", sourceTables: ["BOARDS"] }] },
+        { fieldKey: "controlTypeIndirect", label: "Indirect control protocol", sourceTables: ["BOARDS"], options: [{ value: "dali-2", label: "DALI-2", sourceTables: ["BOARDS"] }] },
+        { fieldKey: "indirectMatchDirect", label: "Indirect match-direct", sourceTables: ["SYSTEM", "OPTICS"], options: [{ value: "match-direct", label: "Match direct", sourceTables: ["SYSTEM", "OPTICS"] }] },
       ],
       workflowSections: [
         { sectionKey: "system", title: "System", fields: [] },
+        {
+          sectionKey: "lightControl",
+          title: "Light & Control",
+          fields: [
+            { fieldKey: "targetLmPerM", label: "Direct lm/m", sourceTables: ["BOARDS"], options: [{ value: "1200", label: "1200 lm/m", sourceTables: ["BOARDS"] }] },
+            { fieldKey: "targetLmPerMIndirect", label: "Indirect lm/m", sourceTables: ["BOARDS"], options: [{ value: "800", label: "800 lm/m", sourceTables: ["BOARDS"] }] },
+            { fieldKey: "cctCri", label: "Direct paired CCT/CRI", sourceTables: ["BOARDS"], options: [{ value: "4000K-CRI90", label: "4000K / CRI90", sourceTables: ["BOARDS"] }] },
+            { fieldKey: "cctCriIndirect", label: "Indirect paired CCT/CRI", sourceTables: ["BOARDS"], options: [{ value: "3000K-CRI90", label: "3000K / CRI90", sourceTables: ["BOARDS"] }] },
+            { fieldKey: "controlType", label: "Direct control protocol", sourceTables: ["BOARDS"], options: [{ value: "dali-2", label: "DALI-2", sourceTables: ["BOARDS"] }] },
+            { fieldKey: "controlTypeIndirect", label: "Indirect control protocol", sourceTables: ["BOARDS"], options: [{ value: "dali-2", label: "DALI-2", sourceTables: ["BOARDS"] }] },
+            { fieldKey: "indirectMatchDirect", label: "Indirect match-direct", sourceTables: ["SYSTEM", "OPTICS"], options: [{ value: "match-direct", label: "Match direct", sourceTables: ["SYSTEM", "OPTICS"] }] },
+          ],
+        },
         { sectionKey: "runs", title: "Runs", fields: [] },
       ],
       manualConstraints: [],
@@ -107,6 +128,19 @@ function createRunReadyState() {
       notes: "safe display note",
     },
   ]);
+  return selectorState;
+}
+
+function createLmTemperatureReadyIntentState() {
+  const selectorState = createRunReadyState();
+  selectorState.setDbBackedSelectorFieldValue("targetLmPerM", "1200", "1200 lm/m");
+  selectorState.setDbBackedSelectorFieldValue("targetLmPerMIndirect", "800", "800 lm/m");
+  selectorState.setDbBackedSelectorFieldValue("cctCri", "4000K-CRI90", "4000K / CRI90");
+  selectorState.setDbBackedSelectorFieldValue("cctCriIndirect", "3000K-CRI90", "3000K / CRI90");
+  selectorState.setDbBackedSelectorFieldValue("controlType", "dali-2", "DALI-2");
+  selectorState.setDbBackedSelectorFieldValue("controlTypeIndirect", "dali-2", "DALI-2");
+  selectorState.setDbBackedSelectorFieldValue("indirectMatchDirect", "match-direct", "Match direct");
+  selectorState.setDbBackedSelectorFieldValue("ambient", "25C", "25°C ambient");
   return selectorState;
 }
 
@@ -152,6 +186,7 @@ test("all safe Selector workflow stages appear with ready, blocked, or review-re
 
   for (const id of [
     "selected-reference-values",
+    "lm-temperature-output-readiness",
     "mount-uplight-compatibility",
     "finish-cascade",
     "timeline-status-gate",
@@ -220,6 +255,49 @@ test("downstream readiness is displayed but production actions remain disabled",
   assert.equal(evidence.rawPayloadsReturned, false);
 });
 
+test("Selector lm/m temperature readiness preview is intent-only and keeps Verify disabled", () => {
+  const model = createModel(createLmTemperatureReadyIntentState());
+  const preview = model.lmTemperatureReadinessPreview;
+  const workflow = model.selectorWorkflowPreview;
+  const stages = stageMap(workflow);
+
+  assert.equal(preview.title, "Lm/m temperature-output readiness — preview only");
+  assert.equal(preview.visibleCopy, "Light output is captured as target intent only. Temperature-adjusted output requires future Engine verification.");
+  assert.equal(preview.targetIntent.direct.valueLabel, "1200 lm/m");
+  assert.equal(preview.targetIntent.direct.intentOnly, true);
+  assert.equal(preview.targetIntent.direct.verifiedOutput, false);
+  assert.equal(preview.targetIntent.indirect.valueLabel, "800 lm/m");
+  assert.equal(preview.targetIntent.indirect.inheritedFromDirect, false);
+  assert.equal(preview.targetIntent.indirect.matchDirectIgnoredForLmPerM, true);
+  assert.equal(preview.targetIntent.verifiedDeliveredLmPerM, false);
+  assert.equal(preview.targetIntent.temperatureAdjustedOutputCalculated, false);
+  assert.equal(preview.cctCriPairing.direct.valueLabel, "4000K / CRI90");
+  assert.equal(preview.cctCriPairing.indirect.valueLabel, "3000K / CRI90");
+  assert.equal(preview.cctCriPairing.paired, true);
+  assert.equal(preview.cctCriPairing.boardBacked, true);
+  assert.equal(preview.cctCriPairing.remainsPairedAndBoardBacked, true);
+  assert.deepEqual(preview.indirectMatchDirectScope.appliesTo, ["cctCriIndirect", "controlTypeIndirect"]);
+  assert.deepEqual(preview.indirectMatchDirectScope.excludedFrom, ["targetLmPerMIndirect"]);
+  assert.equal(preview.indirectMatchDirectScope.lmPerMInherited, false);
+  assert.equal(preview.indirectMatchDirectScope.indirectLmPerMIndependent, true);
+  assert.equal(preview.engineVerification.verifyEnabled, false);
+  assert.equal(preview.engineVerification.verifyOpened, false);
+  assert.equal(preview.engineVerification.donorEngineInvoked, false);
+  assert.equal(preview.safetyFlags.lmPerMAtTempBridgeCalled, false);
+  assert.equal(preview.safetyFlags.donorLmPerMAtTempCalled, false);
+  assert.equal(preview.safetyFlags.exactElectricalValuesReturned, false);
+  assert.equal(preview.safetyFlags.driveCurrentReturned, false);
+  assert.equal(preview.safetyFlags.runtimeDataMutated, false);
+  assert.equal(preview.safetyFlags.runTableGenerated, false);
+  assert.equal(preview.safetyFlags.iesGenerated, false);
+  assert.equal(preview.safetyFlags.selectedResultPersisted, false);
+  assert.equal(preview.safetyFlags.routesAdded, false);
+  assert.equal(preview.safetyFlags.postEndpointsAdded, false);
+  assert.equal(stages.get("lm-temperature-output-readiness").blocked, true);
+  assert.equal(stages.get("lm-temperature-output-readiness").reason, preview.visibleCopy);
+  assert.equal(workflow.lmTemperatureReadinessPreview, preview);
+});
+
 test("workflow preview exposes no raw rows, payloads, USERS, CRM, private data, generation, routes, or POST endpoint flags", () => {
   const workflow = createModel(createRunReadyState()).selectorWorkflowPreview;
   const unsafe = workflow.unsafeOutputsBlocked;
@@ -255,6 +333,7 @@ test("Selector view source keeps workflow diagnostics behind closed developer dr
   const files = [
     "packages/modules/cs-selector/selectorViewModel.js",
     "packages/modules/cs-selector/selectorView.js",
+    "packages/workspace-kernel/selectorLmTemperatureReadinessPreview.js",
   ];
   const combined = files.map((file) => readFileSync(new URL(`../${file}`, import.meta.url), "utf8")).join("\n");
   const view = readFileSync(new URL("../packages/modules/cs-selector/selectorView.js", import.meta.url), "utf8");
@@ -284,10 +363,19 @@ test("Selector view source keeps workflow diagnostics behind closed developer dr
   assert.match(view, /synthetic\/safe preview status is surfaced/);
   assert.match(view, /button\.disabled = true/);
   assert.match(view, /Run Engine disabled/);
+  assert.match(view, /Light output readiness/);
+  assert.match(view, /Light output is captured as target intent only\. Temperature-adjusted output requires future Engine verification\./);
+  assert.match(view, /dataset\.lmTemperatureReadinessPreview = "intent-only"/);
+  assert.match(view, /Lm\/m temperature readiness preview/);
+  assert.match(view, /target lm\/m labelled intent/);
+  assert.match(view, /lm_per_m_at_temp bridge called/);
+  assert.match(view, /indirect lm\/m inherits direct/);
   assert.match(view, /RunTable generation disabled/);
   assert.match(view, /IES generation disabled/);
   assert.match(view, /selected-result persistence disabled/);
   assert.match(view, /HubSpot\/project writes disabled/);
+  assert.equal(/from\s+["']node:(?:crypto|fs|path|os|url)["']/.test(combined), false);
+  assert.equal(/import\s+[^(][^\n]*["']node:(?:crypto|fs|path|os|url)["']/.test(combined), false);
   assert.equal(/fetch\s*\(/.test(combined), false);
   assert.equal(/method\s*:\s*["']POST["']/.test(combined), false);
   assert.equal(/app\.(post|route)\s*\(/.test(combined), false);

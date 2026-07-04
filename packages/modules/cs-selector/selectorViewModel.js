@@ -9,6 +9,7 @@ import { buildRuntimeRunTableDomainOutputScaffoldSummary } from "../../workspace
 import { buildRuntimeControlledDonorEngineVerifyBridgeSummary } from "../../workspace-kernel/engineRunTableControlledDonorEngineVerifyBridge.js";
 import { buildRuntimeSelectedResultHandoffScaffoldSummary } from "../../workspace-kernel/engineRunTableSelectedResultHandoffScaffold.js";
 import { buildRuntimeIesHandoffReadinessScaffoldSummary } from "../../workspace-kernel/engineRunTableIesHandoffReadinessScaffold.js";
+import { buildSelectorLmTemperatureReadinessPreview } from "../../workspace-kernel/selectorLmTemperatureReadinessPreview.js";
 
 const SELECTOR_WORKFLOW_POLICY_FINGERPRINT = "safe-policy:selector-workflow-preview";
 const SELECTOR_WORKFLOW_SOURCE_FINGERPRINT = "safe-source:selector-workflow-preview";
@@ -4545,6 +4546,7 @@ function createSelectorWorkflowPreview({
   runIntakePreview = {},
   runAccessoryPlacementPreview = {},
   specialPartsEntitlementPreview = {},
+  lmTemperatureReadinessPreview = {},
 } = {}) {
   const fingerprints = {
     policyFingerprint: SELECTOR_WORKFLOW_POLICY_FINGERPRINT,
@@ -4650,6 +4652,20 @@ function createSelectorWorkflowPreview({
         workflowSectionCount: selectorReferenceOptionsSummary.workflowSectionCount,
       },
       rows: [["selected values", safeSelectedValuesSummary.selectedValueCount], ["reference options ready", boolString(selectorReferenceOptionsSummary.referenceOptionsReady)]],
+    }),
+    selectorWorkflowStage({
+      id: "lm-temperature-output-readiness",
+      label: "Lm/m temperature-output readiness",
+      ready: false,
+      blocked: true,
+      blocker: lmTemperatureReadinessPreview.blocker || "temperature-adjusted-output-requires-future-engine-verification",
+      reason: lmTemperatureReadinessPreview.visibleCopy || "Light output is captured as target intent only. Temperature-adjusted output requires future Engine verification.",
+      safeCounts: {
+        directTargetIntentCount: lmTemperatureReadinessPreview.targetIntent?.direct?.ready === true ? 1 : 0,
+        indirectTargetIntentCount: lmTemperatureReadinessPreview.targetIntent?.indirect?.ready === true ? 1 : 0,
+        verifiedOutputCount: 0,
+      },
+      rows: lmTemperatureReadinessPreview.summaryRows,
     }),
     selectorWorkflowStage({
       id: "mount-uplight-compatibility",
@@ -4794,6 +4810,8 @@ function createSelectorWorkflowPreview({
     runIntakePreviewSummary: runIntakePreview,
     runAccessoryPlacementPreviewSummary: runAccessoryPlacementPreview,
     specialPartsEntitlementPreviewSummary: specialPartsEntitlementPreview,
+    lmTemperatureReadinessPreview,
+    lmTemperatureReadinessPreviewReady: false,
     safeDraftProjectEnvelopePreviewSummary,
     safeHydrateValidationPreviewSummary,
     stageSummaries,
@@ -4803,7 +4821,7 @@ function createSelectorWorkflowPreview({
     downstreamReadinessSummary,
     selectorDownstreamReadinessSummary: downstreamReadinessSummary,
     disabledProductionActions,
-    markers: ["preview-only", "diagnostic-only", "safe summaries only", "controlled donor bridge blocked", "production actions disabled"],
+    markers: ["preview-only", "diagnostic-only", "safe summaries only", "output intent only", "controlled donor bridge blocked", "production actions disabled"],
     unsafeOutputsBlocked: {
       rawRowsPayloadsPrivateDataExposed: false,
       rawProductRowsReturned: false,
@@ -4816,6 +4834,11 @@ function createSelectorWorkflowPreview({
       privatePathsReturned: false,
       credentialsReturned: false,
       exactElectricalValuesReturned: false,
+      driveCurrentReturned: false,
+      lmPerMAtTempBridgeCalled: false,
+      donorLmPerMAtTempCalled: false,
+      temperatureAdjustedOutputCalculated: false,
+      deliveredLmPerMVerified: false,
       exactPlacementCoordinatesReturned: false,
       realDonorPayloadAssembled: false,
       rawIesContentReturned: false,
@@ -4890,6 +4913,12 @@ function createDbBackedSelectorSurface(selectorReferenceStatus = {}, local = {},
     payload,
     candidateSummary: summary,
   });
+  const lmTemperatureReadinessPreview = buildSelectorLmTemperatureReadinessPreview({
+    fields,
+    workflowSections,
+    selectionTruthSummary,
+    sourceReady,
+  });
   const productSpine = createProductSpine({
     fields,
     workflowSections,
@@ -4943,6 +4972,7 @@ function createDbBackedSelectorSurface(selectorReferenceStatus = {}, local = {},
     selectedEngineResultHandoff,
     timelineFiltering: workflowContext.timelineFiltering || {},
     specialPartsEntitlementPreview: workflowContext.specialPartsEntitlementPreview || {},
+    lmTemperatureReadinessPreview,
     runIntakePreview,
     runAccessoryPlacementPreview,
   });
@@ -5032,6 +5062,9 @@ function createDbBackedSelectorSurface(selectorReferenceStatus = {}, local = {},
     runsWithAccessoryIntentCount: runAccessoryPlacementPreview.runsWithAccessoryIntentCount,
     unresolvedAccessoryIntentCount: runAccessoryPlacementPreview.unresolvedAccessoryIntentCount,
     safeRunAccessoryIntentSummaries: runAccessoryPlacementPreview.safeRunAccessoryIntentSummaries,
+    lmTemperatureReadinessPreview,
+    lmTemperatureReadinessPreviewReady: false,
+    lightOutputIntentCopy: lmTemperatureReadinessPreview.visibleCopy,
     selectorWorkflowPreview,
     selectorWorkflowPreviewReady: selectorWorkflowPreview.selectorWorkflowPreviewReady,
     selectorWorkflowStageSummaries: selectorWorkflowPreview.stageSummaries,
@@ -6000,6 +6033,8 @@ export function createSelectorViewModel({ adapter, selectorState, selectorRefere
     selectorWorkflowStageSummaries: selectorSurface.selectorWorkflowStageSummaries,
     selectorWorkflowBlockedSummary: selectorSurface.selectorWorkflowBlockedSummary,
     selectorDownstreamReadinessSummary: selectorSurface.selectorDownstreamReadinessSummary,
+    lmTemperatureReadinessPreview: selectorSurface.lmTemperatureReadinessPreview,
+    lmTemperatureReadinessPreviewReady: false,
     expanderShell: createSelectorExpanderShell(local, selectorState, onLocalStateChange, selectorReferenceStatus, selectorSurface),
     identity: {
       owner: identity.owner,

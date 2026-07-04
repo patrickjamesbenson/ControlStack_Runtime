@@ -1994,6 +1994,19 @@ function appendSelectorWorkflowPreview(parent, workflow = {}) {
   appendTruthMetric(summary, "downstream blocked", blocked.downstreamBlockedStageCount ?? 0);
   section.appendChild(summary);
 
+  const lmTemp = workflow.lmTemperatureReadinessPreview || {};
+  appendSection(section, "Lm/m temperature readiness preview", [
+    ["copy", lmTemp.visibleCopy || "Light output is captured as target intent only. Temperature-adjusted output requires future Engine verification."],
+    ["target lm/m labelled intent", lmTemp.targetIntentOnly === true ? "true" : "false"],
+    ["verified delivered lm/m", lmTemp.targetIntent?.verifiedDeliveredLmPerM === true ? "true" : "false"],
+    ["temperature-adjusted output calculated", lmTemp.safetyFlags?.temperatureAdjustedOutputCalculated === true ? "true" : "false"],
+    ["CCT/CRI paired and board-backed", lmTemp.cctCriPairing?.remainsPairedAndBoardBacked === true ? "true" : "false"],
+    ["indirect match-direct applies to", (lmTemp.indirectMatchDirectScope?.appliesTo || []).join(", ") || "none"],
+    ["indirect lm/m inherits direct", lmTemp.indirectMatchDirectScope?.lmPerMInherited === true ? "true" : "false"],
+    ["lm_per_m_at_temp bridge called", lmTemp.safetyFlags?.lmPerMAtTempBridgeCalled === true ? "true" : "false"],
+    ["Verify enabled", lmTemp.engineVerification?.verifyEnabled === true ? "true" : "false"],
+  ]);
+
   appendWorkflowStageCardGrid(
     section,
     "Selector workflow stages",
@@ -2294,6 +2307,25 @@ function appendSelectorDefaultBlockerCopy(parent, surface = {}) {
   parent.appendChild(status);
 }
 
+function appendSelectorLmTemperatureReadinessCopy(parent, surface = {}) {
+  const preview = surface.lmTemperatureReadinessPreview || {};
+  const status = document.createElement("section");
+  status.className = "cs-selector-product__plain-readiness cs-selector-product__plain-readiness--lm-temp";
+  status.dataset.lmTemperatureReadinessPreview = "intent-only";
+  status.dataset.verifyEnabled = preview.engineVerification?.verifyEnabled === true ? "true" : "false";
+  status.dataset.verifiedDeliveredLmPerM = preview.targetIntent?.verifiedDeliveredLmPerM === true ? "true" : "false";
+  appendText(status, "h4", "Light output readiness");
+  appendText(status, "p", preview.visibleCopy || "Light output is captured as target intent only. Temperature-adjusted output requires future Engine verification.");
+  appendBadgeList(status, ["target intent only", "not verified output", "Verify disabled"]);
+  appendDefinitionList(status, [
+    ["Direct target", preview.targetIntent?.direct?.valueLabel || "not selected"],
+    ["Indirect target", preview.targetIntent?.indirect?.valueLabel || "not selected"],
+    ["CCT/CRI", preview.cctCriPairing?.direct?.valueLabel || "not selected"],
+    ["Control", preview.controlIntent?.direct?.valueLabel || "not selected"],
+  ]);
+  parent.appendChild(status);
+}
+
 function appendSelectorProductSurface(parent, surface = {}) {
   const section = document.createElement("section");
   section.className = "cs-selector-product";
@@ -2310,6 +2342,7 @@ function appendSelectorProductSurface(parent, surface = {}) {
   appendText(section, "p", surface.proofCopy || "Selector previews selection readiness. Lab Proof proves later.", "cs-selector-product__safety");
 
   appendSelectorDefaultBlockerCopy(section, surface);
+  appendSelectorLmTemperatureReadinessCopy(section, surface);
 
   const layout = document.createElement("div");
   layout.className = "cs-selector-product__layout";
