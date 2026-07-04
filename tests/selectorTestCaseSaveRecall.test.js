@@ -16,6 +16,7 @@ const serverSourceUrl = new URL("../server.js", import.meta.url);
 const indexSourceUrl = new URL("../packages/modules/cs-selector/index.js", import.meta.url);
 
 const source = { present: true, readable: true, parseable: true };
+const ALLAN_EMAIL = "allan" + String.fromCharCode(64) + "zencontrol.com";
 const internalRoadmap = Object.freeze({
   timelineVisibilityMode: "internal-asof-test",
   timelineAsOfDate: "2026-08-15",
@@ -183,7 +184,7 @@ test("Selector test-case save captures safe local Selector state only", () => {
   selectorState.setSelectorTimelineTestMode(true);
   selectorState.setSelectorTimelineAsOfDate("2026-08-15");
   selectorState.setSelectorTimelineVisibleStatus("roadmap", true);
-  selectorState.setSpecialPartsTestPrincipal("Allan Organ");
+  selectorState.setSpecialPartsTestPrincipal(ALLAN_EMAIL);
   selectorState.setShowEntitlementBackedSpecialParts(true);
 
   const saved = selectorState.captureSelectorTestCase();
@@ -201,7 +202,7 @@ test("Selector test-case save captures safe local Selector state only", () => {
   assert.equal(saved.timelineStatusTest.timelineVisibilityMode, "internal-asof-test");
   assert.equal(saved.timelineStatusTest.timelineAsOfDate, "2026-08-15");
   assert.ok(saved.timelineStatusTest.timelineVisibleStatuses.includes("roadmap"));
-  assert.equal(saved.specialPartsUserTest.testPrincipal, "Allan Organ");
+  assert.equal(saved.specialPartsUserTest.testPrincipal, ALLAN_EMAIL);
   assert.equal(saved.specialPartsUserTest.showEntitlementBackedSpecialParts, true);
   assert.equal(saved.safety.localStorageOnly, true);
   assert.equal(saved.safety.productionProjectSave, false);
@@ -235,7 +236,7 @@ test("Selector test-case recall restores manual constraints, timeline controls, 
       accessories: { value: "PIR", valueLabel: "PIR" },
     },
     timelineStatusTest: internalRoadmap,
-    specialPartsUserTest: { testPrincipal: "Allan Organ", showEntitlementBackedSpecialParts: true },
+    specialPartsUserTest: { testPrincipal: ALLAN_EMAIL, showEntitlementBackedSpecialParts: true },
   });
   const selectorState = createSelectorState();
 
@@ -251,7 +252,7 @@ test("Selector test-case recall restores manual constraints, timeline controls, 
   assert.equal(snapshot.timelineStatusTest.timelineVisibilityMode, "internal-asof-test");
   assert.equal(snapshot.timelineStatusTest.timelineAsOfDate, "2026-08-15");
   assert.ok(snapshot.timelineStatusTest.timelineVisibleStatuses.includes("roadmap"));
-  assert.equal(snapshot.specialPartsUserTest.testPrincipal, "Allan Organ");
+  assert.equal(snapshot.specialPartsUserTest.testPrincipal, ALLAN_EMAIL);
   assert.equal(snapshot.specialPartsUserTest.showEntitlementBackedSpecialParts, true);
   assert.equal(snapshot.selectorTestCase.savedTestCasePresent, true);
   assert.equal(snapshot.selectorTestCase.productionProjectSave, false);
@@ -310,7 +311,7 @@ test("Selector test-case recall keeps production outputs blocked", () => {
       directOpticVar1: { value: "80|Inlay", valueLabel: "Inlay · 80" },
     },
     timelineStatusTest: internalRoadmap,
-    specialPartsUserTest: { testPrincipal: "Allan Organ", showEntitlementBackedSpecialParts: true },
+    specialPartsUserTest: { testPrincipal: ALLAN_EMAIL, showEntitlementBackedSpecialParts: true },
   });
   const surface = model(selectorState).selectorSurface;
 

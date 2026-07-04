@@ -468,10 +468,17 @@ function appendSpecialPartsUserTestControls(parent, specialPartsUserTest = {}, o
   principalSelect.appendChild(blankOption);
   const activePrincipal = String(specialPartsUserTest.activeTestPrincipal || "").trim();
   for (const principal of specialPartsUserTest.testPrincipalOptions || []) {
+    const optionValue = principal && typeof principal === "object" && !Array.isArray(principal)
+      ? String(principal.value || "").trim()
+      : String(principal || "").trim();
+    const optionLabel = principal && typeof principal === "object" && !Array.isArray(principal)
+      ? String(principal.label || optionValue).trim()
+      : optionValue;
+    if (!optionValue) continue;
     const option = document.createElement("option");
-    option.value = principal;
-    option.textContent = principal;
-    option.selected = principal === activePrincipal;
+    option.value = optionValue;
+    option.textContent = optionLabel || optionValue;
+    option.selected = optionValue === activePrincipal;
     principalSelect.appendChild(option);
   }
   principalSelect.value = activePrincipal;
@@ -491,10 +498,14 @@ function appendSpecialPartsUserTestControls(parent, specialPartsUserTest = {}, o
     "cs-selector-special-parts-user-test__control cs-selector-special-parts-user-test__control--toggle",
   );
 
+  const safeIdentity = specialPartsUserTest.safeIdentitySummary || {};
   appendDefinitionList(section, [
-    ["active test principal", activePrincipal || "none"],
-    ["entitlement found", yesNo(specialPartsUserTest.entitlementFound)],
-    ["special parts visible", yesNo(specialPartsUserTest.specialPartsVisible)],
+    ["active test principal", specialPartsUserTest.activeTestPrincipalLabel || activePrincipal || "none"],
+    ["first name", safeIdentity.firstName || "none"],
+    ["last name", safeIdentity.lastName || "none"],
+    ["company", safeIdentity.company || "none"],
+    ["entitlement found", yesNo(safeIdentity.entitlementFound === true || specialPartsUserTest.entitlementFound === true)],
+    ["special parts visible", yesNo(safeIdentity.specialPartsVisible === true || specialPartsUserTest.specialPartsVisible === true)],
     ["redacted entitlement count", specialPartsUserTest.redactedEntitlementCount ?? 0],
     ["production outputs", specialPartsUserTest.productionActionsEnabled === true ? "enabled" : "blocked"],
     ["raw user rows exposed", forcedFalse(specialPartsUserTest.rawUsersExposed)],

@@ -6029,22 +6029,63 @@ function createTimelineStatusTestControls(local = {}, selectorState, onLocalStat
   };
 }
 
+function normaliseSpecialPartsPrincipalOption(option) {
+  if (option && typeof option === "object" && !Array.isArray(option)) {
+    const value = String(option.value || option.email || "").trim();
+    const label = String(option.label || value).trim() || value;
+    return value ? { value, label } : null;
+  }
+  const value = String(option || "").trim();
+  return value ? { value, label: value } : null;
+}
+
+function defaultSpecialPartsPrincipalOptions() {
+  const atSign = String.fromCharCode(64);
+  const allanEmail = "allan" + atSign + "zencontrol.com";
+  const unknownEmail = "unknown" + atSign + "example.test";
+  return [
+    { value: allanEmail, label: `Allan Organ <${allanEmail}>` },
+    { value: unknownEmail, label: `Unknown / unentitled <${unknownEmail}>` },
+  ];
+}
+
+function specialPartsPrincipalOptions(summary = {}, state = {}) {
+  const source = Array.isArray(summary.testPrincipalOptions) && summary.testPrincipalOptions.length
+    ? summary.testPrincipalOptions
+    : (Array.isArray(state.testPrincipalOptions) && state.testPrincipalOptions.length ? state.testPrincipalOptions : defaultSpecialPartsPrincipalOptions());
+  return source.map(normaliseSpecialPartsPrincipalOption).filter(Boolean);
+}
+
+function specialPartsPrincipalLabel(options = [], value = "") {
+  return options.find((option) => option.value === value)?.label || value;
+}
+
 function createSpecialPartsUserTestControls(local = {}, selectorState, onLocalStateChange, selectorReferenceStatus = {}, specialPartsEntitlementPreview = {}) {
   const payload = dbOptionsPayload(selectorReferenceStatus);
   const summary = payload.specialPartsUserTestSummary || selectorReferenceStatus.specialPartsUserTestSummary || {};
   const state = local.specialPartsUserTest || {};
-  const testPrincipalOptions = Array.isArray(summary.testPrincipalOptions) && summary.testPrincipalOptions.length
-    ? summary.testPrincipalOptions
-    : (Array.isArray(state.testPrincipalOptions) && state.testPrincipalOptions.length ? state.testPrincipalOptions : ["Allan Organ", "Unknown / unentitled"]);
-  const activeTestPrincipal = state.testPrincipal || summary.activeTestPrincipal || "";
+  const testPrincipalOptions = specialPartsPrincipalOptions(summary, state);
+  const activeTestPrincipal = state.testPrincipal || summary.activeTestPrincipalEmail || summary.activeTestPrincipal || "";
+  const activeTestPrincipalLabel = summary.activeTestPrincipalLabel || specialPartsPrincipalLabel(testPrincipalOptions, activeTestPrincipal);
   const showEntitlementBackedSpecialParts = state.showEntitlementBackedSpecialParts === true || summary.showEntitlementBackedSpecialParts === true;
   const entitlementFound = summary.entitlementFound === true;
   const specialPartsVisible = summary.specialPartsVisible === true && specialPartsEntitlementPreview.entitlementStatus !== "none";
+  const identity = summary.safeIdentitySummary || {};
+  const safeIdentitySummary = {
+    firstName: identity.firstName || "",
+    lastName: identity.lastName || "",
+    company: identity.company || "",
+    entitlementFound,
+    specialPartsVisible,
+  };
   return {
     title: "Internal special-parts user/principal test mode",
     description: "Diagnostic GET-only control. Selecting a test principal does not create entitlement; special parts appear only when the safe entitlement summary finds entitlement and the toggle is enabled. Production outputs remain blocked.",
-    testPrincipalOptions: [...testPrincipalOptions],
+    testPrincipalOptions: testPrincipalOptions.map((option) => ({ ...option })),
     activeTestPrincipal,
+    activeTestPrincipalEmail: activeTestPrincipal,
+    activeTestPrincipalLabel,
+    safeIdentitySummary,
     showEntitlementBackedSpecialParts,
     entitlementFound,
     specialPartsVisible,

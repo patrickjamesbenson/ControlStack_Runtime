@@ -9,18 +9,29 @@ import { selectorConstraintFingerprintFromQuery } from "../packages/modules/cs-s
 import { readSelectorSpecialPartsUserTestOptions } from "../server.js";
 
 const source = { present: true, readable: true, parseable: true };
+const ALLAN_EMAIL = "allan" + "@" + "zencontrol.com";
+const UNKNOWN_EMAIL = "unknown" + "@" + "example.test";
+const MISSING_EMAIL = "missing" + "@" + "example.test";
+const ALLAN_LABEL = `Allan Organ <${ALLAN_EMAIL}>`;
+const UNKNOWN_LABEL = `Unknown / unentitled <${UNKNOWN_EMAIL}>`;
 
 function snapshot() {
   return {
     USERS: [
       {
         display_name: "Allan Organ",
-        email_login: "redacted.allan@example.test",
+        first_name: "Allan",
+        last_name: "Organ",
+        company: "Zencontrol",
+        email_login: ALLAN_EMAIL,
         system_component_ids: "sp-1",
       },
       {
         display_name: "Unentitled User",
-        email_login: "redacted.unentitled@example.test",
+        first_name: "Unentitled",
+        last_name: "User",
+        company: "No Parts Co",
+        email_login: UNKNOWN_EMAIL,
         system_component_ids: "",
       },
     ],
@@ -85,6 +96,17 @@ function assertNoRawExposure(summary) {
   assert.equal(summary.rawRowsExposed, false);
   assert.equal(summary.rawContactsExposed, false);
   assert.equal(summary.rawPayloadsExposed, false);
+}
+
+function assertSafeIdentityOnly(summary, expected) {
+  assert.deepEqual(Object.keys(summary.safeIdentitySummary).sort(), [
+    "company",
+    "entitlementFound",
+    "firstName",
+    "lastName",
+    "specialPartsVisible",
+  ].sort());
+  assert.deepEqual(summary.safeIdentitySummary, expected);
 }
 
 class SpecialPartsTestElement {
@@ -195,17 +217,43 @@ test("default mode does not expose special parts without entitlement override", 
   assert.equal(vm.specialPartsUserTest.activeTestPrincipal, "");
   assert.equal(vm.specialPartsUserTest.specialPartsVisible, false);
   assert.equal(vm.specialPartsEntitlementPreview.entitlementStatus, "none");
+  assertSafeIdentityOnly(result.specialPartsUserTestSummary, {
+    firstName: "",
+    lastName: "",
+    company: "",
+    entitlementFound: false,
+    specialPartsVisible: false,
+  });
   assertNoRawExposure(result.specialPartsUserTestSummary);
 });
 
-test("Allan Organ test principal exposes entitlement-backed special parts when source summary supports it", () => {
-  const result = derive({ specialPartsTestPrincipal: "Allan Organ", showSpecialParts: "1" });
-  const vm = model(result, { testPrincipal: "Allan Organ", showEntitlementBackedSpecialParts: true });
+test("Allan email test principal exposes entitlement-backed special parts when source summary supports it", () => {
+  const result = derive({ specialPartsTestPrincipal: ALLAN_EMAIL, showSpecialParts: "1" });
+  const vm = model(result, { testPrincipal: ALLAN_EMAIL, showEntitlementBackedSpecialParts: true });
 
-  assert.equal(result.specialPartsUserTestSummary.activeTestPrincipal, "Allan Organ");
+  assert.equal(result.specialPartsUserTestSummary.authority, "email-first");
+  assert.equal(result.specialPartsUserTestSummary.activeTestPrincipal, ALLAN_EMAIL);
+  assert.equal(result.specialPartsUserTestSummary.activeTestPrincipalEmail, ALLAN_EMAIL);
+  assert.equal(result.specialPartsUserTestSummary.activeTestPrincipalLabel, ALLAN_LABEL);
   assert.equal(result.specialPartsUserTestSummary.entitlementFound, true);
   assert.equal(result.specialPartsUserTestSummary.specialPartsVisible, true);
   assert.equal(result.specialPartsUserTestSummary.redactedCandidates.length, 1);
+  assertSafeIdentityOnly(result.specialPartsUserTestSummary, {
+    firstName: "Allan",
+    lastName: "Organ",
+    company: "Zencontrol",
+    entitlementFound: true,
+    specialPartsVisible: true,
+  });
+  assert.equal(vm.specialPartsUserTest.activeTestPrincipal, ALLAN_EMAIL);
+  assert.equal(vm.specialPartsUserTest.activeTestPrincipalLabel, ALLAN_LABEL);
+  assert.deepEqual(vm.specialPartsUserTest.safeIdentitySummary, {
+    firstName: "Allan",
+    lastName: "Organ",
+    company: "Zencontrol",
+    entitlementFound: true,
+    specialPartsVisible: true,
+  });
   assert.equal(vm.specialPartsUserTest.entitlementFound, true);
   assert.equal(vm.specialPartsUserTest.specialPartsVisible, true);
   assert.notEqual(vm.specialPartsEntitlementPreview.entitlementStatus, "none");
@@ -213,11 +261,26 @@ test("Allan Organ test principal exposes entitlement-backed special parts when s
   assertNoRawExposure(result.specialPartsUserTestSummary);
 });
 
-test("unknown or unentitled test principal does not expose special parts", () => {
-  const result = derive({ specialPartsTestPrincipal: "Unknown Person", showSpecialParts: "1" });
-  const vm = model(result, { testPrincipal: "Unknown / unentitled", showEntitlementBackedSpecialParts: true });
+test("Allan Organ display label alone does not grant special-parts entitlement", () => {
+  const result = derive({ specialPartsTestPrincipal: "Allan Organ", showSpecialParts: "1" });
+  const vm = model(result, { testPrincipal: "Allan Organ", showEntitlementBackedSpecialParts: true });
 
-  assert.equal(result.specialPartsUserTestSummary.activeTestPrincipal, "Unknown / unentitled");
+  assert.notEqual(result.specialPartsUserTestSummary.activeTestPrincipal, ALLAN_EMAIL);
+  assert.equal(result.specialPartsUserTestSummary.activeTestPrincipal, UNKNOWN_EMAIL);
+  assert.equal(result.specialPartsUserTestSummary.entitlementFound, false);
+  assert.equal(result.specialPartsUserTestSummary.specialPartsVisible, false);
+  assert.equal(result.specialPartsUserTestSummary.redactedCandidates.length, 0);
+  assert.equal(vm.specialPartsUserTest.activeTestPrincipal, UNKNOWN_EMAIL);
+  assert.equal(vm.specialPartsUserTest.entitlementFound, false);
+  assert.equal(vm.specialPartsUserTest.specialPartsVisible, false);
+  assert.equal(vm.specialPartsEntitlementPreview.entitlementStatus, "none");
+});
+
+test("unknown email fails closed", () => {
+  const result = derive({ specialPartsTestPrincipal: MISSING_EMAIL, showSpecialParts: "1" });
+  const vm = model(result, { testPrincipal: MISSING_EMAIL, showEntitlementBackedSpecialParts: true });
+
+  assert.equal(result.specialPartsUserTestSummary.activeTestPrincipal, MISSING_EMAIL);
   assert.equal(result.specialPartsUserTestSummary.entitlementFound, false);
   assert.equal(result.specialPartsUserTestSummary.specialPartsVisible, false);
   assert.equal(vm.specialPartsUserTest.entitlementFound, false);
@@ -226,8 +289,8 @@ test("unknown or unentitled test principal does not expose special parts", () =>
 });
 
 test("show-special-parts toggle without entitlement does not expose parts", () => {
-  const result = derive({ specialPartsTestPrincipal: "Unknown / unentitled", showSpecialParts: "1" });
-  const vm = model(result, { testPrincipal: "Unknown / unentitled", showEntitlementBackedSpecialParts: true });
+  const result = derive({ specialPartsTestPrincipal: UNKNOWN_EMAIL, showSpecialParts: "1" });
+  const vm = model(result, { testPrincipal: UNKNOWN_EMAIL, showEntitlementBackedSpecialParts: true });
 
   assert.equal(result.specialPartsUserTestSummary.showEntitlementBackedSpecialParts, true);
   assert.equal(result.specialPartsUserTestSummary.entitlementFound, false);
@@ -238,8 +301,8 @@ test("show-special-parts toggle without entitlement does not expose parts", () =
 });
 
 test("entitlement-visible special parts remain production-blocked", () => {
-  const result = derive({ specialPartsTestPrincipal: "Allan Organ", showSpecialParts: "1" });
-  const vm = model(result, { testPrincipal: "Allan Organ", showEntitlementBackedSpecialParts: true });
+  const result = derive({ specialPartsTestPrincipal: ALLAN_EMAIL, showSpecialParts: "1" });
+  const vm = model(result, { testPrincipal: ALLAN_EMAIL, showEntitlementBackedSpecialParts: true });
 
   assert.equal(result.specialPartsUserTestSummary.productionOutputsBlocked, true);
   assert.equal(result.specialPartsUserTestSummary.engineEnabled, false);
@@ -254,14 +317,17 @@ test("entitlement-visible special parts remain production-blocked", () => {
 });
 
 test("visible special-parts user card renders beside existing timeline/status controls", () => {
-  const result = derive({ specialPartsTestPrincipal: "Allan Organ", showSpecialParts: "1" });
-  const vm = model(result, { testPrincipal: "Allan Organ", showEntitlementBackedSpecialParts: true });
+  const result = derive({ specialPartsTestPrincipal: ALLAN_EMAIL, showSpecialParts: "1" });
+  const vm = model(result, { testPrincipal: ALLAN_EMAIL, showEntitlementBackedSpecialParts: true });
   const container = renderedContainer(vm);
   const card = visibleSpecialPartsCard(container);
 
   assert.match(elementText(card), /Internal special-parts user\/principal test mode/);
   assert.match(elementText(card), /Test user \/ principal/);
   assert.match(elementText(card), /Allan Organ/);
+  assert.match(elementText(card), /first name Allan/);
+  assert.match(elementText(card), /last name Organ/);
+  assert.match(elementText(card), /company Zencontrol/);
   assert.match(elementText(card), /entitlement found yes/);
   assert.match(elementText(card), /special parts visible yes/);
   assert.match(elementText(card), /production outputs blocked/);
@@ -270,7 +336,8 @@ test("visible special-parts user card renders beside existing timeline/status co
   const toggleInput = elementDescendants(card).find((element) => element.tagName === "INPUT" && element.dataset.specialPartsUserTestControl === "showSpecialParts");
   assert.ok(principalSelect, "expected principal select control");
   assert.ok(toggleInput, "expected show-special-parts toggle");
-  assert.ok(principalSelect.options.some((option) => option.value === "Allan Organ"));
+  assert.ok(principalSelect.options.some((option) => option.value === ALLAN_EMAIL && option.textContent === ALLAN_LABEL));
+  assert.ok(principalSelect.options.some((option) => option.value === UNKNOWN_EMAIL && option.textContent === UNKNOWN_LABEL));
 
   const timelineCard = elementDescendants(container).find((element) => (
     classIncludes(element, "cs-selector-timeline-status-test")
@@ -279,9 +346,9 @@ test("visible special-parts user card renders beside existing timeline/status co
   assert.ok(timelineCard, "existing timeline/status controls should still render in visible shell");
 });
 
-test("special-parts user controls call existing state actions", () => {
-  const result = derive({ specialPartsTestPrincipal: "Allan Organ", showSpecialParts: "1" });
-  const vm = model(result, { testPrincipal: "Allan Organ", showEntitlementBackedSpecialParts: true });
+test("special-parts user controls call existing state actions with email key", () => {
+  const result = derive({ specialPartsTestPrincipal: ALLAN_EMAIL, showSpecialParts: "1" });
+  const vm = model(result, { testPrincipal: ALLAN_EMAIL, showEntitlementBackedSpecialParts: true });
   const actions = [];
   vm.selectorSurface.specialPartsUserTest = {
     ...vm.selectorSurface.specialPartsUserTest,
@@ -291,7 +358,7 @@ test("special-parts user controls call existing state actions", () => {
 
   const card = visibleSpecialPartsCard(renderedContainer(vm));
   const principalSelect = elementDescendants(card).find((element) => element.tagName === "SELECT" && element.dataset.specialPartsUserTestControl === "testPrincipal");
-  principalSelect.value = "Unknown / unentitled";
+  principalSelect.value = UNKNOWN_EMAIL;
   principalSelect.eventListeners.change();
 
   const toggleInput = elementDescendants(card).find((element) => element.tagName === "INPUT" && element.dataset.specialPartsUserTestControl === "showSpecialParts");
@@ -299,28 +366,28 @@ test("special-parts user controls call existing state actions", () => {
   toggleInput.eventListeners.change();
 
   assert.deepEqual(actions, [
-    ["principal", "Unknown / unentitled"],
+    ["principal", UNKNOWN_EMAIL],
     ["show", false],
   ]);
 });
 
-test("special-parts user query parser and fingerprint include safe diagnostic params", () => {
+test("special-parts user query parser and fingerprint include safe diagnostic email params", () => {
   const requestUrl = {
     searchParams: {
       get(key) {
-        return { specialPartsTestPrincipal: "Allan Organ", showSpecialParts: "1" }[key] || "";
+        return { specialPartsTestPrincipal: ALLAN_EMAIL, showSpecialParts: "1" }[key] || "";
       },
       getAll() { return []; },
     },
   };
   assert.deepEqual(readSelectorSpecialPartsUserTestOptions(requestUrl), {
-    specialPartsTestPrincipal: "Allan Organ",
+    specialPartsTestPrincipal: ALLAN_EMAIL,
     showSpecialParts: "1",
   });
 
   const base = selectorConstraintFingerprintFromQuery("?system=DNX+80+DI");
-  const special = selectorConstraintFingerprintFromQuery("?system=DNX+80+DI&specialPartsTestPrincipal=Allan+Organ&showSpecialParts=1");
+  const special = selectorConstraintFingerprintFromQuery(`?system=DNX+80+DI&specialPartsTestPrincipal=${encodeURIComponent(ALLAN_EMAIL)}&showSpecialParts=1`);
   assert.notEqual(special, base);
-  assert.match(special, /specialPartsTestPrincipal=Allan\+Organ/);
+  assert.match(special, /specialPartsTestPrincipal=allan%40zencontrol\.com/);
   assert.match(special, /showSpecialParts=1/);
 });

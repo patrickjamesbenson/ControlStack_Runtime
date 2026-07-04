@@ -450,7 +450,12 @@ const SELECTOR_STATUS_CLASSES = Object.freeze(["available", "approved", "staged"
 const STATUS_VISIBLE_CLASSES = Object.freeze(new Set(["available", "approved"]));
 const STATUS_REVIEW_CLASSES = Object.freeze(new Set(["unknown"]));
 const DEFAULT_TIMELINE_VISIBLE_STATUSES = Object.freeze(["available", "approved"]);
-const SPECIAL_PARTS_INTERNAL_TEST_PRINCIPALS = Object.freeze(["Allan Organ", "Unknown / unentitled"]);
+const SPECIAL_PARTS_ALLAN_TEST_EMAIL = "allan@zencontrol.com";
+const SPECIAL_PARTS_UNKNOWN_TEST_EMAIL = "unknown@example.test";
+const SPECIAL_PARTS_INTERNAL_TEST_PRINCIPALS = Object.freeze([
+  Object.freeze({ value: SPECIAL_PARTS_ALLAN_TEST_EMAIL, label: "Allan Organ <allan@zencontrol.com>" }),
+  Object.freeze({ value: SPECIAL_PARTS_UNKNOWN_TEST_EMAIL, label: "Unknown / unentitled <unknown@example.test>" }),
+]);
 export const SELECTOR_TIMELINE_VISIBILITY_MODES = Object.freeze({
   EXTERNAL_DEFAULT: "external-default",
   INTERNAL_ASOF_TEST: "internal-asof-test",
@@ -2879,11 +2884,28 @@ function safeEntitlementSummary(snapshot) {
   };
 }
 
-function normaliseSpecialPartsTestPrincipal(value = "") {
+function emailFromSpecialPartsPrincipal(value = "") {
   const requested = safeString(value);
   if (!requested) return "";
-  const requestedKey = normaliseKey(requested);
-  return SPECIAL_PARTS_INTERNAL_TEST_PRINCIPALS.find((principal) => normaliseKey(principal) === requestedKey) || "Unknown / unentitled";
+  const angleMatch = requested.match(/<([^<>\s]+@[^<>\s]+)>/);
+  const candidate = angleMatch ? angleMatch[1] : requested;
+  const email = safeLower(candidate);
+  return /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(email) ? email : "";
+}
+
+function normaliseSpecialPartsTestPrincipal(value = "") {
+  const email = emailFromSpecialPartsPrincipal(value);
+  if (!email) return safeString(value) ? SPECIAL_PARTS_UNKNOWN_TEST_EMAIL : "";
+  return email;
+}
+
+function labelForSpecialPartsTestPrincipal(email = "") {
+  const key = safeLower(email);
+  return SPECIAL_PARTS_INTERNAL_TEST_PRINCIPALS.find((principal) => principal.value === key)?.label || key;
+}
+
+function specialPartsTestPrincipalOptions() {
+  return SPECIAL_PARTS_INTERNAL_TEST_PRINCIPALS.map((principal) => ({ ...principal }));
 }
 
 function showSpecialPartsRequested(value) {
@@ -2892,20 +2914,33 @@ function showSpecialPartsRequested(value) {
   return ["1", "true", "yes", "y", "on", "show", "visible"].includes(key);
 }
 
-function specialPartsUserNameCandidates(user = {}) {
-  const first = rowText(user, ["first_name", "firstname", "given_name"], "");
-  const last = rowText(user, ["last_name", "lastname", "surname", "family_name"], "");
-  return [
-    rowText(user, ["display_name", "displayName", "full_name", "fullname", "name", "user_name", "username"], ""),
-    `${first} ${last}`.trim(),
-    safeString(fieldValue(user, "email_login")).split("@")[0]?.replace(/[._-]+/g, " ") || "",
-  ].map((item) => normaliseKey(item)).filter(Boolean);
+function specialPartsUserEmail(user = {}) {
+  return emailFromSpecialPartsPrincipal(rowText(user, ["email", "email_address", "emailAddress", "email_login", "login_email", "user_email", "mail"], ""));
 }
 
-function findSpecialPartsTestUser(users = [], principal = "") {
-  const wanted = normaliseKey(principal);
-  if (!wanted || wanted === normaliseKey("Unknown / unentitled")) return null;
-  return users.find((user) => specialPartsUserNameCandidates(user).includes(wanted)) || null;
+function findSpecialPartsTestUserByEmail(users = [], principalEmail = "") {
+  const wanted = emailFromSpecialPartsPrincipal(principalEmail);
+  if (!wanted) return null;
+  return users.find((user) => specialPartsUserEmail(user) === wanted) || null;
+}
+
+function specialPartsSafeIdentitySummary(user = null, { entitlementFound = false, specialPartsVisible = false } = {}) {
+  if (!user) {
+    return {
+      firstName: "",
+      lastName: "",
+      company: "",
+      entitlementFound: false,
+      specialPartsVisible: false,
+    };
+  }
+  return {
+    firstName: rowText(user, ["first_name", "firstname", "given_name", "firstName"], ""),
+    lastName: rowText(user, ["last_name", "lastname", "surname", "family_name", "lastName"], ""),
+    company: rowText(user, ["company", "company_name", "companyName", "organisation", "organization", "account"], ""),
+    entitlementFound: entitlementFound === true,
+    specialPartsVisible: specialPartsVisible === true,
+  };
 }
 
 function specialPartsUserComponentIds(user = {}) {
@@ -2948,24 +2983,29 @@ function safeSpecialPartsUserTestSummary(snapshot, { specialPartsTestPrincipal =
   const showEntitlementBackedSpecialParts = showSpecialPartsRequested(showSpecialParts);
   const users = tableRows(snapshot, "USERS");
   const components = tableRows(snapshot, "SYSTEM_COMPONENTS");
-  const user = internalTestActive ? findSpecialPartsTestUser(users, activeTestPrincipal) : null;
+  const user = internalTestActive ? findSpecialPartsTestUserByEmail(users, activeTestPrincipal) : null;
   const componentIndex = specialPartsComponentIndex(components);
   const componentIds = user ? specialPartsUserComponentIds(user) : [];
   const redactedCandidates = componentIds
     .map((id) => componentIndex.get(normaliseKey(id)) || null)
     .filter(Boolean)
     .map(redactedSpecialPartsTestCandidate);
-  const entitlementFound = redactedCandidates.length > 0;
+  const entitlementFound = Boolean(user) && redactedCandidates.length > 0;
   const specialPartsVisible = internalTestActive && showEntitlementBackedSpecialParts && entitlementFound;
+  const safeIdentitySummary = specialPartsSafeIdentitySummary(user, { entitlementFound, specialPartsVisible });
 
   return {
     source: "selector-reference-options-special-parts-user-test-summary",
     status: internalTestActive ? (entitlementFound ? "entitlement-found" : "no-entitlement-found") : "external-default",
+    authority: "email-first",
     internalTestActive,
     diagnosticOnly: true,
     readOnly: true,
-    testPrincipalOptions: [...SPECIAL_PARTS_INTERNAL_TEST_PRINCIPALS],
+    testPrincipalOptions: specialPartsTestPrincipalOptions(),
     activeTestPrincipal,
+    activeTestPrincipalEmail: activeTestPrincipal,
+    activeTestPrincipalLabel: activeTestPrincipal ? labelForSpecialPartsTestPrincipal(activeTestPrincipal) : "",
+    safeIdentitySummary,
     showEntitlementBackedSpecialParts,
     entitlementFound,
     specialPartsVisible,

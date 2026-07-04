@@ -46,7 +46,12 @@ const SELECTOR_TIMELINE_VISIBILITY_MODES = Object.freeze({
 
 const SELECTOR_TIMELINE_STATUS_OPTIONS = Object.freeze(["available", "approved", "staged", "roadmap", "obsolete", "unknown"]);
 const DEFAULT_SELECTOR_TIMELINE_VISIBLE_STATUSES = Object.freeze(["available", "approved"]);
-const SPECIAL_PARTS_TEST_PRINCIPAL_OPTIONS = Object.freeze(["Allan Organ", "Unknown / unentitled"]);
+const SPECIAL_PARTS_ALLAN_TEST_EMAIL = "allan@zencontrol.com";
+const SPECIAL_PARTS_UNKNOWN_TEST_EMAIL = "unknown@example.test";
+const SPECIAL_PARTS_TEST_PRINCIPAL_OPTIONS = Object.freeze([
+  Object.freeze({ value: SPECIAL_PARTS_ALLAN_TEST_EMAIL, label: "Allan Organ <allan@zencontrol.com>" }),
+  Object.freeze({ value: SPECIAL_PARTS_UNKNOWN_TEST_EMAIL, label: "Unknown / unentitled <unknown@example.test>" }),
+]);
 
 export const SELECTOR_TEST_CASE_STORAGE_KEY = "controlstack.cs-selector.local-test-case.v1";
 const SELECTOR_TEST_CASE_VERSION = 1;
@@ -165,18 +170,30 @@ function cloneTimelineStatusTestState(value = {}) {
   };
 }
 
-function normaliseSpecialPartsTestPrincipal(value = "") {
+function emailFromSpecialPartsPrincipal(value = "") {
   const requested = String(value || "").trim();
   if (!requested) return "";
-  const key = requested.toLowerCase().replace(/[\s_./-]+/g, " ").replace(/[^a-z0-9 ]+/g, "").replace(/\s+/g, " ").trim();
-  return SPECIAL_PARTS_TEST_PRINCIPAL_OPTIONS.find((principal) => principal.toLowerCase().replace(/[\s_./-]+/g, " ").replace(/[^a-z0-9 ]+/g, "").replace(/\s+/g, " ").trim() === key) || "Unknown / unentitled";
+  const angleMatch = requested.match(/<([^<>\s]+@[^<>\s]+)>/);
+  const candidate = angleMatch ? angleMatch[1] : requested;
+  const email = candidate.trim().toLowerCase();
+  return /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(email) ? email : "";
+}
+
+function normaliseSpecialPartsTestPrincipal(value = "") {
+  const email = emailFromSpecialPartsPrincipal(value);
+  if (!email) return String(value || "").trim() ? SPECIAL_PARTS_UNKNOWN_TEST_EMAIL : "";
+  return email;
+}
+
+function specialPartsTestPrincipalOptions() {
+  return SPECIAL_PARTS_TEST_PRINCIPAL_OPTIONS.map((principal) => ({ ...principal }));
 }
 
 function createInitialSpecialPartsUserTestState() {
   return {
     testPrincipal: "",
     showEntitlementBackedSpecialParts: false,
-    testPrincipalOptions: [...SPECIAL_PARTS_TEST_PRINCIPAL_OPTIONS],
+    testPrincipalOptions: specialPartsTestPrincipalOptions(),
     readOnly: true,
     diagnosticOnly: true,
     queryParamsOnly: true,
@@ -192,7 +209,7 @@ function cloneSpecialPartsUserTestState(value = {}) {
     ...value,
     testPrincipal: normaliseSpecialPartsTestPrincipal(value.testPrincipal || value.activeTestPrincipal || base.testPrincipal),
     showEntitlementBackedSpecialParts: value.showEntitlementBackedSpecialParts === true,
-    testPrincipalOptions: [...SPECIAL_PARTS_TEST_PRINCIPAL_OPTIONS],
+    testPrincipalOptions: specialPartsTestPrincipalOptions(),
     readOnly: true,
     diagnosticOnly: true,
     queryParamsOnly: true,
