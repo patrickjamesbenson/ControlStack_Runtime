@@ -821,7 +821,26 @@ function appendBadgeList(parent, badges = []) {
   parent.appendChild(list);
 }
 
+function optionIsBlocked(option = {}) {
+  return option?.blocked === true || option?.status === "blocked";
+}
+
+function optionMatchesFieldSelection(option = {}, field = {}) {
+  const selectedValue = String(field.selectedValue || "").trim();
+  return option?.selected === true || Boolean(selectedValue && String(option?.value || "") === selectedValue);
+}
+
+function fieldHasBlockedSelectedValue(field = {}) {
+  if (field.selectedOptionBlocked === true || field.displayMode === "warning-chip") return true;
+  const selectedValue = String(field.selectedValue || "").trim();
+  if (!selectedValue) return false;
+  const options = Array.isArray(field.options) ? field.options : [];
+  const selectedOption = options.find((option) => optionMatchesFieldSelection(option, field));
+  return optionIsBlocked(selectedOption);
+}
+
 function fieldSelectedText(field = {}) {
+  if (fieldHasBlockedSelectedValue(field)) return "none";
   return field.selectedLabel || field.selectedValue || "none";
 }
 
@@ -866,30 +885,21 @@ function workflowFieldIsDisabledHandoff(field = {}) {
 
 function selectedOrPreviewOption(field = {}) {
   const options = Array.isArray(field.options) ? field.options : [];
-  return options.find((option) => option.selected === true || String(option.value || "") === String(field.selectedValue || ""))
-    || options.find((option) => option.blocked !== true)
-    || options[0]
+  return options.find((option) => optionMatchesFieldSelection(option, field) && !optionIsBlocked(option))
+    || options.find((option) => !optionIsBlocked(option))
     || {};
 }
 
 function fieldDropdownOptions(field = {}) {
-  if (Array.isArray(field.dropdownOptions)) return field.dropdownOptions;
-  const selectedValue = String(field.selectedValue || "").trim();
+  if (Array.isArray(field.dropdownOptions)) return field.dropdownOptions.filter((option) => !optionIsBlocked(option));
   const options = Array.isArray(field.options) ? field.options : [];
-  return options.filter((option) => {
-    const selected = option.selected === true || Boolean(selectedValue && String(option.value || "") === selectedValue);
-    return option.blocked !== true && option.status !== "blocked" || selected;
-  });
+  return options.filter((option) => !optionIsBlocked(option));
 }
 
 function fieldIncompatibleOptions(field = {}) {
   if (Array.isArray(field.incompatibleOptions)) return field.incompatibleOptions;
-  const selectedValue = String(field.selectedValue || "").trim();
   const options = Array.isArray(field.options) ? field.options : [];
-  return options.filter((option) => {
-    const selected = option.selected === true || Boolean(selectedValue && String(option.value || "") === selectedValue);
-    return (option.blocked === true || option.status === "blocked") && !selected;
-  });
+  return options.filter((option) => optionIsBlocked(option));
 }
 
 function optionBlockerSummary(option = {}) {
@@ -949,7 +959,7 @@ function appendIncompatibleOptionDetails(parent, field = {}) {
   const summary = document.createElement("summary");
   summary.textContent = `${incompatibleOptions.length} incompatible option(s) hidden from normal dropdown`;
   details.appendChild(summary);
-  appendText(details, "p", "Unselected blocked options are separated from the ordinary picker. A currently selected blocked value remains visible in the dropdown and is marked blocked/incompatible.", "cs-selector-product__section-summary");
+  appendText(details, "p", "Blocked or stale selections are separated from the ordinary picker. A previously selected incompatible value is retained here for diagnostic review only, not as the active main-field selection.", "cs-selector-product__section-summary");
   appendDefinitionList(details, incompatibleOptions.map((option) => [
     option.label || option.value || "incompatible option",
     optionBlockerSummary(option),
@@ -1021,15 +1031,18 @@ function appendSelectorProductFieldCard(parent, field = {}, surface = {}, idPref
   select.dataset.incompatibleOptionsCollapsed = String(incompatibleOptions.length);
   select.disabled = field.disabled === true || field.futureMapped === true || !dropdownOptions.length;
 
+  const blockedSelectedValue = fieldHasBlockedSelectedValue(field);
   const emptyOption = document.createElement("option");
   emptyOption.value = "";
   emptyOption.textContent = field.disabled === true
     ? "Disabled in this read-only slice"
     : field.futureMapped === true
       ? "Unavailable from current source — future mapped"
-      : field.provenance === "inherited" && field.effectiveLabel
-        ? `Auto / inherit: ${field.effectiveLabel}`
-        : "No manual constraint / keep preview consequence";
+      : blockedSelectedValue
+        ? "Not selected — previous value incompatible (see details)"
+        : field.provenance === "inherited" && field.effectiveLabel
+          ? `Auto / inherit: ${field.effectiveLabel}`
+          : "No manual constraint / keep preview consequence";
   select.appendChild(emptyOption);
 
   for (const option of dropdownOptions) {
@@ -1042,7 +1055,7 @@ function appendSelectorProductFieldCard(parent, field = {}, surface = {}, idPref
     optionElement.dataset.blocked = blocked ? "true" : "false";
     select.appendChild(optionElement);
   }
-  select.value = field.selectedValue || "";
+  select.value = blockedSelectedValue ? "" : (field.selectedValue || "");
   select.addEventListener("change", () => {
     if (select.value) surface.setFieldValue?.(field.fieldKey, select.value);
     else surface.clearFieldValue?.(field.fieldKey);

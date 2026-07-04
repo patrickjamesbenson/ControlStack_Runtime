@@ -1743,6 +1743,20 @@ function presentationSelectedOption(field = {}) {
   return options.find((option) => option.selected === true || (selectedValue && optionValuesMatch(option.value, selectedValue))) || null;
 }
 
+function presentationSelectedCodePolicyOption(field = {}) {
+  const selectedValue = String(field.selectedValue || "").trim();
+  if (!selectedValue) return null;
+  const options = Array.isArray(field.options) ? field.options : [];
+  return options.find((option) => {
+    const selected = option.selected === true || optionValuesMatch(option.value, selectedValue);
+    if (!selected) return false;
+    const hasPolicyId = optionCodePolicyIds(option).length > 0;
+    const hasPolicyBlocker = (Array.isArray(option.blockedBy) ? option.blockedBy : [])
+      .some((entry) => String(entry.fieldKey || "") === "CODE_POLICY");
+    return hasPolicyId || hasPolicyBlocker;
+  }) || null;
+}
+
 function workflowOptionMatchesSelection(option = {}, field = {}) {
   const selectedValue = String(field.selectedValue || "").trim();
   return option.selected === true || Boolean(selectedValue && optionValuesMatch(option.value, selectedValue));
@@ -1760,8 +1774,11 @@ function createDonorShapeDropdownSplit(field = {}) {
       selected,
       rawRowsExposed: false,
     };
-    if (blocked && !selected) {
-      incompatibleOptions.push(safeOption);
+    if (blocked) {
+      incompatibleOptions.push({
+        ...safeOption,
+        selectedBlockedDiagnostic: selected === true,
+      });
     } else {
       dropdownOptions.push(safeOption);
     }
@@ -1771,7 +1788,8 @@ function createDonorShapeDropdownSplit(field = {}) {
     incompatibleOptions,
     incompatibleOptionCount: incompatibleOptions.length,
     compatibleDropdownOptionCount: dropdownOptions.filter((option) => option.blocked !== true && option.status !== "blocked").length,
-    selectedBlockedOptionVisible: dropdownOptions.some((option) => workflowOptionMatchesSelection(option, field) && (option.blocked === true || option.status === "blocked")),
+    selectedBlockedOptionVisible: false,
+    selectedBlockedOptionRetainedForDiagnostics: incompatibleOptions.some((option) => option.selectedBlockedDiagnostic === true),
     rawRowsExposed: false,
   };
 }
@@ -1890,13 +1908,14 @@ function classifyRuntimePresentationField(field = {}, finishContext = {}) {
   let classificationReason = "real user decision or unresolved available choice";
 
   if (selectedOptionBlocked) {
+    const selectedPolicyOption = presentationSelectedCodePolicyOption(field);
     displayMode = "warning-chip";
     provenance = hasManualConstraint ? "manual" : "diagnostic";
     primaryDecision = false;
     effectiveValue = "";
     effectiveLabel = "";
     overrideAvailable = true;
-    classificationReason = selectedOption?.blockedReason || field.unavailableReason || "selected value is incompatible but preserved as a blocked constraint, not selected truth";
+    classificationReason = selectedPolicyOption?.blockedReason || selectedOption?.blockedReason || field.unavailableReason || "selected value is incompatible but preserved as a blocked constraint, not selected truth";
   } else if (presentationIsHiddenDiagnostic(field)) {
     displayMode = "hidden-diagnostic";
     provenance = "diagnostic";

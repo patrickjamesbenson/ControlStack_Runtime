@@ -232,6 +232,13 @@ function optionValues(model, fieldKey) {
   return (workflowField(model, fieldKey).options || []).map((item) => item.value);
 }
 
+function compatibleOptionValues(model, fieldKey) {
+  return (workflowField(model, fieldKey).options || [])
+    .filter((item) => item.blocked !== true && item.status !== "blocked")
+    .map((item) => item.value)
+    .sort();
+}
+
 function workflowOption(model, fieldKey, value) {
   const option = (workflowField(model, fieldKey).options || []).find((item) => item.value === value || item.label === value);
   assert.ok(option, `expected option ${value} for ${fieldKey}`);
@@ -268,6 +275,21 @@ test("mount style fills from real SYSTEM and ACCESSORIES reference options", () 
   assert.equal(mountingRow(model.selectorSurface.productSpine, "mountStyle").displayValue, "Suspended");
   assert.equal(mountingRow(model.selectorSurface.productSpine, "mountStyle").status, "manual-constraint");
   assert.equal(model.selectorSurface.payloadPreview.mounting.mountStyle, "Suspended");
+});
+
+test("System mount capability filters compatible mount styles before selection", () => {
+  const recessedState = createSelectorState();
+  const recessedModel = selectAndReload(recessedState, "system", "DNX|80");
+
+  assert.deepEqual(compatibleOptionValues(recessedModel, "mountStyle"), ["Recessed", "Suspended"].sort());
+  assert.equal(workflowOption(recessedModel, "mountStyle", "Surface Mount").status, "blocked");
+  assert.equal(workflowOption(recessedModel, "mountStyle", "Surface Mount").blocked, true);
+
+  const surfaceState = createSelectorState();
+  const surfaceModel = selectAndReload(surfaceState, "system", "ALT|40");
+  assert.deepEqual(compatibleOptionValues(surfaceModel, "mountStyle"), ["Surface Mount"]);
+  assert.equal(workflowOption(surfaceModel, "mountStyle", "Recessed").status, "blocked");
+  assert.equal(workflowOption(surfaceModel, "mountStyle", "Suspended").status, "blocked");
 });
 
 test("selecting mount style cascades compatible mount selection and particulars", () => {
@@ -408,14 +430,17 @@ test("selected incompatible Surface Mount is preserved as blocked by donor polic
   const row = mountingRow(model.selectorSurface.productSpine, "mountStyle");
   const mountField = workflowField(model, "mountStyle");
   const selectedDropdown = mountField.dropdownOptions.find((option) => option.value === "Surface Mount");
+  const diagnosticOption = mountField.incompatibleOptions.find((option) => option.value === "Surface Mount");
   assert.equal(row.displayValue, "—");
   assert.equal(row.status, "blocked");
   assert.equal(row.blocked, true);
-  assert.match(row.reason, /ceiling blocks.*indirect|direct-indirect/i);
-  assert.equal(mountField.selectedBlockedOptionVisible, true);
-  assert.equal(selectedDropdown?.blocked, true);
-  assert.equal(selectedDropdown?.blockedBy.some((item) => item.fieldKey === "CODE_POLICY"), true);
-  assert.equal(mountField.incompatibleOptions.some((option) => option.value === "Surface Mount"), false);
+  assert.match(diagnosticOption?.blockedReason || row.reason, /ceiling blocks.*indirect|direct-indirect|blocked/i);
+  assert.equal(mountField.selectedBlockedOptionVisible, false);
+  assert.equal(selectedDropdown, undefined);
+  assert.ok(diagnosticOption, "blocked Surface Mount should remain only in developer/detail diagnostics");
+  assert.equal(diagnosticOption.selected, true);
+  assert.equal(diagnosticOption.selectedBlockedDiagnostic, true);
+  assert.equal(diagnosticOption.blockedBy.some((item) => item.fieldKey === "CODE_POLICY"), true);
   assert.equal(model.selectorSurface.autoConsequences.some((item) => item.fieldKey === "mountStyle"), false);
   assert.equal(selectorState.getSnapshot().dbBackedSelector.manualConstraints.mountStyle.value, "Surface Mount");
   assert.ok(model.selectorSurface.selectionTruthSummary.blockers.some((item) => item.fieldKey === "mountStyle"));

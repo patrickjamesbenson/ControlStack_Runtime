@@ -1460,11 +1460,16 @@ function collectRecords(snapshot, bucket) {
     const mountSelections = rowOptionValues(row, ["mount_selections", "mount_selection"]);
     const mountParticulars = rowOptionValues(row, ["mount_particulars", "particulars"]);
     if (accessoryTypeMatches(row, "mount")) {
+      const mountStyleValues = mountStyles.length ? mountStyles : [label];
+      const mountSystemValues = uniqueStrings(mountStyleValues.flatMap((style) => (
+        mountStyleSystemReferenceKeys(snapshot, style).flatMap((systemKey) => systemIdentityValuesForSourceSystem(systemOptions, systemKey))
+      )));
       pushRelationshipRecord(records, ["ACCESSORIES"], {
-        mountStyle: mountStyles.length ? mountStyles : [label],
+        system: mountSystemValues,
+        mountStyle: mountStyleValues,
         mountSelection: mountSelections,
         mountParticulars,
-      }, "ACCESSORIES mount row maps mount style to selection and particulars");
+      }, "ACCESSORIES mount row maps selected SYSTEM.mount_style capability to mount style, selection, and particulars");
     }
     pushRelationshipRecord(records, ["ACCESSORIES"], {
       powerPenetration: accessoryTypeMatches(row, "power_penetration") ? [label] : [],

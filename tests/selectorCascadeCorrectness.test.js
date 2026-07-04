@@ -998,6 +998,134 @@ test("stale optic children and indirect optics do not block IP/IK parent candida
   assert.equal(surface.selectionTruthSummary.blockers.some((item) => item.fieldKey === "ikRating"), false);
 });
 
+test("live main Direct Optic Var1 dropdown clears stale blocked optic while developer detail retains it", () => {
+  const constraints = {
+    system: "LNX 80 D/I",
+    directOpticVar1: "60|Comfort",
+  };
+  const result = deriveSelectorReferenceOptionsFromSnapshot(cascadeSnapshot(), {
+    source: sourceReady(),
+    constraints,
+  });
+  const model = selectorViewModelFor(result, constraints);
+  const surface = model.selectorSurface;
+  const mainDirectField = viewModelField(result, "directOpticVar1", constraints);
+
+  assert.equal(option(result, "directOpticVar1", "60|Comfort").status, "blocked");
+  assert.equal(mainDirectField.displayMode, "warning-chip");
+  assert.equal(mainDirectField.selectedOptionBlocked, true);
+  assert.equal(mainDirectField.effectiveValue, "");
+  assert.equal(mainDirectField.selectedBlockedOptionVisible, false);
+  assert.equal(mainDirectField.dropdownOptions.some((item) => item.value === "60|Comfort" || /Comfort/.test(item.label)), false);
+  const diagnostic = mainDirectField.incompatibleOptions.find((item) => item.value === "60|Comfort");
+  assert.ok(diagnostic, "stale direct optic should remain available for diagnostic review");
+  assert.equal(diagnostic.selected, true);
+  assert.equal(diagnostic.selectedBlockedDiagnostic, true);
+
+  const directTile = surface.donorShapeSelectedTiles.find((item) => item.tileKey === "directOpticVar1");
+  assert.equal(directTile.value, "");
+  assert.equal(directTile.valueLabel, "Not selected");
+  assert.equal(surface.payloadPreview.optics.direct.opticVar1, null);
+  assert.equal(productSpineRow(surface, "system", "opticDirect").displayValue, "—");
+  assert.equal(truthItemsForField(surface.selectionTruthSummary, "directOpticVar1", "manual-constraint").length, 0);
+  const railText = compactBlockedRailText(surface.selectionTruthSummary);
+  assert.doesNotMatch(railText, /Comfort/);
+  assert.match(detailedBlockedValueText(surface.selectionTruthSummary), /Comfort/);
+});
+
+test("donor-backed Var1 parents remain selectable and Var2 choices hang from the selected parent", () => {
+  const snapshot = identityCascadeSnapshot();
+  snapshot.OPTICS = [
+    ...snapshot.OPTICS,
+    { system: "80", optic_var_1: "Daisy", optic_var_2: "Micro;Wide", emission_permission: "Direct", approved: "yes" },
+  ];
+  const baseConstraints = { system: "DNX 80 DI" };
+  const base = deriveSelectorReferenceOptionsFromSnapshot(snapshot, {
+    source: sourceReady(),
+    constraints: baseConstraints,
+  });
+
+  assert.deepEqual(compatibleLabels(workflowField(base, "directOpticVar1")), ["Daisy · 80", "Inlay · 80"].sort());
+  assert.equal(workflowField(base, "directOpticVar2").options.length, 0);
+
+  const daisyConstraints = { ...baseConstraints, directOpticVar1: "80|Daisy" };
+  const daisy = deriveSelectorReferenceOptionsFromSnapshot(snapshot, {
+    source: sourceReady(),
+    constraints: daisyConstraints,
+  });
+  assert.deepEqual(compatibleLabels(workflowField(daisy, "directOpticVar2")), ["Micro", "Wide"].sort());
+  assert.equal(viewModelField(daisy, "directOpticVar2", daisyConstraints).displayMode, "choice");
+
+  const inlayConstraints = { ...baseConstraints, directOpticVar1: "80|Inlay" };
+  const inlay = deriveSelectorReferenceOptionsFromSnapshot(snapshot, {
+    source: sourceReady(),
+    constraints: inlayConstraints,
+  });
+  assert.deepEqual(compatibleLabels(workflowField(inlay, "directOpticVar2")), ["Var1", "Var2"].sort());
+});
+
+test("IP and IK candidates are limited by the real source-backed System plus selected direct optic", () => {
+  const snapshot = identityCascadeSnapshot();
+  snapshot.OPTICS = [
+    ...snapshot.OPTICS.filter((row) => row.system !== "80" || row.optic_var_1 !== "Inlay"),
+    { system: "80", optic_var_1: "Inlay", optic_var_2: "Var1;Var2", emission_permission: "Direct", ip_option_1: "IP65", ik_option_2: "IK10", approved: "yes" },
+    { system: "80", optic_var_1: "Daisy", optic_var_2: "Micro;Wide", emission_permission: "Direct", ip_option_1: "IP20", ik_option_2: "IK07", approved: "yes" },
+  ];
+
+  const daisyConstraints = { system: "DNX 80 DI", directOpticVar1: "80|Daisy" };
+  const daisy = deriveSelectorReferenceOptionsFromSnapshot(snapshot, {
+    source: sourceReady(),
+    constraints: daisyConstraints,
+  });
+  assert.deepEqual(compatibleLabels(workflowField(daisy, "ipRating")), ["IP20"]);
+  assert.deepEqual(compatibleLabels(workflowField(daisy, "ikRating")), ["IK07"]);
+
+  const inlayConstraints = { system: "DNX 80 DI", directOpticVar1: "80|Inlay" };
+  const inlay = deriveSelectorReferenceOptionsFromSnapshot(snapshot, {
+    source: sourceReady(),
+    constraints: inlayConstraints,
+  });
+  assert.deepEqual(compatibleLabels(workflowField(inlay, "ipRating")), ["IP65"]);
+  assert.deepEqual(compatibleLabels(workflowField(inlay, "ikRating")), ["IK10"]);
+});
+
+test("Electrical Class exposes all source-backed values and is not poisoned by stale IP or IK", () => {
+  const snapshot = {
+    SYSTEM: [
+      { system: "80", system_variant_1: "DI", label: "DNX 80 DI", emission: "Both", approved: "yes" },
+    ],
+    OPTICS: [
+      { system: "80", optic_var_1: "Inlay", optic_var_2: "Var1", emission_permission: "Direct", ip_option_1: "IP65", ik_option_2: "IK10", approved: "yes" },
+      { system: "80", optic_var_1: "Rope", optic_var_2: "Rope", emission_permission: "Indirect", ip_option_1: "IP65", ik_option_2: "IK10", approved: "yes" },
+    ],
+    TIERS: [
+      { tier: "Business", electrical: "Class I;Class II", approved: "yes" },
+    ],
+    ACCESSORIES: [
+      { accessory_type: "elect_class", accessory_id: "SELV Isolated", approved: "yes" },
+    ],
+    SYSTEM_POLICY: [
+      { category: "electrical class", item: "SELV Remote;Non SELV with Earth", approved: "yes" },
+    ],
+  };
+  const constraints = {
+    system: "DNX 80 DI",
+    directOpticVar1: "80|Inlay",
+    ipRating: "IP20",
+    ikRating: "IK07",
+  };
+  const result = deriveSelectorReferenceOptionsFromSnapshot(snapshot, {
+    source: sourceReady(),
+    constraints,
+  });
+
+  assert.equal(option(result, "ipRating", "IP20").status, "blocked");
+  assert.equal(option(result, "ikRating", "IK07").status, "blocked");
+  const labels = compatibleLabels(workflowField(result, "electricalClass"));
+  assert.deepEqual(labels, ["Class I", "Class II", "Non SELV with Earth", "SELV Isolated", "SELV Remote"].sort());
+  assert.equal(labels.includes("SELV with Earth"), false, "do not invent donor fallback electrical classes not present in source");
+});
+
 test("UI reloads GET options endpoint after manual constraint changes", async () => {
   const source = await readFile(moduleSourceUrl, "utf-8");
 

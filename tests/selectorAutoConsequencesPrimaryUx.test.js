@@ -233,7 +233,7 @@ test("donor-shape selected tiles render from safe view model data", () => {
   }
 });
 
-test("donor-shape dropdown split keeps selected blocked values visible and separates unselected incompatible options", () => {
+test("donor-shape dropdown split keeps selected blocked values diagnostic-only and separates incompatible options", () => {
   const systemConstrainedSurface = surfaceFor({ system: "DNX|60" });
   const directVar1 = workflowField(systemConstrainedSurface, "directOpticVar1");
 
@@ -245,9 +245,11 @@ test("donor-shape dropdown split keeps selected blocked values visible and separ
   const blockedSelected = workflowField(blockedSelectedSurface, "diffuserVar2");
 
   assert.equal(blockedSelected.selectedOptionBlocked, true);
-  assert.equal(blockedSelected.selectedBlockedOptionVisible, true);
-  assert.equal(blockedSelected.dropdownOptions.some((option) => option.selected === true && (option.blocked === true || option.status === "blocked")), true);
-  assert.equal(blockedSelected.incompatibleOptions.some((option) => option.selected === true), false);
+  assert.equal(blockedSelected.selectedBlockedOptionVisible, false);
+  assert.equal(blockedSelected.dropdownOptions.some((option) => option.selected === true && (option.blocked === true || option.status === "blocked")), false);
+  const diagnostic = blockedSelected.incompatibleOptions.find((option) => option.selected === true);
+  assert.ok(diagnostic, "selected blocked value should be retained in diagnostic detail");
+  assert.equal(diagnostic.selectedBlockedDiagnostic, true);
 });
 
 test("view adds donor shape strip, incompatible details, and light-control row grid without enabling outputs", async () => {
