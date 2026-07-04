@@ -229,6 +229,20 @@ function detailedBlockedValueText(summary = {}) {
   return (Array.isArray(summary.blockers) ? summary.blockers : []).map((item) => item.valueLabel || item.value || "").join("\n");
 }
 
+function productSpineRow(surface = {}, sectionKey, rowKey) {
+  const section = (surface.productSpine?.sections || []).find((item) => item.sectionKey === sectionKey);
+  assert.ok(section, `expected product spine section ${sectionKey}`);
+  const row = (section.rows || []).find((item) => item.rowKey === rowKey);
+  assert.ok(row, `expected product spine row ${rowKey}`);
+  return row;
+}
+
+function truthItemsForField(summary = {}, fieldKey, truthKind = "manual-constraint") {
+  return (Array.isArray(summary.groups) ? summary.groups : [])
+    .flatMap((group) => Array.isArray(group.items) ? group.items : [])
+    .filter((item) => item.fieldKey === fieldKey && item.truthKind === truthKind);
+}
+
 function identityCascadeSnapshot() {
   return {
     SYSTEM: [
@@ -860,6 +874,128 @@ test("compatible downstream optic survives parent changes as selected truth", ()
   assert.equal(directTile.blocked, false);
   assert.equal(directTile.value, "80|Inlay");
   assert.equal(directTile.valueLabel, "Inlay · 80");
+});
+
+test("system changes reconcile stale IP and IK out of selected truth, summary rail, and payload preview", () => {
+  const constraints = {
+    system: "DNX 60 Beam DI",
+    ipRating: "IP65",
+    ikRating: "IK10",
+  };
+  const result = deriveSelectorReferenceOptionsFromSnapshot(cascadeSnapshot(), {
+    source: sourceReady(),
+    constraints,
+  });
+  const model = selectorViewModelFor(result, constraints);
+  const surface = model.selectorSurface;
+
+  assert.deepEqual(compatibleLabels(workflowField(result, "ipRating")), ["IP20", "IP44"]);
+  assert.deepEqual(compatibleLabels(workflowField(result, "ikRating")), ["IK07"]);
+  assert.equal(option(result, "ipRating", "IP65").selected, true);
+  assert.equal(option(result, "ipRating", "IP65").status, "blocked");
+  assert.equal(option(result, "ikRating", "IK10").selected, true);
+  assert.equal(option(result, "ikRating", "IK10").status, "blocked");
+
+  assert.equal(surface.payloadPreview.environment.ip, null);
+  assert.equal(surface.payloadPreview.environment.ik, null);
+  const ipIkRow = productSpineRow(surface, "environment", "ipIk");
+  assert.equal(ipIkRow.status, "blocked");
+  assert.equal(ipIkRow.displayValue, "—");
+  assert.equal(truthItemsForField(surface.selectionTruthSummary, "ipRating", "manual-constraint").length, 0);
+  assert.equal(truthItemsForField(surface.selectionTruthSummary, "ikRating", "manual-constraint").length, 0);
+  assert.ok(surface.selectionTruthSummary.blockers.some((item) => item.fieldKey === "ipRating"));
+  assert.ok(surface.selectionTruthSummary.blockers.some((item) => item.fieldKey === "ikRating"));
+
+  const railText = compactBlockedRailText(surface.selectionTruthSummary);
+  assert.match(railText, /review required/);
+  assert.doesNotMatch(railText, /IP65|IK10/);
+  assert.match(detailedBlockedValueText(surface.selectionTruthSummary), /IP65|IK10/);
+});
+
+test("direct optic changes reconcile stale IP and IK while exposing new valid Environment candidates", () => {
+  const constraints = {
+    system: "DNX 60 Beam DI",
+    directOpticVar1: "60|Comfort",
+    ipRating: "IP44",
+    ikRating: "IK10",
+  };
+  const result = deriveSelectorReferenceOptionsFromSnapshot(cascadeSnapshot(), {
+    source: sourceReady(),
+    constraints,
+  });
+  const model = selectorViewModelFor(result, constraints);
+  const surface = model.selectorSurface;
+
+  assert.deepEqual(compatibleLabels(workflowField(result, "ipRating")), ["IP20"]);
+  assert.deepEqual(compatibleLabels(workflowField(result, "ikRating")), ["IK07"]);
+  assert.equal(option(result, "ipRating", "IP44").selected, true);
+  assert.equal(option(result, "ipRating", "IP44").status, "blocked");
+  assert.equal(option(result, "ikRating", "IK10").selected, true);
+  assert.equal(option(result, "ikRating", "IK10").status, "blocked");
+  assert.equal(surface.payloadPreview.optics.direct.opticVar1, "Comfort · 60");
+  assert.equal(surface.payloadPreview.environment.ip, null);
+  assert.equal(surface.payloadPreview.environment.ik, null);
+  assert.equal(productSpineRow(surface, "environment", "ipIk").displayValue, "—");
+  assert.equal(truthItemsForField(surface.selectionTruthSummary, "ipRating", "manual-constraint").length, 0);
+  assert.equal(truthItemsForField(surface.selectionTruthSummary, "ikRating", "manual-constraint").length, 0);
+  assert.ok(surface.selectionTruthSummary.blockers.some((item) => item.fieldKey === "ipRating"));
+  assert.ok(surface.selectionTruthSummary.blockers.some((item) => item.fieldKey === "ikRating"));
+
+  const railText = compactBlockedRailText(surface.selectionTruthSummary);
+  assert.match(railText, /review required/);
+  assert.doesNotMatch(railText, /IP44|IK10/);
+  assert.match(detailedBlockedValueText(surface.selectionTruthSummary), /IP44|IK10/);
+});
+
+test("compatible IP and IK survive System and optic constraints as selected truth", () => {
+  const constraints = {
+    system: "DNX 60 Beam DI",
+    directOpticVar1: "60|Opal",
+    ipRating: "IP44",
+    ikRating: "IK07",
+  };
+  const result = deriveSelectorReferenceOptionsFromSnapshot(cascadeSnapshot(), {
+    source: sourceReady(),
+    constraints,
+  });
+  const model = selectorViewModelFor(result, constraints);
+  const surface = model.selectorSurface;
+
+  assert.equal(option(result, "ipRating", "IP44").status, "available");
+  assert.equal(option(result, "ikRating", "IK07").status, "available");
+  assert.equal(surface.payloadPreview.environment.ip, "IP44");
+  assert.equal(surface.payloadPreview.environment.ik, "IK07");
+  const ipIkRow = productSpineRow(surface, "environment", "ipIk");
+  assert.equal(ipIkRow.status, "manual-constraint");
+  assert.equal(ipIkRow.displayValue, "IP44 / IK07");
+  assert.equal(surface.selectionTruthSummary.blockers.some((item) => item.fieldKey === "ipRating"), false);
+  assert.equal(surface.selectionTruthSummary.blockers.some((item) => item.fieldKey === "ikRating"), false);
+});
+
+test("stale optic children and indirect optics do not block IP/IK parent candidate calculation", () => {
+  const constraints = {
+    system: "DNX 60 Beam DI",
+    directOpticVar1: "60|Comfort",
+    directOpticVar2: "60|Opal|Soft",
+    indirectOpticVar1: "80|Blade",
+    ipRating: "IP20",
+    ikRating: "IK07",
+  };
+  const result = deriveSelectorReferenceOptionsFromSnapshot(cascadeSnapshot(), {
+    source: sourceReady(),
+    constraints,
+  });
+  const model = selectorViewModelFor(result, constraints);
+  const surface = model.selectorSurface;
+
+  assert.deepEqual(compatibleLabels(workflowField(result, "ipRating")), ["IP20"]);
+  assert.deepEqual(compatibleLabels(workflowField(result, "ikRating")), ["IK07"]);
+  assert.equal(option(result, "ipRating", "IP20").status, "available");
+  assert.equal(option(result, "ikRating", "IK07").status, "available");
+  assert.equal(surface.payloadPreview.environment.ip, "IP20");
+  assert.equal(surface.payloadPreview.environment.ik, "IK07");
+  assert.equal(surface.selectionTruthSummary.blockers.some((item) => item.fieldKey === "ipRating"), false);
+  assert.equal(surface.selectionTruthSummary.blockers.some((item) => item.fieldKey === "ikRating"), false);
 });
 
 test("UI reloads GET options endpoint after manual constraint changes", async () => {

@@ -1577,10 +1577,10 @@ const CASCADE_CHILD_FIELDS_BY_PARENT = Object.freeze({
     "finishFlex",
     "inheritedFinishStatus",
   ]),
-  directOpticVar1: Object.freeze(["directOpticVar2"]),
+  directOpticVar1: Object.freeze(["directOpticVar2", "ipRating", "ikRating"]),
   indirectOpticVar1: Object.freeze(["indirectOpticVar2"]),
-  diffuserVar1: Object.freeze(["diffuserVar2", "diffuserMaterial", "diffuserSpecCodePreview", "diffuserImageReadiness"]),
-  optic: Object.freeze(["opticSub"]),
+  diffuserVar1: Object.freeze(["diffuserVar2", "diffuserMaterial", "diffuserSpecCodePreview", "diffuserImageReadiness", "ipRating", "ikRating"]),
+  optic: Object.freeze(["opticSub", "ipRating", "ikRating"]),
   mountStyle: Object.freeze(["mountSelection", "mountParticulars"]),
   mountSelection: Object.freeze(["mountParticulars"]),
   bodyFinish: Object.freeze(["finishCover", "finishEnd", "finishFlex", "inheritedFinishStatus"]),
@@ -1588,7 +1588,28 @@ const CASCADE_CHILD_FIELDS_BY_PARENT = Object.freeze({
   controlType: Object.freeze(["driver", "wiringType"]),
 });
 
+const ENVIRONMENT_IP_IK_FIELD_KEYS = Object.freeze(new Set(["ipRating", "ikRating"]));
+
+function selectedEnvironmentDirectOpticConstraint(constraints = {}) {
+  return [
+    ["directOpticVar1", constraints.directOpticVar1],
+    ["diffuserVar1", constraints.diffuserVar1],
+    ["optic", constraints.optic],
+  ].find(([, value]) => safeString(value));
+}
+
+function environmentIpIkScopedConstraints(constraints = {}) {
+  const scoped = {};
+  if (safeString(constraints.system || "")) scoped.system = constraints.system;
+
+  const directOptic = selectedEnvironmentDirectOpticConstraint(constraints);
+  if (directOptic) scoped[directOptic[0]] = directOptic[1];
+
+  return scoped;
+}
+
 function cascadeScopedConstraints(fieldKey = "", constraints = {}) {
+  if (ENVIRONMENT_IP_IK_FIELD_KEYS.has(fieldKey)) return environmentIpIkScopedConstraints(constraints);
   const childKeys = CASCADE_CHILD_FIELDS_BY_PARENT[fieldKey] || [];
   if (!childKeys.length) return constraints;
   const blockedChildren = new Set(childKeys);
