@@ -904,7 +904,136 @@ function blockedFieldRows(diagnostics = {}) {
   ]);
 }
 
-function createSelectionControls(contract = {}, selectorState, onLocalStateChange) {
+function controlOptionBlocked(option = {}) {
+  return option?.blocked === true || option?.status === "blocked";
+}
+
+function workflowControlOptions(field = {}) {
+  const optionSource = Array.isArray(field.dropdownOptions)
+    ? field.dropdownOptions
+    : (Array.isArray(field.options) ? field.options : []);
+  return optionSource
+    .filter((option) => !controlOptionBlocked(option))
+    .map((option) => ({ ...option, selected: false, rawRowsExposed: false }));
+}
+
+function workflowControlIncompatibleOptions(field = {}) {
+  const optionSource = Array.isArray(field.incompatibleOptions)
+    ? field.incompatibleOptions
+    : (Array.isArray(field.options) ? field.options.filter(controlOptionBlocked) : []);
+  return optionSource.map((option) => ({ ...option, rawRowsExposed: false }));
+}
+
+function workflowControlSelectedBlocked(field = {}) {
+  if (!String(field.selectedValue || "").trim()) return false;
+  if (field.selectedOptionBlocked === true || field.displayMode === "warning-chip" || field.status === "blocked") return true;
+  const selectedValue = String(field.selectedValue || "").trim();
+  const selected = [...workflowControlOptions(field), ...workflowControlIncompatibleOptions(field)]
+    .find((option) => optionValuesMatch(option.value, selectedValue) || optionValuesMatch(option.label, selectedValue));
+  return controlOptionBlocked(selected || {});
+}
+
+function workflowControlFieldVisible(field = {}) {
+  if (!field?.fieldKey) return false;
+  if (field.disabled === true || field.futureMapped === true) return false;
+  if (["disabled-handoff", "hidden-diagnostic", "metadata-chip"].includes(field.displayMode)) return false;
+  const activeOptions = workflowControlOptions(field);
+  if (activeOptions.length) return true;
+  return workflowControlIncompatibleOptions(field).some((option) => option.selectedBlockedDiagnostic === true || option.selected === true);
+}
+
+function workflowControlField(section = {}, field = {}) {
+  const activeOptions = workflowControlOptions(field);
+  const incompatibleOptions = workflowControlIncompatibleOptions(field);
+  const selectedBlocked = workflowControlSelectedBlocked(field);
+  const selectedValue = selectedBlocked ? "" : (field.selectedValue || field.effectiveValue || "");
+  const selectedLabel = selectedBlocked ? "Not selected" : (field.selectedLabel || field.effectiveLabel || selectedValue || "none");
+  return {
+    fieldKey: field.fieldKey,
+    label: field.label || field.fieldKey,
+    sectionKey: section.sectionKey || "workflow",
+    value: selectedValue,
+    valueLabel: selectedLabel,
+    stateLabel: selectedBlocked
+      ? "blocked / incompatible — not selected"
+      : field.selectedValue
+        ? "manual constraint"
+        : field.effectiveValue
+          ? "auto consequence / changeable"
+          : "unselected",
+    selectedKind: selectedBlocked ? "blocked" : (field.provenance || field.displayMode || "unselected"),
+    manualConstraint: Boolean(field.selectedValue) && !selectedBlocked,
+    autoConsequence: Boolean(!field.selectedValue && field.effectiveValue),
+    defaultPreview: false,
+    mutable: field.disabled !== true && field.futureMapped !== true,
+    selectedOptionBlocked: selectedBlocked,
+    selectedBlockedOptionVisible: false,
+    selectedBlockedOptionRetainedForDiagnostics: incompatibleOptions.some((option) => option.selectedBlockedDiagnostic === true || option.selected === true),
+    compatibleDropdownOptionCount: activeOptions.length,
+    incompatibleOptionCount: incompatibleOptions.length,
+    options: activeOptions,
+    dropdownOptions: activeOptions,
+    incompatibleOptions,
+    source: "selectorSurface.workflowSections",
+    writes: false,
+    rawRowsExposed: false,
+  };
+}
+
+function selectorSurfaceControlSections(selectorSurface = {}, selectorState, onLocalStateChange) {
+  const workflowSections = Array.isArray(selectorSurface.workflowSections) ? selectorSurface.workflowSections : [];
+  return workflowSections.map((section) => {
+    const fields = (Array.isArray(section.fields) ? section.fields : [])
+      .filter(workflowControlFieldVisible)
+      .map((field) => workflowControlField(section, field));
+    return {
+      sectionId: section.sectionKey || "workflow",
+      title: section.title || section.sectionKey || "Selector fields",
+      source: "selectorSurface.workflowSections",
+      reconciledTruth: true,
+      fields,
+      setFieldValue(fieldKey, value) {
+        const label = fields.find((field) => field.fieldKey === fieldKey)?.options?.find((option) => optionValuesMatch(option.value, value))?.label || "";
+        if (value) {
+          if (selectorSurface.setFieldValue) selectorSurface.setFieldValue(fieldKey, value);
+          else {
+            selectorState?.setDbBackedSelectorFieldValue?.(fieldKey, value, label);
+            onLocalStateChange?.();
+          }
+        } else {
+          if (selectorSurface.clearFieldValue) selectorSurface.clearFieldValue(fieldKey);
+          else {
+            selectorState?.clearDbBackedSelectorFieldValue?.(fieldKey);
+            onLocalStateChange?.();
+          }
+        }
+      },
+      clearManualConstraint(fieldKey) {
+        if (selectorSurface.clearFieldValue) selectorSurface.clearFieldValue(fieldKey);
+        else {
+          selectorState?.clearDbBackedSelectorFieldValue?.(fieldKey);
+          onLocalStateChange?.();
+        }
+      },
+    };
+  }).filter((section) => section.fields.length);
+}
+
+function setSelectorControlValue(selectorState, fieldKey, value) {
+  if (selectorState?.setDbBackedSelectorFieldValue) selectorState.setDbBackedSelectorFieldValue(fieldKey, value);
+  else selectorState?.setSelectorFieldValue?.(fieldKey, value);
+}
+
+function clearSelectorControlValue(selectorState, fieldKey) {
+  if (selectorState?.clearDbBackedSelectorFieldValue) selectorState.clearDbBackedSelectorFieldValue(fieldKey);
+  else selectorState?.clearSelectorFieldValue?.(fieldKey);
+}
+
+function createSelectionControls(contract = {}, selectorState, onLocalStateChange, selectorSurface = null) {
+  if (Array.isArray(selectorSurface?.workflowSections) && selectorSurface.workflowSections.length) {
+    return selectorSurfaceControlSections(selectorSurface, selectorState, onLocalStateChange);
+  }
+
   const sectionFieldContract = readSectionFieldContract(contract);
   const manualConstraints = contract.manualConstraints || {};
   const autoConsequences = contract.autoConsequences || {};
@@ -917,6 +1046,8 @@ function createSelectionControls(contract = {}, selectorState, onLocalStateChang
     return {
       sectionId: section.id,
       title: section.title,
+      source: "selectorStateContract.sectionFieldContract",
+      reconciledTruth: false,
       fields: fields
         .filter((field) => field.effectiveSelectionEligible === true && Array.isArray(field.options) && field.options.length)
         .map((field) => {
@@ -936,21 +1067,23 @@ function createSelectionControls(contract = {}, selectorState, onLocalStateChang
             defaultPreview: isDefault,
             mutable: true,
             options: field.options.map((option) => ({ ...option })),
+            writes: false,
+            rawRowsExposed: false,
           };
         }),
       setFieldValue(fieldKey, value) {
-        selectorState?.setSelectorFieldValue?.(fieldKey, value);
+        setSelectorControlValue(selectorState, fieldKey, value);
         onLocalStateChange?.();
       },
       clearManualConstraint(fieldKey) {
-        selectorState?.clearSelectorFieldValue?.(fieldKey);
+        clearSelectorControlValue(selectorState, fieldKey);
         onLocalStateChange?.();
       },
     };
   }).filter((section) => section.fields.length);
 }
 
-function createManualConstraintBehaviour(contract = {}, selectorState, onLocalStateChange) {
+function createManualConstraintBehaviour(contract = {}, selectorState, onLocalStateChange, selectorSurface = null) {
   const diagnostics = contract.compatibilityDiagnostics || {};
   return {
     requiredWording: [
@@ -984,7 +1117,7 @@ function createManualConstraintBehaviour(contract = {}, selectorState, onLocalSt
     defaultPreviewRows: selectionRows(contract.defaultPreviewSelections, "default-preview selections"),
     compatibilityWarningRows: compatibilityWarningRows(diagnostics),
     blockedFieldRows: blockedFieldRows(diagnostics),
-    controlSections: createSelectionControls(contract, selectorState, onLocalStateChange),
+    controlSections: createSelectionControls(contract, selectorState, onLocalStateChange, selectorSurface),
   };
 }
 
@@ -5741,7 +5874,7 @@ function createSelectorReadinessDiagnostics(contract = {}) {
   };
 }
 
-function createSelectorExpanderShell(local = {}, selectorState, onLocalStateChange, selectorReferenceStatus = {}) {
+function createSelectorExpanderShell(local = {}, selectorState, onLocalStateChange, selectorReferenceStatus = {}, selectorSurface = null) {
   const stateContract = selectorStateContractFromLocal(local);
   const defaultPreviewBuckets = createDefaultPreviewBucketDiagnostics(stateContract);
   const fieldContractDiagnostics = createSelectorFieldContractDiagnostics(stateContract);
@@ -5763,7 +5896,7 @@ function createSelectorExpanderShell(local = {}, selectorState, onLocalStateChan
     sectionFieldContractDiagnostics: fieldContractDiagnostics.sectionDiagnostics,
     manualConstraintScaffoldRows: createManualConstraintScaffoldRows(stateContract),
     behaviourContractRows: createBehaviourContractRows(stateContract),
-    manualConstraintBehaviour: createManualConstraintBehaviour(stateContract, selectorState, onLocalStateChange),
+    manualConstraintBehaviour: createManualConstraintBehaviour(stateContract, selectorState, onLocalStateChange, selectorSurface),
     readinessDiagnostics: createSelectorReadinessDiagnostics(stateContract),
     readonlyResolverPreview,
     setSectionOpen(sectionId, open) {
@@ -5863,7 +5996,7 @@ export function createSelectorViewModel({ adapter, selectorState, selectorRefere
     selectorWorkflowStageSummaries: selectorSurface.selectorWorkflowStageSummaries,
     selectorWorkflowBlockedSummary: selectorSurface.selectorWorkflowBlockedSummary,
     selectorDownstreamReadinessSummary: selectorSurface.selectorDownstreamReadinessSummary,
-    expanderShell: createSelectorExpanderShell(local, selectorState, onLocalStateChange, selectorReferenceStatus),
+    expanderShell: createSelectorExpanderShell(local, selectorState, onLocalStateChange, selectorReferenceStatus, selectorSurface),
     identity: {
       owner: identity.owner,
       status: identity.status,

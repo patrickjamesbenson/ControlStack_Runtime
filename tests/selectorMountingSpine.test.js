@@ -239,6 +239,18 @@ function compatibleOptionValues(model, fieldKey) {
     .sort();
 }
 
+function visibleControlField(model = {}, fieldKey) {
+  const field = (model.expanderShell?.manualConstraintBehaviour?.controlSections || [])
+    .flatMap((section) => Array.isArray(section.fields) ? section.fields : [])
+    .find((item) => item.fieldKey === fieldKey);
+  assert.ok(field, `expected visible/main control field ${fieldKey}`);
+  return field;
+}
+
+function controlOptionValues(field = {}) {
+  return (Array.isArray(field.options) ? field.options : []).map((option) => option.value).sort();
+}
+
 function workflowOption(model, fieldKey, value) {
   const option = (workflowField(model, fieldKey).options || []).find((item) => item.value === value || item.label === value);
   assert.ok(option, `expected option ${value} for ${fieldKey}`);
@@ -282,12 +294,14 @@ test("System mount capability filters compatible mount styles before selection",
   const recessedModel = selectAndReload(recessedState, "system", "DNX|80");
 
   assert.deepEqual(compatibleOptionValues(recessedModel, "mountStyle"), ["Recessed", "Suspended"].sort());
+  assert.deepEqual(controlOptionValues(visibleControlField(recessedModel, "mountStyle")), ["Recessed", "Suspended"].sort());
   assert.equal(workflowOption(recessedModel, "mountStyle", "Surface Mount").status, "blocked");
   assert.equal(workflowOption(recessedModel, "mountStyle", "Surface Mount").blocked, true);
 
   const surfaceState = createSelectorState();
   const surfaceModel = selectAndReload(surfaceState, "system", "ALT|40");
   assert.deepEqual(compatibleOptionValues(surfaceModel, "mountStyle"), ["Surface Mount"]);
+  assert.deepEqual(controlOptionValues(visibleControlField(surfaceModel, "mountStyle")), ["Surface Mount"]);
   assert.equal(workflowOption(surfaceModel, "mountStyle", "Recessed").status, "blocked");
   assert.equal(workflowOption(surfaceModel, "mountStyle", "Suspended").status, "blocked");
 });
@@ -418,6 +432,7 @@ test("SURFACE_MOUNT_DI_BLOCK blocks Surface Mount for direct-indirect/uplight sy
   assert.equal(mountField.dropdownOptions.some((option) => option.value === "Surface Mount"), false);
   assert.equal(mountField.incompatibleOptions.some((option) => option.value === "Surface Mount"), true);
   assert.equal(mountField.selectedBlockedOptionVisible, false);
+  assert.deepEqual(controlOptionValues(visibleControlField(model, "mountStyle")), ["Suspended"]);
   assert.equal(workflowOption(model, "mountStyle", "Suspended").status, "available");
 });
 
@@ -437,6 +452,10 @@ test("selected incompatible Surface Mount is preserved as blocked by donor polic
   assert.match(diagnosticOption?.blockedReason || row.reason, /ceiling blocks.*indirect|direct-indirect|blocked/i);
   assert.equal(mountField.selectedBlockedOptionVisible, false);
   assert.equal(selectedDropdown, undefined);
+  const liveMountControl = visibleControlField(model, "mountStyle");
+  assert.equal(liveMountControl.value, "");
+  assert.deepEqual(controlOptionValues(liveMountControl), ["Suspended"]);
+  assert.equal(liveMountControl.incompatibleOptions.some((option) => option.value === "Surface Mount" && option.selectedBlockedDiagnostic === true), true);
   assert.ok(diagnosticOption, "blocked Surface Mount should remain only in developer/detail diagnostics");
   assert.equal(diagnosticOption.selected, true);
   assert.equal(diagnosticOption.selectedBlockedDiagnostic, true);

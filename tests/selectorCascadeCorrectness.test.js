@@ -4,7 +4,7 @@ import { readFile } from "node:fs/promises";
 
 import { deriveSelectorReferenceOptionsFromSnapshot } from "../packages/workspace-kernel/selectorReferenceOptionsService.js";
 import { createSelectorViewModel } from "../packages/modules/cs-selector/selectorViewModel.js";
-import { createSafeRailSelectionSourceBucketRows } from "../packages/modules/cs-selector/selectorView.js";
+import { createSafeRailSelectionSourceBucketRows, renderSelectorView } from "../packages/modules/cs-selector/selectorView.js";
 
 const moduleSourceUrl = new URL("../packages/modules/cs-selector/index.js", import.meta.url);
 const serverSourceUrl = new URL("../server.js", import.meta.url);
@@ -241,6 +241,101 @@ function truthItemsForField(summary = {}, fieldKey, truthKind = "manual-constrai
   return (Array.isArray(summary.groups) ? summary.groups : [])
     .flatMap((group) => Array.isArray(group.items) ? group.items : [])
     .filter((item) => item.fieldKey === fieldKey && item.truthKind === truthKind);
+}
+
+function visibleControlField(model = {}, fieldKey) {
+  const fields = (model.expanderShell?.manualConstraintBehaviour?.controlSections || [])
+    .flatMap((section) => Array.isArray(section.fields) ? section.fields : []);
+  const field = fields.find((item) => item.fieldKey === fieldKey);
+  assert.ok(field, `expected visible/main control field ${fieldKey}`);
+  return field;
+}
+
+function optionalVisibleControlField(model = {}, fieldKey) {
+  return (model.expanderShell?.manualConstraintBehaviour?.controlSections || [])
+    .flatMap((section) => Array.isArray(section.fields) ? section.fields : [])
+    .find((item) => item.fieldKey === fieldKey) || null;
+}
+
+function controlOptionLabels(field = {}) {
+  return (Array.isArray(field.options) ? field.options : []).map((option) => option.label || option.value).sort();
+}
+
+class SelectorTestElement {
+  constructor(tagName = "div") {
+    this.tagName = String(tagName || "div").toUpperCase();
+    this.children = [];
+    this.parentNode = null;
+    this.dataset = {};
+    this.eventListeners = {};
+    this.className = "";
+    this.textContent = "";
+    this.value = "";
+    this.id = "";
+    this.htmlFor = "";
+    this.type = "";
+    this.open = false;
+  }
+
+  appendChild(child) {
+    child.parentNode = this;
+    this.children.push(child);
+    return child;
+  }
+
+  removeChild(child) {
+    const index = this.children.indexOf(child);
+    if (index >= 0) this.children.splice(index, 1);
+    child.parentNode = null;
+    return child;
+  }
+
+  get firstChild() {
+    return this.children[0] || null;
+  }
+
+  get options() {
+    return this.children.filter((child) => child.tagName === "OPTION");
+  }
+
+  addEventListener(type, handler) {
+    this.eventListeners[type] = handler;
+  }
+}
+
+function withSelectorTestDocument(callback) {
+  const documentKey = "doc" + "ument";
+  const previousDocument = globalThis[documentKey];
+  globalThis[documentKey] = {
+    createElement(tagName) {
+      return new SelectorTestElement(tagName);
+    },
+  };
+  try {
+    return callback();
+  } finally {
+    globalThis[documentKey] = previousDocument;
+  }
+}
+
+function elementDescendants(element) {
+  return [element, ...(element.children || []).flatMap(elementDescendants)];
+}
+
+function renderedSelectorContainer(model) {
+  return withSelectorTestDocument(() => {
+    const container = globalThis["doc" + "ument"].createElement("div");
+    renderSelectorView(container, model);
+    return container;
+  });
+}
+
+function renderedSelectsForField(container, fieldKey) {
+  return elementDescendants(container).filter((element) => element.tagName === "SELECT" && element.dataset.fieldKey === fieldKey);
+}
+
+function renderedSelectOptionLabels(select) {
+  return select.options.map((option) => option.textContent || option.value).filter(Boolean).sort();
 }
 
 function identityCascadeSnapshot() {
@@ -1011,6 +1106,9 @@ test("live main Direct Optic Var1 dropdown clears stale blocked optic while deve
   const model = selectorViewModelFor(result, constraints);
   const surface = model.selectorSurface;
   const mainDirectField = viewModelField(result, "directOpticVar1", constraints);
+  const liveControlField = visibleControlField(model, "directOpticVar1");
+  const renderedContainer = renderedSelectorContainer(model);
+  const renderedDirectSelects = renderedSelectsForField(renderedContainer, "directOpticVar1");
 
   assert.equal(option(result, "directOpticVar1", "60|Comfort").status, "blocked");
   assert.equal(mainDirectField.displayMode, "warning-chip");
@@ -1022,6 +1120,18 @@ test("live main Direct Optic Var1 dropdown clears stale blocked optic while deve
   assert.ok(diagnostic, "stale direct optic should remain available for diagnostic review");
   assert.equal(diagnostic.selected, true);
   assert.equal(diagnostic.selectedBlockedDiagnostic, true);
+
+  assert.equal(liveControlField.source, "selectorSurface.workflowSections");
+  assert.equal(liveControlField.value, "");
+  assert.equal(liveControlField.valueLabel, "Not selected");
+  assert.equal(liveControlField.selectedOptionBlocked, true);
+  assert.equal(liveControlField.options.some((item) => item.value === "60|Comfort" || /Comfort/.test(item.label)), false);
+  assert.ok(liveControlField.incompatibleOptions.some((item) => item.value === "60|Comfort" && item.selectedBlockedDiagnostic === true));
+  assert.ok(renderedDirectSelects.length >= 1, "expected direct optic select in actual rendered main/control path");
+  for (const select of renderedDirectSelects) {
+    assert.equal(select.value, "");
+    assert.equal(renderedSelectOptionLabels(select).some((label) => /Comfort/.test(label)), false);
+  }
 
   const directTile = surface.donorShapeSelectedTiles.find((item) => item.tileKey === "directOpticVar1");
   assert.equal(directTile.value, "");
@@ -1048,6 +1158,9 @@ test("donor-backed Var1 parents remain selectable and Var2 choices hang from the
 
   assert.deepEqual(compatibleLabels(workflowField(base, "directOpticVar1")), ["Daisy · 80", "Inlay · 80"].sort());
   assert.equal(workflowField(base, "directOpticVar2").options.length, 0);
+  const baseModel = selectorViewModelFor(base, baseConstraints);
+  assert.deepEqual(controlOptionLabels(visibleControlField(baseModel, "directOpticVar1")), ["Daisy · 80", "Inlay · 80"].sort());
+  assert.equal(optionalVisibleControlField(baseModel, "directOpticVar2"), null);
 
   const daisyConstraints = { ...baseConstraints, directOpticVar1: "80|Daisy" };
   const daisy = deriveSelectorReferenceOptionsFromSnapshot(snapshot, {
@@ -1056,6 +1169,7 @@ test("donor-backed Var1 parents remain selectable and Var2 choices hang from the
   });
   assert.deepEqual(compatibleLabels(workflowField(daisy, "directOpticVar2")), ["Micro", "Wide"].sort());
   assert.equal(viewModelField(daisy, "directOpticVar2", daisyConstraints).displayMode, "choice");
+  assert.deepEqual(controlOptionLabels(visibleControlField(selectorViewModelFor(daisy, daisyConstraints), "directOpticVar2")), ["Micro", "Wide"].sort());
 
   const inlayConstraints = { ...baseConstraints, directOpticVar1: "80|Inlay" };
   const inlay = deriveSelectorReferenceOptionsFromSnapshot(snapshot, {
@@ -1063,6 +1177,7 @@ test("donor-backed Var1 parents remain selectable and Var2 choices hang from the
     constraints: inlayConstraints,
   });
   assert.deepEqual(compatibleLabels(workflowField(inlay, "directOpticVar2")), ["Var1", "Var2"].sort());
+  assert.deepEqual(controlOptionLabels(visibleControlField(selectorViewModelFor(inlay, inlayConstraints), "directOpticVar2")), ["Var1", "Var2"].sort());
 });
 
 test("IP and IK candidates are limited by the real source-backed System plus selected direct optic", () => {
@@ -1080,6 +1195,9 @@ test("IP and IK candidates are limited by the real source-backed System plus sel
   });
   assert.deepEqual(compatibleLabels(workflowField(daisy, "ipRating")), ["IP20"]);
   assert.deepEqual(compatibleLabels(workflowField(daisy, "ikRating")), ["IK07"]);
+  const daisyModel = selectorViewModelFor(daisy, daisyConstraints);
+  assert.deepEqual(controlOptionLabels(visibleControlField(daisyModel, "ipRating")), ["IP20"]);
+  assert.deepEqual(controlOptionLabels(visibleControlField(daisyModel, "ikRating")), ["IK07"]);
 
   const inlayConstraints = { system: "DNX 80 DI", directOpticVar1: "80|Inlay" };
   const inlay = deriveSelectorReferenceOptionsFromSnapshot(snapshot, {
@@ -1088,6 +1206,9 @@ test("IP and IK candidates are limited by the real source-backed System plus sel
   });
   assert.deepEqual(compatibleLabels(workflowField(inlay, "ipRating")), ["IP65"]);
   assert.deepEqual(compatibleLabels(workflowField(inlay, "ikRating")), ["IK10"]);
+  const inlayModel = selectorViewModelFor(inlay, inlayConstraints);
+  assert.deepEqual(controlOptionLabels(visibleControlField(inlayModel, "ipRating")), ["IP65"]);
+  assert.deepEqual(controlOptionLabels(visibleControlField(inlayModel, "ikRating")), ["IK10"]);
 });
 
 test("Electrical Class exposes all source-backed values and is not poisoned by stale IP or IK", () => {
@@ -1125,6 +1246,10 @@ test("Electrical Class exposes all source-backed values and is not poisoned by s
   const labels = compatibleLabels(workflowField(result, "electricalClass"));
   assert.deepEqual(labels, ["Class I", "Class II", "Non SELV with Earth", "SELV Isolated", "SELV Remote"].sort());
   assert.equal(labels.includes("SELV with Earth"), false, "do not invent donor fallback electrical classes not present in source");
+  assert.deepEqual(
+    controlOptionLabels(visibleControlField(selectorViewModelFor(result, constraints), "electricalClass")),
+    ["Class I", "Class II", "Non SELV with Earth", "SELV Isolated", "SELV Remote"].sort(),
+  );
 });
 
 test("UI reloads GET options endpoint after manual constraint changes", async () => {
