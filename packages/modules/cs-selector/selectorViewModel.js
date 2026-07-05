@@ -1960,6 +1960,11 @@ const RUNTIME_PRESENTATION_CONDITIONAL_PRIMARY_FIELDS = Object.freeze(new Set([
   "indirectOpticVar2",
 ]));
 
+const RUNTIME_PRESENTATION_OPTIC_VAR2_PICKER_FIELDS = Object.freeze(new Set([
+  "directOpticVar2",
+  "indirectOpticVar2",
+]));
+
 const RUNTIME_PRESENTATION_AUTO_CHIP_FIELDS = Object.freeze(new Set([
   "tier",
   "variantKey",
@@ -2190,6 +2195,9 @@ function presentationIsInherited(field = {}) {
 function presentationPrimaryDecisionAtThisStep(field = {}, compatibleOptionCount, selectedOptionBlocked) {
   const selectedValue = String(field.selectedValue || "").trim();
   if (selectedOptionBlocked === true) return true;
+  if (RUNTIME_PRESENTATION_OPTIC_VAR2_PICKER_FIELDS.has(field.fieldKey)) {
+    return selectedValue.length > 0 || compatibleOptionCount > 0;
+  }
   if (RUNTIME_PRESENTATION_CONDITIONAL_PRIMARY_FIELDS.has(field.fieldKey)) {
     return selectedValue.length > 0 || compatibleOptionCount > 1;
   }
@@ -2855,6 +2863,8 @@ const DONOR_SHAPE_SELECTED_TILE_DEFINITIONS = Object.freeze([
 function donorShapeTileField(fieldLookup, fieldKeys = []) {
   const fields = fieldKeys.map((fieldKey) => fieldLookup.get(fieldKey)).filter(Boolean);
   return fields.find((field) => Boolean(field.selectedValue || field.selectedLabel))
+    || fields.find((field) => Boolean((field.effectiveValue || field.effectiveLabel) && field.displayMode !== "hidden-diagnostic"))
+    || fields.find((field) => field.displayMode === "choice" && field.provenance === "available-choice")
     || fields.find((field) => Boolean(field.effectiveValue || field.effectiveLabel))
     || fields[0]
     || null;
@@ -2866,8 +2876,9 @@ function createDonorShapeSelectedTiles({ fields = [], workflowSections = [] } = 
     const field = donorShapeTileField(fieldLookup, definition.fieldKeys);
     const selectedOption = field ? presentationSelectedOption(field) : null;
     const blocked = Boolean(field?.selectedValue && (field?.selectedOptionBlocked === true || selectedOption?.blocked === true || selectedOption?.status === "blocked"));
-    const value = blocked ? "" : (field?.selectedValue || field?.effectiveValue || selectedOption?.value || "");
-    const valueLabel = blocked ? "Not selected" : (field?.selectedLabel || field?.effectiveLabel || selectedOption?.label || "Not selected");
+    const selectedTruthValue = field?.selectedValue || field?.effectiveValue || "";
+    const value = blocked ? "" : selectedTruthValue;
+    const valueLabel = blocked ? "Not selected" : (field?.selectedLabel || field?.effectiveLabel || (selectedTruthValue ? selectedOption?.label : "") || "Not selected");
     const fieldKey = field?.fieldKey || definition.fieldKeys[0];
     return {
       tileKey: definition.tileKey,

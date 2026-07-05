@@ -185,6 +185,47 @@ function multiIndirectChoiceReferenceSnapshot() {
   };
 }
 
+function beamDirectionalIsolationReferenceSnapshot() {
+  return {
+    SYSTEM: [
+      { system: "60", system_variant_1: "Beam", label: "DNX 60 Beam DI", emission: "Both", approved: "yes" },
+      { system: "60", system_variant_1: "Square", label: "DNX 60", emission: "Direct", approved: "yes" },
+    ],
+    OPTICS: [
+      {
+        system: "60",
+        optic_var_1: "Comfort",
+        optic_var_2: "Medium",
+        spec_code: "CFT",
+        spec_code_var2: "MED",
+        emission_permission: "Direct",
+        diffuser_material: "PMMA",
+        approved: "yes",
+      },
+      {
+        system: "60",
+        optic_var_1: "Batwing",
+        optic_var_2: "Wide, Narrow",
+        spec_code: "BWG",
+        spec_code_var2: "WDE, NRW",
+        emission_permission: "Indirect",
+        diffuser_material: "PMMA",
+        approved: "yes",
+      },
+      {
+        system: "60",
+        optic_var_1: "Glow",
+        optic_var_2: "Soft",
+        spec_code: "GLW",
+        spec_code_var2: "SFT",
+        emission_permission: "Indirect",
+        diffuser_material: "PMMA",
+        approved: "yes",
+      },
+    ],
+  };
+}
+
 function currentDbConstraints(selectorState = createSelectorState()) {
   const constraints = selectorState.getSnapshot?.().dbBackedSelector?.manualConstraints || {};
   return Object.fromEntries(Object.entries(constraints).map(([fieldKey, record]) => [fieldKey, String(record?.value || "").trim()]).filter(([, value]) => value));
@@ -324,6 +365,68 @@ test("Both emission promotes the single indirect optic var 1 consequence into th
   assert.notEqual(indirectTile.valueLabel, "Not selected");
   const indirectVar2Tile = model.selectorSurface.donorShapeSelectedTiles.find((tile) => tile.tileKey === "indirectOpticVar2");
   assert.doesNotMatch(indirectVar2Tile.reason || "", /Select indirectOpticVar1/);
+});
+
+test("DNX 60 Beam D/I isolates direct var 2 from multi-option indirect var 1 choices", () => {
+  const selectorState = createSelectorState();
+  const snapshot = beamDirectionalIsolationReferenceSnapshot();
+  let model = selectAndReload(selectorState, "system", "60|Beam", snapshot);
+
+  assert.equal(workflowField(model, "emission").effectiveLabel, "Both");
+  assert.equal(workflowField(model, "directCapability").effectiveLabel, "Direct supported");
+  assert.equal(workflowField(model, "indirectCapability").effectiveLabel, "Indirect supported");
+
+  model = selectAndReload(selectorState, "directOpticVar1", "60|Comfort", snapshot);
+  const directVar2 = workflowField(model, "directOpticVar2");
+  assert.equal(directVar2.displayMode, "choice");
+  assert.equal(directVar2.primaryControl, true);
+  assert.equal(directVar2.compatibleDropdownOptionCount, 1);
+  assert.deepEqual(optionValues(model, "directOpticVar2"), ["60|Comfort|Medium"]);
+
+  const indirectVar1 = workflowField(model, "indirectOpticVar1");
+  assert.equal(indirectVar1.displayMode, "choice");
+  assert.equal(indirectVar1.primaryControl, true);
+  assert.equal(indirectVar1.effectiveValue, "");
+  assert.equal(indirectVar1.compatibleDropdownOptionCount, 2);
+  assert.deepEqual(optionValues(model, "indirectOpticVar1").sort(), ["60|Batwing", "60|Glow"].sort());
+
+  assert.match(spineRow(model.selectorSurface.productSpine, "opticDirect").displayValue, /Comfort/);
+  assert.doesNotMatch(spineRow(model.selectorSurface.productSpine, "opticDirect").displayValue, /Batwing|Glow/);
+  assert.equal(spineRow(model.selectorSurface.productSpine, "opticIndirect").displayValue, "—");
+  assert.equal(model.selectorSurface.payloadPreview.optics.direct.opticVar1, "Comfort · 60");
+  assert.equal(model.selectorSurface.payloadPreview.optics.direct.opticVar2, null);
+  assert.equal(model.selectorSurface.payloadPreview.optics.indirect.opticVar1, null);
+
+  const indirectTile = model.selectorSurface.donorShapeSelectedTiles.find((tile) => tile.tileKey === "indirectOpticVar1");
+  assert.equal(indirectTile.valueLabel, "Not selected");
+  assert.notEqual(indirectTile.valueLabel, "Batwing · 60");
+});
+
+test("DNX 60 Beam D/I selected indirect var 1 derives indirect var 2 without overwriting direct cascade", () => {
+  const selectorState = createSelectorState();
+  const snapshot = beamDirectionalIsolationReferenceSnapshot();
+  let model = selectAndReload(selectorState, "system", "60|Beam", snapshot);
+  model = selectAndReload(selectorState, "directOpticVar1", "60|Comfort", snapshot);
+  model = selectAndReload(selectorState, "directOpticVar2", "60|Comfort|Medium", snapshot);
+  model = selectAndReload(selectorState, "indirectOpticVar1", "60|Glow", snapshot);
+
+  assert.deepEqual(optionValues(model, "directOpticVar2"), ["60|Comfort|Medium"]);
+  assert.ok(!optionValues(model, "directOpticVar2").includes("60|Glow|Soft"));
+  assert.ok(optionValues(model, "indirectOpticVar2").includes("60|Glow|Soft"));
+  assert.ok(!optionValues(model, "indirectOpticVar2").includes("60|Batwing|Wide"));
+
+  assert.equal(model.selectorSurface.payloadPreview.optics.direct.opticVar1, "Comfort · 60");
+  assert.equal(model.selectorSurface.payloadPreview.optics.direct.opticVar2, "Medium");
+  assert.equal(model.selectorSurface.payloadPreview.optics.indirect.opticVar1, "Glow · 60");
+  assert.equal(model.selectorSurface.payloadPreview.optics.indirect.opticVar2, null);
+  assert.match(spineRow(model.selectorSurface.productSpine, "opticDirect").displayValue, /Comfort/);
+  assert.match(spineRow(model.selectorSurface.productSpine, "opticDirect").displayValue, /Medium/);
+  assert.doesNotMatch(spineRow(model.selectorSurface.productSpine, "opticDirect").displayValue, /Glow|Batwing/);
+  assert.match(spineRow(model.selectorSurface.productSpine, "opticIndirect").displayValue, /Glow/);
+
+  model = selectAndReload(selectorState, "indirectOpticVar2", "60|Glow|Soft", snapshot);
+  assert.equal(model.selectorSurface.payloadPreview.optics.indirect.opticVar2, "Soft");
+  assert.match(spineRow(model.selectorSurface.productSpine, "opticIndirect").displayValue, /Soft/);
 });
 
 test("60 Beam D/I with multiple indirect var 1 options renders indirect var 1 as selectable", () => {

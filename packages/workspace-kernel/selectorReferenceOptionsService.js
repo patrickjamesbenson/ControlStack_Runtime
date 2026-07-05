@@ -1948,6 +1948,25 @@ const CASCADE_CHILD_FIELDS_BY_PARENT = Object.freeze({
   controlType: Object.freeze(["driver", "wiringType"]),
 });
 
+const DIRECT_OPTIC_CASCADE_FIELDS = Object.freeze(new Set([
+  "optic",
+  "opticSub",
+  "diffuserVar1",
+  "diffuserVar2",
+  "directOpticVar1",
+  "directOpticVar2",
+]));
+
+const INDIRECT_OPTIC_CASCADE_FIELDS = Object.freeze(new Set([
+  "opticIndirect",
+  "indirectOpticVar1",
+  "indirectOpticVar2",
+  "indirectMatchDirect",
+  "targetLmPerMIndirect",
+  "cctCriIndirect",
+  "controlTypeIndirect",
+]));
+
 const ENVIRONMENT_IP_IK_FIELD_KEYS = Object.freeze(new Set(["ipRating", "ikRating"]));
 const FINISH_COMPATIBILITY_FIELD_KEYS = Object.freeze(new Set([
   "bodyFinish",
@@ -1983,13 +2002,24 @@ function finishScopedConstraints(constraints = {}) {
   return scoped;
 }
 
+function directionalOpticScopedConstraints(fieldKey = "", constraints = {}) {
+  if (DIRECT_OPTIC_CASCADE_FIELDS.has(fieldKey)) {
+    return Object.fromEntries(Object.entries(constraints).filter(([key]) => !INDIRECT_OPTIC_CASCADE_FIELDS.has(key)));
+  }
+  if (INDIRECT_OPTIC_CASCADE_FIELDS.has(fieldKey)) {
+    return Object.fromEntries(Object.entries(constraints).filter(([key]) => !DIRECT_OPTIC_CASCADE_FIELDS.has(key)));
+  }
+  return constraints;
+}
+
 function cascadeScopedConstraints(fieldKey = "", constraints = {}) {
   if (ENVIRONMENT_IP_IK_FIELD_KEYS.has(fieldKey)) return environmentIpIkScopedConstraints(constraints);
   if (FINISH_COMPATIBILITY_FIELD_KEYS.has(fieldKey)) return finishScopedConstraints(constraints);
+  const directionalConstraints = directionalOpticScopedConstraints(fieldKey, constraints);
   const childKeys = CASCADE_CHILD_FIELDS_BY_PARENT[fieldKey] || [];
-  if (!childKeys.length) return constraints;
+  if (!childKeys.length) return directionalConstraints;
   const blockedChildren = new Set(childKeys);
-  return Object.fromEntries(Object.entries(constraints).filter(([key]) => !blockedChildren.has(key)));
+  return Object.fromEntries(Object.entries(directionalConstraints).filter(([key]) => !blockedChildren.has(key)));
 }
 
 function recordConstraintBlockers(record, constraints, exceptFieldKey = "") {
@@ -2977,7 +3007,8 @@ function compatibleWorkflowOptionsForField(fieldKey = "", bucket = {}, records =
 function workflowParentConstraintsForAutoConsequences({ bucket = {}, records = [], constraints = {}, cascadeConstraints = constraints } = {}) {
   const parentConstraints = { ...constraints };
   if (!safeString(parentConstraints.indirectOpticVar1 || "")) {
-    const compatibleIndirectParents = compatibleWorkflowOptionsForField("indirectOpticVar1", bucket, records, constraints, cascadeConstraints);
+    const indirectCascadeConstraints = cascadeScopedConstraints("indirectOpticVar1", cascadeConstraints);
+    const compatibleIndirectParents = compatibleWorkflowOptionsForField("indirectOpticVar1", bucket, records, constraints, indirectCascadeConstraints);
     if (compatibleIndirectParents.length === 1) {
       parentConstraints.indirectOpticVar1 = compatibleIndirectParents[0].value;
     }

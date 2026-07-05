@@ -662,8 +662,9 @@ test("full display label DNX 80 DI resolves to size-80 optics and auto-fills the
   assert.equal(indirect.compatibleOptionCount, 1);
   assert.deepEqual(compatibleLabels(workflowField(result, "directOpticVar2")), ["Antiglare"]);
   const opalVar2 = viewModelField(result, "directOpticVar2", constraints);
-  assert.equal(opalVar2.displayMode, "auto-chip");
-  assert.equal(opalVar2.effectiveValue, "80|Opal|Antiglare");
+  assert.equal(opalVar2.displayMode, "choice");
+  assert.equal(opalVar2.primaryControl, true);
+  assert.equal(opalVar2.effectiveValue, "");
   assert.equal(opalVar2.compatibleOptionCount, 1);
   assert.deepEqual(primaryOpticVar1Controls(result, constraints), ["directOpticVar1", "indirectOpticVar1"]);
 
