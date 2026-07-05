@@ -108,6 +108,30 @@ function lightControlSnapshot({ includeLex = false } = {}) {
   };
 }
 
+function lightControlCoreSnapshot() {
+  const snapshot = lightControlSnapshot();
+  return {
+    ...snapshot,
+    SYSTEM: [
+      { system: "DNX", system_variant_1: "80_DI", label: "DNX 80 DI", emission: "Both", approved: "yes" },
+      { system: "DNX", system_variant_1: "80", label: "DNX 80", emission: "Direct", approved: "yes" },
+    ],
+    OPTICS: [
+      { system: "DNX", optic_var_1: "Inlay", optic_var_2: "Microprism;Antiglare", emission_permission: "Direct", approved: "yes" },
+      { system: "DNX", optic_var_1: "Rope", emission_permission: "Indirect", approved: "yes" },
+    ],
+    BOARDS: [
+      { system: "DNX", system_variant_1: "80_DI", board_lm_per_m: "1200", c1_cct: "4000", c1_cri_min: "90", control_type_labels: "DALI-2;Fixed", approved: "yes" },
+    ],
+    DRIVERS: [
+      { driver_id: "DALI Driver", control_type: "DALI-2", approved: "yes" },
+      { driver_id: "Fixed Driver", control_type: "Fixed", approved: "yes" },
+    ],
+    TIERS: [{ tier: "Business", electrical: "Class I;Class II", approved: "yes" }],
+    ACCESSORIES: [{ accessory_type: "egress_light", accessory_id: "Maintained", approved: "yes" }],
+  };
+}
+
 function selectorReferenceStatus(snapshot = lightControlSnapshot()) {
   return {
     ok: true,
@@ -216,18 +240,18 @@ test("selecting control type changes the compatible driver consequence", () => {
   assert.equal(model.selectorSurface.payloadPreview.lightControl.driver, "PWM Driver");
 });
 
-test("incompatible selected Light & Control options are preserved and blocked", () => {
+test("system selection does not block donor global Light & Control CCT/CRI choices", () => {
   const selectorState = createSelectorState();
   selectAndReload(selectorState, "system", "DNX|80");
   const model = selectAndReload(selectorState, "cctCri", "2700K / CRI80");
   const row = lightRow(model.selectorSurface.productSpine, "cctCri");
 
-  assert.equal(row.displayValue, "—");
-  assert.equal(row.status, "blocked");
-  assert.equal(row.blocked, true);
+  assert.equal(row.displayValue, "2700K / CRI80");
+  assert.equal(row.status, "manual-constraint");
+  assert.equal(row.blocked, false);
   assert.equal(selectorState.getSnapshot().dbBackedSelector.manualConstraints.cctCri.value, "2700K / CRI80");
-  assert.ok(model.selectorSurface.selectionTruthSummary.blockers.some((item) => item.fieldKey === "cctCri"));
-  assert.equal(model.selectorSurface.payloadPreview.lightControl.cctCri, null);
+  assert.equal(model.selectorSurface.selectionTruthSummary.blockers.some((item) => item.fieldKey === "cctCri"), false);
+  assert.equal(model.selectorSurface.payloadPreview.lightControl.cctCri, "2700K / CRI80");
 });
 
 test("Lex weight appears only as a read-only source-backed consequence when reference data supports it", () => {
@@ -249,6 +273,46 @@ test("Lex weight appears only as a read-only source-backed consequence when refe
   assert.equal(field.primaryControl, false);
   assert.equal(field.overrideAvailable, false);
   assert.equal(model.selectorSurface.payloadPreview.lightControl.lexWeight, "LEX-30");
+});
+
+test("core configuration preview follows donor electrical class and emergency consequences safely", () => {
+  const snapshot = lightControlCoreSnapshot();
+  const classTwoState = createSelectorState();
+  let model = selectAndReload(classTwoState, "system", "DNX 80 DI", snapshot);
+  model = selectAndReload(classTwoState, "directOpticVar1", "DNX|Inlay", snapshot);
+  model = selectAndReload(classTwoState, "controlType", "DALI-2", snapshot);
+  model = selectAndReload(classTwoState, "electricalClass", "Class II", snapshot);
+
+  assert.equal(lightRow(model.selectorSurface.productSpine, "topologyConsequence").displayValue, "DALI control bus topology");
+  assert.equal(lightRow(model.selectorSurface.productSpine, "coresConsequence").displayValue, "4-core safe preview");
+  assert.doesNotMatch(lightRow(model.selectorSurface.productSpine, "coresConsequence").displayValue, /DA\+|DA-|L\s*\|\s*N/);
+  assert.match(lightRow(model.selectorSurface.productSpine, "topologyNotes").displayValue, /Exact electrical internals are not exposed/);
+
+  const emergencyState = createSelectorState();
+  model = selectAndReload(emergencyState, "system", "DNX 80 DI", snapshot);
+  model = selectAndReload(emergencyState, "directOpticVar1", "DNX|Inlay", snapshot);
+  model = selectAndReload(emergencyState, "controlType", "DALI-2", snapshot);
+  model = selectAndReload(emergencyState, "electricalClass", "Class I", snapshot);
+  model = selectAndReload(emergencyState, "egressLight", "Maintained", snapshot);
+
+  assert.equal(lightRow(model.selectorSurface.productSpine, "coresConsequence").displayValue, "6-core safe preview");
+  assert.match(lightRow(model.selectorSurface.productSpine, "topologyNotes").displayValue, /Emergency\/egress selection adds an unswitched active consequence/);
+});
+
+test("direct-indirect fixed control derives separate switched lane preview without exact core exposure", () => {
+  const snapshot = lightControlCoreSnapshot();
+  const selectorState = createSelectorState();
+  let model = selectAndReload(selectorState, "system", "DNX 80 DI", snapshot);
+  model = selectAndReload(selectorState, "directOpticVar1", "DNX|Inlay", snapshot);
+  model = selectAndReload(selectorState, "indirectOpticVar1", "DNX|Rope", snapshot);
+  model = selectAndReload(selectorState, "controlType", "Fixed", snapshot);
+  model = selectAndReload(selectorState, "controlTypeIndirect", "Fixed", snapshot);
+  model = selectAndReload(selectorState, "electricalClass", "Class I", snapshot);
+
+  assert.equal(lightRow(model.selectorSurface.productSpine, "topologyConsequence").displayValue, "Fixed direct/indirect switched topology");
+  assert.equal(lightRow(model.selectorSurface.productSpine, "coresConsequence").displayValue, "5-core safe preview");
+  assert.doesNotMatch(JSON.stringify(lightSection(model.selectorSurface.productSpine)), /SW1|SW2|DA\+|DA-/);
+  assert.match(lightRow(model.selectorSurface.productSpine, "topologyNotes").displayValue, /Read-only donor-derived consequence metadata/);
 });
 
 test("Light & Control payload preview keeps safety flags disabled and exposes no raw source data", async () => {

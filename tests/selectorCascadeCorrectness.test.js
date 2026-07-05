@@ -811,6 +811,35 @@ test("CCT and CRI stay paired when source data allows", () => {
   assert.equal(labels.some((item) => item === "CRI80"), false);
 });
 
+test("Light and Control donor options remain global BOARDS/DRIVERS choices under system selection", () => {
+  const snapshot = cascadeSnapshot();
+  snapshot.SYSTEM_POLICY = [
+    ...(snapshot.SYSTEM_POLICY || []),
+    { category: "control", item: "Phase Cut", approved: "yes" },
+  ];
+  const constraints = { system: "DNX 60 Beam DI" };
+  const result = deriveSelectorReferenceOptionsFromSnapshot(snapshot, { source: sourceReady(), constraints });
+
+  assert.ok(compatibleLabels(workflowField(result, "targetLmPerM")).includes("2200 lm/m"));
+  assert.ok(compatibleLabels(workflowField(result, "targetLmPerMIndirect")).includes("2200 lm/m"));
+  assert.ok(compatibleLabels(workflowField(result, "cctCri")).includes("4000K / CRI90"));
+  assert.ok(compatibleLabels(workflowField(result, "cctCriIndirect")).includes("4000K / CRI90"));
+  assert.ok(compatibleLabels(workflowField(result, "controlType")).includes("DALI-2 DT8"));
+  assert.equal(workflowField(result, "controlType").options.some((item) => item.value === "Phase Cut" || item.label === "Phase Cut"), false);
+});
+
+test("direct-only systems suppress indirect Light and Control lane while preserving direct choices", () => {
+  const constraints = { system: "DNX 80 Direct" };
+  const result = deriveSelectorReferenceOptionsFromSnapshot(identityCascadeSnapshot(), { source: sourceReady(), constraints });
+  const directLm = viewModelField(result, "targetLmPerM", constraints);
+  const indirectLm = viewModelField(result, "targetLmPerMIndirect", constraints);
+
+  assert.ok(directLm.compatibleOptionCount > 0);
+  assert.equal(indirectLm.displayMode, "hidden-diagnostic");
+  assert.equal(indirectLm.primaryControl, false);
+  assert.equal(indirectLm.compatibleOptionCount, 0);
+});
+
 test("selecting controlType changes driver auto consequence", () => {
   const result = deriveSelectorReferenceOptionsFromSnapshot(cascadeSnapshot(), {
     source: sourceReady(),

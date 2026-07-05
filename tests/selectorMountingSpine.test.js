@@ -93,6 +93,22 @@ function mountingSnapshot({ includeFlex = true } = {}) {
   };
 }
 
+function tBarMountingSnapshot() {
+  return {
+    SYSTEM: [
+      { system: "DNX", system_variant_1: "TBarAllowed", label: "DNX T-Bar allowed", emission: "Direct", mount_style: "Suspended;Surface Mount", mount_style_all: "Recessed;Trimless;T-Bar Modular", approved: "yes" },
+      { system: "DNX", system_variant_1: "SurfaceOnly", label: "DNX surface only", emission: "Direct", mount_style: "Surface Mount", approved: "yes" },
+    ],
+    ACCESSORIES: [
+      { accessory_type: "mount", display_choice: "Suspended", mount_selections: "Wire;Rod", mount_particulars: "1500mm drop;Custom drop", approved: "yes" },
+      { accessory_type: "mount", display_choice: "Surface Mount", mount_selections: "Surface bracket", mount_particulars: "Direct fix", approved: "yes" },
+      { accessory_type: "mount", display_choice: "Recessed", mount_selections: "Spring clip", mount_particulars: "Plasterboard", approved: "yes" },
+      { accessory_type: "mount", display_choice: "Trimless", mount_selections: "Trimless kit", mount_particulars: "Trimless frame", approved: "yes" },
+      { accessory_type: "mount", display_choice: "T-Bar Modular", accessory_id: "T-Bar Modular", spec_code: "TBR", mount_selections: "Other;T-Bar Main Rail;T-Bar Drop In", mount_particulars: "T_Bar Scissor Clip;Other", approved: "yes" },
+    ],
+  };
+}
+
 function donorParityMountingSnapshot() {
   return {
     SYSTEM: [
@@ -392,6 +408,30 @@ test("System mount capability filters compatible mount styles before selection",
   assert.deepEqual(optionValues(surfaceModel, "mountStyle"), ["Surface Mount"]);
   assert.deepEqual(controlOptionValues(visibleControlField(surfaceModel, "mountStyle")), ["Surface Mount"]);
   assert.equal(visibleControlField(surfaceModel, "mountStyle").incompatibleOptions.length, 0);
+});
+
+test("Mount Style includes donor-allowed T-Bar Modular without broad ACCESSORIES leakage", () => {
+  const selectorState = createSelectorState();
+  const snapshot = tBarMountingSnapshot();
+  let model = selectAndReload(selectorState, "system", "DNX|TBarAllowed", snapshot);
+  const values = controlOptionValues(visibleControlField(model, "mountStyle"));
+
+  assert.deepEqual(values, ["Recessed", "Surface Mount", "Suspended", "T-Bar Modular", "Trimless"].sort());
+  assert.equal(workflowField(model, "mountStyle").options.length, 5);
+  assert.equal(workflowOption(model, "mountStyle", "T-Bar Modular").status, "available");
+
+  model = selectAndReload(selectorState, "mountStyle", "T-Bar Modular", snapshot);
+  assert.deepEqual(compatibleOptionValues(model, "mountSelection"), ["Other", "T-Bar Drop In", "T-Bar Main Rail"].sort());
+  assert.equal(workflowOption(model, "mountSelection", "Surface bracket").status, "blocked");
+
+  model = selectAndReload(selectorState, "mountSelection", "T-Bar Main Rail", snapshot);
+  assert.deepEqual(compatibleOptionValues(model, "mountParticulars"), ["Other", "T_Bar Scissor Clip"].sort());
+  assert.equal(workflowOption(model, "mountParticulars", "Direct fix").status, "blocked");
+
+  const surfaceState = createSelectorState();
+  const surfaceModel = selectAndReload(surfaceState, "system", "DNX|SurfaceOnly", snapshot);
+  assert.deepEqual(controlOptionValues(visibleControlField(surfaceModel, "mountStyle")), ["Surface Mount"]);
+  assert.equal(workflowField(surfaceModel, "mountStyle").options.length, 1);
 });
 
 test("mounting donor parity labels hide bracketed and no-flange internals", () => {

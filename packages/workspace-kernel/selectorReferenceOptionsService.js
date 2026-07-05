@@ -73,7 +73,7 @@ const WORKFLOW_SECTION_DEFINITIONS = Object.freeze([
     fields: [
       { fieldKey: "targetLmPerM", label: "Direct lm/m", role: "manual-constraint", sourceTables: ["BOARDS"] },
       { fieldKey: "cctCri", label: "Direct paired CCT/CRI", role: "manual-constraint", sourceTables: ["BOARDS"] },
-      { fieldKey: "controlType", label: "Direct control protocol", role: "manual-constraint", sourceTables: ["BOARDS", "DRIVERS", "SYSTEM_POLICY"] },
+      { fieldKey: "controlType", label: "Direct control protocol", role: "manual-constraint", sourceTables: ["BOARDS", "DRIVERS"] },
       { fieldKey: "indirectMatchDirect", label: "Indirect match-direct", role: "inherited-consequence", sourceTables: ["SYSTEM", "OPTICS"] },
       { fieldKey: "targetLmPerMIndirect", label: "Indirect lm/m", role: "manual-constraint", sourceTables: ["BOARDS"] },
       { fieldKey: "cctCriIndirect", label: "Indirect paired CCT/CRI", role: "manual-constraint", sourceTables: ["BOARDS"] },
@@ -1083,6 +1083,7 @@ function canonicalMountStyle(label) {
   const raw = safeString(label);
   const text = raw.toLowerCase().replace(/\([^)]*\)/g, " ").replace(/\s+/g, " ").trim();
   if (!text) return "";
+  if (/\bt[-_ ]?bar\b/.test(text)) return "t-bar modular";
   if (/trimless/.test(text)) return "trimless";
   if (/recess/.test(text) && /no flange/.test(text)) return "trimless";
   if (/recess/.test(text) || /with flange/.test(text)) return "recessed";
@@ -1098,6 +1099,7 @@ function donorMountStyleDisplayLabel(label) {
   if (key === "surface mount") return "Surface Mount";
   if (key === "recessed") return "Recessed";
   if (key === "trimless") return "Trimless";
+  if (key === "t-bar modular") return "T-Bar Modular";
   const clean = safeString(label).replace(/\s*\([^)]*\)\s*/g, " ").replace(/\s+/g, " ").trim();
   return clean || safeString(label);
 }
@@ -1122,16 +1124,24 @@ function mountStyleCanonicalKeysForRow(row) {
 }
 
 function systemMountStyleSourceValues(row = {}) {
-  const directValues = rowOptionValues(row, ["mount_style", "mount_styles"]);
-  if (directValues.length) return directValues;
-  return rowOptionValues(row, ["mount_style_all"]);
+  return uniqueStrings([
+    ...rowOptionValues(row, ["mount_style", "mount_styles"]),
+    ...rowOptionValues(row, ["mount_style_all"]),
+  ]);
 }
 
 function systemMountStyleDisplayValues(snapshot, row = {}) {
-  return uniqueStrings(systemMountStyleSourceValues(row)
-    .filter((mount) => !surfaceMountDiPolicyBlocksSystemMount(snapshot, row, mount))
-    .map(donorMountStyleDisplayLabel)
-    .filter(Boolean));
+  const allowedSourceMounts = systemMountStyleSourceValues(row)
+    .filter((mount) => !surfaceMountDiPolicyBlocksSystemMount(snapshot, row, mount));
+  const allowedKeys = uniqueStrings(allowedSourceMounts.map(canonicalMountStyle).filter(Boolean));
+  const accessoryMatches = allowedKeys.length
+    ? liveTableRows(snapshot, "ACCESSORIES").filter((accessoryRow) => accessoryTypeMatches(accessoryRow, "mount")
+      && mountStyleCanonicalKeysForRow(accessoryRow).some((key) => allowedKeys.includes(key)))
+    : [];
+  return uniqueStrings([
+    ...allowedSourceMounts.map(donorMountStyleDisplayLabel),
+    ...accessoryMatches.map(mountStyleLabel),
+  ].filter(Boolean));
 }
 
 function systemMountStyleCanonicalKeys(snapshot, row) {
@@ -1540,23 +1550,24 @@ function collectOptions(snapshot, timelineContext = createSelectorTimelineContex
 
   const boards = liveTableRows(snapshot, "BOARDS", timelineContext);
   for (const row of boards) {
-    const systemValue = systemOptionValueForSource(systemOptions, row);
-    const systemMeta = systemValue ? { systemReferenceKey: systemValue, systemReferenceKeys: [systemValue] } : {};
-    for (const cct of extractCctValues(row)) addOption(bucket, "cct", cct, { sourceTables: ["BOARDS"], ...systemMeta });
+    // Donor Light & Control derives global live BOARDS choices. SYSTEM/emission/optic decide whether
+    // the indirect lane is visible/required, but they do not scope the authored lm/m or paired CCT/CRI lists here.
+    const lightControlMeta = { sourceTables: ["BOARDS"], lightControlGlobalSource: true };
+    for (const cct of extractCctValues(row)) addOption(bucket, "cct", cct, lightControlMeta);
     for (const cctCri of cctCriValues(row)) {
-      addOption(bucket, "cctCri", cctCri, { sourceTables: ["BOARDS"], ...systemMeta });
-      addOption(bucket, "cctCriIndirect", cctCri, { sourceTables: ["BOARDS"], ...systemMeta });
+      addOption(bucket, "cctCri", cctCri, lightControlMeta);
+      addOption(bucket, "cctCriIndirect", cctCri, lightControlMeta);
     }
     for (const lm of numericOptionValues(row, ["board_lm_per_m", "delivered_lm_per_m", "lm_per_m", "nominal_lm_per_m"])) {
-      addOption(bucket, "targetLmPerM", `${lm} lm/m`, { value: lm, sourceTables: ["BOARDS"], ...systemMeta });
-      addOption(bucket, "targetLmPerMIndirect", `${lm} lm/m`, { value: lm, sourceTables: ["BOARDS"], ...systemMeta });
+      addOption(bucket, "targetLmPerM", `${lm} lm/m`, { value: lm, ...lightControlMeta });
+      addOption(bucket, "targetLmPerMIndirect", `${lm} lm/m`, { value: lm, ...lightControlMeta });
     }
     for (const control of rowOptionValues(row, ["control_type_labels", "control_type_options", "native_control_type", "control_type"])) {
-      addOption(bucket, "controlType", control, { sourceTables: ["BOARDS"], ...systemMeta });
-      addOption(bucket, "controlTypeIndirect", control, { sourceTables: ["BOARDS"], ...systemMeta });
+      addOption(bucket, "controlType", control, lightControlMeta);
+      addOption(bucket, "controlTypeIndirect", control, lightControlMeta);
     }
     for (const lex of rowOptionValues(row, ["lexWeight", "lex_weight", "lex_weight_g", "lex_weight_kg", "lexDirect", "lex_direct", "lex"])) {
-      addOption(bucket, "lexWeight", lex, { sourceTables: ["BOARDS"], metadataOnly: true, ...systemMeta });
+      addOption(bucket, "lexWeight", lex, { ...lightControlMeta, metadataOnly: true });
     }
   }
 
@@ -1575,7 +1586,7 @@ function collectOptions(snapshot, timelineContext = createSelectorTimelineContex
   for (const value of policyValues(snapshot, ["application", "environment", "use case", "area type"])) addOption(bucket, "application", value, { sourceTables: ["SYSTEM_POLICY"] });
   for (const value of policyValues(snapshot, ["interior exterior", "indoor outdoor", "location type"])) addOption(bucket, "interiorExterior", value, { sourceTables: ["SYSTEM_POLICY"] });
   for (const value of policyValues(snapshot, ["cct", "colour temperature", "color temperature"])) addOption(bucket, "cct", value, { sourceTables: ["SYSTEM_POLICY"] });
-  for (const value of policyValues(snapshot, ["control", "dimming", "protocol"])) addOption(bucket, "controlType", value, { sourceTables: ["SYSTEM_POLICY"] });
+  // Donor Light & Control protocol options are authored from live BOARDS/DRIVERS; broad SYSTEM_POLICY control terms are not selector choices.
   for (const value of policyValues(snapshot, ["ip", "ingress protection"])) addOption(bucket, "ipRating", value, { sourceTables: ["SYSTEM_POLICY"] });
   for (const value of policyValues(snapshot, ["ik", "impact rating"])) addOption(bucket, "ikRating", value, { sourceTables: ["SYSTEM_POLICY"] });
   // Donor parity: Mount Style is SYSTEM-row authoritative. Broad SYSTEM_POLICY mount keywords are policy metadata, not normal style choices.
@@ -1861,17 +1872,12 @@ function collectRecords(snapshot, bucket, timelineContext = createSelectorTimeli
   }
 
   for (const row of liveTableRows(snapshot, "BOARDS", timelineContext)) {
-    const sourceSystem = systemOptionValueForSource(systemOptions, row) || rowText(row, ["system", "series", "system_name", "system_key"]);
-    const systemValue = systemIdentityValuesForSourceSystem(systemOptions, sourceSystem);
-    const optic = opticFieldValue(row);
     const cctCri = cctCriValues(row);
     const ccts = extractCctValues(row);
     const lm = numericOptionValues(row, ["board_lm_per_m", "delivered_lm_per_m", "lm_per_m", "nominal_lm_per_m"]);
     const controls = rowOptionValues(row, ["control_type_labels", "control_type_options", "native_control_type", "control_type"]);
     const lex = rowOptionValues(row, ["lexWeight", "lex_weight", "lex_weight_g", "lex_weight_kg", "lexDirect", "lex_direct", "lex"]);
     pushRelationshipRecord(records, ["BOARDS"], {
-      system: systemValue,
-      optic,
       cct: ccts,
       cctCri,
       cctCriIndirect: cctCri,
@@ -1880,7 +1886,7 @@ function collectRecords(snapshot, bucket, timelineContext = createSelectorTimeli
       controlType: controls,
       controlTypeIndirect: controls,
       lexWeight: lex,
-    }, "BOARDS row maps system/optic to paired CCT/CRI, lm/m, control options, and Lex metadata where present");
+    }, "Donor Light & Control maps live BOARDS globally to paired CCT/CRI, direct/indirect lm/m, direct/indirect controls, and Lex metadata; system/emission only gates lane visibility.");
   }
 
   for (const row of liveTableRows(snapshot, "DRIVERS", timelineContext)) {

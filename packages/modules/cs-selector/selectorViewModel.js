@@ -2300,7 +2300,7 @@ function classifyRuntimePresentationField(field = {}, finishContext = {}) {
     overrideAvailable = false;
     classificationReason = "metadata descriptor, not a primary decision";
   } else if (optionsComputable && compatibleOptionCount === 0 && !hasManualConstraint) {
-    const unsupportedIndirectPicker = field.fieldKey === "indirectOpticVar1";
+    const unsupportedIndirectPicker = ["indirectOpticVar1", "indirectOpticVar2", "opticIndirect", "indirectMatchDirect", "targetLmPerMIndirect", "cctCriIndirect", "controlTypeIndirect"].includes(field.fieldKey);
     displayMode = primaryAtStep && !unsupportedIndirectPicker ? "warning-chip" : "hidden-diagnostic";
     provenance = "diagnostic";
     primaryDecision = false;
@@ -3525,10 +3525,10 @@ function shouldShowProductSpineRow(definition = {}, lookup) {
 
 function topologySourceValue(lookup, fieldKeys = []) {
   const field = spineField(lookup, fieldKeys);
-  return String(spineFieldValue(field || {}) || field?.selectedLabel || field?.effectiveLabel || field?.selectedValue || field?.effectiveValue || "").trim();
+  return String(spineFieldValue(field || {}) || field?.selectedLabel || field?.selectedValue || "").trim();
 }
 
-function topologyMetadataField(fieldKey, label, value, reason) {
+function topologyMetadataField(fieldKey, label, value, reason, extra = {}) {
   return {
     fieldKey,
     label,
@@ -3550,36 +3550,129 @@ function topologyMetadataField(fieldKey, label, value, reason) {
     compatibleOptionCount: value ? 1 : 0,
     classificationReason: reason,
     unavailableReason: reason,
+    donorDerived: true,
+    safePreviewOnly: true,
+    exactElectricalInternalsExposed: false,
+    ...extra,
     writes: false,
     rawRowsExposed: false,
   };
 }
 
-function deriveTopologyConsequenceFields(lookup) {
+function topologyControlFamily(protocol = "") {
+  const key = String(protocol || "").toLowerCase().replace(/[^a-z0-9+]+/g, "");
+  if (!key) return "";
+  if (key.includes("dali2") || key === "dali" || key.includes("dt6") || key.includes("dt8") || key.includes("d4i")) return "dali";
+  if (key.includes("dmx")) return "dmx";
+  if (key.includes("wireless") || key.includes("dali+") || key.includes("bluetooth") || key.includes("casambi") || key.includes("zigbee")) return "wireless";
+  if (key === "fixed" || key.includes("switch") || key.includes("non") || key.includes("dim")) return "fixed";
+  return "unknown";
+}
+
+function donorControlCoreTokensForFamily(family = "", isIndirect = false) {
+  if (family === "dali") return ["signal-a", "signal-b"];
+  if (family === "dmx") return ["signal-a", "signal-b"];
+  if (family === "wireless") return [];
+  if (family === "fixed") return [isIndirect ? "switched-indirect" : "switched-direct"];
+  return [];
+}
+
+function topologyElectricalClassRequiresEarth(electricalClass = "") {
+  const key = String(electricalClass || "").toLowerCase();
+  return !(key.includes("class ii") || key.includes("isolated"));
+}
+
+function topologySelectionIsNone(value = "") {
+  const key = String(value || "").toLowerCase();
+  return !key || key.includes("none") || key.includes("not required") || key.includes("dc mains");
+}
+
+function deriveDonorCoreConfigurationPreview(lookup) {
   const directControl = topologySourceValue(lookup, ["controlType"]);
-  const indirectControl = topologySourceValue(lookup, ["controlTypeIndirect"]);
-  const wiring = topologySourceValue(lookup, ["wiringType"]);
-  const driver = topologySourceValue(lookup, ["driver"]);
-  const combined = `${directControl} ${indirectControl} ${wiring} ${driver}`.toLowerCase();
-  const splitDirectIndirect = directControl && indirectControl && directControl !== indirectControl;
+  if (!directControl) {
+    return {
+      topology: "Select control protocol to derive safe core preview",
+      cores: "Core preview pending",
+      notes: "Core configuration remains fail-closed until a control protocol is selected; not proof, generation, payload, RunTable, IES, or Board Data mutation.",
+      coreCount: null,
+      familyDirect: "",
+      familyIndirect: "",
+    };
+  }
+
+  const explicitIndirectControl = topologySourceValue(lookup, ["controlTypeIndirect"]);
+  const matchDirect = topologySourceValue(lookup, ["indirectMatchDirect"]) || "match-direct";
+  const indirectControl = explicitIndirectControl || (matchDirect ? directControl : "");
+  const indirectSelected = Boolean(topologySourceValue(lookup, ["indirectOpticVar1", "opticIndirect"]));
+  const hasIndirect = indirectSelected && Boolean(indirectControl);
+  const electricalClass = topologySourceValue(lookup, ["electricalClass"]);
+  const emergency = topologySourceValue(lookup, ["egressLight", "emergency"]);
+  const familyDirect = topologyControlFamily(directControl);
+  const familyIndirect = hasIndirect ? topologyControlFamily(indirectControl) : "";
+  const directOnlyFixed = familyDirect === "fixed" && !hasIndirect;
+  const coreTokens = directOnlyFixed ? ["switched-active", "neutral"] : ["active", "neutral"];
+  const notes = [];
+
+  if (directOnlyFixed) notes.push("Fixed direct-only uses a switched-active safe preview.");
+  if (topologyElectricalClassRequiresEarth(electricalClass)) {
+    coreTokens.push("earth");
+    if (electricalClass) notes.push("Earth included by donor electrical-class consequence.");
+  } else {
+    notes.push("Earth omitted by donor Class II/isolated consequence.");
+  }
+
+  const pushControlCores = (family, isIndirect) => {
+    if (family === "fixed" && directOnlyFixed) return;
+    for (const token of donorControlCoreTokensForFamily(family, isIndirect)) {
+      if (!coreTokens.includes(token)) coreTokens.push(token);
+    }
+    if (family === "dali") notes.push(`DALI-family control signal included${isIndirect ? " for indirect" : ""}.`);
+    if (family === "dmx") notes.push(`DMX-family control signal included${isIndirect ? " for indirect" : ""}.`);
+    if (family === "wireless") notes.push(`Wireless control${isIndirect ? " for indirect" : ""}: no added control cores.`);
+    if (family === "fixed" && hasIndirect) notes.push(`${isIndirect ? "Indirect" : "Direct"} switched-active control included.`);
+  };
+
+  pushControlCores(familyDirect, false);
+  if (hasIndirect) pushControlCores(familyIndirect, true);
+
+  if (!topologySelectionIsNone(emergency)) {
+    coreTokens.push("unswitched-emergency");
+    notes.push("Emergency/egress selection adds an unswitched active consequence.");
+  }
+
+  const splitDirectIndirect = hasIndirect && familyIndirect && familyDirect !== familyIndirect;
   const topology = splitDirectIndirect
     ? "Split direct/indirect control topology"
-    : combined.includes("dali") || combined.includes("dt8") || combined.includes("5-core")
+    : familyDirect === "dali"
       ? "DALI control bus topology"
-      : combined.includes("non") || combined.includes("switch") || combined.includes("3-core")
-        ? "Switched/non-dim topology"
-        : "Source-backed topology pending";
-  const cores = combined.includes("5-core") || combined.includes("dali") || combined.includes("dt8")
-    ? "5-core"
-    : combined.includes("3-core") || combined.includes("switch") || combined.includes("non")
-      ? "3-core"
-      : "Source-backed cores pending";
-  const notes = "Read-only consequence metadata from current safe selections; not proof, generation, payload, RunTable, IES, or Board Data mutation.";
-  const reason = "Derived from visible Selector control/driver/wiring selections only; no raw source rows or generated output are exposed.";
+      : familyDirect === "dmx"
+        ? "DMX signal-pair topology"
+        : familyDirect === "wireless"
+          ? "Wireless control topology"
+          : familyDirect === "fixed"
+            ? (hasIndirect ? "Fixed direct/indirect switched topology" : "Fixed direct-only switched topology")
+            : "Source-backed topology pending";
+
+  return {
+    topology,
+    cores: `${coreTokens.length}-core safe preview`,
+    notes: `${notes.join(" ")} Read-only donor-derived consequence metadata; not proof, generation, payload, RunTable, IES, or Board Data mutation. Exact electrical internals are not exposed.`,
+    coreCount: coreTokens.length,
+    familyDirect,
+    familyIndirect,
+    hasIndirect,
+    emergencyApplied: !topologySelectionIsNone(emergency),
+    exactCoreTokensExposed: false,
+  };
+}
+
+function deriveTopologyConsequenceFields(lookup) {
+  const preview = deriveDonorCoreConfigurationPreview(lookup);
+  const reason = "Derived from donor Selector wiring-topology resolver semantics using visible control, indirect, electrical-class, and emergency selections only; no raw source rows or exact electrical internals are exposed.";
   return [
-    topologyMetadataField("topologyConsequence", "Topology", topology, reason),
-    topologyMetadataField("coresConsequence", "Cores", cores, reason),
-    topologyMetadataField("topologyNotes", "Notes", notes, notes),
+    topologyMetadataField("topologyConsequence", "Topology", preview.topology, reason, preview),
+    topologyMetadataField("coresConsequence", "Cores", preview.cores, reason, preview),
+    topologyMetadataField("topologyNotes", "Notes", preview.notes, preview.notes, preview),
   ];
 }
 
