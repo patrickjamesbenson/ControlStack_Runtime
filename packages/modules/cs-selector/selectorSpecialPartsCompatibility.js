@@ -14,11 +14,38 @@ function freezeResult(value) {
 }
 
 function normalizeToken(value) {
-  return String(value || "").trim().toLowerCase();
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/&/g, " and ")
+    .replace(/[^a-z0-9*]+/g, "_")
+    .replace(/_+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
+
+function tokenMatches(left, right) {
+  const leftKey = normalizeToken(left);
+  const rightKey = normalizeToken(right);
+  if (!leftKey || !rightKey) return false;
+  return leftKey === rightKey || leftKey.startsWith(`${rightKey}_`) || rightKey.startsWith(`${leftKey}_`);
+}
+
+function sourceBackedCompatibilityPass(part = {}) {
+  return [
+    part.sourceBackedCompatibility,
+    part.safeSourceCompatibility,
+    part.sourceCompatibilityStatus,
+  ].some((value) => ["compatible", "source_backed_compatible", "matched", "pass"].includes(normalizeToken(value)));
 }
 
 function readSelectedSystem(selectorSelectionContext = {}) {
-  return normalizeToken(selectorSelectionContext.selectedSystem?.system);
+  return normalizeToken(
+    selectorSelectionContext.selectedSystem?.system
+      || selectorSelectionContext.selectedSystem?.value
+      || selectorSelectionContext.system
+      || selectorSelectionContext.systemReferenceKey
+      || selectorSelectionContext.selectedSystem
+  );
 }
 
 function readSelectedVariant(selectorSelectionContext = {}) {
@@ -49,10 +76,19 @@ function splitCsvTokens(value) {
 }
 
 function parseIpNumber(value) {
-  const digits = String(value || "").replace(/[^0-9]/g, "");
+  const raw = String(value || "").trim();
+  if (!raw) return null;
+  const ipMatch = raw.match(/\bip\s*([0-9]{2})\b/i);
+  const bareMatch = raw.match(/^\s*([0-9]{2})\s*$/);
+  const digits = ipMatch?.[1] || bareMatch?.[1] || "";
   if (!digits) return null;
   const parsed = Number.parseInt(digits, 10);
   return Number.isFinite(parsed) ? parsed : null;
+}
+
+function valueLooksLikeIpRequirement(value) {
+  const raw = String(value || "").trim();
+  return /^\s*(?:ip\s*)?[0-9]{2}\s*$/i.test(raw);
 }
 
 function parseYmdDate(value) {
@@ -81,6 +117,13 @@ function todayTimestamp(selectorSelectionContext = {}) {
 function evaluateSystemCheck(part = {}, selectorSelectionContext = {}) {
   const partSystem = normalizeToken(part.system);
   const selectedSystem = readSelectedSystem(selectorSelectionContext);
+  if (sourceBackedCompatibilityPass(part)) {
+    return {
+      check: CHECK_PASS,
+      reason: null,
+      normalized: { partSystem, selectedSystem },
+    };
+  }
   if (!partSystem) {
     return {
       check: CHECK_NOT_APPLICABLE,
@@ -95,7 +138,7 @@ function evaluateSystemCheck(part = {}, selectorSelectionContext = {}) {
       normalized: { partSystem, selectedSystem },
     };
   }
-  if (partSystem !== selectedSystem) {
+  if (!tokenMatches(partSystem, selectedSystem)) {
     return {
       check: CHECK_FAIL,
       reason: "part-system-does-not-match-selected-system",
@@ -112,6 +155,13 @@ function evaluateSystemCheck(part = {}, selectorSelectionContext = {}) {
 function evaluateVariantCheck(part = {}, selectorSelectionContext = {}) {
   const partVariants = splitCsvTokens(part.variants_all);
   const selectedVariant = readSelectedVariant(selectorSelectionContext);
+  if (sourceBackedCompatibilityPass(part)) {
+    return {
+      check: CHECK_PASS,
+      reason: null,
+      normalized: { partVariants, selectedVariant },
+    };
+  }
   if (!partVariants.length) {
     return {
       check: CHECK_NOT_APPLICABLE,
@@ -133,7 +183,7 @@ function evaluateVariantCheck(part = {}, selectorSelectionContext = {}) {
       normalized: { partVariants, selectedVariant },
     };
   }
-  if (!partVariants.includes(selectedVariant)) {
+  if (!partVariants.some((variant) => tokenMatches(variant, selectedVariant))) {
     return {
       check: CHECK_FAIL,
       reason: "part-variant-does-not-include-selected-variant",
@@ -152,6 +202,13 @@ function evaluateIpClassCheck(part = {}, selectorSelectionContext = {}) {
   const selectedIpClass = readSelectedIpClass(selectorSelectionContext);
   const partIpNumber = parseIpNumber(partIpClass);
   const selectedIpNumber = parseIpNumber(selectedIpClass);
+  if (sourceBackedCompatibilityPass(part)) {
+    return {
+      check: CHECK_PASS,
+      reason: null,
+      normalized: { partIpClass: partIpNumber === null ? "" : String(partIpNumber), selectedIpClass: selectedIpNumber === null ? "" : String(selectedIpNumber) },
+    };
+  }
   if (!partIpClass) {
     return {
       check: CHECK_NOT_APPLICABLE,
@@ -161,9 +218,9 @@ function evaluateIpClassCheck(part = {}, selectorSelectionContext = {}) {
   }
   if (partIpNumber === null) {
     return {
-      check: CHECK_UNKNOWN,
-      reason: "part-ip-class-invalid",
-      normalized: { partIpClass, selectedIpClass: selectedIpNumber === null ? "" : String(selectedIpNumber) },
+      check: valueLooksLikeIpRequirement(partIpClass) ? CHECK_UNKNOWN : CHECK_NOT_APPLICABLE,
+      reason: valueLooksLikeIpRequirement(partIpClass) ? "part-ip-class-invalid" : null,
+      normalized: { partIpClass: valueLooksLikeIpRequirement(partIpClass) ? partIpClass : "", selectedIpClass: selectedIpNumber === null ? "" : String(selectedIpNumber) },
     };
   }
   if (!selectedIpClass || selectedIpNumber === null) {
@@ -188,7 +245,14 @@ function evaluateIpClassCheck(part = {}, selectorSelectionContext = {}) {
 }
 
 function evaluateLifecycleCheck(part = {}, selectorSelectionContext = {}) {
-  const effectiveTo = String(part.effective_to || part.status_date || "").trim();
+  const effectiveTo = String(part.effective_to || part.effectiveTo || "").trim();
+  if (sourceBackedCompatibilityPass(part)) {
+    return {
+      check: CHECK_PASS,
+      reason: null,
+      normalized: { effectiveTo },
+    };
+  }
   if (!effectiveTo) {
     return {
       check: CHECK_NOT_APPLICABLE,

@@ -506,6 +506,8 @@ function safeRedactedSpecialPartCandidate(part = {}, index = 0) {
     ip_class: part.ip_class || part.ipClass || "",
     effective_to: part.effective_to || part.effectiveTo || "",
     status_date: part.status_date || part.statusDate || "",
+    sourceBackedCompatibility: part.sourceBackedCompatibility || part.safeSourceCompatibility || part.sourceCompatibilityStatus || "",
+    sourceBackedCompatibilityReason: part.sourceBackedCompatibilityReason || part.safeSourceCompatibilityReason || part.sourceCompatibilityReason || "",
     status: part.status || part.timelineStatus || part.optionStatusClass || "available",
     timelineStatus: part.timelineStatus || part.status || part.optionStatusClass || "available",
     safelyEntitled: part.safelyEntitled !== false,

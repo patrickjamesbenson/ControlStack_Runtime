@@ -265,6 +265,49 @@ test("Allan email test principal exposes entitlement-backed special parts when s
   assertNoRawExposure(result.specialPartsUserTestSummary);
 });
 
+test("Allan component resolves through source-backed compatibility without false blockers", () => {
+  const sourceSnapshot = {
+    USERS: [
+      { display_name: "Allan Organ", first_name: "Allan", last_name: "Organ", company: "Zencontrol", email_login: ALLAN_EMAIL, system_component_ids: ALLAN_COMPONENT_ID },
+    ],
+    SYSTEM: [
+      { system: "DNX", system_variant_1: "Square_DI", label: "DNX 80 D/I", emission: "Both", mount_style: "Suspended (No Flange)", approved: "yes" },
+    ],
+    ACCESSORIES: [
+      { accessory_type: "mount", display_choice: "Suspended (No Flange)", mount_selections: "Wire", mount_particulars: "1500mm drop", approved: "yes" },
+    ],
+    SYSTEM_COMPONENTS: [
+      {
+        id: ALLAN_COMPONENT_ID,
+        status: "available",
+        system: "DNX",
+        variants_all: "Square DI",
+        ip_class: "Class I",
+        status_date: "validate",
+        caveats: "MOQ 500 plus, AUD 20ea plus gst, 6wks from sign off.",
+        description: "Safe source-backed component projection",
+      },
+    ],
+  };
+  const result = deriveSelectorReferenceOptionsFromSnapshot(sourceSnapshot, {
+    source,
+    ok: true,
+    constraints: { system: "DNX|Square_DI", variantKey: "Square_DI", mountStyle: "Suspended" },
+    specialPartsTestPrincipal: ALLAN_EMAIL,
+    showSpecialParts: "1",
+  });
+  const vm = model(result, { testPrincipal: ALLAN_EMAIL, showEntitlementBackedSpecialParts: true });
+  const row = vm.specialPartsEntitlementPreview.candidateRows.find((item) => item.safeComponentId === ALLAN_COMPONENT_ID);
+  const safeCompatibilityText = JSON.stringify(vm.specialPartsEntitlementPreview.safeCompatibilityResults);
+
+  assert.ok(row, "expected Allan source-backed component row");
+  assert.equal(row.status, "compatible");
+  assert.doesNotMatch(row.reason, /selected-system-missing-for-constrained-special-part|part-variant-does-not-include-selected-variant|part-ip-class-invalid|special-part-expiry-date-invalid/);
+  assert.doesNotMatch(safeCompatibilityText, /selected-system-missing-for-constrained-special-part|part-variant-does-not-include-selected-variant|part-ip-class-invalid|special-part-expiry-date-invalid/);
+  assert.equal(vm.specialPartsEntitlementPreview.rawComponentRowsReturned, false);
+  assertNoRawExposure(result.specialPartsUserTestSummary);
+});
+
 test("Allan Organ display label alone does not grant special-parts entitlement", () => {
   const result = derive({ specialPartsTestPrincipal: "Allan Organ", showSpecialParts: "1" });
   const vm = model(result, { testPrincipal: "Allan Organ", showEntitlementBackedSpecialParts: true });

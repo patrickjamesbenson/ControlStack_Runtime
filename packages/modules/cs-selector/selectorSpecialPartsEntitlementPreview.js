@@ -305,6 +305,8 @@ function redactedCandidate(candidate = {}, index = 0) {
       ip_class: safeString(candidate.ip_class || candidate.ipClass),
       effective_to: safeString(candidate.effective_to || candidate.effectiveTo),
       status_date: safeString(candidate.status_date || candidate.statusDate),
+      sourceBackedCompatibility: safeString(candidate.sourceBackedCompatibility || candidate.safeSourceCompatibility || candidate.sourceCompatibilityStatus),
+      sourceBackedCompatibilityReason: safeString(candidate.sourceBackedCompatibilityReason || candidate.safeSourceCompatibilityReason || candidate.sourceCompatibilityReason),
     },
   };
 }

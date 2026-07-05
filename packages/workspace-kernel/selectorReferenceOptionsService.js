@@ -232,6 +232,7 @@ const SAFE_DEBUG_TABLES = Object.freeze([
 
 const SURFACE_MOUNT_DI_BLOCK_POLICY_ID = "SURFACE_MOUNT_DI_BLOCK";
 const SURFACE_MOUNT_DI_BLOCK_DEFAULT_REASON = "Surface Mount is blocked for direct-indirect/uplight systems because the ceiling would block the indirect light component.";
+const UNMATCHED_SYSTEM_MOUNT_STYLE_KEY = "__unmatched-system-mount-style__";
 
 const SAFE_FLAGS = Object.freeze({
   readOnly: true,
@@ -1099,6 +1100,37 @@ function mountStyleParentValuesForRow(row) {
   return uniqueStrings(mountStyleCandidatesForRow(row).flatMap((candidate) => [donorMountStyleDisplayLabel(candidate), candidate]).filter(Boolean));
 }
 
+function mountStyleCanonicalKeysForRow(row) {
+  return uniqueStrings(mountStyleCandidatesForRow(row).map(canonicalMountStyle).filter(Boolean));
+}
+
+function systemMountStyleCanonicalKeys(snapshot, row) {
+  return uniqueStrings(rowOptionValues(row, ["mount_style", "mount_styles"])
+    .filter((mount) => !surfaceMountDiPolicyBlocksSystemMount(snapshot, row, mount))
+    .map(canonicalMountStyle)
+    .filter(Boolean));
+}
+
+function accessoryMountRowMatchesSystemRow(snapshot, accessoryRow, systemRow) {
+  const accessoryKeys = mountStyleCanonicalKeysForRow(accessoryRow);
+  const systemKeys = systemMountStyleCanonicalKeys(snapshot, systemRow);
+  return accessoryKeys.some((accessoryKey) => systemKeys.includes(accessoryKey));
+}
+
+function accessoryMountSystemRows(snapshot, accessoryRow) {
+  return liveTableRows(snapshot, "SYSTEM").filter((systemRow) => accessoryMountRowMatchesSystemRow(snapshot, accessoryRow, systemRow));
+}
+
+function snapshotHasSystemMountStyleSource(snapshot) {
+  return liveTableRows(snapshot, "SYSTEM").some((systemRow) => rowOptionValues(systemRow, ["mount_style", "mount_styles"]).length > 0);
+}
+
+function accessoryMountSystemReferenceKeys(snapshot, accessoryRow) {
+  return uniqueStrings(accessoryMountSystemRows(snapshot, accessoryRow)
+    .map((systemRow) => systemRowIdentityKey(systemRow))
+    .filter(Boolean));
+}
+
 function mountStyleLabel(row) {
   return donorMountStyleDisplayLabel(rawMountStyleLabel(row));
 }
@@ -1260,18 +1292,8 @@ function collectOptions(snapshot, timelineContext = createSelectorTimelineContex
       if (emissionSupportsDirect(emission)) addOption(bucket, "directCapability", "Direct supported", { value: "direct-supported", sourceTables: ["SYSTEM"] });
       if (emissionSupportsIndirect(emission)) addOption(bucket, "indirectCapability", "Indirect supported", { value: "indirect-supported", sourceTables: ["SYSTEM"] });
     }
-    for (const mount of rowOptionValues(row, ["mount_style", "mount_styles"])) {
-      if (surfaceMountDiPolicyBlocksSystemMount(snapshot, row, mount)) continue;
-      const style = donorMountStyleDisplayLabel(mount);
-      addOption(bucket, "mountStyle", style, {
-        value: style,
-        sourceTables: ["SYSTEM"],
-        parentValues: uniqueStrings([style, mount].filter(Boolean)),
-        systemReferenceKey: systemIdentityKey || tokens.system,
-        systemReferenceKeys: uniqueStrings([systemIdentityKey, tokens.value, tokens.variant ? "" : tokens.system].filter(Boolean)),
-        ...surfaceMountPolicyMeta(snapshot, style),
-      });
-    }
+    // Donor parity: mount style choices are exposed through ACCESSORIES mount rows
+    // that match this resolved SYSTEM.mount_style, not directly from SYSTEM aliases.
     const finishValues = systemPaintFinishValues(row);
     finishValues.forEach((finish, finishInheritanceIndex) => {
       const finishMeta = { sourceTables: ["SYSTEM"], systemReferenceKey: systemIdentityKey || tokens.system, systemReferenceKeys: uniqueStrings([systemIdentityKey, tokens.value, tokens.variant ? "" : tokens.system].filter(Boolean)), finishInheritanceIndex };
@@ -1448,19 +1470,22 @@ function collectOptions(snapshot, timelineContext = createSelectorTimelineContex
     if (accessoryTypeMatches(row, "mount")) {
       const style = mountStyleLabel(row);
       const styleAliases = mountStyleParentValuesForRow(row);
-      const systemKeys = uniqueStrings(styleAliases.flatMap((candidate) => mountStyleSystemReferenceKeys(snapshot, candidate)));
+      const systemKeys = accessoryMountSystemReferenceKeys(snapshot, row);
+      const effectiveSystemKeys = systemKeys.length
+        ? systemKeys
+        : snapshotHasSystemMountStyleSource(snapshot) ? [UNMATCHED_SYSTEM_MOUNT_STYLE_KEY] : [];
       const mountMeta = {
         sourceTables: ["ACCESSORIES"],
         parentFieldKey: "mountStyle",
         parentValue: style,
         parentValues: styleAliases,
-        systemReferenceKey: systemKeys[0] || "",
-        systemReferenceKeys: systemKeys,
+        systemReferenceKey: effectiveSystemKeys[0] || "",
+        systemReferenceKeys: effectiveSystemKeys,
       };
       addOption(bucket, "mountStyle", style, {
         sourceTables: ["ACCESSORIES"],
-        systemReferenceKey: systemKeys[0] || "",
-        systemReferenceKeys: systemKeys,
+        systemReferenceKey: effectiveSystemKeys[0] || "",
+        systemReferenceKeys: effectiveSystemKeys,
         ...surfaceMountPolicyMeta(snapshot, style),
       });
       for (const value of rowOptionValues(row, ["mount_selections", "mount_selection"])) addOption(bucket, "mountSelection", value, mountMeta);
@@ -1756,9 +1781,14 @@ function collectRecords(snapshot, bucket, timelineContext = createSelectorTimeli
     const mountParticulars = rowOptionValues(row, ["mount_particulars", "particulars"]);
     if (accessoryTypeMatches(row, "mount")) {
       const mountStyleValues = mountStyles.length ? mountStyles : uniqueStrings([donorMountStyleDisplayLabel(label), label].filter(Boolean));
-      const mountSystemValues = uniqueStrings(mountStyleValues.flatMap((style) => (
-        mountStyleSystemReferenceKeys(snapshot, style).flatMap((systemKey) => systemIdentityValuesForSourceSystem(systemOptions, systemKey))
-      )));
+      const mountSystemKeys = accessoryMountSystemReferenceKeys(snapshot, row);
+      const mountSystemValues = uniqueStrings((mountSystemKeys.length
+        ? mountSystemKeys
+        : snapshotHasSystemMountStyleSource(snapshot) ? [UNMATCHED_SYSTEM_MOUNT_STYLE_KEY] : []
+      ).flatMap((systemKey) => [
+        systemKey,
+        ...systemIdentityValuesForSourceSystem(systemOptions, systemKey),
+      ]));
       pushRelationshipRecord(records, ["ACCESSORIES"], {
         system: mountSystemValues,
         mountStyle: mountStyleValues,
@@ -3078,10 +3108,58 @@ function specialPartsFallbackComponentForUser(user = {}, componentId = "") {
   return { id: componentId, status: "available", timelineStatus: "available", previewApproved: "true", safeDescription: rowText(user, [["system", "component", "description"].join("_"), "component_description", "safe_description", "description"], ""), safeCaveats: rowText(user, ["caveats", "notes"], "") };
 }
 
-function redactedSpecialPartsTestCandidate(component = {}, index = 0) {
+function specialPartsTokenMatches(left = "", right = "") {
+  const leftKey = normaliseKey(left);
+  const rightKey = normaliseKey(right);
+  if (!leftKey || !rightKey) return false;
+  return leftKey === rightKey || leftKey.startsWith(`${rightKey} `) || rightKey.startsWith(`${leftKey} `);
+}
+
+function parseIpOptionNumber(value = "") {
+  const raw = safeString(value);
+  const ipMatch = raw.match(/\bip\s*([0-9]{2})\b/i);
+  const bareMatch = raw.match(/^([0-9]{2})$/);
+  const digits = ipMatch?.[1] || bareMatch?.[1] || "";
+  const parsed = Number.parseInt(digits, 10);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function sourceBackedSpecialPartsCompatibility(component = {}, constraints = {}) {
+  const blockers = [];
+  const selectedSystem = safeString(constraints.__systemReferenceKey || constraints.system || "");
+  const selectedVariant = safeString(constraints.variantKey || constraints.selectedVariant || String(selectedSystem).split("|").slice(1).join("|") || "");
+  const selectedIp = safeString(constraints.ipRating || constraints.ipClass || "");
+  const componentSystems = rowOptionValues(component, ["system", "systems"]);
+  const componentVariants = rowOptionValues(component, ["variants_all", "variantsAll", "variant", "variant_key"]);
+  const componentIp = rowText(component, ["ip_class", "ipClass", "ip", "ip_rating"], "");
+  const effectiveTo = rowText(component, ["effective_to", "effectiveTo"], "");
+
+  if (componentSystems.length && selectedSystem && !componentSystems.some((system) => specialPartsTokenMatches(system, selectedSystem))) {
+    blockers.push("part-system-does-not-match-selected-system");
+  }
+  if (componentVariants.length && !componentVariants.includes("*") && selectedVariant && !componentVariants.some((variant) => specialPartsTokenMatches(variant, selectedVariant) || specialPartsTokenMatches(variant, selectedSystem))) {
+    blockers.push("part-variant-does-not-include-selected-variant");
+  }
+  const componentIpNumber = parseIpOptionNumber(componentIp);
+  const selectedIpNumber = parseIpOptionNumber(selectedIp);
+  if (componentIpNumber != null && selectedIpNumber != null && componentIpNumber < selectedIpNumber) {
+    blockers.push("part-ip-class-below-selected-ip-requirement");
+  }
+  if (effectiveTo && !/^\d{4}-\d{2}-\d{2}$/.test(effectiveTo)) {
+    blockers.push("special-part-expiry-date-invalid");
+  }
+
+  return {
+    sourceBackedCompatibility: blockers.length ? "incompatible" : "compatible",
+    sourceBackedCompatibilityReason: blockers[0] || "source-backed-component-accessory-compatibility-matched",
+  };
+}
+
+function redactedSpecialPartsTestCandidate(component = {}, index = 0, { constraints = {} } = {}) {
   const safeComponentId = specialPartsComponentDisplayId(component);
   const safeDescription = rowText(component, [["system", "component", "description"].join("_"), "safeDescription", "description", "label", "name"], "");
   const safeCaveats = rowText(component, ["safeCaveats", "caveats", "notes"], "");
+  const sourceCompatibility = sourceBackedSpecialPartsCompatibility(component, constraints);
   return {
     redactedRef: safeComponentId || `redacted:special-parts-user-test-${index + 1}`,
     safeComponentId,
@@ -3093,6 +3171,8 @@ function redactedSpecialPartsTestCandidate(component = {}, index = 0) {
     ip_class: rowText(component, ["ip_class", "ipClass", "ip", "ip_rating"], ""),
     effective_to: rowText(component, ["effective_to", "effectiveTo"], ""),
     status_date: rowText(component, ["status_date", "statusDate"], ""),
+    sourceBackedCompatibility: sourceCompatibility.sourceBackedCompatibility,
+    sourceBackedCompatibilityReason: sourceCompatibility.sourceBackedCompatibilityReason,
     safeDescription,
     safeCaveats,
     safelyEntitled: true,
@@ -3101,7 +3181,7 @@ function redactedSpecialPartsTestCandidate(component = {}, index = 0) {
   };
 }
 
-function safeSpecialPartsUserTestSummary(snapshot, { specialPartsTestPrincipal = "", showSpecialParts = false } = {}) {
+function safeSpecialPartsUserTestSummary(snapshot, { specialPartsTestPrincipal = "", showSpecialParts = false, constraints = {} } = {}) {
   const activeTestPrincipal = normaliseSpecialPartsTestPrincipal(specialPartsTestPrincipal);
   const internalTestActive = Boolean(activeTestPrincipal);
   const showEntitlementBackedSpecialParts = showSpecialPartsRequested(showSpecialParts);
@@ -3114,7 +3194,7 @@ function safeSpecialPartsUserTestSummary(snapshot, { specialPartsTestPrincipal =
   const redactedCandidates = componentIds
     .map((id) => componentIndex.get(normaliseKey(id)) || specialPartsFallbackComponentForUser(user, id))
     .filter(Boolean)
-    .map(redactedSpecialPartsTestCandidate);
+    .map((component, index) => redactedSpecialPartsTestCandidate(component, index, { constraints }));
   const entitlementFound = Boolean(user) && !userBlocked && redactedCandidates.length > 0;
   const specialPartsVisible = internalTestActive && showEntitlementBackedSpecialParts && entitlementFound && !userBlocked;
   const safeIdentitySummary = specialPartsSafeIdentitySummary(user, { entitlementFound, specialPartsVisible });
@@ -3522,7 +3602,7 @@ function failurePayload({ source = {}, reason = "selector_reference_options_unav
       rawUsersExposed: false,
       rawRowsExposed: false,
     },
-    specialPartsUserTestSummary: safeSpecialPartsUserTestSummary({}, { specialPartsTestPrincipal, showSpecialParts }),
+    specialPartsUserTestSummary: safeSpecialPartsUserTestSummary({}, { specialPartsTestPrincipal, showSpecialParts, constraints: safeConstraints }),
     manualConstraints: [],
     autoConsequences: [],
     blockedItems: blockedItems(fields),
@@ -3574,7 +3654,7 @@ export function deriveSelectorReferenceOptionsFromSnapshot(snapshot = {}, { cons
   const blocked = [...blockedItems(fields), ...workflowBlockedItems(workflowSections)];
   const parity = donorFieldParity(workflowSections);
   const entitlementSummary = safeEntitlementSummary(safeSnapshot);
-  const specialPartsUserTestSummary = safeSpecialPartsUserTestSummary(safeSnapshot, { specialPartsTestPrincipal, showSpecialParts });
+  const specialPartsUserTestSummary = safeSpecialPartsUserTestSummary(safeSnapshot, { specialPartsTestPrincipal, showSpecialParts, constraints: cascadeConstraints });
   const availableFieldCount = fields.filter((field) => field.status === "available").length;
   const optionFieldCount = fields.filter((field) => field.options.length).length;
   const workflowMappedFieldCount = parity.counts.mapped || 0;

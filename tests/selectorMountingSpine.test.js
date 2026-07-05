@@ -148,6 +148,19 @@ function donorParityMountingSnapshot() {
   };
 }
 
+function dnx80DiMountJoinSnapshot() {
+  return {
+    SYSTEM: [
+      { system: "DNX", system_variant_1: "Square", label: "DNX 80 direct sibling", emission: "Direct", mount_style: "Surface Mount (No Flange);Suspended (No Flange)", approved: "yes" },
+      { system: "DNX", system_variant_1: "Square_DI", label: "DNX 80 D/I", emission: "Both", mount_style: "Suspended (No Flange)", approved: "yes" },
+    ],
+    ACCESSORIES: [
+      { accessory_type: "mount", display_choice: "Surface Mount (No Flange)", mount_selections: "Surface bracket", mount_particulars: "Ceiling", approved: "yes" },
+      { accessory_type: "mount", display_choice: "Suspended (No Flange)", mount_selections: "Wire;Rod", mount_particulars: "1500mm drop;Custom drop", approved: "yes" },
+    ],
+  };
+}
+
 function mountPolicySnapshot() {
   return {
     SYSTEM: [
@@ -391,6 +404,36 @@ test("suspended and recessed visibility follows donor mount compatibility", () =
   assert.equal(workflowOption(surfaceModel, "mountStyle", "Surface Mount").status, "available");
   assert.equal(workflowOption(surfaceModel, "mountStyle", "Suspended").status, "blocked");
   assert.equal(workflowOption(surfaceModel, "mountStyle", "Recessed").status, "blocked");
+});
+
+test("DNX 80 D/I mounting joins resolved SYSTEM mount_style to ACCESSORIES mount rows only", () => {
+  const snapshot = dnx80DiMountJoinSnapshot();
+  const selectorState = createSelectorState();
+  let model = selectAndReload(selectorState, "system", "DNX|Square_DI", snapshot);
+
+  const liveMountField = visibleControlField(model, "mountStyle");
+  const liveValues = controlOptionValues(liveMountField);
+  assert.deepEqual(liveValues, ["Suspended"]);
+  assert.equal(liveValues.some((value) => /\(|\)|No Flange/i.test(value)), false);
+  assert.equal(workflowOption(model, "mountStyle", "Suspended").status, "available");
+  assert.equal(workflowOption(model, "mountStyle", "Surface Mount").status, "blocked");
+
+  model = selectAndReload(selectorState, "mountStyle", "Suspended", snapshot);
+  assert.equal(workflowOption(model, "mountSelection", "Wire").status, "available");
+  assert.equal(workflowOption(model, "mountSelection", "Surface bracket").status, "blocked");
+
+  model = selectAndReload(selectorState, "mountSelection", "Wire", snapshot);
+  assert.equal(workflowOption(model, "mountParticulars", "1500mm drop").status, "available");
+  assert.equal(workflowOption(model, "mountParticulars", "Ceiling").status, "blocked");
+
+  const staleState = createSelectorState();
+  model = selectAndReload(staleState, "system", "DNX|Square_DI", snapshot);
+  model = selectAndReload(staleState, "mountStyle", "Surface Mount", snapshot);
+  const staleRow = mountingRow(model.selectorSurface.productSpine, "mountStyle");
+  assert.equal(staleRow.displayValue, "—");
+  assert.equal(staleRow.status, "blocked");
+  assert.equal(workflowField(model, "mountStyle").dropdownOptions.some((option) => option.value === "Surface Mount"), false);
+  assert.equal(visibleControlField(model, "mountStyle").incompatibleOptions.some((option) => option.value === "Surface Mount"), true);
 });
 
 test("recess-kit and trimless exceptions cascade from donor-compatible no-flange mounting", () => {
