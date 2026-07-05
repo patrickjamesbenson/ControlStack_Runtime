@@ -1222,17 +1222,16 @@ function surfaceMountDiPolicyRow(snapshot) {
   return activeCodePolicyRow(snapshot, SURFACE_MOUNT_DI_BLOCK_POLICY_ID);
 }
 
-function surfaceMountPolicyMeta(snapshot, style) {
-  const row = canonicalMountStyle(style) === "surface mount" ? surfaceMountDiPolicyRow(snapshot) : null;
-  if (!row) return {};
-  return {
-    codePolicyIds: [SURFACE_MOUNT_DI_BLOCK_POLICY_ID],
-    codePolicyReason: codePolicyReason(row, SURFACE_MOUNT_DI_BLOCK_DEFAULT_REASON),
-  };
+function surfaceMountPolicyMeta(_snapshot, _style) {
+  // Donor trace correction: Surface Mount is a valid mount style when the exact
+  // SYSTEM.mount_style row allows it. D/I/uplight compatibility is enforced at
+  // the ceiling-bracket mount-selection/orientation level, not by blocking the
+  // whole Surface Mount style.
+  return {};
 }
 
-function surfaceMountDiPolicyBlocksSystemMount(snapshot, systemRow, style) {
-  return canonicalMountStyle(style) === "surface mount" && Boolean(surfaceMountDiPolicyRow(snapshot)) && systemRowSupportsIndirect(systemRow);
+function surfaceMountDiPolicyBlocksSystemMount(_snapshot, _systemRow, _style) {
+  return false;
 }
 
 function addRedactedEntitlementOptions(bucket, snapshot) {
@@ -1929,13 +1928,15 @@ function systemIdentityKeyFromSelection(systemOptions = [], selectedValue = "") 
 
 function cascadeConstraintsForOptions(bucket = {}, constraints = {}) {
   const systemOptions = optionsFor(bucket, "system");
-  const selectedSystemKey = systemReferenceKeyFromSelection(systemOptions, constraints.system || "");
-  const selectedSystemIdentity = systemIdentityKeyFromSelection(systemOptions, constraints.system || "");
+  const selectedSystemOption = systemOptionFromSelection(systemOptions, constraints.system || "");
+  const selectedSystemKey = selectedSystemOption ? safeString(selectedSystemOption.systemReferenceKey) || safeString(selectedSystemOption.value).split("|")[0] || safeString(selectedSystemOption.label) : "";
+  const selectedSystemIdentity = selectedSystemOption ? systemOptionIdentityValue(selectedSystemOption) : safeString(constraints.system || "");
   if (!selectedSystemKey && !selectedSystemIdentity) return constraints;
   return {
     ...constraints,
     system: selectedSystemIdentity || constraints.system,
     __systemReferenceKey: selectedSystemKey,
+    __systemSupportsIndirect: selectedSystemOption?.systemSupportsIndirect === true,
   };
 }
 
@@ -2150,25 +2151,79 @@ function optionHasCodePolicy(option = {}, policyId = "") {
   return optionCodePolicyIds(option).some((id) => normaliseKey(id) === wanted);
 }
 
-function mountCodePolicyBlock(fieldKey = "", option = {}, records = [], constraints = {}) {
-  if (fieldKey !== "mountStyle") return { blocked: false, blockedBy: [], reason: "" };
-  const style = canonicalMountStyle(option.value || option.label);
-  if (style !== "surface mount" || !optionHasCodePolicy(option, SURFACE_MOUNT_DI_BLOCK_POLICY_ID)) {
-    return { blocked: false, blockedBy: [], reason: "" };
+function mountCodePolicyBlock(_fieldKey = "", _option = {}, _records = [], _constraints = {}) {
+  // Retained as a no-op compatibility hook for older CODE_POLICY diagnostics.
+  // Donor parity no longer blocks Surface Mount wholesale for D/I systems.
+  return { blocked: false, blockedBy: [], reason: "" };
+}
+
+function mountOrientationText(value = "") {
+  return safeLower(value).replace(/\([^)]*\)/g, " ").replace(/\s+/g, " ").trim();
+}
+
+function mountTextHasCeilingBracket(value = "") {
+  const text = mountOrientationText(value);
+  return text.includes("ceiling bracket") || text.includes("sealing bracket");
+}
+
+function mountTextHasWallBracket(value = "") {
+  return mountOrientationText(value).includes("wall bracket");
+}
+
+function penetrationTextIsSideWall(value = "") {
+  const text = mountOrientationText(value);
+  return text.includes("side wall") || (text.includes("side") && text.includes("wall"));
+}
+
+function penetrationTextIsTop(value = "") {
+  return mountOrientationText(value).includes("top");
+}
+
+function mountOrientationPolicyBlock(fieldKey = "", option = {}, constraints = {}) {
+  const optionText = safeString(option.value || option.label);
+  if (["mountStyle", "mountSelection", "mountParticulars"].includes(fieldKey)
+    && constraints.__systemSupportsIndirect === true
+    && mountTextHasCeilingBracket(optionText)) {
+    return {
+      blocked: true,
+      blockedBy: [{
+        fieldKey: "emission",
+        selectedValue: "Both",
+        compatibleValues: ["non-ceiling mount selection for direct-indirect/uplight"],
+      }],
+      reason: "Donor mounting rules block ceiling-bracket mounting for direct-indirect/uplight systems while preserving other donor-compatible Surface Mount choices.",
+    };
   }
-  const indirectSupport = upstreamIndirectSupportState(records, constraints);
-  if (!indirectSupport.checked || !indirectSupport.supported) {
-    return { blocked: false, blockedBy: [], reason: "" };
+
+  if (fieldKey !== "powerPenetration") return { blocked: false, blockedBy: [], reason: "" };
+  const mountContext = [constraints.mountSelection, constraints.mountStyle, constraints.mountParticulars]
+    .map(safeString)
+    .filter(Boolean)
+    .join(" ");
+  if (!mountContext) return { blocked: false, blockedBy: [], reason: "" };
+  if (mountTextHasWallBracket(mountContext) && penetrationTextIsTop(optionText)) {
+    return {
+      blocked: true,
+      blockedBy: [{
+        fieldKey: "mountSelection",
+        selectedValue: constraints.mountSelection || constraints.mountStyle || "wall bracket",
+        compatibleValues: ["non-top power penetration"],
+      }],
+      reason: "Donor power-entry rules remove top penetration for wall-bracket/body-orientation mounting.",
+    };
   }
-  return {
-    blocked: true,
-    blockedBy: [{
-      fieldKey: "CODE_POLICY",
-      selectedValue: SURFACE_MOUNT_DI_BLOCK_POLICY_ID,
-      compatibleValues: ["Suspended", "other donor-compatible mount styles"],
-    }],
-    reason: option.codePolicyReason || SURFACE_MOUNT_DI_BLOCK_DEFAULT_REASON,
-  };
+  if (mountTextHasCeilingBracket(mountContext) && penetrationTextIsSideWall(optionText)) {
+    return {
+      blocked: true,
+      blockedBy: [{
+        fieldKey: "mountSelection",
+        selectedValue: constraints.mountSelection || constraints.mountStyle || "ceiling bracket",
+        compatibleValues: ["non-side-wall power penetration"],
+      }],
+      reason: "Donor power-entry rules remove side-wall penetration for ceiling-bracket mounting.",
+    };
+  }
+  return { blocked: false, blockedBy: [], reason: "" };
 }
 
 function sanitiseConstraints(constraints = {}) {
@@ -2565,18 +2620,19 @@ function createFields({ bucket, records, constraints, cascadeConstraints = const
       if (visibility.hidden) return null;
       const cascade = optionCascadeResult(field.fieldKey, option, records, cascadeConstraints);
       const policyBlock = mountCodePolicyBlock(field.fieldKey, option, records, cascadeConstraints);
-      const compatible = visibility.blocked !== true && cascade.compatible && policyBlock.blocked !== true;
-      const blockedReason = visibility.blocked ? visibility.policy.blockedReason : policyBlock.reason || "Blocked by current manual constraints; shown rather than silently hidden.";
+      const orientationBlock = mountOrientationPolicyBlock(field.fieldKey, option, cascadeConstraints);
+      const compatible = visibility.blocked !== true && cascade.compatible && policyBlock.blocked !== true && orientationBlock.blocked !== true;
+      const blockedReason = visibility.blocked ? visibility.policy.blockedReason : policyBlock.reason || orientationBlock.reason || "Blocked by current manual constraints; shown rather than silently hidden.";
       return {
         ...option,
         selected: Boolean(selected),
         status: compatible ? "available" : "blocked",
         blocked: !compatible,
         blockedReason: compatible ? "" : blockedReason,
-        blockedBy: compatible ? [] : [...visibility.blockedBy, ...(cascade.blockedBy || []), ...(policyBlock.blockedBy || [])],
+        blockedBy: compatible ? [] : [...visibility.blockedBy, ...(cascade.blockedBy || []), ...(policyBlock.blockedBy || []), ...(orientationBlock.blockedBy || [])],
         cascadeSource: cascade.cascadeSource || option.sourceTables || [],
-        relationshipStatus: visibility.blocked ? "blocked-by-status-policy" : policyBlock.blocked ? "blocked-by-code-policy" : cascade.relationshipStatus,
-        relationshipMissingReason: visibility.blocked ? visibility.policy.blockedReason : policyBlock.blocked ? policyBlock.reason : cascade.relationshipMissingReason,
+        relationshipStatus: visibility.blocked ? "blocked-by-status-policy" : policyBlock.blocked ? "blocked-by-code-policy" : orientationBlock.blocked ? "blocked-by-mount-orientation" : cascade.relationshipStatus,
+        relationshipMissingReason: visibility.blocked ? visibility.policy.blockedReason : policyBlock.blocked ? policyBlock.reason : orientationBlock.blocked ? orientationBlock.reason : cascade.relationshipMissingReason,
         compatibleWithCurrentConstraints: compatible,
         preservesManualConstraint: Boolean(selected),
         writes: false,
@@ -2973,22 +3029,23 @@ function createWorkflowField(field, { bucket, records, constraints, cascadeConst
   const options = baseOptions.map((option) => {
     const cascade = optionCascadeResult(field.fieldKey, option, records, cascadeConstraints);
     const policyBlock = mountCodePolicyBlock(field.fieldKey, option, records, cascadeConstraints);
-    const compatible = cascade.compatible && indirectSupport.supported && policyBlock.blocked !== true;
+    const orientationBlock = mountOrientationPolicyBlock(field.fieldKey, option, cascadeConstraints);
+    const compatible = cascade.compatible && indirectSupport.supported && policyBlock.blocked !== true && orientationBlock.blocked !== true;
     const selected = optionSelectedByValue(field.fieldKey, option, selectedValue);
     const inherited = field.role === "inherited-consequence" && compatible;
     const consequence = field.role === "auto-consequence" && compatible;
-    const blockedBy = compatible ? [] : [...(cascade.blockedBy || []), ...(indirectSupport.supported ? [] : indirectSupport.blockedBy), ...(policyBlock.blockedBy || [])];
+    const blockedBy = compatible ? [] : [...(cascade.blockedBy || []), ...(indirectSupport.supported ? [] : indirectSupport.blockedBy), ...(policyBlock.blockedBy || []), ...(orientationBlock.blockedBy || [])];
     return {
       ...option,
       selected: Boolean(selected),
       status: inherited ? "inherited" : consequence ? "auto-consequence" : compatible ? "available" : "blocked",
       blocked: !compatible,
-      blockedReason: compatible ? "" : policyBlock.reason || (indirectSupport.supported ? "Blocked by current manual constraints; shown rather than silently hidden." : "Indirect fields are blocked because the current system/optic path does not support indirect."),
+      blockedReason: compatible ? "" : policyBlock.reason || orientationBlock.reason || (indirectSupport.supported ? "Blocked by current manual constraints; shown rather than silently hidden." : "Indirect fields are blocked because the current system/optic path does not support indirect."),
       blockedBy,
       cascadeSource: cascade.cascadeSource || option.sourceTables || [],
       inheritedFrom: inherited ? inheritedSourceForField(field.fieldKey, constraints) : "",
-      relationshipStatus: compatible ? cascade.relationshipStatus : policyBlock.blocked ? "blocked-by-code-policy" : indirectSupport.supported ? cascade.relationshipStatus : "blocked-by-indirect-capability",
-      relationshipMissingReason: compatible ? cascade.relationshipMissingReason : policyBlock.blocked ? policyBlock.reason : indirectSupport.supported ? cascade.relationshipMissingReason : "Current upstream selection does not expose indirect capability in safe relationship metadata.",
+      relationshipStatus: compatible ? cascade.relationshipStatus : policyBlock.blocked ? "blocked-by-code-policy" : orientationBlock.blocked ? "blocked-by-mount-orientation" : indirectSupport.supported ? cascade.relationshipStatus : "blocked-by-indirect-capability",
+      relationshipMissingReason: compatible ? cascade.relationshipMissingReason : policyBlock.blocked ? policyBlock.reason : orientationBlock.blocked ? orientationBlock.reason : indirectSupport.supported ? cascade.relationshipMissingReason : "Current upstream selection does not expose indirect capability in safe relationship metadata.",
       compatibleWithCurrentConstraints: compatible,
       preservesManualConstraint: Boolean(selected),
       writes: false,
@@ -3039,7 +3096,8 @@ function compatibleWorkflowOptionsForField(fieldKey = "", bucket = {}, records =
   return baseOptions.filter((option) => {
     const cascade = optionCascadeResult(fieldKey, option, records, cascadeConstraints);
     const policyBlock = mountCodePolicyBlock(fieldKey, option, records, cascadeConstraints);
-    return cascade.compatible === true && policyBlock.blocked !== true;
+    const orientationBlock = mountOrientationPolicyBlock(fieldKey, option, cascadeConstraints);
+    return cascade.compatible === true && policyBlock.blocked !== true && orientationBlock.blocked !== true;
   });
 }
 

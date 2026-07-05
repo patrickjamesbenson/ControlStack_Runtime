@@ -1219,6 +1219,28 @@ function mountStyleValuesMatch(left, right) {
   return Boolean(leftKey && rightKey && leftKey === rightKey) || optionValuesMatch(left, right);
 }
 
+function mountOrientationText(value = "") {
+  return String(value || "").trim().toLowerCase().replace(/\([^)]*\)/g, " ").replace(/\s+/g, " ").trim();
+}
+
+function mountTextHasCeilingBracket(value = "") {
+  const text = mountOrientationText(value);
+  return text.includes("ceiling bracket") || text.includes("sealing bracket");
+}
+
+function mountTextHasWallBracket(value = "") {
+  return mountOrientationText(value).includes("wall bracket");
+}
+
+function penetrationTextIsSideWall(value = "") {
+  const text = mountOrientationText(value);
+  return text.includes("side wall") || (text.includes("side") && text.includes("wall"));
+}
+
+function penetrationTextIsTop(value = "") {
+  return mountOrientationText(value).includes("top");
+}
+
 function optionCodePolicyIds(option = {}) {
   return (Array.isArray(option.codePolicyIds) ? option.codePolicyIds : [option.codePolicyIds]).map((id) => String(id || "").trim()).filter(Boolean);
 }
@@ -1732,7 +1754,7 @@ function optionStrictlyMatchesSelectedSystemReference(option = {}, selectedConst
 
 function localMountingRelationshipBlock(fieldKey = "", option = {}, selectedConstraints = {}) {
   const blockers = [];
-  let codePolicyReason = "";
+  let mountOrientationReason = "";
 
   if (fieldKey === "mountStyle" && !optionStrictlyMatchesSelectedSystemReference(option, selectedConstraints)) {
     blockers.push({
@@ -1742,17 +1764,15 @@ function localMountingRelationshipBlock(fieldKey = "", option = {}, selectedCons
     });
   }
 
-  if (
-    fieldKey === "mountStyle"
+  const optionText = String(option.value || option.label || "");
+  if (["mountStyle", "mountSelection", "mountParticulars"].includes(fieldKey)
     && selectedConstraints.__systemSupportsIndirect === true
-    && canonicalMountStyleValue(option.value || option.label) === "surface mount"
-    && optionHasCodePolicy(option, SURFACE_MOUNT_DI_BLOCK_POLICY_ID)
-  ) {
-    codePolicyReason = option.codePolicyReason || SURFACE_MOUNT_DI_BLOCK_DEFAULT_REASON;
+    && mountTextHasCeilingBracket(optionText)) {
+    mountOrientationReason = "Donor mounting rules block ceiling-bracket mounting for direct-indirect/uplight systems while preserving other donor-compatible Surface Mount choices.";
     blockers.push({
-      fieldKey: "CODE_POLICY",
-      selectedValue: SURFACE_MOUNT_DI_BLOCK_POLICY_ID,
-      compatibleValues: ["Suspended", "other donor-compatible mount styles"],
+      fieldKey: "emission",
+      selectedValue: "Both",
+      compatibleValues: ["non-ceiling mount selection for direct-indirect/uplight"],
     });
   }
 
@@ -1770,11 +1790,34 @@ function localMountingRelationshipBlock(fieldKey = "", option = {}, selectedCons
     }
   }
 
+  if (fieldKey === "powerPenetration") {
+    const mountContext = [selectedConstraints.mountSelection, selectedConstraints.mountStyle, selectedConstraints.mountParticulars]
+      .map((item) => String(item || "").trim())
+      .filter(Boolean)
+      .join(" ");
+    if (mountContext && mountTextHasWallBracket(mountContext) && penetrationTextIsTop(optionText)) {
+      mountOrientationReason = "Donor power-entry rules remove top penetration for wall-bracket/body-orientation mounting.";
+      blockers.push({
+        fieldKey: "mountSelection",
+        selectedValue: selectedConstraints.mountSelection || selectedConstraints.mountStyle || "wall bracket",
+        compatibleValues: ["non-top power penetration"],
+      });
+    }
+    if (mountContext && mountTextHasCeilingBracket(mountContext) && penetrationTextIsSideWall(optionText)) {
+      mountOrientationReason = "Donor power-entry rules remove side-wall penetration for ceiling-bracket mounting.";
+      blockers.push({
+        fieldKey: "mountSelection",
+        selectedValue: selectedConstraints.mountSelection || selectedConstraints.mountStyle || "ceiling bracket",
+        compatibleValues: ["non-side-wall power penetration"],
+      });
+    }
+  }
+
   return {
     blocked: blockers.length > 0,
     blockedBy: blockers,
     reason: blockers.length
-      ? codePolicyReason || "Blocked by current Mounting manual constraints; shown rather than silently hidden."
+      ? mountOrientationReason || "Blocked by current Mounting manual constraints; shown rather than silently hidden."
       : "",
   };
 }

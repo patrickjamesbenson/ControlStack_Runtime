@@ -161,6 +161,21 @@ function dnx80DiMountJoinSnapshot() {
   };
 }
 
+function dnxProductMatrixMountingSnapshot() {
+  return {
+    SYSTEM: [
+      { system: "80", system_variant_1: "Square", label: "DNX 80 direct-only", emission: "Direct", mount_style: "Surface Mount;Suspended", approved: "yes" },
+      { system: "80", system_variant_1: "Square_DI", label: "DNX 80 D/I", emission: "Both", mount_style: "Surface Mount;Suspended", approved: "yes" },
+      { system: "60", system_variant_1: "Beam", label: "DNX 60 Beam D/I", emission: "Both", mount_style: "Surface Mount", approved: "yes" },
+      { system: "60", system_variant_1: "Linear", label: "DNX 60 direct sibling", emission: "Direct", mount_style: "Suspended", approved: "yes" },
+    ],
+    ACCESSORIES: [
+      { accessory_type: "mount", display_choice: "Surface Mount", mount_selections: "Ceiling bracket;Wall bracket", mount_particulars: "Direct fix", approved: "yes" },
+      { accessory_type: "mount", display_choice: "Suspended", mount_selections: "Wire;Rod", mount_particulars: "1500mm drop;Custom drop", approved: "yes" },
+    ],
+  };
+}
+
 function mountPolicySnapshot() {
   return {
     SYSTEM: [
@@ -208,7 +223,7 @@ function mountPolicySnapshot() {
       {
         accessory_type: "mount",
         display_choice: "Surface Mount",
-        mount_selections: "Surface bracket",
+        mount_selections: "Ceiling bracket;Wall bracket;Surface bracket",
         mount_particulars: "Direct fix",
         approved: "yes",
       },
@@ -219,6 +234,11 @@ function mountPolicySnapshot() {
         mount_particulars: "1500mm drop",
         approved: "yes",
       },
+      { accessory_type: "power_penetration", accessory_id: "Top", approved: "yes" },
+      { accessory_type: "power_penetration", accessory_id: "Rear", approved: "yes" },
+      { accessory_type: "power_penetration", accessory_id: "Side Wall", approved: "yes" },
+      { accessory_type: "power_location", accessory_id: "Start", approved: "yes" },
+      { accessory_type: "flex_length", accessory_id: "1500mm", approved: "yes" },
     ],
     CODE_POLICY: [
       {
@@ -436,6 +456,31 @@ test("DNX 80 D/I mounting joins resolved SYSTEM mount_style to ACCESSORIES mount
   assert.equal(visibleControlField(model, "mountStyle").incompatibleOptions.some((option) => option.value === "Surface Mount"), true);
 });
 
+test("DNX product matrix resolves mounting from exact SYSTEM system plus variant", () => {
+  const snapshot = dnxProductMatrixMountingSnapshot();
+
+  let state = createSelectorState();
+  let model = selectAndReload(state, "system", "80|Square_DI", snapshot);
+  assert.deepEqual(controlOptionValues(visibleControlField(model, "mountStyle")), ["Surface Mount", "Suspended"].sort());
+  model = selectAndReload(state, "mountStyle", "Surface Mount", snapshot);
+  assert.equal(workflowOption(model, "mountSelection", "Wall bracket").status, "available");
+  assert.equal(workflowOption(model, "mountSelection", "Ceiling bracket").status, "blocked");
+
+  state = createSelectorState();
+  model = selectAndReload(state, "system", "60|Beam", snapshot);
+  assert.deepEqual(controlOptionValues(visibleControlField(model, "mountStyle")), ["Surface Mount"]);
+  assert.equal(workflowOption(model, "mountStyle", "Suspended").status, "blocked");
+  model = selectAndReload(state, "mountStyle", "Surface Mount", snapshot);
+  assert.equal(workflowOption(model, "mountSelection", "Wall bracket").status, "available");
+  assert.equal(workflowOption(model, "mountSelection", "Ceiling bracket").status, "blocked");
+
+  state = createSelectorState();
+  model = selectAndReload(state, "system", "80|Square", snapshot);
+  assert.deepEqual(controlOptionValues(visibleControlField(model, "mountStyle")), ["Surface Mount", "Suspended"].sort());
+  model = selectAndReload(state, "mountStyle", "Surface Mount", snapshot);
+  assert.equal(workflowOption(model, "mountSelection", "Ceiling bracket").status, "available");
+});
+
 test("recess-kit and trimless exceptions cascade from donor-compatible no-flange mounting", () => {
   const selectorState = createSelectorState();
   const snapshot = donorParityMountingSnapshot();
@@ -576,60 +621,65 @@ test("Mounting payload preview keeps safety flags disabled and exposes no raw so
   assert.equal(source.includes(usersTableLiteral), false);
 });
 
-test("SURFACE_MOUNT_DI_BLOCK blocks Surface Mount for direct-indirect/uplight systems and keeps Suspended", () => {
+test("DNX 80 D/I allows donor Surface Mount style but blocks ceiling-bracket selection", () => {
   const selectorState = createSelectorState();
   const snapshot = mountPolicySnapshot();
-  const model = selectAndReload(selectorState, "system", "DNX80|DI", snapshot);
+  let model = selectAndReload(selectorState, "system", "DNX80|DI", snapshot);
 
-  const mountField = workflowField(model, "mountStyle");
-  const surface = workflowOption(model, "mountStyle", "Surface Mount");
-  assert.equal(surface.status, "blocked");
-  assert.equal(surface.blocked, true);
-  assert.match(surface.blockedReason, /Surface Mount.*direct-indirect|ceiling blocks.*indirect/i);
-  assert.equal(surface.relationshipStatus, "blocked-by-code-policy");
-  assert.deepEqual(surface.codePolicyIds, ["SURFACE_MOUNT_DI_BLOCK"]);
-  assert.equal(surface.blockedBy.some((item) => item.fieldKey === "CODE_POLICY" && item.selectedValue === "SURFACE_MOUNT_DI_BLOCK"), true);
-  assert.equal(mountField.dropdownOptions.some((option) => option.value === "Surface Mount"), false);
-  assert.equal(mountField.incompatibleOptions.some((option) => option.value === "Surface Mount"), true);
-  assert.equal(mountField.selectedBlockedOptionVisible, false);
-  assert.deepEqual(controlOptionValues(visibleControlField(model, "mountStyle")), ["Suspended"]);
+  assert.equal(workflowOption(model, "mountStyle", "Surface Mount").status, "available");
   assert.equal(workflowOption(model, "mountStyle", "Suspended").status, "available");
+  assert.deepEqual(controlOptionValues(visibleControlField(model, "mountStyle")), ["Surface Mount", "Suspended"].sort());
+
+  model = selectAndReload(selectorState, "mountStyle", "Surface Mount", snapshot);
+  assert.equal(workflowOption(model, "mountSelection", "Wall bracket").status, "available");
+  assert.equal(workflowOption(model, "mountSelection", "Surface bracket").status, "available");
+  assert.equal(workflowOption(model, "mountSelection", "Ceiling bracket").status, "blocked");
+  assert.match(workflowOption(model, "mountSelection", "Ceiling bracket").blockedReason, /ceiling-bracket|direct-indirect|uplight/i);
+  assert.equal(visibleControlField(model, "mountSelection").incompatibleOptions.some((option) => option.value === "Ceiling bracket"), true);
+  assert.equal(controlOptionValues(visibleControlField(model, "mountSelection")).includes("Ceiling bracket"), false);
+
+  model = selectAndReload(selectorState, "mountSelection", "Ceiling bracket", snapshot);
+  const row = mountingRow(model.selectorSurface.productSpine, "mountSelection");
+  assert.equal(row.displayValue, "—");
+  assert.equal(row.status, "blocked");
+  assert.equal(row.blocked, true);
+  assert.equal(selectorState.getSnapshot().dbBackedSelector.manualConstraints.mountSelection.value, "Ceiling bracket");
+  assert.ok(model.selectorSurface.selectionTruthSummary.blockers.some((item) => item.fieldKey === "mountSelection"));
+  assert.equal(model.selectorSurface.payloadPreview.mounting.mountSelection, null);
+
+  const railText = compactBlockedRailText(model.selectorSurface.selectionTruthSummary);
+  assert.match(railText, /review required/);
+  assert.doesNotMatch(railText, /Ceiling bracket/);
+  assert.match(detailedBlockedValueText(model.selectorSurface.selectionTruthSummary), /Ceiling bracket/);
 });
 
-test("selected incompatible Surface Mount is preserved as blocked by donor policy", () => {
+test("power penetration follows donor mount orientation rules and preserves stale top as blocked", () => {
   const selectorState = createSelectorState();
   const snapshot = mountPolicySnapshot();
   let model = selectAndReload(selectorState, "system", "DNX80|DI", snapshot);
   model = selectAndReload(selectorState, "mountStyle", "Surface Mount", snapshot);
+  model = selectAndReload(selectorState, "mountSelection", "Wall bracket", snapshot);
 
-  const row = mountingRow(model.selectorSurface.productSpine, "mountStyle");
-  const mountField = workflowField(model, "mountStyle");
-  const selectedDropdown = mountField.dropdownOptions.find((option) => option.value === "Surface Mount");
-  const diagnosticOption = mountField.incompatibleOptions.find((option) => option.value === "Surface Mount");
-  assert.equal(row.displayValue, "—");
-  assert.equal(row.status, "blocked");
-  assert.equal(row.blocked, true);
-  assert.match(diagnosticOption?.blockedReason || row.reason, /ceiling blocks.*indirect|direct-indirect|blocked/i);
-  assert.equal(mountField.selectedBlockedOptionVisible, false);
-  assert.equal(selectedDropdown, undefined);
-  const liveMountControl = visibleControlField(model, "mountStyle");
-  assert.equal(liveMountControl.value, "");
-  assert.deepEqual(controlOptionValues(liveMountControl), ["Suspended"]);
-  assert.equal(liveMountControl.incompatibleOptions.some((option) => option.value === "Surface Mount" && option.selectedBlockedDiagnostic === true), true);
-  assert.ok(diagnosticOption, "blocked Surface Mount should remain only in developer/detail diagnostics");
-  assert.equal(diagnosticOption.selected, true);
-  assert.equal(diagnosticOption.selectedBlockedDiagnostic, true);
-  assert.equal(diagnosticOption.blockedBy.some((item) => item.fieldKey === "CODE_POLICY"), true);
-  assert.equal(model.selectorSurface.autoConsequences.some((item) => item.fieldKey === "mountStyle"), false);
-  assert.equal(selectorState.getSnapshot().dbBackedSelector.manualConstraints.mountStyle.value, "Surface Mount");
-  assert.ok(model.selectorSurface.selectionTruthSummary.blockers.some((item) => item.fieldKey === "mountStyle"));
-  assert.equal(model.selectorSurface.payloadPreview.mounting.mountStyle, null);
+  assert.equal(workflowOption(model, "powerPenetration", "Top").status, "blocked");
+  assert.equal(workflowOption(model, "powerPenetration", "Rear").status, "available");
+  assert.equal(workflowOption(model, "powerPenetration", "Side Wall").status, "available");
+  assert.equal(controlOptionValues(visibleControlField(model, "powerPenetration")).includes("Top"), false);
 
-  const railText = compactBlockedRailText(model.selectorSurface.selectionTruthSummary);
-  assert.match(railText, /review required/);
-  assert.match(railText, /blocked/);
-  assert.doesNotMatch(railText, /Surface Mount/);
-  assert.match(detailedBlockedValueText(model.selectorSurface.selectionTruthSummary), /Surface Mount/);
+  model = selectAndReload(selectorState, "powerPenetration", "Top", snapshot);
+  const topRow = mountingRow(model.selectorSurface.productSpine, "powerPenetration");
+  assert.equal(topRow.displayValue, "—");
+  assert.equal(topRow.status, "blocked");
+  assert.equal(topRow.blocked, true);
+  assert.ok(model.selectorSurface.selectionTruthSummary.blockers.some((item) => item.fieldKey === "powerPenetration"));
+  assert.equal(model.selectorSurface.payloadPreview.mounting.powerPenetration, null);
+
+  const directState = createSelectorState();
+  model = selectAndReload(directState, "system", "DNX60|Direct", snapshot);
+  model = selectAndReload(directState, "mountStyle", "Surface Mount", snapshot);
+  model = selectAndReload(directState, "mountSelection", "Ceiling bracket", snapshot);
+  assert.equal(workflowOption(model, "mountSelection", "Ceiling bracket").status, "available");
+  assert.equal(workflowOption(model, "powerPenetration", "Top").status, "available");
+  assert.equal(workflowOption(model, "powerPenetration", "Side Wall").status, "blocked");
 });
 
 test("mount CODE_POLICY plain reason stays in main flow and technical code stays in developer diagnostics", async () => {
@@ -658,15 +708,18 @@ test("single indirect optic remains an explicit visible choice without mutating 
   assert.equal(selectorState.getSnapshot().dbBackedSelector.manualConstraints.indirectOpticVar1, undefined);
 });
 
-test("direct-only product does not trigger SURFACE_MOUNT_DI_BLOCK", () => {
+test("direct-only mounting keeps donor ceiling and surface choices valid", () => {
   const selectorState = createSelectorState();
   const snapshot = mountPolicySnapshot();
-  const model = selectAndReload(selectorState, "system", "DNX60|Direct", snapshot);
+  let model = selectAndReload(selectorState, "system", "DNX60|Direct", snapshot);
 
   const surface = workflowOption(model, "mountStyle", "Surface Mount");
   assert.equal(surface.status, "available");
   assert.equal(surface.blocked, false);
   assert.equal(workflowOption(model, "mountStyle", "Suspended").status, "available");
+
+  model = selectAndReload(selectorState, "mountStyle", "Surface Mount", snapshot);
+  assert.equal(workflowOption(model, "mountSelection", "Ceiling bracket").status, "available");
 });
 
 test("mount policy compatibility keeps runtime safety boundaries closed", async () => {
