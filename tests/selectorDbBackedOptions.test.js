@@ -58,8 +58,8 @@ function sampleSnapshot() {
       { system: "LNX", system_variant_1: "80", label: "LNX 80", approved: "yes" },
     ],
     OPTICS: [
-      { system: "DNX", optic_var_1: "Opal", ip_option_1: "IP20;IP65", ik_option_2: "IK07;IK10", cct: "3000K;4000K", approved: "yes" },
-      { system: "LNX", optic_var_1: "Microprism", ip_option_1: "IP20", ik_option_2: "IK07", cct: "4000K", approved: "yes" },
+      { system: "DNX", optic_var_1: "Opal", emission_permission: "Direct", ip_option_1: "IP20;IP65", ik_option_2: "IK07;IK10", cct: "3000K;4000K", approved: "yes" },
+      { system: "LNX", optic_var_1: "Microprism", emission_permission: "Direct", ip_option_1: "IP20", ik_option_2: "IK07", cct: "4000K", approved: "yes" },
     ],
     BOARDS: [{ board: "B1", cct: "3000K;4000K", approved: "yes" }],
     DRIVERS: [

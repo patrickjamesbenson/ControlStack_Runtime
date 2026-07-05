@@ -179,11 +179,14 @@ function visibleTimelineTestCard(container) {
   return card;
 }
 
-test("external default hides 80 Inlay", () => {
+test("external default keeps 80 Inlay selector-visible as review-only", () => {
   const result = derive({ system: "DNX 80 DI" });
   assert.equal(result.timelineVisibilityMode, "external-default");
   assert.deepEqual(result.timelineVisibleStatuses, ["available", "approved"]);
-  assert.ok(!labels(result, "directOpticVar1").includes("Inlay · 80"));
+  assert.ok(labels(result, "directOpticVar1").includes("Inlay · 80"));
+  const inlay = byLabel(result, "directOpticVar1", "Inlay · 80");
+  assert.equal(inlay.timelineAvailability, "selector-visible-review-only");
+  assert.equal(inlay.productionBlocked, true);
 });
 
 test("internal as-of with roadmap exposes 80 Inlay", () => {
@@ -195,22 +198,22 @@ test("selecting 80 Inlay hydrates Microprism and Antiglare", () => {
   assert.deepEqual(labels(result, "directOpticVar2"), ["Antiglare", "Microprism"]);
 });
 
-test("80 Inlay stays hidden when roadmap is omitted", () => {
+test("80 Inlay stays visible when roadmap status is omitted from selector test controls", () => {
   const result = derive({ system: "DNX 80 DI" }, {
     timelineVisibilityMode: "internal-asof-test",
     timelineAsOfDate: "2026-08-15",
     timelineVisibleStatuses: ["available", "approved"],
   });
-  assert.ok(!labels(result, "directOpticVar1").includes("Inlay · 80"));
+  assert.ok(labels(result, "directOpticVar1").includes("Inlay · 80"));
 });
 
-test("80 Inlay stays hidden before status date", () => {
+test("80 Inlay stays visible before status date because status_date is not a selector filter", () => {
   const result = derive({ system: "DNX 80 DI" }, {
     timelineVisibilityMode: "internal-asof-test",
     timelineAsOfDate: "2026-08-14",
     timelineVisibleStatuses: ["available", "approved", "roadmap"],
   });
-  assert.ok(!labels(result, "directOpticVar1").includes("Inlay · 80"));
+  assert.ok(labels(result, "directOpticVar1").includes("Inlay · 80"));
 });
 
 test("45 Daisy appears only for 45-family system", () => {

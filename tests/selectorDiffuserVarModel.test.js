@@ -146,7 +146,7 @@ test("diffuser options carry safe two-layer metadata without raw rows or paths",
   assert.equal(var1.writes, false);
 
   assert.equal(var2.diffuserLayer, "var2");
-  assert.equal(var2.parentFieldKey, "diffuserVar1");
+  assert.equal(var2.parentFieldKey, "directOpticVar1");
   assert.equal(var2.parentValue, "80|Inlay");
   assert.equal(var2.diffuserMaterial, "PMMA");
   assert.equal(var2.rawRowsExposed, false);

@@ -25,8 +25,8 @@ function sampleSnapshot() {
       { system: "LNX", system_variant_1: "80", label: "LNX 80", approved: "yes", status: "available" },
     ],
     OPTICS: [
-      { system: "DNX", optic_var_1: "Opal", ip_option_1: "IP20;IP65", ik_option_2: "IK07;IK10", cct: "3000K;4000K", approved: "yes" },
-      { system: "LNX", optic_var_1: "Microprism", ip_option_1: "IP20", ik_option_2: "IK07", cct: "4000K", approved: "yes" },
+      { system: "DNX", optic_var_1: "Opal", emission_permission: "Direct", ip_option_1: "IP20;IP65", ik_option_2: "IK07;IK10", cct: "3000K;4000K", approved: "yes" },
+      { system: "LNX", optic_var_1: "Microprism", emission_permission: "Direct", ip_option_1: "IP20", ik_option_2: "IK07", cct: "4000K", approved: "yes" },
     ],
     BOARDS: [
       { board: "B1", cct: "3000K;4000K", approved: "yes" },
@@ -167,7 +167,7 @@ test("selector reference option adapter supports nested snapshot containers", ()
     data: {
       tables: {
         SYSTEM: [{ system: "NEST", system_variant_1: "60", label: "Nested 60", approved: "yes" }],
-        OPTICS: [{ system: "NEST", optic_var_1: "Opal", ip_option_1: "IP20", ik_option_2: "IK10", cct: "3000K", approved: "yes" }],
+        OPTICS: [{ system: "NEST", optic_var_1: "Opal", emission_permission: "Direct", ip_option_1: "IP20", ik_option_2: "IK10", cct: "3000K", approved: "yes" }],
         DRIVERS: [{ driver_id: "Nested DALI", control_type: "DALI-2", approved: "yes" }],
       },
     },
@@ -189,8 +189,8 @@ test("selector reference option adapter supports sheet-like headers and rows wit
         rows: [["SHEET", "80", "Sheet 80", "yes"]],
       },
       OPTICS: {
-        headers: ["system", "optic_var_1", "ip_option_1", "ik_option_2", "cct", "approved", "secret_note"],
-        rows: [["SHEET", "Microprism", "IP20;IP65", "IK07;IK10", "3000K;4000K", "yes", "must not leak"]],
+        headers: ["system", "optic_var_1", "emission_permission", "ip_option_1", "ik_option_2", "cct", "approved", "secret_note"],
+        rows: [["SHEET", "Microprism", "Direct", "IP20;IP65", "IK07;IK10", "3000K;4000K", "yes", "must not leak"]],
       },
       DRIVERS: {
         values: [
@@ -257,7 +257,7 @@ function timelineStatusSnapshot() {
   };
 }
 
-test("timeline/status policy shows only available and approved options to external default preview", () => {
+test("timeline/status policy keeps staged and roadmap selector-visible while obsolete stays hidden", () => {
   const result = deriveSelectorReferenceOptionsFromSnapshot(timelineStatusSnapshot(), { source: sourceReady() });
   const system = field(result, "system");
   const values = system.options.map((item) => item.value);
@@ -265,7 +265,7 @@ test("timeline/status policy shows only available and approved options to extern
   const approved = option(result, "system", "APR|60");
   const serialised = JSON.stringify(result);
 
-  assert.deepEqual(values.sort(), ["APR|60", "AVL|60"].sort());
+  assert.deepEqual(values.sort(), ["APR|60", "AVL|60", "RDM|60", "STG|60", "UNK|60"].sort());
   assert.equal(available.optionStatusClass, "available");
   assert.equal(approved.optionStatusClass, "approved");
   assert.equal(available.timelineAvailability, "visible-to-external-default");
@@ -273,8 +273,8 @@ test("timeline/status policy shows only available and approved options to extern
   assert.equal(available.rawRowsReturned, false);
   assert.equal(available.rawUsersReturned, false);
   assert.equal(available.privatePathsReturned, false);
-  assert.deepEqual(result.timelineStatusFiltering.visibleToExternalDefault, ["available", "approved"]);
-  assert.deepEqual(result.timelineStatusFiltering.hiddenOrBlockedToExternalDefault, ["staged", "roadmap", "obsolete"]);
+  assert.deepEqual(result.timelineStatusFiltering.visibleToExternalDefault, ["available", "approved", "staged", "roadmap", "unknown"]);
+  assert.deepEqual(result.timelineStatusFiltering.hiddenOrBlockedToExternalDefault, ["obsolete"]);
   assert.equal(result.rawRowsReturned, false);
   assert.equal(result.rawUsersReturned, false);
   assert.equal(result.privatePathsReturned, false);
@@ -282,7 +282,7 @@ test("timeline/status policy shows only available and approved options to extern
   assert.equal(serialised.includes("timeline-private@example.com"), false);
 });
 
-test("selected staged/roadmap/obsolete status values are preserved visibly as blocked", () => {
+test("selected staged and roadmap status values stay selector-visible and production blocked", () => {
   const result = deriveSelectorReferenceOptionsFromSnapshot(timelineStatusSnapshot(), {
     source: sourceReady(),
     constraints: { system: "STG|60" },
@@ -290,13 +290,13 @@ test("selected staged/roadmap/obsolete status values are preserved visibly as bl
   const selected = option(result, "system", "STG|60");
 
   assert.equal(selected.selected, true);
-  assert.equal(selected.status, "blocked");
-  assert.equal(selected.blocked, true);
+  assert.equal(selected.status, "available");
+  assert.equal(selected.blocked, false);
   assert.equal(selected.optionStatusClass, "staged");
-  assert.equal(selected.timelineAvailability, "hidden-from-external-default");
-  assert.equal(selected.blockedByStatusPolicy, true);
-  assert.match(selected.blockedReason, /status policy/i);
-  assert.equal(result.blockedItems.some((item) => item.fieldKey === "system" && item.value === "STG|60"), true);
+  assert.equal(selected.timelineAvailability, "selector-visible-review-only");
+  assert.equal(selected.blockedByStatusPolicy, false);
+  assert.equal(selected.productionBlocked, true);
+  assert.equal(result.blockedItems.some((item) => item.fieldKey === "system" && item.value === "STG|60"), false);
 });
 
 test("unknown timeline/status fails safe as review-required without unsafe side effects", () => {
@@ -307,12 +307,13 @@ test("unknown timeline/status fails safe as review-required without unsafe side 
   const selected = option(result, "system", "UNK|60");
 
   assert.equal(selected.selected, true);
-  assert.equal(selected.status, "blocked");
+  assert.equal(selected.status, "available");
   assert.equal(selected.optionStatusClass, "unknown");
-  assert.equal(selected.timelineAvailability, "review-required");
-  assert.equal(selected.blockedByStatusPolicy, true);
+  assert.equal(selected.timelineAvailability, "selector-visible-review-required");
+  assert.equal(selected.blockedByStatusPolicy, false);
   assert.equal(selected.statusPolicyReviewRequired, true);
-  assert.match(selected.blockedReason, /unknown|review/i);
+  assert.equal(selected.productionBlocked, true);
+
   assert.equal(result.donorEngineInvoked, false);
   assert.equal(result.runtimeDataMutated, false);
   assert.equal(result.runTableGenerated, false);

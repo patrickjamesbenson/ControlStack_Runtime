@@ -21,7 +21,7 @@ function cascadeSnapshot() {
     ],
     OPTICS: [
       { system: "DNX", optic_var_1: "Opal", optic_var_2: "Soft;Sharp", emission_permission: "direct", ip_option_1: "IP20;IP44", ik_option_2: "IK07", cct: "3000K", approved: "yes" },
-      { system: "LNX", optic_var_1: "Blade", optic_var_2: "Wallwash", emission_permission: "direct/indirect", ip_option_1: "IP65;IP66", ik_option_2: "IK10", cct: "4000K", approved: "yes" },
+      { system: "LNX", optic_var_1: "Blade", optic_var_2: "Wallwash", emission_permission: "Direct;Indirect", ip_option_1: "IP65;IP66", ik_option_2: "IK10", cct: "4000K", approved: "yes" },
     ],
     BOARDS: [
       { system: "DNX", optic_var_1: "Opal", c1_cct: "3000", c1_cri_min: "80", board_lm_per_m: "1200", control_type_labels: "DALI-2;Non-dim", approved: "yes" },
@@ -210,7 +210,7 @@ test("metadata and diagnostic fields are downgraded while incompatible manual se
 });
 
 test("donor-shape selected tiles render from safe view model data", () => {
-  const surface = surfaceFor({ system: "DNX|60", diffuserVar1: "DNX|Opal", diffuserVar2: "DNX|Opal|Soft" });
+  const surface = surfaceFor({ system: "DNX|60", directOpticVar1: "DNX|Opal", directOpticVar2: "DNX|Opal|Soft" });
   const tiles = surface.donorShapeSelectedTiles;
 
   assert.equal(Array.isArray(tiles), true);

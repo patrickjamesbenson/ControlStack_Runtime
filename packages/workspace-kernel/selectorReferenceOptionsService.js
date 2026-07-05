@@ -478,6 +478,15 @@ function sourceRowPassesApprovalGate(row) {
   return !["false", "no", "0", "n", "rejected"].includes(approved);
 }
 
+function sourceRowHasRetiredOrObsoleteStatus(row) {
+  const status = optionStatusClassFromValue(rawStatusText(row));
+  return status === "obsolete";
+}
+
+function selectorSourceRowIsLive(row) {
+  return sourceRowPassesApprovalGate(row) && !sourceRowHasRetiredOrObsoleteStatus(row);
+}
+
 function rawStatusText(row) {
   return rowText(row, ["timeline_status", "status", "availability", "lifecycle_status", "product_status", "option_status", "effective_status"]);
 }
@@ -650,14 +659,19 @@ const selectorTimelineStatusPolicyForClassBase = statusPolicyForClass;
 statusPolicyForClass = function statusPolicyForClassWithExternalDefaultParity(optionStatusClass = "unknown", timelineContext = createSelectorTimelineContext(), statusDate = "") {
   const policy = selectorTimelineStatusPolicyForClassBase(optionStatusClass, timelineContext, statusDate);
   const safeClass = SELECTOR_STATUS_CLASSES.includes(policy.optionStatusClass) ? policy.optionStatusClass : "unknown";
-  if (timelineContext?.internalAsOfTestMode !== true && policy.blockedByStatusPolicy === true && !STATUS_REVIEW_CLASSES.has(safeClass)) {
-    return {
-      ...policy,
-      timelineAvailability: "hidden-from-external-default",
-      blockedReason: `${safeClass} status is blocked by external default timeline/status policy.`,
-    };
-  }
-  return policy;
+  if (safeClass === "obsolete") return policy;
+  if (safeClass === "available" || safeClass === "approved") return policy;
+  const internalVisible = timelineContext?.internalAsOfTestMode === true;
+  return {
+    ...policy,
+    timelineAvailability: internalVisible ? "visible-to-internal-asof-test" : (STATUS_REVIEW_CLASSES.has(safeClass) ? "selector-visible-review-required" : "selector-visible-review-only"),
+    blockedByStatusPolicy: false,
+    reviewRequired: true,
+    productionBlocked: true,
+    roadmapReviewOnly: safeClass === "roadmap" || safeClass === "staged",
+    futureOrRoadmapBlocked: safeClass === "roadmap" || safeClass === "staged",
+    blockedReason: `${safeClass} status remains visible to the selector by donor parity, but is review-only and blocked for downstream production outputs.`,
+  };
 };
 
 function rowStatusOptionMeta(row, timelineContext = createSelectorTimelineContext()) {
@@ -719,12 +733,13 @@ function selectedStatusBlockedOption(field = {}, selectedValue = "", reason = "M
 }
 
 function sourceRowIsLive(row, timelineContext = createSelectorTimelineContext()) {
-  return sourceRowPassesApprovalGate(row) && rowStatusOptionMeta(row, timelineContext).blockedByStatusPolicy !== true;
+  void timelineContext;
+  return selectorSourceRowIsLive(row);
 }
 
 function selectorOptionRows(snapshot, tableName, timelineContext = createSelectorTimelineContext()) {
   void timelineContext;
-  return tableRows(snapshot, tableName).filter(sourceRowPassesApprovalGate);
+  return tableRows(snapshot, tableName).filter(selectorSourceRowIsLive);
 }
 
 function liveTableRows(snapshot, tableName, timelineContext = createSelectorTimelineContext()) {
@@ -765,6 +780,7 @@ function createOption(label, {
   parentFieldKey = "",
   parentValue = "",
   parentValues = [],
+  opticLane = "",
   specCodePreview = "",
   specCodeVar2Preview = "",
   diffuserMaterial = "",
@@ -830,6 +846,7 @@ function createOption(label, {
     parentFieldKey,
     parentValue,
     parentValues: compatibleParentValues,
+    opticLane: safeString(opticLane),
     specCodePreview,
     specCodeVar2Preview,
     diffuserMaterial,
@@ -877,7 +894,7 @@ function addOption(bucket, fieldKey, label, meta = {}) {
   if (existing) {
     existing.count += meta.count || 1;
     existing.sourceTables = uniqueStrings([...(existing.sourceTables || []), ...(meta.sourceTables || [])]);
-    for (const key of ["diffuserLayer", "parentFieldKey", "parentValue", "specCodePreview", "specCodeVar2Preview", "diffuserMaterial", "imageReadiness", "imageKey", "systemReferenceKey", "systemVariantKey", "timelineAvailability", "statusDate", "statusDateRaw"]) {
+    for (const key of ["diffuserLayer", "parentFieldKey", "parentValue", "opticLane", "specCodePreview", "specCodeVar2Preview", "diffuserMaterial", "imageReadiness", "imageKey", "systemReferenceKey", "systemVariantKey", "timelineAvailability", "statusDate", "statusDateRaw"]) {
       if (!existing[key] && meta[key]) existing[key] = meta[key];
     }
     existing.parentValues = uniqueStrings([
@@ -1180,6 +1197,23 @@ function emissionSupportsDirect(value) {
   return !mode || mode === "direct" || mode === "direct-indirect";
 }
 
+function emissionPermissionTokens(row) {
+  return rowOptionValues(row, ["emission_permission", "direction", "emission", "optic_direction", "light_direction"]);
+}
+
+function emissionPermissionHasExactToken(row, token = "") {
+  const wanted = normaliseKey(token);
+  return emissionPermissionTokens(row).some((item) => normaliseKey(item) === wanted);
+}
+
+function opticRowAllowsDirect(row) {
+  return emissionPermissionHasExactToken(row, "Direct");
+}
+
+function opticRowAllowsIndirect(row) {
+  return emissionPermissionHasExactToken(row, "Indirect");
+}
+
 function systemRowSupportsIndirect(row) {
   return systemEmissionValues(row).some(emissionSupportsIndirect);
 }
@@ -1314,7 +1348,7 @@ function collectOptions(snapshot, timelineContext = createSelectorTimelineContex
   }
   for (const value of policyValues(snapshot, ["tier"])) addOption(bucket, "tier", value, { sourceTables: ["SYSTEM_POLICY"] });
 
-  const optics = liveTableRows(snapshot, "OPTICS", timelineContext);
+  const optics = selectorOptionRows(snapshot, "OPTICS", timelineContext);
   for (const row of optics) {
     const optic = diffuserVar1Name(row);
     const system = diffuserSystemToken(row);
@@ -1322,34 +1356,41 @@ function collectOptions(snapshot, timelineContext = createSelectorTimelineContex
     const opticValue = diffuserVar1Value(row);
     const rowStatusMeta = rowStatusOptionMeta(row, timelineContext);
     const var1Meta = { ...diffuserOptionMeta(row, { layer: "var1", visualChoice: true }), ...rowStatusMeta };
-    const emissions = rowOptionValues(row, ["emission_permission", "direction", "emission", "optic_direction", "light_direction"]);
-    const hasDirect = emissions.length ? emissions.some(emissionSupportsDirect) : true;
-    const hasIndirect = emissions.some(emissionSupportsIndirect);
-    addOption(bucket, "optic", opticLabel, { value: opticValue, sourceTables: ["OPTICS"], ...var1Meta });
-    addOption(bucket, "diffuserVar1", opticLabel, { value: opticValue, sourceTables: ["OPTICS"], ...var1Meta });
-    if (hasDirect) addOption(bucket, "directOpticVar1", opticLabel, { value: opticValue, sourceTables: ["OPTICS"], ...var1Meta });
-    if (hasIndirect) addOption(bucket, "indirectOpticVar1", opticLabel, { value: opticValue, sourceTables: ["OPTICS"], ...var1Meta });
+    const hasDirect = opticRowAllowsDirect(row);
+    const hasIndirect = opticRowAllowsIndirect(row);
+    if (!hasDirect && !hasIndirect) continue;
+    if (hasDirect) {
+      addOption(bucket, "optic", opticLabel, { value: opticValue, sourceTables: ["OPTICS"], ...var1Meta });
+      addOption(bucket, "diffuserVar1", opticLabel, { value: opticValue, sourceTables: ["OPTICS"], ...var1Meta });
+      addOption(bucket, "directOpticVar1", opticLabel, { value: opticValue, sourceTables: ["OPTICS"], ...var1Meta });
+    }
+    if (hasIndirect) {
+      addOption(bucket, "indirectOpticVar1", opticLabel, { value: opticValue, sourceTables: ["OPTICS"], ...var1Meta });
+      addOption(bucket, "opticIndirect", opticLabel, { value: opticValue, sourceTables: ["OPTICS"], ...var1Meta });
+    }
 
     for (const variant of diffuserVar2Values(row)) {
-      const var2Meta = { ...diffuserOptionMeta(row, {
+      const directVar2Meta = { ...diffuserOptionMeta(row, {
         layer: "var2",
-        parentFieldKey: "diffuserVar1",
+        parentFieldKey: "directOpticVar1",
         parentValue: opticValue,
         var2Label: variant.label,
         visualChoice: true,
-      }), ...rowStatusMeta };
+      }), opticLane: "direct", ...rowStatusMeta };
       const aliasValue = [optic, variant.label].filter(Boolean).join("|") || variant.label;
-      addOption(bucket, "opticSub", variant.label, { value: aliasValue, sourceTables: ["OPTICS"], ...var2Meta });
-      addOption(bucket, "diffuserVar2", variant.label, { value: variant.value, sourceTables: ["OPTICS"], ...var2Meta });
-      if (hasDirect) addOption(bucket, "directOpticVar2", variant.label, { value: variant.value, sourceTables: ["OPTICS"], ...var2Meta });
-      if (hasIndirect) addOption(bucket, "indirectOpticVar2", variant.label, { value: variant.value, sourceTables: ["OPTICS"], ...var2Meta });
+      if (hasDirect) {
+        addOption(bucket, "opticSub", variant.label, { value: aliasValue, sourceTables: ["OPTICS"], ...directVar2Meta, opticLane: "legacy-direct-alias" });
+        addOption(bucket, "diffuserVar2", variant.label, { value: variant.value, sourceTables: ["OPTICS"], ...directVar2Meta, opticLane: "legacy-direct-alias" });
+        addOption(bucket, "directOpticVar2", variant.label, { value: variant.value, sourceTables: ["OPTICS"], ...directVar2Meta });
+      }
     }
 
-    const material = diffuserMaterialText(row);
+    if (hasDirect) {
+      const material = diffuserMaterialText(row);
     if (material) addOption(bucket, "diffuserMaterial", material, {
       value: [system, optic, material].filter(Boolean).join("|") || material,
       sourceTables: ["OPTICS"],
-      ...diffuserOptionMeta(row, { layer: "material", parentFieldKey: "diffuserVar1", parentValue: opticValue, visualChoice: false, metadataOnly: true }),
+      ...diffuserOptionMeta(row, { layer: "material", parentFieldKey: "directOpticVar1", parentValue: opticValue, visualChoice: false, metadataOnly: true }),
       diffuserMaterial: material,
     });
 
@@ -1357,7 +1398,7 @@ function collectOptions(snapshot, timelineContext = createSelectorTimelineContex
     if (baseSpec.combinedSpecCodePreview) addOption(bucket, "diffuserSpecCodePreview", `${optic || "Diffuser"}: ${baseSpec.combinedSpecCodePreview}`, {
       value: [system, optic, baseSpec.combinedSpecCodePreview].filter(Boolean).join("|") || baseSpec.combinedSpecCodePreview,
       sourceTables: ["OPTICS"],
-      ...diffuserOptionMeta(row, { layer: "spec-code-preview", parentFieldKey: "diffuserVar1", parentValue: opticValue, visualChoice: false, metadataOnly: true }),
+      ...diffuserOptionMeta(row, { layer: "spec-code-preview", parentFieldKey: "directOpticVar1", parentValue: opticValue, visualChoice: false, metadataOnly: true }),
       specCodePreview: baseSpec.combinedSpecCodePreview,
       specCodeVar2Preview: baseSpec.specCodeVar2Preview,
     });
@@ -1366,7 +1407,7 @@ function collectOptions(snapshot, timelineContext = createSelectorTimelineContex
       addOption(bucket, "diffuserSpecCodePreview", `${optic || "Diffuser"} / ${variant.label}: ${spec.combinedSpecCodePreview}`, {
         value: [system, optic, variant.label, spec.combinedSpecCodePreview].filter(Boolean).join("|") || spec.combinedSpecCodePreview,
         sourceTables: ["OPTICS"],
-        ...diffuserOptionMeta(row, { layer: "spec-code-preview", parentFieldKey: "diffuserVar2", parentValue: variant.value, var2Label: variant.label, visualChoice: false, metadataOnly: true }),
+        ...diffuserOptionMeta(row, { layer: "spec-code-preview", parentFieldKey: "directOpticVar2", parentValue: variant.value, var2Label: variant.label, visualChoice: false, metadataOnly: true }),
         specCodePreview: spec.combinedSpecCodePreview,
         specCodeVar2Preview: spec.specCodeVar2Preview,
       });
@@ -1375,34 +1416,31 @@ function collectOptions(snapshot, timelineContext = createSelectorTimelineContex
     addOption(bucket, "diffuserImageReadiness", `${optic || "Diffuser"}: runtime manifest missing`, {
       value: [system, optic, "runtime-manifest-missing"].filter(Boolean).join("|") || "runtime-manifest-missing",
       sourceTables: ["OPTICS"],
-      ...diffuserOptionMeta(row, { layer: "image-readiness", parentFieldKey: "diffuserVar1", parentValue: opticValue, visualChoice: false, metadataOnly: true }),
+      ...diffuserOptionMeta(row, { layer: "image-readiness", parentFieldKey: "directOpticVar1", parentValue: opticValue, visualChoice: false, metadataOnly: true }),
       imageReadiness: "runtime-manifest-missing",
     });
     for (const variant of diffuserVar2Values(row)) {
       addOption(bucket, "diffuserImageReadiness", `${optic || "Diffuser"} / ${variant.label}: runtime manifest missing`, {
         value: [system, optic, variant.label, "runtime-manifest-missing"].filter(Boolean).join("|") || "runtime-manifest-missing",
         sourceTables: ["OPTICS"],
-        ...diffuserOptionMeta(row, { layer: "image-readiness", parentFieldKey: "diffuserVar2", parentValue: variant.value, var2Label: variant.label, visualChoice: false, metadataOnly: true }),
+        ...diffuserOptionMeta(row, { layer: "image-readiness", parentFieldKey: "directOpticVar2", parentValue: variant.value, var2Label: variant.label, visualChoice: false, metadataOnly: true }),
         imageReadiness: "runtime-manifest-missing",
       });
     }
 
-    for (const emission of emissions) {
-      if (emissionSupportsDirect(emission)) addOption(bucket, "directCapability", "Direct supported", { value: "direct-supported", sourceTables: ["OPTICS"] });
-      if (emissionSupportsIndirect(emission)) {
-        addOption(bucket, "indirectCapability", "Indirect supported", { value: "indirect-supported", sourceTables: ["OPTICS"] });
-        addOption(bucket, "opticIndirect", opticLabel, { value: opticValue, sourceTables: ["OPTICS"], ...var1Meta });
-      }
     }
+
+    if (hasDirect) addOption(bucket, "directCapability", "Direct supported", { value: "direct-supported", sourceTables: ["OPTICS"] });
+    if (hasIndirect) addOption(bucket, "indirectCapability", "Indirect supported", { value: "indirect-supported", sourceTables: ["OPTICS"] });
     const opticSystemMeta = system ? { systemReferenceKey: system, systemReferenceKeys: [system] } : {};
     const opticEnvironmentMeta = {
       ...opticSystemMeta,
-      parentFieldKey: "diffuserVar1",
+      parentFieldKey: "directOpticVar1",
       parentValue: opticValue,
       parentValues: [opticValue].filter(Boolean),
     };
-    for (const ip of rowOptionValues(row, ["ip_option_1", "ip_options", "ip", "ip_rating"])) addOption(bucket, "ipRating", ip, { sourceTables: ["OPTICS"], ...opticEnvironmentMeta });
-    for (const ik of rowOptionValues(row, ["ik_option_2", "ik_options", "ik", "ik_rating"])) addOption(bucket, "ikRating", ik, { sourceTables: ["OPTICS"], ...opticEnvironmentMeta });
+    if (hasDirect) for (const ip of rowOptionValues(row, ["ip_option_1", "ip_options", "ip", "ip_rating"])) addOption(bucket, "ipRating", ip, { sourceTables: ["OPTICS"], ...opticEnvironmentMeta });
+    if (hasDirect) for (const ik of rowOptionValues(row, ["ik_option_2", "ik_options", "ik", "ik_rating"])) addOption(bucket, "ikRating", ik, { sourceTables: ["OPTICS"], ...opticEnvironmentMeta });
     for (const cct of extractCctValues(row)) addOption(bucket, "cct", cct, { sourceTables: ["OPTICS"], ...opticSystemMeta });
     for (const env of rowOptionValues(row, ["environment", "application", "application_environment"])) addOption(bucket, "application", env, { sourceTables: ["OPTICS"], ...opticSystemMeta });
     for (const io of rowOptionValues(row, ["interior_exterior", "interiorExterior", "indoor_outdoor", "location_type"])) addOption(bucket, "interiorExterior", io, { sourceTables: ["OPTICS"], ...opticSystemMeta });
@@ -1657,7 +1695,7 @@ function collectRecords(snapshot, bucket, timelineContext = createSelectorTimeli
     }, "TIERS row maps selected tier to electrical class options");
   }
 
-  for (const row of liveTableRows(snapshot, "SYSTEM", timelineContext)) {
+  for (const row of selectorOptionRows(snapshot, "SYSTEM", timelineContext)) {
     const tokens = systemTokens(row);
     const matchedSystemOption = systemOptionForRow(systemOptions, row);
     const systemValue = systemOptionIdentityValue(matchedSystemOption || {
@@ -1687,7 +1725,7 @@ function collectRecords(snapshot, bucket, timelineContext = createSelectorTimeli
     }, "SYSTEM row maps system choices to variants, emission, mounting, and finishes");
   }
 
-  for (const row of liveTableRows(snapshot, "OPTICS", timelineContext)) {
+  for (const row of selectorOptionRows(snapshot, "OPTICS", timelineContext)) {
     const systemValue = systemIdentityValuesForSourceSystem(systemOptions, diffuserSystemToken(row));
     const opticValue = opticFieldValue(row);
     const var1Value = diffuserVar1Value(row);
@@ -1702,9 +1740,11 @@ function collectRecords(snapshot, bucket, timelineContext = createSelectorTimeli
       [diffuserSystemToken(row), diffuserVar1Name(row), "runtime-manifest-missing"].filter(Boolean).join("|") || "runtime-manifest-missing",
       ...diffuserVar2Values(row).map((item) => [diffuserSystemToken(row), diffuserVar1Name(row), item.label, "runtime-manifest-missing"].filter(Boolean).join("|") || "runtime-manifest-missing"),
     ];
-    const emissions = rowOptionValues(row, ["emission_permission", "direction", "emission", "optic_direction", "light_direction"]);
-    const direct = emissions.length ? emissions.filter(emissionSupportsDirect).map(() => "direct-supported") : ["direct-supported"];
-    const indirect = emissions.filter(emissionSupportsIndirect).map(() => "indirect-supported");
+    const hasDirect = opticRowAllowsDirect(row);
+    const hasIndirect = opticRowAllowsIndirect(row);
+    if (!hasDirect && !hasIndirect) continue;
+    const direct = hasDirect ? ["direct-supported"] : [];
+    const indirect = hasIndirect ? ["indirect-supported"] : [];
     const ips = rowOptionValues(row, ["ip_option_1", "ip_options", "ip", "ip_rating"]);
     const iks = rowOptionValues(row, ["ik_option_2", "ik_options", "ik", "ik_rating"]);
     const ccts = extractCctValues(row);
@@ -1712,22 +1752,21 @@ function collectRecords(snapshot, bucket, timelineContext = createSelectorTimeli
     const app = rowOptionValues(row, ["environment", "application", "application_environment"]);
     pushRelationshipRecord(records, ["OPTICS"], {
       system: systemValue,
-      optic: opticValue,
-      opticSub: legacySubs,
-      opticIndirect: indirect.length ? [opticValue] : [],
-      diffuserVar1: var1Value,
-      diffuserVar2: var2Values,
-      diffuserMaterial: material ? [material] : [],
-      diffuserSpecCodePreview: specPreviews,
-      diffuserImageReadiness: imageReadinessValues,
-      directOpticVar1: direct.length ? [var1Value] : [],
-      directOpticVar2: direct.length ? var2Values : [],
-      indirectOpticVar1: indirect.length ? [var1Value] : [],
-      indirectOpticVar2: indirect.length ? var2Values : [],
+      optic: hasDirect ? opticValue : [],
+      opticSub: hasDirect ? legacySubs : [],
+      opticIndirect: hasIndirect ? [opticValue] : [],
+      diffuserVar1: hasDirect ? [var1Value] : [],
+      diffuserVar2: hasDirect ? var2Values : [],
+      diffuserMaterial: hasDirect && material ? [material] : [],
+      diffuserSpecCodePreview: hasDirect ? specPreviews : [],
+      diffuserImageReadiness: hasDirect ? imageReadinessValues : [],
+      directOpticVar1: hasDirect ? [var1Value] : [],
+      directOpticVar2: hasDirect ? var2Values : [],
+      indirectOpticVar1: hasIndirect ? [var1Value] : [],
       directCapability: direct,
       indirectCapability: indirect,
-      ipRating: ips,
-      ikRating: iks,
+      ipRating: hasDirect ? ips : [],
+      ikRating: hasDirect ? iks : [],
       cct: ccts,
       interiorExterior: io,
       application: app,
@@ -1938,7 +1977,7 @@ const CASCADE_CHILD_FIELDS_BY_PARENT = Object.freeze({
     "inheritedFinishStatus",
   ]),
   directOpticVar1: Object.freeze(["directOpticVar2", "ipRating", "ikRating"]),
-  indirectOpticVar1: Object.freeze(["indirectOpticVar2"]),
+  indirectOpticVar1: Object.freeze([]),
   diffuserVar1: Object.freeze(["diffuserVar2", "diffuserMaterial", "diffuserSpecCodePreview", "diffuserImageReadiness", "ipRating", "ikRating"]),
   optic: Object.freeze(["opticSub", "ipRating", "ikRating"]),
   mountStyle: Object.freeze(["mountSelection", "mountParticulars"]),
@@ -2741,7 +2780,7 @@ function createDisabledWorkflowField(field, reason, selectedValue = "") {
 
 function opticVar2ParentFieldKey(fieldKey = "") {
   if (fieldKey === "directOpticVar2") return "directOpticVar1";
-  if (fieldKey === "indirectOpticVar2") return "indirectOpticVar1";
+  if (fieldKey === "indirectOpticVar2") return "";
   if (fieldKey === "diffuserVar2") return "diffuserVar1";
   if (fieldKey === "opticSub") return "optic";
   return "";
@@ -3004,16 +3043,8 @@ function compatibleWorkflowOptionsForField(fieldKey = "", bucket = {}, records =
   });
 }
 
-function workflowParentConstraintsForAutoConsequences({ bucket = {}, records = [], constraints = {}, cascadeConstraints = constraints } = {}) {
-  const parentConstraints = { ...constraints };
-  if (!safeString(parentConstraints.indirectOpticVar1 || "")) {
-    const indirectCascadeConstraints = cascadeScopedConstraints("indirectOpticVar1", cascadeConstraints);
-    const compatibleIndirectParents = compatibleWorkflowOptionsForField("indirectOpticVar1", bucket, records, constraints, indirectCascadeConstraints);
-    if (compatibleIndirectParents.length === 1) {
-      parentConstraints.indirectOpticVar1 = compatibleIndirectParents[0].value;
-    }
-  }
-  return parentConstraints;
+function workflowParentConstraintsForAutoConsequences({ constraints = {} } = {}) {
+  return { ...constraints };
 }
 
 function createWorkflowSections({ bucket, records, constraints, cascadeConstraints = constraints, parentConstraints = constraints, sourceReady }) {
@@ -3372,7 +3403,7 @@ function createDiffuserModelSummary(workflowSections = []) {
     specCodePreviewFieldKey: "diffuserSpecCodePreview",
     imageReadinessFieldKey: "diffuserImageReadiness",
     directFields: ["directOpticVar1", "directOpticVar2"],
-    indirectFields: ["indirectOpticVar1", "indirectOpticVar2"],
+    indirectFields: ["indirectOpticVar1"],
     var1OptionCount: field("diffuserVar1").options.length,
     var2OptionCount: field("diffuserVar2").options.length,
     materialOptionCount: field("diffuserMaterial").options.length,
@@ -3518,10 +3549,10 @@ function createTimelineStatusFilteringSummary({ fields = [], workflowSections = 
     timelineVisibleStatuses: [...(timelineContext.timelineVisibleStatuses || DEFAULT_TIMELINE_VISIBLE_STATUSES)],
     timelineVisibleStatusOptions: [...SELECTOR_TIMELINE_VISIBLE_STATUS_OPTIONS],
     internalAsOfTestMode: timelineContext.internalAsOfTestMode === true,
-    visibleToExternalDefault: ["available", "approved"],
-    hiddenOrBlockedToExternalDefault: ["staged", "roadmap", "obsolete"],
-    reviewRequired: ["unknown"],
-    externalDefaultPolicy: "available/approved options are shown; staged/roadmap/obsolete/unknown are hidden unless internal timeline/as-of test mode explicitly includes them and status_date is on or before the as-of date.",
+    visibleToExternalDefault: ["available", "approved", "staged", "roadmap", "unknown"],
+    hiddenOrBlockedToExternalDefault: ["obsolete"],
+    reviewRequired: ["staged", "roadmap", "unknown"],
+    externalDefaultPolicy: "Selector-facing options are shown unless rejected, retired, or obsolete; staged/roadmap/unknown remain review-only and blocked for downstream production outputs. status_date is not a selector resolver filter.",
     selectedBlockedValuesPreserved: true,
     blockedByStatusPolicyCount,
     reviewRequiredCount,

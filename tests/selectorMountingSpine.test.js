@@ -645,15 +645,15 @@ test("mount CODE_POLICY plain reason stays in main flow and technical code stays
   assert.match(source, /optionTechnicalBlockerSummary/);
 });
 
-test("indirect optic remains visible as accepted implicit consequence without mutating state", () => {
+test("single indirect optic remains an explicit visible choice without mutating state", () => {
   const selectorState = createSelectorState();
   const snapshot = mountPolicySnapshot();
   const model = selectAndReload(selectorState, "system", "DNX80|DI", snapshot);
 
   const indirect = workflowField(model, "indirectOpticVar1");
-  assert.equal(indirect.displayMode, "auto-chip");
-  assert.equal(indirect.effectiveValue, "DNX80|Linear Uplight");
-  assert.equal(indirect.effectiveLabel, "Linear Uplight · DNX80");
+  assert.equal(indirect.displayMode, "choice");
+  assert.equal(indirect.primaryControl, true);
+  assert.equal(indirect.effectiveValue, "");
   assert.equal(indirect.compatibleOptionCount, 1);
   assert.equal(selectorState.getSnapshot().dbBackedSelector.manualConstraints.indirectOpticVar1, undefined);
 });

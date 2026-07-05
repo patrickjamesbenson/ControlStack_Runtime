@@ -1226,7 +1226,7 @@ const DB_BACKED_CASCADE_CHILDREN_BY_PARENT = Object.freeze({
   optic: Object.freeze(["opticSub", "ipRating", "ikRating"]),
   diffuserVar1: Object.freeze(["diffuserVar2", "ipRating", "ikRating"]),
   directOpticVar1: Object.freeze(["directOpticVar2", "ipRating", "ikRating"]),
-  indirectOpticVar1: Object.freeze(["indirectOpticVar2"]),
+  indirectOpticVar1: Object.freeze([]),
   mountStyle: Object.freeze(["mountSelection", "mountParticulars"]),
   mountSelection: Object.freeze(["mountParticulars"]),
   controlType: Object.freeze(["driver", "wiringType"]),

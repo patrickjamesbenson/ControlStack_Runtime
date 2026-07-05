@@ -1556,7 +1556,7 @@ function workflowSystemSupportsIndirect(workflowSections = [], selectedSystem = 
 
 function diffuserParentConstraintForField(fieldKey = "", selectedConstraints = {}) {
   if (fieldKey === "directOpticVar2") return selectedConstraints.directOpticVar1 || selectedConstraints.diffuserVar1 || "";
-  if (fieldKey === "indirectOpticVar2") return selectedConstraints.indirectOpticVar1 || selectedConstraints.diffuserVar1 || "";
+  if (fieldKey === "indirectOpticVar2") return "";
   if (["diffuserVar2", "diffuserMaterial", "diffuserSpecCodePreview", "diffuserImageReadiness"].includes(fieldKey)) return selectedConstraints.diffuserVar1 || selectedConstraints.optic || "";
   return "";
 }
@@ -1946,6 +1946,7 @@ const RUNTIME_PRESENTATION_PRIMARY_DECISION_FIELDS = Object.freeze(new Set([
   "egressLight",
   "egressSound",
   "sensor",
+  "indirectOpticVar1",
   "runCount",
   "runQty",
   "runLength",
@@ -1956,13 +1957,10 @@ const RUNTIME_PRESENTATION_CONDITIONAL_PRIMARY_FIELDS = Object.freeze(new Set([
   "diffuserVar2",
   "directOpticVar1",
   "directOpticVar2",
-  "indirectOpticVar1",
-  "indirectOpticVar2",
 ]));
 
 const RUNTIME_PRESENTATION_OPTIC_VAR2_PICKER_FIELDS = Object.freeze(new Set([
   "directOpticVar2",
-  "indirectOpticVar2",
 ]));
 
 const RUNTIME_PRESENTATION_AUTO_CHIP_FIELDS = Object.freeze(new Set([
@@ -1974,8 +1972,6 @@ const RUNTIME_PRESENTATION_AUTO_CHIP_FIELDS = Object.freeze(new Set([
   "diffuserVar2",
   "directOpticVar1",
   "directOpticVar2",
-  "indirectOpticVar1",
-  "indirectOpticVar2",
   "ipRating",
   "ikRating",
   "electricalClass",
@@ -2009,6 +2005,7 @@ const RUNTIME_PRESENTATION_METADATA_FIELDS = Object.freeze(new Set([
 ]));
 
 const RUNTIME_PRESENTATION_HIDDEN_DIAGNOSTIC_FIELDS = Object.freeze(new Set([
+  "indirectOpticVar2",
   "optic",
   "opticSub",
   "opticIndirect",
@@ -2260,7 +2257,8 @@ function classifyRuntimePresentationField(field = {}, finishContext = {}) {
     overrideAvailable = false;
     classificationReason = "metadata descriptor, not a primary decision";
   } else if (optionsComputable && compatibleOptionCount === 0 && !hasManualConstraint) {
-    displayMode = primaryAtStep ? "warning-chip" : "hidden-diagnostic";
+    const unsupportedIndirectPicker = field.fieldKey === "indirectOpticVar1";
+    displayMode = primaryAtStep && !unsupportedIndirectPicker ? "warning-chip" : "hidden-diagnostic";
     provenance = "diagnostic";
     primaryDecision = false;
     effectiveValue = "";
@@ -2854,9 +2852,9 @@ function createSelectionTruthSummary({
 
 const DONOR_SHAPE_SELECTED_TILE_DEFINITIONS = Object.freeze([
   Object.freeze({ tileKey: "system", title: "System", fieldKeys: Object.freeze(["system"]) }),
-  Object.freeze({ tileKey: "directOpticVar1", title: "Direct optic / diffuser var 1", fieldKeys: Object.freeze(["diffuserVar1", "directOpticVar1", "optic"]) }),
-  Object.freeze({ tileKey: "directOpticVar2", title: "Direct optic / diffuser var 2", fieldKeys: Object.freeze(["diffuserVar2", "directOpticVar2", "opticSub"]) }),
-  Object.freeze({ tileKey: "indirectOpticVar1", title: "Indirect optic / diffuser var 1", fieldKeys: Object.freeze(["indirectOpticVar1", "opticIndirect"]) }),
+  Object.freeze({ tileKey: "directOpticVar1", title: "Direct optic / diffuser var 1", fieldKeys: Object.freeze(["directOpticVar1"]) }),
+  Object.freeze({ tileKey: "directOpticVar2", title: "Direct optic / diffuser var 2", fieldKeys: Object.freeze(["directOpticVar2"]) }),
+  Object.freeze({ tileKey: "indirectOpticVar1", title: "Indirect optic / diffuser var 1", fieldKeys: Object.freeze(["indirectOpticVar1"]) }),
   Object.freeze({ tileKey: "indirectOpticVar2", title: "Indirect optic / diffuser var 2", fieldKeys: Object.freeze(["indirectOpticVar2"]) }),
 ]);
 
@@ -2876,9 +2874,10 @@ function createDonorShapeSelectedTiles({ fields = [], workflowSections = [] } = 
     const field = donorShapeTileField(fieldLookup, definition.fieldKeys);
     const selectedOption = field ? presentationSelectedOption(field) : null;
     const blocked = Boolean(field?.selectedValue && (field?.selectedOptionBlocked === true || selectedOption?.blocked === true || selectedOption?.status === "blocked"));
-    const selectedTruthValue = field?.selectedValue || field?.effectiveValue || "";
-    const value = blocked ? "" : selectedTruthValue;
-    const valueLabel = blocked ? "Not selected" : (field?.selectedLabel || field?.effectiveLabel || (selectedTruthValue ? selectedOption?.label : "") || "Not selected");
+    const hiddenDiagnosticEmpty = field?.displayMode === "hidden-diagnostic" && !field?.selectedValue && !field?.effectiveValue;
+    const selectedTruthValue = hiddenDiagnosticEmpty ? "" : (field?.selectedValue || field?.effectiveValue || "");
+    const value = blocked || hiddenDiagnosticEmpty ? "" : selectedTruthValue;
+    const valueLabel = blocked || hiddenDiagnosticEmpty ? "Not selected" : (field?.selectedLabel || field?.effectiveLabel || (selectedTruthValue ? selectedOption?.label : "") || "Not selected");
     const fieldKey = field?.fieldKey || definition.fieldKeys[0];
     return {
       tileKey: definition.tileKey,
@@ -2910,8 +2909,8 @@ const PRODUCT_SPINE_SECTION_DEFINITIONS = Object.freeze([
     title: "SYSTEM",
     rows: Object.freeze([
       Object.freeze({ rowKey: "profileSystem", label: "Profile / system", fields: Object.freeze(["system"]) }),
-      Object.freeze({ rowKey: "opticDirect", label: "Optic Direct", fields: Object.freeze(["directOpticVar1", "directOpticVar2", "diffuserVar1", "diffuserVar2", "optic", "opticSub"]) }),
-      Object.freeze({ rowKey: "opticIndirect", label: "Optic Indirect", fields: Object.freeze(["indirectOpticVar1", "indirectOpticVar2", "opticIndirect"]), condition: "indirect-supported" }),
+      Object.freeze({ rowKey: "opticDirect", label: "Optic Direct", fields: Object.freeze(["directOpticVar1", "directOpticVar2"]) }),
+      Object.freeze({ rowKey: "opticIndirect", label: "Optic Indirect", fields: Object.freeze(["indirectOpticVar1"]), condition: "indirect-supported" }),
     ]),
   }),
   Object.freeze({
@@ -3642,12 +3641,12 @@ function createPayloadPreviewSkeleton({ fields = [], workflowSections = [], summ
     tier: payloadFieldValue(lookup, ["tier"]),
     optics: {
       direct: {
-        opticVar1: payloadFieldValue(lookup, ["directOpticVar1", "diffuserVar1", "optic"]),
-        opticVar2: payloadFieldValue(lookup, ["directOpticVar2", "diffuserVar2", "opticSub"]),
+        opticVar1: payloadFieldValue(lookup, ["directOpticVar1"]),
+        opticVar2: payloadFieldValue(lookup, ["directOpticVar2"]),
       },
       indirect: {
-        opticVar1: payloadFieldValue(lookup, ["indirectOpticVar1", "opticIndirect"]),
-        opticVar2: payloadFieldValue(lookup, ["indirectOpticVar2"]),
+        opticVar1: payloadFieldValue(lookup, ["indirectOpticVar1"]),
+        opticVar2: null,
       },
     },
     environment: {

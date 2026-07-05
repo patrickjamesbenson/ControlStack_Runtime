@@ -58,7 +58,7 @@ function systemSnapshot({ includeGrey = true } = {}) {
       },
     ],
     OPTICS: [
-      { system: "LNX", optic_var_1: "Opal", ip_option_1: "IP20", ik_option_2: "IK07", cct: "4000K", approved: "yes" },
+      { system: "LNX", optic_var_1: "Opal", emission_permission: "Direct", ip_option_1: "IP20", ik_option_2: "IK07", cct: "4000K", approved: "yes" },
     ],
     DRIVERS: [
       { driver_id: "DALI Driver", control_type: "DALI-2", approved: "yes" },

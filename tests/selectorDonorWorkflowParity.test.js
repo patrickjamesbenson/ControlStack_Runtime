@@ -29,7 +29,7 @@ function workflowSnapshot() {
         system: "DNX",
         optic_var_1: "Inlay",
         optic_var_2: "Microprism, Antiglare",
-        emission_permission: "direct/indirect",
+        emission_permission: "Direct;Indirect",
         ip_option_1: "IP20;IP65",
         ik_option_2: "IK07;IK10",
         cct: "3000K;4000K",

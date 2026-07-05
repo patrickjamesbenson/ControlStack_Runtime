@@ -449,8 +449,9 @@ test("DNX80 direct-only and DNX80 DI remain distinct while DI exposes source-bac
   assert.deepEqual(compatibleLabels(workflowField(di, "directOpticVar1")), ["Inlay · 80"]);
   assert.deepEqual(compatibleLabels(workflowField(di, "indirectOpticVar1")), ["Rope · 80"]);
   const indirect = viewModelField(di, "indirectOpticVar1", diConstraints);
-  assert.equal(indirect.displayMode, "auto-chip");
-  assert.equal(indirect.effectiveValue, "80|Rope");
+  assert.equal(indirect.displayMode, "choice");
+  assert.equal(indirect.primaryControl, true);
+  assert.equal(indirect.effectiveValue, "");
 
   const diWithDirect = deriveSelectorReferenceOptionsFromSnapshot(snapshot, { source: sourceReady(), constraints: { ...diConstraints, directOpticVar1: "80|Inlay" } });
   assert.deepEqual(compatibleLabels(workflowField(diWithDirect, "directOpticVar2")), ["Var1", "Var2"]);
@@ -657,8 +658,9 @@ test("full display label DNX 80 DI resolves to size-80 optics and auto-fills the
   assert.equal(direct.displayMode, "choice");
   assert.equal(direct.primaryControl, true);
   assert.equal(direct.compatibleOptionCount, 2);
-  assert.equal(indirect.displayMode, "auto-chip");
-  assert.equal(indirect.effectiveValue, "80|Rope");
+  assert.equal(indirect.displayMode, "choice");
+  assert.equal(indirect.primaryControl, true);
+  assert.equal(indirect.effectiveValue, "");
   assert.equal(indirect.compatibleOptionCount, 1);
   assert.deepEqual(compatibleLabels(workflowField(result, "directOpticVar2")), ["Antiglare"]);
   const opalVar2 = viewModelField(result, "directOpticVar2", constraints);
@@ -706,7 +708,7 @@ test("both-emission system keeps direct/down and indirect/up options as classifi
   assert.equal(indirect.compatibleOptionCount, 2);
 });
 
-test("both-emission system exposes single indirect optic as auto-chip while direct remains a choice", () => {
+test("both-emission system keeps single indirect optic as an explicit choice while direct remains a choice", () => {
   const snapshot = cascadeSnapshot();
   snapshot.OPTICS = [
     ...snapshot.OPTICS,
@@ -734,8 +736,9 @@ test("both-emission system exposes single indirect optic as auto-chip while dire
   assert.equal(direct.compatibleOptionCount, 2);
 
   const indirect = viewModelField(result, "indirectOpticVar1", constraints);
-  assert.equal(indirect.displayMode, "auto-chip");
-  assert.equal(indirect.effectiveValue, "80|Blade");
+  assert.equal(indirect.displayMode, "choice");
+  assert.equal(indirect.primaryControl, true);
+  assert.equal(indirect.effectiveValue, "");
   assert.equal(indirect.compatibleOptionCount, compatibleCount(indirect));
   assert.equal(indirect.compatibleOptionCount, 1);
 
@@ -753,7 +756,7 @@ test("multiple compatible direct and indirect optics remain choices with real co
       system: "80",
       optic_var_1: "Prism",
       optic_var_2: "Wide",
-      emission_permission: "Both",
+      emission_permission: "Direct;Indirect",
       ip_option_1: "IP65",
       ik_option_2: "IK10",
       cct: "4000K",
