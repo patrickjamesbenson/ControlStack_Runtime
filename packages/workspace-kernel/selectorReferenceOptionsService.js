@@ -61,7 +61,7 @@ const WORKFLOW_SECTION_DEFINITIONS = Object.freeze([
     fields: [
       { fieldKey: "ipRating", label: "IP rating", role: "manual-constraint", sourceTables: ["OPTICS", "SYSTEM_POLICY"] },
       { fieldKey: "ikRating", label: "IK rating", role: "manual-constraint", sourceTables: ["OPTICS", "SYSTEM_POLICY"] },
-      { fieldKey: "electricalClass", label: "Electrical class", role: "manual-constraint", sourceTables: ["TIERS", "ACCESSORIES", "SYSTEM_POLICY"] },
+      { fieldKey: "electricalClass", label: "Electrical class", role: "manual-constraint", sourceTables: ["TIERS", "ACCESSORIES"] },
       { fieldKey: "ambient", label: "Ambient temperature", role: "manual-constraint", sourceTables: ["SYSTEM_POLICY"] },
       { fieldKey: "application", label: "Application / environment", role: "manual-constraint", sourceTables: ["OPTICS", "SYSTEM_POLICY"] },
       { fieldKey: "interiorExterior", label: "Interior / exterior", role: "manual-constraint", sourceTables: ["OPTICS", "SYSTEM_POLICY"] },
@@ -1311,6 +1311,69 @@ function accessoryLabels(snapshot, needles) {
   ])));
 }
 
+const ELECTRICAL_CLASS_FIELD_KEY = "electricalClass";
+const ELECTRICAL_CLASS_TIER_FIELDS = Object.freeze(["tier", "tier_key", "name", "label", "id"]);
+const ELECTRICAL_CLASS_TIER_OPTION_FIELDS = Object.freeze(["electrical", "electrical_options", "elect_class"]);
+const DONOR_ELECTRICAL_CLASS_ACCESSORY_TYPE = "elect_class";
+
+function electricalClassTierKey(row = {}) {
+  return rowText(row, ELECTRICAL_CLASS_TIER_FIELDS);
+}
+
+function donorElectricalClassTierOptions(row = {}) {
+  return rowOptionValues(row, ELECTRICAL_CLASS_TIER_OPTION_FIELDS);
+}
+
+function isDonorElectricalClassAccessoryRow(row = {}) {
+  return safeLower(rowText(row, ["accessory_type"])) === DONOR_ELECTRICAL_CLASS_ACCESSORY_TYPE;
+}
+
+function donorElectricalClassAccessoryLabel(row = {}) {
+  return rowText(row, ["accessory_id", "id"]);
+}
+
+function optionHasSourceTable(option = {}, tableName = "") {
+  const wanted = normaliseKey(tableName);
+  return (Array.isArray(option.sourceTables) ? option.sourceTables : [])
+    .some((sourceTable) => normaliseKey(sourceTable) === wanted);
+}
+
+function optionParentValues(option = {}) {
+  return uniqueStrings([
+    option.parentValue,
+    ...(Array.isArray(option.parentValues) ? option.parentValues : []),
+  ].map(safeString).filter(Boolean));
+}
+
+function donorElectricalClassScopedOptions(baseOptions = [], constraints = {}) {
+  const selectedTier = safeString(constraints.tier || "");
+  if (selectedTier) {
+    const tierOptions = baseOptions.filter((option) => optionParentValues(option)
+      .some((parentValue) => valuesMatch(parentValue, selectedTier)));
+    if (tierOptions.length) {
+      return {
+        options: tierOptions,
+        parentFieldKey: "tier",
+        parentValue: selectedTier,
+        childFiltered: true,
+        deferredOptions: [],
+        unavailableReason: "",
+      };
+    }
+  }
+  const accessoryOptions = baseOptions.filter((option) => optionHasSourceTable(option, "ACCESSORIES"));
+  return {
+    options: accessoryOptions,
+    parentFieldKey: selectedTier ? "tier" : "",
+    parentValue: selectedTier,
+    childFiltered: Boolean(selectedTier),
+    deferredOptions: [],
+    unavailableReason: accessoryOptions.length
+      ? ""
+      : "Electrical class has no live donor TIERS.electrical value for the selected tier and no live ACCESSORIES.elect_class fallback.",
+  };
+}
+
 function collectOptions(snapshot, timelineContext = createSelectorTimelineContext()) {
   const bucket = {};
   const systems = selectorOptionRows(snapshot, "SYSTEM", timelineContext);
@@ -1341,9 +1404,16 @@ function collectOptions(snapshot, timelineContext = createSelectorTimelineContex
 
   const tiers = liveTableRows(snapshot, "TIERS", timelineContext);
   for (const row of tiers) {
-    const tier = rowText(row, ["tier", "tier_key", "name", "label", "id"]);
+    const tier = electricalClassTierKey(row);
     if (tier) addOption(bucket, "tier", tier, { sourceTables: ["TIERS"] });
-    for (const electrical of rowOptionValues(row, ["electrical", "electrical_options", "elect_class", "electrical_class", "electrical_class_options", "electrical class", "class_options"])) addOption(bucket, "electricalClass", electrical, { sourceTables: ["TIERS"] });
+    for (const electrical of donorElectricalClassTierOptions(row)) {
+      addOption(bucket, ELECTRICAL_CLASS_FIELD_KEY, electrical, {
+        sourceTables: ["TIERS"],
+        parentFieldKey: "tier",
+        parentValue: tier,
+        parentValues: [tier].filter(Boolean),
+      });
+    }
   }
   for (const value of policyValues(snapshot, ["tier"])) addOption(bucket, "tier", value, { sourceTables: ["SYSTEM_POLICY"] });
 
@@ -1493,7 +1563,7 @@ function collectOptions(snapshot, timelineContext = createSelectorTimelineContex
     addOption(bucket, "finishCover", value, { sourceTables: ["SYSTEM_POLICY"] });
     addOption(bucket, "finishEnd", value, { sourceTables: ["SYSTEM_POLICY"] });
   }
-  for (const value of policyValues(snapshot, ["electrical", "electrical class", "electrical_class", "class"] )) addOption(bucket, "electricalClass", value, { sourceTables: ["SYSTEM_POLICY"] });
+  // Donor parity: Electrical Class is not sourced from broad SYSTEM_POLICY policyValues; it resolves from TIERS.electrical for the selected tier or live ACCESSORIES.elect_class fallback.
   for (const value of ambientPolicyValues(snapshot)) addOption(bucket, "ambient", value, { sourceTables: ["SYSTEM_POLICY"] });
   for (const value of policyValues(snapshot, ["wiring", "cable", "control cores"] )) addOption(bucket, "wiringType", value, { sourceTables: ["SYSTEM_POLICY"] });
   addOption(bucket, "indirectMatchDirect", "Match direct CCT/CRI and control", { value: "match-direct", sourceTables: ["SYSTEM", "OPTICS"] });
@@ -1531,7 +1601,10 @@ function collectOptions(snapshot, timelineContext = createSelectorTimelineContex
     if (accessoryTypeMatches(row, "power_penetration")) addOption(bucket, "powerPenetration", label, { sourceTables: ["ACCESSORIES"] });
     if (accessoryTypeMatches(row, "power_location")) addOption(bucket, "powerLocation", label === "mm" ? "TBD" : label, { sourceTables: ["ACCESSORIES"] });
     if (accessoryTypeMatches(row, "flex_length")) addOption(bucket, "flexLength", label, { sourceTables: ["ACCESSORIES"] });
-    if (accessoryTypeMatches(row, "elect_class") || accessoryTypeMatches(row, "electrical_class") || accessoryTypeMatches(row, "electrical class") || accessoryTypeMatches(row, "electrical")) addOption(bucket, "electricalClass", rowText(row, ["accessory_id", "id", "display_choice", "label"], label), { sourceTables: ["ACCESSORIES"] });
+    if (isDonorElectricalClassAccessoryRow(row)) {
+      const electrical = donorElectricalClassAccessoryLabel(row);
+      if (electrical) addOption(bucket, ELECTRICAL_CLASS_FIELD_KEY, electrical, { sourceTables: ["ACCESSORIES"] });
+    }
     if (accessoryTypeMatches(row, "egress_light")) {
       const option = egressLightAccessoryOption(row);
       if (option) addOption(bucket, "egressLight", option.label, { value: option.value, sourceTables: ["ACCESSORIES"] });
@@ -1686,8 +1759,8 @@ function collectRecords(snapshot, bucket, timelineContext = createSelectorTimeli
   const systemOptions = optionsFor(bucket, "system");
 
   for (const row of liveTableRows(snapshot, "TIERS", timelineContext)) {
-    const tier = rowText(row, ["tier", "tier_key", "name", "label", "id"]);
-    const electricalClass = rowOptionValues(row, ["electrical", "electrical_options", "elect_class", "electrical_class", "electrical_class_options", "electrical class", "class_options"]);
+    const tier = electricalClassTierKey(row);
+    const electricalClass = donorElectricalClassTierOptions(row);
     pushRelationshipRecord(records, ["TIERS"], {
       tier,
       electricalClass,
@@ -2053,6 +2126,7 @@ function directionalOpticScopedConstraints(fieldKey = "", constraints = {}) {
 }
 
 function cascadeScopedConstraints(fieldKey = "", constraints = {}) {
+  if (fieldKey === ELECTRICAL_CLASS_FIELD_KEY) return {};
   if (ENVIRONMENT_IP_IK_FIELD_KEYS.has(fieldKey)) return environmentIpIkScopedConstraints(constraints);
   if (FINISH_COMPATIBILITY_FIELD_KEYS.has(fieldKey)) return finishScopedConstraints(constraints);
   const directionalConstraints = directionalOpticScopedConstraints(fieldKey, constraints);
@@ -2884,6 +2958,7 @@ function safeDeferredChildOptions(baseOptions = []) {
 }
 
 function optionsForSelectedWorkflowParent(fieldKey = "", baseOptions = [], constraints = {}) {
+  if (fieldKey === ELECTRICAL_CLASS_FIELD_KEY) return donorElectricalClassScopedOptions(baseOptions, constraints);
   const rule = workflowParentRuleForField(fieldKey, constraints);
   if (!rule) return { options: baseOptions, parentFieldKey: "", parentValue: "", childFiltered: false, deferredOptions: [], unavailableReason: "" };
   const missingRequired = rule.requiredFieldKeys.find((requiredFieldKey) => !safeString(constraints[requiredFieldKey] || ""));
@@ -3087,7 +3162,8 @@ function createWorkflowField(field, { bucket, records, constraints, cascadeConst
 }
 
 function compatibleWorkflowOptionsForField(fieldKey = "", bucket = {}, records = [], constraints = {}, cascadeConstraints = constraints) {
-  const baseOptions = optionsFor(bucket, fieldKey).filter((option) => option && option.status !== "disabled");
+  const rawBaseOptions = optionsFor(bucket, fieldKey).filter((option) => option && option.status !== "disabled");
+  const baseOptions = optionsForSelectedWorkflowParent(fieldKey, rawBaseOptions, constraints).options;
   if (!baseOptions.length) return [];
   const indirectSupport = indirectFieldRequiresSupport(fieldKey)
     ? upstreamIndirectSupportState(records, cascadeConstraints)

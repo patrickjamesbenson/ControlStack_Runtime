@@ -1501,45 +1501,70 @@ test("IP and IK candidates are limited by the real source-backed System plus sel
   assert.deepEqual(controlOptionLabels(visibleControlField(inlayModel, "ikRating")), ["IK10"]);
 });
 
-test("Electrical Class exposes all source-backed values and is not poisoned by stale IP or IK", () => {
+test("Electrical Class follows donor tier-first / exact ACCESSORIES fallback and ignores broad source pools", () => {
+  const fallbackOptions = ["Donor class 1", "Donor class 2", "Donor class 3", "Donor class 4", "Donor class 5"];
+  const broadPool = Array.from({ length: 88 }, (_, index) => `Broad source class ${index + 1}`);
   const snapshot = {
     SYSTEM: [
-      { system: "80", system_variant_1: "DI", label: "DNX 80 DI", emission: "Both", approved: "yes" },
+      { system: "80", system_variant_1: "Square_DI", label: "DNX 80 D/I", emission: "Both", approved: "yes" },
+      { system: "60", system_variant_1: "Beam", label: "DNX 60 Beam D/I", emission: "Both", approved: "yes" },
+      { system: "80", system_variant_1: "Square", label: "DNX 80 direct-only", emission: "Direct", approved: "yes" },
     ],
     OPTICS: [
-      { system: "80", optic_var_1: "Inlay", optic_var_2: "Var1", emission_permission: "Direct", ip_option_1: "IP65", ik_option_2: "IK10", approved: "yes" },
+      { system: "80", optic_var_1: "Inlay", optic_var_2: "Antiglare", emission_permission: "Direct", ip_option_1: "IP65", ik_option_2: "IK10", approved: "yes" },
       { system: "80", optic_var_1: "Rope", optic_var_2: "Rope", emission_permission: "Indirect", ip_option_1: "IP65", ik_option_2: "IK10", approved: "yes" },
+      { system: "60", optic_var_1: "Beam", optic_var_2: "Wide", emission_permission: "Direct, Indirect", ip_option_1: "IP20;IP44", ik_option_2: "IK07", approved: "yes" },
     ],
     TIERS: [
-      { tier: "Business", electrical: "Class I;Class II", approved: "yes" },
+      { tier: "Business", electrical: "Tier class A;Tier class B", approved: "yes" },
     ],
     ACCESSORIES: [
-      { accessory_type: "elect_class", accessory_id: "SELV Isolated", approved: "yes" },
+      ...fallbackOptions.map((accessory_id) => ({ accessory_type: "elect_class", accessory_id, approved: "yes" })),
+      { accessory_type: "electrical_class", accessory_id: broadPool[0], approved: "yes" },
+      { accessory_type: "electrical", accessory_id: broadPool[1], approved: "yes" },
     ],
     SYSTEM_POLICY: [
-      { category: "electrical class", item: "SELV Remote;Non SELV with Earth", approved: "yes" },
+      { category: "electrical class", item: broadPool.join(";"), approved: "yes" },
     ],
   };
-  const constraints = {
-    system: "DNX 80 DI",
-    directOpticVar1: "80|Inlay",
-    ipRating: "IP20",
-    ikRating: "IK07",
-  };
-  const result = deriveSelectorReferenceOptionsFromSnapshot(snapshot, {
-    source: sourceReady(),
-    constraints,
-  });
+  const products = [
+    { label: "DNX 80 D/I", constraints: { system: "DNX 80 D/I", emission: "Both" } },
+    { label: "DNX 60 Beam D/I", constraints: { system: "DNX 60 Beam D/I", emission: "Both" } },
+    { label: "DNX 80 direct-only", constraints: { system: "DNX 80 direct-only", emission: "Direct" } },
+  ];
+  const expectedFallback = [...fallbackOptions].sort();
 
-  assert.equal(option(result, "ipRating", "IP20").status, "blocked");
-  assert.equal(option(result, "ikRating", "IK07").status, "blocked");
-  const labels = compatibleLabels(workflowField(result, "electricalClass"));
-  assert.deepEqual(labels, ["Class I", "Class II", "Non SELV with Earth", "SELV Isolated", "SELV Remote"].sort());
-  assert.equal(labels.includes("SELV with Earth"), false, "do not invent donor fallback electrical classes not present in source");
-  assert.deepEqual(
-    controlOptionLabels(visibleControlField(selectorViewModelFor(result, constraints), "electricalClass")),
-    ["Class I", "Class II", "Non SELV with Earth", "SELV Isolated", "SELV Remote"].sort(),
-  );
+  for (const product of products) {
+    const result = deriveSelectorReferenceOptionsFromSnapshot(snapshot, {
+      source: sourceReady(),
+      constraints: product.constraints,
+    });
+    const labels = compatibleLabels(workflowField(result, "electricalClass"));
+    assert.deepEqual(labels, expectedFallback, `${product.label} should use exact donor fallback options`);
+    assert.equal(labels.length, 5, `${product.label} should not expose broad source-pool Electrical Class options`);
+    assert.equal(labels.some((label) => label.startsWith("Broad source")), false);
+    assert.deepEqual(
+      controlOptionLabels(visibleControlField(selectorViewModelFor(result, product.constraints), "electricalClass")),
+      expectedFallback,
+    );
+  }
+
+  const tierConstraints = { system: "DNX 80 D/I", emission: "Both", tier: "Business" };
+  const tierResult = deriveSelectorReferenceOptionsFromSnapshot(snapshot, {
+    source: sourceReady(),
+    constraints: tierConstraints,
+  });
+  assert.deepEqual(compatibleLabels(workflowField(tierResult, "electricalClass")), ["Tier class A", "Tier class B"].sort());
+
+  const staleConstraints = { system: "DNX 60 Beam D/I", emission: "Both", electricalClass: broadPool[21] };
+  const staleResult = deriveSelectorReferenceOptionsFromSnapshot(snapshot, {
+    source: sourceReady(),
+    constraints: staleConstraints,
+  });
+  assert.equal(option(staleResult, "electricalClass", broadPool[21]).status, "blocked");
+  const surface = selectorViewModelFor(staleResult, staleConstraints).selectorSurface;
+  assert.equal(surface.payloadPreview.environment.electricalClass, null);
+  assert.ok(surface.selectionTruthSummary.blockers.some((item) => item.fieldKey === "electricalClass"));
 });
 
 test("live GET options endpoint parser preserves Var1 parent constraints before deriving Var2", () => {

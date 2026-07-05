@@ -94,22 +94,29 @@ function environmentSnapshot({ includeAmbient = true, includeApplication = true 
   };
 }
 
-function selectorReferenceStatus(snapshot = environmentSnapshot()) {
+function selectorReferenceStatus(snapshot = environmentSnapshot(), constraints = {}) {
   return {
     ok: true,
     status: "loaded",
     readOnly: true,
     diagnosticOnly: true,
     source: sourceReady(),
-    selectorOptions: deriveSelectorReferenceOptionsFromSnapshot(snapshot, { source: sourceReady() }),
+    selectorOptions: deriveSelectorReferenceOptionsFromSnapshot(snapshot, { source: sourceReady(), constraints }),
   };
+}
+
+function dbConstraintValues(selectorState = createSelectorState()) {
+  const manualConstraints = selectorState.getSnapshot().dbBackedSelector.manualConstraints || {};
+  return Object.fromEntries(Object.entries(manualConstraints)
+    .map(([fieldKey, record]) => [fieldKey, record?.value || ""])
+    .filter(([, value]) => value));
 }
 
 function createModel({ selectorState = createSelectorState(), snapshot = environmentSnapshot() } = {}) {
   return createSelectorViewModel({
     adapter: createAdapter(),
     selectorState,
-    selectorReferenceStatus: selectorReferenceStatus(snapshot),
+    selectorReferenceStatus: selectorReferenceStatus(snapshot, dbConstraintValues(selectorState)),
   });
 }
 
@@ -175,12 +182,16 @@ test("IP and IK fill from real reference options after manual selection", () => 
   assert.equal(model.selectorSurface.payloadPreview.environment.ik, "IK10");
 });
 
-test("electrical class fills from tier and accessory reference options", () => {
+test("electrical class fills from donor tier first and ACCESSORIES fallback only when no tier is selected", () => {
+  const fallbackModel = createModel();
+  assert.ok(optionValues(fallbackModel, "electricalClass").includes("Remote SELV"));
+
   const selectorState = createSelectorState();
   let model = selectAndReload(selectorState, "tier", "Economy");
 
   assert.ok(optionValues(model, "electricalClass").includes("Class I"));
-  assert.ok(optionValues(model, "electricalClass").includes("Remote SELV"));
+  assert.ok(optionValues(model, "electricalClass").includes("SELV"));
+  assert.equal(optionValues(model, "electricalClass").includes("Remote SELV"), false);
 
   model = selectAndReload(selectorState, "electricalClass", "Class I");
 
@@ -237,6 +248,7 @@ test("payload preview mirrors Environment safely and keeps write/proof flags dis
   model = selectAndReload(selectorState, "ipRating", "IP65");
   model = selectAndReload(selectorState, "ikRating", "IK10");
   model = selectAndReload(selectorState, "ambient", "35°C");
+  model = selectAndReload(selectorState, "tier", "Economy");
   model = selectAndReload(selectorState, "electricalClass", "Class I");
 
   const payload = model.selectorSurface.payloadPreview;
