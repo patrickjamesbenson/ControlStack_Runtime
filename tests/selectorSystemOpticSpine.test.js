@@ -95,6 +95,46 @@ function systemOpticReferenceSnapshot() {
   };
 }
 
+function bothEmissionIndirectVar2ReferenceSnapshot() {
+  return {
+    SYSTEM: [
+      { system: "DNX", system_variant_1: "80", label: "DNX 80 D/I", emission: "Both", approved: "yes" },
+      { system: "DNX", system_variant_1: "60", label: "DNX 60", emission: "Direct", approved: "yes" },
+    ],
+    OPTICS: [
+      {
+        system: "80",
+        optic_var_1: "Inlay",
+        optic_var_2: "Microprism, Antiglare",
+        spec_code: "INL",
+        spec_code_var2: "MPR, AGL",
+        emission_permission: "Direct",
+        diffuser_material: "PMMA",
+        approved: "yes",
+      },
+      {
+        system: "80",
+        optic_var_1: "Rope",
+        optic_var_2: "Soft, Asymmetric",
+        spec_code: "RPE",
+        spec_code_var2: "SFT, ASY",
+        emission_permission: "Indirect",
+        diffuser_material: "PMMA",
+        approved: "yes",
+      },
+      {
+        system: "60",
+        optic_var_1: "Opal",
+        optic_var_2: "",
+        spec_code: "OPL",
+        emission_permission: "Direct",
+        diffuser_material: "PMMA",
+        approved: "yes",
+      },
+    ],
+  };
+}
+
 function currentDbConstraints(selectorState = createSelectorState()) {
   const constraints = selectorState.getSnapshot?.().dbBackedSelector?.manualConstraints || {};
   return Object.fromEntries(Object.entries(constraints).map(([fieldKey, record]) => [fieldKey, String(record?.value || "").trim()]).filter(([, value]) => value));
@@ -209,6 +249,31 @@ test("indirect optic var 1 passes through without inventing an optic var 2", () 
   assert.match(spineRow(model.selectorSurface.productSpine, "opticIndirect").displayValue, /Rope/);
   assert.equal(model.selectorSurface.payloadPreview.optics.indirect.opticVar1, "Rope · 80");
   assert.equal(model.selectorSurface.payloadPreview.optics.indirect.opticVar2, null);
+});
+
+test("Both emission promotes the single indirect optic var 1 consequence into the indirect var 2 parent", () => {
+  const selectorState = createSelectorState();
+  const snapshot = bothEmissionIndirectVar2ReferenceSnapshot();
+  let model = selectAndReload(selectorState, "system", "DNX|80", snapshot);
+  model = selectAndReload(selectorState, "directOpticVar1", "80|Inlay", snapshot);
+  model = selectAndReload(selectorState, "directOpticVar2", "80|Inlay|Antiglare", snapshot);
+
+  const indirectVar1 = workflowField(model, "indirectOpticVar1");
+  assert.equal(indirectVar1.effectiveValue, "80|Rope");
+  assert.equal(indirectVar1.effectiveLabel, "Rope · 80");
+  assert.equal(indirectVar1.displayMode, "auto-chip");
+  assert.match(spineRow(model.selectorSurface.productSpine, "opticIndirect").displayValue, /Rope/);
+  assert.equal(model.selectorSurface.payloadPreview.optics.indirect.opticVar1, "Rope · 80");
+
+  const indirectVar2 = workflowField(model, "indirectOpticVar2");
+  assert.ok(optionValues(model, "indirectOpticVar2").includes("80|Rope|Asymmetric"));
+  assert.doesNotMatch(indirectVar2.unavailableReason || "", /Select indirectOpticVar1/);
+
+  const indirectTile = model.selectorSurface.donorShapeSelectedTiles.find((tile) => tile.tileKey === "indirectOpticVar1");
+  assert.equal(indirectTile.valueLabel, "Rope · 80");
+  assert.notEqual(indirectTile.valueLabel, "Not selected");
+  const indirectVar2Tile = model.selectorSurface.donorShapeSelectedTiles.find((tile) => tile.tileKey === "indirectOpticVar2");
+  assert.doesNotMatch(indirectVar2Tile.reason || "", /Select indirectOpticVar1/);
 });
 
 test("direct-only system path suppresses the indirect optic row", () => {

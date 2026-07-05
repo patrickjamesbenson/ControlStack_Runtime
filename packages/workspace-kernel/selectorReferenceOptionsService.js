@@ -2858,14 +2858,14 @@ function createMetadataWorkflowField(field, baseOptions = [], records = [], cons
   };
 }
 
-function createWorkflowField(field, { bucket, records, constraints, cascadeConstraints = constraints, sourceReady }) {
+function createWorkflowField(field, { bucket, records, constraints, cascadeConstraints = constraints, parentConstraints = constraints, sourceReady }) {
   const selectedValue = constraints[field.fieldKey] || "";
   if (!sourceReady) return createUnavailableField(field, "Selector Reference source is unavailable or not parseable.");
   if (field.role === "disabled") return createDisabledWorkflowField(field, "Disabled read-only preview. No workflow action, generation, write, proof, payload, RunTable, HubSpot push, save, or hidden write-back is available in this slice.", selectedValue);
   if (field.role === "future-mapped") return createUnavailableField(field, `${field.label} is a donor workflow field but is not source-backed in this runtime slice.`);
 
   const rawBaseOptions = optionsFor(bucket, field.fieldKey);
-  const childOptions = optionsForSelectedWorkflowParent(field.fieldKey, rawBaseOptions, constraints);
+  const childOptions = optionsForSelectedWorkflowParent(field.fieldKey, rawBaseOptions, parentConstraints);
   const baseOptions = childOptions.options;
   if (childOptions.childFiltered && !baseOptions.length) {
     const emptyField = createEmptyChildWorkflowField(field, childOptions.parentFieldKey, childOptions.parentValue, childOptions.deferredOptions, childOptions.unavailableReason);
@@ -2960,9 +2960,34 @@ function createWorkflowField(field, { bucket, records, constraints, cascadeConst
   };
 }
 
-function createWorkflowSections({ bucket, records, constraints, cascadeConstraints = constraints, sourceReady }) {
+function compatibleWorkflowOptionsForField(fieldKey = "", bucket = {}, records = [], constraints = {}, cascadeConstraints = constraints) {
+  const baseOptions = optionsFor(bucket, fieldKey).filter((option) => option && option.status !== "disabled");
+  if (!baseOptions.length) return [];
+  const indirectSupport = indirectFieldRequiresSupport(fieldKey)
+    ? upstreamIndirectSupportState(records, cascadeConstraints)
+    : { supported: true, checked: false, blockedBy: [] };
+  if (indirectSupport.supported !== true) return [];
+  return baseOptions.filter((option) => {
+    const cascade = optionCascadeResult(fieldKey, option, records, cascadeConstraints);
+    const policyBlock = mountCodePolicyBlock(fieldKey, option, records, cascadeConstraints);
+    return cascade.compatible === true && policyBlock.blocked !== true;
+  });
+}
+
+function workflowParentConstraintsForAutoConsequences({ bucket = {}, records = [], constraints = {}, cascadeConstraints = constraints } = {}) {
+  const parentConstraints = { ...constraints };
+  if (!safeString(parentConstraints.indirectOpticVar1 || "")) {
+    const compatibleIndirectParents = compatibleWorkflowOptionsForField("indirectOpticVar1", bucket, records, constraints, cascadeConstraints);
+    if (compatibleIndirectParents.length === 1) {
+      parentConstraints.indirectOpticVar1 = compatibleIndirectParents[0].value;
+    }
+  }
+  return parentConstraints;
+}
+
+function createWorkflowSections({ bucket, records, constraints, cascadeConstraints = constraints, parentConstraints = constraints, sourceReady }) {
   return WORKFLOW_SECTION_DEFINITIONS.map((section) => {
-    const fields = section.fields.map((field) => createWorkflowField(field, { bucket, records, constraints, cascadeConstraints, sourceReady }));
+    const fields = section.fields.map((field) => createWorkflowField(field, { bucket, records, constraints, cascadeConstraints, parentConstraints, sourceReady }));
     const mappedCount = fields.filter((field) => String(field.sourceStatus || "").startsWith("db-reference-backed") || field.sourceStatus === "entitlement-gated-redacted").length;
     const futureMappedCount = fields.filter((field) => field.futureMapped === true).length;
     const disabledCount = fields.filter((field) => field.disabled === true && field.metadataOnly !== true).length;
@@ -3642,8 +3667,9 @@ export function deriveSelectorReferenceOptionsFromSnapshot(snapshot = {}, { cons
   const bucket = collectOptions(safeSnapshot, timelineContext);
   const records = collectRecords(safeSnapshot, bucket, timelineContext);
   const cascadeConstraints = cascadeConstraintsForOptions(bucket, safeConstraints);
+  const parentConstraints = workflowParentConstraintsForAutoConsequences({ bucket, records, constraints: safeConstraints, cascadeConstraints });
   const fields = createFields({ bucket, records, constraints: safeConstraints, cascadeConstraints, sourceReady });
-  const workflowSectionsBase = createWorkflowSections({ bucket, records, constraints: safeConstraints, cascadeConstraints, sourceReady });
+  const workflowSectionsBase = createWorkflowSections({ bucket, records, constraints: safeConstraints, cascadeConstraints, parentConstraints, sourceReady });
   const finishCascadeResult = applySelectorFinishCascadeToWorkflowSections(workflowSectionsBase, safeConstraints);
   const workflowSections = finishCascadeResult.workflowSections;
   const manualConstraints = createManualConstraintList(fields, safeConstraints);
