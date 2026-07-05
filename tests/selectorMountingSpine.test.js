@@ -93,6 +93,61 @@ function mountingSnapshot({ includeFlex = true } = {}) {
   };
 }
 
+function donorParityMountingSnapshot() {
+  return {
+    SYSTEM: [
+      {
+        system: "DNX",
+        system_variant_1: "NoFlange",
+        label: "DNX no-flange",
+        emission: "Direct",
+        mount_style: "Suspended (No Flange);Surface Mount (No Flange);Recessed (No Flange)",
+        approved: "yes",
+      },
+      {
+        system: "REC",
+        system_variant_1: "SuspOk",
+        label: "Recessed suspended allowed",
+        emission: "Direct",
+        mount_style: "Suspended (No Flange);Recessed (No Flange)",
+        approved: "yes",
+      },
+      {
+        system: "SURF",
+        system_variant_1: "40",
+        label: "Surface bracket only",
+        emission: "Direct",
+        mount_style: "Surface Mount (No Flange)",
+        approved: "yes",
+      },
+    ],
+    ACCESSORIES: [
+      {
+        accessory_type: "mount",
+        display_choice: "Suspended (No Flange)",
+        mount_selections: "Wire;Rod",
+        mount_particulars: "1000mm drop;Custom drop",
+        approved: "yes",
+      },
+      {
+        accessory_type: "mount",
+        display_choice: "Recessed (No Flange)",
+        mount_selections: "Trimless kit;Recess kit",
+        mount_particulars: "Plasterboard;Trimless frame",
+        approved: "yes",
+      },
+      {
+        accessory_type: "mount",
+        display_choice: "Bracketed",
+        mount_style: "Surface Mount (No Flange)",
+        mount_selections: "Ceiling bracket;Wall bracket",
+        mount_particulars: "Direct fix",
+        approved: "yes",
+      },
+    ],
+  };
+}
+
 function mountPolicySnapshot() {
   return {
     SYSTEM: [
@@ -304,6 +359,68 @@ test("System mount capability filters compatible mount styles before selection",
   assert.deepEqual(controlOptionValues(visibleControlField(surfaceModel, "mountStyle")), ["Surface Mount"]);
   assert.equal(workflowOption(surfaceModel, "mountStyle", "Recessed").status, "blocked");
   assert.equal(workflowOption(surfaceModel, "mountStyle", "Suspended").status, "blocked");
+});
+
+test("mounting donor parity labels hide bracketed and no-flange internals", () => {
+  const selectorState = createSelectorState();
+  const snapshot = donorParityMountingSnapshot();
+  const model = selectAndReload(selectorState, "system", "DNX|NoFlange", snapshot);
+  const values = controlOptionValues(visibleControlField(model, "mountStyle"));
+
+  assert.deepEqual(values, ["Recessed", "Surface Mount", "Suspended"].sort());
+  assert.equal(values.some((value) => /Bracketed|No Flange/i.test(value)), false);
+  assert.equal(workflowOption(model, "mountStyle", "Suspended").status, "available");
+  assert.equal(workflowOption(model, "mountStyle", "Recessed").status, "available");
+  assert.equal(workflowOption(model, "mountStyle", "Surface Mount").status, "available");
+});
+
+test("suspended and recessed visibility follows donor mount compatibility", () => {
+  const snapshot = donorParityMountingSnapshot();
+  const recessedState = createSelectorState();
+  const recessedModel = selectAndReload(recessedState, "system", "REC|SuspOk", snapshot);
+
+  assert.deepEqual(controlOptionValues(visibleControlField(recessedModel, "mountStyle")), ["Recessed", "Suspended"].sort());
+  assert.equal(workflowOption(recessedModel, "mountStyle", "Suspended").status, "available");
+  assert.equal(workflowOption(recessedModel, "mountStyle", "Recessed").status, "available");
+  assert.equal(workflowOption(recessedModel, "mountStyle", "Surface Mount").status, "blocked");
+
+  const surfaceState = createSelectorState();
+  const surfaceModel = selectAndReload(surfaceState, "system", "SURF|40", snapshot);
+
+  assert.deepEqual(controlOptionValues(visibleControlField(surfaceModel, "mountStyle")), ["Surface Mount"]);
+  assert.equal(workflowOption(surfaceModel, "mountStyle", "Surface Mount").status, "available");
+  assert.equal(workflowOption(surfaceModel, "mountStyle", "Suspended").status, "blocked");
+  assert.equal(workflowOption(surfaceModel, "mountStyle", "Recessed").status, "blocked");
+});
+
+test("recess-kit and trimless exceptions cascade from donor-compatible no-flange mounting", () => {
+  const selectorState = createSelectorState();
+  const snapshot = donorParityMountingSnapshot();
+  let model = selectAndReload(selectorState, "system", "DNX|NoFlange", snapshot);
+  model = selectAndReload(selectorState, "mountStyle", "Recessed", snapshot);
+
+  assert.equal(workflowOption(model, "mountSelection", "Trimless kit").status, "available");
+  assert.equal(workflowOption(model, "mountSelection", "Recess kit").status, "available");
+  assert.equal(workflowOption(model, "mountSelection", "Ceiling bracket").status, "blocked");
+
+  model = selectAndReload(selectorState, "mountSelection", "Trimless kit", snapshot);
+  assert.equal(workflowOption(model, "mountParticulars", "Trimless frame").status, "available");
+  assert.equal(workflowOption(model, "mountParticulars", "Direct fix").status, "blocked");
+});
+
+test("raw bracketed mounting selections are preserved as blocked when selected directly", () => {
+  const selectorState = createSelectorState();
+  const snapshot = donorParityMountingSnapshot();
+  let model = selectAndReload(selectorState, "system", "DNX|NoFlange", snapshot);
+  model = selectAndReload(selectorState, "mountStyle", "Bracketed", snapshot);
+
+  const row = mountingRow(model.selectorSurface.productSpine, "mountStyle");
+  assert.equal(row.displayValue, "—");
+  assert.equal(row.status, "blocked");
+  assert.equal(row.blocked, true);
+  assert.equal(selectorState.getSnapshot().dbBackedSelector.manualConstraints.mountStyle.value, "Bracketed");
+  assert.ok(model.selectorSurface.selectionTruthSummary.blockers.some((item) => item.fieldKey === "mountStyle"));
+  assert.equal(model.selectorSurface.payloadPreview.mounting.mountStyle, null);
 });
 
 test("selecting mount style cascades compatible mount selection and particulars", () => {

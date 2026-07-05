@@ -1058,11 +1058,43 @@ function canonicalMountStyle(label) {
   if (/recess/.test(text) || /with flange/.test(text)) return "recessed";
   if (/surface/.test(text)) return "surface mount";
   if (/suspend/.test(text)) return "suspended";
+  if (/\bbracket(?:ed)?\b/.test(text)) return "surface mount";
   return text;
 }
 
-function mountStyleLabel(row) {
+function donorMountStyleDisplayLabel(label) {
+  const key = canonicalMountStyle(label);
+  if (key === "suspended") return "Suspended";
+  if (key === "surface mount") return "Surface Mount";
+  if (key === "recessed") return "Recessed";
+  if (key === "trimless") return "Trimless";
+  const clean = safeString(label).replace(/\s*\([^)]*\)\s*/g, " ").replace(/\s+/g, " ").trim();
+  return clean || safeString(label);
+}
+
+function rawMountStyleLabel(row) {
   return rowText(row, ["display_choice", "mount_style", "name", "style", "label", "accessory_id", "id"]);
+}
+
+function mountStyleCandidatesForRow(row) {
+  return uniqueStrings([
+    rawMountStyleLabel(row),
+    ...rowOptionValues(row, ["display_choice", "mount_style", "mount_styles", "name", "style", "label", "accessory_id", "id"]),
+  ].map(safeString).filter(Boolean));
+}
+
+function mountStyleParentValuesForRow(row) {
+  return uniqueStrings(mountStyleCandidatesForRow(row).flatMap((candidate) => [donorMountStyleDisplayLabel(candidate), candidate]).filter(Boolean));
+}
+
+function mountStyleLabel(row) {
+  return donorMountStyleDisplayLabel(rawMountStyleLabel(row));
+}
+
+function mountStyleValuesMatch(left, right) {
+  const leftKey = canonicalMountStyle(left);
+  const rightKey = canonicalMountStyle(right);
+  return Boolean(leftKey && rightKey && leftKey === rightKey) || valuesMatch(left, right);
 }
 
 function mountStyleSystemReferenceKeys(snapshot, style) {
@@ -1217,11 +1249,14 @@ function collectOptions(snapshot, timelineContext = createSelectorTimelineContex
     }
     for (const mount of rowOptionValues(row, ["mount_style", "mount_styles"])) {
       if (surfaceMountDiPolicyBlocksSystemMount(snapshot, row, mount)) continue;
-      addOption(bucket, "mountStyle", mount, {
+      const style = donorMountStyleDisplayLabel(mount);
+      addOption(bucket, "mountStyle", style, {
+        value: style,
         sourceTables: ["SYSTEM"],
+        parentValues: uniqueStrings([style, mount].filter(Boolean)),
         systemReferenceKey: tokens.system,
         systemReferenceKeys: [tokens.system].filter(Boolean),
-        ...surfaceMountPolicyMeta(snapshot, mount),
+        ...surfaceMountPolicyMeta(snapshot, style),
       });
     }
     const finishValues = systemPaintFinishValues(row);
@@ -1399,8 +1434,16 @@ function collectOptions(snapshot, timelineContext = createSelectorTimelineContex
     if (!label) continue;
     if (accessoryTypeMatches(row, "mount")) {
       const style = mountStyleLabel(row);
-      const systemKeys = mountStyleSystemReferenceKeys(snapshot, style);
-      const mountMeta = { sourceTables: ["ACCESSORIES"], parentFieldKey: "mountStyle", parentValue: style, systemReferenceKey: systemKeys[0] || "", systemReferenceKeys: systemKeys };
+      const styleAliases = mountStyleParentValuesForRow(row);
+      const systemKeys = uniqueStrings(styleAliases.flatMap((candidate) => mountStyleSystemReferenceKeys(snapshot, candidate)));
+      const mountMeta = {
+        sourceTables: ["ACCESSORIES"],
+        parentFieldKey: "mountStyle",
+        parentValue: style,
+        parentValues: styleAliases,
+        systemReferenceKey: systemKeys[0] || "",
+        systemReferenceKeys: systemKeys,
+      };
       addOption(bucket, "mountStyle", style, {
         sourceTables: ["ACCESSORIES"],
         systemReferenceKey: systemKeys[0] || "",
@@ -1586,7 +1629,8 @@ function collectRecords(snapshot, bucket, timelineContext = createSelectorTimeli
     });
     const variant = rowText(row, ["system_variant_1", "variant", "family", "profile_family"]);
     const emissions = systemEmissionValues(row);
-    const mountStyles = rowOptionValues(row, ["mount_style", "mount_styles"]).filter((mount) => !surfaceMountDiPolicyBlocksSystemMount(snapshot, row, mount));
+    const rawMountStyles = rowOptionValues(row, ["mount_style", "mount_styles"]).filter((mount) => !surfaceMountDiPolicyBlocksSystemMount(snapshot, row, mount));
+    const mountStyles = uniqueStrings(rawMountStyles.flatMap((mount) => [donorMountStyleDisplayLabel(mount), mount]).filter(Boolean));
     const finishes = systemPaintFinishValues(row);
     const flexes = systemFlexColourValues(row);
     pushRelationshipRecord(records, ["SYSTEM"], {
@@ -1693,11 +1737,11 @@ function collectRecords(snapshot, bucket, timelineContext = createSelectorTimeli
     const egressSoundId = accessoryTypeMatches(row, "egress_sound") ? accessorySourceId(row) : "";
     const sensorOption = (accessoryTypeMatches(row, "pir") || accessoryTypeMatches(row, "sensor")) ? sensorAccessoryOption(row) : null;
     const genericAccessoryValue = isGenericAccessoryPreviewRow(row) ? [label] : [];
-    const mountStyles = rowOptionValues(row, ["mount_style", "mount_styles", "display_choice"]).filter(Boolean);
+    const mountStyles = mountStyleParentValuesForRow(row);
     const mountSelections = rowOptionValues(row, ["mount_selections", "mount_selection"]);
     const mountParticulars = rowOptionValues(row, ["mount_particulars", "particulars"]);
     if (accessoryTypeMatches(row, "mount")) {
-      const mountStyleValues = mountStyles.length ? mountStyles : [label];
+      const mountStyleValues = mountStyles.length ? mountStyles : uniqueStrings([donorMountStyleDisplayLabel(label), label].filter(Boolean));
       const mountSystemValues = uniqueStrings(mountStyleValues.flatMap((style) => (
         mountStyleSystemReferenceKeys(snapshot, style).flatMap((systemKey) => systemIdentityValuesForSourceSystem(systemOptions, systemKey))
       )));
@@ -1731,6 +1775,7 @@ function valuesMatch(left, right) {
 }
 
 function constraintValueMatches(fieldKey, candidateValue, selectedValue) {
+  if (fieldKey === "mountStyle") return mountStyleValuesMatch(candidateValue, selectedValue);
   return valuesMatch(candidateValue, selectedValue);
 }
 
@@ -2659,7 +2704,9 @@ function optionsForSelectedWorkflowParent(fieldKey = "", baseOptions = [], const
       option.parentValue,
       ...(Array.isArray(option.parentValues) ? option.parentValues : []),
     ].map(safeString).filter(Boolean));
-    return parentValues.some((parentValue) => valuesMatch(parentValue, rule.filterValue));
+    return parentValues.some((parentValue) => (rule.parentFieldKey === "mountStyle"
+      ? mountStyleValuesMatch(parentValue, rule.filterValue)
+      : valuesMatch(parentValue, rule.filterValue)));
   });
   return {
     options: rule.preserveBlockedOptions ? baseOptions : matchingOptions,

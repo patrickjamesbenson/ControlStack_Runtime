@@ -1204,7 +1204,14 @@ function canonicalMountStyleValue(label) {
   if (/recess/.test(text) || /with flange/.test(text)) return "recessed";
   if (/surface/.test(text)) return "surface mount";
   if (/suspend/.test(text)) return "suspended";
+  if (text.includes("bracket")) return "surface mount";
   return text;
+}
+
+function mountStyleValuesMatch(left, right) {
+  const leftKey = canonicalMountStyleValue(left);
+  const rightKey = canonicalMountStyleValue(right);
+  return Boolean(leftKey && rightKey && leftKey === rightKey) || optionValuesMatch(left, right);
 }
 
 function optionCodePolicyIds(option = {}) {
@@ -1707,7 +1714,7 @@ function localMountingRelationshipBlock(fieldKey = "", option = {}, selectedCons
       option.parentValue,
       ...(Array.isArray(option.parentValues) ? option.parentValues : []),
     ].map((item) => String(item || "").trim()).filter(Boolean);
-    if (parentValues.length && !parentValues.some((parentValue) => optionValuesMatch(parentValue, selectedConstraints.mountStyle))) {
+    if (parentValues.length && !parentValues.some((parentValue) => mountStyleValuesMatch(parentValue, selectedConstraints.mountStyle))) {
       blockers.push({
         fieldKey: "mountStyle",
         selectedValue: selectedConstraints.mountStyle,
