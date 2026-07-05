@@ -5,6 +5,9 @@ import { createSelectorViewModel } from "./selectorViewModel.js";
 
 const SELECTOR_REFERENCE_STATUS_ENDPOINT = "/api/selector-reference/status";
 const SELECTOR_REFERENCE_OPTIONS_ENDPOINT = "/api/selector-reference/options";
+const SELECTOR_TEST_CASE_LEGACY_STORAGE_KEYS = Object.freeze([
+  "controlstack.cs-selector.local-test-case.v1",
+]);
 
 const SELECTOR_TIMELINE_VISIBILITY_MODES = Object.freeze({
   EXTERNAL_DEFAULT: "external-default",
@@ -291,7 +294,12 @@ function recallSavedSelectorTestCase() {
 
 function clearSavedSelectorTestCase() {
   const storage = selectorTestCaseStorage();
-  if (storage) storage.removeItem(SELECTOR_TEST_CASE_STORAGE_KEY);
+  if (storage) {
+    storage.removeItem(SELECTOR_TEST_CASE_STORAGE_KEY);
+    for (const legacyKey of SELECTOR_TEST_CASE_LEGACY_STORAGE_KEYS) {
+      storage.removeItem(legacyKey);
+    }
+  }
   selectorState?.clearSavedSelectorTestCaseSummary?.();
   renderCurrentView();
 }

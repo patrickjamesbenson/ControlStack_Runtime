@@ -53,7 +53,7 @@ const SPECIAL_PARTS_TEST_PRINCIPAL_OPTIONS = Object.freeze([
   Object.freeze({ value: SPECIAL_PARTS_UNKNOWN_TEST_EMAIL, label: "Unknown / unentitled <unknown@example.test>" }),
 ]);
 
-export const SELECTOR_TEST_CASE_STORAGE_KEY = "controlstack.cs-selector.local-test-case.v1";
+export const SELECTOR_TEST_CASE_STORAGE_KEY = "controlstack.cs-selector.local-test-case.v2";
 const SELECTOR_TEST_CASE_VERSION = 1;
 const SELECTOR_TEST_CASE_KIND = "selector-local-test-case";
 

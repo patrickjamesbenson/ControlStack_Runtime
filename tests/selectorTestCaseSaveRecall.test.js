@@ -17,6 +17,7 @@ const indexSourceUrl = new URL("../packages/modules/cs-selector/index.js", impor
 
 const source = { present: true, readable: true, parseable: true };
 const ALLAN_EMAIL = "allan" + String.fromCharCode(64) + "zencontrol.com";
+const UNKNOWN_EMAIL = "unknown" + String.fromCharCode(64) + "example.test";
 const internalRoadmap = Object.freeze({
   timelineVisibilityMode: "internal-asof-test",
   timelineAsOfDate: "2026-08-15",
@@ -259,6 +260,20 @@ test("Selector test-case recall restores manual constraints, timeline controls, 
   assert.equal(snapshot.selectorTestCase.selectedResultPersistenceEnabled, false);
 });
 
+test("Selector test-case recall preserves unknown principal without converting it to Allan", () => {
+  const saved = sanitiseSelectorTestCase({
+    specialPartsUserTest: { testPrincipal: UNKNOWN_EMAIL, showEntitlementBackedSpecialParts: true },
+  });
+  const selectorState = createSelectorState();
+
+  selectorState.recallSelectorTestCase(saved);
+  const snapshot = selectorState.getSnapshot();
+
+  assert.equal(snapshot.specialPartsUserTest.testPrincipal, UNKNOWN_EMAIL);
+  assert.notEqual(snapshot.specialPartsUserTest.testPrincipal, ALLAN_EMAIL);
+  assert.equal(snapshot.selectorTestCase.summary.specialPartsTestPrincipal, UNKNOWN_EMAIL);
+});
+
 test("Selector test-case recall preserves incompatible recalled values as blocked instead of faking validity", () => {
   const selectorState = createSelectorState();
   selectorState.recallSelectorTestCase({
@@ -370,7 +385,8 @@ test("Selector test-case implementation does not add POST endpoints or server pe
     readFile(indexSourceUrl, "utf-8"),
   ]);
 
-  assert.equal(SELECTOR_TEST_CASE_STORAGE_KEY, "controlstack.cs-selector.local-test-case.v1");
+  assert.equal(SELECTOR_TEST_CASE_STORAGE_KEY, "controlstack.cs-selector.local-test-case.v2");
+  assert.equal(indexSource.includes("controlstack.cs-selector.local-test-case.v1"), true);
   assert.equal(serverSource.includes("selector-test-case"), false);
   assert.equal(serverSource.includes("SELECTOR_TEST_CASE"), false);
   assert.equal(indexSource.includes("method: \"POST\""), false);

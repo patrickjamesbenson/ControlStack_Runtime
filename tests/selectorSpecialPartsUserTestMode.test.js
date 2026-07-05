@@ -347,8 +347,8 @@ test("visible special-parts user card renders beside existing timeline/status co
 });
 
 test("special-parts user controls call existing state actions with email key", () => {
-  const result = derive({ specialPartsTestPrincipal: ALLAN_EMAIL, showSpecialParts: "1" });
-  const vm = model(result, { testPrincipal: ALLAN_EMAIL, showEntitlementBackedSpecialParts: true });
+  const result = derive({ specialPartsTestPrincipal: UNKNOWN_EMAIL, showSpecialParts: "1" });
+  const vm = model(result, { testPrincipal: UNKNOWN_EMAIL, showEntitlementBackedSpecialParts: true });
   const actions = [];
   vm.selectorSurface.specialPartsUserTest = {
     ...vm.selectorSurface.specialPartsUserTest,
@@ -358,7 +358,8 @@ test("special-parts user controls call existing state actions with email key", (
 
   const card = visibleSpecialPartsCard(renderedContainer(vm));
   const principalSelect = elementDescendants(card).find((element) => element.tagName === "SELECT" && element.dataset.specialPartsUserTestControl === "testPrincipal");
-  principalSelect.value = UNKNOWN_EMAIL;
+  assert.equal(principalSelect.value, UNKNOWN_EMAIL);
+  principalSelect.value = ALLAN_EMAIL;
   principalSelect.eventListeners.change();
 
   const toggleInput = elementDescendants(card).find((element) => element.tagName === "INPUT" && element.dataset.specialPartsUserTestControl === "showSpecialParts");
@@ -366,7 +367,7 @@ test("special-parts user controls call existing state actions with email key", (
   toggleInput.eventListeners.change();
 
   assert.deepEqual(actions, [
-    ["principal", UNKNOWN_EMAIL],
+    ["principal", ALLAN_EMAIL],
     ["show", false],
   ]);
 });
