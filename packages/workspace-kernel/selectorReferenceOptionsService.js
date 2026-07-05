@@ -14,7 +14,7 @@ const TARGET_FIELDS = Object.freeze([
   { fieldKey: "driver", label: "Driver / control consequence", role: "auto-consequence", sourceTables: ["DRIVERS"] },
   { fieldKey: "ipRating", label: "IP", role: "manual-constraint", sourceTables: ["OPTICS", "SYSTEM_POLICY"] },
   { fieldKey: "ikRating", label: "IK", role: "manual-constraint", sourceTables: ["OPTICS", "SYSTEM_POLICY"] },
-  { fieldKey: "mountStyle", label: "Mounting", role: "manual-constraint", sourceTables: ["ACCESSORIES", "SYSTEM_POLICY"] },
+  { fieldKey: "mountStyle", label: "Mounting", role: "manual-constraint", sourceTables: ["SYSTEM", "ACCESSORIES", "SYSTEM_POLICY"] },
   { fieldKey: "bodyFinish", label: "Finish", role: "manual-constraint", sourceTables: ["ACCESSORIES", "SYSTEM_POLICY"] },
   { fieldKey: "emergency", label: "Emergency", role: "manual-constraint", sourceTables: ["ACCESSORIES"] },
   { fieldKey: "egressLight", label: "Egress light", role: "manual-constraint", sourceTables: ["ACCESSORIES"] },
@@ -1121,8 +1121,21 @@ function mountStyleCanonicalKeysForRow(row) {
   return uniqueStrings(mountStyleCandidatesForRow(row).map(canonicalMountStyle).filter(Boolean));
 }
 
+function systemMountStyleSourceValues(row = {}) {
+  const directValues = rowOptionValues(row, ["mount_style", "mount_styles"]);
+  if (directValues.length) return directValues;
+  return rowOptionValues(row, ["mount_style_all"]);
+}
+
+function systemMountStyleDisplayValues(snapshot, row = {}) {
+  return uniqueStrings(systemMountStyleSourceValues(row)
+    .filter((mount) => !surfaceMountDiPolicyBlocksSystemMount(snapshot, row, mount))
+    .map(donorMountStyleDisplayLabel)
+    .filter(Boolean));
+}
+
 function systemMountStyleCanonicalKeys(snapshot, row) {
-  return uniqueStrings(rowOptionValues(row, ["mount_style", "mount_styles"])
+  return uniqueStrings(systemMountStyleSourceValues(row)
     .filter((mount) => !surfaceMountDiPolicyBlocksSystemMount(snapshot, row, mount))
     .map(canonicalMountStyle)
     .filter(Boolean));
@@ -1139,7 +1152,7 @@ function accessoryMountSystemRows(snapshot, accessoryRow) {
 }
 
 function snapshotHasSystemMountStyleSource(snapshot) {
-  return liveTableRows(snapshot, "SYSTEM").some((systemRow) => rowOptionValues(systemRow, ["mount_style", "mount_styles"]).length > 0);
+  return liveTableRows(snapshot, "SYSTEM").some((systemRow) => systemMountStyleSourceValues(systemRow).length > 0);
 }
 
 function accessoryMountSystemReferenceKeys(snapshot, accessoryRow) {
@@ -1162,7 +1175,7 @@ function mountStyleSystemReferenceKeys(snapshot, style) {
   const wanted = canonicalMountStyle(style);
   if (!wanted) return [];
   return uniqueStrings(liveTableRows(snapshot, "SYSTEM").filter((row) => {
-    const styleAllowedBySystem = rowOptionValues(row, ["mount_style", "mount_styles"]).some((mount) => canonicalMountStyle(mount) === wanted);
+    const styleAllowedBySystem = systemMountStyleSourceValues(row).some((mount) => canonicalMountStyle(mount) === wanted);
     return styleAllowedBySystem && !surfaceMountDiPolicyBlocksSystemMount(snapshot, row, style);
   })
     .map((row) => systemRowIdentityKey(row))
@@ -1388,8 +1401,18 @@ function collectOptions(snapshot, timelineContext = createSelectorTimelineContex
       if (emissionSupportsDirect(emission)) addOption(bucket, "directCapability", "Direct supported", { value: "direct-supported", sourceTables: ["SYSTEM"] });
       if (emissionSupportsIndirect(emission)) addOption(bucket, "indirectCapability", "Indirect supported", { value: "indirect-supported", sourceTables: ["SYSTEM"] });
     }
-    // Donor parity: mount style choices are exposed through ACCESSORIES mount rows
-    // that match this resolved SYSTEM.mount_style, not directly from SYSTEM aliases.
+    // Donor parity: Mount Style itself is scoped to the exact selected SYSTEM row.
+    // ACCESSORIES rows only supply downstream selections/particulars once this style matches.
+    const mountSystemReferenceKeys = uniqueStrings([systemIdentityKey, tokens.value, tokens.variant ? "" : tokens.system].filter(Boolean));
+    for (const mountStyle of systemMountStyleDisplayValues(snapshot, row)) {
+      addOption(bucket, "mountStyle", mountStyle, {
+        sourceTables: ["SYSTEM"],
+        systemReferenceKey: mountSystemReferenceKeys[0] || "",
+        systemReferenceKeys: mountSystemReferenceKeys,
+        ...rowStatusOptionMeta(row, timelineContext),
+        ...surfaceMountPolicyMeta(snapshot, mountStyle),
+      });
+    }
     const finishValues = systemPaintFinishValues(row);
     finishValues.forEach((finish, finishInheritanceIndex) => {
       const finishMeta = { sourceTables: ["SYSTEM"], systemReferenceKey: systemIdentityKey || tokens.system, systemReferenceKeys: uniqueStrings([systemIdentityKey, tokens.value, tokens.variant ? "" : tokens.system].filter(Boolean)), finishInheritanceIndex };
@@ -1555,9 +1578,7 @@ function collectOptions(snapshot, timelineContext = createSelectorTimelineContex
   for (const value of policyValues(snapshot, ["control", "dimming", "protocol"])) addOption(bucket, "controlType", value, { sourceTables: ["SYSTEM_POLICY"] });
   for (const value of policyValues(snapshot, ["ip", "ingress protection"])) addOption(bucket, "ipRating", value, { sourceTables: ["SYSTEM_POLICY"] });
   for (const value of policyValues(snapshot, ["ik", "impact rating"])) addOption(bucket, "ikRating", value, { sourceTables: ["SYSTEM_POLICY"] });
-  for (const value of policyValues(snapshot, ["mount", "mounting", "suspension", "recessed", "surface"])) {
-    addOption(bucket, "mountStyle", value, { sourceTables: ["SYSTEM_POLICY"], ...surfaceMountPolicyMeta(snapshot, value) });
-  }
+  // Donor parity: Mount Style is SYSTEM-row authoritative. Broad SYSTEM_POLICY mount keywords are policy metadata, not normal style choices.
   for (const value of policyValues(snapshot, POLICY_PAINT_FINISH_NEEDLES)) {
     addOption(bucket, "bodyFinish", value, { sourceTables: ["SYSTEM_POLICY"] });
     addOption(bucket, "finishCover", value, { sourceTables: ["SYSTEM_POLICY"] });
@@ -1589,12 +1610,6 @@ function collectOptions(snapshot, timelineContext = createSelectorTimelineContex
         systemReferenceKey: effectiveSystemKeys[0] || "",
         systemReferenceKeys: effectiveSystemKeys,
       };
-      addOption(bucket, "mountStyle", style, {
-        sourceTables: ["ACCESSORIES"],
-        systemReferenceKey: effectiveSystemKeys[0] || "",
-        systemReferenceKeys: effectiveSystemKeys,
-        ...surfaceMountPolicyMeta(snapshot, style),
-      });
       for (const value of rowOptionValues(row, ["mount_selections", "mount_selection"])) addOption(bucket, "mountSelection", value, mountMeta);
       for (const value of rowOptionValues(row, ["mount_particulars", "particulars"])) addOption(bucket, "mountParticulars", value, mountMeta);
     }
@@ -1778,7 +1793,7 @@ function collectRecords(snapshot, bucket, timelineContext = createSelectorTimeli
     });
     const variant = rowText(row, ["system_variant_1", "variant", "family", "profile_family"]);
     const emissions = systemEmissionValues(row);
-    const rawMountStyles = rowOptionValues(row, ["mount_style", "mount_styles"]).filter((mount) => !surfaceMountDiPolicyBlocksSystemMount(snapshot, row, mount));
+    const rawMountStyles = systemMountStyleSourceValues(row).filter((mount) => !surfaceMountDiPolicyBlocksSystemMount(snapshot, row, mount));
     const mountStyles = uniqueStrings(rawMountStyles.flatMap((mount) => [donorMountStyleDisplayLabel(mount), mount]).filter(Boolean));
     const finishes = systemPaintFinishValues(row);
     const flexes = systemFlexColourValues(row);
@@ -3066,7 +3081,10 @@ function createWorkflowField(field, { bucket, records, constraints, cascadeConst
 
   const rawBaseOptions = optionsFor(bucket, field.fieldKey);
   const childOptions = optionsForSelectedWorkflowParent(field.fieldKey, rawBaseOptions, parentConstraints);
-  const baseOptions = childOptions.options;
+  const parentScopedOptions = childOptions.options;
+  const baseOptions = field.fieldKey === "mountStyle" && safeString(cascadeConstraints.system || constraints.system || "")
+    ? parentScopedOptions.filter((option) => optionCascadeResult("mountStyle", option, records, cascadeConstraints).compatible === true)
+    : parentScopedOptions;
   if (childOptions.childFiltered && !baseOptions.length) {
     const emptyField = createEmptyChildWorkflowField(field, childOptions.parentFieldKey, childOptions.parentValue, childOptions.deferredOptions, childOptions.unavailableReason);
     if (!selectedValue) return emptyField;

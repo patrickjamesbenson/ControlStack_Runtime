@@ -382,16 +382,16 @@ test("System mount capability filters compatible mount styles before selection",
   const recessedModel = selectAndReload(recessedState, "system", "DNX|80");
 
   assert.deepEqual(compatibleOptionValues(recessedModel, "mountStyle"), ["Recessed", "Suspended"].sort());
+  assert.deepEqual(optionValues(recessedModel, "mountStyle").sort(), ["Recessed", "Suspended"].sort());
   assert.deepEqual(controlOptionValues(visibleControlField(recessedModel, "mountStyle")), ["Recessed", "Suspended"].sort());
-  assert.equal(workflowOption(recessedModel, "mountStyle", "Surface Mount").status, "blocked");
-  assert.equal(workflowOption(recessedModel, "mountStyle", "Surface Mount").blocked, true);
+  assert.equal(visibleControlField(recessedModel, "mountStyle").incompatibleOptions.some((option) => option.value === "Surface Mount"), false);
 
   const surfaceState = createSelectorState();
   const surfaceModel = selectAndReload(surfaceState, "system", "ALT|40");
   assert.deepEqual(compatibleOptionValues(surfaceModel, "mountStyle"), ["Surface Mount"]);
+  assert.deepEqual(optionValues(surfaceModel, "mountStyle"), ["Surface Mount"]);
   assert.deepEqual(controlOptionValues(visibleControlField(surfaceModel, "mountStyle")), ["Surface Mount"]);
-  assert.equal(workflowOption(surfaceModel, "mountStyle", "Recessed").status, "blocked");
-  assert.equal(workflowOption(surfaceModel, "mountStyle", "Suspended").status, "blocked");
+  assert.equal(visibleControlField(surfaceModel, "mountStyle").incompatibleOptions.length, 0);
 });
 
 test("mounting donor parity labels hide bracketed and no-flange internals", () => {
@@ -413,17 +413,16 @@ test("suspended and recessed visibility follows donor mount compatibility", () =
   const recessedModel = selectAndReload(recessedState, "system", "REC|SuspOk", snapshot);
 
   assert.deepEqual(controlOptionValues(visibleControlField(recessedModel, "mountStyle")), ["Recessed", "Suspended"].sort());
+  assert.deepEqual(optionValues(recessedModel, "mountStyle").sort(), ["Recessed", "Suspended"].sort());
   assert.equal(workflowOption(recessedModel, "mountStyle", "Suspended").status, "available");
   assert.equal(workflowOption(recessedModel, "mountStyle", "Recessed").status, "available");
-  assert.equal(workflowOption(recessedModel, "mountStyle", "Surface Mount").status, "blocked");
 
   const surfaceState = createSelectorState();
   const surfaceModel = selectAndReload(surfaceState, "system", "SURF|40", snapshot);
 
   assert.deepEqual(controlOptionValues(visibleControlField(surfaceModel, "mountStyle")), ["Surface Mount"]);
+  assert.deepEqual(optionValues(surfaceModel, "mountStyle"), ["Surface Mount"]);
   assert.equal(workflowOption(surfaceModel, "mountStyle", "Surface Mount").status, "available");
-  assert.equal(workflowOption(surfaceModel, "mountStyle", "Suspended").status, "blocked");
-  assert.equal(workflowOption(surfaceModel, "mountStyle", "Recessed").status, "blocked");
 });
 
 test("DNX 80 D/I mounting joins resolved SYSTEM mount_style to ACCESSORIES mount rows only", () => {
@@ -434,9 +433,10 @@ test("DNX 80 D/I mounting joins resolved SYSTEM mount_style to ACCESSORIES mount
   const liveMountField = visibleControlField(model, "mountStyle");
   const liveValues = controlOptionValues(liveMountField);
   assert.deepEqual(liveValues, ["Suspended"]);
+  assert.deepEqual(optionValues(model, "mountStyle"), ["Suspended"]);
   assert.equal(liveValues.some((value) => /\(|\)|No Flange/i.test(value)), false);
   assert.equal(workflowOption(model, "mountStyle", "Suspended").status, "available");
-  assert.equal(workflowOption(model, "mountStyle", "Surface Mount").status, "blocked");
+  assert.equal(liveMountField.incompatibleOptions.some((option) => option.value === "Surface Mount"), false);
 
   model = selectAndReload(selectorState, "mountStyle", "Suspended", snapshot);
   assert.equal(workflowOption(model, "mountSelection", "Wire").status, "available");
@@ -462,6 +462,8 @@ test("DNX product matrix resolves mounting from exact SYSTEM system plus variant
   let state = createSelectorState();
   let model = selectAndReload(state, "system", "80|Square_DI", snapshot);
   assert.deepEqual(controlOptionValues(visibleControlField(model, "mountStyle")), ["Surface Mount", "Suspended"].sort());
+  assert.deepEqual(optionValues(model, "mountStyle").sort(), ["Surface Mount", "Suspended"].sort());
+  assert.equal(workflowField(model, "mountStyle").options.length, 2);
   model = selectAndReload(state, "mountStyle", "Surface Mount", snapshot);
   assert.equal(workflowOption(model, "mountSelection", "Wall bracket").status, "available");
   assert.equal(workflowOption(model, "mountSelection", "Ceiling bracket").status, "blocked");
@@ -469,7 +471,8 @@ test("DNX product matrix resolves mounting from exact SYSTEM system plus variant
   state = createSelectorState();
   model = selectAndReload(state, "system", "60|Beam", snapshot);
   assert.deepEqual(controlOptionValues(visibleControlField(model, "mountStyle")), ["Surface Mount"]);
-  assert.equal(workflowOption(model, "mountStyle", "Suspended").status, "blocked");
+  assert.deepEqual(optionValues(model, "mountStyle"), ["Surface Mount"]);
+  assert.equal(workflowField(model, "mountStyle").options.length, 1);
   model = selectAndReload(state, "mountStyle", "Surface Mount", snapshot);
   assert.equal(workflowOption(model, "mountSelection", "Wall bracket").status, "available");
   assert.equal(workflowOption(model, "mountSelection", "Ceiling bracket").status, "blocked");
@@ -477,6 +480,8 @@ test("DNX product matrix resolves mounting from exact SYSTEM system plus variant
   state = createSelectorState();
   model = selectAndReload(state, "system", "80|Square", snapshot);
   assert.deepEqual(controlOptionValues(visibleControlField(model, "mountStyle")), ["Surface Mount", "Suspended"].sort());
+  assert.deepEqual(optionValues(model, "mountStyle").sort(), ["Surface Mount", "Suspended"].sort());
+  assert.equal(workflowField(model, "mountStyle").options.length, 2);
   model = selectAndReload(state, "mountStyle", "Surface Mount", snapshot);
   assert.equal(workflowOption(model, "mountSelection", "Ceiling bracket").status, "available");
 });
