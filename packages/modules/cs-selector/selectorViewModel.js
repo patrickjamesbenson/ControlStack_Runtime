@@ -1418,8 +1418,23 @@ function dbWorkflowSections(selectorReferenceStatus = {}) {
   return Array.isArray(payload.workflowSections) ? payload.workflowSections : [];
 }
 
+function selectedSystemOptionFromFieldOptions(options = [], selectedValue = "") {
+  const selected = String(selectedValue || "").trim();
+  if (!selected) return null;
+  const exact = options.find((option) => optionValuesMatch(option.value, selected))
+    || options.find((option) => optionValuesMatch(option.label, selected));
+  if (exact) return exact;
+  return options
+    .map((option, index) => ({ option, score: systemSelectionMatchScore(option, selected), index }))
+    .filter((item) => item.score > 0)
+    .sort((left, right) => right.score - left.score || left.index - right.index)[0]?.option || null;
+}
+
 function labelFromWorkflowField(field = {}, value = "") {
-  const option = (Array.isArray(field.options) ? field.options : []).find((item) => optionValuesMatch(item.value, value) || (field.fieldKey === "system" && systemOptionMatchesSelection(item, value)));
+  const options = Array.isArray(field.options) ? field.options : [];
+  const option = field.fieldKey === "system"
+    ? selectedSystemOptionFromFieldOptions(options, value)
+    : options.find((item) => optionValuesMatch(item.value, value));
   return option?.label || String(value || "");
 }
 
@@ -2031,7 +2046,12 @@ function presentationCompatibleOptions(field = {}) {
 function presentationSelectedOption(field = {}) {
   const selectedValue = String(field.selectedValue || "").trim();
   const options = Array.isArray(field.options) ? field.options : [];
-  return options.find((option) => option.selected === true || (selectedValue && optionValuesMatch(option.value, selectedValue))) || null;
+  if (field.fieldKey === "system" && selectedValue) return selectedSystemOptionFromFieldOptions(options, selectedValue);
+  if (selectedValue) return options.find((option) => optionValuesMatch(option.value, selectedValue))
+    || options.find((option) => optionValuesMatch(option.label, selectedValue))
+    || options.find((option) => option.selected === true)
+    || null;
+  return options.find((option) => option.selected === true) || null;
 }
 
 function presentationSelectedCodePolicyOption(field = {}) {
