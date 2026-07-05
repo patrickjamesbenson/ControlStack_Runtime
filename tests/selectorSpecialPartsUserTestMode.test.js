@@ -12,6 +12,7 @@ const source = { present: true, readable: true, parseable: true };
 const ALLAN_EMAIL = "allan" + "@" + "zencontrol.com";
 const UNKNOWN_EMAIL = "unknown" + "@" + "example.test";
 const MISSING_EMAIL = "missing" + "@" + "example.test";
+const ALLAN_COMPONENT_ID = "assy-internal-mount-bracket-dnx-generic";
 const ALLAN_LABEL = `Allan Organ <${ALLAN_EMAIL}>`;
 const UNKNOWN_LABEL = `Unknown / unentitled <${UNKNOWN_EMAIL}>`;
 
@@ -24,7 +25,7 @@ function snapshot() {
         last_name: "Organ",
         company: "Zencontrol",
         email_login: ALLAN_EMAIL,
-        system_component_ids: "sp-1",
+        system_component_ids: "assy-internal-mount-bracket-dnx-generic",
       },
       {
         display_name: "Unentitled User",
@@ -37,11 +38,12 @@ function snapshot() {
     ],
     SYSTEM_COMPONENTS: [
       {
-        id: "sp-1",
+        id: "assy-internal-mount-bracket-dnx-generic",
         status: "available",
         system: "",
         variants_all: "",
         ip_class: "",
+        caveats: "MOQ 500 plus, AUD 20ea plus gst, 6wks from sign off.",
         description: "Safe special component — should not render raw row data",
       },
     ],
@@ -238,6 +240,8 @@ test("Allan email test principal exposes entitlement-backed special parts when s
   assert.equal(result.specialPartsUserTestSummary.entitlementFound, true);
   assert.equal(result.specialPartsUserTestSummary.specialPartsVisible, true);
   assert.equal(result.specialPartsUserTestSummary.redactedCandidates.length, 1);
+  assert.equal(result.specialPartsUserTestSummary.redactedCandidates[0].safeComponentId, ALLAN_COMPONENT_ID);
+  assert.match(result.specialPartsUserTestSummary.redactedCandidates[0].safeCaveats, /MOQ 500 plus/);
   assertSafeIdentityOnly(result.specialPartsUserTestSummary, {
     firstName: "Allan",
     lastName: "Organ",

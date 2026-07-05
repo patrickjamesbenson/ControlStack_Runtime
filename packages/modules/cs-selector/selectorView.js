@@ -85,8 +85,8 @@ function readSpecialPartsEntitlementCandidateRows(viewModel) {
   const rows = Array.isArray(preview.candidateRows) ? preview.candidateRows : [];
   if (!rows.length) return [["redacted candidates", "none"]];
   return rows.map((row) => [
-    row.redactedRef || "redacted-special-part",
-    `${row.status || "unknown"}; ${row.reason || "safe redacted preview only"}; rawRowsReturned:${forcedFalse(row.rawRowsReturned)}`,
+    [row.safeComponentId || row.redactedRef || "redacted-special-part", row.safeDescription].filter(Boolean).join(" - "),
+    `${row.status || "unknown"}; ${row.reason || "safe redacted preview only"}${row.safeCaveats ? `; caveats:${row.safeCaveats}` : ""}; rawRowsReturned:${forcedFalse(row.rawRowsReturned)}`,
   ]);
 }
 
@@ -515,9 +515,9 @@ function appendSpecialPartsUserTestControls(parent, specialPartsUserTest = {}, o
 
   const candidateRows = Array.isArray(specialPartsUserTest.candidateRows) ? specialPartsUserTest.candidateRows : [];
   if (candidateRows.length) {
-    appendSection(section, "Visible entitlement-backed special parts — redacted", candidateRows.map((row) => [
-      row.redactedRef || "redacted special part",
-      row.reason || row.status || "safe redacted candidate",
+    appendSection(section, "Visible entitlement-backed special parts - redacted", candidateRows.map((row) => [
+      [row.safeComponentId || row.redactedRef || "redacted special part", row.safeDescription].filter(Boolean).join(" - "),
+      [row.reason || row.status || "safe redacted candidate", row.safeCaveats ? `caveats: ${row.safeCaveats}` : ""].filter(Boolean).join("; "),
     ]));
   }
   parent.appendChild(section);

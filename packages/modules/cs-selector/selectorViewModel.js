@@ -496,8 +496,11 @@ function safeRedactedSpecialPartCandidate(part = {}, index = 0) {
     return { redactedRef: `redacted-special-part-${index + 1}`, redacted: true };
   }
   return {
-    redactedRef: String(part.redactedRef || part.safeRef || part.redactedReference || `redacted-special-part-${index + 1}`),
+    redactedRef: String(part.redactedRef || part.safeComponentId || part.safeRef || part.redactedReference || `redacted-special-part-${index + 1}`),
     redacted: true,
+    safeComponentId: String(part.safeComponentId || part.systemComponentId || part.componentId || part.redactedRef || ""),
+    safeDescription: String(part.safeDescription || part.description || ""),
+    safeCaveats: String(part.safeCaveats || part.caveats || ""),
     system: part.system || "",
     variants_all: part.variants_all || part.variantsAll || "",
     ip_class: part.ip_class || part.ipClass || "",
@@ -1426,21 +1429,48 @@ function normalisedSelectionTokens(value = "") {
   return new Set(String(value || "").trim().toLowerCase().split(/[^a-z0-9]+/).filter(Boolean));
 }
 
-function systemOptionMatchesSelection(option = {}, selectedSystem = "") {
-  if (!selectedSystem) return false;
-  if (optionValuesMatch(option.value, selectedSystem) || optionValuesMatch(option.label, selectedSystem) || optionValuesMatch(option.systemReferenceKey, selectedSystem)) return true;
+function selectionTokensIncludeAll(haystackTokens, needleTokens) {
+  const needles = Array.from(needleTokens || []).filter(Boolean);
+  return needles.length > 0 && needles.every((token) => haystackTokens.has(token));
+}
+
+function systemOptionVariant(option = {}) {
+  return String(option.systemVariantKey || String(option.value || "").split("|").slice(1).join("|")).trim();
+}
+
+function systemSelectionMatchScore(option = {}, selectedSystem = "") {
+  const selected = String(selectedSystem || "").trim();
+  if (!selected) return 0;
+  if (optionValuesMatch(option.value, selected)) return 10000;
+  if (optionValuesMatch(option.label, selected)) return 9500;
 
   const systemKey = String(option.systemReferenceKey || systemTokenFromSelection(option.value || "")).trim();
-  if (!systemKey) return false;
-  const selectedTokens = normalisedSelectionTokens(selectedSystem);
-  if (!selectedTokens.has(systemKey.toLowerCase())) return false;
+  const variant = systemOptionVariant(option);
+  const selectedTokens = normalisedSelectionTokens(selected);
+  const selectedParts = selected.split("|").map((item) => item.trim()).filter(Boolean);
+  const systemTokenCount = normalisedSelectionTokens(systemKey).size;
+  const selectedLooksVariantSpecific = selectedParts.length > 1 || selectedTokens.size > systemTokenCount;
+  const selectedIsExactSystemOnly = Boolean(systemKey && optionValuesMatch(systemKey, selected) && !selectedLooksVariantSpecific);
 
-  const variant = String(option.systemVariantKey || String(option.value || "").split("|").slice(1).join("|")).trim();
-  if (!variant) return true;
-  const selectedKey = String(selectedSystem || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
-  const variantKey = variant.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
-  if (variantKey && selectedKey.includes(variantKey)) return true;
-  return Array.from(normalisedSelectionTokens(variant)).every((token) => selectedTokens.has(token));
+  if (systemKey) {
+    const systemTokens = normalisedSelectionTokens(systemKey);
+    const exactSystem = optionValuesMatch(systemKey, selected);
+    if (!exactSystem && !selectionTokensIncludeAll(selectedTokens, systemTokens)) return 0;
+    if (!variant) return exactSystem ? 8000 : 5000;
+  }
+
+  if (!variant) return 0;
+  const variantTokens = normalisedSelectionTokens(variant);
+  const variantPhrase = String(variant || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  const selectedPhrase = selected.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  const variantMatched = Boolean(variantPhrase && selectedPhrase.includes(variantPhrase)) || selectionTokensIncludeAll(selectedTokens, variantTokens);
+  if (!variantMatched) return selectedIsExactSystemOnly ? 5500 : 0;
+  const specificity = Array.from(variantTokens).join("").length + variantTokens.size;
+  return selectedLooksVariantSpecific ? 7000 + specificity : 6000 + specificity;
+}
+
+function systemOptionMatchesSelection(option = {}, selectedSystem = "") {
+  return systemSelectionMatchScore(option, selectedSystem) > 0;
 }
 
 function workflowOpticSystemReferenceKeys(workflowSections = []) {
@@ -1475,32 +1505,32 @@ function workflowOpticSystemReferenceKeys(workflowSections = []) {
 function workflowSystemReferenceKey(workflowSections = [], selectedSystem = "") {
   if (!selectedSystem) return "";
   const opticSystemKeys = workflowOpticSystemReferenceKeys(workflowSections);
-  for (const section of workflowSections) {
-    const field = (section.fields || []).find((item) => item.fieldKey === "system");
-    if (!field) continue;
-    const option = (field.options || []).find((item) => systemOptionMatchesSelection(item, selectedSystem));
-    if (!option) continue;
-    const candidates = [
-      option.systemVariantKey,
-      option.systemReferenceKey,
-      systemTokenFromSelection(option.value || option.label),
-    ].map((item) => String(item || "").trim()).filter(Boolean);
-    const matchedOpticKey = candidates.find((candidate) => opticSystemKeys.has(candidate.toLowerCase()));
-    if (matchedOpticKey) return matchedOpticKey;
-    return option.systemReferenceKey || systemTokenFromSelection(option.value || option.label);
-  }
-  return "";
+  const option = workflowSelectedSystemOption(workflowSections, selectedSystem);
+  if (!option) return "";
+  const identityKey = [option.systemReferenceKey, option.systemVariantKey].map((item) => String(item || "").trim()).filter(Boolean).join("|");
+  const candidates = [
+    identityKey,
+    option.systemVariantKey,
+    option.systemReferenceKey,
+    systemTokenFromSelection(option.value || option.label),
+  ].map((item) => String(item || "").trim()).filter(Boolean);
+  const matchedOpticKey = candidates.find((candidate) => opticSystemKeys.has(candidate.toLowerCase()));
+  if (matchedOpticKey) return matchedOpticKey;
+  return identityKey || option.systemReferenceKey || systemTokenFromSelection(option.value || option.label);
 }
 
 function workflowSelectedSystemOption(workflowSections = [], selectedSystem = "") {
   if (!selectedSystem) return null;
+  const scored = [];
   for (const section of workflowSections) {
     const field = (section.fields || []).find((item) => item.fieldKey === "system");
     if (!field) continue;
-    const option = (field.options || []).find((item) => systemOptionMatchesSelection(item, selectedSystem));
-    if (option) return option;
+    for (const option of field.options || []) {
+      const score = systemSelectionMatchScore(option, selectedSystem);
+      if (score > 0) scored.push({ option, score, index: scored.length });
+    }
   }
-  return null;
+  return scored.sort((left, right) => right.score - left.score || left.index - right.index)[0]?.option || null;
 }
 
 function workflowSystemSupportsIndirect(workflowSections = [], selectedSystem = "") {

@@ -292,7 +292,10 @@ function selectedBlockedRows(selectedBlockedValues = []) {
 function redactedCandidate(candidate = {}, index = 0) {
   const status = normaliseStatus(candidate.timelineStatus || candidate.status || candidate.optionStatusClass || candidate.availability);
   return {
-    redactedRef: redactedRefFor(candidate.redactedRef || candidate.safeRef || candidate.redactedReference || candidate.reference, index),
+    redactedRef: redactedRefFor(candidate.redactedRef || candidate.safeComponentId || candidate.safeRef || candidate.redactedReference || candidate.reference, index),
+    safeComponentId: safeString(candidate.safeComponentId || candidate.systemComponentId || candidate.componentId || candidate.redactedRef),
+    safeDescription: safeString(candidate.safeDescription || candidate.description),
+    safeCaveats: safeString(candidate.safeCaveats || candidate.caveats),
     status,
     previewApproved: candidate.previewApproved === true || candidate.approvedForPreview === true || candidate.safePreviewApproved === true,
     safelyEntitled: candidate.safelyEntitled !== false && candidate.entitled !== false,
@@ -394,6 +397,9 @@ function safeRowsForCandidates(candidates, compatibilityResults, projection, sel
     }
     rows.push({
       redactedRef: candidate.redactedRef,
+      safeComponentId: candidate.safeComponentId,
+      safeDescription: candidate.safeDescription,
+      safeCaveats: candidate.safeCaveats,
       status,
       timelineStatus: candidate.status,
       reason,

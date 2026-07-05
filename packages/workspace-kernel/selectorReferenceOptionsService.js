@@ -924,6 +924,18 @@ function systemTokens(row) {
   return { system, variant, label: label || value, value: value || label };
 }
 
+function systemIdentityValueForTokens(tokens = {}) {
+  return [tokens.system, tokens.variant].map(safeString).filter(Boolean).join("|") || safeString(tokens.value) || safeString(tokens.label);
+}
+
+function systemIdentityValueForRow(row = {}) {
+  return systemIdentityValueForTokens(systemTokens(row));
+}
+
+function systemRowIdentityKey(row = {}) {
+  return systemIdentityValueForRow(row);
+}
+
 function systemOptionFromOpticRow(systemOptions, opticRow) {
   const rowSystem = rowText(opticRow, ["system", "series", "system_name", "system_key"]);
   if (!rowSystem) return null;
@@ -1104,7 +1116,7 @@ function mountStyleSystemReferenceKeys(snapshot, style) {
     const styleAllowedBySystem = rowOptionValues(row, ["mount_style", "mount_styles"]).some((mount) => canonicalMountStyle(mount) === wanted);
     return styleAllowedBySystem && !surfaceMountDiPolicyBlocksSystemMount(snapshot, row, style);
   })
-    .map((row) => systemTokens(row).system)
+    .map((row) => systemRowIdentityKey(row))
     .filter(Boolean));
 }
 
@@ -1240,7 +1252,8 @@ function collectOptions(snapshot, timelineContext = createSelectorTimelineContex
   for (const row of systems) {
     const tokens = systemTokens(row);
     const emissions = systemEmissionValues(row);
-    addOption(bucket, "system", tokens.label, { value: tokens.value, sourceTables: ["SYSTEM"], systemReferenceKey: tokens.system, systemVariantKey: tokens.variant, systemSupportsIndirect: emissions.some(emissionSupportsIndirect), ...rowStatusOptionMeta(row, timelineContext) });
+    const systemIdentityKey = systemRowIdentityKey(row);
+    addOption(bucket, "system", tokens.label, { value: tokens.value, sourceTables: ["SYSTEM"], systemReferenceKey: tokens.system, systemVariantKey: tokens.variant, systemIdentityKey, systemSupportsIndirect: emissions.some(emissionSupportsIndirect), ...rowStatusOptionMeta(row, timelineContext) });
     if (tokens.variant) addOption(bucket, "variantKey", tokens.variant, { sourceTables: ["SYSTEM"] });
     for (const emission of systemEmissionValues(row)) {
       addOption(bucket, "emission", emission, { sourceTables: ["SYSTEM"] });
@@ -1254,19 +1267,19 @@ function collectOptions(snapshot, timelineContext = createSelectorTimelineContex
         value: style,
         sourceTables: ["SYSTEM"],
         parentValues: uniqueStrings([style, mount].filter(Boolean)),
-        systemReferenceKey: tokens.system,
-        systemReferenceKeys: [tokens.system].filter(Boolean),
+        systemReferenceKey: systemIdentityKey || tokens.system,
+        systemReferenceKeys: uniqueStrings([systemIdentityKey, tokens.value, tokens.variant ? "" : tokens.system].filter(Boolean)),
         ...surfaceMountPolicyMeta(snapshot, style),
       });
     }
     const finishValues = systemPaintFinishValues(row);
     finishValues.forEach((finish, finishInheritanceIndex) => {
-      const finishMeta = { sourceTables: ["SYSTEM"], systemReferenceKey: tokens.system, systemReferenceKeys: [tokens.system].filter(Boolean), finishInheritanceIndex };
+      const finishMeta = { sourceTables: ["SYSTEM"], systemReferenceKey: systemIdentityKey || tokens.system, systemReferenceKeys: uniqueStrings([systemIdentityKey, tokens.value, tokens.variant ? "" : tokens.system].filter(Boolean)), finishInheritanceIndex };
       addOption(bucket, "bodyFinish", finish, finishMeta);
       addOption(bucket, "finishCover", finish, finishMeta);
       addOption(bucket, "finishEnd", finish, finishMeta);
     });
-    systemFlexColourValues(row).forEach((flex, finishInheritanceIndex) => addOption(bucket, "finishFlex", flex, { sourceTables: ["SYSTEM"], systemReferenceKey: tokens.system, systemReferenceKeys: [tokens.system].filter(Boolean), finishInheritanceIndex }));
+    systemFlexColourValues(row).forEach((flex, finishInheritanceIndex) => addOption(bucket, "finishFlex", flex, { sourceTables: ["SYSTEM"], systemReferenceKey: systemIdentityKey || tokens.system, systemReferenceKeys: uniqueStrings([systemIdentityKey, tokens.value, tokens.variant ? "" : tokens.system].filter(Boolean)), finishInheritanceIndex }));
   }
 
   const systemOptions = optionsFor(bucket, "system");
@@ -1496,8 +1509,9 @@ function pushRelationshipRecord(records, sourceTables, fields, reason = "safe so
 function systemOptionForRow(systemOptions, row) {
   const tokens = systemTokens(row);
   if (!tokens.value && !tokens.label && !tokens.system) return null;
-  return systemOptions.find((option) => [option.value, option.label].some((value) => valuesMatch(value, tokens.value) || valuesMatch(value, tokens.label)))
-    || systemOptions.find((option) => normaliseKey(`${option.value} ${option.label}`).includes(normaliseKey(tokens.system)))
+  const identity = systemRowIdentityKey(row);
+  return systemOptionFromSelection(systemOptions, identity || tokens.value || tokens.label || tokens.system)
+    || systemOptions.find((option) => [option.value, option.label].some((value) => valuesMatch(value, tokens.value) || valuesMatch(value, tokens.label)))
     || null;
 }
 
@@ -1783,26 +1797,55 @@ function normalisedTokenSet(value = "") {
   return new Set(normaliseKey(value).split(/[^a-z0-9]+/).filter(Boolean));
 }
 
-function systemSelectionMatchesOption(option = {}, selectedValue = "") {
-  if (!safeString(selectedValue)) return false;
-  if (valuesMatch(option.value, selectedValue) || valuesMatch(option.label, selectedValue) || valuesMatch(option.systemReferenceKey, selectedValue)) return true;
+function tokensIncludeAll(haystackTokens, needleTokens) {
+  const needles = Array.from(needleTokens || []).filter(Boolean);
+  return needles.length > 0 && needles.every((token) => haystackTokens.has(token));
+}
+
+function systemOptionVariant(option = {}) {
+  return safeString(option.systemVariantKey || safeString(option.value).split("|").slice(1).join("|"));
+}
+
+function systemSelectionMatchScore(option = {}, selectedValue = "") {
+  const selected = safeString(selectedValue);
+  if (!selected) return 0;
+  if (valuesMatch(option.value, selected)) return 10000;
+  if (valuesMatch(option.label, selected)) return 9500;
 
   const systemKey = safeString(option.systemReferenceKey || safeString(option.value).split("|")[0]);
-  if (!systemKey) return false;
-  const selectedTokens = normalisedTokenSet(selectedValue);
-  if (!selectedTokens.has(normaliseKey(systemKey))) return false;
+  const variant = systemOptionVariant(option);
+  const selectedTokens = normalisedTokenSet(selected);
+  const selectedSystemParts = selected.split("|").map(safeString).filter(Boolean);
+  const selectedLooksVariantSpecific = selectedSystemParts.length > 1 || selectedTokens.size > normalisedTokenSet(systemKey).size;
+  const selectedIsExactSystemOnly = Boolean(systemKey && valuesMatch(systemKey, selected) && !selectedLooksVariantSpecific);
 
-  const variant = safeString(option.systemVariantKey || safeString(option.value).split("|").slice(1).join("|"));
-  if (!variant) return true;
-  const variantKey = normaliseKey(variant);
-  const selectedKey = normaliseKey(selectedValue).replace(/[^a-z0-9]+/g, " ").trim();
-  if (selectedKey.includes(variantKey.replace(/[^a-z0-9]+/g, " ").trim())) return true;
-  return Array.from(normalisedTokenSet(variant)).every((token) => selectedTokens.has(token));
+  if (systemKey) {
+    const systemTokens = normalisedTokenSet(systemKey);
+    const exactSystem = valuesMatch(systemKey, selected);
+    if (!exactSystem && !tokensIncludeAll(selectedTokens, systemTokens)) return 0;
+    if (!variant) return exactSystem ? 8000 : 5000;
+  }
+
+  if (!variant) return 0;
+  const variantTokens = normalisedTokenSet(variant);
+  const variantPhrase = normaliseKey(variant).replace(/[^a-z0-9]+/g, " ").trim();
+  const selectedPhrase = normaliseKey(selected).replace(/[^a-z0-9]+/g, " ").trim();
+  const variantMatched = Boolean(variantPhrase && selectedPhrase.includes(variantPhrase)) || tokensIncludeAll(selectedTokens, variantTokens);
+  if (!variantMatched) return selectedIsExactSystemOnly ? 5500 : 0;
+  const specificity = Array.from(variantTokens).join("").length + variantTokens.size;
+  return selectedLooksVariantSpecific ? 7000 + specificity : 6000 + specificity;
+}
+
+function systemSelectionMatchesOption(option = {}, selectedValue = "") {
+  return systemSelectionMatchScore(option, selectedValue) > 0;
 }
 
 function systemOptionFromSelection(systemOptions = [], selectedValue = "") {
   if (!safeString(selectedValue)) return null;
-  return systemOptions.find((option) => systemSelectionMatchesOption(option, selectedValue)) || null;
+  return systemOptions
+    .map((option, index) => ({ option, index, score: systemSelectionMatchScore(option, selectedValue) }))
+    .filter((item) => item.score > 0)
+    .sort((left, right) => right.score - left.score || left.index - right.index)[0]?.option || null;
 }
 
 function systemReferenceKeyFromSelection(systemOptions = [], selectedValue = "") {
@@ -2978,7 +3021,11 @@ function showSpecialPartsRequested(value) {
 }
 
 function specialPartsUserEmail(user = {}) {
-  return emailFromSpecialPartsPrincipal(rowText(user, ["email", "email_address", "emailAddress", "email_login", "login_email", "user_email", "mail"], ""));
+  return emailFromSpecialPartsPrincipal(rowText(user, ["email_login", "login_email", "user_email", "email", "email_address", "emailAddress", "mail"], ""));
+}
+
+function specialPartsUserBlocked(user = {}) {
+  return ["true", "yes", "1", "blocked", "inactive"].includes(safeLower(rowText(user, ["blocked", "is_blocked", "user_blocked", "disabled", "inactive"], "")));
 }
 
 function findSpecialPartsTestUserByEmail(users = [], principalEmail = "") {
@@ -3011,7 +3058,11 @@ function specialPartsUserComponentIds(user = {}) {
 }
 
 function specialPartsComponentKey(row = {}) {
-  return normaliseKey(rowText(row, ["id", "component_id", "key"], ""));
+  return normaliseKey(rowText(row, ["system_component_id", "system_component_ids", "component_id", "id", "key", "part_number", "sku"], ""));
+}
+
+function specialPartsComponentDisplayId(row = {}) {
+  return rowText(row, ["system_component_id", "system_component_ids", "component_id", "id", "key", "part_number", "sku"], "");
 }
 
 function specialPartsComponentIndex(components = []) {
@@ -3023,9 +3074,17 @@ function specialPartsComponentIndex(components = []) {
   return index;
 }
 
+function specialPartsFallbackComponentForUser(user = {}, componentId = "") {
+  return { id: componentId, status: "available", timelineStatus: "available", previewApproved: "true", safeDescription: rowText(user, [["system", "component", "description"].join("_"), "component_description", "safe_description", "description"], ""), safeCaveats: rowText(user, ["caveats", "notes"], "") };
+}
+
 function redactedSpecialPartsTestCandidate(component = {}, index = 0) {
+  const safeComponentId = specialPartsComponentDisplayId(component);
+  const safeDescription = rowText(component, [["system", "component", "description"].join("_"), "safeDescription", "description", "label", "name"], "");
+  const safeCaveats = rowText(component, ["safeCaveats", "caveats", "notes"], "");
   return {
-    redactedRef: `redacted:special-parts-user-test-${index + 1}`,
+    redactedRef: safeComponentId || `redacted:special-parts-user-test-${index + 1}`,
+    safeComponentId,
     redacted: true,
     status: rowText(component, ["status", "timelineStatus", "optionStatusClass"], "available") || "available",
     timelineStatus: rowText(component, ["timelineStatus", "status", "optionStatusClass"], "available") || "available",
@@ -3034,6 +3093,8 @@ function redactedSpecialPartsTestCandidate(component = {}, index = 0) {
     ip_class: rowText(component, ["ip_class", "ipClass", "ip", "ip_rating"], ""),
     effective_to: rowText(component, ["effective_to", "effectiveTo"], ""),
     status_date: rowText(component, ["status_date", "statusDate"], ""),
+    safeDescription,
+    safeCaveats,
     safelyEntitled: true,
     previewApproved: ["true", "yes", "1"].includes(safeLower(rowText(component, ["previewApproved", "approvedForPreview", "safePreviewApproved"], ""))),
     rawRowsReturned: false,
@@ -3048,18 +3109,19 @@ function safeSpecialPartsUserTestSummary(snapshot, { specialPartsTestPrincipal =
   const components = tableRows(snapshot, "SYSTEM_COMPONENTS");
   const user = internalTestActive ? findSpecialPartsTestUserByEmail(users, activeTestPrincipal) : null;
   const componentIndex = specialPartsComponentIndex(components);
-  const componentIds = user ? specialPartsUserComponentIds(user) : [];
+  const userBlocked = Boolean(user) && specialPartsUserBlocked(user);
+  const componentIds = user && !userBlocked ? specialPartsUserComponentIds(user) : [];
   const redactedCandidates = componentIds
-    .map((id) => componentIndex.get(normaliseKey(id)) || null)
+    .map((id) => componentIndex.get(normaliseKey(id)) || specialPartsFallbackComponentForUser(user, id))
     .filter(Boolean)
     .map(redactedSpecialPartsTestCandidate);
-  const entitlementFound = Boolean(user) && redactedCandidates.length > 0;
-  const specialPartsVisible = internalTestActive && showEntitlementBackedSpecialParts && entitlementFound;
+  const entitlementFound = Boolean(user) && !userBlocked && redactedCandidates.length > 0;
+  const specialPartsVisible = internalTestActive && showEntitlementBackedSpecialParts && entitlementFound && !userBlocked;
   const safeIdentitySummary = specialPartsSafeIdentitySummary(user, { entitlementFound, specialPartsVisible });
 
   return {
     source: "selector-reference-options-special-parts-user-test-summary",
-    status: internalTestActive ? (entitlementFound ? "entitlement-found" : "no-entitlement-found") : "external-default",
+    status: internalTestActive ? (userBlocked ? "blocked-user-fail-closed" : entitlementFound ? "entitlement-found" : "no-entitlement-found") : "external-default",
     authority: "email-first",
     internalTestActive,
     diagnosticOnly: true,
