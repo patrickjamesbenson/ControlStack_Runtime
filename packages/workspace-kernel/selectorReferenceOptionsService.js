@@ -1175,9 +1175,10 @@ function mountStyleCanonicalKeysForRow(row) {
 }
 
 function systemMountStyleSourceValues(row = {}) {
-  const primary = rowOptionValues(row, ["mount_style", "mount_styles"]);
-  if (primary.length) return uniqueStrings(primary);
-  return uniqueStrings(rowOptionValues(row, ["mount_style_all"]));
+  return uniqueStrings([
+    ...rowOptionValues(row, ["mount_style", "mount_styles"]),
+    ...rowOptionValues(row, ["mount_style_all"]),
+  ]);
 }
 
 function systemMountStyleDisplayValues(snapshot, row = {}) {

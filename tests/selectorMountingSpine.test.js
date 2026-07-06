@@ -96,7 +96,7 @@ function mountingSnapshot({ includeFlex = true } = {}) {
 function tBarMountingSnapshot() {
   return {
     SYSTEM: [
-      { system: "DNX", system_variant_1: "TBarAllowed", label: "DNX T-Bar allowed", emission: "Direct", mount_style: "Suspended;Surface Mount;Recessed;Trimless;T-Bar Modular", mount_style_all: "legacy ignored by selector normal path", approved: "yes" },
+      { system: "DNX", system_variant_1: "TBarAllowed", label: "DNX T-Bar allowed", emission: "Direct", mount_style: "Suspended;Surface Mount", mount_style_all: "Recessed;Trimless;T-Bar Modular", approved: "yes" },
       { system: "DNX", system_variant_1: "SurfaceOnly", label: "DNX surface only", emission: "Direct", mount_style: "Surface Mount", approved: "yes" },
     ],
     ACCESSORIES: [
