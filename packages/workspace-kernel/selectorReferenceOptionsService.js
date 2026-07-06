@@ -2119,6 +2119,8 @@ function cascadeConstraintsForOptions(bucket = {}, constraints = {}, snapshot = 
     ...constraints,
     system: selectedSystemIdentity || constraints.system,
     __systemReferenceKey: selectedSystemKey,
+    __systemVariantKey: selectedSystemOption ? safeString(selectedSystemOption.systemVariantKey) : "",
+    __systemLabel: selectedSystemOption ? safeString(selectedSystemOption.label) : "",
     __systemSupportsIndirect: selectedSystemOption?.systemSupportsIndirect === true,
     __selectorMountingCodePolicies: selectorMountingCodePolicySummaries(snapshot),
   };
@@ -2403,6 +2405,19 @@ function mountTextIsTBarModularOrTrimless(value = "") {
   return text.includes("t bar modular") || text.includes("t-bar modular") || text.includes("trimless");
 }
 
+function mountTextIsTrimless(value = "") {
+  return mountOrientationText(value).includes("trimless");
+}
+
+function selectedSystemLooksRecessed(constraints = {}) {
+  const text = mountOrientationText([
+    constraints.system,
+    constraints.__systemVariantKey,
+    constraints.__systemLabel,
+  ].map(safeString).filter(Boolean).join(" "));
+  return text.includes("recess");
+}
+
 function mountOrientationPolicyBlock(fieldKey = "", option = {}, constraints = {}) {
   const optionText = safeString(option.value || option.label);
   const inactive = { blocked: false, blockedBy: [], reason: "", codePolicyIds: [], codePolicyReason: "" };
@@ -2423,6 +2438,20 @@ function mountOrientationPolicyBlock(fieldKey = "", option = {}, constraints = {
   const ceilingDiPolicy = selectorMountingPolicyFor(constraints, MOUNTING_CEILING_DI_POLICY_IDS, (text) => policyTextHasAny(text, ["ceiling bracket", "direct indirect"]));
   const wallTopPolicy = selectorMountingPolicyFor(constraints, MOUNTING_WALL_TOP_POLICY_IDS, (text) => policyTextHasAny(text, ["wall bracket", "top"]));
   const ceilingSidePolicy = selectorMountingPolicyFor(constraints, MOUNTING_CEILING_SIDE_POLICY_IDS, (text) => policyTextHasAny(text, ["ceiling bracket", "side wall"]));
+
+  if (fieldKey === "mountStyle"
+    && selectedSystemLooksRecessed(constraints)
+    && mountTextIsTrimless(optionText)) {
+    return {
+      blocked: true,
+      blockedBy: [{
+        fieldKey: "system",
+        selectedValue: constraints.system || "recessed system",
+        compatibleValues: ["non-trimless mount style for recessed system"],
+      }],
+      reason: "Trimless is unavailable when the selected product/system is recessed.",
+    };
+  }
 
   if (["mountStyle", "mountSelection", "mountParticulars"].includes(fieldKey)
     && constraints.__systemSupportsIndirect === true
