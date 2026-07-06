@@ -1222,6 +1222,10 @@ function accessoryMountSystemReferenceKeys(snapshot, accessoryRow) {
     .filter(Boolean));
 }
 
+function allSystemMountReferenceKeys(snapshot) {
+  return uniqueStrings(liveTableRows(snapshot, "SYSTEM").map((systemRow) => systemRowIdentityKey(systemRow)).filter(Boolean));
+}
+
 function mountStyleLabel(row) {
   return donorMountStyleDisplayLabel(rawMountStyleLabel(row));
 }
@@ -1663,7 +1667,7 @@ function collectOptions(snapshot, timelineContext = createSelectorTimelineContex
       const systemKeys = accessoryMountSystemReferenceKeys(snapshot, row);
       const effectiveSystemKeys = systemKeys.length
         ? systemKeys
-        : snapshotHasSystemMountStyleSource(snapshot) ? [UNMATCHED_SYSTEM_MOUNT_STYLE_KEY] : [];
+        : snapshotHasSystemMountStyleSource(snapshot) ? allSystemMountReferenceKeys(snapshot) : [];
       const mountMeta = {
         sourceTables: ["ACCESSORIES"],
         parentFieldKey: "mountStyle",
@@ -1672,6 +1676,14 @@ function collectOptions(snapshot, timelineContext = createSelectorTimelineContex
         systemReferenceKey: effectiveSystemKeys[0] || "",
         systemReferenceKeys: effectiveSystemKeys,
       };
+      addOption(bucket, "mountStyle", style, {
+        sourceTables: ["ACCESSORIES"],
+        systemReferenceKey: effectiveSystemKeys[0] || "",
+        systemReferenceKeys: effectiveSystemKeys,
+        parentValues: styleAliases,
+        ...rowStatusOptionMeta(row, timelineContext),
+        ...surfaceMountPolicyMeta(snapshot, style),
+      });
       for (const value of rowOptionValues(row, ["mount_selections", "mount_selection"])) addOption(bucket, "mountSelection", value, mountMeta);
       for (const value of rowOptionValues(row, ["mount_particulars", "particulars"])) addOption(bucket, "mountParticulars", value, mountMeta);
     }
