@@ -1200,6 +1200,14 @@ function optionValuesMatch(left, right) {
 
 const SURFACE_MOUNT_DI_BLOCK_POLICY_ID = "SURFACE_MOUNT_DI_BLOCK";
 const SURFACE_MOUNT_DI_BLOCK_DEFAULT_REASON = "Surface Mount is blocked for direct-indirect/uplight systems because the ceiling would block the indirect light component.";
+const MOUNTING_WALL_TOP_POLICY_IDS = Object.freeze([
+  "WALL_BRACKET_TOP_ENTRY_BLOCK",
+  "TOP_ENTRY_WALL_BRACKET_BLOCK",
+]);
+const MOUNTING_CEILING_SIDE_POLICY_IDS = Object.freeze([
+  "CEILING_BRACKET_SIDE_ENTRY_BLOCK",
+  "SIDE_ENTRY_CEILING_BRACKET_BLOCK",
+]);
 
 function canonicalMountStyleValue(label) {
   const text = String(label || "").trim().toLowerCase().replace(/\([^)]*\)/g, " ").replace(/\s+/g, " ").trim();
@@ -1248,6 +1256,10 @@ function optionCodePolicyIds(option = {}) {
 function optionHasCodePolicy(option = {}, policyId = "") {
   const wanted = String(policyId || "").trim().toLowerCase();
   return optionCodePolicyIds(option).some((id) => id.toLowerCase() === wanted);
+}
+
+function optionHasAnyCodePolicy(option = {}, policyIds = []) {
+  return policyIds.some((policyId) => optionHasCodePolicy(option, policyId));
 }
 
 function dbConstraintMap(local = {}) {
@@ -1767,6 +1779,7 @@ function localMountingRelationshipBlock(fieldKey = "", option = {}, selectedCons
   const optionText = String(option.value || option.label || "");
   if (["mountStyle", "mountSelection", "mountParticulars"].includes(fieldKey)
     && selectedConstraints.__systemSupportsIndirect === true
+    && optionHasCodePolicy(option, SURFACE_MOUNT_DI_BLOCK_POLICY_ID)
     && mountTextHasCeilingBracket(optionText)) {
     mountOrientationReason = "Donor mounting rules block ceiling-bracket mounting for direct-indirect/uplight systems while preserving other donor-compatible Surface Mount choices.";
     blockers.push({
@@ -1795,7 +1808,7 @@ function localMountingRelationshipBlock(fieldKey = "", option = {}, selectedCons
       .map((item) => String(item || "").trim())
       .filter(Boolean)
       .join(" ");
-    if (mountContext && mountTextHasWallBracket(mountContext) && penetrationTextIsTop(optionText)) {
+    if (mountContext && optionHasAnyCodePolicy(option, MOUNTING_WALL_TOP_POLICY_IDS) && mountTextHasWallBracket(mountContext) && penetrationTextIsTop(optionText)) {
       mountOrientationReason = "Donor power-entry rules remove top penetration for wall-bracket/body-orientation mounting.";
       blockers.push({
         fieldKey: "mountSelection",
@@ -1803,7 +1816,7 @@ function localMountingRelationshipBlock(fieldKey = "", option = {}, selectedCons
         compatibleValues: ["non-top power penetration"],
       });
     }
-    if (mountContext && mountTextHasCeilingBracket(mountContext) && penetrationTextIsSideWall(optionText)) {
+    if (mountContext && optionHasAnyCodePolicy(option, MOUNTING_CEILING_SIDE_POLICY_IDS) && mountTextHasCeilingBracket(mountContext) && penetrationTextIsSideWall(optionText)) {
       mountOrientationReason = "Donor power-entry rules remove side-wall penetration for ceiling-bracket mounting.";
       blockers.push({
         fieldKey: "mountSelection",

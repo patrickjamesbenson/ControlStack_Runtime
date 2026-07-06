@@ -96,7 +96,7 @@ function mountingSnapshot({ includeFlex = true } = {}) {
 function tBarMountingSnapshot() {
   return {
     SYSTEM: [
-      { system: "DNX", system_variant_1: "TBarAllowed", label: "DNX T-Bar allowed", emission: "Direct", mount_style: "Suspended;Surface Mount", mount_style_all: "Recessed;Trimless;T-Bar Modular", approved: "yes" },
+      { system: "DNX", system_variant_1: "TBarAllowed", label: "DNX T-Bar allowed", emission: "Direct", mount_style: "Suspended;Surface Mount;Recessed;Trimless;T-Bar Modular", mount_style_all: "legacy ignored by selector normal path", approved: "yes" },
       { system: "DNX", system_variant_1: "SurfaceOnly", label: "DNX surface only", emission: "Direct", mount_style: "Surface Mount", approved: "yes" },
     ],
     ACCESSORIES: [
@@ -262,6 +262,18 @@ function mountPolicySnapshot() {
         area: "selector.mounting",
         approved: "yes",
         user_visible_ui: "Surface Mount is unavailable for direct-indirect/uplight systems because the ceiling blocks the indirect light component.",
+      },
+      {
+        rule_id: "WALL_BRACKET_TOP_ENTRY_BLOCK",
+        area: "selector.mounting",
+        approved: "yes",
+        user_visible_ui: "Top entry is unavailable for wall bracket mounting.",
+      },
+      {
+        rule_id: "CEILING_BRACKET_SIDE_ENTRY_BLOCK",
+        area: "selector.mounting",
+        approved: "yes",
+        user_visible_ui: "Side wall entry is unavailable for ceiling bracket mounting.",
       },
     ],
   };
@@ -506,7 +518,7 @@ test("DNX product matrix resolves mounting from exact SYSTEM system plus variant
   assert.equal(workflowField(model, "mountStyle").options.length, 2);
   model = selectAndReload(state, "mountStyle", "Surface Mount", snapshot);
   assert.equal(workflowOption(model, "mountSelection", "Wall bracket").status, "available");
-  assert.equal(workflowOption(model, "mountSelection", "Ceiling bracket").status, "blocked");
+  assert.equal(workflowOption(model, "mountSelection", "Ceiling bracket").status, "available");
 
   state = createSelectorState();
   model = selectAndReload(state, "system", "60|Beam", snapshot);
@@ -515,7 +527,7 @@ test("DNX product matrix resolves mounting from exact SYSTEM system plus variant
   assert.equal(workflowField(model, "mountStyle").options.length, 1);
   model = selectAndReload(state, "mountStyle", "Surface Mount", snapshot);
   assert.equal(workflowOption(model, "mountSelection", "Wall bracket").status, "available");
-  assert.equal(workflowOption(model, "mountSelection", "Ceiling bracket").status, "blocked");
+  assert.equal(workflowOption(model, "mountSelection", "Ceiling bracket").status, "available");
 
   state = createSelectorState();
   model = selectAndReload(state, "system", "80|Square", snapshot);
