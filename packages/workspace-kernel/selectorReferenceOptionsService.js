@@ -247,6 +247,12 @@ const MOUNTING_CEILING_SIDE_POLICY_IDS = Object.freeze([
   "CEILING_BRACKET_SIDE_ENTRY_BLOCK",
   "SIDE_ENTRY_CEILING_BRACKET_BLOCK",
 ]);
+const DEFAULT_SYSTEM_POWER_PENETRATION_OPTIONS = Object.freeze([
+  "Top Side",
+  "Back Wall Side",
+  "End Plate",
+  "Bottom Cover Plate",
+]);
 const UNMATCHED_SYSTEM_MOUNT_STYLE_KEY = "__unmatched-system-mount-style__";
 
 const SAFE_FLAGS = Object.freeze({
@@ -1181,6 +1187,16 @@ function systemMountStyleSourceValues(row = {}) {
   ]);
 }
 
+function systemPowerPenetrationValues(row = {}) {
+  const values = rowOptionValues(row, [
+    "system_power_penetration",
+    "system_power_penetrations",
+    "power_penetration",
+    "power_penetrations",
+  ]);
+  return values.length ? uniqueStrings(values) : [...DEFAULT_SYSTEM_POWER_PENETRATION_OPTIONS];
+}
+
 function systemMountStyleDisplayValues(snapshot, row = {}) {
   const allowedSourceMounts = systemMountStyleSourceValues(row)
     .filter((mount) => !surfaceMountDiPolicyBlocksSystemMount(snapshot, row, mount));
@@ -1478,6 +1494,14 @@ function collectOptions(snapshot, timelineContext = createSelectorTimelineContex
         ...surfaceMountPolicyMeta(snapshot, mountStyle),
       });
     }
+    for (const powerPenetration of systemPowerPenetrationValues(row)) {
+      addOption(bucket, "powerPenetration", powerPenetration, {
+        sourceTables: ["SYSTEM"],
+        systemReferenceKey: mountSystemReferenceKeys[0] || "",
+        systemReferenceKeys: mountSystemReferenceKeys,
+        ...rowStatusOptionMeta(row, timelineContext),
+      });
+    }
     const finishValues = systemPaintFinishValues(row);
     finishValues.forEach((finish, finishInheritanceIndex) => {
       const finishMeta = { sourceTables: ["SYSTEM"], systemReferenceKey: systemIdentityKey || tokens.system, systemReferenceKeys: uniqueStrings([systemIdentityKey, tokens.value, tokens.variant ? "" : tokens.system].filter(Boolean)), finishInheritanceIndex };
@@ -1687,7 +1711,7 @@ function collectOptions(snapshot, timelineContext = createSelectorTimelineContex
       for (const value of rowOptionValues(row, ["mount_selections", "mount_selection"])) addOption(bucket, "mountSelection", value, mountMeta);
       for (const value of rowOptionValues(row, ["mount_particulars", "particulars"])) addOption(bucket, "mountParticulars", value, mountMeta);
     }
-    if (accessoryTypeMatches(row, "power_penetration")) addOption(bucket, "powerPenetration", label, { sourceTables: ["ACCESSORIES"] });
+    if (accessoryTypeMatches(row, "power_penetration")) void label;
     if (accessoryTypeMatches(row, "power_location")) addOption(bucket, "powerLocation", label === "mm" ? "TBD" : label, { sourceTables: ["ACCESSORIES"] });
     if (accessoryTypeMatches(row, "flex_length")) addOption(bucket, "flexLength", label, { sourceTables: ["ACCESSORIES"] });
     if (isDonorElectricalClassAccessoryRow(row)) {
@@ -1869,6 +1893,7 @@ function collectRecords(snapshot, bucket, timelineContext = createSelectorTimeli
     const emissions = systemEmissionValues(row);
     const rawMountStyles = systemMountStyleSourceValues(row).filter((mount) => !surfaceMountDiPolicyBlocksSystemMount(snapshot, row, mount));
     const mountStyles = uniqueStrings(rawMountStyles.flatMap((mount) => [donorMountStyleDisplayLabel(mount), mount]).filter(Boolean));
+    const powerPenetrations = systemPowerPenetrationValues(row);
     const finishes = systemPaintFinishValues(row);
     const flexes = systemFlexColourValues(row);
     pushRelationshipRecord(records, ["SYSTEM"], {
@@ -1878,6 +1903,7 @@ function collectRecords(snapshot, bucket, timelineContext = createSelectorTimeli
       directCapability: emissions.filter(emissionSupportsDirect).map(() => "direct-supported"),
       indirectCapability: emissions.filter(emissionSupportsIndirect).map(() => "indirect-supported"),
       mountStyle: mountStyles,
+      powerPenetration: powerPenetrations,
       bodyFinish: finishes,
       finishCover: finishes,
       finishEnd: finishes,
@@ -2362,6 +2388,16 @@ function penetrationTextIsTop(value = "") {
   return mountOrientationText(value).includes("top");
 }
 
+function penetrationTextIsBottomCoverPlate(value = "") {
+  const text = mountOrientationText(value);
+  return text.includes("bottom cover plate") || (text.includes("bottom") && text.includes("cover"));
+}
+
+function mountTextIsTBarOrRecessed(value = "") {
+  const text = mountOrientationText(value);
+  return text.includes("t bar") || text.includes("t-bar") || text.includes("recess");
+}
+
 function mountOrientationPolicyBlock(fieldKey = "", option = {}, constraints = {}) {
   const optionText = safeString(option.value || option.label);
   const inactive = { blocked: false, blockedBy: [], reason: "", codePolicyIds: [], codePolicyReason: "" };
@@ -2385,10 +2421,8 @@ function mountOrientationPolicyBlock(fieldKey = "", option = {}, constraints = {
 
   if (["mountStyle", "mountSelection", "mountParticulars"].includes(fieldKey)
     && constraints.__systemSupportsIndirect === true
-    && ceilingDiPolicy
     && mountTextHasCeilingBracket(optionText)) {
     const policy = ceilingDiPolicy;
-    if (!policy) return inactive;
     const payload = policyPayload(policy, "Donor mounting rules block ceiling-bracket mounting for direct-indirect/uplight systems while preserving other donor-compatible Surface Mount choices.");
     return {
       blocked: true,
@@ -2409,6 +2443,17 @@ function mountOrientationPolicyBlock(fieldKey = "", option = {}, constraints = {
     .filter(Boolean)
     .join(" ");
   if (!mountContext) return inactive;
+  if (mountTextIsTBarOrRecessed(mountContext) && penetrationTextIsBottomCoverPlate(optionText)) {
+    return {
+      blocked: true,
+      blockedBy: [{
+        fieldKey: "mountStyle",
+        selectedValue: constraints.mountStyle || constraints.mountSelection || "recessed/t-bar",
+        compatibleValues: ["non-bottom-cover-plate power entry"],
+      }],
+      reason: "Bottom Cover Plate is unavailable for T-Bar or recessed mounting.",
+    };
+  }
   if (wallTopPolicy && mountTextHasWallBracket(mountContext) && penetrationTextIsTop(optionText)) {
     const policy = wallTopPolicy;
     if (!policy) return inactive;

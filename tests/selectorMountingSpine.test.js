@@ -518,7 +518,7 @@ test("DNX product matrix resolves mounting from exact SYSTEM system plus variant
   assert.equal(workflowField(model, "mountStyle").options.length, 2);
   model = selectAndReload(state, "mountStyle", "Surface Mount", snapshot);
   assert.equal(workflowOption(model, "mountSelection", "Wall bracket").status, "available");
-  assert.equal(workflowOption(model, "mountSelection", "Ceiling bracket").status, "available");
+  assert.equal(workflowOption(model, "mountSelection", "Ceiling bracket").status, "blocked");
 
   state = createSelectorState();
   model = selectAndReload(state, "system", "60|Beam", snapshot);
@@ -527,7 +527,7 @@ test("DNX product matrix resolves mounting from exact SYSTEM system plus variant
   assert.equal(workflowField(model, "mountStyle").options.length, 1);
   model = selectAndReload(state, "mountStyle", "Surface Mount", snapshot);
   assert.equal(workflowOption(model, "mountSelection", "Wall bracket").status, "available");
-  assert.equal(workflowOption(model, "mountSelection", "Ceiling bracket").status, "available");
+  assert.equal(workflowOption(model, "mountSelection", "Ceiling bracket").status, "blocked");
 
   state = createSelectorState();
   model = selectAndReload(state, "system", "80|Square", snapshot);
@@ -588,23 +588,23 @@ test("selecting mount style cascades compatible mount selection and particulars"
   assert.equal(model.selectorSurface.payloadPreview.mounting.mountParticulars, "1500mm drop");
 });
 
-test("power penetration, power location, and flex length fill from ACCESSORIES options", () => {
+test("power penetration fills from SYSTEM lookup with hard-coded fallback while location and flex stay ACCESSORIES-backed", () => {
   const selectorState = createSelectorState();
   let model = createModel({ selectorState });
 
-  assert.ok(optionValues(model, "powerPenetration").includes("Top"));
+  assert.deepEqual(optionValues(model, "powerPenetration").sort(), ["Back Wall Side", "Bottom Cover Plate", "End Plate", "Top Side"].sort());
   assert.ok(optionValues(model, "powerLocation").includes("Start"));
   assert.ok(optionValues(model, "powerLocation").includes("TBD"));
   assert.ok(optionValues(model, "flexLength").includes("1500mm"));
 
-  model = selectAndReload(selectorState, "powerPenetration", "Top");
+  model = selectAndReload(selectorState, "powerPenetration", "Top Side");
   model = selectAndReload(selectorState, "powerLocation", "Start");
   model = selectAndReload(selectorState, "flexLength", "1500mm");
 
-  assert.equal(mountingRow(model.selectorSurface.productSpine, "powerPenetration").displayValue, "Top");
+  assert.equal(mountingRow(model.selectorSurface.productSpine, "powerPenetration").displayValue, "Top Side");
   assert.equal(mountingRow(model.selectorSurface.productSpine, "powerLocation").displayValue, "Start");
   assert.equal(mountingRow(model.selectorSurface.productSpine, "flexLength").displayValue, "1500mm");
-  assert.equal(model.selectorSurface.payloadPreview.mounting.powerPenetration, "Top");
+  assert.equal(model.selectorSurface.payloadPreview.mounting.powerPenetration, "Top Side");
   assert.equal(model.selectorSurface.payloadPreview.mounting.powerLocation, "Start");
   assert.equal(model.selectorSurface.payloadPreview.mounting.flexLength, "1500mm");
 
@@ -644,7 +644,7 @@ test("Mounting payload preview keeps safety flags disabled and exposes no raw so
   model = selectAndReload(selectorState, "mountStyle", "Suspended");
   model = selectAndReload(selectorState, "mountSelection", "Wire");
   model = selectAndReload(selectorState, "mountParticulars", "1500mm drop");
-  model = selectAndReload(selectorState, "powerPenetration", "Top");
+  model = selectAndReload(selectorState, "powerPenetration", "Top Side");
   model = selectAndReload(selectorState, "powerLocation", "Start");
   model = selectAndReload(selectorState, "flexLength", "1500mm");
 
@@ -654,7 +654,7 @@ test("Mounting payload preview keeps safety flags disabled and exposes no raw so
   assert.equal(payload.mounting.mountStyle, "Suspended");
   assert.equal(payload.mounting.mountSelection, "Wire");
   assert.equal(payload.mounting.mountParticulars, "1500mm drop");
-  assert.equal(payload.mounting.powerPenetration, "Top");
+  assert.equal(payload.mounting.powerPenetration, "Top Side");
   assert.equal(payload.mounting.powerLocation, "Start");
   assert.equal(payload.mounting.flexLength, "1500mm");
   assert.equal(payload.safetyFlags.readOnly, true);
@@ -717,12 +717,12 @@ test("power penetration follows donor mount orientation rules and preserves stal
   model = selectAndReload(selectorState, "mountStyle", "Surface Mount", snapshot);
   model = selectAndReload(selectorState, "mountSelection", "Wall bracket", snapshot);
 
-  assert.equal(workflowOption(model, "powerPenetration", "Top").status, "blocked");
-  assert.equal(workflowOption(model, "powerPenetration", "Rear").status, "available");
-  assert.equal(workflowOption(model, "powerPenetration", "Side Wall").status, "available");
-  assert.equal(controlOptionValues(visibleControlField(model, "powerPenetration")).includes("Top"), false);
+  assert.equal(workflowOption(model, "powerPenetration", "Top Side").status, "blocked");
+  assert.equal(workflowOption(model, "powerPenetration", "End Plate").status, "available");
+  assert.equal(workflowOption(model, "powerPenetration", "Back Wall Side").status, "available");
+  assert.equal(controlOptionValues(visibleControlField(model, "powerPenetration")).includes("Top Side"), false);
 
-  model = selectAndReload(selectorState, "powerPenetration", "Top", snapshot);
+  model = selectAndReload(selectorState, "powerPenetration", "Top Side", snapshot);
   const topRow = mountingRow(model.selectorSurface.productSpine, "powerPenetration");
   assert.equal(topRow.displayValue, "—");
   assert.equal(topRow.status, "blocked");
@@ -735,8 +735,8 @@ test("power penetration follows donor mount orientation rules and preserves stal
   model = selectAndReload(directState, "mountStyle", "Surface Mount", snapshot);
   model = selectAndReload(directState, "mountSelection", "Ceiling bracket", snapshot);
   assert.equal(workflowOption(model, "mountSelection", "Ceiling bracket").status, "available");
-  assert.equal(workflowOption(model, "powerPenetration", "Top").status, "available");
-  assert.equal(workflowOption(model, "powerPenetration", "Side Wall").status, "blocked");
+  assert.equal(workflowOption(model, "powerPenetration", "Top Side").status, "available");
+  assert.equal(workflowOption(model, "powerPenetration", "Back Wall Side").status, "blocked");
 });
 
 test("mount CODE_POLICY plain reason stays in main flow and technical code stays in developer diagnostics", async () => {

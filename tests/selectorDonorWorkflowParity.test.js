@@ -127,7 +127,7 @@ test("workflow parity includes paired CCT/CRI, direct/indirect variants, mount, 
   assert.ok(workflowField(result, "opticIndirect").options.length > 0);
   assert.ok(workflowField(result, "mountSelection").options.some((item) => item.label === "Wire"));
   assert.ok(workflowField(result, "mountParticulars").options.some((item) => item.label === "1500mm drop"));
-  assert.ok(workflowField(result, "powerPenetration").options.some((item) => item.label === "Top"));
+  assert.ok(workflowField(result, "powerPenetration").options.some((item) => item.label === "Top Side"));
   assert.ok(workflowField(result, "powerLocation").options.some((item) => item.label === "Start"));
   assert.ok(workflowField(result, "flexLength").options.some((item) => item.label === "1500mm"));
   assert.ok(workflowField(result, "finishCover").options.some((item) => item.label === "White"));
