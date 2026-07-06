@@ -2398,6 +2398,11 @@ function mountTextIsTBarOrRecessed(value = "") {
   return text.includes("t bar") || text.includes("t-bar") || text.includes("recess");
 }
 
+function mountTextIsTBarModularOrTrimless(value = "") {
+  const text = mountOrientationText(value);
+  return text.includes("t bar modular") || text.includes("t-bar modular") || text.includes("trimless");
+}
+
 function mountOrientationPolicyBlock(fieldKey = "", option = {}, constraints = {}) {
   const optionText = safeString(option.value || option.label);
   const inactive = { blocked: false, blockedBy: [], reason: "", codePolicyIds: [], codePolicyReason: "" };
@@ -2418,6 +2423,21 @@ function mountOrientationPolicyBlock(fieldKey = "", option = {}, constraints = {
   const ceilingDiPolicy = selectorMountingPolicyFor(constraints, MOUNTING_CEILING_DI_POLICY_IDS, (text) => policyTextHasAny(text, ["ceiling bracket", "direct indirect"]));
   const wallTopPolicy = selectorMountingPolicyFor(constraints, MOUNTING_WALL_TOP_POLICY_IDS, (text) => policyTextHasAny(text, ["wall bracket", "top"]));
   const ceilingSidePolicy = selectorMountingPolicyFor(constraints, MOUNTING_CEILING_SIDE_POLICY_IDS, (text) => policyTextHasAny(text, ["ceiling bracket", "side wall"]));
+
+  if (["mountStyle", "mountSelection", "mountParticulars"].includes(fieldKey)
+    && constraints.__systemSupportsIndirect === true
+    && fieldKey === "mountStyle"
+    && mountTextIsTBarModularOrTrimless(optionText)) {
+    return {
+      blocked: true,
+      blockedBy: [{
+        fieldKey: "emission",
+        selectedValue: "Both",
+        compatibleValues: ["non-indirect-only mount style"],
+      }],
+      reason: "T-Bar Modular and Trimless are unavailable for systems with indirect or uplight output.",
+    };
+  }
 
   if (["mountStyle", "mountSelection", "mountParticulars"].includes(fieldKey)
     && constraints.__systemSupportsIndirect === true

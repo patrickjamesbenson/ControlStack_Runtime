@@ -97,6 +97,7 @@ function tBarMountingSnapshot() {
   return {
     SYSTEM: [
       { system: "DNX", system_variant_1: "TBarAllowed", label: "DNX T-Bar allowed", emission: "Direct", mount_style: "Suspended;Surface Mount", mount_style_all: "Recessed;Trimless;T-Bar Modular", approved: "yes" },
+      { system: "DNX", system_variant_1: "TBarIndirect", label: "DNX T-Bar indirect", emission: "Both", mount_style: "Suspended;Surface Mount", mount_style_all: "Recessed;Trimless;T-Bar Modular", approved: "yes" },
       { system: "DNX", system_variant_1: "SurfaceOnly", label: "DNX surface only", emission: "Direct", mount_style: "Surface Mount", approved: "yes" },
     ],
     ACCESSORIES: [
@@ -439,6 +440,13 @@ test("Mount Style includes donor-allowed T-Bar Modular without broad ACCESSORIES
   model = selectAndReload(selectorState, "mountSelection", "T-Bar Main Rail", snapshot);
   assert.deepEqual(compatibleOptionValues(model, "mountParticulars"), ["Other", "T_Bar Scissor Clip"].sort());
   assert.equal(workflowOption(model, "mountParticulars", "Direct fix").status, "blocked");
+
+  const indirectState = createSelectorState();
+  const indirectModel = selectAndReload(indirectState, "system", "DNX|TBarIndirect", snapshot);
+  assert.equal(workflowOption(indirectModel, "mountStyle", "T-Bar Modular").status, "blocked");
+  assert.equal(workflowOption(indirectModel, "mountStyle", "Trimless").status, "blocked");
+  assert.equal(controlOptionValues(visibleControlField(indirectModel, "mountStyle")).includes("T-Bar Modular"), false);
+  assert.equal(controlOptionValues(visibleControlField(indirectModel, "mountStyle")).includes("Trimless"), false);
 
   const surfaceState = createSelectorState();
   const surfaceModel = selectAndReload(surfaceState, "system", "DNX|SurfaceOnly", snapshot);
