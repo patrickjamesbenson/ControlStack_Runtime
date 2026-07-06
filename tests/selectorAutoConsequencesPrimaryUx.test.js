@@ -272,7 +272,7 @@ test("view renders chips/collapsed overrides and keeps generation/proof/write/im
   const styles = await readFile(stylesUrl, "utf-8");
   const viewModel = await readFile(viewModelSourceUrl, "utf-8");
 
-  assert.match(view, /\["choice", "warning-chip"\]\.includes\(field\.displayMode\)/);
+  assert.match(view, /\["choice", "warning-chip", "manual-input"\]\.includes\(field\.displayMode\)/);
   assert.match(view, /appendWorkflowChipStrip/);
   assert.match(view, /appendCollapsedOverrideDetails/);
   assert.match(view, /hiddenDiagnosticCount/);

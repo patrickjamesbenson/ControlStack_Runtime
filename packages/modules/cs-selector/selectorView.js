@@ -1087,10 +1087,11 @@ const PRIMARY_HIDDEN_WORKFLOW_FIELDS = Object.freeze(new Set([
 
 function workflowFieldIsHiddenFromPrimary(field = {}) {
   if (!field) return true;
-  if (field.displayMode && !["choice", "warning-chip"].includes(field.displayMode)) return true;
+  if (field.displayMode && !["choice", "warning-chip", "manual-input"].includes(field.displayMode)) return true;
   if (PRIMARY_HIDDEN_WORKFLOW_FIELDS.has(field.fieldKey)) return true;
   if (workflowFieldIsMetadata(field)) return true;
   if (field.disabled === true || field.futureMapped === true) return true;
+  if (field.manualInput === true) return false;
   return fieldOptionCount(field) === 0;
 }
 

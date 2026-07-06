@@ -2375,14 +2375,14 @@ function classifyRuntimePresentationField(field = {}, finishContext = {}) {
     effectiveLabel = hasManualConstraint ? field.selectedLabel || field.selectedValue : "";
     overrideAvailable = true;
     classificationReason = field.unavailableReason || "typed manual input; no dropdown catalogue or auto-selection is sourced";
-  } else if (["cctCriIndirect", "controlTypeIndirect"].includes(field.fieldKey) && field.inheritedValue && !hasManualConstraint && optionsComputable && compatibleOptionCount > 0) {
+  } else if (field.fieldKey === "controlTypeIndirect" && !hasManualConstraint && optionsComputable && compatibleOptionCount > 0) {
     displayMode = "choice";
-    provenance = "inherited";
+    provenance = field.inheritedValue ? "inherited" : "available-choice";
     primaryDecision = true;
-    effectiveValue = field.inheritedValue;
-    effectiveLabel = field.inheritedLabel || field.inheritedValue;
+    effectiveValue = field.inheritedValue || "";
+    effectiveLabel = field.inheritedLabel || field.inheritedValue || "";
     overrideAvailable = true;
-    classificationReason = field.unavailableReason || "indirect value currently matches direct; selecting a value creates an independent indirect override";
+    classificationReason = field.unavailableReason || "indirect control can match direct or be selected independently; compatible protocol options remain selectable";
   } else if (presentationIsInherited(field) && field.inheritedValue && !hasManualConstraint && !["finishCover", "finishEnd", "finishFlex"].includes(field.fieldKey)) {
     displayMode = "inherited-chip";
     provenance = "inherited";
@@ -3192,6 +3192,7 @@ function spineFieldHasDisplayValue(field = {}) {
 function spineFieldValue(field = {}) {
   if (!field) return null;
   if (field.selectedOptionBlocked === true || field.status === "blocked" || field.displayMode === "warning-chip") return null;
+  if (field.manualInput === true && field.selectedValue) return field.selectedValue;
   if (field.selectedLabel || field.selectedValue) return field.selectedLabel || field.selectedValue;
   if (field.provenance === "available-choice") return null;
   if (field.displayMode === "collapsed-override" && !field.selectedValue && !field.effectiveValue) return null;
