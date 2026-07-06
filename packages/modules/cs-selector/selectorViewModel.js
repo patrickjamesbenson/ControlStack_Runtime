@@ -2297,6 +2297,7 @@ function presentationIsHiddenDiagnostic(field = {}) {
 
 function presentationIsInherited(field = {}) {
   if (field.fieldKey === "indirectMatchDirect") return false;
+  if (["cctCriIndirect", "controlTypeIndirect"].includes(field.fieldKey) && !field.inheritedValue) return false;
   return RUNTIME_PRESENTATION_INHERITED_FIELDS.has(field.fieldKey) || presentationRole(field) === "inherited-consequence";
 }
 

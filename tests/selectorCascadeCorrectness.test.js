@@ -895,6 +895,58 @@ test("live D/I Light and Control keeps lm/m inputs and protocol dropdowns usable
   assert.equal(model.selectorSurface.payloadPreview.lightControl.targetLmPerMIndirect, "250");
 });
 
+test("live D/I Light and Control unlocks independent indirect CCT/CRI and protocol choices", () => {
+  const snapshot = {
+    SYSTEM: [{ system: "80", system_variant_1: "Square_DI", label: "DNX 80 DI", emission: "Both", approved: "yes" }],
+    OPTICS: [
+      { system: "80", optic_var_1: "Inlay", optic_var_2: "Var1;Var2", emission_permission: "Direct", approved: "yes" },
+      { system: "80", optic_var_1: "Rope", optic_var_2: "Rope", emission_permission: "Indirect", approved: "yes" },
+    ],
+    BOARDS: [{ system: "80", system_variant_1: "Square_DI", c1_cct: "3500", c1_cri_min: "80", control_type_labels: "DALI-2;DALI-2 DT8;Fixed;Non-dim;D4i;DMX", approved: "yes" }],
+    DRIVERS: [
+      { driver_id: "DALI Driver", control_type: "DALI-2", approved: "yes" },
+      { driver_id: "DT8 Driver", control_type: "DALI-2 DT8", approved: "yes" },
+      { driver_id: "Fixed Driver", control_type: "Fixed", approved: "yes" },
+      { driver_id: "Non-dim Driver", control_type: "Non-dim", approved: "yes" },
+      { driver_id: "D4i Driver", control_type: "D4i", approved: "yes" },
+      { driver_id: "DMX Driver", control_type: "DMX", approved: "yes" },
+    ],
+  };
+  const constraints = {
+    system: "DNX 80 DI",
+    cctCri: "3500K / CRI80",
+    indirectMatchDirect: "independent",
+    targetLmPerM: "950",
+    targetLmPerMIndirect: "250",
+  };
+  const result = deriveSelectorReferenceOptionsFromSnapshot(snapshot, { source: sourceReady(), constraints });
+  const model = selectorViewModelFor(result, constraints);
+  const directLm = viewModelField(result, "targetLmPerM", constraints);
+  const indirectLm = viewModelField(result, "targetLmPerMIndirect", constraints);
+  const indirectCctCri = viewModelField(result, "cctCriIndirect", constraints);
+  const directControl = viewModelField(result, "controlType", constraints);
+  const indirectControl = viewModelField(result, "controlTypeIndirect", constraints);
+  const container = renderedSelectorContainer(model);
+
+  assert.equal(directLm.displayMode, "manual-input");
+  assert.equal(indirectLm.displayMode, "manual-input");
+  assert.equal(indirectCctCri.displayMode, "choice");
+  assert.equal(indirectCctCri.provenance, "available-choice");
+  assert.equal(indirectCctCri.inheritedValue || "", "");
+  assert.ok(compatibleLabels(indirectCctCri).includes("3500K / CRI80"));
+  assert.ok(compatibleLabels(directControl).includes("DALI-2"));
+  assert.ok(compatibleLabels(indirectControl).includes("DALI-2"));
+  assert.equal(directControl.options.every((option) => option.blocked === true || option.status === "blocked"), false);
+  assert.equal(indirectControl.options.every((option) => option.blocked === true || option.status === "blocked"), false);
+  assert.ok(renderedInputsForField(container, "targetLmPerM").some((input) => input.value === "950"));
+  assert.ok(renderedInputsForField(container, "targetLmPerMIndirect").some((input) => input.value === "250"));
+  assert.ok(renderedSelectsForField(container, "cctCriIndirect").some((select) => select.disabled !== true && renderedSelectOptionLabels(select).includes("3500K / CRI80")));
+  assert.ok(renderedSelectsForField(container, "controlType").some((select) => select.disabled !== true && renderedSelectOptionLabels(select).includes("DALI-2")));
+  assert.ok(renderedSelectsForField(container, "controlTypeIndirect").some((select) => select.disabled !== true && renderedSelectOptionLabels(select).includes("DALI-2")));
+  assert.equal(model.selectorSurface.payloadPreview.lightControl.targetLmPerM, "950");
+  assert.equal(model.selectorSurface.payloadPreview.lightControl.targetLmPerMIndirect, "250");
+});
+
 test("direct-only systems suppress indirect Light and Control lane while preserving direct choices", () => {
   const constraints = { system: "DNX 80 Direct" };
   const result = deriveSelectorReferenceOptionsFromSnapshot(identityCascadeSnapshot(), { source: sourceReady(), constraints });
