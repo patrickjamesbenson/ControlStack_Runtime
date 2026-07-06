@@ -192,12 +192,13 @@ function protocolScopedSnapshot() {
       { system: "ALT", system_variant_1: "40", label: "ALT 40", emission: "Direct", approved: "yes" },
     ],
     BOARDS: [
-      { system: "DNX", system_variant_1: "80", c1_cct: "4000", c1_cri_min: "90", control_type_labels: "DALI-2;Fixed", control_type_options: "internal-driver-bus;0-10V", approved: "yes" },
-      { system: "ALT", system_variant_1: "40", c1_cct: "3000", c1_cri_min: "80", control_type_labels: "PWM", approved: "yes" },
+      { system: "DNX", system_variant_1: "80", c1_cct: "4000", c1_cri_min: "90", control_type_labels: "Dali2 DT6 (1 channel);Fixed (On/Off);internal-driver-bus;0-10V", control_type_options: "Dali2 DT6 (1 channel);Fixed (On/Off);internal-driver-bus;0-10V", approved: "yes" },
+      { system: "ALT", system_variant_1: "40", c1_cct: "3000", c1_cri_min: "80", control_type_labels: "PWM", control_type_options: "PWM", approved: "yes" },
     ],
     DRIVERS: [
-      { driver_id: "DALI Driver", control_type: "DALI-2", approved: "yes" },
-      { driver_id: "Internal Diagnostic Driver", control_type: "internal-driver-bus", approved: "yes" },
+      { driver_id: "DALI Driver", native_control_type: "Dali2 DT6", approved: "yes" },
+      { driver_id: "Fixed Driver", native_control_type: "Fixed (On/Off)", approved: "yes" },
+      { driver_id: "Internal Diagnostic Driver", native_control_type: "internal-driver-bus", approved: "yes" },
     ],
   };
 }
@@ -264,12 +265,12 @@ test("control protocol dropdown is source-scoped and excludes broad driver/inter
   const controlValues = dropdownValues(model, "controlType");
   const incompatibleValues = (workflowField(model, "controlType").incompatibleOptions || []).map((item) => item.value);
 
-  assert.ok(controlValues.includes("DALI-2"));
-  assert.ok(controlValues.includes("Fixed"));
+  assert.ok(controlValues.includes("DALI-2 DT6"));
+  assert.ok(controlValues.includes("Fixed (On/Off)"));
   assert.equal(controlValues.includes("PWM"), false);
   assert.equal(controlValues.includes("internal-driver-bus"), false);
   assert.equal(controlValues.includes("0-10V"), false);
-  assert.ok(incompatibleValues.includes("PWM"));
+  assert.equal(incompatibleValues.includes("PWM"), false);
 });
 
 test("direct and indirect Light & Control inputs follow emission lane capability", () => {

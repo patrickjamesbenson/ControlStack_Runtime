@@ -1693,7 +1693,14 @@ function selectedSystemReferenceCandidates(selectedConstraints = {}) {
   ].map((item) => String(item || "").trim()).filter(Boolean);
 }
 
+function systemReferenceValueIsWildcard(value = "") {
+  const raw = String(stripDirectionSuffix(value) || "").trim();
+  if (!raw) return false;
+  return raw === "*" || raw.split("|").map((item) => item.trim()).filter(Boolean)[0] === "*";
+}
+
 function systemReferenceValuesMatch(optionKey = "", selectedKey = "") {
+  if (systemReferenceValueIsWildcard(optionKey)) return true;
   if (optionValuesMatch(optionKey, selectedKey)) return true;
   const optionTokens = normalisedSystemSelectionTokens(optionKey);
   const selectedTokens = normalisedSystemSelectionTokens(selectedKey);
