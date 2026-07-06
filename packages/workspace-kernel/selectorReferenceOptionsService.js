@@ -1979,7 +1979,7 @@ function collectRecords(snapshot, bucket, timelineContext = createSelectorTimeli
       const mountSystemKeys = accessoryMountSystemReferenceKeys(snapshot, row);
       const mountSystemValues = uniqueStrings((mountSystemKeys.length
         ? mountSystemKeys
-        : snapshotHasSystemMountStyleSource(snapshot) ? [UNMATCHED_SYSTEM_MOUNT_STYLE_KEY] : []
+        : snapshotHasSystemMountStyleSource(snapshot) ? allSystemMountReferenceKeys(snapshot) : []
       ).flatMap((systemKey) => [
         systemKey,
         ...systemIdentityValuesForSourceSystem(systemOptions, systemKey),
