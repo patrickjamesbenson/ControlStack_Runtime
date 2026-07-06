@@ -463,8 +463,8 @@ test("indirect lm/m is independent and topology consequence rows render as read-
   const model = selectorViewModelFor(result, constraints);
   const indirectLm = viewModelField(result, "targetLmPerMIndirect", constraints);
 
-  assert.equal(indirectLm.displayMode, "choice");
-  assert.equal(indirectLm.primaryControl, true);
+  assert.equal(indirectLm.displayMode, "manual-input");
+  assert.deepEqual(compatibleLabels(workflowField(result, "targetLmPerMIndirect")), []);
   assert.notEqual(indirectLm.provenance, "inherited");
 
   const lightRows = model.selectorSurface.productSpine.sections.find((section) => section.sectionKey === "lightControl").rows;
@@ -811,7 +811,7 @@ test("CCT and CRI stay paired when source data allows", () => {
   assert.equal(labels.some((item) => item === "CRI80"), false);
 });
 
-test("Light and Control donor options remain global BOARDS/DRIVERS choices under system selection", () => {
+test("Light and Control keeps lm/m manual and scopes protocol choices under system selection", () => {
   const snapshot = cascadeSnapshot();
   snapshot.SYSTEM_POLICY = [
     ...(snapshot.SYSTEM_POLICY || []),
@@ -820,11 +820,16 @@ test("Light and Control donor options remain global BOARDS/DRIVERS choices under
   const constraints = { system: "DNX 60 Beam DI" };
   const result = deriveSelectorReferenceOptionsFromSnapshot(snapshot, { source: sourceReady(), constraints });
 
-  assert.ok(compatibleLabels(workflowField(result, "targetLmPerM")).includes("2200 lm/m"));
-  assert.ok(compatibleLabels(workflowField(result, "targetLmPerMIndirect")).includes("2200 lm/m"));
+  assert.equal(workflowField(result, "targetLmPerM").manualInput, true);
+  assert.equal(workflowField(result, "targetLmPerM").dropdownSourced, false);
+  assert.deepEqual(compatibleLabels(workflowField(result, "targetLmPerM")), []);
+  assert.equal(workflowField(result, "targetLmPerMIndirect").manualInput, true);
+  assert.equal(workflowField(result, "targetLmPerMIndirect").dropdownSourced, false);
+  assert.deepEqual(compatibleLabels(workflowField(result, "targetLmPerMIndirect")), []);
   assert.ok(compatibleLabels(workflowField(result, "cctCri")).includes("4000K / CRI90"));
   assert.ok(compatibleLabels(workflowField(result, "cctCriIndirect")).includes("4000K / CRI90"));
-  assert.ok(compatibleLabels(workflowField(result, "controlType")).includes("DALI-2 DT8"));
+  assert.ok(compatibleLabels(workflowField(result, "controlType")).includes("DALI-2"));
+  assert.equal(compatibleLabels(workflowField(result, "controlType")).includes("DALI-2 DT8"), false);
   assert.equal(workflowField(result, "controlType").options.some((item) => item.value === "Phase Cut" || item.label === "Phase Cut"), false);
 });
 
@@ -834,7 +839,10 @@ test("direct-only systems suppress indirect Light and Control lane while preserv
   const directLm = viewModelField(result, "targetLmPerM", constraints);
   const indirectLm = viewModelField(result, "targetLmPerMIndirect", constraints);
 
-  assert.ok(directLm.compatibleOptionCount > 0);
+  assert.equal(directLm.displayMode, "manual-input");
+  assert.equal(directLm.manualInput, true);
+  assert.equal(directLm.dropdownSourced, false);
+  assert.equal(directLm.compatibleOptionCount, 0);
   assert.equal(indirectLm.displayMode, "hidden-diagnostic");
   assert.equal(indirectLm.primaryControl, false);
   assert.equal(indirectLm.compatibleOptionCount, 0);

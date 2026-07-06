@@ -851,6 +851,7 @@ function createOption(label, {
   systemReferenceKey = "",
   systemVariantKey = "",
   systemReferenceKeys = [],
+  systemSupportsDirect = false,
   systemSupportsIndirect = false,
   compatibleControlTypes = [],
   finishInheritanceIndex = null,
@@ -933,6 +934,7 @@ function createOption(label, {
     systemReferenceKey: safeString(systemReferenceKey || referenceKeys[0] || ""),
     systemReferenceKeys: referenceKeys,
     systemVariantKey: safeString(systemVariantKey),
+    systemSupportsDirect: systemSupportsDirect === true,
     systemSupportsIndirect: systemSupportsIndirect === true,
     compatibleControlTypes: controlTypes,
     finishInheritanceIndex: safeFinishInheritanceIndex,
@@ -968,6 +970,7 @@ function addOption(bucket, fieldKey, label, meta = {}) {
       ...(Array.isArray(existing.compatibleControlTypes) ? existing.compatibleControlTypes : []),
       ...(Array.isArray(meta.compatibleControlTypes) ? meta.compatibleControlTypes : []),
     ].map(safeString).filter(Boolean));
+    existing.systemSupportsDirect = existing.systemSupportsDirect === true || meta.systemSupportsDirect === true;
     existing.systemSupportsIndirect = existing.systemSupportsIndirect === true || meta.systemSupportsIndirect === true;
     if (existing.finishInheritanceIndex == null && Number.isInteger(meta.finishInheritanceIndex) && meta.finishInheritanceIndex >= 0) existing.finishInheritanceIndex = meta.finishInheritanceIndex;
     existing.codePolicyIds = uniqueStrings([
@@ -1475,7 +1478,7 @@ function collectOptions(snapshot, timelineContext = createSelectorTimelineContex
     const tokens = systemTokens(row);
     const emissions = systemEmissionValues(row);
     const systemIdentityKey = systemRowIdentityKey(row);
-    addOption(bucket, "system", tokens.label, { value: tokens.value, sourceTables: ["SYSTEM"], systemReferenceKey: tokens.system, systemVariantKey: tokens.variant, systemIdentityKey, systemSupportsIndirect: emissions.some(emissionSupportsIndirect), ...rowStatusOptionMeta(row, timelineContext) });
+    addOption(bucket, "system", tokens.label, { value: tokens.value, sourceTables: ["SYSTEM"], systemReferenceKey: tokens.system, systemVariantKey: tokens.variant, systemIdentityKey, systemSupportsDirect: emissions.some(emissionSupportsDirect), systemSupportsIndirect: emissions.some(emissionSupportsIndirect), ...rowStatusOptionMeta(row, timelineContext) });
     if (tokens.variant) addOption(bucket, "variantKey", tokens.variant, { sourceTables: ["SYSTEM"] });
     for (const emission of systemEmissionValues(row)) {
       addOption(bucket, "emission", emission, { sourceTables: ["SYSTEM"] });
@@ -1628,36 +1631,36 @@ function collectOptions(snapshot, timelineContext = createSelectorTimelineContex
   }
 
   const boards = liveTableRows(snapshot, "BOARDS", timelineContext);
+  const drivers = liveTableRows(snapshot, "DRIVERS", timelineContext);
+  const authoredControlLabelsAvailable = [...boards, ...drivers]
+    .some((row) => rowOptionValues(row, CONTROL_PROTOCOL_LABEL_COLUMNS).length > 0);
   for (const row of boards) {
-    // Donor Light & Control derives global live BOARDS choices. SYSTEM/emission/optic decide whether
-    // the indirect lane is visible/required, but they do not scope the authored lm/m or paired CCT/CRI lists here.
+    // Donor Light & Control keeps CCT/CRI source-backed, while lm/m remains typed/manual.
+    // Control protocols use authored user-facing labels first and do not leak broad driver/internal values.
     const lightControlMeta = { sourceTables: ["BOARDS"], lightControlGlobalSource: true };
+    const protocolMeta = { sourceTables: ["BOARDS"], lightControlSourceBacked: true, ...sourceRowSystemReferenceMeta(systemOptions, row) };
     for (const cct of extractCctValues(row)) addOption(bucket, "cct", cct, lightControlMeta);
     for (const cctCri of cctCriValues(row)) {
       addOption(bucket, "cctCri", cctCri, lightControlMeta);
       addOption(bucket, "cctCriIndirect", cctCri, lightControlMeta);
     }
-    for (const lm of numericOptionValues(row, ["board_lm_per_m", "delivered_lm_per_m", "lm_per_m", "nominal_lm_per_m"])) {
-      addOption(bucket, "targetLmPerM", `${lm} lm/m`, { value: lm, ...lightControlMeta });
-      addOption(bucket, "targetLmPerMIndirect", `${lm} lm/m`, { value: lm, ...lightControlMeta });
-    }
-    for (const control of rowOptionValues(row, ["control_type_labels", "control_type_options", "native_control_type", "control_type"])) {
-      addOption(bucket, "controlType", control, lightControlMeta);
-      addOption(bucket, "controlTypeIndirect", control, lightControlMeta);
+    for (const control of userFacingControlValues(row, authoredControlLabelsAvailable)) {
+      addOption(bucket, "controlType", control, protocolMeta);
+      addOption(bucket, "controlTypeIndirect", control, protocolMeta);
     }
     for (const lex of rowOptionValues(row, ["lexWeight", "lex_weight", "lex_weight_g", "lex_weight_kg", "lexDirect", "lex_direct", "lex"])) {
       addOption(bucket, "lexWeight", lex, { ...lightControlMeta, metadataOnly: true });
     }
   }
 
-  const drivers = liveTableRows(snapshot, "DRIVERS", timelineContext);
   for (const row of drivers) {
     const driver = rowText(row, ["driver_id", "driver", "driver_name", "name", "label", "sku", "part_number"]);
-    const controls = rowOptionValues(row, ["control_type", "control", "protocol", "dimming", "dimming_type", "driver_control", "control_protocol", "native_control_type"]);
+    const rawControls = rowOptionValues(row, DRIVER_COMPATIBLE_CONTROL_COLUMNS);
+    const controls = uniqueStrings([...rawControls, ...rawControls.map(canonicalControlProtocolLabel)].filter(Boolean));
     if (driver) addOption(bucket, "driver", driver, { sourceTables: ["DRIVERS"], compatibleControlTypes: controls });
-    for (const control of controls) {
-      addOption(bucket, "controlType", control, { sourceTables: ["DRIVERS"] });
-      addOption(bucket, "controlTypeIndirect", control, { sourceTables: ["DRIVERS"] });
+    for (const control of userFacingControlValues(row, authoredControlLabelsAvailable)) {
+      addOption(bucket, "controlType", control, { sourceTables: ["DRIVERS"], lightControlSourceBacked: true });
+      addOption(bucket, "controlTypeIndirect", control, { sourceTables: ["DRIVERS"], lightControlSourceBacked: true });
     }
     for (const wiring of rowOptionValues(row, ["wiring_type", "wiring", "cable_type", "control_cores"])) addOption(bucket, "wiringType", wiring, { sourceTables: ["DRIVERS"] });
   }
@@ -1785,6 +1788,51 @@ function systemIdentityValuesForSourceSystem(systemOptions = [], sourceSystem = 
     return valuesMatch(optionReference, source) || valuesMatch(optionVariant, source) || valuesMatch(option.value, source) || valuesMatch(option.label, source);
   }).map(systemOptionIdentityValue);
   return uniqueStrings(matches.length ? matches : [source]);
+}
+
+const CONTROL_PROTOCOL_LABEL_COLUMNS = Object.freeze(["control_type_labels"]);
+const CONTROL_PROTOCOL_FALLBACK_COLUMNS = Object.freeze(["control_type_options", "native_control_type"]);
+const DRIVER_COMPATIBLE_CONTROL_COLUMNS = Object.freeze(["control_type_labels", "control_type", "control", "protocol", "dimming", "dimming_type", "driver_control", "control_protocol", "native_control_type"]);
+
+function sourceRowSystemReferenceMeta(systemOptions = [], row = {}) {
+  const option = systemOptionForRow(systemOptions, row);
+  const tokens = systemTokens(row);
+  const referenceKey = safeString(option?.systemReferenceKey || tokens.system || rowText(row, ["system", "series", "system_name", "system_key"]));
+  const identityKey = option ? systemOptionIdentityValue(option) : systemRowIdentityKey(row);
+  const keys = uniqueStrings([
+    identityKey,
+    safeString(option?.value),
+    referenceKey,
+    ...systemIdentityValuesForSourceSystem(systemOptions, referenceKey),
+  ].filter(Boolean));
+  return {
+    systemReferenceKey: keys[0] || "",
+    systemReferenceKeys: keys,
+    systemVariantKey: safeString(option?.systemVariantKey || tokens.variant),
+  };
+}
+
+function canonicalControlProtocolLabel(value = "") {
+  const raw = safeString(value);
+  const key = normaliseKey(raw).replace(/\s+/g, " ").trim();
+  if (!key) return "";
+  if (/internal|driver only|not user|diagnostic|channel current|mA\b/i.test(raw)) return "";
+  if (key.includes("dali+") || (key.includes("dali") && key.includes("wireless"))) return "DALI+ (Wireless)";
+  if (key.includes("dali") && key.includes("dt8")) return "DALI-2 DT8";
+  if (key.includes("dali") && key.includes("dt6")) return "DALI-2 DT6";
+  if (key === "dali" || key.includes("dali2") || key.includes("dali 2")) return "DALI-2";
+  if (key.includes("d4i")) return "D4i";
+  if (key.includes("dmx")) return "DMX";
+  if (key.includes("pwm")) return "PWM";
+  if (key.includes("fixed") || key.includes("on off") || key.includes("switched") || key.includes("non dim")) return raw;
+  return raw;
+}
+
+function userFacingControlValues(row = {}, authoredLabelsAvailable = false) {
+  const labels = rowOptionValues(row, CONTROL_PROTOCOL_LABEL_COLUMNS);
+  if (labels.length) return uniqueStrings(labels.map(canonicalControlProtocolLabel).filter(Boolean)).slice(0, 12);
+  if (authoredLabelsAvailable) return [];
+  return uniqueStrings(rowOptionValues(row, CONTROL_PROTOCOL_FALLBACK_COLUMNS).map(canonicalControlProtocolLabel).filter(Boolean)).slice(0, 12);
 }
 
 function opticFieldValue(row) {
@@ -1960,34 +2008,31 @@ function collectRecords(snapshot, bucket, timelineContext = createSelectorTimeli
     }, "OPTICS row maps system to diffuser var 1, diffuser var 2, spec-code preview metadata, material, image readiness, IP/IK compatibility, and direct/indirect availability");
   }
 
-  for (const row of liveTableRows(snapshot, "BOARDS", timelineContext)) {
-    const cctCri = cctCriValues(row);
-    const ccts = extractCctValues(row);
-    const lm = numericOptionValues(row, ["board_lm_per_m", "delivered_lm_per_m", "lm_per_m", "nominal_lm_per_m"]);
-    const controls = rowOptionValues(row, ["control_type_labels", "control_type_options", "native_control_type", "control_type"]);
-    const lex = rowOptionValues(row, ["lexWeight", "lex_weight", "lex_weight_g", "lex_weight_kg", "lexDirect", "lex_direct", "lex"]);
+  const boardRowsForRelationships = liveTableRows(snapshot, "BOARDS", timelineContext);
+  const driverRowsForRelationships = liveTableRows(snapshot, "DRIVERS", timelineContext);
+  const relationshipAuthoredControlLabelsAvailable = [...boardRowsForRelationships, ...driverRowsForRelationships]
+    .some((row) => rowOptionValues(row, CONTROL_PROTOCOL_LABEL_COLUMNS).length > 0);
+  for (const row of boardRowsForRelationships) {
+    const controls = userFacingControlValues(row, relationshipAuthoredControlLabelsAvailable);
+    const systemMeta = sourceRowSystemReferenceMeta(systemOptions, row);
     pushRelationshipRecord(records, ["BOARDS"], {
-      cct: ccts,
-      cctCri,
-      cctCriIndirect: cctCri,
-      targetLmPerM: lm,
-      targetLmPerMIndirect: lm,
+      system: systemMeta.systemReferenceKeys,
       controlType: controls,
       controlTypeIndirect: controls,
-      lexWeight: lex,
-    }, "Donor Light & Control maps live BOARDS globally to paired CCT/CRI, direct/indirect lm/m, direct/indirect controls, and Lex metadata; system/emission only gates lane visibility.");
+    }, "BOARDS row maps authored user-facing control protocols to the selected source system; lm/m remains typed/manual and is not catalogue-sourced.");
   }
 
-  for (const row of liveTableRows(snapshot, "DRIVERS", timelineContext)) {
+  for (const row of driverRowsForRelationships) {
     const driver = rowText(row, ["driver_id", "driver", "driver_name", "name", "label", "sku", "part_number"]);
-    const control = rowOptionValues(row, ["control_type", "control", "protocol", "dimming", "dimming_type", "driver_control", "control_protocol", "native_control_type"]);
+    const rawControls = rowOptionValues(row, DRIVER_COMPATIBLE_CONTROL_COLUMNS);
+    const control = uniqueStrings([...rawControls, ...rawControls.map(canonicalControlProtocolLabel)].filter(Boolean));
     const wiring = rowOptionValues(row, ["wiring_type", "wiring", "cable_type", "control_cores"]);
     pushRelationshipRecord(records, ["DRIVERS"], {
       driver,
       controlType: control,
       controlTypeIndirect: control,
       wiringType: wiring,
-    }, "DRIVERS row maps control protocol to driver and wiring consequences");
+    }, "DRIVERS row maps selected user-facing control protocol to driver and wiring consequences without exposing raw/internal driver protocol noise as normal choices.");
   }
 
   for (const row of liveTableRows(snapshot, "ACCESSORIES", timelineContext)) {
@@ -2121,6 +2166,7 @@ function cascadeConstraintsForOptions(bucket = {}, constraints = {}, snapshot = 
     __systemReferenceKey: selectedSystemKey,
     __systemVariantKey: selectedSystemOption ? safeString(selectedSystemOption.systemVariantKey) : "",
     __systemLabel: selectedSystemOption ? safeString(selectedSystemOption.label) : "",
+    __systemSupportsDirect: selectedSystemOption?.systemSupportsDirect === true,
     __systemSupportsIndirect: selectedSystemOption?.systemSupportsIndirect === true,
     __selectorMountingCodePolicies: selectorMountingCodePolicySummaries(snapshot),
   };
@@ -2192,6 +2238,9 @@ const INDIRECT_OPTIC_CASCADE_FIELDS = Object.freeze(new Set([
   "cctCriIndirect",
   "controlTypeIndirect",
 ]));
+
+const LIGHT_CONTROL_MANUAL_INPUT_FIELDS = Object.freeze(new Set(["targetLmPerM", "targetLmPerMIndirect"]));
+const DIRECT_LIGHT_CONTROL_FIELDS = Object.freeze(new Set(["targetLmPerM", "cctCri", "controlType"]));
 
 const ENVIRONMENT_IP_IK_FIELD_KEYS = Object.freeze(new Set(["ipRating", "ikRating"]));
 const FINISH_COMPATIBILITY_FIELD_KEYS = Object.freeze(new Set([
@@ -3089,8 +3138,41 @@ function inheritedSourceForField(fieldKey, constraints = {}) {
   return "safe DB/reference cascade preview";
 }
 
+function directFieldRequiresSupport(fieldKey) {
+  return DIRECT_LIGHT_CONTROL_FIELDS.has(fieldKey);
+}
+
 function indirectFieldRequiresSupport(fieldKey) {
   return ["opticIndirect", "indirectOpticVar1", "indirectOpticVar2", "indirectMatchDirect", "targetLmPerMIndirect", "cctCriIndirect", "controlTypeIndirect"].includes(fieldKey);
+}
+
+function upstreamDirectSupportState(records = [], constraints = {}) {
+  const upstreamSelected = Boolean(constraints.system || constraints.emission);
+  if (!upstreamSelected) {
+    return { supported: true, checked: false, blockedBy: [] };
+  }
+  if (constraints.__systemSupportsDirect === true) return { supported: true, checked: true, blockedBy: [] };
+  if (constraints.__systemSupportsDirect === false) {
+    return {
+      supported: false,
+      checked: true,
+      blockedBy: [{ fieldKey: "directCapability", selectedValue: "unsupported by current upstream selection", compatibleValues: ["direct-supported"] }],
+    };
+  }
+  const selectedSystem = safeString(constraints.system || "");
+  const systemRecords = selectedSystem
+    ? records.filter((record) => (record.sourceTables || []).includes("SYSTEM") && Array.isArray(record.fields?.system) && record.fields.system.some((value) => valuesMatch(value, selectedSystem)))
+    : [];
+  const recordsToCheck = systemRecords.length
+    ? systemRecords
+    : records.filter((record) => Array.isArray(record.fields?.directCapability) && record.fields.directCapability.some((value) => valuesMatch(value, "direct-supported")));
+  if (!recordsToCheck.length) return { supported: true, checked: false, blockedBy: [] };
+  const supported = recordsToCheck.some((record) => Array.isArray(record.fields?.directCapability) && record.fields.directCapability.some((value) => valuesMatch(value, "direct-supported")) && recordMatchesConstraints(record, constraints, "directCapability"));
+  return {
+    supported,
+    checked: true,
+    blockedBy: supported ? [] : [{ fieldKey: "directCapability", selectedValue: "unsupported by current upstream selection", compatibleValues: ["direct-supported"] }],
+  };
 }
 
 function upstreamIndirectSupportState(records = [], constraints = {}) {
@@ -3100,6 +3182,14 @@ function upstreamIndirectSupportState(records = [], constraints = {}) {
       supported: false,
       checked: false,
       blockedBy: [{ fieldKey: "system", selectedValue: "not selected", compatibleValues: ["system with indirect emission"] }],
+    };
+  }
+  if (constraints.__systemSupportsIndirect === true) return { supported: true, checked: true, blockedBy: [] };
+  if (constraints.__systemSupportsIndirect === false) {
+    return {
+      supported: false,
+      checked: true,
+      blockedBy: [{ fieldKey: "indirectCapability", selectedValue: "unsupported by current upstream selection", compatibleValues: ["indirect-supported"] }],
     };
   }
   const selectedSystem = safeString(constraints.system || "");
@@ -3253,6 +3343,63 @@ function createEmptyChildWorkflowField(field, parentFieldKey = "", parentValue =
   };
 }
 
+function manualLightControlInputLabel(_fieldKey = "", value = "") {
+  const raw = safeString(value);
+  if (!raw) return "";
+  if (/lm\s*\/\s*m/i.test(raw)) return raw;
+  if (/^[0-9]+(?:\.[0-9]+)?$/.test(raw)) return `${raw} lm/m`;
+  return raw;
+}
+
+function createManualInputWorkflowField(field, records = [], constraints = {}, cascadeConstraints = constraints) {
+  const selectedValue = safeString(constraints[field.fieldKey] || "");
+  const directSupport = directFieldRequiresSupport(field.fieldKey)
+    ? upstreamDirectSupportState(records, cascadeConstraints)
+    : { supported: true, checked: false, blockedBy: [] };
+  const indirectSupport = indirectFieldRequiresSupport(field.fieldKey)
+    ? upstreamIndirectSupportState(records, cascadeConstraints)
+    : { supported: true, checked: false, blockedBy: [] };
+  const supported = directSupport.supported === true && indirectSupport.supported === true;
+  const selectedLabel = manualLightControlInputLabel(field.fieldKey, selectedValue);
+  const blockedBy = supported ? [] : [...(directSupport.blockedBy || []), ...(indirectSupport.blockedBy || [])];
+  const selectedOption = selectedValue ? [{
+    value: selectedValue,
+    label: selectedLabel || selectedValue,
+    count: 0,
+    sourceStatus: "manual-typed-input",
+    sourceTables: [],
+    selected: true,
+    status: supported ? "available" : "blocked",
+    blocked: !supported,
+    blockedReason: supported ? "" : "Manual lm/m target is preserved but the current emission path does not support this lane.",
+    blockedBy,
+    manualInput: true,
+    typedManualInput: true,
+    dropdownSourced: false,
+    writes: false,
+    rawRowsExposed: false,
+  }] : [];
+  return {
+    fieldKey: field.fieldKey,
+    label: field.label,
+    role: field.role,
+    status: supported ? "available" : "blocked",
+    sourceStatus: "manual-input-only",
+    sourceTables: [],
+    options: selectedOption,
+    selectedValue,
+    selectedLabel,
+    unavailableReason: supported ? "Type target lm/m manually; no BOARDS dropdown, auto-selection, RunTable, IES, or Engine lookup is performed." : "This lm/m lane is not required or supported by the current emission selection.",
+    futureMapped: false,
+    disabled: false,
+    manualInput: true,
+    inputKind: "manual-lm-per-m",
+    dropdownSourced: false,
+    compatibleOptionCount: selectedValue && supported ? 1 : 0,
+    rawRowsExposed: false,
+  };
+}
+
 function createMetadataWorkflowField(field, baseOptions = [], records = [], constraints = {}, cascadeConstraints = constraints) {
   const selectedValue = constraints[field.fieldKey] || "";
   const options = baseOptions.map((option) => {
@@ -3303,6 +3450,7 @@ function createWorkflowField(field, { bucket, records, constraints, cascadeConst
   if (!sourceReady) return createUnavailableField(field, "Selector Reference source is unavailable or not parseable.");
   if (field.role === "disabled") return createDisabledWorkflowField(field, "Disabled read-only preview. No workflow action, generation, write, proof, payload, RunTable, HubSpot push, save, or hidden write-back is available in this slice.", selectedValue);
   if (field.role === "future-mapped") return createUnavailableField(field, `${field.label} is a donor workflow field but is not source-backed in this runtime slice.`);
+  if (LIGHT_CONTROL_MANUAL_INPUT_FIELDS.has(field.fieldKey)) return createManualInputWorkflowField(field, records, constraints, cascadeConstraints);
 
   const rawBaseOptions = optionsFor(bucket, field.fieldKey);
   const childOptions = optionsForSelectedWorkflowParent(field.fieldKey, rawBaseOptions, parentConstraints);
@@ -3344,28 +3492,31 @@ function createWorkflowField(field, { bucket, records, constraints, cascadeConst
   const indirectSupport = indirectFieldRequiresSupport(field.fieldKey)
     ? upstreamIndirectSupportState(records, cascadeConstraints)
     : { supported: true, checked: false, blockedBy: [] };
+  const directSupport = directFieldRequiresSupport(field.fieldKey)
+    ? upstreamDirectSupportState(records, cascadeConstraints)
+    : { supported: true, checked: false, blockedBy: [] };
   const options = baseOptions.map((option) => {
     const cascade = optionCascadeResult(field.fieldKey, option, records, cascadeConstraints);
     const policyBlock = mountCodePolicyBlock(field.fieldKey, option, records, cascadeConstraints);
     const orientationBlock = mountOrientationPolicyBlock(field.fieldKey, option, cascadeConstraints);
-    const compatible = cascade.compatible && indirectSupport.supported && policyBlock.blocked !== true && orientationBlock.blocked !== true;
+    const compatible = cascade.compatible && directSupport.supported && indirectSupport.supported && policyBlock.blocked !== true && orientationBlock.blocked !== true;
     const selected = optionSelectedByValue(field.fieldKey, option, selectedValue);
     const inherited = field.role === "inherited-consequence" && compatible;
     const consequence = field.role === "auto-consequence" && compatible;
-    const blockedBy = compatible ? [] : [...(cascade.blockedBy || []), ...(indirectSupport.supported ? [] : indirectSupport.blockedBy), ...(policyBlock.blockedBy || []), ...(orientationBlock.blockedBy || [])];
+    const blockedBy = compatible ? [] : [...(cascade.blockedBy || []), ...(directSupport.supported ? [] : directSupport.blockedBy), ...(indirectSupport.supported ? [] : indirectSupport.blockedBy), ...(policyBlock.blockedBy || []), ...(orientationBlock.blockedBy || [])];
     return {
       ...option,
       selected: Boolean(selected),
       status: inherited ? "inherited" : consequence ? "auto-consequence" : compatible ? "available" : "blocked",
       blocked: !compatible,
-      blockedReason: compatible ? "" : policyBlock.reason || orientationBlock.reason || (indirectSupport.supported ? "Blocked by current manual constraints; shown rather than silently hidden." : "Indirect fields are blocked because the current system/optic path does not support indirect."),
+      blockedReason: compatible ? "" : policyBlock.reason || orientationBlock.reason || (!directSupport.supported ? "Direct fields are blocked because the current system/emission path does not support direct." : indirectSupport.supported ? "Blocked by current manual constraints; shown rather than silently hidden." : "Indirect fields are blocked because the current system/optic path does not support indirect."),
       blockedBy,
       codePolicyIds: uniqueStrings([...optionCodePolicyIds(option), ...(policyBlock.codePolicyIds || []), ...(orientationBlock.codePolicyIds || [])]),
       codePolicyReason: option.codePolicyReason || policyBlock.codePolicyReason || orientationBlock.codePolicyReason || "",
       cascadeSource: cascade.cascadeSource || option.sourceTables || [],
       inheritedFrom: inherited ? inheritedSourceForField(field.fieldKey, constraints) : "",
-      relationshipStatus: compatible ? cascade.relationshipStatus : policyBlock.blocked ? "blocked-by-code-policy" : orientationBlock.blocked ? "blocked-by-mount-orientation" : indirectSupport.supported ? cascade.relationshipStatus : "blocked-by-indirect-capability",
-      relationshipMissingReason: compatible ? cascade.relationshipMissingReason : policyBlock.blocked ? policyBlock.reason : orientationBlock.blocked ? orientationBlock.reason : indirectSupport.supported ? cascade.relationshipMissingReason : "Current upstream selection does not expose indirect capability in safe relationship metadata.",
+      relationshipStatus: compatible ? cascade.relationshipStatus : policyBlock.blocked ? "blocked-by-code-policy" : orientationBlock.blocked ? "blocked-by-mount-orientation" : !directSupport.supported ? "blocked-by-direct-capability" : indirectSupport.supported ? cascade.relationshipStatus : "blocked-by-indirect-capability",
+      relationshipMissingReason: compatible ? cascade.relationshipMissingReason : policyBlock.blocked ? policyBlock.reason : orientationBlock.blocked ? orientationBlock.reason : !directSupport.supported ? "Current upstream selection does not expose direct capability in safe relationship metadata." : indirectSupport.supported ? cascade.relationshipMissingReason : "Current upstream selection does not expose indirect capability in safe relationship metadata.",
       compatibleWithCurrentConstraints: compatible,
       preservesManualConstraint: Boolean(selected),
       writes: false,
@@ -3388,6 +3539,19 @@ function createWorkflowField(field, { bucket, records, constraints, cascadeConst
     });
   }
 
+  const matchDirectActive = !safeString(constraints.indirectMatchDirect || "") || valuesMatch(constraints.indirectMatchDirect, "match-direct");
+  const inheritedCandidate = matchDirectActive && !selectedValue
+    ? field.fieldKey === "cctCriIndirect"
+      ? safeString(constraints.cctCri || "")
+      : field.fieldKey === "controlTypeIndirect"
+        ? safeString(constraints.controlType || "")
+        : ""
+    : "";
+  const inheritedOption = inheritedCandidate
+    ? options.find((option) => option.blocked !== true && optionSelectedByValue(field.fieldKey, option, inheritedCandidate))
+    : null;
+  const inheritedValue = inheritedOption ? inheritedCandidate : "";
+  const inheritedLabel = inheritedOption ? inheritedOption.label || inheritedCandidate : "";
   const availableCount = options.filter((option) => option.blocked !== true).length;
   return {
     fieldKey: field.fieldKey,
@@ -3399,6 +3563,9 @@ function createWorkflowField(field, { bucket, records, constraints, cascadeConst
     options,
     selectedValue,
     selectedLabel: selectedValue ? labelForSelectedValue(options, selectedValue, field.fieldKey) : "",
+    inheritedValue,
+    inheritedLabel,
+    inheritedFrom: inheritedValue ? inheritedSourceForField(field.fieldKey, constraints) : "",
     unavailableReason: availableCount ? "" : "No compatible options remain under the current manual constraints; values are shown as blocked rather than removed.",
     futureMapped: false,
     disabled: false,
@@ -3413,7 +3580,10 @@ function compatibleWorkflowOptionsForField(fieldKey = "", bucket = {}, records =
   const indirectSupport = indirectFieldRequiresSupport(fieldKey)
     ? upstreamIndirectSupportState(records, cascadeConstraints)
     : { supported: true, checked: false, blockedBy: [] };
-  if (indirectSupport.supported !== true) return [];
+  const directSupport = directFieldRequiresSupport(fieldKey)
+    ? upstreamDirectSupportState(records, cascadeConstraints)
+    : { supported: true, checked: false, blockedBy: [] };
+  if (directSupport.supported !== true || indirectSupport.supported !== true) return [];
   return baseOptions.filter((option) => {
     const cascade = optionCascadeResult(fieldKey, option, records, cascadeConstraints);
     const policyBlock = mountCodePolicyBlock(fieldKey, option, records, cascadeConstraints);

@@ -1006,6 +1006,7 @@ function workflowControlFieldVisible(field = {}) {
   if (!field?.fieldKey) return false;
   if (field.disabled === true || field.futureMapped === true) return false;
   if (["disabled-handoff", "hidden-diagnostic", "metadata-chip"].includes(field.displayMode)) return false;
+  if (field.manualInput === true && (field.status !== "blocked" || String(field.selectedValue || "").trim())) return true;
   const activeOptions = workflowControlOptions(field);
   if (activeOptions.length) return true;
   return workflowControlIncompatibleOptions(field).some((option) => option.selectedBlockedDiagnostic === true || option.selected === true);
@@ -1035,6 +1036,9 @@ function workflowControlField(section = {}, field = {}) {
     autoConsequence: Boolean(!field.selectedValue && field.effectiveValue),
     defaultPreview: false,
     mutable: field.disabled !== true && field.futureMapped !== true,
+    manualInput: field.manualInput === true,
+    inputKind: field.inputKind || "",
+    dropdownSourced: field.dropdownSourced === true ? true : field.manualInput === true ? false : undefined,
     selectedOptionBlocked: selectedBlocked,
     selectedBlockedOptionVisible: false,
     selectedBlockedOptionRetainedForDiagnostics: incompatibleOptions.some((option) => option.selectedBlockedDiagnostic === true || option.selected === true),
@@ -1584,6 +1588,10 @@ function workflowSelectedSystemOption(workflowSections = [], selectedSystem = ""
   return scored.sort((left, right) => right.score - left.score || left.index - right.index)[0]?.option || null;
 }
 
+function workflowSystemSupportsDirect(workflowSections = [], selectedSystem = "") {
+  return workflowSelectedSystemOption(workflowSections, selectedSystem)?.systemSupportsDirect === true;
+}
+
 function workflowSystemSupportsIndirect(workflowSections = [], selectedSystem = "") {
   return workflowSelectedSystemOption(workflowSections, selectedSystem)?.systemSupportsIndirect === true;
 }
@@ -1627,6 +1635,9 @@ function localDiffuserRelationshipBlock(fieldKey = "", option = {}, selectedCons
       : "",
   };
 }
+
+const DIRECT_LIGHT_CONTROL_LANE_FIELDS = Object.freeze(new Set(["targetLmPerM", "cctCri", "controlType"]));
+const INDIRECT_LIGHT_CONTROL_LANE_FIELDS = Object.freeze(new Set(["targetLmPerMIndirect", "cctCriIndirect", "controlTypeIndirect", "indirectMatchDirect"]));
 
 const LIGHT_CONTROL_SYSTEM_SCOPED_FIELDS = Object.freeze(new Set([
   "application",
@@ -1730,6 +1741,13 @@ function localEnvironmentIpIkRelationshipBlock(fieldKey = "", option = {}, selec
 function localLightControlRelationshipBlock(fieldKey = "", option = {}, selectedConstraints = {}) {
   const blockers = [];
   const strictEnvironmentBlock = localEnvironmentIpIkRelationshipBlock(fieldKey, option, selectedConstraints);
+
+  if (DIRECT_LIGHT_CONTROL_LANE_FIELDS.has(fieldKey) && selectedConstraints.__systemSupportsDirect === false) {
+    blockers.push({ fieldKey: "directCapability", selectedValue: "unsupported by current upstream selection", compatibleValues: ["direct-supported"] });
+  }
+  if (INDIRECT_LIGHT_CONTROL_LANE_FIELDS.has(fieldKey) && selectedConstraints.__systemSupportsIndirect === false) {
+    blockers.push({ fieldKey: "indirectCapability", selectedValue: "unsupported by current upstream selection", compatibleValues: ["indirect-supported"] });
+  }
 
   if (!ENVIRONMENT_IP_IK_FIELD_KEYS.has(fieldKey) && LIGHT_CONTROL_SYSTEM_SCOPED_FIELDS.has(fieldKey) && !optionMatchesSelectedSystemReference(option, selectedConstraints)) {
     blockers.push({
@@ -1856,11 +1874,13 @@ function enrichDbWorkflowSections(selectorReferenceStatus = {}, local = {}) {
   const workflowSections = dbWorkflowSections(selectorReferenceStatus);
   const selectedConstraints = dbConstraintValueMap(local);
   const selectedSystemReferenceKey = workflowSystemReferenceKey(workflowSections, selectedConstraints.system || "");
+  const selectedSystemSupportsDirect = workflowSystemSupportsDirect(workflowSections, selectedConstraints.system || "");
   const selectedSystemSupportsIndirect = workflowSystemSupportsIndirect(workflowSections, selectedConstraints.system || "");
-  const cascadeConstraints = selectedSystemReferenceKey || selectedSystemSupportsIndirect
+  const cascadeConstraints = selectedSystemReferenceKey || selectedSystemSupportsDirect || selectedSystemSupportsIndirect
     ? {
       ...selectedConstraints,
       ...(selectedSystemReferenceKey ? { __systemReferenceKey: selectedSystemReferenceKey } : {}),
+      __systemSupportsDirect: selectedSystemSupportsDirect,
       __systemSupportsIndirect: selectedSystemSupportsIndirect,
     }
     : selectedConstraints;
@@ -1868,6 +1888,35 @@ function enrichDbWorkflowSections(selectorReferenceStatus = {}, local = {}) {
     ...section,
     fields: (Array.isArray(section.fields) ? section.fields : []).map((field) => {
       const selectedValue = selectedConstraints[field.fieldKey] || "";
+      const manualInputField = field.manualInput === true;
+      const upstreamLaneSelected = Boolean(selectedConstraints.system || selectedConstraints.emission);
+      const manualLaneSupported = !manualInputField
+        || (field.fieldKey === "targetLmPerMIndirect"
+          ? selectedSystemSupportsIndirect === true
+          : field.fieldKey === "targetLmPerM"
+            ? (!upstreamLaneSelected || selectedSystemSupportsDirect === true)
+            : true);
+      const manualLaneMeta = manualInputField ? {
+        status: manualLaneSupported ? "available" : "blocked",
+        unavailableReason: manualLaneSupported
+          ? "Type target lm/m manually; no BOARDS dropdown, auto-selection, RunTable, IES, or Engine lookup is performed."
+          : "This lm/m lane is not required or supported by the current emission selection.",
+      } : {};
+      const matchDirectActive = !selectedConstraints.indirectMatchDirect || optionValuesMatch(selectedConstraints.indirectMatchDirect, "match-direct");
+      const inheritedLaneValue = selectedSystemSupportsIndirect && matchDirectActive && !selectedValue
+        ? field.fieldKey === "cctCriIndirect"
+          ? selectedConstraints.cctCri || ""
+          : field.fieldKey === "controlTypeIndirect"
+            ? selectedConstraints.controlType || ""
+            : ""
+        : "";
+      const inheritedLaneMeta = inheritedLaneValue ? {
+        status: "available",
+        inheritedValue: inheritedLaneValue,
+        inheritedLabel: inheritedLaneValue,
+        inheritedFrom: "direct light/control preview",
+        unavailableReason: "Indirect value matches direct while match-direct is active; clearing/overriding keeps donor-safe source scoping.",
+      } : {};
       const optionPayloadProvided = Array.isArray(field.options);
       const baseOptions = optionPayloadProvided ? field.options : [];
       const deferredOptions = Array.isArray(field.deferredOptions) ? field.deferredOptions : [];
@@ -1897,6 +1946,8 @@ function enrichDbWorkflowSections(selectorReferenceStatus = {}, local = {}) {
       });
       return {
         ...field,
+        ...manualLaneMeta,
+        ...inheritedLaneMeta,
         selectedValue,
         selectedLabel: selectedValue
           ? labelFromWorkflowField({ ...field, options }, selectedValue)
@@ -2040,6 +2091,8 @@ const RUNTIME_PRESENTATION_AUTO_CHIP_FIELDS = Object.freeze(new Set([
 ]));
 
 const RUNTIME_PRESENTATION_MANUAL_ONLY_FIELDS = Object.freeze(new Set([
+  "targetLmPerM",
+  "targetLmPerMIndirect",
   "accessories",
 ]));
 
@@ -2312,9 +2365,28 @@ function classifyRuntimePresentationField(field = {}, finishContext = {}) {
     effectiveLabel = field.selectedLabel || effectiveOption?.label || field.unavailableReason || "metadata pending";
     overrideAvailable = false;
     classificationReason = "metadata descriptor, not a primary decision";
+  } else if (field.manualInput === true && (field.status !== "blocked" || hasManualConstraint)) {
+    displayMode = "manual-input";
+    provenance = hasManualConstraint ? "manual" : "manual-input";
+    primaryDecision = true;
+    effectiveValue = hasManualConstraint ? field.selectedValue : "";
+    effectiveLabel = hasManualConstraint ? field.selectedLabel || field.selectedValue : "";
+    overrideAvailable = true;
+    classificationReason = field.unavailableReason || "typed manual input; no dropdown catalogue or auto-selection is sourced";
+  } else if (presentationIsInherited(field) && field.inheritedValue && !hasManualConstraint && !["finishCover", "finishEnd", "finishFlex"].includes(field.fieldKey)) {
+    displayMode = "inherited-chip";
+    provenance = "inherited";
+    primaryDecision = false;
+    effectiveValue = field.inheritedValue;
+    effectiveLabel = field.inheritedLabel || field.inheritedValue;
+    overrideAvailable = optionsComputable && compatibleOptionCount > 0;
+    classificationReason = field.unavailableReason || "inherited consequence from direct/default selection";
   } else if (optionsComputable && compatibleOptionCount === 0 && !hasManualConstraint) {
-    const unsupportedIndirectPicker = ["indirectOpticVar1", "indirectOpticVar2", "opticIndirect", "indirectMatchDirect", "targetLmPerMIndirect", "cctCriIndirect", "controlTypeIndirect"].includes(field.fieldKey);
-    displayMode = primaryAtStep && !unsupportedIndirectPicker ? "warning-chip" : "hidden-diagnostic";
+    const blockedByLaneCapability = (Array.isArray(field.options) ? field.options : []).some((option) => (Array.isArray(option.blockedBy) ? option.blockedBy : [])
+      .some((blocker) => ["directCapability", "indirectCapability"].includes(blocker.fieldKey)));
+    const unsupportedLanePicker = ["targetLmPerM", "cctCri", "controlType", "indirectOpticVar1", "indirectOpticVar2", "opticIndirect", "indirectMatchDirect", "targetLmPerMIndirect", "cctCriIndirect", "controlTypeIndirect"].includes(field.fieldKey)
+      && (blockedByLaneCapability || field.status === "blocked" || /lane|emission|direct|indirect|not required|not supported/i.test(String(field.unavailableReason || "")));
+    displayMode = primaryAtStep && !unsupportedLanePicker ? "warning-chip" : "hidden-diagnostic";
     provenance = "diagnostic";
     primaryDecision = false;
     effectiveValue = "";
@@ -2323,11 +2395,13 @@ function classifyRuntimePresentationField(field = {}, finishContext = {}) {
     classificationReason = "no compatible DB-backed option is available; no dead dropdown or fake consequence is rendered";
   } else if (presentationIsInherited(field) && !hasManualConstraint) {
     const visibleInheritedFinishField = ["finishCover", "finishEnd", "finishFlex"].includes(field.fieldKey);
+    const inheritedPreviewValue = field.inheritedValue || (visibleInheritedFinishField ? effectiveOption?.value || "" : "");
+    const inheritedPreviewLabel = field.inheritedLabel || (visibleInheritedFinishField ? effectiveOption?.label || "" : "");
     displayMode = visibleInheritedFinishField ? "choice" : "inherited-chip";
     provenance = "inherited";
     primaryDecision = false;
-    effectiveValue = effectiveOption?.value || "";
-    effectiveLabel = effectiveOption?.label || field.inheritedLabel || field.unavailableReason || "inherits from direct/default selection";
+    effectiveValue = inheritedPreviewValue;
+    effectiveLabel = inheritedPreviewLabel || field.unavailableReason || "inherits from direct/default selection";
     if (visibleInheritedFinishField && !finishContext.bodyValue && !field.inheritedValue) {
       displayMode = "collapsed-override";
       effectiveValue = "";
@@ -2381,7 +2455,7 @@ function classifyRuntimePresentationField(field = {}, finishContext = {}) {
     displayMode,
     provenance,
     primaryDecision,
-    primaryControl: primaryDecision === true && displayMode === "choice",
+    primaryControl: primaryDecision === true && (displayMode === "choice" || displayMode === "manual-input"),
     effectiveValue,
     effectiveLabel,
     compatibleOptionCount,
@@ -3810,6 +3884,10 @@ function createPayloadPreviewSkeleton({ fields = [], workflowSections = [], summ
       targetLmPerM: payloadFieldValue(lookup, ["targetLmPerM", "targetLumensPerMetre"]),
       cctCri: payloadFieldValue(lookup, ["cctCri", "cct", "cri"]),
       controlType: payloadFieldValue(lookup, ["controlType"]),
+      indirectMatchDirect: payloadFieldValue(lookup, ["indirectMatchDirect"]),
+      targetLmPerMIndirect: payloadFieldValue(lookup, ["targetLmPerMIndirect"]),
+      cctCriIndirect: payloadFieldValue(lookup, ["cctCriIndirect"]),
+      controlTypeIndirect: payloadFieldValue(lookup, ["controlTypeIndirect"]),
       driver: payloadFieldValue(lookup, ["driver"]),
       wiringTopology: payloadFieldValue(lookup, ["wiringType"]),
       lexWeight: payloadFieldValue(lookup, ["lexWeight", "lex_weight", "lex"]),

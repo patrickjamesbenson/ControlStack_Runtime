@@ -181,6 +181,46 @@ function optionValues(model, fieldKey) {
   return (workflowField(model, fieldKey).options || []).map((item) => item.value);
 }
 
+function dropdownValues(model, fieldKey) {
+  return (workflowField(model, fieldKey).dropdownOptions || []).map((item) => item.value);
+}
+
+function protocolScopedSnapshot() {
+  return {
+    SYSTEM: [
+      { system: "DNX", system_variant_1: "80", label: "DNX 80", emission: "Direct", approved: "yes" },
+      { system: "ALT", system_variant_1: "40", label: "ALT 40", emission: "Direct", approved: "yes" },
+    ],
+    BOARDS: [
+      { system: "DNX", system_variant_1: "80", c1_cct: "4000", c1_cri_min: "90", control_type_labels: "DALI-2;Fixed", control_type_options: "internal-driver-bus;0-10V", approved: "yes" },
+      { system: "ALT", system_variant_1: "40", c1_cct: "3000", c1_cri_min: "80", control_type_labels: "PWM", approved: "yes" },
+    ],
+    DRIVERS: [
+      { driver_id: "DALI Driver", control_type: "DALI-2", approved: "yes" },
+      { driver_id: "Internal Diagnostic Driver", control_type: "internal-driver-bus", approved: "yes" },
+    ],
+  };
+}
+
+function emissionLaneSnapshot() {
+  return {
+    SYSTEM: [
+      { system: "DNX", system_variant_1: "80", label: "DNX 80", emission: "Direct", approved: "yes" },
+      { system: "DNX", system_variant_1: "80_DI", label: "DNX 80 DI", emission: "Both", approved: "yes" },
+      { system: "UP", system_variant_1: "40", label: "UP 40", emission: "Indirect", approved: "yes" },
+    ],
+    BOARDS: [
+      { system: "DNX", system_variant_1: "80", c1_cct: "4000", c1_cri_min: "90", control_type_labels: "DALI-2", approved: "yes" },
+      { system: "DNX", system_variant_1: "80_DI", c1_cct: "4000", c1_cri_min: "90", control_type_labels: "DALI-2", approved: "yes" },
+      { system: "UP", system_variant_1: "40", c1_cct: "3000", c1_cri_min: "80", control_type_labels: "Fixed", approved: "yes" },
+    ],
+    DRIVERS: [
+      { driver_id: "DALI Driver", control_type: "DALI-2", approved: "yes" },
+      { driver_id: "Fixed Driver", control_type: "Fixed", approved: "yes" },
+    ],
+  };
+}
+
 test("empty Light & Control spine rows render as em dash", () => {
   const model = createModel();
   const spine = model.selectorSurface.productSpine;
@@ -195,23 +235,67 @@ test("empty Light & Control spine rows render as em dash", () => {
   assert.equal(model.selectorSurface.payloadPreview.lightControl.controlType, null);
 });
 
-test("target lm/m and paired CCT/CRI fill from real reference options after manual selection", () => {
+test("target lm/m remains a manual typed input while paired CCT/CRI stays source-backed", () => {
   const selectorState = createSelectorState();
   let model = selectAndReload(selectorState, "system", "DNX|80");
 
-  assert.ok(optionValues(model, "targetLmPerM").includes("1200"));
+  const targetField = workflowField(model, "targetLmPerM");
+  assert.equal(targetField.manualInput, true);
+  assert.equal(targetField.dropdownSourced, false);
+  assert.deepEqual(optionValues(model, "targetLmPerM"), []);
   assert.ok(optionValues(model, "cctCri").includes("4000K / CRI90"));
 
   model = selectAndReload(selectorState, "targetLmPerM", "1200");
   model = selectAndReload(selectorState, "cctCri", "4000K / CRI90");
   model = selectAndReload(selectorState, "controlType", "DALI-2");
 
-  assert.equal(lightRow(model.selectorSurface.productSpine, "targetLmPerM").displayValue, "1200 lm/m");
+  assert.equal(lightRow(model.selectorSurface.productSpine, "targetLmPerM").displayValue, "1200");
   assert.equal(lightRow(model.selectorSurface.productSpine, "cctCri").displayValue, "4000K / CRI90");
   assert.equal(lightRow(model.selectorSurface.productSpine, "control").displayValue, "DALI-2");
-  assert.equal(model.selectorSurface.payloadPreview.lightControl.targetLmPerM, "1200 lm/m");
+  assert.equal(model.selectorSurface.payloadPreview.lightControl.targetLmPerM, "1200");
   assert.equal(model.selectorSurface.payloadPreview.lightControl.cctCri, "4000K / CRI90");
   assert.equal(model.selectorSurface.payloadPreview.lightControl.controlType, "DALI-2");
+});
+
+test("control protocol dropdown is source-scoped and excludes broad driver/internal noise", () => {
+  const snapshot = protocolScopedSnapshot();
+  const selectorState = createSelectorState();
+  const model = selectAndReload(selectorState, "system", "DNX|80", snapshot);
+  const controlValues = dropdownValues(model, "controlType");
+  const incompatibleValues = (workflowField(model, "controlType").incompatibleOptions || []).map((item) => item.value);
+
+  assert.ok(controlValues.includes("DALI-2"));
+  assert.ok(controlValues.includes("Fixed"));
+  assert.equal(controlValues.includes("PWM"), false);
+  assert.equal(controlValues.includes("internal-driver-bus"), false);
+  assert.equal(controlValues.includes("0-10V"), false);
+  assert.ok(incompatibleValues.includes("PWM"));
+});
+
+test("direct and indirect Light & Control inputs follow emission lane capability", () => {
+  const snapshot = emissionLaneSnapshot();
+
+  const directState = createSelectorState();
+  let model = selectAndReload(directState, "system", "DNX|80", snapshot);
+  assert.equal(workflowField(model, "targetLmPerM").displayMode, "manual-input");
+  assert.equal(workflowField(model, "targetLmPerMIndirect").displayMode, "hidden-diagnostic");
+  assert.equal(workflowField(model, "controlTypeIndirect").displayMode, "hidden-diagnostic");
+
+  const bothState = createSelectorState();
+  model = selectAndReload(bothState, "system", "DNX|80_DI", snapshot);
+  assert.equal(workflowField(model, "targetLmPerM").displayMode, "manual-input");
+  assert.equal(workflowField(model, "targetLmPerMIndirect").displayMode, "manual-input");
+  model = selectAndReload(bothState, "cctCri", "4000K / CRI90", snapshot);
+  model = selectAndReload(bothState, "controlType", "DALI-2", snapshot);
+  model = selectAndReload(bothState, "indirectMatchDirect", "match-direct", snapshot);
+  assert.equal(workflowField(model, "cctCriIndirect").effectiveValue, "4000K / CRI90");
+  assert.equal(workflowField(model, "controlTypeIndirect").effectiveValue, "DALI-2");
+
+  const indirectState = createSelectorState();
+  model = selectAndReload(indirectState, "system", "UP|40", snapshot);
+  assert.equal(workflowField(model, "targetLmPerM").displayMode, "hidden-diagnostic");
+  assert.equal(workflowField(model, "controlType").displayMode, "hidden-diagnostic");
+  assert.equal(workflowField(model, "targetLmPerMIndirect").displayMode, "manual-input");
 });
 
 test("selecting control type changes the compatible driver consequence", () => {

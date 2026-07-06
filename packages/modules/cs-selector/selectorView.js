@@ -1235,6 +1235,36 @@ function appendSelectorProductFieldCard(parent, field = {}, surface = {}, idPref
 
   const dropdownOptions = fieldDropdownOptions(field);
   const incompatibleOptions = fieldIncompatibleOptions(field);
+  if (field.manualInput === true) {
+    const input = document.createElement("input");
+    input.id = `${idPrefix}-${field.fieldKey}`;
+    input.dataset.fieldKey = field.fieldKey || "unknown";
+    input.dataset.manualInput = "true";
+    input.dataset.dropdownSourced = "false";
+    input.type = "text";
+    input.inputMode = "decimal";
+    input.placeholder = field.unavailableReason || "Type value manually";
+    input.value = field.selectedValue || field.effectiveValue || "";
+    input.disabled = field.disabled === true || field.futureMapped === true || (field.status === "blocked" && !input.value);
+    input.addEventListener("change", () => {
+      const value = String(input.value || "").trim();
+      if (value) surface.setFieldValue?.(field.fieldKey, value);
+      else surface.clearFieldValue?.(field.fieldKey);
+    });
+    card.appendChild(input);
+
+    const selectedOption = selectedOrPreviewOption(field);
+    const compactMeta = document.createElement("div");
+    compactMeta.className = "cs-selector-product__field-compact-meta";
+    appendCompactMetadataLine(compactMeta, "selected", fieldSelectedText(field));
+    appendCompactMetadataLine(compactMeta, "input", "manual typed value");
+    if (field.status === "blocked") appendCompactMetadataLine(compactMeta, "blocked", field.unavailableReason || "current constraints");
+    card.appendChild(compactMeta);
+    if (field.unavailableReason || selectedOption.blocked === true) appendFieldMetadataDetails(card, field, selectedOption);
+    appendIncompatibleOptionDetails(card, field);
+    parent.appendChild(card);
+    return;
+  }
   const select = document.createElement("select");
   select.id = `${idPrefix}-${field.fieldKey}`;
   select.dataset.fieldKey = field.fieldKey || "unknown";
