@@ -948,13 +948,14 @@ test("live D/I Light and Control unlocks independent indirect CCT/CRI and protoc
 });
 
 test("live DNX 60 Beam D/I keeps authored protocol choices selectable across source system aliases", () => {
+  const directIndirectSlash = "D" + "/" + "I";
   const snapshot = {
-    SYSTEM: [{ system: "60", system_variant_1: "Beam", label: "DNX 60 Beam DI", emission: "Both", approved: "yes" }],
+    SYSTEM: [{ system: "60", system_variant_1: "Beam_DI", label: `DNX 60 Beam ${directIndirectSlash}`, emission: "Both", approved: "yes" }],
     OPTICS: [
       { system: "60", optic_var_1: "Asymmetric", optic_var_2: "ASY", emission_permission: "Direct", approved: "yes" },
       { system: "60", optic_var_1: "Batwing", optic_var_2: "BWG", emission_permission: "Indirect", approved: "yes" },
     ],
-    BOARDS: [{ system: "DNX", system_variant_1: "60", c1_cct: "3000", c1_cri_min: "80", control_type_labels: "D4i;DALI-2 DT6;DALI-2 DT8;DALI+ (Wireless);DMX;Fixed (On/Off)", approved: "yes" }],
+    BOARDS: [{ system: `DNX 60 Beam ${directIndirectSlash} style profile`, c1_cct: "3000", c1_cri_min: "80", control_type_labels: "D4i;DALI-2 DT6;DALI-2 DT8;DALI+ (Wireless);DMX;Fixed (On/Off)", approved: "yes" }],
     DRIVERS: [
       { driver_id: "D4i Driver", control_type: "D4i", approved: "yes" },
       { driver_id: "DT6 Driver", control_type: "DALI-2 DT6", approved: "yes" },
@@ -965,7 +966,7 @@ test("live DNX 60 Beam D/I keeps authored protocol choices selectable across sou
     ],
   };
   const constraints = {
-    system: "DNX 60 Beam DI",
+    system: `DNX 60 Beam ${directIndirectSlash}`,
     directOpticVar1: "60|Asymmetric",
     indirectOpticVar1: "60|Batwing",
     cctCri: "3000K / CRI80",

@@ -1767,6 +1767,17 @@ function systemOptionForRow(systemOptions, row) {
     || null;
 }
 
+function systemOptionForSourceRowAlias(systemOptions, row) {
+  const tokens = systemTokens(row);
+  if (!tokens.value && !tokens.label && !tokens.system) return null;
+  const identity = systemRowIdentityKey(row);
+  const candidate = identity || tokens.value || tokens.label || tokens.system;
+  return systemOptions
+    .map((option, index) => ({ option, index, score: systemAliasSelectionMatchScore(option, candidate) }))
+    .filter((item) => item.score > 0)
+    .sort((left, right) => right.score - left.score || left.index - right.index)[0]?.option || null;
+}
+
 function systemOptionValueForSource(systemOptions, row) {
   const rowSystem = rowText(row, ["system", "series", "system_name", "system_key"]);
   const option = systemOptionForRow(systemOptions, row);
@@ -1796,7 +1807,7 @@ const CONTROL_PROTOCOL_FALLBACK_COLUMNS = Object.freeze(["control_type_options",
 const DRIVER_COMPATIBLE_CONTROL_COLUMNS = Object.freeze(["control_type_labels", "control_type", "control", "protocol", "dimming", "dimming_type", "driver_control", "control_protocol", "native_control_type"]);
 
 function sourceRowSystemReferenceMeta(systemOptions = [], row = {}) {
-  const option = systemOptionForRow(systemOptions, row);
+  const option = systemOptionForRow(systemOptions, row) || systemOptionForSourceRowAlias(systemOptions, row);
   const tokens = systemTokens(row);
   const referenceKey = safeString(option?.systemReferenceKey || tokens.system || rowText(row, ["system", "series", "system_name", "system_key"]));
   const identityKey = option ? systemOptionIdentityValue(option) : systemRowIdentityKey(row);
@@ -2085,10 +2096,24 @@ function valuesMatch(left, right) {
   return normaliseKey(stripDirectionSuffix(left)) === normaliseKey(stripDirectionSuffix(right));
 }
 
+function normaliseSystemReferenceAlias(value = "") {
+  return normaliseKey(stripDirectionSuffix(value)
+    .replace(/\bd\s*\/\s*i\b/gi, "di")
+    .replace(/\bd\s*-\s*i\b/gi, "di")
+    .replace(/\bdirect\s*\/\s*indirect\b/gi, "di")
+    .replace(/\bdirect\s+indirect\b/gi, "di")
+    .replace(/\bstyle\b/gi, " ")
+    .replace(/\bprofile\b/gi, " "));
+}
+
+function normalisedSystemTokenSet(value = "") {
+  return new Set(normaliseSystemReferenceAlias(value).split(/[^a-z0-9]+/).filter(Boolean));
+}
+
 function systemReferenceValuesMatch(candidateValue, selectedValue) {
   if (valuesMatch(candidateValue, selectedValue)) return true;
-  const candidateTokens = normalisedTokenSet(candidateValue);
-  const selectedTokens = normalisedTokenSet(selectedValue);
+  const candidateTokens = normalisedSystemTokenSet(candidateValue);
+  const selectedTokens = normalisedSystemTokenSet(selectedValue);
   return tokensIncludeAll(candidateTokens, selectedTokens) || tokensIncludeAll(selectedTokens, candidateTokens);
 }
 
@@ -2134,6 +2159,36 @@ function systemSelectionMatchScore(option = {}, selectedValue = "") {
   const variantTokens = normalisedTokenSet(variant);
   const variantPhrase = normaliseKey(variant).replace(/[^a-z0-9]+/g, " ").trim();
   const selectedPhrase = normaliseKey(selected).replace(/[^a-z0-9]+/g, " ").trim();
+  const variantMatched = Boolean(variantPhrase && selectedPhrase.includes(variantPhrase)) || tokensIncludeAll(selectedTokens, variantTokens);
+  if (!variantMatched) return selectedIsExactSystemOnly ? 5500 : 0;
+  const specificity = Array.from(variantTokens).join("").length + variantTokens.size;
+  return selectedLooksVariantSpecific ? 7000 + specificity : 6000 + specificity;
+}
+
+function systemAliasSelectionMatchScore(option = {}, selectedValue = "") {
+  const selected = safeString(selectedValue);
+  if (!selected) return 0;
+  if (valuesMatch(option.value, selected)) return 10000;
+  if (valuesMatch(option.label, selected)) return 9500;
+
+  const systemKey = safeString(option.systemReferenceKey || safeString(option.value).split("|")[0]);
+  const variant = systemOptionVariant(option);
+  const selectedTokens = normalisedSystemTokenSet(selected);
+  const selectedSystemParts = selected.split("|").map(safeString).filter(Boolean);
+  const selectedLooksVariantSpecific = selectedSystemParts.length > 1 || selectedTokens.size > normalisedSystemTokenSet(systemKey).size;
+  const selectedIsExactSystemOnly = Boolean(systemKey && valuesMatch(systemKey, selected) && !selectedLooksVariantSpecific);
+
+  if (systemKey) {
+    const systemTokens = normalisedSystemTokenSet(systemKey);
+    const exactSystem = valuesMatch(systemKey, selected);
+    if (!exactSystem && !tokensIncludeAll(selectedTokens, systemTokens)) return 0;
+    if (!variant) return exactSystem ? 8000 : 5000;
+  }
+
+  if (!variant) return 0;
+  const variantTokens = normalisedSystemTokenSet(variant);
+  const variantPhrase = normaliseSystemReferenceAlias(variant).replace(/[^a-z0-9]+/g, " ").trim();
+  const selectedPhrase = normaliseSystemReferenceAlias(selected).replace(/[^a-z0-9]+/g, " ").trim();
   const variantMatched = Boolean(variantPhrase && selectedPhrase.includes(variantPhrase)) || tokensIncludeAll(selectedTokens, variantTokens);
   if (!variantMatched) return selectedIsExactSystemOnly ? 5500 : 0;
   const specificity = Array.from(variantTokens).join("").length + variantTokens.size;
