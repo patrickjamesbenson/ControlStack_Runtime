@@ -159,8 +159,6 @@ function activeSelectorOptionsPayload() {
         endpoint: payload?.endpoint || SELECTOR_REFERENCE_OPTIONS_ENDPOINT,
         constraintQuery: activeSignature.constraintQuery,
         constraintFingerprint: activeSignature.constraintFingerprint,
-        fields: [],
-        workflowSections: [],
         warnings: ["Selector reference options are loading."],
       },
       activeSignature.constraintFingerprint,
@@ -425,16 +423,31 @@ export function resolveSelectorReferenceOptionsStatus(
   const incomingFingerprint = String(nextStatus?.constraintFingerprint || activeConstraintFingerprint || selectorConstraintFingerprintFromQuery(activeConstraintQuery));
   const incomingQuery = typeof nextStatus?.constraintQuery === "string" ? nextStatus.constraintQuery : activeConstraintQuery;
   const sameConstraintFingerprint = Boolean(previousFingerprint && incomingFingerprint && previousFingerprint === incomingFingerprint);
+  const loadingWithPreviousPayload = nextStatus?.status === "loading" && !Array.isArray(nextStatus?.fields) && previousFields.length > 0;
+  const stripSelectedState = (field = {}) => ({
+    ...field,
+    selectedValue: "",
+    selectedLabel: "",
+    options: Array.isArray(field.options) ? field.options.map((option) => ({ ...option, selected: false })) : field.options,
+    incompatibleOptions: Array.isArray(field.incompatibleOptions) ? field.incompatibleOptions.map((option) => ({ ...option, selected: false })) : field.incompatibleOptions,
+  });
   const fieldsFromCurrentPayload = Array.isArray(nextStatus?.fields)
     ? nextStatus.fields
-    : sameConstraintFingerprint
-      ? previousFields
-      : [];
+    : loadingWithPreviousPayload
+      ? previousFields.map(stripSelectedState)
+      : sameConstraintFingerprint
+        ? previousFields
+        : [];
   const workflowSectionsFromCurrentPayload = Array.isArray(nextStatus?.workflowSections)
     ? nextStatus.workflowSections
-    : sameConstraintFingerprint
-      ? previousWorkflowSections
-      : [];
+    : loadingWithPreviousPayload
+      ? previousWorkflowSections.map((section) => ({
+        ...section,
+        fields: Array.isArray(section.fields) ? section.fields.map(stripSelectedState) : section.fields,
+      }))
+      : sameConstraintFingerprint
+        ? previousWorkflowSections
+        : [];
   const stalePreviousFieldsCount = sameConstraintFingerprint ? 0 : previousFields.length;
   const stalePreviousWorkflowSectionCount = sameConstraintFingerprint ? 0 : previousWorkflowSections.length;
 
@@ -447,8 +460,9 @@ export function resolveSelectorReferenceOptionsStatus(
     fields: fieldsFromCurrentPayload,
     workflowSections: workflowSectionsFromCurrentPayload,
     candidateSummary: nextStatus?.candidateSummary || (sameConstraintFingerprint ? currentStatus?.candidateSummary : base.candidateSummary),
-    previousFieldsReused: !Array.isArray(nextStatus?.fields) && sameConstraintFingerprint && previousFields.length > 0,
-    previousWorkflowSectionsReused: !Array.isArray(nextStatus?.workflowSections) && sameConstraintFingerprint && previousWorkflowSections.length > 0,
+    previousFieldsReused: !Array.isArray(nextStatus?.fields) && (sameConstraintFingerprint || loadingWithPreviousPayload) && previousFields.length > 0,
+    previousWorkflowSectionsReused: !Array.isArray(nextStatus?.workflowSections) && (sameConstraintFingerprint || loadingWithPreviousPayload) && previousWorkflowSections.length > 0,
+    loadingPreviousFieldsRetained: loadingWithPreviousPayload,
     stalePreviousFieldsCount,
     stalePreviousWorkflowSectionCount,
     stalePreviousPayloadRetainedForDiagnostics: false,
@@ -495,8 +509,6 @@ async function loadSelectorReferenceOptions() {
     endpoint: SELECTOR_REFERENCE_OPTIONS_ENDPOINT,
     constraintQuery: activeSignature.constraintQuery,
     constraintFingerprint: activeSignature.constraintFingerprint,
-    fields: [],
-    workflowSections: [],
     warnings: ["Selector reference options are loading."],
   }, activeSignature);
 

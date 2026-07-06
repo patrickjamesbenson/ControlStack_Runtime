@@ -1383,7 +1383,7 @@ test("stale optic children and indirect optics do not block IP/IK parent candida
   assert.equal(surface.selectionTruthSummary.blockers.some((item) => item.fieldKey === "ikRating"), false);
 });
 
-test("live options loading after System change drops stale previous child fields from active truth", () => {
+test("live options loading after System change keeps visible fields but drops stale previous child fields from active truth", () => {
   const previousConstraints = {
     system: "DNX 60 Beam DI",
     directOpticVar1: "60|Comfort",
@@ -1461,20 +1461,22 @@ test("live options loading after System change drops stale previous child fields
   }, nextSignature.constraintFingerprint, nextSignature.constraintQuery);
   const model = selectorViewModelFor(loading, nextConstraints);
   const surface = model.selectorSurface;
-  const surfaceText = JSON.stringify(surface);
 
   assert.equal(loading.constraintFingerprint, nextSignature.constraintFingerprint);
   assert.equal(loading.stalePreviousFieldsCount, 5);
   assert.equal(loading.stalePreviousWorkflowSectionCount, 1);
-  assert.deepEqual(loading.fields, []);
-  assert.deepEqual(loading.workflowSections, []);
+  assert.equal(loading.loadingPreviousFieldsRetained, true);
+  assert.equal(loading.previousFieldsReused, true);
+  assert.equal(loading.previousWorkflowSectionsReused, true);
+  assert.equal(loading.fields.length, 5);
+  assert.equal(loading.workflowSections.length, 1);
   assert.deepEqual(surface.manualConstraints.map((constraint) => constraint.fieldKey), ["system"]);
   const loadingDirectField = optionalVisibleControlField(model, "directOpticVar1");
   if (loadingDirectField) {
     assert.equal(loadingDirectField.manualConstraint, false);
-    assert.doesNotMatch(JSON.stringify(loadingDirectField), /Comfort · 60|60\|Comfort/);
+    assert.equal(loadingDirectField.selectedValue || "", "");
   }
-  assert.doesNotMatch(surfaceText, /Comfort · 60|60\|Comfort|IP65|IK10|Surface clip|Class I/);
+  assert.doesNotMatch(JSON.stringify(surface.payloadPreview), /Comfort · 60|60\|Comfort|IP65|IK10|Surface clip|Class I/);
   assert.equal(surface.payloadPreview.optics.direct.opticVar1, null);
   assert.equal(surface.payloadPreview.environment.ip, null);
   assert.equal(surface.payloadPreview.environment.ik, null);
