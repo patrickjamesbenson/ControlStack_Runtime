@@ -2085,6 +2085,13 @@ function valuesMatch(left, right) {
   return normaliseKey(stripDirectionSuffix(left)) === normaliseKey(stripDirectionSuffix(right));
 }
 
+function systemReferenceValuesMatch(candidateValue, selectedValue) {
+  if (valuesMatch(candidateValue, selectedValue)) return true;
+  const candidateTokens = normalisedTokenSet(candidateValue);
+  const selectedTokens = normalisedTokenSet(selectedValue);
+  return tokensIncludeAll(candidateTokens, selectedTokens) || tokensIncludeAll(selectedTokens, candidateTokens);
+}
+
 function constraintValueMatches(fieldKey, candidateValue, selectedValue) {
   if (fieldKey === "mountStyle") return mountStyleValuesMatch(candidateValue, selectedValue);
   return valuesMatch(candidateValue, selectedValue);
@@ -2299,12 +2306,31 @@ function cascadeScopedConstraints(fieldKey = "", constraints = {}) {
   return Object.fromEntries(Object.entries(directionalConstraints).filter(([key]) => !blockedChildren.has(key)));
 }
 
+function systemConstraintSelectionValues(constraints = {}, selected = "") {
+  return uniqueStrings([
+    selected,
+    constraints.system,
+    constraints.__systemReferenceKey,
+    constraints.__systemLabel,
+  ].map(safeString).filter(Boolean));
+}
+
+function controlProtocolSystemConstraintCanMatch(fieldKey = "", targetFieldKey = "") {
+  return fieldKey === "system" && ["controlType", "controlTypeIndirect"].includes(targetFieldKey);
+}
+
+function recordConstraintValueMatches(fieldKey = "", candidateValue = "", selectedValue = "", targetFieldKey = "") {
+  if (controlProtocolSystemConstraintCanMatch(fieldKey, targetFieldKey)) return systemReferenceValuesMatch(candidateValue, selectedValue);
+  return constraintValueMatches(fieldKey, candidateValue, selectedValue);
+}
+
 function recordConstraintBlockers(record, constraints, exceptFieldKey = "") {
   const blockers = [];
   for (const [fieldKey, selected] of Object.entries(constraints)) {
     if (fieldKey === exceptFieldKey || !safeString(selected)) continue;
     const values = Array.isArray(record.fields?.[fieldKey]) ? record.fields[fieldKey] : [];
-    if (values.length && !values.some((value) => constraintValueMatches(fieldKey, value, selected))) {
+    const selectedValues = controlProtocolSystemConstraintCanMatch(fieldKey, exceptFieldKey) ? systemConstraintSelectionValues(constraints, selected) : [selected];
+    if (values.length && !values.some((value) => selectedValues.some((selectedValue) => recordConstraintValueMatches(fieldKey, value, selectedValue, exceptFieldKey)))) {
       blockers.push({
         fieldKey,
         selectedValue: selected,

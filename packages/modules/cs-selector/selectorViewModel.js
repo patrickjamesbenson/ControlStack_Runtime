@@ -1676,11 +1676,18 @@ function selectedSystemReferenceCandidates(selectedConstraints = {}) {
   ].map((item) => String(item || "").trim()).filter(Boolean);
 }
 
+function systemReferenceValuesMatch(optionKey = "", selectedKey = "") {
+  if (optionValuesMatch(optionKey, selectedKey)) return true;
+  const optionTokens = normalisedSelectionTokens(optionKey);
+  const selectedTokens = normalisedSelectionTokens(selectedKey);
+  return selectionTokensIncludeAll(optionTokens, selectedTokens) || selectionTokensIncludeAll(selectedTokens, optionTokens);
+}
+
 function optionMatchesSelectedSystemReference(option = {}, selectedConstraints = {}) {
   const optionKeys = optionSystemReferenceKeys(option);
   const selectedKeys = selectedSystemReferenceCandidates(selectedConstraints);
   if (!optionKeys.length || !selectedKeys.length) return true;
-  return selectedKeys.some((selected) => optionKeys.some((optionKey) => optionValuesMatch(optionKey, selected)));
+  return selectedKeys.some((selected) => optionKeys.some((optionKey) => systemReferenceValuesMatch(optionKey, selected)));
 }
 
 function driverCompatibleWithSelectedControl(option = {}, selectedControl = "") {

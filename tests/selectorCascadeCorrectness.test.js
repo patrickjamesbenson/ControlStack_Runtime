@@ -947,6 +947,48 @@ test("live D/I Light and Control unlocks independent indirect CCT/CRI and protoc
   assert.equal(model.selectorSurface.payloadPreview.lightControl.targetLmPerMIndirect, "250");
 });
 
+test("live DNX 60 Beam D/I keeps authored protocol choices selectable across source system aliases", () => {
+  const snapshot = {
+    SYSTEM: [{ system: "60", system_variant_1: "Beam", label: "DNX 60 Beam DI", emission: "Both", approved: "yes" }],
+    OPTICS: [
+      { system: "60", optic_var_1: "Asymmetric", optic_var_2: "ASY", emission_permission: "Direct", approved: "yes" },
+      { system: "60", optic_var_1: "Batwing", optic_var_2: "BWG", emission_permission: "Indirect", approved: "yes" },
+    ],
+    BOARDS: [{ system: "DNX", system_variant_1: "60", c1_cct: "3000", c1_cri_min: "80", control_type_labels: "D4i;DALI-2 DT6;DALI-2 DT8;DALI+ (Wireless);DMX;Fixed (On/Off)", approved: "yes" }],
+    DRIVERS: [
+      { driver_id: "D4i Driver", control_type: "D4i", approved: "yes" },
+      { driver_id: "DT6 Driver", control_type: "DALI-2 DT6", approved: "yes" },
+      { driver_id: "DT8 Driver", control_type: "DALI-2 DT8", approved: "yes" },
+      { driver_id: "DALI Plus Driver", control_type: "DALI+ (Wireless)", approved: "yes" },
+      { driver_id: "DMX Driver", control_type: "DMX", approved: "yes" },
+      { driver_id: "Fixed Driver", control_type: "Fixed (On/Off)", approved: "yes" },
+    ],
+  };
+  const constraints = {
+    system: "DNX 60 Beam DI",
+    directOpticVar1: "60|Asymmetric",
+    indirectOpticVar1: "60|Batwing",
+    cctCri: "3000K / CRI80",
+    cctCriIndirect: "3000K / CRI80",
+    indirectMatchDirect: "independent",
+    targetLmPerM: "1000",
+    targetLmPerMIndirect: "1000",
+  };
+  const result = deriveSelectorReferenceOptionsFromSnapshot(snapshot, { source: sourceReady(), constraints });
+  const model = selectorViewModelFor(result, constraints);
+  const directControl = viewModelField(result, "controlType", constraints);
+  const indirectControl = viewModelField(result, "controlTypeIndirect", constraints);
+  const container = renderedSelectorContainer(model);
+
+  assert.ok(compatibleLabels(directControl).includes("DALI-2 DT6"));
+  assert.ok(compatibleLabels(directControl).includes("Fixed (On/Off)"));
+  assert.ok(compatibleLabels(indirectControl).includes("DALI-2 DT6"));
+  assert.equal(directControl.options.every((option) => option.blocked === true || option.status === "blocked"), false);
+  assert.equal(indirectControl.options.every((option) => option.blocked === true || option.status === "blocked"), false);
+  assert.ok(renderedSelectsForField(container, "controlType").some((select) => select.disabled !== true && renderedSelectOptionLabels(select).includes("DALI-2 DT6")));
+  assert.ok(renderedSelectsForField(container, "controlTypeIndirect").some((select) => select.disabled !== true && renderedSelectOptionLabels(select).includes("DALI-2 DT6")));
+});
+
 test("direct-only systems suppress indirect Light and Control lane while preserving direct choices", () => {
   const constraints = { system: "DNX 80 Direct" };
   const result = deriveSelectorReferenceOptionsFromSnapshot(identityCascadeSnapshot(), { source: sourceReady(), constraints });
