@@ -2042,6 +2042,7 @@ const RUNTIME_PRESENTATION_PRIMARY_DECISION_FIELDS = Object.freeze(new Set([
   "cctCriIndirect",
   "controlType",
   "controlTypeIndirect",
+  "indirectMatchDirect",
   "mountStyle",
   "mountSelection",
   "mountParticulars",
@@ -2295,6 +2296,7 @@ function presentationIsHiddenDiagnostic(field = {}) {
 }
 
 function presentationIsInherited(field = {}) {
+  if (field.fieldKey === "indirectMatchDirect") return false;
   return RUNTIME_PRESENTATION_INHERITED_FIELDS.has(field.fieldKey) || presentationRole(field) === "inherited-consequence";
 }
 
@@ -2373,6 +2375,14 @@ function classifyRuntimePresentationField(field = {}, finishContext = {}) {
     effectiveLabel = hasManualConstraint ? field.selectedLabel || field.selectedValue : "";
     overrideAvailable = true;
     classificationReason = field.unavailableReason || "typed manual input; no dropdown catalogue or auto-selection is sourced";
+  } else if (["cctCriIndirect", "controlTypeIndirect"].includes(field.fieldKey) && field.inheritedValue && !hasManualConstraint && optionsComputable && compatibleOptionCount > 0) {
+    displayMode = "choice";
+    provenance = "inherited";
+    primaryDecision = true;
+    effectiveValue = field.inheritedValue;
+    effectiveLabel = field.inheritedLabel || field.inheritedValue;
+    overrideAvailable = true;
+    classificationReason = field.unavailableReason || "indirect value currently matches direct; selecting a value creates an independent indirect override";
   } else if (presentationIsInherited(field) && field.inheritedValue && !hasManualConstraint && !["finishCover", "finishEnd", "finishFlex"].includes(field.fieldKey)) {
     displayMode = "inherited-chip";
     provenance = "inherited";

@@ -585,24 +585,40 @@ function appendSelectorManualConstraintBehaviour(parent, shell = {}) {
       label.htmlFor = `cs-selector-${field.fieldKey}`;
       row.appendChild(label);
 
-      const select = document.createElement("select");
-      select.id = `cs-selector-${field.fieldKey}`;
-      select.dataset.fieldKey = field.fieldKey;
-      const emptyOption = document.createElement("option");
-      emptyOption.value = "";
-      emptyOption.textContent = "Clear manual constraint / return to preview consequence";
-      select.appendChild(emptyOption);
-      for (const option of field.options || []) {
-        const optionElement = document.createElement("option");
-        optionElement.value = option.value;
-        optionElement.textContent = option.label || option.value;
-        select.appendChild(optionElement);
+      if (field.manualInput === true) {
+        const input = document.createElement("input");
+        input.id = `cs-selector-${field.fieldKey}`;
+        input.dataset.fieldKey = field.fieldKey;
+        input.dataset.manualInput = "true";
+        input.dataset.dropdownSourced = "false";
+        input.type = "text";
+        input.inputMode = "decimal";
+        input.placeholder = "Type lm/m manually";
+        input.value = field.value || "";
+        input.addEventListener("change", () => {
+          group.setFieldValue?.(field.fieldKey, String(input.value || "").trim());
+        });
+        row.appendChild(input);
+      } else {
+        const select = document.createElement("select");
+        select.id = `cs-selector-${field.fieldKey}`;
+        select.dataset.fieldKey = field.fieldKey;
+        const emptyOption = document.createElement("option");
+        emptyOption.value = "";
+        emptyOption.textContent = "Clear manual constraint / return to preview consequence";
+        select.appendChild(emptyOption);
+        for (const option of field.options || []) {
+          const optionElement = document.createElement("option");
+          optionElement.value = option.value;
+          optionElement.textContent = option.label || option.value;
+          select.appendChild(optionElement);
+        }
+        select.value = field.value || "";
+        select.addEventListener("change", () => {
+          group.setFieldValue?.(field.fieldKey, select.value);
+        });
+        row.appendChild(select);
       }
-      select.value = field.value || "";
-      select.addEventListener("change", () => {
-        group.setFieldValue?.(field.fieldKey, select.value);
-      });
-      row.appendChild(select);
 
       appendDefinitionList(row, [
         ["state", field.stateLabel || "changeable"],
@@ -1491,7 +1507,7 @@ function appendSelectorWorkflowSections(parent, surface = {}) {
   wrapper.dataset.flatFieldsPrimary = surface.flatFieldsPrimary === true ? "true" : "false";
   for (const workflowSection of sections) {
     const allFields = Array.isArray(workflowSection.fields) ? workflowSection.fields : [];
-    const visibleFields = allFields.filter((field) => ["choice", "warning-chip"].includes(field.displayMode) && !workflowFieldIsHiddenFromPrimary(field));
+    const visibleFields = allFields.filter((field) => ["choice", "warning-chip", "manual-input"].includes(field.displayMode) && !workflowFieldIsHiddenFromPrimary(field));
     const overrideFields = allFields.filter(workflowFieldIsCollapsedOverride);
     const disclosureFields = workflowSectionDisclosureFields(allFields);
     const diagnosticHiddenCount = allFields.filter(workflowFieldIsSectionHiddenDiagnostic).length;

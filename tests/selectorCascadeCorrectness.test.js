@@ -386,6 +386,10 @@ function renderedSelectsForField(container, fieldKey) {
   return elementDescendants(container).filter((element) => element.tagName === "SELECT" && element.dataset.fieldKey === fieldKey);
 }
 
+function renderedInputsForField(container, fieldKey) {
+  return elementDescendants(container).filter((element) => element.tagName === "INPUT" && element.dataset.fieldKey === fieldKey);
+}
+
 function renderedSelectOptionLabels(select) {
   return select.options.map((option) => option.textContent || option.value).filter(Boolean).sort();
 }
@@ -831,6 +835,18 @@ test("Light and Control keeps lm/m manual and scopes protocol choices under syst
   assert.ok(compatibleLabels(workflowField(result, "controlType")).includes("DALI-2"));
   assert.equal(compatibleLabels(workflowField(result, "controlType")).includes("DALI-2 DT8"), false);
   assert.equal(workflowField(result, "controlType").options.some((item) => item.value === "Phase Cut" || item.label === "Phase Cut"), false);
+});
+
+test("rendered Light and Control controls expose typed lm/m inputs and protocol selects for D/I profiles", () => {
+  const constraints = { system: "DNX 80 DI" };
+  const result = deriveSelectorReferenceOptionsFromSnapshot(identityCascadeSnapshot(), { source: sourceReady(), constraints });
+  const model = selectorViewModelFor(result, constraints);
+  const container = renderedSelectorContainer(model);
+
+  assert.ok(renderedInputsForField(container, "targetLmPerM").length > 0, "direct lm/m should render as an input");
+  assert.ok(renderedInputsForField(container, "targetLmPerMIndirect").length > 0, "indirect lm/m should render as an input");
+  assert.ok(renderedSelectsForField(container, "controlType").length > 0, "direct control protocol should render as a selectable dropdown");
+  assert.ok(renderedSelectsForField(container, "indirectMatchDirect").length > 0, "match-direct / independent toggle should render as a selectable dropdown");
 });
 
 test("direct-only systems suppress indirect Light and Control lane while preserving direct choices", () => {

@@ -1681,6 +1681,7 @@ function collectOptions(snapshot, timelineContext = createSelectorTimelineContex
   for (const value of ambientPolicyValues(snapshot)) addOption(bucket, "ambient", value, { sourceTables: ["SYSTEM_POLICY"] });
   for (const value of policyValues(snapshot, ["wiring", "cable", "control cores"] )) addOption(bucket, "wiringType", value, { sourceTables: ["SYSTEM_POLICY"] });
   addOption(bucket, "indirectMatchDirect", "Match direct CCT/CRI and control", { value: "match-direct", sourceTables: ["SYSTEM", "OPTICS"] });
+  addOption(bucket, "indirectMatchDirect", "Independent indirect CCT/CRI and control", { value: "independent", sourceTables: ["SYSTEM", "OPTICS"] });
   addOption(bucket, "inheritedFinishStatus", "Cover/end/flex inherit default until changed", { value: "inherits-default-finish", sourceTables: ["SYSTEM", "SYSTEM_POLICY"] });
 
   for (const value of accessoryLabels(snapshot, ACCESSORY_PAINT_FINISH_NEEDLES)) addOption(bucket, "bodyFinish", value, { sourceTables: ["ACCESSORIES"] });
