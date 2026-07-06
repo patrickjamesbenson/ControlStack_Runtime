@@ -2,9 +2,9 @@
 """Fixed named runtime gate runner for ControlStack Runtime.
 
 This script intentionally supports named gates only. It does not accept arbitrary
-shell commands or user-supplied working directories. The supported gates are
-diagnostic aliases only; every allowed gate runs the same fixed runtime test
-command from the runtime root.
+shell commands or user-supplied working directories. Each supported gate maps to
+a fixed, reviewed command so ChatGPT can run the smallest useful verification
+instead of always invoking the full Runtime suite.
 """
 
 from __future__ import annotations
@@ -20,7 +20,16 @@ from typing import Any
 
 ALLOWED_GATES = {"selector", "test", "runtime"}
 RUNTIME_ROOT = Path(__file__).resolve().parents[1]
-FIXED_COMMAND = ["npm.cmd", "test"]
+
+# Keep these commands deliberately fixed. Do not accept caller-supplied commands.
+# - selector: fast Selector-only slice for normal Selector coding/debugging.
+# - runtime: Runtime/Engine/RunTable slice, still smaller than the full suite.
+# - test: full repository suite for final readiness checks.
+GATE_COMMANDS: dict[str, list[str]] = {
+    "selector": ["node", "--test", "tests/selector*.test.js"],
+    "runtime": ["node", "--test", "tests/runtime*.test.js", "tests/engine*.test.js", "tests/runTable*.test.js"],
+    "test": ["npm.cmd", "test"],
+}
 DEFAULT_MAX_CHARS = 50_000
 
 
@@ -60,6 +69,7 @@ def _payload(
     *,
     ok: bool,
     gate: str,
+    command: list[str],
     exit_code: int | None,
     stdout: str,
     stderr: str,
@@ -71,7 +81,7 @@ def _payload(
         "ok": ok,
         "gate": gate,
         "root": str(RUNTIME_ROOT),
-        "command": FIXED_COMMAND,
+        "command": command,
         "exit_code": exit_code,
         "returncode": exit_code,
         "stdout": stdout,
@@ -86,10 +96,12 @@ def _payload(
 
 def run_gate(gate: str, max_chars: int) -> dict[str, Any]:
     gate_name = str(gate or "").strip().lower()
-    if gate_name not in ALLOWED_GATES:
+    command = GATE_COMMANDS.get(gate_name)
+    if gate_name not in ALLOWED_GATES or not command:
         return _payload(
             ok=False,
             gate=gate_name,
+            command=[],
             exit_code=2,
             stdout="",
             stderr=f"Unknown or disallowed ControlStack runtime gate: {gate!r}",
@@ -102,7 +114,7 @@ def run_gate(gate: str, max_chars: int) -> dict[str, Any]:
     started = time.monotonic()
     try:
         proc = subprocess.run(
-            FIXED_COMMAND,
+            command,
             cwd=str(RUNTIME_ROOT),
             env=_safe_env(),
             capture_output=True,
@@ -116,12 +128,13 @@ def run_gate(gate: str, max_chars: int) -> dict[str, Any]:
         return _payload(
             ok=False,
             gate=gate_name,
+            command=command,
             exit_code=127,
             stdout="",
             stderr=str(exc),
             duration_s=time.monotonic() - started,
             truncated=False,
-            error="npm_not_found",
+            error="command_not_found",
         )
     except subprocess.TimeoutExpired as exc:
         stdout, stdout_truncated = _clip_text(exc.stdout or "", stream_budget)
@@ -129,6 +142,7 @@ def run_gate(gate: str, max_chars: int) -> dict[str, Any]:
         return _payload(
             ok=False,
             gate=gate_name,
+            command=command,
             exit_code=124,
             stdout=stdout,
             stderr=stderr,
@@ -142,6 +156,7 @@ def run_gate(gate: str, max_chars: int) -> dict[str, Any]:
     return _payload(
         ok=proc.returncode == 0,
         gate=gate_name,
+        command=command,
         exit_code=proc.returncode,
         stdout=stdout,
         stderr=stderr,

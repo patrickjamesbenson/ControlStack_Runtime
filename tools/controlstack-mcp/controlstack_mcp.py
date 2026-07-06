@@ -75,7 +75,7 @@ GIT_INDEX_JUNK_DIRS = {"node_modules", "__pycache__", ".pytest_cache", ".mypy_ca
 GIT_INDEX_ARCHIVE_EXTS = {".zip", ".tar", ".tgz", ".rar", ".7z", ".gz", ".bz2", ".xz"}
 GIT_INDEX_GLOB_CHARS = {"*", "?", "[", "]"}
 ALLOWED_GATES = {"selector", "test", "runtime"}
-FIXED_GATE_COMMAND = ["npm.cmd", "test"]
+FIXED_GATE_COMMAND = ["python", "scripts/controlstack_gate.py", "<gate>"]
 RUNTIMEDATA_SELECTOR_CRITICAL_TABLES = [
     "SYSTEM",
     "OPTICS",
