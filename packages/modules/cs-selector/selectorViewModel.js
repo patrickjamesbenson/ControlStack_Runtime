@@ -2,6 +2,7 @@ import { buildSelectedResultProjectionContract } from "../../workspace-kernel/se
 import { buildSelectorSpecialPartsEntitlementPreview } from "./selectorSpecialPartsEntitlementPreview.js";
 import { buildSelectorRunAccessoryPlacementPreview } from "./selectorRunAccessoryPlacementPreview.js";
 import { buildSelectorRunIntakePreview } from "./selectorRunIntakePreview.js";
+import { buildSelectorFactoryApprovedInputsSummary } from "./selectorFactoryApprovedInputsSummary.js";
 import { buildSelectorSafeDraftProjectEnvelopePreview } from "./selectorSafeDraftProjectEnvelopePreview.js";
 import { buildSelectorSafeHydrateValidationPreview } from "./selectorSafeHydrateValidationPreview.js";
 import { buildRuntimeSealedCandidateAssemblyPreviewSummary } from "../../workspace-kernel/engineRunTableSealedCandidateAssemblyPreview.js";
@@ -4729,6 +4730,8 @@ function createSpecBuildReadinessPreview({
   committedSelectorConstraints = null,
   autoConsequences = [],
   blockedItems = [],
+  runIntakePreview = {},
+  runAccessoryPlacementPreview = {},
   summary = {},
 } = {}) {
   const spec = productSpine.specGateCandidateReadiness || payloadPreview.specGateCandidateReadiness || {};
@@ -4749,10 +4752,17 @@ function createSpecBuildReadinessPreview({
     specReady,
     buildReady,
   });
+  const factoryApprovedInputsSummary = buildSelectorFactoryApprovedInputsSummary({
+    stage2Ready: buildReady,
+    committedSelectorConstraints: buildAuthorityConstraints,
+    runIntakePreviewSummary: runIntakePreview,
+    runAccessoryPlacementPreviewSummary: runAccessoryPlacementPreview,
+  });
+  const factoryApprovedInputsReady = factoryApprovedInputsSummary.factoryApprovedInputsReady === true;
   const stageIndicators = [
     { stage: 1, key: "specReady", label: "Stage 1 — Spec Ready", ready: specReady, authority: "committed selector state", sourceAuthority: "manualConstraints or acceptedDefaults only; provisional defaults do not count", failClosed: !specReady },
     { stage: 2, key: "proofOfConceptBuildable", label: "Stage 2 — Proof-of-Concept Buildable", ready: buildReady, authority: "committed selector state only: manualConstraints or acceptedDefaults", sourceAuthority: "manualConstraints or acceptedDefaults only; product-spine/display rows do not count", failClosed: !buildReady },
-    { stage: 3, key: "factoryApprovedInputs", label: "Stage 3 — Factory Approved Inputs", ready: false, authority: "factory approval not implemented in Selector", sourceAuthority: "not implemented — fail closed", failClosed: true },
+    { stage: 3, key: "factoryApprovedInputs", label: "Stage 3 — Factory Approved Inputs", ready: factoryApprovedInputsReady, authority: "committed selector state plus safe factory-input summaries", sourceAuthority: factoryApprovedInputsSummary.sourceAuthority, failClosed: !factoryApprovedInputsReady, blocker: factoryApprovedInputsSummary.blocker || null, summary: factoryApprovedInputsSummary },
     { stage: 4, key: "engineOutcomeProven", label: "Stage 4 — Engine Outcome Proven", ready: false, authority: "Engine/RunTable proof remains downstream", sourceAuthority: "not implemented — fail closed", failClosed: true },
     { stage: 5, key: "standaloneProGradeHardening", label: "Stage 5 — Standalone / Pro-grade Hardening", ready: false, authority: "standalone/pro-grade hardening deferred", sourceAuthority: "not implemented — fail closed", failClosed: true },
   ];
@@ -4809,10 +4819,13 @@ function createSpecBuildReadinessPreview({
     buildReady,
     buildGateComplete: buildReady,
     buildGateState: buildReady ? "complete enough for future build slug/spec input metadata" : "incomplete — build/order context still required",
+    factoryApprovedInputsReady,
+    factoryApprovedInputsSummary,
+    factoryApprovedInputsRows: factoryApprovedInputsSummary.summaryRows,
     stageIndicators,
     stageIndicatorRows: stageIndicators.map((stage) => [stage.label, stage.ready ? "true" : "false"]),
     businessStageIndicatorContract: {
-      sourceAuthority: "committed selector state only for Stage 1 and Stage 2; downstream stages fail closed until implemented",
+      sourceAuthority: "committed selector state for Stage 1/2; Stage 3 uses committed selector state plus safe factory-input summaries; Stage 4/5 remain fail-closed",
       stages: stageIndicators,
       writes: false,
       rawRowsExposed: false,
@@ -4871,6 +4884,8 @@ function createSpecBuildReadinessPreview({
       ["candidate state", candidateState],
       ["spec gate state", specReady ? "ready" : "incomplete"],
       ["build gate state", buildReady ? "ready" : "incomplete"],
+      ["factory-approved inputs", factoryApprovedInputsReady ? "ready" : "blocked/fail-closed"],
+      ["factory-approved blocker", factoryApprovedInputsSummary.blocker || "none"],
       ["manual constraints", String(manualConstraints.length)],
       ["auto consequences", String(autoConsequences.length)],
       ["missing spec requirements", missingSpecRequirements.length ? missingSpecRequirements.join(", ") : "none"],
@@ -5704,6 +5719,8 @@ function createDbBackedSelectorSurface(selectorReferenceStatus = {}, local = {},
     committedSelectorConstraints,
     autoConsequences,
     blockedItems,
+    runIntakePreview,
+    runAccessoryPlacementPreview,
     summary,
   });
   const productSurfaceParityLock = createProductSurfaceParityLock({

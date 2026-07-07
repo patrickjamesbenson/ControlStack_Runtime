@@ -338,7 +338,7 @@ test("Stage 2 build readiness accepts accepted defaults as committed selector st
   assert.equal(buildRows.Runs, "complete");
   assert.equal(stageRows["Stage 1 — Spec Ready"], "true");
   assert.equal(stageRows["Stage 2 — Proof-of-Concept Buildable"], "true");
-  assert.equal(stageRows["Stage 3 — Factory Approved Inputs"], "false");
+  assert.equal(stageRows["Stage 3 — Factory Approved Inputs"], "true");
   assert.equal(stageRows["Stage 4 — Engine Outcome Proven"], "false");
   assert.equal(stageRows["Stage 5 — Standalone / Pro-grade Hardening"], "false");
   assertNoGenerationAuthority(value);
@@ -349,7 +349,7 @@ test("business-stage indicators expose committed-state authority and downstream 
   completeSpecReadyCandidate(selectorState);
   const value = preview(acceptBuildOrderContext(selectorState));
 
-  assert.equal(value.businessStageIndicatorContract.sourceAuthority, "committed selector state only for Stage 1 and Stage 2; downstream stages fail closed until implemented");
+  assert.equal(value.businessStageIndicatorContract.sourceAuthority, "committed selector state for Stage 1/2; Stage 3 uses committed selector state plus safe factory-input summaries; Stage 4/5 remain fail-closed");
   assert.equal(value.businessStageIndicatorContract.writes, false);
   assert.equal(value.businessStageIndicatorContract.rawRowsExposed, false);
   assert.deepEqual(value.businessStageIndicatorContract.stages.map((stage) => stage.label), [
@@ -359,9 +359,36 @@ test("business-stage indicators expose committed-state authority and downstream 
     "Stage 4 — Engine Outcome Proven",
     "Stage 5 — Standalone / Pro-grade Hardening",
   ]);
-  assert.deepEqual(value.businessStageIndicatorContract.stages.map((stage) => stage.ready), [true, true, false, false, false]);
+  assert.deepEqual(value.businessStageIndicatorContract.stages.map((stage) => stage.ready), [true, true, true, false, false]);
   assert.match(value.businessStageIndicatorContract.stages[0].sourceAuthority, /provisional defaults do not count/);
   assert.match(value.businessStageIndicatorContract.stages[1].sourceAuthority, /product-spine\/display rows do not count/);
+  assert.match(value.businessStageIndicatorContract.stages[2].sourceAuthority, /safe run\/accessory\/reservation summaries/);
+  assert.equal(value.factoryApprovedInputsReady, true);
+  assert.equal(value.factoryApprovedInputsSummary.stage3Mode, "simple-run-stage3a-zero-accessory");
+  assert.equal(value.factoryApprovedInputsSummary.engineOutcomeProven, false);
+  assert.equal(value.factoryApprovedInputsSummary.runTableGenerated, false);
+  assert.equal(value.factoryApprovedInputsSummary.iesGenerated, false);
+});
+
+test("Stage 3 requires safe reservation summary when accessory placement intent exists", () => {
+  const selectorState = createSelectorState();
+  completeSpecReadyCandidate(selectorState);
+  selectorState.setRunIntakeRows([
+    { id: "run-1", runNumber: 1, label: "Run 1", quantity: "2", runLengthMm: "3500", lengthMode: "cut_to_length" },
+  ]);
+  selectorState.setRunAccessoryPlacementIntents([
+    { runReference: "Run 1", accessoryType: "sensor", quantity: "1", placementPreference: "start", status: "confirmed" },
+  ]);
+  const value = preview(addBuildOrderContext(selectorState));
+  const stageRows = rowsToObject(value.stageIndicatorRows);
+
+  assert.equal(value.buildReady, true);
+  assert.equal(value.factoryApprovedInputsReady, false);
+  assert.equal(value.factoryApprovedInputsSummary.accessoryReservationRequired, true);
+  assert.equal(value.factoryApprovedInputsSummary.blocker, "missing-policy-fingerprint");
+  assert.equal(stageRows["Stage 3 — Factory Approved Inputs"], "false");
+  assert.equal(stageRows["Stage 4 — Engine Outcome Proven"], "false");
+  assertNoGenerationAuthority(value);
 });
 
 test("slug source contract uses committed selector state only and fails closed", () => {
