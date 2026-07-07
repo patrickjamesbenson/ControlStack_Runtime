@@ -230,6 +230,10 @@ function safetyBase(extra = {}) {
     reservationLengthBand: extra.reservationLengthBand || bandMm(0),
     reservationLengthMm: extra.reservationLengthMm ?? 0,
     accessoryPlacementIntentSummary: extra.accessoryPlacementIntentSummary || null,
+    sealedReservedRangeSummary: extra.sealedReservedRangeSummary || null,
+    sealedPhysicalBoardPlacementSummary: extra.sealedPhysicalBoardPlacementSummary || null,
+    frozenPhysicalSegmentSummary: extra.frozenPhysicalSegmentSummary || null,
+    physicalSegmentBridgeReady: extra.physicalSegmentBridgeReady ?? false,
     lengthAdjustmentMode: extra.lengthAdjustmentMode || "unresolved",
     boardFillInputReady: extra.boardFillInputReady ?? false,
     warnings: Array.isArray(extra.warnings) ? extra.warnings.map((warning) => safeLabel(warning, "warning")) : [],
@@ -508,6 +512,380 @@ function lengthCanBeBoardFilled(lengthMm, boardFamilyLengthsSortedDesc, boardPit
     while (remaining >= candidate) remaining -= candidate;
   }
   return remaining === 0;
+}
+
+function physicalSegmentBridgeRequired(source) {
+  return source?.stage3BPhysicalSegmentBridgeRequired === true
+    || source?.requireSealedPhysicalSegmentBridge === true
+    || source?.physicalSegmentBridgeRequired === true;
+}
+
+function normalisePlacementIntent(value) {
+  const intent = safeToken(value, "unspecified");
+  if (["start", "begin", "beginning", "left"].includes(intent)) return "start";
+  if (["end", "finish", "right"].includes(intent)) return "end";
+  if (["mid", "middle", "center", "centre"].includes(intent)) return "mid";
+  return intent || "unspecified";
+}
+
+function resolveAggregatePlacementIntent(requests) {
+  const intents = [...new Set(requests.map((request) => normalisePlacementIntent(request.placementIntent)))];
+  if (intents.length === 0) return { ok: true, placementIntent: "none" };
+  const supported = new Set(["start", "end", "mid"]);
+  if (intents.length !== 1) {
+    return { ok: false, blocker: "stage3b-mixed-placement-intent-unsupported", diagnostic: "Stage 3B physical reservation coordinates require one sealed placement intent for the aggregate reserved range." };
+  }
+  if (!supported.has(intents[0])) {
+    return { ok: false, blocker: "stage3b-placement-intent-unresolved", diagnostic: "Stage 3B physical reservation coordinates require start, end, or mid placement intent." };
+  }
+  return { ok: true, placementIntent: intents[0] };
+}
+
+function resolveSegmentPolicy(source) {
+  const summary = firstPresent(source, ["sealedSegmentPolicySummary", "segmentPolicySummary", "physicalSegmentPolicySummary"]);
+  const policy = isPlainObject(summary) ? summary : {};
+  const segmentMaxLengthMm = toPositiveIntegerMm(firstPresent(policy, [
+    "segmentMaxLengthMm",
+    "segment_max_length_mm",
+    "maxSegmentLengthMm",
+  ])) ?? toPositiveIntegerMm(firstPresent(source, [
+    "segmentMaxLengthMm",
+    "segment_max_length_mm",
+    "maxSegmentLengthMm",
+  ]));
+  const segmentMinAestheticLengthMm = toPositiveIntegerMm(firstPresent(policy, [
+    "segmentMinAestheticLengthMm",
+    "segment_min_aesthetic_length_mm",
+    "minAestheticSegmentLengthMm",
+  ])) ?? toPositiveIntegerMm(firstPresent(source, [
+    "segmentMinAestheticLengthMm",
+    "segment_min_aesthetic_length_mm",
+    "minAestheticSegmentLengthMm",
+  ])) ?? 0;
+  return { segmentMaxLengthMm, segmentMinAestheticLengthMm };
+}
+
+function buildSealedReservedRangeSummary({
+  normalisedRequests,
+  bodyLengthBeforeReservationMm,
+  reservationLengthMm,
+  reservationCount,
+  boardPitchMm,
+}) {
+  if (reservationLengthMm === 0) {
+    return {
+      ok: true,
+      diagnosticOnly: true,
+      safeSummaryOnly: true,
+      coordinateSpace: "body-after-source-backed-end-deductions-mm",
+      bodyStartMm: 0,
+      bodyEndMm: bodyLengthBeforeReservationMm,
+      bodyLengthMm: bodyLengthBeforeReservationMm,
+      rangeCount: 0,
+      totalReservedLengthMm: 0,
+      totalReservedLengthBand: bandMm(0),
+      ranges: [],
+      reservationGridAligned: true,
+      rawReservationGridReturned: false,
+      rawAccessoryRowsReturned: false,
+    };
+  }
+
+  const placement = resolveAggregatePlacementIntent(normalisedRequests);
+  if (!placement.ok) return placement;
+
+  let startMm;
+  if (placement.placementIntent === "start") startMm = 0;
+  else if (placement.placementIntent === "end") startMm = bodyLengthBeforeReservationMm - reservationLengthMm;
+  else if (placement.placementIntent === "mid") startMm = (bodyLengthBeforeReservationMm - reservationLengthMm) / 2;
+
+  if (!Number.isInteger(startMm) || startMm < 0 || startMm + reservationLengthMm > bodyLengthBeforeReservationMm) {
+    return { ok: false, blocker: "stage3b-reservation-coordinate-unavailable", diagnostic: "Stage 3B could not derive a safe aggregate reserved range in body coordinates." };
+  }
+  const endMm = startMm + reservationLengthMm;
+  if (startMm % boardPitchMm !== 0 || endMm % boardPitchMm !== 0) {
+    return { ok: false, blocker: "reservation-grid-unavailable", diagnostic: "Reserved range coordinates must align to the sealed board pitch grid." };
+  }
+
+  return {
+    ok: true,
+    diagnosticOnly: true,
+    safeSummaryOnly: true,
+    coordinateSpace: "body-after-source-backed-end-deductions-mm",
+    bodyStartMm: 0,
+    bodyEndMm: bodyLengthBeforeReservationMm,
+    bodyLengthMm: bodyLengthBeforeReservationMm,
+    rangeCount: 1,
+    totalReservedLengthMm: reservationLengthMm,
+    totalReservedLengthBand: bandMm(reservationLengthMm),
+    ranges: [{
+      rangeIndex: 0,
+      startMm,
+      endMm,
+      lengthMm: reservationLengthMm,
+      lengthBand: bandMm(reservationLengthMm),
+      placementIntent: placement.placementIntent,
+      reservationCount,
+      reason: "accessory-reservation",
+      bodyCoordinateSpace: true,
+      rawAccessoryRowsReturned: false,
+    }],
+    reservationGridAligned: true,
+    rawReservationGridReturned: false,
+    rawAccessoryRowsReturned: false,
+  };
+}
+
+function buildUnreservedIntervals(bodyLengthBeforeReservationMm, ranges) {
+  const intervals = [];
+  let cursor = 0;
+  for (const range of ranges) {
+    if (range.startMm > cursor) intervals.push({ startMm: cursor, endMm: range.startMm, lengthMm: range.startMm - cursor });
+    cursor = Math.max(cursor, range.endMm);
+  }
+  if (cursor < bodyLengthBeforeReservationMm) {
+    intervals.push({ startMm: cursor, endMm: bodyLengthBeforeReservationMm, lengthMm: bodyLengthBeforeReservationMm - cursor });
+  }
+  return intervals.filter((interval) => interval.lengthMm > 0);
+}
+
+function boardRunForInterval(interval, boardFamilyLengthsSortedDesc, boardPitchMm, startIndex) {
+  if (interval.lengthMm % boardPitchMm !== 0) {
+    return { ok: false, blocker: "reservation-grid-unavailable", diagnostic: "Unreserved board-fill interval is not aligned to the sealed board pitch grid." };
+  }
+  const lengths = uniquePositiveLengths(boardFamilyLengthsSortedDesc);
+  if (lengths.length === 0) return { ok: false, blocker: "missing-board-length", diagnostic: "Sealed board family lengths are required for physical placement." };
+  const placements = [];
+  let cursor = interval.startMm;
+  let remaining = interval.lengthMm;
+  let boardIndex = startIndex;
+  while (remaining > 0) {
+    const picked = lengths.find((candidate) => candidate <= remaining);
+    if (!picked) {
+      return { ok: false, blocker: "reserved-span-bisects-board", diagnostic: "Reserved range leaves an unreserved interval that cannot be filled without bisecting a board." };
+    }
+    placements.push({
+      boardIndex,
+      startMm: cursor,
+      endMm: cursor + picked,
+      lengthMm: picked,
+      lengthBand: bandMm(picked),
+      bodyCoordinateSpace: true,
+      rawBoardRowsReturned: false,
+    });
+    boardIndex += 1;
+    cursor += picked;
+    remaining -= picked;
+  }
+  return { ok: true, placements, nextBoardIndex: boardIndex };
+}
+
+function buildSealedPhysicalBoardPlacementSummary({
+  bodyLengthBeforeReservationMm,
+  boardFillInputLengthMm,
+  boardFamilyLengthsSortedDesc,
+  boardPitchMm,
+  sealedReservedRangeSummary,
+}) {
+  const ranges = Array.isArray(sealedReservedRangeSummary?.ranges) ? sealedReservedRangeSummary.ranges : [];
+  const intervals = buildUnreservedIntervals(bodyLengthBeforeReservationMm, ranges);
+  const intervalLengthTotal = intervals.reduce((sum, interval) => sum + interval.lengthMm, 0);
+  if (intervalLengthTotal !== boardFillInputLengthMm) {
+    return { ok: false, blocker: "stage3b-physical-placement-length-mismatch", diagnostic: "Sealed reserved ranges do not match the board-fill input length." };
+  }
+
+  const placements = [];
+  let boardIndex = 0;
+  for (const interval of intervals) {
+    const run = boardRunForInterval(interval, boardFamilyLengthsSortedDesc, boardPitchMm, boardIndex);
+    if (!run.ok) return run;
+    placements.push(...run.placements);
+    boardIndex = run.nextBoardIndex;
+  }
+  if (placements.length === 0) {
+    return { ok: false, blocker: "board-fill-input-not-positive", diagnostic: "No sealed board placements could be derived." };
+  }
+
+  return {
+    ok: true,
+    diagnosticOnly: true,
+    safeSummaryOnly: true,
+    coordinateSpace: "body-after-source-backed-end-deductions-mm",
+    bodyLengthMm: bodyLengthBeforeReservationMm,
+    boardFillInputLengthMm,
+    boardPlacementCount: placements.length,
+    intervals,
+    placements,
+    boardPitchMm,
+    boardFamilyLengthsSortedDesc: [...boardFamilyLengthsSortedDesc],
+    noBoardOverlapsReservedRange: true,
+    reservationCannotBisectBoard: true,
+    rawBoardRowsReturned: false,
+    rawReservationGridReturned: false,
+  };
+}
+
+function makeFrozenSegment(segmentIndex, startMm, endMm, boards, segmentMinAestheticLengthMm, segmentMaxLengthMm) {
+  const segmentLengthMm = endMm - startMm;
+  if (segmentLengthMm <= 0) return { ok: false, blocker: "stage3b-frozen-segment-invalid", diagnostic: "Frozen physical segment length must be positive." };
+  if (segmentLengthMm > segmentMaxLengthMm) return { ok: false, blocker: "stage3b-segment-max-length-exceeded", diagnostic: "Frozen physical segment exceeds source-backed segment maximum length." };
+  if (segmentMinAestheticLengthMm > 0 && segmentLengthMm < segmentMinAestheticLengthMm) {
+    return { ok: false, blocker: "stage3b-segment-min-aesthetic-unmet", diagnostic: "Frozen physical segment is below source-backed minimum aesthetic length." };
+  }
+  return {
+    ok: true,
+    segment: {
+      segmentIndex,
+      segmentStartMm: startMm,
+      segmentEndMm: endMm,
+      segmentLengthMm,
+      segmentLengthBand: bandMm(segmentLengthMm),
+      boardCount: boards.length,
+      boardIndices: boards.map((board) => board.boardIndex),
+      activeLedLengthMm: boards.reduce((sum, board) => sum + board.lengthMm, 0),
+      activeLedLengthBand: bandMm(boards.reduce((sum, board) => sum + board.lengthMm, 0)),
+      rawBoardRowsReturned: false,
+    },
+  };
+}
+
+function buildFrozenPhysicalSegmentSummary({
+  sealedPhysicalBoardPlacementSummary,
+  sealedReservedRangeSummary,
+  segmentMaxLengthMm,
+  segmentMinAestheticLengthMm,
+}) {
+  if (!segmentMaxLengthMm) {
+    return { ok: false, blocker: "missing-max-segment-length", diagnostic: "A positive source-backed segment maximum length is required for frozen physical segments." };
+  }
+  const placements = sealedPhysicalBoardPlacementSummary.placements;
+  const segments = [];
+  let currentStart = null;
+  let currentEnd = null;
+  let currentBoards = [];
+  const flush = () => {
+    if (!currentBoards.length) return { ok: true };
+    const made = makeFrozenSegment(segments.length, currentStart, currentEnd, currentBoards, segmentMinAestheticLengthMm, segmentMaxLengthMm);
+    if (!made.ok) return made;
+    segments.push(made.segment);
+    currentStart = null;
+    currentEnd = null;
+    currentBoards = [];
+    return { ok: true };
+  };
+
+  for (const board of placements) {
+    if (board.lengthMm > segmentMaxLengthMm) {
+      return { ok: false, blocker: "board-swap-required-but-unsupported", diagnostic: "A sealed board placement is longer than the source-backed segment maximum length." };
+    }
+    if (currentBoards.length && board.startMm !== currentEnd) {
+      const closed = flush();
+      if (!closed.ok) return closed;
+    }
+    if (!currentBoards.length) {
+      currentStart = board.startMm;
+      currentEnd = board.startMm;
+    }
+    if (currentBoards.length && board.endMm - currentStart > segmentMaxLengthMm) {
+      const closed = flush();
+      if (!closed.ok) return closed;
+      currentStart = board.startMm;
+      currentEnd = board.startMm;
+    }
+    if (board.endMm - currentStart > segmentMaxLengthMm) {
+      return { ok: false, blocker: "board-fill-cannot-satisfy-segment-pattern", diagnostic: "Sealed board placement cannot satisfy max segment policy." };
+    }
+    currentBoards.push(board);
+    currentEnd = board.endMm;
+  }
+  const closed = flush();
+  if (!closed.ok) return closed;
+  if (segments.length === 0) return { ok: false, blocker: "stage3b-frozen-segment-unavailable", diagnostic: "Frozen physical segments could not be derived." };
+
+  const joinPositionsMm = [];
+  for (let index = 1; index < segments.length; index += 1) {
+    joinPositionsMm.push(segments[index].segmentStartMm);
+  }
+  const ranges = Array.isArray(sealedReservedRangeSummary?.ranges) ? sealedReservedRangeSummary.ranges : [];
+  const reservedRangesCrossFrozenSegmentJoin = ranges.some((range) => joinPositionsMm.some((joinMm) => range.startMm < joinMm && joinMm < range.endMm));
+  const totalReservedLengthMm = ranges.reduce((sum, range) => sum + range.lengthMm, 0);
+
+  return {
+    ok: true,
+    diagnosticOnly: true,
+    safeSummaryOnly: true,
+    summaryType: "stage3b-sealed-frozen-physical-segment-summary",
+    frozenFrom: "sealed-reserved-ranges-plus-segment-aware-board-placement",
+    segmentCount: segments.length,
+    joinCount: Math.max(0, segments.length - 1),
+    segmentMaxLengthMm,
+    segmentMinAestheticLengthMm,
+    boardPlacementCount: placements.length,
+    reservedRangeSummary: {
+      rangeCount: ranges.length,
+      totalReservedLengthMm,
+      totalReservedLengthBand: bandMm(totalReservedLengthMm),
+      reservedRangesCrossFrozenSegmentJoin,
+      reservedRangesForceSegmentSplits: false,
+      rawReservationGridReturned: false,
+    },
+    segments,
+    joinPositionsMm,
+    segmentBoundariesAtBoardEndsOnly: true,
+    noBoardCrossesFrozenSegmentBoundary: true,
+    rawBoardRowsReturned: false,
+    rawReservationGridReturned: false,
+  };
+}
+
+function buildStage3BPhysicalSegmentBridgeSummary({
+  source,
+  normalisedRequests,
+  bodyLengthBeforeReservationMm,
+  reservationLengthMm,
+  reservationCount,
+  boardFillInputLengthMm,
+  boardFamilyLengthsSortedDesc,
+  boardPitchMm,
+}) {
+  if (!physicalSegmentBridgeRequired(source)) {
+    return { ok: true, required: false, physicalSegmentBridgeReady: false };
+  }
+  const segmentPolicy = resolveSegmentPolicy(source);
+  const sealedReservedRangeSummary = buildSealedReservedRangeSummary({
+    normalisedRequests,
+    bodyLengthBeforeReservationMm,
+    reservationLengthMm,
+    reservationCount,
+    boardPitchMm,
+  });
+  if (!sealedReservedRangeSummary.ok) return sealedReservedRangeSummary;
+
+  const sealedPhysicalBoardPlacementSummary = buildSealedPhysicalBoardPlacementSummary({
+    bodyLengthBeforeReservationMm,
+    boardFillInputLengthMm,
+    boardFamilyLengthsSortedDesc,
+    boardPitchMm,
+    sealedReservedRangeSummary,
+  });
+  if (!sealedPhysicalBoardPlacementSummary.ok) return sealedPhysicalBoardPlacementSummary;
+
+  const frozenPhysicalSegmentSummary = buildFrozenPhysicalSegmentSummary({
+    sealedPhysicalBoardPlacementSummary,
+    sealedReservedRangeSummary,
+    segmentMaxLengthMm: segmentPolicy.segmentMaxLengthMm,
+    segmentMinAestheticLengthMm: segmentPolicy.segmentMinAestheticLengthMm,
+  });
+  if (!frozenPhysicalSegmentSummary.ok) return frozenPhysicalSegmentSummary;
+
+  return {
+    ok: true,
+    required: true,
+    physicalSegmentBridgeReady: true,
+    sealedReservedRangeSummary,
+    sealedPhysicalBoardPlacementSummary,
+    frozenPhysicalSegmentSummary,
+  };
 }
 
 function buildReservationFingerprint(payload) {
@@ -822,6 +1200,33 @@ export function buildRuntimeAccessoryReservationFootholdSummary(input = {}) {
     });
   }
 
+  const physicalSegmentBridgeSummary = buildStage3BPhysicalSegmentBridgeSummary({
+    source,
+    normalisedRequests,
+    bodyLengthBeforeReservationMm,
+    reservationLengthMm,
+    reservationCount,
+    boardFillInputLengthMm,
+    boardFamilyLengthsSortedDesc,
+    boardPitchMm,
+  });
+  if (physicalSegmentBridgeSummary.ok !== true) {
+    return failClosed(physicalSegmentBridgeSummary.blocker, physicalSegmentBridgeSummary.diagnostic, {
+      originalRunLengthMm,
+      selectedTierOrProfile,
+      productFamilyToken,
+      endPlateDeductionBand: endPlatePolicy.band,
+      bodyLengthBeforeLengthAdjustmentMm,
+      bodyLengthBeforeReservationMm,
+      reservationCount,
+      reservationLengthMm,
+      reservationLengthBand: bandMm(reservationLengthMm),
+      boardFillInputLengthMm,
+      policyFingerprint,
+      sourceFingerprint,
+    });
+  }
+
   const accessoryPlacementIntentSummary = buildPlacementIntentSummary(
     normalisedRequests,
     reservationUnit,
@@ -846,6 +1251,10 @@ export function buildRuntimeAccessoryReservationFootholdSummary(input = {}) {
     reservationLengthMm,
     accessoryPlacementIntentSummary,
     boardFillInputLengthMm,
+    physicalSegmentBridgeRequired: physicalSegmentBridgeSummary.required === true,
+    sealedReservedRangeSummary: physicalSegmentBridgeSummary.sealedReservedRangeSummary || null,
+    sealedPhysicalBoardPlacementSummary: physicalSegmentBridgeSummary.sealedPhysicalBoardPlacementSummary || null,
+    frozenPhysicalSegmentSummary: physicalSegmentBridgeSummary.frozenPhysicalSegmentSummary || null,
     policyFingerprint,
     sourceFingerprint,
   };
@@ -871,6 +1280,10 @@ export function buildRuntimeAccessoryReservationFootholdSummary(input = {}) {
     reservationLengthBand: bandMm(reservationLengthMm),
     reservationLengthMm,
     accessoryPlacementIntentSummary,
+    sealedReservedRangeSummary: physicalSegmentBridgeSummary.sealedReservedRangeSummary || null,
+    sealedPhysicalBoardPlacementSummary: physicalSegmentBridgeSummary.sealedPhysicalBoardPlacementSummary || null,
+    frozenPhysicalSegmentSummary: physicalSegmentBridgeSummary.frozenPhysicalSegmentSummary || null,
+    physicalSegmentBridgeReady: physicalSegmentBridgeSummary.physicalSegmentBridgeReady === true,
     lengthAdjustmentMode,
     boardFillInputReady: true,
     warnings,

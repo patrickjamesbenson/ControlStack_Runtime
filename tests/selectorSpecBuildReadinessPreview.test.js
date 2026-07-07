@@ -449,6 +449,14 @@ test("Stage 3B accepts non-zero accessory intent when it remains inside one seal
   assert.equal(reservation.bodyLengthBeforeReservationMm, 2800);
   assert.equal(reservation.bodyLengthBeforeLengthAdjustmentMm, 2800);
   assert.equal(reservation.boardFillInputLengthMm, 1400);
+  assert.equal(reservation.physicalSegmentBridgeReady, true);
+  assert.equal(reservation.sealedReservedRangeSummary.rangeCount, 1);
+  assert.equal(reservation.sealedReservedRangeSummary.ranges[0].startMm, 0);
+  assert.equal(reservation.sealedReservedRangeSummary.ranges[0].endMm, 1400);
+  assert.equal(reservation.sealedPhysicalBoardPlacementSummary.boardPlacementCount, 1);
+  assert.deepEqual(reservation.sealedPhysicalBoardPlacementSummary.placements.map((row) => [row.startMm, row.endMm]), [[1400, 2800]]);
+  assert.equal(reservation.frozenPhysicalSegmentSummary.segmentCount, 1);
+  assert.deepEqual(reservation.frozenPhysicalSegmentSummary.joinPositionsMm, []);
   assert.equal(joinAuthority.ok, true);
   assert.equal(joinAuthority.joinCrossingAuthorityReady, true);
   assert.equal(joinAuthority.joinSensitive, false);
@@ -480,7 +488,7 @@ test("Stage 3B fails closed when non-zero accessory intent is join-sensitive wit
     { id: "run-1", runNumber: 1, label: "Run 1", quantity: "2", runLengthMm: "5620", lengthMode: "cut_to_length" },
   ]);
   selectorState.setRunAccessoryPlacementIntents([
-    { runReference: "Run 1", accessoryType: "sensor", quantity: "1", placementPreference: "mid", status: "confirmed" },
+    { runReference: "Run 1", accessoryType: "sensor", quantity: "1", placementPreference: "start", status: "confirmed" },
   ]);
   acceptBuildOrderContext(selectorState, { runLength: "5620", runLengthLabel: "5620 mm" });
   const value = preview(createModel({ selectorState, constraints: selectorStateConstraints(selectorState) }));
@@ -498,14 +506,23 @@ test("Stage 3B fails closed when non-zero accessory intent is join-sensitive wit
   assert.equal(reservation.boardFillInputReady, false);
   assert.equal(reservation.sourceBackedBodyLengthPolicySummary.source, "SYSTEM_POLICY");
   assert.equal(reservation.sourceBackedBodyLengthPolicySummary.bodyLengthBeforeReservationMm, 5600);
+  assert.equal(reservation.physicalSegmentBridgeReady, true);
+  assert.equal(reservation.sealedReservedRangeSummary.ranges[0].startMm, 0);
+  assert.equal(reservation.sealedReservedRangeSummary.ranges[0].endMm, 1400);
+  assert.equal(reservation.sealedPhysicalBoardPlacementSummary.boardPlacementCount, 3);
+  assert.equal(reservation.frozenPhysicalSegmentSummary.segmentCount, 2);
+  assert.deepEqual(reservation.frozenPhysicalSegmentSummary.joinPositionsMm, [4200]);
   assert.equal(joinAuthority.ok, false);
   assert.equal(joinAuthority.joinSensitive, true);
   assert.equal(joinAuthority.singleSegmentContained, false);
+  assert.equal(joinAuthority.physicalSegmentBridgeReady, true);
   assert.equal(joinAuthority.bodyLengthBeforeReservationMm, 5600);
   assert.equal(joinAuthority.segmentMaxLengthMm, 3650);
-  assert.equal(joinAuthority.ruleCoverage.find((row) => row.rule === "board_cross_segment_join").classification, "partially represented");
-  assert.equal(joinAuthority.ruleCoverage.find((row) => row.rule === "diffuser_cross_segment_join").classification, "partially represented");
-  assert.equal(joinAuthority.ruleCoverage.find((row) => row.rule === "secondary_across_segment").classification, "partially represented");
+  assert.ok(joinAuthority.joinAuthorityBlockers.includes("do-not-bridge-join-policy-not-physically-enforced"));
+  assert.ok(joinAuthority.joinAuthorityBlockers.includes("do-not-bridge-segment-join-policy-not-physically-enforced"));
+  assert.equal(joinAuthority.ruleCoverage.find((row) => row.rule === "board_cross_segment_join").classification, "represented and physically enforced");
+  assert.equal(joinAuthority.ruleCoverage.find((row) => row.rule === "diffuser_cross_segment_join").classification, "represented and physically enforced");
+  assert.equal(joinAuthority.ruleCoverage.find((row) => row.rule === "secondary_across_segment").classification, "represented and physically enforced");
   assert.equal(joinAuthority.ruleCoverage.find((row) => row.rule === "do_not_bridge_join").classification, "missing and not safe to defer for Stage 3B claims");
   assert.equal(joinAuthority.ruleCoverage.find((row) => row.rule === "do_not_bridge_segment_join").classification, "missing and not safe to defer for Stage 3B claims");
   assert.equal(stageRows["Stage 3 — Factory Approved Inputs"], "false");
