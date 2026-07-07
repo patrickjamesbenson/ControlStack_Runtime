@@ -90,8 +90,11 @@ const LENGTH_POLICY_KEYS = Object.freeze([
   "start_board_gap",
   "end_board_gap",
   "pitch_tolerance_mm",
+  "max_board_gap_mm",
   "length_pref",
   "gap_mode",
+  "greedy_tie_break_mode",
+  "board_selection_prefer_recent",
 ]);
 
 const JOIN_POLICY_KEYS = Object.freeze([

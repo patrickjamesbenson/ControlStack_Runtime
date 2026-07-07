@@ -63,6 +63,7 @@ const STAGE3B_SELECTOR_POLICY_PAYLOAD = Object.freeze({
   reservationUnit: "board-module",
   reservationModules: 1,
   endPlatePolicyMode: "source-backed-system-policy-deduction-stage3b-foothold",
+  boardPackingSplitPolicyMode: "source-backed-system-policy-stage3b-exact-fill-greedy-maxlen-only",
   lengthAdjustmentPreference: "cut-back",
   joinBridgePolicy: "physical join placement not represented at Stage 3B",
 });
@@ -814,6 +815,7 @@ function buildStage3BReservationSummaryFromSafePreviews({
       boardPitchMm: STAGE3B_SELECTOR_BOARD_PITCH_MM,
       boardFamilyLengthsSortedDesc: [...STAGE3B_SELECTOR_BOARD_FAMILY_LENGTHS],
     },
+    sourceBackedLengthPolicySummary,
     endPlatePolicySummary: {
       startDeductionMm: sourceBackedBodyLengthPolicySummary.startDeductionMm,
       endDeductionMm: sourceBackedBodyLengthPolicySummary.endDeductionMm,

@@ -71,6 +71,41 @@ const DEFAULT_SUPPORTED_ACCESSORY_TYPES = new Set([
   "blank-cover",
   "power-entry",
 ]);
+const STAGE3B_PACKING_SPLIT_POLICY_KEYS = Object.freeze([
+  "pitch_tolerance_mm",
+  "max_board_gap_mm",
+  "gap_mode",
+  "length_pref",
+  "greedy_tie_break_mode",
+  "board_selection_prefer_recent",
+  "segment_max_board_split_qty",
+  "segment_split_mode_2piece",
+  "segment_split_mode_3piece",
+  "segment_split_mode_multi",
+  "segment_short_piece_position_2piece",
+  "segment_short_piece_position_3piece",
+  "segment_short_piece_position_multi",
+]);
+const GAP_MODES = new Set(["N+1", "N-1"]);
+const STAGE3B_EXACT_FILL_LENGTH_PREFS = new Set(["exact", "nearest", "shorter", "longer"]);
+const STAGE3B_GREEDY_MAXLEN_MODES = new Set([
+  "largest-first",
+  "largest_first",
+  "longest-first",
+  "longest_first",
+  "descending-length",
+  "descending_length",
+  "maximise-maxlen",
+  "maximise_maxlen",
+  "maximize-maxlen",
+  "maximize_maxlen",
+  "greedy-maxlen",
+  "greedy_maxlen",
+  "greedy-largest-first",
+  "greedy_largest_first",
+]);
+const STAGE3B_EQUAL_SPLIT_MODES = new Set(["equal-split", "equal_split", "equal"]);
+const STAGE3B_SHORT_PIECE_POSITIONS = new Set(["start", "end", "mid", "middle", "center", "centre"]);
 
 function clonePlain(value) {
   return JSON.parse(JSON.stringify(value ?? null));
@@ -230,6 +265,7 @@ function safetyBase(extra = {}) {
     reservationLengthBand: extra.reservationLengthBand || bandMm(0),
     reservationLengthMm: extra.reservationLengthMm ?? 0,
     accessoryPlacementIntentSummary: extra.accessoryPlacementIntentSummary || null,
+    boardPackingSplitPolicySummary: extra.boardPackingSplitPolicySummary || null,
     sealedReservedRangeSummary: extra.sealedReservedRangeSummary || null,
     sealedPhysicalBoardPlacementSummary: extra.sealedPhysicalBoardPlacementSummary || null,
     frozenPhysicalSegmentSummary: extra.frozenPhysicalSegmentSummary || null,
@@ -512,6 +548,259 @@ function lengthCanBeBoardFilled(lengthMm, boardFamilyLengthsSortedDesc, boardPit
     while (remaining >= candidate) remaining -= candidate;
   }
   return remaining === 0;
+}
+
+function hasPolicyValue(source, key) {
+  return isPlainObject(source) && Object.prototype.hasOwnProperty.call(source, key) && !isBlank(source[key]);
+}
+
+function stage3BPolicyTokens(value) {
+  return String(value ?? "")
+    .split(/[;,|]/g)
+    .map((entry) => safeToken(entry, ""))
+    .filter(Boolean);
+}
+
+function stage3BPolicyValue(summary, key) {
+  const lengthPolicies = isPlainObject(summary?.lengthPolicies) ? summary.lengthPolicies : {};
+  const policies = isPlainObject(summary?.policies) ? summary.policies : {};
+  const numericMm = isPlainObject(summary?.numericMm) ? summary.numericMm : {};
+  if (hasPolicyValue(lengthPolicies, key)) return lengthPolicies[key];
+  if (hasPolicyValue(policies, key)) return policies[key];
+  if (hasPolicyValue(numericMm, key)) return numericMm[key];
+  if (hasPolicyValue(summary, key)) return summary[key];
+  return undefined;
+}
+
+function strictBooleanPolicy(value) {
+  const token = safeToken(value, "");
+  if (["true", "yes", "1", "y", "t"].includes(token)) return true;
+  if (["false", "no", "0", "n", "f"].includes(token)) return false;
+  return null;
+}
+
+function resolveBoardPackingSplitPolicySummary(source, {
+  boardLengthMm,
+  boardPitchMm,
+  boardFamilyLengthsSortedDesc,
+} = {}) {
+  if (!physicalSegmentBridgeRequired(source)) return { ok: true, required: false, physicallyInvoked: false };
+  const supplied = firstPresent(source, [
+    "boardPackingSplitPolicySummary",
+    "sourceBackedBoardPackingSplitPolicySummary",
+    "packingSplitPolicySummary",
+    "sourceBackedPackingSplitPolicySummary",
+    "sourceBackedLengthPolicySummary",
+    "lengthPolicySummary",
+  ]);
+  if (!isPlainObject(supplied)) {
+    return {
+      ok: false,
+      blocker: "stage3b-board-packing-split-policy-unresolved",
+      diagnostic: "Stage 3B physical board packing requires a sealed source-backed packing/split policy summary.",
+    };
+  }
+  const blocker = unsafeBlocker(supplied);
+  if (blocker) {
+    return {
+      ok: false,
+      blocker,
+      diagnostic: "Stage 3B packing/split policy summary contains unsafe raw or private input.",
+    };
+  }
+
+  const missingPolicyKeys = STAGE3B_PACKING_SPLIT_POLICY_KEYS.filter((key) => isBlank(stage3BPolicyValue(supplied, key)));
+  if (missingPolicyKeys.length > 0) {
+    return {
+      ok: false,
+      blocker: "stage3b-board-packing-split-policy-unresolved",
+      diagnostic: `Stage 3B board packing/split authority is missing source-backed policy values: ${missingPolicyKeys.join(", ")}.`,
+      missingPolicyKeys,
+      rawRowsReturned: false,
+    };
+  }
+
+  const pitchToleranceMm = toFiniteNumber(stage3BPolicyValue(supplied, "pitch_tolerance_mm"));
+  const maxBoardGapMm = toNonNegativeIntegerMm(stage3BPolicyValue(supplied, "max_board_gap_mm"));
+  const segmentMaxBoardSplitQty = toNonNegativeIntegerMm(stage3BPolicyValue(supplied, "segment_max_board_split_qty"));
+  if (!Number.isFinite(pitchToleranceMm) || pitchToleranceMm < 0 || maxBoardGapMm === null || segmentMaxBoardSplitQty === null) {
+    return {
+      ok: false,
+      blocker: "stage3b-board-packing-split-policy-invalid",
+      diagnostic: "Stage 3B board packing/split authority requires non-negative numeric pitch, board-gap, and segment split policies.",
+      rawRowsReturned: false,
+    };
+  }
+
+  const gapMode = String(stage3BPolicyValue(supplied, "gap_mode") || "").trim().toUpperCase();
+  const lengthPref = safeToken(stage3BPolicyValue(supplied, "length_pref"), "");
+  const greedyTieBreakMode = safeToken(stage3BPolicyValue(supplied, "greedy_tie_break_mode"), "");
+  const boardSelectionPreferRecent = strictBooleanPolicy(stage3BPolicyValue(supplied, "board_selection_prefer_recent"));
+  if (!GAP_MODES.has(gapMode) || !STAGE3B_EXACT_FILL_LENGTH_PREFS.has(lengthPref) || boardSelectionPreferRecent === null) {
+    return {
+      ok: false,
+      blocker: "stage3b-board-packing-split-policy-invalid",
+      diagnostic: "Stage 3B board packing/split authority contains unsupported gap, length preference, or board-selection policy values.",
+      rawRowsReturned: false,
+    };
+  }
+
+  const lengths = uniquePositiveLengths(boardFamilyLengthsSortedDesc);
+  if (!boardLengthMm || !boardPitchMm || lengths.length === 0 || boardLengthMm % boardPitchMm !== 0 || lengths.some((lengthMm) => lengthMm % boardPitchMm !== 0)) {
+    return {
+      ok: false,
+      blocker: "stage3b-board-family-authority-unproven",
+      diagnostic: "Stage 3B board packing requires sealed board family denominations aligned to the sealed pitch/reservation quantum.",
+      rawRowsReturned: false,
+    };
+  }
+
+  const greedyTieBreakPhysicallyInvoked = lengths.length > 1;
+  if (greedyTieBreakPhysicallyInvoked && !STAGE3B_GREEDY_MAXLEN_MODES.has(greedyTieBreakMode)) {
+    return {
+      ok: false,
+      blocker: "stage3b-greedy-board-packing-policy-unsupported",
+      diagnostic: "Stage 3B currently supports multi-denomination board packing only when the source-backed greedy tie-break mode matches longest/largest-first packing.",
+      rawRowsReturned: false,
+    };
+  }
+  if (greedyTieBreakPhysicallyInvoked && boardSelectionPreferRecent) {
+    return {
+      ok: false,
+      blocker: "stage3b-board-selection-recency-unsupported",
+      diagnostic: "Stage 3B does not use source board recency when resolving multi-denomination board packing.",
+      rawRowsReturned: false,
+    };
+  }
+
+  const splitModeTokens = {
+    twoPiece: stage3BPolicyTokens(stage3BPolicyValue(supplied, "segment_split_mode_2piece")),
+    threePiece: stage3BPolicyTokens(stage3BPolicyValue(supplied, "segment_split_mode_3piece")),
+    multi: stage3BPolicyTokens(stage3BPolicyValue(supplied, "segment_split_mode_multi")),
+  };
+  const shortPiecePositionTokens = {
+    twoPiece: stage3BPolicyTokens(stage3BPolicyValue(supplied, "segment_short_piece_position_2piece")),
+    threePiece: stage3BPolicyTokens(stage3BPolicyValue(supplied, "segment_short_piece_position_3piece")),
+    multi: stage3BPolicyTokens(stage3BPolicyValue(supplied, "segment_short_piece_position_multi")),
+  };
+  const unsupportedShortPolicy = Object.values(shortPiecePositionTokens)
+    .flat()
+    .find((token) => !STAGE3B_SHORT_PIECE_POSITIONS.has(token));
+  if (unsupportedShortPolicy) {
+    return {
+      ok: false,
+      blocker: "stage3b-short-piece-policy-unsupported",
+      diagnostic: "Stage 3B short-piece policy contains an unsupported position token.",
+      rawRowsReturned: false,
+    };
+  }
+
+  return {
+    ok: true,
+    required: true,
+    physicallyInvoked: true,
+    summaryType: "stage3b-source-backed-board-packing-split-policy-summary",
+    boardLengthMm,
+    boardPitchMm,
+    boardFamilyLengthsSortedDesc: [...lengths],
+    boardDenominationsAlignedToPitch: true,
+    reservationQuantumMm: boardPitchMm,
+    pitchToleranceMm,
+    maxBoardGapMm,
+    gapMode,
+    lengthPref,
+    exactFillOnly: true,
+    greedyTieBreakMode,
+    greedyTieBreakPhysicallyInvoked,
+    boardSelectionPreferRecent,
+    segmentMaxBoardSplitQty,
+    splitModeTokens,
+    shortPiecePositionTokens,
+    policyNames: [...STAGE3B_PACKING_SPLIT_POLICY_KEYS],
+    policyFingerprint: `safe-stage3b-packing-split-policy:${stableSha1({
+      boardLengthMm,
+      boardPitchMm,
+      boardFamilyLengthsSortedDesc: lengths,
+      pitchToleranceMm,
+      maxBoardGapMm,
+      gapMode,
+      lengthPref,
+      greedyTieBreakMode,
+      boardSelectionPreferRecent,
+      segmentMaxBoardSplitQty,
+      splitModeTokens,
+      shortPiecePositionTokens,
+    })}`,
+    rawRowsReturned: false,
+    rawTableHeadersReturned: false,
+  };
+}
+
+function segmentPiecePolicyKey(segmentCount) {
+  if (segmentCount <= 2) return "twoPiece";
+  if (segmentCount === 3) return "threePiece";
+  return "multi";
+}
+
+function validateFrozenSegmentSplitPolicy(boardPackingSplitPolicySummary, frozenPhysicalSegmentSummary) {
+  if (boardPackingSplitPolicySummary?.required !== true || frozenPhysicalSegmentSummary?.ok !== true) {
+    return { ok: true, segmentSplitPhysicallyInvoked: false };
+  }
+  const segmentCount = toPositiveIntegerMm(frozenPhysicalSegmentSummary.segmentCount) || 0;
+  const joinCount = Math.max(0, segmentCount - 1);
+  if (joinCount === 0) return { ok: true, segmentSplitPhysicallyInvoked: false };
+
+  if (boardPackingSplitPolicySummary.segmentMaxBoardSplitQty < joinCount) {
+    return {
+      ok: false,
+      blocker: "stage3b-segment-split-authority-unproven",
+      diagnostic: "Stage 3B frozen segment joins exceed the source-backed segment_max_board_split_qty policy.",
+    };
+  }
+
+  const piecePolicyKey = segmentPiecePolicyKey(segmentCount);
+  const splitTokens = boardPackingSplitPolicySummary.splitModeTokens?.[piecePolicyKey] || [];
+  const segmentLengths = Array.isArray(frozenPhysicalSegmentSummary.segments)
+    ? frozenPhysicalSegmentSummary.segments.map((segment) => toPositiveIntegerMm(segment.segmentLengthMm)).filter(Boolean)
+    : [];
+  const allEqual = segmentLengths.length > 0 && segmentLengths.every((lengthMm) => lengthMm === segmentLengths[0]);
+  const supportsGreedyMaxLen = splitTokens.some((token) => STAGE3B_GREEDY_MAXLEN_MODES.has(token));
+  const supportsEqualSplit = splitTokens.some((token) => STAGE3B_EQUAL_SPLIT_MODES.has(token));
+  if (!supportsGreedyMaxLen && !(supportsEqualSplit && allEqual)) {
+    return {
+      ok: false,
+      blocker: "stage3b-segment-split-mode-unsupported",
+      diagnostic: "Stage 3B frozen segment layout does not match the source-backed split mode policy for this piece count.",
+    };
+  }
+
+  if (!allEqual) {
+    const minLength = Math.min(...segmentLengths);
+    const shortIndices = segmentLengths
+      .map((lengthMm, index) => (lengthMm === minLength ? index : -1))
+      .filter((index) => index >= 0);
+    if (shortIndices.length !== 1) {
+      return {
+        ok: false,
+        blocker: "stage3b-short-piece-position-unsupported",
+        diagnostic: "Stage 3B currently requires exactly one frozen short piece when short-piece placement is physically invoked.",
+      };
+    }
+    const shortIndex = shortIndices[0];
+    const actualShortPosition = shortIndex === 0 ? "start" : (shortIndex === segmentLengths.length - 1 ? "end" : "mid");
+    const allowedPositions = boardPackingSplitPolicySummary.shortPiecePositionTokens?.[piecePolicyKey] || [];
+    const normalisedActual = actualShortPosition === "mid" ? new Set(["mid", "middle", "center", "centre"]) : new Set([actualShortPosition]);
+    if (!allowedPositions.some((token) => normalisedActual.has(token))) {
+      return {
+        ok: false,
+        blocker: "stage3b-short-piece-position-unsupported",
+        diagnostic: "Stage 3B frozen segment short-piece position does not match the source-backed short-piece policy.",
+      };
+    }
+    return { ok: true, segmentSplitPhysicallyInvoked: true, piecePolicyKey, actualShortPosition };
+  }
+
+  return { ok: true, segmentSplitPhysicallyInvoked: true, piecePolicyKey, actualShortPosition: "none/equal" };
 }
 
 function physicalSegmentBridgeRequired(source) {
@@ -1184,6 +1473,28 @@ export function buildRuntimeAccessoryReservationFootholdSummary(input = {}) {
   }
 
   const boardFamilyLengthsSortedDesc = resolveBoardFamilyLengths(source, boardLengthMm);
+  const boardPackingSplitPolicySummary = resolveBoardPackingSplitPolicySummary(source, {
+    boardLengthMm,
+    boardPitchMm,
+    boardFamilyLengthsSortedDesc,
+  });
+  if (boardPackingSplitPolicySummary.ok !== true) {
+    return failClosed(boardPackingSplitPolicySummary.blocker, boardPackingSplitPolicySummary.diagnostic, {
+      originalRunLengthMm,
+      selectedTierOrProfile,
+      productFamilyToken,
+      endPlateDeductionBand: endPlatePolicy.band,
+      bodyLengthBeforeLengthAdjustmentMm,
+      bodyLengthBeforeReservationMm,
+      reservationCount,
+      reservationLengthMm,
+      reservationLengthBand: bandMm(reservationLengthMm),
+      boardFillInputLengthMm,
+      boardPackingSplitPolicySummary,
+      policyFingerprint,
+      sourceFingerprint,
+    });
+  }
   if (!lengthCanBeBoardFilled(boardFillInputLengthMm, boardFamilyLengthsSortedDesc, boardPitchMm)) {
     return failClosed("no-valid-board-reservation", "Effective board-fill input length cannot be represented by the sealed board family length/pitch summary.", {
       originalRunLengthMm,
@@ -1222,6 +1533,33 @@ export function buildRuntimeAccessoryReservationFootholdSummary(input = {}) {
       reservationLengthMm,
       reservationLengthBand: bandMm(reservationLengthMm),
       boardFillInputLengthMm,
+      boardPackingSplitPolicySummary,
+      policyFingerprint,
+      sourceFingerprint,
+    });
+  }
+
+  const segmentSplitPolicyValidation = validateFrozenSegmentSplitPolicy(
+    boardPackingSplitPolicySummary,
+    physicalSegmentBridgeSummary.frozenPhysicalSegmentSummary,
+  );
+  if (segmentSplitPolicyValidation.ok !== true) {
+    return failClosed(segmentSplitPolicyValidation.blocker, segmentSplitPolicyValidation.diagnostic, {
+      originalRunLengthMm,
+      selectedTierOrProfile,
+      productFamilyToken,
+      endPlateDeductionBand: endPlatePolicy.band,
+      bodyLengthBeforeLengthAdjustmentMm,
+      bodyLengthBeforeReservationMm,
+      reservationCount,
+      reservationLengthMm,
+      reservationLengthBand: bandMm(reservationLengthMm),
+      boardFillInputLengthMm,
+      boardPackingSplitPolicySummary,
+      sealedReservedRangeSummary: physicalSegmentBridgeSummary.sealedReservedRangeSummary || null,
+      sealedPhysicalBoardPlacementSummary: physicalSegmentBridgeSummary.sealedPhysicalBoardPlacementSummary || null,
+      frozenPhysicalSegmentSummary: physicalSegmentBridgeSummary.frozenPhysicalSegmentSummary || null,
+      physicalSegmentBridgeReady: physicalSegmentBridgeSummary.physicalSegmentBridgeReady === true,
       policyFingerprint,
       sourceFingerprint,
     });
@@ -1247,6 +1585,8 @@ export function buildRuntimeAccessoryReservationFootholdSummary(input = {}) {
     boardLengthMm,
     boardPitchMm,
     boardFamilyLengthsSortedDesc,
+    boardPackingSplitPolicySummary: boardPackingSplitPolicySummary.required === true ? boardPackingSplitPolicySummary : null,
+    segmentSplitPolicyValidation,
     reservationCount,
     reservationLengthMm,
     accessoryPlacementIntentSummary,
@@ -1280,6 +1620,7 @@ export function buildRuntimeAccessoryReservationFootholdSummary(input = {}) {
     reservationLengthBand: bandMm(reservationLengthMm),
     reservationLengthMm,
     accessoryPlacementIntentSummary,
+    boardPackingSplitPolicySummary,
     sealedReservedRangeSummary: physicalSegmentBridgeSummary.sealedReservedRangeSummary || null,
     sealedPhysicalBoardPlacementSummary: physicalSegmentBridgeSummary.sealedPhysicalBoardPlacementSummary || null,
     frozenPhysicalSegmentSummary: physicalSegmentBridgeSummary.frozenPhysicalSegmentSummary || null,

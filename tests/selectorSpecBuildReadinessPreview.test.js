@@ -146,7 +146,19 @@ function specGateSnapshot() {
       { item: "min_body_mm", economy: "1400", business: "1400", first: "1400", approved: "yes" },
       { item: "start_board_gap", economy: "0", business: "0", first: "0", approved: "yes" },
       { item: "end_board_gap", economy: "0", business: "0", first: "0", approved: "yes" },
+      { item: "pitch_tolerance_mm", economy: "0", business: "0", first: "0", approved: "yes" },
+      { item: "max_board_gap_mm", economy: "0", business: "0", first: "0", approved: "yes" },
+      { item: "length_pref", economy: "nearest", business: "nearest", first: "exact", approved: "yes" },
       { item: "gap_mode", economy: "N+1", business: "N+1", first: "N+1", approved: "yes" },
+      { item: "greedy_tie_break_mode", economy: "maximise_maxlen", business: "maximise_maxlen", first: "maximise_maxlen", approved: "yes" },
+      { item: "board_selection_prefer_recent", economy: "FALSE", business: "FALSE", first: "FALSE", approved: "yes" },
+      { item: "segment_max_board_split_qty", economy: "3", business: "3", first: "3", approved: "yes" },
+      { item: "segment_split_mode_2piece", economy: "maximise_maxlen", business: "maximise_maxlen", first: "maximise_maxlen", approved: "yes" },
+      { item: "segment_split_mode_3piece", economy: "maximise_maxlen", business: "maximise_maxlen", first: "maximise_maxlen", approved: "yes" },
+      { item: "segment_split_mode_multi", economy: "maximise_maxlen", business: "maximise_maxlen", first: "maximise_maxlen", approved: "yes" },
+      { item: "segment_short_piece_position_2piece", economy: "end", business: "end", first: "end", approved: "yes" },
+      { item: "segment_short_piece_position_3piece", economy: "end", business: "end", first: "end", approved: "yes" },
+      { item: "segment_short_piece_position_multi", economy: "end", business: "end", first: "end", approved: "yes" },
       { item: "board_cross_segment_join", economy: "FALSE", business: "FALSE", first: "FALSE", approved: "yes" },
       { item: "diffuser_cross_segment_join", economy: "FALSE", business: "FALSE", first: "FALSE", approved: "yes" },
       { item: "secondary_across_segment", economy: "forbid", business: "compare", first: "allow", approved: "yes" },
@@ -580,6 +592,71 @@ test("Stage 3B accepts join-sensitive accessory intent when do-not-bridge is phy
   assert.equal(joinAuthority.ruleCoverage.find((row) => row.rule === "do_not_bridge_join").classification, "represented and physically enforced");
   assert.equal(joinAuthority.ruleCoverage.find((row) => row.rule === "do_not_bridge_segment_join").classification, "represented and physically enforced");
   assert.equal(stageRows["Stage 3 — Factory Approved Inputs"], "true");
+  assert.equal(stageRows["Stage 4 — Engine Outcome Proven"], "false");
+  assertNoGenerationAuthority(value);
+});
+
+test("Stage 3B fails closed when board packing policy is not source-backed", () => {
+  const selectorState = createSelectorState();
+  const snapshot = specGateSnapshot();
+  snapshot.SYSTEM_POLICY = snapshot.SYSTEM_POLICY.filter((row) => row.item !== "max_board_gap_mm");
+  completeSpecReadyCandidate(selectorState);
+  selectorState.acceptDbBackedSelectorDefaults([
+    { fieldKey: "tier", label: "Tier", value: "Economy", valueLabel: "Economy" },
+  ]);
+  selectorState.setRunIntakeRows([
+    { id: "run-1", runNumber: 1, label: "Run 1", quantity: "2", runLengthMm: "2820", lengthMode: "cut_to_length" },
+  ]);
+  selectorState.setRunAccessoryPlacementIntents([
+    { runReference: "Run 1", accessoryType: "sensor", quantity: "1", placementPreference: "start", status: "confirmed" },
+  ]);
+  acceptBuildOrderContext(selectorState, { runLength: "2820", runLengthLabel: "2820 mm" });
+  const value = preview(createModel({ selectorState, snapshot, constraints: selectorStateConstraints(selectorState) }));
+  const stageRows = rowsToObject(value.stageIndicatorRows);
+  const reservation = value.factoryApprovedInputsSummary.accessoryReservationSummary;
+
+  assert.equal(value.buildReady, true);
+  assert.equal(value.factoryApprovedInputsReady, false);
+  assert.equal(value.factoryApprovedInputsSummary.blocker, "stage3b-board-packing-split-policy-unresolved");
+  assert.equal(reservation.ok, false);
+  assert.equal(reservation.boardFillInputReady, false);
+  assert.ok(reservation.boardPackingSplitPolicySummary.missingPolicyKeys.includes("max_board_gap_mm"));
+  assert.equal(stageRows["Stage 3 — Factory Approved Inputs"], "false");
+  assert.equal(stageRows["Stage 4 — Engine Outcome Proven"], "false");
+  assertNoGenerationAuthority(value);
+});
+
+test("Stage 3B fails closed when frozen segment splits exceed source-backed split quantity", () => {
+  const selectorState = createSelectorState();
+  const snapshot = snapshotWithDoNotBridgeAuthority();
+  snapshot.SYSTEM_POLICY = snapshot.SYSTEM_POLICY.map((row) => (
+    row.item === "segment_max_board_split_qty"
+      ? { ...row, economy: "0", business: "0", first: "0" }
+      : row
+  ));
+  completeSpecReadyCandidate(selectorState);
+  selectorState.acceptDbBackedSelectorDefaults([
+    { fieldKey: "tier", label: "Tier", value: "Economy", valueLabel: "Economy" },
+  ]);
+  selectorState.setRunIntakeRows([
+    { id: "run-1", runNumber: 1, label: "Run 1", quantity: "2", runLengthMm: "5620", lengthMode: "cut_to_length" },
+  ]);
+  selectorState.setRunAccessoryPlacementIntents([
+    { runReference: "Run 1", accessoryType: "sensor", quantity: "1", placementPreference: "start", status: "confirmed" },
+  ]);
+  acceptBuildOrderContext(selectorState, { runLength: "5620", runLengthLabel: "5620 mm" });
+  const value = preview(createModel({ selectorState, snapshot, constraints: selectorStateConstraints(selectorState) }));
+  const stageRows = rowsToObject(value.stageIndicatorRows);
+  const reservation = value.factoryApprovedInputsSummary.accessoryReservationSummary;
+
+  assert.equal(value.buildReady, true);
+  assert.equal(value.factoryApprovedInputsReady, false);
+  assert.equal(value.factoryApprovedInputsSummary.blocker, "stage3b-segment-split-authority-unproven");
+  assert.equal(reservation.ok, false);
+  assert.equal(reservation.physicalSegmentBridgeReady, true);
+  assert.equal(reservation.frozenPhysicalSegmentSummary.segmentCount, 2);
+  assert.equal(reservation.boardPackingSplitPolicySummary.segmentMaxBoardSplitQty, 0);
+  assert.equal(stageRows["Stage 3 — Factory Approved Inputs"], "false");
   assert.equal(stageRows["Stage 4 — Engine Outcome Proven"], "false");
   assertNoGenerationAuthority(value);
 });
