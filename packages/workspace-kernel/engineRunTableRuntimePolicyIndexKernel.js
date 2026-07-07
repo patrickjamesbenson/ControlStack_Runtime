@@ -70,6 +70,7 @@ const POLICY_VALIDATION = Object.freeze({
   end_board_gap: { min: 0 },
   electrical_zone_mode: { values: ["start_run_as_one_zone", "start_segment_as_one_zone"] },
   secondary_across_segment: { values: ["allow", "forbid", "compare"] },
+  secondary_no_cross_max_extra_drivers_abs: { min: 0 },
   length_pref: { values: ["exact", "longer", "nearest", "shorter"] },
   gap_mode: { values: ["N+1", "N-1"] },
 });
@@ -103,6 +104,14 @@ const JOIN_POLICY_KEYS = Object.freeze([
   "secondary_across_segment",
   "do_not_bridge_join",
   "do_not_bridge_segment_join",
+]);
+
+const ELECTRICAL_TOPOLOGY_POLICY_KEYS = Object.freeze([
+  "electrical_zone_mode",
+  "secondary_across_segment",
+  "secondary_no_cross_max_extra_drivers_abs",
+  "driver_util_target_pct",
+  "driver_util_max_pct",
 ]);
 
 const PRIVATE_TABLE_NAME_PATTERN = /^(USERS?|USER_|ACCOUNTS?|AUTH|CREDENTIALS?|SECRETS?|TOKENS?|PASSWORDS?|PRIVATE)(_|$)/i;
@@ -577,6 +586,7 @@ export function buildSourceBackedLengthPolicySummary(snapshot = {}, options = {}
     }
   }
   const joinPolicies = pickSafePolicySubset(tierPolicies.policies, JOIN_POLICY_KEYS);
+  const electricalTopologyPolicies = pickSafePolicySubset(tierPolicies.policies, ELECTRICAL_TOPOLOGY_POLICY_KEYS);
 
   return {
     ok: true,
@@ -586,6 +596,8 @@ export function buildSourceBackedLengthPolicySummary(snapshot = {}, options = {}
     lengthPolicies: policies,
     joinPolicies,
     joinPolicyNames: Object.keys(joinPolicies).sort(),
+    electricalTopologyPolicies,
+    electricalTopologyPolicyNames: Object.keys(electricalTopologyPolicies).sort(),
     numericMm,
     segmentMaxLengthMm: SEGMENT_MAX_LENGTH_MM_OVERRIDE,
     segmentMaxLengthOverrideApplied: true,

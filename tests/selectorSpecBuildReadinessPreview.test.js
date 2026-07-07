@@ -162,6 +162,10 @@ function specGateSnapshot() {
       { item: "board_cross_segment_join", economy: "FALSE", business: "FALSE", first: "FALSE", approved: "yes" },
       { item: "diffuser_cross_segment_join", economy: "FALSE", business: "FALSE", first: "FALSE", approved: "yes" },
       { item: "secondary_across_segment", economy: "forbid", business: "compare", first: "allow", approved: "yes" },
+      { item: "electrical_zone_mode", economy: "start_segment_as_one_zone", business: "start_segment_as_one_zone", first: "start_segment_as_one_zone", approved: "yes" },
+      { item: "secondary_no_cross_max_extra_drivers_abs", economy: "0", business: "0", first: "0", approved: "yes" },
+      { item: "driver_util_target_pct", economy: "0.85", business: "0.85", first: "0.85", approved: "yes" },
+      { item: "driver_util_max_pct", economy: "0.90", business: "0.90", first: "0.90", approved: "yes" },
     ],
   };
 }
@@ -173,6 +177,14 @@ function snapshotWithDoNotBridgeAuthority() {
     { item: "do_not_bridge_join", economy: "TRUE", business: "TRUE", first: "TRUE", approved: "yes" },
     { item: "do_not_bridge_segment_join", economy: "TRUE", business: "TRUE", first: "TRUE", approved: "yes" },
   ];
+  return snapshot;
+}
+
+function snapshotWithDoNotBridgePolicyOverride(item, values = {}) {
+  const snapshot = snapshotWithDoNotBridgeAuthority();
+  snapshot.SYSTEM_POLICY = snapshot.SYSTEM_POLICY.map((row) => (
+    row.item === item ? { ...row, ...values } : row
+  ));
   return snapshot;
 }
 
@@ -265,6 +277,22 @@ function preview(model) {
 
 function rowsToObject(rows = []) {
   return Object.fromEntries(rows);
+}
+
+function joinSensitiveStage3BPreview(snapshot = snapshotWithDoNotBridgeAuthority(), tier = "Economy") {
+  const selectorState = createSelectorState();
+  completeSpecReadyCandidate(selectorState);
+  selectorState.acceptDbBackedSelectorDefaults([
+    { fieldKey: "tier", label: "Tier", value: tier, valueLabel: tier },
+  ]);
+  selectorState.setRunIntakeRows([
+    { id: "run-1", runNumber: 1, label: "Run 1", quantity: "2", runLengthMm: "5620", lengthMode: "cut_to_length" },
+  ]);
+  selectorState.setRunAccessoryPlacementIntents([
+    { runReference: "Run 1", accessoryType: "sensor", quantity: "1", placementPreference: "start", status: "confirmed" },
+  ]);
+  acceptBuildOrderContext(selectorState, { runLength: "5620", runLengthLabel: "5620 mm" });
+  return preview(createModel({ selectorState, snapshot, constraints: selectorStateConstraints(selectorState) }));
 }
 
 function assertNoGenerationAuthority(value = {}) {
@@ -589,9 +617,85 @@ test("Stage 3B accepts join-sensitive accessory intent when do-not-bridge is phy
   assert.equal(joinAuthority.ruleCoverage.find((row) => row.rule === "board_cross_segment_join").classification, "represented and physically enforced");
   assert.equal(joinAuthority.ruleCoverage.find((row) => row.rule === "diffuser_cross_segment_join").classification, "represented and physically enforced");
   assert.equal(joinAuthority.ruleCoverage.find((row) => row.rule === "secondary_across_segment").classification, "represented and physically enforced");
+  assert.equal(joinAuthority.ruleCoverage.find((row) => row.rule === "electrical_zone_mode").classification, "represented and physically enforced");
+  assert.equal(joinAuthority.ruleCoverage.find((row) => row.rule === "secondary_no_cross_max_extra_drivers_abs").classification, "represented and physically enforced");
+  assert.equal(joinAuthority.ruleCoverage.find((row) => row.rule === "driver_util_target_pct").classification, "represented");
+  assert.equal(joinAuthority.ruleCoverage.find((row) => row.rule === "driver_util_max_pct").classification, "represented");
   assert.equal(joinAuthority.ruleCoverage.find((row) => row.rule === "do_not_bridge_join").classification, "represented and physically enforced");
   assert.equal(joinAuthority.ruleCoverage.find((row) => row.rule === "do_not_bridge_segment_join").classification, "represented and physically enforced");
   assert.equal(stageRows["Stage 3 — Factory Approved Inputs"], "true");
+  assert.equal(stageRows["Stage 4 — Engine Outcome Proven"], "false");
+  assertNoGenerationAuthority(value);
+});
+
+test("Stage 3B fails closed when secondary cross-segment routing is allowed", () => {
+  const snapshot = snapshotWithDoNotBridgePolicyOverride("secondary_across_segment", { economy: "allow" });
+  const value = joinSensitiveStage3BPreview(snapshot);
+  const stageRows = rowsToObject(value.stageIndicatorRows);
+  const reservation = value.factoryApprovedInputsSummary.accessoryReservationSummary;
+  const joinAuthority = reservation.joinCrossingAuthoritySummary;
+
+  assert.equal(value.buildReady, true);
+  assert.equal(value.factoryApprovedInputsReady, false);
+  assert.equal(value.factoryApprovedInputsSummary.blocker, "stage3b-secondary-cross-segment-routing-unproven");
+  assert.equal(joinAuthority.ok, false);
+  assert.equal(joinAuthority.blocker, "stage3b-secondary-cross-segment-routing-unproven");
+  assert.ok(joinAuthority.joinAuthorityBlockers.includes("stage3b-secondary-cross-segment-routing-unproven"));
+  assert.equal(stageRows["Stage 3 — Factory Approved Inputs"], "false");
+  assert.equal(stageRows["Stage 4 — Engine Outcome Proven"], "false");
+  assertNoGenerationAuthority(value);
+});
+
+test("Stage 3B fails closed when secondary cross-segment policy is compare", () => {
+  const snapshot = snapshotWithDoNotBridgePolicyOverride("secondary_across_segment", { economy: "compare" });
+  const value = joinSensitiveStage3BPreview(snapshot);
+  const stageRows = rowsToObject(value.stageIndicatorRows);
+  const reservation = value.factoryApprovedInputsSummary.accessoryReservationSummary;
+  const joinAuthority = reservation.joinCrossingAuthoritySummary;
+
+  assert.equal(value.buildReady, true);
+  assert.equal(value.factoryApprovedInputsReady, false);
+  assert.equal(value.factoryApprovedInputsSummary.blocker, "stage3b-secondary-compare-scoring-not-implemented");
+  assert.equal(joinAuthority.ok, false);
+  assert.equal(joinAuthority.blocker, "stage3b-secondary-compare-scoring-not-implemented");
+  assert.ok(joinAuthority.joinAuthorityBlockers.includes("stage3b-secondary-compare-scoring-not-implemented"));
+  assert.equal(stageRows["Stage 3 — Factory Approved Inputs"], "false");
+  assert.equal(stageRows["Stage 4 — Engine Outcome Proven"], "false");
+  assertNoGenerationAuthority(value);
+});
+
+test("Stage 3B fails closed when electrical zone mode crosses the full run", () => {
+  const snapshot = snapshotWithDoNotBridgePolicyOverride("electrical_zone_mode", { economy: "start_run_as_one_zone" });
+  const value = joinSensitiveStage3BPreview(snapshot);
+  const stageRows = rowsToObject(value.stageIndicatorRows);
+  const reservation = value.factoryApprovedInputsSummary.accessoryReservationSummary;
+  const joinAuthority = reservation.joinCrossingAuthoritySummary;
+
+  assert.equal(value.buildReady, true);
+  assert.equal(value.factoryApprovedInputsReady, false);
+  assert.equal(value.factoryApprovedInputsSummary.blocker, "stage3b-electrical-zone-crossing-unproven");
+  assert.equal(joinAuthority.ok, false);
+  assert.equal(joinAuthority.blocker, "stage3b-electrical-zone-crossing-unproven");
+  assert.ok(joinAuthority.joinAuthorityBlockers.includes("stage3b-electrical-zone-crossing-unproven"));
+  assert.equal(stageRows["Stage 3 — Factory Approved Inputs"], "false");
+  assert.equal(stageRows["Stage 4 — Engine Outcome Proven"], "false");
+  assertNoGenerationAuthority(value);
+});
+
+test("Stage 3B fails closed when secondary no-cross allows extra drivers", () => {
+  const snapshot = snapshotWithDoNotBridgePolicyOverride("secondary_no_cross_max_extra_drivers_abs", { economy: "1" });
+  const value = joinSensitiveStage3BPreview(snapshot);
+  const stageRows = rowsToObject(value.stageIndicatorRows);
+  const reservation = value.factoryApprovedInputsSummary.accessoryReservationSummary;
+  const joinAuthority = reservation.joinCrossingAuthoritySummary;
+
+  assert.equal(value.buildReady, true);
+  assert.equal(value.factoryApprovedInputsReady, false);
+  assert.equal(value.factoryApprovedInputsSummary.blocker, "stage3b-secondary-extra-driver-threshold-unproven");
+  assert.equal(joinAuthority.ok, false);
+  assert.equal(joinAuthority.blocker, "stage3b-secondary-extra-driver-threshold-unproven");
+  assert.ok(joinAuthority.joinAuthorityBlockers.includes("stage3b-secondary-extra-driver-threshold-unproven"));
+  assert.equal(stageRows["Stage 3 — Factory Approved Inputs"], "false");
   assert.equal(stageRows["Stage 4 — Engine Outcome Proven"], "false");
   assertNoGenerationAuthority(value);
 });

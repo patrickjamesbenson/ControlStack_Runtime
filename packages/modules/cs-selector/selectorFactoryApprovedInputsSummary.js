@@ -94,6 +94,14 @@ function parsePositiveInteger(value) {
   return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : null;
 }
 
+function parseNonNegativeInteger(value) {
+  if (typeof value === "number") return Number.isInteger(value) && value >= 0 ? value : null;
+  const raw = text(value).replace(/\s*mm$/i, "");
+  if (!/^\d+$/.test(raw)) return null;
+  const parsed = Number(raw);
+  return Number.isSafeInteger(parsed) && parsed >= 0 ? parsed : null;
+}
+
 function safeString(value, fallback = "") {
   const raw = text(value);
   if (!raw) return fallback;
@@ -328,12 +336,28 @@ function stage3BJoinRuleCoverageRow({
   };
 }
 
-function stage3BPolicyValue({ sourceBackedLengthPolicySummary = null, policies = {}, joinPolicies = {}, rule }) {
-  return joinPolicies[rule] ?? policies[rule] ?? sourceBackedLengthPolicySummary?.[rule];
+function stage3BPolicyValue({
+  sourceBackedLengthPolicySummary = null,
+  policies = {},
+  joinPolicies = {},
+  electricalTopologyPolicies = {},
+  rule,
+}) {
+  return electricalTopologyPolicies[rule]
+    ?? joinPolicies[rule]
+    ?? policies[rule]
+    ?? sourceBackedLengthPolicySummary?.[rule];
 }
 
-function stage3BPolicyRepresented({ sourceBackedLengthPolicySummary = null, policies = {}, joinPolicies = {}, rule }) {
-  return hasOwnNonBlank(joinPolicies, rule)
+function stage3BPolicyRepresented({
+  sourceBackedLengthPolicySummary = null,
+  policies = {},
+  joinPolicies = {},
+  electricalTopologyPolicies = {},
+  rule,
+}) {
+  return hasOwnNonBlank(electricalTopologyPolicies, rule)
+    || hasOwnNonBlank(joinPolicies, rule)
     || hasOwnNonBlank(policies, rule)
     || hasOwnNonBlank(sourceBackedLengthPolicySummary, rule);
 }
@@ -366,6 +390,9 @@ function buildStage3BJoinCrossingAuthoritySummary({
     : {};
   const joinPolicies = isPlainObject(sourceBackedLengthPolicySummary?.joinPolicies)
     ? sourceBackedLengthPolicySummary.joinPolicies
+    : {};
+  const electricalTopologyPolicies = isPlainObject(sourceBackedLengthPolicySummary?.electricalTopologyPolicies)
+    ? sourceBackedLengthPolicySummary.electricalTopologyPolicies
     : {};
   const segmentMaxLengthMm = parsePositiveInteger(sourceBackedLengthPolicySummary?.segmentMaxLengthMm)
     || parsePositiveInteger(sourceBackedLengthPolicySummary?.numericMm?.segment_max_length_mm)
@@ -404,16 +431,28 @@ function buildStage3BJoinCrossingAuthoritySummary({
     ? frozenSegmentCount > 1
     : bodyLengthBeforeReservationMm > segmentMaxLengthMm;
 
-  const boardValue = stage3BPolicyValue({ sourceBackedLengthPolicySummary, policies, joinPolicies, rule: "board_cross_segment_join" });
-  const diffuserValue = stage3BPolicyValue({ sourceBackedLengthPolicySummary, policies, joinPolicies, rule: "diffuser_cross_segment_join" });
-  const secondaryValue = stage3BPolicyValue({ sourceBackedLengthPolicySummary, policies, joinPolicies, rule: "secondary_across_segment" });
-  const doNotBridgeJoinValue = stage3BPolicyValue({ sourceBackedLengthPolicySummary, policies, joinPolicies, rule: "do_not_bridge_join" });
-  const doNotBridgeSegmentJoinValue = stage3BPolicyValue({ sourceBackedLengthPolicySummary, policies, joinPolicies, rule: "do_not_bridge_segment_join" });
-  const boardRepresented = stage3BPolicyRepresented({ sourceBackedLengthPolicySummary, policies, joinPolicies, rule: "board_cross_segment_join" });
-  const diffuserRepresented = stage3BPolicyRepresented({ sourceBackedLengthPolicySummary, policies, joinPolicies, rule: "diffuser_cross_segment_join" });
-  const secondaryRepresented = stage3BPolicyRepresented({ sourceBackedLengthPolicySummary, policies, joinPolicies, rule: "secondary_across_segment" });
-  const doNotBridgeJoinRepresented = stage3BPolicyRepresented({ sourceBackedLengthPolicySummary, policies, joinPolicies, rule: "do_not_bridge_join" });
-  const doNotBridgeSegmentJoinRepresented = stage3BPolicyRepresented({ sourceBackedLengthPolicySummary, policies, joinPolicies, rule: "do_not_bridge_segment_join" });
+  const policyLookup = { sourceBackedLengthPolicySummary, policies, joinPolicies, electricalTopologyPolicies };
+  const boardValue = stage3BPolicyValue({ ...policyLookup, rule: "board_cross_segment_join" });
+  const diffuserValue = stage3BPolicyValue({ ...policyLookup, rule: "diffuser_cross_segment_join" });
+  const secondaryValue = stage3BPolicyValue({ ...policyLookup, rule: "secondary_across_segment" });
+  const electricalZoneModeValue = stage3BPolicyValue({ ...policyLookup, rule: "electrical_zone_mode" });
+  const secondaryNoCrossMaxExtraDriversAbsValue = stage3BPolicyValue({ ...policyLookup, rule: "secondary_no_cross_max_extra_drivers_abs" });
+  const driverUtilTargetPctValue = stage3BPolicyValue({ ...policyLookup, rule: "driver_util_target_pct" });
+  const driverUtilMaxPctValue = stage3BPolicyValue({ ...policyLookup, rule: "driver_util_max_pct" });
+  const doNotBridgeJoinValue = stage3BPolicyValue({ ...policyLookup, rule: "do_not_bridge_join" });
+  const doNotBridgeSegmentJoinValue = stage3BPolicyValue({ ...policyLookup, rule: "do_not_bridge_segment_join" });
+  const boardRepresented = stage3BPolicyRepresented({ ...policyLookup, rule: "board_cross_segment_join" });
+  const diffuserRepresented = stage3BPolicyRepresented({ ...policyLookup, rule: "diffuser_cross_segment_join" });
+  const secondaryRepresented = stage3BPolicyRepresented({ ...policyLookup, rule: "secondary_across_segment" });
+  const electricalZoneModeRepresented = stage3BPolicyRepresented({ ...policyLookup, rule: "electrical_zone_mode" });
+  const secondaryNoCrossMaxExtraDriversAbsRepresented = stage3BPolicyRepresented({ ...policyLookup, rule: "secondary_no_cross_max_extra_drivers_abs" });
+  const driverUtilTargetPctRepresented = stage3BPolicyRepresented({ ...policyLookup, rule: "driver_util_target_pct" });
+  const driverUtilMaxPctRepresented = stage3BPolicyRepresented({ ...policyLookup, rule: "driver_util_max_pct" });
+  const doNotBridgeJoinRepresented = stage3BPolicyRepresented({ ...policyLookup, rule: "do_not_bridge_join" });
+  const doNotBridgeSegmentJoinRepresented = stage3BPolicyRepresented({ ...policyLookup, rule: "do_not_bridge_segment_join" });
+  const secondaryAcrossSegmentToken = normaliseJoinPolicyValue(secondaryValue);
+  const electricalZoneModeToken = normaliseJoinPolicyValue(electricalZoneModeValue);
+  const secondaryNoCrossMaxExtraDriversAbs = parseNonNegativeInteger(secondaryNoCrossMaxExtraDriversAbsValue);
 
   const boardPhysicallyEnforced = joinSensitive
     && physicalSegmentBridgeReady
@@ -428,7 +467,11 @@ function buildStage3BJoinCrossingAuthoritySummary({
   const secondaryPhysicallyEnforced = joinSensitive
     && physicalSegmentBridgeReady
     && secondaryRepresented
-    && isSecondaryNoCrossPolicy(secondaryValue);
+    && isSecondaryNoCrossPolicy(secondaryValue)
+    && electricalZoneModeRepresented
+    && electricalZoneModeToken === "start_segment_as_one_zone"
+    && secondaryNoCrossMaxExtraDriversAbsRepresented
+    && secondaryNoCrossMaxExtraDriversAbs === 0;
   const doNotBridgeJoinPhysicallyEnforced = joinSensitive
     && physicalSegmentBridgeReady
     && doNotBridgeJoinRepresented
@@ -482,7 +525,43 @@ function buildStage3BJoinCrossingAuthoritySummary({
       joinSensitive,
       representedButNotEnforced: secondaryRepresented && joinSensitive && !secondaryPhysicallyEnforced,
       physicallyEnforced: secondaryPhysicallyEnforced,
-      enforcement: secondaryPhysicallyEnforced ? "secondary-forbid-no-cross-containment" : "not-physically-enforced",
+      enforcement: secondaryPhysicallyEnforced ? "secondary-forbid-segment-zone-zero-extra-driver-containment" : "not-physically-enforced",
+    }),
+    stage3BJoinRuleCoverageRow({
+      rule: "electrical_zone_mode",
+      represented: electricalZoneModeRepresented,
+      value: electricalZoneModeRepresented ? electricalZoneModeValue : STAGE3B_JOIN_RULE_NOT_PRESENT,
+      joinSensitive,
+      representedButNotEnforced: electricalZoneModeRepresented && joinSensitive && !secondaryPhysicallyEnforced,
+      physicallyEnforced: secondaryPhysicallyEnforced,
+      enforcement: secondaryPhysicallyEnforced ? "start-segment-as-one-zone-required-for-secondary-no-cross" : "represented-fact-not-stage3b-proof",
+    }),
+    stage3BJoinRuleCoverageRow({
+      rule: "secondary_no_cross_max_extra_drivers_abs",
+      represented: secondaryNoCrossMaxExtraDriversAbsRepresented,
+      value: secondaryNoCrossMaxExtraDriversAbsRepresented ? secondaryNoCrossMaxExtraDriversAbsValue : STAGE3B_JOIN_RULE_NOT_PRESENT,
+      joinSensitive,
+      representedButNotEnforced: secondaryNoCrossMaxExtraDriversAbsRepresented && joinSensitive && !secondaryPhysicallyEnforced,
+      physicallyEnforced: secondaryPhysicallyEnforced,
+      enforcement: secondaryPhysicallyEnforced ? "zero-extra-driver-threshold-required-for-secondary-no-cross" : "represented-fact-not-stage3b-proof",
+    }),
+    stage3BJoinRuleCoverageRow({
+      rule: "driver_util_target_pct",
+      represented: driverUtilTargetPctRepresented,
+      value: driverUtilTargetPctRepresented ? driverUtilTargetPctValue : STAGE3B_JOIN_RULE_NOT_PRESENT,
+      joinSensitive: false,
+      representedButNotEnforced: false,
+      physicallyEnforced: false,
+      enforcement: "represented-fact-only-not-stage3b-physical-proof",
+    }),
+    stage3BJoinRuleCoverageRow({
+      rule: "driver_util_max_pct",
+      represented: driverUtilMaxPctRepresented,
+      value: driverUtilMaxPctRepresented ? driverUtilMaxPctValue : STAGE3B_JOIN_RULE_NOT_PRESENT,
+      joinSensitive: false,
+      representedButNotEnforced: false,
+      physicallyEnforced: false,
+      enforcement: "represented-fact-only-not-stage3b-physical-proof",
     }),
     stage3BJoinRuleCoverageRow({
       rule: "do_not_bridge_join",
@@ -509,13 +588,25 @@ function buildStage3BJoinCrossingAuthoritySummary({
     if (!physicalSegmentBridgeReady) joinAuthorityBlockers.push("physical-segment-bridge-not-ready");
     if (!boardPhysicallyEnforced) joinAuthorityBlockers.push("board-cross-policy-not-physically-enforced");
     if (!diffuserPhysicallyEnforced) joinAuthorityBlockers.push("diffuser-cross-policy-not-physically-enforced");
-    if (!secondaryPhysicallyEnforced) joinAuthorityBlockers.push("secondary-cross-policy-not-physically-enforced");
+    if (!secondaryPhysicallyEnforced) {
+      if (secondaryRepresented && secondaryAcrossSegmentToken === "allow") {
+        joinAuthorityBlockers.push("stage3b-secondary-cross-segment-routing-unproven");
+      } else if (secondaryRepresented && secondaryAcrossSegmentToken === "compare") {
+        joinAuthorityBlockers.push("stage3b-secondary-compare-scoring-not-implemented");
+      } else if (electricalZoneModeRepresented && electricalZoneModeToken === "start_run_as_one_zone") {
+        joinAuthorityBlockers.push("stage3b-electrical-zone-crossing-unproven");
+      } else if (Number.isInteger(secondaryNoCrossMaxExtraDriversAbs) && secondaryNoCrossMaxExtraDriversAbs > 0) {
+        joinAuthorityBlockers.push("stage3b-secondary-extra-driver-threshold-unproven");
+      } else {
+        joinAuthorityBlockers.push("secondary-cross-policy-not-physically-enforced");
+      }
+    }
     if (!doNotBridgeJoinPhysicallyEnforced) joinAuthorityBlockers.push("do-not-bridge-join-policy-not-physically-enforced");
     if (!doNotBridgeSegmentJoinPhysicallyEnforced) joinAuthorityBlockers.push("do-not-bridge-segment-join-policy-not-physically-enforced");
     if (joinAuthorityBlockers.length > 0) {
       return {
         ok: false,
-        blocker: "stage3b-join-crossing-authority-unproven",
+        blocker: joinAuthorityBlockers.find((blocker) => blocker.startsWith("stage3b-")) || "stage3b-join-crossing-authority-unproven",
         diagnostic: "Stage 3B accessory reservation is join-sensitive; frozen physical segments are represented, but at least one join/do-not-bridge rule is not physically enforceable for this claim.",
         joinCrossingAuthorityReady: false,
         joinSensitive: true,
