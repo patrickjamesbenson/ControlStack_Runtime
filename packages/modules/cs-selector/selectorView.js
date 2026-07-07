@@ -1989,6 +1989,28 @@ function accessoryIntentRows(preview = {}) {
   });
 }
 
+function appendSelectorDefaultAcceptance(parent, surface = {}) {
+  const acceptance = surface.defaultAcceptance || {};
+  const section = document.createElement("section");
+  section.className = "cs-selector-proof__section cs-selector-proof__section--nested cs-selector-default-acceptance";
+  section.dataset.defaultAcceptance = "explicit";
+  section.dataset.eligibleCount = String(acceptance.eligibleCount || 0);
+
+  appendText(section, "h4", acceptance.title || "Default acceptance");
+  appendText(section, "p", "Auto-filled values are provisional until accepted here or changed manually. Readiness ignores unaccepted defaults.");
+  appendSection(section, "Defaults requiring acceptance", acceptance.rows || [["defaults requiring acceptance", "none"]]);
+
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "cs-selector-default-acceptance__button";
+  button.textContent = acceptance.actionLabel || "Accept current defaults";
+  button.disabled = !(Number(acceptance.eligibleCount || 0) > 0) || typeof surface.acceptDefaults !== "function";
+  button.addEventListener("click", () => surface.acceptDefaults?.());
+  section.appendChild(button);
+
+  parent.appendChild(section);
+}
+
 function appendSelectorRunAccessoryPlacementPreview(parent, preview = {}) {
   const section = document.createElement("section");
   section.className = "cs-selector-proof__section cs-selector-proof__section--nested cs-selector-run-accessory-placement-preview";
@@ -2705,6 +2727,7 @@ export function renderSelectorView(container, viewModel) {
   appendSelectorDisabledHandoffSummary(diagnostics, surface.disabledHandoffSummary || {});
   appendSelectorRunIntakePreview(diagnostics, surface.runIntakePreview || {});
   appendSelectorRunAccessoryPlacementPreview(diagnostics, surface.runAccessoryPlacementPreview || {});
+  appendSelectorDefaultAcceptance(diagnostics, surface);
   appendSelectorSpecBuildReadinessPreview(diagnostics, surface.specBuildReadinessPreview || {});
   appendSelectorProductCompactStatus(diagnostics, surface);
   appendSelectorCodePolicyDiagnostics(diagnostics, surface);

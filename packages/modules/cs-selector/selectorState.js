@@ -1269,11 +1269,15 @@ function cloneDbBackedSelectorState(value = {}) {
   const manualConstraints = value.manualConstraints && typeof value.manualConstraints === "object" && !Array.isArray(value.manualConstraints)
     ? Object.fromEntries(Object.entries(value.manualConstraints).map(([fieldKey, constraint]) => [fieldKey, { ...constraint }]))
     : {};
+  const acceptedDefaults = value.acceptedDefaults && typeof value.acceptedDefaults === "object" && !Array.isArray(value.acceptedDefaults)
+    ? Object.fromEntries(Object.entries(value.acceptedDefaults).map(([fieldKey, defaultRecord]) => [fieldKey, { ...defaultRecord }]))
+    : {};
   return {
     source: "module-local safe DB/reference-backed selector constraints",
     readOnly: true,
     writes: false,
     manualConstraints,
+    acceptedDefaults,
     lastAction: value.lastAction || "mounted",
   };
 }
@@ -1413,7 +1417,10 @@ export function createSelectorState() {
       if (!normalisedValue) return this.clearDbBackedSelectorFieldValue(fieldKey);
       const next = cloneDbBackedSelectorState(state.dbBackedSelector);
       const cascadeClear = clearDbBackedSelectorCascadeChildren(next.manualConstraints, fieldKey);
+      const acceptedCascadeClear = clearDbBackedSelectorCascadeChildren(next.acceptedDefaults, fieldKey);
       next.manualConstraints = cascadeClear.nextManualConstraints;
+      next.acceptedDefaults = acceptedCascadeClear.nextManualConstraints;
+      delete next.acceptedDefaults[fieldKey];
       next.manualConstraints[fieldKey] = {
         fieldKey,
         value: normalisedValue,
@@ -1423,8 +1430,9 @@ export function createSelectorState() {
         mutable: true,
         writes: false,
       };
-      next.lastAction = cascadeClear.clearedFields.length
-        ? "db-backed-manual-constraint:" + fieldKey + ":cascade-cleared:" + cascadeClear.clearedFields.join("|")
+      const clearedFields = [...new Set([...cascadeClear.clearedFields, ...acceptedCascadeClear.clearedFields])];
+      next.lastAction = clearedFields.length
+        ? "db-backed-manual-constraint:" + fieldKey + ":cascade-cleared:" + clearedFields.join("|")
         : "db-backed-manual-constraint:" + fieldKey;
       state.dbBackedSelector = next;
       state.localDirty = true;
@@ -1434,13 +1442,47 @@ export function createSelectorState() {
 
     clearDbBackedSelectorFieldValue(fieldKey) {
       const next = cloneDbBackedSelectorState(state.dbBackedSelector);
-      if (Object.prototype.hasOwnProperty.call(next.manualConstraints, fieldKey)) {
+      const hadManual = Object.prototype.hasOwnProperty.call(next.manualConstraints, fieldKey);
+      const hadAcceptedDefault = Object.prototype.hasOwnProperty.call(next.acceptedDefaults, fieldKey);
+      if (hadManual || hadAcceptedDefault) {
         delete next.manualConstraints[fieldKey];
-        next.lastAction = `db-backed-manual-constraint-cleared:${fieldKey}`;
+        delete next.acceptedDefaults[fieldKey];
+        next.lastAction = hadManual
+          ? `db-backed-manual-constraint-cleared:${fieldKey}`
+          : `db-backed-accepted-default-cleared:${fieldKey}`;
         state.dbBackedSelector = next;
         state.localDirty = true;
         state.lastAction = next.lastAction;
       }
+      return this.getSnapshot();
+    },
+
+    acceptDbBackedSelectorDefaults(defaults = []) {
+      const next = cloneDbBackedSelectorState(state.dbBackedSelector);
+      const accepted = Array.isArray(defaults) ? defaults : [];
+      let acceptedCount = 0;
+      for (const defaultRecord of accepted) {
+        const fieldKey = normaliseManualValue(defaultRecord?.fieldKey);
+        const value = normaliseManualValue(defaultRecord?.value);
+        if (!fieldKey || !value || Object.prototype.hasOwnProperty.call(next.manualConstraints, fieldKey)) continue;
+        next.acceptedDefaults[fieldKey] = {
+          fieldKey,
+          label: normaliseManualValue(defaultRecord?.label) || fieldKey,
+          value,
+          valueLabel: normaliseManualValue(defaultRecord?.valueLabel) || value,
+          kind: "accepted-default",
+          source: "user-accepted current DB/reference auto-default",
+          mutable: true,
+          writes: false,
+        };
+        acceptedCount += 1;
+      }
+      next.lastAction = acceptedCount
+        ? `db-backed-accepted-defaults:${acceptedCount}`
+        : "db-backed-accepted-defaults:none";
+      state.dbBackedSelector = next;
+      state.localDirty = acceptedCount > 0 ? true : state.localDirty;
+      state.lastAction = next.lastAction;
       return this.getSnapshot();
     },
 

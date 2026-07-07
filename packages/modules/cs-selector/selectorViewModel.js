@@ -1266,14 +1266,40 @@ function optionHasAnyCodePolicy(option = {}, policyIds = []) {
   return policyIds.some((policyId) => optionHasCodePolicy(option, policyId));
 }
 
+function safeRecordMap(value = {}) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  return value;
+}
+
 function dbConstraintMap(local = {}) {
-  const constraints = local.dbBackedSelector?.manualConstraints;
-  if (!constraints || typeof constraints !== "object" || Array.isArray(constraints)) return {};
-  return constraints;
+  return safeRecordMap(local.dbBackedSelector?.manualConstraints);
+}
+
+function dbAcceptedDefaultMap(local = {}) {
+  return safeRecordMap(local.dbBackedSelector?.acceptedDefaults);
+}
+
+function dbEffectiveConstraintMap(local = {}) {
+  return {
+    ...dbAcceptedDefaultMap(local),
+    ...dbConstraintMap(local),
+  };
+}
+
+function recordValueMap(records = {}) {
+  return Object.fromEntries(Object.entries(records).map(([fieldKey, record]) => [fieldKey, String(record?.value || "").trim()]).filter(([, value]) => value));
 }
 
 function dbConstraintValueMap(local = {}) {
-  return Object.fromEntries(Object.entries(dbConstraintMap(local)).map(([fieldKey, record]) => [fieldKey, String(record?.value || "").trim()]).filter(([, value]) => value));
+  return recordValueMap(dbConstraintMap(local));
+}
+
+function dbAcceptedDefaultValueMap(local = {}) {
+  return recordValueMap(dbAcceptedDefaultMap(local));
+}
+
+function dbEffectiveConstraintValueMap(local = {}) {
+  return recordValueMap(dbEffectiveConstraintMap(local));
 }
 
 function dbOptionsPayload(selectorReferenceStatus = {}) {
@@ -1424,7 +1450,7 @@ function dbOptionLocallyCompatible(fieldKey, option = {}, constraints = {}, sele
 }
 
 function enrichDbOptionFields(selectorReferenceStatus = {}, local = {}) {
-  const selectedConstraints = dbConstraintValueMap(local);
+  const selectedConstraints = dbEffectiveConstraintValueMap(local);
   return dbOptionsFields(selectorReferenceStatus).map((field) => {
     const selectedValue = selectedConstraints[field.fieldKey] || "";
     const options = Array.isArray(field.options) ? field.options.map((option) => {
@@ -1903,7 +1929,9 @@ function localWorkflowRelationshipBlock(fieldKey = "", option = {}, selectedCons
 
 function enrichDbWorkflowSections(selectorReferenceStatus = {}, local = {}) {
   const workflowSections = dbWorkflowSections(selectorReferenceStatus);
-  const selectedConstraints = dbConstraintValueMap(local);
+  const selectedConstraints = dbEffectiveConstraintValueMap(local);
+  const manualConstraintValues = dbConstraintValueMap(local);
+  const acceptedDefaultValues = dbAcceptedDefaultValueMap(local);
   const selectedSystemReferenceKey = workflowSystemReferenceKey(workflowSections, selectedConstraints.system || "");
   const selectedSystemSupportsDirect = workflowSystemSupportsDirect(workflowSections, selectedConstraints.system || "");
   const selectedSystemSupportsIndirect = workflowSystemSupportsIndirect(workflowSections, selectedConstraints.system || "");
@@ -1919,6 +1947,15 @@ function enrichDbWorkflowSections(selectorReferenceStatus = {}, local = {}) {
     ...section,
     fields: (Array.isArray(section.fields) ? section.fields : []).map((field) => {
       const selectedValue = selectedConstraints[field.fieldKey] || "";
+      const selectedByManualConstraint = Boolean(selectedValue && manualConstraintValues[field.fieldKey]);
+      const selectedByAcceptedDefault = Boolean(selectedValue && !selectedByManualConstraint && acceptedDefaultValues[field.fieldKey]);
+      const defaultAcceptanceState = selectedByManualConstraint
+        ? "manually-set"
+        : selectedByAcceptedDefault
+          ? "accepted"
+          : selectedValue
+            ? "manually-set"
+            : "unresolved";
       const manualInputField = field.manualInput === true;
       const upstreamLaneSelected = Boolean(selectedConstraints.system || selectedConstraints.emission);
       const manualLaneSupported = !manualInputField
@@ -1985,6 +2022,9 @@ function enrichDbWorkflowSections(selectorReferenceStatus = {}, local = {}) {
           : presentationIsMetadata(field)
             ? field.selectedLabel || field.effectiveLabel || ""
             : "",
+        selectedByManualConstraint,
+        selectedByAcceptedDefault,
+        defaultAcceptanceState,
         options,
         optionPayloadProvided: optionPayloadProvided || deferredChildOptionsHydrated,
         deferredOptions: deferredOptions.map((option) => ({ ...option, rawRowsExposed: false })),
@@ -2044,7 +2084,7 @@ function createDbAvailableConsequence(fields = [], fieldKey, constraints = {}) {
 }
 
 function createDbAutoConsequences(fields = [], local = {}) {
-  const constraints = dbConstraintValueMap(local);
+  const constraints = dbEffectiveConstraintValueMap(local);
   return [
     createDbAvailableConsequence(fields, "driver", constraints),
     createDbAvailableConsequence(fields, "specialParts", constraints),
@@ -2181,9 +2221,15 @@ const RUNTIME_PRESENTATION_DISABLED_HANDOFF_FIELDS = Object.freeze(new Set([
   "rregApprovalCustody",
 ]));
 
+function optionIsUnknownChoice(option = {}) {
+  const value = String(option.value || "").trim().toLowerCase();
+  const label = String(option.label || "").trim().toLowerCase();
+  return value === "unknown" || label === "unknown";
+}
+
 function presentationCompatibleOptions(field = {}) {
   if (field.optionPayloadProvided !== true || !Array.isArray(field.options)) return null;
-  return field.options.filter((option) => option?.blocked !== true && option?.status !== "blocked");
+  return field.options.filter((option) => option?.blocked !== true && option?.status !== "blocked" && !optionIsUnknownChoice(option));
 }
 
 function presentationSelectedOption(field = {}) {
@@ -2221,6 +2267,7 @@ function createDonorShapeDropdownSplit(field = {}) {
   const dropdownOptions = [];
   const incompatibleOptions = [];
   for (const option of options) {
+    if (optionIsUnknownChoice(option)) continue;
     const selected = workflowOptionMatchesSelection(option, field);
     const blocked = option.blocked === true || option.status === "blocked";
     const safeOption = {
@@ -2349,20 +2396,22 @@ function classifyRuntimePresentationField(field = {}, finishContext = {}) {
   const compatibleOptionCount = compatibleOptions ? compatibleOptions.length : null;
   const selectedOption = presentationSelectedOption(field);
   const selectedOptionBlocked = Boolean(field.selectedValue && (selectedOption?.blocked === true || selectedOption?.status === "blocked"));
-  const hasManualConstraint = String(field.selectedValue || "").trim().length > 0;
+  const hasSelectedValue = String(field.selectedValue || "").trim().length > 0;
+  const acceptedDefaultSelected = field.defaultAcceptanceState === "accepted" || field.selectedByAcceptedDefault === true;
+  const hasManualConstraint = hasSelectedValue && !acceptedDefaultSelected;
   const effectiveOption = presentationFirstEffectiveOption(field, compatibleOptions || [], finishContext);
   const primaryAtStep = presentationPrimaryDecisionAtThisStep(field, compatibleOptionCount, selectedOptionBlocked);
   const optionsComputable = compatibleOptionCount !== null;
   const safeAutoResolve = optionsComputable
     && compatibleOptionCount === 1
-    && !hasManualConstraint
+    && !hasSelectedValue
     && selectedOptionBlocked !== true
     && primaryAtStep !== true;
   let displayMode = "choice";
-  let provenance = hasManualConstraint ? "manual" : "available-choice";
+  let provenance = hasManualConstraint ? "manual" : acceptedDefaultSelected ? "accepted-default" : "available-choice";
   let primaryDecision = primaryAtStep;
-  let effectiveValue = hasManualConstraint ? field.selectedValue : "";
-  let effectiveLabel = hasManualConstraint ? field.selectedLabel : "";
+  let effectiveValue = hasSelectedValue ? field.selectedValue : "";
+  let effectiveLabel = hasSelectedValue ? field.selectedLabel : "";
   let overrideAvailable = false;
   let classificationReason = "real user decision or unresolved available choice";
 
@@ -2407,7 +2456,7 @@ function classifyRuntimePresentationField(field = {}, finishContext = {}) {
     effectiveLabel = hasManualConstraint ? field.selectedLabel || field.selectedValue : "";
     overrideAvailable = true;
     classificationReason = field.unavailableReason || "typed manual input; no dropdown catalogue or auto-selection is sourced";
-  } else if (field.fieldKey === "controlTypeIndirect" && !hasManualConstraint && optionsComputable && compatibleOptionCount > 0) {
+  } else if (field.fieldKey === "controlTypeIndirect" && !hasSelectedValue && optionsComputable && compatibleOptionCount > 0) {
     displayMode = "choice";
     provenance = field.inheritedValue ? "inherited" : "available-choice";
     primaryDecision = true;
@@ -2415,7 +2464,7 @@ function classifyRuntimePresentationField(field = {}, finishContext = {}) {
     effectiveLabel = field.inheritedLabel || field.inheritedValue || "";
     overrideAvailable = true;
     classificationReason = field.unavailableReason || "indirect control can match direct or be selected independently; compatible protocol options remain selectable";
-  } else if (presentationIsInherited(field) && field.inheritedValue && !hasManualConstraint && !["finishCover", "finishEnd", "finishFlex"].includes(field.fieldKey)) {
+  } else if (presentationIsInherited(field) && field.inheritedValue && !hasSelectedValue && !["finishCover", "finishEnd", "finishFlex"].includes(field.fieldKey)) {
     displayMode = "inherited-chip";
     provenance = "inherited";
     primaryDecision = false;
@@ -2423,7 +2472,7 @@ function classifyRuntimePresentationField(field = {}, finishContext = {}) {
     effectiveLabel = field.inheritedLabel || field.inheritedValue;
     overrideAvailable = optionsComputable && compatibleOptionCount > 0;
     classificationReason = field.unavailableReason || "inherited consequence from direct/default selection";
-  } else if (optionsComputable && compatibleOptionCount === 0 && !hasManualConstraint) {
+  } else if (optionsComputable && compatibleOptionCount === 0 && !hasSelectedValue) {
     const blockedByLaneCapability = (Array.isArray(field.options) ? field.options : []).some((option) => (Array.isArray(option.blockedBy) ? option.blockedBy : [])
       .some((blocker) => ["directCapability", "indirectCapability"].includes(blocker.fieldKey)));
     const unsupportedLanePicker = ["targetLmPerM", "cctCri", "controlType", "indirectOpticVar1", "indirectOpticVar2", "opticIndirect", "indirectMatchDirect", "targetLmPerMIndirect", "cctCriIndirect", "controlTypeIndirect"].includes(field.fieldKey)
@@ -2435,7 +2484,7 @@ function classifyRuntimePresentationField(field = {}, finishContext = {}) {
     effectiveLabel = field.unavailableReason || "no compatible options under current constraints";
     overrideAvailable = false;
     classificationReason = "no compatible DB-backed option is available; no dead dropdown or fake consequence is rendered";
-  } else if (presentationIsInherited(field) && !hasManualConstraint) {
+  } else if (presentationIsInherited(field) && !hasSelectedValue) {
     const visibleInheritedFinishField = ["finishCover", "finishEnd", "finishFlex"].includes(field.fieldKey);
     const inheritedPreviewValue = field.inheritedValue || (visibleInheritedFinishField ? effectiveOption?.value || "" : "");
     const inheritedPreviewLabel = field.inheritedLabel || (visibleInheritedFinishField ? effectiveOption?.label || "" : "");
@@ -2458,32 +2507,43 @@ function classifyRuntimePresentationField(field = {}, finishContext = {}) {
     }
   } else if (safeAutoResolve && (RUNTIME_PRESENTATION_AUTO_CHIP_FIELDS.has(field.fieldKey) || presentationRole(field) === "auto-consequence" || (presentationRole(field) === "manual-constraint" && !RUNTIME_PRESENTATION_MANUAL_ONLY_FIELDS.has(field.fieldKey)))) {
     displayMode = "auto-chip";
-    provenance = presentationRole(field) === "auto-consequence" ? "auto" : "accepted";
+    provenance = "auto";
     primaryDecision = false;
     effectiveValue = effectiveOption?.value || "";
-    effectiveLabel = effectiveOption?.label || "accepted consequence";
+    effectiveLabel = effectiveOption?.label || "auto-defaulted consequence";
     overrideAvailable = true;
-    classificationReason = "exactly one compatible DB-backed option; shown as accepted consequence without mutating state";
+    classificationReason = "exactly one compatible DB-backed option; shown as provisional auto-default until accepted or manually changed";
   } else if (!primaryAtStep && (RUNTIME_PRESENTATION_AUTO_CHIP_FIELDS.has(field.fieldKey) || presentationRole(field) === "auto-consequence" || presentationIsInherited(field))) {
     displayMode = "collapsed-override";
     provenance = presentationIsInherited(field) ? "inherited" : "auto";
     primaryDecision = false;
-    effectiveValue = hasManualConstraint ? field.selectedValue : "";
-    effectiveLabel = hasManualConstraint ? field.selectedLabel : (optionsComputable ? "multiple compatible options — override available" : "compatible count not available");
+    effectiveValue = hasSelectedValue ? field.selectedValue : "";
+    effectiveLabel = hasSelectedValue ? field.selectedLabel : (optionsComputable ? "multiple compatible options — override available" : "compatible count not available");
     overrideAvailable = optionsComputable && compatibleOptionCount > 0;
     classificationReason = optionsComputable
       ? "not a primary decision in this slice; kept as collapsed override/details"
       : "compatible option count unavailable; no auto-resolution invented";
   } else {
     displayMode = "choice";
-    provenance = hasManualConstraint ? "manual" : "available-choice";
+    provenance = hasManualConstraint ? "manual" : acceptedDefaultSelected ? "accepted-default" : "available-choice";
     primaryDecision = true;
-    effectiveValue = hasManualConstraint ? field.selectedValue : "";
-    effectiveLabel = hasManualConstraint ? field.selectedLabel : "";
+    effectiveValue = hasSelectedValue ? field.selectedValue : "";
+    effectiveLabel = hasSelectedValue ? field.selectedLabel : "";
     overrideAvailable = true;
   }
 
   if (!effectiveLabel && effectiveValue) effectiveLabel = labelFromWorkflowField(field, effectiveValue);
+
+  const resolvedAcceptanceState = selectedOptionBlocked
+    ? "unresolved"
+    : hasManualConstraint
+      ? "manually-set"
+      : acceptedDefaultSelected
+        ? "accepted"
+        : (effectiveValue && (displayMode === "auto-chip" || displayMode === "inherited-chip" || provenance === "auto" || provenance === "inherited"))
+          ? "auto-defaulted"
+          : field.defaultAcceptanceState || "unresolved";
+  const provisionalDefault = resolvedAcceptanceState === "auto-defaulted";
 
   const donorShapeDropdown = createDonorShapeDropdownSplit({
     ...field,
@@ -2502,6 +2562,10 @@ function classifyRuntimePresentationField(field = {}, finishContext = {}) {
     effectiveLabel,
     compatibleOptionCount,
     selectedOptionBlocked,
+    selectedByManualConstraint: hasManualConstraint,
+    selectedByAcceptedDefault: acceptedDefaultSelected,
+    defaultAcceptanceState: resolvedAcceptanceState,
+    provisionalDefault,
     overrideAvailable,
     classificationReason,
     compatibleOptionCountComputed: optionsComputable,
@@ -2585,6 +2649,64 @@ function createPresentationAutoConsequences(workflowSections = []) {
     .flatMap((section) => Array.isArray(section.fields) ? section.fields : [])
     .map((field) => presentationConsequenceFromField(field))
     .filter(Boolean);
+}
+
+const DEFAULT_ACCEPTANCE_USER_DRIVEN_SECTIONS = Object.freeze(new Set(["system", "optics", "lightControl", "egressAccessories"]));
+const DEFAULT_ACCEPTANCE_USER_DRIVEN_FIELDS = Object.freeze(new Set([
+  "system",
+  "optic",
+  "opticSub",
+  "opticIndirect",
+  "diffuserVar1",
+  "diffuserVar2",
+  "directOpticVar1",
+  "directOpticVar2",
+  "indirectOpticVar1",
+  "indirectOpticVar2",
+  "degree",
+  "accessories",
+]));
+
+function defaultAcceptanceExcludedForUserDrivenField(field = {}) {
+  const sectionKey = field.canonicalSectionKey || field.sectionKey || "";
+  return DEFAULT_ACCEPTANCE_USER_DRIVEN_FIELDS.has(field.fieldKey) || DEFAULT_ACCEPTANCE_USER_DRIVEN_SECTIONS.has(sectionKey);
+}
+
+function defaultAcceptanceRecordFromField(field = {}) {
+  if (!field.fieldKey || !field.effectiveValue) return null;
+  if (defaultAcceptanceExcludedForUserDrivenField(field)) return null;
+  if (field.defaultAcceptanceState !== "auto-defaulted" && field.provisionalDefault !== true) return null;
+  if (["metadata-chip", "hidden-diagnostic", "disabled-handoff", "warning-chip"].includes(field.displayMode)) return null;
+  return {
+    fieldKey: field.fieldKey,
+    label: field.label || field.fieldKey,
+    value: field.effectiveValue,
+    valueLabel: field.effectiveLabel || field.effectiveValue,
+    acceptanceState: "auto-defaulted",
+    source: RUNTIME_PRESENTATION_CLASSIFICATION_NAME,
+    reason: field.classificationReason || "current auto-default can be accepted by the user",
+    writes: false,
+    rawRowsExposed: false,
+  };
+}
+
+function createDefaultAcceptanceSummary(workflowSections = []) {
+  const eligibleDefaults = workflowSections
+    .flatMap((section) => Array.isArray(section.fields) ? section.fields : [])
+    .map((field) => defaultAcceptanceRecordFromField(field))
+    .filter(Boolean);
+  return {
+    title: "Default acceptance",
+    actionLabel: "Accept current defaults",
+    eligibleCount: eligibleDefaults.length,
+    eligibleDefaults,
+    rows: eligibleDefaults.length
+      ? eligibleDefaults.map((item) => [item.label, `${item.valueLabel} — accept required`])
+      : [["defaults requiring acceptance", "none"]],
+    readOnly: true,
+    writes: false,
+    rawRowsExposed: false,
+  };
 }
 
 const SELECTION_TRUTH_SUMMARY_GROUPS = Object.freeze([
@@ -2704,6 +2826,8 @@ function selectionTruthKindFor(item = {}, field = {}) {
   const role = String(item.role || field.role || "").trim();
   const status = String(item.status || "").trim();
   if (item.blocked === true || status === "blocked") return "blocked";
+  if (item.defaultAcceptanceState === "accepted" || item.selectedByAcceptedDefault === true || item.provenance === "accepted-default") return "accepted-default";
+  if (kind === "accepted-default" || role === "accepted-default" || status === "accepted-default") return "accepted-default";
   if (kind === "inherited-consequence" || role === "inherited-consequence" || status === "inherited") return "inherited-consequence";
   if (kind === "auto-consequence" || role === "auto-consequence" || status === "auto-consequence") return "auto-consequence";
   if (role === "metadata-only" || item.metadataOnly === true || status === "metadata-only") return "source-status";
@@ -3221,6 +3345,21 @@ function spineFieldHasDisplayValue(field = {}) {
   return false;
 }
 
+function spineFieldAcceptanceState(field = {}) {
+  if (!field) return "unresolved";
+  if (field.selectedOptionBlocked === true || field.status === "blocked" || field.displayMode === "warning-chip") return "unresolved";
+  if (field.defaultAcceptanceState === "accepted" || field.selectedByAcceptedDefault === true || field.provenance === "accepted-default") return "accepted";
+  if (field.selectedValue || field.selectedLabel) return "manually-set";
+  if ((field.displayMode === "auto-chip" || field.displayMode === "inherited-chip" || field.provenance === "auto" || field.provenance === "inherited") && (field.effectiveValue || field.effectiveLabel)) return "auto-defaulted";
+  return field.defaultAcceptanceState || "unresolved";
+}
+
+function spineFieldProvisionalValue(field = {}) {
+  const state = spineFieldAcceptanceState(field);
+  if (state !== "auto-defaulted") return null;
+  return field.effectiveLabel || field.effectiveValue || null;
+}
+
 function spineFieldValue(field = {}) {
   if (!field) return null;
   if (field.selectedOptionBlocked === true || field.status === "blocked" || field.displayMode === "warning-chip") return null;
@@ -3232,16 +3371,24 @@ function spineFieldValue(field = {}) {
   if (["auto-chip", "inherited-chip", "metadata-chip", "warning-chip"].includes(field.displayMode)) {
     return field.effectiveLabel || field.effectiveValue || null;
   }
-  if (field.provenance === "auto" || field.provenance === "inherited" || field.provenance === "metadata") {
+  if (field.provenance === "auto" || field.provenance === "inherited" || field.provenance === "metadata" || field.provenance === "accepted-default") {
     return field.effectiveLabel || field.effectiveValue || null;
   }
   return null;
+}
+
+function spineFieldAcceptedValue(field = {}) {
+  const acceptanceState = spineFieldAcceptanceState(field);
+  if (acceptanceState !== "accepted" && acceptanceState !== "manually-set") return null;
+  return field.selectedLabel || field.selectedValue || field.effectiveLabel || field.effectiveValue || null;
 }
 
 function spineFieldStatus(field = null) {
   if (!field) return "missing";
   if (field.selectedOptionBlocked === true || field.status === "blocked" || field.displayMode === "warning-chip") return "blocked";
   if (presentationIsMetadata(field) && (field.futureMapped === true || field.status === "future-mapped") && !spineFieldHasDisplayValue(field)) return "missing";
+  const acceptanceState = spineFieldAcceptanceState(field);
+  if (acceptanceState === "accepted") return "accepted-default";
   if (field.selectedValue) return "manual-constraint";
   if (field.displayMode === "auto-chip" || field.provenance === "auto") return "auto-consequence";
   if (field.displayMode === "inherited-chip" || field.provenance === "inherited") return "inherited-consequence";
@@ -3254,6 +3401,7 @@ function spineFieldStatus(field = null) {
 function spineFieldIndicator(field = null) {
   const status = spineFieldStatus(field);
   if (status === "manual-constraint") return "manual constraint";
+  if (status === "accepted-default") return "accepted default";
   if (status === "auto-consequence") return "auto consequence";
   if (status === "inherited-consequence") return "inherited consequence";
   if (status === "blocked") return "blocked / preserved";
@@ -3340,24 +3488,31 @@ function summarizeReadinessBlockers(blockedItems = [], emptyLabel = PRODUCT_SPIN
 function specGateRequirementStatus(definition = {}, lookup) {
   const field = spineField(lookup, definition.fields || []);
   const fieldStatus = spineFieldStatus(field);
-  const value = spineFieldValue(field || {});
+  const acceptanceState = spineFieldAcceptanceState(field || {});
+  const value = spineFieldAcceptedValue(field || {});
+  const provisionalValue = spineFieldProvisionalValue(field || {});
   const blocked = fieldStatus === "blocked";
-  const complete = Boolean(value) && !blocked;
+  const complete = Boolean(value) && !blocked && (acceptanceState === "accepted" || acceptanceState === "manually-set");
+  const provisionalDefault = Boolean(!complete && provisionalValue && !blocked);
   return {
     key: definition.key,
     label: definition.label,
     gateSection: definition.gateSection,
     fieldKeys: [...(definition.fields || [])],
     value: value || null,
-    displayValue: value || PRODUCT_SPINE_EMPTY_VALUE,
-    status: blocked ? "blocked" : (complete ? "complete" : "missing"),
+    displayValue: value || provisionalValue || PRODUCT_SPINE_EMPTY_VALUE,
+    status: blocked ? "blocked" : (complete ? "complete" : provisionalDefault ? "auto-defaulted" : "missing"),
     complete,
     blocked,
+    provisionalDefault,
+    acceptanceState: complete ? acceptanceState : provisionalDefault ? "auto-defaulted" : acceptanceState,
     reason: blocked
       ? spineFieldReason(field)
       : (complete
-        ? "Source-backed Selector field satisfies the donor Gate S requirement."
-        : "Required by donor Gate S; no value is faked."),
+        ? "Accepted default or manual selection satisfies the donor Gate S requirement."
+        : provisionalDefault
+          ? "Auto-default is visible but provisional; accept defaults or manually change it before readiness can count it."
+          : "Required by donor Gate S; no value is faked."),
     rawRowsExposed: false,
     writes: false,
   };
@@ -3369,6 +3524,7 @@ function createSpecGateCandidateReadiness({ lookup, sourceReady = false, summary
     ...(spineSupportsIndirect(lookup) ? SPEC_GATE_INDIRECT_REQUIREMENTS : []),
   ].map((requirement) => specGateRequirementStatus(requirement, lookup));
   const missingRequirements = requirements.filter((requirement) => !requirement.complete).map((requirement) => requirement.label);
+  const provisionalRequirements = requirements.filter((requirement) => requirement.provisionalDefault === true).map((requirement) => requirement.label);
   const manualBlockedKeys = new Set((Array.isArray(manualConstraints) ? manualConstraints : [])
     .filter((constraint) => constraint.blocked === true)
     .map((constraint) => `${constraint.fieldKey || ""}:${constraint.value || ""}`));
@@ -3411,6 +3567,7 @@ function createSpecGateCandidateReadiness({ lookup, sourceReady = false, summary
     constrainedSelectionState: manualConstraintCount > 0,
     blockedIncompatibleState: blockedCount > 0,
     missingRequirements,
+    provisionalRequirements,
     missingRequirementRows: requirements.map((requirement) => [requirement.label, requirement.status]),
     requirementRows: requirements.map((requirement) => [requirement.label, requirement.displayValue]),
     requirements,
@@ -5281,6 +5438,7 @@ function createDbBackedSelectorSurface(selectorReferenceStatus = {}, local = {},
   const canonicalWorkflow = createCanonicalWorkflowSections(classifiedWorkflowSections);
   const workflowSections = canonicalWorkflow.sections;
   const presentationClassification = createPresentationClassificationSummary(workflowSections);
+  const defaultAcceptance = createDefaultAcceptanceSummary(workflowSections);
   const manualConstraints = createDbManualConstraints(selectorReferenceStatus, local);
   const payloadConsequences = Array.isArray(payload.autoConsequences) ? payload.autoConsequences : [];
   const localConsequences = createDbAutoConsequences(fields, local);
@@ -5454,6 +5612,7 @@ function createDbBackedSelectorSurface(selectorReferenceStatus = {}, local = {},
     donorFieldParity: payload.donorFieldParity || null,
     specialPartsEntitlementSummary: payload.specialPartsEntitlementSummary || null,
     presentationClassification,
+    defaultAcceptance,
     donorShapeSelectedTiles,
     productSpine,
     payloadPreview,
@@ -5502,6 +5661,10 @@ function createDbBackedSelectorSurface(selectorReferenceStatus = {}, local = {},
     setFieldValue(fieldKey, value) {
       const label = dbOptionLabel(selectorReferenceStatus, fieldKey, value);
       selectorState?.setDbBackedSelectorFieldValue?.(fieldKey, value, label);
+      onLocalStateChange?.();
+    },
+    acceptDefaults() {
+      selectorState?.acceptDbBackedSelectorDefaults?.(defaultAcceptance.eligibleDefaults || []);
       onLocalStateChange?.();
     },
     clearFieldValue(fieldKey) {

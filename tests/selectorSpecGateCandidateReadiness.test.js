@@ -235,6 +235,28 @@ test("manual constraints and auto consequences remain separate readiness summari
   assert.equal(specRow(model, "autoConsequences").status, "auto-consequence");
 });
 
+test("auto-defaulted requirement values stay provisional and user-driven optics are not bulk accepted", () => {
+  const selectorState = createSelectorState();
+  let model = selectAndReload(selectorState, "system", "DNX|60");
+  let payload = model.selectorSurface.payloadPreview.specGateCandidateReadiness;
+  let opticRequirement = payload.requirements.find((requirement) => requirement.label === "Optic Direct");
+
+  assert.ok(opticRequirement, "expected optic requirement");
+  assert.equal(opticRequirement.status, "auto-defaulted");
+  assert.equal(opticRequirement.complete, false);
+  assert.equal(payload.missingRequirements.includes("Optic Direct"), true);
+  assert.equal(model.selectorSurface.defaultAcceptance.eligibleDefaults.some((item) => item.fieldKey === "directOpticVar1"), false);
+
+  model.selectorSurface.acceptDefaults();
+  model = createModel({ selectorState });
+  payload = model.selectorSurface.payloadPreview.specGateCandidateReadiness;
+  opticRequirement = payload.requirements.find((requirement) => requirement.label === "Optic Direct");
+
+  assert.equal(opticRequirement.status, "auto-defaulted");
+  assert.equal(opticRequirement.acceptanceState, "auto-defaulted");
+  assert.equal(payload.missingRequirements.includes("Optic Direct"), true);
+});
+
 test("blocked or incompatible selections appear in readiness blockers", () => {
   const selectorState = createSelectorState();
   selectAndReload(selectorState, "system", "DNX|60");
