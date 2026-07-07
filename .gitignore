@@ -1,3 +1,14 @@
 node_modules/
 session_admin/
 _worker_reports/
+
+# Local-only secrets/config. Keep Google/HubSpot keys outside the repo.
+.env
+.env.*
+*.env.bat
+*.env.ps1
+secrets/
+_secrets/
+*_key.json
+*secrets*.json
+*.pem
