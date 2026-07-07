@@ -154,6 +154,16 @@ function specGateSnapshot() {
   };
 }
 
+function snapshotWithDoNotBridgeAuthority() {
+  const snapshot = specGateSnapshot();
+  snapshot.SYSTEM_POLICY = [
+    ...snapshot.SYSTEM_POLICY,
+    { item: "do_not_bridge_join", economy: "TRUE", business: "TRUE", first: "TRUE", approved: "yes" },
+    { item: "do_not_bridge_segment_join", economy: "TRUE", business: "TRUE", first: "TRUE", approved: "yes" },
+  ];
+  return snapshot;
+}
+
 function selectorStateConstraints(selectorState = createSelectorState()) {
   const snapshot = selectorState.getSnapshot();
   const manualConstraints = snapshot.dbBackedSelector?.manualConstraints || {};
@@ -526,6 +536,50 @@ test("Stage 3B fails closed when non-zero accessory intent is join-sensitive wit
   assert.equal(joinAuthority.ruleCoverage.find((row) => row.rule === "do_not_bridge_join").classification, "missing and not safe to defer for Stage 3B claims");
   assert.equal(joinAuthority.ruleCoverage.find((row) => row.rule === "do_not_bridge_segment_join").classification, "missing and not safe to defer for Stage 3B claims");
   assert.equal(stageRows["Stage 3 — Factory Approved Inputs"], "false");
+  assert.equal(stageRows["Stage 4 — Engine Outcome Proven"], "false");
+  assertNoGenerationAuthority(value);
+});
+
+test("Stage 3B accepts join-sensitive accessory intent when do-not-bridge is physically enforced", () => {
+  const selectorState = createSelectorState();
+  const snapshot = snapshotWithDoNotBridgeAuthority();
+  completeSpecReadyCandidate(selectorState);
+  selectorState.acceptDbBackedSelectorDefaults([
+    { fieldKey: "tier", label: "Tier", value: "Economy", valueLabel: "Economy" },
+  ]);
+  selectorState.setRunIntakeRows([
+    { id: "run-1", runNumber: 1, label: "Run 1", quantity: "2", runLengthMm: "5620", lengthMode: "cut_to_length" },
+  ]);
+  selectorState.setRunAccessoryPlacementIntents([
+    { runReference: "Run 1", accessoryType: "sensor", quantity: "1", placementPreference: "start", status: "confirmed" },
+  ]);
+  acceptBuildOrderContext(selectorState, { runLength: "5620", runLengthLabel: "5620 mm" });
+  const value = preview(createModel({ selectorState, snapshot, constraints: selectorStateConstraints(selectorState) }));
+  const stageRows = rowsToObject(value.stageIndicatorRows);
+  const reservation = value.factoryApprovedInputsSummary.accessoryReservationSummary;
+  const joinAuthority = reservation.joinCrossingAuthoritySummary;
+
+  assert.equal(value.buildReady, true);
+  assert.equal(value.factoryApprovedInputsReady, true);
+  assert.equal(value.factoryApprovedInputsSummary.stage3Mode, "accessory-reservation-required");
+  assert.equal(value.factoryApprovedInputsSummary.accessoryReservationRequired, true);
+  assert.equal(reservation.ok, true);
+  assert.equal(reservation.accessoryReservationReady, true);
+  assert.equal(reservation.boardFillInputReady, true);
+  assert.equal(reservation.physicalSegmentBridgeReady, true);
+  assert.equal(reservation.frozenPhysicalSegmentSummary.segmentCount, 2);
+  assert.deepEqual(reservation.frozenPhysicalSegmentSummary.joinPositionsMm, [4200]);
+  assert.equal(reservation.frozenPhysicalSegmentSummary.reservedRangeSummary.reservedRangesCrossFrozenSegmentJoin, false);
+  assert.equal(joinAuthority.ok, true);
+  assert.equal(joinAuthority.joinSensitive, true);
+  assert.equal(joinAuthority.joinCrossingAuthorityReady, true);
+  assert.equal(joinAuthority.singleSegmentContained, false);
+  assert.equal(joinAuthority.ruleCoverage.find((row) => row.rule === "board_cross_segment_join").classification, "represented and physically enforced");
+  assert.equal(joinAuthority.ruleCoverage.find((row) => row.rule === "diffuser_cross_segment_join").classification, "represented and physically enforced");
+  assert.equal(joinAuthority.ruleCoverage.find((row) => row.rule === "secondary_across_segment").classification, "represented and physically enforced");
+  assert.equal(joinAuthority.ruleCoverage.find((row) => row.rule === "do_not_bridge_join").classification, "represented and physically enforced");
+  assert.equal(joinAuthority.ruleCoverage.find((row) => row.rule === "do_not_bridge_segment_join").classification, "represented and physically enforced");
+  assert.equal(stageRows["Stage 3 — Factory Approved Inputs"], "true");
   assert.equal(stageRows["Stage 4 — Engine Outcome Proven"], "false");
   assertNoGenerationAuthority(value);
 });

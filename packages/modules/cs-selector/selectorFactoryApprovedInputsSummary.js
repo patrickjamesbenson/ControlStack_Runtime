@@ -350,6 +350,11 @@ function isSecondaryNoCrossPolicy(value) {
   return normaliseJoinPolicyValue(value) === "forbid";
 }
 
+function isStrictDoNotBridgePolicy(value) {
+  const token = normaliseJoinPolicyValue(value);
+  return ["true", "yes", "1", "y", "t", "forbid", "forbidden", "disallow", "blocked"].includes(token);
+}
+
 function buildStage3BJoinCrossingAuthoritySummary({
   sourceBackedLengthPolicySummary = null,
   sourceBackedBodyLengthPolicySummary = null,
@@ -426,12 +431,12 @@ function buildStage3BJoinCrossingAuthoritySummary({
   const doNotBridgeJoinPhysicallyEnforced = joinSensitive
     && physicalSegmentBridgeReady
     && doNotBridgeJoinRepresented
-    && isStrictNoCrossPolicy(doNotBridgeJoinValue)
+    && isStrictDoNotBridgePolicy(doNotBridgeJoinValue)
     && frozenPhysicalSegmentSummary.reservedRangeSummary?.reservedRangesCrossFrozenSegmentJoin === false;
   const doNotBridgeSegmentJoinPhysicallyEnforced = joinSensitive
     && physicalSegmentBridgeReady
     && doNotBridgeSegmentJoinRepresented
-    && isStrictNoCrossPolicy(doNotBridgeSegmentJoinValue)
+    && isStrictDoNotBridgePolicy(doNotBridgeSegmentJoinValue)
     && frozenPhysicalSegmentSummary.reservedRangeSummary?.reservedRangesCrossFrozenSegmentJoin === false;
 
   const ruleCoverage = [
