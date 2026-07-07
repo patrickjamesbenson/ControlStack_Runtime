@@ -221,6 +221,7 @@ test("downstream readiness is displayed but production actions remain disabled",
     "runtable-domain",
     "controlled-donor-engine-verify-bridge",
     "selected-result-handoff",
+    "selected-result-authority-preflight",
     "ies-handoff",
     "controlled-real-source-evidence",
   ]);
