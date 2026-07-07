@@ -15,6 +15,7 @@ import {
   buildSelectorReadonlyEngineCandidateForInternalSeam,
   buildSelectorReadonlyEngineStep1SafeSummary,
   buildSelectorReadonlyEngineStep2SelectedResultProjection,
+  buildSelectorReadonlyEngineStep3SelectedResultAuthorityGuard,
 } from "../../workspace-kernel/selectorReadonlyEngineCandidateMapper.js";
 
 const SELECTOR_WORKFLOW_POLICY_FINGERPRINT = "safe-policy:selector-workflow-preview";
@@ -4238,8 +4239,9 @@ const SELECTED_ENGINE_RESULT_BOUNDARY_COPY = Object.freeze([
   "No IES, payload, drawings, Controlled Records, RREG approval/custody, CRM write-back, Board Data mutation, or hidden write-back is created here.",
 ]);
 
-function createSelectedEngineResultHandoffScaffold(selectedResultProjection = buildSelectedResultProjectionContract()) {
+function createSelectedEngineResultHandoffScaffold(selectedResultProjection = buildSelectedResultProjectionContract(), authorityGuardSummary = null, safeSelectedResultSourceObjectSummary = null) {
   const projection = selectedResultProjection || buildSelectedResultProjectionContract();
+  const guard = authorityGuardSummary || {};
   const projectionSafetyFlags = projection.safetyFlags || {};
   const unavailable = "unavailable — future read-only Engine/RunTable result source required";
   const fieldRows = SELECTED_ENGINE_RESULT_REQUIRED_FIELDS.map((field) => [field, unavailable]);
@@ -4292,6 +4294,17 @@ function createSelectedEngineResultHandoffScaffold(selectedResultProjection = bu
       staleSensitiveInputKeys: Array.isArray(projection.staleSensitiveInputKeys) ? [...projection.staleSensitiveInputKeys] : [],
       redactionRuleCount: Array.isArray(projection.redactionRules) ? projection.redactionRules.length : 0,
     },
+    selectedResultAuthorityGuard: guard && guard.state ? {
+      state: guard.state,
+      stale: guard.stale === true,
+      failClosed: guard.failClosed !== false,
+      reason: guard.reason || "not compared",
+      diagnosticOnly: guard.diagnosticOnly === true,
+      readOnly: guard.readOnly === true,
+      comparisonAttempted: guard.comparisonAttempted === true,
+      fingerprint: guard.selectedResultAuthorityGuardFingerprint || null,
+    } : null,
+    safeSelectedResultSourceObjectSummary: safeSelectedResultSourceObjectSummary || null,
     selectedResultProjectionSource: projection.source || "future Engine/RunTable selected-result projection",
     selectedResultProjectionState: projection.state || "no_selected_result",
     selectedResultAvailable: projection.selectedResultAvailable === true,
@@ -4337,7 +4350,10 @@ function createSelectedEngineResultHandoffScaffold(selectedResultProjection = bu
       ["engine verification", projection.engineVerificationEnabled === true ? "enabled" : "disabled"],
       ["selected result ingestion", projection.selectedResultIngestionEnabled === true ? "enabled" : "disabled"],
       ["selected result persistence", projection.selectedResultPersistenceEnabled === true ? "enabled" : "disabled"],
-      ["stale result flag", projection.stale === true ? "true" : "placeholder only — false"],
+      ["authority guard state", guard.state || "not_compared_fail_closed"],
+      ["authority guard fail closed", guard.failClosed === false ? "false" : "true"],
+      ["authority guard reason", guard.reason || "not compared"],
+      ["stale result flag", guard.stale === true || projection.stale === true ? "true" : "placeholder only — false"],
       ["selected subset/family lock", projection.selectedFamilySubsetLock ? "established" : "not established"],
       ["per-run lookup", projection.perRunLookupNormalised === true ? "normalised" : "not available"],
     ],
@@ -4715,7 +4731,10 @@ function createSpecBuildRequirementStatus(requirement = {}, productSpine = {}, c
 }
 
 function selectedResultAcceptedForSpecBuild(handoff = {}) {
-  return handoff.accepted === true && handoff.selectedResultAvailable === true;
+  return handoff.accepted === true
+    && handoff.selectedResultAvailable === true
+    && handoff.selectedResultAuthorityGuard?.state === "engine_verified_selected_result_ready"
+    && handoff.selectedResultAuthorityGuard?.failClosed === false;
 }
 
 function specBuildCandidateState({ specReady = false, buildReady = false, defaultPreview = false, blockedCount = 0 } = {}) {
@@ -4786,6 +4805,13 @@ function createSpecBuildReadinessPreview({
   const readonlyEngineStep2SelectedResultSummary = buildSelectorReadonlyEngineStep2SelectedResultProjection({
     readonlyEngineStep1SafeSummary,
   });
+  const readonlyEngineStep3AuthorityGuardSummary = buildSelectorReadonlyEngineStep3SelectedResultAuthorityGuard({
+    readonlyEngineStep2SelectedResultSummary,
+    policyFingerprint: SELECTOR_WORKFLOW_POLICY_FINGERPRINT,
+    sourceFingerprint: SELECTOR_WORKFLOW_SOURCE_FINGERPRINT,
+    currentSelectorStateFingerprint: SELECTOR_WORKFLOW_STATE_FINGERPRINT,
+    currentReferenceOptionsFingerprint: SELECTOR_WORKFLOW_REFERENCE_OPTIONS_FINGERPRINT,
+  });
   const stageIndicators = [
     { stage: 1, key: "specReady", label: "Stage 1 — Spec Ready", ready: specReady, authority: "committed selector state", sourceAuthority: "manualConstraints or acceptedDefaults only; provisional defaults do not count", failClosed: !specReady },
     { stage: 2, key: "proofOfConceptBuildable", label: "Stage 2 — Proof-of-Concept Buildable", ready: buildReady, authority: "committed selector state only: manualConstraints or acceptedDefaults", sourceAuthority: "manualConstraints or acceptedDefaults only; product-spine/display rows do not count", failClosed: !buildReady },
@@ -4855,6 +4881,9 @@ function createSpecBuildReadinessPreview({
     readonlyEngineStep2SelectedResultSummary,
     readonlyEngineStep2Ready: readonlyEngineStep2SelectedResultSummary?.readonlyEngineStep2Ready === true,
     selectedResultSummaryProjectionReady: readonlyEngineStep2SelectedResultSummary?.selectedResultProjectionReady === true,
+    readonlyEngineStep3AuthorityGuardSummary,
+    readonlyEngineStep3Ready: readonlyEngineStep3AuthorityGuardSummary?.readonlyEngineStep3Ready === true,
+    selectedResultAuthorityState: readonlyEngineStep3AuthorityGuardSummary?.selectedResultAuthorityState || "not_compared_fail_closed",
     stageIndicators,
     stageIndicatorRows: stageIndicators.map((stage) => [stage.label, stage.ready ? "true" : "false"]),
     businessStageIndicatorContract: {
@@ -4894,6 +4923,8 @@ function createSpecBuildReadinessPreview({
       ["selected result available", selectedEngineResultHandoff.selectedResultAvailable === true ? "true" : "false"],
       ["accepted", selectedEngineResultHandoff.accepted === true ? "true" : "false"],
       ["engine verified", selectedEngineResultHandoff.engineVerified === true ? "true" : "false"],
+      ["authority guard", selectedEngineResultHandoff.selectedResultAuthorityGuard?.state || "not_compared_fail_closed"],
+      ["authority guard fail closed", selectedEngineResultHandoff.selectedResultAuthorityGuard?.failClosed === false ? "false" : "true"],
       ["dependency state", selectedResultAccepted ? "accepted selected result available" : "blocked/fail-closed"],
     ],
     futureSlugSpecDependencyState: buildReady
@@ -4922,6 +4953,7 @@ function createSpecBuildReadinessPreview({
       ["Stage 4 Step 1 readonly mapper", readonlyEngineCandidateMapperSummary?.readonlyEngineCandidateMapperReady === true ? "ready" : (readonlyEngineCandidateMapperSummary?.blocker || "blocked/fail-closed")],
       ["Stage 4 Step 1 readonly seam", readonlyEngineStep1SafeSummary?.readonlyEngineStep1Ready === true ? "ready" : (readonlyEngineStep1SafeSummary?.blocker || "host-local-readonly-engine-seam-not-invoked")],
       ["Stage 4 Step 2 selected-result source/projection", readonlyEngineStep2SelectedResultSummary?.readonlyEngineStep2Ready === true ? "summary-ready" : (readonlyEngineStep2SelectedResultSummary?.blocker || "blocked/fail-closed")],
+      ["Stage 4 Step 3 selected-result authority guard", readonlyEngineStep3AuthorityGuardSummary?.selectedResultAuthorityState || "not_compared_fail_closed"],
       ["manual constraints", String(manualConstraints.length)],
       ["auto consequences", String(autoConsequences.length)],
       ["missing spec requirements", missingSpecRequirements.length ? missingSpecRequirements.join(", ") : "none"],
@@ -5382,6 +5414,8 @@ function createSelectorWorkflowPreview({
     sealedCandidateAssemblyPreviewSummary,
     runTableDomainOutputScaffoldSummary,
     selectedResultProjectionSummary: selectedEngineResultHandoff.selectedResultProjection || null,
+    safeSelectedResultSourceObjectSummary: selectedEngineResultHandoff.safeSelectedResultSourceObjectSummary || null,
+    selectedResultAuthorityGuardSummary: selectedEngineResultHandoff.selectedResultAuthorityGuard || null,
   });
   const iesHandoffReadinessScaffoldSummary = buildRuntimeIesHandoffReadinessScaffoldSummary({
     ...fingerprints,
@@ -5722,7 +5756,18 @@ function createDbBackedSelectorSurface(selectorReferenceStatus = {}, local = {},
   const selectedResultProjection = readonlyEngineStep2SelectedResultSummaryForSurface?.selectedResultProjectionReady === true
     ? readonlyEngineStep2SelectedResultSummaryForSurface.selectedResultProjection
     : buildSelectedResultProjectionContract();
-  const selectedEngineResultHandoff = createSelectedEngineResultHandoffScaffold(selectedResultProjection);
+  const readonlyEngineStep3AuthorityGuardSummaryForSurface = buildSelectorReadonlyEngineStep3SelectedResultAuthorityGuard({
+    readonlyEngineStep2SelectedResultSummary: readonlyEngineStep2SelectedResultSummaryForSurface || {},
+    policyFingerprint: SELECTOR_WORKFLOW_POLICY_FINGERPRINT,
+    sourceFingerprint: SELECTOR_WORKFLOW_SOURCE_FINGERPRINT,
+    currentSelectorStateFingerprint: SELECTOR_WORKFLOW_STATE_FINGERPRINT,
+    currentReferenceOptionsFingerprint: SELECTOR_WORKFLOW_REFERENCE_OPTIONS_FINGERPRINT,
+  });
+  const selectedEngineResultHandoff = createSelectedEngineResultHandoffScaffold(
+    selectedResultProjection,
+    readonlyEngineStep3AuthorityGuardSummaryForSurface.authorityGuardSummary,
+    readonlyEngineStep2SelectedResultSummaryForSurface?.safeSelectedResultSourceObject || null,
+  );
   const sourceSpecReadinessExplanation = createSourceSpecReadinessExplanation({
     sourceReady,
     sourceReadiness,

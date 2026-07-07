@@ -1,5 +1,6 @@
 import { buildSafeEngineRunTableSelectedResultSourceObject } from "./engineRunTableSafeSelectedResultSourceObject.js";
 import { adaptSafeSelectedResultSourceObjectToSummaryProjection } from "./engineRunTableSelectedResultAdapter.js";
+import { buildSelectedResultAuthorityGuardSummary } from "./selectedResultAuthorityGuard.js";
 import { stableFingerprint } from "./stableFingerprint.js";
 
 export const SELECTOR_READONLY_ENGINE_CANDIDATE_MAPPER_SCHEMA_ID =
@@ -11,6 +12,9 @@ export const SELECTOR_READONLY_ENGINE_STEP1_SAFE_SUMMARY_SCHEMA_VERSION = 1;
 export const SELECTOR_READONLY_ENGINE_STEP2_SELECTED_RESULT_SCHEMA_ID =
   "controlstack.runtime.selector-readonly-engine-step2-selected-result-projection.v1";
 export const SELECTOR_READONLY_ENGINE_STEP2_SELECTED_RESULT_SCHEMA_VERSION = 1;
+export const SELECTOR_READONLY_ENGINE_STEP3_AUTHORITY_GUARD_SCHEMA_ID =
+  "controlstack.runtime.selector-readonly-engine-step3-selected-result-authority-guard.v1";
+export const SELECTOR_READONLY_ENGINE_STEP3_AUTHORITY_GUARD_SCHEMA_VERSION = 1;
 
 const REQUIRED_CANDIDATE_FIELDS = Object.freeze([
   "tier",
@@ -487,13 +491,18 @@ export async function invokeSelectorReadonlyEngineStep1WithHostLocalReadonlySeam
     const readonlyEngineStep2SelectedResultSummary = buildSelectorReadonlyEngineStep2SelectedResultProjection({
       readonlyEngineStep1SafeSummary,
     });
+    const readonlyEngineStep3AuthorityGuardSummary = buildSelectorReadonlyEngineStep3SelectedResultAuthorityGuard({
+      readonlyEngineStep2SelectedResultSummary,
+    });
     return {
       ok: false,
       readonlyEngineStep1Ready: false,
       readonlyEngineStep2Ready: false,
+      readonlyEngineStep3Ready: false,
       mapperSummary: mapperResult.summary,
       readonlyEngineStep1SafeSummary,
       readonlyEngineStep2SelectedResultSummary,
+      readonlyEngineStep3AuthorityGuardSummary,
       candidatePayloadReturned: false,
       rawSelectorPayloadReturned: false,
       rawEnginePayloadReturned: false,
@@ -523,13 +532,18 @@ export async function invokeSelectorReadonlyEngineStep1WithHostLocalReadonlySeam
   const readonlyEngineStep2SelectedResultSummary = buildSelectorReadonlyEngineStep2SelectedResultProjection({
     readonlyEngineStep1SafeSummary,
   });
+  const readonlyEngineStep3AuthorityGuardSummary = buildSelectorReadonlyEngineStep3SelectedResultAuthorityGuard({
+    readonlyEngineStep2SelectedResultSummary,
+  });
   return {
     ok: readonlyEngineStep1SafeSummary.ok === true,
     readonlyEngineStep1Ready: readonlyEngineStep1SafeSummary.readonlyEngineStep1Ready === true,
     readonlyEngineStep2Ready: readonlyEngineStep2SelectedResultSummary.readonlyEngineStep2Ready === true,
+    readonlyEngineStep3Ready: readonlyEngineStep3AuthorityGuardSummary.readonlyEngineStep3Ready === true,
     mapperSummary: mapperResult.summary,
     readonlyEngineStep1SafeSummary,
     readonlyEngineStep2SelectedResultSummary,
+    readonlyEngineStep3AuthorityGuardSummary,
     candidatePayloadReturned: false,
     rawSelectorPayloadReturned: false,
     rawEnginePayloadReturned: false,
@@ -947,6 +961,142 @@ export function buildSelectorReadonlyEngineStep2SelectedResultProjection({
   };
 }
 
+function step3FailSummary(blocker, extra = {}) {
+  const authorityGuardSummary = buildSelectedResultAuthorityGuardSummary({
+    selectedResultProjectionSummary: extra.selectedResultProjection || null,
+    safeSelectedResultSourceObjectSummary: extra.safeSelectedResultSourceObject || null,
+  });
+  const state = authorityGuardSummary.state || "not_compared_fail_closed";
+  return {
+    schemaId: SELECTOR_READONLY_ENGINE_STEP3_AUTHORITY_GUARD_SCHEMA_ID,
+    schemaVersion: SELECTOR_READONLY_ENGINE_STEP3_AUTHORITY_GUARD_SCHEMA_VERSION,
+    state: "selector_readonly_engine_step3_fail_closed",
+    ok: false,
+    readonlyEngineStep3Ready: false,
+    selectedResultAuthorityGuardReady: true,
+    selectedResultAuthorityState: state,
+    stale: authorityGuardSummary.stale === true,
+    failClosed: true,
+    blocker: safeString(blocker, "readonly-engine-step3-authority-guard-not-ready"),
+    diagnostics: [safeString(blocker, "readonly-engine-step3-authority-guard-not-ready")],
+    readonlyEngineStep2Ready: extra.readonlyEngineStep2Ready === true,
+    selectedResultProjectionReady: extra.selectedResultProjectionReady === true,
+    selectedResultSourceObjectReady: extra.selectedResultSourceObjectReady === true,
+    authorityGuardSummary,
+    candidatePayloadReturned: false,
+    rawSelectorPayloadReturned: false,
+    rawEnginePayloadReturned: false,
+    rawEngineResultReturned: false,
+    rawRunTableRowsReturned: false,
+    rawSelectedPayloadReturned: false,
+    runtimeDataMutationEnabled: false,
+    selectedResultPersistenceEnabled: false,
+    selectedResultPersisted: false,
+    runTableGenerationEnabled: false,
+    runTableGenerated: false,
+    iesGenerationEnabled: false,
+    iesGenerated: false,
+    outputGenerationEnabled: false,
+    routesAdded: false,
+    postEndpointsAdded: false,
+    safetyFlags: { ...SAFETY_FLAGS },
+  };
+}
+
+export function buildSelectorReadonlyEngineStep3SelectedResultAuthorityGuard({
+  readonlyEngineStep2SelectedResultSummary = {},
+  policyFingerprint = null,
+  sourceFingerprint = null,
+  currentSelectorStateFingerprint = null,
+  currentReferenceOptionsFingerprint = null,
+  currentSourceInputFingerprint = null,
+  currentSealedCandidateAssemblyPreviewFingerprint = null,
+  currentSelectedResultHandoffScaffoldFingerprint = null,
+} = {}) {
+  if (!isPlainObject(readonlyEngineStep2SelectedResultSummary)
+    || readonlyEngineStep2SelectedResultSummary.readonlyEngineStep2Ready !== true) {
+    return step3FailSummary(readonlyEngineStep2SelectedResultSummary?.blocker || "readonly-engine-step2-selected-result-not-ready", {
+      readonlyEngineStep2Ready: false,
+      selectedResultProjection: readonlyEngineStep2SelectedResultSummary?.selectedResultProjection || null,
+      safeSelectedResultSourceObject: readonlyEngineStep2SelectedResultSummary?.safeSelectedResultSourceObject || null,
+    });
+  }
+
+  const unsafe = unsafeTrueFlag(readonlyEngineStep2SelectedResultSummary);
+  if (unsafe) {
+    return step3FailSummary(`unsafe-readonly-engine-step2-summary-${safeToken(unsafe, "flag")}`, {
+      readonlyEngineStep2Ready: true,
+      selectedResultProjectionReady: readonlyEngineStep2SelectedResultSummary.selectedResultProjectionReady === true,
+      selectedResultSourceObjectReady: readonlyEngineStep2SelectedResultSummary.selectedResultSourceObjectReady === true,
+      selectedResultProjection: readonlyEngineStep2SelectedResultSummary.selectedResultProjection || null,
+      safeSelectedResultSourceObject: readonlyEngineStep2SelectedResultSummary.safeSelectedResultSourceObject || null,
+    });
+  }
+
+  const selectedResultProjection = readonlyEngineStep2SelectedResultSummary.selectedResultProjection || null;
+  const safeSelectedResultSourceObject = readonlyEngineStep2SelectedResultSummary.safeSelectedResultSourceObject || null;
+  const authorityGuardSummary = buildSelectedResultAuthorityGuardSummary({
+    selectedResultProjectionSummary: selectedResultProjection,
+    safeSelectedResultSourceObjectSummary: safeSelectedResultSourceObject,
+    selectedResultProjectionSourceInputFingerprint: selectedResultProjection?.sourceInputFingerprint || null,
+    selectedSourceInputFingerprint: safeSelectedResultSourceObject?.sourceInputFingerprint || null,
+    policyFingerprint,
+    sourceFingerprint,
+    currentSelectorStateFingerprint,
+    currentReferenceOptionsFingerprint,
+    currentSourceInputFingerprint,
+    currentSealedCandidateAssemblyPreviewFingerprint,
+    currentSelectedResultHandoffScaffoldFingerprint,
+  });
+  const authorityState = authorityGuardSummary.state || "not_compared_fail_closed";
+  const ready = authorityState === "engine_verified_selected_result_ready";
+  const fingerprint = stableFingerprint("safe-selector-readonly-engine-step3-authority-guard", {
+    readonlyEngineStep2Fingerprint: readonlyEngineStep2SelectedResultSummary.readonlyEngineStep2Fingerprint || null,
+    authorityGuardFingerprint: authorityGuardSummary.selectedResultAuthorityGuardFingerprint || null,
+    authorityState,
+    stale: authorityGuardSummary.stale === true,
+  });
+
+  return {
+    schemaId: SELECTOR_READONLY_ENGINE_STEP3_AUTHORITY_GUARD_SCHEMA_ID,
+    schemaVersion: SELECTOR_READONLY_ENGINE_STEP3_AUTHORITY_GUARD_SCHEMA_VERSION,
+    state: ready
+      ? "selector_readonly_engine_step3_engine_verified_selected_result_ready"
+      : "selector_readonly_engine_step3_summary_or_fail_closed",
+    ok: true,
+    readonlyEngineStep3Ready: ready,
+    selectedResultAuthorityGuardReady: true,
+    selectedResultAuthorityState: authorityState,
+    stale: authorityGuardSummary.stale === true,
+    failClosed: authorityGuardSummary.failClosed !== false,
+    blocker: ready ? null : authorityState,
+    diagnostics: ready ? [] : [authorityState, authorityGuardSummary.reason].filter(Boolean),
+    readonlyEngineStep2Ready: true,
+    selectedResultProjectionReady: readonlyEngineStep2SelectedResultSummary.selectedResultProjectionReady === true,
+    selectedResultSourceObjectReady: readonlyEngineStep2SelectedResultSummary.selectedResultSourceObjectReady === true,
+    authorityGuardSummary,
+    readonlyEngineStep3Fingerprint: fingerprint,
+    candidatePayloadReturned: false,
+    rawSelectorPayloadReturned: false,
+    rawEnginePayloadReturned: false,
+    rawEngineResultReturned: false,
+    rawRunTableRowsReturned: false,
+    rawSelectedPayloadReturned: false,
+    runtimeDataMutationEnabled: false,
+    selectedResultPersistenceEnabled: false,
+    selectedResultPersisted: false,
+    runTableGenerationEnabled: false,
+    runTableGenerated: false,
+    iesGenerationEnabled: false,
+    iesGenerated: false,
+    outputGenerationEnabled: false,
+    routesAdded: false,
+    postEndpointsAdded: false,
+    safetyFlags: { ...SAFETY_FLAGS },
+  };
+}
+
 export const buildSelectorToReadonlyEngineCandidateMapperSummary = buildSelectorReadonlyEngineCandidateForInternalSeam;
 export const buildSelectorRuntimeReadonlyEngineStep1SafeSummary = buildSelectorReadonlyEngineStep1SafeSummary;
 export const buildSelectorRuntimeReadonlyEngineStep2SelectedResultProjection = buildSelectorReadonlyEngineStep2SelectedResultProjection;
+export const buildSelectorRuntimeReadonlyEngineStep3SelectedResultAuthorityGuard = buildSelectorReadonlyEngineStep3SelectedResultAuthorityGuard;

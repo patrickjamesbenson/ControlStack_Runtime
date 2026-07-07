@@ -342,6 +342,10 @@ function validateSelectedResultProjectionSummary(summary, policyFingerprint, sou
     "selected-accepted",
     "adapter-selected-result-available",
     "selected_accepted",
+    "engine-verified",
+    "engine_verified",
+    "adapter-safe-summary-projection-available",
+    "adapter_safe_summary_projection_available",
     "estimated-preview",
     "no-selected-result",
     "no_selected_result",
@@ -382,6 +386,39 @@ function validateSafeSelectedResultSourceObjectSummary(summary, policyFingerprin
   };
 }
 
+function validateSelectedResultAuthorityGuardSummary(summary) {
+  if (!isPlainObject(summary)) {
+    return { ok: true, state: "not_compared_fail_closed", reason: "selected-result authority guard summary not supplied" };
+  }
+  const unsafe = unsafeBlocker(summary) || selectedBodyBlocker(summary);
+  if (unsafe) return { ok: false, blocker: unsafe, diagnostic: "Selected-result authority guard summary contains unsafe raw result, raw payload, row, exact electrical, persistence, generation, route, endpoint, write, mutation, or body markers." };
+  const state = safeToken(firstPresent(summary, ["state", "selectedResultAuthorityState", "staleState"]), "not_compared_fail_closed");
+  const allowed = [
+    "readonly-engine-summary-only",
+    "readonly_engine_summary_only",
+    "engine-verified-selected-result-ready",
+    "engine_verified_selected_result_ready",
+    "stale-verify-again",
+    "stale_verify_again",
+    "fingerprint-mismatch",
+    "fingerprint_mismatch",
+    "not-compared-fail-closed",
+    "not_compared_fail_closed",
+  ];
+  if (!allowed.includes(state)) {
+    return { ok: false, blocker: "unsafe-selected-result-authority-guard-summary", diagnostic: "Selected-result authority guard summary state is not one of the frozen safe states." };
+  }
+  return {
+    ok: true,
+    state: state.replace(/-/g, "_"),
+    reason: safeLabel(summary.reason || state, state),
+    stale: summary.stale === true || state === "stale_verify_again" || state === "stale-verify-again",
+    failClosed: summary.failClosed !== false,
+    readOnly: summary.readOnly !== false,
+    diagnosticOnly: summary.diagnosticOnly !== false,
+  };
+}
+
 function handoffReadinessSummary(extra = {}) {
   return {
     diagnosticOnly: true,
@@ -394,7 +431,8 @@ function handoffReadinessSummary(extra = {}) {
     selectedResultProjectionState: extra.selectedResultProjectionState || "unknown",
     safeSelectedResultSourceState: extra.safeSelectedResultSourceState || "unknown",
     staleComparisonReady: false,
-    staleComparisonBlocker: "stale-comparison-not-implemented",
+    staleComparisonState: extra.staleState || "not_compared_fail_closed",
+    staleComparisonBlocker: extra.staleState && extra.staleState !== "not_compared_fail_closed" ? extra.staleState : "stale-comparison-not-implemented",
     selectedResultPersistenceReady: false,
     productionRunTableReady: false,
     runTableReady: false,
@@ -423,6 +461,7 @@ function baseSummary(extra = {}) {
     safeSelectedResultSourceState: extra.safeSelectedResultSourceState || "unknown",
     handoffReadinessSummary: extra.handoffReadinessSummary || handoffReadinessSummary({ reason: blocker || null }),
     staleState: extra.staleState || "not_compared_fail_closed",
+    selectedResultAuthorityState: extra.selectedResultAuthorityState || extra.staleState || "not_compared_fail_closed",
     warnings: Array.isArray(extra.warnings) ? extra.warnings.map((warning) => safeLabel(warning, "warning")) : [],
     failClosedDiagnostics: Array.isArray(extra.failClosedDiagnostics)
       ? extra.failClosedDiagnostics.map((diagnostic) => safeLabel(diagnostic, "diagnostic"))
@@ -555,8 +594,29 @@ export function buildRuntimeSelectedResultHandoffScaffoldSummary(input = {}) {
     });
   }
 
+  const authorityGuardValidation = validateSelectedResultAuthorityGuardSummary(source.selectedResultAuthorityGuardSummary);
+  if (!authorityGuardValidation.ok) {
+    return failClosed(authorityGuardValidation.blocker, authorityGuardValidation.diagnostic, {
+      policyFingerprint,
+      sourceFingerprint,
+      upstreamFingerprints,
+      selectedResultProjectionState: projectionValidation.state,
+      safeSelectedResultSourceState: sourceObjectValidation.state,
+      handoffReadinessSummary: handoffReadinessSummary({
+        reason: authorityGuardValidation.blocker,
+        sealedCandidateAssemblyPreviewReady: true,
+        runTableDomainOutputScaffoldReady: true,
+        gateDScaffoldReady: true,
+        selectedResultProjectionReady: true,
+        safeSelectedResultSourceObjectReady: true,
+        staleState: "not_compared_fail_closed",
+      }),
+    });
+  }
+
   const selectedResultProjectionState = projectionValidation.state;
   const safeSelectedResultSourceState = sourceObjectValidation.state;
+  const staleState = authorityGuardValidation.state || "not_compared_fail_closed";
   const readiness = handoffReadinessSummary({
     ready: true,
     sealedCandidateAssemblyPreviewReady: true,
@@ -566,6 +626,7 @@ export function buildRuntimeSelectedResultHandoffScaffoldSummary(input = {}) {
     safeSelectedResultSourceObjectReady: true,
     selectedResultProjectionState,
     safeSelectedResultSourceState,
+    staleState,
   });
   const fingerprintPayload = {
     schemaId: ENGINE_RUNTABLE_SELECTED_RESULT_HANDOFF_SCAFFOLD_SCHEMA_ID,
@@ -576,7 +637,7 @@ export function buildRuntimeSelectedResultHandoffScaffoldSummary(input = {}) {
     selectedResultProjectionState,
     safeSelectedResultSourceState,
     handoffReadinessSummary: readiness,
-    staleState: "not_compared_fail_closed",
+    staleState,
   };
   const selectedResultHandoffScaffoldFingerprint = `safe-selected-result-handoff-scaffold:${stableSha1(fingerprintPayload)}`;
 
@@ -585,7 +646,8 @@ export function buildRuntimeSelectedResultHandoffScaffoldSummary(input = {}) {
     selectedResultProjectionState,
     safeSelectedResultSourceState,
     handoffReadinessSummary: readiness,
-    staleState: "not_compared_fail_closed",
+    staleState,
+    selectedResultAuthorityState: staleState,
     warnings: [
       "Diagnostic-only selected-result handoff scaffold: safe selected-result handoff readiness was emitted, but selected-result persistence remains disabled.",
       "Stale comparison is not implemented; staleState is not_compared_fail_closed until a future safe comparison exists.",
