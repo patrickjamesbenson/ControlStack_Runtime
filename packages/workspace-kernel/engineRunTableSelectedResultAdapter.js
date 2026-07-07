@@ -629,6 +629,168 @@ export function adaptEngineRunTableSelectedResultToProjection(input = null) {
   };
 }
 
+export function adaptSafeSelectedResultSourceObjectToSummaryProjection(sourceObject = null) {
+  if (!isRecord(sourceObject) || sourceObject.ok !== true || sourceObject.readOnly !== true) {
+    return failClosedProjection("safe selected-result source object is not ready");
+  }
+
+  const selectedTierOrProfile = safeText(sourceObject.selectedTierOrProfile, null, 120);
+  if (!selectedTierOrProfile) return failClosedProjection("safe selected-result source tier/profile is missing");
+
+  const runCount = asNonNegativeInteger(sourceObject.runCount, Array.isArray(sourceObject.runs) ? sourceObject.runs.length : null);
+  if (runCount === null || runCount < 1) return failClosedProjection("safe selected-result source run count is missing");
+
+  const sourceInputFingerprint = safeToken(sourceObject.sourceInputFingerprint, null);
+  if (!sourceInputFingerprint) return failClosedProjection("safe selected-result source fingerprint is missing");
+
+  const boardDataSourceVersion = safeToken(sourceObject.sourceVersionMarker, "readonly-engine-safe-summary");
+  const summaryRuns = Array.isArray(sourceObject.runs)
+    ? sourceObject.runs.slice(0, 50).map((run, index) => ({
+      runKey: safeToken(run?.runKey, `safe-engine-run-${index + 1}`),
+      runIndex: asNonNegativeInteger(run?.runIndex, index),
+      boardCount: asNonNegativeInteger(run?.boardCount, null),
+      segmentCount: asNonNegativeInteger(run?.segmentCount, null),
+      zoneCount: asNonNegativeInteger(run?.zoneCount, null),
+      clipPointsCount: asNonNegativeInteger(run?.clipPointsCount, null),
+      suspensionPointsCount: asNonNegativeInteger(run?.suspensionPointsCount, null),
+      gearTrayPlanCount: asNonNegativeInteger(run?.gearTrayPlanCount, null),
+      reservedRangesCount: asNonNegativeInteger(run?.reservedRangesCount, 0),
+      safeSummaryOnly: true,
+      rawRunReturned: false,
+    }))
+    : [];
+  if (summaryRuns.length !== runCount) return failClosedProjection("safe selected-result source run summaries do not match run count");
+
+  const projection = buildSelectedResultProjectionContract();
+  const safetyFlags = {
+    ...projection.safetyFlags,
+    sourceAvailable: true,
+    selectedResultAvailable: true,
+    engineExecutionEnabled: false,
+    engineVerificationEnabled: false,
+    selectedResultIngestionEnabled: false,
+    selectedResultPersistenceEnabled: false,
+    staleResultComparisonEnabled: false,
+    runTableGenerationEnabled: false,
+    payloadGenerationEnabled: false,
+    iesGenerationEnabled: false,
+    drawingGenerationEnabled: false,
+    labProofAuthority: false,
+    complianceProofAuthority: false,
+    controlledRecordsWriteEnabled: false,
+    rregApprovalEnabled: false,
+    rregCustodyTransferEnabled: false,
+    hubSpotCrmWriteBackEnabled: false,
+    boardDataMutationEnabled: false,
+    hiddenWriteBackEnabled: false,
+    rawSelectedPayloadExposed: false,
+    rawEngineDebugPayloadExposed: false,
+    rawCandidateAlternativesExposedAsFinalOutputs: false,
+    rawBoardDataRowsExposed: false,
+    rawBoardDataHeadersExposed: false,
+    rawUsersExposed: false,
+    credentialsExposed: false,
+    privatePathsExposed: false,
+    rawLabEvidenceExposed: false,
+    rawIesExposed: false,
+    rawArtefactsExposed: false,
+    rawPdfsExposed: false,
+  };
+
+  return {
+    ...projection,
+    source: ENGINE_RUNTABLE_SELECTED_RESULT_ADAPTER_SOURCE,
+    sourceOwnerLabel: RUNTABLE_SELECTED_RESULT_SOURCE_OWNER_LABEL,
+    sourceAvailable: true,
+    sourceState: "adapter_safe_summary_projection_available",
+    selectedResultAvailable: true,
+    selectedResultUnavailableReason: null,
+    estimatedPreviewOnly: false,
+    state: "engine_verified",
+    resultState: "engine_verified",
+    resultStateLabel: "Engine verified",
+    accepted: false,
+    acceptedSelectedResultAvailable: false,
+    engineVerified: true,
+    stale: false,
+    selectedProfileTier: selectedTierOrProfile,
+    selectedTierOrProfile,
+    selectedReason: "Readonly engine seam safe summary projected; detailed selected-result acceptance remains disabled.",
+    selectedFamilySubsetLock: null,
+    perRunLookupNormalised: false,
+    perRunLookupSummary: {
+      available: false,
+      summaryOnly: true,
+      runCount,
+      rawLookupExposed: false,
+      lookupKey: RUNTABLE_SELECTED_RESULT_PER_RUN_LOOKUP_KEY,
+    },
+    sourceInputFingerprint,
+    sourceInputFingerprintMetadata: {
+      present: true,
+      value: sourceInputFingerprint,
+      staleComparisonImplemented: false,
+    },
+    boardDataSourceVersion,
+    boardDataSourceVersionMetadata: {
+      present: true,
+      value: boardDataSourceVersion,
+    },
+    runCount,
+    summaryProjectionOnly: true,
+    summaryCounts: {
+      boardCount: asNonNegativeInteger(sourceObject.boardCount, null),
+      segmentCount: asNonNegativeInteger(sourceObject.segmentCount, null),
+      zoneCount: asNonNegativeInteger(sourceObject.zoneCount, null),
+      clipPointsCount: asNonNegativeInteger(sourceObject.clipPointsCount, null),
+      suspensionPointsCount: asNonNegativeInteger(sourceObject.suspensionPointsCount, null),
+      gearTrayPlanCount: asNonNegativeInteger(sourceObject.gearTrayPlanCount, null),
+      rawSourceExposed: false,
+    },
+    summaryRuns,
+    runs: [],
+    runsByKey: {},
+    sanitisedWarnings: [],
+    adapterConsumed: true,
+    adapterContractOnly: true,
+    futureSourceRequiredFields: [...ENGINE_RUNTABLE_SELECTED_RESULT_ADAPTER_REQUIRED_FIELDS],
+    futureRunRequiredFields: [...ENGINE_RUNTABLE_SELECTED_RESULT_ADAPTER_RUN_REQUIRED_FIELDS],
+    staleSensitiveInputKeys: [...SELECTED_RESULT_STALE_SENSITIVE_INPUT_KEYS],
+    staleSensitiveInputOwnership: [...RUNTABLE_SELECTED_RESULT_STALE_INPUT_OWNERSHIP],
+    staleComparisonMetadataOnly: true,
+    staleResultComparisonAttempted: false,
+    redactionRules: [...new Set([...(projection.redactionRules || []), ...ENGINE_RUNTABLE_SELECTED_RESULT_ADAPTER_REDACTION_BOUNDARY])],
+    safetyFlags,
+    rows: [
+      ...(Array.isArray(projection.rows) ? projection.rows : []),
+      ["adapter", ENGINE_RUNTABLE_SELECTED_RESULT_ADAPTER_SOURCE],
+      ["adapter state", "adapter_safe_summary_projection_available"],
+      ["selected result available", "true"],
+      ["summary projection only", "true"],
+      ["result state label", "Engine verified"],
+      ["engine verified", "true"],
+      ["accepted", "false"],
+      ["detailed selected result accepted", "false"],
+      ["stale", "false"],
+      ["selected tier/profile", selectedTierOrProfile],
+      ["per-run lookup", "summary-only not normalised"],
+      ["raw per-run lookup exposed", "false"],
+      ["run count", String(runCount)],
+      ["stale comparison", "not implemented"],
+      ["routes added", "false"],
+      ["post endpoints added", "false"],
+    ],
+    writes: false,
+    generation: false,
+    proof: false,
+    routesAdded: false,
+    postEndpointsAdded: false,
+    engineExecutionAttempted: false,
+    runTableGenerationAttempted: false,
+    selectedResultPersistenceAttempted: false,
+  };
+}
+
 export function buildFailClosedEngineRunTableSelectedResultAdapterProjection(reason = "selected-result adapter failed closed") {
   return failClosedProjection(reason);
 }

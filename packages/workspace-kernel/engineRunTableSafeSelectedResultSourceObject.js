@@ -198,8 +198,17 @@ function selectedTierFrom(input, summary, redactedMetadata) {
   );
 }
 
+function safeRunSummaryList(summary) {
+  if (!isRecord(summary)) return [];
+  if (Array.isArray(summary.runs)) return summary.runs;
+  if (Array.isArray(summary.safeRunSummaries)) return summary.safeRunSummaries;
+  if (Array.isArray(summary.safe_run_summaries)) return summary.safe_run_summaries;
+  return [];
+}
+
 function runCountFrom(summary) {
-  return asNonNegativeInteger(firstPresent(summary, ["run_count", "runCount"]), Array.isArray(summary.runs) ? summary.runs.length : null);
+  const safeRuns = safeRunSummaryList(summary);
+  return asNonNegativeInteger(firstPresent(summary, ["run_count", "runCount"]), safeRuns.length ? safeRuns.length : null);
 }
 
 function countFromRun(run, keys, fallback = null) {
@@ -207,7 +216,7 @@ function countFromRun(run, keys, fallback = null) {
 }
 
 function runSourceSummary(summary) {
-  const runs = Array.isArray(summary.runs) ? summary.runs : [];
+  const runs = safeRunSummaryList(summary);
   return runs.map((run, index) => {
     const runRecord = isRecord(run) ? run : {};
     const runIndex = asNonNegativeInteger(firstPresent(runRecord, ["index", "runIndex", "run_index"]), index);

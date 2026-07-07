@@ -1,3 +1,5 @@
+import { buildSafeEngineRunTableSelectedResultSourceObject } from "./engineRunTableSafeSelectedResultSourceObject.js";
+import { adaptSafeSelectedResultSourceObjectToSummaryProjection } from "./engineRunTableSelectedResultAdapter.js";
 import { stableFingerprint } from "./stableFingerprint.js";
 
 export const SELECTOR_READONLY_ENGINE_CANDIDATE_MAPPER_SCHEMA_ID =
@@ -6,6 +8,9 @@ export const SELECTOR_READONLY_ENGINE_CANDIDATE_MAPPER_SCHEMA_VERSION = 1;
 export const SELECTOR_READONLY_ENGINE_STEP1_SAFE_SUMMARY_SCHEMA_ID =
   "controlstack.runtime.selector-readonly-engine-step1-safe-summary.v1";
 export const SELECTOR_READONLY_ENGINE_STEP1_SAFE_SUMMARY_SCHEMA_VERSION = 1;
+export const SELECTOR_READONLY_ENGINE_STEP2_SELECTED_RESULT_SCHEMA_ID =
+  "controlstack.runtime.selector-readonly-engine-step2-selected-result-projection.v1";
+export const SELECTOR_READONLY_ENGINE_STEP2_SELECTED_RESULT_SCHEMA_VERSION = 1;
 
 const REQUIRED_CANDIDATE_FIELDS = Object.freeze([
   "tier",
@@ -414,8 +419,38 @@ export function buildSelectorReadonlyEngineCandidateForInternalSeam({
   return { ok: true, candidate, summary };
 }
 
+function nonNegativeInteger(value, fallback = null) {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    const rounded = Math.round(value);
+    return rounded >= 0 ? rounded : fallback;
+  }
+  const text = safeString(value);
+  if (!text) return fallback;
+  const parsed = Number(text.match(/\d+/)?.[0]);
+  return Number.isSafeInteger(parsed) && parsed >= 0 ? parsed : fallback;
+}
+
+function sanitizedSafeRunSummary(run = {}, index = 0) {
+  const source = isPlainObject(run) ? run : {};
+  return {
+    runIndex: nonNegativeInteger(source.index ?? source.runIndex ?? source.run_index, index),
+    hasBodyRequested: source.has_body_requested === true || source.hasBodyRequested === true,
+    boardCount: nonNegativeInteger(source.boards_count ?? source.boardCount ?? source.board_count, null),
+    segmentCount: nonNegativeInteger(source.segments_count ?? source.segmentCount ?? source.segment_count, null),
+    zoneCount: nonNegativeInteger(source.zone_count ?? source.zoneCount, null),
+    clipPointsCount: nonNegativeInteger(source.clip_points_count ?? source.clipPointsCount ?? source.clip_count, null),
+    suspensionPointsCount: nonNegativeInteger(source.suspension_points_count ?? source.suspensionPointsCount ?? source.suspension_count, null),
+    gearTrayPlanCount: nonNegativeInteger(source.gear_tray_plan_count ?? source.gearTrayPlanCount ?? source.gear_tray_count, null),
+    reservedRangesCount: nonNegativeInteger(source.reserved_ranges_count ?? source.reservedRangesCount ?? source.reserved_range_count, 0),
+    rawRunReturned: false,
+  };
+}
+
 function sanitizeSafeEngineSummary(safeEngineSummary = {}) {
   if (!isPlainObject(safeEngineSummary)) return null;
+  const safeRunSummaries = Array.isArray(safeEngineSummary.runs)
+    ? safeEngineSummary.runs.slice(0, 50).map(sanitizedSafeRunSummary)
+    : [];
   return {
     success: safeEngineSummary.success === true,
     runCount: positiveInteger(safeEngineSummary.run_count ?? safeEngineSummary.runCount) || 0,
@@ -425,7 +460,8 @@ function sanitizeSafeEngineSummary(safeEngineSummary = {}) {
     firstWarning: safeString(safeEngineSummary.first_warning ?? safeEngineSummary.firstWarning).slice(0, 240),
     selectedTier: safeString(safeEngineSummary.selected_tier ?? safeEngineSummary.selectedTier).slice(0, 80),
     outputContractReady: safeEngineSummary.output_contract_ready === true || safeEngineSummary.outputContractReady === true,
-    safeRunSummaryCount: Array.isArray(safeEngineSummary.runs) ? safeEngineSummary.runs.length : 0,
+    safeRunSummaryCount: safeRunSummaries.length,
+    safeRunSummaries,
     rawResultReturned: false,
     rawDebugReturned: false,
     rawRoughElectricalPayloadReturned: false,
@@ -448,11 +484,16 @@ export async function invokeSelectorReadonlyEngineStep1WithHostLocalReadonlySeam
       mapperResult,
       seamResult: null,
     });
+    const readonlyEngineStep2SelectedResultSummary = buildSelectorReadonlyEngineStep2SelectedResultProjection({
+      readonlyEngineStep1SafeSummary,
+    });
     return {
       ok: false,
       readonlyEngineStep1Ready: false,
+      readonlyEngineStep2Ready: false,
       mapperSummary: mapperResult.summary,
       readonlyEngineStep1SafeSummary,
+      readonlyEngineStep2SelectedResultSummary,
       candidatePayloadReturned: false,
       rawSelectorPayloadReturned: false,
       rawEnginePayloadReturned: false,
@@ -479,11 +520,16 @@ export async function invokeSelectorReadonlyEngineStep1WithHostLocalReadonlySeam
     mapperResult,
     seamResult,
   });
+  const readonlyEngineStep2SelectedResultSummary = buildSelectorReadonlyEngineStep2SelectedResultProjection({
+    readonlyEngineStep1SafeSummary,
+  });
   return {
     ok: readonlyEngineStep1SafeSummary.ok === true,
     readonlyEngineStep1Ready: readonlyEngineStep1SafeSummary.readonlyEngineStep1Ready === true,
+    readonlyEngineStep2Ready: readonlyEngineStep2SelectedResultSummary.readonlyEngineStep2Ready === true,
     mapperSummary: mapperResult.summary,
     readonlyEngineStep1SafeSummary,
+    readonlyEngineStep2SelectedResultSummary,
     candidatePayloadReturned: false,
     rawSelectorPayloadReturned: false,
     rawEnginePayloadReturned: false,
@@ -604,6 +650,23 @@ export function buildSelectorReadonlyEngineStep1SafeSummary({ mapperResult = {},
     seam: safeString(seamResult.seam, "engine-runtable-internal-readonly-invoke"),
     seamVersion: safeString(seamResult.seam_version, "engine_runtable_internal_readonly_invoke.v1"),
     safeEngineSummary,
+    safeCandidateDerivation: {
+      candidateFingerprint: mapperSummary.candidateShapeSummary?.readonlyEngineCandidateFingerprint || null,
+      candidateShapeSummary: mapperSummary.candidateShapeSummary || null,
+      fieldSourceMap: Array.isArray(mapperSummary.fieldStatus)
+        ? mapperSummary.fieldStatus.map((row) => ({
+          field: safeToken(row.field, "unknown"),
+          present: row.present === true,
+          classification: safeString(row.classification, "unclassified"),
+          source: safeString(row.source, "unavailable"),
+          rawRowReturned: false,
+          rawValueReturned: false,
+        }))
+        : [],
+      rawCandidateReturned: false,
+      rawSelectorPayloadReturned: false,
+      rawEnginePayloadReturned: false,
+    },
     readonlyEngineStep1Fingerprint: fingerprint,
     candidatePayloadReturned: false,
     rawSelectorPayloadReturned: false,
@@ -628,5 +691,262 @@ export function buildSelectorReadonlyEngineStep1SafeSummary({ mapperResult = {},
   };
 }
 
+function step2FailProjection(blocker) {
+  const reason = safeString(blocker, "readonly-engine-step2-selected-result-not-ready");
+  return {
+    source: "read-only Engine/RunTable selected-result adapter",
+    sourceAvailable: false,
+    sourceState: "adapter_fail_closed",
+    readOnly: true,
+    displayOnly: true,
+    contractOnly: true,
+    failClosed: true,
+    state: "no_selected_result",
+    resultState: "no_selected_result",
+    resultStateLabel: "Estimated preview",
+    selectedResultAvailable: false,
+    selectedResultUnavailableReason: reason,
+    estimatedPreviewOnly: true,
+    accepted: false,
+    acceptedSelectedResultAvailable: false,
+    engineVerified: false,
+    stale: false,
+    summaryProjectionOnly: true,
+    perRunLookupNormalised: false,
+    runCount: 0,
+    runs: [],
+    runsByKey: {},
+    redactionRules: [],
+    safetyFlags: { ...SAFETY_FLAGS },
+    rows: [
+      ["source state", "adapter_fail_closed"],
+      ["state", "no_selected_result"],
+      ["result state label", "Estimated preview"],
+      ["selected result available", "false"],
+      ["summary projection only", "true"],
+      ["accepted", "false"],
+      ["engine verified", "false"],
+      ["routes added", "false"],
+      ["post endpoints added", "false"],
+    ],
+    writes: false,
+    generation: false,
+    proof: false,
+    routesAdded: false,
+    postEndpointsAdded: false,
+  };
+}
+
+function step2FailSummary(blocker, extra = {}) {
+  const projection = step2FailProjection(blocker);
+  return {
+    schemaId: SELECTOR_READONLY_ENGINE_STEP2_SELECTED_RESULT_SCHEMA_ID,
+    schemaVersion: SELECTOR_READONLY_ENGINE_STEP2_SELECTED_RESULT_SCHEMA_VERSION,
+    state: "selector_readonly_engine_step2_fail_closed",
+    ok: false,
+    readonlyEngineStep2Ready: false,
+    selectedResultSourceObjectReady: false,
+    selectedResultProjectionReady: false,
+    blocker: safeString(blocker, "readonly-engine-step2-selected-result-not-ready"),
+    diagnostics: [safeString(blocker, "readonly-engine-step2-selected-result-not-ready")],
+    readonlyEngineStep1Ready: extra.readonlyEngineStep1Ready === true,
+    safeSelectedResultSourceObject: extra.safeSelectedResultSourceObject || null,
+    selectedResultProjection: projection,
+    selectedResultProjectionState: projection.state || "no_selected_result",
+    selectedResultAvailable: false,
+    accepted: false,
+    engineVerified: false,
+    summaryProjectionOnly: true,
+    candidatePayloadReturned: false,
+    rawSelectorPayloadReturned: false,
+    rawEnginePayloadReturned: false,
+    rawEngineResultReturned: false,
+    rawRunTableRowsReturned: false,
+    rawSelectedPayloadReturned: false,
+    runtimeDataMutationEnabled: false,
+    selectedResultPersistenceEnabled: false,
+    selectedResultPersisted: false,
+    runTableGenerationEnabled: false,
+    runTableGenerated: false,
+    iesGenerationEnabled: false,
+    iesGenerated: false,
+    outputGenerationEnabled: false,
+    routesAdded: false,
+    postEndpointsAdded: false,
+    safetyFlags: { ...SAFETY_FLAGS },
+  };
+}
+
+function redactedStep2MetadataFromStep1(readonlyEngineStep1SafeSummary = {}) {
+  const derivation = isPlainObject(readonlyEngineStep1SafeSummary.safeCandidateDerivation)
+    ? readonlyEngineStep1SafeSummary.safeCandidateDerivation
+    : {};
+  const shape = isPlainObject(derivation.candidateShapeSummary) ? derivation.candidateShapeSummary : {};
+  const fieldSourceMap = Array.isArray(derivation.fieldSourceMap) ? derivation.fieldSourceMap : [];
+  return {
+    controlled_geometry: {
+      classification: "controlled-selector-stage3-geometry-summary",
+      length_class: safeToken(shape.runLengthBand, "stage3-supported-run-length"),
+      qty: positiveInteger(shape.totalQuantity) || 1,
+      requested_length_basis: "selector-stage3-supported-subset",
+      length_policy_source: "selector-stage3-supported-subset",
+      accessory_length_policy_source: "selector-stage3-supported-subset",
+      not_product_data: true,
+      not_source_backed_board_data: true,
+      raw_payload_returned: false,
+    },
+    tier_strategy: {
+      classification: "source-backed-tier-resolution-shape",
+      tier_strategy_mode: "manual",
+      top_level_tier_passed: true,
+      tier_strategy_selected_tier_passed: true,
+      tier_strategy_candidate_tiers_passed: true,
+      raw_payload_returned: false,
+    },
+    field_source_map: fieldSourceMap.map((entry) => ({
+      field: safeToken(entry.field, "unknown"),
+      present: entry.present === true,
+      classification: safeString(entry.classification, "unclassified"),
+      source: safeString(entry.source, "unavailable"),
+      raw_row_returned: false,
+      raw_value_returned: false,
+    })),
+    raw_payload_returned: false,
+  };
+}
+
+export function buildSelectorReadonlyEngineStep2SelectedResultProjection({
+  readonlyEngineStep1SafeSummary = {},
+} = {}) {
+  if (!isPlainObject(readonlyEngineStep1SafeSummary) || readonlyEngineStep1SafeSummary.readonlyEngineStep1Ready !== true) {
+    return step2FailSummary(readonlyEngineStep1SafeSummary?.blocker || "readonly-engine-step1-safe-summary-not-ready", {
+      readonlyEngineStep1Ready: false,
+    });
+  }
+
+  const unsafe = unsafeTrueFlag(readonlyEngineStep1SafeSummary);
+  if (unsafe) {
+    return step2FailSummary(`unsafe-readonly-engine-step1-summary-${safeToken(unsafe, "flag")}`, {
+      readonlyEngineStep1Ready: true,
+    });
+  }
+
+  const safeEngineSummary = isPlainObject(readonlyEngineStep1SafeSummary.safeEngineSummary)
+    ? readonlyEngineStep1SafeSummary.safeEngineSummary
+    : null;
+  if (!safeEngineSummary || safeEngineSummary.success !== true) {
+    return step2FailSummary("readonly-engine-step1-safe-engine-summary-not-successful", {
+      readonlyEngineStep1Ready: true,
+    });
+  }
+
+  const sourceInputFingerprint = safeToken(
+    readonlyEngineStep1SafeSummary.readonlyEngineStep1Fingerprint
+      || readonlyEngineStep1SafeSummary.safeCandidateDerivation?.candidateFingerprint,
+    null,
+    160,
+  );
+  if (!sourceInputFingerprint) {
+    return step2FailSummary("readonly-engine-step1-fingerprint-missing", {
+      readonlyEngineStep1Ready: true,
+    });
+  }
+
+  const selectedTier = safeEngineSummary.selectedTier || safeEngineSummary.selected_tier;
+  const safeRunSummaries = Array.isArray(safeEngineSummary.safeRunSummaries)
+    ? safeEngineSummary.safeRunSummaries
+    : [];
+  const sourceObject = buildSafeEngineRunTableSelectedResultSourceObject({
+    safe_engine_summary: {
+      success: true,
+      selected_tier: selectedTier,
+      run_count: safeEngineSummary.runCount,
+      safeRunSummaries,
+    },
+    sourceInputFingerprint,
+    source_summary: {
+      ok: true,
+      active_source_db_loaded_read_only: false,
+      source_fingerprint_available: true,
+      present_tables: [],
+      missing_tables: [],
+      source: {
+        label: "selector-readonly-engine-step1-safe-summary",
+        source_fingerprint: sourceInputFingerprint,
+        path_returned: false,
+        local_path_exposure_enabled: false,
+      },
+      raw_rows_exposed: false,
+      raw_headers_exposed: false,
+      raw_users_exposed: false,
+      raw_snapshot_returned: false,
+    },
+    redacted_metadata: redactedStep2MetadataFromStep1(readonlyEngineStep1SafeSummary),
+    sourceVersionMarker: `readonly-engine-step1:${sourceInputFingerprint.slice(0, 24)}`,
+  });
+
+  if (sourceObject.ok !== true) {
+    return step2FailSummary(sourceObject.blockers?.[0]?.reason || "safe-selected-result-source-object-not-ready", {
+      readonlyEngineStep1Ready: true,
+      safeSelectedResultSourceObject: sourceObject,
+    });
+  }
+
+  const projection = adaptSafeSelectedResultSourceObjectToSummaryProjection(sourceObject);
+  if (projection.selectedResultAvailable !== true || projection.summaryProjectionOnly !== true) {
+    return step2FailSummary(projection.selectedResultUnavailableReason || "selected-result-summary-projection-not-ready", {
+      readonlyEngineStep1Ready: true,
+      safeSelectedResultSourceObject: sourceObject,
+    });
+  }
+
+  const fingerprint = stableFingerprint("safe-selector-readonly-engine-step2-selected-result-projection", {
+    readonlyEngineStep1Fingerprint: sourceInputFingerprint,
+    sourceObjectFingerprint: sourceObject.sourceInputFingerprint,
+    projectionState: projection.state,
+    runCount: projection.runCount,
+    summaryCounts: projection.summaryCounts,
+  });
+
+  return {
+    schemaId: SELECTOR_READONLY_ENGINE_STEP2_SELECTED_RESULT_SCHEMA_ID,
+    schemaVersion: SELECTOR_READONLY_ENGINE_STEP2_SELECTED_RESULT_SCHEMA_VERSION,
+    state: "selector_readonly_engine_step2_selected_result_summary_ready",
+    ok: true,
+    readonlyEngineStep2Ready: true,
+    selectedResultSourceObjectReady: true,
+    selectedResultProjectionReady: true,
+    blocker: null,
+    diagnostics: [],
+    readonlyEngineStep1Ready: true,
+    readonlyEngineStep2Fingerprint: fingerprint,
+    safeSelectedResultSourceObject: sourceObject,
+    selectedResultProjection: projection,
+    selectedResultProjectionState: projection.state,
+    selectedResultAvailable: projection.selectedResultAvailable === true,
+    accepted: projection.accepted === true,
+    engineVerified: projection.engineVerified === true,
+    summaryProjectionOnly: projection.summaryProjectionOnly === true,
+    candidatePayloadReturned: false,
+    rawSelectorPayloadReturned: false,
+    rawEnginePayloadReturned: false,
+    rawEngineResultReturned: false,
+    rawRunTableRowsReturned: false,
+    rawSelectedPayloadReturned: false,
+    runtimeDataMutationEnabled: false,
+    selectedResultPersistenceEnabled: false,
+    selectedResultPersisted: false,
+    runTableGenerationEnabled: false,
+    runTableGenerated: false,
+    iesGenerationEnabled: false,
+    iesGenerated: false,
+    outputGenerationEnabled: false,
+    routesAdded: false,
+    postEndpointsAdded: false,
+    safetyFlags: { ...SAFETY_FLAGS },
+  };
+}
+
 export const buildSelectorToReadonlyEngineCandidateMapperSummary = buildSelectorReadonlyEngineCandidateForInternalSeam;
 export const buildSelectorRuntimeReadonlyEngineStep1SafeSummary = buildSelectorReadonlyEngineStep1SafeSummary;
+export const buildSelectorRuntimeReadonlyEngineStep2SelectedResultProjection = buildSelectorReadonlyEngineStep2SelectedResultProjection;

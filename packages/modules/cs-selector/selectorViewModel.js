@@ -14,6 +14,7 @@ import { buildSelectorLmTemperatureReadinessPreview } from "../../workspace-kern
 import {
   buildSelectorReadonlyEngineCandidateForInternalSeam,
   buildSelectorReadonlyEngineStep1SafeSummary,
+  buildSelectorReadonlyEngineStep2SelectedResultProjection,
 } from "../../workspace-kernel/selectorReadonlyEngineCandidateMapper.js";
 
 const SELECTOR_WORKFLOW_POLICY_FINGERPRINT = "safe-policy:selector-workflow-preview";
@@ -4228,8 +4229,8 @@ const SELECTED_ENGINE_RESULT_REQUIRED_FIELDS = Object.freeze([
 ]);
 
 const SELECTED_ENGINE_RESULT_BOUNDARY_COPY = Object.freeze([
-  "No selected engine result is available in this slice.",
-  "Selector shows an Estimated preview until a future read-only Engine/RunTable result source exists.",
+  "Only a summary-level selected-result projection may be available in this slice.",
+  "Selector shows an Estimated preview until a safe read-only Engine/RunTable summary source exists.",
   "Selector does not fire the engine, generate RunTable output, persist a result, or detect stale results here.",
   "A future selected engine result must be one accepted successful result, normalised per run and locked to one selected subset/family.",
   "Weighted alternatives, raw engine debug, and raw selected payload are not normal-user final outputs.",
@@ -4298,6 +4299,9 @@ function createSelectedEngineResultHandoffScaffold(selectedResultProjection = bu
     resultStateLabel: projection.resultStateLabel || "Estimated preview",
     estimatedPreviewOnly: projection.estimatedPreviewOnly !== false,
     engineVerified: projection.engineVerified === true,
+    summaryProjectionOnly: projection.summaryProjectionOnly === true,
+    acceptedSelectedResultAvailable: projection.acceptedSelectedResultAvailable === true,
+    runCount: projection.runCount || 0,
     engineVerificationEnabled: projection.engineVerificationEnabled === true,
     selectedResultIngestionEnabled: projection.selectedResultIngestionEnabled === true,
     selectedResultPersistenceEnabled: projection.selectedResultPersistenceEnabled === true,
@@ -4328,6 +4332,8 @@ function createSelectedEngineResultHandoffScaffold(selectedResultProjection = bu
       ["engine verified", projection.engineVerified === true ? "true" : "false"],
       ["stale", projection.stale === true ? "true" : "false"],
       ["accepted", projection.accepted === true ? "true" : "false"],
+      ["summary projection only", projection.summaryProjectionOnly === true ? "true" : "false"],
+      ["detailed selected result accepted", projection.acceptedSelectedResultAvailable === true ? "true" : "false"],
       ["engine verification", projection.engineVerificationEnabled === true ? "enabled" : "disabled"],
       ["selected result ingestion", projection.selectedResultIngestionEnabled === true ? "enabled" : "disabled"],
       ["selected result persistence", projection.selectedResultPersistenceEnabled === true ? "enabled" : "disabled"],
@@ -4738,6 +4744,7 @@ function createSpecBuildReadinessPreview({
   runAccessoryPlacementPreview = {},
   sourceBackedLengthPolicySummary = null,
   lmTemperatureReadinessPreview = {},
+  readonlyEngineStep1SafeSummaryOverride = null,
   summary = {},
 } = {}) {
   const spec = productSpine.specGateCandidateReadiness || payloadPreview.specGateCandidateReadiness || {};
@@ -4772,9 +4779,12 @@ function createSpecBuildReadinessPreview({
     lmTemperatureReadinessPreview,
   });
   const readonlyEngineCandidateMapperSummary = readonlyEngineCandidateMapperResult.summary;
-  const readonlyEngineStep1SafeSummary = buildSelectorReadonlyEngineStep1SafeSummary({
+  const readonlyEngineStep1SafeSummary = readonlyEngineStep1SafeSummaryOverride || buildSelectorReadonlyEngineStep1SafeSummary({
     mapperResult: readonlyEngineCandidateMapperResult,
     seamResult: null,
+  });
+  const readonlyEngineStep2SelectedResultSummary = buildSelectorReadonlyEngineStep2SelectedResultProjection({
+    readonlyEngineStep1SafeSummary,
   });
   const stageIndicators = [
     { stage: 1, key: "specReady", label: "Stage 1 — Spec Ready", ready: specReady, authority: "committed selector state", sourceAuthority: "manualConstraints or acceptedDefaults only; provisional defaults do not count", failClosed: !specReady },
@@ -4842,6 +4852,9 @@ function createSpecBuildReadinessPreview({
     readonlyEngineCandidateReady: readonlyEngineCandidateMapperSummary?.readonlyEngineCandidateMapperReady === true,
     readonlyEngineCandidateMapperSummary,
     readonlyEngineStep1SafeSummary,
+    readonlyEngineStep2SelectedResultSummary,
+    readonlyEngineStep2Ready: readonlyEngineStep2SelectedResultSummary?.readonlyEngineStep2Ready === true,
+    selectedResultSummaryProjectionReady: readonlyEngineStep2SelectedResultSummary?.selectedResultProjectionReady === true,
     stageIndicators,
     stageIndicatorRows: stageIndicators.map((stage) => [stage.label, stage.ready ? "true" : "false"]),
     businessStageIndicatorContract: {
@@ -4908,6 +4921,7 @@ function createSpecBuildReadinessPreview({
       ["factory-approved blocker", factoryApprovedInputsSummary.blocker || "none"],
       ["Stage 4 Step 1 readonly mapper", readonlyEngineCandidateMapperSummary?.readonlyEngineCandidateMapperReady === true ? "ready" : (readonlyEngineCandidateMapperSummary?.blocker || "blocked/fail-closed")],
       ["Stage 4 Step 1 readonly seam", readonlyEngineStep1SafeSummary?.readonlyEngineStep1Ready === true ? "ready" : (readonlyEngineStep1SafeSummary?.blocker || "host-local-readonly-engine-seam-not-invoked")],
+      ["Stage 4 Step 2 selected-result source/projection", readonlyEngineStep2SelectedResultSummary?.readonlyEngineStep2Ready === true ? "summary-ready" : (readonlyEngineStep2SelectedResultSummary?.blocker || "blocked/fail-closed")],
       ["manual constraints", String(manualConstraints.length)],
       ["auto consequences", String(autoConsequences.length)],
       ["missing spec requirements", missingSpecRequirements.length ? missingSpecRequirements.join(", ") : "none"],
@@ -5002,8 +5016,14 @@ function createProductSurfaceParityLock({
       && specBuildReadinessPreview.safetyFlags?.controlledRecordsMutation === false
       && specBuildReadinessPreview.safetyFlags?.rregApprovalCustodyTransfer === false
       && specBuildReadinessPreview.safetyFlags?.boardDataMutation === false,
-    selectedEngineResultSafetyAgrees: selectedEngineResultHandoff.selectedResultAvailable === false
-      && selectedEngineResultHandoff.engineVerified === false
+    selectedEngineResultSafetyAgrees: (
+      (selectedEngineResultHandoff.selectedResultAvailable === false && selectedEngineResultHandoff.engineVerified === false)
+      || (selectedEngineResultHandoff.selectedResultAvailable === true
+        && selectedEngineResultHandoff.summaryProjectionOnly === true
+        && selectedEngineResultHandoff.accepted === false
+        && selectedEngineResultHandoff.acceptedSelectedResultAvailable !== true
+        && selectedEngineResultHandoff.engineVerified === true)
+    )
       && selectedEngineResultHandoff.engineVerificationEnabled === false
       && selectedEngineResultHandoff.safetyFlags?.engineExecutionEnabled === false
       && selectedEngineResultHandoff.safetyFlags?.runTableGenerationEnabled === false
@@ -5691,7 +5711,17 @@ function createDbBackedSelectorSurface(selectorReferenceStatus = {}, local = {},
     sourceReadiness,
     referenceOptionSourceCoverage,
   });
-  const selectedResultProjection = buildSelectedResultProjectionContract();
+  const readonlyEngineStep1SafeSummaryOverride = payload.readonlyEngineStep1SafeSummary
+    || payload.selectorReadonlyEngineStep1SafeSummary
+    || null;
+  const readonlyEngineStep2SelectedResultSummaryForSurface = readonlyEngineStep1SafeSummaryOverride
+    ? buildSelectorReadonlyEngineStep2SelectedResultProjection({
+      readonlyEngineStep1SafeSummary: readonlyEngineStep1SafeSummaryOverride,
+    })
+    : null;
+  const selectedResultProjection = readonlyEngineStep2SelectedResultSummaryForSurface?.selectedResultProjectionReady === true
+    ? readonlyEngineStep2SelectedResultSummaryForSurface.selectedResultProjection
+    : buildSelectedResultProjectionContract();
   const selectedEngineResultHandoff = createSelectedEngineResultHandoffScaffold(selectedResultProjection);
   const sourceSpecReadinessExplanation = createSourceSpecReadinessExplanation({
     sourceReady,
@@ -5745,6 +5775,7 @@ function createDbBackedSelectorSurface(selectorReferenceStatus = {}, local = {},
     runAccessoryPlacementPreview,
     sourceBackedLengthPolicySummary: payload.sourceBackedLengthPolicySummary || null,
     lmTemperatureReadinessPreview,
+    readonlyEngineStep1SafeSummaryOverride,
     summary,
   });
   const productSurfaceParityLock = createProductSurfaceParityLock({
