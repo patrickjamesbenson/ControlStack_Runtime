@@ -288,7 +288,7 @@ test("Engineering remains a separate design and tooling group", async () => {
 
   assert.match(engineering, /aria-label="Engineering"/);
   assert.match(engineering, /Engineering design and tooling menu/);
-  for (const group of ["Kernel Tools", "Design Intent"]) {
+  for (const group of ["Kernel Tools", "Design Intent", "Database Tools"]) {
     assert.match(engineering, new RegExp(`>${group}<`), `${group} should render as an Engineering menu group`);
   }
 
@@ -303,6 +303,7 @@ test("Engineering remains a separate design and tooling group", async () => {
     "System / Board / Driver Design",
     "Emergency System Design",
     "Engineering Handoff to Lab",
+    "Google Sync",
   ]) {
     assert.match(engineering, new RegExp(`>${label}<`), `${label} should render in Engineering`);
   }
