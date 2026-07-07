@@ -418,6 +418,37 @@ test("Stage 2 build readiness accepts accepted defaults as committed selector st
   assertNoGenerationAuthority(value);
 });
 
+test("Stage 4 Step 1 readonly mapper uses Stage 3-supported selector state without opening Stage 4", () => {
+  const selectorState = createSelectorState();
+  completeSpecReadyCandidate(selectorState);
+  selectorState.acceptDbBackedSelectorDefaults([
+    { fieldKey: "tier", label: "Tier", value: "Business", valueLabel: "Business" },
+  ]);
+  const value = preview(acceptBuildOrderContext(selectorState));
+  const stageRows = rowsToObject(value.stageIndicatorRows);
+  const summaryRows = rowsToObject(value.summaryRows);
+
+  assert.equal(value.factoryApprovedInputsReady, true);
+  assert.equal(value.readonlyEngineCandidateReady, true);
+  assert.equal(value.readonlyEngineCandidateMapperSummary.readonlyEngineCandidateMapperReady, true);
+  assert.equal(value.readonlyEngineCandidateMapperSummary.candidateReadyForHostLocalReadonlySeam, true);
+  assert.equal(value.readonlyEngineCandidateMapperSummary.candidatePayloadReturned, false);
+  assert.equal(value.readonlyEngineCandidateMapperSummary.rawEnginePayloadReturned, false);
+  assert.equal(value.readonlyEngineCandidateMapperSummary.selectedResultPersistenceEnabled, false);
+  assert.equal(value.readonlyEngineCandidateMapperSummary.runTableGenerationEnabled, false);
+  assert.equal(value.readonlyEngineCandidateMapperSummary.iesGenerationEnabled, false);
+  assert.equal(value.readonlyEngineCandidateMapperSummary.routesAdded, false);
+  assert.equal(value.readonlyEngineCandidateMapperSummary.postEndpointsAdded, false);
+  assert.equal(value.readonlyEngineCandidateMapperSummary.candidateShapeSummary.runCount, 1);
+  assert.equal(value.readonlyEngineStep1SafeSummary.readonlyEngineStep1Ready, false);
+  assert.equal(value.readonlyEngineStep1SafeSummary.blocker, "host-local-readonly-engine-seam-not-invoked");
+  assert.equal(value.readonlyEngineStep1SafeSummary.hostLocalReadonlyEngineSeamInvoked, false);
+  assert.equal(summaryRows["Stage 4 Step 1 readonly mapper"], "ready");
+  assert.equal(summaryRows["Stage 4 Step 1 readonly seam"], "host-local-readonly-engine-seam-not-invoked");
+  assert.equal(stageRows["Stage 4 — Engine Outcome Proven"], "false");
+  assertNoGenerationAuthority(value);
+});
+
 test("business-stage indicators expose committed-state authority and downstream stages fail closed", () => {
   const selectorState = createSelectorState();
   completeSpecReadyCandidate(selectorState);

@@ -11,6 +11,10 @@ import { buildRuntimeControlledDonorEngineVerifyBridgeSummary } from "../../work
 import { buildRuntimeSelectedResultHandoffScaffoldSummary } from "../../workspace-kernel/engineRunTableSelectedResultHandoffScaffold.js";
 import { buildRuntimeIesHandoffReadinessScaffoldSummary } from "../../workspace-kernel/engineRunTableIesHandoffReadinessScaffold.js";
 import { buildSelectorLmTemperatureReadinessPreview } from "../../workspace-kernel/selectorLmTemperatureReadinessPreview.js";
+import {
+  buildSelectorReadonlyEngineCandidateForInternalSeam,
+  buildSelectorReadonlyEngineStep1SafeSummary,
+} from "../../workspace-kernel/selectorReadonlyEngineCandidateMapper.js";
 
 const SELECTOR_WORKFLOW_POLICY_FINGERPRINT = "safe-policy:selector-workflow-preview";
 const SELECTOR_WORKFLOW_SOURCE_FINGERPRINT = "safe-source:selector-workflow-preview";
@@ -4733,6 +4737,7 @@ function createSpecBuildReadinessPreview({
   runIntakePreview = {},
   runAccessoryPlacementPreview = {},
   sourceBackedLengthPolicySummary = null,
+  lmTemperatureReadinessPreview = {},
   summary = {},
 } = {}) {
   const spec = productSpine.specGateCandidateReadiness || payloadPreview.specGateCandidateReadiness || {};
@@ -4761,6 +4766,16 @@ function createSpecBuildReadinessPreview({
     sourceBackedLengthPolicySummary,
   });
   const factoryApprovedInputsReady = factoryApprovedInputsSummary.factoryApprovedInputsReady === true;
+  const readonlyEngineCandidateMapperResult = buildSelectorReadonlyEngineCandidateForInternalSeam({
+    factoryApprovedInputsSummary,
+    committedSelectorConstraints: buildAuthorityConstraints,
+    lmTemperatureReadinessPreview,
+  });
+  const readonlyEngineCandidateMapperSummary = readonlyEngineCandidateMapperResult.summary;
+  const readonlyEngineStep1SafeSummary = buildSelectorReadonlyEngineStep1SafeSummary({
+    mapperResult: readonlyEngineCandidateMapperResult,
+    seamResult: null,
+  });
   const stageIndicators = [
     { stage: 1, key: "specReady", label: "Stage 1 — Spec Ready", ready: specReady, authority: "committed selector state", sourceAuthority: "manualConstraints or acceptedDefaults only; provisional defaults do not count", failClosed: !specReady },
     { stage: 2, key: "proofOfConceptBuildable", label: "Stage 2 — Proof-of-Concept Buildable", ready: buildReady, authority: "committed selector state only: manualConstraints or acceptedDefaults", sourceAuthority: "manualConstraints or acceptedDefaults only; product-spine/display rows do not count", failClosed: !buildReady },
@@ -4824,6 +4839,9 @@ function createSpecBuildReadinessPreview({
     factoryApprovedInputsReady,
     factoryApprovedInputsSummary,
     factoryApprovedInputsRows: factoryApprovedInputsSummary.summaryRows,
+    readonlyEngineCandidateReady: readonlyEngineCandidateMapperSummary?.readonlyEngineCandidateMapperReady === true,
+    readonlyEngineCandidateMapperSummary,
+    readonlyEngineStep1SafeSummary,
     stageIndicators,
     stageIndicatorRows: stageIndicators.map((stage) => [stage.label, stage.ready ? "true" : "false"]),
     businessStageIndicatorContract: {
@@ -4888,6 +4906,8 @@ function createSpecBuildReadinessPreview({
       ["build gate state", buildReady ? "ready" : "incomplete"],
       ["factory-approved inputs", factoryApprovedInputsReady ? "ready" : "blocked/fail-closed"],
       ["factory-approved blocker", factoryApprovedInputsSummary.blocker || "none"],
+      ["Stage 4 Step 1 readonly mapper", readonlyEngineCandidateMapperSummary?.readonlyEngineCandidateMapperReady === true ? "ready" : (readonlyEngineCandidateMapperSummary?.blocker || "blocked/fail-closed")],
+      ["Stage 4 Step 1 readonly seam", readonlyEngineStep1SafeSummary?.readonlyEngineStep1Ready === true ? "ready" : (readonlyEngineStep1SafeSummary?.blocker || "host-local-readonly-engine-seam-not-invoked")],
       ["manual constraints", String(manualConstraints.length)],
       ["auto consequences", String(autoConsequences.length)],
       ["missing spec requirements", missingSpecRequirements.length ? missingSpecRequirements.join(", ") : "none"],
@@ -5724,6 +5744,7 @@ function createDbBackedSelectorSurface(selectorReferenceStatus = {}, local = {},
     runIntakePreview,
     runAccessoryPlacementPreview,
     sourceBackedLengthPolicySummary: payload.sourceBackedLengthPolicySummary || null,
+    lmTemperatureReadinessPreview,
     summary,
   });
   const productSurfaceParityLock = createProductSurfaceParityLock({
