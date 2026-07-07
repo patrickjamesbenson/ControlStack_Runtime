@@ -26,6 +26,9 @@ function safePolicyFixture() {
       { item: "segment_max_board_split_qty", Economy: "0", Business: "3", First: "4" },
       { item: "segment_split_mode_2piece", Economy: "equal_split", Business: "maximise_maxlen, equal_split", First: "equal_split" },
       { item: "segment_short_piece_position_2piece", Economy: "end", Business: "end, start", First: "mid" },
+      { item: "end_plate_std_mm", Economy: "5", Business: "5", First: "5" },
+      { item: "end_plate_ip_mm", Economy: "10", Business: "10", First: "10" },
+      { item: "min_body_mm", Economy: "1400", Business: "1400", First: "1400" },
       { item: "start_board_gap", Economy: "10", Business: "15", First: "20" },
       { item: "end_board_gap", Economy: "10", Business: "15", First: "20" },
       { item: "pitch_tolerance_mm", Economy: "1.5", Business: "2.5", First: "2.0" },
@@ -185,6 +188,9 @@ test("runtime policy index kernel builds source-backed length policy summary", (
   assert.equal(summary.lengthPolicies.length_pref, "nearest");
   assert.equal(summary.numericMm.segment_max_length_mm, 3650);
   assert.equal(summary.numericMm.segment_min_aesthetic_length_mm, 1400);
+  assert.equal(summary.numericMm.end_plate_std_mm, 5);
+  assert.equal(summary.numericMm.end_plate_ip_mm, 10);
+  assert.equal(summary.numericMm.min_body_mm, 1400);
   assert.equal(summary.numericMm.start_board_gap, 15);
   assert.equal(summary.numericMm.end_board_gap, 15);
   assert.equal(summary.rawRowsReturned, false);

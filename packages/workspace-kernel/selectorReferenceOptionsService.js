@@ -1,4 +1,5 @@
 import { readFile, stat } from "node:fs/promises";
+import { buildSourceBackedLengthPolicySummary } from "./engineRunTableRuntimePolicyIndexKernel.js";
 
 export const SELECTOR_REFERENCE_OPTIONS_PATH = "/api/selector-reference/options";
 
@@ -4334,6 +4335,15 @@ function failurePayload({ source = {}, reason = "selector_reference_options_unav
     reason,
   });
   const timelineStatusFiltering = createTimelineStatusFilteringSummary({ fields, workflowSections, timelineContext });
+  const sourceBackedLengthPolicySummary = {
+    ok: false,
+    summaryAvailable: false,
+    summaryType: "source-backed-length-policy",
+    blocker: "selector-reference-source-unavailable",
+    diagnostic: "Selector source is unavailable, so source-backed SYSTEM_POLICY length authority cannot be resolved.",
+    rawRowsReturned: false,
+    rawTableHeadersReturned: false,
+  };
   return {
     ok: false,
     endpoint: SELECTOR_REFERENCE_OPTIONS_PATH,
@@ -4353,6 +4363,7 @@ function failurePayload({ source = {}, reason = "selector_reference_options_unav
     timelineStatusFiltering,
     sourceReadiness,
     safeSnapshotState: sourceReadiness,
+    sourceBackedLengthPolicySummary,
     referenceOptionSourceCoverage: sourceReadiness.referenceOptionSourceCoverage,
     futureMappedFieldExplanation: sourceReadiness.futureMappedFieldExplanation,
     futureMappedFields: sourceReadiness.futureMappedFields,
@@ -4435,6 +4446,9 @@ export function deriveSelectorReferenceOptionsFromSnapshot(snapshot = {}, { cons
     reason: hasMissing ? "Some option fields are future-mapped or unavailable from the current source; no fake values emitted." : "",
   });
   const timelineStatusFiltering = createTimelineStatusFilteringSummary({ fields, workflowSections, timelineContext });
+  const sourceBackedLengthPolicySummary = buildSourceBackedLengthPolicySummary(safeSnapshot, {
+    tier: safeConstraints.tier || "",
+  });
 
   return {
     ok: true,
@@ -4455,6 +4469,7 @@ export function deriveSelectorReferenceOptionsFromSnapshot(snapshot = {}, { cons
     timelineStatusFiltering,
     sourceReadiness,
     safeSnapshotState: sourceReadiness,
+    sourceBackedLengthPolicySummary,
     referenceOptionSourceCoverage: sourceReadiness.referenceOptionSourceCoverage,
     futureMappedFieldExplanation: sourceReadiness.futureMappedFieldExplanation,
     futureMappedFields: sourceReadiness.futureMappedFields,

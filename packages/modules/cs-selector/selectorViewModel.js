@@ -4732,6 +4732,7 @@ function createSpecBuildReadinessPreview({
   blockedItems = [],
   runIntakePreview = {},
   runAccessoryPlacementPreview = {},
+  sourceBackedLengthPolicySummary = null,
   summary = {},
 } = {}) {
   const spec = productSpine.specGateCandidateReadiness || payloadPreview.specGateCandidateReadiness || {};
@@ -4757,6 +4758,7 @@ function createSpecBuildReadinessPreview({
     committedSelectorConstraints: buildAuthorityConstraints,
     runIntakePreviewSummary: runIntakePreview,
     runAccessoryPlacementPreviewSummary: runAccessoryPlacementPreview,
+    sourceBackedLengthPolicySummary,
   });
   const factoryApprovedInputsReady = factoryApprovedInputsSummary.factoryApprovedInputsReady === true;
   const stageIndicators = [
@@ -5721,6 +5723,7 @@ function createDbBackedSelectorSurface(selectorReferenceStatus = {}, local = {},
     blockedItems,
     runIntakePreview,
     runAccessoryPlacementPreview,
+    sourceBackedLengthPolicySummary: payload.sourceBackedLengthPolicySummary || null,
     summary,
   });
   const productSurfaceParityLock = createProductSurfaceParityLock({

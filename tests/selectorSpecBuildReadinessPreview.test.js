@@ -141,27 +141,43 @@ function specGateSnapshot() {
     ],
     SYSTEM_POLICY: [
       { item: "ambient_temp", economy: "25;35", business: "40", first: "ENG", charter: "", approved: "yes" },
+      { item: "end_plate_std_mm", economy: "5", business: "5", first: "5", approved: "yes" },
+      { item: "end_plate_ip_mm", economy: "10", business: "10", first: "10", approved: "yes" },
+      { item: "min_body_mm", economy: "1400", business: "1400", first: "1400", approved: "yes" },
+      { item: "start_board_gap", economy: "0", business: "0", first: "0", approved: "yes" },
+      { item: "end_board_gap", economy: "0", business: "0", first: "0", approved: "yes" },
+      { item: "gap_mode", economy: "N+1", business: "N+1", first: "N+1", approved: "yes" },
     ],
   };
 }
 
-function selectorReferenceStatus(snapshot = specGateSnapshot(), overrides = {}) {
+function selectorStateConstraints(selectorState = createSelectorState()) {
+  const snapshot = selectorState.getSnapshot();
+  const manualConstraints = snapshot.dbBackedSelector?.manualConstraints || {};
+  const acceptedDefaults = snapshot.dbBackedSelector?.acceptedDefaults || {};
+  return Object.fromEntries(Object.entries({ ...acceptedDefaults, ...manualConstraints }).map(([key, record]) => {
+    const value = String(record?.value || record?.valueLabel || "").trim();
+    return value ? [key, value] : null;
+  }).filter(Boolean));
+}
+
+function selectorReferenceStatus(snapshot = specGateSnapshot(), overrides = {}, constraints = {}) {
   return {
     ok: true,
     status: "loaded",
     readOnly: true,
     diagnosticOnly: true,
     source: sourceReady(),
-    selectorOptions: deriveSelectorReferenceOptionsFromSnapshot(snapshot, { source: sourceReady() }),
+    selectorOptions: deriveSelectorReferenceOptionsFromSnapshot(snapshot, { source: sourceReady(), constraints }),
     ...overrides,
   };
 }
 
-function createModel({ selectorState = createSelectorState(), snapshot = specGateSnapshot(), statusOverrides = {} } = {}) {
+function createModel({ selectorState = createSelectorState(), snapshot = specGateSnapshot(), statusOverrides = {}, constraints = {} } = {}) {
   return createSelectorViewModel({
     adapter: createAdapter(),
     selectorState,
-    selectorReferenceStatus: selectorReferenceStatus(snapshot, statusOverrides),
+    selectorReferenceStatus: selectorReferenceStatus(snapshot, statusOverrides, constraints),
   });
 }
 
@@ -378,13 +394,17 @@ test("business-stage indicators expose committed-state authority and downstream 
 test("Stage 3B fails closed when non-zero accessory reservation cannot produce a valid board-fill input", () => {
   const selectorState = createSelectorState();
   completeSpecReadyCandidate(selectorState);
+  selectorState.acceptDbBackedSelectorDefaults([
+    { fieldKey: "tier", label: "Tier", value: "Economy", valueLabel: "Economy" },
+  ]);
   selectorState.setRunIntakeRows([
     { id: "run-1", runNumber: 1, label: "Run 1", quantity: "2", runLengthMm: "3500", lengthMode: "cut_to_length" },
   ]);
   selectorState.setRunAccessoryPlacementIntents([
     { runReference: "Run 1", accessoryType: "sensor", quantity: "1", placementPreference: "start", status: "confirmed" },
   ]);
-  const value = preview(addBuildOrderContext(selectorState));
+  addBuildOrderContext(selectorState);
+  const value = preview(createModel({ selectorState, constraints: selectorStateConstraints(selectorState) }));
   const stageRows = rowsToObject(value.stageIndicatorRows);
 
   assert.equal(value.buildReady, true);
@@ -399,13 +419,17 @@ test("Stage 3B fails closed when non-zero accessory reservation cannot produce a
 test("Stage 3B accepts non-zero accessory intent when safe reservation authority exists", () => {
   const selectorState = createSelectorState();
   completeSpecReadyCandidate(selectorState);
+  selectorState.acceptDbBackedSelectorDefaults([
+    { fieldKey: "tier", label: "Tier", value: "Economy", valueLabel: "Economy" },
+  ]);
   selectorState.setRunIntakeRows([
-    { id: "run-1", runNumber: 1, label: "Run 1", quantity: "2", runLengthMm: "5600", lengthMode: "cut_to_length" },
+    { id: "run-1", runNumber: 1, label: "Run 1", quantity: "2", runLengthMm: "5620", lengthMode: "cut_to_length" },
   ]);
   selectorState.setRunAccessoryPlacementIntents([
     { runReference: "Run 1", accessoryType: "sensor", quantity: "1", placementPreference: "mid", status: "confirmed" },
   ]);
-  const value = preview(acceptBuildOrderContext(selectorState, { runLength: "5600", runLengthLabel: "5600 mm" }));
+  acceptBuildOrderContext(selectorState, { runLength: "5620", runLengthLabel: "5620 mm" });
+  const value = preview(createModel({ selectorState, constraints: selectorStateConstraints(selectorState) }));
   const stageRows = rowsToObject(value.stageIndicatorRows);
   const reservation = value.factoryApprovedInputsSummary.accessoryReservationSummary;
 
@@ -418,7 +442,13 @@ test("Stage 3B accepts non-zero accessory intent when safe reservation authority
   assert.equal(reservation.boardFillInputReady, true);
   assert.equal(reservation.reservationCount, 1);
   assert.equal(reservation.reservationLengthMm, 1400);
+  assert.equal(reservation.bodyLengthBeforeReservationMm, 5600);
+  assert.equal(reservation.bodyLengthBeforeLengthAdjustmentMm, 5600);
   assert.equal(reservation.boardFillInputLengthMm, 4200);
+  assert.equal(reservation.sourceBackedBodyLengthPolicySummary.source, "SYSTEM_POLICY");
+  assert.equal(reservation.sourceBackedBodyLengthPolicySummary.selectedEndPlatePolicyName, "end_plate_ip_mm");
+  assert.equal(reservation.sourceBackedBodyLengthPolicySummary.totalDeductionMm, 20);
+  assert.match(reservation.sourceBackedBodyLengthPolicySummary.policyFingerprint, /^safe-stage3b-body-policy:[0-9a-f]{40}$/);
   assert.match(reservation.policyFingerprint, /^safe-stage3b-policy:[0-9a-f]{40}$/);
   assert.match(reservation.sourceFingerprint, /^safe-stage3b-source:[0-9a-f]{40}$/);
   assert.equal(stageRows["Stage 3 — Factory Approved Inputs"], "true");

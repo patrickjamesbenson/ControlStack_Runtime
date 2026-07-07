@@ -62,11 +62,19 @@ const STAGE3B_SELECTOR_POLICY_PAYLOAD = Object.freeze({
   supportedAccessoryTypes: STAGE3B_SELECTOR_SUPPORTED_ACCESSORY_TYPES,
   reservationUnit: "board-module",
   reservationModules: 1,
-  endPlatePolicyMode: "sealed-zero-deduction-stage3b-foothold",
+  endPlatePolicyMode: "source-backed-system-policy-deduction-stage3b-foothold",
   lengthAdjustmentPreference: "cut-back",
   joinBridgePolicy: "physical join placement not represented at Stage 3B",
 });
 const STAGE3B_SELECTOR_POLICY_FINGERPRINT = `safe-stage3b-policy:${stableSha1(STAGE3B_SELECTOR_POLICY_PAYLOAD)}`;
+const STAGE3B_BODY_LENGTH_REQUIRED_POLICY_KEYS = Object.freeze([
+  "end_plate_std_mm",
+  "end_plate_ip_mm",
+  "min_body_mm",
+  "start_board_gap",
+  "end_board_gap",
+  "gap_mode",
+]);
 
 function isPlainObject(value) {
   return value !== null && typeof value === "object" && !Array.isArray(value);
@@ -119,6 +127,173 @@ function constraintMap(committedSelectorConstraints = []) {
 
 function constraintDisplayValue(constraint) {
   return safeString(constraint?.valueLabel || constraint?.value || "");
+}
+
+function selectedPolicyTierFromConstraints(map = new Map()) {
+  return safeString(map.get("tier")?.value || map.get("tier")?.valueLabel || "");
+}
+
+function selectedIpRequiresIpEndPlate(map = new Map()) {
+  const raw = safeString(map.get("ipRating")?.value || map.get("ipRating")?.valueLabel || "").toUpperCase();
+  const match = raw.match(/IP\s*(\d{2})/);
+  if (!match) return false;
+  return Number(match[1]) > 20;
+}
+
+function requiredBodyPolicyMissing(lengthPolicySummary = {}) {
+  const policies = isPlainObject(lengthPolicySummary.lengthPolicies) ? lengthPolicySummary.lengthPolicies : {};
+  const numericMm = isPlainObject(lengthPolicySummary.numericMm) ? lengthPolicySummary.numericMm : {};
+  return STAGE3B_BODY_LENGTH_REQUIRED_POLICY_KEYS.filter((key) => {
+    if (key === "gap_mode") return !safeString(policies.gap_mode);
+    return !Number.isInteger(numericMm[key]);
+  });
+}
+
+function buildSourceBackedStage3BBodyLengthPolicySummary({
+  sourceBackedLengthPolicySummary = null,
+  committedSelectorConstraints = [],
+  runLengthMm = 0,
+} = {}) {
+  const map = constraintMap(committedSelectorConstraints);
+  const selectedTier = selectedPolicyTierFromConstraints(map) || safeString(sourceBackedLengthPolicySummary?.tier || "");
+  if (!selectedTier) {
+    return {
+      ok: false,
+      blocker: "stage3b-source-backed-tier-required",
+      diagnostic: "Stage 3B body-length authority requires a committed tier before resolving SYSTEM_POLICY deductions.",
+    };
+  }
+  if (!isPlainObject(sourceBackedLengthPolicySummary) || sourceBackedLengthPolicySummary.ok !== true) {
+    return {
+      ok: false,
+      blocker: sourceBackedLengthPolicySummary?.blocker || "stage3b-source-backed-length-policy-unresolved",
+      diagnostic: sourceBackedLengthPolicySummary?.diagnostic || "Stage 3B body-length authority requires a safe source-backed SYSTEM_POLICY length summary.",
+      selectedTier,
+    };
+  }
+  if (safeToken(sourceBackedLengthPolicySummary.tier) !== safeToken(selectedTier)) {
+    return {
+      ok: false,
+      blocker: "stage3b-source-backed-length-policy-tier-mismatch",
+      diagnostic: "Stage 3B body-length authority requires the source-backed SYSTEM_POLICY summary to match the committed tier.",
+      selectedTier,
+      resolvedTier: safeString(sourceBackedLengthPolicySummary.tier),
+    };
+  }
+
+  const policies = isPlainObject(sourceBackedLengthPolicySummary.lengthPolicies) ? sourceBackedLengthPolicySummary.lengthPolicies : {};
+  const numericMm = isPlainObject(sourceBackedLengthPolicySummary.numericMm) ? sourceBackedLengthPolicySummary.numericMm : {};
+  const missingPolicyKeys = requiredBodyPolicyMissing(sourceBackedLengthPolicySummary);
+  if (missingPolicyKeys.length > 0) {
+    return {
+      ok: false,
+      blocker: "stage3b-source-backed-body-policy-missing",
+      diagnostic: `Stage 3B body-length authority is missing required SYSTEM_POLICY values: ${missingPolicyKeys.join(", ")}.`,
+      selectedTier,
+      missingPolicyKeys,
+    };
+  }
+
+  const selectedEndPlatePolicyName = selectedIpRequiresIpEndPlate(map) ? "end_plate_ip_mm" : "end_plate_std_mm";
+  const selectedEndPlateMm = numericMm[selectedEndPlatePolicyName];
+  const minBodyMm = numericMm.min_body_mm;
+  const startBoardGapMm = numericMm.start_board_gap;
+  const endBoardGapMm = numericMm.end_board_gap;
+  const gapMode = safeString(policies.gap_mode);
+  if (!Number.isInteger(selectedEndPlateMm) || selectedEndPlateMm <= 0) {
+    return {
+      ok: false,
+      blocker: "stage3b-source-backed-end-plate-policy-invalid",
+      diagnostic: "Stage 3B body-length authority requires a positive source-backed end-plate deduction.",
+      selectedTier,
+      selectedEndPlatePolicyName,
+    };
+  }
+  if (!Number.isInteger(minBodyMm) || minBodyMm <= 0) {
+    return {
+      ok: false,
+      blocker: "stage3b-source-backed-min-body-policy-invalid",
+      diagnostic: "Stage 3B body-length authority requires a positive source-backed minimum body length.",
+      selectedTier,
+    };
+  }
+  if (!Number.isInteger(startBoardGapMm) || startBoardGapMm < 0 || !Number.isInteger(endBoardGapMm) || endBoardGapMm < 0) {
+    return {
+      ok: false,
+      blocker: "stage3b-source-backed-gap-policy-invalid",
+      diagnostic: "Stage 3B body-length authority requires non-negative source-backed start/end board gaps.",
+      selectedTier,
+    };
+  }
+  if (!Number.isInteger(runLengthMm) || runLengthMm <= 0) {
+    return {
+      ok: false,
+      blocker: "stage3b-source-backed-run-length-invalid",
+      diagnostic: "Stage 3B body-length authority requires a positive sealed run length before deduction.",
+      selectedTier,
+    };
+  }
+
+  const startDeductionMm = selectedEndPlateMm + startBoardGapMm;
+  const endDeductionMm = selectedEndPlateMm + endBoardGapMm;
+  const totalDeductionMm = startDeductionMm + endDeductionMm;
+  const bodyLengthBeforeReservationMm = runLengthMm - totalDeductionMm;
+  if (bodyLengthBeforeReservationMm <= 0) {
+    return {
+      ok: false,
+      blocker: "stage3b-source-backed-body-length-invalid",
+      diagnostic: "Source-backed end-plate/body deductions leave no positive body length before reservation.",
+      selectedTier,
+      bodyLengthBeforeReservationMm,
+    };
+  }
+  if (bodyLengthBeforeReservationMm < minBodyMm) {
+    return {
+      ok: false,
+      blocker: "stage3b-source-backed-min-body-unmet",
+      diagnostic: "Source-backed body length is below the required SYSTEM_POLICY minimum before reservation.",
+      selectedTier,
+      bodyLengthBeforeReservationMm,
+      minBodyMm,
+    };
+  }
+
+  const fingerprintPayload = {
+    schemaId: "controlstack.runtime.selector.stage3b.source-backed-body-length-policy-summary",
+    schemaVersion: 1,
+    source: "SYSTEM_POLICY",
+    selectedTier,
+    selectedEndPlatePolicyName,
+    selectedEndPlateMm,
+    minBodyMm,
+    startBoardGapMm,
+    endBoardGapMm,
+    gapMode,
+    startDeductionMm,
+    endDeductionMm,
+    totalDeductionMm,
+    bodyLengthBeforeReservationMm,
+  };
+  return {
+    ok: true,
+    source: "SYSTEM_POLICY",
+    selectedTier,
+    selectedEndPlatePolicyName,
+    selectedEndPlateMm,
+    minBodyMm,
+    startBoardGapMm,
+    endBoardGapMm,
+    gapMode,
+    startDeductionMm,
+    endDeductionMm,
+    totalDeductionMm,
+    bodyLengthBeforeReservationMm,
+    policyNames: [...STAGE3B_BODY_LENGTH_REQUIRED_POLICY_KEYS],
+    policyFingerprint: `safe-stage3b-body-policy:${stableSha1(fingerprintPayload)}`,
+    fingerprintPayload,
+    rawRowsReturned: false,
+    rawTableHeadersReturned: false,
+  };
 }
 
 function buildCommittedRunIntakeSummary(committedSelectorConstraints = []) {
@@ -208,6 +383,7 @@ function stage3BFailClosedReservationSummary(blocker, diagnostic, extra = {}) {
     reservationLengthMm: extra.reservationLengthMm ?? 0,
     reservationLengthBand: extra.reservationLengthBand || "unresolved",
     lengthAdjustmentMode: extra.lengthAdjustmentMode || "unresolved",
+    sourceBackedBodyLengthPolicySummary: extra.sourceBackedBodyLengthPolicySummary || null,
     mutationRepresentation: "fail-closed-no-cut-mutation-authority",
     safeSummaryOnly: true,
     readOnly: true,
@@ -239,6 +415,7 @@ function buildStage3BReservationSummaryFromSafePreviews({
   committedRunIntakeSummary = {},
   runIntakePreviewSummary = {},
   runAccessoryPlacementPreviewSummary = {},
+  sourceBackedLengthPolicySummary = null,
 } = {}) {
   const accessoryIntentCount = parsePositiveInteger(runAccessoryPlacementPreviewSummary.accessoryIntentCount) || 0;
   if (accessoryIntentCount === 0) return null;
@@ -305,6 +482,19 @@ function buildStage3BReservationSummaryFromSafePreviews({
     );
   }
 
+  const sourceBackedBodyLengthPolicySummary = buildSourceBackedStage3BBodyLengthPolicySummary({
+    sourceBackedLengthPolicySummary,
+    committedSelectorConstraints,
+    runLengthMm,
+  });
+  if (sourceBackedBodyLengthPolicySummary.ok !== true) {
+    return stage3BFailClosedReservationSummary(
+      sourceBackedBodyLengthPolicySummary.blocker,
+      sourceBackedBodyLengthPolicySummary.diagnostic,
+      { sourceBackedBodyLengthPolicySummary },
+    );
+  }
+
   const requests = [];
   for (const row of safeRows) {
     const accessoryType = safeToken(row.accessoryTypeToken);
@@ -333,13 +523,14 @@ function buildStage3BReservationSummaryFromSafePreviews({
       lengthMode: safeToken(safeRun.lengthMode, "unresolved"),
     },
     requests,
+    sourceBackedBodyLengthPolicy: sourceBackedBodyLengthPolicySummary.fingerprintPayload,
   };
   const sourceFingerprint = `safe-stage3b-source:${stableSha1(sourceFingerprintPayload)}`;
   const map = constraintMap(committedSelectorConstraints);
-  const selectedTierOrProfile = safeString(map.get("tier")?.value || map.get("electricalClass")?.valueLabel || map.get("electricalClass")?.value, "selector-stage3b");
+  const selectedTierOrProfile = safeString(sourceBackedBodyLengthPolicySummary.selectedTier, "selector-stage3b");
   const productFamilyToken = safeToken(map.get("system")?.value || map.get("system")?.valueLabel, "selector-system");
 
-  return buildRuntimeAccessoryReservationFootholdSummary({
+  const reservationSummary = buildRuntimeAccessoryReservationFootholdSummary({
     runLengthMm,
     selectedTierOrProfile,
     productFamilyToken,
@@ -351,9 +542,14 @@ function buildStage3BReservationSummaryFromSafePreviews({
       boardFamilyLengthsSortedDesc: [...STAGE3B_SELECTOR_BOARD_FAMILY_LENGTHS],
     },
     endPlatePolicySummary: {
-      startDeductionMm: 0,
-      endDeductionMm: 0,
-      mode: "sealed-zero-deduction-stage3b-foothold",
+      startDeductionMm: sourceBackedBodyLengthPolicySummary.startDeductionMm,
+      endDeductionMm: sourceBackedBodyLengthPolicySummary.endDeductionMm,
+      totalDeductionMm: sourceBackedBodyLengthPolicySummary.totalDeductionMm,
+      mode: `source-backed-system-policy:${sourceBackedBodyLengthPolicySummary.selectedEndPlatePolicyName}:${sourceBackedBodyLengthPolicySummary.gapMode}`,
+      source: "SYSTEM_POLICY",
+      sourceBacked: true,
+      policyFingerprint: sourceBackedBodyLengthPolicySummary.policyFingerprint,
+      rawRowsReturned: false,
     },
     accessoryRequestsSummary: {
       requests,
@@ -370,6 +566,14 @@ function buildStage3BReservationSummaryFromSafePreviews({
     policyFingerprint: STAGE3B_SELECTOR_POLICY_FINGERPRINT,
     sourceFingerprint,
   });
+
+  return isPlainObject(reservationSummary)
+    ? {
+      ...reservationSummary,
+      sourceBackedBodyLengthPolicySummary,
+      rawRowsReturned: false,
+    }
+    : reservationSummary;
 }
 
 function reservationSummaryForStage3({ accessoryIntentCount = 0, accessoryReservationSummary = null } = {}) {
@@ -412,6 +616,7 @@ export function buildSelectorFactoryApprovedInputsSummary({
   committedSelectorConstraints = [],
   runIntakePreviewSummary = {},
   runAccessoryPlacementPreviewSummary = {},
+  sourceBackedLengthPolicySummary = null,
   accessoryReservationSummary = null,
 } = {}) {
   const committedRunIntakeSummary = buildCommittedRunIntakeSummary(committedSelectorConstraints);
@@ -423,6 +628,7 @@ export function buildSelectorFactoryApprovedInputsSummary({
       committedRunIntakeSummary,
       runIntakePreviewSummary,
       runAccessoryPlacementPreviewSummary,
+      sourceBackedLengthPolicySummary,
     });
   const selectedReservationSummary = reservationSummaryForStage3({
     accessoryIntentCount: accessoryPlacementIntentSummary.accessoryIntentCount,
