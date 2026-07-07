@@ -416,7 +416,54 @@ test("Stage 3B fails closed when non-zero accessory reservation cannot produce a
   assertNoGenerationAuthority(value);
 });
 
-test("Stage 3B accepts non-zero accessory intent when safe reservation authority exists", () => {
+test("Stage 3B accepts non-zero accessory intent when it remains inside one sealed segment", () => {
+  const selectorState = createSelectorState();
+  completeSpecReadyCandidate(selectorState);
+  selectorState.acceptDbBackedSelectorDefaults([
+    { fieldKey: "tier", label: "Tier", value: "Economy", valueLabel: "Economy" },
+  ]);
+  selectorState.setRunIntakeRows([
+    { id: "run-1", runNumber: 1, label: "Run 1", quantity: "2", runLengthMm: "2820", lengthMode: "cut_to_length" },
+  ]);
+  selectorState.setRunAccessoryPlacementIntents([
+    { runReference: "Run 1", accessoryType: "sensor", quantity: "1", placementPreference: "start", status: "confirmed" },
+  ]);
+  acceptBuildOrderContext(selectorState, { runLength: "2820", runLengthLabel: "2820 mm" });
+  const value = preview(createModel({ selectorState, constraints: selectorStateConstraints(selectorState) }));
+  const stageRows = rowsToObject(value.stageIndicatorRows);
+  const reservation = value.factoryApprovedInputsSummary.accessoryReservationSummary;
+  const joinAuthority = reservation.joinCrossingAuthoritySummary;
+
+  assert.equal(value.buildReady, true);
+  assert.equal(value.factoryApprovedInputsReady, true);
+  assert.equal(value.factoryApprovedInputsSummary.stage3Mode, "accessory-reservation-required");
+  assert.equal(value.factoryApprovedInputsSummary.accessoryReservationRequired, true);
+  assert.equal(reservation.ok, true);
+  assert.equal(reservation.accessoryReservationReady, true);
+  assert.equal(reservation.boardFillInputReady, true);
+  assert.equal(reservation.reservationCount, 1);
+  assert.equal(reservation.reservationLengthMm, 1400);
+  assert.equal(reservation.bodyLengthBeforeReservationMm, 2800);
+  assert.equal(reservation.bodyLengthBeforeLengthAdjustmentMm, 2800);
+  assert.equal(reservation.boardFillInputLengthMm, 1400);
+  assert.equal(joinAuthority.ok, true);
+  assert.equal(joinAuthority.joinCrossingAuthorityReady, true);
+  assert.equal(joinAuthority.joinSensitive, false);
+  assert.equal(joinAuthority.singleSegmentContained, true);
+  assert.equal(joinAuthority.segmentMaxLengthMm, 3650);
+  assert.equal(joinAuthority.ruleCoverage.find((row) => row.rule === "board_cross_segment_join").classification, "missing but safe to defer");
+  assert.equal(reservation.sourceBackedBodyLengthPolicySummary.source, "SYSTEM_POLICY");
+  assert.equal(reservation.sourceBackedBodyLengthPolicySummary.selectedEndPlatePolicyName, "end_plate_ip_mm");
+  assert.equal(reservation.sourceBackedBodyLengthPolicySummary.totalDeductionMm, 20);
+  assert.match(reservation.sourceBackedBodyLengthPolicySummary.policyFingerprint, /^safe-stage3b-body-policy:[0-9a-f]{40}$/);
+  assert.match(reservation.policyFingerprint, /^safe-stage3b-policy:[0-9a-f]{40}$/);
+  assert.match(reservation.sourceFingerprint, /^safe-stage3b-source:[0-9a-f]{40}$/);
+  assert.equal(stageRows["Stage 3 — Factory Approved Inputs"], "true");
+  assert.equal(stageRows["Stage 4 — Engine Outcome Proven"], "false");
+  assertNoGenerationAuthority(value);
+});
+
+test("Stage 3B fails closed when non-zero accessory intent is join-sensitive without do-not-bridge authority", () => {
   const selectorState = createSelectorState();
   completeSpecReadyCandidate(selectorState);
   selectorState.acceptDbBackedSelectorDefaults([
@@ -432,26 +479,26 @@ test("Stage 3B accepts non-zero accessory intent when safe reservation authority
   const value = preview(createModel({ selectorState, constraints: selectorStateConstraints(selectorState) }));
   const stageRows = rowsToObject(value.stageIndicatorRows);
   const reservation = value.factoryApprovedInputsSummary.accessoryReservationSummary;
+  const joinAuthority = reservation.joinCrossingAuthoritySummary;
 
   assert.equal(value.buildReady, true);
-  assert.equal(value.factoryApprovedInputsReady, true);
+  assert.equal(value.factoryApprovedInputsReady, false);
   assert.equal(value.factoryApprovedInputsSummary.stage3Mode, "accessory-reservation-required");
   assert.equal(value.factoryApprovedInputsSummary.accessoryReservationRequired, true);
-  assert.equal(reservation.ok, true);
-  assert.equal(reservation.accessoryReservationReady, true);
-  assert.equal(reservation.boardFillInputReady, true);
-  assert.equal(reservation.reservationCount, 1);
-  assert.equal(reservation.reservationLengthMm, 1400);
-  assert.equal(reservation.bodyLengthBeforeReservationMm, 5600);
-  assert.equal(reservation.bodyLengthBeforeLengthAdjustmentMm, 5600);
-  assert.equal(reservation.boardFillInputLengthMm, 4200);
+  assert.equal(value.factoryApprovedInputsSummary.blocker, "stage3b-join-crossing-authority-unproven");
+  assert.equal(reservation.ok, false);
+  assert.equal(reservation.accessoryReservationReady, false);
+  assert.equal(reservation.boardFillInputReady, false);
   assert.equal(reservation.sourceBackedBodyLengthPolicySummary.source, "SYSTEM_POLICY");
-  assert.equal(reservation.sourceBackedBodyLengthPolicySummary.selectedEndPlatePolicyName, "end_plate_ip_mm");
-  assert.equal(reservation.sourceBackedBodyLengthPolicySummary.totalDeductionMm, 20);
-  assert.match(reservation.sourceBackedBodyLengthPolicySummary.policyFingerprint, /^safe-stage3b-body-policy:[0-9a-f]{40}$/);
-  assert.match(reservation.policyFingerprint, /^safe-stage3b-policy:[0-9a-f]{40}$/);
-  assert.match(reservation.sourceFingerprint, /^safe-stage3b-source:[0-9a-f]{40}$/);
-  assert.equal(stageRows["Stage 3 — Factory Approved Inputs"], "true");
+  assert.equal(reservation.sourceBackedBodyLengthPolicySummary.bodyLengthBeforeReservationMm, 5600);
+  assert.equal(joinAuthority.ok, false);
+  assert.equal(joinAuthority.joinSensitive, true);
+  assert.equal(joinAuthority.singleSegmentContained, false);
+  assert.equal(joinAuthority.bodyLengthBeforeReservationMm, 5600);
+  assert.equal(joinAuthority.segmentMaxLengthMm, 3650);
+  assert.equal(joinAuthority.ruleCoverage.find((row) => row.rule === "board_cross_segment_join").classification, "missing and not safe to defer for Stage 3B claims");
+  assert.equal(joinAuthority.ruleCoverage.find((row) => row.rule === "do-not-bridge join").classification, "missing and not safe to defer for Stage 3B claims");
+  assert.equal(stageRows["Stage 3 — Factory Approved Inputs"], "false");
   assert.equal(stageRows["Stage 4 — Engine Outcome Proven"], "false");
   assertNoGenerationAuthority(value);
 });
