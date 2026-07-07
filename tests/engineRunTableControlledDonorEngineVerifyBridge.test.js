@@ -118,6 +118,64 @@ const safeSyntheticRawResultFixture = (overrides = {}) => ({
   warningCategories: ["none"],
   ...overrides,
 });
+const readonlyEngineStep1SafeSummary = (overrides = {}) => ({
+  schemaId: "controlstack.runtime.selector-readonly-engine-step1-safe-summary.v1",
+  schemaVersion: 1,
+  state: "selector_readonly_engine_step1_safe_summary_ready",
+  ok: true,
+  readonlyEngineStep1Ready: true,
+  blocker: null,
+  mapperReady: true,
+  hostLocalReadonlyEngineSeamInvoked: true,
+  hostLocalReadonlyEngineResultProduced: true,
+  seam: "engine-runtable-internal-readonly-invoke",
+  seamVersion: "engine_runtable_internal_readonly_invoke.v1",
+  safeEngineSummary: {
+    success: true,
+    runCount: 2,
+    errorCount: 0,
+    warningCount: 1,
+    firstError: "",
+    firstWarning: "safe warning category only",
+    selectedTier: "business",
+    outputContractReady: true,
+    safeRunSummaryCount: 2,
+    safeRunSummaries: [
+      { runIndex: 0, boardCount: 2, segmentCount: 1, zoneCount: 1, rawRunReturned: false },
+      { runIndex: 1, boardCount: 3, segmentCount: 1, zoneCount: 1, rawRunReturned: false },
+    ],
+    rawResultReturned: false,
+    rawDebugReturned: false,
+    rawRoughElectricalPayloadReturned: false,
+  },
+  safeCandidateDerivation: {
+    candidateFingerprint: "safe-selector-readonly-engine-candidate:controlled-donor-bridge-fixture",
+    rawCandidateReturned: false,
+    rawSelectorPayloadReturned: false,
+    rawEnginePayloadReturned: false,
+  },
+  readonlyEngineStep1Fingerprint: "safe-selector-readonly-engine-step1:controlled-donor-bridge-fixture",
+  candidatePayloadReturned: false,
+  rawSelectorPayloadReturned: false,
+  rawEnginePayloadReturned: false,
+  rawEngineResultReturned: false,
+  rawRowsReturned: false,
+  rawUsersReturned: false,
+  rawCrmReturned: false,
+  rawContactsReturned: false,
+  privatePathsReturned: false,
+  credentialsReturned: false,
+  runtimeDataMutationEnabled: false,
+  selectedResultPersistenceEnabled: false,
+  selectedResultPersisted: false,
+  runTableGenerationEnabled: false,
+  runTableGenerated: false,
+  iesGenerationEnabled: false,
+  iesGenerated: false,
+  routesAdded: false,
+  postEndpointsAdded: false,
+  ...overrides,
+});
 
 function bridgeInput(overrides = {}) {
   return {
@@ -178,10 +236,51 @@ test("accepts complete safe summaries and a synthetic donor-shaped raw result fi
   assert.equal(result.selectedResultSourceObjectReady, false);
   assert.equal(result.runTableDomainReadinessReady, true);
   assert.equal(result.iesHandoffReadinessReady, false);
+  assert.equal(result.syntheticFixtureOnly, true);
+  assert.equal(result.verificationMode, "synthetic-fixture-contract");
   assert.equal(result.broadCountBands.runCountBand, "2-5");
   assert.match(result.opaqueResultToken, /^safe-donor-engine-result-token:/);
   assert.equal(result.redactionFlags.rawDonorResultScanned, true);
   assert.equal(result.redactionFlags.rawDonorResultReturned, false);
+});
+
+test("accepts private readonly seam Step 1 safe summary as real verification summary", () => {
+  const result = buildControlledDonorEngineVerifyBridgeSummary({
+    privateReadonlySeamBridgeGateApproved: true,
+    policyFingerprint: POLICY_FINGERPRINT,
+    sourceFingerprint: SOURCE_FINGERPRINT,
+    readonlyEngineStep1SafeSummary: readonlyEngineStep1SafeSummary(),
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.bridgeReady, true);
+  assert.equal(result.state, "controlled_donor_engine_verify_bridge_real_readonly_seam_summary");
+  assert.equal(result.syntheticFixtureOnly, false);
+  assert.equal(result.verificationMode, "real-readonly-seam-summary");
+  assert.equal(result.readonlySeamSummaryOnly, true);
+  assert.equal(result.realEngineVerificationSummaryAvailable, true);
+  assert.equal(result.selectedResultSourceObjectReady, false);
+  assert.equal(result.acceptedSelectedResultAuthorityReady, false);
+  assert.equal(result.outputsReady, false);
+  assert.match(result.opaqueResultToken, /^safe-real-engine-verification-token:/);
+  assert.equal(result.safetyFlags.hostLocalReadonlyEngineSeamSummaryConsumed, true);
+  assert.equal(result.safetyFlags.runTableGenerated, false);
+  assert.equal(result.safetyFlags.iesGenerated, false);
+});
+
+test("rejects readonly seam summary without the private bridge gate", () => {
+  const result = buildControlledDonorEngineVerifyBridgeSummary({
+    policyFingerprint: POLICY_FINGERPRINT,
+    sourceFingerprint: SOURCE_FINGERPRINT,
+    readonlyEngineStep1SafeSummary: readonlyEngineStep1SafeSummary(),
+  });
+
+  assert.equal(result.ok, false);
+  assert.equal(result.blocker, "private-readonly-engine-verification-bridge-gate-required");
+  assert.equal(result.verificationMode, "readonly-seam-summary-only");
+  assert.equal(result.readonlySeamSummaryOnly, true);
+  assert.equal(result.realEngineVerificationSummaryAvailable, false);
+  assert.equal(result.outputsReady, false);
 });
 
 test("rejects required missing or unready upstream summaries", () => {

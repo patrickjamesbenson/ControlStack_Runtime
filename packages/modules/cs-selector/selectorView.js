@@ -2219,8 +2219,8 @@ function appendWorkflowDonorBridgeStatus(parent, bridge = {}) {
   group.dataset.donorEngineInvoked = bridge.donorEngineInvoked === true || flags.donorEngineInvoked === true ? "true" : "false";
   group.dataset.realDonorPayloadAssembled = bridge.realDonorPayloadAssembled === true || flags.realDonorPayloadAssembled === true ? "true" : "false";
   appendText(group, "h5", "Controlled donor Engine verify bridge", "cs-selector-workflow-preview__group-title");
-  appendText(group, "p", "Private bridge only: synthetic/safe preview status is surfaced while donor invocation remains blocked. No selected-result persistence, RunTable generation, or IES generation is enabled.", "cs-selector-workflow-preview__group-copy");
-  appendBadgeList(group, ["private bridge only", "synthetic/safe preview only", "donor invocation blocked", "no selected-result persistence", "no RunTable generation", "no IES generation"]);
+  appendText(group, "p", "Private bridge only: safe verification summary status is surfaced while donor invocation, accepted selected-result authority, persistence, RunTable generation, and IES generation remain blocked.", "cs-selector-workflow-preview__group-copy");
+  appendBadgeList(group, ["private bridge only", "safe summary only", "real readonly summary when available", "donor invocation blocked", "accepted authority blocked", "outputs blocked"]);
   appendDefinitionList(group, [
     ["status", bridge.bridgeReady === true ? "ready" : "blocked"],
     ["blocker", bridge.blocker || "donor-engine-invocation-not-approved"],
@@ -2228,6 +2228,11 @@ function appendWorkflowDonorBridgeStatus(parent, bridge = {}) {
     ["diagnostic only", bridge.diagnosticOnly === true || flags.diagnosticOnly === true ? "true" : "false"],
     ["safe summary only", bridge.safeSummaryOnly === true || flags.safeSummaryOnly === true ? "true" : "false"],
     ["synthetic fixture only", bridge.syntheticFixtureOnly === true || flags.syntheticFixtureOnly === true ? "true" : "false"],
+    ["verification mode", bridge.verificationMode || "synthetic-fixture-contract"],
+    ["readonly seam summary only", bridge.readonlySeamSummaryOnly === true || flags.readonlySeamSummaryOnly === true ? "true" : "false"],
+    ["real Engine verification summary available", bridge.realEngineVerificationSummaryAvailable === true || flags.realEngineVerificationSummaryAvailable === true ? "true" : "false"],
+    ["accepted selected-result authority", bridge.acceptedSelectedResultAuthorityReady === true || flags.acceptedSelectedResultAuthorityReady === true ? "ready" : "blocked"],
+    ["outputs ready", bridge.outputsReady === true || flags.outputsReady === true ? "true" : "false"],
     ["bridge fingerprint", bridge.bridgeFingerprint || "none"],
     ["donor Engine invoked", bridge.donorEngineInvoked === true || flags.donorEngineInvoked === true ? "true" : "false"],
     ["real donor payload assembled", bridge.realDonorPayloadAssembled === true || flags.realDonorPayloadAssembled === true ? "true" : "false"],

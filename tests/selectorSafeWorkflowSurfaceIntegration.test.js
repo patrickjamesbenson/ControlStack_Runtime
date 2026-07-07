@@ -360,7 +360,8 @@ test("Selector view source keeps workflow diagnostics behind closed developer dr
   assert.match(view, /Controlled real-source evidence is status-only and not invoked by the UI/);
   assert.match(view, /dataset\.controlledDonorEngineVerifyBridge = "status-only"/);
   assert.match(view, /Controlled donor Engine verify bridge/);
-  assert.match(view, /synthetic\/safe preview status is surfaced/);
+  assert.match(view, /safe verification summary status is surfaced/);
+  assert.match(view, /real readonly summary when available/);
   assert.match(view, /button\.disabled = true/);
   assert.match(view, /Run Engine disabled/);
   assert.match(view, /Light output readiness/);

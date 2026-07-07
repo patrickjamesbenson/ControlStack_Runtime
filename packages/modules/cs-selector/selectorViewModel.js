@@ -5348,6 +5348,7 @@ function createSelectorWorkflowPreview({
   runAccessoryPlacementPreview = {},
   specialPartsEntitlementPreview = {},
   lmTemperatureReadinessPreview = {},
+  readonlyEngineStep1SafeSummaryOverride = null,
 } = {}) {
   const fingerprints = {
     policyFingerprint: SELECTOR_WORKFLOW_POLICY_FINGERPRINT,
@@ -5408,6 +5409,8 @@ function createSelectorWorkflowPreview({
     ...fingerprints,
     sealedCandidateAssemblyPreviewSummary,
     runTableDomainOutputScaffoldSummary,
+    readonlyEngineStep1SafeSummary: readonlyEngineStep1SafeSummaryOverride,
+    privateReadonlySeamBridgeGateApproved: Boolean(readonlyEngineStep1SafeSummaryOverride),
   });
   const selectedResultHandoffScaffoldSummary = buildRuntimeSelectedResultHandoffScaffoldSummary({
     ...fingerprints,
@@ -5799,6 +5802,7 @@ function createDbBackedSelectorSurface(selectorReferenceStatus = {}, local = {},
     timelineFiltering: workflowContext.timelineFiltering || {},
     specialPartsEntitlementPreview: workflowContext.specialPartsEntitlementPreview || {},
     lmTemperatureReadinessPreview,
+    readonlyEngineStep1SafeSummaryOverride,
     runIntakePreview,
     runAccessoryPlacementPreview,
   });

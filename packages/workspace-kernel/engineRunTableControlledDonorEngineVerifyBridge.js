@@ -15,6 +15,11 @@ export const CONTROLLED_DONOR_ENGINE_VERIFY_BRIDGE_ALLOWED_OUTPUT_KEYS = Object.
   "diagnosticOnly",
   "safeSummaryOnly",
   "syntheticFixtureOnly",
+  "verificationMode",
+  "readonlySeamSummaryOnly",
+  "realEngineVerificationSummaryAvailable",
+  "acceptedSelectedResultAuthorityReady",
+  "outputsReady",
   "ok",
   "bridgeReady",
   "safeEngineResultReady",
@@ -44,6 +49,11 @@ const SAFETY_FLAGS = Object.freeze({
   diagnosticOnly: true,
   safeSummaryOnly: true,
   syntheticFixtureOnly: true,
+  readonlySeamSummaryOnly: false,
+  realEngineVerificationSummaryAvailable: false,
+  hostLocalReadonlyEngineSeamSummaryConsumed: false,
+  acceptedSelectedResultAuthorityReady: false,
+  outputsReady: false,
   noRoute: true,
   noPostEndpoint: true,
   noUiInvocation: true,
@@ -97,6 +107,18 @@ const REDACTION_FLAGS = Object.freeze({
   privateDataReturned: false,
   denyListHit: false,
 });
+
+function safetyFlagsFor(extra = {}) {
+  return {
+    ...SAFETY_FLAGS,
+    syntheticFixtureOnly: extra.syntheticFixtureOnly !== false,
+    readonlySeamSummaryOnly: extra.readonlySeamSummaryOnly === true,
+    realEngineVerificationSummaryAvailable: extra.realEngineVerificationSummaryAvailable === true,
+    hostLocalReadonlyEngineSeamSummaryConsumed: extra.hostLocalReadonlyEngineSeamSummaryConsumed === true,
+    acceptedSelectedResultAuthorityReady: false,
+    outputsReady: false,
+  };
+}
 
 const PRIVATE_PATH_PATTERN = /(?:[A-Za-z]:[\\/]|\\\\|[\\/]Users[\\/]|[\\/]home[\\/]|[\\/]mnt[\\/]|file:|\bControlStack(?:_Runtime|_RuntimeData)?[\\/])/i;
 const RAW_IES_TEXT_PATTERN = /(?:^\s*IESNA:|\bTILT\s*=|\bLM-63\b|\[[A-Z0-9_ -]{2,}\]\s+[^\n]+\n\s*TILT\s*=)/i;
@@ -315,6 +337,17 @@ function hasPrivateFixtureGate(source) {
     || source.privateBridgeFixtureGate === "synthetic-donor-result-fixture-only";
 }
 
+function hasPrivateReadonlySeamBridgeGate(source) {
+  return source.privateReadonlySeamBridgeGateApproved === true
+    || source.privateRealEngineVerificationBridgeGateApproved === true
+    || source.privateBridgeGate === "readonly-engine-step1-safe-summary-only"
+    || source.privateBridgeGate === "real-readonly-engine-summary-only";
+}
+
+function readonlyEngineStep1SafeSummaryFrom(source) {
+  return firstPresent(source, ["readonlyEngineStep1SafeSummary", "selectorReadonlyEngineStep1SafeSummary"]);
+}
+
 function resolveFingerprints(source) {
   const policyFingerprint = safeFingerprint(firstPresent(source, ["policyFingerprint", "safePolicyFingerprint"]));
   const sourceFingerprint = safeFingerprint(firstPresent(source, ["sourceFingerprint", "safeSourceFingerprint"]));
@@ -432,6 +465,107 @@ function sanitiseSyntheticDonorResultFixture(fixture, policyFingerprint, sourceF
   };
 }
 
+function sanitiseReadonlyEngineStep1SafeSummary(summary, policyFingerprint, sourceFingerprint) {
+  if (!isPlainObject(summary)) {
+    return {
+      ok: false,
+      blocker: "missing-readonly-engine-step1-safe-summary",
+      diagnostic: "A safe readonly Engine Step 1 summary is required for the real verification bridge boundary.",
+      redactionFlags: { ...REDACTION_FLAGS, rawDonorResultScanned: false },
+    };
+  }
+
+  const blocker = unsafeBlocker(summary);
+  if (blocker) {
+    return {
+      ok: false,
+      blocker,
+      diagnostic: "Readonly Engine Step 1 summary contained unsafe raw rows, payloads, exact values, private data, route, endpoint, mutation, generation, or artifact markers.",
+      redactionFlags: { ...REDACTION_FLAGS, rawDonorResultScanned: false, denyListHit: true },
+    };
+  }
+
+  if (summary.ok !== true || summary.readonlyEngineStep1Ready !== true) {
+    return {
+      ok: false,
+      blocker: summary.blocker || "readonly-engine-step1-safe-summary-not-ready",
+      diagnostic: "Readonly Engine Step 1 did not provide a ready safe summary.",
+      redactionFlags: { ...REDACTION_FLAGS, rawDonorResultScanned: false },
+    };
+  }
+
+  if (summary.hostLocalReadonlyEngineSeamInvoked !== true || summary.hostLocalReadonlyEngineResultProduced !== true) {
+    return {
+      ok: false,
+      blocker: "readonly-engine-step1-safe-summary-not-produced",
+      diagnostic: "Readonly Engine Step 1 must have consumed the host-local readonly seam and produced only its safe summary.",
+      redactionFlags: { ...REDACTION_FLAGS, rawDonorResultScanned: false },
+    };
+  }
+
+  if (summary.candidatePayloadReturned === true || summary.rawSelectorPayloadReturned === true) {
+    return {
+      ok: false,
+      blocker: "raw-selector-payload-not-approved",
+      diagnostic: "Readonly Engine Step 1 may not expose the selector/candidate payload at the bridge boundary.",
+      redactionFlags: { ...REDACTION_FLAGS, rawDonorResultScanned: false, denyListHit: true },
+    };
+  }
+
+  const safeEngineSummary = isPlainObject(summary.safeEngineSummary) ? summary.safeEngineSummary : null;
+  if (!safeEngineSummary || safeEngineSummary.success !== true) {
+    return {
+      ok: false,
+      blocker: "readonly-engine-step1-safe-engine-summary-not-successful",
+      diagnostic: "Readonly Engine Step 1 safe Engine summary was missing or unsuccessful.",
+      redactionFlags: { ...REDACTION_FLAGS, rawDonorResultScanned: false },
+    };
+  }
+
+  const step1Fingerprint = safeFingerprint(firstPresent(summary, [
+    "readonlyEngineStep1Fingerprint",
+    "summaryFingerprint",
+    "fingerprint",
+  ])) || safeFingerprint(summary.safeCandidateDerivation?.candidateFingerprint);
+  if (!step1Fingerprint) {
+    return {
+      ok: false,
+      blocker: "readonly-engine-step1-fingerprint-missing",
+      diagnostic: "Readonly Engine Step 1 safe summary must carry a safe fingerprint before bridge verification can be claimed.",
+      redactionFlags: { ...REDACTION_FLAGS, rawDonorResultScanned: false },
+    };
+  }
+
+  const broadCountBands = {
+    runCountBand: countBand(safeEngineSummary.runCount ?? safeEngineSummary.run_count),
+    candidateCountBand: countBand(safeEngineSummary.safeRunSummaryCount ?? safeEngineSummary.runCount ?? safeEngineSummary.run_count),
+    warningCountBand: countBand(safeEngineSummary.warningCount ?? safeEngineSummary.warning_count),
+    errorCountBand: countBand(safeEngineSummary.errorCount ?? safeEngineSummary.error_count),
+  };
+  const safeWarningCategories = normaliseWarnings([
+    safeEngineSummary.firstWarning ? "engine-warning-present" : null,
+    safeEngineSummary.firstError ? "engine-error-present" : null,
+  ].filter(Boolean));
+  const tokenSeed = {
+    policyFingerprint,
+    sourceFingerprint,
+    step1Fingerprint,
+    readonlySeamSummaryOnly: true,
+    realEngineVerificationSummaryAvailable: true,
+    broadCountBands,
+    safeWarningCategories,
+  };
+
+  return {
+    ok: true,
+    broadCountBands,
+    safeWarningCategories,
+    opaqueResultToken: `safe-real-engine-verification-token:${stableSha1(tokenSeed)}`,
+    redactionFlags: { ...REDACTION_FLAGS, rawDonorResultScanned: false },
+    step1Fingerprint,
+  };
+}
+
 function buildBridgeFingerprint(payload) {
   return `safe-controlled-donor-engine-verify-bridge:${stableSha1(payload)}`;
 }
@@ -439,6 +573,13 @@ function buildBridgeFingerprint(payload) {
 function baseSummary(extra = {}) {
   const blocker = extra.blocker || null;
   const ok = extra.ok === true;
+  const syntheticFixtureOnly = extra.syntheticFixtureOnly !== false;
+  const verificationMode = safeToken(extra.verificationMode, syntheticFixtureOnly ? "synthetic-fixture-contract" : "real-readonly-seam-summary");
+  const readonlySeamSummaryOnly = extra.readonlySeamSummaryOnly === true;
+  const realEngineVerificationSummaryAvailable = extra.realEngineVerificationSummaryAvailable === true;
+  const acceptedSelectedResultAuthorityReady = false;
+  const outputsReady = false;
+  const state = String(extra.state || CONTROLLED_DONOR_ENGINE_VERIFY_BRIDGE_STATE).trim() || CONTROLLED_DONOR_ENGINE_VERIFY_BRIDGE_STATE;
   const sourceFingerprints = extra.sourceFingerprints || {
     policyFingerprint: extra.policyFingerprint || null,
     sourceFingerprint: extra.sourceFingerprint || null,
@@ -458,7 +599,8 @@ function baseSummary(extra = {}) {
   const resultForFingerprint = {
     schemaId: CONTROLLED_DONOR_ENGINE_VERIFY_BRIDGE_SCHEMA_ID,
     schemaVersion: CONTROLLED_DONOR_ENGINE_VERIFY_BRIDGE_SCHEMA_VERSION,
-    state: CONTROLLED_DONOR_ENGINE_VERIFY_BRIDGE_STATE,
+    state,
+    verificationMode,
     ok,
     blocker,
     sourceFingerprints,
@@ -467,18 +609,27 @@ function baseSummary(extra = {}) {
     broadCountBands,
     safeWarningCategories,
     redactionFlags,
-    syntheticFixtureOnly: true,
+    syntheticFixtureOnly,
+    readonlySeamSummaryOnly,
+    realEngineVerificationSummaryAvailable,
+    acceptedSelectedResultAuthorityReady,
+    outputsReady,
   };
 
   const result = {
     schemaId: CONTROLLED_DONOR_ENGINE_VERIFY_BRIDGE_SCHEMA_ID,
     schemaVersion: CONTROLLED_DONOR_ENGINE_VERIFY_BRIDGE_SCHEMA_VERSION,
-    state: CONTROLLED_DONOR_ENGINE_VERIFY_BRIDGE_STATE,
+    state,
     readOnly: true,
     privateBridgeOnly: true,
     diagnosticOnly: true,
     safeSummaryOnly: true,
-    syntheticFixtureOnly: true,
+    syntheticFixtureOnly,
+    verificationMode,
+    readonlySeamSummaryOnly,
+    realEngineVerificationSummaryAvailable,
+    acceptedSelectedResultAuthorityReady,
+    outputsReady,
     ok,
     bridgeReady: ok,
     safeEngineResultReady: ok,
@@ -495,7 +646,12 @@ function baseSummary(extra = {}) {
     projectionFingerprints,
     scaffoldFingerprints,
     redactionFlags,
-    safetyFlags: clonePlain(SAFETY_FLAGS),
+    safetyFlags: clonePlain(safetyFlagsFor({
+      syntheticFixtureOnly,
+      readonlySeamSummaryOnly,
+      realEngineVerificationSummaryAvailable,
+      hostLocalReadonlyEngineSeamSummaryConsumed: extra.hostLocalReadonlyEngineSeamSummaryConsumed === true,
+    })),
     failClosedDiagnostics,
     sanitizerAllowListVersion: "controlled-donor-engine-verify-bridge-allow-list.v1",
     sanitizerDenyListVersion: "controlled-donor-engine-verify-bridge-deny-list.v1",
@@ -530,6 +686,74 @@ export function buildControlledDonorEngineVerifyBridgeSummary(input = {}) {
       ...fingerprints,
       redactionFlags: { ...REDACTION_FLAGS, rawDonorResultScanned: Boolean(rawFixtureFrom(source)), denyListHit: true },
       denyListHit: true,
+    });
+  }
+
+  const readonlyEngineStep1SafeSummary = readonlyEngineStep1SafeSummaryFrom(source);
+  const privateReadonlySeamBridgeGateApproved = hasPrivateReadonlySeamBridgeGate(source);
+  if (privateReadonlySeamBridgeGateApproved || isPlainObject(readonlyEngineStep1SafeSummary)) {
+    const upstreamFingerprints = collectUpstreamFingerprints(source);
+    if (!privateReadonlySeamBridgeGateApproved) {
+      return failClosed("private-readonly-engine-verification-bridge-gate-required", "A readonly seam summary was present, but the private real Engine verification bridge gate was not approved.", {
+        policyFingerprint: safeFingerprint(firstPresent(source, ["policyFingerprint", "safePolicyFingerprint"])),
+        sourceFingerprint: safeFingerprint(firstPresent(source, ["sourceFingerprint", "safeSourceFingerprint"])),
+        ...upstreamFingerprints,
+        syntheticFixtureOnly: false,
+        verificationMode: "readonly-seam-summary-only",
+        readonlySeamSummaryOnly: true,
+        realEngineVerificationSummaryAvailable: false,
+      });
+    }
+
+    const resolvedFingerprints = resolveFingerprints(source);
+    if (!resolvedFingerprints.ok) {
+      return failClosed(resolvedFingerprints.blocker, resolvedFingerprints.diagnostic, {
+        policyFingerprint: resolvedFingerprints.policyFingerprint,
+        sourceFingerprint: resolvedFingerprints.sourceFingerprint,
+        ...upstreamFingerprints,
+        syntheticFixtureOnly: false,
+        verificationMode: "readonly-seam-summary-only",
+        readonlySeamSummaryOnly: true,
+        realEngineVerificationSummaryAvailable: false,
+      });
+    }
+
+    const { policyFingerprint, sourceFingerprint } = resolvedFingerprints;
+    const sanitised = sanitiseReadonlyEngineStep1SafeSummary(readonlyEngineStep1SafeSummary, policyFingerprint, sourceFingerprint);
+    if (!sanitised.ok) {
+      return failClosed(sanitised.blocker, sanitised.diagnostic, {
+        policyFingerprint,
+        sourceFingerprint,
+        ...upstreamFingerprints,
+        syntheticFixtureOnly: false,
+        verificationMode: "readonly-seam-summary-only",
+        readonlySeamSummaryOnly: true,
+        realEngineVerificationSummaryAvailable: false,
+        redactionFlags: sanitised.redactionFlags,
+        denyListHit: sanitised.redactionFlags?.denyListHit === true,
+      });
+    }
+
+    return baseSummary({
+      ok: true,
+      state: "controlled_donor_engine_verify_bridge_real_readonly_seam_summary",
+      verificationMode: "real-readonly-seam-summary",
+      syntheticFixtureOnly: false,
+      readonlySeamSummaryOnly: true,
+      realEngineVerificationSummaryAvailable: true,
+      hostLocalReadonlyEngineSeamSummaryConsumed: true,
+      policyFingerprint,
+      sourceFingerprint,
+      ...upstreamFingerprints,
+      broadCountBands: sanitised.broadCountBands,
+      safeWarningCategories: sanitised.safeWarningCategories,
+      opaqueResultToken: sanitised.opaqueResultToken,
+      redactionFlags: sanitised.redactionFlags,
+      warnings: [
+        "Real readonly Engine verification summary is available from the private host-local seam.",
+        "Only safe bands, fingerprints, and an opaque token are emitted; accepted selected-result authority and outputs remain blocked.",
+      ],
+      failClosedDiagnostics: [],
     });
   }
 
