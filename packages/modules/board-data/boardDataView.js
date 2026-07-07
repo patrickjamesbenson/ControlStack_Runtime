@@ -89,6 +89,7 @@ export function renderBoardDataView(container, viewModel) {
 
   appendStatementSection(article, viewModel.liveStatusCopy, "Board Data / Selector Reference live status bridge");
   appendStatementSection(article, viewModel.requiredBoundaryStatements);
+  appendStatementSection(article, viewModel.donorBoardSyncAuditAddendum, "Donor Board Sync audit addendum");
   appendSection(article, "Live source/data readiness bridge", viewModel.liveStatusRows);
   appendSection(article, "Board Data source", viewModel.sourceRows);
   appendSection(article, "Board Data safety flags", viewModel.safetyRows);

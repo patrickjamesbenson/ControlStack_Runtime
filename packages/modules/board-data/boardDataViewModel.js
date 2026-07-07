@@ -34,6 +34,14 @@ const LIVE_STATUS_COPY = Object.freeze([
   "Board Data defines metadata. Selector resolves later. Lab proves later.",
 ]);
 
+const DONOR_BOARD_SYNC_AUDIT_ADDENDUM = Object.freeze([
+  "Board Sync is not restored in Runtime.",
+  "Runtime currently has no active Board Sync, Board Data Intake, board population, overlay push, promotion, or Google Sheets BOARDS write-back route.",
+  "The donor push path used staged local overlay behaviour; a direct Google Sheets BOARDS write-back branch was not confirmed as active in the inspected donor checkout.",
+  "Board Data belongs under Engineering Database Tools as a read-only inspector until a separate write-authority stage exists.",
+  "Future Board Data Intake, Staging Review, and Sync / Promotion require separate explicit implementation stages.",
+]);
+
 function yesNo(value) {
   if (value === true) return "true";
   if (value === false) return "false";
@@ -272,6 +280,7 @@ export function createBoardDataViewModel({ context, local = {}, status = {} }) {
     status,
     requiredBoundaryStatements: REQUIRED_BOUNDARY_STATEMENTS,
     liveStatusCopy: LIVE_STATUS_COPY,
+    donorBoardSyncAuditAddendum: DONOR_BOARD_SYNC_AUDIT_ADDENDUM,
     liveStatusRows: liveStatusRows(status),
     sourceRows: sourceRows(status),
     safetyRows: safetyRows(status),

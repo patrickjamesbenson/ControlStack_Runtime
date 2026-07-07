@@ -130,6 +130,14 @@ test("Board Data view model includes the required read-only boundary statements"
     "Board Data does not generate IES files.",
     "Materialiser refresh and active snapshot promotion remain separate controlled workflows.",
   ]);
+
+  assert.deepEqual(model.donorBoardSyncAuditAddendum, [
+    "Board Sync is not restored in Runtime.",
+    "Runtime currently has no active Board Sync, Board Data Intake, board population, overlay push, promotion, or Google Sheets BOARDS write-back route.",
+    "The donor push path used staged local overlay behaviour; a direct Google Sheets BOARDS write-back branch was not confirmed as active in the inspected donor checkout.",
+    "Board Data belongs under Engineering Database Tools as a read-only inspector until a separate write-authority stage exists.",
+    "Future Board Data Intake, Staging Review, and Sync / Promotion require separate explicit implementation stages.",
+  ]);
 });
 
 test("Board Data redacted detail inspector exposes only safe category summaries", () => {

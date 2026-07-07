@@ -2007,7 +2007,6 @@ function bootWorkspaceShell() {
   registry.register("liora_cockpit", lioraCockpitModule);
   registry.register("engine_flow", engineFlowModule);
   ensureModuleNavLink("scene_builder", "Scene Builder");
-  ensureModuleNavLink("board_data", "Board Data");
   ensureModuleNavLink("ies_builder", "IES Builder");
   ensureModuleNavLink("lab_proof", "Lab Proof");
   ensureModuleNavLink("knowledge_base", "Knowledge Base");

@@ -304,6 +304,7 @@ test("Engineering remains a separate design and tooling group", async () => {
     "Emergency System Design",
     "Engineering Handoff to Lab",
     "Google Sync",
+    "Board Data Status",
   ]) {
     assert.match(engineering, new RegExp(`>${label}<`), `${label} should render in Engineering`);
   }
@@ -313,6 +314,7 @@ test("Engineering remains a separate design and tooling group", async () => {
     "tool preview",
     "handoff to Lab",
     "production disabled",
+    "read-only inspector",
   ]) {
     assert.match(engineering, new RegExp(status), `${status} status should be visible`);
   }
@@ -373,6 +375,7 @@ test("Lab and Engineering menus route only to existing safe diagnostic modules",
     "/workspace?module=lab_proof",
     "/workspace?module=emergence",
     "/workspace?module=admin_dev",
+    "/workspace?module=board_data",
   ]);
 
   const hrefs = Array.from(sections.matchAll(/href="([^"]+)"/g), (match) => match[1]);
