@@ -248,6 +248,27 @@ function assertNoGenerationAuthority(value = {}) {
   }
 }
 
+function assertSlugInputContract(value = {}) {
+  const contract = value.slugInputSourceContract;
+
+  assert.ok(contract, "expected slug source-of-truth contract");
+  assert.equal(contract.sourceAuthority, "committed selector state only: manualConstraints and acceptedDefaults");
+  assert.deepEqual(contract.allowedInputSources, ["manualConstraints", "acceptedDefaults"]);
+  assert.ok(contract.ignoredInputSources.includes("provisional auto-default-only values"));
+  assert.ok(contract.ignoredInputSources.includes("inherited-only values"));
+  assert.ok(contract.ignoredInputSources.includes("metadata-only display values"));
+  assert.ok(contract.ignoredInputSources.includes("product-spine display state"));
+  assert.ok(contract.ignoredInputSources.includes("payload preview display state"));
+  assert.equal(contract.productionSlugGenerationSafe, false);
+  assert.equal(contract.slugGenerationEnabled, false);
+  assert.equal(contract.slugGenerated, false);
+  assert.equal(contract.generatedSlug, null);
+  assert.equal(contract.finalSlugString, null);
+  assert.equal(contract.writes, false);
+  assert.equal(contract.generation, false);
+  assert.equal(contract.rawRowsExposed, false);
+}
+
 test("spec-build preview keeps fresh/default preview out of spec-ready state", () => {
   const value = preview(createModel());
 
@@ -261,6 +282,7 @@ test("spec-build preview keeps fresh/default preview out of spec-ready state", (
   assert.ok(value.missingBuildRequirements.includes("Runs"));
   assert.match(value.futureSlugSpecDependencyState, /blocked/);
   assertNoGenerationAuthority(value);
+  assertSlugInputContract(value);
 });
 
 test("complete core selection becomes spec-ready metadata only and not build-ready", () => {
@@ -319,6 +341,51 @@ test("Stage 2 build readiness accepts accepted defaults as committed selector st
   assert.equal(stageRows["Stage 3 — Factory Approved Inputs"], "false");
   assert.equal(stageRows["Stage 4 — Engine Outcome Proven"], "false");
   assert.equal(stageRows["Stage 5 — Standalone / Pro-grade Hardening"], "false");
+  assertNoGenerationAuthority(value);
+});
+
+test("business-stage indicators expose committed-state authority and downstream stages fail closed", () => {
+  const selectorState = createSelectorState();
+  completeSpecReadyCandidate(selectorState);
+  const value = preview(acceptBuildOrderContext(selectorState));
+
+  assert.equal(value.businessStageIndicatorContract.sourceAuthority, "committed selector state only for Stage 1 and Stage 2; downstream stages fail closed until implemented");
+  assert.equal(value.businessStageIndicatorContract.writes, false);
+  assert.equal(value.businessStageIndicatorContract.rawRowsExposed, false);
+  assert.deepEqual(value.businessStageIndicatorContract.stages.map((stage) => stage.label), [
+    "Stage 1 — Spec Ready",
+    "Stage 2 — Proof-of-Concept Buildable",
+    "Stage 3 — Factory Approved Inputs",
+    "Stage 4 — Engine Outcome Proven",
+    "Stage 5 — Standalone / Pro-grade Hardening",
+  ]);
+  assert.deepEqual(value.businessStageIndicatorContract.stages.map((stage) => stage.ready), [true, true, false, false, false]);
+  assert.match(value.businessStageIndicatorContract.stages[0].sourceAuthority, /provisional defaults do not count/);
+  assert.match(value.businessStageIndicatorContract.stages[1].sourceAuthority, /product-spine\/display rows do not count/);
+});
+
+test("slug source contract uses committed selector state only and fails closed", () => {
+  const selectorState = createSelectorState();
+  completeSpecReadyCandidate(selectorState);
+  const value = preview(acceptBuildOrderContext(selectorState));
+  const contract = value.slugInputSourceContract;
+  const authoritySources = new Set(contract.committedInputRows.map(([, detail]) => detail.includes("acceptedDefaults") ? "acceptedDefaults" : detail.includes("manualConstraints") ? "manualConstraints" : "unknown"));
+  const slugRows = rowsToObject(value.futureSlugSpecRows);
+
+  assertSlugInputContract(value);
+  assert.equal(contract.specReady, true);
+  assert.equal(contract.buildReady, true);
+  assert.equal(contract.sourceState, "metadata-ready only — production slug generation remains disabled/fail-closed");
+  assert.ok(contract.committedInputCount > 0);
+  assert.equal(contract.committedInputCount, contract.eligibleCommittedInputCount);
+  assert.equal(contract.blockedCommittedInputCount, 0);
+  assert.equal(authoritySources.has("manualConstraints"), true);
+  assert.equal(authoritySources.has("acceptedDefaults"), true);
+  assert.equal(authoritySources.has("unknown"), false);
+  assert.equal(slugRows["final slug string"], "none");
+  assert.equal(slugRows["slug input authority"], contract.sourceAuthority);
+  assert.match(slugRows["ignored slug sources"], /provisional auto-default-only values/);
+  assert.match(slugRows["ignored slug sources"], /product-spine display state/);
   assertNoGenerationAuthority(value);
 });
 

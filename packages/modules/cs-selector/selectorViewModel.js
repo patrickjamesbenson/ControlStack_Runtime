@@ -4576,6 +4576,78 @@ function readinessRowComplete(row = {}) {
   return !["blocked", "missing", "future-mapped", "disabled", "not-selected"].includes(status);
 }
 
+const SLUG_SOURCE_ALLOWED_INPUTS = Object.freeze(["manualConstraints", "acceptedDefaults"]);
+
+const SLUG_SOURCE_IGNORED_INPUTS = Object.freeze([
+  "provisional auto-default-only values",
+  "inherited-only values",
+  "metadata-only display values",
+  "product-spine display state",
+  "payload preview display state",
+]);
+
+function createSlugInputSourceContract({ committedSelectorConstraints = [], specReady = false, buildReady = false } = {}) {
+  const committedInputs = (Array.isArray(committedSelectorConstraints) ? committedSelectorConstraints : [])
+    .filter((constraint) => constraint && constraint.committedSelectorState === true)
+    .map((constraint) => ({
+      fieldKey: constraint.fieldKey,
+      label: constraint.label || constraint.fieldKey,
+      value: constraint.value || null,
+      valueLabel: constraint.valueLabel || constraint.value || null,
+      authoritySource: constraint.authoritySource === "acceptedDefaults" ? "acceptedDefaults" : "manualConstraints",
+      acceptedDefault: constraint.acceptedDefault === true,
+      manualConstraint: constraint.manualConstraint === true,
+      blocked: constraint.blocked === true,
+      status: constraint.blocked === true ? "blocked" : "eligible committed input",
+      writes: false,
+      rawRowsExposed: false,
+    }));
+  const eligibleInputs = committedInputs.filter((input) => input.blocked !== true && input.value);
+  const blockedInputs = committedInputs.filter((input) => input.blocked === true);
+  const productionSlugGenerationSafe = false;
+  const sourceState = !specReady
+    ? "blocked — Stage 1 Spec Ready is incomplete"
+    : !buildReady
+      ? "blocked — Stage 2 Proof-of-Concept Buildable is incomplete"
+      : "metadata-ready only — production slug generation remains disabled/fail-closed";
+  return {
+    title: "Slug source-of-truth contract",
+    readOnly: true,
+    previewOnly: true,
+    diagnosticOnly: false,
+    sourceAuthority: "committed selector state only: manualConstraints and acceptedDefaults",
+    allowedInputSources: [...SLUG_SOURCE_ALLOWED_INPUTS],
+    ignoredInputSources: [...SLUG_SOURCE_IGNORED_INPUTS],
+    sourceState,
+    specReady,
+    buildReady,
+    committedInputCount: committedInputs.length,
+    eligibleCommittedInputCount: eligibleInputs.length,
+    blockedCommittedInputCount: blockedInputs.length,
+    committedInputRows: committedInputs.map((input) => [input.label, `${input.valueLabel || input.value || PRODUCT_SPINE_EMPTY_VALUE} — ${input.authoritySource}${input.blocked ? " — blocked" : ""}`]),
+    blockedInputRows: blockedInputs.length
+      ? blockedInputs.map((input) => [input.label, input.valueLabel || input.value || "blocked"])
+      : [["blocked committed inputs", "none"]],
+    productionSlugGenerationSafe,
+    slugGenerationEnabled: false,
+    slugGenerated: false,
+    generatedSlug: null,
+    finalSlugString: null,
+    reason: productionSlugGenerationSafe
+      ? "Production slug generation may only consume eligible committed inputs."
+      : "Production slug generation is not implemented in this slice, so Runtime exposes the input contract and fails closed instead of inventing an unstable slug.",
+    boundaryCopy: [
+      "Only committed selector state may become future slug identity input.",
+      "Committed selector state means manualConstraints plus acceptedDefaults.",
+      "Provisional defaults, inherited values, metadata display values, product-spine rows, and payload preview rows are ignored for slug identity.",
+      "No slug string is generated until a production slug generator is explicitly approved.",
+    ],
+    writes: false,
+    generation: false,
+    rawRowsExposed: false,
+  };
+}
+
 function createSpecBuildRequirementStatus(requirement = {}, productSpine = {}, committedSelectorConstraints = []) {
   const committedConstraintMap = new Map((Array.isArray(committedSelectorConstraints) ? committedSelectorConstraints : []).map((item) => [item.fieldKey, item]));
   const fields = (Array.isArray(requirement.rows) ? requirement.rows : []).map((definition) => {
@@ -4672,12 +4744,17 @@ function createSpecBuildReadinessPreview({
   const selectedResultAccepted = selectedResultAcceptedForSpecBuild(selectedEngineResultHandoff);
   const downstreamBlocked = selectedResultAccepted !== true;
   const candidateState = specBuildCandidateState({ specReady, buildReady, defaultPreview, blockedCount });
+  const slugInputSourceContract = createSlugInputSourceContract({
+    committedSelectorConstraints: buildAuthorityConstraints,
+    specReady,
+    buildReady,
+  });
   const stageIndicators = [
-    { stage: 1, key: "specReady", label: "Stage 1 — Spec Ready", ready: specReady, authority: "committed selector state", failClosed: !specReady },
-    { stage: 2, key: "proofOfConceptBuildable", label: "Stage 2 — Proof-of-Concept Buildable", ready: buildReady, authority: "committed selector state only: manualConstraints or acceptedDefaults", failClosed: !buildReady },
-    { stage: 3, key: "factoryApprovedInputs", label: "Stage 3 — Factory Approved Inputs", ready: false, authority: "factory approval not implemented in Selector", failClosed: true },
-    { stage: 4, key: "engineOutcomeProven", label: "Stage 4 — Engine Outcome Proven", ready: false, authority: "Engine/RunTable proof remains downstream", failClosed: true },
-    { stage: 5, key: "standaloneProGradeHardening", label: "Stage 5 — Standalone / Pro-grade Hardening", ready: false, authority: "standalone/pro-grade hardening deferred", failClosed: true },
+    { stage: 1, key: "specReady", label: "Stage 1 — Spec Ready", ready: specReady, authority: "committed selector state", sourceAuthority: "manualConstraints or acceptedDefaults only; provisional defaults do not count", failClosed: !specReady },
+    { stage: 2, key: "proofOfConceptBuildable", label: "Stage 2 — Proof-of-Concept Buildable", ready: buildReady, authority: "committed selector state only: manualConstraints or acceptedDefaults", sourceAuthority: "manualConstraints or acceptedDefaults only; product-spine/display rows do not count", failClosed: !buildReady },
+    { stage: 3, key: "factoryApprovedInputs", label: "Stage 3 — Factory Approved Inputs", ready: false, authority: "factory approval not implemented in Selector", sourceAuthority: "not implemented — fail closed", failClosed: true },
+    { stage: 4, key: "engineOutcomeProven", label: "Stage 4 — Engine Outcome Proven", ready: false, authority: "Engine/RunTable proof remains downstream", sourceAuthority: "not implemented — fail closed", failClosed: true },
+    { stage: 5, key: "standaloneProGradeHardening", label: "Stage 5 — Standalone / Pro-grade Hardening", ready: false, authority: "standalone/pro-grade hardening deferred", sourceAuthority: "not implemented — fail closed", failClosed: true },
   ];
   const downstreamBlockers = SPEC_BUILD_READINESS_DOWNSTREAM_AUTHORITIES.map((blocker) => ({
     ...blocker,
@@ -4734,6 +4811,12 @@ function createSpecBuildReadinessPreview({
     buildGateState: buildReady ? "complete enough for future build slug/spec input metadata" : "incomplete — build/order context still required",
     stageIndicators,
     stageIndicatorRows: stageIndicators.map((stage) => [stage.label, stage.ready ? "true" : "false"]),
+    businessStageIndicatorContract: {
+      sourceAuthority: "committed selector state only for Stage 1 and Stage 2; downstream stages fail closed until implemented",
+      stages: stageIndicators,
+      writes: false,
+      rawRowsExposed: false,
+    },
     downstreamBlocked,
     selectedResultAccepted,
     manualConstraintCount: manualConstraints.length,
@@ -4777,8 +4860,11 @@ function createSpecBuildReadinessPreview({
       ["slug generated", "false"],
       ["spec generated", "false"],
       ["final slug string", "none"],
+      ["slug input authority", slugInputSourceContract.sourceAuthority],
+      ["ignored slug sources", slugInputSourceContract.ignoredInputSources.join("; ")],
       ["descriptor source", "donor specBuildDescriptor observed; runtime preview does not call or reproduce it"],
     ],
+    slugInputSourceContract,
     downstreamBlockers,
     downstreamBlockerRows: downstreamBlockers.map((blocker) => [blocker.label, blocker.status]),
     summaryRows: [
