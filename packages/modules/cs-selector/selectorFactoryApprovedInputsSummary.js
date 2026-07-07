@@ -1,4 +1,5 @@
 import { buildRuntimeAccessoryReservationFootholdSummary } from "../../workspace-kernel/engineRunTableRuntimeAccessoryReservationFootholdKernel.js";
+import { stableSha1 } from "../../workspace-kernel/engineRunTableRuntimePolicyIndexKernel.js";
 
 const STAGE3_SAFETY_FLAGS = Object.freeze({
   engineExecution: false,
@@ -41,6 +42,31 @@ const UNSAFE_TRUE_FIELDS = Object.freeze([
 ]);
 
 const RUN_CONSTRAINT_KEYS = Object.freeze(["runQty", "runLength", "runLengthMode"]);
+const STAGE3B_SELECTOR_BOARD_LENGTH_MM = 1400;
+const STAGE3B_SELECTOR_BOARD_PITCH_MM = 70;
+const STAGE3B_SELECTOR_BOARD_FAMILY_LENGTHS = Object.freeze([STAGE3B_SELECTOR_BOARD_LENGTH_MM]);
+const STAGE3B_SELECTOR_SUPPORTED_ACCESSORY_TYPES = Object.freeze([
+  "sensor",
+  "pir",
+  "microwave",
+  "daylight-sensor",
+  "power-feed",
+  "blank-cover",
+]);
+const STAGE3B_SELECTOR_POLICY_PAYLOAD = Object.freeze({
+  schemaId: "controlstack.runtime.selector.stage3b.safe-accessory-reservation-policy",
+  schemaVersion: 1,
+  boardLengthMm: STAGE3B_SELECTOR_BOARD_LENGTH_MM,
+  boardPitchMm: STAGE3B_SELECTOR_BOARD_PITCH_MM,
+  boardFamilyLengthsSortedDesc: STAGE3B_SELECTOR_BOARD_FAMILY_LENGTHS,
+  supportedAccessoryTypes: STAGE3B_SELECTOR_SUPPORTED_ACCESSORY_TYPES,
+  reservationUnit: "board-module",
+  reservationModules: 1,
+  endPlatePolicyMode: "sealed-zero-deduction-stage3b-foothold",
+  lengthAdjustmentPreference: "cut-back",
+  joinBridgePolicy: "physical join placement not represented at Stage 3B",
+});
+const STAGE3B_SELECTOR_POLICY_FINGERPRINT = `safe-stage3b-policy:${stableSha1(STAGE3B_SELECTOR_POLICY_PAYLOAD)}`;
 
 function isPlainObject(value) {
   return value !== null && typeof value === "object" && !Array.isArray(value);
@@ -66,6 +92,15 @@ function safeString(value, fallback = "") {
     .replace(/\s+/g, " ")
     .slice(0, 160)
     .trim() || fallback;
+}
+
+function safeToken(value, fallback = "") {
+  const token = safeString(value, fallback)
+    .toLowerCase()
+    .replace(/[^0-9a-z_.:-]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 120);
+  return token || fallback;
 }
 
 function constraintMap(committedSelectorConstraints = []) {
@@ -160,6 +195,183 @@ function zeroAccessoryReservationSummary() {
   };
 }
 
+function stage3BFailClosedReservationSummary(blocker, diagnostic, extra = {}) {
+  return {
+    schemaId: "controlstack.runtime.selector.factory-approved-inputs.stage3b-reservation-summary",
+    schemaVersion: 1,
+    state: "stage3b_accessory_reservation_fail_closed",
+    ok: false,
+    blocker,
+    accessoryReservationReady: false,
+    boardFillInputReady: false,
+    reservationCount: extra.reservationCount ?? 0,
+    reservationLengthMm: extra.reservationLengthMm ?? 0,
+    reservationLengthBand: extra.reservationLengthBand || "unresolved",
+    lengthAdjustmentMode: extra.lengthAdjustmentMode || "unresolved",
+    mutationRepresentation: "fail-closed-no-cut-mutation-authority",
+    safeSummaryOnly: true,
+    readOnly: true,
+    diagnosticOnly: true,
+    failClosedDiagnostics: [blocker, diagnostic],
+    warnings: [],
+    rawAccessoryRowsReturned: false,
+    rawEnginePayloadReturned: false,
+    donorEngineInvoked: false,
+    runtimeDataMutated: false,
+    selectedResultPersisted: false,
+    runTableGenerated: false,
+    iesGenerated: false,
+    routesAdded: false,
+    postEndpointsAdded: false,
+    safetyFlags: { ...STAGE3_SAFETY_FLAGS },
+  };
+}
+
+function firstSafeRun(runIntakePreviewSummary = {}) {
+  const runs = Array.isArray(runIntakePreviewSummary.safeRunIntentSummaries)
+    ? runIntakePreviewSummary.safeRunIntentSummaries
+    : [];
+  return runs.length === 1 ? runs[0] : null;
+}
+
+function buildStage3BReservationSummaryFromSafePreviews({
+  committedSelectorConstraints = [],
+  committedRunIntakeSummary = {},
+  runIntakePreviewSummary = {},
+  runAccessoryPlacementPreviewSummary = {},
+} = {}) {
+  const accessoryIntentCount = parsePositiveInteger(runAccessoryPlacementPreviewSummary.accessoryIntentCount) || 0;
+  if (accessoryIntentCount === 0) return null;
+  if (committedRunIntakeSummary.ready !== true) {
+    return stage3BFailClosedReservationSummary(
+      "committed-run-intake-not-ready",
+      "Stage 3B accessory reservation requires committed run intake before sealed reservation authority can be derived.",
+    );
+  }
+  if (runIntakePreviewSummary.runIntakePreviewReady !== true) {
+    return stage3BFailClosedReservationSummary(
+      "run-intake-preview-not-ready",
+      "Stage 3B accessory reservation requires exactly one complete safe run-intake preview row.",
+    );
+  }
+  if (runAccessoryPlacementPreviewSummary.runAccessoryPlacementPreviewReady !== true) return null;
+
+  const safeRun = firstSafeRun(runIntakePreviewSummary);
+  if (!safeRun) {
+    return stage3BFailClosedReservationSummary(
+      "stage3b-single-run-reservation-required",
+      "Stage 3B currently represents one complete run at a time; multi-run accessory reservation remains fail-closed.",
+    );
+  }
+
+  const runsWithAccessoryIntentCount = parsePositiveInteger(runAccessoryPlacementPreviewSummary.runsWithAccessoryIntentCount) || 0;
+  if (runsWithAccessoryIntentCount !== 1) {
+    return stage3BFailClosedReservationSummary(
+      "stage3b-single-run-accessory-intent-required",
+      "Stage 3B currently requires all accessory intent to belong to the same sealed run-intake row.",
+    );
+  }
+
+  const safeRows = Array.isArray(runAccessoryPlacementPreviewSummary.safeAccessoryIntentRows)
+    ? runAccessoryPlacementPreviewSummary.safeAccessoryIntentRows
+    : [];
+  if (safeRows.length !== accessoryIntentCount) {
+    return stage3BFailClosedReservationSummary(
+      "stage3b-accessory-intent-summary-mismatch",
+      "Stage 3B accessory intent count must match the sealed safe accessory intent rows.",
+    );
+  }
+
+  const safeRunId = safeString(safeRun.id);
+  const safeRunLabel = safeString(safeRun.label);
+  const mismatchedRun = safeRows.find((row) => {
+    const rowRunId = safeString(row.runId);
+    const rowRunLabel = safeString(row.runLabel || row.runReference);
+    return (rowRunId && safeRunId && rowRunId !== safeRunId)
+      || (!rowRunId && rowRunLabel && safeRunLabel && rowRunLabel !== safeRunLabel);
+  });
+  if (mismatchedRun) {
+    return stage3BFailClosedReservationSummary(
+      "stage3b-accessory-run-mismatch",
+      "Stage 3B accessory intent must reference the single sealed run-intake row.",
+    );
+  }
+
+  const runLengthMm = parsePositiveInteger(safeRun.runLengthMm) || committedRunIntakeSummary.runLengthMm;
+  if (!runLengthMm) {
+    return stage3BFailClosedReservationSummary(
+      "missing-run-length",
+      "Stage 3B accessory reservation requires a positive sealed run length.",
+    );
+  }
+
+  const requests = [];
+  for (const row of safeRows) {
+    const accessoryType = safeToken(row.accessoryTypeToken);
+    const quantity = parsePositiveInteger(row.quantityReceivingAccessory);
+    if (!accessoryType || !quantity) {
+      return stage3BFailClosedReservationSummary(
+        "stage3b-accessory-request-not-safe",
+        "Stage 3B accessory reservation requires sealed accessory type and positive quantity intent.",
+      );
+    }
+    requests.push({
+      accessoryType,
+      quantity,
+      placementIntent: safeToken(row.placementPreference, "unspecified"),
+    });
+  }
+
+  const sourceFingerprintPayload = {
+    schemaId: "controlstack.runtime.selector.stage3b.safe-accessory-reservation-source",
+    schemaVersion: 1,
+    run: {
+      id: safeRunId,
+      label: safeRunLabel,
+      quantity: parsePositiveInteger(safeRun.quantity) || 0,
+      runLengthMm,
+      lengthMode: safeToken(safeRun.lengthMode, "unresolved"),
+    },
+    requests,
+  };
+  const sourceFingerprint = `safe-stage3b-source:${stableSha1(sourceFingerprintPayload)}`;
+  const map = constraintMap(committedSelectorConstraints);
+  const selectedTierOrProfile = safeString(map.get("tier")?.value || map.get("electricalClass")?.valueLabel || map.get("electricalClass")?.value, "selector-stage3b");
+  const productFamilyToken = safeToken(map.get("system")?.value || map.get("system")?.valueLabel, "selector-system");
+
+  return buildRuntimeAccessoryReservationFootholdSummary({
+    runLengthMm,
+    selectedTierOrProfile,
+    productFamilyToken,
+    boardLengthMm: STAGE3B_SELECTOR_BOARD_LENGTH_MM,
+    boardPitchMm: STAGE3B_SELECTOR_BOARD_PITCH_MM,
+    boardFamilyLengthsSummary: {
+      boardLengthMm: STAGE3B_SELECTOR_BOARD_LENGTH_MM,
+      boardPitchMm: STAGE3B_SELECTOR_BOARD_PITCH_MM,
+      boardFamilyLengthsSortedDesc: [...STAGE3B_SELECTOR_BOARD_FAMILY_LENGTHS],
+    },
+    endPlatePolicySummary: {
+      startDeductionMm: 0,
+      endDeductionMm: 0,
+      mode: "sealed-zero-deduction-stage3b-foothold",
+    },
+    accessoryRequestsSummary: {
+      requests,
+      sourceFingerprint,
+    },
+    accessoryPolicySummary: {
+      supportedAccessoryTypes: [...STAGE3B_SELECTOR_SUPPORTED_ACCESSORY_TYPES],
+      reservationUnit: "board-module",
+      reservationModules: 1,
+      policyFingerprint: STAGE3B_SELECTOR_POLICY_FINGERPRINT,
+      rawAccessoryRowsReturned: false,
+    },
+    lengthAdjustmentPreference: "cut-back",
+    policyFingerprint: STAGE3B_SELECTOR_POLICY_FINGERPRINT,
+    sourceFingerprint,
+  });
+}
+
 function reservationSummaryForStage3({ accessoryIntentCount = 0, accessoryReservationSummary = null } = {}) {
   if (accessoryIntentCount === 0) return zeroAccessoryReservationSummary();
   if (isPlainObject(accessoryReservationSummary)) return accessoryReservationSummary;
@@ -204,9 +416,17 @@ export function buildSelectorFactoryApprovedInputsSummary({
 } = {}) {
   const committedRunIntakeSummary = buildCommittedRunIntakeSummary(committedSelectorConstraints);
   const accessoryPlacementIntentSummary = buildAccessoryPlacementIntentSummary(runAccessoryPlacementPreviewSummary);
+  const derivedAccessoryReservationSummary = isPlainObject(accessoryReservationSummary)
+    ? accessoryReservationSummary
+    : buildStage3BReservationSummaryFromSafePreviews({
+      committedSelectorConstraints,
+      committedRunIntakeSummary,
+      runIntakePreviewSummary,
+      runAccessoryPlacementPreviewSummary,
+    });
   const selectedReservationSummary = reservationSummaryForStage3({
     accessoryIntentCount: accessoryPlacementIntentSummary.accessoryIntentCount,
-    accessoryReservationSummary,
+    accessoryReservationSummary: derivedAccessoryReservationSummary,
   });
   const accessoryReservationReady = selectedReservationSummary?.ok === true
     && selectedReservationSummary?.accessoryReservationReady === true

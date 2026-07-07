@@ -196,7 +196,12 @@ function addBuildOrderContext(selectorState) {
   return createModel({ selectorState });
 }
 
-function acceptBuildOrderContext(selectorState) {
+function acceptBuildOrderContext(selectorState, overrides = {}) {
+  const runQty = overrides.runQty || "2";
+  const runLength = overrides.runLength || "3500";
+  const runLengthLabel = overrides.runLengthLabel || `${runLength} mm`;
+  const runLengthMode = overrides.runLengthMode || "cut_to_length";
+  const runLengthModeLabel = overrides.runLengthModeLabel || "Cut to length";
   selectorState.acceptDbBackedSelectorDefaults([
     { fieldKey: "mountStyle", label: "Mount style", value: "Suspended", valueLabel: "Suspended" },
     { fieldKey: "mountSelection", label: "Mount selection", value: "Wire", valueLabel: "Wire" },
@@ -204,9 +209,9 @@ function acceptBuildOrderContext(selectorState) {
     { fieldKey: "finishCover", label: "Cover", value: "White (Textured)", valueLabel: "White (Textured)" },
     { fieldKey: "finishEnd", label: "End plates", value: "White (Textured)", valueLabel: "White (Textured)" },
     { fieldKey: "finishFlex", label: "Flex colour", value: "White Flex", valueLabel: "White Flex" },
-    { fieldKey: "runQty", label: "Run qty", value: "2", valueLabel: "2" },
-    { fieldKey: "runLength", label: "Run length", value: "3500", valueLabel: "3500 mm" },
-    { fieldKey: "runLengthMode", label: "Length mode", value: "cut_to_length", valueLabel: "Cut to length" },
+    { fieldKey: "runQty", label: "Run qty", value: runQty, valueLabel: runQty },
+    { fieldKey: "runLength", label: "Run length", value: runLength, valueLabel: runLengthLabel },
+    { fieldKey: "runLengthMode", label: "Length mode", value: runLengthMode, valueLabel: runLengthModeLabel },
   ]);
   return createModel({ selectorState });
 }
@@ -370,7 +375,7 @@ test("business-stage indicators expose committed-state authority and downstream 
   assert.equal(value.factoryApprovedInputsSummary.iesGenerated, false);
 });
 
-test("Stage 3 requires safe reservation summary when accessory placement intent exists", () => {
+test("Stage 3B fails closed when non-zero accessory reservation cannot produce a valid board-fill input", () => {
   const selectorState = createSelectorState();
   completeSpecReadyCandidate(selectorState);
   selectorState.setRunIntakeRows([
@@ -385,8 +390,38 @@ test("Stage 3 requires safe reservation summary when accessory placement intent 
   assert.equal(value.buildReady, true);
   assert.equal(value.factoryApprovedInputsReady, false);
   assert.equal(value.factoryApprovedInputsSummary.accessoryReservationRequired, true);
-  assert.equal(value.factoryApprovedInputsSummary.blocker, "missing-policy-fingerprint");
+  assert.equal(value.factoryApprovedInputsSummary.blocker, "no-valid-board-reservation");
   assert.equal(stageRows["Stage 3 — Factory Approved Inputs"], "false");
+  assert.equal(stageRows["Stage 4 — Engine Outcome Proven"], "false");
+  assertNoGenerationAuthority(value);
+});
+
+test("Stage 3B accepts non-zero accessory intent when safe reservation authority exists", () => {
+  const selectorState = createSelectorState();
+  completeSpecReadyCandidate(selectorState);
+  selectorState.setRunIntakeRows([
+    { id: "run-1", runNumber: 1, label: "Run 1", quantity: "2", runLengthMm: "5600", lengthMode: "cut_to_length" },
+  ]);
+  selectorState.setRunAccessoryPlacementIntents([
+    { runReference: "Run 1", accessoryType: "sensor", quantity: "1", placementPreference: "mid", status: "confirmed" },
+  ]);
+  const value = preview(acceptBuildOrderContext(selectorState, { runLength: "5600", runLengthLabel: "5600 mm" }));
+  const stageRows = rowsToObject(value.stageIndicatorRows);
+  const reservation = value.factoryApprovedInputsSummary.accessoryReservationSummary;
+
+  assert.equal(value.buildReady, true);
+  assert.equal(value.factoryApprovedInputsReady, true);
+  assert.equal(value.factoryApprovedInputsSummary.stage3Mode, "accessory-reservation-required");
+  assert.equal(value.factoryApprovedInputsSummary.accessoryReservationRequired, true);
+  assert.equal(reservation.ok, true);
+  assert.equal(reservation.accessoryReservationReady, true);
+  assert.equal(reservation.boardFillInputReady, true);
+  assert.equal(reservation.reservationCount, 1);
+  assert.equal(reservation.reservationLengthMm, 1400);
+  assert.equal(reservation.boardFillInputLengthMm, 4200);
+  assert.match(reservation.policyFingerprint, /^safe-stage3b-policy:[0-9a-f]{40}$/);
+  assert.match(reservation.sourceFingerprint, /^safe-stage3b-source:[0-9a-f]{40}$/);
+  assert.equal(stageRows["Stage 3 — Factory Approved Inputs"], "true");
   assert.equal(stageRows["Stage 4 — Engine Outcome Proven"], "false");
   assertNoGenerationAuthority(value);
 });
