@@ -154,6 +154,29 @@ test("valid run accessory intent appears in preview", () => {
   assertDownstreamBlocked(preview);
 });
 
+test("zero accessory intents are valid for empty primary run proof", () => {
+  const preview = previewFor({ intents: [] });
+  const summary = Object.fromEntries(preview.summaryRows);
+
+  assert.equal(preview.runAccessoryPlacementPreviewReady, true);
+  assert.equal(preview.accessoryIntentCount, 0);
+  assert.equal(preview.runsWithAccessoryIntentCount, 0);
+  assert.equal(preview.unresolvedAccessoryIntentCount, 0);
+  assert.deepEqual(preview.safeRunAccessoryIntentSummaries, []);
+  assert.deepEqual(preview.safeAccessoryIntentRows, []);
+  assert.deepEqual(preview.missingOrInvalidDiagnostics, []);
+  assert.equal(summary.runAccessoryPlacementPreviewReady, "true");
+  assert.equal(summary.accessoryIntentCount, "0");
+  assertDownstreamBlocked(preview);
+});
+
+test("malformed accessory intent source does not count as zero-accessory ready", () => {
+  const preview = buildSelectorRunAccessoryPlacementPreview({ runs: baseRuns(), intents: { accessoryTypeToken: "sensor" } });
+
+  assert.equal(preview.runAccessoryPlacementPreviewReady, false);
+  assert.match(preview.missingOrInvalidDiagnostics.join("|"), /invalid-accessory-intents-source/);
+});
+
 test("accessory quantity cannot exceed run quantity", () => {
   const preview = previewFor({ intents: [baseIntent({ quantityReceivingAccessory: 3 })] });
 

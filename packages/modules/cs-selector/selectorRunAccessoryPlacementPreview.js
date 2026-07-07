@@ -331,15 +331,17 @@ function groupIntentSummaries(evaluatedIntents = []) {
 
 export function buildSelectorRunAccessoryPlacementPreview(input = {}, maybeIntents = undefined) {
   const runs = Array.isArray(input) ? input : input.runs || [];
-  const intents = Array.isArray(input) ? maybeIntents || [] : input.intents || input.accessoryIntents || [];
+  const intentSource = Array.isArray(input) ? maybeIntents : firstDefined(input.intents, input.accessoryIntents, []);
+  const intents = Array.isArray(intentSource) ? intentSource : [];
   const { lookup } = buildRunLookup(runs);
-  const evaluatedIntents = Array.isArray(intents) ? intents.map((intent, index) => evaluateIntentWithLookup(intent, lookup, index)) : [];
+  const evaluatedIntents = intents.map((intent, index) => evaluateIntentWithLookup(intent, lookup, index));
   const accessoryIntentCount = evaluatedIntents.length;
   const unresolvedAccessoryIntentCount = evaluatedIntents.filter((intent) => intent.unresolved).length;
   const runsWithAccessoryIntentCount = new Set(evaluatedIntents.filter((intent) => intent.run).map((intent) => intent.run.id)).size;
-  const intentDiagnostics = evaluatedIntents.flatMap((intent) => intent.diagnostics.map((diagnostic) => `${intent.intentId}:${diagnostic}`));
+  const sourceDiagnostics = intentSource === undefined || intentSource === null || Array.isArray(intentSource) ? [] : ["invalid-accessory-intents-source"];
+  const intentDiagnostics = [...sourceDiagnostics, ...evaluatedIntents.flatMap((intent) => intent.diagnostics.map((diagnostic) => `${intent.intentId}:${diagnostic}`))];
   const downstreamDiagnostics = [...DOWNSTREAM_BLOCKING_DIAGNOSTICS];
-  const runAccessoryPlacementPreviewReady = accessoryIntentCount > 0 && intentDiagnostics.length === 0;
+  const runAccessoryPlacementPreviewReady = intentDiagnostics.length === 0;
   const safeRunAccessoryIntentSummaries = groupIntentSummaries(evaluatedIntents);
 
   return {
