@@ -2063,6 +2063,47 @@ function createDbManualConstraints(selectorReferenceStatus = {}, local = {}) {
   });
 }
 
+function createDbCommittedSelectorConstraints(selectorReferenceStatus = {}, local = {}) {
+  const fields = [
+    ...enrichDbOptionFields(selectorReferenceStatus, local),
+    ...enrichDbWorkflowSections(selectorReferenceStatus, local).flatMap((section) => Array.isArray(section.fields) ? section.fields : []),
+  ];
+  const manualRecords = dbConstraintMap(local);
+  const acceptedDefaultRecords = dbAcceptedDefaultMap(local);
+  const committedRecords = {
+    ...acceptedDefaultRecords,
+    ...manualRecords,
+  };
+  return Object.entries(committedRecords).map(([fieldKey, record]) => {
+    const field = fields.find((item) => item.fieldKey === fieldKey);
+    const option = field?.options?.find((item) => optionValuesMatch(item.value, record.value));
+    const recalledTestCaseConstraint = /test-case recall/i.test(String(record.source || ""));
+    const optionMissing = Boolean(recalledTestCaseConstraint && String(record.value || "").trim() && field && Array.isArray(field.options) && !option);
+    const blocked = option?.blocked === true || optionMissing;
+    const manual = Object.prototype.hasOwnProperty.call(manualRecords, fieldKey);
+    const acceptedDefault = !manual && Object.prototype.hasOwnProperty.call(acceptedDefaultRecords, fieldKey);
+    return {
+      fieldKey,
+      label: field?.label || record.label || fieldKey,
+      value: record.value,
+      valueLabel: option?.label || record.valueLabel || record.value,
+      status: blocked ? "blocked" : (acceptedDefault ? "accepted default" : "manual constraint"),
+      blocked,
+      manualConstraint: manual,
+      acceptedDefault,
+      committedSelectorState: true,
+      authoritySource: manual ? "manualConstraints" : "acceptedDefaults",
+      reason: option?.blockedReason || (optionMissing
+        ? "Recalled value is unavailable or incompatible under current source-backed options; preserved for review, not faked valid."
+        : acceptedDefault
+          ? "accepted default is committed selector state"
+          : "manual selection is treated as a durable constraint"),
+      mutable: true,
+      writes: false,
+    };
+  });
+}
+
 function createDbAvailableConsequence(fields = [], fieldKey, constraints = {}) {
   const field = fields.find((item) => item.fieldKey === fieldKey);
   if (!field || constraints[fieldKey]) return null;
@@ -4535,8 +4576,8 @@ function readinessRowComplete(row = {}) {
   return !["blocked", "missing", "future-mapped", "disabled", "not-selected"].includes(status);
 }
 
-function createSpecBuildRequirementStatus(requirement = {}, productSpine = {}, manualConstraints = []) {
-  const manualConstraintMap = new Map((Array.isArray(manualConstraints) ? manualConstraints : []).map((item) => [item.fieldKey, item]));
+function createSpecBuildRequirementStatus(requirement = {}, productSpine = {}, committedSelectorConstraints = []) {
+  const committedConstraintMap = new Map((Array.isArray(committedSelectorConstraints) ? committedSelectorConstraints : []).map((item) => [item.fieldKey, item]));
   const fields = (Array.isArray(requirement.rows) ? requirement.rows : []).map((definition) => {
     const row = productSpineRow(productSpine, definition.sectionKey, definition.rowKey);
     const candidateFieldKeys = [
@@ -4544,23 +4585,32 @@ function createSpecBuildRequirementStatus(requirement = {}, productSpine = {}, m
       ...(Array.isArray(row?.fieldKeys) ? row.fieldKeys : []),
       definition.rowKey,
     ].filter(Boolean);
-    const manualConstraint = candidateFieldKeys.map((fieldKey) => manualConstraintMap.get(fieldKey)).find(Boolean) || null;
-    const manualDisplayValue = manualConstraint?.valueLabel || manualConstraint?.value || "";
+    const committedConstraint = candidateFieldKeys.map((fieldKey) => committedConstraintMap.get(fieldKey)).find(Boolean) || null;
+    const committedDisplayValue = committedConstraint?.valueLabel || committedConstraint?.value || "";
     const rowComplete = readinessRowComplete(row);
-    const complete = rowComplete || Boolean(manualConstraint);
+    const committedComplete = Boolean(committedConstraint && committedConstraint.blocked !== true && committedConstraint.value);
     return {
       key: `${definition.sectionKey}.${definition.rowKey}`,
       sectionKey: definition.sectionKey,
       rowKey: definition.rowKey,
       label: definition.label || definition.rowKey,
-      displayValue: rowComplete ? readinessDisplayValue(row) : (manualDisplayValue || readinessDisplayValue(row) || PRODUCT_SPINE_EMPTY_VALUE),
-      status: complete ? (row?.status || manualConstraint?.status || "manual-constraint") : (row?.status || "missing"),
-      complete,
-      reason: rowComplete
-        ? (row?.reason || "Source-backed row is present for future build-ready metadata.")
-        : manualConstraint
-          ? "Durable manual build/order constraint is present; this is readiness metadata only and does not write or generate."
-          : (row?.reason || "Required for future build-ready metadata; no value is faked."),
+      displayValue: committedDisplayValue || readinessDisplayValue(row) || PRODUCT_SPINE_EMPTY_VALUE,
+      status: committedComplete
+        ? (committedConstraint?.status || "committed-selector-state")
+        : committedConstraint?.blocked === true
+          ? "blocked"
+          : "missing",
+      complete: committedComplete,
+      authoritySource: committedComplete ? (committedConstraint.authoritySource || "committed selector state") : "not-committed",
+      displayRowPresent: rowComplete,
+      displayRowStatus: row?.status || "missing",
+      reason: committedComplete
+        ? `${committedConstraint.authoritySource || "committed selector state"} satisfies Stage 2 build/order readiness; product-spine rows remain display only.`
+        : committedConstraint?.blocked === true
+          ? (committedConstraint.reason || "Committed selector state is blocked or incompatible, so Stage 2 fails closed.")
+          : rowComplete
+            ? "Product-spine/display value is visible, but Stage 2 requires committed selector state from manualConstraints or acceptedDefaults."
+            : (row?.reason || "Required for future build-ready metadata; no committed selector state is present."),
       writes: false,
       rawRowsExposed: false,
     };
@@ -4575,6 +4625,7 @@ function createSpecBuildRequirementStatus(requirement = {}, productSpine = {}, m
     fields,
     status: missingFields.length === 0 ? "complete" : "missing",
     summary: missingFields.length ? `missing ${missingFields.join(", ")}` : "complete",
+    authority: "committed selector state only: manualConstraints or acceptedDefaults",
     writes: false,
     rawRowsExposed: false,
   };
@@ -4603,12 +4654,14 @@ function createSpecBuildReadinessPreview({
   sourceSpecReadinessExplanation = {},
   disabledHandoffSummary = {},
   manualConstraints = [],
+  committedSelectorConstraints = null,
   autoConsequences = [],
   blockedItems = [],
   summary = {},
 } = {}) {
   const spec = productSpine.specGateCandidateReadiness || payloadPreview.specGateCandidateReadiness || {};
-  const buildRequirements = SPEC_BUILD_READINESS_BUILD_REQUIREMENTS.map((requirement) => createSpecBuildRequirementStatus(requirement, productSpine, manualConstraints));
+  const buildAuthorityConstraints = Array.isArray(committedSelectorConstraints) ? committedSelectorConstraints : manualConstraints;
+  const buildRequirements = SPEC_BUILD_READINESS_BUILD_REQUIREMENTS.map((requirement) => createSpecBuildRequirementStatus(requirement, productSpine, buildAuthorityConstraints));
   const missingBuildRequirements = buildRequirements.filter((requirement) => requirement.complete !== true).map((requirement) => requirement.label);
   const missingSpecRequirements = Array.isArray(spec.missingRequirements) ? [...spec.missingRequirements] : [];
   const blockedRows = Array.isArray(spec.blockedIncompatibleSelections) ? spec.blockedIncompatibleSelections : [];
@@ -4619,6 +4672,13 @@ function createSpecBuildReadinessPreview({
   const selectedResultAccepted = selectedResultAcceptedForSpecBuild(selectedEngineResultHandoff);
   const downstreamBlocked = selectedResultAccepted !== true;
   const candidateState = specBuildCandidateState({ specReady, buildReady, defaultPreview, blockedCount });
+  const stageIndicators = [
+    { stage: 1, key: "specReady", label: "Stage 1 — Spec Ready", ready: specReady, authority: "committed selector state", failClosed: !specReady },
+    { stage: 2, key: "proofOfConceptBuildable", label: "Stage 2 — Proof-of-Concept Buildable", ready: buildReady, authority: "committed selector state only: manualConstraints or acceptedDefaults", failClosed: !buildReady },
+    { stage: 3, key: "factoryApprovedInputs", label: "Stage 3 — Factory Approved Inputs", ready: false, authority: "factory approval not implemented in Selector", failClosed: true },
+    { stage: 4, key: "engineOutcomeProven", label: "Stage 4 — Engine Outcome Proven", ready: false, authority: "Engine/RunTable proof remains downstream", failClosed: true },
+    { stage: 5, key: "standaloneProGradeHardening", label: "Stage 5 — Standalone / Pro-grade Hardening", ready: false, authority: "standalone/pro-grade hardening deferred", failClosed: true },
+  ];
   const downstreamBlockers = SPEC_BUILD_READINESS_DOWNSTREAM_AUTHORITIES.map((blocker) => ({
     ...blocker,
     blocked: blocker.key === "selectedResult" ? !selectedResultAccepted : true,
@@ -4672,6 +4732,8 @@ function createSpecBuildReadinessPreview({
     buildReady,
     buildGateComplete: buildReady,
     buildGateState: buildReady ? "complete enough for future build slug/spec input metadata" : "incomplete — build/order context still required",
+    stageIndicators,
+    stageIndicatorRows: stageIndicators.map((stage) => [stage.label, stage.ready ? "true" : "false"]),
     downstreamBlocked,
     selectedResultAccepted,
     manualConstraintCount: manualConstraints.length,
@@ -5440,6 +5502,7 @@ function createDbBackedSelectorSurface(selectorReferenceStatus = {}, local = {},
   const presentationClassification = createPresentationClassificationSummary(workflowSections);
   const defaultAcceptance = createDefaultAcceptanceSummary(workflowSections);
   const manualConstraints = createDbManualConstraints(selectorReferenceStatus, local);
+  const committedSelectorConstraints = createDbCommittedSelectorConstraints(selectorReferenceStatus, local);
   const payloadConsequences = Array.isArray(payload.autoConsequences) ? payload.autoConsequences : [];
   const localConsequences = createDbAutoConsequences(fields, local);
   const presentationConsequences = createPresentationAutoConsequences(workflowSections);
@@ -5552,6 +5615,7 @@ function createDbBackedSelectorSurface(selectorReferenceStatus = {}, local = {},
     sourceSpecReadinessExplanation,
     disabledHandoffSummary,
     manualConstraints,
+    committedSelectorConstraints,
     autoConsequences,
     blockedItems,
     summary,

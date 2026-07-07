@@ -196,6 +196,21 @@ function addBuildOrderContext(selectorState) {
   return createModel({ selectorState });
 }
 
+function acceptBuildOrderContext(selectorState) {
+  selectorState.acceptDbBackedSelectorDefaults([
+    { fieldKey: "mountStyle", label: "Mount style", value: "Suspended", valueLabel: "Suspended" },
+    { fieldKey: "mountSelection", label: "Mount selection", value: "Wire", valueLabel: "Wire" },
+    { fieldKey: "bodyFinish", label: "Body finish", value: "White (Textured)", valueLabel: "White (Textured)" },
+    { fieldKey: "finishCover", label: "Cover", value: "White (Textured)", valueLabel: "White (Textured)" },
+    { fieldKey: "finishEnd", label: "End plates", value: "White (Textured)", valueLabel: "White (Textured)" },
+    { fieldKey: "finishFlex", label: "Flex colour", value: "White Flex", valueLabel: "White Flex" },
+    { fieldKey: "runQty", label: "Run qty", value: "2", valueLabel: "2" },
+    { fieldKey: "runLength", label: "Run length", value: "3500", valueLabel: "3500 mm" },
+    { fieldKey: "runLengthMode", label: "Length mode", value: "cut_to_length", valueLabel: "Cut to length" },
+  ]);
+  return createModel({ selectorState });
+}
+
 function preview(model) {
   const result = model.selectorSurface.specBuildReadinessPreview;
   assert.ok(result, "expected spec-build readiness preview on product surface");
@@ -283,6 +298,36 @@ test("build readiness requires mounting, finishes, and run/order context beyond 
   assert.equal(value.downstreamBlocked, true);
   assert.match(value.futureSlugSpecDependencyState, /no slug or spec is generated here/);
   assertNoGenerationAuthority(value);
+});
+
+test("Stage 2 build readiness accepts accepted defaults as committed selector state", () => {
+  const selectorState = createSelectorState();
+  completeSpecReadyCandidate(selectorState);
+  const value = preview(acceptBuildOrderContext(selectorState));
+  const buildRows = rowsToObject(value.missingBuildRequirementRows);
+  const stageRows = rowsToObject(value.stageIndicatorRows);
+
+  assert.equal(value.candidateState, "build-ready candidate");
+  assert.equal(value.specReady, true);
+  assert.equal(value.buildReady, true);
+  assert.deepEqual(value.missingBuildRequirements, []);
+  assert.equal(buildRows.Mounting, "complete");
+  assert.equal(buildRows.Finishes, "complete");
+  assert.equal(buildRows.Runs, "complete");
+  assert.equal(stageRows["Stage 1 — Spec Ready"], "true");
+  assert.equal(stageRows["Stage 2 — Proof-of-Concept Buildable"], "true");
+  assert.equal(stageRows["Stage 3 — Factory Approved Inputs"], "false");
+  assert.equal(stageRows["Stage 4 — Engine Outcome Proven"], "false");
+  assert.equal(stageRows["Stage 5 — Standalone / Pro-grade Hardening"], "false");
+  assertNoGenerationAuthority(value);
+});
+
+test("Stage 2 source guard keeps product-spine display rows out of build authority", async () => {
+  const source = await import("node:fs/promises").then((fs) => fs.readFile(new URL("../packages/modules/cs-selector/selectorViewModel.js", import.meta.url), "utf8"));
+
+  assert.doesNotMatch(source, /const complete = rowComplete \|\| Boolean\(manualConstraint\)/);
+  assert.match(source, /committed selector state only: manualConstraints or acceptedDefaults/);
+  assert.match(source, /Product-spine\/display value is visible, but Stage 2 requires committed selector state/);
 });
 
 test("incompatible manual selections block readiness without being cleared", () => {
