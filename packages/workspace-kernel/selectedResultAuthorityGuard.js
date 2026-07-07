@@ -7,6 +7,7 @@ export const SELECTED_RESULT_AUTHORITY_GUARD_SCHEMA_VERSION = 1;
 export const SELECTED_RESULT_AUTHORITY_STATES = Object.freeze({
   readonlyEngineSummaryOnly: "readonly_engine_summary_only",
   engineVerifiedSelectedResultReady: "engine_verified_selected_result_ready",
+  acceptedSelectedResultAuthority: "accepted_selected_result_authority",
   staleVerifyAgain: "stale_verify_again",
   fingerprintMismatch: "fingerprint_mismatch",
   notComparedFailClosed: "not_compared_fail_closed",

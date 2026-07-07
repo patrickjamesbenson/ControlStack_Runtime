@@ -11,6 +11,7 @@ import { buildRuntimeControlledDonorEngineVerifyBridgeSummary } from "../../work
 import { buildRuntimeSelectedResultHandoffScaffoldSummary } from "../../workspace-kernel/engineRunTableSelectedResultHandoffScaffold.js";
 import { buildRuntimeIesHandoffReadinessScaffoldSummary } from "../../workspace-kernel/engineRunTableIesHandoffReadinessScaffold.js";
 import { buildSelectedResultAuthorityReadinessPreflight } from "../../workspace-kernel/selectedResultAuthorityReadinessPreflight.js";
+import { buildAcceptedSelectedResultAuthorityGate } from "../../workspace-kernel/acceptedSelectedResultAuthorityGate.js";
 import { buildSelectorLmTemperatureReadinessPreview } from "../../workspace-kernel/selectorLmTemperatureReadinessPreview.js";
 import {
   buildSelectorReadonlyEngineCandidateForInternalSeam,
@@ -4287,8 +4288,28 @@ function createSelectedEngineResultHandoffScaffold(selectedResultProjection = bu
     selectedResultProjection: {
       source: projection.source,
       sourceAvailable: projection.sourceAvailable === true,
+      selectedResultAvailable: projection.selectedResultAvailable === true,
       sourceState: projection.sourceState || "no_source",
       state: projection.state || "no_selected_result",
+      resultState: projection.resultState || projection.state || "no_selected_result",
+      resultStateLabel: projection.resultStateLabel || "Estimated preview",
+      accepted: projection.accepted === true,
+      acceptedSelectedResultAvailable: projection.acceptedSelectedResultAvailable === true,
+      engineVerified: projection.engineVerified === true,
+      stale: projection.stale === true,
+      summaryProjectionOnly: projection.summaryProjectionOnly === true,
+      selectedFamilySubsetLock: projection.selectedFamilySubsetLock || null,
+      perRunLookupNormalised: projection.perRunLookupNormalised === true,
+      oneSuccessfulAcceptedResult: projection.oneSuccessfulAcceptedResult === true,
+      selectedResultCandidateCount: projection.selectedResultCandidateCount || projection.acceptedCandidateCount || null,
+      sourceInputFingerprint: projection.sourceInputFingerprint || projection.sourceInputFingerprintMetadata?.value || null,
+      boardDataSourceVersion: projection.boardDataSourceVersion || projection.boardDataSourceVersionMetadata?.value || null,
+      selectedResultPersistenceEnabled: projection.selectedResultPersistenceEnabled === true,
+      runTableGenerationEnabled: projection.runTableGenerationEnabled === true,
+      iesGenerationEnabled: projection.iesGenerationEnabled === true,
+      outputGenerationEnabled: projection.outputGenerationEnabled === true,
+      routesAdded: projection.routesAdded === true,
+      postEndpointsAdded: projection.postEndpointsAdded === true,
       stateEnum: Array.isArray(projection.stateEnum) ? [...projection.stateEnum] : [],
       approvedStateLabels: Array.isArray(projection.approvedStateLabels) ? [...projection.approvedStateLabels] : [],
       staleHistoricalLabel: projection.staleHistoricalLabel || "Result stale — run table changed, verify again",
@@ -4302,7 +4323,19 @@ function createSelectedEngineResultHandoffScaffold(selectedResultProjection = bu
       reason: guard.reason || "not compared",
       diagnosticOnly: guard.diagnosticOnly === true,
       readOnly: guard.readOnly === true,
+      authorityReady: guard.authorityReady === true,
+      selectedResultAuthorityGuardReady: guard.selectedResultAuthorityGuardReady === true,
       comparisonAttempted: guard.comparisonAttempted === true,
+      comparisonPairs: Array.isArray(guard.comparisonPairs)
+        ? guard.comparisonPairs.map((pair) => ({
+          label: String(pair.label || "unknown").slice(0, 120),
+          comparable: pair.comparable === true,
+          stale: pair.stale === true,
+          storedPresent: pair.storedPresent === true,
+          currentPresent: pair.currentPresent === true,
+        }))
+        : [],
+      selectedResultAuthorityGuardFingerprint: guard.selectedResultAuthorityGuardFingerprint || null,
       fingerprint: guard.selectedResultAuthorityGuardFingerprint || null,
     } : null,
     safeSelectedResultSourceObjectSummary: safeSelectedResultSourceObjectSummary || null,
@@ -5291,6 +5324,7 @@ function selectorWorkflowDownstreamStage(id, label, summary = {}, readyKey = "ok
       || summary?.bridgeFingerprint
       || summary?.selectedResultHandoffScaffoldFingerprint
       || summary?.selectedResultAuthorityReadinessPreflightFingerprint
+      || summary?.acceptedSelectedResultAuthorityGateFingerprint
       || summary?.iesHandoffReadinessScaffoldFingerprint
       || null,
     safeCounts: summary?.bridgeFingerprint ? {
@@ -5302,7 +5336,7 @@ function selectorWorkflowDownstreamStage(id, label, summary = {}, readyKey = "ok
       iesGenerated: 0,
     } : {},
     rows: selectorWorkflowRows([
-      ["fingerprint", summary?.bridgeFingerprint || summary?.sealedCandidateAssemblyPreviewFingerprint || summary?.runTableDomainOutputScaffoldFingerprint || summary?.selectedResultHandoffScaffoldFingerprint || summary?.selectedResultAuthorityReadinessPreflightFingerprint || summary?.iesHandoffReadinessScaffoldFingerprint || "none"],
+      ["fingerprint", summary?.bridgeFingerprint || summary?.sealedCandidateAssemblyPreviewFingerprint || summary?.runTableDomainOutputScaffoldFingerprint || summary?.selectedResultHandoffScaffoldFingerprint || summary?.selectedResultAuthorityReadinessPreflightFingerprint || summary?.acceptedSelectedResultAuthorityGateFingerprint || summary?.iesHandoffReadinessScaffoldFingerprint || "none"],
       ["private bridge only", boolString(summary?.privateBridgeOnly === true || safetyFlags.privateBridgeOnly === true)],
       ["synthetic/safe preview only", boolString(summary?.syntheticFixtureOnly === true || safetyFlags.syntheticFixtureOnly === true)],
       ["donor invocation blocked", boolString((summary?.blocker || "") === "donor-engine-invocation-not-approved" || safetyFlags.donorEngineInvoked !== true)],
@@ -5431,6 +5465,16 @@ function createSelectorWorkflowPreview({
     selectedResultProjectionSummary: selectedEngineResultHandoff.selectedResultProjection || null,
     selectedResultAuthorityGuardSummary: selectedEngineResultHandoff.selectedResultAuthorityGuard || null,
     selectedResultHandoffScaffoldSummary,
+  });
+  const acceptedSelectedResultAuthorityGateSummary = buildAcceptedSelectedResultAuthorityGate({
+    ...fingerprints,
+    currentSourceInputFingerprint: selectedEngineResultHandoff.selectedResultProjection?.sourceInputFingerprint || null,
+    verifiedSummary: readonlyEngineStep1SafeSummaryOverride || null,
+    privateVerificationBridgeSummary: controlledDonorEngineVerifyBridgeSummary,
+    safeSelectedResultSourceObjectSummary: selectedEngineResultHandoff.safeSelectedResultSourceObjectSummary || null,
+    selectedResultProjectionSummary: selectedEngineResultHandoff.selectedResultProjection || null,
+    selectedResultAuthorityGuardSummary: selectedEngineResultHandoff.selectedResultAuthorityGuard || null,
+    selectedResultAuthorityReadinessPreflightSummary,
   });
   const iesHandoffReadinessScaffoldSummary = buildRuntimeIesHandoffReadinessScaffoldSummary({
     ...fingerprints,
@@ -5568,6 +5612,7 @@ function createSelectorWorkflowPreview({
     selectorWorkflowDownstreamStage("controlled-donor-engine-verify-bridge", "Controlled donor Engine verify bridge", controlledDonorEngineVerifyBridgeSummary, "bridgeReady"),
     selectorWorkflowDownstreamStage("selected-result-handoff", "Selected-result handoff readiness", selectedResultHandoffScaffoldSummary, "selectedResultHandoffScaffoldReady"),
     selectorWorkflowDownstreamStage("selected-result-authority-preflight", "Accepted selected-result authority readiness preflight", selectedResultAuthorityReadinessPreflightSummary, "acceptedAuthorityReadinessPreflightReady"),
+    selectorWorkflowDownstreamStage("accepted-selected-result-authority", "Accepted selected-result authority gate", acceptedSelectedResultAuthorityGateSummary, "acceptedSelectedResultAuthorityReady"),
     selectorWorkflowDownstreamStage("ies-handoff", "IES handoff readiness", iesHandoffReadinessScaffoldSummary, "iesHandoffReadinessScaffoldReady"),
     controlledRealSourceEvidenceStatus,
   ];
@@ -5584,6 +5629,7 @@ function createSelectorWorkflowPreview({
     controlledDonorEngineVerifyBridgeSummary,
     selectedResultHandoffScaffoldSummary,
     selectedResultAuthorityReadinessPreflightSummary,
+    acceptedSelectedResultAuthorityGateSummary,
     iesHandoffReadinessScaffoldSummary,
     controlledRealSourceEvidenceStatus,
     productionActions: disabledProductionActions,
@@ -5641,6 +5687,7 @@ function createSelectorWorkflowPreview({
     downstreamReadinessSummary,
     selectorDownstreamReadinessSummary: downstreamReadinessSummary,
     selectedResultAuthorityReadinessPreflightSummary,
+    acceptedSelectedResultAuthorityGateSummary,
     disabledProductionActions,
     markers: ["preview-only", "diagnostic-only", "safe summaries only", "output intent only", "controlled donor bridge blocked", "production actions disabled"],
     unsafeOutputsBlocked: {
