@@ -147,6 +147,9 @@ function specGateSnapshot() {
       { item: "start_board_gap", economy: "0", business: "0", first: "0", approved: "yes" },
       { item: "end_board_gap", economy: "0", business: "0", first: "0", approved: "yes" },
       { item: "gap_mode", economy: "N+1", business: "N+1", first: "N+1", approved: "yes" },
+      { item: "board_cross_segment_join", economy: "FALSE", business: "FALSE", first: "FALSE", approved: "yes" },
+      { item: "diffuser_cross_segment_join", economy: "FALSE", business: "FALSE", first: "FALSE", approved: "yes" },
+      { item: "secondary_across_segment", economy: "forbid", business: "compare", first: "allow", approved: "yes" },
     ],
   };
 }
@@ -451,7 +454,11 @@ test("Stage 3B accepts non-zero accessory intent when it remains inside one seal
   assert.equal(joinAuthority.joinSensitive, false);
   assert.equal(joinAuthority.singleSegmentContained, true);
   assert.equal(joinAuthority.segmentMaxLengthMm, 3650);
-  assert.equal(joinAuthority.ruleCoverage.find((row) => row.rule === "board_cross_segment_join").classification, "missing but safe to defer");
+  assert.equal(joinAuthority.ruleCoverage.find((row) => row.rule === "board_cross_segment_join").classification, "represented");
+  assert.equal(joinAuthority.ruleCoverage.find((row) => row.rule === "diffuser_cross_segment_join").classification, "represented");
+  assert.equal(joinAuthority.ruleCoverage.find((row) => row.rule === "secondary_across_segment").classification, "represented");
+  assert.equal(joinAuthority.ruleCoverage.find((row) => row.rule === "do_not_bridge_join").classification, "missing but safe to defer");
+  assert.equal(joinAuthority.ruleCoverage.find((row) => row.rule === "do_not_bridge_segment_join").classification, "missing but safe to defer");
   assert.equal(reservation.sourceBackedBodyLengthPolicySummary.source, "SYSTEM_POLICY");
   assert.equal(reservation.sourceBackedBodyLengthPolicySummary.selectedEndPlatePolicyName, "end_plate_ip_mm");
   assert.equal(reservation.sourceBackedBodyLengthPolicySummary.totalDeductionMm, 20);
@@ -496,8 +503,11 @@ test("Stage 3B fails closed when non-zero accessory intent is join-sensitive wit
   assert.equal(joinAuthority.singleSegmentContained, false);
   assert.equal(joinAuthority.bodyLengthBeforeReservationMm, 5600);
   assert.equal(joinAuthority.segmentMaxLengthMm, 3650);
-  assert.equal(joinAuthority.ruleCoverage.find((row) => row.rule === "board_cross_segment_join").classification, "missing and not safe to defer for Stage 3B claims");
-  assert.equal(joinAuthority.ruleCoverage.find((row) => row.rule === "do-not-bridge join").classification, "missing and not safe to defer for Stage 3B claims");
+  assert.equal(joinAuthority.ruleCoverage.find((row) => row.rule === "board_cross_segment_join").classification, "partially represented");
+  assert.equal(joinAuthority.ruleCoverage.find((row) => row.rule === "diffuser_cross_segment_join").classification, "partially represented");
+  assert.equal(joinAuthority.ruleCoverage.find((row) => row.rule === "secondary_across_segment").classification, "partially represented");
+  assert.equal(joinAuthority.ruleCoverage.find((row) => row.rule === "do_not_bridge_join").classification, "missing and not safe to defer for Stage 3B claims");
+  assert.equal(joinAuthority.ruleCoverage.find((row) => row.rule === "do_not_bridge_segment_join").classification, "missing and not safe to defer for Stage 3B claims");
   assert.equal(stageRows["Stage 3 — Factory Approved Inputs"], "false");
   assert.equal(stageRows["Stage 4 — Engine Outcome Proven"], "false");
   assertNoGenerationAuthority(value);

@@ -323,6 +323,9 @@ function buildStage3BJoinCrossingAuthoritySummary({
   const policies = isPlainObject(sourceBackedLengthPolicySummary?.lengthPolicies)
     ? sourceBackedLengthPolicySummary.lengthPolicies
     : {};
+  const joinPolicies = isPlainObject(sourceBackedLengthPolicySummary?.joinPolicies)
+    ? sourceBackedLengthPolicySummary.joinPolicies
+    : {};
   const segmentMaxLengthMm = parsePositiveInteger(sourceBackedLengthPolicySummary?.segmentMaxLengthMm)
     || parsePositiveInteger(sourceBackedLengthPolicySummary?.numericMm?.segment_max_length_mm)
     || parsePositiveInteger(policies.segment_max_length_mm);
@@ -341,12 +344,20 @@ function buildStage3BJoinCrossingAuthoritySummary({
   }
 
   const joinSensitive = bodyLengthBeforeReservationMm > segmentMaxLengthMm;
-  const secondaryRepresented = hasOwnNonBlank(policies, "secondary_across_segment") || hasOwnNonBlank(sourceBackedLengthPolicySummary, "secondary_across_segment");
-  const diffuserRepresented = hasOwnNonBlank(policies, "diffuser_cross_segment_join") || hasOwnNonBlank(sourceBackedLengthPolicySummary, "diffuser_cross_segment_join");
-  const boardRepresented = hasOwnNonBlank(policies, "board_cross_segment_join") || hasOwnNonBlank(sourceBackedLengthPolicySummary, "board_cross_segment_join");
-  const doNotBridgeRepresented = hasOwnNonBlank(policies, "do_not_bridge_join")
+  const secondaryRepresented = hasOwnNonBlank(joinPolicies, "secondary_across_segment")
+    || hasOwnNonBlank(policies, "secondary_across_segment")
+    || hasOwnNonBlank(sourceBackedLengthPolicySummary, "secondary_across_segment");
+  const diffuserRepresented = hasOwnNonBlank(joinPolicies, "diffuser_cross_segment_join")
+    || hasOwnNonBlank(policies, "diffuser_cross_segment_join")
+    || hasOwnNonBlank(sourceBackedLengthPolicySummary, "diffuser_cross_segment_join");
+  const boardRepresented = hasOwnNonBlank(joinPolicies, "board_cross_segment_join")
+    || hasOwnNonBlank(policies, "board_cross_segment_join")
+    || hasOwnNonBlank(sourceBackedLengthPolicySummary, "board_cross_segment_join");
+  const doNotBridgeJoinRepresented = hasOwnNonBlank(joinPolicies, "do_not_bridge_join")
+    || hasOwnNonBlank(policies, "do_not_bridge_join")
+    || hasOwnNonBlank(sourceBackedLengthPolicySummary, "do_not_bridge_join");
+  const doNotBridgeSegmentJoinRepresented = hasOwnNonBlank(joinPolicies, "do_not_bridge_segment_join")
     || hasOwnNonBlank(policies, "do_not_bridge_segment_join")
-    || hasOwnNonBlank(sourceBackedLengthPolicySummary, "do_not_bridge_join")
     || hasOwnNonBlank(sourceBackedLengthPolicySummary, "do_not_bridge_segment_join");
 
   const ruleCoverage = [
@@ -359,30 +370,37 @@ function buildStage3BJoinCrossingAuthoritySummary({
     stage3BJoinRuleCoverageRow({
       rule: "board_cross_segment_join",
       represented: boardRepresented,
-      value: boardRepresented ? (policies.board_cross_segment_join || sourceBackedLengthPolicySummary.board_cross_segment_join) : STAGE3B_JOIN_RULE_NOT_PRESENT,
+      value: boardRepresented ? (joinPolicies.board_cross_segment_join ?? policies.board_cross_segment_join ?? sourceBackedLengthPolicySummary.board_cross_segment_join) : STAGE3B_JOIN_RULE_NOT_PRESENT,
       joinSensitive,
       representedButNotEnforced: boardRepresented && joinSensitive,
     }),
     stage3BJoinRuleCoverageRow({
       rule: "diffuser_cross_segment_join",
       represented: diffuserRepresented,
-      value: diffuserRepresented ? (policies.diffuser_cross_segment_join || sourceBackedLengthPolicySummary.diffuser_cross_segment_join) : STAGE3B_JOIN_RULE_NOT_PRESENT,
+      value: diffuserRepresented ? (joinPolicies.diffuser_cross_segment_join ?? policies.diffuser_cross_segment_join ?? sourceBackedLengthPolicySummary.diffuser_cross_segment_join) : STAGE3B_JOIN_RULE_NOT_PRESENT,
       joinSensitive,
       representedButNotEnforced: diffuserRepresented && joinSensitive,
     }),
     stage3BJoinRuleCoverageRow({
       rule: "secondary_across_segment",
       represented: secondaryRepresented,
-      value: secondaryRepresented ? (policies.secondary_across_segment || sourceBackedLengthPolicySummary.secondary_across_segment) : STAGE3B_JOIN_RULE_NOT_PRESENT,
+      value: secondaryRepresented ? (joinPolicies.secondary_across_segment ?? policies.secondary_across_segment ?? sourceBackedLengthPolicySummary.secondary_across_segment) : STAGE3B_JOIN_RULE_NOT_PRESENT,
       joinSensitive,
       representedButNotEnforced: secondaryRepresented && joinSensitive,
     }),
     stage3BJoinRuleCoverageRow({
-      rule: "do-not-bridge join",
-      represented: doNotBridgeRepresented,
-      value: doNotBridgeRepresented ? (policies.do_not_bridge_join || policies.do_not_bridge_segment_join || sourceBackedLengthPolicySummary.do_not_bridge_join || sourceBackedLengthPolicySummary.do_not_bridge_segment_join) : STAGE3B_JOIN_RULE_NOT_PRESENT,
+      rule: "do_not_bridge_join",
+      represented: doNotBridgeJoinRepresented,
+      value: doNotBridgeJoinRepresented ? (joinPolicies.do_not_bridge_join ?? policies.do_not_bridge_join ?? sourceBackedLengthPolicySummary.do_not_bridge_join) : STAGE3B_JOIN_RULE_NOT_PRESENT,
       joinSensitive,
-      representedButNotEnforced: doNotBridgeRepresented && joinSensitive,
+      representedButNotEnforced: doNotBridgeJoinRepresented && joinSensitive,
+    }),
+    stage3BJoinRuleCoverageRow({
+      rule: "do_not_bridge_segment_join",
+      represented: doNotBridgeSegmentJoinRepresented,
+      value: doNotBridgeSegmentJoinRepresented ? (joinPolicies.do_not_bridge_segment_join ?? policies.do_not_bridge_segment_join ?? sourceBackedLengthPolicySummary.do_not_bridge_segment_join) : STAGE3B_JOIN_RULE_NOT_PRESENT,
+      joinSensitive,
+      representedButNotEnforced: doNotBridgeSegmentJoinRepresented && joinSensitive,
     }),
   ];
 

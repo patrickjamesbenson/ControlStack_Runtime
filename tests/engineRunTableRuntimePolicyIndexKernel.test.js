@@ -20,7 +20,11 @@ function safePolicyFixture() {
       { item: "driver_util_target_pct", Economy: "0.70", Business: "0.82", First: "0.88" },
       { item: "driver_util_max_pct", Economy: "0.90", Business: "0.95", First: "0.98" },
       { item: "board_selection_prefer_recent", Economy: "FALSE", Business: "TRUE", First: "YES" },
+      { item: "board_cross_segment_join", Economy: "FALSE", Business: "FALSE", First: "FALSE" },
       { item: "diffuser_cross_segment_join", Economy: "FALSE", Business: "TRUE", First: "TRUE" },
+      { item: "secondary_across_segment", Economy: "forbid", Business: "compare", First: "allow" },
+      { item: "do_not_bridge_join", Economy: "TRUE", Business: "FALSE", First: "FALSE" },
+      { item: "do_not_bridge_segment_join", Economy: "TRUE", Business: "TRUE", First: "FALSE" },
       { item: "segment_max_length_mm", Economy: "3200", Business: "3500", First: "3600" },
       { item: "segment_min_aesthetic_length_mm", Economy: "900", Business: "1400", First: "1600" },
       { item: "segment_max_board_split_qty", Economy: "0", Business: "3", First: "4" },
@@ -110,7 +114,11 @@ test("runtime policy index kernel resolves selected business tier policies with 
   assert.equal(result.policies.driver_util_target_pct, 0.82);
   assert.equal(result.policies.driver_util_max_pct, 0.95);
   assert.equal(result.policies.board_selection_prefer_recent, true);
+  assert.equal(result.policies.board_cross_segment_join, false);
   assert.equal(result.policies.diffuser_cross_segment_join, true);
+  assert.equal(result.policies.secondary_across_segment, "compare");
+  assert.equal(result.policies.do_not_bridge_join, false);
+  assert.equal(result.policies.do_not_bridge_segment_join, true);
   assert.equal(result.policies.segment_max_board_split_qty, 3);
   assert.equal(result.policies.pitch_tolerance_mm, 2.5);
   assert.equal(result.policies.length_pref, "nearest");
@@ -186,6 +194,18 @@ test("runtime policy index kernel builds source-backed length policy summary", (
   assert.equal(summary.lengthPolicies.segment_min_aesthetic_length_mm, "1400");
   assert.equal(summary.lengthPolicies.segment_max_board_split_qty, 3);
   assert.equal(summary.lengthPolicies.length_pref, "nearest");
+  assert.equal(summary.joinPolicies.board_cross_segment_join, false);
+  assert.equal(summary.joinPolicies.diffuser_cross_segment_join, true);
+  assert.equal(summary.joinPolicies.secondary_across_segment, "compare");
+  assert.equal(summary.joinPolicies.do_not_bridge_join, false);
+  assert.equal(summary.joinPolicies.do_not_bridge_segment_join, true);
+  assert.deepEqual(summary.joinPolicyNames, [
+    "board_cross_segment_join",
+    "diffuser_cross_segment_join",
+    "do_not_bridge_join",
+    "do_not_bridge_segment_join",
+    "secondary_across_segment",
+  ]);
   assert.equal(summary.numericMm.segment_max_length_mm, 3650);
   assert.equal(summary.numericMm.segment_min_aesthetic_length_mm, 1400);
   assert.equal(summary.numericMm.end_plate_std_mm, 5);

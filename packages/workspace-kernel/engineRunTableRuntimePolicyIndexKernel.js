@@ -54,7 +54,10 @@ const POLICY_TYPES = Object.freeze({
   gap_mode: "string",
   greedy_tie_break_mode: "string",
   board_selection_prefer_recent: "bool",
+  board_cross_segment_join: "bool",
   diffuser_cross_segment_join: "bool",
+  do_not_bridge_join: "bool",
+  do_not_bridge_segment_join: "bool",
 });
 
 const POLICY_VALIDATION = Object.freeze({
@@ -89,6 +92,14 @@ const LENGTH_POLICY_KEYS = Object.freeze([
   "pitch_tolerance_mm",
   "length_pref",
   "gap_mode",
+]);
+
+const JOIN_POLICY_KEYS = Object.freeze([
+  "board_cross_segment_join",
+  "diffuser_cross_segment_join",
+  "secondary_across_segment",
+  "do_not_bridge_join",
+  "do_not_bridge_segment_join",
 ]);
 
 const PRIVATE_TABLE_NAME_PATTERN = /^(USERS?|USER_|ACCOUNTS?|AUTH|CREDENTIALS?|SECRETS?|TOKENS?|PASSWORDS?|PRIVATE)(_|$)/i;
@@ -528,6 +539,19 @@ function maybeNumericMm(value) {
   }
 }
 
+function safePolicySummaryValue(value) {
+  return typeof value === "string" ? sanitizePolicyString(value) : value;
+}
+
+function pickSafePolicySubset(policies = {}, keys = []) {
+  const out = {};
+  for (const key of keys) {
+    if (!Object.prototype.hasOwnProperty.call(policies, key)) continue;
+    out[key] = safePolicySummaryValue(policies[key]);
+  }
+  return out;
+}
+
 export function buildSourceBackedLengthPolicySummary(snapshot = {}, options = {}) {
   const tierPolicies = resolveRuntimeTierPolicies(snapshot, options);
   if (!tierPolicies.ok) {
@@ -543,12 +567,13 @@ export function buildSourceBackedLengthPolicySummary(snapshot = {}, options = {}
   for (const key of LENGTH_POLICY_KEYS) {
     if (!Object.prototype.hasOwnProperty.call(tierPolicies.policies, key)) continue;
     const value = tierPolicies.policies[key];
-    policies[key] = typeof value === "string" ? sanitizePolicyString(value) : value;
+    policies[key] = safePolicySummaryValue(value);
     if (/_mm$/.test(key) || ["start_board_gap", "end_board_gap"].includes(key)) {
       const parsed = maybeNumericMm(value);
       if (parsed !== null) numericMm[key] = parsed;
     }
   }
+  const joinPolicies = pickSafePolicySubset(tierPolicies.policies, JOIN_POLICY_KEYS);
 
   return {
     ok: true,
@@ -556,6 +581,8 @@ export function buildSourceBackedLengthPolicySummary(snapshot = {}, options = {}
     summaryType: "source-backed-length-policy",
     tier: tierPolicies.tier,
     lengthPolicies: policies,
+    joinPolicies,
+    joinPolicyNames: Object.keys(joinPolicies).sort(),
     numericMm,
     segmentMaxLengthMm: SEGMENT_MAX_LENGTH_MM_OVERRIDE,
     segmentMaxLengthOverrideApplied: true,
