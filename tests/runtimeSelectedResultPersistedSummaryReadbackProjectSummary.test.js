@@ -387,7 +387,7 @@ test("project summary consumer does not expose raw payload/envelope/downstream/r
 
   assertCompactProjectStatus(status);
   assert.equal(status.readiness, "blocked_fail_closed");
-  assert.equal(status.blocker, "blocked-raw-field-selectedResultBody");
+  assert.equal(status.blocker, "blocked-raw-field");
   assertNoUnsafeProjectStatusValues(status);
 });
 
