@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto";
+import { stableSha1 } from "./stableFingerprint.js";
 
 export const RUNTIME_IES_FIRST_NARROW_METADATA_HANDOFF_CONTRACT_ID = "RUNTIME-IES-FIRST-NARROW-METADATA-HANDOFF-1";
 export const RUNTIME_IES_FIRST_NARROW_METADATA_HANDOFF_SUMMARY_SCHEMA_ID = "controlstack.runtime.ies-first-narrow-metadata-handoff-summary.v1";
@@ -156,15 +156,7 @@ function firstPresent(source, keys) {
   return undefined;
 }
 
-function stableValue(value) {
-  if (Array.isArray(value)) return value.map(stableValue);
-  if (!isRecord(value)) return value;
-  return Object.fromEntries(Object.keys(value).sort().map((key) => [key, stableValue(value[key])]));
-}
 
-function stableSha1(value) {
-  return createHash("sha1").update(JSON.stringify(stableValue(value))).digest("hex");
-}
 
 function safeToken(value) {
   if (value === null || value === undefined) return null;
