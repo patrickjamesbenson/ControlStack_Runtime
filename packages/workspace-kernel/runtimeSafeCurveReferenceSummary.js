@@ -586,3 +586,348 @@ export function buildRuntimeSafeCurveReferenceSummary(input = {}) {
 
 export const buildSafeCurveReferenceSummary = buildRuntimeSafeCurveReferenceSummary;
 export const buildEngineRunTableSafeCurveReferenceSummary = buildRuntimeSafeCurveReferenceSummary;
+
+export const RUNTIME_SAFE_PHOTOMETRY_REFERENCE_SUMMARY_CONTRACT_ID =
+  "RUNTIME-SAFE-PHOTOMETRY-REFERENCE-SUMMARY-1";
+export const RUNTIME_SAFE_PHOTOMETRY_REFERENCE_SUMMARY_SCHEMA_ID =
+  "controlstack.runtime.safe-photometry-reference-summary";
+export const RUNTIME_SAFE_PHOTOMETRY_REFERENCE_SUMMARY_SCHEMA_VERSION = 1;
+export const RUNTIME_SAFE_PHOTOMETRY_REFERENCE_SUMMARY_STATE =
+  "runtime_safe_photometry_reference_summary_diagnostic_only";
+
+export const RUNTIME_SAFE_PHOTOMETRY_REFERENCE_SUMMARY_SAFETY_FLAGS = Object.freeze({
+  readOnly: true,
+  deterministicOnly: true,
+  diagnosticOnly: true,
+  safeSummaryOnly: true,
+  opaqueReferenceOnly: true,
+  sourceAnchorOnly: true,
+  slugGenerationEnabled: false,
+  iesGenerationEnabled: false,
+  iesGenerated: false,
+  outputGenerationEnabled: false,
+  rawIesContentReturned: false,
+  rawPhotometryReturned: false,
+  candelaArraysReturned: false,
+  base64ArtifactsReturned: false,
+  filenamesReturned: false,
+  localPathsReturned: false,
+  selectedResultPersisted: false,
+  runtimeDataMutationEnabled: false,
+  routesAdded: false,
+  postEndpointsAdded: false,
+});
+
+const REQUIRED_PHOTOMETRY_LOCK_FIELDS = Object.freeze([
+  "boardFamily",
+  "pitchFamily",
+  "opticCurrentAssumptions",
+  "zoneSplitStrategy",
+  "driverFamily",
+]);
+
+function safeReferenceToken(value) {
+  const token = safeToken(value, "");
+  return SAFE_TOKEN_PATTERN.test(token) ? token : "";
+}
+
+function photometryCurveSummaryFrom(source) {
+  return firstPresent(source, [
+    "safeCurveReferenceSummary",
+    "curveReferenceSummary",
+    "runtimeSafeCurveReferenceSummary",
+  ]);
+}
+
+function photometryUnsafeTopLevelBlocker(source) {
+  if (!isPlainObject(source)) return null;
+  if (source.slugGenerationEnabled === true || source.slugGenerated === true || source.productionSlugGenerated === true) {
+    return "slug-generation-not-approved";
+  }
+  if (source.outputGenerationEnabled === true || source.outputGenerated === true || source.artifactGenerationEnabled === true || source.artefactGenerationEnabled === true) {
+    return "output-generation-not-approved";
+  }
+  if (source.rawIesContentReturned === true) return "raw-ies-content-not-approved";
+  if (source.rawPhotometryReturned === true) return "raw-photometry-not-approved";
+  if (source.candelaArraysReturned === true) return "candela-array-return-not-approved";
+  if (source.base64ArtifactsReturned === true) return "base64-artifact-not-approved";
+  if (source.filenamesReturned === true || source.localPathsReturned === true) return "filename-or-local-path-not-approved";
+  if (source.runtimeDataMutationEnabled === true) return "runtime-data-mutation-not-approved";
+  if (source.routesAdded === true || source.postEndpointsAdded === true) return "route-or-post-endpoint-not-approved";
+  return null;
+}
+
+function sourceInputFingerprintFrom(source) {
+  return safeFingerprint(firstPresent(source, ["sourceInputFingerprint", "source_input_fingerprint", "selectorPayloadFingerprint"])
+    ?? firstPresent(source.sourceInputFingerprintMetadata, ["value", "fingerprint"]));
+}
+
+function boardDataSourceVersionFrom(source) {
+  const value = firstPresent(source, ["boardDataSourceVersion", "board_data_source_version"])
+    ?? firstPresent(source.boardDataSourceVersionMetadata, ["value", "version", "token"])
+    ?? firstPresent(source.selectedResultProjectionSummary, ["boardDataSourceVersion"]);
+  const token = safeReferenceToken(value);
+  if (token) return token;
+  const label = safeToken(value, "");
+  return label ? `safe-board-data-source-version:${stableSha1({ label })}` : "";
+}
+
+function selectedFamilySubsetLockFrom(source) {
+  const lock = firstPresent(source, ["selectedFamilySubsetLock", "selected_family_subset_lock"])
+    ?? firstPresent(source.selectedResultProjectionSummary, ["selectedFamilySubsetLock"])
+    ?? firstPresent(source.safeSelectedResultSourceObjectSummary, ["selectedFamilySubsetLock"]);
+  if (!isPlainObject(lock)) return null;
+  const result = {};
+  for (const field of REQUIRED_PHOTOMETRY_LOCK_FIELDS) {
+    const value = safeLabel(lock[field], "");
+    if (!value) return null;
+    result[field] = value;
+  }
+  return result;
+}
+
+function validateSafeCurveForPhotometryAnchor(summary) {
+  if (!isPlainObject(summary)) return { ok: false, blocker: "missing-safe-curve-reference-summary" };
+  const unsafe = unsafeBlocker(summary);
+  if (unsafe) return { ok: false, blocker: unsafe };
+  if (summary.ok !== true
+    || summary.curveReferenceSummaryReady !== true
+    || summary.readOnly !== true
+    || summary.diagnosticOnly !== true
+    || summary.safeSummaryOnly !== true) {
+    return { ok: false, blocker: "safe-curve-reference-summary-not-ready" };
+  }
+  const iesSummary = isPlainObject(summary.iesPhotometryReferenceSummary) ? summary.iesPhotometryReferenceSummary : {};
+  const lumenSummary = isPlainObject(summary.lumenCurveReferenceSummary) ? summary.lumenCurveReferenceSummary : {};
+  const driverSummary = isPlainObject(summary.driverUtilCurveReferenceSummary) ? summary.driverUtilCurveReferenceSummary : {};
+  const iesPhotometryReferenceToken = safeReferenceToken(iesSummary.iesPhotometryReferenceToken);
+  const lumenCurveReferenceToken = safeReferenceToken(lumenSummary.curveReferenceToken);
+  const driverUtilCurveReferenceToken = safeReferenceToken(driverSummary.curveReferenceToken);
+  if (!iesPhotometryReferenceToken || !lumenCurveReferenceToken || !driverUtilCurveReferenceToken) {
+    return { ok: false, blocker: "missing-opaque-photometry-reference-token" };
+  }
+  if (iesSummary.rawIesContentReturned === true
+    || iesSummary.rawPhotometryReturned === true
+    || iesSummary.candelaArraysReturned === true
+    || iesSummary.base64ArtifactsReturned === true
+    || iesSummary.filenamesReturned === true
+    || iesSummary.localPathsReturned === true
+    || iesSummary.iesGenerated === true) {
+    return { ok: false, blocker: "unsafe-photometry-reference-token-summary" };
+  }
+  return {
+    ok: true,
+    iesSummary,
+    lumenSummary,
+    driverSummary,
+    iesPhotometryReferenceToken,
+    lumenCurveReferenceToken,
+    driverUtilCurveReferenceToken,
+    oneMmPolicyLabel: safeToken(iesSummary.oneMmPolicyLabel, "one-mm-length-policy-summary-only"),
+  };
+}
+
+function photometryUnsafeOutputsBlocked() {
+  return {
+    slugGenerationBlocked: true,
+    iesGenerationBlocked: true,
+    outputGenerationBlocked: true,
+    rawIesContentBlocked: true,
+    rawPhotometryBlocked: true,
+    candelaArraysBlocked: true,
+    base64ArtifactsBlocked: true,
+    filenamesBlocked: true,
+    localPathsBlocked: true,
+    selectedResultPersistenceBlocked: true,
+    runtimeDataMutationBlocked: true,
+    routesBlocked: true,
+    postEndpointsBlocked: true,
+  };
+}
+
+function photometryBaseSummary(extra = {}) {
+  const ok = extra.ok === true;
+  return {
+    contractId: RUNTIME_SAFE_PHOTOMETRY_REFERENCE_SUMMARY_CONTRACT_ID,
+    schemaId: RUNTIME_SAFE_PHOTOMETRY_REFERENCE_SUMMARY_SCHEMA_ID,
+    schemaVersion: RUNTIME_SAFE_PHOTOMETRY_REFERENCE_SUMMARY_SCHEMA_VERSION,
+    state: RUNTIME_SAFE_PHOTOMETRY_REFERENCE_SUMMARY_STATE,
+    ok,
+    blocker: extra.blocker || null,
+    photometryReferenceSummaryReady: ok,
+    sourcePhotometryStatus: extra.sourcePhotometryStatus || (ok ? "opaque_reference_summary_ready" : "opaque_reference_summary_blocked"),
+    readOnly: true,
+    diagnosticOnly: true,
+    safeSummaryOnly: true,
+    opaqueReferenceOnly: true,
+    sourceAnchorOnly: true,
+    sourceBacked: extra.sourceBacked === true,
+    policyFingerprint: extra.policyFingerprint || null,
+    sourceFingerprint: extra.sourceFingerprint || null,
+    sourceInputFingerprint: extra.sourceInputFingerprint || null,
+    boardDataSourceVersion: extra.boardDataSourceVersion || null,
+    selectedFamilySubsetLock: extra.selectedFamilySubsetLock || null,
+    oneMmPolicyLabel: extra.oneMmPolicyLabel || null,
+    sourcePhotometryRef: extra.sourcePhotometryRef || null,
+    iesPhotometryReferenceToken: extra.iesPhotometryReferenceToken || null,
+    lumenCurveReferenceSummary: extra.lumenCurveReferenceSummary || null,
+    driverUtilCurveReferenceSummary: extra.driverUtilCurveReferenceSummary || null,
+    photometryReferenceFingerprint: extra.photometryReferenceFingerprint || null,
+    failClosedDiagnostics: Array.isArray(extra.failClosedDiagnostics)
+      ? extra.failClosedDiagnostics.map((diagnostic) => safeToken(diagnostic, "diagnostic"))
+      : [],
+    unsafeOutputsBlocked: photometryUnsafeOutputsBlocked(),
+    slugGenerationEnabled: false,
+    iesGenerationEnabled: false,
+    iesGenerated: false,
+    outputGenerationEnabled: false,
+    rawIesContentReturned: false,
+    rawPhotometryReturned: false,
+    candelaArraysReturned: false,
+    base64ArtifactsReturned: false,
+    filenamesReturned: false,
+    localPathsReturned: false,
+    selectedResultPersisted: false,
+    runtimeDataMutationEnabled: false,
+    routesAdded: false,
+    postEndpointsAdded: false,
+    safetyFlags: clonePlain(RUNTIME_SAFE_PHOTOMETRY_REFERENCE_SUMMARY_SAFETY_FLAGS),
+  };
+}
+
+function photometryFailClosed(blocker, extra = {}) {
+  return finalizePhotometrySummary(photometryBaseSummary({
+    ...extra,
+    ok: false,
+    blocker,
+    sourceBacked: false,
+    failClosedDiagnostics: [blocker, ...(Array.isArray(extra.failClosedDiagnostics) ? extra.failClosedDiagnostics : [])],
+  }));
+}
+
+function finalizePhotometrySummary(summary) {
+  const serialized = JSON.stringify(summary);
+  if (PRIVATE_PATH_PATTERN.test(serialized)
+    || RAW_IES_TEXT_PATTERN.test(serialized)
+    || DATA_BASE64_PATTERN.test(serialized)
+    || FILE_EXTENSION_VALUE_PATTERN.test(serialized)) {
+    if (summary.blocker === "unsafe-photometry-reference-summary-output") return Object.freeze(summary);
+    return Object.freeze(photometryBaseSummary({
+      ok: false,
+      blocker: "unsafe-photometry-reference-summary-output",
+      sourceFingerprint: summary.sourceFingerprint,
+      policyFingerprint: summary.policyFingerprint,
+      failClosedDiagnostics: ["unsafe-photometry-reference-summary-output"],
+    }));
+  }
+  return Object.freeze(summary);
+}
+
+export function buildRuntimeSafePhotometryReferenceSummary(input = {}) {
+  const source = isPlainObject(input) ? input : {};
+  const photometryTopLevelBlocker = photometryUnsafeTopLevelBlocker(source);
+  if (photometryTopLevelBlocker) return photometryFailClosed(photometryTopLevelBlocker);
+  const inputBlocker = unsafeBlocker(source);
+  if (inputBlocker) return photometryFailClosed(inputBlocker);
+
+  const safeCurveReferenceSummary = photometryCurveSummaryFrom(source);
+  const curveValidation = validateSafeCurveForPhotometryAnchor(safeCurveReferenceSummary);
+  if (!curveValidation.ok) return photometryFailClosed(curveValidation.blocker);
+
+  const sourceFingerprint = sourceFingerprintFrom(source) || sourceFingerprintFrom(safeCurveReferenceSummary);
+  if (!sourceFingerprint) return photometryFailClosed("missing-source-fingerprint");
+
+  const sourceInputFingerprint = sourceInputFingerprintFrom(source);
+  if (!sourceInputFingerprint) return photometryFailClosed("missing-source-input-fingerprint", { sourceFingerprint });
+
+  const boardDataSourceVersion = boardDataSourceVersionFrom(source);
+  if (!boardDataSourceVersion) return photometryFailClosed("missing-board-data-source-version", {
+    sourceFingerprint,
+    sourceInputFingerprint,
+  });
+
+  const selectedFamilySubsetLock = selectedFamilySubsetLockFrom(source);
+  if (!selectedFamilySubsetLock) return photometryFailClosed("missing-selected-family-subset-lock", {
+    sourceFingerprint,
+    sourceInputFingerprint,
+    boardDataSourceVersion,
+  });
+
+  const policyFingerprint = providedPolicyFingerprintFrom(source)
+    || providedPolicyFingerprintFrom(safeCurveReferenceSummary)
+    || `safe-policy:${stableSha1({
+      contractId: RUNTIME_SAFE_PHOTOMETRY_REFERENCE_SUMMARY_CONTRACT_ID,
+      sourceFingerprint,
+      sourceInputFingerprint,
+      boardDataSourceVersion,
+      selectedFamilySubsetLock,
+    })}`;
+  const oneMmPolicyLabel = safeToken(firstPresent(source, ["oneMmPolicyLabel", "one_mm_policy_label"]), "")
+    || curveValidation.oneMmPolicyLabel;
+  const sourcePhotometryRef = `safe-source-photometry-ref:${stableSha1({
+    contractId: RUNTIME_SAFE_PHOTOMETRY_REFERENCE_SUMMARY_CONTRACT_ID,
+    sourceFingerprint,
+    sourceInputFingerprint,
+    boardDataSourceVersion,
+    selectedFamilySubsetLock,
+    oneMmPolicyLabel,
+    iesPhotometryReferenceToken: curveValidation.iesPhotometryReferenceToken,
+    lumenCurveReferenceToken: curveValidation.lumenCurveReferenceToken,
+    driverUtilCurveReferenceToken: curveValidation.driverUtilCurveReferenceToken,
+  })}`;
+  const lumenCurveReferenceSummary = Object.freeze({
+    curveReferenceToken: curveValidation.lumenCurveReferenceToken,
+    referenceKind: safeToken(curveValidation.lumenSummary.referenceKind, "lumen-curve-reference"),
+    sourceBacked: curveValidation.lumenSummary.sourceBacked === true,
+    manifestValid: curveValidation.lumenSummary.manifestValid === true,
+    rawCurveRowsReturned: false,
+    rawCurvePayloadsExposed: false,
+    filenamesReturned: false,
+    localPathsReturned: false,
+  });
+  const driverUtilCurveReferenceSummary = Object.freeze({
+    curveReferenceToken: curveValidation.driverUtilCurveReferenceToken,
+    referenceKind: safeToken(curveValidation.driverSummary.referenceKind, "driver-util-curve-reference"),
+    sourceBacked: curveValidation.driverSummary.sourceBacked === true,
+    manifestValid: curveValidation.driverSummary.manifestValid === true,
+    rawDriverUtilPayloadsExposed: false,
+    rawDriverUtilCurvePointsReturned: false,
+    filenamesReturned: false,
+    localPathsReturned: false,
+  });
+  const photometryReferenceFingerprint = `safe-photometry-reference:${stableSha1({
+    contractId: RUNTIME_SAFE_PHOTOMETRY_REFERENCE_SUMMARY_CONTRACT_ID,
+    schemaId: RUNTIME_SAFE_PHOTOMETRY_REFERENCE_SUMMARY_SCHEMA_ID,
+    schemaVersion: RUNTIME_SAFE_PHOTOMETRY_REFERENCE_SUMMARY_SCHEMA_VERSION,
+    sourceFingerprint,
+    policyFingerprint,
+    sourceInputFingerprint,
+    boardDataSourceVersion,
+    selectedFamilySubsetLock,
+    oneMmPolicyLabel,
+    sourcePhotometryRef,
+    iesPhotometryReferenceToken: curveValidation.iesPhotometryReferenceToken,
+    lumenCurveReferenceSummary,
+    driverUtilCurveReferenceSummary,
+  })}`;
+
+  return finalizePhotometrySummary(photometryBaseSummary({
+    ok: true,
+    sourceBacked: true,
+    policyFingerprint,
+    sourceFingerprint,
+    sourceInputFingerprint,
+    boardDataSourceVersion,
+    selectedFamilySubsetLock,
+    oneMmPolicyLabel,
+    sourcePhotometryRef,
+    iesPhotometryReferenceToken: curveValidation.iesPhotometryReferenceToken,
+    lumenCurveReferenceSummary,
+    driverUtilCurveReferenceSummary,
+    photometryReferenceFingerprint,
+    failClosedDiagnostics: [],
+  }));
+}
+
+export const buildRuntimeSafePhotometrySourceAnchorSummary = buildRuntimeSafePhotometryReferenceSummary;
+export const buildSafePhotometryReferenceSummary = buildRuntimeSafePhotometryReferenceSummary;

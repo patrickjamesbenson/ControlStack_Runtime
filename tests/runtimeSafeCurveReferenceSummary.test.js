@@ -6,8 +6,14 @@ import {
   buildRuntimeSafeCurveReferenceSummary,
   buildSafeCurveReferenceSummary,
   buildEngineRunTableSafeCurveReferenceSummary,
+  buildRuntimeSafePhotometryReferenceSummary,
+  buildRuntimeSafePhotometrySourceAnchorSummary,
+  buildSafePhotometryReferenceSummary,
   RUNTIME_SAFE_CURVE_REFERENCE_SUMMARY_SCHEMA_ID,
   RUNTIME_SAFE_CURVE_REFERENCE_SUMMARY_SCHEMA_VERSION,
+  RUNTIME_SAFE_PHOTOMETRY_REFERENCE_SUMMARY_CONTRACT_ID,
+  RUNTIME_SAFE_PHOTOMETRY_REFERENCE_SUMMARY_SCHEMA_ID,
+  RUNTIME_SAFE_PHOTOMETRY_REFERENCE_SUMMARY_SCHEMA_VERSION,
 } from "../packages/workspace-kernel/runtimeSafeCurveReferenceSummary.js";
 import { buildRuntimeIesHandoffReadinessScaffoldSummary } from "../packages/workspace-kernel/engineRunTableIesHandoffReadinessScaffold.js";
 
@@ -352,4 +358,221 @@ test("safe curve helper does not add routes, POST endpoints, RuntimeData mutatio
   assert.equal(serverText.includes("runtimeSafeCurveReferenceSummary"), false);
   assert.equal(/POST[\s\S]{0,180}curve-reference/i.test(serverText), false);
   assert.equal(/curve-reference[\s\S]{0,180}POST/i.test(serverText), false);
+});
+
+const SOURCE_INPUT_FINGERPRINT = "safe-source-input:curve-reference-fixture";
+const BOARD_DATA_SOURCE_VERSION = "safe-board-data-source-version:curve-reference-fixture";
+
+function selectedFamilySubsetLock(overrides = {}) {
+  return {
+    boardFamily: "runtime-board-family-token",
+    pitchFamily: "runtime-pitch-family-token",
+    opticCurrentAssumptions: "source-backed-selector-backed-optic-basis",
+    zoneSplitStrategy: "runtime-supported-zone-split-token",
+    driverFamily: "runtime-driver-family-token",
+    ...overrides,
+  };
+}
+
+function photometrySummaryInput(overrides = {}) {
+  return {
+    policyFingerprint: POLICY_FINGERPRINT,
+    sourceFingerprint: SOURCE_FINGERPRINT,
+    sourceInputFingerprint: SOURCE_INPUT_FINGERPRINT,
+    boardDataSourceVersion: BOARD_DATA_SOURCE_VERSION,
+    selectedFamilySubsetLock: selectedFamilySubsetLock(),
+    safeCurveReferenceSummary: buildRuntimeSafeCurveReferenceSummary(summaryInput()),
+    ...overrides,
+  };
+}
+
+test("builds RUNTIME-SAFE-PHOTOMETRY-REFERENCE-SUMMARY-1 from opaque curve and selected-result anchors", () => {
+  const result = buildRuntimeSafePhotometryReferenceSummary(photometrySummaryInput());
+
+  assert.equal(result.ok, true);
+  assert.equal(result.contractId, RUNTIME_SAFE_PHOTOMETRY_REFERENCE_SUMMARY_CONTRACT_ID);
+  assert.equal(result.schemaId, RUNTIME_SAFE_PHOTOMETRY_REFERENCE_SUMMARY_SCHEMA_ID);
+  assert.equal(result.schemaVersion, RUNTIME_SAFE_PHOTOMETRY_REFERENCE_SUMMARY_SCHEMA_VERSION);
+  assert.equal(result.photometryReferenceSummaryReady, true);
+  assert.equal(result.sourcePhotometryStatus, "opaque_reference_summary_ready");
+  assert.equal(result.readOnly, true);
+  assert.equal(result.diagnosticOnly, true);
+  assert.equal(result.safeSummaryOnly, true);
+  assert.equal(result.opaqueReferenceOnly, true);
+  assert.equal(result.sourceAnchorOnly, true);
+  assert.equal(result.sourceBacked, true);
+  assert.equal(result.policyFingerprint, POLICY_FINGERPRINT);
+  assert.equal(result.sourceFingerprint, SOURCE_FINGERPRINT);
+  assert.equal(result.sourceInputFingerprint, SOURCE_INPUT_FINGERPRINT);
+  assert.equal(result.boardDataSourceVersion, BOARD_DATA_SOURCE_VERSION);
+  assert.deepEqual(result.selectedFamilySubsetLock, selectedFamilySubsetLock());
+  assert.equal(result.oneMmPolicyLabel, "one-mm-length-policy-summary-only");
+  assert.match(result.sourcePhotometryRef, /^safe-source-photometry-ref:/);
+  assert.match(result.iesPhotometryReferenceToken, /^safe-ies-photometry-reference:/);
+  assert.match(result.lumenCurveReferenceSummary.curveReferenceToken, /^safe-lumen-curve-reference:/);
+  assert.match(result.driverUtilCurveReferenceSummary.curveReferenceToken, /^safe-driver-util-curve-reference:/);
+  assert.match(result.photometryReferenceFingerprint, /^safe-photometry-reference:/);
+});
+
+test("photometry reference aliases point at the same helper", () => {
+  assert.equal(buildRuntimeSafePhotometrySourceAnchorSummary, buildRuntimeSafePhotometryReferenceSummary);
+  assert.equal(buildSafePhotometryReferenceSummary, buildRuntimeSafePhotometryReferenceSummary);
+});
+
+test("photometry reference keeps all slug, IES, output, raw artefact, persistence, route, POST, and mutation flags false", () => {
+  const result = buildRuntimeSafePhotometryReferenceSummary(photometrySummaryInput());
+
+  assert.equal(result.slugGenerationEnabled, false);
+  assert.equal(result.iesGenerationEnabled, false);
+  assert.equal(result.iesGenerated, false);
+  assert.equal(result.outputGenerationEnabled, false);
+  assert.equal(result.rawIesContentReturned, false);
+  assert.equal(result.rawPhotometryReturned, false);
+  assert.equal(result.candelaArraysReturned, false);
+  assert.equal(result.base64ArtifactsReturned, false);
+  assert.equal(result.filenamesReturned, false);
+  assert.equal(result.localPathsReturned, false);
+  assert.equal(result.selectedResultPersisted, false);
+  assert.equal(result.runtimeDataMutationEnabled, false);
+  assert.equal(result.routesAdded, false);
+  assert.equal(result.postEndpointsAdded, false);
+  assert.equal(result.safetyFlags.slugGenerationEnabled, false);
+  assert.equal(result.safetyFlags.iesGenerationEnabled, false);
+  assert.equal(result.safetyFlags.iesGenerated, false);
+  assert.equal(result.safetyFlags.rawPhotometryReturned, false);
+  assert.equal(result.safetyFlags.runtimeDataMutationEnabled, false);
+});
+
+test("photometry reference emits opaque machine tokens only and no raw photometry or path artefacts", () => {
+  const result = buildRuntimeSafePhotometryReferenceSummary(photometrySummaryInput());
+  const text = serialised(result);
+
+  assert.equal(text.includes(".csv"), false);
+  assert.equal(text.includes(".json"), false);
+  assert.equal(text.includes(".ies"), false);
+  assert.equal(text.includes(".pdf"), false);
+  assert.equal(text.includes("C:\\"), false);
+  assert.equal(text.includes("IESNA:"), false);
+  assert.equal(text.includes("TILT="), false);
+  assert.equal(text.includes("candelaGrid"), false);
+  assert.equal(text.includes("data:application"), false);
+});
+
+test("photometry reference fingerprint and sourcePhotometryRef are deterministic", () => {
+  const first = buildRuntimeSafePhotometryReferenceSummary(photometrySummaryInput());
+  const second = buildRuntimeSafePhotometryReferenceSummary(photometrySummaryInput());
+
+  assert.equal(first.sourcePhotometryRef, second.sourcePhotometryRef);
+  assert.equal(first.photometryReferenceFingerprint, second.photometryReferenceFingerprint);
+});
+
+test("photometry reference fails closed if required safe anchors are missing", () => {
+  const missingCurve = buildRuntimeSafePhotometryReferenceSummary({
+    sourceFingerprint: SOURCE_FINGERPRINT,
+    sourceInputFingerprint: SOURCE_INPUT_FINGERPRINT,
+    boardDataSourceVersion: BOARD_DATA_SOURCE_VERSION,
+    selectedFamilySubsetLock: selectedFamilySubsetLock(),
+  });
+  assert.equal(missingCurve.ok, false);
+  assert.equal(missingCurve.blocker, "missing-safe-curve-reference-summary");
+
+  const missingInput = buildRuntimeSafePhotometryReferenceSummary(photometrySummaryInput({ sourceInputFingerprint: null }));
+  assert.equal(missingInput.ok, false);
+  assert.equal(missingInput.blocker, "missing-source-input-fingerprint");
+
+  const missingBoardVersion = buildRuntimeSafePhotometryReferenceSummary(photometrySummaryInput({ boardDataSourceVersion: null }));
+  assert.equal(missingBoardVersion.ok, false);
+  assert.equal(missingBoardVersion.blocker, "missing-board-data-source-version");
+
+  const missingLock = buildRuntimeSafePhotometryReferenceSummary(photometrySummaryInput({ selectedFamilySubsetLock: null }));
+  assert.equal(missingLock.ok, false);
+  assert.equal(missingLock.blocker, "missing-selected-family-subset-lock");
+});
+
+test("photometry reference fails closed if slug, IES, output, persistence, mutation, route, or POST flags are enabled", () => {
+  const slug = buildRuntimeSafePhotometryReferenceSummary(photometrySummaryInput({ slugGenerationEnabled: true }));
+  assert.equal(slug.ok, false);
+  assert.equal(slug.blocker, "slug-generation-not-approved");
+  assert.equal(slug.slugGenerationEnabled, false);
+
+  const ies = buildRuntimeSafePhotometryReferenceSummary(photometrySummaryInput({ iesGenerationEnabled: true }));
+  assert.equal(ies.ok, false);
+  assert.equal(ies.blocker, "ies-generation-not-approved");
+  assert.equal(ies.iesGenerationEnabled, false);
+
+  const output = buildRuntimeSafePhotometryReferenceSummary(photometrySummaryInput({ outputGenerationEnabled: true }));
+  assert.equal(output.ok, false);
+  assert.equal(output.blocker, "output-generation-not-approved");
+  assert.equal(output.outputGenerationEnabled, false);
+
+  const persisted = buildRuntimeSafePhotometryReferenceSummary(photometrySummaryInput({ selectedResultPersisted: true }));
+  assert.equal(persisted.ok, false);
+  assert.equal(persisted.blocker, "selected-result-body-or-persistence-not-approved");
+  assert.equal(persisted.selectedResultPersisted, false);
+
+  const mutation = buildRuntimeSafePhotometryReferenceSummary(photometrySummaryInput({ runtimeDataMutationEnabled: true }));
+  assert.equal(mutation.ok, false);
+  assert.equal(mutation.blocker, "runtime-data-mutation-not-approved");
+  assert.equal(mutation.runtimeDataMutationEnabled, false);
+
+  const route = buildRuntimeSafePhotometryReferenceSummary(photometrySummaryInput({ routesAdded: true }));
+  assert.equal(route.ok, false);
+  assert.equal(route.blocker, "route-or-post-endpoint-not-approved");
+  assert.equal(route.routesAdded, false);
+
+  const post = buildRuntimeSafePhotometryReferenceSummary(photometrySummaryInput({ postEndpointsAdded: true }));
+  assert.equal(post.ok, false);
+  assert.equal(post.blocker, "route-or-post-endpoint-not-approved");
+  assert.equal(post.postEndpointsAdded, false);
+});
+
+test("photometry reference fails closed if raw IES, raw photometry, candela, base64, filename, or local path values are supplied", () => {
+  const rawIes = buildRuntimeSafePhotometryReferenceSummary(photometrySummaryInput({ rawIesText: "IESNA:LM-63-2002\nTILT=NONE" }));
+  assert.equal(rawIes.ok, false);
+  assert.equal(rawIes.blocker, "raw-ies-content-not-approved");
+
+  const rawPhotometry = buildRuntimeSafePhotometryReferenceSummary(photometrySummaryInput({ rawPhotometry: { value: "grid" } }));
+  assert.equal(rawPhotometry.ok, false);
+  assert.equal(rawPhotometry.blocker, "raw-photometry-not-approved");
+
+  const candela = buildRuntimeSafePhotometryReferenceSummary(photometrySummaryInput({ candelaArraysReturned: true }));
+  assert.equal(candela.ok, false);
+  assert.equal(candela.blocker, "candela-array-return-not-approved");
+
+  const base64 = buildRuntimeSafePhotometryReferenceSummary(photometrySummaryInput({ fileArtifact: "data:application/pdf;base64,AAAA" }));
+  assert.equal(base64.ok, false);
+  assert.equal(base64.blocker, "base64-artifact-not-approved");
+
+  const filename = buildRuntimeSafePhotometryReferenceSummary(photometrySummaryInput({ filename: "unsafe_reference.ies" }));
+  assert.equal(filename.ok, false);
+  assert.equal(filename.blocker, "filename-or-local-path-not-approved");
+
+  const localPath = buildRuntimeSafePhotometryReferenceSummary(photometrySummaryInput({ localPath: "C:\\ControlStack_RuntimeData\\photometry" }));
+  assert.equal(localPath.ok, false);
+  assert.equal(localPath.blocker, "filename-or-local-path-not-approved");
+});
+
+test("photometry reference helper adds no fs/path IO, routes, POST endpoints, slug generation, IES generation, or server wiring", async () => {
+  const helperText = await readFile(helperSourceUrl, "utf-8");
+  const serverText = await readFile(serverSourceUrl, "utf-8");
+  const result = buildRuntimeSafePhotometryReferenceSummary(photometrySummaryInput());
+
+  assert.equal(result.slugGenerationEnabled, false);
+  assert.equal(result.iesGenerationEnabled, false);
+  assert.equal(result.iesGenerated, false);
+  assert.equal(result.runtimeDataMutationEnabled, false);
+  assert.equal(result.routesAdded, false);
+  assert.equal(result.postEndpointsAdded, false);
+  assert.equal(helperText.includes("node:fs"), false);
+  assert.equal(helperText.includes("node:path"), false);
+  assert.equal(helperText.includes("build_ies_text"), false);
+  assert.equal(helperText.includes("parse_ies"), false);
+  assert.equal(helperText.includes("writeFile"), false);
+  assert.equal(helperText.includes("mkdir"), false);
+  assert.equal(helperText.includes("router.post"), false);
+  assert.equal(helperText.includes("app.post"), false);
+  assert.equal(helperText.includes("slugGenerated: true"), false);
+  assert.equal(serverText.includes("runtimeSafePhotometryReferenceSummary"), false);
+  assert.equal(/POST[\s\S]{0,180}photometry-reference/i.test(serverText), false);
+  assert.equal(/photometry-reference[\s\S]{0,180}POST/i.test(serverText), false);
 });
