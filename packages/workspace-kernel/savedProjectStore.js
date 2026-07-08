@@ -8,6 +8,14 @@ import {
   SELECTED_RESULT_PERSISTED_SUMMARY_SLOT_STATES,
   SELECTED_RESULT_PERSISTED_SUMMARY_SLOT_TARGET,
 } from "./selectedResultPersistedSummarySlotContract.js";
+import {
+  buildRunTableFirstNarrowOutputHandoffContract,
+  RUNTABLE_FIRST_NARROW_OUTPUT_HANDOFF_GATING_PREREQUISITES,
+  RUNTABLE_FIRST_NARROW_OUTPUT_HANDOFF_REQUIRED_FALSE_FLAGS,
+  RUNTABLE_FIRST_NARROW_OUTPUT_HANDOFF_STATES,
+  RUNTABLE_FIRST_NARROW_OUTPUT_HANDOFF_SUMMARY_SCHEMA_ID,
+  RUNTABLE_FIRST_NARROW_OUTPUT_HANDOFF_SUMMARY_SCHEMA_VERSION,
+} from "./runTableFirstNarrowOutputHandoffContract.js";
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
@@ -18,6 +26,7 @@ function nowIso() {
 }
 
 const SELECTED_RESULT_SUMMARY_TARGET = "projectEnvelope.modules.cs_selector.downstreamContext.selectedResultSummary";
+const RUNTABLE_FIRST_NARROW_OUTPUT_SUMMARY_TARGET = "projectEnvelope.modules.cs_selector.downstreamContext.runTableFirstNarrowOutputSummary";
 
 const SELECTED_RESULT_SUMMARY_WRITE_SOURCE_KEYS = Object.freeze([
   "selectedResultSummary",
@@ -38,6 +47,77 @@ const SELECTED_RESULT_SUMMARY_WRITE_SOURCE_KEYS = Object.freeze([
   "safeSelectedResultSourceObjectSummary",
   "selectedResultHandoffScaffoldSummary",
   "selectedResultOutputReadinessPreflightSummary",
+]);
+
+const RUNTABLE_FIRST_NARROW_OUTPUT_WRITE_SOURCE_KEYS = Object.freeze([
+  "runTableFirstNarrowOutputSummary",
+  "runTableFirstNarrowOutputSummaryCandidate",
+  "runTableFirstNarrowOutputSummaryWrite",
+  "runTableFirstNarrowOutputSummaryWriteRequest",
+  "runTableFirstNarrowOutputWrite",
+  "runTableFirstNarrowOutputWriteRequest",
+  "runTableFirstNarrowOutputHandoffSummary",
+  "runTableFirstNarrowOutputHandoffSummaryCandidate",
+  "runTableFirstNarrowOutputHandoffSummaryWrite",
+  "runTableFirstNarrowOutputHandoffWrite",
+  "runTableFirstNarrowOutputHandoffWriteRequest",
+  "runTableFirstNarrowOutputHandoffContractSummary",
+  "runtableFirstNarrowOutputHandoffContractSummary",
+]);
+
+const RUNTABLE_FIRST_NARROW_OUTPUT_SUMMARY_ELIGIBLE_FIELD_SET = Object.freeze([
+  "schemaId",
+  "schemaVersion",
+  "owner",
+  "slotOwner",
+  "targetKind",
+  "moduleId",
+  "state",
+  "summaryOnly",
+  "diagnosticOnly",
+  "safeSummaryOnly",
+  "redacted",
+  "machineValueSafe",
+  "sourceKind",
+  "futureOutputKind",
+  "rowsIncluded",
+  "rowCount",
+  "generated",
+  "generationEnabled",
+  "persisted",
+  "routeAdded",
+  "postEndpointAdded",
+  "runTableFirstNarrowOutputHandoffContractState",
+  "runTableFirstNarrowOutputHandoffContractReady",
+  "acceptedSelectedResultAuthorityState",
+  "selectedResultPersistenceAuthorityPreflightState",
+  "selectedResultPersistenceBoundaryState",
+  "selectedResultOutputReadinessPreflightState",
+  "policyFingerprint",
+  "sourceFingerprint",
+  "sourceInputFingerprint",
+  "sourceVersionFingerprint",
+  "persistedSelectedResultSummaryFingerprint",
+  "selectedResultPersistedSummarySlotContractFingerprint",
+  "runTableFirstNarrowOutputHandoffContractFingerprint",
+  ...RUNTABLE_FIRST_NARROW_OUTPUT_HANDOFF_REQUIRED_FALSE_FLAGS,
+]);
+
+const RUNTABLE_FIRST_NARROW_OUTPUT_SUMMARY_REQUIRED_FIELDS = Object.freeze([
+  "schemaId",
+  "schemaVersion",
+  "owner",
+  "slotOwner",
+  "targetKind",
+  "moduleId",
+  "state",
+  "policyFingerprint",
+  "sourceFingerprint",
+  "sourceInputFingerprint",
+  "sourceVersionFingerprint",
+  "persistedSelectedResultSummaryFingerprint",
+  "selectedResultPersistedSummarySlotContractFingerprint",
+  "runTableFirstNarrowOutputHandoffContractFingerprint",
 ]);
 
 const SELECTED_RESULT_SUMMARY_RAW_BODY_KEYS = Object.freeze([
@@ -251,6 +331,7 @@ function removeSelectedResultSummaryWriteSourceKeys(value) {
   if (!isPlainObject(value)) return value;
   const copy = cloneMaybe(value) || {};
   for (const key of SELECTED_RESULT_SUMMARY_WRITE_SOURCE_KEYS) delete copy[key];
+  for (const key of RUNTABLE_FIRST_NARROW_OUTPUT_WRITE_SOURCE_KEYS) delete copy[key];
   return copy;
 }
 
@@ -532,6 +613,330 @@ function writeSelectedResultPersistedSummaryToEnvelope(envelope, summary) {
     envelope.modules.cs_selector.downstreamContext = {};
   }
   envelope.modules.cs_selector.downstreamContext.selectedResultSummary = clone(summary);
+  return envelope;
+}
+
+function runTableFirstNarrowOutputSummaryWriteFailure(reason) {
+  throw new Error(`RunTable first narrow output summary write rejected: ${reason}`);
+}
+
+function resolveRunTableFirstNarrowOutputSummaryWrite(context = {}, moduleContributions = {}) {
+  const selectorContribution = isPlainObject(moduleContributions.cs_selector) ? moduleContributions.cs_selector : {};
+  const contributionDownstream = isPlainObject(selectorContribution.downstreamContext) ? selectorContribution.downstreamContext : {};
+  const contextSelectorDownstream = isPlainObject(context.downstream?.selector) ? context.downstream.selector : {};
+  const directWrite = selectedSummaryFirstPlain(
+    [selectorContribution, contributionDownstream, contextSelectorDownstream, context],
+    [
+      "runTableFirstNarrowOutputSummaryWrite",
+      "runTableFirstNarrowOutputSummaryWriteRequest",
+      "runTableFirstNarrowOutputWrite",
+      "runTableFirstNarrowOutputWriteRequest",
+      "runTableFirstNarrowOutputHandoffSummaryWrite",
+      "runTableFirstNarrowOutputHandoffWrite",
+      "runTableFirstNarrowOutputHandoffWriteRequest",
+    ],
+  );
+  const sources = [directWrite, selectorContribution, contributionDownstream, contextSelectorDownstream, context];
+  const requested = directWrite.writeRequested === true
+    || directWrite.enabled === true
+    || directWrite.persist === true
+    || directWrite.write === true
+    || selectorContribution.runTableFirstNarrowOutputSummaryWriteRequested === true
+    || contributionDownstream.runTableFirstNarrowOutputSummaryWriteRequested === true
+    || contextSelectorDownstream.runTableFirstNarrowOutputSummaryWriteRequested === true
+    || selectorContribution.runTableFirstNarrowOutputHandoffWriteRequested === true
+    || contributionDownstream.runTableFirstNarrowOutputHandoffWriteRequested === true
+    || contextSelectorDownstream.runTableFirstNarrowOutputHandoffWriteRequested === true
+    || hasOwnPlainKey(directWrite, "runTableFirstNarrowOutputSummaryCandidate")
+    || hasOwnPlainKey(contributionDownstream, "runTableFirstNarrowOutputSummaryCandidate")
+    || hasOwnPlainKey(contextSelectorDownstream, "runTableFirstNarrowOutputSummaryCandidate")
+    || hasOwnPlainKey(directWrite, "runTableFirstNarrowOutputHandoffSummaryCandidate")
+    || hasOwnPlainKey(contributionDownstream, "runTableFirstNarrowOutputHandoffSummaryCandidate")
+    || hasOwnPlainKey(contextSelectorDownstream, "runTableFirstNarrowOutputHandoffSummaryCandidate");
+
+  if (!requested) {
+    return {
+      requested: false,
+      context,
+      moduleContributions,
+    };
+  }
+
+  const targetPath = selectedSummaryFirstValue(sources, [
+    "targetPath",
+    "targetLocation",
+    "writeTarget",
+    "slot",
+    "envelopeSlot",
+  ]) || RUNTABLE_FIRST_NARROW_OUTPUT_SUMMARY_TARGET;
+
+  const persistedSummary = selectedSummaryFirstPlain(sources, [
+    "persistedSelectedResultSummary",
+    "selectedResultPersistedSummary",
+    "selectedResultSummary",
+  ]);
+  const slotContractSummary = selectedSummaryFirstPlain(sources, [
+    "selectedResultPersistedSummarySlotContractSummary",
+    "persistedSummarySlotContractSummary",
+  ]);
+  const handoffContractSummary = selectedSummaryFirstPlain(sources, [
+    "runTableFirstNarrowOutputHandoffContractSummary",
+    "runtableFirstNarrowOutputHandoffContractSummary",
+    "runTableFirstNarrowOutputHandoffContract",
+    "runTableFirstNarrowOutputContractSummary",
+  ]);
+
+  return {
+    requested: true,
+    targetPath: selectedSummarySafeToken(targetPath, ""),
+    persistedSummary,
+    slotContractSummary,
+    handoffContractSummary,
+    sourceFingerprints: {
+      policyFingerprint: selectedSummarySafeFingerprint(selectedSummaryFirstValue(sources, ["policyFingerprint", "safePolicyFingerprint", "currentPolicyFingerprint"])),
+      sourceFingerprint: selectedSummarySafeFingerprint(selectedSummaryFirstValue(sources, ["sourceFingerprint", "safeSourceFingerprint", "currentSourceFingerprint"])),
+      sourceInputFingerprint: selectedSummarySafeFingerprint(selectedSummaryFirstValue(sources, ["sourceInputFingerprint", "currentSourceInputFingerprint"])),
+      sourceVersionFingerprint: selectedSummarySafeFingerprint(selectedSummaryFirstValue(sources, ["sourceVersionFingerprint", "sourceVersionMarker", "boardDataSourceVersion"])),
+      persistedSelectedResultSummaryFingerprint: selectedSummarySafeFingerprint(selectedSummaryFirstValue(sources, ["persistedSelectedResultSummaryFingerprint", "selectedResultPersistedSummaryFingerprint"])),
+      selectedResultPersistedSummarySlotContractFingerprint: selectedSummarySafeFingerprint(selectedSummaryFirstValue(sources, ["selectedResultPersistedSummarySlotContractFingerprint", "persistedSummarySlotContractFingerprint"])),
+    },
+    rawInputForSafetyScan: {
+      directWrite,
+      runTableFirstNarrowOutputSummary: directWrite.runTableFirstNarrowOutputSummary || contributionDownstream.runTableFirstNarrowOutputSummary || contextSelectorDownstream.runTableFirstNarrowOutputSummary || null,
+      runTableFirstNarrowOutputSummaryCandidate: directWrite.runTableFirstNarrowOutputSummaryCandidate || contributionDownstream.runTableFirstNarrowOutputSummaryCandidate || contextSelectorDownstream.runTableFirstNarrowOutputSummaryCandidate || null,
+      runTableFirstNarrowOutputHandoffSummary: directWrite.runTableFirstNarrowOutputHandoffSummary || contributionDownstream.runTableFirstNarrowOutputHandoffSummary || contextSelectorDownstream.runTableFirstNarrowOutputHandoffSummary || null,
+      runTableFirstNarrowOutputHandoffSummaryCandidate: directWrite.runTableFirstNarrowOutputHandoffSummaryCandidate || contributionDownstream.runTableFirstNarrowOutputHandoffSummaryCandidate || contextSelectorDownstream.runTableFirstNarrowOutputHandoffSummaryCandidate || null,
+      runTableFirstNarrowOutputHandoffContractSummary: handoffContractSummary,
+    },
+    context: sanitiseSelectedResultSummaryContext(context),
+    moduleContributions: sanitiseSelectedResultSummaryModuleContributions(moduleContributions),
+  };
+}
+
+function envelopeSelectedResultSummary(envelope) {
+  return isPlainObject(envelope?.modules?.cs_selector?.downstreamContext?.selectedResultSummary)
+    ? envelope.modules.cs_selector.downstreamContext.selectedResultSummary
+    : {};
+}
+
+function slotContractReadyForRunTable(writeRequest) {
+  const slotContract = isPlainObject(writeRequest.slotContractSummary) ? writeRequest.slotContractSummary : {};
+  return slotContract.selectedResultPersistedSummarySlotContractReady === true
+    || slotContract.state === SELECTED_RESULT_PERSISTED_SUMMARY_SLOT_STATES.contractReady
+    || slotContract.persistedSummarySlotContractState === SELECTED_RESULT_PERSISTED_SUMMARY_SLOT_STATES.contractReady;
+}
+
+function resolveRunTableFirstNarrowOutputHandoffContract(writeRequest, envelope) {
+  if (isPlainObject(writeRequest.handoffContractSummary) && Object.keys(writeRequest.handoffContractSummary).length > 0) {
+    return writeRequest.handoffContractSummary;
+  }
+
+  const persistedSummary = Object.keys(envelopeSelectedResultSummary(envelope)).length > 0
+    ? envelopeSelectedResultSummary(envelope)
+    : writeRequest.persistedSummary;
+  const fingerprints = writeRequest.sourceFingerprints || {};
+  const slotContract = isPlainObject(writeRequest.slotContractSummary) ? writeRequest.slotContractSummary : {};
+  const slotContractFingerprints = isPlainObject(slotContract.fingerprints) ? slotContract.fingerprints : {};
+
+  return buildRunTableFirstNarrowOutputHandoffContract({
+    selectedResultPersistedSummaryWritten: true,
+    selectedResultPersistenceWriteComplete: true,
+    selectedResultPersistedSummarySlotContractReady: slotContractReadyForRunTable(writeRequest),
+    persistedSelectedResultSummary: persistedSummary,
+    policyFingerprint: fingerprints.policyFingerprint || persistedSummary.policyFingerprint,
+    sourceFingerprint: fingerprints.sourceFingerprint || persistedSummary.sourceFingerprint,
+    sourceInputFingerprint: fingerprints.sourceInputFingerprint || persistedSummary.sourceInputFingerprint,
+    sourceVersionFingerprint: fingerprints.sourceVersionFingerprint || persistedSummary.sourceVersionFingerprint,
+    persistedSelectedResultSummaryFingerprint: fingerprints.persistedSelectedResultSummaryFingerprint || persistedSummary.persistedSelectedResultSummaryFingerprint,
+    selectedResultPersistedSummarySlotContractFingerprint: fingerprints.selectedResultPersistedSummarySlotContractFingerprint
+      || persistedSummary.selectedResultPersistedSummarySlotContractFingerprint
+      || slotContract.selectedResultPersistedSummarySlotContractFingerprint
+      || slotContract.persistedSummarySlotContractFingerprint
+      || slotContractFingerprints.selectedResultPersistedSummarySlotContractFingerprint
+      || slotContractFingerprints.selectedResultPersistedSummarySlotContract,
+  });
+}
+
+function validateRunTableFirstNarrowOutputSummaryTarget(writeRequest, handoffContract) {
+  if (writeRequest.targetPath !== RUNTABLE_FIRST_NARROW_OUTPUT_SUMMARY_TARGET) {
+    runTableFirstNarrowOutputSummaryWriteFailure(`target path drifted from shell slot: ${writeRequest.targetPath || "missing"}`);
+  }
+  const target = isPlainObject(handoffContract.writeTarget) ? handoffContract.writeTarget
+    : isPlainObject(handoffContract.slotTarget) ? handoffContract.slotTarget
+      : isPlainObject(handoffContract.safeWriteTarget) ? handoffContract.safeWriteTarget
+        : {};
+  if (!isBlank(target.targetLocation) && target.targetLocation !== RUNTABLE_FIRST_NARROW_OUTPUT_SUMMARY_TARGET) {
+    runTableFirstNarrowOutputSummaryWriteFailure("handoff contract target does not match runTableFirstNarrowOutputSummary shell slot");
+  }
+  if (!isBlank(target.slot) && target.slot !== RUNTABLE_FIRST_NARROW_OUTPUT_SUMMARY_TARGET) {
+    runTableFirstNarrowOutputSummaryWriteFailure("handoff contract slot does not match runTableFirstNarrowOutputSummary shell slot");
+  }
+  if (target.owner && target.owner !== "shell") {
+    runTableFirstNarrowOutputSummaryWriteFailure("handoff contract target is not shell-owned");
+  }
+  if (target.moduleId && target.moduleId !== "cs_selector") {
+    runTableFirstNarrowOutputSummaryWriteFailure("handoff contract target module is not cs_selector");
+  }
+  for (const key of ["runtimeDataTarget", "boardDataTarget", "donorDataTarget", "runTableTarget", "iesTarget", "outputTarget", "routeTarget", "postEndpointTarget"]) {
+    if (target[key] === true || handoffContract[key] === true) {
+      runTableFirstNarrowOutputSummaryWriteFailure(`handoff contract attempted blocked target ${key}`);
+    }
+  }
+}
+
+function validateRunTableFirstNarrowOutputHandoffAuthority(handoffContract) {
+  if (handoffContract.state !== RUNTABLE_FIRST_NARROW_OUTPUT_HANDOFF_STATES.contractReady
+    || handoffContract.runTableFirstNarrowOutputHandoffContractReady !== true
+    || handoffContract.failClosed === true) {
+    runTableFirstNarrowOutputSummaryWriteFailure(handoffContract.blocker || "runtable-first-narrow-output-handoff-contract-not-ready");
+  }
+  const requirements = isPlainObject(handoffContract.requirements) ? handoffContract.requirements : {};
+  for (const key of RUNTABLE_FIRST_NARROW_OUTPUT_HANDOFF_GATING_PREREQUISITES) {
+    if (requirements[key] !== true) runTableFirstNarrowOutputSummaryWriteFailure(key);
+  }
+  for (const key of RUNTABLE_FIRST_NARROW_OUTPUT_HANDOFF_REQUIRED_FALSE_FLAGS) {
+    if (handoffContract[key] !== false) runTableFirstNarrowOutputSummaryWriteFailure(`required false handoff flag not false: ${key}`);
+    if (isPlainObject(handoffContract.safetyFlags) && handoffContract.safetyFlags[key] !== false) {
+      runTableFirstNarrowOutputSummaryWriteFailure(`required false handoff safety flag not false: ${key}`);
+    }
+  }
+  if (handoffContract.rowsIncluded === true || handoffContract.rowCount > 0 || Array.isArray(handoffContract.rows) && handoffContract.rows.length > 0) {
+    runTableFirstNarrowOutputSummaryWriteFailure("raw-runtable-rows-not-approved");
+  }
+}
+
+function buildRedactedRunTableFirstNarrowOutputSummary(handoffContract) {
+  const fingerprints = isPlainObject(handoffContract.fingerprints) ? handoffContract.fingerprints : {};
+  const summary = {
+    schemaId: handoffContract.summarySchemaId || RUNTABLE_FIRST_NARROW_OUTPUT_HANDOFF_SUMMARY_SCHEMA_ID,
+    schemaVersion: handoffContract.summarySchemaVersion || RUNTABLE_FIRST_NARROW_OUTPUT_HANDOFF_SUMMARY_SCHEMA_VERSION,
+    owner: "shell",
+    slotOwner: "shell",
+    targetKind: "project-envelope-module-downstream-context-summary-slot",
+    moduleId: "cs_selector",
+    state: "redacted_runtable_first_narrow_output_summary_persisted",
+    summaryOnly: true,
+    diagnosticOnly: true,
+    safeSummaryOnly: true,
+    redacted: true,
+    machineValueSafe: true,
+    sourceKind: "persisted-selected-result-summary",
+    futureOutputKind: "runtable-first-narrow-output",
+    rowsIncluded: false,
+    rowCount: 0,
+    generated: false,
+    generationEnabled: false,
+    persisted: false,
+    routeAdded: false,
+    postEndpointAdded: false,
+    runTableFirstNarrowOutputHandoffContractState: selectedSummarySafeToken(handoffContract.runTableFirstNarrowOutputHandoffContractState || handoffContract.state, RUNTABLE_FIRST_NARROW_OUTPUT_HANDOFF_STATES.contractReady),
+    runTableFirstNarrowOutputHandoffContractReady: true,
+    acceptedSelectedResultAuthorityState: selectedSummarySafeToken(handoffContract.acceptedSelectedResultAuthorityState, "accepted_selected_result_authority"),
+    selectedResultPersistenceAuthorityPreflightState: selectedSummarySafeToken(handoffContract.selectedResultPersistenceAuthorityPreflightState, "ready_for_persistence_authority"),
+    selectedResultPersistenceBoundaryState: selectedSummarySafeToken(handoffContract.selectedResultPersistenceBoundaryState, "selected_result_persistence_boundary_contract_ready"),
+    selectedResultOutputReadinessPreflightState: selectedSummarySafeToken(handoffContract.selectedResultOutputReadinessPreflightState, "selected_result_output_readiness_ready_for_persistence"),
+    policyFingerprint: selectedSummarySafeFingerprint(fingerprints.policyFingerprint || handoffContract.policyFingerprint),
+    sourceFingerprint: selectedSummarySafeFingerprint(fingerprints.sourceFingerprint || handoffContract.sourceFingerprint),
+    sourceInputFingerprint: selectedSummarySafeFingerprint(fingerprints.sourceInputFingerprint || handoffContract.sourceInputFingerprint),
+    sourceVersionFingerprint: selectedSummarySafeFingerprint(fingerprints.sourceVersionFingerprint || handoffContract.sourceVersionFingerprint),
+    persistedSelectedResultSummaryFingerprint: selectedSummarySafeFingerprint(fingerprints.persistedSelectedResultSummaryFingerprint || handoffContract.persistedSelectedResultSummaryFingerprint),
+    selectedResultPersistedSummarySlotContractFingerprint: selectedSummarySafeFingerprint(fingerprints.selectedResultPersistedSummarySlotContractFingerprint || handoffContract.selectedResultPersistedSummarySlotContractFingerprint),
+    runTableFirstNarrowOutputHandoffContractFingerprint: selectedSummarySafeFingerprint(fingerprints.runTableFirstNarrowOutputHandoffContractFingerprint || handoffContract.runTableFirstNarrowOutputHandoffContractFingerprint),
+  };
+
+  for (const key of RUNTABLE_FIRST_NARROW_OUTPUT_HANDOFF_REQUIRED_FALSE_FLAGS) {
+    summary[key] = false;
+  }
+
+  const allowed = new Set(RUNTABLE_FIRST_NARROW_OUTPUT_SUMMARY_ELIGIBLE_FIELD_SET);
+  return Object.fromEntries(Object.entries(summary).filter(([key]) => allowed.has(key)));
+}
+
+function findUnsafeRunTableFirstNarrowOutputInput(value, depth = 0, seen = new Set()) {
+  if (depth > 10) return null;
+  if (typeof value === "string") {
+    return SELECTED_RESULT_SUMMARY_PRIVATE_VALUE_PATTERN.test(value) ? "private-path-or-filename-not-approved" : null;
+  }
+  if (Array.isArray(value)) {
+    for (const item of value.slice(0, 80)) {
+      const nested = findUnsafeRunTableFirstNarrowOutputInput(item, depth + 1, seen);
+      if (nested) return nested;
+    }
+    return null;
+  }
+  if (!isPlainObject(value) || seen.has(value)) return null;
+  seen.add(value);
+
+  for (const [key, nested] of Object.entries(value)) {
+    if (key === "rows" && Array.isArray(nested) && nested.length > 0) {
+      return "blocked-raw-field-rows";
+    }
+    if (SELECTED_RESULT_SUMMARY_RAW_BODY_KEYS.includes(key) && nested !== false && nested !== null && nested !== undefined) {
+      return `blocked-raw-field-${selectedSummarySafeToken(key, "unsafe")}`;
+    }
+    if (RUNTABLE_FIRST_NARROW_OUTPUT_HANDOFF_REQUIRED_FALSE_FLAGS.includes(key) && nested === true) {
+      return `unsafe-true-flag-${selectedSummarySafeToken(key, "flag")}`;
+    }
+    const child = findUnsafeRunTableFirstNarrowOutputInput(nested, depth + 1, seen);
+    if (child) return child;
+  }
+  return null;
+}
+
+function validateRedactedRunTableFirstNarrowOutputSummary(summary) {
+  const allowed = new Set(RUNTABLE_FIRST_NARROW_OUTPUT_SUMMARY_ELIGIBLE_FIELD_SET);
+  for (const key of Object.keys(summary)) {
+    if (!allowed.has(key)) runTableFirstNarrowOutputSummaryWriteFailure(`summary field not allow-listed: ${key}`);
+  }
+  for (const key of RUNTABLE_FIRST_NARROW_OUTPUT_SUMMARY_REQUIRED_FIELDS) {
+    if (isBlank(summary[key])) runTableFirstNarrowOutputSummaryWriteFailure(`required summary field missing: ${key}`);
+  }
+  for (const key of RUNTABLE_FIRST_NARROW_OUTPUT_HANDOFF_REQUIRED_FALSE_FLAGS) {
+    if (summary[key] !== false) runTableFirstNarrowOutputSummaryWriteFailure(`required false summary flag not false: ${key}`);
+  }
+  if (summary.owner !== "shell" || summary.slotOwner !== "shell" || summary.moduleId !== "cs_selector") {
+    runTableFirstNarrowOutputSummaryWriteFailure("summary owner/module is not shell-owned cs_selector");
+  }
+  if (summary.summaryOnly !== true || summary.diagnosticOnly !== true || summary.safeSummaryOnly !== true || summary.redacted !== true || summary.machineValueSafe !== true) {
+    runTableFirstNarrowOutputSummaryWriteFailure("summary is not marked diagnostic-only, summary-only, redacted, and machine-value-safe");
+  }
+  if (summary.rowsIncluded !== false || summary.rowCount !== 0 || summary.generated !== false || summary.generationEnabled !== false || summary.persisted !== false || summary.routeAdded !== false || summary.postEndpointAdded !== false) {
+    runTableFirstNarrowOutputSummaryWriteFailure("summary attempted RunTable generation, persistence, route, or POST exposure");
+  }
+  const unsafe = findUnsafeRunTableFirstNarrowOutputInput(summary);
+  if (unsafe) runTableFirstNarrowOutputSummaryWriteFailure(unsafe);
+}
+
+function prepareRunTableFirstNarrowOutputSummaryWrite(writeRequest, envelope) {
+  if (!writeRequest.requested) return writeRequest;
+
+  const unsafe = findUnsafeRunTableFirstNarrowOutputInput(writeRequest.rawInputForSafetyScan);
+  if (unsafe) runTableFirstNarrowOutputSummaryWriteFailure(unsafe);
+
+  const handoffContract = resolveRunTableFirstNarrowOutputHandoffContract(writeRequest, envelope);
+  const contractUnsafe = findUnsafeRunTableFirstNarrowOutputInput(handoffContract); 
+  if (contractUnsafe) runTableFirstNarrowOutputSummaryWriteFailure(contractUnsafe);
+  validateRunTableFirstNarrowOutputSummaryTarget(writeRequest, handoffContract);
+  validateRunTableFirstNarrowOutputHandoffAuthority(handoffContract);
+
+  const summary = buildRedactedRunTableFirstNarrowOutputSummary(handoffContract);
+  validateRedactedRunTableFirstNarrowOutputSummary(summary);
+
+  return {
+    ...writeRequest,
+    handoffContract,
+    summary,
+  };
+}
+
+function writeRunTableFirstNarrowOutputSummaryToEnvelope(envelope, summary) {
+  if (!isPlainObject(envelope?.modules?.cs_selector)) {
+    runTableFirstNarrowOutputSummaryWriteFailure("candidate envelope missing cs_selector module slot");
+  }
+  if (!isPlainObject(envelope.modules.cs_selector.downstreamContext)) {
+    envelope.modules.cs_selector.downstreamContext = {};
+  }
+  envelope.modules.cs_selector.downstreamContext.runTableFirstNarrowOutputSummary = clone(summary);
   return envelope;
 }
 
@@ -830,8 +1235,13 @@ export function createSavedProjectStore({ eventBus } = {}) {
       state.save.lastError = null;
 
       const selectedResultSummaryWrite = prepareSelectedResultPersistedSummaryWrite(context, moduleContributions);
-      const saveContext = selectedResultSummaryWrite.requested ? selectedResultSummaryWrite.context : context;
-      const saveModuleContributions = selectedResultSummaryWrite.requested ? selectedResultSummaryWrite.moduleContributions : moduleContributions;
+      const runTableFirstNarrowOutputSummaryWriteRequest = resolveRunTableFirstNarrowOutputSummaryWrite(context, moduleContributions);
+      const saveContext = runTableFirstNarrowOutputSummaryWriteRequest.requested
+        ? runTableFirstNarrowOutputSummaryWriteRequest.context
+        : selectedResultSummaryWrite.requested ? selectedResultSummaryWrite.context : context;
+      const saveModuleContributions = runTableFirstNarrowOutputSummaryWriteRequest.requested
+        ? runTableFirstNarrowOutputSummaryWriteRequest.moduleContributions
+        : selectedResultSummaryWrite.requested ? selectedResultSummaryWrite.moduleContributions : moduleContributions;
       browserContext = saveContext;
 
       const projectId = saveContext.project?.metadata?.projectId || saveContext.project?.currentProject?.projectId || "runtime-project";
@@ -853,6 +1263,17 @@ export function createSavedProjectStore({ eventBus } = {}) {
         writeSelectedResultPersistedSummaryToEnvelope(envelope, selectedResultSummaryWrite.summary);
       }
 
+      if (runTableFirstNarrowOutputSummaryWriteRequest.requested
+        && Object.keys(envelopeSelectedResultSummary(envelope)).length === 0
+        && Object.keys(envelopeSelectedResultSummary(previousEnvelope)).length > 0) {
+        writeSelectedResultPersistedSummaryToEnvelope(envelope, envelopeSelectedResultSummary(previousEnvelope));
+      }
+
+      const runTableFirstNarrowOutputSummaryWrite = prepareRunTableFirstNarrowOutputSummaryWrite(runTableFirstNarrowOutputSummaryWriteRequest, envelope);
+      if (runTableFirstNarrowOutputSummaryWrite.requested) {
+        writeRunTableFirstNarrowOutputSummaryToEnvelope(envelope, runTableFirstNarrowOutputSummaryWrite.summary);
+      }
+
       if (existingIndex >= 0) state.savedEnvelopes[existingIndex] = envelope;
       else state.savedEnvelopes.unshift(envelope);
       state.save.status = "saved";
@@ -868,6 +1289,8 @@ export function createSavedProjectStore({ eventBus } = {}) {
         updatedExisting: existingIndex >= 0,
         selectedResultPersistedSummaryWritten: selectedResultSummaryWrite.requested === true,
         selectedResultPersistedSummaryTarget: selectedResultSummaryWrite.requested ? SELECTED_RESULT_SUMMARY_TARGET : null,
+        runTableFirstNarrowOutputSummaryWritten: runTableFirstNarrowOutputSummaryWrite.requested === true,
+        runTableFirstNarrowOutputSummaryTarget: runTableFirstNarrowOutputSummaryWrite.requested ? RUNTABLE_FIRST_NARROW_OUTPUT_SUMMARY_TARGET : null,
         envelope: clone(envelope),
         browser: getStoreSnapshot(saveContext),
       };
