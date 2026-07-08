@@ -13,6 +13,10 @@ export const PROJECT_BROWSER_SELECTED_PROJECT_SELECTED_RESULT_PERSISTED_SUMMARY_
   "controlstack.runtime.project-browser.selected-project-selected-result-persisted-summary-readback-status.v1";
 export const PROJECT_BROWSER_SELECTED_PROJECT_SELECTED_RESULT_PERSISTED_SUMMARY_READBACK_STATUS_SCHEMA_VERSION = 1;
 
+export const PROJECT_BROWSER_SELECTED_PROJECT_SELECTED_RESULT_PERSISTED_SUMMARY_READBACK_DETAIL_SUMMARY_SCHEMA_ID =
+  "controlstack.runtime.project-browser.selected-project-selected-result-persisted-summary-readback-detail-summary.v1";
+export const PROJECT_BROWSER_SELECTED_PROJECT_SELECTED_RESULT_PERSISTED_SUMMARY_READBACK_DETAIL_SUMMARY_SCHEMA_VERSION = 1;
+
 export const PROJECT_BROWSER_SELECTED_RESULT_PERSISTED_SUMMARY_READBACK_STATES = Object.freeze({
   ready: "project_browser_selected_result_persisted_summary_readback_ready",
   missing: "project_browser_selected_result_persisted_summary_readback_missing",
@@ -31,10 +35,18 @@ export const PROJECT_BROWSER_SELECTED_PROJECT_SELECTED_RESULT_PERSISTED_SUMMARY_
   blockedFailClosed: "project_browser_selected_project_selected_result_persisted_summary_readback_blocked_fail_closed",
 });
 
+export const PROJECT_BROWSER_SELECTED_PROJECT_SELECTED_RESULT_PERSISTED_SUMMARY_READBACK_DETAIL_STATES = Object.freeze({
+  ready: "project_browser_selected_project_selected_result_persisted_summary_readback_detail_ready",
+  missing: "project_browser_selected_project_selected_result_persisted_summary_readback_detail_missing",
+  blockedFailClosed: "project_browser_selected_project_selected_result_persisted_summary_readback_detail_blocked_fail_closed",
+});
+
 const PROJECT_BROWSER_SELECTED_RESULT_READBACK_SOURCE =
   "project-browser-project-summary-selected-result-readback-consumer";
 const PROJECT_BROWSER_SELECTED_PROJECT_SELECTED_RESULT_READBACK_STATUS_SOURCE =
   "project-browser-selected-project-project-summary-selected-result-readback-status-consumer";
+export const PROJECT_BROWSER_SELECTED_PROJECT_SELECTED_RESULT_READBACK_DETAIL_SOURCE =
+  "project-browser-selected-project-project-summary-selected-result-readback-detail-consumer";
 const SELECTED_RESULT_READBACK_TARGET =
   "projectEnvelope.modules.cs_selector.downstreamContext.selectedResultSummary";
 
@@ -437,6 +449,112 @@ export function buildProjectBrowserSelectedProjectSelectedResultPersistedSummary
   });
 }
 
+export function buildProjectBrowserSelectedProjectSelectedResultPersistedSummaryReadbackDetailSummary(projects = [], selectedProjectId = null) {
+  const projectSummaries = Array.isArray(projects) ? projects : [];
+  const sourceStatus = buildProjectBrowserSelectedProjectSelectedResultPersistedSummaryReadbackStatus(
+    projectSummaries,
+    selectedProjectId,
+  );
+  const selectedProject = sourceStatus.selectedProjectFound === true
+    ? findSelectedProjectSummary(projectSummaries, sourceStatus.selectedProjectId)
+    : null;
+  const sourceDetail = buildProjectBrowserSelectedResultPersistedSummaryReadbackDetailSummary(
+    selectedProject?.selectedResultPersistedSummaryReadbackStatus || {},
+  );
+
+  const statusReady = sourceStatus.readiness === "ready"
+    && sourceStatus.ready === true
+    && sourceStatus.failClosed !== true;
+  const detailReady = sourceDetail.readiness === "ready"
+    && sourceDetail.ready === true
+    && sourceDetail.failClosed !== true;
+  const statusBlockedFailClosed = sourceStatus.readiness === "blocked_fail_closed"
+    || sourceStatus.state === PROJECT_BROWSER_SELECTED_PROJECT_SELECTED_RESULT_PERSISTED_SUMMARY_READBACK_STATUS_STATES.blockedFailClosed;
+  const detailBlockedFailClosed = sourceDetail.readiness === "blocked_fail_closed"
+    || sourceDetail.state === PROJECT_BROWSER_SELECTED_RESULT_PERSISTED_SUMMARY_READBACK_DETAIL_STATES.blockedFailClosed;
+
+  let state = PROJECT_BROWSER_SELECTED_PROJECT_SELECTED_RESULT_PERSISTED_SUMMARY_READBACK_DETAIL_STATES.missing;
+  let readiness = "missing";
+  let ready = false;
+  let failClosed = true;
+  let blocker = null;
+
+  if (statusReady && detailReady) {
+    state = PROJECT_BROWSER_SELECTED_PROJECT_SELECTED_RESULT_PERSISTED_SUMMARY_READBACK_DETAIL_STATES.ready;
+    readiness = "ready";
+    ready = true;
+    failClosed = false;
+  } else if (statusBlockedFailClosed || detailBlockedFailClosed) {
+    state = PROJECT_BROWSER_SELECTED_PROJECT_SELECTED_RESULT_PERSISTED_SUMMARY_READBACK_DETAIL_STATES.blockedFailClosed;
+    readiness = "blocked_fail_closed";
+    blocker = safeToken(
+      sourceStatus.selectedProjectBlocker || sourceDetail.blocker,
+      "project-browser-selected-project-readback-blocked-fail-closed",
+    );
+  } else if (sourceStatus.selectedProjectId === null) {
+    blocker = "project-browser-selected-project-not-selected";
+  } else if (sourceStatus.selectedProjectFound !== true) {
+    blocker = "project-browser-selected-project-not-found";
+  } else {
+    blocker = "project-browser-selected-project-readback-missing";
+  }
+
+  const base = {
+    schemaId: PROJECT_BROWSER_SELECTED_PROJECT_SELECTED_RESULT_PERSISTED_SUMMARY_READBACK_DETAIL_SUMMARY_SCHEMA_ID,
+    schemaVersion: PROJECT_BROWSER_SELECTED_PROJECT_SELECTED_RESULT_PERSISTED_SUMMARY_READBACK_DETAIL_SUMMARY_SCHEMA_VERSION,
+    owner: "shell",
+    source: PROJECT_BROWSER_SELECTED_PROJECT_SELECTED_RESULT_READBACK_DETAIL_SOURCE,
+    sourceStatusSchemaId: safeToken(sourceStatus.schemaId, null),
+    sourceStatusSchemaVersion: safeSchemaVersion(sourceStatus.schemaVersion),
+    sourceStatusState: safeToken(sourceStatus.state, null),
+    sourceStatusReadiness: safeToken(sourceStatus.readiness, "missing") || "missing",
+    sourceDetailSchemaId: safeToken(sourceDetail.schemaId, null),
+    sourceDetailSchemaVersion: safeSchemaVersion(sourceDetail.schemaVersion),
+    sourceDetailState: safeToken(sourceDetail.state, null),
+    sourceDetailReadiness: safeToken(sourceDetail.readiness, "missing") || "missing",
+    state,
+    readiness,
+    ready,
+    failClosed,
+    blocker,
+    selectedProjectId: sourceStatus.selectedProjectId || null,
+    selectedProjectFound: sourceStatus.selectedProjectFound === true,
+    summaryPresent: sourceDetail.summaryPresent === true,
+    summarySchemaId: sourceDetail.summarySchemaId ? safeToken(sourceDetail.summarySchemaId, null) : null,
+    summarySchemaVersion: safeSchemaVersion(sourceDetail.summarySchemaVersion),
+    summaryState: sourceDetail.summaryState ? safeToken(sourceDetail.summaryState, null) : null,
+    slotOwner: safeToken(sourceDetail.slotOwner, "shell"),
+    envelopeOwner: safeToken(sourceDetail.envelopeOwner, "shell"),
+    moduleId: safeToken(sourceDetail.moduleId, "cs_selector"),
+    targetLocation: safeToken(sourceDetail.targetLocation, SELECTED_RESULT_READBACK_TARGET),
+    readOnly: true,
+    selectedProjectOnly: true,
+    detailOnly: true,
+    summaryOnly: true,
+    redacted: true,
+    machineValueSafe: true,
+    sourceSelectedProjectReadbackFingerprint: safeToken(sourceStatus.selectedProjectReadbackFingerprint, null, 760),
+    sourceSelectedProjectReadbackStatusFingerprint: safeToken(
+      sourceStatus.projectBrowserSelectedProjectSelectedResultPersistedSummaryReadbackStatusFingerprint,
+      null,
+      760,
+    ),
+    sourceSelectedProjectReadbackDetailFingerprint: safeToken(
+      sourceDetail.projectBrowserSelectedResultPersistedSummaryReadbackDetailFingerprint,
+      null,
+      760,
+    ),
+  };
+
+  return Object.freeze({
+    ...base,
+    projectBrowserSelectedProjectSelectedResultPersistedSummaryReadbackDetailFingerprint: stableFingerprint(
+      "safe-project-browser-selected-project-selected-result-persisted-summary-readback-detail-summary",
+      base,
+    ),
+  });
+}
+
 export function buildProjectBrowserSelectedResultPersistedSummaryReadbackDetailSummary(envelopeOrProjectSummary = {}) {
   const sourceSummary = buildSelectedResultPersistedSummaryReadbackProjectSummary(envelopeOrProjectSummary || {});
   const sourceReadiness = safeToken(sourceSummary.readiness, "missing") || "missing";
@@ -525,6 +643,10 @@ export function createProjectBrowserService({ savedProjectStore, projectService,
         state.selectedProjectId,
       ),
       selectedProjectSelectedResultPersistedSummaryReadbackStatus: buildProjectBrowserSelectedProjectSelectedResultPersistedSummaryReadbackStatus(
+        storeSnapshot.projects,
+        state.selectedProjectId,
+      ),
+      selectedProjectSelectedResultPersistedSummaryReadbackDetailSummary: buildProjectBrowserSelectedProjectSelectedResultPersistedSummaryReadbackDetailSummary(
         storeSnapshot.projects,
         state.selectedProjectId,
       ),
