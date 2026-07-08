@@ -1606,7 +1606,7 @@ function moduleLabel(moduleId) {
     scene_builder: "Scene Builder",
     emergence: "Emergency / EGRES",
     egres: "Emergency / EGRES",
-    admin_dev: "Admin / Dev",
+    admin_dev: "Database Sync",
     board_data: "Board Data",
     ies_builder: "IES Builder / Photometry",
     compliance_matters: "Compliance Matters",

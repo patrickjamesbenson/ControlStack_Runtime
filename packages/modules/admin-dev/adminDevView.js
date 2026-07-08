@@ -258,11 +258,11 @@ function appendHeader(parent, viewModel) {
   const titleRow = document.createElement("div");
   titleRow.className = "cs-admin-dev__title-row";
   const copy = document.createElement("div");
-  appendText(copy, "p", "Admin / Dev", "cs-shell__eyebrow");
+  appendText(copy, "p", "Database Sync", "cs-shell__eyebrow");
   const headingRow = document.createElement("div");
   headingRow.className = "cs-admin-dev__heading-row";
-  appendText(headingRow, "h2", "Authority/reference data");
-  appendInfoHint(headingRow, "About authority/reference data", "Refresh the materialised source as a dry-run-only foundation check, then use the separate promotion workflow to promote the already-materialised source to the active snapshot when server gates allow it.");
+  appendText(headingRow, "h2", "Google Sheet to NVB Data");
+  appendInfoHint(headingRow, "About Database Sync", "Check Google Sheet sync reads and validates Google without writing files. Run live Google sync writes the materialised NVB, archives the current active NVB, and promotes the fresh active NVB.");
   copy.appendChild(headingRow);
   titleRow.appendChild(copy);
   appendStatusBadge(titleRow, statusLabel(viewModel));
@@ -279,8 +279,8 @@ function appendMaterialiserFoundation(parent, materialiser = {}, actions = {}) {
   const section = document.createElement("section");
   section.className = "cs-admin-dev__card cs-admin-dev__operator-card cs-admin-dev__materialiser-card";
 
-  appendText(section, "p", "Authority Materialiser", "cs-shell__eyebrow");
-  appendText(section, "h3", materialiser.title || "Authority Materialiser");
+  appendText(section, "p", "Database Sync", "cs-shell__eyebrow");
+  appendText(section, "h3", materialiser.title || "Database Sync");
   appendText(section, "p", materialiser.description || "Runtime-native materialiser foundation status.");
 
   const actionsRow = document.createElement("div");
@@ -290,20 +290,20 @@ function appendMaterialiserFoundation(parent, materialiser = {}, actions = {}) {
     onClick: actions.onRunMaterialiserDryRun,
     variant: "primary",
   });
-  appendActionButton(actionsRow, materialiser.liveRefresh?.label || "Live materialiser refresh", {
-    disabled: true,
-    onClick: null,
+  appendActionButton(actionsRow, materialiser.liveRefresh?.label || "Run live Google sync", {
+    disabled: materialiser.running || materialiser.liveRefresh?.enabled !== true,
+    onClick: actions.onRunMaterialiserLive,
     variant: "secondary",
   });
-  appendInfoHint(actionsRow, "About materialiser refresh", materialiser.buttonNote || "Dry-run only. This does not call dryRun=false, write files, or promote the active snapshot.");
+  appendInfoHint(actionsRow, "About Database Sync", materialiser.buttonNote || "Check Google Sheet sync reads Google and validates the data. No files are written.");
   section.appendChild(actionsRow);
 
   appendDefinitionList(section, materialiser.statusRows || [], "cs-admin-dev__meta cs-admin-dev__meta--operator");
 
   const refreshPanel = document.createElement("section");
   refreshPanel.className = "cs-admin-dev__sync-result";
-  appendText(refreshPanel, "h4", "Refresh materialised source from Google Sheet");
-  appendText(refreshPanel, "p", materialiser.buttonNote || "Dry-run only in this slice — no active snapshot promotion and no file write.");
+  appendText(refreshPanel, "h4", "Database Sync result");
+  appendText(refreshPanel, "p", materialiser.buttonNote || "Check Google Sheet sync is dry-run only. Run live Google sync writes materialised NVB and promotes active NVB with archive-before-write.");
   appendDefinitionList(refreshPanel, materialiser.refreshRows || [], "cs-admin-dev__meta cs-admin-dev__meta--operator");
   appendErrors(refreshPanel, "Materialiser refresh error", materialiser.errors || []);
   section.appendChild(refreshPanel);
@@ -319,8 +319,8 @@ function appendMaterialiserFoundation(parent, materialiser = {}, actions = {}) {
 
   const reminder = document.createElement("section");
   reminder.className = "cs-admin-dev__notice";
-  appendText(reminder, "h4", "Separate promotion action");
-  appendText(reminder, "p", materialiser.promoteReminder || "Promote materialised source to active snapshot remains separate.");
+  appendText(reminder, "h4", "Live sync path");
+  appendText(reminder, "p", materialiser.promoteReminder || "Run live Google sync writes the materialised NVB, archives the active NVB, and promotes the fresh active NVB.");
   if (materialiser.liveRefresh?.note) appendText(reminder, "p", materialiser.liveRefresh.note);
   section.appendChild(reminder);
 

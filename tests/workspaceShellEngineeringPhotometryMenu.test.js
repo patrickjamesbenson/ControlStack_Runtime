@@ -303,7 +303,7 @@ test("Engineering remains a separate design and tooling group", async () => {
     "System / Board / Driver Design",
     "Emergency System Design",
     "Engineering Handoff to Lab",
-    "Google Sync",
+    "Database Sync",
     "Board Data Status",
   ]) {
     assert.match(engineering, new RegExp(`>${label}<`), `${label} should render in Engineering`);
@@ -314,6 +314,7 @@ test("Engineering remains a separate design and tooling group", async () => {
     "tool preview",
     "handoff to Lab",
     "production disabled",
+    "Google Sheet to NVB Data",
     "read-only inspector",
   ]) {
     assert.match(engineering, new RegExp(status), `${status} status should be visible`);

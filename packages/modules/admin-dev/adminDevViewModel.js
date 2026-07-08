@@ -315,18 +315,30 @@ function createMaterialiserModel({ materialiserState = {}, materialiserEndpoints
   const body = syncResultBody(normalisedState.refreshResult);
   const targetFile = materialiserStatus.target?.file || {};
   const refreshSummary = body?.validation?.summary || {};
+  const promotion = body?.promotion || null;
+  const dryRunReady = body?.dryRun === true
+    && body?.status === "dry-run-ready"
+    && body?.googleNetworkCallAttempted === true
+    && body?.validation?.ok === true
+    && (!Array.isArray(body?.blockers) || body.blockers.length === 0);
+  const liveCompleted = body?.dryRun === false && body?.ok === true;
 
   return {
-    title: "Authority Materialiser",
-    description: "Runtime-native materialiser foundation status. It is admin-only, non-boot-critical, and this UI slice runs dry-run refresh only; it does not promote the active snapshot.",
+    title: "Database Sync",
+    description: "Google Sheet to NVB Data. Check Google Sheet sync reads and validates Google without writing files. Run live Google sync writes the materialised NVB, archives the current active NVB, and promotes the fresh active NVB.",
     endpoint: materialiserStatus.endpoint || "/api/authority-reference/materialiser/status",
     refreshDryRunEndpoint: materialiserEndpoints.refreshDryRun || "/api/authority-reference/materialiser/refresh?dryRun=true",
-    buttonLabel: "Refresh materialised source from Google Sheet",
-    buttonNote: "Dry-run only in this slice — no active snapshot promotion and no file write.",
+    refreshLiveEndpoint: materialiserEndpoints.refreshLive || "/api/authority-reference/materialiser/refresh?dryRun=false",
+    buttonLabel: "Check Google Sheet sync",
+    buttonNote: dryRunReady
+      ? "Google Sheet dry-run passed. Live sync is now available for this page session."
+      : liveCompleted
+        ? "Google Sheet sync completed. Materialised and active NVB are refreshed."
+        : "Check Google Sheet sync reads Google and validates the data. No files are written.",
     running: normalisedState.refreshStatus === "running",
     statusRows: [
       ["status", materialiserStatus.status || "unknown"],
-      ["source", "runtime-native materialiser foundation"],
+      ["source", "Google Sheet to NVB Data"],
       ["normal boot dependency", asText(materialiserStatus.normalBootDependency, "false")],
       ["admin only", asText(materialiserStatus.adminOnly, "true")],
       ["non boot critical", asText(materialiserStatus.nonBootCritical, "true")],
@@ -350,15 +362,16 @@ function createMaterialiserModel({ materialiserState = {}, materialiserEndpoints
       ["full materialised JSON exposed", asText(materialiserStatus.fullMaterialisedJsonExposed, "false")],
     ],
     refreshRows: [
-      ["action", "Refresh materialised source from Google Sheet"],
-      ["mode", "Dry-run only — no files written, no active snapshot promotion"],
-      ["endpoint", materialiserEndpoints.refreshDryRun || "/api/authority-reference/materialiser/refresh?dryRun=true"],
+      ["action", liveCompleted ? "Google Sheet sync completed" : "Google Sheet to NVB Data"],
+      ["mode", body?.mode || (body ? (body?.dryRun === false ? "google-sheet-to-active-snapshot" : "dry-run-google-sheet-preview") : "not run")],
+      ["endpoint", body?.dryRun === false ? (materialiserEndpoints.refreshLive || "/api/authority-reference/materialiser/refresh?dryRun=false") : (materialiserEndpoints.refreshDryRun || "/api/authority-reference/materialiser/refresh?dryRun=true")],
       ["refresh result status", body?.status || normalisedState.refreshStatus || "not run"],
+      ["promotion status", promotion?.status || "not run"],
       ["dry run", asText(body?.dryRun, "not run")],
       ["Google network call attempted", asText(body?.googleNetworkCallAttempted, "false")],
       ["materialised write attempted", asText(body?.materialisedWriteAttempted, "false")],
       ["active snapshot write attempted", asText(body?.activeSnapshotWriteAttempted, "false")],
-      ["active snapshot write enabled", asText(body?.activeSnapshotWriteEnabled ?? body?.writePolicy?.activeSnapshotWriteEnabled, "false")],
+      ["active snapshot write enabled", asText(body?.activeSnapshotWriteEnabled ?? promotion?.writePolicy?.activeSnapshotWriteEnabled ?? body?.writePolicy?.activeSnapshotWriteEnabled, "false")],
       ["browser secrets exposed", asText(body?.browserSecretsExposed, "false")],
       ["raw Google response exposed", asText(body?.rawGoogleResponseExposed ?? refreshSummary.rawGoogleResponseExposed, "false")],
       ["raw sheet rows exposed", asText(body?.rawSheetRowsExposed ?? body?.rawRowsExposed, "false")],
@@ -371,11 +384,17 @@ function createMaterialiserModel({ materialiserState = {}, materialiserEndpoints
     blockers: materialiserBlockerItems(materialiserStatus, body),
     errors: normalisedState.refreshError ? [normalisedState.refreshError] : [],
     liveRefresh: {
-      label: "Live materialiser refresh",
-      enabled: false,
-      note: "Not active yet in this slice. The UI does not call dryRun=false automatically.",
+      label: normalisedState.refreshStatus === "running" ? "Running live Google sync..." : "Run live Google sync",
+      enabled: dryRunReady && !normalisedState.refreshError,
+      note: dryRunReady
+        ? "Live sync writes the materialised NVB, validates it, archives the current active NVB, then promotes the fresh snapshot."
+        : liveCompleted
+          ? "Live Google sync has completed."
+          : "Run a successful Google Sheet dry-run first. Live sync stays disabled until validation passes in this page session.",
     },
-    promoteReminder: "Promote materialised source to active snapshot remains a separate authority/reference promotion action.",
+    promoteReminder: liveCompleted
+      ? "Google Sheet to NVB Data sync completed through the interface."
+      : "Database Sync is two-step: check Google Sheet sync first, then run live Google sync.",
   };
 }
 
@@ -664,8 +683,8 @@ export function createAdminDevViewModel({ context = {}, endpoints = {}, syncEndp
 
   return {
     moduleId: "admin_dev",
-    label: "Admin / Dev",
-    title: "Data Admin / Authority Reference",
+    label: "Database Sync",
+    title: "Database Sync",
     access: {
       allowed,
       role,
@@ -682,12 +701,12 @@ export function createAdminDevViewModel({ context = {}, endpoints = {}, syncEndp
     headerRows: [
       ["module id", "admin_dev"],
       ["route", "/workspace?module=admin_dev"],
-      ["visible label", "Admin / Dev"],
+      ["visible label", "Database Sync"],
       ["authority role", role],
       ["display role", displayRole(context)],
       ["visibility", decision?.reason || "unknown"],
       ["read policy", "GET status/archive reads only"],
-      ["write policy", "materialiser refresh dry-run only; active snapshot promotion remains separate and requires SYNC confirmation plus server approval"],
+      ["write policy", "Check Google Sheet sync is dry-run Google read/validation only; Run live Google sync writes materialised NVB, archives active NVB, and promotes the fresh active NVB when server gates allow it"],
       ["archive policy", "list/diff/detail plus preview-first RESTORE workflow behind server env gate"],
     ],
     cards: [

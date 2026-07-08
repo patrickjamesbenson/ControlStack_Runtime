@@ -7,9 +7,11 @@ import { buildLabProofStatus, LAB_PROOF_STATUS_PATH } from "./packages/workspace
 import {
   AUTHORITY_REFERENCE_MATERIALISER_REFRESH_PATH,
   AUTHORITY_REFERENCE_MATERIALISER_STATUS_PATH,
+  AUTHORITY_REFERENCE_MATERIALISER_CONFIRMATION,
   buildAuthorityReferenceMaterialiserStatus,
   refreshAuthorityReferenceMaterialiser,
 } from "./packages/workspace-kernel/authorityReferenceMaterialiserService.js";
+import { buildSyncEnvironment, promoteMaterialisedAuthorityReference } from "./scripts/refresh_authority_reference_from_google.js";
 import { buildSelectorReferenceStatus, SELECTOR_REFERENCE_STATUS_PATH } from "./packages/workspace-kernel/selectorReferenceService.js";
 import { buildSelectorReferenceOptions, SELECTOR_REFERENCE_OPTIONS_PATH } from "./packages/workspace-kernel/selectorReferenceOptionsService.js";
 
@@ -807,19 +809,50 @@ async function sendAuthorityReferenceSourceMaterialisation(res) {
   sendPublicStatusJson(res, 200, await authorityReferenceSourceMaterialisationStatus());
 }
 
+async function authorityReferenceGoogleSyncEnvironment({ apply = false } = {}) {
+  const environment = await buildSyncEnvironment({ args: { apply }, env: process.env });
+  return environment.env;
+}
+
 async function sendAuthorityReferenceMaterialiserStatus(res) {
-  sendPublicStatusJson(res, 200, await buildAuthorityReferenceMaterialiserStatus());
+  const materialiserEnv = await authorityReferenceGoogleSyncEnvironment({ apply: false });
+  sendPublicStatusJson(res, 200, await buildAuthorityReferenceMaterialiserStatus({ env: materialiserEnv }));
 }
 
 async function sendAuthorityReferenceMaterialiserRefresh(res, req, requestUrl) {
   const dryRunParam = String(requestUrl.searchParams.get("dryRun") || "true").toLowerCase();
   const dryRun = !["0", "false", "no", "live"].includes(dryRunParam);
+  const liveRequested = !dryRun;
   try {
     const body = await requestJson(req);
-    const result = await refreshAuthorityReferenceMaterialiser({ dryRun, body });
-    const httpStatus = Number.isInteger(result.httpStatus) ? result.httpStatus : dryRun ? 200 : 409;
+    const materialiserEnv = await authorityReferenceGoogleSyncEnvironment({ apply: liveRequested });
+    const result = await refreshAuthorityReferenceMaterialiser({
+      env: materialiserEnv,
+      dryRun,
+      body: liveRequested ? { confirmation: AUTHORITY_REFERENCE_MATERIALISER_CONFIRMATION } : body,
+      allowMaterialisedWrite: liveRequested,
+    });
+
+    let promotion = null;
+    if (liveRequested && result.ok === true && body.promoteActiveSnapshot === true) {
+      promotion = await promoteMaterialisedAuthorityReference({ dryRun: false });
+    }
+
+    const combinedOk = result.ok === true && (!promotion || promotion.ok === true);
+    const httpStatus = dryRun ? 200 : combinedOk ? 200 : 409;
     const { httpStatus: _httpStatus, ...payload } = result;
-    sendJson(res, httpStatus, payload);
+    sendJson(res, httpStatus, {
+      ...payload,
+      ok: combinedOk,
+      mode: liveRequested && body.promoteActiveSnapshot === true
+        ? "google-sheet-to-active-snapshot"
+        : liveRequested
+          ? "google-sheet-to-materialised"
+          : "dry-run-google-sheet-preview",
+      promotion,
+      activeSnapshotWriteAttempted: promotion ? true : payload.activeSnapshotWriteAttempted,
+      activeSnapshotWriteEnabled: promotion?.writePolicy?.activeSnapshotWriteEnabled ?? payload.activeSnapshotWriteEnabled,
+    });
   } catch (error) {
     sendJson(res, 400, {
       ok: false,
@@ -1717,7 +1750,7 @@ async function jsonValidityForFile(pathValue) {
 
 function restoreBlockerRows({ moduleAccessAllowed, archiveResolution, archiveMeta, archiveJson, currentSnapshot, archiveAvailable, restoreConfig, confirmationMatches, requireConfirmation }) {
   const blockers = [];
-  if (!moduleAccessAllowed) blockers.push({ code: "admin-dev-module-access-required", severity: "blocking", reason: "Restore preview/live restore must be called from the protected Admin / Dev module." });
+  if (!moduleAccessAllowed) blockers.push({ code: "admin-dev-module-access-required", severity: "blocking", reason: "Restore preview/live restore must be called from the protected Database Sync module." });
   if (!archiveResolution?.ok) blockers.push({ code: "archive-name-rejected", severity: "blocking", reason: archiveResolution?.reason || "archiveName was rejected." });
   if (archiveResolution?.ok && archiveMeta?.present !== true) blockers.push({ code: "archive-unavailable", severity: "blocking", reason: "Selected archive is not available as a readable JSON file." });
   if (archiveResolution?.ok && archiveJson?.validJson !== true) blockers.push({ code: "archive-json-invalid", severity: "blocking", reason: "Selected archive is not valid JSON." });

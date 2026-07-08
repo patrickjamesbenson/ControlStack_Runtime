@@ -17,6 +17,7 @@ const SYNC_ENDPOINTS = Object.freeze({
 
 const MATERIALISER_ENDPOINTS = Object.freeze({
   refreshDryRun: "/api/authority-reference/materialiser/refresh?dryRun=true",
+  refreshLive: "/api/authority-reference/materialiser/refresh?dryRun=false",
 });
 
 const ARCHIVE_ENDPOINTS = Object.freeze({
@@ -164,6 +165,7 @@ function renderCurrentView() {
     onRunLiveSync: runConfirmedLiveSync,
     onConfirmationInput: updateSyncConfirmation,
     onRunMaterialiserDryRun: runMaterialiserDryRun,
+    onRunMaterialiserLive: runMaterialiserLive,
     onRunArchiveDiff: runArchiveDiff,
     onRunArchiveDiffDetail: runArchiveDiffDetail,
     onRunRestorePreview: runRestorePreview,
@@ -313,6 +315,48 @@ async function runMaterialiserDryRun() {
   renderCurrentView();
 }
 
+async function runMaterialiserLive() {
+  if (!canUseAdminDevActions()) return;
+
+  const materialiser = state.materialiser || createMaterialiserState();
+  if (materialiser.refreshStatus === "running") return;
+
+  const thisMaterialiserRequest = ++materialiserRequestId;
+  mergeMaterialiserState({
+    refreshStatus: "running",
+    refreshResult: null,
+    refreshError: null,
+    refreshLoadedAt: null,
+    refreshCompleted: false,
+  });
+  renderCurrentView();
+
+  try {
+    const result = await postJson(MATERIALISER_ENDPOINTS.refreshLive, { promoteActiveSnapshot: true });
+    if (thisMaterialiserRequest !== materialiserRequestId || !mountedContainer) return;
+    mergeMaterialiserState({
+      refreshStatus: result.ok ? "complete" : "endpoint-error",
+      refreshResult: result,
+      refreshError: result.ok ? null : `${MATERIALISER_ENDPOINTS.refreshLive} returned HTTP ${result.httpStatus}`,
+      refreshLoadedAt: new Date().toISOString(),
+      refreshCompleted: result.ok === true,
+    });
+  } catch (error) {
+    if (thisMaterialiserRequest !== materialiserRequestId || !mountedContainer) return;
+    mergeMaterialiserState({
+      refreshStatus: "endpoint-error",
+      refreshResult: null,
+      refreshError: error?.message || "Live Google Sheet sync failed.",
+      refreshLoadedAt: new Date().toISOString(),
+      refreshCompleted: false,
+    });
+  }
+
+  renderCurrentView();
+  if (mountedContainer && canViewAdminDev(mountedContext)) {
+    await loadReadOnlyStatus();
+  }
+}
 async function runDryRunSyncPreview() {
   if (!canUseAdminDevActions()) return;
 
@@ -679,11 +723,11 @@ export const adminDevModule = {
     maybeLoadReadOnlyStatus();
     mountedServices?.eventBus?.emit("admin_dev:mounted", {
       moduleId: "admin_dev",
-      label: "Admin / Dev",
+      label: "Database Sync",
       readOnly: false,
       nonBootCritical: true,
       endpoints: [...Object.values(READ_ENDPOINTS), ...Object.values(MATERIALISER_ENDPOINTS), ...Object.values(SYNC_ENDPOINTS), ...Object.values(ARCHIVE_ENDPOINTS)],
-      mutationPolicy: "materialiser-refresh-dry-run-only-plus-separate-active-snapshot-promotion-and-preview-first-restore",
+      mutationPolicy: "database-sync-google-sheet-to-materialised-nvb-to-active-nvb-plus-preview-first-restore",
     });
   },
 
