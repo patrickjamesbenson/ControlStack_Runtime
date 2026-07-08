@@ -223,10 +223,15 @@ test("downstream readiness is displayed but production actions remain disabled",
     "selected-result-handoff",
     "selected-result-authority-preflight",
     "accepted-selected-result-authority",
+    "selected-result-persistence-boundary-contract",
     "ies-handoff",
     "selected-result-output-readiness-preflight",
+    "selected-result-persistence-authority-preflight",
     "controlled-real-source-evidence",
   ]);
+  assert.equal(downstream.selectedResultPersistenceBoundaryContractSummary.readOnly, true);
+  assert.equal(downstream.selectedResultPersistenceBoundaryContractSummary.diagnosticOnly, true);
+  assert.equal(downstream.selectedResultPersistenceBoundaryContractSummary.selectedResultPersistenceEnabled, false);
   assert.equal(downstream.selectedResultOutputReadinessPreflightSummary.readOnly, true);
   assert.equal(downstream.selectedResultOutputReadinessPreflightSummary.diagnosticOnly, true);
   assert.equal(downstream.selectedResultOutputReadinessPreflightSummary.preflightOnly, true);
@@ -234,6 +239,13 @@ test("downstream readiness is displayed but production actions remain disabled",
   assert.equal(downstream.selectedResultOutputReadinessPreflightSummary.runTableGenerationEnabled, false);
   assert.equal(downstream.selectedResultOutputReadinessPreflightSummary.iesGenerationEnabled, false);
   assert.equal(downstream.selectedResultOutputReadinessPreflightSummary.outputGenerationEnabled, false);
+  assert.equal(downstream.selectedResultPersistenceAuthorityPreflightSummary.readOnly, true);
+  assert.equal(downstream.selectedResultPersistenceAuthorityPreflightSummary.diagnosticOnly, true);
+  assert.equal(downstream.selectedResultPersistenceAuthorityPreflightSummary.preflightOnly, true);
+  assert.equal(downstream.selectedResultPersistenceAuthorityPreflightSummary.selectedResultPersistenceEnabled, false);
+  assert.equal(downstream.selectedResultPersistenceAuthorityPreflightSummary.runTableGenerationEnabled, false);
+  assert.equal(downstream.selectedResultPersistenceAuthorityPreflightSummary.iesGenerationEnabled, false);
+  assert.equal(downstream.selectedResultPersistenceAuthorityPreflightSummary.outputGenerationEnabled, false);
   assert.equal(downstream.runEngineEnabled, false);
   assert.equal(downstream.runTableGenerationEnabled, false);
   assert.equal(downstream.iesGenerationEnabled, false);

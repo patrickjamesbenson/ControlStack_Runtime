@@ -197,11 +197,13 @@ function fingerprintFromSummary(value, keys = []) {
   ]) ?? firstPresent(value.sourceInputFingerprintMetadata || {}, ["value", "fingerprint"]));
 }
 
-function fingerprintsFrom({ source = {}, gate = {}, preflight = {}, guard = {}, projection = {}, sourceObject = {}, handoff = {}, runTable = {}, ies = {} } = {}) {
+function fingerprintsFrom({ source = {}, gate = {}, preflight = {}, persistenceBoundary = {}, guard = {}, projection = {}, sourceObject = {}, handoff = {}, runTable = {}, ies = {} } = {}) {
   return {
     policyFingerprint: safeFingerprint(firstPresent(source, ["policyFingerprint", "safePolicyFingerprint", "currentPolicyFingerprint"])
       ?? firstPresent(gate.fingerprints || {}, ["policyFingerprint", "safePolicyFingerprint"])
       ?? firstPresent(preflight.fingerprints || {}, ["policyFingerprint", "safePolicyFingerprint"])
+      ?? firstPresent(persistenceBoundary.fingerprints || {}, ["policyFingerprint", "safePolicyFingerprint"])
+      ?? firstPresent(persistenceBoundary, ["policyFingerprint", "safePolicyFingerprint"])
       ?? firstPresent(handoff, ["policyFingerprint", "safePolicyFingerprint"])
       ?? firstPresent(runTable, ["policyFingerprint", "safePolicyFingerprint"])
       ?? firstPresent(ies, ["policyFingerprint", "safePolicyFingerprint"])
@@ -210,6 +212,8 @@ function fingerprintsFrom({ source = {}, gate = {}, preflight = {}, guard = {}, 
     sourceFingerprint: safeFingerprint(firstPresent(source, ["sourceFingerprint", "safeSourceFingerprint", "currentSourceFingerprint"])
       ?? firstPresent(gate.fingerprints || {}, ["sourceFingerprint", "safeSourceFingerprint"])
       ?? firstPresent(preflight.fingerprints || {}, ["sourceFingerprint", "safeSourceFingerprint"])
+      ?? firstPresent(persistenceBoundary.fingerprints || {}, ["sourceFingerprint", "safeSourceFingerprint"])
+      ?? firstPresent(persistenceBoundary, ["sourceFingerprint", "safeSourceFingerprint"])
       ?? firstPresent(handoff, ["sourceFingerprint", "safeSourceFingerprint"])
       ?? firstPresent(runTable, ["sourceFingerprint", "safeSourceFingerprint"])
       ?? firstPresent(ies, ["sourceFingerprint", "safeSourceFingerprint"])
@@ -218,12 +222,16 @@ function fingerprintsFrom({ source = {}, gate = {}, preflight = {}, guard = {}, 
     sourceInputFingerprint: safeFingerprint(firstPresent(source, ["sourceInputFingerprint", "currentSourceInputFingerprint"])
       ?? firstPresent(gate.fingerprints || {}, ["sourceInputFingerprint"])
       ?? firstPresent(preflight.fingerprints || {}, ["sourceInputFingerprint"])
+      ?? firstPresent(persistenceBoundary.fingerprints || {}, ["sourceInputFingerprint"])
+      ?? firstPresent(persistenceBoundary, ["sourceInputFingerprint"])
       ?? firstPresent(projection, ["sourceInputFingerprint", "source_input_fingerprint"])
       ?? firstPresent(projection.sourceInputFingerprintMetadata || {}, ["value", "fingerprint"])
       ?? firstPresent(sourceObject, ["sourceInputFingerprint", "source_input_fingerprint"])),
     sourceVersionFingerprint: safeFingerprint(firstPresent(source, ["sourceVersionFingerprint", "boardDataSourceVersion", "sourceVersionMarker"])
       ?? firstPresent(gate.fingerprints || {}, ["sourceVersionFingerprint"])
       ?? firstPresent(preflight.fingerprints || {}, ["sourceVersionFingerprint"])
+      ?? firstPresent(persistenceBoundary.fingerprints || {}, ["sourceVersionFingerprint", "boardDataSourceVersion", "sourceVersionMarker"])
+      ?? firstPresent(persistenceBoundary, ["sourceVersionFingerprint", "boardDataSourceVersion", "sourceVersionMarker"])
       ?? firstPresent(projection, ["boardDataSourceVersion", "sourceVersionMarker"])
       ?? firstPresent(projection.boardDataSourceVersionMetadata || {}, ["value", "fingerprint"])
       ?? firstPresent(sourceObject, ["sourceVersionMarker", "boardDataSourceVersion"])),
@@ -327,6 +335,7 @@ function buildReadiness(source, summaries) {
   const {
     gate,
     preflight,
+    persistenceBoundary,
     guard,
     projection,
     sourceObject,
@@ -345,10 +354,10 @@ function buildReadiness(source, summaries) {
   addRequirement(requirements, missingRequirements, "safe-selected-result-source-object-ready", sourceObjectReady(sourceObject));
   addRequirement(requirements, missingRequirements, "selected-result-handoff-scaffold-ready", handoffReady(handoff));
 
-  addRequirement(requirements, missingRequirements, "selected-result-persistence-contract-ready", readinessFlag(source, "selectedResultPersistenceContractReady") || handoff.handoffReadinessSummary?.selectedResultPersistenceReady === true);
-  addRequirement(requirements, missingRequirements, "selected-result-persistence-redaction-boundary-ready", readinessFlag(source, "selectedResultPersistenceRedactionBoundaryReady"));
-  addRequirement(requirements, missingRequirements, "selected-result-persistence-mutation-gate-ready", readinessFlag(source, "selectedResultPersistenceMutationGateReady"));
-  addRequirement(requirements, missingRequirements, "selected-result-persistence-safe-target-defined", readinessFlag(source, "selectedResultPersistenceSafeTargetDefined") || source.selectedResultPersistenceTargetSummary?.safeWriteTargetDefined === true);
+  addRequirement(requirements, missingRequirements, "selected-result-persistence-contract-ready", readinessFlag(source, "selectedResultPersistenceContractReady") || persistenceBoundary.selectedResultPersistenceContractReady === true || handoff.handoffReadinessSummary?.selectedResultPersistenceReady === true);
+  addRequirement(requirements, missingRequirements, "selected-result-persistence-redaction-boundary-ready", readinessFlag(source, "selectedResultPersistenceRedactionBoundaryReady") || persistenceBoundary.selectedResultPersistenceRedactionBoundaryReady === true);
+  addRequirement(requirements, missingRequirements, "selected-result-persistence-mutation-gate-ready", readinessFlag(source, "selectedResultPersistenceMutationGateReady") || persistenceBoundary.selectedResultPersistenceMutationGateReady === true);
+  addRequirement(requirements, missingRequirements, "selected-result-persistence-safe-target-defined", readinessFlag(source, "selectedResultPersistenceSafeTargetDefined") || persistenceBoundary.selectedResultPersistenceSafeTargetDefined === true || source.selectedResultPersistenceTargetSummary?.safeWriteTargetDefined === true || persistenceBoundary.selectedResultPersistenceTargetSummary?.safeWriteTargetDefined === true);
 
   const readyForSelectedResultPersistence = [
     "accepted-selected-result-authority-ready",
@@ -569,6 +578,7 @@ export function buildSelectedResultOutputReadinessPreflight(input = {}) {
   const source = isPlainObject(input) ? input : {};
   const gate = summary(source, ["acceptedSelectedResultAuthorityGateSummary", "acceptedAuthorityGateSummary"]);
   const preflight = summary(source, ["selectedResultAuthorityReadinessPreflightSummary", "acceptedAuthorityReadinessPreflightSummary"]);
+  const persistenceBoundary = summary(source, ["selectedResultPersistenceBoundaryContractSummary", "persistenceBoundaryContractSummary"]);
   const guard = summary(source, ["selectedResultAuthorityGuardSummary", "authorityGuardSummary"]);
   const projection = summary(source, ["selectedResultProjectionSummary", "selectedResultProjection"]);
   const sourceObject = summary(source, ["safeSelectedResultSourceObjectSummary", "safeSelectedResultSourceObject"]);
@@ -582,6 +592,8 @@ export function buildSelectedResultOutputReadinessPreflight(input = {}) {
     acceptedAuthorityGateSummary: undefined,
     selectedResultAuthorityReadinessPreflightSummary: undefined,
     acceptedAuthorityReadinessPreflightSummary: undefined,
+    selectedResultPersistenceBoundaryContractSummary: undefined,
+    persistenceBoundaryContractSummary: undefined,
     selectedResultAuthorityGuardSummary: undefined,
     authorityGuardSummary: undefined,
     selectedResultProjectionSummary: undefined,
@@ -594,12 +606,13 @@ export function buildSelectedResultOutputReadinessPreflight(input = {}) {
     runTableDomainSummary: undefined,
     iesHandoffReadinessScaffoldSummary: undefined,
     iesHandoffSummary: undefined,
-  }) || hasUnsafeInput(gate) || hasUnsafeInput(preflight) || hasUnsafeInput(guard) || hasUnsafeInput(projection) || hasUnsafeInput(sourceObject) || hasUnsafeInput(handoff) || hasUnsafeInput(runTable) || hasUnsafeInput(ies);
+  }) || hasUnsafeInput(gate) || hasUnsafeInput(preflight) || hasUnsafeInput(persistenceBoundary) || hasUnsafeInput(guard) || hasUnsafeInput(projection) || hasUnsafeInput(sourceObject) || hasUnsafeInput(handoff) || hasUnsafeInput(runTable) || hasUnsafeInput(ies);
 
-  const fingerprints = fingerprintsFrom({ source, gate, preflight, guard, projection, sourceObject, handoff, runTable, ies });
+  const fingerprints = fingerprintsFrom({ source, gate, preflight, persistenceBoundary, guard, projection, sourceObject, handoff, runTable, ies });
   const summaryFingerprints = {
     acceptedSelectedResultAuthorityGate: fingerprintFromSummary(gate, ["acceptedSelectedResultAuthorityGateFingerprint"]),
     selectedResultAuthorityReadinessPreflight: fingerprintFromSummary(preflight, ["selectedResultAuthorityReadinessPreflightFingerprint"]),
+    selectedResultPersistenceBoundaryContract: fingerprintFromSummary(persistenceBoundary, ["selectedResultPersistenceBoundaryContractFingerprint"]),
     selectedResultAuthorityGuard: fingerprintFromSummary(guard, ["selectedResultAuthorityGuardFingerprint"]),
     selectedResultProjection: fingerprintFromSummary(projection, ["selectedResultProjectionFingerprint"]),
     safeSelectedResultSourceObject: fingerprintFromSummary(sourceObject, ["safeSelectedResultSourceObjectFingerprint"]),
@@ -630,7 +643,7 @@ export function buildSelectedResultOutputReadinessPreflight(input = {}) {
     );
   }
 
-  const readiness = buildReadiness(source, { gate, preflight, guard, projection, sourceObject, handoff, runTable, ies });
+  const readiness = buildReadiness(source, { gate, preflight, persistenceBoundary, guard, projection, sourceObject, handoff, runTable, ies });
   const state = stateFor(readiness);
   const reason = reasonFor(state);
   return result(state, reason, {

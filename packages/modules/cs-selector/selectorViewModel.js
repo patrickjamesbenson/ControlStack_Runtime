@@ -12,7 +12,9 @@ import { buildRuntimeSelectedResultHandoffScaffoldSummary } from "../../workspac
 import { buildRuntimeIesHandoffReadinessScaffoldSummary } from "../../workspace-kernel/engineRunTableIesHandoffReadinessScaffold.js";
 import { buildSelectedResultAuthorityReadinessPreflight } from "../../workspace-kernel/selectedResultAuthorityReadinessPreflight.js";
 import { buildAcceptedSelectedResultAuthorityGate } from "../../workspace-kernel/acceptedSelectedResultAuthorityGate.js";
+import { buildSelectedResultPersistenceBoundaryContract } from "../../workspace-kernel/selectedResultPersistenceBoundaryContract.js";
 import { buildSelectedResultOutputReadinessPreflight } from "../../workspace-kernel/selectedResultOutputReadinessPreflight.js";
+import { buildSelectedResultPersistenceAuthorityPreflight } from "../../workspace-kernel/selectedResultPersistenceAuthorityPreflight.js";
 import { buildSelectorLmTemperatureReadinessPreview } from "../../workspace-kernel/selectorLmTemperatureReadinessPreview.js";
 import {
   buildSelectorReadonlyEngineCandidateForInternalSeam,
@@ -5326,8 +5328,10 @@ function selectorWorkflowDownstreamStage(id, label, summary = {}, readyKey = "ok
       || summary?.selectedResultHandoffScaffoldFingerprint
       || summary?.selectedResultAuthorityReadinessPreflightFingerprint
       || summary?.acceptedSelectedResultAuthorityGateFingerprint
+      || summary?.selectedResultPersistenceBoundaryContractFingerprint
       || summary?.iesHandoffReadinessScaffoldFingerprint
       || summary?.selectedResultOutputReadinessPreflightFingerprint
+      || summary?.selectedResultPersistenceAuthorityPreflightFingerprint
       || null,
     safeCounts: summary?.bridgeFingerprint ? {
       privateBridgeOnly: summary?.privateBridgeOnly === true || safetyFlags.privateBridgeOnly === true ? 1 : 0,
@@ -5338,7 +5342,7 @@ function selectorWorkflowDownstreamStage(id, label, summary = {}, readyKey = "ok
       iesGenerated: 0,
     } : {},
     rows: selectorWorkflowRows([
-      ["fingerprint", summary?.bridgeFingerprint || summary?.sealedCandidateAssemblyPreviewFingerprint || summary?.runTableDomainOutputScaffoldFingerprint || summary?.selectedResultHandoffScaffoldFingerprint || summary?.selectedResultAuthorityReadinessPreflightFingerprint || summary?.acceptedSelectedResultAuthorityGateFingerprint || summary?.iesHandoffReadinessScaffoldFingerprint || summary?.selectedResultOutputReadinessPreflightFingerprint || "none"],
+      ["fingerprint", summary?.bridgeFingerprint || summary?.sealedCandidateAssemblyPreviewFingerprint || summary?.runTableDomainOutputScaffoldFingerprint || summary?.selectedResultHandoffScaffoldFingerprint || summary?.selectedResultAuthorityReadinessPreflightFingerprint || summary?.acceptedSelectedResultAuthorityGateFingerprint || summary?.selectedResultPersistenceBoundaryContractFingerprint || summary?.iesHandoffReadinessScaffoldFingerprint || summary?.selectedResultOutputReadinessPreflightFingerprint || summary?.selectedResultPersistenceAuthorityPreflightFingerprint || "none"],
       ["private bridge only", boolString(summary?.privateBridgeOnly === true || safetyFlags.privateBridgeOnly === true)],
       ["synthetic/safe preview only", boolString(summary?.syntheticFixtureOnly === true || safetyFlags.syntheticFixtureOnly === true)],
       ["donor invocation blocked", boolString((summary?.blocker || "") === "donor-engine-invocation-not-approved" || safetyFlags.donorEngineInvoked !== true)],
@@ -5478,6 +5482,15 @@ function createSelectorWorkflowPreview({
     selectedResultAuthorityGuardSummary: selectedEngineResultHandoff.selectedResultAuthorityGuard || null,
     selectedResultAuthorityReadinessPreflightSummary,
   });
+  const selectedResultPersistenceBoundaryContractSummary = buildSelectedResultPersistenceBoundaryContract({
+    ...fingerprints,
+    currentSourceInputFingerprint: selectedEngineResultHandoff.selectedResultProjection?.sourceInputFingerprint || null,
+    acceptedSelectedResultAuthorityGateSummary,
+    selectedResultAuthorityGuardSummary: selectedEngineResultHandoff.selectedResultAuthorityGuard || null,
+    selectedResultProjectionSummary: selectedEngineResultHandoff.selectedResultProjection || null,
+    safeSelectedResultSourceObjectSummary: selectedEngineResultHandoff.safeSelectedResultSourceObjectSummary || null,
+    selectedResultHandoffScaffoldSummary,
+  });
   const iesHandoffReadinessScaffoldSummary = buildRuntimeIesHandoffReadinessScaffoldSummary({
     ...fingerprints,
     selectedResultHandoffScaffoldSummary,
@@ -5491,12 +5504,24 @@ function createSelectorWorkflowPreview({
     currentSourceInputFingerprint: selectedEngineResultHandoff.selectedResultProjection?.sourceInputFingerprint || null,
     acceptedSelectedResultAuthorityGateSummary,
     selectedResultAuthorityReadinessPreflightSummary,
+    selectedResultPersistenceBoundaryContractSummary,
     selectedResultAuthorityGuardSummary: selectedEngineResultHandoff.selectedResultAuthorityGuard || null,
     selectedResultProjectionSummary: selectedEngineResultHandoff.selectedResultProjection || null,
     safeSelectedResultSourceObjectSummary: selectedEngineResultHandoff.safeSelectedResultSourceObjectSummary || null,
     selectedResultHandoffScaffoldSummary,
     runTableDomainOutputScaffoldSummary,
     iesHandoffReadinessScaffoldSummary,
+  });
+  const selectedResultPersistenceAuthorityPreflightSummary = buildSelectedResultPersistenceAuthorityPreflight({
+    ...fingerprints,
+    currentSourceInputFingerprint: selectedEngineResultHandoff.selectedResultProjection?.sourceInputFingerprint || null,
+    acceptedSelectedResultAuthorityGateSummary,
+    selectedResultOutputReadinessPreflightSummary,
+    selectedResultPersistenceBoundaryContractSummary,
+    selectedResultAuthorityGuardSummary: selectedEngineResultHandoff.selectedResultAuthorityGuard || null,
+    selectedResultProjectionSummary: selectedEngineResultHandoff.selectedResultProjection || null,
+    safeSelectedResultSourceObjectSummary: selectedEngineResultHandoff.safeSelectedResultSourceObjectSummary || null,
+    selectedResultHandoffScaffoldSummary,
   });
   const controlledRealSourceEvidenceStatus = {
     id: "controlled-real-source-evidence",
@@ -5627,8 +5652,10 @@ function createSelectorWorkflowPreview({
     selectorWorkflowDownstreamStage("selected-result-handoff", "Selected-result handoff readiness", selectedResultHandoffScaffoldSummary, "selectedResultHandoffScaffoldReady"),
     selectorWorkflowDownstreamStage("selected-result-authority-preflight", "Accepted selected-result authority readiness preflight", selectedResultAuthorityReadinessPreflightSummary, "acceptedAuthorityReadinessPreflightReady"),
     selectorWorkflowDownstreamStage("accepted-selected-result-authority", "Accepted selected-result authority gate", acceptedSelectedResultAuthorityGateSummary, "acceptedSelectedResultAuthorityReady"),
+    selectorWorkflowDownstreamStage("selected-result-persistence-boundary-contract", "Selected-result persistence boundary contract", selectedResultPersistenceBoundaryContractSummary, "selectedResultPersistenceContractReady"),
     selectorWorkflowDownstreamStage("ies-handoff", "IES handoff readiness", iesHandoffReadinessScaffoldSummary, "iesHandoffReadinessScaffoldReady"),
-    selectorWorkflowDownstreamStage("selected-result-output-readiness-preflight", "Selected-result persistence/output-readiness preflight", selectedResultOutputReadinessPreflightSummary, "readyForOutputGeneration"),
+    selectorWorkflowDownstreamStage("selected-result-output-readiness-preflight", "Selected-result persistence/output-readiness preflight", selectedResultOutputReadinessPreflightSummary, "readyForSelectedResultPersistence"),
+    selectorWorkflowDownstreamStage("selected-result-persistence-authority-preflight", "Selected-result persistence authority preflight", selectedResultPersistenceAuthorityPreflightSummary, "readyForPersistenceAuthority"),
     controlledRealSourceEvidenceStatus,
   ];
   const blockedStages = stageSummaries.filter((stage) => stage.blocked);
@@ -5645,8 +5672,10 @@ function createSelectorWorkflowPreview({
     selectedResultHandoffScaffoldSummary,
     selectedResultAuthorityReadinessPreflightSummary,
     acceptedSelectedResultAuthorityGateSummary,
+    selectedResultPersistenceBoundaryContractSummary,
     iesHandoffReadinessScaffoldSummary,
     selectedResultOutputReadinessPreflightSummary,
+    selectedResultPersistenceAuthorityPreflightSummary,
     controlledRealSourceEvidenceStatus,
     productionActions: disabledProductionActions,
     runEngineEnabled: false,
@@ -5704,7 +5733,9 @@ function createSelectorWorkflowPreview({
     selectorDownstreamReadinessSummary: downstreamReadinessSummary,
     selectedResultAuthorityReadinessPreflightSummary,
     acceptedSelectedResultAuthorityGateSummary,
+    selectedResultPersistenceBoundaryContractSummary,
     selectedResultOutputReadinessPreflightSummary,
+    selectedResultPersistenceAuthorityPreflightSummary,
     disabledProductionActions,
     markers: ["preview-only", "diagnostic-only", "safe summaries only", "output intent only", "controlled donor bridge blocked", "production actions disabled"],
     unsafeOutputsBlocked: {
