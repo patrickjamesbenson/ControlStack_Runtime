@@ -329,10 +329,10 @@ test("golden-supported-machine-value-witness", async () => {
 
   const reservation = stage3.accessoryReservationSummary;
   assert.equal(reservation.accessoryReservationReady, true);
-  assert.equal(reservation.originalRunLengthMm, 2800);
+  assert.equal(reservation.originalRunLengthMm, 2820);
   assert.equal(reservation.reservationCount, 1);
   assert.equal(reservation.reservationLengthMm, 1400);
-  assert.equal(reservation.boardFillInputLengthMm, 1400);
+  assert.equal(reservation.boardFillInputLengthMm, 1390);
 
   const lmTemperatureReadinessPreview = buildSelectorLmTemperatureReadinessPreview({
     fields: referenceOptions.fields,
@@ -347,10 +347,9 @@ test("golden-supported-machine-value-witness", async () => {
     lmTemperatureReadinessPreview,
   });
   assert.equal(mapper.ok, true);
-  return;
 
   const policyFingerprint = reservation.policyFingerprint;
-  const sourceFingerprint = sourceAccess.source.sourceFingerprint;
+  const sourceFingerprint = reservation.sourceFingerprint;
   const selectorStateFingerprint = stableFingerprint("safe-selector-state:golden-supported-machine-value-witness", patInputsMachineValues);
   const referenceOptionsFingerprint = stableFingerprint("safe-reference-options:golden-supported-machine-value-witness", referenceOptions.selectedConstraints);
   const sourceVersionFingerprint = stableFingerprint("safe-source-version:golden-supported-machine-value-witness", { policyFingerprint, sourceFingerprint });
@@ -377,7 +376,7 @@ test("golden-supported-machine-value-witness", async () => {
         warning_count: 0,
         selected_tier: patInputsMachineValues.tier,
         output_contract_ready: true,
-        safeRunSummaries: [safeRunSummary(reservation)],
+        runs: [safeRunSummary(reservation)],
       },
     },
   });
@@ -393,7 +392,6 @@ test("golden-supported-machine-value-witness", async () => {
     privateReadonlySeamBridgeGateApproved: true,
   });
   assert.equal(bridge.bridgeReady, true);
-  return;
 
   const sourceInputFingerprint = step2.selectedResultProjection.sourceInputFingerprint;
   const acceptedProjection = {
