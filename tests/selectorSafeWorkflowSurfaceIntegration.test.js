@@ -224,8 +224,16 @@ test("downstream readiness is displayed but production actions remain disabled",
     "selected-result-authority-preflight",
     "accepted-selected-result-authority",
     "ies-handoff",
+    "selected-result-output-readiness-preflight",
     "controlled-real-source-evidence",
   ]);
+  assert.equal(downstream.selectedResultOutputReadinessPreflightSummary.readOnly, true);
+  assert.equal(downstream.selectedResultOutputReadinessPreflightSummary.diagnosticOnly, true);
+  assert.equal(downstream.selectedResultOutputReadinessPreflightSummary.preflightOnly, true);
+  assert.equal(downstream.selectedResultOutputReadinessPreflightSummary.selectedResultPersistenceEnabled, false);
+  assert.equal(downstream.selectedResultOutputReadinessPreflightSummary.runTableGenerationEnabled, false);
+  assert.equal(downstream.selectedResultOutputReadinessPreflightSummary.iesGenerationEnabled, false);
+  assert.equal(downstream.selectedResultOutputReadinessPreflightSummary.outputGenerationEnabled, false);
   assert.equal(downstream.runEngineEnabled, false);
   assert.equal(downstream.runTableGenerationEnabled, false);
   assert.equal(downstream.iesGenerationEnabled, false);
