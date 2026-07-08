@@ -1,13 +1,24 @@
 import { stableFingerprint } from "./stableFingerprint.js";
+import { buildSelectedResultPersistedSummaryReadbackProjectSummary } from "./savedProjectStore.js";
 
 export const PROJECT_BROWSER_SELECTED_RESULT_PERSISTED_SUMMARY_READBACK_SUMMARY_SCHEMA_ID =
   "controlstack.runtime.project-browser.selected-result-persisted-summary-readback-summary.v1";
 export const PROJECT_BROWSER_SELECTED_RESULT_PERSISTED_SUMMARY_READBACK_SUMMARY_SCHEMA_VERSION = 1;
 
+export const PROJECT_BROWSER_SELECTED_RESULT_PERSISTED_SUMMARY_READBACK_DETAIL_SUMMARY_SCHEMA_ID =
+  "controlstack.runtime.project-browser.selected-result-persisted-summary-readback-detail-summary.v1";
+export const PROJECT_BROWSER_SELECTED_RESULT_PERSISTED_SUMMARY_READBACK_DETAIL_SUMMARY_SCHEMA_VERSION = 1;
+
 export const PROJECT_BROWSER_SELECTED_RESULT_PERSISTED_SUMMARY_READBACK_STATES = Object.freeze({
   ready: "project_browser_selected_result_persisted_summary_readback_ready",
   missing: "project_browser_selected_result_persisted_summary_readback_missing",
   blockedFailClosed: "project_browser_selected_result_persisted_summary_readback_blocked_fail_closed",
+});
+
+export const PROJECT_BROWSER_SELECTED_RESULT_PERSISTED_SUMMARY_READBACK_DETAIL_STATES = Object.freeze({
+  ready: "project_browser_selected_result_persisted_summary_readback_detail_ready",
+  missing: "project_browser_selected_result_persisted_summary_readback_detail_missing",
+  blockedFailClosed: "project_browser_selected_result_persisted_summary_readback_detail_blocked_fail_closed",
 });
 
 const PROJECT_BROWSER_SELECTED_RESULT_READBACK_SOURCE =
@@ -116,6 +127,12 @@ function safeToken(value, fallback = null, maxLength = 220) {
 
 function safeBoolean(value) {
   return value === true;
+}
+
+function safeSchemaVersion(value) {
+  if (value === null || value === undefined || String(value).trim() === "") return null;
+  const version = Number(value);
+  return Number.isFinite(version) ? version : null;
 }
 
 function hasNonNullBlocker(value) {
@@ -310,6 +327,66 @@ export function buildProjectBrowserSelectedResultPersistedSummaryReadbackSummary
   });
 }
 
+export function buildProjectBrowserSelectedResultPersistedSummaryReadbackDetailSummary(envelopeOrProjectSummary = {}) {
+  const sourceSummary = buildSelectedResultPersistedSummaryReadbackProjectSummary(envelopeOrProjectSummary || {});
+  const sourceReadiness = safeToken(sourceSummary.readiness, "missing") || "missing";
+  const ready = sourceSummary.ready === true && sourceSummary.failClosed !== true && sourceReadiness === "ready";
+  const blockedFailClosed = !ready && (
+    sourceReadiness === "blocked_fail_closed"
+    || sourceSummary.state === "selected_result_persisted_summary_readback_blocked_fail_closed"
+  );
+  const state = ready
+    ? PROJECT_BROWSER_SELECTED_RESULT_PERSISTED_SUMMARY_READBACK_DETAIL_STATES.ready
+    : blockedFailClosed
+      ? PROJECT_BROWSER_SELECTED_RESULT_PERSISTED_SUMMARY_READBACK_DETAIL_STATES.blockedFailClosed
+      : PROJECT_BROWSER_SELECTED_RESULT_PERSISTED_SUMMARY_READBACK_DETAIL_STATES.missing;
+  const readiness = state === PROJECT_BROWSER_SELECTED_RESULT_PERSISTED_SUMMARY_READBACK_DETAIL_STATES.ready
+    ? "ready"
+    : state === PROJECT_BROWSER_SELECTED_RESULT_PERSISTED_SUMMARY_READBACK_DETAIL_STATES.blockedFailClosed
+      ? "blocked_fail_closed"
+      : "missing";
+  const base = {
+    schemaId: PROJECT_BROWSER_SELECTED_RESULT_PERSISTED_SUMMARY_READBACK_DETAIL_SUMMARY_SCHEMA_ID,
+    schemaVersion: PROJECT_BROWSER_SELECTED_RESULT_PERSISTED_SUMMARY_READBACK_DETAIL_SUMMARY_SCHEMA_VERSION,
+    sourceSchemaId: safeToken(sourceSummary.schemaId, null),
+    sourceSchemaVersion: safeSchemaVersion(sourceSummary.schemaVersion),
+    sourceState: safeToken(sourceSummary.state, null),
+    sourceReadiness,
+    state,
+    readiness,
+    ready,
+    failClosed: !ready,
+    blocker: sourceSummary.blocker ? safeToken(sourceSummary.blocker, "project-browser-selected-result-readback-detail-blocked") : null,
+    summaryPresent: sourceSummary.summaryPresent === true,
+    summarySchemaId: sourceSummary.summarySchemaId ? safeToken(sourceSummary.summarySchemaId, null) : null,
+    summarySchemaVersion: safeSchemaVersion(sourceSummary.summarySchemaVersion),
+    summaryState: sourceSummary.summaryState ? safeToken(sourceSummary.summaryState, null) : null,
+    owner: safeToken(sourceSummary.owner, "shell"),
+    slotOwner: safeToken(sourceSummary.slotOwner, "shell"),
+    envelopeOwner: safeToken(sourceSummary.envelopeOwner, "shell"),
+    moduleId: safeToken(sourceSummary.moduleId, "cs_selector"),
+    targetLocation: safeToken(sourceSummary.targetLocation, SELECTED_RESULT_READBACK_TARGET),
+    readOnly: true,
+    detailOnly: true,
+    summaryOnly: true,
+    redacted: true,
+    machineValueSafe: true,
+    sourceSelectedResultPersistedSummaryReadbackFingerprint: safeToken(
+      sourceSummary.selectedResultPersistedSummaryReadbackFingerprint,
+      null,
+      760,
+    ),
+  };
+
+  return Object.freeze({
+    ...base,
+    projectBrowserSelectedResultPersistedSummaryReadbackDetailFingerprint: stableFingerprint(
+      "safe-project-browser-selected-result-persisted-summary-readback-detail-summary",
+      base,
+    ),
+  });
+}
+
 export function createProjectBrowserService({ savedProjectStore, projectService, eventBus } = {}) {
   const state = {
     owner: "shell",
@@ -376,6 +453,7 @@ export function createProjectBrowserService({ savedProjectStore, projectService,
       return {
         accepted: false,
         reason: `Saved project not found: ${projectId}`,
+        selectedResultPersistedSummaryReadbackDetailSummary: buildProjectBrowserSelectedResultPersistedSummaryReadbackDetailSummary({}),
         browser: getProjectBrowserSnapshot(context),
       };
     }
@@ -386,6 +464,7 @@ export function createProjectBrowserService({ savedProjectStore, projectService,
       projectId: envelope.projectId,
       envelopeId: envelope.envelopeId,
       restoreEligible: envelope.readOnly !== true && envelope.browserOnly !== true,
+      selectedResultPersistedSummaryReadbackDetailSummary: buildProjectBrowserSelectedResultPersistedSummaryReadbackDetailSummary(envelope),
       envelope,
       browser: getProjectBrowserSnapshot(context),
     };
