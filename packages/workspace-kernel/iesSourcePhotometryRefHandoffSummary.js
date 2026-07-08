@@ -9,6 +9,8 @@ const SAFE_SOURCE_PHOTOMETRY_REF_PATTERN = /^safe-source-photometry-ref:[0-9a-f]
 const PRIVATE_PATH_PATTERN = /[A-Za-z]:\\|\\ControlStack\\|\/ControlStack\b|ControlStack_RuntimeData/i;
 const RAW_IES_TEXT_PATTERN = /IESNA:|TILT=/i;
 const DATA_BASE64_PATTERN = /data:[^\s"']*base64|base64,/i;
+const SAFE_SCHEMA_OR_CONTRACT_ID_PATTERN = /^(?:RUNTIME-[A-Z0-9_-]+|controlstack\.(?:runtime|ies_builder)\.[0-9a-z_.:-]+|runtime_[0-9a-z_]+)$/i;
+const SAFE_IES_SOURCE_OPAQUE_TOKEN_PATTERN = /^(?:safe|opaque)-[0-9a-z_.:-]*\.ies-source[0-9a-z_.:-]*$/i;
 const FILE_EXTENSION_VALUE_PATTERN = /(?:^|[\s\\/])[^\s\\/]+\.(?:ies|pdf|csv|json)(?:$|[\s?#])/i;
 
 const REQUIRED_FALSE_FLAG_NAMES = Object.freeze([
@@ -125,10 +127,16 @@ function driverUtilCurveReferenceTokenFrom(summary) {
 
 function hasUnsafeString(value) {
   if (typeof value === "string") {
-    return PRIVATE_PATH_PATTERN.test(value)
+    if (PRIVATE_PATH_PATTERN.test(value)
       || RAW_IES_TEXT_PATTERN.test(value)
-      || DATA_BASE64_PATTERN.test(value)
-      || FILE_EXTENSION_VALUE_PATTERN.test(value);
+      || DATA_BASE64_PATTERN.test(value)) {
+      return true;
+    }
+    if (SAFE_SCHEMA_OR_CONTRACT_ID_PATTERN.test(value)
+      || SAFE_IES_SOURCE_OPAQUE_TOKEN_PATTERN.test(value)) {
+      return false;
+    }
+    return FILE_EXTENSION_VALUE_PATTERN.test(value);
   }
   if (Array.isArray(value)) return value.some(hasUnsafeString);
   if (!isRecord(value)) return false;
