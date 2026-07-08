@@ -104,6 +104,37 @@ const REQUIRED_CANDIDATE_FLAG_ROWS = Object.freeze([
   ["hiddenWriteBackEnabled", "false"],
 ]);
 
+const SAFE_SOURCE_PHOTOMETRY_REF = `safe-source-photometry-ref:${"a".repeat(40)}`;
+
+function safePhotometryReferenceSummary(overrides = {}) {
+  return {
+    ok: true,
+    photometryReferenceSummaryReady: true,
+    sourcePhotometryStatus: "opaque_reference_summary_ready",
+    sourcePhotometryRef: SAFE_SOURCE_PHOTOMETRY_REF,
+    readOnly: true,
+    diagnosticOnly: true,
+    safeSummaryOnly: true,
+    opaqueReferenceOnly: true,
+    sourceAnchorOnly: true,
+    sourceBacked: true,
+    sourceFingerprint: "safe-source:ies-builder-status-fixture",
+    policyFingerprint: "safe-policy:ies-builder-status-fixture",
+    sourceInputFingerprint: "safe-source-input:ies-builder-status-fixture",
+    boardDataSourceVersion: "safe-board-data-source-version:ies-builder-status-fixture",
+    photometryReferenceFingerprint: "safe-photometry-reference:ies-builder-status-fixture",
+    oneMmPolicyLabel: "one-mm-length-policy-summary-only",
+    iesPhotometryReferenceToken: "safe-ies-photometry-reference:ies-builder-status-fixture",
+    lumenCurveReferenceSummary: {
+      curveReferenceToken: "safe-lumen-curve-reference:ies-builder-status-fixture",
+    },
+    driverUtilCurveReferenceSummary: {
+      curveReferenceToken: "safe-driver-util-curve-reference:ies-builder-status-fixture",
+    },
+    ...overrides,
+  };
+}
+
 function completeAcceptedSelectedResultInput(overrides = {}) {
   const base = {
     oneSuccessfulAcceptedResult: true,
@@ -498,6 +529,36 @@ test("missing sourcePhotometryRef remains blocked and opaque-placeholder only wh
   assert.equal(JSON.stringify(present).includes("private-source.ies"), false);
   assertHandoffSafety(missing);
   assertHandoffSafety(present);
+});
+
+test("status upgrades placeholder source photometry metadata to real opaque source ref when safe anchor is supplied", () => {
+  const status = buildIesBuilderStatus({
+    selectedResultProjection: acceptedSelectedResultProjection(),
+    safePhotometryReferenceSummary: safePhotometryReferenceSummary(),
+  });
+
+  assert.equal(status.sourcePhotometryRefHandoffSummary.ok, true);
+  assert.equal(status.sourcePhotometryRefHandoffSummary.handoffReady, true);
+  assert.equal(status.sourcePhotometryRefHandoffSummary.sourcePhotometryStatus, "real_source_ref_ready");
+  assert.match(status.sourcePhotometryRefHandoffSummary.sourcePhotometryRef, /^safe-source-photometry-ref:[0-9a-f]{40}$/);
+  assert.equal(status.photometryMetadataShape.sourcePhotometryStatus, "real_source_ref_ready");
+  assert.match(status.photometryMetadataShape.sourcePhotometryRef, /^safe-source-photometry-ref:[0-9a-f]{40}$/);
+  assert.equal(status.photometryMetadataShape.sourceBacked, true);
+  assert.equal(status.photometryMetadataShape.sourceAnchorOnly, true);
+  assert.equal(status.photometryMetadataShape.opaqueReferenceOnly, true);
+  assert.equal(status.photometryMetadataShape.safeSummaryOnly, true);
+  assert.equal(JSON.stringify(status).includes("opaque-photometry-ref-do-not-emit.ies"), false);
+});
+
+test("status keeps placeholder/null source photometry metadata when safe anchor is absent", () => {
+  const status = buildIesBuilderStatus({ selectedResultProjection: acceptedSelectedResultProjection() });
+
+  assert.equal(status.sourcePhotometryRefHandoffSummary.ok, false);
+  assert.equal(status.sourcePhotometryRefHandoffSummary.blocker, "missing-safe-photometry-reference-summary");
+  assert.equal(status.photometryMetadataShape.sourcePhotometryRef, null);
+  assert.equal(status.photometryMetadataShape.sourcePhotometryStatus, "opaque_ref_required_later");
+  assert.equal(status.sourcePhotometryRefReadiness.ready, true);
+  assert.equal(status.sourcePhotometryRefReadiness.sourcePhotometryRef, "opaque-source-photometry-ref-present");
 });
 
 test("1mm policy remains metadata-only and candidate artefact refs remain opaque/null", () => {

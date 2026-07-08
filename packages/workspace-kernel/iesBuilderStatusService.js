@@ -1,3 +1,5 @@
+import { buildRuntimeIesSourcePhotometryRefHandoffSummary } from "./iesSourcePhotometryRefHandoffSummary.js";
+
 export const IES_BUILDER_STATUS_PATH = "/api/ies-builder/status";
 
 export const IES_BUILDER_CANDIDATE_OUTPUT_SCHEMA = Object.freeze({
@@ -28,6 +30,7 @@ export const IES_BUILDER_CANDIDATE_OUTPUT_SCHEMA = Object.freeze({
     "boardDataSourceVersionReadiness",
     "sourceInputFingerprintReadiness",
     "sourcePhotometryRefReadiness",
+    "sourcePhotometryRefHandoffSummary",
     "oneMmPolicy",
   ]),
 });
@@ -569,6 +572,29 @@ function buildOneMmPolicyMetadata() {
   };
 }
 
+function buildPhotometryMetadataShape(sourcePhotometryRefHandoffSummary) {
+  const shape = clonePlain(PHOTOMETRY_METADATA_SHAPE);
+  if (!isRecord(sourcePhotometryRefHandoffSummary)
+    || sourcePhotometryRefHandoffSummary.ok !== true
+    || sourcePhotometryRefHandoffSummary.handoffReady !== true) {
+    return shape;
+  }
+  return {
+    ...shape,
+    sourcePhotometryRef: sourcePhotometryRefHandoffSummary.sourcePhotometryRef,
+    sourcePhotometryStatus: sourcePhotometryRefHandoffSummary.sourcePhotometryStatus,
+    oneMmPolicyLabel: sourcePhotometryRefHandoffSummary.oneMmPolicyLabel,
+    iesPhotometryReferenceToken: sourcePhotometryRefHandoffSummary.iesPhotometryReferenceToken,
+    lumenCurveReferenceToken: sourcePhotometryRefHandoffSummary.lumenCurveReferenceToken,
+    driverUtilCurveReferenceToken: sourcePhotometryRefHandoffSummary.driverUtilCurveReferenceToken,
+    photometryReferenceFingerprint: sourcePhotometryRefHandoffSummary.photometryReferenceFingerprint,
+    sourceBacked: true,
+    sourceAnchorOnly: true,
+    opaqueReferenceOnly: true,
+    safeSummaryOnly: true,
+  };
+}
+
 export function buildIesBuilderSelectedResultHandoffContract(selectedResultProjection = null) {
   const projection = isRecord(selectedResultProjection) ? selectedResultProjection : {};
   const hasProjection = isRecord(selectedResultProjection);
@@ -680,6 +706,13 @@ export function buildIesBuilderStatus(options = {}) {
   const handoffContract = buildIesBuilderSelectedResultHandoffContract(
     isRecord(options) ? (options.selectedResultProjection || options.selectedResultAdapterProjection || null) : null,
   );
+  const safePhotometryReferenceSummary = isRecord(options)
+    ? (options.safePhotometryReferenceSummary || options.safePhotometrySourceAnchorSummary || options.photometryReferenceSummary || null)
+    : null;
+  const sourcePhotometryRefHandoffSummary = buildRuntimeIesSourcePhotometryRefHandoffSummary({
+    safePhotometryReferenceSummary,
+    selectedResultHandoffContract: handoffContract,
+  });
 
   return {
     ...SAFE_IES_BUILDER_STATUS,
@@ -694,9 +727,10 @@ export function buildIesBuilderStatus(options = {}) {
     productIntentSummary: clonePlain(PRODUCT_INTENT_SUMMARY),
     geometryPolicy: clonePlain(GEOMETRY_POLICY),
     runSummaryShape: clonePlain(RUN_SUMMARY_SHAPE),
-    photometryMetadataShape: clonePlain(PHOTOMETRY_METADATA_SHAPE),
+    photometryMetadataShape: buildPhotometryMetadataShape(sourcePhotometryRefHandoffSummary),
     candidateArtefactRefs: clonePlain(CANDIDATE_ARTEFACT_REFS),
     handoffContract,
+    sourcePhotometryRefHandoffSummary,
     selectedResultStateSummary: clonePlain(handoffContract.selectedResultStateSummary),
     selectedFamilySubsetLockReadiness: clonePlain(handoffContract.selectedFamilySubsetLockReadiness),
     perRunLookupReadiness: clonePlain(handoffContract.perRunLookupReadiness),
