@@ -31,7 +31,7 @@ test("authority reference public status fields redact local default and material
   assert.match(source, /legacyTransitionalPath: "redacted"/);
   assert.match(source, /sendPublicStatusJson\(res, 200, await authorityReferenceAdminStatus\(\)\)/);
   assert.match(source, /sendPublicStatusJson\(res, 200, await authorityReferenceSourceMaterialisationStatus\(\)\)/);
-  assert.match(source, /sendPublicStatusJson\(res, 200, await buildAuthorityReferenceMaterialiserStatus\(\)\)/);
+  assert.match(source, /sendPublicStatusJson\(res, 200, await buildAuthorityReferenceMaterialiserStatus\(\{ env: materialiserEnv \}\)\)/);
 });
 
 test("normal workspace assets remain served while static patch artefacts are denied", async () => {
