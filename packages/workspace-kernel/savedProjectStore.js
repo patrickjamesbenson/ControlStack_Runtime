@@ -8,7 +8,11 @@ import {
   SELECTED_RESULT_PERSISTED_SUMMARY_SLOT_STATES,
   SELECTED_RESULT_PERSISTED_SUMMARY_SLOT_TARGET,
 } from "./selectedResultPersistedSummarySlotContract.js";
-import { buildSelectedResultPersistedSummaryReadbackStatus } from "./selectedResultPersistedSummaryReadbackStatus.js";
+import {
+  buildSelectedResultPersistedSummaryReadbackStatus,
+  SELECTED_RESULT_PERSISTED_SUMMARY_READBACK_STATUS_SCHEMA_ID,
+  SELECTED_RESULT_PERSISTED_SUMMARY_READBACK_STATUS_SCHEMA_VERSION,
+} from "./selectedResultPersistedSummaryReadbackStatus.js";
 import {
   buildRunTableFirstNarrowOutputHandoffContract,
   RUNTABLE_FIRST_NARROW_OUTPUT_HANDOFF_GATING_PREREQUISITES,
@@ -36,6 +40,9 @@ function nowIso() {
 }
 
 const SELECTED_RESULT_SUMMARY_TARGET = "projectEnvelope.modules.cs_selector.downstreamContext.selectedResultSummary";
+export const SELECTED_RESULT_PERSISTED_SUMMARY_READBACK_PROJECT_SUMMARY_SCHEMA_ID =
+  "controlstack.runtime.selected-result-persisted-summary-readback-project-summary.v1";
+export const SELECTED_RESULT_PERSISTED_SUMMARY_READBACK_PROJECT_SUMMARY_SCHEMA_VERSION = 1;
 const RUNTABLE_FIRST_NARROW_OUTPUT_SUMMARY_TARGET = "projectEnvelope.modules.cs_selector.downstreamContext.runTableFirstNarrowOutputSummary";
 const IES_FIRST_NARROW_METADATA_HANDOFF_SUMMARY_TARGET = RUNTIME_IES_FIRST_NARROW_METADATA_HANDOFF_TARGET;
 const IES_SOURCE_PHOTOMETRY_REF_SAFE_PATTERN = /^safe-source-photometry-ref:[0-9a-f]{40}$/;
@@ -291,6 +298,48 @@ function selectedSummarySafeFingerprint(value) {
   const token = selectedSummarySafeToken(value, "", 700);
   if (!token) return null;
   return SELECTED_RESULT_SUMMARY_SAFE_FINGERPRINT_PATTERN.test(token) ? token : null;
+}
+
+function selectedSummarySchemaVersion(value) {
+  if (isBlank(value)) return null;
+  const version = Number(value);
+  return Number.isFinite(version) ? version : null;
+}
+
+function selectedSummarySafeBoolean(value) {
+  return value === true;
+}
+
+export function buildSelectedResultPersistedSummaryReadbackProjectSummary(envelopeOrStatus = {}) {
+  const sourceStatus = isPlainObject(envelopeOrStatus)
+    && envelopeOrStatus.schemaId === SELECTED_RESULT_PERSISTED_SUMMARY_READBACK_STATUS_SCHEMA_ID
+    && Number(envelopeOrStatus.schemaVersion) === SELECTED_RESULT_PERSISTED_SUMMARY_READBACK_STATUS_SCHEMA_VERSION
+    ? envelopeOrStatus
+    : buildSelectedResultPersistedSummaryReadbackStatus(envelopeOrStatus || {});
+  const ready = sourceStatus.ready === true;
+  const failClosed = sourceStatus.failClosed === true || !ready;
+
+  return Object.freeze({
+    schemaId: SELECTED_RESULT_PERSISTED_SUMMARY_READBACK_PROJECT_SUMMARY_SCHEMA_ID,
+    schemaVersion: SELECTED_RESULT_PERSISTED_SUMMARY_READBACK_PROJECT_SUMMARY_SCHEMA_VERSION,
+    sourceSchemaId: selectedSummarySafeToken(sourceStatus.schemaId, SELECTED_RESULT_PERSISTED_SUMMARY_READBACK_STATUS_SCHEMA_ID),
+    sourceSchemaVersion: selectedSummarySchemaVersion(sourceStatus.schemaVersion),
+    state: selectedSummarySafeToken(sourceStatus.state, null),
+    readiness: selectedSummarySafeToken(sourceStatus.readiness, failClosed ? "blocked_fail_closed" : "ready"),
+    ready,
+    failClosed,
+    blocker: sourceStatus.blocker ? selectedSummarySafeToken(sourceStatus.blocker, "selected-result-persisted-summary-readback-blocked") : null,
+    summaryPresent: selectedSummarySafeBoolean(sourceStatus.summaryPresent),
+    summarySchemaId: sourceStatus.summarySchemaId ? selectedSummarySafeToken(sourceStatus.summarySchemaId, null) : null,
+    summarySchemaVersion: selectedSummarySchemaVersion(sourceStatus.summarySchemaVersion),
+    summaryState: sourceStatus.summaryState ? selectedSummarySafeToken(sourceStatus.summaryState, null) : null,
+    owner: selectedSummarySafeToken(sourceStatus.owner, SELECTED_RESULT_PERSISTED_SUMMARY_SLOT_TARGET.owner),
+    slotOwner: selectedSummarySafeToken(sourceStatus.slotOwner, SELECTED_RESULT_PERSISTED_SUMMARY_SLOT_TARGET.slotOwner),
+    envelopeOwner: selectedSummarySafeToken(sourceStatus.envelopeOwner, SELECTED_RESULT_PERSISTED_SUMMARY_SLOT_TARGET.envelopeOwner),
+    moduleId: selectedSummarySafeToken(sourceStatus.moduleId, SELECTED_RESULT_PERSISTED_SUMMARY_SLOT_TARGET.moduleId),
+    targetLocation: selectedSummarySafeToken(sourceStatus.targetLocation, SELECTED_RESULT_SUMMARY_TARGET),
+    selectedResultPersistedSummaryReadbackFingerprint: selectedSummarySafeFingerprint(sourceStatus.selectedResultPersistedSummaryReadbackFingerprint),
+  });
 }
 
 function selectedSummaryFirstPresent(source, keys) {
@@ -1321,7 +1370,10 @@ export function createSavedProjectStore({ eventBus } = {}) {
   }
 
   function listProjectSummaries() {
-    return allEnvelopes().map((envelope) => summariseProjectEnvelope(envelope));
+    return allEnvelopes().map((envelope) => ({
+      ...summariseProjectEnvelope(envelope),
+      selectedResultPersistedSummaryReadbackStatus: buildSelectedResultPersistedSummaryReadbackProjectSummary(envelope),
+    }));
   }
 
   function getProjectEnvelope(projectIdOrEnvelopeId) {
