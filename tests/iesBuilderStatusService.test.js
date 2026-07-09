@@ -793,3 +793,136 @@ test("no POST IES Builder endpoint is added", async () => {
   assert.equal(/POST[\s\S]{0,160}IES_BUILDER_STATUS_PATH/.test(serverText), false);
   assert.equal(/AUTH_REF_POST_PATHS[\s\S]{0,700}IES_BUILDER_STATUS_PATH/.test(serverText), false);
 });
+
+import { test as labRuntimeStatusTest } from "node:test";
+import * as labRuntimeStatusAssert from "node:assert/strict";
+import { buildIesBuilderStatus as buildIesBuilderStatusWithLabRuntimeHandoff } from "../packages/workspace-kernel/iesBuilderStatusService.js";
+
+function labRuntimeStatusSafeHandoff(overrides = {}) {
+  return {
+    schemaId: "safe-runtime-handoff.v1",
+    schemaVersion: 1,
+    handoffState: "ready",
+    approvalState: "approved_for_runtime_reference",
+    oneMmNormalised: true,
+    baseLengthM: 0.001,
+    sourcePhotometryRef: "opaque-source-photometry-ref:status",
+    sourcePhotometryStatus: "reference-ready",
+    iesPhotometryReferenceToken: "ies-ref-token:status",
+    lumenCurveReferenceToken: "lumen-token:status",
+    driverUtilCurveReferenceToken: "driver-token:status",
+    photometryReferenceFingerprint: "photometry-fp-status",
+    sourceInputFingerprint: "source-input-fp-status",
+    boardDataSourceVersion: "board-version-status",
+    selectedFamilySubsetLock: {
+      family: "status-family",
+      subset: "status-subset",
+    },
+    oneMmPolicyLabel: "one-mm-normalised-reference",
+    recordFingerprint: "record-fp-status",
+    derivedFromFingerprint: null,
+    safeSummaryOnly: true,
+    readOnly: true,
+    ...overrides,
+  };
+}
+
+labRuntimeStatusTest("IES Builder status consumes safe runtime handoff through lab adapter", () => {
+  const status = buildIesBuilderStatusWithLabRuntimeHandoff({
+    safeRuntimeHandoff: labRuntimeStatusSafeHandoff(),
+  });
+
+  labRuntimeStatusAssert.equal(status.sourcePhotometryRefHandoffSummary.ok, true);
+  labRuntimeStatusAssert.equal(status.sourcePhotometryRefHandoffSummary.state, "runtime_lab_ies_safe_handoff_ready");
+  labRuntimeStatusAssert.equal(status.sourcePhotometryRefHandoffSummary.sourcePhotometryRef, "opaque-source-photometry-ref:status");
+  labRuntimeStatusAssert.equal(status.sourcePhotometryRefHandoffSummary.sourcePhotometryStatus, "reference-ready");
+  labRuntimeStatusAssert.equal(status.sourcePhotometryRefHandoffSummary.iesPhotometryReferenceToken, "ies-ref-token:status");
+  labRuntimeStatusAssert.equal(status.sourcePhotometryRefHandoffSummary.photometryReferenceFingerprint, "photometry-fp-status");
+  labRuntimeStatusAssert.equal(status.sourcePhotometryRefHandoffSummary.sourceInputFingerprint, "source-input-fp-status");
+  labRuntimeStatusAssert.equal(status.sourcePhotometryRefHandoffSummary.boardDataSourceVersion, "board-version-status");
+  labRuntimeStatusAssert.equal(status.photometryMetadataShape.sourcePhotometryRef, "opaque-source-photometry-ref:status");
+  labRuntimeStatusAssert.equal(status.photometryMetadataShape.sourceInputFingerprint, "source-input-fp-status");
+  labRuntimeStatusAssert.equal(status.photometryMetadataShape.boardDataSourceVersion, "board-version-status");
+  labRuntimeStatusAssert.equal(status.rawIesExposed, false);
+  labRuntimeStatusAssert.equal(status.rawCandelaGridExposed, false);
+  labRuntimeStatusAssert.equal(status.rawPhotometryPayloadExposed, false);
+  labRuntimeStatusAssert.equal(status.sourcePhotometryRefHandoffSummary.rawIesContentReturned, false);
+  labRuntimeStatusAssert.equal(status.sourcePhotometryRefHandoffSummary.rawPhotometryReturned, false);
+  labRuntimeStatusAssert.equal(status.sourcePhotometryRefHandoffSummary.candelaArraysReturned, false);
+});
+
+labRuntimeStatusTest("IES Builder status fills board-owned runtime null slots from board data", () => {
+  const status = buildIesBuilderStatusWithLabRuntimeHandoff({
+    safeRuntimeHandoff: labRuntimeStatusSafeHandoff({
+      lumenCurveReferenceToken: null,
+      driverUtilCurveReferenceToken: null,
+      boardDataSourceVersion: null,
+      selectedFamilySubsetLock: null,
+    }),
+    boardData: {
+      lumenCurveReferenceToken: "board-lumen-fill",
+      driverUtilCurveReferenceToken: "board-driver-fill",
+      boardDataSourceVersion: "board-version-fill",
+      selectedFamilySubsetLock: {
+        family: "board-family-fill",
+        subset: "board-subset-fill",
+      },
+    },
+  });
+
+  labRuntimeStatusAssert.equal(status.sourcePhotometryRefHandoffSummary.ok, true);
+  labRuntimeStatusAssert.equal(status.sourcePhotometryRefHandoffSummary.lumenCurveReferenceToken, "board-lumen-fill");
+  labRuntimeStatusAssert.equal(status.sourcePhotometryRefHandoffSummary.driverUtilCurveReferenceToken, "board-driver-fill");
+  labRuntimeStatusAssert.equal(status.sourcePhotometryRefHandoffSummary.boardDataSourceVersion, "board-version-fill");
+  labRuntimeStatusAssert.deepEqual(status.sourcePhotometryRefHandoffSummary.selectedFamilySubsetLock, {
+    family: "board-family-fill",
+    subset: "board-subset-fill",
+  });
+  labRuntimeStatusAssert.deepEqual(status.sourcePhotometryRefHandoffSummary.boardOwnedRuntimeFillApplied, [
+    "lumenCurveReferenceToken",
+    "driverUtilCurveReferenceToken",
+    "boardDataSourceVersion",
+    "selectedFamilySubsetLock",
+  ]);
+  labRuntimeStatusAssert.equal(status.photometryMetadataShape.lumenCurveReferenceToken, "board-lumen-fill");
+  labRuntimeStatusAssert.equal(status.photometryMetadataShape.driverUtilCurveReferenceToken, "board-driver-fill");
+  labRuntimeStatusAssert.equal(status.photometryMetadataShape.boardDataSourceVersion, "board-version-fill");
+});
+
+labRuntimeStatusTest("IES Builder status remains blocked when safe runtime handoff is blocked", () => {
+  const status = buildIesBuilderStatusWithLabRuntimeHandoff({
+    safeRuntimeHandoff: labRuntimeStatusSafeHandoff({
+      handoffState: "blocked",
+    }),
+  });
+
+  labRuntimeStatusAssert.equal(status.sourcePhotometryRefHandoffSummary.ok, false);
+  labRuntimeStatusAssert.equal(status.sourcePhotometryRefHandoffSummary.state, "runtime_lab_ies_safe_handoff_blocked_fail_closed");
+  labRuntimeStatusAssert.equal(status.sourcePhotometryRefHandoffSummary.blocker, "safe-runtime-handoff-not-ready");
+  labRuntimeStatusAssert.equal(status.photometryMetadataShape.sourcePhotometryRef, null);
+  labRuntimeStatusAssert.equal(status.photometryMetadataShape.rawCandelaGridExposed, false);
+  labRuntimeStatusAssert.equal(status.photometryMetadataShape.rawPhotometryPayloadExposed, false);
+});
+
+labRuntimeStatusTest("IES Builder status keeps raw generation file route post and mutation flags false with safe runtime handoff", () => {
+  const status = buildIesBuilderStatusWithLabRuntimeHandoff({
+    safeRuntimeHandoff: labRuntimeStatusSafeHandoff(),
+  });
+
+  labRuntimeStatusAssert.equal(status.iesGenerationEnabled, false);
+  labRuntimeStatusAssert.equal(status.uploadEnabled, false);
+  labRuntimeStatusAssert.equal(status.exportEnabled, false);
+  labRuntimeStatusAssert.equal(status.postEndpointsEnabled, false);
+  labRuntimeStatusAssert.equal(status.selectorMutationEnabled, false);
+  labRuntimeStatusAssert.equal(status.boardDataMutationEnabled, false);
+  labRuntimeStatusAssert.equal(status.activeSnapshotWriteEnabled, false);
+  labRuntimeStatusAssert.equal(status.materialisedSnapshotWriteEnabled, false);
+  labRuntimeStatusAssert.equal(status.sourcePhotometryRefHandoffSummary.routesAdded, false);
+  labRuntimeStatusAssert.equal(status.sourcePhotometryRefHandoffSummary.postEndpointsAdded, false);
+  labRuntimeStatusAssert.equal(status.sourcePhotometryRefHandoffSummary.runtimeDataMutationEnabled, false);
+  labRuntimeStatusAssert.equal(status.sourcePhotometryRefHandoffSummary.runtimeDataMutated, false);
+  labRuntimeStatusAssert.equal(status.sourcePhotometryRefHandoffSummary.iesGenerationEnabled, false);
+  labRuntimeStatusAssert.equal(status.sourcePhotometryRefHandoffSummary.iesGenerated, false);
+  labRuntimeStatusAssert.equal(status.sourcePhotometryRefHandoffSummary.fileOutputEnabled, false);
+  labRuntimeStatusAssert.equal(status.sourcePhotometryRefHandoffSummary.fileOutputWritten, false);
+});
