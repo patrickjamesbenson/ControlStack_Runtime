@@ -1,7 +1,8 @@
 // Lab IES toolkit — runtime-facing safe handoff. Pure, browser-safe.
 // Emits CP's blessed safe-runtime-handoff.v1 field set. Lab-owned refs are populated; board/runtime-owned
 // tokens (lumen curve, driver-util, board-data version, family-subset lock) are null slots the RUNTIME fills.
-// Never exposes candela, keywords, mutation log, or proprietary data (leak-tested).
+// Carries NO raw data and no field named candela/keywords/mutationLog/provenance/etc (so CP's adapter,
+// which fails closed on those exact field names, integrates cleanly). Absence IS the guarantee.
 export function buildSafeHandoff(record){
   const isReference = record.approvalState === "reference";
   return {
@@ -22,7 +23,7 @@ export function buildSafeHandoff(record){
     derivedFromFingerprint: record.derivedFromFingerprint || null, // null for a reference; set on derived project IES
     recordType: record.recordType || null,
     referenceEngineToken: record.referenceEngineId || null,
-    // runtime/board-owned slots — lab leaves null; the runtime populates from board data
+    // runtime/board-owned slots — lab leaves null; the runtime adapter populates from board data
     lumenCurveReferenceToken: null,
     driverUtilCurveReferenceToken: null,
     boardDataSourceVersion: null,
@@ -31,6 +32,5 @@ export function buildSafeHandoff(record){
     unresolvedCount: (record.unresolvedFields || []).length,
     safeSummaryOnly: true,
     readOnly: true,
-    rawExposed: { iesText: false, candela: false, keywords: false, filenames: false, localPaths: false, proprietaryMetadata: false, mutationLog: false },
   };
 }
