@@ -63,5 +63,6 @@ export function buildOneMmRecord(model, opts = {}){
     sourceFingerprint: null, recordFingerprint: null,
     provenance: { fingerprintsSealed: false, mutationLog: [] },
     approvalState: "draft",
+    unresolvedFields: labForm.filter((r) => r.source === "needs-lab-input").map((r) => r.bareField),
   };
 }
