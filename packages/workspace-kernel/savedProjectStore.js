@@ -55,6 +55,16 @@ import {
   RUNTIME_IES_FIRST_NARROW_CANDIDATE_OUTPUT_MANIFEST_SUMMARY_SCHEMA_VERSION,
   RUNTIME_IES_FIRST_NARROW_CANDIDATE_OUTPUT_MANIFEST_TARGET,
 } from "./iesFirstNarrowCandidateOutputManifestSummary.js";
+import {
+  buildRuntimeIesFirstNarrowCandidateOutputDetailSummary,
+  findUnsafeIesFirstNarrowCandidateOutputDetailInput,
+  RUNTIME_IES_FIRST_NARROW_CANDIDATE_OUTPUT_DETAIL_CONTRACT_ID,
+  RUNTIME_IES_FIRST_NARROW_CANDIDATE_OUTPUT_DETAIL_FIELD_ORDER,
+  RUNTIME_IES_FIRST_NARROW_CANDIDATE_OUTPUT_DETAIL_REQUIRED_FALSE_FLAGS,
+  RUNTIME_IES_FIRST_NARROW_CANDIDATE_OUTPUT_DETAIL_SUMMARY_SCHEMA_ID,
+  RUNTIME_IES_FIRST_NARROW_CANDIDATE_OUTPUT_DETAIL_SUMMARY_SCHEMA_VERSION,
+  RUNTIME_IES_FIRST_NARROW_CANDIDATE_OUTPUT_DETAIL_TARGET,
+} from "./iesFirstNarrowCandidateOutputDetailSummary.js";
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
@@ -73,6 +83,7 @@ const RUNTABLE_FIRST_NARROW_ROWS_TARGET = RUNTABLE_FIRST_NARROW_ROWS_SLOT_TARGET
 const IES_FIRST_NARROW_METADATA_HANDOFF_SUMMARY_TARGET = RUNTIME_IES_FIRST_NARROW_METADATA_HANDOFF_TARGET;
 const IES_FIRST_NARROW_CANDIDATE_OUTPUT_SUMMARY_TARGET = RUNTIME_IES_FIRST_NARROW_CANDIDATE_OUTPUT_TARGET;
 const IES_FIRST_NARROW_CANDIDATE_OUTPUT_MANIFEST_SUMMARY_TARGET = RUNTIME_IES_FIRST_NARROW_CANDIDATE_OUTPUT_MANIFEST_TARGET;
+const IES_FIRST_NARROW_CANDIDATE_OUTPUT_DETAIL_SUMMARY_TARGET = RUNTIME_IES_FIRST_NARROW_CANDIDATE_OUTPUT_DETAIL_TARGET;
 const IES_SOURCE_PHOTOMETRY_REF_SAFE_PATTERN = /^safe-source-photometry-ref:[0-9a-f]{40}$/;
 
 const SELECTED_RESULT_SUMMARY_WRITE_SOURCE_KEYS = Object.freeze([
@@ -173,9 +184,26 @@ const IES_FIRST_NARROW_CANDIDATE_OUTPUT_MANIFEST_WRITE_SOURCE_KEYS = Object.free
   "iesFirstNarrowCandidateOutputSummary",
 ]);
 
+const IES_FIRST_NARROW_CANDIDATE_OUTPUT_DETAIL_WRITE_REQUEST_KEYS = Object.freeze([
+  "iesFirstNarrowCandidateOutputDetailWrite",
+  "iesFirstNarrowCandidateOutputDetailWriteRequest",
+  "iesFirstNarrowCandidateOutputDetailSummaryWrite",
+  "iesFirstNarrowCandidateOutputDetailSummaryWriteRequest",
+]);
+
+const IES_FIRST_NARROW_CANDIDATE_OUTPUT_DETAIL_WRITE_SOURCE_KEYS = Object.freeze([
+  "iesFirstNarrowCandidateOutputDetailSummary",
+  "iesFirstNarrowCandidateOutputDetailSummaryCandidate",
+  "runTableFirstNarrowRows",
+  "iesFirstNarrowMetadataHandoffSummary",
+  "iesFirstNarrowCandidateOutputSummary",
+  "iesFirstNarrowCandidateOutputManifestSummary",
+]);
+
 const IES_FIRST_NARROW_METADATA_HANDOFF_REQUIRED_FIELD_SET = new Set(RUNTIME_IES_FIRST_NARROW_METADATA_HANDOFF_FIELD_ORDER);
 const IES_FIRST_NARROW_CANDIDATE_OUTPUT_REQUIRED_FIELD_SET = new Set(RUNTIME_IES_FIRST_NARROW_CANDIDATE_OUTPUT_FIELD_ORDER);
 const IES_FIRST_NARROW_CANDIDATE_OUTPUT_MANIFEST_REQUIRED_FIELD_SET = new Set(RUNTIME_IES_FIRST_NARROW_CANDIDATE_OUTPUT_MANIFEST_FIELD_ORDER);
+const IES_FIRST_NARROW_CANDIDATE_OUTPUT_DETAIL_REQUIRED_FIELD_SET = new Set(RUNTIME_IES_FIRST_NARROW_CANDIDATE_OUTPUT_DETAIL_FIELD_ORDER);
 
 const RUNTABLE_FIRST_NARROW_OUTPUT_SUMMARY_ELIGIBLE_FIELD_SET = Object.freeze([
   "schemaId",
@@ -527,6 +555,8 @@ function removeSelectedResultSummaryWriteSourceKeys(value) {
   for (const key of IES_FIRST_NARROW_CANDIDATE_OUTPUT_WRITE_SOURCE_KEYS) delete copy[key];
   for (const key of IES_FIRST_NARROW_CANDIDATE_OUTPUT_MANIFEST_WRITE_REQUEST_KEYS) delete copy[key];
   for (const key of IES_FIRST_NARROW_CANDIDATE_OUTPUT_MANIFEST_WRITE_SOURCE_KEYS) delete copy[key];
+  for (const key of IES_FIRST_NARROW_CANDIDATE_OUTPUT_DETAIL_WRITE_REQUEST_KEYS) delete copy[key];
+  for (const key of IES_FIRST_NARROW_CANDIDATE_OUTPUT_DETAIL_WRITE_SOURCE_KEYS) delete copy[key];
   return copy;
 }
 
@@ -1195,6 +1225,23 @@ function resolveRunTableFirstNarrowRowsSlotWrite(context = {}, moduleContributio
     || hasOwnPlainKey(candidateOutputManifestWriteRequest, "iesFirstNarrowCandidateOutputManifestSummaryCandidate")
     || hasOwnPlainKey(contributionDownstream, "iesFirstNarrowCandidateOutputManifestSummaryCandidate")
     || hasOwnPlainKey(contextSelectorDownstream, "iesFirstNarrowCandidateOutputManifestSummaryCandidate");
+  const candidateOutputDetailWriteRequest = selectedSummaryFirstPlain(
+    [selectorContribution, contributionDownstream, contextSelectorDownstream, context],
+    IES_FIRST_NARROW_CANDIDATE_OUTPUT_DETAIL_WRITE_REQUEST_KEYS,
+  );
+  const candidateOutputDetailRequested = candidateOutputDetailWriteRequest.writeRequested === true
+    || candidateOutputDetailWriteRequest.enabled === true
+    || candidateOutputDetailWriteRequest.persist === true
+    || candidateOutputDetailWriteRequest.write === true
+    || selectorContribution.iesFirstNarrowCandidateOutputDetailWriteRequested === true
+    || contributionDownstream.iesFirstNarrowCandidateOutputDetailWriteRequested === true
+    || contextSelectorDownstream.iesFirstNarrowCandidateOutputDetailWriteRequested === true
+    || selectorContribution.iesFirstNarrowCandidateOutputDetailSummaryWriteRequested === true
+    || contributionDownstream.iesFirstNarrowCandidateOutputDetailSummaryWriteRequested === true
+    || contextSelectorDownstream.iesFirstNarrowCandidateOutputDetailSummaryWriteRequested === true
+    || hasOwnPlainKey(candidateOutputDetailWriteRequest, "iesFirstNarrowCandidateOutputDetailSummaryCandidate")
+    || hasOwnPlainKey(contributionDownstream, "iesFirstNarrowCandidateOutputDetailSummaryCandidate")
+    || hasOwnPlainKey(contextSelectorDownstream, "iesFirstNarrowCandidateOutputDetailSummaryCandidate");
   const rowsSourcePresent = hasOwnPlainKey(directWrite, "runTableFirstNarrowRowsCandidate")
     || hasOwnPlainKey(contributionDownstream, "runTableFirstNarrowRowsCandidate")
     || hasOwnPlainKey(contextSelectorDownstream, "runTableFirstNarrowRowsCandidate")
@@ -1202,7 +1249,7 @@ function resolveRunTableFirstNarrowRowsSlotWrite(context = {}, moduleContributio
     || hasOwnPlainKey(contributionDownstream, "runTableFirstNarrowRows")
     || hasOwnPlainKey(contextSelectorDownstream, "runTableFirstNarrowRows");
   const requested = explicitWriteRequested
-    || (!candidateOutputRequested && !candidateOutputManifestRequested && rowsSourcePresent);
+    || (!candidateOutputRequested && !candidateOutputManifestRequested && !candidateOutputDetailRequested && rowsSourcePresent);
 
   if (!requested) {
     return {
@@ -1372,6 +1419,23 @@ function resolveIesFirstNarrowMetadataHandoffWrite(context = {}, moduleContribut
     || hasOwnPlainKey(candidateOutputManifestWriteRequest, "iesFirstNarrowCandidateOutputManifestSummaryCandidate")
     || hasOwnPlainKey(contributionDownstream, "iesFirstNarrowCandidateOutputManifestSummaryCandidate")
     || hasOwnPlainKey(contextSelectorDownstream, "iesFirstNarrowCandidateOutputManifestSummaryCandidate");
+  const candidateOutputDetailWriteRequest = selectedSummaryFirstPlain(
+    [selectorContribution, contributionDownstream, contextSelectorDownstream, context],
+    IES_FIRST_NARROW_CANDIDATE_OUTPUT_DETAIL_WRITE_REQUEST_KEYS,
+  );
+  const candidateOutputDetailRequested = candidateOutputDetailWriteRequest.writeRequested === true
+    || candidateOutputDetailWriteRequest.enabled === true
+    || candidateOutputDetailWriteRequest.persist === true
+    || candidateOutputDetailWriteRequest.write === true
+    || selectorContribution.iesFirstNarrowCandidateOutputDetailWriteRequested === true
+    || contributionDownstream.iesFirstNarrowCandidateOutputDetailWriteRequested === true
+    || contextSelectorDownstream.iesFirstNarrowCandidateOutputDetailWriteRequested === true
+    || selectorContribution.iesFirstNarrowCandidateOutputDetailSummaryWriteRequested === true
+    || contributionDownstream.iesFirstNarrowCandidateOutputDetailSummaryWriteRequested === true
+    || contextSelectorDownstream.iesFirstNarrowCandidateOutputDetailSummaryWriteRequested === true
+    || hasOwnPlainKey(candidateOutputDetailWriteRequest, "iesFirstNarrowCandidateOutputDetailSummaryCandidate")
+    || hasOwnPlainKey(contributionDownstream, "iesFirstNarrowCandidateOutputDetailSummaryCandidate")
+    || hasOwnPlainKey(contextSelectorDownstream, "iesFirstNarrowCandidateOutputDetailSummaryCandidate");
   const sourcePhotometryRefHandoffPresent = ["sourcePhotometryRefHandoffSummary", "iesSourcePhotometryRefHandoffSummary"].some((key) => hasOwnPlainKey(directWrite, key)
     || hasOwnPlainKey(contributionDownstream, key)
     || hasOwnPlainKey(contextSelectorDownstream, key));
@@ -1380,7 +1444,7 @@ function resolveIesFirstNarrowMetadataHandoffWrite(context = {}, moduleContribut
     || hasOwnPlainKey(contextSelectorDownstream, key));
   const requested = explicitWriteRequested
     || sourcePhotometryRefHandoffPresent
-    || (!candidateOutputRequested && !candidateOutputManifestRequested && metadataHandoffSummarySourcePresent);
+    || (!candidateOutputRequested && !candidateOutputManifestRequested && !candidateOutputDetailRequested && metadataHandoffSummarySourcePresent);
 
   if (!requested) {
     return {
@@ -1882,6 +1946,199 @@ function writeIesFirstNarrowCandidateOutputManifestSummaryToEnvelope(envelope, s
   return envelope;
 }
 
+function envelopeIesFirstNarrowCandidateOutputManifestSummary(envelope) {
+  return isPlainObject(envelope?.modules?.cs_selector?.downstreamContext?.iesFirstNarrowCandidateOutputManifestSummary)
+    ? envelope.modules.cs_selector.downstreamContext.iesFirstNarrowCandidateOutputManifestSummary
+    : {};
+}
+
+function iesFirstNarrowCandidateOutputDetailWriteFailure(reason) {
+  throw new Error(`IES first narrow candidate output detail summary write rejected: ${reason}`);
+}
+
+function resolveIesFirstNarrowCandidateOutputDetailWrite(context = {}, moduleContributions = {}) {
+  const selectorContribution = isPlainObject(moduleContributions.cs_selector) ? moduleContributions.cs_selector : {};
+  const contributionDownstream = isPlainObject(selectorContribution.downstreamContext) ? selectorContribution.downstreamContext : {};
+  const contextSelectorDownstream = isPlainObject(context.downstream?.selector) ? context.downstream.selector : {};
+  const directWrite = selectedSummaryFirstPlain(
+    [selectorContribution, contributionDownstream, contextSelectorDownstream, context],
+    IES_FIRST_NARROW_CANDIDATE_OUTPUT_DETAIL_WRITE_REQUEST_KEYS,
+  );
+  const sources = [directWrite, selectorContribution, contributionDownstream, contextSelectorDownstream, context];
+  const requested = directWrite.writeRequested === true
+    || directWrite.enabled === true
+    || directWrite.persist === true
+    || directWrite.write === true
+    || selectorContribution.iesFirstNarrowCandidateOutputDetailWriteRequested === true
+    || contributionDownstream.iesFirstNarrowCandidateOutputDetailWriteRequested === true
+    || contextSelectorDownstream.iesFirstNarrowCandidateOutputDetailWriteRequested === true
+    || selectorContribution.iesFirstNarrowCandidateOutputDetailSummaryWriteRequested === true
+    || contributionDownstream.iesFirstNarrowCandidateOutputDetailSummaryWriteRequested === true
+    || contextSelectorDownstream.iesFirstNarrowCandidateOutputDetailSummaryWriteRequested === true
+    || hasOwnPlainKey(directWrite, "iesFirstNarrowCandidateOutputDetailSummaryCandidate")
+    || hasOwnPlainKey(contributionDownstream, "iesFirstNarrowCandidateOutputDetailSummaryCandidate")
+    || hasOwnPlainKey(contextSelectorDownstream, "iesFirstNarrowCandidateOutputDetailSummaryCandidate");
+
+  if (!requested) {
+    return {
+      requested: false,
+      context,
+      moduleContributions,
+    };
+  }
+
+  const targetPath = selectedSummaryFirstValue(sources, [
+    "targetPath",
+    "targetLocation",
+    "writeTarget",
+    "slot",
+    "envelopeSlot",
+  ]) || IES_FIRST_NARROW_CANDIDATE_OUTPUT_DETAIL_SUMMARY_TARGET;
+
+  const runTableFirstNarrowRows = selectedSummaryFirstPlain(sources, ["runTableFirstNarrowRows"]);
+  const iesFirstNarrowMetadataHandoffSummary = selectedSummaryFirstPlain(sources, ["iesFirstNarrowMetadataHandoffSummary"]);
+  const iesFirstNarrowCandidateOutputSummary = selectedSummaryFirstPlain(sources, ["iesFirstNarrowCandidateOutputSummary"]);
+  const iesFirstNarrowCandidateOutputManifestSummary = selectedSummaryFirstPlain(sources, ["iesFirstNarrowCandidateOutputManifestSummary"]);
+  const candidate = selectedSummaryFirstPlain(sources, [
+    "iesFirstNarrowCandidateOutputDetailSummaryCandidate",
+    "iesFirstNarrowCandidateOutputDetailSummary",
+  ]);
+
+  return {
+    requested: true,
+    targetPath: selectedSummarySafeToken(targetPath, ""),
+    runTableFirstNarrowRows,
+    iesFirstNarrowMetadataHandoffSummary,
+    iesFirstNarrowCandidateOutputSummary,
+    iesFirstNarrowCandidateOutputManifestSummary,
+    candidate,
+    rawInputForSafetyScan: {
+      directWrite,
+      runTableFirstNarrowRows,
+      iesFirstNarrowMetadataHandoffSummary,
+      iesFirstNarrowCandidateOutputSummary,
+      iesFirstNarrowCandidateOutputManifestSummary,
+      candidate,
+    },
+    context: sanitiseSelectedResultSummaryContext(context),
+    moduleContributions: sanitiseSelectedResultSummaryModuleContributions(moduleContributions),
+  };
+}
+
+function validateIesFirstNarrowCandidateOutputDetailTarget(writeRequest) {
+  if (writeRequest.targetPath !== IES_FIRST_NARROW_CANDIDATE_OUTPUT_DETAIL_SUMMARY_TARGET) {
+    iesFirstNarrowCandidateOutputDetailWriteFailure(`target drifted from shell slot: ${writeRequest.targetPath || "missing"}`);
+  }
+}
+
+function validateIesFirstNarrowCandidateOutputDetailSummary(summary) {
+  const keys = Object.keys(summary);
+  for (const key of keys) {
+    if (!IES_FIRST_NARROW_CANDIDATE_OUTPUT_DETAIL_REQUIRED_FIELD_SET.has(key)) {
+      iesFirstNarrowCandidateOutputDetailWriteFailure(`summary field not allow-listed: ${key}`);
+    }
+  }
+  for (const key of RUNTIME_IES_FIRST_NARROW_CANDIDATE_OUTPUT_DETAIL_FIELD_ORDER) {
+    if (!Object.prototype.hasOwnProperty.call(summary, key)) {
+      iesFirstNarrowCandidateOutputDetailWriteFailure(`required summary field missing: ${key}`);
+    }
+  }
+  if (keys.join("|") !== RUNTIME_IES_FIRST_NARROW_CANDIDATE_OUTPUT_DETAIL_FIELD_ORDER.join("|")) {
+    iesFirstNarrowCandidateOutputDetailWriteFailure("summary field order drifted");
+  }
+  if (summary.schemaId !== RUNTIME_IES_FIRST_NARROW_CANDIDATE_OUTPUT_DETAIL_SUMMARY_SCHEMA_ID
+    || summary.schemaVersion !== RUNTIME_IES_FIRST_NARROW_CANDIDATE_OUTPUT_DETAIL_SUMMARY_SCHEMA_VERSION
+    || summary.contractId !== RUNTIME_IES_FIRST_NARROW_CANDIDATE_OUTPUT_DETAIL_CONTRACT_ID) {
+    iesFirstNarrowCandidateOutputDetailWriteFailure("summary schema or contract identity drifted");
+  }
+  if (summary.owner !== "shell" || summary.slotOwner !== "shell" || summary.moduleId !== "cs_selector" || summary.consumerModuleId !== "ies_builder") {
+    iesFirstNarrowCandidateOutputDetailWriteFailure("summary owner/module is not shell-owned cs_selector to ies_builder candidate output detail");
+  }
+  if (summary.summaryOnly !== true || summary.diagnosticOnly !== true || summary.safeSummaryOnly !== true || summary.redacted !== true || summary.machineValueSafe !== true) {
+    iesFirstNarrowCandidateOutputDetailWriteFailure("summary is not marked diagnostic-only, summary-only, redacted, and machine-value-safe");
+  }
+  if (summary.readOnly !== true || summary.deterministicOnly !== true || summary.detailOnly !== true || summary.candidateOutputOnly !== true) {
+    iesFirstNarrowCandidateOutputDetailWriteFailure("summary is not read-only deterministic detail-only candidate-output-only");
+  }
+  if (summary.productionProof !== false || summary.labProofAuthority !== false) {
+    iesFirstNarrowCandidateOutputDetailWriteFailure("summary attempted proof authority");
+  }
+  if (summary.sourceBacked !== true || summary.sourceAnchorOnly !== true || summary.opaqueReferenceOnly !== true) {
+    iesFirstNarrowCandidateOutputDetailWriteFailure("summary source references are not opaque source-backed anchor-only metadata");
+  }
+  if (summary.runTableFirstNarrowRowsReady !== true
+    || summary.iesFirstNarrowMetadataHandoffReady !== true
+    || summary.iesFirstNarrowCandidateOutputSummaryReady !== true
+    || summary.iesFirstNarrowCandidateOutputManifestSummaryReady !== true
+    || summary.readyForDetailBoundary !== true
+    || summary.readyForFutureOutput !== true
+    || summary.detailsJoined !== true) {
+    iesFirstNarrowCandidateOutputDetailWriteFailure("summary did not join ready RunTable rows, IES metadata handoff, candidate output summary, and manifest summary");
+  }
+  if (summary.sourceRowsIncluded !== false
+    || summary.candidateOutputDetailsIncluded !== true
+    || summary.artifactListIncluded !== false
+    || summary.sourceRunTableRowCount !== 1
+    || summary.candidateOutputRecordCount !== 1
+    || summary.manifestRecordCount !== 1
+    || summary.detailRecordCount !== 1
+    || summary.detailEntryCount !== 1) {
+    iesFirstNarrowCandidateOutputDetailWriteFailure("summary attempted raw output inclusion or invalid detail record count");
+  }
+  for (const key of RUNTIME_IES_FIRST_NARROW_CANDIDATE_OUTPUT_DETAIL_REQUIRED_FALSE_FLAGS) {
+    if (summary[key] !== false) iesFirstNarrowCandidateOutputDetailWriteFailure(`required false candidate output detail flag not false: ${key}`);
+  }
+  const unsafe = findUnsafeIesFirstNarrowCandidateOutputDetailInput(summary);
+  if (unsafe) iesFirstNarrowCandidateOutputDetailWriteFailure(unsafe);
+}
+
+function prepareIesFirstNarrowCandidateOutputDetailWrite(writeRequest, envelope) {
+  if (!writeRequest.requested) return writeRequest;
+
+  if (!isPlainObject(envelope?.modules?.cs_selector)) {
+    iesFirstNarrowCandidateOutputDetailWriteFailure("candidate envelope missing cs_selector module slot");
+  }
+  validateIesFirstNarrowCandidateOutputDetailTarget(writeRequest);
+  const unsafe = findUnsafeIesFirstNarrowCandidateOutputDetailInput(writeRequest.rawInputForSafetyScan);
+  if (unsafe) iesFirstNarrowCandidateOutputDetailWriteFailure(unsafe);
+
+  const runTableFirstNarrowRows = Object.keys(envelopeRunTableFirstNarrowRows(envelope)).length > 0
+    ? envelopeRunTableFirstNarrowRows(envelope)
+    : writeRequest.runTableFirstNarrowRows;
+  const metadataHandoffSummary = Object.keys(envelopeIesFirstNarrowMetadataHandoffSummary(envelope)).length > 0
+    ? envelopeIesFirstNarrowMetadataHandoffSummary(envelope)
+    : writeRequest.iesFirstNarrowMetadataHandoffSummary;
+  const candidateOutputSummary = Object.keys(envelopeIesFirstNarrowCandidateOutputSummary(envelope)).length > 0
+    ? envelopeIesFirstNarrowCandidateOutputSummary(envelope)
+    : writeRequest.iesFirstNarrowCandidateOutputSummary;
+  const manifestSummary = Object.keys(envelopeIesFirstNarrowCandidateOutputManifestSummary(envelope)).length > 0
+    ? envelopeIesFirstNarrowCandidateOutputManifestSummary(envelope)
+    : writeRequest.iesFirstNarrowCandidateOutputManifestSummary;
+  const summary = buildRuntimeIesFirstNarrowCandidateOutputDetailSummary({
+    runTableFirstNarrowRows,
+    iesFirstNarrowMetadataHandoffSummary: metadataHandoffSummary,
+    iesFirstNarrowCandidateOutputSummary: candidateOutputSummary,
+    iesFirstNarrowCandidateOutputManifestSummary: manifestSummary,
+  });
+  validateIesFirstNarrowCandidateOutputDetailSummary(summary);
+
+  return {
+    ...writeRequest,
+    summary,
+  };
+}
+
+function writeIesFirstNarrowCandidateOutputDetailSummaryToEnvelope(envelope, summary) {
+  if (!isPlainObject(envelope?.modules?.cs_selector)) {
+    iesFirstNarrowCandidateOutputDetailWriteFailure("candidate envelope missing cs_selector module slot");
+  }
+  if (!isPlainObject(envelope.modules.cs_selector.downstreamContext)) {
+    envelope.modules.cs_selector.downstreamContext = {};
+  }
+  envelope.modules.cs_selector.downstreamContext.iesFirstNarrowCandidateOutputDetailSummary = clone(summary);
+  return envelope;
+}
+
 function createFixtureEnvelope({ projectId, title, client, site, savedByName, savedByEmail, lifecycleStatus = "draft" }) {
   const now = new Date().toISOString();
   return {
@@ -2190,7 +2447,10 @@ export function createSavedProjectStore({ eventBus } = {}) {
       const iesFirstNarrowMetadataHandoffWriteRequest = resolveIesFirstNarrowMetadataHandoffWrite(context, moduleContributions);
       const iesFirstNarrowCandidateOutputWriteRequest = resolveIesFirstNarrowCandidateOutputWrite(context, moduleContributions);
       const iesFirstNarrowCandidateOutputManifestWriteRequest = resolveIesFirstNarrowCandidateOutputManifestWrite(context, moduleContributions);
-      const saveContext = iesFirstNarrowCandidateOutputManifestWriteRequest.requested
+      const iesFirstNarrowCandidateOutputDetailWriteRequest = resolveIesFirstNarrowCandidateOutputDetailWrite(context, moduleContributions);
+      const saveContext = iesFirstNarrowCandidateOutputDetailWriteRequest.requested
+        ? iesFirstNarrowCandidateOutputDetailWriteRequest.context
+        : iesFirstNarrowCandidateOutputManifestWriteRequest.requested
         ? iesFirstNarrowCandidateOutputManifestWriteRequest.context
         : iesFirstNarrowCandidateOutputWriteRequest.requested
           ? iesFirstNarrowCandidateOutputWriteRequest.context
@@ -2201,9 +2461,11 @@ export function createSavedProjectStore({ eventBus } = {}) {
               : runTableFirstNarrowOutputSummaryWriteRequest.requested
                 ? runTableFirstNarrowOutputSummaryWriteRequest.context
                 : selectedResultSummaryWrite.requested ? selectedResultSummaryWrite.context : context;
-      const saveModuleContributions = iesFirstNarrowCandidateOutputManifestWriteRequest.requested
-        ? iesFirstNarrowCandidateOutputManifestWriteRequest.moduleContributions
-        : iesFirstNarrowCandidateOutputWriteRequest.requested
+      const saveModuleContributions = iesFirstNarrowCandidateOutputDetailWriteRequest.requested
+        ? iesFirstNarrowCandidateOutputDetailWriteRequest.moduleContributions
+        : iesFirstNarrowCandidateOutputManifestWriteRequest.requested
+          ? iesFirstNarrowCandidateOutputManifestWriteRequest.moduleContributions
+          : iesFirstNarrowCandidateOutputWriteRequest.requested
           ? iesFirstNarrowCandidateOutputWriteRequest.moduleContributions
           : iesFirstNarrowMetadataHandoffWriteRequest.requested
             ? iesFirstNarrowMetadataHandoffWriteRequest.moduleContributions
@@ -2312,6 +2574,29 @@ export function createSavedProjectStore({ eventBus } = {}) {
         writeIesFirstNarrowCandidateOutputManifestSummaryToEnvelope(envelope, iesFirstNarrowCandidateOutputManifestWrite.summary);
       }
 
+      if (iesFirstNarrowCandidateOutputDetailWriteRequest.requested
+        && Object.keys(envelopeIesFirstNarrowMetadataHandoffSummary(envelope)).length === 0
+        && Object.keys(envelopeIesFirstNarrowMetadataHandoffSummary(previousEnvelope)).length > 0) {
+        writeIesFirstNarrowMetadataHandoffSummaryToEnvelope(envelope, envelopeIesFirstNarrowMetadataHandoffSummary(previousEnvelope));
+      }
+
+      if (iesFirstNarrowCandidateOutputDetailWriteRequest.requested
+        && Object.keys(envelopeIesFirstNarrowCandidateOutputSummary(envelope)).length === 0
+        && Object.keys(envelopeIesFirstNarrowCandidateOutputSummary(previousEnvelope)).length > 0) {
+        writeIesFirstNarrowCandidateOutputSummaryToEnvelope(envelope, envelopeIesFirstNarrowCandidateOutputSummary(previousEnvelope));
+      }
+
+      if (iesFirstNarrowCandidateOutputDetailWriteRequest.requested
+        && Object.keys(envelopeIesFirstNarrowCandidateOutputManifestSummary(envelope)).length === 0
+        && Object.keys(envelopeIesFirstNarrowCandidateOutputManifestSummary(previousEnvelope)).length > 0) {
+        writeIesFirstNarrowCandidateOutputManifestSummaryToEnvelope(envelope, envelopeIesFirstNarrowCandidateOutputManifestSummary(previousEnvelope));
+      }
+
+      const iesFirstNarrowCandidateOutputDetailWrite = prepareIesFirstNarrowCandidateOutputDetailWrite(iesFirstNarrowCandidateOutputDetailWriteRequest, envelope);
+      if (iesFirstNarrowCandidateOutputDetailWrite.requested) {
+        writeIesFirstNarrowCandidateOutputDetailSummaryToEnvelope(envelope, iesFirstNarrowCandidateOutputDetailWrite.summary);
+      }
+
       if (existingIndex >= 0) state.savedEnvelopes[existingIndex] = envelope;
       else state.savedEnvelopes.unshift(envelope);
       state.save.status = "saved";
@@ -2338,6 +2623,8 @@ export function createSavedProjectStore({ eventBus } = {}) {
         iesFirstNarrowCandidateOutputSummaryTarget: iesFirstNarrowCandidateOutputWrite.requested ? IES_FIRST_NARROW_CANDIDATE_OUTPUT_SUMMARY_TARGET : null,
         iesFirstNarrowCandidateOutputManifestSummaryWritten: iesFirstNarrowCandidateOutputManifestWrite.requested === true,
         iesFirstNarrowCandidateOutputManifestSummaryTarget: iesFirstNarrowCandidateOutputManifestWrite.requested ? IES_FIRST_NARROW_CANDIDATE_OUTPUT_MANIFEST_SUMMARY_TARGET : null,
+        iesFirstNarrowCandidateOutputDetailSummaryWritten: iesFirstNarrowCandidateOutputDetailWrite.requested === true,
+        iesFirstNarrowCandidateOutputDetailSummaryTarget: iesFirstNarrowCandidateOutputDetailWrite.requested ? IES_FIRST_NARROW_CANDIDATE_OUTPUT_DETAIL_SUMMARY_TARGET : null,
         selectedResultPersistedSummaryReadbackStatus,
         envelope: clone(envelope),
         browser: getStoreSnapshot(saveContext),
