@@ -105,6 +105,15 @@ import {
   RUNTIME_IES_FIRST_NARROW_CANDIDATE_OUTPUT_BUNDLE_BOUNDARY_SUMMARY_SCHEMA_VERSION,
   RUNTIME_IES_FIRST_NARROW_CANDIDATE_OUTPUT_BUNDLE_BOUNDARY_TARGET,
 } from "./iesFirstNarrowCandidateOutputBundleBoundarySummary.js";
+import {
+  findUnsafeIesFirstNarrowProjectIesExportBoundaryInput,
+  RUNTIME_IES_FIRST_NARROW_PROJECT_IES_EXPORT_BOUNDARY_CONTRACT_ID,
+  RUNTIME_IES_FIRST_NARROW_PROJECT_IES_EXPORT_BOUNDARY_FIELD_ORDER,
+  RUNTIME_IES_FIRST_NARROW_PROJECT_IES_EXPORT_BOUNDARY_REQUIRED_FALSE_FLAGS,
+  RUNTIME_IES_FIRST_NARROW_PROJECT_IES_EXPORT_BOUNDARY_SUMMARY_SCHEMA_ID,
+  RUNTIME_IES_FIRST_NARROW_PROJECT_IES_EXPORT_BOUNDARY_SUMMARY_SCHEMA_VERSION,
+  RUNTIME_IES_FIRST_NARROW_PROJECT_IES_EXPORT_BOUNDARY_TARGET,
+} from "./iesFirstNarrowProjectIesExportBoundarySummary.js";
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
@@ -128,6 +137,7 @@ const IES_FIRST_NARROW_CANDIDATE_OUTPUT_ARTIFACT_PLAN_SUMMARY_TARGET = RUNTIME_I
 const IES_FIRST_NARROW_CANDIDATE_OUTPUT_ARTIFACT_REF_SUMMARY_TARGET = RUNTIME_IES_FIRST_NARROW_CANDIDATE_OUTPUT_ARTIFACT_REF_TARGET;
 const IES_FIRST_NARROW_CANDIDATE_OUTPUT_ARTIFACT_MATERIALISATION_SUMMARY_TARGET = RUNTIME_IES_FIRST_NARROW_CANDIDATE_OUTPUT_ARTIFACT_MATERIALISATION_TARGET;
 const IES_FIRST_NARROW_CANDIDATE_OUTPUT_BUNDLE_BOUNDARY_SUMMARY_TARGET = RUNTIME_IES_FIRST_NARROW_CANDIDATE_OUTPUT_BUNDLE_BOUNDARY_TARGET;
+const IES_FIRST_NARROW_PROJECT_IES_EXPORT_BOUNDARY_SUMMARY_TARGET = RUNTIME_IES_FIRST_NARROW_PROJECT_IES_EXPORT_BOUNDARY_TARGET;
 const IES_SOURCE_PHOTOMETRY_REF_SAFE_PATTERN = /^safe-source-photometry-ref:[0-9a-f]{40}$/;
 
 const SELECTED_RESULT_SUMMARY_WRITE_SOURCE_KEYS = Object.freeze([
@@ -318,6 +328,26 @@ const IES_FIRST_NARROW_CANDIDATE_OUTPUT_BUNDLE_BOUNDARY_WRITE_SOURCE_KEYS = Obje
   "iesFirstNarrowCandidateOutputArtifactMaterialisationSummary",
 ]);
 
+const IES_FIRST_NARROW_PROJECT_IES_EXPORT_BOUNDARY_WRITE_REQUEST_KEYS = Object.freeze([
+  "iesFirstNarrowProjectIesExportBoundaryWrite",
+  "iesFirstNarrowProjectIesExportBoundaryWriteRequest",
+  "iesFirstNarrowProjectIesExportBoundarySummaryWrite",
+  "iesFirstNarrowProjectIesExportBoundarySummaryWriteRequest",
+]);
+
+const IES_FIRST_NARROW_PROJECT_IES_EXPORT_BOUNDARY_WRITE_SOURCE_KEYS = Object.freeze([
+  "iesFirstNarrowProjectIesExportBoundarySummary",
+  "iesFirstNarrowProjectIesExportBoundarySummaryCandidate",
+  "projectIesExportBoundarySummary",
+  "projectIesExportBoundarySummaryCandidate",
+]);
+
+const IES_FIRST_NARROW_PROJECT_IES_EXPORT_BOUNDARY_WRITE_EXTRA_RAW_KEYS = Object.freeze([
+  "rawGovernancePayload",
+  "rawProjectIesPayload",
+  "projectIesPayload",
+]);
+
 const IES_FIRST_NARROW_METADATA_HANDOFF_REQUIRED_FIELD_SET = new Set(RUNTIME_IES_FIRST_NARROW_METADATA_HANDOFF_FIELD_ORDER);
 const IES_FIRST_NARROW_CANDIDATE_OUTPUT_REQUIRED_FIELD_SET = new Set(RUNTIME_IES_FIRST_NARROW_CANDIDATE_OUTPUT_FIELD_ORDER);
 const IES_FIRST_NARROW_CANDIDATE_OUTPUT_MANIFEST_REQUIRED_FIELD_SET = new Set(RUNTIME_IES_FIRST_NARROW_CANDIDATE_OUTPUT_MANIFEST_FIELD_ORDER);
@@ -326,6 +356,7 @@ const IES_FIRST_NARROW_CANDIDATE_OUTPUT_ARTIFACT_PLAN_REQUIRED_FIELD_SET = new S
 const IES_FIRST_NARROW_CANDIDATE_OUTPUT_ARTIFACT_REF_REQUIRED_FIELD_SET = new Set(RUNTIME_IES_FIRST_NARROW_CANDIDATE_OUTPUT_ARTIFACT_REF_FIELD_ORDER);
 const IES_FIRST_NARROW_CANDIDATE_OUTPUT_ARTIFACT_MATERIALISATION_REQUIRED_FIELD_SET = new Set(RUNTIME_IES_FIRST_NARROW_CANDIDATE_OUTPUT_ARTIFACT_MATERIALISATION_FIELD_ORDER);
 const IES_FIRST_NARROW_CANDIDATE_OUTPUT_BUNDLE_BOUNDARY_REQUIRED_FIELD_SET = new Set(RUNTIME_IES_FIRST_NARROW_CANDIDATE_OUTPUT_BUNDLE_BOUNDARY_FIELD_ORDER);
+const IES_FIRST_NARROW_PROJECT_IES_EXPORT_BOUNDARY_REQUIRED_FIELD_SET = new Set(RUNTIME_IES_FIRST_NARROW_PROJECT_IES_EXPORT_BOUNDARY_FIELD_ORDER);
 
 const RUNTABLE_FIRST_NARROW_OUTPUT_SUMMARY_ELIGIBLE_FIELD_SET = Object.freeze([
   "schemaId",
@@ -3360,6 +3391,253 @@ function envelopeIesFirstNarrowCandidateOutputBundleBoundarySummary(envelope) {
     : {};
 }
 
+function iesFirstNarrowProjectIesExportBoundaryWriteFailure(reason) {
+  throw new Error(`IES first narrow project IES export boundary summary write rejected: ${reason}`);
+}
+
+function sanitiseIesFirstNarrowProjectIesExportBoundaryModuleContributions(moduleContributions = {}) {
+  const sanitised = sanitiseSelectedResultSummaryModuleContributions(moduleContributions);
+  const selectorContribution = isPlainObject(sanitised.cs_selector) ? sanitised.cs_selector : null;
+  if (!selectorContribution) return sanitised;
+
+  for (const key of [
+    ...IES_FIRST_NARROW_PROJECT_IES_EXPORT_BOUNDARY_WRITE_REQUEST_KEYS,
+    ...IES_FIRST_NARROW_PROJECT_IES_EXPORT_BOUNDARY_WRITE_SOURCE_KEYS,
+    "iesFirstNarrowProjectIesExportBoundaryWriteRequested",
+    "iesFirstNarrowProjectIesExportBoundarySummaryWriteRequested",
+  ]) {
+    delete selectorContribution[key];
+  }
+
+  if (isPlainObject(selectorContribution.downstreamContext)) {
+    for (const key of [
+      ...IES_FIRST_NARROW_PROJECT_IES_EXPORT_BOUNDARY_WRITE_REQUEST_KEYS,
+      ...IES_FIRST_NARROW_PROJECT_IES_EXPORT_BOUNDARY_WRITE_SOURCE_KEYS,
+      "iesFirstNarrowProjectIesExportBoundaryWriteRequested",
+      "iesFirstNarrowProjectIesExportBoundarySummaryWriteRequested",
+    ]) {
+      delete selectorContribution.downstreamContext[key];
+    }
+  }
+
+  return sanitised;
+}
+
+function resolveIesFirstNarrowProjectIesExportBoundaryWrite(context = {}, moduleContributions = {}) {
+  const selectorContribution = isPlainObject(moduleContributions.cs_selector) ? moduleContributions.cs_selector : {};
+  const contributionDownstream = isPlainObject(selectorContribution.downstreamContext) ? selectorContribution.downstreamContext : {};
+  const contextSelectorDownstream = isPlainObject(context.downstream?.selector) ? context.downstream.selector : {};
+  const directWrite = selectedSummaryFirstPlain(
+    [selectorContribution, contributionDownstream, contextSelectorDownstream, context],
+    IES_FIRST_NARROW_PROJECT_IES_EXPORT_BOUNDARY_WRITE_REQUEST_KEYS,
+  );
+  const sources = [directWrite, selectorContribution, contributionDownstream, contextSelectorDownstream, context];
+  const candidate = selectedSummaryFirstPlain(sources, IES_FIRST_NARROW_PROJECT_IES_EXPORT_BOUNDARY_WRITE_SOURCE_KEYS);
+  const requested = directWrite.writeRequested === true
+    || directWrite.enabled === true
+    || directWrite.persist === true
+    || directWrite.write === true
+    || selectorContribution.iesFirstNarrowProjectIesExportBoundaryWriteRequested === true
+    || contributionDownstream.iesFirstNarrowProjectIesExportBoundaryWriteRequested === true
+    || contextSelectorDownstream.iesFirstNarrowProjectIesExportBoundaryWriteRequested === true
+    || selectorContribution.iesFirstNarrowProjectIesExportBoundarySummaryWriteRequested === true
+    || contributionDownstream.iesFirstNarrowProjectIesExportBoundarySummaryWriteRequested === true
+    || contextSelectorDownstream.iesFirstNarrowProjectIesExportBoundarySummaryWriteRequested === true
+    || hasOwnPlainKey(directWrite, "iesFirstNarrowProjectIesExportBoundarySummaryCandidate")
+    || hasOwnPlainKey(directWrite, "iesFirstNarrowProjectIesExportBoundarySummary")
+    || hasOwnPlainKey(directWrite, "projectIesExportBoundarySummaryCandidate")
+    || hasOwnPlainKey(directWrite, "projectIesExportBoundarySummary")
+    || hasOwnPlainKey(contributionDownstream, "iesFirstNarrowProjectIesExportBoundarySummaryCandidate")
+    || hasOwnPlainKey(contributionDownstream, "iesFirstNarrowProjectIesExportBoundarySummary")
+    || hasOwnPlainKey(contributionDownstream, "projectIesExportBoundarySummaryCandidate")
+    || hasOwnPlainKey(contributionDownstream, "projectIesExportBoundarySummary")
+    || hasOwnPlainKey(contextSelectorDownstream, "iesFirstNarrowProjectIesExportBoundarySummaryCandidate")
+    || hasOwnPlainKey(contextSelectorDownstream, "iesFirstNarrowProjectIesExportBoundarySummary")
+    || hasOwnPlainKey(contextSelectorDownstream, "projectIesExportBoundarySummaryCandidate")
+    || hasOwnPlainKey(contextSelectorDownstream, "projectIesExportBoundarySummary");
+
+  if (!requested) {
+    return {
+      requested: false,
+      context,
+      moduleContributions,
+    };
+  }
+
+  const targetPath = selectedSummaryFirstValue(sources, [
+    "targetPath",
+    "targetLocation",
+    "writeTarget",
+    "slot",
+    "envelopeSlot",
+  ]) || IES_FIRST_NARROW_PROJECT_IES_EXPORT_BOUNDARY_SUMMARY_TARGET;
+
+  return {
+    requested: true,
+    targetPath: selectedSummarySafeToken(targetPath, ""),
+    candidate,
+    rawInputForSafetyScan: {
+      directWrite,
+      candidate,
+    },
+    context: sanitiseSelectedResultSummaryContext(context),
+    moduleContributions: sanitiseIesFirstNarrowProjectIesExportBoundaryModuleContributions(moduleContributions),
+  };
+}
+
+function validateIesFirstNarrowProjectIesExportBoundaryTarget(writeRequest) {
+  if (writeRequest.targetPath !== IES_FIRST_NARROW_PROJECT_IES_EXPORT_BOUNDARY_SUMMARY_TARGET) {
+    iesFirstNarrowProjectIesExportBoundaryWriteFailure(`target drifted from shell slot: ${writeRequest.targetPath || "missing"}`);
+  }
+}
+
+function findUnsafeIesFirstNarrowProjectIesExportBoundaryWriteInput(value, depth = 0, seen = new Set()) {
+  const unsafe = findUnsafeIesFirstNarrowProjectIesExportBoundaryInput(value);
+  if (unsafe) return unsafe;
+  if (depth > 12 || value === null || value === undefined || typeof value === "function") return null;
+  if (Array.isArray(value)) {
+    for (const item of value.slice(0, 100)) {
+      const nested = findUnsafeIesFirstNarrowProjectIesExportBoundaryWriteInput(item, depth + 1, seen);
+      if (nested) return nested;
+    }
+    return null;
+  }
+  if (!isPlainObject(value) || seen.has(value)) return null;
+  seen.add(value);
+  for (const [key, nested] of Object.entries(value)) {
+    if (key === "buildProjectIes") continue;
+    if (IES_FIRST_NARROW_PROJECT_IES_EXPORT_BOUNDARY_WRITE_EXTRA_RAW_KEYS.includes(key) && !isBlank(nested) && nested !== false) {
+      return "blocked-unsafe-raw-input";
+    }
+    const child = findUnsafeIesFirstNarrowProjectIesExportBoundaryWriteInput(nested, depth + 1, seen);
+    if (child) return child;
+  }
+  return null;
+}
+
+function reduceIesFirstNarrowProjectIesExportBoundarySummaryCandidate(candidate) {
+  if (!isPlainObject(candidate)) return {};
+  const summary = {};
+  for (const key of RUNTIME_IES_FIRST_NARROW_PROJECT_IES_EXPORT_BOUNDARY_FIELD_ORDER) {
+    if (Object.prototype.hasOwnProperty.call(candidate, key)) summary[key] = candidate[key];
+  }
+  return summary;
+}
+
+function validateIesFirstNarrowProjectIesExportBoundarySummary(summary) {
+  const keys = Object.keys(summary);
+  for (const key of keys) {
+    if (!IES_FIRST_NARROW_PROJECT_IES_EXPORT_BOUNDARY_REQUIRED_FIELD_SET.has(key)) {
+      iesFirstNarrowProjectIesExportBoundaryWriteFailure(`summary field not allow-listed: ${key}`);
+    }
+  }
+  for (const key of RUNTIME_IES_FIRST_NARROW_PROJECT_IES_EXPORT_BOUNDARY_FIELD_ORDER) {
+    if (!Object.prototype.hasOwnProperty.call(summary, key)) {
+      iesFirstNarrowProjectIesExportBoundaryWriteFailure(`required summary field missing: ${key}`);
+    }
+  }
+  if (keys.join("|") !== RUNTIME_IES_FIRST_NARROW_PROJECT_IES_EXPORT_BOUNDARY_FIELD_ORDER.join("|")) {
+    iesFirstNarrowProjectIesExportBoundaryWriteFailure("summary field order drifted");
+  }
+  if (summary.schemaId !== RUNTIME_IES_FIRST_NARROW_PROJECT_IES_EXPORT_BOUNDARY_SUMMARY_SCHEMA_ID
+    || summary.schemaVersion !== RUNTIME_IES_FIRST_NARROW_PROJECT_IES_EXPORT_BOUNDARY_SUMMARY_SCHEMA_VERSION
+    || summary.contractId !== RUNTIME_IES_FIRST_NARROW_PROJECT_IES_EXPORT_BOUNDARY_CONTRACT_ID) {
+    iesFirstNarrowProjectIesExportBoundaryWriteFailure("summary schema or contract identity drifted");
+  }
+  if (summary.owner !== "shell" || summary.slotOwner !== "shell" || summary.moduleId !== "cs_selector" || summary.consumerModuleId !== "ies_builder") {
+    iesFirstNarrowProjectIesExportBoundaryWriteFailure("summary owner/module is not shell-owned cs_selector to ies_builder project IES export boundary");
+  }
+  if (summary.state !== "redacted_ies_first_narrow_project_ies_export_boundary_summary_ready" || summary.blocker !== null) {
+    iesFirstNarrowProjectIesExportBoundaryWriteFailure("summary is not a ready redacted project IES export boundary summary");
+  }
+  if (summary.summaryOnly !== true || summary.diagnosticOnly !== true || summary.safeSummaryOnly !== true || summary.redacted !== true || summary.machineValueSafe !== true) {
+    iesFirstNarrowProjectIesExportBoundaryWriteFailure("summary is not marked diagnostic-only, summary-only, redacted, and machine-value-safe");
+  }
+  if (summary.readOnly !== true || summary.deterministicOnly !== true || summary.exportBoundaryOnly !== true || summary.projectIesExportBoundaryOnly !== true || summary.bundleBoundaryOnly !== true || summary.builderCallBoundaryOnly !== true) {
+    iesFirstNarrowProjectIesExportBoundaryWriteFailure("summary is not read-only deterministic project-IES export-boundary-only bundle-boundary-only builder-call-boundary-only");
+  }
+  if (summary.productionProof !== false || summary.labProofAuthority !== false) {
+    iesFirstNarrowProjectIesExportBoundaryWriteFailure("summary attempted proof authority");
+  }
+  if (summary.approvedReferenceGatePassed !== true
+    || summary.resolvedRunLengthGatePassed !== true
+    || summary.fingerprintAlignmentGatePassed !== true
+    || summary.builderBoundaryCallAllowed !== true
+    || summary.builderBoundaryCallAttempted !== true
+    || summary.builderBoundaryCallSucceeded !== true
+    || summary.builderOutputReduced !== true
+    || summary.approvedReferenceReady !== true
+    || summary.projectIesExportApproved !== true
+    || summary.bundleBoundaryReady !== true) {
+    iesFirstNarrowProjectIesExportBoundaryWriteFailure("summary did not prove ready approved project IES export boundary gates");
+  }
+  if (summary.sourceBacked !== true || summary.sourceAnchorOnly !== true || summary.opaqueReferenceOnly !== true) {
+    iesFirstNarrowProjectIesExportBoundaryWriteFailure("summary source references are not opaque source-backed anchor-only metadata");
+  }
+  if (!/^safe-ies-first-narrow-candidate-output-bundle-boundary:[0-9a-f]{40}$/.test(String(summary.opaqueBundleBoundaryRef || ""))) {
+    iesFirstNarrowProjectIesExportBoundaryWriteFailure("summary missing safe opaque bundle boundary reference");
+  }
+  if (!/^safe-ies-first-narrow-project-ies-export-boundary:[0-9a-f]{40}$/.test(String(summary.opaqueProjectIesExportBoundaryRef || ""))) {
+    iesFirstNarrowProjectIesExportBoundaryWriteFailure("summary missing safe opaque project IES export boundary reference");
+  }
+  if (!/^safe-ies-first-narrow-candidate-output-bundle-boundary-summary:[0-9a-f]{40}$/.test(String(summary.candidateOutputBundleBoundarySummaryFingerprint || ""))) {
+    iesFirstNarrowProjectIesExportBoundaryWriteFailure("summary missing safe candidate output bundle boundary summary fingerprint");
+  }
+  if (!/^safe-ies-first-narrow-project-ies-export-builder-output-reduction:[0-9a-f]{40}$/.test(String(summary.builderOutputReductionFingerprint || ""))) {
+    iesFirstNarrowProjectIesExportBoundaryWriteFailure("summary missing safe builder output reduction fingerprint");
+  }
+  if (!/^safe-ies-first-narrow-project-ies-export-boundary-summary:[0-9a-f]{40}$/.test(String(summary.iesFirstNarrowProjectIesExportBoundarySummaryFingerprint || ""))) {
+    iesFirstNarrowProjectIesExportBoundaryWriteFailure("summary missing safe project IES export boundary summary fingerprint");
+  }
+  if (!Number.isFinite(summary.runLengthMm) || summary.runLengthMm <= 0
+    || summary.bundleBoundaryRecordCount !== 1
+    || summary.bundleBoundaryEntryCount !== 1
+    || summary.builderOutputRecordCount < 1
+    || summary.builderOutputEntryCount < 1
+    || summary.builderOutputSafeScalarCount < 1
+    || summary.builderOutputRedactedPayloadMarkerCount < 1) {
+    iesFirstNarrowProjectIesExportBoundaryWriteFailure("summary attempted raw output inclusion or invalid project IES export boundary counts");
+  }
+  for (const key of RUNTIME_IES_FIRST_NARROW_PROJECT_IES_EXPORT_BOUNDARY_REQUIRED_FALSE_FLAGS) {
+    if (summary[key] !== false) iesFirstNarrowProjectIesExportBoundaryWriteFailure(`required false project IES export boundary flag not false: ${key}`);
+  }
+  const unsafe = findUnsafeIesFirstNarrowProjectIesExportBoundaryWriteInput(summary);
+  if (unsafe) iesFirstNarrowProjectIesExportBoundaryWriteFailure(unsafe);
+}
+
+function prepareIesFirstNarrowProjectIesExportBoundaryWrite(writeRequest) {
+  if (!writeRequest.requested) return writeRequest;
+
+  validateIesFirstNarrowProjectIesExportBoundaryTarget(writeRequest);
+  const unsafe = findUnsafeIesFirstNarrowProjectIesExportBoundaryWriteInput(writeRequest.rawInputForSafetyScan);
+  if (unsafe) iesFirstNarrowProjectIesExportBoundaryWriteFailure(unsafe);
+
+  const summary = reduceIesFirstNarrowProjectIesExportBoundarySummaryCandidate(writeRequest.candidate);
+  validateIesFirstNarrowProjectIesExportBoundarySummary(summary);
+
+  return {
+    ...writeRequest,
+    summary,
+  };
+}
+
+function writeIesFirstNarrowProjectIesExportBoundarySummaryToEnvelope(envelope, summary) {
+  if (!isPlainObject(envelope?.modules?.cs_selector)) {
+    iesFirstNarrowProjectIesExportBoundaryWriteFailure("candidate envelope missing cs_selector module slot");
+  }
+  if (!isPlainObject(envelope.modules.cs_selector.downstreamContext)) {
+    envelope.modules.cs_selector.downstreamContext = {};
+  }
+  envelope.modules.cs_selector.downstreamContext.iesFirstNarrowProjectIesExportBoundarySummary = clone(summary);
+  return envelope;
+}
+
+function envelopeIesFirstNarrowProjectIesExportBoundarySummary(envelope) {
+  return isPlainObject(envelope?.modules?.cs_selector?.downstreamContext?.iesFirstNarrowProjectIesExportBoundarySummary)
+    ? envelope.modules.cs_selector.downstreamContext.iesFirstNarrowProjectIesExportBoundarySummary
+    : {};
+}
+
 function createFixtureEnvelope({ projectId, title, client, site, savedByName, savedByEmail, lifecycleStatus = "draft" }) {
   const now = new Date().toISOString();
   return {
@@ -3673,7 +3951,10 @@ export function createSavedProjectStore({ eventBus } = {}) {
       const iesFirstNarrowCandidateOutputArtifactRefWriteRequest = resolveIesFirstNarrowCandidateOutputArtifactRefWrite(context, moduleContributions);
       const iesFirstNarrowCandidateOutputArtifactMaterialisationWriteRequest = resolveIesFirstNarrowCandidateOutputArtifactMaterialisationWrite(context, moduleContributions);
       const iesFirstNarrowCandidateOutputBundleBoundaryWriteRequest = resolveIesFirstNarrowCandidateOutputBundleBoundaryWrite(context, moduleContributions);
-      const saveContext = iesFirstNarrowCandidateOutputBundleBoundaryWriteRequest.requested
+      const iesFirstNarrowProjectIesExportBoundaryWriteRequest = resolveIesFirstNarrowProjectIesExportBoundaryWrite(context, moduleContributions);
+      const saveContext = iesFirstNarrowProjectIesExportBoundaryWriteRequest.requested
+        ? iesFirstNarrowProjectIesExportBoundaryWriteRequest.context
+        : iesFirstNarrowCandidateOutputBundleBoundaryWriteRequest.requested
         ? iesFirstNarrowCandidateOutputBundleBoundaryWriteRequest.context
         : iesFirstNarrowCandidateOutputArtifactMaterialisationWriteRequest.requested
         ? iesFirstNarrowCandidateOutputArtifactMaterialisationWriteRequest.context
@@ -3694,7 +3975,9 @@ export function createSavedProjectStore({ eventBus } = {}) {
               : runTableFirstNarrowOutputSummaryWriteRequest.requested
                 ? runTableFirstNarrowOutputSummaryWriteRequest.context
                 : selectedResultSummaryWrite.requested ? selectedResultSummaryWrite.context : context;
-      const saveModuleContributions = iesFirstNarrowCandidateOutputBundleBoundaryWriteRequest.requested
+      const saveModuleContributions = iesFirstNarrowProjectIesExportBoundaryWriteRequest.requested
+        ? iesFirstNarrowProjectIesExportBoundaryWriteRequest.moduleContributions
+        : iesFirstNarrowCandidateOutputBundleBoundaryWriteRequest.requested
         ? iesFirstNarrowCandidateOutputBundleBoundaryWriteRequest.moduleContributions
         : iesFirstNarrowCandidateOutputArtifactMaterialisationWriteRequest.requested
         ? iesFirstNarrowCandidateOutputArtifactMaterialisationWriteRequest.moduleContributions
@@ -4008,6 +4291,11 @@ export function createSavedProjectStore({ eventBus } = {}) {
         writeIesFirstNarrowCandidateOutputBundleBoundarySummaryToEnvelope(envelope, iesFirstNarrowCandidateOutputBundleBoundaryWrite.summary);
       }
 
+      const iesFirstNarrowProjectIesExportBoundaryWrite = prepareIesFirstNarrowProjectIesExportBoundaryWrite(iesFirstNarrowProjectIesExportBoundaryWriteRequest);
+      if (iesFirstNarrowProjectIesExportBoundaryWrite.requested) {
+        writeIesFirstNarrowProjectIesExportBoundarySummaryToEnvelope(envelope, iesFirstNarrowProjectIesExportBoundaryWrite.summary);
+      }
+
       if (existingIndex >= 0) state.savedEnvelopes[existingIndex] = envelope;
       else state.savedEnvelopes.unshift(envelope);
       state.save.status = "saved";
@@ -4044,6 +4332,8 @@ export function createSavedProjectStore({ eventBus } = {}) {
         iesFirstNarrowCandidateOutputArtifactMaterialisationSummaryTarget: iesFirstNarrowCandidateOutputArtifactMaterialisationWrite.requested ? IES_FIRST_NARROW_CANDIDATE_OUTPUT_ARTIFACT_MATERIALISATION_SUMMARY_TARGET : null,
         iesFirstNarrowCandidateOutputBundleBoundarySummaryWritten: iesFirstNarrowCandidateOutputBundleBoundaryWrite.requested === true,
         iesFirstNarrowCandidateOutputBundleBoundarySummaryTarget: iesFirstNarrowCandidateOutputBundleBoundaryWrite.requested ? IES_FIRST_NARROW_CANDIDATE_OUTPUT_BUNDLE_BOUNDARY_SUMMARY_TARGET : null,
+        iesFirstNarrowProjectIesExportBoundarySummaryWritten: iesFirstNarrowProjectIesExportBoundaryWrite.requested === true,
+        iesFirstNarrowProjectIesExportBoundarySummaryTarget: iesFirstNarrowProjectIesExportBoundaryWrite.requested ? IES_FIRST_NARROW_PROJECT_IES_EXPORT_BOUNDARY_SUMMARY_TARGET : null,
         selectedResultPersistedSummaryReadbackStatus,
         envelope: clone(envelope),
         browser: getStoreSnapshot(saveContext),
