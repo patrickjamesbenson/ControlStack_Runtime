@@ -255,6 +255,17 @@ const DEFAULT_SYSTEM_POWER_PENETRATION_OPTIONS = Object.freeze([
   "Bottom Cover Plate",
 ]);
 const UNMATCHED_SYSTEM_MOUNT_STYLE_KEY = "__unmatched-system-mount-style__";
+const SOURCE_DEFAULT_MARKER_COLUMNS = Object.freeze([
+  "default",
+  "is_default",
+  "default_option",
+  "default_value",
+  "default_values",
+  "selector_default",
+  "default_marker",
+]);
+const SOURCE_DEFAULT_ROW_MARKERS = Object.freeze(new Set(["default", "true", "yes", "y", "1"]));
+const SOURCE_DEFAULT_FALSE_MARKERS = Object.freeze(new Set(["false", "no", "n", "0", "none", ""]));
 
 const SAFE_FLAGS = Object.freeze({
   readOnly: true,
@@ -351,6 +362,63 @@ function uniqueStrings(values) {
     out.push(label);
   }
   return out;
+}
+
+function sourceDefaultMarkerValues(row = {}) {
+  const values = SOURCE_DEFAULT_MARKER_COLUMNS.flatMap((key) => splitOptions(fieldValue(row, key)))
+    .map(safeString);
+  const markers = [];
+  let rowDefault = false;
+  for (const value of values) {
+    const key = normaliseKey(value);
+    if (SOURCE_DEFAULT_FALSE_MARKERS.has(key)) continue;
+    if (SOURCE_DEFAULT_ROW_MARKERS.has(key)) {
+      rowDefault = true;
+      continue;
+    }
+    markers.push(value);
+  }
+  return {
+    rowDefault,
+    values: uniqueStrings(markers),
+    present: rowDefault || markers.length > 0,
+  };
+}
+
+function sourceDefaultMeta(row = {}, candidates = []) {
+  const markers = sourceDefaultMarkerValues(row);
+  if (!markers.present) return {};
+  const safeCandidates = uniqueStrings((Array.isArray(candidates) ? candidates : [candidates]).map(safeString).filter(Boolean));
+  const markerMatchesCandidate = markers.values.some((marker) => safeCandidates.some((candidate) => valuesMatch(marker, candidate)));
+  if (!markers.rowDefault && !markerMatchesCandidate) return {};
+  return {
+    isDefault: true,
+    explicitDefault: true,
+    defaultSource: "source-marker",
+  };
+}
+
+function selectedValueStatusForOptions(fieldKey = "", options = [], selectedValue = "") {
+  const value = safeString(selectedValue);
+  if (!value) return "";
+  return options.some((option) => optionSelectedByValue(fieldKey, option, value)) ? "source_valid" : "diagnostic_unmapped";
+}
+
+function diagnosticUnmappedSelectedValue(field = {}, selectedValue = "", reason = "Selected value is not present in the current canonical source option set.") {
+  const value = safeString(selectedValue);
+  if (!value) return null;
+  return {
+    value,
+    label: value,
+    status: "diagnostic_unmapped",
+    sourceStatus: "diagnostic_unmapped",
+    selectedValueStatus: "diagnostic_unmapped",
+    reason,
+    sourceTables: [...(field.sourceTables || [])],
+    writes: false,
+    rawRowsExposed: false,
+    rawRowsReturned: false,
+  };
 }
 
 function headerName(header, index) {
@@ -869,6 +937,9 @@ function createOption(label, {
   statusDate = "",
   statusDateRaw = "",
   blockedReason = "",
+  isDefault = false,
+  explicitDefault = false,
+  defaultSource = "",
 } = {}) {
   const optionLabel = safeString(label || value);
   const referenceKeys = uniqueStrings([
@@ -899,6 +970,11 @@ function createOption(label, {
     value: optionValue(value || optionLabel),
     label: optionLabel,
     count,
+    valueStatus: "source_valid",
+    canonicalSourceValue: true,
+    isDefault: isDefault === true || explicitDefault === true,
+    explicitDefault: explicitDefault === true || isDefault === true,
+    defaultSource: explicitDefault === true || isDefault === true ? safeString(defaultSource || "source-marker") : "",
     sourceStatus: "db-reference-backed",
     sourceTables: uniqueStrings(sourceTables),
     diffuserLayer,
@@ -979,6 +1055,9 @@ function addOption(bucket, fieldKey, label, meta = {}) {
       ...(Array.isArray(meta.codePolicyIds) ? meta.codePolicyIds : [meta.codePolicyIds]),
     ].map(safeString).filter(Boolean));
     if (!existing.codePolicyReason && meta.codePolicyReason) existing.codePolicyReason = safeString(meta.codePolicyReason);
+    existing.isDefault = existing.isDefault === true || meta.isDefault === true || meta.explicitDefault === true;
+    existing.explicitDefault = existing.explicitDefault === true || meta.explicitDefault === true || meta.isDefault === true;
+    if (!existing.defaultSource && (meta.explicitDefault === true || meta.isDefault === true)) existing.defaultSource = safeString(meta.defaultSource || "source-marker");
     existing.visualChoice = existing.visualChoice === true || meta.visualChoice === true;
     existing.donorImageReferenceKnown = existing.donorImageReferenceKnown === true || meta.donorImageReferenceKnown === true;
     existing.runtimeImageAvailable = false;
@@ -992,7 +1071,7 @@ function addOption(bucket, fieldKey, label, meta = {}) {
 }
 
 function optionsFor(bucket, fieldKey) {
-  return Array.from(bucket[fieldKey]?.values?.() || []).sort((left, right) => left.label.localeCompare(right.label));
+  return Array.from(bucket[fieldKey]?.values?.() || []);
 }
 
 function systemTokens(row) {
@@ -1479,7 +1558,7 @@ function collectOptions(snapshot, timelineContext = createSelectorTimelineContex
     const tokens = systemTokens(row);
     const emissions = systemEmissionValues(row);
     const systemIdentityKey = systemRowIdentityKey(row);
-    addOption(bucket, "system", tokens.label, { value: tokens.value, sourceTables: ["SYSTEM"], systemReferenceKey: tokens.system, systemVariantKey: tokens.variant, systemIdentityKey, systemSupportsDirect: emissions.some(emissionSupportsDirect), systemSupportsIndirect: emissions.some(emissionSupportsIndirect), ...rowStatusOptionMeta(row, timelineContext) });
+    addOption(bucket, "system", tokens.label, { value: tokens.value, sourceTables: ["SYSTEM"], systemReferenceKey: tokens.system, systemVariantKey: tokens.variant, systemIdentityKey, systemSupportsDirect: emissions.some(emissionSupportsDirect), systemSupportsIndirect: emissions.some(emissionSupportsIndirect), ...sourceDefaultMeta(row, [tokens.value, tokens.label, tokens.system, systemIdentityKey]), ...rowStatusOptionMeta(row, timelineContext) });
     if (tokens.variant) addOption(bucket, "variantKey", tokens.variant, { sourceTables: ["SYSTEM"] });
     for (const emission of systemEmissionValues(row)) {
       addOption(bucket, "emission", emission, { sourceTables: ["SYSTEM"] });
@@ -1624,11 +1703,11 @@ function collectOptions(snapshot, timelineContext = createSelectorTimelineContex
       parentValue: opticValue,
       parentValues: [opticValue].filter(Boolean),
     };
-    if (hasDirect) for (const ip of rowOptionValues(row, ["ip_option_1", "ip_options", "ip", "ip_rating"])) addOption(bucket, "ipRating", ip, { sourceTables: ["OPTICS"], ...opticEnvironmentMeta });
-    if (hasDirect) for (const ik of rowOptionValues(row, ["ik_option_2", "ik_options", "ik", "ik_rating"])) addOption(bucket, "ikRating", ik, { sourceTables: ["OPTICS"], ...opticEnvironmentMeta });
-    for (const cct of extractCctValues(row)) addOption(bucket, "cct", cct, { sourceTables: ["OPTICS"], ...opticSystemMeta });
-    for (const env of rowOptionValues(row, ["environment", "application", "application_environment"])) addOption(bucket, "application", env, { sourceTables: ["OPTICS"], ...opticSystemMeta });
-    for (const io of rowOptionValues(row, ["interior_exterior", "interiorExterior", "indoor_outdoor", "location_type"])) addOption(bucket, "interiorExterior", io, { sourceTables: ["OPTICS"], ...opticSystemMeta });
+    if (hasDirect) for (const ip of rowOptionValues(row, ["ip_option_1", "ip_options", "ip", "ip_rating"])) addOption(bucket, "ipRating", ip, { sourceTables: ["OPTICS"], ...opticEnvironmentMeta, ...sourceDefaultMeta(row, [ip]) });
+    if (hasDirect) for (const ik of rowOptionValues(row, ["ik_option_2", "ik_options", "ik", "ik_rating"])) addOption(bucket, "ikRating", ik, { sourceTables: ["OPTICS"], ...opticEnvironmentMeta, ...sourceDefaultMeta(row, [ik]) });
+    for (const cct of extractCctValues(row)) addOption(bucket, "cct", cct, { sourceTables: ["OPTICS"], ...opticSystemMeta, ...sourceDefaultMeta(row, [cct]) });
+    for (const env of rowOptionValues(row, ["environment", "application", "application_environment"])) addOption(bucket, "application", env, { sourceTables: ["OPTICS"], ...opticSystemMeta, ...sourceDefaultMeta(row, [env]) });
+    for (const io of rowOptionValues(row, ["interior_exterior", "interiorExterior", "indoor_outdoor", "location_type"])) addOption(bucket, "interiorExterior", io, { sourceTables: ["OPTICS"], ...opticSystemMeta, ...sourceDefaultMeta(row, [io]) });
   }
 
   const boards = liveTableRows(snapshot, "BOARDS", timelineContext);
@@ -2728,14 +2807,18 @@ function createUnavailableField(field, reason) {
     fieldKey: field.fieldKey,
     label: field.label,
     role: field.role,
-    status: "future-mapped",
+    status: "blocked",
     sourceStatus: "unavailable from current source",
     sourceTables: [...field.sourceTables],
     options: [],
     selectedValue: "",
     selectedLabel: "",
+    selectedValueStatus: "",
+    selectedValueDiagnostic: null,
     unavailableReason: reason,
     futureMapped: true,
+    unavailable: true,
+    blocked: true,
     rawRowsExposed: false,
   };
 }
@@ -3132,20 +3215,10 @@ function createFields({ bucket, records, constraints, cascadeConstraints = const
       };
     }).filter(Boolean);
 
-    if (selectedValue && !options.some((option) => optionSelectedByValue(field.fieldKey, option, selectedValue))) {
-      options.push({
-        value: selectedValue,
-        label: selectedValue,
-        count: 0,
-        sourceStatus: "selected constraint not available from current filtered source",
-        sourceTables: [...field.sourceTables],
-        selected: true,
-        status: "blocked",
-        blocked: true,
-        blockedReason: "Manual constraint is preserved but unavailable/incompatible in the current filtered source.",
-        rawRowsExposed: false,
-      });
-    }
+    const selectedValueStatus = selectedValueStatusForOptions(field.fieldKey, options, selectedValue);
+    const selectedValueDiagnostic = selectedValueStatus === "diagnostic_unmapped"
+      ? diagnosticUnmappedSelectedValue(field, selectedValue, "Manual constraint is preserved as an unmapped diagnostic only; it is not inserted into source-valid options.")
+      : null;
 
     const availableCount = options.filter((option) => option.status === "available").length;
     return {
@@ -3157,8 +3230,10 @@ function createFields({ bucket, records, constraints, cascadeConstraints = const
       sourceTables: [...field.sourceTables],
       options,
       selectedValue,
-      selectedLabel: selectedValue ? labelForSelectedValue(options, selectedValue, field.fieldKey) : "",
-      unavailableReason: availableCount ? "" : "No compatible options remain under the current manual constraints; values are shown as blocked rather than removed.",
+      selectedValueStatus,
+      selectedValueDiagnostic,
+      selectedLabel: selectedValueStatus === "source_valid" ? labelForSelectedValue(options, selectedValue, field.fieldKey) : "",
+      unavailableReason: selectedValueDiagnostic ? selectedValueDiagnostic.reason : availableCount ? "" : "No compatible options remain under the current manual constraints; values are shown as blocked rather than removed.",
       futureMapped: false,
       rawRowsExposed: false,
     };
@@ -3225,17 +3300,19 @@ function deriveAutoConsequences(fields, constraints) {
 function createManualConstraintList(fields, constraints) {
   return Object.entries(constraints).map(([fieldKey, value]) => {
     const field = fields.find((item) => item.fieldKey === fieldKey);
-    const option = field?.options?.find((item) => valuesMatch(item.value, value));
+    const option = field?.options?.find((item) => optionSelectedByValue(fieldKey, item, value));
+    const selectedValueStatus = field?.selectedValueStatus || (option ? "source_valid" : "diagnostic_unmapped");
     return {
       fieldKey,
       label: field?.label || fieldKey,
       value,
-      valueLabel: option?.label || value,
+      valueLabel: selectedValueStatus === "source_valid" ? option?.label || value : value,
       kind: "manual-constraint",
       source: "module-local UI constraint over safe Selector Reference options",
-      status: option?.status || "selected",
-      blocked: option?.blocked === true,
-      reason: option?.blockedReason || "manual selection is treated as a durable constraint",
+      status: selectedValueStatus === "diagnostic_unmapped" ? "diagnostic_unmapped" : option?.status || "selected",
+      selectedValueStatus,
+      blocked: selectedValueStatus === "diagnostic_unmapped" || option?.blocked === true,
+      reason: selectedValueStatus === "diagnostic_unmapped" ? "manual selection is not present in canonical source options and is diagnostic only" : option?.blockedReason || "manual selection is treated as a durable source-valid constraint",
       mutable: true,
       writes: false,
     };
@@ -3245,6 +3322,10 @@ function createManualConstraintList(fields, constraints) {
 function blockedItems(fields) {
   const blocked = [];
   for (const field of fields) {
+    if (field.selectedValueStatus === "diagnostic_unmapped" && field.selectedValueDiagnostic) {
+      blocked.push({ fieldKey: field.fieldKey, label: field.label, value: field.selectedValueDiagnostic.value, valueLabel: field.selectedValueDiagnostic.label, status: "diagnostic_unmapped", reason: field.selectedValueDiagnostic.reason });
+      continue;
+    }
     if (field.futureMapped) {
       blocked.push({ fieldKey: field.fieldKey, label: field.label, status: "future-mapped", reason: field.unavailableReason });
       continue;
@@ -3590,23 +3671,35 @@ function createWorkflowField(field, { bucket, records, constraints, cascadeConst
   if (childOptions.childFiltered && !baseOptions.length) {
     const emptyField = createEmptyChildWorkflowField(field, childOptions.parentFieldKey, childOptions.parentValue, childOptions.deferredOptions, childOptions.unavailableReason);
     if (!selectedValue) return emptyField;
+    const selectedSourceOption = rawBaseOptions.find((option) => optionSelectedByValue(field.fieldKey, option, selectedValue));
+    if (selectedSourceOption) {
+      return {
+        ...emptyField,
+        selectedValue,
+        selectedValueStatus: "source_valid",
+        selectedValueDiagnostic: null,
+        selectedLabel: selectedSourceOption.label || selectedValue,
+        options: [{
+          ...selectedSourceOption,
+          selected: true,
+          status: "blocked",
+          blocked: true,
+          blockedReason: "Manual child-field constraint is source-valid but incompatible with the current parent selection.",
+          selectedBlockedDiagnostic: true,
+          preservesManualConstraint: true,
+          writes: false,
+          rawRowsExposed: false,
+        }],
+        status: "blocked",
+      };
+    }
     return {
       ...emptyField,
       selectedValue,
-      selectedLabel: selectedValue,
-      options: [{
-        value: selectedValue,
-        label: selectedValue,
-        count: 0,
-        sourceStatus: "selected constraint not available from current filtered source",
-        sourceTables: [...(field.sourceTables || [])],
-        selected: true,
-        status: "blocked",
-        blocked: true,
-        blockedReason: "Manual constraint is preserved but unavailable/incompatible in the current filtered source.",
-        writes: false,
-        rawRowsExposed: false,
-      }],
+      selectedValueStatus: "diagnostic_unmapped",
+      selectedValueDiagnostic: diagnosticUnmappedSelectedValue(field, selectedValue, "Manual child-field constraint is preserved as an unmapped diagnostic only; it is not inserted into source-valid options."),
+      selectedLabel: "",
+      options: [],
       status: "blocked",
     };
   }
@@ -3653,20 +3746,27 @@ function createWorkflowField(field, { bucket, records, constraints, cascadeConst
     };
   });
 
-  if (selectedValue && !options.some((option) => optionSelectedByValue(field.fieldKey, option, selectedValue))) {
+  const selectedSourceOption = selectedValue && !options.some((option) => optionSelectedByValue(field.fieldKey, option, selectedValue))
+    ? rawBaseOptions.find((option) => optionSelectedByValue(field.fieldKey, option, selectedValue))
+    : null;
+  if (selectedSourceOption) {
     options.push({
-      value: selectedValue,
-      label: selectedValue,
-      count: 0,
-      sourceStatus: "selected constraint not available from current filtered source",
-      sourceTables: [...(field.sourceTables || [])],
+      ...selectedSourceOption,
       selected: true,
       status: "blocked",
       blocked: true,
-      blockedReason: "Manual constraint is preserved but unavailable/incompatible in the current filtered source.",
+      blockedReason: "Manual constraint is source-valid but incompatible with the current upstream constraints.",
+      selectedBlockedDiagnostic: true,
+      preservesManualConstraint: true,
+      writes: false,
       rawRowsExposed: false,
     });
   }
+
+  const selectedValueStatus = selectedValueStatusForOptions(field.fieldKey, options, selectedValue);
+  const selectedValueDiagnostic = selectedValueStatus === "diagnostic_unmapped"
+    ? diagnosticUnmappedSelectedValue(field, selectedValue, "Manual constraint is preserved as an unmapped diagnostic only; it is not inserted into source-valid options.")
+    : null;
 
   const matchDirectActive = !safeString(constraints.indirectMatchDirect || "") || valuesMatch(constraints.indirectMatchDirect, "match-direct");
   const inheritedCandidate = matchDirectActive && !selectedValue
@@ -3691,11 +3791,13 @@ function createWorkflowField(field, { bucket, records, constraints, cascadeConst
     sourceTables: [...(field.sourceTables || [])],
     options,
     selectedValue,
-    selectedLabel: selectedValue ? labelForSelectedValue(options, selectedValue, field.fieldKey) : "",
+    selectedValueStatus,
+    selectedValueDiagnostic,
+    selectedLabel: selectedValueStatus === "source_valid" ? labelForSelectedValue(options, selectedValue, field.fieldKey) : "",
     inheritedValue,
     inheritedLabel,
     inheritedFrom: inheritedValue ? inheritedSourceForField(field.fieldKey, constraints) : "",
-    unavailableReason: availableCount ? "" : "No compatible options remain under the current manual constraints; values are shown as blocked rather than removed.",
+    unavailableReason: selectedValueDiagnostic ? selectedValueDiagnostic.reason : availableCount ? "" : "No compatible options remain under the current manual constraints; values are shown as blocked rather than removed.",
     futureMapped: false,
     disabled: false,
     rawRowsExposed: false,

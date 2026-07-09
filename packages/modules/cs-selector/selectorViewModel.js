@@ -1007,7 +1007,7 @@ function workflowControlIncompatibleOptions(field = {}) {
 
 function workflowControlSelectedBlocked(field = {}) {
   if (!String(field.selectedValue || "").trim()) return false;
-  if (field.selectedOptionBlocked === true || field.displayMode === "warning-chip" || field.status === "blocked") return true;
+  if (field.selectedValueStatus === "diagnostic_unmapped" || field.selectedOptionBlocked === true || field.displayMode === "warning-chip" || field.status === "blocked") return true;
   const selectedValue = String(field.selectedValue || "").trim();
   const selected = [...workflowControlOptions(field), ...workflowControlIncompatibleOptions(field)]
     .find((option) => optionValuesMatch(option.value, selectedValue) || optionValuesMatch(option.label, selectedValue));
@@ -2296,6 +2296,26 @@ function presentationSelectedOption(field = {}) {
   return options.find((option) => option.selected === true) || null;
 }
 
+function diagnosticUnmappedOptionFromField(field = {}) {
+  if (field.selectedValueStatus !== "diagnostic_unmapped") return null;
+  const diagnostic = field.selectedValueDiagnostic && typeof field.selectedValueDiagnostic === "object" ? field.selectedValueDiagnostic : {};
+  const value = String(diagnostic.value || field.selectedValue || "").trim();
+  if (!value) return null;
+  return {
+    value,
+    label: diagnostic.label || value,
+    selected: true,
+    status: "blocked",
+    blocked: true,
+    selectedBlockedDiagnostic: true,
+    sourceStatus: "diagnostic_unmapped",
+    selectedValueStatus: "diagnostic_unmapped",
+    blockedReason: diagnostic.reason || field.unavailableReason || "Selected value is not present in canonical source options and is diagnostic only.",
+    writes: false,
+    rawRowsExposed: false,
+  };
+}
+
 function presentationSelectedCodePolicyOption(field = {}) {
   const selectedValue = String(field.selectedValue || "").trim();
   if (!selectedValue) return null;
@@ -2318,7 +2338,8 @@ function workflowOptionMatchesSelection(option = {}, field = {}) {
 function createDonorShapeDropdownSplit(field = {}) {
   const options = Array.isArray(field.options) ? field.options : [];
   const dropdownOptions = [];
-  const incompatibleOptions = [];
+  const diagnosticUnmappedOption = diagnosticUnmappedOptionFromField(field);
+  const incompatibleOptions = diagnosticUnmappedOption ? [diagnosticUnmappedOption] : [];
   for (const option of options) {
     if (optionIsUnknownChoice(option)) continue;
     const selected = workflowOptionMatchesSelection(option, field);
@@ -2448,7 +2469,8 @@ function classifyRuntimePresentationField(field = {}, finishContext = {}) {
   const compatibleOptions = presentationCompatibleOptions(field);
   const compatibleOptionCount = compatibleOptions ? compatibleOptions.length : null;
   const selectedOption = presentationSelectedOption(field);
-  const selectedOptionBlocked = Boolean(field.selectedValue && (selectedOption?.blocked === true || selectedOption?.status === "blocked"));
+  const diagnosticUnmappedOption = diagnosticUnmappedOptionFromField(field);
+  const selectedOptionBlocked = Boolean(field.selectedValue && (field.selectedValueStatus === "diagnostic_unmapped" || selectedOption?.blocked === true || selectedOption?.status === "blocked"));
   const hasSelectedValue = String(field.selectedValue || "").trim().length > 0;
   const acceptedDefaultSelected = field.defaultAcceptanceState === "accepted" || field.selectedByAcceptedDefault === true;
   const hasManualConstraint = hasSelectedValue && !acceptedDefaultSelected;
@@ -2476,7 +2498,7 @@ function classifyRuntimePresentationField(field = {}, finishContext = {}) {
     effectiveValue = "";
     effectiveLabel = "";
     overrideAvailable = true;
-    classificationReason = selectedPolicyOption?.blockedReason || selectedOption?.blockedReason || field.unavailableReason || "selected value is incompatible but preserved as a blocked constraint, not selected truth";
+    classificationReason = diagnosticUnmappedOption?.blockedReason || selectedPolicyOption?.blockedReason || selectedOption?.blockedReason || field.unavailableReason || "selected value is incompatible but preserved as a blocked constraint, not selected truth";
   } else if (presentationIsHiddenDiagnostic(field)) {
     displayMode = "hidden-diagnostic";
     provenance = "diagnostic";

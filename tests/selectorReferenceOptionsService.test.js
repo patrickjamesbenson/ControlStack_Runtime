@@ -211,6 +211,81 @@ test("selector reference option adapter supports sheet-like headers and rows wit
   assert.equal(result.tableSummary.some((table) => table.table === "SYSTEM" && table.rowCount === 1), true);
 });
 
+test("selector source options preserve source order and explicit default independent from order", () => {
+  const result = deriveSelectorReferenceOptionsFromSnapshot({
+    SYSTEM: [
+      { system: "COM", system_variant_1: "60", label: "Comfort", approved: "yes" },
+      { system: "ASY", system_variant_1: "60", label: "Asymmetric", approved: "yes" },
+      { system: "WIDE", system_variant_1: "60", label: "Wide", approved: "yes", is_default: "yes" },
+    ],
+  }, { source: sourceReady() });
+
+  const systems = field(result, "system").options;
+  assert.deepEqual(systems.map((item) => item.label), ["Comfort", "Asymmetric", "Wide"]);
+  assert.equal(systems[0].isDefault, false);
+  assert.equal(systems[1].isDefault, false);
+  assert.equal(systems[2].isDefault, true);
+  assert.equal(systems[2].explicitDefault, true);
+  assert.equal(systems[2].defaultSource, "source-marker");
+});
+
+test("selector source delimited cells preserve token order and source default marker", () => {
+  const result = deriveSelectorReferenceOptionsFromSnapshot({
+    OPTICS: [
+      {
+        system: "DNX",
+        optic_var_1: "Comfort",
+        emission_permission: "Direct",
+        ip_option_1: "IP65;IP20,IP54|IP40",
+        default_value: "IP54",
+        approved: "yes",
+      },
+    ],
+  }, { source: sourceReady() });
+
+  const ipOptions = field(result, "ipRating").options;
+  assert.deepEqual(ipOptions.map((item) => item.value), ["IP65", "IP20", "IP54", "IP40"]);
+  assert.equal(ipOptions.find((item) => item.value === "IP54")?.explicitDefault, true);
+  assert.equal(ipOptions.find((item) => item.value === "IP65")?.explicitDefault, false);
+});
+
+test("selector unknown selected values stay diagnostic_unmapped and out of source-valid options", () => {
+  const result = deriveSelectorReferenceOptionsFromSnapshot(sampleSnapshot(), {
+    source: sourceReady(),
+    constraints: { ipRating: "IP00", optic: "opal" },
+  });
+  const ip = field(result, "ipRating");
+  const optic = field(result, "optic");
+
+  assert.equal(ip.options.some((item) => item.value === "IP00"), false);
+  assert.equal(ip.selectedValueStatus, "diagnostic_unmapped");
+  assert.equal(ip.selectedValueDiagnostic.value, "IP00");
+  assert.equal(optic.options.some((item) => item.value === "opal"), false);
+  assert.equal(optic.selectedValueStatus, "diagnostic_unmapped");
+  assert.equal(result.manualConstraints.every((item) => ["source_valid", "diagnostic_unmapped"].includes(item.selectedValueStatus)), true);
+  assert.equal(result.blockedItems.some((item) => item.fieldKey === "ipRating" && item.status === "diagnostic_unmapped"), true);
+});
+
+test("selector empty source-valid field is blocked unavailable with no fallback option", () => {
+  const result = deriveSelectorReferenceOptionsFromSnapshot({ SYSTEM: sampleSnapshot().SYSTEM }, { source: sourceReady() });
+  const application = field(result, "application");
+
+  assert.equal(application.status, "blocked");
+  assert.equal(application.unavailable, true);
+  assert.equal(application.blocked, true);
+  assert.deepEqual(application.options, []);
+  assert.equal(application.options.some((item) => item.sourceStatus === "stand-in" || item.value === "opal" || item.value === "IK07"), false);
+});
+
+test("selector emitted options expose source_valid machine values only", () => {
+  const result = deriveSelectorReferenceOptionsFromSnapshot(sampleSnapshot(), { source: sourceReady() });
+  const optionValues = result.fields.flatMap((item) => item.options.map((optionItem) => ({ fieldKey: item.fieldKey, option: optionItem })));
+
+  assert.equal(optionValues.length > 0, true);
+  assert.equal(optionValues.every(({ option: optionItem }) => optionItem.valueStatus === "source_valid" && optionItem.canonicalSourceValue === true), true);
+  assert.equal(optionValues.some(({ option: optionItem }) => optionItem.value === "opal"), false);
+});
+
 test("selector reference option adapter returns visible future-mapped cards when no tables are mappable", () => {
   const result = deriveSelectorReferenceOptionsFromSnapshot({ unrelated: [{ name: "no selector data" }] }, { source: sourceReady() });
 

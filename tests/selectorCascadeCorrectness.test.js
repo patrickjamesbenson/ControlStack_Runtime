@@ -1796,7 +1796,10 @@ test("Electrical Class follows donor tier-first / exact ACCESSORIES fallback and
     source: sourceReady(),
     constraints: staleConstraints,
   });
-  assert.equal(option(staleResult, "electricalClass", broadPool[21]).status, "blocked");
+  const staleField = workflowField(staleResult, "electricalClass");
+  assert.equal(staleField.options.some((item) => item.value === broadPool[21]), false);
+  assert.equal(staleField.selectedValueStatus, "diagnostic_unmapped");
+  assert.equal(staleField.selectedValueDiagnostic.value, broadPool[21]);
   const surface = selectorViewModelFor(staleResult, staleConstraints).selectorSurface;
   assert.equal(surface.payloadPreview.environment.electricalClass, null);
   assert.ok(surface.selectionTruthSummary.blockers.some((item) => item.fieldKey === "electricalClass"));
