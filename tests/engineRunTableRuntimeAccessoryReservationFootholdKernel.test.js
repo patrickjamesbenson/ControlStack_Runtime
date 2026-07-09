@@ -59,6 +59,44 @@ function noAccessoryInput(overrides = {}) {
   };
 }
 
+function assertFootholdNoSideEffects(result = {}) {
+  assert.equal(result.rawProductRowsReturned, false);
+  assert.equal(result.rawBoardRowsReturned, false);
+  assert.equal(result.rawAccessoryRowsReturned, false);
+  assert.equal(result.rawEnginePayloadReturned, false);
+  assert.equal(result.donorEngineInvoked, false);
+  assert.equal(result.runtimeDataMutated, false);
+  assert.equal(result.selectedResultPersisted, false);
+  assert.equal(result.runTableGenerated, false);
+  assert.equal(result.iesGenerated, false);
+  assert.equal(result.routesAdded, false);
+  assert.equal(result.postEndpointsAdded, false);
+  for (const key of [
+    "runtimeDataMutationEnabled",
+    "donorMutationEnabled",
+    "boardDataMakerImported",
+    "donorEngineInvoked",
+    "productionEngineExecutionEnabled",
+    "fullDonorAncillaryParityEnabled",
+    "physicalCoordinatePlacementEnabled",
+    "emergencyZonePickerEnabled",
+    "mechanicalDetailingEnabled",
+    "segmentSplitEnabled",
+    "gateDValidationEnabled",
+    "runTableGenerationEnabled",
+    "iesGenerationEnabled",
+    "selectedResultPersistenceEnabled",
+    "publicRoutesAdded",
+    "postEndpointsAdded",
+    "rawProductRowsReturned",
+    "rawBoardRowsReturned",
+    "rawAccessoryRowsReturned",
+    "rawEnginePayloadReturned",
+  ]) {
+    assert.equal(result.safetyFlags?.[key], false);
+  }
+}
+
 function oneSensorInput(overrides = {}) {
   return noAccessoryInput({
     accessoryRequestsSummary: {
@@ -101,6 +139,7 @@ test("runtime accessory reservation foothold returns no reservation and board-fi
   assert.equal(result.iesGenerated, false);
   assert.equal(result.routesAdded, false);
   assert.equal(result.postEndpointsAdded, false);
+  assertFootholdNoSideEffects(result);
 });
 
 test("one sealed sensor request reserves one board/module space before board fill", () => {
@@ -117,6 +156,7 @@ test("one sealed sensor request reserves one board/module space before board fil
   assert.equal(result.accessoryPlacementIntentSummary.placementIntentBuckets.middle, 1);
   assert.equal(result.accessoryPlacementIntentSummary.physicalPlacementReturned, false);
   assert.equal(result.accessoryPlacementIntentSummary.rawCoordinatesReturned, false);
+  assertFootholdNoSideEffects(result);
 });
 
 test("end plate deduction affects body length before reservation", () => {
@@ -192,6 +232,7 @@ test("unresolved length adjustment fails closed", () => {
   assert.equal(result.accessoryReservationReady, false);
   assert.equal(result.boardFillInputReady, false);
   assert.equal(result.donorEngineInvoked, false);
+  assertFootholdNoSideEffects(result);
 });
 
 test("reservation exceeding body length fails closed", () => {

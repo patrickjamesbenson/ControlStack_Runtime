@@ -322,6 +322,69 @@ function assertNoGenerationAuthority(value = {}) {
   }
 }
 
+function assertStage3BoundaryNoSideEffects(value = {}) {
+  assertNoGenerationAuthority(value);
+  const summary = value.factoryApprovedInputsSummary;
+  assert.ok(summary, "expected factory-approved inputs summary");
+  assert.equal(summary.engineOutcomeProven, false);
+  assert.equal(summary.engineExecuted, false);
+  assert.equal(summary.donorEngineInvoked, false);
+  assert.equal(summary.selectedResultPersisted, false);
+  assert.equal(summary.runTableGenerated, false);
+  assert.equal(summary.iesGenerated, false);
+  assert.equal(summary.runtimeDataMutated, false);
+  assert.equal(summary.boardDataMutated, false);
+  assert.equal(summary.rawRowsExposed, false);
+  assert.equal(summary.rawAccessoryRowsExposed, false);
+  assert.equal(summary.rawEnginePayloadExposed, false);
+  assert.equal(summary.rawSelectedResultPayloadExposed, false);
+  assert.equal(summary.routesAdded, false);
+  assert.equal(summary.postEndpointsAdded, false);
+  assert.equal(summary.writes, false);
+  assert.equal(summary.generation, false);
+  assert.equal(summary.proof, false);
+  for (const flag of Object.values(summary.safetyFlags || {})) {
+    assert.equal(flag, false);
+  }
+
+  const reservation = summary.accessoryReservationSummary;
+  if (reservation) {
+    assert.equal(reservation.rawAccessoryRowsReturned, false);
+    assert.equal(reservation.rawEnginePayloadReturned, false);
+    assert.equal(reservation.donorEngineInvoked, false);
+    assert.equal(reservation.runtimeDataMutated, false);
+    assert.equal(reservation.selectedResultPersisted, false);
+    assert.equal(reservation.runTableGenerated, false);
+    assert.equal(reservation.iesGenerated, false);
+    assert.equal(reservation.routesAdded, false);
+    assert.equal(reservation.postEndpointsAdded, false);
+    for (const key of [
+      "runtimeDataMutationEnabled",
+      "donorMutationEnabled",
+      "boardDataMakerImported",
+      "donorEngineInvoked",
+      "productionEngineExecutionEnabled",
+      "fullDonorAncillaryParityEnabled",
+      "physicalCoordinatePlacementEnabled",
+      "emergencyZonePickerEnabled",
+      "mechanicalDetailingEnabled",
+      "segmentSplitEnabled",
+      "gateDValidationEnabled",
+      "runTableGenerationEnabled",
+      "iesGenerationEnabled",
+      "selectedResultPersistenceEnabled",
+      "publicRoutesAdded",
+      "postEndpointsAdded",
+      "rawProductRowsReturned",
+      "rawBoardRowsReturned",
+      "rawAccessoryRowsReturned",
+      "rawEnginePayloadReturned",
+    ]) {
+      assert.notEqual(reservation.safetyFlags?.[key], true);
+    }
+  }
+}
+
 function assertSlugInputContract(value = {}) {
   const contract = value.slugInputSourceContract;
 
@@ -497,7 +560,7 @@ test("Stage 3B fails closed when non-zero accessory reservation cannot produce a
   assert.equal(value.factoryApprovedInputsSummary.blocker, "no-valid-board-reservation");
   assert.equal(stageRows["Stage 3 — Factory Approved Inputs"], "false");
   assert.equal(stageRows["Stage 4 — Engine Outcome Proven"], "false");
-  assertNoGenerationAuthority(value);
+  assertStage3BoundaryNoSideEffects(value);
 });
 
 test("Stage 3B accepts non-zero accessory intent when it remains inside one sealed segment", () => {
@@ -556,7 +619,7 @@ test("Stage 3B accepts non-zero accessory intent when it remains inside one seal
   assert.match(reservation.sourceFingerprint, /^safe-stage3b-source:[0-9a-f]{40}$/);
   assert.equal(stageRows["Stage 3 — Factory Approved Inputs"], "true");
   assert.equal(stageRows["Stage 4 — Engine Outcome Proven"], "false");
-  assertNoGenerationAuthority(value);
+  assertStage3BoundaryNoSideEffects(value);
 });
 
 test("Stage 3B fails closed when non-zero accessory intent is join-sensitive without do-not-bridge authority", () => {
@@ -608,7 +671,7 @@ test("Stage 3B fails closed when non-zero accessory intent is join-sensitive wit
   assert.equal(joinAuthority.ruleCoverage.find((row) => row.rule === "do_not_bridge_segment_join").classification, "missing and not safe to defer for Stage 3B claims");
   assert.equal(stageRows["Stage 3 — Factory Approved Inputs"], "false");
   assert.equal(stageRows["Stage 4 — Engine Outcome Proven"], "false");
-  assertNoGenerationAuthority(value);
+  assertStage3BoundaryNoSideEffects(value);
 });
 
 test("Stage 3B accepts join-sensitive accessory intent when do-not-bridge is physically enforced", () => {
@@ -656,7 +719,7 @@ test("Stage 3B accepts join-sensitive accessory intent when do-not-bridge is phy
   assert.equal(joinAuthority.ruleCoverage.find((row) => row.rule === "do_not_bridge_segment_join").classification, "represented and physically enforced");
   assert.equal(stageRows["Stage 3 — Factory Approved Inputs"], "true");
   assert.equal(stageRows["Stage 4 — Engine Outcome Proven"], "false");
-  assertNoGenerationAuthority(value);
+  assertStage3BoundaryNoSideEffects(value);
 });
 
 test("Stage 3B fails closed when secondary cross-segment routing is allowed", () => {
@@ -674,7 +737,7 @@ test("Stage 3B fails closed when secondary cross-segment routing is allowed", ()
   assert.ok(joinAuthority.joinAuthorityBlockers.includes("stage3b-secondary-cross-segment-routing-unproven"));
   assert.equal(stageRows["Stage 3 — Factory Approved Inputs"], "false");
   assert.equal(stageRows["Stage 4 — Engine Outcome Proven"], "false");
-  assertNoGenerationAuthority(value);
+  assertStage3BoundaryNoSideEffects(value);
 });
 
 test("Stage 3B fails closed when secondary cross-segment policy is compare", () => {
@@ -692,7 +755,7 @@ test("Stage 3B fails closed when secondary cross-segment policy is compare", () 
   assert.ok(joinAuthority.joinAuthorityBlockers.includes("stage3b-secondary-compare-scoring-not-implemented"));
   assert.equal(stageRows["Stage 3 — Factory Approved Inputs"], "false");
   assert.equal(stageRows["Stage 4 — Engine Outcome Proven"], "false");
-  assertNoGenerationAuthority(value);
+  assertStage3BoundaryNoSideEffects(value);
 });
 
 test("Stage 3B fails closed when electrical zone mode crosses the full run", () => {
@@ -710,7 +773,7 @@ test("Stage 3B fails closed when electrical zone mode crosses the full run", () 
   assert.ok(joinAuthority.joinAuthorityBlockers.includes("stage3b-electrical-zone-crossing-unproven"));
   assert.equal(stageRows["Stage 3 — Factory Approved Inputs"], "false");
   assert.equal(stageRows["Stage 4 — Engine Outcome Proven"], "false");
-  assertNoGenerationAuthority(value);
+  assertStage3BoundaryNoSideEffects(value);
 });
 
 test("Stage 3B fails closed when secondary no-cross allows extra drivers", () => {
@@ -728,7 +791,7 @@ test("Stage 3B fails closed when secondary no-cross allows extra drivers", () =>
   assert.ok(joinAuthority.joinAuthorityBlockers.includes("stage3b-secondary-extra-driver-threshold-unproven"));
   assert.equal(stageRows["Stage 3 — Factory Approved Inputs"], "false");
   assert.equal(stageRows["Stage 4 — Engine Outcome Proven"], "false");
-  assertNoGenerationAuthority(value);
+  assertStage3BoundaryNoSideEffects(value);
 });
 
 test("Stage 3B fails closed when board packing policy is not source-backed", () => {
@@ -758,7 +821,7 @@ test("Stage 3B fails closed when board packing policy is not source-backed", () 
   assert.ok(reservation.boardPackingSplitPolicySummary.missingPolicyKeys.includes("max_board_gap_mm"));
   assert.equal(stageRows["Stage 3 — Factory Approved Inputs"], "false");
   assert.equal(stageRows["Stage 4 — Engine Outcome Proven"], "false");
-  assertNoGenerationAuthority(value);
+  assertStage3BoundaryNoSideEffects(value);
 });
 
 test("Stage 3B fails closed when frozen segment splits exceed source-backed split quantity", () => {
@@ -793,7 +856,7 @@ test("Stage 3B fails closed when frozen segment splits exceed source-backed spli
   assert.equal(reservation.boardPackingSplitPolicySummary.segmentMaxBoardSplitQty, 0);
   assert.equal(stageRows["Stage 3 — Factory Approved Inputs"], "false");
   assert.equal(stageRows["Stage 4 — Engine Outcome Proven"], "false");
-  assertNoGenerationAuthority(value);
+  assertStage3BoundaryNoSideEffects(value);
 });
 
 test("slug source contract uses committed selector state only and fails closed", () => {
