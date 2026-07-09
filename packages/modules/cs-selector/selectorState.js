@@ -61,7 +61,6 @@ const SAFE_SELECTOR_TEST_CASE_MANUAL_CONSTRAINT_KEYS = Object.freeze(new Set([
   "system",
   "application",
   "interiorExterior",
-  "cct",
   "optic",
   "controlType",
   "driver",
@@ -488,14 +487,10 @@ const SELECTOR_FIELD_OPTIONS = Object.freeze({
     Object.freeze({ value: "1200", label: "1200 lm/m — default-preview" }),
     Object.freeze({ value: "1800", label: "1800 lm/m" }),
   ]),
-  cct: Object.freeze([
-    Object.freeze({ value: "3000K", label: "3000K" }),
-    Object.freeze({ value: "4000K", label: "4000K — default-preview" }),
-    Object.freeze({ value: "tunable-white", label: "Tunable white" }),
-  ]),
-  cri: Object.freeze([
-    Object.freeze({ value: "CRI80", label: "CRI 80 — default-preview" }),
-    Object.freeze({ value: "CRI90", label: "CRI 90" }),
+  cctCri: Object.freeze([
+    Object.freeze({ value: "cct_cri:3000K|CRI80", label: "3000K / CRI80" }),
+    Object.freeze({ value: "cct_cri:4000K|CRI80", label: "4000K / CRI80 — default-preview" }),
+    Object.freeze({ value: "cct_cri:TW_2700K_6500K|CRI90", label: "TW 2700K–6500K / CRI90" }),
   ]),
   optic: Object.freeze([
     Object.freeze({ value: "opal", label: "Opal — default-preview" }),
@@ -595,8 +590,7 @@ const DEFAULT_PREVIEW_SELECTION_VALUES = Object.freeze({
   ipRating: "IP20",
   ikRating: "IK07",
   targetLumensPerMetre: "1200",
-  cct: "4000K",
-  cri: "CRI80",
+  cctCri: "cct_cri:4000K|CRI80",
   optic: "opal",
   controlType: "dali-2",
   mountStyle: "surface",
@@ -634,8 +628,7 @@ const DEFAULT_SECTION_FIELD_DEFINITIONS = Object.freeze({
   ]),
   lightControl: Object.freeze([
     { fieldKey: "targetLumensPerMetre", label: "Target lumens per metre", manualConstraintEligible: true, effectiveSelectionEligible: true, committedSpecEligible: true, requiredForSpecGate: true },
-    { fieldKey: "cct", label: "CCT", manualConstraintEligible: true, effectiveSelectionEligible: true, committedSpecEligible: true, requiredForSpecGate: true },
-    { fieldKey: "cri", label: "CRI", manualConstraintEligible: true, effectiveSelectionEligible: true, committedSpecEligible: true },
+    { fieldKey: "cctCri", label: "CCT/CRI", manualConstraintEligible: true, effectiveSelectionEligible: true, committedSpecEligible: true, requiredForSpecGate: true },
     { fieldKey: "optic", label: "Optic", manualConstraintEligible: true, effectiveSelectionEligible: true, committedSpecEligible: true, requiredForSpecGate: true },
     { fieldKey: "controlType", label: "Control type", manualConstraintEligible: true, effectiveSelectionEligible: true, committedSpecEligible: true, requiredForSpecGate: true },
     { fieldKey: "driver", label: "Driver", autoConsequenceEligible: true, effectiveSelectionEligible: true, committedSpecEligible: true, requiredForBuildGate: true },

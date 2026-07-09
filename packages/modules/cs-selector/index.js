@@ -18,7 +18,6 @@ const SELECTOR_OPTION_CONSTRAINT_KEYS = Object.freeze([
   "system",
   "application",
   "interiorExterior",
-  "cct",
   "optic",
   "controlType",
   "driver",

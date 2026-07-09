@@ -232,7 +232,7 @@ function completeSpecReadyCandidate(selectorState) {
   model = selectAndReload(selectorState, "electricalClass", "Class I");
   model = selectAndReload(selectorState, "ambient", "35°C");
   model = selectAndReload(selectorState, "targetLmPerM", "1200");
-  model = selectAndReload(selectorState, "cctCri", "4000K / CRI90");
+  model = selectAndReload(selectorState, "cctCri", "cct_cri:4000K|CRI90");
   return selectAndReload(selectorState, "controlType", "DALI-2");
 }
 

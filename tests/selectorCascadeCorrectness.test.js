@@ -815,6 +815,51 @@ test("CCT and CRI stay paired when source data allows", () => {
   assert.equal(labels.some((item) => item === "CRI80"), false);
 });
 
+test("CCT/CRI source compatibility is keyed by canonical pair token, not display label", () => {
+  const snapshot = cascadeSnapshot();
+  const tokenResult = deriveSelectorReferenceOptionsFromSnapshot(snapshot, {
+    source: sourceReady(),
+    constraints: { cctCri: "cct_cri:4000K|CRI90" },
+  });
+  const legacyResult = deriveSelectorReferenceOptionsFromSnapshot(snapshot, {
+    source: sourceReady(),
+    constraints: { cctCri: "4000K / CRI90" },
+  });
+
+  assert.equal(workflowField(tokenResult, "cctCri").selectedValueStatus, "source_valid");
+  assert.equal(workflowField(tokenResult, "cctCri").selectedLabel, "4000K / CRI90");
+  assert.equal(workflowField(legacyResult, "cctCri").selectedValueStatus, "diagnostic_unmapped");
+});
+
+test("indirect match-direct inherits canonical cctCri token only", () => {
+  const snapshot = cascadeSnapshot();
+  const constraints = {
+    system: "DNX 80 DI",
+    cctCri: "cct_cri:4000K|CRI90",
+    indirectMatchDirect: "match-direct",
+  };
+  const result = deriveSelectorReferenceOptionsFromSnapshot(snapshot, { source: sourceReady(), constraints });
+  const direct = viewModelField(result, "cctCri", result.selectedConstraints);
+  const indirect = viewModelField(result, "cctCriIndirect", result.selectedConstraints);
+
+  assert.equal(direct.selectedValue, "cct_cri:4000K|CRI90");
+  assert.equal(indirect.options.some((item) => item.value === "cct_cri:4000K|CRI90"), true);
+  assert.equal(indirect.options.some((item) => item.value === "4000K / CRI90"), false);
+});
+
+test("independent cct and cri constraints do not satisfy direct cctCri", () => {
+  const result = deriveSelectorReferenceOptionsFromSnapshot(cascadeSnapshot(), {
+    source: sourceReady(),
+    constraints: { cct: "4000K", cri: "CRI90" },
+  });
+  const cctCri = workflowField(result, "cctCri");
+
+  assert.equal(cctCri.selectedValue, "");
+  assert.equal(cctCri.selectedValueStatus, "");
+  assert.equal(result.manualConstraints.some((item) => item.fieldKey === "cctCri"), false);
+});
+
+
 test("Light and Control keeps lm/m manual and scopes protocol choices under system selection", () => {
   const snapshot = cascadeSnapshot();
   snapshot.SYSTEM_POLICY = [
@@ -868,7 +913,7 @@ test("live D/I Light and Control keeps lm/m inputs and protocol dropdowns usable
   };
   const constraints = {
     system: "DNX 80 DI",
-    cctCri: "3500K / CRI80",
+    cctCri: "cct_cri:3500K|CRI80",
     indirectMatchDirect: "match-direct",
     targetLmPerM: "950",
     targetLmPerMIndirect: "250",
@@ -914,7 +959,7 @@ test("live D/I Light and Control unlocks independent indirect CCT/CRI and protoc
   };
   const constraints = {
     system: "DNX 80 DI",
-    cctCri: "3500K / CRI80",
+    cctCri: "cct_cri:3500K|CRI80",
     indirectMatchDirect: "independent",
     targetLmPerM: "950",
     targetLmPerMIndirect: "250",
@@ -969,8 +1014,8 @@ test("live DNX 60 Beam D/I keeps authored protocol choices selectable across sou
     system: `DNX 60 Beam ${directIndirectSlash}`,
     directOpticVar1: "60|Asymmetric",
     indirectOpticVar1: "60|Batwing",
-    cctCri: "3000K / CRI80",
-    cctCriIndirect: "3000K / CRI80",
+    cctCri: "cct_cri:3000K|CRI80",
+    cctCriIndirect: "cct_cri:3000K|CRI80",
     indirectMatchDirect: "independent",
     targetLmPerM: "1000",
     targetLmPerMIndirect: "1000",
@@ -1008,8 +1053,8 @@ test("wildcard BOARDS profile system keys keep authored protocol choices selecta
     system: `DNX 60 Beam ${directIndirectSlash}`,
     directOpticVar1: "60|Asymmetric",
     indirectOpticVar1: "60|Batwing",
-    cctCri: "3000K / CRI80",
-    cctCriIndirect: "3000K / CRI80",
+    cctCri: "cct_cri:3000K|CRI80",
+    cctCriIndirect: "cct_cri:3000K|CRI80",
     indirectMatchDirect: "independent",
     targetLmPerM: "1000",
     targetLmPerMIndirect: "1000",
@@ -1135,13 +1180,13 @@ test("incompatible selected options are preserved and marked blocked", () => {
 test("compatible selections are not cleared", () => {
   const result = deriveSelectorReferenceOptionsFromSnapshot(cascadeSnapshot(), {
     source: sourceReady(),
-    constraints: { system: "DNX 60 Beam DI", optic: "60|Opal", cctCri: "3000K / CRI80" },
+    constraints: { system: "DNX 60 Beam DI", optic: "60|Opal", cctCri: "cct_cri:3000K|CRI80" },
   });
 
   assert.equal(result.selectedConstraints.system, "DNX 60 Beam DI");
   assert.equal(result.selectedConstraints.optic, "60|Opal");
-  assert.equal(result.selectedConstraints.cctCri, "3000K / CRI80");
-  assert.equal(workflowField(result, "cctCri").selectedValue, "3000K / CRI80");
+  assert.equal(result.selectedConstraints.cctCri, "cct_cri:3000K|CRI80");
+  assert.equal(workflowField(result, "cctCri").selectedValue, "cct_cri:3000K|CRI80");
 });
 
 test("system changes reconcile stale direct and indirect optics out of selected truth, summary rail, and payload preview", () => {

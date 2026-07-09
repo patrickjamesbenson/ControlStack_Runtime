@@ -200,8 +200,11 @@ test("Selector read-only resolver preview reflects source readiness and missing 
 
 test("Selector read-only resolver preview reflects manual constraints, auto consequences, and effective selection without mutation", () => {
   const selectorState = createSelectorState();
-  selectorState.setSelectorFieldValue("cct", "3000K");
+  selectorState.setSelectorFieldValue("cctCri", "cct_cri:3000K|CRI80");
   const before = selectorState.getSnapshot().selectorStateContract;
+  assert.equal(before.manualConstraints.cctCri.value, "cct_cri:3000K|CRI80");
+  assert.equal(before.manualConstraints.cctCri.valueLabel, "3000K / CRI80");
+  assert.equal(Object.prototype.hasOwnProperty.call(before.manualConstraints, "cct"), false);
 
   const model = createModel({ selectorState });
   const after = selectorState.getSnapshot().selectorStateContract;
@@ -211,9 +214,9 @@ test("Selector read-only resolver preview reflects manual constraints, auto cons
   assert.deepEqual(after.autoConsequences, before.autoConsequences);
   assert.deepEqual(after.effectiveSelection, before.effectiveSelection);
   assert.equal(preview.fields.preview_state, "manually constrained preview");
-  assert.match(preview.fields.manual_constraints, /CCT: 3000K/);
+  assert.match(preview.fields.manual_constraints, /CCT\/CRI: 3000K \/ CRI80/);
   assert.match(preview.fields.auto_consequences, /Driver:/);
-  assert.match(preview.fields.effective_selection, /CCT: 3000K/);
+  assert.match(preview.fields.effective_selection, /CCT\/CRI: 3000K \/ CRI80/);
   assert.equal(preview.fields.spec_gate_status, "incomplete — preview-ready does not mean spec-ready");
   assert.equal(preview.fields.slug_preview_status, "disabled — no slug generated, committed, or treated as authority");
   assert.match(preview.fields.downstream_outputs_disabled, /^true/);

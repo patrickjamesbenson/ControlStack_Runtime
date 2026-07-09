@@ -71,13 +71,26 @@ function selectorReferenceStatus() {
   };
 }
 
+function cctCriSelectorReferenceStatus() {
+  return {
+    ok: true,
+    status: "loaded",
+    readOnly: true,
+    diagnosticOnly: true,
+    source: sourceReady(),
+    selectorOptions: deriveSelectorReferenceOptionsFromSnapshot({
+      BOARDS: [{ board: "B1", c1_cct: "4000", c1_cri_min: "90", approved: "yes" }],
+    }, { source: sourceReady() }),
+  };
+}
+
 function createModel(options = {}) {
-  const selectorState = createSelectorState();
+  const selectorState = options.selectorState || createSelectorState();
   options.configureState?.(selectorState);
   return createSelectorViewModel({
     adapter: createAdapter(),
     selectorState,
-    selectorReferenceStatus: selectorReferenceStatus(),
+    selectorReferenceStatus: options.selectorReferenceStatus || selectorReferenceStatus(),
   });
 }
 
@@ -242,6 +255,21 @@ test("Selector product surface parity lock keeps summary, spine, payload, readin
   assert.equal(handoffs.safetyFlags.hubSpotCrmWriteBack, false);
   assert.equal(handoffs.safetyFlags.boardDataMutation, false);
 });
+
+test("selector payload skeleton exposes authoritative cctCri token without independent cct / cri authority", () => {
+  const selectorState = createSelectorState();
+  let model = createModel({ selectorState, selectorReferenceStatus: cctCriSelectorReferenceStatus() });
+  model.selectorSurface.setFieldValue("cct", "4000K");
+  model.selectorSurface.setFieldValue("cri", "CRI90");
+  model.selectorSurface.setFieldValue("cctCri", "cct_cri:4000K|CRI90");
+  model = createModel({ selectorState, selectorReferenceStatus: cctCriSelectorReferenceStatus() });
+  const payload = model.selectorSurface.payloadPreview;
+
+  assert.equal(payload.lightControl.cct, undefined);
+  assert.equal(payload.lightControl.cri, undefined);
+  assert.equal(payload.lightControl.cctCri, "cct_cri:4000K|CRI90");
+});
+
 
 test("Selected engine-result handoff defaults to no selected result and Estimated preview", () => {
   const handoff = createModel().selectorSurface.selectedEngineResultHandoff;

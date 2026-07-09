@@ -29,7 +29,7 @@ function sampleSnapshot() {
       { system: "LNX", optic_var_1: "Microprism", emission_permission: "Direct", ip_option_1: "IP20", ik_option_2: "IK07", cct: "4000K", approved: "yes" },
     ],
     BOARDS: [
-      { board: "B1", cct: "3000K;4000K", approved: "yes" },
+      { board: "B1", cct_cri: "3000K / CRI80;4000K / CRI90", approved: "yes" },
     ],
     DRIVERS: [
       { driver_id: "DALI Driver", control_type: "DALI-2", approved: "yes" },
@@ -98,7 +98,8 @@ test("selector reference option adapter emits only safe read-only option metadat
 
   assert.ok(field(result, "system").options.some((item) => item.label === "DNX 60"));
   assert.ok(field(result, "optic").options.some((item) => item.value === "DNX|Opal"));
-  assert.ok(field(result, "cct").options.some((item) => item.value === "3000K"));
+  assert.ok(field(result, "cctCri").options.some((item) => item.value === "cct_cri:3000K|CRI80"));
+  assert.equal(result.fields.some((item) => item.fieldKey === "cct"), false);
   assert.ok(field(result, "egressLight").options.some((item) => item.value === "Maintained" && item.label === "EM — Maintained"));
   assert.ok(field(result, "egressSound").options.some((item) => item.value === "EWIS" && item.label === "EWIS"));
   assert.ok(field(result, "sensor").options.some((item) => item.value === "Ceiling PIR (Daylight Sensing)" && item.label === "Ceiling PIR"));
@@ -285,6 +286,84 @@ test("selector emitted options expose source_valid machine values only", () => {
   assert.equal(optionValues.every(({ option: optionItem }) => optionItem.valueStatus === "source_valid" && optionItem.canonicalSourceValue === true), true);
   assert.equal(optionValues.some(({ option: optionItem }) => optionItem.value === "opal"), false);
 });
+
+test("selector cctCri emits canonical cct_cri pair token with display-only label", () => {
+  const result = deriveSelectorReferenceOptionsFromSnapshot({
+    BOARDS: [{ board: "B1", c1_cct: "4000", c1_cri_min: "90", approved: "yes" }],
+  }, { source: sourceReady() });
+  const pair = option(result, "cctCri", "cct_cri:4000K|CRI90");
+  const indirectPair = option(result, "cctCriIndirect", "cct_cri:4000K|CRI90");
+
+  assert.equal(pair.value, "cct_cri:4000K|CRI90");
+  assert.equal(pair.label, "4000K / CRI90");
+  assert.equal(pair.valueStatus, "source_valid");
+  assert.equal(pair.canonicalSourceValue, true);
+  assert.equal(pair.cctCriToken, "cct_cri:4000K|CRI90");
+  assert.equal(pair.cctToken, "4000K");
+  assert.equal(pair.criToken, "CRI90");
+  assert.equal(pair.pairAuthority, "authoritative-cct-cri-pair");
+  assert.equal(indirectPair.value, "cct_cri:4000K|CRI90");
+});
+
+test("selector cctCri preserves explicit source pair order and default marker", () => {
+  const result = deriveSelectorReferenceOptionsFromSnapshot({
+    BOARDS: [{
+      board: "B1",
+      cct_cri: "4000K / CRI90;3000K / CRI80;cct_cri:TW_2700K_6500K|CRI90",
+      default_value: "3000K / CRI80",
+      approved: "yes",
+    }],
+  }, { source: sourceReady() });
+  const pairs = field(result, "cctCri").options;
+
+  assert.deepEqual(pairs.map((item) => item.value), [
+    "cct_cri:4000K|CRI90",
+    "cct_cri:3000K|CRI80",
+    "cct_cri:TW_2700K_6500K|CRI90",
+  ]);
+  assert.deepEqual(pairs.map((item) => item.label), [
+    "4000K / CRI90",
+    "3000K / CRI80",
+    "TW 2700K–6500K / CRI90",
+  ]);
+  assert.equal(pairs[1].explicitDefault, true);
+  assert.equal(pairs[0].explicitDefault, false);
+});
+
+test("selector cctCri does not cartesian-mix independent CCT and CRI cells", () => {
+  const result = deriveSelectorReferenceOptionsFromSnapshot({
+    BOARDS: [{ board: "B1", cct: "3000K;4000K", cri: "CRI80;CRI90", approved: "yes" }],
+  }, { source: sourceReady() });
+
+  assert.deepEqual(field(result, "cctCri").options, []);
+  assert.deepEqual(field(result, "cctCriIndirect").options, []);
+});
+
+test("selector cctCri missing CRI fails closed without source-valid pair option", () => {
+  const result = deriveSelectorReferenceOptionsFromSnapshot({
+    BOARDS: [{ board: "B1", c1_cct: "4000", approved: "yes" }],
+  }, { source: sourceReady() });
+  const cctCri = field(result, "cctCri");
+
+  assert.equal(cctCri.status, "blocked");
+  assert.equal(cctCri.unavailable, true);
+  assert.deepEqual(cctCri.options, []);
+});
+
+test("selector legacy cctCri display label is diagnostic_unmapped, not source_valid", () => {
+  const result = deriveSelectorReferenceOptionsFromSnapshot({
+    BOARDS: [{ board: "B1", c1_cct: "4000", c1_cri_min: "90", approved: "yes" }],
+  }, {
+    source: sourceReady(),
+    constraints: { cctCri: "4000K / CRI90" },
+  });
+  const cctCri = field(result, "cctCri");
+
+  assert.equal(cctCri.selectedValueStatus, "diagnostic_unmapped");
+  assert.equal(cctCri.options.some((item) => item.value === "4000K / CRI90"), false);
+  assert.equal(cctCri.options.some((item) => item.value === "cct_cri:4000K|CRI90"), true);
+});
+
 
 test("selector reference option adapter returns visible future-mapped cards when no tables are mappable", () => {
   const result = deriveSelectorReferenceOptionsFromSnapshot({ unrelated: [{ name: "no selector data" }] }, { source: sourceReady() });

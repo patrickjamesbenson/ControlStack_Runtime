@@ -9,7 +9,8 @@ const TARGET_FIELDS = Object.freeze([
   { fieldKey: "system", label: "System", role: "manual-constraint", sourceTables: ["SYSTEM"] },
   { fieldKey: "application", label: "Application / environment", role: "manual-constraint", sourceTables: ["SYSTEM_POLICY"] },
   { fieldKey: "interiorExterior", label: "Interior / exterior", role: "manual-constraint", sourceTables: ["SYSTEM_POLICY", "OPTICS"] },
-  { fieldKey: "cct", label: "CCT", role: "manual-constraint", sourceTables: ["BOARDS", "OPTICS", "SYSTEM_POLICY"] },
+  { fieldKey: "cctCri", label: "CCT/CRI", role: "manual-constraint", sourceTables: ["BOARDS"] },
+  { fieldKey: "cctCriIndirect", label: "Indirect CCT/CRI", role: "manual-constraint", sourceTables: ["BOARDS"] },
   { fieldKey: "optic", label: "Optic", role: "manual-constraint", sourceTables: ["OPTICS"] },
   { fieldKey: "controlType", label: "Control type", role: "manual-constraint", sourceTables: ["DRIVERS", "SYSTEM_POLICY"] },
   { fieldKey: "driver", label: "Driver / control consequence", role: "auto-consequence", sourceTables: ["DRIVERS"] },
@@ -940,6 +941,12 @@ function createOption(label, {
   isDefault = false,
   explicitDefault = false,
   defaultSource = "",
+  cctCriToken = "",
+  cctToken = "",
+  criToken = "",
+  cctDisplay = "",
+  criDisplay = "",
+  pairAuthority = "",
 } = {}) {
   const optionLabel = safeString(label || value);
   const referenceKeys = uniqueStrings([
@@ -1017,6 +1024,12 @@ function createOption(label, {
     finishInheritanceIndex: safeFinishInheritanceIndex,
     codePolicyIds: safeCodePolicyIds,
     codePolicyReason: safeString(codePolicyReason),
+    cctCriToken: safeString(cctCriToken),
+    cctToken: safeString(cctToken),
+    criToken: safeString(criToken),
+    cctDisplay: safeString(cctDisplay),
+    criDisplay: safeString(criDisplay),
+    pairAuthority: safeString(pairAuthority),
   };
 }
 
@@ -1030,7 +1043,7 @@ function addOption(bucket, fieldKey, label, meta = {}) {
   if (existing) {
     existing.count += meta.count || 1;
     existing.sourceTables = uniqueStrings([...(existing.sourceTables || []), ...(meta.sourceTables || [])]);
-    for (const key of ["diffuserLayer", "parentFieldKey", "parentValue", "opticLane", "specCodePreview", "specCodeVar2Preview", "diffuserMaterial", "imageReadiness", "imageKey", "systemReferenceKey", "systemVariantKey", "timelineAvailability", "statusDate", "statusDateRaw"]) {
+    for (const key of ["diffuserLayer", "parentFieldKey", "parentValue", "opticLane", "specCodePreview", "specCodeVar2Preview", "diffuserMaterial", "imageReadiness", "imageKey", "systemReferenceKey", "systemVariantKey", "timelineAvailability", "statusDate", "statusDateRaw", "cctCriToken", "cctToken", "criToken", "cctDisplay", "criDisplay", "pairAuthority"]) {
       if (!existing[key] && meta[key]) existing[key] = meta[key];
     }
     existing.parentValues = uniqueStrings([
@@ -1149,16 +1162,130 @@ function systemFlexColourValues(row) {
   return rowOptionValues(row, SYSTEM_FLEX_COLOUR_COLUMNS);
 }
 
-function cctCriValues(row) {
-  const c1 = rowText(row, ["c1_cct", "cct", "cct_k"]);
+const CCT_CRI_PAIR_COLUMNS = Object.freeze([
+  "cct_cri",
+  "cctCri",
+  "cct_cri_option",
+  "cct_cri_options",
+  "cct_cri_pair",
+  "cct_cri_pairs",
+  "cct_cri_token",
+  "cct_cri_tokens",
+  "colour_temperature_cri",
+  "color_temperature_cri",
+]);
+
+function normaliseCctToken(value = "") {
+  const raw = safeString(value).trim();
+  if (!raw) return "";
+  const withoutPairPrefix = raw.replace(/^cct_cri:/i, "").split("|")[0] || raw;
+  const text = safeString(withoutPairPrefix)
+    .replace(/kelvin/gi, "K")
+    .replace(/tunable\s+white/gi, "TW")
+    .replace(/[–—]/g, "-")
+    .replace(/\s+/g, " ")
+    .trim();
+  const tunable = text.match(/(?:^|\b)TW\s*[_ -]?\s*(\d{4})\s*K?\s*[_ -]\s*(\d{4})\s*K?(?:\b|$)/i)
+    || text.match(/\b(\d{4})\s*K?\s*[-_]\s*(\d{4})\s*K?\b/i);
+  if (tunable) {
+    const low = Math.min(Number(tunable[1]), Number(tunable[2]));
+    const high = Math.max(Number(tunable[1]), Number(tunable[2]));
+    if (low && high && low !== high) return `TW_${low}K_${high}K`;
+  }
+  const fixed = text.match(/\b(\d{4})\s*K?\b/i);
+  return fixed ? `${fixed[1]}K` : "";
+}
+
+function normaliseCriToken(value = "") {
+  const raw = safeString(value).trim();
+  if (!raw) return "";
+  const withoutPairPrefix = raw.replace(/^cct_cri:/i, "");
+  const criSide = withoutPairPrefix.includes("|") ? withoutPairPrefix.split("|").slice(1).join("|") : withoutPairPrefix;
+  const text = safeString(criSide).replace(/\s+/g, " ").trim();
+  const explicit = text.match(/\b(?:CRI|RA)\s*[>:=-]?\s*(\d{2,3})\b/i);
+  if (explicit) return `CRI${explicit[1]}`;
+  const numeric = text.match(/^\s*(\d{2,3})\s*$/);
+  return numeric ? `CRI${numeric[1]}` : "";
+}
+
+function canonicalCctCriToken({ cctToken = "", criToken = "" } = {}) {
+  const safeCctToken = normaliseCctToken(cctToken);
+  const safeCriToken = normaliseCriToken(criToken);
+  if (!safeCctToken || !safeCriToken) return "";
+  return `cct_cri:${safeCctToken}|${safeCriToken}`;
+}
+
+function cctCriDisplayLabel({ cctToken = "", criToken = "" } = {}) {
+  const safeCctToken = normaliseCctToken(cctToken);
+  const safeCriToken = normaliseCriToken(criToken);
+  if (!safeCctToken || !safeCriToken) return "";
+  const tunable = safeCctToken.match(/^TW_(\d{4}K)_(\d{4}K)$/i);
+  const cctDisplay = tunable ? `TW ${tunable[1]}–${tunable[2]}` : safeCctToken;
+  return `${cctDisplay} / ${safeCriToken}`;
+}
+
+function cctCriPairFromText(value = "") {
+  const raw = safeString(value);
+  if (!raw) return null;
+  const canonical = raw.match(/^\s*cct_cri:([^|]+)\|([^|]+)\s*$/i);
+  const cctToken = canonical ? normaliseCctToken(canonical[1]) : normaliseCctToken(raw);
+  const criToken = canonical ? normaliseCriToken(canonical[2]) : normaliseCriToken(raw);
+  const token = canonicalCctCriToken({ cctToken, criToken });
+  const label = cctCriDisplayLabel({ cctToken, criToken });
+  if (!token || !label) return null;
+  const cctDisplay = label.split(" / ")[0] || cctToken;
+  const criDisplay = criToken;
+  return {
+    value: token,
+    label,
+    cctCriToken: token,
+    cctToken,
+    criToken,
+    cctDisplay,
+    criDisplay,
+    pairAuthority: "authoritative-cct-cri-pair",
+  };
+}
+
+function cctCriPairFromRow(row = {}) {
+  const c1 = rowText(row, ["c1_cct"]);
   const c2 = rowText(row, ["c2_cct"]);
-  const cct = c1 && c2 && /^\d+$/.test(c1) && /^\d+$/.test(c2) && c1 !== c2
-    ? `TW_${Math.min(Number(c1), Number(c2))}_${Math.max(Number(c1), Number(c2))}`
-    : c1;
-  const cri = rowText(row, ["c2_cri_min", "c1_cri_min", "cri", "cri_min"]);
-  if (!cct) return [];
-  const cctLabel = /^\d{4}$/.test(cct) ? `${cct}K` : cct;
-  return [`${cctLabel}${cri ? ` / CRI${cri}` : ""}`];
+  const c1Token = normaliseCctToken(c1);
+  const c2Token = normaliseCctToken(c2);
+  const criToken = normaliseCriToken(rowText(row, ["c1_cri_min", "c2_cri_min", "cri", "cri_min"]));
+  if (c1Token && c2Token && c1Token !== c2Token) {
+    const low = Math.min(Number(c1Token.replace(/\D/g, "")), Number(c2Token.replace(/\D/g, "")));
+    const high = Math.max(Number(c1Token.replace(/\D/g, "")), Number(c2Token.replace(/\D/g, "")));
+    return cctCriPairFromText(`TW_${low}K_${high}K / ${criToken}`);
+  }
+  if (c1Token && criToken) return cctCriPairFromText(`${c1Token} / ${criToken}`);
+
+  const cctValues = uniqueStrings(["cct", "cct_k", "colour_temperature", "color_temperature", "led_cct"]
+    .flatMap((key) => splitOptions(fieldValue(row, key))));
+  const criValues = uniqueStrings(["cri", "cri_min", "c1_cri_min", "c2_cri_min"]
+    .flatMap((key) => splitOptions(fieldValue(row, key))));
+  if (cctValues.length === 1 && criValues.length === 1) return cctCriPairFromText(`${cctValues[0]} / ${criValues[0]}`);
+  return null;
+}
+
+function cctCriPairOptions(row = {}) {
+  const explicitPairs = [];
+  for (const key of CCT_CRI_PAIR_COLUMNS) {
+    const cell = safeString(fieldValue(row, key));
+    if (!cell) continue;
+    for (const value of cell.split(/[;,]/).map((item) => item.trim()).filter(Boolean)) {
+      const pair = cctCriPairFromText(value);
+      if (pair) explicitPairs.push(pair);
+    }
+  }
+  const pairs = explicitPairs.length ? explicitPairs : [cctCriPairFromRow(row)].filter(Boolean);
+  const seen = new Set();
+  return pairs.filter((pair) => {
+    const key = normaliseKey(pair.value);
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 function numericOptionValues(row, keys) {
@@ -1705,7 +1832,6 @@ function collectOptions(snapshot, timelineContext = createSelectorTimelineContex
     };
     if (hasDirect) for (const ip of rowOptionValues(row, ["ip_option_1", "ip_options", "ip", "ip_rating"])) addOption(bucket, "ipRating", ip, { sourceTables: ["OPTICS"], ...opticEnvironmentMeta, ...sourceDefaultMeta(row, [ip]) });
     if (hasDirect) for (const ik of rowOptionValues(row, ["ik_option_2", "ik_options", "ik", "ik_rating"])) addOption(bucket, "ikRating", ik, { sourceTables: ["OPTICS"], ...opticEnvironmentMeta, ...sourceDefaultMeta(row, [ik]) });
-    for (const cct of extractCctValues(row)) addOption(bucket, "cct", cct, { sourceTables: ["OPTICS"], ...opticSystemMeta, ...sourceDefaultMeta(row, [cct]) });
     for (const env of rowOptionValues(row, ["environment", "application", "application_environment"])) addOption(bucket, "application", env, { sourceTables: ["OPTICS"], ...opticSystemMeta, ...sourceDefaultMeta(row, [env]) });
     for (const io of rowOptionValues(row, ["interior_exterior", "interiorExterior", "indoor_outdoor", "location_type"])) addOption(bucket, "interiorExterior", io, { sourceTables: ["OPTICS"], ...opticSystemMeta, ...sourceDefaultMeta(row, [io]) });
   }
@@ -1724,10 +1850,20 @@ function collectOptions(snapshot, timelineContext = createSelectorTimelineContex
     const boardControlKeys = new Set(boardCompatibleControlValues(row, authoredControlLabelsAvailable).map(controlProtocolMatchKey).filter(Boolean));
     const boardDriverIntersectionKeys = new Set([...boardControlKeys].filter((key) => availableDriverControlKeys.has(key)));
     const controls = controlValuesMatchingKeys(boardDisplayControlValues(row, authoredControlLabelsAvailable), boardDriverIntersectionKeys);
-    for (const cct of extractCctValues(row)) addOption(bucket, "cct", cct, lightControlMeta);
-    for (const cctCri of cctCriValues(row)) {
-      addOption(bucket, "cctCri", cctCri, lightControlMeta);
-      addOption(bucket, "cctCriIndirect", cctCri, lightControlMeta);
+    for (const cctCri of cctCriPairOptions(row)) {
+      const pairMeta = {
+        ...lightControlMeta,
+        ...sourceDefaultMeta(row, [cctCri.value, cctCri.label, cctCri.cctCriToken]),
+        cctCriToken: cctCri.cctCriToken,
+        cctToken: cctCri.cctToken,
+        criToken: cctCri.criToken,
+        cctDisplay: cctCri.cctDisplay,
+        criDisplay: cctCri.criDisplay,
+        pairAuthority: cctCri.pairAuthority,
+        value: cctCri.value,
+      };
+      addOption(bucket, "cctCri", cctCri.label, pairMeta);
+      addOption(bucket, "cctCriIndirect", cctCri.label, pairMeta);
     }
     for (const control of controls) {
       addOption(bucket, "controlType", control, protocolMeta);
@@ -1747,7 +1883,6 @@ function collectOptions(snapshot, timelineContext = createSelectorTimelineContex
 
   for (const value of policyValues(snapshot, ["application", "environment", "use case", "area type"])) addOption(bucket, "application", value, { sourceTables: ["SYSTEM_POLICY"] });
   for (const value of policyValues(snapshot, ["interior exterior", "indoor outdoor", "location type"])) addOption(bucket, "interiorExterior", value, { sourceTables: ["SYSTEM_POLICY"] });
-  for (const value of policyValues(snapshot, ["cct", "colour temperature", "color temperature"])) addOption(bucket, "cct", value, { sourceTables: ["SYSTEM_POLICY"] });
   // Donor Light & Control protocol options are authored from live BOARDS/DRIVERS; broad SYSTEM_POLICY control terms are not selector choices.
   for (const value of policyValues(snapshot, ["ip", "ingress protection"])) addOption(bucket, "ipRating", value, { sourceTables: ["SYSTEM_POLICY"] });
   for (const value of policyValues(snapshot, ["ik", "impact rating"])) addOption(bucket, "ikRating", value, { sourceTables: ["SYSTEM_POLICY"] });
@@ -2381,7 +2516,6 @@ const CASCADE_CHILD_FIELDS_BY_PARENT = Object.freeze({
     "indirectOpticVar2",
     "ipRating",
     "ikRating",
-    "cct",
     "cctCri",
     "cctCriIndirect",
     "targetLmPerM",

@@ -119,7 +119,12 @@ test("Selector preview result summary exposes required product-facing boundary c
 
 test("Selector preview result summary explains candidate, source readiness, constraints, consequences, and proof state", () => {
   const selectorState = createSelectorState();
-  selectorState.setSelectorFieldValue("cct", "3000K");
+  selectorState.setSelectorFieldValue("cctCri", "cct_cri:3000K|CRI80");
+
+  const contract = selectorState.getSnapshot().selectorStateContract;
+  assert.equal(contract.manualConstraints.cctCri.value, "cct_cri:3000K|CRI80");
+  assert.equal(contract.manualConstraints.cctCri.valueLabel, "3000K / CRI80");
+  assert.equal(Object.prototype.hasOwnProperty.call(contract.manualConstraints, "cct"), false);
 
   const summary = createModel({ selectorState }).expanderShell.readonlyResolverPreview.previewResultSummary;
   const candidateSummary = rowsToObject(summary.candidateSummaryRows);
@@ -134,9 +139,9 @@ test("Selector preview result summary explains candidate, source readiness, cons
   assert.ok(Number(candidateSummary["effective selection count"]) >= 1);
   assert.equal(candidateSummary["spec gate state"], "incomplete — preview-ready does not mean spec-ready");
   assert.equal(candidateSummary["proof state"], "not established — this is not Lab Proof");
-  assert.match(why["manual constraints"], /CCT: 3000K/);
+  assert.match(why["manual constraints"], /CCT\/CRI: 3000K \/ CRI80/);
   assert.match(why["auto consequences"], /Driver:/);
-  assert.match(why["effective selection"], /CCT: 3000K/);
+  assert.match(why["effective selection"], /CCT\/CRI: 3000K \/ CRI80/);
   assert.equal(path["Lab Proof still required later"], "required later — not established here");
 });
 

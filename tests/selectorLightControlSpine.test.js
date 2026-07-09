@@ -244,19 +244,41 @@ test("target lm/m remains a manual typed input while paired CCT/CRI stays source
   assert.equal(targetField.manualInput, true);
   assert.equal(targetField.dropdownSourced, false);
   assert.deepEqual(optionValues(model, "targetLmPerM"), []);
-  assert.ok(optionValues(model, "cctCri").includes("4000K / CRI90"));
+  assert.ok(optionValues(model, "cctCri").includes("cct_cri:4000K|CRI90"));
 
   model = selectAndReload(selectorState, "targetLmPerM", "1200");
-  model = selectAndReload(selectorState, "cctCri", "4000K / CRI90");
+  model = selectAndReload(selectorState, "cctCri", "cct_cri:4000K|CRI90");
   model = selectAndReload(selectorState, "controlType", "DALI-2");
 
   assert.equal(lightRow(model.selectorSurface.productSpine, "targetLmPerM").displayValue, "1200");
   assert.equal(lightRow(model.selectorSurface.productSpine, "cctCri").displayValue, "4000K / CRI90");
   assert.equal(lightRow(model.selectorSurface.productSpine, "control").displayValue, "DALI-2");
   assert.equal(model.selectorSurface.payloadPreview.lightControl.targetLmPerM, "1200");
-  assert.equal(model.selectorSurface.payloadPreview.lightControl.cctCri, "4000K / CRI90");
+  assert.equal(model.selectorSurface.payloadPreview.lightControl.cctCri, "cct_cri:4000K|CRI90");
+  assert.deepEqual(model.selectorSurface.payloadPreview.lightControl.cctCriProjection, {
+    cctCriToken: "cct_cri:4000K|CRI90",
+    cctToken: "4000K",
+    criToken: "CRI90",
+    cctDisplay: "4000K",
+    criDisplay: "CRI90",
+    projectionOnly: true,
+    authorityFieldKey: "cctCri",
+  });
   assert.equal(model.selectorSurface.payloadPreview.lightControl.controlType, "DALI-2");
 });
+
+test("legacy cct / cri selections do not populate CCT/CRI spine row", () => {
+  const selectorState = createSelectorState();
+  let model = createModel({ selectorState });
+  model.selectorSurface.setFieldValue("cct", "4000K");
+  model.selectorSurface.setFieldValue("cri", "CRI90");
+  model = createModel({ selectorState });
+
+  assert.equal(lightRow(model.selectorSurface.productSpine, "cctCri").displayValue, "—");
+  assert.equal(model.selectorSurface.payloadPreview.lightControl.cctCri, null);
+  assert.equal(model.selectorSurface.payloadPreview.lightControl.cctCriProjection, null);
+});
+
 
 test("control protocol dropdown is source-scoped and excludes broad driver/internal noise", () => {
   const snapshot = protocolScopedSnapshot();
@@ -286,10 +308,10 @@ test("direct and indirect Light & Control inputs follow emission lane capability
   model = selectAndReload(bothState, "system", "DNX|80_DI", snapshot);
   assert.equal(workflowField(model, "targetLmPerM").displayMode, "manual-input");
   assert.equal(workflowField(model, "targetLmPerMIndirect").displayMode, "manual-input");
-  model = selectAndReload(bothState, "cctCri", "4000K / CRI90", snapshot);
+  model = selectAndReload(bothState, "cctCri", "cct_cri:4000K|CRI90", snapshot);
   model = selectAndReload(bothState, "controlType", "DALI-2", snapshot);
   model = selectAndReload(bothState, "indirectMatchDirect", "match-direct", snapshot);
-  assert.equal(workflowField(model, "cctCriIndirect").effectiveValue, "4000K / CRI90");
+  assert.equal(workflowField(model, "cctCriIndirect").effectiveValue, "cct_cri:4000K|CRI90");
   assert.equal(workflowField(model, "controlTypeIndirect").effectiveValue, "DALI-2");
 
   const indirectState = createSelectorState();
@@ -328,15 +350,15 @@ test("selecting control type changes the compatible driver consequence", () => {
 test("system selection does not block donor global Light & Control CCT/CRI choices", () => {
   const selectorState = createSelectorState();
   selectAndReload(selectorState, "system", "DNX|80");
-  const model = selectAndReload(selectorState, "cctCri", "2700K / CRI80");
+  const model = selectAndReload(selectorState, "cctCri", "cct_cri:2700K|CRI80");
   const row = lightRow(model.selectorSurface.productSpine, "cctCri");
 
   assert.equal(row.displayValue, "2700K / CRI80");
   assert.equal(row.status, "manual-constraint");
   assert.equal(row.blocked, false);
-  assert.equal(selectorState.getSnapshot().dbBackedSelector.manualConstraints.cctCri.value, "2700K / CRI80");
+  assert.equal(selectorState.getSnapshot().dbBackedSelector.manualConstraints.cctCri.value, "cct_cri:2700K|CRI80");
   assert.equal(model.selectorSurface.selectionTruthSummary.blockers.some((item) => item.fieldKey === "cctCri"), false);
-  assert.equal(model.selectorSurface.payloadPreview.lightControl.cctCri, "2700K / CRI80");
+  assert.equal(model.selectorSurface.payloadPreview.lightControl.cctCri, "cct_cri:2700K|CRI80");
 });
 
 test("Lex weight appears only as a read-only source-backed consequence when reference data supports it", () => {
@@ -344,7 +366,7 @@ test("Lex weight appears only as a read-only source-backed consequence when refe
   const selectorState = createSelectorState();
   let model = selectAndReload(selectorState, "system", "DNX|80", snapshot);
   model = selectAndReload(selectorState, "targetLmPerM", "1200", snapshot);
-  model = selectAndReload(selectorState, "cctCri", "4000K / CRI90", snapshot);
+  model = selectAndReload(selectorState, "cctCri", "cct_cri:4000K|CRI90", snapshot);
   model = selectAndReload(selectorState, "controlType", "DALI-2", snapshot);
 
   const row = lightRow(model.selectorSurface.productSpine, "lexWeight");
@@ -404,7 +426,7 @@ test("Light & Control payload preview keeps safety flags disabled and exposes no
   const selectorState = createSelectorState();
   let model = selectAndReload(selectorState, "system", "DNX|80");
   model = selectAndReload(selectorState, "targetLmPerM", "1200");
-  model = selectAndReload(selectorState, "cctCri", "4000K / CRI90");
+  model = selectAndReload(selectorState, "cctCri", "cct_cri:4000K|CRI90");
   model = selectAndReload(selectorState, "controlType", "DALI-2");
 
   const payload = model.selectorSurface.payloadPreview;

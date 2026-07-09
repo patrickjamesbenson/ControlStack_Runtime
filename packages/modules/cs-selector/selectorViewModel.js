@@ -1701,7 +1701,6 @@ const LIGHT_CONTROL_SYSTEM_SCOPED_FIELDS = Object.freeze(new Set([
   "ikRating",
   "targetLmPerM",
   "targetLmPerMIndirect",
-  "cct",
   "cctCri",
   "cctCriIndirect",
   "controlType",
@@ -2289,6 +2288,9 @@ function presentationSelectedOption(field = {}) {
   const selectedValue = String(field.selectedValue || "").trim();
   const options = Array.isArray(field.options) ? field.options : [];
   if (field.fieldKey === "system" && selectedValue) return selectedSystemOptionFromFieldOptions(options, selectedValue);
+  if (["cctCri", "cctCriIndirect"].includes(field.fieldKey) && selectedValue) return options.find((option) => optionValuesMatch(option.value, selectedValue))
+    || options.find((option) => option.selected === true)
+    || null;
   if (selectedValue) return options.find((option) => optionValuesMatch(option.value, selectedValue))
     || options.find((option) => optionValuesMatch(option.label, selectedValue))
     || options.find((option) => option.selected === true)
@@ -2825,7 +2827,6 @@ const SELECTION_TRUTH_FIELD_GROUPS = Object.freeze({
   electricalClass: "environment",
   ambient: "environment",
   targetLmPerM: "lightControl",
-  cct: "lightControl",
   cctCri: "lightControl",
   controlType: "lightControl",
   indirectMatchDirect: "lightControl",
@@ -3300,7 +3301,7 @@ const PRODUCT_SPINE_SECTION_DEFINITIONS = Object.freeze([
     title: "LIGHT & CONTROL",
     rows: Object.freeze([
       Object.freeze({ rowKey: "targetLmPerM", label: "Target lm/m", fields: Object.freeze(["targetLmPerM", "targetLumensPerMetre"]) }),
-      Object.freeze({ rowKey: "cctCri", label: "CCT/CRI", fields: Object.freeze(["cctCri", "cct", "cri"]) }),
+      Object.freeze({ rowKey: "cctCri", label: "CCT/CRI", fields: Object.freeze(["cctCri"]) }),
       Object.freeze({ rowKey: "control", label: "Control", fields: Object.freeze(["controlType", "controlTypeIndirect"]) }),
       Object.freeze({ rowKey: "driver", label: "Driver", fields: Object.freeze(["driver"]) }),
       Object.freeze({ rowKey: "lexWeight", label: "Lex weight", fields: Object.freeze(["lexWeight", "lex_weight", "lex"]) }),
@@ -3512,7 +3513,7 @@ const SPEC_GATE_BASE_REQUIREMENTS = Object.freeze([
   Object.freeze({ key: "electricalClass", label: "Electrical class", fields: Object.freeze(["electricalClass"]), gateSection: "Environment" }),
   Object.freeze({ key: "ambient", label: "Ambient", fields: Object.freeze(["ambient"]), gateSection: "Environment" }),
   Object.freeze({ key: "targetLmPerM", label: "Target lm/m", fields: Object.freeze(["targetLmPerM", "targetLumensPerMetre"]), gateSection: "Light & Control" }),
-  Object.freeze({ key: "cctCri", label: "CCT/CRI", fields: Object.freeze(["cctCri", "cct", "cri"]), gateSection: "Light & Control" }),
+  Object.freeze({ key: "cctCri", label: "CCT/CRI", fields: Object.freeze(["cctCri"]), gateSection: "Light & Control" }),
   Object.freeze({ key: "controlType", label: "Control", fields: Object.freeze(["controlType"]), gateSection: "Light & Control" }),
 ]);
 
@@ -4076,6 +4077,34 @@ function payloadFieldValue(lookup, fieldKeys = []) {
   return value || null;
 }
 
+function cctCriProjectionDisplayFromToken(cctToken = "") {
+  const safeToken = String(cctToken || "").trim();
+  const tunable = safeToken.match(/^TW_(\d{4}K)_(\d{4}K)$/i);
+  return tunable ? `TW ${tunable[1]}–${tunable[2]}` : safeToken;
+}
+
+function cctCriProjectionFromSelectedOption(field = {}) {
+  const selectedOption = presentationSelectedOption(field) || {};
+  const token = String(selectedOption.cctCriToken || selectedOption.value || field.selectedValue || field.effectiveValue || "").trim();
+  const pair = token.match(/^cct_cri:([^|]+)\|([^|]+)$/i);
+  if (!pair) return null;
+  const cctToken = selectedOption.cctToken || pair[1];
+  const criToken = selectedOption.criToken || pair[2];
+  return {
+    cctCriToken: token,
+    cctToken,
+    criToken,
+    cctDisplay: selectedOption.cctDisplay || cctCriProjectionDisplayFromToken(cctToken),
+    criDisplay: selectedOption.criDisplay || criToken,
+    projectionOnly: true,
+    authorityFieldKey: "cctCri",
+  };
+}
+
+function cctCriProjectionFromField(field = {}) {
+  return cctCriProjectionFromSelectedOption(field);
+}
+
 function payloadProjectSnapshot(project = {}) {
   const currentProject = project.currentProject || {};
   return {
@@ -4118,6 +4147,7 @@ function createPayloadPreviewSkeleton({ fields = [], workflowSections = [], summ
     },
   };
   const safeCoverage = referenceOptionSourceCoverage || safeSourceReadiness.referenceOptionSourceCoverage || {};
+  const cctCriProjection = cctCriProjectionFromField(lookup.get("cctCri") || {});
   return {
     previewOnly: true,
     productionPayload: false,
@@ -4157,7 +4187,8 @@ function createPayloadPreviewSkeleton({ fields = [], workflowSections = [], summ
     },
     lightControl: {
       targetLmPerM: payloadFieldValue(lookup, ["targetLmPerM", "targetLumensPerMetre"]),
-      cctCri: payloadFieldValue(lookup, ["cctCri", "cct", "cri"]),
+      cctCri: cctCriProjection?.cctCriToken || null,
+      cctCriProjection,
       controlType: payloadFieldValue(lookup, ["controlType"]),
       indirectMatchDirect: payloadFieldValue(lookup, ["indirectMatchDirect"]),
       targetLmPerMIndirect: payloadFieldValue(lookup, ["targetLmPerMIndirect"]),
