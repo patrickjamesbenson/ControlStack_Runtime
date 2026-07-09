@@ -479,3 +479,25 @@ test("unknown timeline/status fails safe as review-required without unsafe side 
   assert.equal(result.rawUsersReturned, false);
   assert.equal(result.privatePathsReturned, false);
 });
+
+
+test("selector reference options bind source-version metadata onto emitted source-valid options", () => {
+  const result = deriveSelectorReferenceOptionsFromSnapshot(sampleSnapshot(), {
+    source: {
+      ...sourceReady(),
+      sourceInputFingerprint: "safe-selector-reference-source-fp-v1",
+      boardDataSourceVersion: "safe-selector-reference-board-version-v1",
+    },
+  });
+  const cctCri = field(result, "cctCri");
+  const pair = option(result, "cctCri", "cct_cri:3000K|CRI80");
+
+  assert.equal(result.sourceInputFingerprint, "safe-selector-reference-source-fp-v1");
+  assert.equal(result.boardDataSourceVersion, "safe-selector-reference-board-version-v1");
+  assert.equal(result.sourceVersionBinding.bindingStatus, "source-version-bound");
+  assert.equal(cctCri.sourceVersionBinding.staleRevalidationEnabled, true);
+  assert.equal(cctCri.sourceVersionBinding.staleValuesInsertedIntoOptions, false);
+  assert.equal(pair.sourceInputFingerprint, "safe-selector-reference-source-fp-v1");
+  assert.equal(pair.boardDataSourceVersion, "safe-selector-reference-board-version-v1");
+  assert.equal(pair.sourceVersionBinding.optionSetsBound, true);
+});

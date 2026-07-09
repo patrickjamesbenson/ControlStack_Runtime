@@ -1059,6 +1059,9 @@ function workflowControlField(section = {}, field = {}) {
     options: activeOptions,
     dropdownOptions: activeOptions,
     incompatibleOptions,
+    sourceInputFingerprint: field.sourceInputFingerprint || field.sourceVersionBinding?.sourceInputFingerprint || "",
+    boardDataSourceVersion: field.boardDataSourceVersion || field.sourceVersionBinding?.boardDataSourceVersion || "",
+    sourceVersionBinding: field.sourceVersionBinding || {},
     source: "selectorSurface.workflowSections",
     writes: false,
     rawRowsExposed: false,
@@ -1078,11 +1081,14 @@ function selectorSurfaceControlSections(selectorSurface = {}, selectorState, onL
       reconciledTruth: true,
       fields,
       setFieldValue(fieldKey, value) {
-        const label = fields.find((field) => field.fieldKey === fieldKey)?.options?.find((option) => optionValuesMatch(option.value, value))?.label || "";
+        const controlField = fields.find((field) => field.fieldKey === fieldKey) || {};
+        const selectedOption = controlField.options?.find((option) => optionValuesMatch(option.value, value)) || null;
+        const label = selectedOption?.label || "";
+        const sourceVersionBinding = selectedOption?.sourceVersionBinding || controlField.sourceVersionBinding || selectorSurface.sourceVersionBinding || {};
         if (value) {
           if (selectorSurface.setFieldValue) selectorSurface.setFieldValue(fieldKey, value);
           else {
-            selectorState?.setDbBackedSelectorFieldValue?.(fieldKey, value, label);
+            selectorState?.setDbBackedSelectorFieldValue?.(fieldKey, value, label, sourceVersionBinding);
             onLocalStateChange?.();
           }
         } else {
@@ -1355,6 +1361,41 @@ function dbReferenceOptionCoverage(selectorReferenceStatus = {}) {
   return payload.referenceOptionSourceCoverage || selectorReferenceStatus.referenceOptionSourceCoverage || readiness.referenceOptionSourceCoverage || null;
 }
 
+function safeDbSourceVersionValue(value = "") {
+  return String(value ?? "").trim();
+}
+
+function dbSourceVersionBinding(selectorReferenceStatus = {}) {
+  const payload = dbOptionsPayload(selectorReferenceStatus);
+  const binding = payload.sourceVersionBinding || selectorReferenceStatus.sourceVersionBinding || {};
+  const sourceInputFingerprint = safeDbSourceVersionValue(payload.sourceInputFingerprint || binding.sourceInputFingerprint || payload.sourceInputFingerprintMetadata?.value || "");
+  const boardDataSourceVersion = safeDbSourceVersionValue(payload.boardDataSourceVersion || binding.boardDataSourceVersion || payload.boardDataSourceVersionMetadata?.value || "");
+  const bound = Boolean(sourceInputFingerprint && boardDataSourceVersion);
+  return {
+    ...binding,
+    sourceInputFingerprint,
+    boardDataSourceVersion,
+    bindingStatus: bound ? "source-version-bound" : "source-version-unbound",
+    optionSetsBound: bound,
+    selectedValuesBound: bound,
+    staleRevalidationEnabled: true,
+    staleValuesBecomeDiagnosticUnmapped: true,
+    staleValuesInsertedIntoOptions: false,
+    readOnly: true,
+    diagnosticOnly: true,
+    writes: false,
+    rawRowsExposed: false,
+  };
+}
+
+function dbOptionSourceVersionBinding(selectorReferenceStatus = {}, fieldKey = "", value = "") {
+  const payloadBinding = dbSourceVersionBinding(selectorReferenceStatus);
+  const field = dbOptionField(selectorReferenceStatus, fieldKey) || {};
+  const option = (Array.isArray(field.options) ? field.options : [])
+    .find((item) => optionValuesMatch(item.value, value) || optionValuesMatch(item.label, value));
+  return option?.sourceVersionBinding || field.sourceVersionBinding || payloadBinding;
+}
+
 function yesNoWord(value) {
   return value === true ? "yes" : "no";
 }
@@ -1381,6 +1422,7 @@ function createDbBackedCandidateSummaryRows(surface = {}) {
   const summary = surface.candidateSummary || {};
   const readiness = surface.sourceReadiness || surface.safeSnapshotState || {};
   const coverage = surface.referenceOptionSourceCoverage || readiness.referenceOptionSourceCoverage || {};
+  const sourceVersionBinding = surface.sourceVersionBinding || readiness.sourceVersionBinding || {};
   const missingBlockers = Array.isArray(readiness.missingTableBlockers) ? readiness.missingTableBlockers : [];
   return [
     ["candidate state", summary.state || "default preview"],
@@ -1388,6 +1430,9 @@ function createDbBackedCandidateSummaryRows(surface = {}) {
     ["source readiness state", readiness.state || (surface.sourceReady === true ? "source-backed-safe-preview" : "fail-closed-source-warning")],
     ["safe snapshot state", readiness.completeEnoughForPreview === true ? "complete enough for read-only preview" : "fail-closed or incomplete"],
     ["active snapshot", `${yesNoWord(readiness.activeSnapshot?.present ?? surface.sourceReady)} present / ${yesNoWord(readiness.activeSnapshot?.readable ?? surface.sourceReady)} readable / ${yesNoWord(readiness.activeSnapshot?.parseable ?? surface.sourceReady)} parseable`],
+    ["source input fingerprint", sourceVersionBinding.sourceInputFingerprint || "not provided"],
+    ["board data source version", sourceVersionBinding.boardDataSourceVersion || "not provided"],
+    ["source-version revalidation", sourceVersionBinding.staleRevalidationEnabled === false ? "disabled" : "enabled"],
     ["materialised snapshot", `${yesNoWord(readiness.materialisedSnapshot?.present)} present / ${yesNoWord(readiness.materialisedSnapshot?.readable)} readable`],
     ["expected tables present", yesNoWord(readiness.expectedTablesPresent)],
     ["missing table blockers", missingBlockers.length ? missingBlockers.map((blocker) => blocker.table).join(", ") : "none"],
@@ -1463,14 +1508,20 @@ function dbOptionLocallyCompatible(fieldKey, option = {}, constraints = {}, sele
 
 function enrichDbOptionFields(selectorReferenceStatus = {}, local = {}) {
   const selectedConstraints = dbEffectiveConstraintValueMap(local);
+  const payloadSourceVersionBinding = dbSourceVersionBinding(selectorReferenceStatus);
   return dbOptionsFields(selectorReferenceStatus).map((field) => {
     const selectedValue = selectedConstraints[field.fieldKey] || "";
+    const fieldSourceVersionBinding = field.sourceVersionBinding || payloadSourceVersionBinding;
     const options = Array.isArray(field.options) ? field.options.map((option) => {
+      const optionSourceVersionBinding = option.sourceVersionBinding || fieldSourceVersionBinding;
       const selected = selectedValue ? (optionValuesMatch(option.value, selectedValue) || (field.fieldKey === "system" && systemOptionMatchesSelection(option, selectedValue))) : false;
       const locallyCompatible = dbOptionLocallyCompatible(field.fieldKey, option, selectedConstraints, selectorReferenceStatus);
       const blocked = option.blocked === true || !locallyCompatible;
       return {
         ...option,
+        sourceInputFingerprint: optionSourceVersionBinding.sourceInputFingerprint || "",
+        boardDataSourceVersion: optionSourceVersionBinding.boardDataSourceVersion || "",
+        sourceVersionBinding: optionSourceVersionBinding,
         selected,
         status: blocked ? "blocked" : (option.status || "available"),
         blocked,
@@ -1481,6 +1532,9 @@ function enrichDbOptionFields(selectorReferenceStatus = {}, local = {}) {
     }) : [];
     return {
       ...field,
+      sourceInputFingerprint: fieldSourceVersionBinding.sourceInputFingerprint || "",
+      boardDataSourceVersion: fieldSourceVersionBinding.boardDataSourceVersion || "",
+      sourceVersionBinding: fieldSourceVersionBinding,
       status: options.some((option) => option.status === "available") ? field.status || "available" : field.futureMapped ? "future-mapped" : "blocked",
       selectedValue,
       selectedLabel: selectedValue ? dbOptionLabel(selectorReferenceStatus, field.fieldKey, selectedValue) : "",
@@ -5832,6 +5886,7 @@ function createDbBackedSelectorSurface(selectorReferenceStatus = {}, local = {},
   const sourceReady = dbOptionsSourceReady(selectorReferenceStatus);
   const sourceReadiness = dbSourceReadinessPayload(selectorReferenceStatus);
   const referenceOptionSourceCoverage = dbReferenceOptionCoverage(selectorReferenceStatus);
+  const sourceVersionBinding = dbSourceVersionBinding(selectorReferenceStatus);
   const fields = enrichDbOptionFields(selectorReferenceStatus, local).map((field) => ({
     ...field,
     primaryControl: false,
@@ -6012,6 +6067,9 @@ function createDbBackedSelectorSurface(selectorReferenceStatus = {}, local = {},
     sourceReady,
     sourceReadiness,
     safeSnapshotState: sourceReadiness,
+    sourceInputFingerprint: sourceVersionBinding.sourceInputFingerprint || "",
+    boardDataSourceVersion: sourceVersionBinding.boardDataSourceVersion || "",
+    sourceVersionBinding,
     referenceOptionSourceCoverage,
     futureMappedFieldExplanation: (sourceReadiness && sourceReadiness.futureMappedFieldExplanation) || (referenceOptionSourceCoverage && referenceOptionSourceCoverage.futureMappedExplanation) || "Future-mapped fields are visible and not faked.",
     status: payload.status || selectorReferenceStatus.status || "not-requested",
@@ -6087,14 +6145,15 @@ function createDbBackedSelectorSurface(selectorReferenceStatus = {}, local = {},
     autoConsequences,
     blockedItems,
     candidateSummary: summary,
-    candidateSummaryRows: createDbBackedCandidateSummaryRows({ ...payload, sourceReady, sourceReadiness, referenceOptionSourceCoverage, candidateSummary: summary, blockedItems }),
+    candidateSummaryRows: createDbBackedCandidateSummaryRows({ ...payload, sourceReady, sourceReadiness, sourceVersionBinding, referenceOptionSourceCoverage, candidateSummary: summary, blockedItems }),
     manualConstraintRows: dbSelectedConstraintRows({ manualConstraints }),
     autoConsequenceRows: dbAutoConsequenceRows({ autoConsequences }),
     blockedRows: dbBlockedRows({ blockedItems }),
     pathRows: createDbBackedPathRows(payload),
     setFieldValue(fieldKey, value) {
       const label = dbOptionLabel(selectorReferenceStatus, fieldKey, value);
-      selectorState?.setDbBackedSelectorFieldValue?.(fieldKey, value, label);
+      const binding = dbOptionSourceVersionBinding(selectorReferenceStatus, fieldKey, value);
+      selectorState?.setDbBackedSelectorFieldValue?.(fieldKey, value, label, binding);
       onLocalStateChange?.();
     },
     acceptDefaults() {

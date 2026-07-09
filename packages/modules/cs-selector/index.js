@@ -110,6 +110,24 @@ function initialSelectorReferenceOptionsStatus() {
     endpoint: SELECTOR_REFERENCE_OPTIONS_ENDPOINT,
     constraintQuery: "",
     constraintFingerprint: selectorConstraintFingerprintFromQuery(""),
+    sourceInputFingerprint: "",
+    boardDataSourceVersion: "",
+    sourceVersionBinding: {
+      sourceInputFingerprint: "",
+      boardDataSourceVersion: "",
+      bindingStatus: "source-version-unbound",
+      optionSetsBound: false,
+      selectedValuesBound: false,
+      staleRevalidationEnabled: true,
+      staleValuesBecomeDiagnosticUnmapped: true,
+      staleValuesInsertedIntoOptions: false,
+      readOnly: true,
+      diagnosticOnly: true,
+      writes: false,
+      rawRowsExposed: false,
+    },
+    sourceVersionBindingMatched: true,
+    staleSourceVersionBinding: false,
     fields: [],
     workflowSections: [],
     candidateSummary: {
@@ -397,16 +415,72 @@ function currentSelectorOptionConstraintSignature() {
   };
 }
 
+function safeSourceVersionIdentityValue(value = "") {
+  return String(value ?? "").trim();
+}
+
+function selectorSourceVersionIdentity(status = {}) {
+  const payload = status?.selectorOptions || status?.options || status || {};
+  const binding = payload.sourceVersionBinding || {};
+  return {
+    sourceInputFingerprint: safeSourceVersionIdentityValue(payload.sourceInputFingerprint || binding.sourceInputFingerprint || payload.sourceInputFingerprintMetadata?.value || ""),
+    boardDataSourceVersion: safeSourceVersionIdentityValue(payload.boardDataSourceVersion || binding.boardDataSourceVersion || payload.boardDataSourceVersionMetadata?.value || ""),
+  };
+}
+
+function selectorSourceVersionIdentityBound(identity = {}) {
+  return Boolean(identity.sourceInputFingerprint && identity.boardDataSourceVersion);
+}
+
+function selectorSourceVersionsMatch(left = {}, right = {}) {
+  const leftBound = selectorSourceVersionIdentityBound(left);
+  const rightBound = selectorSourceVersionIdentityBound(right);
+  if (!leftBound || !rightBound) return true;
+  return left.sourceInputFingerprint === right.sourceInputFingerprint
+    && left.boardDataSourceVersion === right.boardDataSourceVersion;
+}
+
+function selectorSourceVersionBindingPayload(identity = {}, binding = {}) {
+  const sourceInputFingerprint = safeSourceVersionIdentityValue(identity.sourceInputFingerprint || binding.sourceInputFingerprint || "");
+  const boardDataSourceVersion = safeSourceVersionIdentityValue(identity.boardDataSourceVersion || binding.boardDataSourceVersion || "");
+  const bound = Boolean(sourceInputFingerprint && boardDataSourceVersion);
+  return {
+    ...binding,
+    sourceInputFingerprint,
+    boardDataSourceVersion,
+    bindingStatus: bound ? "source-version-bound" : "source-version-unbound",
+    optionSetsBound: bound,
+    selectedValuesBound: bound,
+    staleRevalidationEnabled: true,
+    staleValuesBecomeDiagnosticUnmapped: true,
+    staleValuesInsertedIntoOptions: false,
+    readOnly: true,
+    diagnosticOnly: true,
+    writes: false,
+    rawRowsExposed: false,
+  };
+}
+
 export function selectorReferenceOptionsResponseIsCurrent({
   requestId = 0,
   activeRequestId = 0,
   responseConstraintFingerprint = "",
   activeConstraintFingerprint = "",
+  responseSourceInputFingerprint = "",
+  activeSourceInputFingerprint = "",
+  responseBoardDataSourceVersion = "",
+  activeBoardDataSourceVersion = "",
   mounted = true,
 } = {}) {
+  const activeSourceInput = safeSourceVersionIdentityValue(activeSourceInputFingerprint);
+  const activeBoardVersion = safeSourceVersionIdentityValue(activeBoardDataSourceVersion);
+  const sourceInputMatches = !activeSourceInput || safeSourceVersionIdentityValue(responseSourceInputFingerprint) === activeSourceInput;
+  const boardVersionMatches = !activeBoardVersion || safeSourceVersionIdentityValue(responseBoardDataSourceVersion) === activeBoardVersion;
   return mounted === true
     && requestId === activeRequestId
-    && String(responseConstraintFingerprint || "") === String(activeConstraintFingerprint || "");
+    && String(responseConstraintFingerprint || "") === String(activeConstraintFingerprint || "")
+    && sourceInputMatches
+    && boardVersionMatches;
 }
 
 export function resolveSelectorReferenceOptionsStatus(
@@ -422,6 +496,14 @@ export function resolveSelectorReferenceOptionsStatus(
   const incomingFingerprint = String(nextStatus?.constraintFingerprint || activeConstraintFingerprint || selectorConstraintFingerprintFromQuery(activeConstraintQuery));
   const incomingQuery = typeof nextStatus?.constraintQuery === "string" ? nextStatus.constraintQuery : activeConstraintQuery;
   const sameConstraintFingerprint = Boolean(previousFingerprint && incomingFingerprint && previousFingerprint === incomingFingerprint);
+  const previousSourceVersionIdentity = selectorSourceVersionIdentity(currentStatus);
+  const incomingSourceVersionIdentity = selectorSourceVersionIdentity(nextStatus);
+  const sameSourceVersionBinding = selectorSourceVersionsMatch(previousSourceVersionIdentity, incomingSourceVersionIdentity);
+  const sameReusablePayload = sameConstraintFingerprint && sameSourceVersionBinding;
+  const activeSourceVersionIdentity = incomingSourceVersionIdentity.sourceInputFingerprint || incomingSourceVersionIdentity.boardDataSourceVersion
+    ? incomingSourceVersionIdentity
+    : sameReusablePayload ? previousSourceVersionIdentity : { sourceInputFingerprint: "", boardDataSourceVersion: "" };
+  const activeSourceVersionBinding = selectorSourceVersionBindingPayload(activeSourceVersionIdentity, nextStatus?.sourceVersionBinding || (sameReusablePayload ? currentStatus?.sourceVersionBinding : {}));
   const loadingWithPreviousPayload = nextStatus?.status === "loading" && !Array.isArray(nextStatus?.fields) && previousFields.length > 0;
   const stripSelectedState = (field = {}) => ({
     ...field,
@@ -434,7 +516,7 @@ export function resolveSelectorReferenceOptionsStatus(
     ? nextStatus.fields
     : loadingWithPreviousPayload
       ? previousFields.map(stripSelectedState)
-      : sameConstraintFingerprint
+      : sameReusablePayload
         ? previousFields
         : [];
   const workflowSectionsFromCurrentPayload = Array.isArray(nextStatus?.workflowSections)
@@ -444,11 +526,11 @@ export function resolveSelectorReferenceOptionsStatus(
         ...section,
         fields: Array.isArray(section.fields) ? section.fields.map(stripSelectedState) : section.fields,
       }))
-      : sameConstraintFingerprint
+      : sameReusablePayload
         ? previousWorkflowSections
         : [];
-  const stalePreviousFieldsCount = sameConstraintFingerprint ? 0 : previousFields.length;
-  const stalePreviousWorkflowSectionCount = sameConstraintFingerprint ? 0 : previousWorkflowSections.length;
+  const stalePreviousFieldsCount = sameReusablePayload ? 0 : previousFields.length;
+  const stalePreviousWorkflowSectionCount = sameReusablePayload ? 0 : previousWorkflowSections.length;
 
   return {
     ...base,
@@ -456,11 +538,16 @@ export function resolveSelectorReferenceOptionsStatus(
     endpoint: nextStatus?.endpoint || SELECTOR_REFERENCE_OPTIONS_ENDPOINT,
     constraintQuery: incomingQuery || "",
     constraintFingerprint: incomingFingerprint,
+    sourceInputFingerprint: activeSourceVersionBinding.sourceInputFingerprint,
+    boardDataSourceVersion: activeSourceVersionBinding.boardDataSourceVersion,
+    sourceVersionBinding: activeSourceVersionBinding,
+    sourceVersionBindingMatched: sameSourceVersionBinding,
+    staleSourceVersionBinding: sameConstraintFingerprint && !sameSourceVersionBinding,
     fields: fieldsFromCurrentPayload,
     workflowSections: workflowSectionsFromCurrentPayload,
-    candidateSummary: nextStatus?.candidateSummary || (sameConstraintFingerprint ? currentStatus?.candidateSummary : base.candidateSummary),
-    previousFieldsReused: !Array.isArray(nextStatus?.fields) && (sameConstraintFingerprint || loadingWithPreviousPayload) && previousFields.length > 0,
-    previousWorkflowSectionsReused: !Array.isArray(nextStatus?.workflowSections) && (sameConstraintFingerprint || loadingWithPreviousPayload) && previousWorkflowSections.length > 0,
+    candidateSummary: nextStatus?.candidateSummary || (sameReusablePayload ? currentStatus?.candidateSummary : base.candidateSummary),
+    previousFieldsReused: !Array.isArray(nextStatus?.fields) && (sameReusablePayload || loadingWithPreviousPayload) && previousFields.length > 0,
+    previousWorkflowSectionsReused: !Array.isArray(nextStatus?.workflowSections) && (sameReusablePayload || loadingWithPreviousPayload) && previousWorkflowSections.length > 0,
     loadingPreviousFieldsRetained: loadingWithPreviousPayload,
     stalePreviousFieldsCount,
     stalePreviousWorkflowSectionCount,

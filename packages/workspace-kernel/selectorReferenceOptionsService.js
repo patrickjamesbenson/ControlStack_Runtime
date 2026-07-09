@@ -4368,6 +4368,166 @@ function sourceMetadata({ sourceStat = null, present = Boolean(sourceStat), read
   };
 }
 
+const SOURCE_INPUT_FINGERPRINT_KEYS = Object.freeze([
+  "sourceInputFingerprint",
+  "source_input_fingerprint",
+  "selectorSourceInputFingerprint",
+  "selector_source_input_fingerprint",
+  "inputFingerprint",
+  "input_fingerprint",
+  "sourceFingerprint",
+  "source_fingerprint",
+  "sourceInputFingerprintMetadata",
+]);
+const BOARD_DATA_SOURCE_VERSION_KEYS = Object.freeze([
+  "boardDataSourceVersion",
+  "board_data_source_version",
+  "boardDataVersion",
+  "board_data_version",
+  "boardSourceVersion",
+  "board_source_version",
+  "sourceVersion",
+  "source_version",
+  "version",
+  "boardDataSourceVersionMetadata",
+]);
+const SOURCE_VERSION_CONTAINER_KEYS = Object.freeze([
+  "metadata",
+  "meta",
+  "source",
+  "sourceMetadata",
+  "source_version_binding",
+  "sourceVersionBinding",
+  "boardData",
+  "board_data",
+  "selectorOptions",
+]);
+
+function safeSourceVersionToken(value = "") {
+  const text = safeString(value);
+  if (!text || text.length > 240) return "";
+  if (/(?:[A-Z]:\\|\\\\|\/mnt\/|novondb|privatepath|credential|secret|api[_-]?key)/i.test(text)) return "";
+  return text;
+}
+
+function sourceVersionScalar(value) {
+  if (isPlainObject(value)) {
+    return safeSourceVersionToken(value.value || value.fingerprint || value.version || value.token || value.id || value.label || "");
+  }
+  return safeSourceVersionToken(value);
+}
+
+function sourceVersionValueFromObject(value = {}, keys = []) {
+  if (!isPlainObject(value)) return "";
+  for (const key of keys) {
+    const direct = Object.prototype.hasOwnProperty.call(value, key) ? value[key] : fieldValue(value, key);
+    const token = sourceVersionScalar(direct);
+    if (token) return token;
+  }
+  return "";
+}
+
+function sourceVersionContainerCandidates(snapshot = {}, source = {}) {
+  const roots = [source, snapshot].filter(isPlainObject);
+  const candidates = [];
+  for (const root of roots) {
+    candidates.push(root);
+    for (const key of SOURCE_VERSION_CONTAINER_KEYS) {
+      const nested = nestedValue(root, [key]);
+      if (isPlainObject(nested)) candidates.push(nested);
+    }
+  }
+  return candidates;
+}
+
+function createSourceVersionBinding({ snapshot = {}, source = {} } = {}) {
+  const candidates = sourceVersionContainerCandidates(snapshot, source);
+  const sourceInputFingerprint = candidates.map((candidate) => sourceVersionValueFromObject(candidate, SOURCE_INPUT_FINGERPRINT_KEYS)).find(Boolean) || "";
+  const boardDataSourceVersion = candidates.map((candidate) => sourceVersionValueFromObject(candidate, BOARD_DATA_SOURCE_VERSION_KEYS)).find(Boolean) || "";
+  const bound = Boolean(sourceInputFingerprint && boardDataSourceVersion);
+  return {
+    sourceInputFingerprint,
+    boardDataSourceVersion,
+    bindingStatus: bound ? "source-version-bound" : "source-version-unbound",
+    optionSetsBound: bound,
+    selectedValuesBound: bound,
+    staleRevalidationEnabled: true,
+    staleValuesBecomeDiagnosticUnmapped: true,
+    staleValuesInsertedIntoOptions: false,
+    sourceOrderPreserved: true,
+    readOnly: true,
+    diagnosticOnly: true,
+    writes: false,
+    rawRowsExposed: false,
+  };
+}
+
+function bindSourceVersionPayload(value = {}, sourceVersionBinding = {}) {
+  return {
+    ...sourceVersionBinding,
+    sourceInputFingerprint: safeSourceVersionToken(value.sourceInputFingerprint || sourceVersionBinding.sourceInputFingerprint || ""),
+    boardDataSourceVersion: safeSourceVersionToken(value.boardDataSourceVersion || sourceVersionBinding.boardDataSourceVersion || ""),
+    staleRevalidationEnabled: true,
+    staleValuesBecomeDiagnosticUnmapped: true,
+    staleValuesInsertedIntoOptions: false,
+    readOnly: true,
+    diagnosticOnly: true,
+    writes: false,
+    rawRowsExposed: false,
+  };
+}
+
+function bindOptionToSourceVersion(option = {}, sourceVersionBinding = {}) {
+  const binding = bindSourceVersionPayload(option, sourceVersionBinding);
+  return {
+    ...option,
+    sourceInputFingerprint: binding.sourceInputFingerprint,
+    boardDataSourceVersion: binding.boardDataSourceVersion,
+    sourceVersionBinding: binding,
+    writes: false,
+    rawRowsExposed: false,
+  };
+}
+
+function bindSelectedDiagnosticToSourceVersion(diagnostic = null, sourceVersionBinding = {}) {
+  if (!diagnostic) return diagnostic;
+  const binding = bindSourceVersionPayload(diagnostic, sourceVersionBinding);
+  return {
+    ...diagnostic,
+    sourceInputFingerprint: binding.sourceInputFingerprint,
+    boardDataSourceVersion: binding.boardDataSourceVersion,
+    sourceVersionBinding: binding,
+    writes: false,
+    rawRowsExposed: false,
+  };
+}
+
+function bindFieldToSourceVersion(field = {}, sourceVersionBinding = {}) {
+  const binding = bindSourceVersionPayload(field, sourceVersionBinding);
+  return {
+    ...field,
+    sourceInputFingerprint: binding.sourceInputFingerprint,
+    boardDataSourceVersion: binding.boardDataSourceVersion,
+    sourceVersionBinding: { ...binding, fieldKey: safeString(field.fieldKey || "") },
+    selectedValueDiagnostic: bindSelectedDiagnosticToSourceVersion(field.selectedValueDiagnostic, { ...binding, fieldKey: safeString(field.fieldKey || "") }),
+    options: Array.isArray(field.options) ? field.options.map((option) => bindOptionToSourceVersion(option, { ...binding, fieldKey: safeString(field.fieldKey || "") })) : field.options,
+    incompatibleOptions: Array.isArray(field.incompatibleOptions) ? field.incompatibleOptions.map((option) => bindOptionToSourceVersion(option, { ...binding, fieldKey: safeString(field.fieldKey || "") })) : field.incompatibleOptions,
+    deferredOptions: Array.isArray(field.deferredOptions) ? field.deferredOptions.map((option) => bindOptionToSourceVersion(option, { ...binding, fieldKey: safeString(field.fieldKey || "") })) : field.deferredOptions,
+    rawRowsExposed: false,
+  };
+}
+
+function bindWorkflowSectionsToSourceVersion(workflowSections = [], sourceVersionBinding = {}) {
+  return (Array.isArray(workflowSections) ? workflowSections : []).map((section) => ({
+    ...section,
+    sourceInputFingerprint: sourceVersionBinding.sourceInputFingerprint || "",
+    boardDataSourceVersion: sourceVersionBinding.boardDataSourceVersion || "",
+    sourceVersionBinding: bindSourceVersionPayload(section, sourceVersionBinding),
+    fields: Array.isArray(section.fields) ? section.fields.map((field) => bindFieldToSourceVersion(field, sourceVersionBinding)) : section.fields,
+    rawRowsExposed: false,
+  }));
+}
+
 function flattenCoverageFields({ fields = [], workflowSections = [] } = {}) {
   const workflowFields = (Array.isArray(workflowSections) ? workflowSections : []).flatMap((section) => (
     Array.isArray(section.fields) ? section.fields.map((field) => ({ ...field, sectionKey: section.sectionKey || section.title || "workflow" })) : []
@@ -4485,7 +4645,8 @@ function createTimelineStatusFilteringSummary({ fields = [], workflowSections = 
   };
 }
 
-function createOptionSafeSnapshotState({ source = {}, sourceReady = false, fields = [], workflowSections = [], tableSummaryRows = [], reason = "" } = {}) {
+function createOptionSafeSnapshotState({ source = {}, sourceReady = false, fields = [], workflowSections = [], tableSummaryRows = [], reason = "", sourceVersionBinding = createSourceVersionBinding({ source }) } = {}) {
+  const safeSourceVersionBinding = bindSourceVersionPayload({}, sourceVersionBinding);
   const coverage = createReferenceOptionSourceCoverage({ fields, workflowSections });
   const missingTables = tableSummaryRows.filter((table) => table.present !== true).map((table) => table.table);
   const completeEnoughForPreview = sourceReady === true && missingTables.length === 0;
@@ -4495,6 +4656,9 @@ function createOptionSafeSnapshotState({ source = {}, sourceReady = false, field
     sourcePresent: source.present === true,
     sourceReadable: source.readable !== false,
     sourceParseable: source.parseable !== false,
+    sourceInputFingerprint: safeSourceVersionBinding.sourceInputFingerprint,
+    boardDataSourceVersion: safeSourceVersionBinding.boardDataSourceVersion,
+    sourceVersionBinding: safeSourceVersionBinding,
     activeSnapshot: {
       label: source.label || "runtime-authority-reference-active-snapshot",
       present: source.present === true,
@@ -4546,8 +4710,9 @@ function createOptionSafeSnapshotState({ source = {}, sourceReady = false, field
 
 function failurePayload({ source = {}, reason = "selector_reference_options_unavailable", constraints = {}, timelineContext = createSelectorTimelineContext(), specialPartsTestPrincipal = "", showSpecialParts = false } = {}) {
   const safeConstraints = sanitiseConstraints(constraints);
-  const fields = TARGET_FIELDS.map((field) => createUnavailableField(field, reason));
-  const workflowSections = WORKFLOW_SECTION_DEFINITIONS.map((section) => ({
+  const sourceVersionBinding = createSourceVersionBinding({ source });
+  const fields = TARGET_FIELDS.map((field) => bindFieldToSourceVersion(createUnavailableField(field, reason), sourceVersionBinding));
+  const workflowSections = bindWorkflowSectionsToSourceVersion(WORKFLOW_SECTION_DEFINITIONS.map((section) => ({
     sectionKey: section.sectionKey,
     title: section.title,
     status: section.sectionKey === "disabledWorkflow" || section.sectionKey === "runsPreview" ? "disabled" : "source-unavailable",
@@ -4560,7 +4725,7 @@ function failurePayload({ source = {}, reason = "selector_reference_options_unav
         : createUnavailableField(field, reason)
     )),
     rawRowsExposed: false,
-  }));
+  })), sourceVersionBinding);
   const parity = donorFieldParity(workflowSections);
   const sourceReadiness = createOptionSafeSnapshotState({
     source,
@@ -4569,6 +4734,7 @@ function failurePayload({ source = {}, reason = "selector_reference_options_unav
     workflowSections,
     tableSummaryRows: [],
     reason,
+    sourceVersionBinding,
   });
   const timelineStatusFiltering = createTimelineStatusFilteringSummary({ fields, workflowSections, timelineContext });
   const sourceBackedLengthPolicySummary = {
@@ -4587,6 +4753,9 @@ function failurePayload({ source = {}, reason = "selector_reference_options_unav
     status: "source-unavailable",
     source,
     sourceReady: false,
+    sourceInputFingerprint: sourceVersionBinding.sourceInputFingerprint,
+    boardDataSourceVersion: sourceVersionBinding.boardDataSourceVersion,
+    sourceVersionBinding,
     selectedConstraints: safeConstraints,
     timelineVisibilityMode: timelineContext.timelineVisibilityMode,
     timelineAsOfDate: timelineContext.timelineAsOfDate,
@@ -4650,14 +4819,17 @@ export function deriveSelectorReferenceOptionsFromSnapshot(snapshot = {}, { cons
   const sourceReady = ok !== false && (source.readable !== false) && (source.parseable !== false);
   if (!sourceReady) return failurePayload({ source, reason: "Selector Reference source is unavailable or not parseable.", constraints: safeConstraints, timelineContext, specialPartsTestPrincipal, showSpecialParts });
 
+  const sourceVersionBinding = createSourceVersionBinding({ snapshot: safeSnapshot, source });
   const bucket = collectOptions(safeSnapshot, timelineContext);
   const records = collectRecords(safeSnapshot, bucket, timelineContext);
   const cascadeConstraints = cascadeConstraintsForOptions(bucket, safeConstraints, safeSnapshot);
   const parentConstraints = workflowParentConstraintsForAutoConsequences({ bucket, records, constraints: safeConstraints, cascadeConstraints });
-  const fields = createFields({ bucket, records, constraints: safeConstraints, cascadeConstraints, sourceReady });
+  const fields = createFields({ bucket, records, constraints: safeConstraints, cascadeConstraints, sourceReady })
+    .map((field) => bindFieldToSourceVersion(field, sourceVersionBinding));
   const workflowSectionsBase = createWorkflowSections({ bucket, records, constraints: safeConstraints, cascadeConstraints, parentConstraints, sourceReady });
-  const finishCascadeResult = applySelectorFinishCascadeToWorkflowSections(workflowSectionsBase, safeConstraints);
-  const workflowSections = finishCascadeResult.workflowSections;
+  const finishCascadeBase = applySelectorFinishCascadeToWorkflowSections(workflowSectionsBase, safeConstraints);
+  const workflowSections = bindWorkflowSectionsToSourceVersion(finishCascadeBase.workflowSections, sourceVersionBinding);
+  const finishCascadeResult = { ...finishCascadeBase, workflowSections };
   const manualConstraints = createManualConstraintList(fields, safeConstraints);
   const autoConsequences = [
     ...deriveAutoConsequences(fields, safeConstraints),
@@ -4680,6 +4852,7 @@ export function deriveSelectorReferenceOptionsFromSnapshot(snapshot = {}, { cons
     workflowSections,
     tableSummaryRows,
     reason: hasMissing ? "Some option fields are future-mapped or unavailable from the current source; no fake values emitted." : "",
+    sourceVersionBinding,
   });
   const timelineStatusFiltering = createTimelineStatusFilteringSummary({ fields, workflowSections, timelineContext });
   const sourceBackedLengthPolicySummary = buildSourceBackedLengthPolicySummary(safeSnapshot, {
@@ -4693,6 +4866,9 @@ export function deriveSelectorReferenceOptionsFromSnapshot(snapshot = {}, { cons
     status: hasBlocked || hasMissing ? "preview-with-blockers" : "preview-ready",
     source,
     sourceReady: true,
+    sourceInputFingerprint: sourceVersionBinding.sourceInputFingerprint,
+    boardDataSourceVersion: sourceVersionBinding.boardDataSourceVersion,
+    sourceVersionBinding,
     selectedConstraints: safeConstraints,
     timelineVisibilityMode: timelineContext.timelineVisibilityMode,
     timelineAsOfDate: timelineContext.timelineAsOfDate,

@@ -1258,19 +1258,62 @@ function createInitialSelectorStateContract() {
   });
 }
 
+function safeSelectorSourceVersionValue(value = "") {
+  const text = normaliseManualValue(value);
+  if (!text || text.length > 240) return "";
+  if (SELECTOR_TEST_CASE_FORBIDDEN_VALUE_PATTERN.test(text)) return "";
+  return text;
+}
+
+function cloneSelectorSourceVersionBinding(value = {}) {
+  const sourceInputFingerprint = safeSelectorSourceVersionValue(value.sourceInputFingerprint || value.sourceInputFingerprintMetadata?.value || "");
+  const boardDataSourceVersion = safeSelectorSourceVersionValue(value.boardDataSourceVersion || value.boardDataSourceVersionMetadata?.value || "");
+  const bound = Boolean(sourceInputFingerprint && boardDataSourceVersion);
+  return {
+    ...(value && typeof value === "object" && !Array.isArray(value) ? value : {}),
+    sourceInputFingerprint,
+    boardDataSourceVersion,
+    bindingStatus: bound ? "source-version-bound" : "source-version-unbound",
+    optionSetsBound: bound,
+    selectedValuesBound: bound,
+    staleRevalidationEnabled: true,
+    staleValuesBecomeDiagnosticUnmapped: true,
+    staleValuesInsertedIntoOptions: false,
+    readOnly: true,
+    diagnosticOnly: true,
+    writes: false,
+    rawRowsExposed: false,
+  };
+}
+
+function cloneDbBackedConstraintRecord(constraint = {}) {
+  const sourceVersionBinding = cloneSelectorSourceVersionBinding(constraint.sourceVersionBinding || constraint);
+  return {
+    ...constraint,
+    sourceInputFingerprint: sourceVersionBinding.sourceInputFingerprint,
+    boardDataSourceVersion: sourceVersionBinding.boardDataSourceVersion,
+    sourceVersionBinding,
+    writes: false,
+  };
+}
+
 function cloneDbBackedSelectorState(value = {}) {
   const manualConstraints = value.manualConstraints && typeof value.manualConstraints === "object" && !Array.isArray(value.manualConstraints)
-    ? Object.fromEntries(Object.entries(value.manualConstraints).map(([fieldKey, constraint]) => [fieldKey, { ...constraint }]))
+    ? Object.fromEntries(Object.entries(value.manualConstraints).map(([fieldKey, constraint]) => [fieldKey, cloneDbBackedConstraintRecord(constraint)]))
     : {};
   const acceptedDefaults = value.acceptedDefaults && typeof value.acceptedDefaults === "object" && !Array.isArray(value.acceptedDefaults)
-    ? Object.fromEntries(Object.entries(value.acceptedDefaults).map(([fieldKey, defaultRecord]) => [fieldKey, { ...defaultRecord }]))
+    ? Object.fromEntries(Object.entries(value.acceptedDefaults).map(([fieldKey, defaultRecord]) => [fieldKey, cloneDbBackedConstraintRecord(defaultRecord)]))
     : {};
+  const sourceVersionBinding = cloneSelectorSourceVersionBinding(value.sourceVersionBinding || value);
   return {
     source: "module-local safe DB/reference-backed selector constraints",
     readOnly: true,
     writes: false,
     manualConstraints,
     acceptedDefaults,
+    sourceInputFingerprint: sourceVersionBinding.sourceInputFingerprint,
+    boardDataSourceVersion: sourceVersionBinding.boardDataSourceVersion,
+    sourceVersionBinding,
     lastAction: value.lastAction || "mounted",
   };
 }
@@ -1405,10 +1448,16 @@ export function createSelectorState() {
       return this.getSnapshot();
     },
 
-    setDbBackedSelectorFieldValue(fieldKey, value, label = "") {
+    setDbBackedSelectorFieldValue(fieldKey, value, label = "", sourceVersionBindingInput = {}) {
       const normalisedValue = normaliseManualValue(value);
       if (!normalisedValue) return this.clearDbBackedSelectorFieldValue(fieldKey);
       const next = cloneDbBackedSelectorState(state.dbBackedSelector);
+      const sourceVersionBinding = cloneSelectorSourceVersionBinding(sourceVersionBindingInput);
+      if (sourceVersionBinding.sourceInputFingerprint || sourceVersionBinding.boardDataSourceVersion) {
+        next.sourceInputFingerprint = sourceVersionBinding.sourceInputFingerprint;
+        next.boardDataSourceVersion = sourceVersionBinding.boardDataSourceVersion;
+        next.sourceVersionBinding = sourceVersionBinding;
+      }
       const cascadeClear = clearDbBackedSelectorCascadeChildren(next.manualConstraints, fieldKey);
       const acceptedCascadeClear = clearDbBackedSelectorCascadeChildren(next.acceptedDefaults, fieldKey);
       next.manualConstraints = cascadeClear.nextManualConstraints;
@@ -1420,6 +1469,9 @@ export function createSelectorState() {
         valueLabel: normaliseManualValue(label) || normalisedValue,
         kind: "manual-constraint",
         source: "module-local UI constraint over safe DB/reference options",
+        sourceInputFingerprint: sourceVersionBinding.sourceInputFingerprint,
+        boardDataSourceVersion: sourceVersionBinding.boardDataSourceVersion,
+        sourceVersionBinding,
         mutable: true,
         writes: false,
       };
@@ -1458,6 +1510,7 @@ export function createSelectorState() {
         const fieldKey = normaliseManualValue(defaultRecord?.fieldKey);
         const value = normaliseManualValue(defaultRecord?.value);
         if (!fieldKey || !value || Object.prototype.hasOwnProperty.call(next.manualConstraints, fieldKey)) continue;
+        const sourceVersionBinding = cloneSelectorSourceVersionBinding(defaultRecord?.sourceVersionBinding || defaultRecord);
         next.acceptedDefaults[fieldKey] = {
           fieldKey,
           label: normaliseManualValue(defaultRecord?.label) || fieldKey,
@@ -1465,6 +1518,9 @@ export function createSelectorState() {
           valueLabel: normaliseManualValue(defaultRecord?.valueLabel) || value,
           kind: "accepted-default",
           source: "user-accepted current DB/reference auto-default",
+          sourceInputFingerprint: sourceVersionBinding.sourceInputFingerprint,
+          boardDataSourceVersion: sourceVersionBinding.boardDataSourceVersion,
+          sourceVersionBinding,
           mutable: true,
           writes: false,
         };
