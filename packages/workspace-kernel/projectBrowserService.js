@@ -17,6 +17,18 @@ export const PROJECT_BROWSER_SELECTED_PROJECT_SELECTED_RESULT_PERSISTED_SUMMARY_
   "controlstack.runtime.project-browser.selected-project-selected-result-persisted-summary-readback-detail-summary.v1";
 export const PROJECT_BROWSER_SELECTED_PROJECT_SELECTED_RESULT_PERSISTED_SUMMARY_READBACK_DETAIL_SUMMARY_SCHEMA_VERSION = 1;
 
+export const PROJECT_BROWSER_PROJECT_IES_EXPORT_BOUNDARY_READBACK_SUMMARY_SCHEMA_ID =
+  "controlstack.runtime.project-browser.project-ies-export-boundary-readback-summary.v1";
+export const PROJECT_BROWSER_PROJECT_IES_EXPORT_BOUNDARY_READBACK_SUMMARY_SCHEMA_VERSION = 1;
+
+export const PROJECT_BROWSER_SELECTED_PROJECT_IES_EXPORT_BOUNDARY_READBACK_DETAIL_SUMMARY_SCHEMA_ID =
+  "controlstack.runtime.project-browser.selected-project-ies-export-boundary-readback-detail-summary.v1";
+export const PROJECT_BROWSER_SELECTED_PROJECT_IES_EXPORT_BOUNDARY_READBACK_DETAIL_SUMMARY_SCHEMA_VERSION = 1;
+
+export const PROJECT_BROWSER_PROJECT_IES_EXPORT_RESULT_READBACK_SUMMARY_SCHEMA_ID =
+  "controlstack.runtime.project-browser.project-ies-export-result-readback-summary.v1";
+export const PROJECT_BROWSER_PROJECT_IES_EXPORT_RESULT_READBACK_SUMMARY_SCHEMA_VERSION = 1;
+
 export const PROJECT_BROWSER_SELECTED_RESULT_PERSISTED_SUMMARY_READBACK_STATES = Object.freeze({
   ready: "project_browser_selected_result_persisted_summary_readback_ready",
   missing: "project_browser_selected_result_persisted_summary_readback_missing",
@@ -41,14 +53,42 @@ export const PROJECT_BROWSER_SELECTED_PROJECT_SELECTED_RESULT_PERSISTED_SUMMARY_
   blockedFailClosed: "project_browser_selected_project_selected_result_persisted_summary_readback_detail_blocked_fail_closed",
 });
 
+export const PROJECT_BROWSER_PROJECT_IES_EXPORT_BOUNDARY_READBACK_STATES = Object.freeze({
+  ready: "project_browser_project_ies_export_boundary_readback_ready",
+  missing: "project_browser_project_ies_export_boundary_readback_missing",
+  blockedFailClosed: "project_browser_project_ies_export_boundary_readback_blocked_fail_closed",
+});
+
+export const PROJECT_BROWSER_SELECTED_PROJECT_IES_EXPORT_BOUNDARY_READBACK_DETAIL_STATES = Object.freeze({
+  ready: "project_browser_selected_project_ies_export_boundary_readback_detail_ready",
+  missing: "project_browser_selected_project_ies_export_boundary_readback_detail_missing",
+  blockedFailClosed: "project_browser_selected_project_ies_export_boundary_readback_detail_blocked_fail_closed",
+});
+
+export const PROJECT_BROWSER_PROJECT_IES_EXPORT_RESULT_READBACK_STATES = Object.freeze({
+  ready: "project_browser_project_ies_export_result_readback_ready",
+  missing: "project_browser_project_ies_export_result_readback_missing",
+  blockedFailClosed: "project_browser_project_ies_export_result_readback_blocked_fail_closed",
+});
+
 const PROJECT_BROWSER_SELECTED_RESULT_READBACK_SOURCE =
   "project-browser-project-summary-selected-result-readback-consumer";
 const PROJECT_BROWSER_SELECTED_PROJECT_SELECTED_RESULT_READBACK_STATUS_SOURCE =
   "project-browser-selected-project-project-summary-selected-result-readback-status-consumer";
 export const PROJECT_BROWSER_SELECTED_PROJECT_SELECTED_RESULT_READBACK_DETAIL_SOURCE =
   "project-browser-selected-project-project-summary-selected-result-readback-detail-consumer";
+const PROJECT_BROWSER_PROJECT_IES_EXPORT_BOUNDARY_READBACK_SOURCE =
+  "project-browser-saved-project-project-ies-export-boundary-readback-consumer";
+export const PROJECT_BROWSER_SELECTED_PROJECT_IES_EXPORT_BOUNDARY_READBACK_DETAIL_SOURCE =
+  "project-browser-selected-project-project-ies-export-boundary-readback-detail-consumer";
+const PROJECT_BROWSER_PROJECT_IES_EXPORT_RESULT_READBACK_SOURCE =
+  "project-browser-saved-project-project-ies-export-result-readback-consumer";
 const SELECTED_RESULT_READBACK_TARGET =
   "projectEnvelope.modules.cs_selector.downstreamContext.selectedResultSummary";
+const PROJECT_IES_EXPORT_BOUNDARY_READBACK_TARGET =
+  "projectEnvelope.modules.cs_selector.downstreamContext.iesFirstNarrowProjectIesExportBoundarySummary";
+const PROJECT_IES_EXPORT_RESULT_READBACK_TARGET =
+  "projectEnvelope.modules.cs_selector.downstreamContext.iesFirstNarrowProjectIesExportResultSummary";
 
 const READBACK_RAW_OR_PRIVATE_KEYS = Object.freeze([
   "body",
@@ -122,6 +162,67 @@ const READBACK_UNSAFE_TRUE_KEYS = Object.freeze([
   "boardDataMutated",
   "selectedResultPersistenceAttempted",
   "runTableGenerationAttempted",
+  "iesGenerationAttempted",
+  "outputGenerationEnabled",
+]);
+
+const PROJECT_IES_EXPORT_BOUNDARY_RAW_OR_PRIVATE_KEYS = Object.freeze([
+  "projectIes",
+  "projectIES",
+  "projectIesBody",
+  "projectIESBody",
+  "projectIesText",
+  "projectIESText",
+  "rawProjectIes",
+  "rawProjectIES",
+  "rawProjectIesText",
+  "rawProjectIESText",
+  "ies",
+  "iesText",
+  "rawIes",
+  "rawIES",
+  "rawIesText",
+  "rawIESText",
+  "candela",
+  "candelaGrid",
+  "candelaArray",
+  "candelaArrays",
+  "photometry",
+  "rawPhotometry",
+  "governance",
+  "rawGovernance",
+  "governancePayload",
+  "rawGovernancePayload",
+  "outputFiles",
+  "files",
+  "filename",
+  "fileName",
+  "filePath",
+  "localPath",
+  "privatePath",
+  "targetPath",
+  "writeTarget",
+  "base64",
+  "base64Artifacts",
+  "projectEnvelope",
+  "envelopeBody",
+]);
+
+const PROJECT_IES_EXPORT_BOUNDARY_UNSAFE_TRUE_KEYS = Object.freeze([
+  "rawIesReturned",
+  "rawIesExposed",
+  "rawProjectIesReturned",
+  "rawProjectIesExposed",
+  "rawPhotometryReturned",
+  "candelaArraysReturned",
+  "governancePayloadReturned",
+  "base64ArtifactsReturned",
+  "privatePathsReturned",
+  "filenamesReturned",
+  "routesAdded",
+  "postEndpointsAdded",
+  "runtimeDataMutated",
+  "boardDataMutated",
   "iesGenerationAttempted",
   "outputGenerationEnabled",
 ]);
@@ -264,6 +365,218 @@ function classifyProjectReadback(project = {}) {
   };
 }
 
+function readProjectIesExportBoundaryReadbackStatus(project = {}, getReadbackStatus = null) {
+  if (isPlainObject(project?.iesFirstNarrowProjectIesExportBoundaryReadbackStatus)) {
+    return project.iesFirstNarrowProjectIesExportBoundaryReadbackStatus;
+  }
+  if (typeof getReadbackStatus !== "function") return null;
+  const projectIdOrEnvelopeId = projectSummaryEnvelopeId(project) || projectSummaryId(project);
+  if (!projectIdOrEnvelopeId) return null;
+  try {
+    return getReadbackStatus(projectIdOrEnvelopeId);
+  } catch {
+    return {
+      state: "ies_first_narrow_project_ies_export_boundary_readback_blocked_fail_closed",
+      readiness: "blocked_fail_closed",
+      ready: false,
+      failClosed: true,
+      blocker: "project-ies-export-boundary-readback-accessor-failed",
+    };
+  }
+}
+
+function findUnsafeProjectIesExportBoundaryReadbackField(status) {
+  if (!isPlainObject(status)) return null;
+  for (const [key, value] of Object.entries(status)) {
+    if (PROJECT_IES_EXPORT_BOUNDARY_RAW_OR_PRIVATE_KEYS.includes(key)
+      && value !== false
+      && value !== null
+      && value !== undefined
+      && value !== "") {
+      return `blocked-raw-field-${safeToken(key, "unknown")}`;
+    }
+    if (PROJECT_IES_EXPORT_BOUNDARY_UNSAFE_TRUE_KEYS.includes(key) && value === true) {
+      return `blocked-unsafe-true-flag-${safeToken(key, "unknown")}`;
+    }
+    if (typeof value === "string" && PRIVATE_VALUE_PATTERN.test(value)) return "blocked-private-value";
+  }
+  return null;
+}
+
+function classifyProjectIesExportBoundaryReadback(status) {
+  if (!isPlainObject(status)) {
+    return {
+      state: PROJECT_BROWSER_PROJECT_IES_EXPORT_BOUNDARY_READBACK_STATES.missing,
+      readiness: "missing",
+      ready: false,
+      failClosed: true,
+      blocker: "project-ies-export-boundary-readback-status-missing",
+      readbackFingerprint: null,
+    };
+  }
+
+  const readbackFingerprint = safeToken(
+    status.iesFirstNarrowProjectIesExportBoundaryReadbackFingerprint,
+    null,
+    760,
+  );
+  const unsafeBlocker = findUnsafeProjectIesExportBoundaryReadbackField(status);
+  if (unsafeBlocker) {
+    return {
+      state: PROJECT_BROWSER_PROJECT_IES_EXPORT_BOUNDARY_READBACK_STATES.blockedFailClosed,
+      readiness: "blocked_fail_closed",
+      ready: false,
+      failClosed: true,
+      blocker: unsafeBlocker,
+      readbackFingerprint,
+    };
+  }
+
+  const readiness = safeToken(status.readiness, "missing") || "missing";
+  const blocker = safeToken(status.blocker, null);
+  const blocked = readiness === "blocked_fail_closed"
+    || status.state === "ies_first_narrow_project_ies_export_boundary_readback_blocked_fail_closed"
+    || (status.failClosed === true && hasNonNullBlocker(status.blocker) && readiness !== "missing");
+
+  if (blocked) {
+    return {
+      state: PROJECT_BROWSER_PROJECT_IES_EXPORT_BOUNDARY_READBACK_STATES.blockedFailClosed,
+      readiness: "blocked_fail_closed",
+      ready: false,
+      failClosed: true,
+      blocker: blocker || "project-ies-export-boundary-readback-blocked-fail-closed",
+      readbackFingerprint,
+    };
+  }
+
+  if (readiness === "ready" && status.ready === true && status.failClosed !== true) {
+    return {
+      state: PROJECT_BROWSER_PROJECT_IES_EXPORT_BOUNDARY_READBACK_STATES.ready,
+      readiness: "ready",
+      ready: true,
+      failClosed: false,
+      blocker: null,
+      readbackFingerprint,
+    };
+  }
+
+  return {
+    state: PROJECT_BROWSER_PROJECT_IES_EXPORT_BOUNDARY_READBACK_STATES.missing,
+    readiness: "missing",
+    ready: false,
+    failClosed: true,
+    blocker: blocker || "project-ies-export-boundary-readback-missing",
+    readbackFingerprint,
+  };
+}
+
+function readProjectIesExportResultReadbackStatus(project = {}, getReadbackStatus = null) {
+  if (isPlainObject(project?.iesFirstNarrowProjectIesExportResultReadbackStatus)) {
+    return project.iesFirstNarrowProjectIesExportResultReadbackStatus;
+  }
+  if (typeof getReadbackStatus !== "function") return null;
+  const projectIdOrEnvelopeId = projectSummaryEnvelopeId(project) || projectSummaryId(project);
+  if (!projectIdOrEnvelopeId) return null;
+  try {
+    return getReadbackStatus(projectIdOrEnvelopeId);
+  } catch {
+    return {
+      state: "ies_first_narrow_project_ies_export_result_readback_blocked_fail_closed",
+      readiness: "blocked_fail_closed",
+      ready: false,
+      failClosed: true,
+      blocker: "project-ies-export-result-readback-accessor-failed",
+    };
+  }
+}
+
+function findUnsafeProjectIesExportResultReadbackField(status) {
+  if (!isPlainObject(status)) return null;
+  for (const [key, value] of Object.entries(status)) {
+    if ((PROJECT_IES_EXPORT_BOUNDARY_RAW_OR_PRIVATE_KEYS.includes(key)
+      || READBACK_RAW_OR_PRIVATE_KEYS.includes(key))
+      && value !== false
+      && value !== null
+      && value !== undefined
+      && value !== "") {
+      return `blocked-raw-field-${safeToken(key, "unknown")}`;
+    }
+    if ((PROJECT_IES_EXPORT_BOUNDARY_UNSAFE_TRUE_KEYS.includes(key)
+      || READBACK_UNSAFE_TRUE_KEYS.includes(key)) && value === true) {
+      return `blocked-unsafe-true-flag-${safeToken(key, "unknown")}`;
+    }
+    if (typeof value === "string" && PRIVATE_VALUE_PATTERN.test(value)) return "blocked-private-value";
+  }
+  return null;
+}
+
+function classifyProjectIesExportResultReadback(status) {
+  if (!isPlainObject(status)) {
+    return {
+      state: PROJECT_BROWSER_PROJECT_IES_EXPORT_RESULT_READBACK_STATES.missing,
+      readiness: "missing",
+      ready: false,
+      failClosed: true,
+      blocker: "project-ies-export-result-readback-status-missing",
+      readbackFingerprint: null,
+    };
+  }
+
+  const readbackFingerprint = safeToken(
+    status.iesFirstNarrowProjectIesExportResultReadbackFingerprint,
+    null,
+    760,
+  );
+  const unsafeBlocker = findUnsafeProjectIesExportResultReadbackField(status);
+  if (unsafeBlocker) {
+    return {
+      state: PROJECT_BROWSER_PROJECT_IES_EXPORT_RESULT_READBACK_STATES.blockedFailClosed,
+      readiness: "blocked_fail_closed",
+      ready: false,
+      failClosed: true,
+      blocker: unsafeBlocker,
+      readbackFingerprint,
+    };
+  }
+
+  const readiness = safeToken(status.readiness, "missing") || "missing";
+  const blocker = safeToken(status.blocker, null);
+  const blocked = readiness === "blocked_fail_closed"
+    || status.state === "ies_first_narrow_project_ies_export_result_readback_blocked_fail_closed"
+    || (status.failClosed === true && hasNonNullBlocker(status.blocker) && readiness !== "missing");
+
+  if (blocked) {
+    return {
+      state: PROJECT_BROWSER_PROJECT_IES_EXPORT_RESULT_READBACK_STATES.blockedFailClosed,
+      readiness: "blocked_fail_closed",
+      ready: false,
+      failClosed: true,
+      blocker: blocker || "project-ies-export-result-readback-blocked-fail-closed",
+      readbackFingerprint,
+    };
+  }
+
+  if (readiness === "ready" && status.ready === true && status.failClosed !== true) {
+    return {
+      state: PROJECT_BROWSER_PROJECT_IES_EXPORT_RESULT_READBACK_STATES.ready,
+      readiness: "ready",
+      ready: true,
+      failClosed: false,
+      blocker: null,
+      readbackFingerprint,
+    };
+  }
+
+  return {
+    state: PROJECT_BROWSER_PROJECT_IES_EXPORT_RESULT_READBACK_STATES.missing,
+    readiness: "missing",
+    ready: false,
+    failClosed: true,
+    blocker: blocker || "project-ies-export-result-readback-missing",
+    readbackFingerprint,
+  };
+}
+
 function isSavedProjectSummary(project = {}) {
   if (project.source === "p2-shell-save-envelope") return true;
   return project.readOnly !== true && project.browserOnly !== true;
@@ -347,6 +660,312 @@ export function buildProjectBrowserSelectedResultPersistedSummaryReadbackSummary
     projectBrowserSelectedResultPersistedSummaryReadbackSummaryFingerprint: stableFingerprint(
       "safe-project-browser-selected-result-persisted-summary-readback-summary",
       summary,
+    ),
+  });
+}
+
+export function buildProjectBrowserProjectIesExportBoundaryReadbackSummary(
+  projects = [],
+  getReadbackStatus = null,
+) {
+  const projectSummaries = Array.isArray(projects) ? projects : [];
+  const projectStatuses = projectSummaries.map((project) => {
+    const classified = classifyProjectIesExportBoundaryReadback(
+      readProjectIesExportBoundaryReadbackStatus(project, getReadbackStatus),
+    );
+    return Object.freeze({
+      projectId: projectSummaryId(project),
+      envelopeId: projectSummaryEnvelopeId(project),
+      state: classified.state,
+      readiness: classified.readiness,
+      ready: classified.ready,
+      failClosed: classified.failClosed,
+      blocker: classified.blocker,
+      sourceReadbackFingerprint: classified.readbackFingerprint,
+    });
+  });
+
+  const readyProjectCount = projectStatuses.filter((project) => project.readiness === "ready").length;
+  const missingProjectCount = projectStatuses.filter((project) => project.readiness === "missing").length;
+  const blockedFailClosedProjectCount = projectStatuses.filter(
+    (project) => project.readiness === "blocked_fail_closed",
+  ).length;
+  const state = blockedFailClosedProjectCount > 0
+    ? PROJECT_BROWSER_PROJECT_IES_EXPORT_BOUNDARY_READBACK_STATES.blockedFailClosed
+    : projectStatuses.length > 0 && readyProjectCount === projectStatuses.length
+      ? PROJECT_BROWSER_PROJECT_IES_EXPORT_BOUNDARY_READBACK_STATES.ready
+      : PROJECT_BROWSER_PROJECT_IES_EXPORT_BOUNDARY_READBACK_STATES.missing;
+  const readiness = state === PROJECT_BROWSER_PROJECT_IES_EXPORT_BOUNDARY_READBACK_STATES.ready
+    ? "ready"
+    : state === PROJECT_BROWSER_PROJECT_IES_EXPORT_BOUNDARY_READBACK_STATES.blockedFailClosed
+      ? "blocked_fail_closed"
+      : "missing";
+
+  const summary = {
+    schemaId: PROJECT_BROWSER_PROJECT_IES_EXPORT_BOUNDARY_READBACK_SUMMARY_SCHEMA_ID,
+    schemaVersion: PROJECT_BROWSER_PROJECT_IES_EXPORT_BOUNDARY_READBACK_SUMMARY_SCHEMA_VERSION,
+    owner: "shell",
+    source: PROJECT_BROWSER_PROJECT_IES_EXPORT_BOUNDARY_READBACK_SOURCE,
+    state,
+    readiness,
+    ready: readiness === "ready",
+    failClosed: readiness !== "ready",
+    projectCount: projectStatuses.length,
+    readyProjectCount,
+    missingProjectCount,
+    blockedFailClosedProjectCount,
+    projectStatuses,
+    moduleId: "cs_selector",
+    consumerModuleId: "ies_builder",
+    targetLocation: PROJECT_IES_EXPORT_BOUNDARY_READBACK_TARGET,
+    safeReadbackStatusOnly: true,
+    summaryOnly: true,
+    redacted: true,
+    readOnly: true,
+    rawIesReturned: false,
+    rawIesExposed: false,
+    rawPhotometryReturned: false,
+    candelaArraysReturned: false,
+    governancePayloadReturned: false,
+    base64ArtifactsReturned: false,
+    privatePathsReturned: false,
+    filenamesReturned: false,
+    routesAdded: false,
+    postEndpointsAdded: false,
+    runtimeDataMutated: false,
+    boardDataMutated: false,
+    iesGenerationAttempted: false,
+    outputGenerationEnabled: false,
+  };
+
+  return Object.freeze({
+    ...summary,
+    projectBrowserProjectIesExportBoundaryReadbackSummaryFingerprint: stableFingerprint(
+      "safe-project-browser-project-ies-export-boundary-readback-summary",
+      summary,
+    ),
+  });
+}
+
+export function buildProjectBrowserProjectIesExportResultReadbackSummary(
+  projects = [],
+  getReadbackStatus = null,
+) {
+  const projectSummaries = Array.isArray(projects) ? projects : [];
+  const projectStatuses = projectSummaries.map((project) => {
+    const classified = classifyProjectIesExportResultReadback(
+      readProjectIesExportResultReadbackStatus(project, getReadbackStatus),
+    );
+    return Object.freeze({
+      projectId: projectSummaryId(project),
+      envelopeId: projectSummaryEnvelopeId(project),
+      state: classified.state,
+      readiness: classified.readiness,
+      ready: classified.ready,
+      failClosed: classified.failClosed,
+      blocker: classified.blocker,
+      sourceReadbackFingerprint: classified.readbackFingerprint,
+    });
+  });
+
+  const readyProjectCount = projectStatuses.filter((project) => project.readiness === "ready").length;
+  const missingProjectCount = projectStatuses.filter((project) => project.readiness === "missing").length;
+  const blockedFailClosedProjectCount = projectStatuses.filter(
+    (project) => project.readiness === "blocked_fail_closed",
+  ).length;
+  const state = blockedFailClosedProjectCount > 0
+    ? PROJECT_BROWSER_PROJECT_IES_EXPORT_RESULT_READBACK_STATES.blockedFailClosed
+    : projectStatuses.length > 0 && readyProjectCount === projectStatuses.length
+      ? PROJECT_BROWSER_PROJECT_IES_EXPORT_RESULT_READBACK_STATES.ready
+      : PROJECT_BROWSER_PROJECT_IES_EXPORT_RESULT_READBACK_STATES.missing;
+  const readiness = state === PROJECT_BROWSER_PROJECT_IES_EXPORT_RESULT_READBACK_STATES.ready
+    ? "ready"
+    : state === PROJECT_BROWSER_PROJECT_IES_EXPORT_RESULT_READBACK_STATES.blockedFailClosed
+      ? "blocked_fail_closed"
+      : "missing";
+
+  const summary = {
+    schemaId: PROJECT_BROWSER_PROJECT_IES_EXPORT_RESULT_READBACK_SUMMARY_SCHEMA_ID,
+    schemaVersion: PROJECT_BROWSER_PROJECT_IES_EXPORT_RESULT_READBACK_SUMMARY_SCHEMA_VERSION,
+    owner: "shell",
+    source: PROJECT_BROWSER_PROJECT_IES_EXPORT_RESULT_READBACK_SOURCE,
+    state,
+    readiness,
+    ready: readiness === "ready",
+    failClosed: readiness !== "ready",
+    projectCount: projectStatuses.length,
+    readyProjectCount,
+    missingProjectCount,
+    blockedFailClosedProjectCount,
+    projectStatuses,
+    moduleId: "cs_selector",
+    consumerModuleId: "ies_builder",
+    targetLocation: PROJECT_IES_EXPORT_RESULT_READBACK_TARGET,
+    safeReadbackStatusOnly: true,
+    summaryOnly: true,
+    redacted: true,
+    readOnly: true,
+    rawIesReturned: false,
+    rawIesExposed: false,
+    rawPhotometryReturned: false,
+    candelaArraysReturned: false,
+    governancePayloadReturned: false,
+    base64ArtifactsReturned: false,
+    privatePathsReturned: false,
+    filenamesReturned: false,
+    routesAdded: false,
+    postEndpointsAdded: false,
+    runtimeDataMutated: false,
+    boardDataMutated: false,
+    iesGenerationAttempted: false,
+    outputGenerationEnabled: false,
+  };
+
+  return Object.freeze({
+    ...summary,
+    projectBrowserProjectIesExportResultReadbackSummaryFingerprint: stableFingerprint(
+      "safe-project-browser-project-ies-export-result-readback-summary",
+      summary,
+    ),
+  });
+}
+
+export function buildProjectBrowserSelectedProjectIesExportBoundaryReadbackDetailSummary(
+  projectIesExportBoundaryReadbackSummary = {},
+  selectedProjectId = null,
+) {
+  const sourceSummary = isPlainObject(projectIesExportBoundaryReadbackSummary)
+    ? projectIesExportBoundaryReadbackSummary
+    : {};
+  const selectedProjectToken = selectedProjectId === null ? null : safeToken(selectedProjectId, null);
+  const projectStatuses = Array.isArray(sourceSummary.projectStatuses)
+    ? sourceSummary.projectStatuses.filter((status) => isPlainObject(status))
+    : [];
+  const selectedProjectStatus = selectedProjectToken
+    ? projectStatuses.find((status) => (
+      safeToken(status.projectId, null) === selectedProjectToken
+      || safeToken(status.envelopeId, null) === selectedProjectToken
+    )) || null
+    : null;
+  const sourceUnsafeBlocker = findUnsafeProjectIesExportBoundaryReadbackField(sourceSummary);
+  const selectedStatusUnsafeBlocker = findUnsafeProjectIesExportBoundaryReadbackField(selectedProjectStatus);
+
+  let state = PROJECT_BROWSER_SELECTED_PROJECT_IES_EXPORT_BOUNDARY_READBACK_DETAIL_STATES.missing;
+  let readiness = "missing";
+  let ready = false;
+  let failClosed = true;
+  let blocker = null;
+
+  if (sourceUnsafeBlocker) {
+    state = PROJECT_BROWSER_SELECTED_PROJECT_IES_EXPORT_BOUNDARY_READBACK_DETAIL_STATES.blockedFailClosed;
+    readiness = "blocked_fail_closed";
+    blocker = sourceUnsafeBlocker;
+  } else if (selectedProjectId === null) {
+    blocker = "project-browser-selected-project-not-selected";
+  } else if (!selectedProjectToken) {
+    state = PROJECT_BROWSER_SELECTED_PROJECT_IES_EXPORT_BOUNDARY_READBACK_DETAIL_STATES.blockedFailClosed;
+    readiness = "blocked_fail_closed";
+    blocker = "project-browser-selected-project-id-invalid";
+  } else if (!Array.isArray(sourceSummary.projectStatuses)) {
+    blocker = "project-browser-project-ies-export-boundary-readback-summary-missing";
+  } else if (!selectedProjectStatus) {
+    blocker = "project-browser-selected-project-not-found";
+  } else if (selectedStatusUnsafeBlocker) {
+    state = PROJECT_BROWSER_SELECTED_PROJECT_IES_EXPORT_BOUNDARY_READBACK_DETAIL_STATES.blockedFailClosed;
+    readiness = "blocked_fail_closed";
+    blocker = selectedStatusUnsafeBlocker;
+  } else {
+    const selectedReadiness = safeToken(selectedProjectStatus.readiness, "missing") || "missing";
+    const selectedBlocker = safeToken(selectedProjectStatus.blocker, null);
+    const selectedBlocked = selectedReadiness === "blocked_fail_closed"
+      || selectedProjectStatus.state === PROJECT_BROWSER_PROJECT_IES_EXPORT_BOUNDARY_READBACK_STATES.blockedFailClosed
+      || (selectedProjectStatus.failClosed === true
+        && hasNonNullBlocker(selectedProjectStatus.blocker)
+        && selectedReadiness !== "missing");
+    const selectedReady = selectedReadiness === "ready"
+      && selectedProjectStatus.ready === true
+      && selectedProjectStatus.failClosed !== true;
+
+    if (selectedReady) {
+      state = PROJECT_BROWSER_SELECTED_PROJECT_IES_EXPORT_BOUNDARY_READBACK_DETAIL_STATES.ready;
+      readiness = "ready";
+      ready = true;
+      failClosed = false;
+    } else if (selectedBlocked) {
+      state = PROJECT_BROWSER_SELECTED_PROJECT_IES_EXPORT_BOUNDARY_READBACK_DETAIL_STATES.blockedFailClosed;
+      readiness = "blocked_fail_closed";
+      blocker = selectedBlocker || "project-browser-selected-project-ies-export-boundary-readback-blocked-fail-closed";
+    } else {
+      blocker = selectedBlocker || "project-browser-selected-project-ies-export-boundary-readback-missing";
+    }
+  }
+
+  const base = {
+    schemaId: PROJECT_BROWSER_SELECTED_PROJECT_IES_EXPORT_BOUNDARY_READBACK_DETAIL_SUMMARY_SCHEMA_ID,
+    schemaVersion: PROJECT_BROWSER_SELECTED_PROJECT_IES_EXPORT_BOUNDARY_READBACK_DETAIL_SUMMARY_SCHEMA_VERSION,
+    owner: "shell",
+    source: PROJECT_BROWSER_SELECTED_PROJECT_IES_EXPORT_BOUNDARY_READBACK_DETAIL_SOURCE,
+    sourceSummarySchemaId: safeToken(sourceSummary.schemaId, null),
+    sourceSummarySchemaVersion: safeSchemaVersion(sourceSummary.schemaVersion),
+    sourceSummaryState: safeToken(sourceSummary.state, null),
+    sourceSummaryReadiness: safeToken(sourceSummary.readiness, "missing") || "missing",
+    state,
+    readiness,
+    ready,
+    failClosed,
+    blocker,
+    selectedProjectId: selectedProjectToken,
+    selectedProjectFound: selectedProjectStatus !== null,
+    projectId: selectedProjectStatus ? safeToken(selectedProjectStatus.projectId, null) : null,
+    envelopeId: selectedProjectStatus ? safeToken(selectedProjectStatus.envelopeId, null) : null,
+    boundaryReadbackState: selectedProjectStatus ? safeToken(selectedProjectStatus.state, null) : null,
+    boundaryReadbackReadiness: selectedProjectStatus
+      ? safeToken(selectedProjectStatus.readiness, "missing") || "missing"
+      : "missing",
+    boundaryReadbackReady: selectedProjectStatus?.ready === true,
+    boundaryReadbackFailClosed: selectedProjectStatus?.failClosed !== false,
+    boundaryReadbackBlocker: selectedProjectStatus?.blocker
+      ? safeToken(selectedProjectStatus.blocker, "project-browser-selected-project-ies-export-boundary-readback-blocked")
+      : null,
+    moduleId: "cs_selector",
+    consumerModuleId: "ies_builder",
+    targetLocation: PROJECT_IES_EXPORT_BOUNDARY_READBACK_TARGET,
+    safeReadbackStatusOnly: true,
+    readOnly: true,
+    selectedProjectOnly: true,
+    detailOnly: true,
+    summaryOnly: true,
+    redacted: true,
+    machineValueSafe: true,
+    sourceReadbackFingerprint: selectedProjectStatus
+      ? safeToken(selectedProjectStatus.sourceReadbackFingerprint, null, 760)
+      : null,
+    sourceProjectBrowserProjectIesExportBoundaryReadbackSummaryFingerprint: safeToken(
+      sourceSummary.projectBrowserProjectIesExportBoundaryReadbackSummaryFingerprint,
+      null,
+      760,
+    ),
+    rawIesReturned: false,
+    rawIesExposed: false,
+    rawPhotometryReturned: false,
+    candelaArraysReturned: false,
+    governancePayloadReturned: false,
+    base64ArtifactsReturned: false,
+    privatePathsReturned: false,
+    filenamesReturned: false,
+    routesAdded: false,
+    postEndpointsAdded: false,
+    runtimeDataMutated: false,
+    boardDataMutated: false,
+    iesGenerationAttempted: false,
+    outputGenerationEnabled: false,
+  };
+
+  return Object.freeze({
+    ...base,
+    projectBrowserSelectedProjectIesExportBoundaryReadbackDetailFingerprint: stableFingerprint(
+      "safe-project-browser-selected-project-ies-export-boundary-readback-detail-summary",
+      base,
     ),
   });
 }
@@ -629,6 +1248,14 @@ export function createProjectBrowserService({ savedProjectStore, projectService,
 
   function getProjectBrowserSnapshot(context = {}) {
     const storeSnapshot = savedProjectStore.getStoreSnapshot(context);
+    const projectIesExportBoundaryReadbackSummary = buildProjectBrowserProjectIesExportBoundaryReadbackSummary(
+      storeSnapshot.projects,
+      savedProjectStore.getIesFirstNarrowProjectIesExportBoundaryReadbackStatus?.bind(savedProjectStore),
+    );
+    const projectIesExportResultReadbackSummary = buildProjectBrowserProjectIesExportResultReadbackSummary(
+      storeSnapshot.projects,
+      savedProjectStore.getIesFirstNarrowProjectIesExportResultReadbackStatus?.bind(savedProjectStore),
+    );
     return {
       owner: state.owner,
       status: state.status,
@@ -648,6 +1275,12 @@ export function createProjectBrowserService({ savedProjectStore, projectService,
       ),
       selectedProjectSelectedResultPersistedSummaryReadbackDetailSummary: buildProjectBrowserSelectedProjectSelectedResultPersistedSummaryReadbackDetailSummary(
         storeSnapshot.projects,
+        state.selectedProjectId,
+      ),
+      projectIesExportBoundaryReadbackSummary,
+      projectIesExportResultReadbackSummary,
+      selectedProjectIesExportBoundaryReadbackDetailSummary: buildProjectBrowserSelectedProjectIesExportBoundaryReadbackDetailSummary(
+        projectIesExportBoundaryReadbackSummary,
         state.selectedProjectId,
       ),
       filters: { ...state.filters },
