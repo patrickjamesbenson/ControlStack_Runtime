@@ -114,6 +114,9 @@ import {
   RUNTIME_IES_FIRST_NARROW_PROJECT_IES_EXPORT_BOUNDARY_SUMMARY_SCHEMA_VERSION,
   RUNTIME_IES_FIRST_NARROW_PROJECT_IES_EXPORT_BOUNDARY_TARGET,
 } from "./iesFirstNarrowProjectIesExportBoundarySummary.js";
+import {
+  buildRuntimeIesFirstNarrowProjectIesExportBoundaryReadbackStatus,
+} from "./iesFirstNarrowProjectIesExportBoundaryReadbackStatus.js";
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
@@ -3825,6 +3828,11 @@ export function createSavedProjectStore({ eventBus } = {}) {
     return buildSelectedResultPersistedSummaryReadbackStatus(envelope || {});
   }
 
+  function getIesFirstNarrowProjectIesExportBoundaryReadbackStatus(projectIdOrEnvelopeId) {
+    const envelope = getProjectEnvelope(projectIdOrEnvelopeId);
+    return buildRuntimeIesFirstNarrowProjectIesExportBoundaryReadbackStatus(envelope || {});
+  }
+
   function createCurrentProjectPreviewEnvelope(context = {}) {
     return createSavedProjectEnvelope({
       project: context.project,
@@ -4303,6 +4311,8 @@ export function createSavedProjectStore({ eventBus } = {}) {
       state.save.lastSavedProjectId = envelope.projectId;
       state.save.lastSavedAt = envelope.savedAt;
       const selectedResultPersistedSummaryReadbackStatus = buildSelectedResultPersistedSummaryReadbackStatus(envelope);
+      const iesFirstNarrowProjectIesExportBoundaryReadbackStatus =
+        buildRuntimeIesFirstNarrowProjectIesExportBoundaryReadbackStatus(envelope);
       const result = {
         accepted: true,
         status: "saved",
@@ -4335,6 +4345,7 @@ export function createSavedProjectStore({ eventBus } = {}) {
         iesFirstNarrowProjectIesExportBoundarySummaryWritten: iesFirstNarrowProjectIesExportBoundaryWrite.requested === true,
         iesFirstNarrowProjectIesExportBoundarySummaryTarget: iesFirstNarrowProjectIesExportBoundaryWrite.requested ? IES_FIRST_NARROW_PROJECT_IES_EXPORT_BOUNDARY_SUMMARY_TARGET : null,
         selectedResultPersistedSummaryReadbackStatus,
+        iesFirstNarrowProjectIesExportBoundaryReadbackStatus,
         envelope: clone(envelope),
         browser: getStoreSnapshot(saveContext),
       };
@@ -4349,6 +4360,8 @@ export function createSavedProjectStore({ eventBus } = {}) {
         status: "failed",
         reason: state.save.lastError,
         selectedResultPersistedSummaryReadbackStatus: buildSelectedResultPersistedSummaryReadbackStatus({}),
+        iesFirstNarrowProjectIesExportBoundaryReadbackStatus:
+          buildRuntimeIesFirstNarrowProjectIesExportBoundaryReadbackStatus({}),
         browser: getStoreSnapshot(browserContext),
       };
       eventBus?.emit("saved-project-store:save-failed", result);
@@ -4483,6 +4496,7 @@ export function createSavedProjectStore({ eventBus } = {}) {
     listProjectSummaries,
     getProjectEnvelope,
     getSelectedResultPersistedSummaryReadbackStatus,
+    getIesFirstNarrowProjectIesExportBoundaryReadbackStatus,
     getStoreSnapshot,
     getSaveSnapshot,
     getRestoreSnapshot,
