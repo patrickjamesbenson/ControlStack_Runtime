@@ -1,6 +1,7 @@
 import { createIesBuilderState } from "./iesBuilderState.js";
 import { renderIesBuilderView } from "./iesBuilderView.js";
 import { createIesBuilderViewModel } from "./iesBuilderViewModel.js";
+import { resolveIesBuilderSelectedProjectIesExportDownloadSourceBoundary } from "./iesBuilderSelectedProjectIesExportDownloadSourceBoundary.js";
 
 const IES_BUILDER_STATUS_ENDPOINT = "/api/ies-builder/status";
 
@@ -74,6 +75,8 @@ let mountedContext = null;
 let mountedServices = null;
 let iesBuilderState = null;
 let iesBuilderRequestId = 0;
+let iesBuilderDownloadSourceRequestId = 0;
+let iesBuilderSelectedProjectIesExportDownloadSourceBoundary = null;
 
 const INITIAL_STATUS = Object.freeze({
   ok: null,
@@ -219,8 +222,22 @@ function renderCurrentView() {
     context: mountedContext,
     local,
     status: currentStatus(),
+    projectIesExportDownloadSourceBoundary:
+      iesBuilderSelectedProjectIesExportDownloadSourceBoundary,
   });
   renderIesBuilderView(mountedContainer, viewModel);
+}
+
+async function refreshSelectedProjectIesExportDownloadSourceBoundary() {
+  const requestId = iesBuilderDownloadSourceRequestId + 1;
+  iesBuilderDownloadSourceRequestId = requestId;
+  const boundary = await resolveIesBuilderSelectedProjectIesExportDownloadSourceBoundary({
+    context: mountedContext,
+    services: mountedServices,
+  });
+  if (requestId !== iesBuilderDownloadSourceRequestId || !mountedContainer) return;
+  iesBuilderSelectedProjectIesExportDownloadSourceBoundary = boundary;
+  renderCurrentView();
 }
 
 function applyIesBuilderStatus(payload) {
@@ -273,7 +290,9 @@ export const iesBuilderModule = {
     mountedContext = context;
     mountedServices = services;
     iesBuilderState = createIesBuilderState();
+    iesBuilderSelectedProjectIesExportDownloadSourceBoundary = null;
     renderCurrentView();
+    void refreshSelectedProjectIesExportDownloadSourceBoundary();
     loadIesBuilderStatus();
     services.eventBus?.emit("ies-builder:mounted", {
       moduleId: "ies_builder",
@@ -290,11 +309,14 @@ export const iesBuilderModule = {
     mountedContext = nextContext;
     mountedContainer.dataset.lastUpdate = new Date().toISOString();
     mountedContainer.dataset.module = nextContext.route?.moduleId || "ies_builder";
+    iesBuilderSelectedProjectIesExportDownloadSourceBoundary = null;
     renderCurrentView();
+    void refreshSelectedProjectIesExportDownloadSourceBoundary();
   },
 
   unmount() {
     iesBuilderRequestId += 1;
+    iesBuilderDownloadSourceRequestId += 1;
     if (mountedContainer) {
       while (mountedContainer.firstChild) {
         mountedContainer.removeChild(mountedContainer.firstChild);
@@ -304,5 +326,6 @@ export const iesBuilderModule = {
     mountedContext = null;
     mountedServices = null;
     iesBuilderState = null;
+    iesBuilderSelectedProjectIesExportDownloadSourceBoundary = null;
   },
 };

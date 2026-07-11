@@ -333,6 +333,13 @@ function safeObject(value, fallback = {}) {
   return value && typeof value === "object" && !Array.isArray(value) ? value : fallback;
 }
 
+function safeScalarBoundary(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value) || !Object.isFrozen(value)) return null;
+  return Object.values(value).every((item) => (
+    item === null || ["string", "number", "boolean"].includes(typeof item)
+  )) ? value : null;
+}
+
 function objectRows(value = {}, fallback = {}) {
   const object = safeObject(value, fallback);
   return Object.entries(object).map(([key, item]) => [key, valueToText(item)]);
@@ -494,7 +501,10 @@ function oneMmPolicyRows(status = {}) {
   ];
 }
 
-export function createIesBuilderProjectIesExportDownloadControl(action) {
+export function createIesBuilderProjectIesExportDownloadControl(
+  action,
+  { unavailableBlocker = "project-ies-export-download-action-seam-unavailable" } = {},
+) {
   const actionAvailable = typeof action === "function";
   const fields = {
     schemaId: IES_BUILDER_FIRST_VISIBLE_PROJECT_IES_EXPORT_DOWNLOAD_CONTROL_SCHEMA_ID,
@@ -508,7 +518,7 @@ export function createIesBuilderProjectIesExportDownloadControl(action) {
     visible: true,
     enabled: actionAvailable,
     failClosed: !actionAvailable,
-    blocker: actionAvailable ? null : "project-ies-export-download-action-seam-unavailable",
+    blocker: actionAvailable ? null : unavailableBlocker,
     browserOnly: true,
     userGestureRequired: true,
     ephemeral: true,
@@ -530,7 +540,13 @@ export function triggerIesBuilderProjectIesExportDownloadAction(input = {}) {
   });
 }
 
-export function createIesBuilderViewModel({ context, local = {}, status = {} }) {
+export function createIesBuilderViewModel({
+  context,
+  local = {},
+  status = {},
+  projectIesExportDownloadSourceBoundary = null,
+  projectIesExportDownloadControlAction = null,
+}) {
   const fallbackWarnings = [
     ...CANDIDATE_READINESS_BOUNDARY_STATEMENTS,
     ...CANDIDATE_OUTPUT_CONTRACT_BOUNDARY_COPY,
@@ -560,6 +576,14 @@ export function createIesBuilderViewModel({ context, local = {}, status = {} }) 
     ...CANDIDATE_READINESS_BOUNDARY_STATEMENTS,
     ...contractBoundaryCopy,
   ];
+  const selectedProjectDownloadSourceBoundary = safeScalarBoundary(
+    projectIesExportDownloadSourceBoundary,
+  );
+  const selectedProjectDownloadControlAction = typeof projectIesExportDownloadControlAction === "function"
+    ? projectIesExportDownloadControlAction
+    : null;
+  const selectedProjectDownloadAction = selectedProjectDownloadControlAction
+    || triggerIesBuilderProjectIesExportDownloadAction;
 
   return {
     moduleId: "ies_builder",
@@ -568,9 +592,11 @@ export function createIesBuilderViewModel({ context, local = {}, status = {} }) 
     loadedAt: local.loadedAt || "none",
     lastAction: local.lastAction || "mounted",
     shellRoute: context?.route?.moduleId || "ies_builder",
-    projectIesExportDownloadAction: triggerIesBuilderProjectIesExportDownloadAction,
+    projectIesExportDownloadSourceBoundary: selectedProjectDownloadSourceBoundary,
+    projectIesExportDownloadAction: selectedProjectDownloadAction,
     projectIesExportDownloadControl: createIesBuilderProjectIesExportDownloadControl(
-      triggerIesBuilderProjectIesExportDownloadAction,
+      selectedProjectDownloadControlAction,
+      { unavailableBlocker: "project-ies-download-materialiser-capability-not-wired" },
     ),
     status,
     statusRows: statusRows(status),

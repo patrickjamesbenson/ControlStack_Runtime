@@ -97,7 +97,7 @@ function safeTriggeredReceipt(overrides = {}) {
   });
 }
 
-test("view-model exposes one exact immutable first-visible project IES export download control", () => {
+test("view-model exposes one exact immutable first-visible project IES export download control disabled until materialiser wiring exists", () => {
   const viewModel = baseViewModel();
   const control = viewModel.projectIesExportDownloadControl;
 
@@ -122,12 +122,12 @@ test("view-model exposes one exact immutable first-visible project IES export do
   assert.equal(control.label, "Download project IES (.ies)");
   assert.equal(
     control.state,
-    IES_BUILDER_FIRST_VISIBLE_PROJECT_IES_EXPORT_DOWNLOAD_CONTROL_STATES.actionAvailable,
+    IES_BUILDER_FIRST_VISIBLE_PROJECT_IES_EXPORT_DOWNLOAD_CONTROL_STATES.blockedFailClosed,
   );
   assert.equal(control.visible, true);
-  assert.equal(control.enabled, true);
-  assert.equal(control.failClosed, false);
-  assert.equal(control.blocker, null);
+  assert.equal(control.enabled, false);
+  assert.equal(control.failClosed, true);
+  assert.equal(control.blocker, "project-ies-download-materialiser-capability-not-wired");
   assert.equal(control.browserOnly, true);
   assert.equal(control.userGestureRequired, true);
   assert.equal(control.ephemeral, true);
@@ -136,6 +136,44 @@ test("view-model exposes one exact immutable first-visible project IES export do
     viewModel.projectIesExportDownloadAction,
     triggerIesBuilderProjectIesExportDownloadAction,
   );
+});
+
+test("view-model exposes only the scalar selected-project source boundary and never the retained readback input", () => {
+  const sourceBoundary = Object.freeze({
+    state: "ies_builder_selected_project_ies_export_download_source_ready",
+    readiness: "ready",
+    ready: true,
+    sourceReadbackFingerprint:
+      `safe-ies-first-narrow-project-ies-export-result-readback-status:${"a".repeat(40)}`,
+    exactReadbackStatusRetainedInternally: true,
+  });
+  const viewModel = createIesBuilderViewModel({
+    context: { route: { moduleId: "ies_builder" } },
+    local: {},
+    status: {},
+    projectIesExportDownloadSourceBoundary: sourceBoundary,
+  });
+
+  assert.equal(viewModel.projectIesExportDownloadSourceBoundary, sourceBoundary);
+  assert.equal("iesFirstNarrowProjectIesExportResultReadbackStatus" in viewModel, false);
+  assert.equal("projectIesExportDownloadMaterialisationInput" in viewModel, false);
+  assert.equal("downloadMetadata" in viewModel, false);
+  assert.equal("blob" in viewModel, false);
+  assert.equal(viewModel.projectIesExportDownloadControl.enabled, false);
+  assert.equal(
+    viewModel.projectIesExportDownloadControl.blocker,
+    "project-ies-download-materialiser-capability-not-wired",
+  );
+
+  const rejected = createIesBuilderViewModel({
+    context: { route: { moduleId: "ies_builder" } },
+    local: {},
+    status: {},
+    projectIesExportDownloadSourceBoundary: Object.freeze({
+      readbackStatus: Object.freeze({ rawIesText: "IESNA:LM-63 secret" }),
+    }),
+  });
+  assert.equal(rejected.projectIesExportDownloadSourceBoundary, null);
 });
 
 test("control fails closed when the landed synchronous action seam is unavailable", () => {
@@ -156,7 +194,7 @@ test("control fails closed when the landed synchronous action seam is unavailabl
   assert.equal(control.blocker, "project-ies-export-download-action-seam-unavailable");
 });
 
-test("IES Builder renders exactly one visible download button immediately after the introduction and before diagnostics", () => {
+test("IES Builder renders exactly one visible disabled download button immediately after the introduction and before diagnostics", () => {
   const container = withIesBuilderDocument(() => {
     const target = globalThis["doc" + "ument"].createElement("div");
     renderIesBuilderView(target, baseViewModel());
@@ -181,10 +219,11 @@ test("IES Builder renders exactly one visible download button immediately after 
   assert.equal(button.tagName, "BUTTON");
   assert.equal(button.type, "button");
   assert.equal(button.textContent, "Download project IES (.ies)");
-  assert.equal(button.disabled, false);
+  assert.equal(button.disabled, true);
+  assert.equal("click" in button.eventListeners, false);
   assert.equal(
     statuses[0].textContent,
-    "Download the ready IES export for the selected project.",
+    "Project IES download is unavailable.",
   );
 });
 
@@ -193,13 +232,15 @@ test("visible button invokes the supplied synchronous action exactly once and re
   const receipt = safeTriggeredReceipt();
   const container = withIesBuilderDocument(() => {
     const target = globalThis["doc" + "ument"].createElement("div");
-    const viewModel = {
-      ...baseViewModel(),
-      projectIesExportDownloadAction() {
+    const viewModel = createIesBuilderViewModel({
+      context: { route: { moduleId: "ies_builder" } },
+      local: {},
+      status: {},
+      projectIesExportDownloadControlAction() {
         calls += 1;
         return receipt;
       },
-    };
+    });
     renderIesBuilderView(target, viewModel);
     return target;
   });
