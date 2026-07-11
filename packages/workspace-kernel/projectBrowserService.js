@@ -29,6 +29,10 @@ export const PROJECT_BROWSER_PROJECT_IES_EXPORT_RESULT_READBACK_SUMMARY_SCHEMA_I
   "controlstack.runtime.project-browser.project-ies-export-result-readback-summary.v1";
 export const PROJECT_BROWSER_PROJECT_IES_EXPORT_RESULT_READBACK_SUMMARY_SCHEMA_VERSION = 1;
 
+export const PROJECT_BROWSER_SELECTED_PROJECT_IES_EXPORT_RESULT_READBACK_DETAIL_SUMMARY_SCHEMA_ID =
+  "controlstack.runtime.project-browser.selected-project-ies-export-result-readback-detail-summary.v1";
+export const PROJECT_BROWSER_SELECTED_PROJECT_IES_EXPORT_RESULT_READBACK_DETAIL_SUMMARY_SCHEMA_VERSION = 1;
+
 export const PROJECT_BROWSER_SELECTED_RESULT_PERSISTED_SUMMARY_READBACK_STATES = Object.freeze({
   ready: "project_browser_selected_result_persisted_summary_readback_ready",
   missing: "project_browser_selected_result_persisted_summary_readback_missing",
@@ -71,6 +75,12 @@ export const PROJECT_BROWSER_PROJECT_IES_EXPORT_RESULT_READBACK_STATES = Object.
   blockedFailClosed: "project_browser_project_ies_export_result_readback_blocked_fail_closed",
 });
 
+export const PROJECT_BROWSER_SELECTED_PROJECT_IES_EXPORT_RESULT_READBACK_DETAIL_STATES = Object.freeze({
+  ready: "project_browser_selected_project_ies_export_result_readback_detail_ready",
+  missing: "project_browser_selected_project_ies_export_result_readback_detail_missing",
+  blockedFailClosed: "project_browser_selected_project_ies_export_result_readback_detail_blocked_fail_closed",
+});
+
 const PROJECT_BROWSER_SELECTED_RESULT_READBACK_SOURCE =
   "project-browser-project-summary-selected-result-readback-consumer";
 const PROJECT_BROWSER_SELECTED_PROJECT_SELECTED_RESULT_READBACK_STATUS_SOURCE =
@@ -83,6 +93,8 @@ export const PROJECT_BROWSER_SELECTED_PROJECT_IES_EXPORT_BOUNDARY_READBACK_DETAI
   "project-browser-selected-project-project-ies-export-boundary-readback-detail-consumer";
 const PROJECT_BROWSER_PROJECT_IES_EXPORT_RESULT_READBACK_SOURCE =
   "project-browser-saved-project-project-ies-export-result-readback-consumer";
+export const PROJECT_BROWSER_SELECTED_PROJECT_IES_EXPORT_RESULT_READBACK_DETAIL_SOURCE =
+  "project-browser-selected-project-project-ies-export-result-readback-detail-consumer";
 const SELECTED_RESULT_READBACK_TARGET =
   "projectEnvelope.modules.cs_selector.downstreamContext.selectedResultSummary";
 const PROJECT_IES_EXPORT_BOUNDARY_READBACK_TARGET =
@@ -970,6 +982,146 @@ export function buildProjectBrowserSelectedProjectIesExportBoundaryReadbackDetai
   });
 }
 
+export function buildProjectBrowserSelectedProjectIesExportResultReadbackDetailSummary(
+  projectIesExportResultReadbackSummary = {},
+  selectedProjectId = null,
+) {
+  const sourceSummary = isPlainObject(projectIesExportResultReadbackSummary)
+    ? projectIesExportResultReadbackSummary
+    : {};
+  const selectedProjectToken = selectedProjectId === null ? null : safeToken(selectedProjectId, null);
+  const projectStatuses = Array.isArray(sourceSummary.projectStatuses)
+    ? sourceSummary.projectStatuses.filter((status) => isPlainObject(status))
+    : [];
+  const selectedProjectStatus = selectedProjectToken
+    ? projectStatuses.find((status) => (
+      safeToken(status.projectId, null) === selectedProjectToken
+      || safeToken(status.envelopeId, null) === selectedProjectToken
+    )) || null
+    : null;
+  const sourceUnsafeBlocker = findUnsafeProjectIesExportResultReadbackField(sourceSummary);
+  const selectedStatusUnsafeBlocker = findUnsafeProjectIesExportResultReadbackField(selectedProjectStatus);
+
+  let state = PROJECT_BROWSER_SELECTED_PROJECT_IES_EXPORT_RESULT_READBACK_DETAIL_STATES.missing;
+  let readiness = "missing";
+  let ready = false;
+  let failClosed = true;
+  let blocker = null;
+
+  if (sourceUnsafeBlocker) {
+    state = PROJECT_BROWSER_SELECTED_PROJECT_IES_EXPORT_RESULT_READBACK_DETAIL_STATES.blockedFailClosed;
+    readiness = "blocked_fail_closed";
+    blocker = sourceUnsafeBlocker;
+  } else if (selectedProjectId === null) {
+    blocker = "project-browser-selected-project-not-selected";
+  } else if (!selectedProjectToken) {
+    state = PROJECT_BROWSER_SELECTED_PROJECT_IES_EXPORT_RESULT_READBACK_DETAIL_STATES.blockedFailClosed;
+    readiness = "blocked_fail_closed";
+    blocker = "project-browser-selected-project-id-invalid";
+  } else if (!Array.isArray(sourceSummary.projectStatuses)) {
+    blocker = "project-browser-project-ies-export-result-readback-summary-missing";
+  } else if (!selectedProjectStatus) {
+    blocker = "project-browser-selected-project-not-found";
+  } else if (selectedStatusUnsafeBlocker) {
+    state = PROJECT_BROWSER_SELECTED_PROJECT_IES_EXPORT_RESULT_READBACK_DETAIL_STATES.blockedFailClosed;
+    readiness = "blocked_fail_closed";
+    blocker = selectedStatusUnsafeBlocker;
+  } else {
+    const selectedReadiness = safeToken(selectedProjectStatus.readiness, "missing") || "missing";
+    const selectedBlocker = safeToken(selectedProjectStatus.blocker, null);
+    const selectedBlocked = selectedReadiness === "blocked_fail_closed"
+      || selectedProjectStatus.state === PROJECT_BROWSER_PROJECT_IES_EXPORT_RESULT_READBACK_STATES.blockedFailClosed
+      || (selectedProjectStatus.failClosed === true
+        && hasNonNullBlocker(selectedProjectStatus.blocker)
+        && selectedReadiness !== "missing");
+    const selectedReady = selectedReadiness === "ready"
+      && selectedProjectStatus.ready === true
+      && selectedProjectStatus.failClosed !== true;
+
+    if (selectedReady) {
+      state = PROJECT_BROWSER_SELECTED_PROJECT_IES_EXPORT_RESULT_READBACK_DETAIL_STATES.ready;
+      readiness = "ready";
+      ready = true;
+      failClosed = false;
+    } else if (selectedBlocked) {
+      state = PROJECT_BROWSER_SELECTED_PROJECT_IES_EXPORT_RESULT_READBACK_DETAIL_STATES.blockedFailClosed;
+      readiness = "blocked_fail_closed";
+      blocker = selectedBlocker || "project-browser-selected-project-ies-export-result-readback-blocked-fail-closed";
+    } else {
+      blocker = selectedBlocker || "project-browser-selected-project-ies-export-result-readback-missing";
+    }
+  }
+
+  const base = {
+    schemaId: PROJECT_BROWSER_SELECTED_PROJECT_IES_EXPORT_RESULT_READBACK_DETAIL_SUMMARY_SCHEMA_ID,
+    schemaVersion: PROJECT_BROWSER_SELECTED_PROJECT_IES_EXPORT_RESULT_READBACK_DETAIL_SUMMARY_SCHEMA_VERSION,
+    owner: "shell",
+    source: PROJECT_BROWSER_SELECTED_PROJECT_IES_EXPORT_RESULT_READBACK_DETAIL_SOURCE,
+    sourceSummarySchemaId: safeToken(sourceSummary.schemaId, null),
+    sourceSummarySchemaVersion: safeSchemaVersion(sourceSummary.schemaVersion),
+    sourceSummaryState: safeToken(sourceSummary.state, null),
+    sourceSummaryReadiness: safeToken(sourceSummary.readiness, "missing") || "missing",
+    state,
+    readiness,
+    ready,
+    failClosed,
+    blocker,
+    selectedProjectId: selectedProjectToken,
+    selectedProjectFound: selectedProjectStatus !== null,
+    projectId: selectedProjectStatus ? safeToken(selectedProjectStatus.projectId, null) : null,
+    envelopeId: selectedProjectStatus ? safeToken(selectedProjectStatus.envelopeId, null) : null,
+    resultReadbackState: selectedProjectStatus ? safeToken(selectedProjectStatus.state, null) : null,
+    resultReadbackReadiness: selectedProjectStatus
+      ? safeToken(selectedProjectStatus.readiness, "missing") || "missing"
+      : "missing",
+    resultReadbackReady: selectedProjectStatus?.ready === true,
+    resultReadbackFailClosed: selectedProjectStatus?.failClosed !== false,
+    resultReadbackBlocker: selectedProjectStatus?.blocker
+      ? safeToken(selectedProjectStatus.blocker, "project-browser-selected-project-ies-export-result-readback-blocked")
+      : null,
+    moduleId: "cs_selector",
+    consumerModuleId: "ies_builder",
+    targetLocation: PROJECT_IES_EXPORT_RESULT_READBACK_TARGET,
+    safeReadbackStatusOnly: true,
+    readOnly: true,
+    selectedProjectOnly: true,
+    detailOnly: true,
+    summaryOnly: true,
+    redacted: true,
+    machineValueSafe: true,
+    sourceReadbackFingerprint: selectedProjectStatus
+      ? safeToken(selectedProjectStatus.sourceReadbackFingerprint, null, 760)
+      : null,
+    sourceProjectBrowserProjectIesExportResultReadbackSummaryFingerprint: safeToken(
+      sourceSummary.projectBrowserProjectIesExportResultReadbackSummaryFingerprint,
+      null,
+      760,
+    ),
+    rawIesReturned: false,
+    rawIesExposed: false,
+    rawPhotometryReturned: false,
+    candelaArraysReturned: false,
+    governancePayloadReturned: false,
+    base64ArtifactsReturned: false,
+    privatePathsReturned: false,
+    filenamesReturned: false,
+    routesAdded: false,
+    postEndpointsAdded: false,
+    runtimeDataMutated: false,
+    boardDataMutated: false,
+    iesGenerationAttempted: false,
+    outputGenerationEnabled: false,
+  };
+
+  return Object.freeze({
+    ...base,
+    projectBrowserSelectedProjectIesExportResultReadbackDetailFingerprint: stableFingerprint(
+      "safe-project-browser-selected-project-ies-export-result-readback-detail-summary",
+      base,
+    ),
+  });
+}
+
 export function buildProjectBrowserSelectedProjectSelectedResultPersistedSummaryReadbackStatus(projects = [], selectedProjectId = null) {
   const projectSummaries = Array.isArray(projects) ? projects : [];
   const selectedProjectToken = selectedProjectId === null ? null : safeToken(selectedProjectId, null);
@@ -1281,6 +1433,10 @@ export function createProjectBrowserService({ savedProjectStore, projectService,
       projectIesExportResultReadbackSummary,
       selectedProjectIesExportBoundaryReadbackDetailSummary: buildProjectBrowserSelectedProjectIesExportBoundaryReadbackDetailSummary(
         projectIesExportBoundaryReadbackSummary,
+        state.selectedProjectId,
+      ),
+      selectedProjectIesExportResultReadbackDetailSummary: buildProjectBrowserSelectedProjectIesExportResultReadbackDetailSummary(
+        projectIesExportResultReadbackSummary,
         state.selectedProjectId,
       ),
       filters: { ...state.filters },
