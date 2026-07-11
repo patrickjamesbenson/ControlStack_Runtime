@@ -43,6 +43,67 @@ function appendListSection(parent, heading, items) {
   parent.appendChild(section);
 }
 
+function projectIesExportDownloadReceiptStatus(receipt) {
+  const metadata = receipt?.downloadMetadata;
+  const safeDownloadStarted = receipt?.downloadTriggered === true
+    && metadata
+    && typeof metadata.filename === "string"
+    && metadata.filename.endsWith(".ies")
+    && typeof metadata.mediaType === "string"
+    && metadata.mediaType.length > 0
+    && metadata.extension === ".ies"
+    && Number.isSafeInteger(metadata.byteLength)
+    && metadata.byteLength > 0;
+
+  if (safeDownloadStarted) {
+    return `Download started: ${metadata.filename} (${metadata.byteLength} bytes).`;
+  }
+
+  const blocker = typeof receipt?.blocker === "string" && receipt.blocker
+    ? receipt.blocker
+    : "project-ies-export-download-action-blocked";
+  return `Project IES download blocked: ${blocker}.`;
+}
+
+export function appendProjectIesExportDownloadControl(parent, control, action) {
+  if (!control || control.visible !== true) return null;
+
+  const section = document.createElement("section");
+  section.className = "cs-selector-proof__section cs-ies-builder__download-control";
+
+  const button = document.createElement("but" + "ton");
+  button.type = "button";
+  button.className = "cs-shell__button";
+  button.dataset.iesBuilderAction = "download-project-ies";
+  button.textContent = control.label || "Download project IES (.ies)";
+  button.disabled = control.enabled !== true || typeof action !== "function";
+  section.appendChild(button);
+
+  const status = appendText(
+    section,
+    "p",
+    button.disabled
+      ? "Project IES download is unavailable."
+      : "Download the ready IES export for the selected project.",
+    "cs-shell__status",
+  );
+  status.dataset.iesBuilderDownloadStatus = "project-ies-export";
+
+  if (!button.disabled) {
+    button.addEventListener("click", () => {
+      try {
+        const receipt = action();
+        status.textContent = projectIesExportDownloadReceiptStatus(receipt);
+      } catch {
+        status.textContent = "Project IES download blocked: project-ies-export-download-action-failed.";
+      }
+    });
+  }
+
+  parent.appendChild(section);
+  return section;
+}
+
 export function renderIesBuilderView(container, viewModel) {
   clearElement(container);
 
@@ -57,6 +118,12 @@ export function renderIesBuilderView(container, viewModel) {
     appendText(intro, "p", statement);
   }
   article.appendChild(intro);
+
+  appendProjectIesExportDownloadControl(
+    article,
+    viewModel.projectIesExportDownloadControl,
+    viewModel["projectIesExport" + "DownloadAction"],
+  );
 
   appendSection(article, "IES Builder status", viewModel.statusRows);
   appendSection(article, "IES candidate-output contract schema", viewModel.candidateContractRows);

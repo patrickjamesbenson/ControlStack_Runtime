@@ -2,6 +2,34 @@ import { triggerIesFirstNarrowProjectIesExportBrowserDownload } from "./iesFirst
 
 const STATUS_ENDPOINT = "/api/ies-builder/status";
 
+export const IES_BUILDER_FIRST_VISIBLE_PROJECT_IES_EXPORT_DOWNLOAD_CONTROL_CONTRACT_ID =
+  "IES-BUILDER-FIRST-VISIBLE-PROJECT-IES-EXPORT-DOWNLOAD-CONTROL-1";
+export const IES_BUILDER_FIRST_VISIBLE_PROJECT_IES_EXPORT_DOWNLOAD_CONTROL_SCHEMA_ID =
+  "controlstack.runtime.ies-builder.first-visible-project-ies-export-download-control.v1";
+export const IES_BUILDER_FIRST_VISIBLE_PROJECT_IES_EXPORT_DOWNLOAD_CONTROL_SCHEMA_VERSION = 1;
+
+export const IES_BUILDER_FIRST_VISIBLE_PROJECT_IES_EXPORT_DOWNLOAD_CONTROL_STATES = Object.freeze({
+  actionAvailable: "ies_builder_project_ies_export_download_action_available",
+  blockedFailClosed: "ies_builder_project_ies_export_download_blocked_fail_closed",
+});
+
+export const IES_BUILDER_FIRST_VISIBLE_PROJECT_IES_EXPORT_DOWNLOAD_CONTROL_FIELD_ORDER = Object.freeze([
+  "schemaId",
+  "schemaVersion",
+  "contractId",
+  "controlId",
+  "label",
+  "state",
+  "visible",
+  "enabled",
+  "failClosed",
+  "blocker",
+  "browserOnly",
+  "userGestureRequired",
+  "ephemeral",
+  "inMemoryOnly",
+]);
+
 const REQUIRED_BOUNDARY_STATEMENTS = Object.freeze([
   "IES Builder is read-only and diagnostic in this slice.",
   "IES Builder is candidate-output-only and does not provide production proof.",
@@ -466,6 +494,33 @@ function oneMmPolicyRows(status = {}) {
   ];
 }
 
+export function createIesBuilderProjectIesExportDownloadControl(action) {
+  const actionAvailable = typeof action === "function";
+  const fields = {
+    schemaId: IES_BUILDER_FIRST_VISIBLE_PROJECT_IES_EXPORT_DOWNLOAD_CONTROL_SCHEMA_ID,
+    schemaVersion: IES_BUILDER_FIRST_VISIBLE_PROJECT_IES_EXPORT_DOWNLOAD_CONTROL_SCHEMA_VERSION,
+    contractId: IES_BUILDER_FIRST_VISIBLE_PROJECT_IES_EXPORT_DOWNLOAD_CONTROL_CONTRACT_ID,
+    controlId: "project-ies-export-download",
+    label: "Download project IES (.ies)",
+    state: actionAvailable
+      ? IES_BUILDER_FIRST_VISIBLE_PROJECT_IES_EXPORT_DOWNLOAD_CONTROL_STATES.actionAvailable
+      : IES_BUILDER_FIRST_VISIBLE_PROJECT_IES_EXPORT_DOWNLOAD_CONTROL_STATES.blockedFailClosed,
+    visible: true,
+    enabled: actionAvailable,
+    failClosed: !actionAvailable,
+    blocker: actionAvailable ? null : "project-ies-export-download-action-seam-unavailable",
+    browserOnly: true,
+    userGestureRequired: true,
+    ephemeral: true,
+    inMemoryOnly: true,
+  };
+
+  return Object.freeze(Object.fromEntries(
+    IES_BUILDER_FIRST_VISIBLE_PROJECT_IES_EXPORT_DOWNLOAD_CONTROL_FIELD_ORDER
+      .map((key) => [key, fields[key]]),
+  ));
+}
+
 export function triggerIesBuilderProjectIesExportDownloadAction(input = {}) {
   return triggerIesFirstNarrowProjectIesExportBrowserDownload({
     iesFirstNarrowProjectIesExportDownloadMaterialisationBoundary:
@@ -514,6 +569,9 @@ export function createIesBuilderViewModel({ context, local = {}, status = {} }) 
     lastAction: local.lastAction || "mounted",
     shellRoute: context?.route?.moduleId || "ies_builder",
     projectIesExportDownloadAction: triggerIesBuilderProjectIesExportDownloadAction,
+    projectIesExportDownloadControl: createIesBuilderProjectIesExportDownloadControl(
+      triggerIesBuilderProjectIesExportDownloadAction,
+    ),
     status,
     statusRows: statusRows(status),
     candidateContractRows: objectRows(schema, SCHEMA_FALLBACK),
