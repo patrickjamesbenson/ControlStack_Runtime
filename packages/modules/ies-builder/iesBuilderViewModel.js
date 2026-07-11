@@ -1,3 +1,5 @@
+import { triggerIesFirstNarrowProjectIesExportBrowserDownload } from "./iesFirstNarrowProjectIesExportBrowserDownloadTrigger.js";
+
 const STATUS_ENDPOINT = "/api/ies-builder/status";
 
 const REQUIRED_BOUNDARY_STATEMENTS = Object.freeze([
@@ -464,6 +466,15 @@ function oneMmPolicyRows(status = {}) {
   ];
 }
 
+export function triggerIesBuilderProjectIesExportDownloadAction(input = {}) {
+  return triggerIesFirstNarrowProjectIesExportBrowserDownload({
+    iesFirstNarrowProjectIesExportDownloadMaterialisationBoundary:
+      input?.iesFirstNarrowProjectIesExportDownloadMaterialisationBoundary,
+    browserDocument: input?.browserDocument,
+    browserUrlApi: input?.browserUrlApi,
+  });
+}
+
 export function createIesBuilderViewModel({ context, local = {}, status = {} }) {
   const fallbackWarnings = [
     ...CANDIDATE_READINESS_BOUNDARY_STATEMENTS,
@@ -502,6 +513,7 @@ export function createIesBuilderViewModel({ context, local = {}, status = {} }) 
     loadedAt: local.loadedAt || "none",
     lastAction: local.lastAction || "mounted",
     shellRoute: context?.route?.moduleId || "ies_builder",
+    projectIesExportDownloadAction: triggerIesBuilderProjectIesExportDownloadAction,
     status,
     statusRows: statusRows(status),
     candidateContractRows: objectRows(schema, SCHEMA_FALLBACK),
