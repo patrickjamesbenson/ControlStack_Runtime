@@ -1,4 +1,10 @@
 import { triggerIesFirstNarrowProjectIesExportBrowserDownload } from "./iesFirstNarrowProjectIesExportBrowserDownloadTrigger.js";
+import {
+  getIesBuilderSelectedProjectIesExportDownloadInternalMaterialisationInput,
+} from "./iesBuilderSelectedProjectIesExportDownloadSourceBoundary.js";
+import {
+  buildRuntimeIesFirstNarrowProjectIesExportDownloadMaterialisationBoundary,
+} from "../../workspace-kernel/iesFirstNarrowProjectIesExportDownloadMaterialisationBoundary.js";
 
 const STATUS_ENDPOINT = "/api/ies-builder/status";
 
@@ -579,7 +585,11 @@ export function createIesBuilderViewModel({
   const selectedProjectDownloadSourceBoundary = safeScalarBoundary(
     projectIesExportDownloadSourceBoundary,
   );
-  const selectedProjectDownloadControlAction = typeof projectIesExportDownloadControlAction === "function"
+  const selectedProjectDownloadSourceReady = selectedProjectDownloadSourceBoundary?.ready === true
+    && selectedProjectDownloadSourceBoundary?.readiness === "ready"
+    && selectedProjectDownloadSourceBoundary?.failClosed === false;
+  const selectedProjectDownloadControlAction = selectedProjectDownloadSourceReady
+    && typeof projectIesExportDownloadControlAction === "function"
     ? projectIesExportDownloadControlAction
     : null;
   const selectedProjectDownloadAction = selectedProjectDownloadControlAction
@@ -632,5 +642,67 @@ export function createIesBuilderViewModel({
     boundaryStatements,
     contractBoundaryCopy: [...contractBoundaryCopy],
     warnings: safeList(status.warnings, fallbackWarnings),
+  };
+}
+
+function resolveIesBuilderProjectIesExportDownloadCapability({ services = {}, context = {} } = {}) {
+  const serviceCapability = services?.materialiseProjectIesDownload;
+  if (typeof serviceCapability === "function") return serviceCapability.bind(services);
+
+  const nestedServiceCapability = services?.iesBuilder?.materialiseProjectIesDownload;
+  if (typeof nestedServiceCapability === "function") {
+    return nestedServiceCapability.bind(services.iesBuilder);
+  }
+
+  const contextCapability = context?.materialiseProjectIesDownload;
+  if (typeof contextCapability === "function") return contextCapability.bind(context);
+
+  const nestedContextCapability = context?.iesBuilder?.materialiseProjectIesDownload;
+  if (typeof nestedContextCapability === "function") {
+    return nestedContextCapability.bind(context.iesBuilder);
+  }
+
+  return null;
+}
+
+export async function prepareIesBuilderProjectIesExportDownloadCapabilityAction({
+  projectIesExportDownloadSourceBoundary = null,
+  services = {},
+  context = {},
+  browserDocument,
+  browserUrlApi,
+} = {}) {
+  const materialiseProjectIesDownload = resolveIesBuilderProjectIesExportDownloadCapability({
+    services,
+    context,
+  });
+  if (typeof materialiseProjectIesDownload !== "function") return null;
+
+  const readbackStatus =
+    getIesBuilderSelectedProjectIesExportDownloadInternalMaterialisationInput(
+      projectIesExportDownloadSourceBoundary,
+    );
+  if (!readbackStatus) return null;
+
+  let materialisationBoundary;
+  try {
+    materialisationBoundary =
+      await buildRuntimeIesFirstNarrowProjectIesExportDownloadMaterialisationBoundary({
+        iesFirstNarrowProjectIesExportResultReadbackStatus: readbackStatus,
+        materialiseProjectIesDownload,
+      });
+  } catch {
+    return null;
+  }
+
+  if (materialisationBoundary?.ready !== true
+    || materialisationBoundary?.failClosed !== false) return null;
+
+  return function triggerPreparedIesBuilderProjectIesExportDownload() {
+    return triggerIesBuilderProjectIesExportDownloadAction({
+      iesFirstNarrowProjectIesExportDownloadMaterialisationBoundary: materialisationBoundary,
+      browserDocument: browserDocument || globalThis.document,
+      browserUrlApi: browserUrlApi || globalThis.URL,
+    });
   };
 }

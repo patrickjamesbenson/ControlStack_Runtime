@@ -260,7 +260,7 @@ test("action seam fails closed before any browser capability is invoked for miss
   }
 });
 
-test("action seam remains view-model-only, synchronous, non-visible, and isolated from persistence, routes, filesystem, RuntimeData, envelopes, and lab transforms", async () => {
+test("action seam remains synchronous while capability preparation stays outside the seam and isolated from backend or mutation paths", async () => {
   const [viewModelSource, viewSource, indexSource] = await Promise.all([
     readFile(new URL("../packages/modules/ies-builder/iesBuilderViewModel.js", import.meta.url), "utf8"),
     readFile(new URL("../packages/modules/ies-builder/iesBuilderView.js", import.meta.url), "utf8"),
@@ -273,10 +273,14 @@ test("action seam remains view-model-only, synchronous, non-visible, and isolate
     "export function createIesBuilderViewModel",
     actionStart,
   );
+  const capabilityPreparationStart = viewModelSource.indexOf(
+    "export async function prepareIesBuilderProjectIesExportDownloadCapabilityAction",
+  );
   const actionSource = viewModelSource.slice(actionStart, actionEnd);
 
   assert.notEqual(actionStart, -1);
   assert.notEqual(actionEnd, -1);
+  assert.equal(capabilityPreparationStart > actionEnd, true);
   assert.match(
     viewModelSource,
     /from "\.\/iesFirstNarrowProjectIesExportBrowserDownloadTrigger\.js";/,
@@ -294,4 +298,6 @@ test("action seam remains view-model-only, synchronous, non-visible, and isolate
   assert.equal(indexSource.includes("projectIesExportDownloadAction"), false);
   assert.equal(viewSource.includes("triggerIesBuilderProjectIesExportDownloadAction"), false);
   assert.equal(indexSource.includes("triggerIesBuilderProjectIesExportDownloadAction"), false);
+  assert.match(indexSource, /prepareIesBuilderProjectIesExportDownloadCapabilityAction/);
+  assert.match(indexSource, /projectIesExportDownloadControlAction: iesBuilderDownloadCapabilityAction/);
 });

@@ -1,6 +1,9 @@
 import { createIesBuilderState } from "./iesBuilderState.js";
 import { renderIesBuilderView } from "./iesBuilderView.js";
-import { createIesBuilderViewModel } from "./iesBuilderViewModel.js";
+import {
+  createIesBuilderViewModel,
+  prepareIesBuilderProjectIesExportDownloadCapabilityAction,
+} from "./iesBuilderViewModel.js";
 import { resolveIesBuilderSelectedProjectIesExportDownloadSourceBoundary } from "./iesBuilderSelectedProjectIesExportDownloadSourceBoundary.js";
 
 const IES_BUILDER_STATUS_ENDPOINT = "/api/ies-builder/status";
@@ -77,6 +80,7 @@ let iesBuilderState = null;
 let iesBuilderRequestId = 0;
 let iesBuilderDownloadSourceRequestId = 0;
 let iesBuilderSelectedProjectIesExportDownloadSourceBoundary = null;
+let iesBuilderDownloadCapabilityAction = null;
 
 const INITIAL_STATUS = Object.freeze({
   ok: null,
@@ -224,6 +228,7 @@ function renderCurrentView() {
     status: currentStatus(),
     projectIesExportDownloadSourceBoundary:
       iesBuilderSelectedProjectIesExportDownloadSourceBoundary,
+    projectIesExportDownloadControlAction: iesBuilderDownloadCapabilityAction,
   });
   renderIesBuilderView(mountedContainer, viewModel);
 }
@@ -235,8 +240,14 @@ async function refreshSelectedProjectIesExportDownloadSourceBoundary() {
     context: mountedContext,
     services: mountedServices,
   });
+  const capabilityAction = await prepareIesBuilderProjectIesExportDownloadCapabilityAction({
+    projectIesExportDownloadSourceBoundary: boundary,
+    context: mountedContext,
+    services: mountedServices,
+  });
   if (requestId !== iesBuilderDownloadSourceRequestId || !mountedContainer) return;
   iesBuilderSelectedProjectIesExportDownloadSourceBoundary = boundary;
+  iesBuilderDownloadCapabilityAction = capabilityAction;
   renderCurrentView();
 }
 
@@ -291,6 +302,7 @@ export const iesBuilderModule = {
     mountedServices = services;
     iesBuilderState = createIesBuilderState();
     iesBuilderSelectedProjectIesExportDownloadSourceBoundary = null;
+    iesBuilderDownloadCapabilityAction = null;
     renderCurrentView();
     void refreshSelectedProjectIesExportDownloadSourceBoundary();
     loadIesBuilderStatus();
@@ -310,6 +322,7 @@ export const iesBuilderModule = {
     mountedContainer.dataset.lastUpdate = new Date().toISOString();
     mountedContainer.dataset.module = nextContext.route?.moduleId || "ies_builder";
     iesBuilderSelectedProjectIesExportDownloadSourceBoundary = null;
+    iesBuilderDownloadCapabilityAction = null;
     renderCurrentView();
     void refreshSelectedProjectIesExportDownloadSourceBoundary();
   },
@@ -327,5 +340,6 @@ export const iesBuilderModule = {
     mountedServices = null;
     iesBuilderState = null;
     iesBuilderSelectedProjectIesExportDownloadSourceBoundary = null;
+    iesBuilderDownloadCapabilityAction = null;
   },
 };

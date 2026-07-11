@@ -83,6 +83,18 @@ function baseViewModel() {
   });
 }
 
+function readyScalarSourceBoundary() {
+  return Object.freeze({
+    state: "ies_builder_selected_project_ies_export_download_source_ready",
+    readiness: "ready",
+    ready: true,
+    failClosed: false,
+    sourceReadbackFingerprint:
+      `safe-ies-first-narrow-project-ies-export-result-readback-status:${"a".repeat(40)}`,
+    exactReadbackStatusRetainedInternally: true,
+  });
+}
+
 function safeTriggeredReceipt(overrides = {}) {
   return Object.freeze({
     downloadTriggered: true,
@@ -139,14 +151,7 @@ test("view-model exposes one exact immutable first-visible project IES export do
 });
 
 test("view-model exposes only the scalar selected-project source boundary and never the retained readback input", () => {
-  const sourceBoundary = Object.freeze({
-    state: "ies_builder_selected_project_ies_export_download_source_ready",
-    readiness: "ready",
-    ready: true,
-    sourceReadbackFingerprint:
-      `safe-ies-first-narrow-project-ies-export-result-readback-status:${"a".repeat(40)}`,
-    exactReadbackStatusRetainedInternally: true,
-  });
+  const sourceBoundary = readyScalarSourceBoundary();
   const viewModel = createIesBuilderViewModel({
     context: { route: { moduleId: "ies_builder" } },
     local: {},
@@ -174,6 +179,34 @@ test("view-model exposes only the scalar selected-project source boundary and ne
     }),
   });
   assert.equal(rejected.projectIesExportDownloadSourceBoundary, null);
+});
+
+test("view-model enables the visible control only when both the selected-project source and prepared action are ready", () => {
+  const action = () => safeTriggeredReceipt();
+  const withoutSource = createIesBuilderViewModel({
+    context: { route: { moduleId: "ies_builder" } },
+    local: {},
+    status: {},
+    projectIesExportDownloadControlAction: action,
+  });
+  const withSource = createIesBuilderViewModel({
+    context: { route: { moduleId: "ies_builder" } },
+    local: {},
+    status: {},
+    projectIesExportDownloadSourceBoundary: readyScalarSourceBoundary(),
+    projectIesExportDownloadControlAction: action,
+  });
+
+  assert.equal(withoutSource.projectIesExportDownloadControl.enabled, false);
+  assert.equal(withoutSource.projectIesExportDownloadControl.failClosed, true);
+  assert.equal(
+    withoutSource.projectIesExportDownloadControl.blocker,
+    "project-ies-download-materialiser-capability-not-wired",
+  );
+  assert.equal(withSource.projectIesExportDownloadControl.enabled, true);
+  assert.equal(withSource.projectIesExportDownloadControl.failClosed, false);
+  assert.equal(withSource.projectIesExportDownloadControl.blocker, null);
+  assert.equal(withSource.projectIesExportDownloadAction, action);
 });
 
 test("control fails closed when the landed synchronous action seam is unavailable", () => {
@@ -236,6 +269,7 @@ test("visible button invokes the supplied synchronous action exactly once and re
       context: { route: { moduleId: "ies_builder" } },
       local: {},
       status: {},
+      projectIesExportDownloadSourceBoundary: readyScalarSourceBoundary(),
       projectIesExportDownloadControlAction() {
         calls += 1;
         return receipt;
