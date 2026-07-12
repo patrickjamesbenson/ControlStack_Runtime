@@ -9,6 +9,9 @@ import {
   RUNTIME_IES_FIRST_NARROW_CANDIDATE_OUTPUT_BUNDLE_BOUNDARY_SUMMARY_SCHEMA_VERSION,
 } from "./iesFirstNarrowCandidateOutputBundleBoundarySummary.js";
 import { stableFingerprint } from "./stableFingerprint.js";
+import {
+  registerRuntimeIesFirstNarrowProjectIesExportDownloadMaterialiserSource,
+} from "./iesFirstNarrowProjectIesExportDownloadMaterialiserCapability.js";
 
 export const RUNTIME_IES_FIRST_NARROW_PROJECT_IES_EXPORT_BOUNDARY_CONTRACT_ID = "RUNTIME-IES-FIRST-NARROW-PROJECT-IES-EXPORT-BOUNDARY-1";
 export const RUNTIME_IES_FIRST_NARROW_PROJECT_IES_EXPORT_BOUNDARY_SUMMARY_SCHEMA_ID = "controlstack.runtime.ies-first-narrow-project-ies-export-boundary-summary.v1";
@@ -818,7 +821,24 @@ export function buildRuntimeIesFirstNarrowProjectIesExportBoundarySummary(input 
     withoutFingerprint,
   );
 
-  return Object.freeze(orderedSummary(fields));
+  const summary = Object.freeze(orderedSummary(fields));
+  let projectIesText;
+  try {
+    projectIesText = isRecord(builderOutput)
+      && Object.prototype.hasOwnProperty.call(builderOutput, "projectIesText")
+      ? builderOutput.projectIesText
+      : undefined;
+  } catch {
+    projectIesText = undefined;
+  }
+  registerRuntimeIesFirstNarrowProjectIesExportDownloadMaterialiserSource({
+    projectIesText,
+    boundarySummary: summary,
+  });
+  builderOutput = null;
+  projectIesText = null;
+
+  return summary;
 }
 
 export const buildIesFirstNarrowProjectIesExportBoundarySummary = buildRuntimeIesFirstNarrowProjectIesExportBoundarySummary;

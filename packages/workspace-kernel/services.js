@@ -12,6 +12,9 @@ import { createSavedProjectStore } from "./savedProjectStore.js";
 import { createSpecialPartsPolicyService } from "./specialPartsPolicyService.js";
 import { createTimelinePolicyService } from "./timelinePolicyService.js";
 import { createVisibilityService } from "./visibilityService.js";
+import {
+  materialiseRuntimeIesFirstNarrowProjectIesDownload,
+} from "./iesFirstNarrowProjectIesExportDownloadMaterialiserCapability.js";
 
 function createEventBus() {
   const listeners = new Map();
@@ -49,6 +52,7 @@ export function createShellServices() {
   const adminToolRegistry = createAdminToolRegistry();
 
   return {
+    materialiseProjectIesDownload: materialiseRuntimeIesFirstNarrowProjectIesDownload,
     adminTools: adminToolRegistry,
     auth: authAdapter,
     identity: identityAdapter,
