@@ -154,6 +154,35 @@ const SAFE_INTEGER_FIELDS = Object.freeze([
   "projectIesExportBoundarySummarySchemaVersion",
 ]);
 
+export const RUNTIME_IES_FIRST_NARROW_PROJECT_IES_EXPORT_RESULT_READBACK_STATUS_FIELD_ORDER = Object.freeze([
+  "schemaId",
+  "schemaVersion",
+  "state",
+  "readiness",
+  "ready",
+  "failClosed",
+  "blocker",
+  "reason",
+  "owner",
+  "slotOwner",
+  "envelopeOwner",
+  "targetKind",
+  "moduleId",
+  "consumerModuleId",
+  "targetLocation",
+  "summaryPresent",
+  "summarySchemaId",
+  "summarySchemaVersion",
+  "summaryContractId",
+  "summaryState",
+  "summaryFingerprint",
+  ...SAFE_BOOLEAN_FIELDS,
+  ...SAFE_TOKEN_FIELDS,
+  ...SAFE_INTEGER_FIELDS,
+  ...RUNTIME_IES_FIRST_NARROW_PROJECT_IES_EXPORT_RESULT_SUMMARY_REQUIRED_FALSE_FLAGS,
+  "iesFirstNarrowProjectIesExportResultReadbackFingerprint",
+]);
+
 function isPlainObject(value) {
   return value !== null && typeof value === "object" && !Array.isArray(value);
 }
@@ -235,6 +264,13 @@ function buildSafeProjection(summary) {
   return projection;
 }
 
+function orderedReadbackStatus(fields) {
+  return Object.fromEntries(
+    RUNTIME_IES_FIRST_NARROW_PROJECT_IES_EXPORT_RESULT_READBACK_STATUS_FIELD_ORDER
+      .map((key) => [key, fields[key]]),
+  );
+}
+
 function result(state, reason, { blocker = null, summary = null } = {}) {
   const ready = state === RUNTIME_IES_FIRST_NARROW_PROJECT_IES_EXPORT_RESULT_READBACK_STATUS_STATES.ready;
   const readiness = ready ? "ready"
@@ -267,7 +303,7 @@ function result(state, reason, { blocker = null, summary = null } = {}) {
     RESULT_READBACK_FINGERPRINT_PREFIX,
     base,
   );
-  return Object.freeze(base);
+  return Object.freeze(orderedReadbackStatus(base));
 }
 
 function validateSummary(summary) {

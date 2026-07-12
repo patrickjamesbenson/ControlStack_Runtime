@@ -33,6 +33,58 @@ export const PROJECT_BROWSER_SELECTED_PROJECT_IES_EXPORT_RESULT_READBACK_DETAIL_
   "controlstack.runtime.project-browser.selected-project-ies-export-result-readback-detail-summary.v1";
 export const PROJECT_BROWSER_SELECTED_PROJECT_IES_EXPORT_RESULT_READBACK_DETAIL_SUMMARY_SCHEMA_VERSION = 1;
 
+export const PROJECT_BROWSER_SELECTED_PROJECT_IES_EXPORT_RESULT_READBACK_DETAIL_SUMMARY_FIELD_ORDER = Object.freeze([
+  "schemaId",
+  "schemaVersion",
+  "owner",
+  "source",
+  "sourceSummarySchemaId",
+  "sourceSummarySchemaVersion",
+  "sourceSummaryState",
+  "sourceSummaryReadiness",
+  "state",
+  "readiness",
+  "ready",
+  "failClosed",
+  "blocker",
+  "selectedProjectId",
+  "selectedProjectFound",
+  "projectId",
+  "envelopeId",
+  "resultReadbackState",
+  "resultReadbackReadiness",
+  "resultReadbackReady",
+  "resultReadbackFailClosed",
+  "resultReadbackBlocker",
+  "moduleId",
+  "consumerModuleId",
+  "targetLocation",
+  "safeReadbackStatusOnly",
+  "readOnly",
+  "selectedProjectOnly",
+  "detailOnly",
+  "summaryOnly",
+  "redacted",
+  "machineValueSafe",
+  "sourceReadbackFingerprint",
+  "sourceProjectBrowserProjectIesExportResultReadbackSummaryFingerprint",
+  "rawIesReturned",
+  "rawIesExposed",
+  "rawPhotometryReturned",
+  "candelaArraysReturned",
+  "governancePayloadReturned",
+  "base64ArtifactsReturned",
+  "privatePathsReturned",
+  "filenamesReturned",
+  "routesAdded",
+  "postEndpointsAdded",
+  "runtimeDataMutated",
+  "boardDataMutated",
+  "iesGenerationAttempted",
+  "outputGenerationEnabled",
+  "projectBrowserSelectedProjectIesExportResultReadbackDetailFingerprint",
+]);
+
 export const PROJECT_BROWSER_PROJECT_IES_EXPORT_READBACK_SURFACE_CLASSIFICATION = Object.freeze({
   schemaId: "controlstack.runtime.project-browser.project-ies-export-readback-surface-classification.v1",
   schemaVersion: 1,
@@ -265,6 +317,13 @@ function clone(value) {
 
 function isPlainObject(value) {
   return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+function orderedSelectedProjectIesExportResultReadbackDetailSummary(fields) {
+  return Object.fromEntries(
+    PROJECT_BROWSER_SELECTED_PROJECT_IES_EXPORT_RESULT_READBACK_DETAIL_SUMMARY_FIELD_ORDER
+      .map((key) => [key, fields[key]]),
+  );
 }
 
 function safeToken(value, fallback = null, maxLength = 220) {
@@ -1131,13 +1190,13 @@ export function buildProjectBrowserSelectedProjectIesExportResultReadbackDetailS
     outputGenerationEnabled: false,
   };
 
-  return Object.freeze({
+  return Object.freeze(orderedSelectedProjectIesExportResultReadbackDetailSummary({
     ...base,
     projectBrowserSelectedProjectIesExportResultReadbackDetailFingerprint: stableFingerprint(
       "safe-project-browser-selected-project-ies-export-result-readback-detail-summary",
       base,
     ),
-  });
+  }));
 }
 
 export function buildProjectBrowserSelectedProjectSelectedResultPersistedSummaryReadbackStatus(projects = [], selectedProjectId = null) {

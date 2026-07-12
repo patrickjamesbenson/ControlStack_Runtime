@@ -2,14 +2,19 @@ import {
   PROJECT_BROWSER_PROJECT_IES_EXPORT_RESULT_READBACK_STATES,
   PROJECT_BROWSER_SELECTED_PROJECT_IES_EXPORT_RESULT_READBACK_DETAIL_SOURCE,
   PROJECT_BROWSER_SELECTED_PROJECT_IES_EXPORT_RESULT_READBACK_DETAIL_STATES,
+  PROJECT_BROWSER_SELECTED_PROJECT_IES_EXPORT_RESULT_READBACK_DETAIL_SUMMARY_FIELD_ORDER,
   PROJECT_BROWSER_SELECTED_PROJECT_IES_EXPORT_RESULT_READBACK_DETAIL_SUMMARY_SCHEMA_ID,
   PROJECT_BROWSER_SELECTED_PROJECT_IES_EXPORT_RESULT_READBACK_DETAIL_SUMMARY_SCHEMA_VERSION,
 } from "../../workspace-kernel/projectBrowserService.js";
 import {
+  RUNTIME_IES_FIRST_NARROW_PROJECT_IES_EXPORT_RESULT_READBACK_STATUS_FIELD_ORDER,
   RUNTIME_IES_FIRST_NARROW_PROJECT_IES_EXPORT_RESULT_READBACK_STATUS_SCHEMA_ID,
   RUNTIME_IES_FIRST_NARROW_PROJECT_IES_EXPORT_RESULT_READBACK_STATUS_SCHEMA_VERSION,
   RUNTIME_IES_FIRST_NARROW_PROJECT_IES_EXPORT_RESULT_READBACK_STATUS_STATES,
 } from "../../workspace-kernel/iesFirstNarrowProjectIesExportResultReadbackStatus.js";
+import {
+  RUNTIME_IES_FIRST_NARROW_PROJECT_IES_EXPORT_RESULT_SUMMARY_CONTRACT_ID,
+} from "../../workspace-kernel/iesFirstNarrowProjectIesExportResultSummary.js";
 import { stableFingerprint } from "../../workspace-kernel/stableFingerprint.js";
 
 export const IES_BUILDER_FIRST_SELECTED_PROJECT_IES_EXPORT_DOWNLOAD_SOURCE_BOUNDARY_CONTRACT_ID =
@@ -63,58 +68,6 @@ export const IES_BUILDER_FIRST_SELECTED_PROJECT_IES_EXPORT_DOWNLOAD_SOURCE_BOUND
   "sourceBoundaryFingerprint",
 ]);
 
-const SELECTED_PROJECT_DETAIL_FIELD_ORDER = Object.freeze([
-  "schemaId",
-  "schemaVersion",
-  "owner",
-  "source",
-  "sourceSummarySchemaId",
-  "sourceSummarySchemaVersion",
-  "sourceSummaryState",
-  "sourceSummaryReadiness",
-  "state",
-  "readiness",
-  "ready",
-  "failClosed",
-  "blocker",
-  "selectedProjectId",
-  "selectedProjectFound",
-  "projectId",
-  "envelopeId",
-  "resultReadbackState",
-  "resultReadbackReadiness",
-  "resultReadbackReady",
-  "resultReadbackFailClosed",
-  "resultReadbackBlocker",
-  "moduleId",
-  "consumerModuleId",
-  "targetLocation",
-  "safeReadbackStatusOnly",
-  "readOnly",
-  "selectedProjectOnly",
-  "detailOnly",
-  "summaryOnly",
-  "redacted",
-  "machineValueSafe",
-  "sourceReadbackFingerprint",
-  "sourceProjectBrowserProjectIesExportResultReadbackSummaryFingerprint",
-  "rawIesReturned",
-  "rawIesExposed",
-  "rawPhotometryReturned",
-  "candelaArraysReturned",
-  "governancePayloadReturned",
-  "base64ArtifactsReturned",
-  "privatePathsReturned",
-  "filenamesReturned",
-  "routesAdded",
-  "postEndpointsAdded",
-  "runtimeDataMutated",
-  "boardDataMutated",
-  "iesGenerationAttempted",
-  "outputGenerationEnabled",
-  "projectBrowserSelectedProjectIesExportResultReadbackDetailFingerprint",
-]);
-
 const REQUIRED_DETAIL_TRUE_FLAGS = Object.freeze([
   "selectedProjectFound",
   "resultReadbackReady",
@@ -151,6 +104,8 @@ const SOURCE_BOUNDARY_FINGERPRINT_PREFIX =
   "safe-ies-builder-selected-project-ies-export-download-source-boundary";
 const RESULT_READBACK_FINGERPRINT_PREFIX =
   "safe-ies-first-narrow-project-ies-export-result-readback-status";
+const LEGACY_RESULT_SUMMARY_CONTRACT_ID =
+  "RUNTIME-IES-FIRST-NARROW-PROJECT-IES-EXPORT-RESULT-SUMMARY-1";
 const RESULT_READBACK_FINGERPRINT_PATTERN =
   /^safe-ies-first-narrow-project-ies-export-result-readback-status:[0-9a-f]{40}$/;
 const DETAIL_FINGERPRINT_PATTERN =
@@ -283,7 +238,11 @@ function validateSelectedProjectDetail(detail) {
   if (!isPlainObject(detail) || Object.keys(detail).length === 0) {
     return "selected-project-ies-export-result-detail-summary-missing";
   }
-  if (!Object.isFrozen(detail) || !hasExactKeys(detail, SELECTED_PROJECT_DETAIL_FIELD_ORDER)) {
+  if (!Object.isFrozen(detail)
+    || !hasExactKeys(
+      detail,
+      PROJECT_BROWSER_SELECTED_PROJECT_IES_EXPORT_RESULT_READBACK_DETAIL_SUMMARY_FIELD_ORDER,
+    )) {
     return "selected-project-ies-export-result-detail-shape-invalid";
   }
   if (!scalarSafeObject(detail)) return "selected-project-ies-export-result-detail-non-scalar-field";
@@ -330,6 +289,16 @@ function validateSelectedProjectDetail(detail) {
 
 function validateReadbackStatus(status, detail) {
   if (!isPlainObject(status) || !Object.isFrozen(status) || !scalarSafeObject(status)) {
+    return "selected-project-ies-export-result-readback-status-shape-invalid";
+  }
+  const canonicalContract = status.summaryContractId
+    === RUNTIME_IES_FIRST_NARROW_PROJECT_IES_EXPORT_RESULT_SUMMARY_CONTRACT_ID;
+  const legacyCompatibilityContract = status.summaryContractId === LEGACY_RESULT_SUMMARY_CONTRACT_ID;
+  if ((!canonicalContract && !legacyCompatibilityContract)
+    || (canonicalContract && !hasExactKeys(
+      status,
+      RUNTIME_IES_FIRST_NARROW_PROJECT_IES_EXPORT_RESULT_READBACK_STATUS_FIELD_ORDER,
+    ))) {
     return "selected-project-ies-export-result-readback-status-shape-invalid";
   }
   if (status.schemaId !== RUNTIME_IES_FIRST_NARROW_PROJECT_IES_EXPORT_RESULT_READBACK_STATUS_SCHEMA_ID
