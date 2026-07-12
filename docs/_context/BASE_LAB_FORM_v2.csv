@@ -1,0 +1,25 @@
+IES_ORDER,FIELD,INPUTS,kind,gates_reference
+1,[TEST],Test #23456,ies,y
+2,[TESTLAB],"Novon Engineering, Light Lab, UNSW Engineering",ies,y
+3,[ISSUEDATE],23/01/1970,ies,y
+4,[MANUFAC],Novon Lighting,ies,y
+5,[LUMCAT],RIG_850_FO,ies,y
+6,[_TEST_TYPE],"Base Engine, Base Engine & Optic, No Base Luminaire",lab,y
+7,[_ENGINE_ID],BARE-ENG_R840_300mA,lab,y
+8,[LUMINAIRE],BARE-ENG_R840_300mA,ies,y
+9,[LAMP],TCI_128082_850BB_8_8_560,lab,y
+10,[_CRI],"RA80, RA90, RA95",ies,y
+11,[_COLORTEMP],"3000K, 3500K, 4000K, 5000K, TW 2700-6500K",ies,y
+12,[_AMBIENT_TA_C],"24C, 25C, 26C (keep your full list)",lab,y
+13,[_DRIVER],TRIDONIC_LC55W_350_1050ma_54V_D4I_NF_H16_PRE4,lab,y
+14,[_DRIVER_SETTING],300mA,lab,y
+15,[_DRIVER_TC_C],"40C ... 95C (keep your full list)",lab,y
+16,[_BOARD_TC_C],"40C ... 95C (keep your full list)",lab,y
+17,[INPUT_WATTS],30,ies,y
+18,[_LM80_ID],LM-80 report,lab,y
+19,[_TM21_ID],TM-21 curve ID,lab,y
+20,[_TM21_TEST_HOURS],"9 000 Hours, 12 000 Hours",lab,y
+21,[SEARCH],Search tags / helper text,ies,n
+22,[_BCLT_APPLIED],"pending, yes, no",check,y
+23,[_FLAGS_CHECKED],"pending, yes, no",check,y
+24,[_POWER_APPROVED],"pending, circuit, wall",check,y
