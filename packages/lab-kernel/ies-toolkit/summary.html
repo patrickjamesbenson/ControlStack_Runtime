@@ -15,6 +15,8 @@
   .grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
   .card{ background:#fff; border:1px solid var(--line2); border-radius:10px; padding:14px 16px; }
   .card h2{ font-size:13px; font-weight:600; margin:0 0 10px; color:#333; text-transform:uppercase; letter-spacing:.04em; }
+  .badge1{ display:inline-flex; width:20px; height:20px; border-radius:50%; background:#eee; color:#666; font-size:11px; align-items:center; justify-content:center; font-weight:700; margin-right:6px; vertical-align:middle; }
+  .badge1.on{ background:var(--blue); color:#fff; } .badge1.done{ background:var(--ok); color:#fff; }
   .kv{ display:flex; justify-content:space-between; gap:12px; padding:3px 0; font-size:13px; border-bottom:1px solid #f2f2f2; }
   .kv .k{ color:var(--muted); } .kv .v{ font-weight:500; text-align:right; } .kv .v.mono{ font-family:var(--mono); font-size:12px; }
   .metric{ display:inline-flex; flex-direction:column; margin:0 18px 8px 0; }
@@ -22,6 +24,7 @@
   table.dim{ width:100%; border-collapse:collapse; font-size:12.5px; }
   table.dim th,table.dim td{ border:1px solid var(--line2); padding:5px 8px; text-align:center; }
   table.dim th{ background:#f6f6f6; font-weight:600; } table.dim td.h{ text-align:left; color:var(--muted); }
+  table.dim input,table.dim select{ font-size:12px; padding:2px 4px; }
   .flag{ display:inline-block; font-size:11px; padding:2px 7px; border-radius:20px; font-weight:600; }
   .flag.ok{ background:#e6f6ef; color:var(--ok); } .flag.bad{ background:#fde7e7; color:var(--red); }
   .flag.noise{ background:#e6f6ef; color:var(--ok); } .flag.large{ background:#fbf0dc; color:var(--amber); }
@@ -29,21 +32,21 @@
   .leg{ font-size:11.5px; color:#444; margin-top:6px; } .leg .sw{ display:inline-block; width:14px; height:2px; vertical-align:middle; margin-right:4px; }
   .norm .step{ display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid #f2f2f2; }
   .norm .n{ width:22px; height:22px; border-radius:50%; background:#eee; color:#666; font-size:12px; display:inline-flex; align-items:center; justify-content:center; font-weight:700; }
-  .norm .n.on{ background:var(--blue); color:#fff; }
-  .norm .n.done{ background:var(--ok); color:#fff; }
+  .norm .n.on{ background:var(--blue); color:#fff; } .norm .n.done{ background:var(--ok); color:#fff; }
   .norm .lbl{ flex:1; font-size:13px; } .norm .lbl small{ color:var(--muted); display:block; font-size:11px; }
   .norm select,.norm button,.orient input,.orient button{ font-size:12.5px; padding:4px 8px; }
   .norm button,.orient button{ background:var(--blue); color:#fff; border:none; border-radius:6px; cursor:pointer; }
-  .norm button[disabled]{ background:#e3e3e3; color:#999; cursor:not-allowed; }
-  .norm .res,.orient .res{ font-size:12px; color:#444; min-width:170px; text-align:right; }
+  .norm button[disabled],.orient button[disabled]{ background:#e3e3e3; color:#999; cursor:not-allowed; }
+  .norm .res,.orient .res{ font-size:12px; color:#444; min-width:150px; text-align:right; }
   .log{ font-family:var(--mono); font-size:11.5px; }
   .log .row{ padding:5px 0; border-bottom:1px solid #f2f2f2; } .log .op{ color:var(--blue); font-weight:700; }
   .muted{ color:var(--muted); } .full{ grid-column:1/3; }
   .hidden{ display:none; }
+  .diag{ display:flex; gap:14px; align-items:flex-start; }
 </style>
 
 <h1>Summary + Normalise</h1>
-<p class="sub">Load any IES, see it in a standard format with polar + CIE&nbsp;190 UGR, then normalise in order and watch the file change. Views recompute after every mutation. Nothing here touches the runtime.</p>
+<p class="sub">Load any IES, accept its luminous dimensions, then normalise in order and orient it - watching the file change at each step. Nothing here touches the runtime.</p>
 
 <div class="drop" id="drop">Drop a reference <b>.ies</b> here, or click to choose<input type="file" id="file" accept=".ies,.txt" class="hidden" /></div>
 
@@ -52,9 +55,9 @@
     <div class="card"><h2>Identity</h2><div id="identity"></div></div>
     <div class="card"><h2>Metrics (computed)</h2><div id="metrics"></div></div>
 
-    <div class="card full"><h2>Dimensions - physical &rarr; luminous opening</h2>
+    <div class="card full"><h2><span class="badge1" id="dimBadge">1</span>Dimensions - accept the luminous opening (unlocks normalise)</h2>
       <table class="dim" id="dims"></table>
-      <p class="muted" style="font-size:11.5px;margin:8px 0 0">Physical L&times;W&times;H is the carton, not the luminous opening. For a <b>stretchable</b> IES, any gap between physical and true luminous length is multiplied per metre - so length is reported as the active LED length, with the end capture method (<b>end-plate</b> or <b>BCLT +300/+300</b>). Luminous length is a human-entered physical check.</p>
+      <p class="muted" style="font-size:11.5px;margin:8px 0 0">Physical L&times;W&times;H is the carton, not the luminous opening. For a <b>stretchable</b> IES, any gap between physical and true luminous length is multiplied per metre - so length is the active LED length, with the end capture method (<b>end-plate</b> or <b>BCLT +300/+300</b>). The width&gt;length check runs here, once - after you accept, it is locked and never re-flags (so reducing to 1&nbsp;mm does not trip it).</p>
     </div>
 
     <div class="card"><h2>Polar - C0 / C90</h2><div class="polarbox" id="polar"></div>
@@ -63,28 +66,38 @@
     <div class="card"><h2>UGR - CIE 190:2010</h2><div id="ugr" style="overflow:auto"></div></div>
 
     <div class="card full norm"><h2>Normalise (ordered recipe)</h2>
-      <div class="step"><span class="n" id="n1">1</span><span class="lbl">Level <small>tilt-correct so the peak sits at nadir - skip if an off-nadir peak is intended</small></span>
-        <span class="res" id="levelRes">peak at nadir - no tilt</span>
+      <div class="step"><span class="n" id="n2">2</span><span class="lbl">Level <small>tilt-correct so the peak sits at nadir - skip if an off-nadir peak is intended</small></span>
+        <span class="res" id="levelRes">accept dimensions first</span>
         <button id="levelSkip" class="hidden" style="background:#777">Skip</button><button id="levelBtn" disabled>Level</button></div>
-      <div class="step"><span class="n" id="n2">2</span><span class="lbl">Symmetrise <small>enforce azimuth symmetry &amp; record the imbalance - skip if the asymmetry is intended</small></span>
+      <div class="step"><span class="n" id="n3">3</span><span class="lbl">Symmetrise <small>enforce azimuth symmetry &amp; record the imbalance - skip if the asymmetry is intended</small></span>
         <select id="symMode"><option value="auto">auto</option><option value="quadrant">quadrant</option><option value="mirror-c0">mirror C0-C180</option><option value="mirror-c90">mirror C90-C270</option><option value="rotational">rotational</option></select>
         <span class="res" id="symRes"></span>
         <button id="symSkip" class="hidden" style="background:#777">Skip</button><button id="symBtn" disabled>Symmetrise</button></div>
-      <div class="step"><span class="n" id="n3">3</span><span class="lbl">Interpolate <small>resample to the standard grid (default 181&times;25, adjustable)</small></span>
+      <div class="step"><span class="n" id="n4">4</span><span class="lbl">Interpolate <small>resample to the standard grid (default 181&times;25, adjustable)</small></span>
         <span class="res muted" id="interpRes"></span><button id="interpBtn" disabled>Interpolate</button></div>
-      <div class="step"><span class="n" id="n4">4</span><span class="lbl">Pad hemisphere <small>zero the non-emitting hemisphere (after interpolate)</small></span>
+      <div class="step"><span class="n" id="n5">5</span><span class="lbl">Pad hemisphere <small>zero the non-emitting hemisphere (after interpolate)</small></span>
         <span class="res muted" id="padRes"></span><button id="padBtn" disabled>Pad</button></div>
-      <div class="step"><span class="n" id="n5">5</span><span class="lbl">Reduce to 1&nbsp;mm <small>scale candela + power + length to the 1&nbsp;mm base</small></span>
+      <div class="step"><span class="n" id="n6">6</span><span class="lbl">Reduce to 1&nbsp;mm <small>scale candela + power + length to the 1&nbsp;mm base</small></span>
         <span class="res muted" id="mmRes"></span><button id="mmBtn" disabled>1&nbsp;mm</button></div>
       <div style="margin-top:8px"><button id="resetBtn" style="background:#777">Reset to original</button></div>
     </div>
 
-    <div class="card full orient"><h2>Orient - Roll (azimuth)</h2>
-      <div style="display:flex;align-items:center;gap:10px;font-size:13px">
-        <label>Rotate <input id="rollDeg" type="number" value="0" step="1" style="width:70px"/> °</label>
-        <button id="rollBtn">Roll</button><span class="res" id="rollRes"></span>
+    <div class="card full orient"><h2>Orient</h2>
+      <div class="diag">
+        <div id="orientDiag" class="diag" style="gap:10px"></div>
+        <div style="flex:1">
+          <div style="display:flex;align-items:center;gap:10px;font-size:13px;margin-bottom:8px">
+            <b style="min-width:88px">Roll (azimuth)</b> spin about the vertical:
+            <input id="rollDeg" type="number" value="0" step="1" style="width:64px" disabled/> °
+            <button id="rollBtn" disabled>Roll</button><span class="res" id="rollRes"></span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;font-size:13px">
+            <b style="min-width:88px">Flip (end-on)</b> rotate 180° about the long axis - light points up/down:
+            <button id="flipBtn" disabled>Flip up/down</button><span class="res" id="flipRes"></span>
+          </div>
+          <p class="muted" style="font-size:11.5px;margin:8px 0 0"><b>Roll</b> spins the fitting in plan (top view, left) - a symmetric downlight barely changes. <b>Flip</b> turns it end-over-end so the beam points the other way (elevation, right) - this is your "hold it end-on and turn it 180°". Roll needs a full 0-360 distribution (fails closed otherwise).</p>
+        </div>
       </div>
-      <p class="muted" style="font-size:11.5px;margin:8px 0 0">Azimuth shift, not a mirror. Requires a full 0-360 distribution (fails closed otherwise). The polar mirrors captured quadrants into uncaptured sides for display, so a rolled or half-stored curve reads correctly - no mirror-the-data hack.</p>
     </div>
 
     <div class="card full"><h2>Mutation log (provenance)</h2><div class="log" id="log"></div></div>
@@ -94,8 +107,8 @@
 <script type="module">
 const _b = "?b=" + Date.now();
 let parseIes, computeMetrics, checkDimensions, fixDimensionTranspose, analyzeSymmetry, symmetrize, level, detectTilt,
-    standardize, maskHemisphere, toOneMm, rotate, renderUgrTableHTML, UGR_CSS, computeUgr190Table;
-let origin = null, working = null, log = [], normStep = 1;
+    standardize, maskHemisphere, mirrorVertical, setDimensions, toOneMm, rotate, renderUgrTableHTML, UGR_CSS, computeUgr190Table;
+let origin = null, working = null, log = [], normStep = 1, orientRoll = 0, flipped = false;
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? "").replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
 const peakCd = (m) => { let p=0; for(const r of m.photometry.candela) for(const c of r) p=Math.max(p,Number(c)); return p; };
@@ -106,7 +119,7 @@ async function boot(){
   ({ checkDimensions, fixDimensionTranspose } = await import("./iesDimCheck.js"+_b));
   ({ analyzeSymmetry, symmetrize } = await import("./iesSymmetrize.js"+_b));
   ({ level, detectTilt } = await import("./iesLevel.js"+_b));
-  ({ standardize, maskHemisphere } = await import("./iesTransforms.js"+_b));
+  ({ standardize, maskHemisphere, mirrorVertical, setDimensions } = await import("./iesTransforms.js"+_b));
   ({ toOneMm } = await import("./iesOneMm.js"+_b));
   ({ rotate } = await import("./iesRotate.js"+_b));
   ({ renderUgrTableHTML, UGR_CSS } = await import("./iesUgr.js"+_b));
@@ -117,19 +130,15 @@ async function boot(){
 function fp(model){ let h = 2166136261 >>> 0; const I = model.photometry.candela;
   for (const row of I) for (const c of row){ h ^= Math.round(Number(c)*100); h = Math.imul(h, 16777619) >>> 0; }
   return "cd-" + h.toString(16).padStart(8,"0"); }
-
 function kw(model, key){ const r = (model.meta?.keywords_order||[]).find(x => String(x.key).toUpperCase() === key.toUpperCase()); return r ? r.value.trim() : ""; }
 
 function renderIdentity(m){
   const ballast = kw(m,"BALLASTCAT"); const mA = (ballast.match(/(\d+)\s*mA/i)||[])[1];
   const rows = [
-    ["Product", kw(m,"LUMINAIRE") || kw(m,"LUMCAT")],
-    ["Catalogue", kw(m,"LUMCAT")],
-    ["Manufacturer", kw(m,"MANUFAC")],
+    ["Product", kw(m,"LUMINAIRE") || kw(m,"LUMCAT")], ["Catalogue", kw(m,"LUMCAT")], ["Manufacturer", kw(m,"MANUFAC")],
     ["Test lab / date", [kw(m,"TESTLAB"), kw(m,"ISSUEDATE")].filter(Boolean).join(" · ")],
     ["CCT / CRI", [kw(m,"_COLORTEMP"), kw(m,"_CRI")?"CRI "+kw(m,"_CRI"):""].filter(Boolean).join(" · ")],
-    ["Driver", kw(m,"BALLASTCAT") || kw(m,"BALLAST")],
-    ["Drive current", mA ? mA+" mA" : "-"],
+    ["Driver", kw(m,"BALLASTCAT") || kw(m,"BALLAST")], ["Drive current", mA ? mA+" mA" : "-"],
   ];
   $("identity").innerHTML = rows.map(([k,v]) => `<div class="kv"><span class="k">${esc(k)}</span><span class="v ${k==='Catalogue'?'mono':''}">${esc(v||"-")}</span></div>`).join("");
 }
@@ -140,29 +149,43 @@ function renderMetrics(m){
     : (x.beam.fwhmDeg!=null ? x.beam.fwhmDeg.toFixed(1)+"°" : "n/a");
   const fluxNote = x.statedLumens!=null ? " ("+(x.lumensMatch?"matches":"differs from")+" stated "+x.statedLumens+")" : "";
   const cells = [
-    ["Flux (computed)", (x.lumens!=null?Math.round(x.lumens):"n/a")+" lm"+fluxNote],
-    ["Stated flux", x.statedLumens!=null?x.statedLumens+" lm":"-"],
-    ["Efficacy", x.lmPerW!=null?x.lmPerW.toFixed(1)+" lm/W":"-"],
-    ["lm / m", x.lmPerM!=null?Math.round(x.lmPerM)+" lm/m":"-"],
-    ["Peak", (x.peak.maxCandela!=null?Math.round(x.peak.maxCandela):"-")+" cd"],
-    ["Beam (C0 × C90)", beam],
+    ["Flux (computed)", (x.lumens!=null?Math.round(x.lumens):"n/a")+" lm"+fluxNote], ["Stated flux", x.statedLumens!=null?x.statedLumens+" lm":"-"],
+    ["Efficacy", x.lmPerW!=null?x.lmPerW.toFixed(1)+" lm/W":"-"], ["lm / m", x.lmPerM!=null?Math.round(x.lmPerM)+" lm/m":"-"],
+    ["Peak", (x.peak.maxCandela!=null?Math.round(x.peak.maxCandela):"-")+" cd"], ["Beam (C0 × C90)", beam],
   ];
   $("metrics").innerHTML = cells.map(([k,v]) => `<span class="metric"><span class="k">${esc(k)}</span><span class="b">${esc(v)}</span></span>`).join("");
 }
-function renderDims(m){
-  const c = checkDimensions(m);
-  const flag = c.transposedLikely ? `<span class="flag bad">width &gt; length - likely transposed</span>` : `<span class="flag ok">orientation ok</span>`;
-  const fix = c.transposedLikely ? ` <button id="dimFix" style="font-size:11px;padding:3px 7px;border:none;border-radius:5px;background:var(--blue);color:#fff;cursor:pointer">Reposition G7↔G8</button>` : "";
+function renderDims(){
+  const phys = checkDimensions(origin);   // physical dims from the ORIGINAL file (never re-checked after accept)
+  let lumRow;
+  if (normStep === 1){
+    lumRow = `<tr><td class="h">Luminous opening</td>
+      <td><input id="lumL" type="number" step="0.001" value="${phys.lengthM}"/> m</td>
+      <td><input id="lumW" type="number" step="0.001" value="${phys.widthM}"/> m</td>
+      <td><input id="lumH" type="number" step="0.001" value="${phys.heightM}"/> m</td>
+      <td><select id="lumMethod"><option value="end-plate">end-plate</option><option value="BCLT +300/+300">BCLT +300/+300</option></select>
+        <button id="dimAccept" style="margin-left:6px;background:var(--blue);color:#fff;border:none;border-radius:6px;padding:4px 10px;cursor:pointer">Accept</button></td></tr>`;
+  } else {
+    const L = working.meta?.luminous || {};
+    lumRow = `<tr><td class="h">Luminous opening <span class="flag ok">locked ✓</span></td>
+      <td>${L.lengthM} m</td><td>${L.widthM} m</td><td>${L.heightM} m</td><td>${esc(L.method||"")}</td></tr>`;
+  }
   $("dims").innerHTML =
     `<tr><th></th><th>Length</th><th>Width</th><th>Height</th><th>Method</th></tr>`+
-    `<tr><td class="h">Physical (as tested)</td><td>${c.lengthM} m</td><td>${c.widthM} m</td><td>${c.heightM} m</td><td class="muted">carton ${flag}${fix}</td></tr>`+
-    `<tr><td class="h">Luminous opening</td><td class="muted">enter active LED length</td><td>${c.widthM} m</td><td>${c.heightM} m</td><td class="muted">end-plate / BCLT (enter)</td></tr>`;
-  if (c.transposedLikely) $("dimFix").onclick = () => { const r = fixDimensionTranspose(working); working = r.model; addLog("dimension-reposition", "G7↔G8", "width/length swapped"); renderAll(); };
+    `<tr><td class="h">Physical (as tested)</td><td>${phys.lengthM} m</td><td>${phys.widthM} m</td><td>${phys.heightM} m</td><td class="muted">carton</td></tr>`+
+    lumRow;
+  if (normStep === 1) $("dimAccept").onclick = () => {
+    const L=Number($("lumL").value), W=Number($("lumW").value), H=Number($("lumH").value), method=$("lumMethod").value;
+    if (!(L>0)){ alert("Enter a luminous length > 0"); return; }
+    if (W > L && !confirm("Width ("+W+" m) > length ("+L+" m) - that is usually a transposition. Accept anyway?")) return;   // the check runs HERE, once
+    working = { ...working, photometry: setDimensions(working.photometry, { g7:W, g8:L, g9:H }) };
+    working.meta = working.meta || {}; working.meta.luminous = { lengthM:L, widthM:W, heightM:H, method };
+    normStep = 2; addLog("dimensions", "L "+L+" · W "+W+" · H "+H+" · "+method, "accepted + locked"); renderAll();
+  };
 }
 function polarSVG(m){
   const P=m.photometry, V=P.v_angles.map(Number), H=P.h_angles.map(Number), I=P.candela;
   const Hmax = H.length ? Math.max(...H) : 0;
-  // quadrant-aware: fold a requested C-plane into the stored azimuth range (mirror captured -> uncaptured)
   const fold=(t)=>{ t=((t%360)+360)%360; if(Hmax<=1) return 0; if(Hmax<=91){ t=t>180?360-t:t; return t>90?180-t:t; } if(Hmax<=181) return t>180?360-t:t; return t; };
   const idx=(t)=>{ let bi=0,bd=1e9; for(let h=0;h<H.length;h++){ let d=Math.abs(((H[h]-t)%360+360)%360); d=Math.min(d,360-d); if(d<bd){bd=d;bi=h;} } return bi; };
   let peak=0; for(const row of I) for(const c of row) peak=Math.max(peak,Number(c)); if(peak<=0) peak=1;
@@ -173,55 +196,62 @@ function polarSVG(m){
   const spokes=[0,30,60,90,120,150].map(a=>{const rad=a*Math.PI/180;const x1=cx-R*Math.sin(rad),y1=cy-R*Math.cos(rad),x2=cx+R*Math.sin(rad),y2=cy+R*Math.cos(rad);return `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="#f0f0f0"/>`;}).join("");
   return `<svg viewBox="0 0 340 340" width="300" height="300" xmlns="http://www.w3.org/2000/svg">
     <rect width="340" height="340" fill="#fff"/>${rings}${spokes}
-    <path d="${pts(0,1)}" fill="none" stroke="var(--red)" stroke-width="1.6"/>
-    <path d="${pts(180,-1)}" fill="none" stroke="var(--red)" stroke-width="1.6"/>
-    <path d="${pts(90,1)}" fill="none" stroke="var(--blue)" stroke-width="1.6"/>
-    <path d="${pts(270,-1)}" fill="none" stroke="var(--blue)" stroke-width="1.6"/>
-    <text x="${cx}" y="${cy+R+16}" font-size="10" fill="#888" text-anchor="middle" font-family="Arial">nadir 0° · peak ${peak<10?peak.toFixed(2):Math.round(peak)} cd</text>
-  </svg>`;
+    <path d="${pts(0,1)}" fill="none" stroke="var(--red)" stroke-width="1.6"/><path d="${pts(180,-1)}" fill="none" stroke="var(--red)" stroke-width="1.6"/>
+    <path d="${pts(90,1)}" fill="none" stroke="var(--blue)" stroke-width="1.6"/><path d="${pts(270,-1)}" fill="none" stroke="var(--blue)" stroke-width="1.6"/>
+    <text x="${cx}" y="${cy+R+16}" font-size="10" fill="#888" text-anchor="middle" font-family="Arial">nadir 0° · peak ${peak<10?peak.toFixed(2):Math.round(peak)} cd</text></svg>`;
 }
 function renderUgr(m){ try{ $("ugr").innerHTML = renderUgrTableHTML(computeUgr190Table(m)); }catch(e){ $("ugr").innerHTML = `<span class="muted">UGR error: ${esc(e.message)}</span>`; } }
+
+function renderOrient(){
+  const roll = ((orientRoll%360)+360)%360;
+  const plan = `<svg viewBox="0 0 120 120" width="100" height="100"><rect width="120" height="120" fill="#fff" stroke="#eee"/>
+    <g transform="rotate(${roll} 60 60)"><rect x="28" y="53" width="64" height="14" rx="3" fill="#cdd6ea" stroke="#7a89b8"/><circle cx="88" cy="60" r="4" fill="#d84a4a"/></g>
+    <text x="60" y="113" font-size="9" fill="#888" text-anchor="middle" font-family="Arial">plan · roll ${roll}°</text></svg>`;
+  const cone = flipped
+    ? `<polygon points="50,58 70,58 84,16 36,16" fill="rgba(230,180,40,.25)" stroke="#c9862a"/><path d="M60,42 L60,16 M60,16 L55,24 M60,16 L65,24" stroke="#c9862a" fill="none" stroke-width="1.5"/>`
+    : `<polygon points="50,62 70,62 84,104 36,104" fill="rgba(230,180,40,.25)" stroke="#c9862a"/><path d="M60,78 L60,104 M60,104 L55,96 M60,104 L65,96" stroke="#c9862a" fill="none" stroke-width="1.5"/>`;
+  const elev = `<svg viewBox="0 0 120 120" width="100" height="100"><rect width="120" height="120" fill="#fff" stroke="#eee"/>
+    <rect x="40" y="54" width="40" height="12" rx="2" fill="#cdd6ea" stroke="#7a89b8"/>${cone}
+    <text x="60" y="113" font-size="9" fill="#888" text-anchor="middle" font-family="Arial">elevation · light ${flipped?"up":"down"}</text></svg>`;
+  $("orientDiag").innerHTML = plan + elev;
+}
 
 function addLog(op, params, result){ log.push({ op, params, result, fp: fp(working), t: new Date().toISOString() });
   $("log").innerHTML = [`<div class="row"><span class="op">origin</span> loaded · ${esc(fp(origin))}</div>`]
     .concat(log.map(e => `<div class="row"><span class="op">${esc(e.op)}</span> ${esc(e.params)} → ${esc(e.result)} · ${esc(e.fp)}</div>`)).join(""); }
 
 function refreshSteps(){
-  const t = detectTilt(working);
+  const dimsOk = normStep >= 2;
+  $("dimBadge").classList.toggle("on", normStep===1); $("dimBadge").classList.toggle("done", normStep>1);
+  const t = dimsOk ? detectTilt(working) : { tiltDeg:0, tiltAzimuthDeg:0 };
   const hasTilt = t.tiltDeg > 1;
-  if (normStep === 1 && !hasTilt) normStep = 2;          // no tilt -> Level auto-advances
-  const btns = { 1:$("levelBtn"), 2:$("symBtn"), 3:$("interpBtn"), 4:$("padBtn"), 5:$("mmBtn") };
-  for (let i=1;i<=5;i++){
-    if (btns[i]) btns[i].disabled = (i !== normStep);
-    const n = $("n"+i); if (n){ n.classList.toggle("on", i===normStep); n.classList.toggle("done", i<normStep); }
-  }
-  $("levelSkip").classList.toggle("hidden", normStep !== 1);
-  $("symSkip").classList.toggle("hidden", normStep !== 2);
+  if (normStep === 2 && !hasTilt) normStep = 3;                 // no tilt -> Level auto-advances
+  const btns = { 2:$("levelBtn"), 3:$("symBtn"), 4:$("interpBtn"), 5:$("padBtn"), 6:$("mmBtn") };
+  for (let i=2;i<=6;i++){ if(btns[i]) btns[i].disabled = (i !== normStep); const n=$("n"+i); if(n){ n.classList.toggle("on",i===normStep); n.classList.toggle("done", i<normStep); } }
+  $("levelSkip").classList.toggle("hidden", normStep !== 2);
+  $("symSkip").classList.toggle("hidden", normStep !== 3);
+  ["rollBtn","flipBtn","rollDeg"].forEach(id=>{ if($(id)) $(id).disabled = !dimsOk; });
 
-  if (hasTilt){
+  if (!dimsOk){ $("levelRes").textContent = "accept dimensions first"; }
+  else if (hasTilt){
     const b = computeMetrics(working).beam;
     const ratio = (b.c0Deg!=null && b.c90Deg!=null && Math.min(b.c0Deg,b.c90Deg)>0) ? Math.max(b.c0Deg,b.c90Deg)/Math.min(b.c0Deg,b.c90Deg) : 1;
     $("levelRes").innerHTML = ratio > 1.5
       ? `off-nadir <b>${t.tiltDeg}°</b> @ C${Math.round(t.tiltAzimuthDeg)} <span class="flag large">asymmetric ${ratio.toFixed(1)}× - may be intended, Skip unless rig tilt</span>`
       : `tilt <b>${t.tiltDeg}°</b> @ C${Math.round(t.tiltAzimuthDeg)} <span class="flag noise">symmetric fixture - level recommended</span>`;
-  } else {
-    $("levelRes").textContent = "peak at nadir - no tilt";
-  }
+  } else if (normStep === 2){ $("levelRes").textContent = "peak at nadir - no tilt"; }
 
-  // Symmetrise preview: show the imbalance BEFORE deciding, so a genuinely-intended asymmetry can be kept.
-  if (normStep === 2){
+  if (normStep === 3){
     const a = analyzeSymmetry(working);
     $("symRes").innerHTML = `recommend <b>${a.recommended}</b> · plane spread ${a.rotationalSpreadPct}% `+
-      (a.rotationalSpreadPct > 5
-        ? `<span class="flag large">sizable - may be intended, Skip to keep</span>`
-        : `<span class="flag noise">likely noise - fold</span>`);
+      (a.rotationalSpreadPct > 5 ? `<span class="flag large">sizable - may be intended, Skip to keep</span>` : `<span class="flag noise">likely noise - fold</span>`);
   }
 }
 
-function renderAll(){ renderIdentity(working); renderMetrics(working); renderDims(working); $("polar").innerHTML = polarSVG(working); renderUgr(working); refreshSteps(); }
+function renderAll(){ renderIdentity(working); renderMetrics(working); renderDims(); $("polar").innerHTML = polarSVG(working); renderUgr(working); renderOrient(); refreshSteps(); }
 
-function loadModel(text){ origin = parseIes(text); working = JSON.parse(JSON.stringify(origin)); log = []; normStep = 1;
-  ["symRes","interpRes","padRes","mmRes","rollRes"].forEach(id=>$(id).innerHTML=""); $("rollDeg").value=0;
+function loadModel(text){ origin = parseIes(text); working = JSON.parse(JSON.stringify(origin)); log = []; normStep = 1; orientRoll = 0; flipped = false;
+  ["symRes","interpRes","padRes","mmRes","rollRes","flipRes"].forEach(id=>$(id).innerHTML="");
   $("root").classList.remove("hidden"); addLog("parse", "read "+working.photometry.h_angles.length+" planes", "loaded"); renderAll(); }
 
 function wire(){
@@ -232,36 +262,33 @@ function wire(){
   drop.ondragleave=()=>drop.classList.remove("over");
   drop.ondrop=e=>{ e.preventDefault(); drop.classList.remove("over"); const f=e.dataTransfer.files[0]; if(f) f.text().then(loadModel); };
 
-  $("levelBtn").onclick=()=>{ const r=level(working); working=r.model; normStep=2; addLog("level","tilt "+r.tiltDeg+"° @ C"+Math.round(r.tiltAzimuthDeg),"re-nadir"); renderAll(); };
-  $("levelSkip").onclick=()=>{ normStep=2; addLog("level","skipped","peak left as measured (off-nadir kept)"); renderAll(); };
+  $("levelBtn").onclick=()=>{ const r=level(working); working=r.model; normStep=3; addLog("level","tilt "+r.tiltDeg+"° @ C"+Math.round(r.tiltAzimuthDeg),"re-nadir"); renderAll(); };
+  $("levelSkip").onclick=()=>{ normStep=3; addLog("level","skipped","peak left as measured (off-nadir kept)"); renderAll(); };
 
   $("symBtn").onclick=()=>{
     const mode=$("symMode").value; const a=analyzeSymmetry(working); const r=symmetrize(working, mode);
-    working={ ...working, photometry:r.photometry }; normStep=3;
+    working={ ...working, photometry:r.photometry }; normStep=4;
     const large=r.imbalance.maxRelPct>5;
-    $("symRes").innerHTML=`imbalance <b>${r.imbalance.maxRelPct}%</b> max / ${r.imbalance.rmsRelPct}% rms `+
-      (large?`<span class="flag large">large - check fixture</span>`:`<span class="flag noise">within noise</span>`);
-    addLog("symmetrize","mode "+r.imbalance.mode+" (recommended "+a.recommended+")", r.imbalance.maxRelPct+"% max");
-    renderAll();
+    $("symRes").innerHTML=`imbalance <b>${r.imbalance.maxRelPct}%</b> max / ${r.imbalance.rmsRelPct}% rms `+(large?`<span class="flag large">large - check fixture</span>`:`<span class="flag noise">within noise</span>`);
+    addLog("symmetrize","mode "+r.imbalance.mode+" (recommended "+a.recommended+")", r.imbalance.maxRelPct+"% max"); renderAll();
   };
-  $("symSkip").onclick=()=>{ normStep=3; $("symRes").innerHTML=`<span class="flag large">kept as measured - asymmetry treated as intended</span>`; addLog("symmetrize","skipped","asymmetry kept as intended"); renderAll(); };
+  $("symSkip").onclick=()=>{ normStep=4; $("symRes").innerHTML=`<span class="flag large">kept as measured - asymmetry treated as intended</span>`; addLog("symmetrize","skipped","asymmetry kept as intended"); renderAll(); };
 
-  $("interpBtn").onclick=()=>{ working={ ...working, photometry:standardize(working.photometry) }; normStep=4;
-    const g=working.photometry.v_angles.length+"×"+working.photometry.h_angles.length;
-    $("interpRes").textContent="grid "+g; addLog("interpolate","standard grid","grid "+g); renderAll(); };
-
-  $("padBtn").onclick=()=>{ working={ ...working, photometry:maskHemisphere(working.photometry,"auto") }; normStep=5;
+  $("interpBtn").onclick=()=>{ working={ ...working, photometry:standardize(working.photometry) }; normStep=5;
+    const g=working.photometry.v_angles.length+"×"+working.photometry.h_angles.length; $("interpRes").textContent="grid "+g; addLog("interpolate","standard grid","grid "+g); renderAll(); };
+  $("padBtn").onclick=()=>{ working={ ...working, photometry:maskHemisphere(working.photometry,"auto") }; normStep=6;
     $("padRes").textContent="non-emitting hemisphere zeroed"; addLog("pad","auto hemisphere","zeroed"); renderAll(); };
-
-  $("mmBtn").onclick=()=>{ working=toOneMm(working); normStep=6; const p=peakCd(working);
+  $("mmBtn").onclick=()=>{ working=toOneMm(working); normStep=7; const p=peakCd(working);
     $("mmRes").textContent="1 mm base · peak "+p.toFixed(2)+" cd"; addLog("reduce-1mm","base 0.001 m","peak "+p.toFixed(2)+" cd"); renderAll(); };
 
-  $("rollBtn").onclick=()=>{ try{ const deg=Number($("rollDeg").value)||0; working={ ...working, photometry:rotate(working.photometry, deg) };
-    $("rollRes").innerHTML=`<span class="flag noise">rolled ${deg}°</span>`; addLog("roll","azimuth "+deg+"°","re-oriented"); renderAll(); }
+  $("rollBtn").onclick=()=>{ try{ const deg=Number($("rollDeg").value)||0; working={ ...working, photometry:rotate(working.photometry, deg) }; orientRoll+=deg;
+    $("rollRes").innerHTML=`<span class="flag noise">rolled ${deg}° (total ${((orientRoll%360)+360)%360}°)</span>`; addLog("roll","azimuth "+deg+"°","re-oriented"); renderAll(); }
     catch(e){ $("rollRes").innerHTML=`<span class="flag bad">${esc(e.message)}</span>`; } };
+  $("flipBtn").onclick=()=>{ working={ ...working, photometry:mirrorVertical(working.photometry) }; flipped=!flipped;
+    $("flipRes").innerHTML=`<span class="flag noise">light now points ${flipped?"up":"down"}</span>`; addLog("flip","end-on 180°","light "+(flipped?"up":"down")); renderAll(); };
 
-  $("resetBtn").onclick=()=>{ if(origin){ working=JSON.parse(JSON.stringify(origin)); log=[]; normStep=1;
-    ["symRes","interpRes","padRes","mmRes","rollRes"].forEach(id=>$(id).innerHTML=""); $("rollDeg").value=0; addLog("reset","","back to original"); renderAll(); } };
+  $("resetBtn").onclick=()=>{ if(origin){ working=JSON.parse(JSON.stringify(origin)); log=[]; normStep=1; orientRoll=0; flipped=false;
+    ["symRes","interpRes","padRes","mmRes","rollRes","flipRes"].forEach(id=>$(id).innerHTML=""); addLog("reset","","back to original"); renderAll(); } };
 }
 
 boot().then(wire).catch(e => { document.body.insertAdjacentHTML("beforeend", `<p style="color:#d84a4a">boot error: ${esc(e.message)}</p>`); });
