@@ -569,6 +569,7 @@ function safeProjectIesExportDownloadBlocker(
 function safeProjectIesExportDownloadStartedMetadata(receipt) {
   const metadata = receipt?.downloadMetadata;
   if (receipt?.downloadTriggered !== true
+    || receipt?.failClosed === true
     || !metadata
     || !PROJECT_IES_EXPORT_DOWNLOAD_FILENAME_PATTERN.test(String(metadata.filename || ""))
     || (metadata.mediaType !== RUNTIME_IES_FIRST_NARROW_PROJECT_IES_EXPORT_DOWNLOAD_MEDIA_TYPE
