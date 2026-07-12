@@ -287,13 +287,13 @@ function assertNoRawText(value) {
 }
 
 test("mounts exactly one top-level runtime materialiser capability and lets the existing download boundary consume the privately registered canonical text", async () => {
+  const services = createShellServices();
   const chain = buildRegisteredChain({
     label: "ready",
     bundleHex: "1",
     bundleFingerprintHex: "2",
     projectIesText: VALID_LM63,
   });
-  const services = createShellServices();
 
   assert.equal(
     RUNTIME_IES_FIRST_NARROW_PROJECT_IES_EXPORT_DOWNLOAD_MATERIALISER_CAPABILITY_ID,
@@ -328,13 +328,13 @@ test("mounts exactly one top-level runtime materialiser capability and lets the 
 });
 
 test("fails closed on missing registrations, stale fingerprints, extra fields, and mismatched scalar identities", () => {
+  const services = createShellServices();
   const chain = buildRegisteredChain({
     label: "identity",
     bundleHex: "3",
     bundleFingerprintHex: "4",
     projectIesText: VALID_LM63,
   });
-  const services = createShellServices();
   const input = capabilityInput(chain.resultReadbackStatus);
 
   assert.equal(services.materialiseProjectIesDownload(input), VALID_LM63);
@@ -370,7 +370,8 @@ test("fails closed on missing registrations, stale fingerprints, extra fields, a
   );
 });
 
-test("invalidates a colliding opaque boundary registration instead of returning either LM-63 body", () => {
+test("rejects a conflicting opaque boundary registration and preserves the first canonical LM-63 body", () => {
+  const services = createShellServices();
   const first = buildRegisteredChain({
     label: "collision",
     bundleHex: "5",
@@ -383,14 +384,13 @@ test("invalidates a colliding opaque boundary registration instead of returning 
     bundleFingerprintHex: "6",
     projectIesText: VALID_LM63_COLLISION,
   });
-  const services = createShellServices();
 
   assert.deepEqual(first.boundarySummary, second.boundarySummary);
-  assert.throws(
-    () => services.materialiseProjectIesDownload(
+  assert.equal(
+    services.materialiseProjectIesDownload(
       capabilityInput(first.resultReadbackStatus),
     ),
-    /registration-collision/,
+    VALID_LM63,
   );
   assertNoRawText(first.boundarySummary);
   assertNoRawText(second.boundarySummary);
@@ -398,13 +398,13 @@ test("invalidates a colliding opaque boundary registration instead of returning 
 });
 
 test("malformed or missing canonical projectIesText is never retained and the download path blocks fail-closed", async () => {
+  const services = createShellServices();
   const malformed = buildRegisteredChain({
     label: "malformed",
     bundleHex: "7",
     bundleFingerprintHex: "8",
     projectIesText: "IESNA:LM-63-2002\r\nTILT=NONE\r\nnot-numeric",
   });
-  const services = createShellServices();
 
   assert.throws(
     () => services.materialiseProjectIesDownload(
@@ -459,6 +459,9 @@ test("capability source remains memory-only and isolated from UI, persistence, s
   }
   assert.equal(source.includes("new Map()"), true);
   assert.equal(source.includes("projectIesText"), true);
-  assert.equal(servicesSource.match(/materialiseProjectIesDownload:/g)?.length, 1);
+  assert.equal(
+    servicesSource.match(/^    materialiseProjectIesDownload,$/gm)?.length,
+    1,
+  );
   assert.equal(servicesSource.includes("projectIesText"), false);
 });

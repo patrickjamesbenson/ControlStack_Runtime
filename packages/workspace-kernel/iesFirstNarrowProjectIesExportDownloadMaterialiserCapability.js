@@ -27,6 +27,8 @@ const BUNDLE_SUMMARY_FINGERPRINT_PATTERN = /^safe-ies-first-narrow-candidate-out
 const BUILDER_REDUCTION_FINGERPRINT_PATTERN = /^safe-ies-first-narrow-project-ies-export-builder-output-reduction:[0-9a-f]{40}$/;
 const JOB_FINGERPRINT_PATTERN = /^safe-ies-first-narrow-project-ies-export-boundary-job:[0-9a-f]{40}$/;
 const MAX_LM63_BYTES = 2_000_000;
+const MAX_REGISTERED_SOURCE_COUNT = 8;
+const MAX_REGISTERED_SOURCE_COMBINED_UTF8_BYTES = 16_000_000;
 const MAX_LM63_LINE_LENGTH = 4096;
 const MAX_VERTICAL_ANGLE_COUNT = 1001;
 const MAX_HORIZONTAL_ANGLE_COUNT = 361;
@@ -76,8 +78,17 @@ const REGISTERED_IDENTITY_FIELDS = Object.freeze([
   "projectIesExportBoundarySummaryFingerprint",
 ]);
 
-const registeredSourcesByProjectBoundaryRef = new Map();
-const collidedProjectBoundaryRefs = new Set();
+const textEncoder = new TextEncoder();
+
+function createRegistryState() {
+  return {
+    entriesByProjectBoundaryRef: new Map(),
+    combinedUtf8ByteLength: 0,
+  };
+}
+
+let activeRegistryState = createRegistryState();
+let shellRuntimeCapabilityActivated = false;
 
 function isPlainObject(value) {
   if (value === null || typeof value !== "object" || Array.isArray(value)) return false;
@@ -129,7 +140,7 @@ function validateLm63Text(text) {
     return "project-ies-download-materialiser-registration-private-or-base64-content";
   }
 
-  const byteLength = new TextEncoder().encode(text).byteLength;
+  const byteLength = textEncoder.encode(text).byteLength;
   if (byteLength <= 0 || byteLength > MAX_LM63_BYTES) {
     return "project-ies-download-materialiser-registration-size-invalid";
   }
@@ -313,9 +324,30 @@ function identityKey(identity) {
   return stableFingerprint(SOURCE_KEY_FINGERPRINT_PREFIX, identity);
 }
 
-function invalidateProjectBoundaryRef(projectBoundaryRef) {
-  if (!projectBoundaryRef) return;
-  registeredSourcesByProjectBoundaryRef.delete(projectBoundaryRef);
+function clearRegistryState(registryState) {
+  registryState.entriesByProjectBoundaryRef.clear();
+  registryState.combinedUtf8ByteLength = 0;
+}
+
+function removeOldestRegisteredSource(registryState) {
+  const oldestProjectBoundaryRef =
+    registryState.entriesByProjectBoundaryRef.keys().next().value;
+  if (!oldestProjectBoundaryRef) return false;
+  const oldest = registryState.entriesByProjectBoundaryRef.get(oldestProjectBoundaryRef);
+  registryState.entriesByProjectBoundaryRef.delete(oldestProjectBoundaryRef);
+  registryState.combinedUtf8ByteLength -= oldest.utf8ByteLength;
+  return true;
+}
+
+function retainRegisteredSource(registryState, projectBoundaryRef, entry) {
+  while (registryState.entriesByProjectBoundaryRef.size >= MAX_REGISTERED_SOURCE_COUNT
+    || registryState.combinedUtf8ByteLength + entry.utf8ByteLength
+      > MAX_REGISTERED_SOURCE_COMBINED_UTF8_BYTES) {
+    if (!removeOldestRegisteredSource(registryState)) return false;
+  }
+  registryState.entriesByProjectBoundaryRef.set(projectBoundaryRef, entry);
+  registryState.combinedUtf8ByteLength += entry.utf8ByteLength;
+  return true;
 }
 
 export function registerRuntimeIesFirstNarrowProjectIesExportDownloadMaterialiserSource({
@@ -329,39 +361,30 @@ export function registerRuntimeIesFirstNarrowProjectIesExportDownloadMaterialise
   const projectBoundaryRef = identity?.opaqueProjectIesExportBoundaryRef
     || fallbackProjectBoundaryRef;
 
-  if (!identity) {
-    invalidateProjectBoundaryRef(projectBoundaryRef);
-    return false;
-  }
+  if (!identity) return false;
 
   const textBlocker = validateLm63Text(projectIesText);
-  if (textBlocker) {
-    invalidateProjectBoundaryRef(projectBoundaryRef);
-    return false;
-  }
-  if (collidedProjectBoundaryRefs.has(projectBoundaryRef)) return false;
+  if (textBlocker) return false;
 
   const key = identityKey(identity);
   const contentFingerprint = stableFingerprint(
     SOURCE_CONTENT_FINGERPRINT_PREFIX,
     projectIesText,
   );
-  const existing = registeredSourcesByProjectBoundaryRef.get(projectBoundaryRef);
+  const registryState = activeRegistryState;
+  const existing = registryState.entriesByProjectBoundaryRef.get(projectBoundaryRef);
   if (existing) {
-    if (existing.key !== key || existing.contentFingerprint !== contentFingerprint) {
-      registeredSourcesByProjectBoundaryRef.delete(projectBoundaryRef);
-      collidedProjectBoundaryRefs.add(projectBoundaryRef);
-      return false;
-    }
+    if (existing.key !== key || existing.contentFingerprint !== contentFingerprint) return false;
     return true;
   }
 
-  registeredSourcesByProjectBoundaryRef.set(projectBoundaryRef, Object.freeze({
+  const utf8ByteLength = textEncoder.encode(projectIesText).byteLength;
+  return retainRegisteredSource(registryState, projectBoundaryRef, Object.freeze({
     key,
     contentFingerprint,
+    utf8ByteLength,
     projectIesText,
   }));
-  return true;
 }
 
 export function materialiseRuntimeIesFirstNarrowProjectIesDownload(input = {}) {
@@ -371,11 +394,8 @@ export function materialiseRuntimeIesFirstNarrowProjectIesDownload(input = {}) {
   }
 
   const projectBoundaryRef = identity.opaqueProjectIesExportBoundaryRef;
-  if (collidedProjectBoundaryRefs.has(projectBoundaryRef)) {
-    throw new Error("project-ies-download-materialiser-registration-collision");
-  }
-
-  const registered = registeredSourcesByProjectBoundaryRef.get(projectBoundaryRef);
+  const registryState = activeRegistryState;
+  const registered = registryState.entriesByProjectBoundaryRef.get(projectBoundaryRef);
   if (!registered) {
     throw new Error("project-ies-download-materialiser-registration-missing");
   }
@@ -383,10 +403,21 @@ export function materialiseRuntimeIesFirstNarrowProjectIesDownload(input = {}) {
     throw new Error("project-ies-download-materialiser-scalar-identity-mismatch");
   }
   if (validateLm63Text(registered.projectIesText)) {
-    registeredSourcesByProjectBoundaryRef.delete(projectBoundaryRef);
+    registryState.entriesByProjectBoundaryRef.delete(projectBoundaryRef);
+    registryState.combinedUtf8ByteLength -= registered.utf8ByteLength;
     throw new Error("project-ies-download-materialiser-registration-malformed");
   }
   return registered.projectIesText;
+}
+
+export function createRuntimeIesFirstNarrowProjectIesExportDownloadMaterialiserCapability() {
+  if (shellRuntimeCapabilityActivated) {
+    clearRegistryState(activeRegistryState);
+    activeRegistryState = createRegistryState();
+  } else {
+    shellRuntimeCapabilityActivated = true;
+  }
+  return materialiseRuntimeIesFirstNarrowProjectIesDownload;
 }
 
 export const materialiseProjectIesDownload =

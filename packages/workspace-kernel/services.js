@@ -13,7 +13,7 @@ import { createSpecialPartsPolicyService } from "./specialPartsPolicyService.js"
 import { createTimelinePolicyService } from "./timelinePolicyService.js";
 import { createVisibilityService } from "./visibilityService.js";
 import {
-  materialiseRuntimeIesFirstNarrowProjectIesDownload,
+  createRuntimeIesFirstNarrowProjectIesExportDownloadMaterialiserCapability,
 } from "./iesFirstNarrowProjectIesExportDownloadMaterialiserCapability.js";
 
 function createEventBus() {
@@ -36,6 +36,8 @@ function createEventBus() {
 }
 
 export function createShellServices() {
+  const materialiseProjectIesDownload =
+    createRuntimeIesFirstNarrowProjectIesExportDownloadMaterialiserCapability();
   const eventBus = createEventBus();
   const authAdapter = createAuthService({ eventBus });
   const identityAdapter = createIdentityService({ authService: authAdapter, eventBus });
@@ -52,7 +54,7 @@ export function createShellServices() {
   const adminToolRegistry = createAdminToolRegistry();
 
   return {
-    materialiseProjectIesDownload: materialiseRuntimeIesFirstNarrowProjectIesDownload,
+    materialiseProjectIesDownload,
     adminTools: adminToolRegistry,
     auth: authAdapter,
     identity: identityAdapter,
