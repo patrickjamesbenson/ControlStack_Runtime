@@ -1,6 +1,5 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { appendFileSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 
 import {
@@ -17,22 +16,6 @@ import {
   appendProjectIesExportDownloadControl,
   renderIesBuilderView,
 } from "../packages/modules/ies-builder/iesBuilderView.js";
-
-function outcomeTest(name, callback) {
-  test(name, async (context) => {
-    try {
-      await callback(context);
-      console.error(`[OUTCOME PASS] ${name}`);
-    } catch (error) {
-      appendFileSync(
-        new URL(import.meta.url),
-        `\n/* OUTCOME FAIL: ${name}\n${error?.stack || error}\n*/\n`,
-        "utf8",
-      );
-      throw error;
-    }
-  });
-}
 
 class OutcomeStateTestElement {
   constructor(tagName = "div") {
@@ -124,7 +107,7 @@ function safeStartedReceipt(overrides = {}) {
   });
 }
 
-outcomeTest("outcome state publishes the exact contract identity and immutable idle snapshot", () => {
+test("outcome state publishes the exact contract identity and immutable idle snapshot", () => {
   const outcomeState = createIesBuilderProjectIesExportDownloadOutcomeState();
   const snapshot = outcomeState.getSnapshot();
 
@@ -153,7 +136,7 @@ outcomeTest("outcome state publishes the exact contract identity and immutable i
   });
 });
 
-outcomeTest("started outcome retains only the five approved safe receipt metadata fields", () => {
+test("started outcome retains only the five approved safe receipt metadata fields", () => {
   const outcomeState = createIesBuilderProjectIesExportDownloadOutcomeState();
   const receipt = safeStartedReceipt();
   const snapshot = outcomeState.recordReceipt(receipt);
@@ -181,7 +164,7 @@ outcomeTest("started outcome retains only the five approved safe receipt metadat
   assert.equal("blobReturned" in snapshot, false);
 });
 
-outcomeTest("blocked and malformed receipts fail closed to blocker-only outcome state", () => {
+test("blocked and malformed receipts fail closed to blocker-only outcome state", () => {
   const outcomeState = createIesBuilderProjectIesExportDownloadOutcomeState();
   const blocked = outcomeState.recordReceipt(Object.freeze({
     downloadTriggered: false,
@@ -217,7 +200,7 @@ outcomeTest("blocked and malformed receipts fail closed to blocker-only outcome 
   });
 });
 
-outcomeTest("view-model owns one module-local idle outcome state for the rendered control", () => {
+test("view-model owns one module-local idle outcome state for the rendered control", () => {
   const first = createIesBuilderViewModel({
     context: { route: { moduleId: "ies_builder" } },
     local: {},
@@ -241,7 +224,7 @@ outcomeTest("view-model owns one module-local idle outcome state for the rendere
   assert.equal("downloadMetadata" in first, false);
 });
 
-outcomeTest("rendered action transitions explicit outcome state before projecting safe started text", () => {
+test("rendered action transitions explicit outcome state before projecting safe started text", () => {
   let viewModel;
   const container = withOutcomeStateDocument(() => {
     const target = globalThis["doc" + "ument"].createElement("div");
@@ -284,7 +267,7 @@ outcomeTest("rendered action transitions explicit outcome state before projectin
   assert.equal(status.textContent.includes("application/octet-stream"), false);
 });
 
-outcomeTest("blocked receipt and thrown action both transition explicit state without retaining unsafe values", () => {
+test("blocked receipt and thrown action both transition explicit state without retaining unsafe values", () => {
   const blockedOutcomeState = createIesBuilderProjectIesExportDownloadOutcomeState();
   const thrownOutcomeState = createIesBuilderProjectIesExportDownloadOutcomeState();
 
@@ -336,7 +319,7 @@ outcomeTest("blocked receipt and thrown action both transition explicit state wi
   );
 });
 
-outcomeTest("outcome-state implementation stays module-local, ephemeral, synchronous, and persistence-free", async () => {
+test("outcome-state implementation stays module-local, ephemeral, synchronous, and persistence-free", async () => {
   const [viewModelSource, viewSource] = await Promise.all([
     readFile(new URL("../packages/modules/ies-builder/iesBuilderViewModel.js", import.meta.url), "utf8"),
     readFile(new URL("../packages/modules/ies-builder/iesBuilderView.js", import.meta.url), "utf8"),
