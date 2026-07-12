@@ -143,11 +143,17 @@ let projectBrowserRestoreButton = null;
 let projectBrowserHandoffButton = null;
 let projectBrowserSelectedProjectExportsPanel = null;
 let projectBrowserSelectedProjectExportsTitle = null;
-let projectBrowserSelectedProjectExportsStatus = null;
-let projectBrowserProjectIesExportDownloadButton = null;
+let projectBrowserSelectedProjectExportsItems = null;
 let projectBrowserSelectedProjectExportsWorkflow = null;
-const projectBrowserProjectIesExportDownloadOutcomeState =
-  createShellProjectBrowserProjectIesExportDownloadOutcomeState();
+const projectBrowserSelectedProjectExportControls = new Map();
+const projectBrowserSelectedProjectExportOutcomeStates = new Map();
+const projectBrowserProjectIesExportDownloadOutcomeState = Object.freeze({
+  reset() {
+    for (const outcomeState of projectBrowserSelectedProjectExportOutcomeStates.values()) {
+      outcomeState.reset();
+    }
+  },
+});
 let projectBrowserSelectedProjectExportsRefreshSequence = 0;
 let shellTopbarBound = false;
 
@@ -912,31 +918,13 @@ function ensureProjectBrowserPanel() {
   projectBrowserSelectedProjectExportsTitle = document.createElement("p");
   projectBrowserSelectedProjectExportsTitle.className = "cs-shell__project-browser-exports-project";
   projectBrowserSelectedProjectExportsTitle.textContent = "Select a saved project";
-  const exportsItem = document.createElement("div");
-  exportsItem.className = "cs-shell__project-browser-export-item";
-  const exportsItemCopy = document.createElement("div");
-  const exportsItemLabel = document.createElement("strong");
-  exportsItemLabel.textContent = "Project IES";
-  const exportsItemMeta = document.createElement("span");
-  exportsItemMeta.textContent = "LM-63 · .ies";
-  exportsItemCopy.append(exportsItemLabel, exportsItemMeta);
-  projectBrowserProjectIesExportDownloadButton = document.createElement("button");
-  projectBrowserProjectIesExportDownloadButton.type = "button";
-  projectBrowserProjectIesExportDownloadButton.className = "cs-shell__project-browser-export-download";
-  projectBrowserProjectIesExportDownloadButton.dataset.shellExportId = "project-ies";
-  projectBrowserProjectIesExportDownloadButton.textContent = "Download project IES (.ies)";
-  projectBrowserProjectIesExportDownloadButton.disabled = true;
-  exportsItem.append(exportsItemCopy, projectBrowserProjectIesExportDownloadButton);
-  projectBrowserSelectedProjectExportsStatus = document.createElement("p");
-  projectBrowserSelectedProjectExportsStatus.className = "cs-shell__project-browser-export-status";
-  projectBrowserSelectedProjectExportsStatus.dataset.shellProjectIesExportDownloadOutcomeState =
-    SHELL_PROJECT_BROWSER_FIRST_PROJECT_IES_EXPORT_DOWNLOAD_OUTCOME_STATES.idle;
-  projectBrowserSelectedProjectExportsStatus.textContent = "Select a saved project to check export readiness.";
+  projectBrowserSelectedProjectExportsItems = document.createElement("div");
+  projectBrowserSelectedProjectExportsItems.className = "cs-shell__project-browser-export-items";
+  projectBrowserSelectedProjectExportsItems.setAttribute("aria-live", "polite");
   projectBrowserSelectedProjectExportsPanel.append(
     exportsHeading,
     projectBrowserSelectedProjectExportsTitle,
-    exportsItem,
-    projectBrowserSelectedProjectExportsStatus,
+    projectBrowserSelectedProjectExportsItems,
   );
 
   projectBrowserPanel.append(kicker, heading, note, projectBrowserSaveButton, projectBrowserRestoreButton, projectBrowserHandoffButton, projectBrowserSummary, projectBrowserSelectedProjectExportsPanel, projectBrowserList);
@@ -1230,68 +1218,132 @@ function setProjectBrowserSelectedProjectExportsWorkflowDescriptor(workflowDescr
   const descriptorChanged = projectBrowserSelectedProjectExportsWorkflow !== workflowDescriptor;
   projectBrowserSelectedProjectExportsWorkflow = workflowDescriptor;
   if (descriptorChanged) projectBrowserProjectIesExportDownloadOutcomeState.reset();
+  if (descriptorChanged) projectBrowserSelectedProjectExportOutcomeStates.clear();
   return descriptorChanged;
 }
 
-function renderProjectBrowserProjectIesExportDownloadOutcome(
+function getProjectBrowserSelectedProjectExportOutcomeState(exportId) {
+  if (!projectBrowserSelectedProjectExportOutcomeStates.has(exportId)) {
+    projectBrowserSelectedProjectExportOutcomeStates.set(
+      exportId,
+      createShellProjectBrowserProjectIesExportDownloadOutcomeState(),
+    );
+  }
+  return projectBrowserSelectedProjectExportOutcomeStates.get(exportId);
+}
+
+function renderProjectBrowserSelectedProjectExportOutcome(
+  exportId,
   outcomeSnapshot,
-  workflowDescriptor = projectBrowserSelectedProjectExportsWorkflow,
+  output,
 ) {
-  if (!projectBrowserSelectedProjectExportsStatus) return;
-  projectBrowserSelectedProjectExportsStatus.dataset.shellProjectIesExportDownloadOutcomeState =
-    outcomeSnapshot.state;
+  const controls = projectBrowserSelectedProjectExportControls.get(exportId);
+  if (!controls?.status) return;
+  controls.status.dataset.shellProjectIesExportDownloadOutcomeState = outcomeSnapshot.state;
+  controls.status.dataset.shellExportId = exportId;
 
   if (outcomeSnapshot.state
     === SHELL_PROJECT_BROWSER_FIRST_PROJECT_IES_EXPORT_DOWNLOAD_OUTCOME_STATES.started) {
-    projectBrowserSelectedProjectExportsStatus.textContent =
+    controls.status.textContent =
       `Download started: ${outcomeSnapshot.filename} (${outcomeSnapshot.byteLength} bytes).`;
     return;
   }
   if (outcomeSnapshot.state
     === SHELL_PROJECT_BROWSER_FIRST_PROJECT_IES_EXPORT_DOWNLOAD_OUTCOME_STATES.blocked) {
-    projectBrowserSelectedProjectExportsStatus.textContent =
-      `Project IES download blocked: ${outcomeSnapshot.blocker}.`;
+    controls.status.textContent =
+      `${output?.label || "Export"} download blocked: ${outcomeSnapshot.blocker}.`;
     return;
   }
 
-  const output = workflowDescriptor?.outputs?.[0] || null;
-  projectBrowserSelectedProjectExportsStatus.textContent = output?.ready === true
-    ? "Project IES is ready to download."
-    : workflowDescriptor?.readiness === "missing"
+  controls.status.textContent = output?.ready === true
+    ? `${output.label} is ready to download.`
+    : projectBrowserSelectedProjectExportsWorkflow?.readiness === "missing"
       ? "Select a saved project to check export readiness."
-      : "Project IES is not ready for the selected project.";
+      : `${output?.label || "Export"} is not ready for the selected project.`;
+}
+
+function renderProjectBrowserSelectedProjectExportItem(workflowDescriptor, output) {
+  const exportId = typeof output?.exportId === "string" ? output.exportId : null;
+  if (!projectBrowserSelectedProjectExportsItems || !exportId) return null;
+
+  const item = document.createElement("div");
+  item.className = "cs-shell__project-browser-export-item";
+  item.dataset.shellExportId = exportId;
+  const itemMain = document.createElement("div");
+  itemMain.className = "cs-shell__project-browser-export-item-main";
+  const itemCopy = document.createElement("div");
+  const itemLabel = document.createElement("strong");
+  itemLabel.textContent = output.label || "Project export";
+  const itemMeta = document.createElement("span");
+  itemMeta.textContent = [output.format, output.extension].filter(Boolean).join(" · ")
+    || "LM-63 · .ies";
+  itemCopy.append(itemLabel, itemMeta);
+
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "cs-shell__project-browser-export-download";
+  button.dataset.shellExportId = exportId;
+  button.textContent = output.actionLabel || "Download project IES (.ies)";
+  button.disabled = output.ready !== true;
+  button.title = output.ready === true
+    ? `Download the selected project's prepared ${output.format || "export"} output.`
+    : `${output.label || "Project export"} is unavailable until the selected project export is ready.`;
+
+  const status = document.createElement("p");
+  status.className = "cs-shell__project-browser-export-status";
+  itemMain.append(itemCopy, button);
+  item.append(itemMain, status);
+  projectBrowserSelectedProjectExportsItems.appendChild(item);
+  projectBrowserSelectedProjectExportControls.set(
+    exportId,
+    Object.freeze({ item, button, status }),
+  );
+
+  const outcomeState = getProjectBrowserSelectedProjectExportOutcomeState(exportId);
+  renderProjectBrowserSelectedProjectExportOutcome(
+    exportId,
+    outcomeState.getSnapshot(),
+    output,
+  );
+  return item;
+}
+
+function renderProjectBrowserSelectedProjectExportItems(workflowDescriptor) {
+  if (!projectBrowserSelectedProjectExportsItems) return;
+  clearElement(projectBrowserSelectedProjectExportsItems);
+  projectBrowserSelectedProjectExportControls.clear();
+  const outputs = Array.isArray(workflowDescriptor?.outputs)
+    ? workflowDescriptor.outputs
+    : [];
+  for (const output of outputs) {
+    renderProjectBrowserSelectedProjectExportItem(workflowDescriptor, output);
+  }
 }
 
 function renderProjectBrowserSelectedProjectExportsWorkflow(workflowDescriptor) {
   if (!projectBrowserSelectedProjectExportsPanel
     || !projectBrowserSelectedProjectExportsTitle
-    || !projectBrowserSelectedProjectExportsStatus
-    || !projectBrowserProjectIesExportDownloadButton) return;
+    || !projectBrowserSelectedProjectExportsItems) return;
 
   setProjectBrowserSelectedProjectExportsWorkflowDescriptor(workflowDescriptor);
-  const output = workflowDescriptor?.outputs?.[0] || null;
   projectBrowserSelectedProjectExportsTitle.textContent =
     workflowDescriptor?.selectedProjectTitle || "Select a saved project";
-  projectBrowserProjectIesExportDownloadButton.textContent =
-    output?.actionLabel || "Download project IES (.ies)";
-  projectBrowserProjectIesExportDownloadButton.disabled = output?.ready !== true;
-  projectBrowserProjectIesExportDownloadButton.title = output?.ready === true
-    ? "Download the selected project's prepared LM-63 IES output."
-    : "Project IES download is unavailable until the selected project export is ready.";
-  renderProjectBrowserProjectIesExportDownloadOutcome(
-    projectBrowserProjectIesExportDownloadOutcomeState.getSnapshot(),
-    workflowDescriptor,
-  );
+  renderProjectBrowserSelectedProjectExportItems(workflowDescriptor);
 }
 
 async function refreshProjectBrowserSelectedProjectExportsWorkflow({ services, context }) {
   const refreshSequence = ++projectBrowserSelectedProjectExportsRefreshSequence;
   setProjectBrowserSelectedProjectExportsWorkflowDescriptor(null);
-  if (projectBrowserProjectIesExportDownloadButton) {
-    projectBrowserProjectIesExportDownloadButton.disabled = true;
+  for (const controls of projectBrowserSelectedProjectExportControls.values()) {
+    controls.button.disabled = true;
   }
-  if (projectBrowserSelectedProjectExportsStatus) {
-    projectBrowserSelectedProjectExportsStatus.textContent = "Checking project IES export readiness...";
+  projectBrowserSelectedProjectExportControls.clear();
+  if (projectBrowserSelectedProjectExportsItems) {
+    clearElement(projectBrowserSelectedProjectExportsItems);
+    const checking = document.createElement("p");
+    checking.className = "cs-shell__project-browser-export-status";
+    checking.textContent = "Checking project IES export readiness...";
+    projectBrowserSelectedProjectExportsItems.appendChild(checking);
   }
 
   const workflowDescriptor =
@@ -1933,11 +1985,16 @@ function bootWorkspaceShell() {
     void refreshProjectBrowserSelectedProjectExportsWorkflow({ services, context }).catch((error) => {
       console.error("[workspace-shell] selected-project exports workflow failed", error);
       setProjectBrowserSelectedProjectExportsWorkflowDescriptor(null);
-      if (projectBrowserProjectIesExportDownloadButton) {
-        projectBrowserProjectIesExportDownloadButton.disabled = true;
+      for (const controls of projectBrowserSelectedProjectExportControls.values()) {
+        controls.button.disabled = true;
       }
-      if (projectBrowserSelectedProjectExportsStatus) {
-        projectBrowserSelectedProjectExportsStatus.textContent = "Project IES is not ready for the selected project.";
+      projectBrowserSelectedProjectExportControls.clear();
+      if (projectBrowserSelectedProjectExportsItems) {
+        clearElement(projectBrowserSelectedProjectExportsItems);
+        const blocked = document.createElement("p");
+        blocked.className = "cs-shell__project-browser-export-status";
+        blocked.textContent = "Project IES is not ready for the selected project.";
+        projectBrowserSelectedProjectExportsItems.appendChild(blocked);
       }
     });
     renderIdentityVisibilityControls({ services, context });
@@ -2074,45 +2131,64 @@ function bootWorkspaceShell() {
     setStatus(`Prepared handoff/share package for ${readProjectTitle(nextContext.project)}. External delivery, email, and HubSpot writes remain deferred.`);
   }
 
-  function handleProjectBrowserProjectIesExportDownload() {
-    const preparedAction =
-      getShellProjectBrowserSelectedProjectExportAction(
+  function handleProjectBrowserSelectedProjectExportAction(event) {
+    const button = event.target.closest?.("button[data-shell-export-id]");
+    const exportId = button?.dataset?.shellExportId;
+    if (!exportId) return;
+
+    const output = projectBrowserSelectedProjectExportsWorkflow?.outputs?.find(
+      (candidate) => candidate?.exportId === exportId,
+    );
+    const control = projectBrowserSelectedProjectExportControls.get(exportId);
+    const outcomeState = projectBrowserSelectedProjectExportOutcomeStates.get(exportId);
+    if (!output || !control || !outcomeState || control.button !== button) return;
+
+    handleProjectBrowserProjectIesExportDownload({
+      exportId,
+      output,
+      control,
+      outcomeState,
+      preparedAction: getShellProjectBrowserSelectedProjectExportAction(
         projectBrowserSelectedProjectExportsWorkflow,
-      );
+        exportId,
+      ),
+    });
+  }
+
+  function handleProjectBrowserProjectIesExportDownload() {
+    const {
+      exportId,
+      output,
+      control,
+      outcomeState,
+      preparedAction,
+    } = arguments[0] || {};
     if (typeof preparedAction !== "function") {
-      const outcomeSnapshot =
-        projectBrowserProjectIesExportDownloadOutcomeState.recordBlocked(
-          "project-ies-export-download-action-unavailable",
-        );
-      renderProjectBrowserProjectIesExportDownloadOutcome(outcomeSnapshot);
-      setStatus("Project IES download is not ready for the selected project.");
+      const outcomeSnapshot = outcomeState.recordBlocked(
+        "project-ies-export-download-action-unavailable",
+      );
+      renderProjectBrowserSelectedProjectExportOutcome(exportId, outcomeSnapshot, output);
+      setStatus(`${output?.label || "Project export"} is not ready for the selected project.`);
       return;
     }
 
-    if (projectBrowserProjectIesExportDownloadButton) {
-      projectBrowserProjectIesExportDownloadButton.disabled = true;
-    }
+    control.button.disabled = true;
     try {
       const receipt = preparedAction();
-      const outcomeSnapshot =
-        projectBrowserProjectIesExportDownloadOutcomeState.recordReceipt(receipt);
-      renderProjectBrowserProjectIesExportDownloadOutcome(outcomeSnapshot);
+      const outcomeSnapshot = outcomeState.recordReceipt(receipt);
+      renderProjectBrowserSelectedProjectExportOutcome(exportId, outcomeSnapshot, output);
       setStatus(outcomeSnapshot.state
         === SHELL_PROJECT_BROWSER_FIRST_PROJECT_IES_EXPORT_DOWNLOAD_OUTCOME_STATES.started
-        ? "Project IES download started."
-        : "Project IES download was blocked safely.");
+        ? `${output.label} download started.`
+        : `${output.label} download was blocked safely.`);
     } catch {
-      const outcomeSnapshot =
-        projectBrowserProjectIesExportDownloadOutcomeState.recordBlocked(
-          "project-ies-export-download-action-failed",
-        );
-      renderProjectBrowserProjectIesExportDownloadOutcome(outcomeSnapshot);
-      setStatus("Project IES download was blocked safely.");
+      const outcomeSnapshot = outcomeState.recordBlocked(
+        "project-ies-export-download-action-failed",
+      );
+      renderProjectBrowserSelectedProjectExportOutcome(exportId, outcomeSnapshot, output);
+      setStatus(`${output?.label || "Project export"} download was blocked safely.`);
     } finally {
-      if (projectBrowserProjectIesExportDownloadButton) {
-        projectBrowserProjectIesExportDownloadButton.disabled =
-          projectBrowserSelectedProjectExportsWorkflow?.ready !== true;
-      }
+      control.button.disabled = output?.ready !== true;
     }
   }
 
@@ -2213,9 +2289,9 @@ function bootWorkspaceShell() {
   projectBrowserSaveButton?.addEventListener("click", handleProjectBrowserSave);
   projectBrowserRestoreButton?.addEventListener("click", handleProjectBrowserRestore);
   projectBrowserHandoffButton?.addEventListener("click", handleProjectBrowserHandoffShare);
-  projectBrowserProjectIesExportDownloadButton?.addEventListener(
+  projectBrowserSelectedProjectExportsItems?.addEventListener(
     "click",
-    handleProjectBrowserProjectIesExportDownload,
+    handleProjectBrowserSelectedProjectExportAction,
   );
   projectBrowserList?.addEventListener("click", handleProjectBrowserListClick);
   projectSelect?.addEventListener("change", handleProjectSelectionChange);

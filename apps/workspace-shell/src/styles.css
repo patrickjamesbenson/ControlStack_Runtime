@@ -338,12 +338,14 @@ img.cs-shell__rail-icon,
 }
 .cs-shell__project-browser-exports h4 { margin-bottom: 4px; }
 .cs-shell__project-browser-exports-project { margin-bottom: 10px; font-size: 12px; line-height: 18px; }
-.cs-shell__project-browser-export-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.cs-shell__project-browser-export-item > div { display: grid; gap: 2px; min-width: 0; }
+.cs-shell__project-browser-export-items { display: grid; gap: 10px; }
+.cs-shell__project-browser-export-item { display: grid; gap: 10px; }
+.cs-shell__project-browser-export-item-main { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.cs-shell__project-browser-export-item-main > div { display: grid; gap: 2px; min-width: 0; }
 .cs-shell__project-browser-export-item strong { font-size: 13px; font-weight: 600; }
 .cs-shell__project-browser-export-item span { color: var(--cs-muted); font-size: 12px; }
 .cs-shell__project-browser-export-download { flex: 0 0 auto; min-height: 36px; padding: 8px 14px; }
-.cs-shell__project-browser-export-status { margin: 10px 0 0; font-size: 12px; line-height: 18px; overflow-wrap: anywhere; }
+.cs-shell__project-browser-export-status { margin: 0; font-size: 12px; line-height: 18px; overflow-wrap: anywhere; }
 .cs-shell__project-browser-export-status[data-shell-project-ies-export-download-outcome-state="shell_project_browser_project_ies_export_download_started"] { font-weight: 600; }
 .cs-shell__project-browser-export-status[data-shell-project-ies-export-download-outcome-state="shell_project_browser_project_ies_export_download_blocked"] { font-weight: 600; }
 

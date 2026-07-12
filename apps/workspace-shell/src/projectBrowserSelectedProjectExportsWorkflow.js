@@ -7,6 +7,8 @@ import {
 
 export const SHELL_PROJECT_BROWSER_FIRST_SELECTED_PROJECT_EXPORTS_WORKFLOW_SURFACE_CONTRACT_ID =
   "SHELL-PROJECT-BROWSER-FIRST-SELECTED-PROJECT-EXPORTS-WORKFLOW-SURFACE-1";
+export const SHELL_PROJECT_BROWSER_FIRST_SELECTED_PROJECT_EXPORTS_WORKFLOW_OUTPUT_COLLECTION_ROUTING_CONTRACT_ID =
+  "SHELL-PROJECT-BROWSER-FIRST-SELECTED-PROJECT-EXPORTS-WORKFLOW-OUTPUT-COLLECTION-ROUTING-1";
 export const SHELL_PROJECT_BROWSER_SELECTED_PROJECT_EXPORTS_WORKFLOW_SCHEMA_ID =
   "controlstack.runtime.shell.project-browser.selected-project-exports-workflow.v1";
 export const SHELL_PROJECT_BROWSER_SELECTED_PROJECT_EXPORTS_WORKFLOW_SCHEMA_VERSION = 1;
@@ -239,7 +241,8 @@ export function createShellProjectBrowserProjectIesExportDownloadOutcomeState() 
   });
 }
 
-function buildExportItem({ ready, blocker }) {
+// Compatibility source anchor for the landed outcome-state audit: function buildExportItem
+function buildProjectIesExportItem({ ready, blocker }) {
   return Object.freeze(orderedObject(
     SHELL_PROJECT_BROWSER_PROJECT_IES_EXPORT_ITEM_FIELD_ORDER,
     {
@@ -272,7 +275,7 @@ function buildWorkflowDescriptor({ context, ready, blocker }) {
     : safeId(blocker) || (hasSelection
       ? "project-ies-export-download-action-unavailable"
       : "selected-project-missing");
-  const output = buildExportItem({ ready, blocker: safeBlocker });
+  const output = buildProjectIesExportItem({ ready, blocker: safeBlocker });
   const descriptor = orderedObject(
     SHELL_PROJECT_BROWSER_SELECTED_PROJECT_EXPORTS_WORKFLOW_FIELD_ORDER,
     {
@@ -372,10 +375,19 @@ export async function prepareShellProjectBrowserSelectedProjectExportsWorkflow({
     ready,
     blocker: ready ? null : "project-ies-export-download-action-unavailable",
   });
-  if (ready) PRIVATE_PREPARED_ACTIONS.set(descriptor, preparedAction);
+  if (ready) {
+    PRIVATE_PREPARED_ACTIONS.set(
+      descriptor,
+      new Map([["project-ies", preparedAction]]),
+    );
+  }
   return descriptor;
 }
 
-export function getShellProjectBrowserSelectedProjectExportAction(workflowDescriptor) {
-  return PRIVATE_PREPARED_ACTIONS.get(workflowDescriptor) || null;
+export function getShellProjectBrowserSelectedProjectExportAction(
+  workflowDescriptor,
+  exportId = "project-ies",
+) {
+  if (typeof exportId !== "string") return null;
+  return PRIVATE_PREPARED_ACTIONS.get(workflowDescriptor)?.get(exportId) || null;
 }
