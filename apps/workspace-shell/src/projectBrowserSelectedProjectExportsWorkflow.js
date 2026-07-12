@@ -13,6 +13,26 @@ export const SHELL_PROJECT_BROWSER_SELECTED_PROJECT_EXPORTS_WORKFLOW_SCHEMA_VERS
 export const SHELL_PROJECT_BROWSER_PROJECT_IES_EXPORT_ITEM_SCHEMA_ID =
   "controlstack.runtime.shell.project-browser.project-ies-export-item.v1";
 export const SHELL_PROJECT_BROWSER_PROJECT_IES_EXPORT_ITEM_SCHEMA_VERSION = 1;
+export const SHELL_PROJECT_BROWSER_FIRST_PROJECT_IES_EXPORT_DOWNLOAD_OUTCOME_STATE_CONTRACT_ID =
+  "SHELL-PROJECT-BROWSER-FIRST-PROJECT-IES-EXPORT-DOWNLOAD-OUTCOME-STATE-1";
+export const SHELL_PROJECT_BROWSER_FIRST_PROJECT_IES_EXPORT_DOWNLOAD_OUTCOME_STATE_SCHEMA_ID =
+  "controlstack.runtime.shell.project-browser.first-project-ies-export-download-outcome-state.v1";
+export const SHELL_PROJECT_BROWSER_FIRST_PROJECT_IES_EXPORT_DOWNLOAD_OUTCOME_STATE_SCHEMA_VERSION = 1;
+
+export const SHELL_PROJECT_BROWSER_FIRST_PROJECT_IES_EXPORT_DOWNLOAD_OUTCOME_STATES = Object.freeze({
+  idle: "shell_project_browser_project_ies_export_download_idle",
+  started: "shell_project_browser_project_ies_export_download_started",
+  blocked: "shell_project_browser_project_ies_export_download_blocked",
+});
+
+export const SHELL_PROJECT_BROWSER_FIRST_PROJECT_IES_EXPORT_DOWNLOAD_OUTCOME_FIELD_ORDER = Object.freeze([
+  "state",
+  "filename",
+  "mediaType",
+  "extension",
+  "byteLength",
+  "blocker",
+]);
 
 export const SHELL_PROJECT_BROWSER_SELECTED_PROJECT_EXPORTS_WORKFLOW_STATES = Object.freeze({
   ready: "shell_project_browser_selected_project_exports_workflow_ready",
@@ -85,6 +105,10 @@ export const SHELL_PROJECT_BROWSER_PROJECT_IES_EXPORT_ITEM_FIELD_ORDER = Object.
 const PRIVATE_PREPARED_ACTIONS = new WeakMap();
 const SAFE_ID_PATTERN = /^[0-9A-Za-z_.:-]{1,760}$/;
 const PRIVATE_VALUE_PATTERN = /(?:[A-Za-z]:[\\/]|\\\\|[\\/]Users[\\/]|[\\/]home[\\/]|[\\/]mnt[\\/]|file:|data:[^\s]*base64|\bbase64\s*[,=:])/i;
+const PROJECT_IES_EXPORT_DOWNLOAD_FILENAME_PATTERN =
+  /^controlstack-project-ies-[1-9][0-9]*mm-[0-9a-f]{12}\.ies$/;
+const PROJECT_IES_EXPORT_DOWNLOAD_MEDIA_TYPE = "application/octet-stream";
+const PROJECT_IES_EXPORT_DOWNLOAD_BLOCKER_PATTERN = /^[0-9A-Za-z_.:-]{1,760}$/;
 
 function safeId(value) {
   if (typeof value !== "string") return null;
@@ -118,6 +142,101 @@ function selectedProjectSummary(context) {
 
 function orderedObject(fieldOrder, fields) {
   return Object.fromEntries(fieldOrder.map((key) => [key, fields[key]]));
+}
+
+function createShellProjectBrowserProjectIesExportDownloadOutcomeSnapshot({
+  state = SHELL_PROJECT_BROWSER_FIRST_PROJECT_IES_EXPORT_DOWNLOAD_OUTCOME_STATES.idle,
+  filename = null,
+  mediaType = null,
+  extension = null,
+  byteLength = null,
+  blocker = null,
+} = {}) {
+  return Object.freeze(orderedObject(
+    SHELL_PROJECT_BROWSER_FIRST_PROJECT_IES_EXPORT_DOWNLOAD_OUTCOME_FIELD_ORDER,
+    {
+      state,
+      filename,
+      mediaType,
+      extension,
+      byteLength,
+      blocker,
+    },
+  ));
+}
+
+function safeProjectIesExportDownloadOutcomeBlocker(
+  blocker,
+  fallback = "project-ies-export-download-action-blocked",
+) {
+  return typeof blocker === "string"
+    && PROJECT_IES_EXPORT_DOWNLOAD_BLOCKER_PATTERN.test(blocker)
+    ? blocker
+    : fallback;
+}
+
+function safeProjectIesExportDownloadOutcomeMetadata(receipt) {
+  const metadata = receipt?.downloadMetadata;
+  if (receipt?.downloadTriggered !== true
+    || receipt?.failClosed === true
+    || !metadata
+    || !PROJECT_IES_EXPORT_DOWNLOAD_FILENAME_PATTERN.test(String(metadata.filename || ""))
+    || metadata.mediaType !== PROJECT_IES_EXPORT_DOWNLOAD_MEDIA_TYPE
+    || metadata.extension !== ".ies"
+    || !Number.isSafeInteger(metadata.byteLength)
+    || metadata.byteLength <= 0) {
+    return null;
+  }
+
+  return {
+    filename: metadata.filename,
+    mediaType: metadata.mediaType,
+    extension: metadata.extension,
+    byteLength: metadata.byteLength,
+  };
+}
+
+export function createShellProjectBrowserProjectIesExportDownloadOutcomeState() {
+  let snapshot = createShellProjectBrowserProjectIesExportDownloadOutcomeSnapshot();
+
+  return Object.freeze({
+    getSnapshot() {
+      return snapshot;
+    },
+
+    reset() {
+      snapshot = createShellProjectBrowserProjectIesExportDownloadOutcomeSnapshot();
+      return snapshot;
+    },
+
+    recordReceipt(receipt = {}) {
+      const metadata = safeProjectIesExportDownloadOutcomeMetadata(receipt);
+      if (metadata) {
+        snapshot = createShellProjectBrowserProjectIesExportDownloadOutcomeSnapshot({
+          state: SHELL_PROJECT_BROWSER_FIRST_PROJECT_IES_EXPORT_DOWNLOAD_OUTCOME_STATES.started,
+          ...metadata,
+        });
+        return snapshot;
+      }
+
+      snapshot = createShellProjectBrowserProjectIesExportDownloadOutcomeSnapshot({
+        state: SHELL_PROJECT_BROWSER_FIRST_PROJECT_IES_EXPORT_DOWNLOAD_OUTCOME_STATES.blocked,
+        blocker: safeProjectIesExportDownloadOutcomeBlocker(receipt?.blocker),
+      });
+      return snapshot;
+    },
+
+    recordBlocked(blocker = "project-ies-export-download-action-failed") {
+      snapshot = createShellProjectBrowserProjectIesExportDownloadOutcomeSnapshot({
+        state: SHELL_PROJECT_BROWSER_FIRST_PROJECT_IES_EXPORT_DOWNLOAD_OUTCOME_STATES.blocked,
+        blocker: safeProjectIesExportDownloadOutcomeBlocker(
+          blocker,
+          "project-ies-export-download-action-failed",
+        ),
+      });
+      return snapshot;
+    },
+  });
 }
 
 function buildExportItem({ ready, blocker }) {
