@@ -127,6 +127,67 @@ export const PROJECT_BROWSER_PROJECT_IES_EXPORT_BOUNDARY_READBACK_STAGED_REMOVAL
   deterministic: true,
 });
 
+export const PROJECT_BROWSER_PROJECT_IES_EXPORT_BOUNDARY_READBACK_CONSUMER_INVENTORY = Object.freeze({
+  schemaId: "controlstack.runtime.project-browser.project-ies-export-boundary-readback-consumer-inventory.v1",
+  schemaVersion: 1,
+  inventoryScope: "tracked-runtime-source-and-contract-tests",
+  inventoryState: "repository_consumers_inventoried_removal_not_authorised",
+  inventoriedBoundaryReadbackPair: Object.freeze([
+    "projectIesExportBoundaryReadbackSummary",
+    "selectedProjectIesExportBoundaryReadbackDetailSummary",
+  ]),
+  replacementResultReadbackPair: Object.freeze([
+    "projectIesExportResultReadbackSummary",
+    "selectedProjectIesExportResultReadbackDetailSummary",
+  ]),
+  directFieldSpecificRuntimeConsumers: Object.freeze([
+    Object.freeze({
+      consumerId: "selected-project-boundary-readback-detail-derivation",
+      sourceFile: "packages/workspace-kernel/projectBrowserService.js",
+      sourceSurface: "projectIesExportBoundaryReadbackSummary",
+      consumerFunction: "buildProjectBrowserSelectedProjectIesExportBoundaryReadbackDetailSummary",
+      outputSurface: "selectedProjectIesExportBoundaryReadbackDetailSummary",
+      replacementSourceSurface: "projectIesExportResultReadbackSummary",
+      replacementConsumerFunction: "buildProjectBrowserSelectedProjectIesExportResultReadbackDetailSummary",
+      replacementOutputSurface: "selectedProjectIesExportResultReadbackDetailSummary",
+      compatibilityOnly: true,
+      featureConsumer: false,
+      replacementPresent: true,
+      migratedToReplacement: false,
+    }),
+  ]),
+  wholeSnapshotCarriers: Object.freeze([
+    Object.freeze({
+      carrierId: "shell-context-project-browser-snapshot",
+      sourceFile: "packages/workspace-kernel/context.js",
+      functionName: "createShellContext",
+      fieldSpecificRead: false,
+    }),
+    Object.freeze({
+      carrierId: "diagnostics-project-browser-snapshot",
+      sourceFile: "packages/plugins/diagnostics/diagnosticsViewModel.js",
+      functionName: "readProjectBrowser",
+      fieldSpecificRead: false,
+    }),
+  ]),
+  knownFeatureConsumers: Object.freeze([]),
+  compatibilityContractTests: Object.freeze([
+    "tests/runtimeProjectBrowserProjectIesExportBoundaryReadbackConsumer.test.js",
+    "tests/runtimeProjectBrowserSelectedProjectIesExportBoundaryReadbackDetailConsumer.test.js",
+    "tests/runtimeProjectBrowserProjectIesExportReadbackSurfaceClassification.test.js",
+    "tests/runtimeProjectBrowserProjectIesExportBoundaryReadbackStagedRemovalPlan.test.js",
+    "tests/runtimeIesFirstNarrowProjectIesExportCrossLayerContractLock.test.js",
+  ]),
+  trackedRepositoryInventoryComplete: true,
+  consumerFree: false,
+  externalConsumerAbsenceProven: false,
+  migrationEvidenceComplete: false,
+  removalAuthorised: false,
+  readOnly: true,
+  declarative: true,
+  deterministic: true,
+});
+
 export const PROJECT_BROWSER_SELECTED_RESULT_PERSISTED_SUMMARY_READBACK_STATES = Object.freeze({
   ready: "project_browser_selected_result_persisted_summary_readback_ready",
   missing: "project_browser_selected_result_persisted_summary_readback_missing",
@@ -1536,6 +1597,8 @@ export function createProjectBrowserService({ savedProjectStore, projectService,
         PROJECT_BROWSER_PROJECT_IES_EXPORT_READBACK_SURFACE_CLASSIFICATION,
       projectIesExportBoundaryReadbackStagedRemovalPlan:
         PROJECT_BROWSER_PROJECT_IES_EXPORT_BOUNDARY_READBACK_STAGED_REMOVAL_PLAN,
+      projectIesExportBoundaryReadbackConsumerInventory:
+        PROJECT_BROWSER_PROJECT_IES_EXPORT_BOUNDARY_READBACK_CONSUMER_INVENTORY,
       selectedProjectIesExportBoundaryReadbackDetailSummary: buildProjectBrowserSelectedProjectIesExportBoundaryReadbackDetailSummary(
         projectIesExportBoundaryReadbackSummary,
         state.selectedProjectId,
