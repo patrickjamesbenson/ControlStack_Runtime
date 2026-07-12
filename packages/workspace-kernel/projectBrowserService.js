@@ -103,6 +103,30 @@ export const PROJECT_BROWSER_PROJECT_IES_EXPORT_READBACK_SURFACE_CLASSIFICATION 
   deterministic: true,
 });
 
+export const PROJECT_BROWSER_PROJECT_IES_EXPORT_BOUNDARY_READBACK_STAGED_REMOVAL_PLAN = Object.freeze({
+  schemaId: "controlstack.runtime.project-browser.project-ies-export-boundary-readback-staged-removal-plan.v1",
+  schemaVersion: 1,
+  currentStage: "freeze-and-retain",
+  frozenBoundaryReadbackPair: Object.freeze([
+    "projectIesExportBoundaryReadbackSummary",
+    "selectedProjectIesExportBoundaryReadbackDetailSummary",
+  ]),
+  soleReplacementResultReadbackPair: Object.freeze([
+    "projectIesExportResultReadbackSummary",
+    "selectedProjectIesExportResultReadbackDetailSummary",
+  ]),
+  newFeatureWorkProhibited: true,
+  newConsumerAdoptionProhibited: true,
+  compatibilityPresenceMandatory: true,
+  compatibilityShapeMandatory: true,
+  explicitConsumerInventoryRequiredBeforeRemoval: true,
+  explicitConsumerMigrationEvidenceRequiredBeforeRemoval: true,
+  removalAuthorised: false,
+  readOnly: true,
+  declarative: true,
+  deterministic: true,
+});
+
 export const PROJECT_BROWSER_SELECTED_RESULT_PERSISTED_SUMMARY_READBACK_STATES = Object.freeze({
   ready: "project_browser_selected_result_persisted_summary_readback_ready",
   missing: "project_browser_selected_result_persisted_summary_readback_missing",
@@ -1510,6 +1534,8 @@ export function createProjectBrowserService({ savedProjectStore, projectService,
       projectIesExportResultReadbackSummary,
       projectIesExportReadbackSurfaceClassification:
         PROJECT_BROWSER_PROJECT_IES_EXPORT_READBACK_SURFACE_CLASSIFICATION,
+      projectIesExportBoundaryReadbackStagedRemovalPlan:
+        PROJECT_BROWSER_PROJECT_IES_EXPORT_BOUNDARY_READBACK_STAGED_REMOVAL_PLAN,
       selectedProjectIesExportBoundaryReadbackDetailSummary: buildProjectBrowserSelectedProjectIesExportBoundaryReadbackDetailSummary(
         projectIesExportBoundaryReadbackSummary,
         state.selectedProjectId,
