@@ -33,6 +33,24 @@ export const PROJECT_BROWSER_SELECTED_PROJECT_IES_EXPORT_RESULT_READBACK_DETAIL_
   "controlstack.runtime.project-browser.selected-project-ies-export-result-readback-detail-summary.v1";
 export const PROJECT_BROWSER_SELECTED_PROJECT_IES_EXPORT_RESULT_READBACK_DETAIL_SUMMARY_SCHEMA_VERSION = 1;
 
+export const PROJECT_BROWSER_PROJECT_IES_EXPORT_READBACK_SURFACE_CLASSIFICATION = Object.freeze({
+  schemaId: "controlstack.runtime.project-browser.project-ies-export-readback-surface-classification.v1",
+  schemaVersion: 1,
+  solePrimaryBrowserReadinessPair: Object.freeze([
+    "projectIesExportResultReadbackSummary",
+    "selectedProjectIesExportResultReadbackDetailSummary",
+  ]),
+  frozenLegacyButKeptCompatibilityDiagnostics: Object.freeze([
+    "projectIesExportBoundaryReadbackSummary",
+    "selectedProjectIesExportBoundaryReadbackDetailSummary",
+  ]),
+  deletionProhibitedUntilSeparateStagedRemovalPlanExists: true,
+  readOnly: true,
+  summaryOnly: true,
+  redacted: true,
+  deterministic: true,
+});
+
 export const PROJECT_BROWSER_SELECTED_RESULT_PERSISTED_SUMMARY_READBACK_STATES = Object.freeze({
   ready: "project_browser_selected_result_persisted_summary_readback_ready",
   missing: "project_browser_selected_result_persisted_summary_readback_missing",
@@ -1431,6 +1449,8 @@ export function createProjectBrowserService({ savedProjectStore, projectService,
       ),
       projectIesExportBoundaryReadbackSummary,
       projectIesExportResultReadbackSummary,
+      projectIesExportReadbackSurfaceClassification:
+        PROJECT_BROWSER_PROJECT_IES_EXPORT_READBACK_SURFACE_CLASSIFICATION,
       selectedProjectIesExportBoundaryReadbackDetailSummary: buildProjectBrowserSelectedProjectIesExportBoundaryReadbackDetailSummary(
         projectIesExportBoundaryReadbackSummary,
         state.selectedProjectId,
