@@ -37,8 +37,9 @@
   .norm button,.orient button{ background:var(--blue); color:#fff; border:none; border-radius:6px; cursor:pointer; }
   .norm button[disabled],.orient button[disabled]{ background:#e3e3e3; color:#999; cursor:not-allowed; }
   .norm .res,.orient .res{ font-size:12px; color:#444; min-width:150px; }
-  .orient .row{ display:flex; align-items:center; gap:8px; font-size:13px; margin-bottom:7px; }
-  .orient .row b{ min-width:96px; } .orient input{ width:60px; }
+  .orient .row{ display:flex; align-items:center; gap:8px; font-size:12.5px; margin-bottom:7px; }
+  .orient .row b{ min-width:150px; } .orient input{ width:58px; }
+  .diags{ display:flex; gap:10px; flex-wrap:wrap; }
   .log{ font-family:var(--mono); font-size:11.5px; } .log .row{ padding:5px 0; border-bottom:1px solid #f2f2f2; } .log .op{ color:var(--blue); font-weight:700; }
   .muted{ color:var(--muted); } .full{ grid-column:1/3; } .hidden{ display:none; } .diag{ display:flex; gap:14px; align-items:flex-start; }
   .bar button{ font-size:12.5px; padding:5px 12px; border:none; border-radius:6px; cursor:pointer; color:#fff; }
@@ -84,13 +85,13 @@
 
     <div class="card full orient"><h2>Orient (each is undoable)</h2>
       <div class="diag">
-        <div id="orientDiag" class="diag" style="gap:10px"></div>
-        <div style="flex:1">
-          <div class="row"><b>Roll (azimuth)</b> spin about vertical: <input id="rollDeg" type="number" value="0" step="1" disabled/>° <button id="rollBtn" disabled>Roll</button><span class="res" id="rollRes"></span></div>
-          <div class="row"><b>Tilt short axis</b> beam fore/aft (C0 plane): <input id="tiltSDeg" type="number" value="0" step="1" disabled/>° <button id="tiltSBtn" disabled>Tilt</button><span class="res" id="tiltSRes"></span></div>
-          <div class="row"><b>Tilt long axis</b> beam side/side (C90 plane): <input id="tiltLDeg" type="number" value="0" step="1" disabled/>° <button id="tiltLBtn" disabled>Tilt</button><span class="res" id="tiltLRes"></span></div>
-          <div class="row"><b>Flip 180°</b> end-on, down&harr;up: <button id="flipBtn" disabled>Flip</button><span class="res" id="flipRes"></span></div>
-          <p class="muted" style="font-size:11.5px;margin:6px 0 0"><b>Roll</b> spins in plan (left diagram) - a symmetric downlight barely changes. <b>Tilt short/long</b> and <b>Flip</b> swing the beam in elevation (right diagram). Flip is the 180° case of a tilt. Roll needs a full 0-360 distribution.</p>
+        <div id="orientDiag" class="diags"></div>
+        <div style="flex:1;min-width:340px">
+          <div class="row"><b>Roll - about vertical</b><span class="muted">(plan view)</span> <input id="rollDeg" type="number" value="0" step="1" disabled/>° <button id="rollBtn" disabled>Roll</button><span class="res" id="rollRes"></span></div>
+          <div class="row"><b>Tilt about WIDTH axis</b><span class="muted">(side view: beam down&rarr;up)</span> <input id="tiltSDeg" type="number" value="0" step="1" disabled/>° <button id="tiltSBtn" disabled>Tilt</button><span class="res" id="tiltSRes"></span></div>
+          <div class="row"><b>Tilt about LENGTH axis</b><span class="muted">(end-on view: beam swings sideways)</span> <input id="tiltLDeg" type="number" value="0" step="1" disabled/>° <button id="tiltLBtn" disabled>Tilt</button><span class="res" id="tiltLRes"></span></div>
+          <div class="row"><b>Flip 180°</b><span class="muted">(down&harr;up)</span> <button id="flipBtn" disabled>Flip</button><span class="res" id="flipRes"></span></div>
+          <p class="muted" style="font-size:11.5px;margin:6px 0 0">Match the button to the view: <b>Tilt about the width axis</b> see-saws the length - the beam rotates <b>down&rarr;up in the side view</b> (this is your "end-on, rotate about the horizontal line, 180&deg; = up"). <b>Tilt about the length axis</b> spins it end-on - the beam swings <b>sideways in the end-on view</b>. Both reach straight up at 180&deg;.</p>
         </div>
       </div>
     </div>
@@ -103,7 +104,7 @@
 const _b = "?b=" + Date.now();
 let parseIes, computeMetrics, checkDimensions, fixDimensionTranspose, analyzeSymmetry, symmetrize, level, detectTilt,
     standardize, maskHemisphere, mirrorVertical, setDimensions, toOneMm, rotate, tilt, renderUgrTableHTML, UGR_CSS, computeUgr190Table;
-let origin = null, working = null, log = [], normStep = 1, orientRoll = 0, beamElev = 0, history = [];
+let origin = null, working = null, log = [], normStep = 1, orientRoll = 0, sTilt = 0, lTilt = 0, flips = 0, history = [];
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? "").replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
 const peakCd = (m) => { let p=0; for(const r of m.photometry.candela) for(const c of r) p=Math.max(p,Number(c)); return p; };
@@ -132,9 +133,9 @@ function renderLog(){ $("log").innerHTML = [`<div class="row"><span class="op">o
   .concat(log.map(e => `<div class="row"><span class="op">${esc(e.op)}</span> ${esc(e.params)} → ${esc(e.result)} · ${esc(e.fp)}</div>`)).join(""); }
 function addLog(op, params, result){ log.push({ op, params, result, fp: fp(working) }); renderLog(); }
 
-function pushHistory(){ history.push({ w: JSON.stringify(working), ns: normStep, or: orientRoll, be: beamElev, ll: log.length }); $("undoBtn").disabled = false; }
+function pushHistory(){ history.push({ w: JSON.stringify(working), ns: normStep, or: orientRoll, st: sTilt, lt: lTilt, fl: flips, ll: log.length }); $("undoBtn").disabled = false; }
 function undo(){ if(!history.length) return; const s = history.pop();
-  working = JSON.parse(s.w); normStep = s.ns; orientRoll = s.or; beamElev = s.be; log.length = s.ll;
+  working = JSON.parse(s.w); normStep = s.ns; orientRoll = s.or; sTilt = s.st; lTilt = s.lt; flips = s.fl; log.length = s.ll;
   ["symRes","interpRes","padRes","mmRes","rollRes","flipRes","tiltSRes","tiltLRes"].forEach(id=>{ if($(id)) $(id).innerHTML=""; });
   renderLog(); renderAll(); $("undoBtn").disabled = history.length===0; }
 
@@ -194,11 +195,26 @@ function polarSVG(m){
     <text x="${cx}" y="${cy+R+16}" font-size="10" fill="#888" text-anchor="middle" font-family="Arial">nadir 0° · peak ${peak<10?peak.toFixed(2):Math.round(peak)} cd</text></svg>`;
 }
 function renderUgr(m){ try{ $("ugr").innerHTML = renderUgrTableHTML(computeUgr190Table(m)); }catch(e){ $("ugr").innerHTML = `<span class="muted">UGR error: ${esc(e.message)}</span>`; } }
+
+// a beam-in-view diagram: fixture bar + light cone rotated by the given angle, with centre cross-hairs
+function beamDiag(angleDeg, title){
+  const a = ((angleDeg%360)+360)%360; const up = a>90 && a<270;
+  return `<svg viewBox="0 0 120 128" width="94" height="100"><rect width="120" height="120" fill="#fff" stroke="#eee"/>
+    <line x1="12" y1="60" x2="108" y2="60" stroke="#eaeaea"/><line x1="60" y1="12" x2="60" y2="108" stroke="#eaeaea"/>
+    <g transform="rotate(${a} 60 60)"><rect x="40" y="52" width="40" height="11" rx="2" fill="#cdd6ea" stroke="#7a89b8"/>
+      <polygon points="50,63 70,63 82,104 38,104" fill="rgba(230,180,40,.25)" stroke="#c9862a"/>
+      <path d="M60,80 L60,104 M60,104 L55,96 M60,104 L65,96" stroke="#c9862a" fill="none" stroke-width="1.4"/></g>
+    <text x="60" y="119" font-size="8.5" fill="#888" text-anchor="middle" font-family="Arial">${title} · ${up?"up":"down"} ${Math.round(a)}°</text></svg>`;
+}
+function planDiag(){
+  const r = ((orientRoll%360)+360)%360;
+  return `<svg viewBox="0 0 120 128" width="94" height="100"><rect width="120" height="120" fill="#fff" stroke="#eee"/>
+    <line x1="12" y1="60" x2="108" y2="60" stroke="#eaeaea"/><line x1="60" y1="12" x2="60" y2="108" stroke="#eaeaea"/>
+    <g transform="rotate(${r} 60 60)"><rect x="28" y="53" width="64" height="14" rx="3" fill="#cdd6ea" stroke="#7a89b8"/><circle cx="88" cy="60" r="4" fill="#d84a4a"/></g>
+    <text x="60" y="119" font-size="8.5" fill="#888" text-anchor="middle" font-family="Arial">plan (roll) · ${r}°</text></svg>`;
+}
 function renderOrient(){
-  const roll = ((orientRoll%360)+360)%360, be = ((beamElev%360)+360)%360; const up = be>90 && be<270;
-  const plan = `<svg viewBox="0 0 120 124" width="98" height="101"><rect width="120" height="120" fill="#fff" stroke="#eee"/><g transform="rotate(${roll} 60 60)"><rect x="28" y="53" width="64" height="14" rx="3" fill="#cdd6ea" stroke="#7a89b8"/><circle cx="88" cy="60" r="4" fill="#d84a4a"/></g><text x="60" y="119" font-size="9" fill="#888" text-anchor="middle" font-family="Arial">plan · roll ${roll}°</text></svg>`;
-  const elev = `<svg viewBox="0 0 120 124" width="98" height="101"><rect width="120" height="120" fill="#fff" stroke="#eee"/><g transform="rotate(${be} 60 60)"><rect x="40" y="52" width="40" height="11" rx="2" fill="#cdd6ea" stroke="#7a89b8"/><polygon points="50,63 70,63 82,104 38,104" fill="rgba(230,180,40,.25)" stroke="#c9862a"/><path d="M60,80 L60,104 M60,104 L55,96 M60,104 L65,96" stroke="#c9862a" fill="none" stroke-width="1.4"/></g><text x="60" y="119" font-size="9" fill="#888" text-anchor="middle" font-family="Arial">elevation · beam ${up?"up":"down"} (${Math.round(be)}°)</text></svg>`;
-  $("orientDiag").innerHTML = plan + elev;
+  $("orientDiag").innerHTML = planDiag() + beamDiag(sTilt + flips*180, "side (width axis)") + beamDiag(lTilt + flips*180, "end-on (length axis)");
 }
 
 function refreshSteps(){
@@ -222,7 +238,7 @@ function refreshSteps(){
 }
 function renderAll(){ renderIdentity(working); renderMetrics(working); renderDims(); $("polar").innerHTML = polarSVG(working); renderUgr(working); renderOrient(); refreshSteps(); }
 
-function loadModel(text){ origin = parseIes(text); working = JSON.parse(JSON.stringify(origin)); log = []; history = []; normStep = 1; orientRoll = 0; beamElev = 0;
+function loadModel(text){ origin = parseIes(text); working = JSON.parse(JSON.stringify(origin)); log = []; history = []; normStep = 1; orientRoll = 0; sTilt = 0; lTilt = 0; flips = 0;
   ["symRes","interpRes","padRes","mmRes","rollRes","flipRes","tiltSRes","tiltLRes"].forEach(id=>$(id).innerHTML=""); $("undoBtn").disabled = true;
   $("root").classList.remove("hidden"); addLog("parse", "read "+working.photometry.h_angles.length+" planes", "loaded"); renderAll(); }
 
@@ -248,14 +264,14 @@ function wire(){
   $("rollBtn").onclick=()=>{ try{ pushHistory(); const d=Number($("rollDeg").value)||0; working={ ...working, photometry:rotate(working.photometry, d) }; orientRoll+=d;
     $("rollRes").innerHTML=`<span class="flag noise">rolled ${d}° (total ${((orientRoll%360)+360)%360}°)</span>`; addLog("roll","azimuth "+d+"°","re-oriented"); renderAll(); }
     catch(e){ history.pop(); $("undoBtn").disabled=history.length===0; $("rollRes").innerHTML=`<span class="flag bad">${esc(e.message)}</span>`; } };
-  $("tiltSBtn").onclick=()=>{ pushHistory(); const d=Number($("tiltSDeg").value)||0; working={ ...working, photometry:tilt(working.photometry, d, "short") }; beamElev+=d;
-    $("tiltSRes").innerHTML=`<span class="flag noise">tilted ${d}° (short)</span>`; addLog("tilt-short","fore/aft "+d+"°","re-oriented"); renderAll(); };
-  $("tiltLBtn").onclick=()=>{ pushHistory(); const d=Number($("tiltLDeg").value)||0; working={ ...working, photometry:tilt(working.photometry, d, "long") };
-    $("tiltLRes").innerHTML=`<span class="flag noise">tilted ${d}° (long)</span>`; addLog("tilt-long","side/side "+d+"°","re-oriented"); renderAll(); };
-  $("flipBtn").onclick=()=>{ pushHistory(); working={ ...working, photometry:mirrorVertical(working.photometry) }; beamElev+=180;
-    const up=(((beamElev%360)+360)%360)>90 && (((beamElev%360)+360)%360)<270; $("flipRes").innerHTML=`<span class="flag noise">light now points ${up?"up":"down"}</span>`; addLog("flip","end-on 180°","light "+(up?"up":"down")); renderAll(); };
+  $("tiltSBtn").onclick=()=>{ pushHistory(); const d=Number($("tiltSDeg").value)||0; working={ ...working, photometry:tilt(working.photometry, d, "short") }; sTilt+=d;
+    $("tiltSRes").innerHTML=`<span class="flag noise">width-axis ${d}° (beam ${((( sTilt+flips*180)%360)+360)%360>90&&(((sTilt+flips*180)%360)+360)%360<270?"up":"down"})</span>`; addLog("tilt-width","about width axis "+d+"°","beam down→up plane"); renderAll(); };
+  $("tiltLBtn").onclick=()=>{ pushHistory(); const d=Number($("tiltLDeg").value)||0; working={ ...working, photometry:tilt(working.photometry, d, "long") }; lTilt+=d;
+    $("tiltLRes").innerHTML=`<span class="flag noise">length-axis ${d}° (sideways)</span>`; addLog("tilt-length","about length axis "+d+"°","beam sideways plane"); renderAll(); };
+  $("flipBtn").onclick=()=>{ pushHistory(); working={ ...working, photometry:mirrorVertical(working.photometry) }; flips+=1;
+    const up=(flips%2)===1; $("flipRes").innerHTML=`<span class="flag noise">light now points ${up?"up":"down"}</span>`; addLog("flip","end-on 180°","light "+(up?"up":"down")); renderAll(); };
 
-  $("resetBtn").onclick=()=>{ if(origin){ working=JSON.parse(JSON.stringify(origin)); log=[]; history=[]; normStep=1; orientRoll=0; beamElev=0;
+  $("resetBtn").onclick=()=>{ if(origin){ working=JSON.parse(JSON.stringify(origin)); log=[]; history=[]; normStep=1; orientRoll=0; sTilt=0; lTilt=0; flips=0;
     ["symRes","interpRes","padRes","mmRes","rollRes","flipRes","tiltSRes","tiltLRes"].forEach(id=>$(id).innerHTML=""); $("undoBtn").disabled=true; addLog("reset","","back to original"); renderAll(); } };
 }
 boot().then(wire).catch(e => { document.body.insertAdjacentHTML("beforeend", `<p style="color:#d84a4a">boot error: ${esc(e.message)}</p>`); });
