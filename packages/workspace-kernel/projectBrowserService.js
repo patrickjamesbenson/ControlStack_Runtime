@@ -1,5 +1,12 @@
 import { stableFingerprint } from "./stableFingerprint.js";
 import { buildSelectedResultPersistedSummaryReadbackProjectSummary } from "./savedProjectStore.js";
+import {
+  RUNTIME_IES_FIRST_NARROW_CANDIDATE_OUTPUT_MANIFEST_CONTRACT_ID,
+  RUNTIME_IES_FIRST_NARROW_CANDIDATE_OUTPUT_MANIFEST_REQUIRED_FALSE_FLAGS,
+  RUNTIME_IES_FIRST_NARROW_CANDIDATE_OUTPUT_MANIFEST_SUMMARY_SCHEMA_ID,
+  RUNTIME_IES_FIRST_NARROW_CANDIDATE_OUTPUT_MANIFEST_SUMMARY_SCHEMA_VERSION,
+  RUNTIME_IES_FIRST_NARROW_CANDIDATE_OUTPUT_MANIFEST_TARGET,
+} from "./iesFirstNarrowCandidateOutputManifestSummary.js";
 
 export const PROJECT_BROWSER_SELECTED_RESULT_PERSISTED_SUMMARY_READBACK_SUMMARY_SCHEMA_ID =
   "controlstack.runtime.project-browser.selected-result-persisted-summary-readback-summary.v1";
@@ -32,6 +39,69 @@ export const PROJECT_BROWSER_PROJECT_IES_EXPORT_RESULT_READBACK_SUMMARY_SCHEMA_V
 export const PROJECT_BROWSER_SELECTED_PROJECT_IES_EXPORT_RESULT_READBACK_DETAIL_SUMMARY_SCHEMA_ID =
   "controlstack.runtime.project-browser.selected-project-ies-export-result-readback-detail-summary.v1";
 export const PROJECT_BROWSER_SELECTED_PROJECT_IES_EXPORT_RESULT_READBACK_DETAIL_SUMMARY_SCHEMA_VERSION = 1;
+
+export const PROJECT_BROWSER_SELECTED_PROJECT_CANDIDATE_OUTPUT_MANIFEST_READBACK_SUMMARY_SCHEMA_ID =
+  "controlstack.runtime.project-browser.selected-project-candidate-output-manifest-readback-summary.v1";
+export const PROJECT_BROWSER_SELECTED_PROJECT_CANDIDATE_OUTPUT_MANIFEST_READBACK_SUMMARY_SCHEMA_VERSION = 1;
+
+export const PROJECT_BROWSER_SELECTED_PROJECT_CANDIDATE_OUTPUT_MANIFEST_READBACK_SUMMARY_FIELD_ORDER = Object.freeze([
+  "schemaId",
+  "schemaVersion",
+  "owner",
+  "source",
+  "state",
+  "readiness",
+  "ready",
+  "failClosed",
+  "blocker",
+  "selectedProjectId",
+  "selectedProjectFound",
+  "projectId",
+  "envelopeId",
+  "manifestSummaryPresent",
+  "manifestBoundaryReady",
+  "runTableRowCount",
+  "candidateOutputRecordCount",
+  "manifestRecordCount",
+  "manifestEntryCount",
+  "firstCandidateOutputKind",
+  "policyFingerprint",
+  "sourceFingerprint",
+  "sourceInputFingerprint",
+  "iesFirstNarrowMetadataHandoffSummaryFingerprint",
+  "iesFirstNarrowCandidateOutputSummaryFingerprint",
+  "iesFirstNarrowCandidateOutputManifestSummaryFingerprint",
+  "targetLocation",
+  "selectedProjectOnly",
+  "summaryOnly",
+  "diagnosticOnly",
+  "readOnly",
+  "redacted",
+  "machineValueSafe",
+  "manifestFileExists",
+  "manifestDownloadable",
+  "manifestFileOutputEnabled",
+  "manifestFileOutputWritten",
+  "downloadEnabled",
+  "downloadAvailable",
+  "sourceRowsReturned",
+  "candidateOutputDetailsReturned",
+  "artifactListReturned",
+  "rawManifestReturned",
+  "rawCandidateOutputReturned",
+  "rawIesReturned",
+  "rawPhotometryReturned",
+  "candelaArraysReturned",
+  "governancePayloadReturned",
+  "base64ArtifactsReturned",
+  "filenamesReturned",
+  "privatePathsReturned",
+  "routesAdded",
+  "postEndpointsAdded",
+  "runtimeDataMutated",
+  "boardDataMutated",
+  "projectBrowserSelectedProjectCandidateOutputManifestReadbackSummaryFingerprint",
+]);
 
 export const PROJECT_BROWSER_SELECTED_PROJECT_IES_EXPORT_RESULT_READBACK_DETAIL_SUMMARY_FIELD_ORDER = Object.freeze([
   "schemaId",
@@ -236,6 +306,12 @@ export const PROJECT_BROWSER_SELECTED_PROJECT_IES_EXPORT_RESULT_READBACK_DETAIL_
   blockedFailClosed: "project_browser_selected_project_ies_export_result_readback_detail_blocked_fail_closed",
 });
 
+export const PROJECT_BROWSER_SELECTED_PROJECT_CANDIDATE_OUTPUT_MANIFEST_READBACK_STATES = Object.freeze({
+  ready: "project_browser_selected_project_candidate_output_manifest_readback_ready",
+  missing: "project_browser_selected_project_candidate_output_manifest_readback_missing",
+  blockedFailClosed: "project_browser_selected_project_candidate_output_manifest_readback_blocked_fail_closed",
+});
+
 const PROJECT_BROWSER_SELECTED_RESULT_READBACK_SOURCE =
   "project-browser-project-summary-selected-result-readback-consumer";
 const PROJECT_BROWSER_SELECTED_PROJECT_SELECTED_RESULT_READBACK_STATUS_SOURCE =
@@ -250,12 +326,75 @@ const PROJECT_BROWSER_PROJECT_IES_EXPORT_RESULT_READBACK_SOURCE =
   "project-browser-saved-project-project-ies-export-result-readback-consumer";
 export const PROJECT_BROWSER_SELECTED_PROJECT_IES_EXPORT_RESULT_READBACK_DETAIL_SOURCE =
   "project-browser-selected-project-project-ies-export-result-readback-detail-consumer";
+export const PROJECT_BROWSER_SELECTED_PROJECT_CANDIDATE_OUTPUT_MANIFEST_READBACK_SOURCE =
+  "project-browser-selected-project-candidate-output-manifest-readback-summary-consumer";
 const SELECTED_RESULT_READBACK_TARGET =
   "projectEnvelope.modules.cs_selector.downstreamContext.selectedResultSummary";
 const PROJECT_IES_EXPORT_BOUNDARY_READBACK_TARGET =
   "projectEnvelope.modules.cs_selector.downstreamContext.iesFirstNarrowProjectIesExportBoundarySummary";
 const PROJECT_IES_EXPORT_RESULT_READBACK_TARGET =
   "projectEnvelope.modules.cs_selector.downstreamContext.iesFirstNarrowProjectIesExportResultSummary";
+
+const CANDIDATE_OUTPUT_MANIFEST_RAW_OR_PRIVATE_KEYS = Object.freeze([
+  "ies",
+  "iesText",
+  "rawIes",
+  "rawIesText",
+  "rawIesContent",
+  "photometry",
+  "rawPhotometry",
+  "candela",
+  "candelaGrid",
+  "candelaArray",
+  "candelaArrays",
+  "governance",
+  "governancePayload",
+  "mutationLog",
+  "rawManifest",
+  "manifest",
+  "artifactManifest",
+  "outputManifest",
+  "artifactList",
+  "outputFiles",
+  "files",
+  "filename",
+  "fileName",
+  "filePath",
+  "localPath",
+  "privatePath",
+  "absolutePath",
+  "targetPath",
+  "writeTarget",
+  "base64",
+  "base64Artifacts",
+  "artifactBase64",
+  "sourceRows",
+  "runTableRows",
+  "rawRunTableRows",
+  "candidateOutputDetails",
+  "rawCandidateOutput",
+  "projectEnvelope",
+  "envelopeBody",
+  "resultBody",
+]);
+
+const CANDIDATE_OUTPUT_MANIFEST_UNSAFE_TRUE_KEYS = Object.freeze([
+  ...RUNTIME_IES_FIRST_NARROW_CANDIDATE_OUTPUT_MANIFEST_REQUIRED_FALSE_FLAGS,
+  "artifactManifestGenerated",
+  "artifactManifestWritten",
+  "rawManifestReturned",
+  "rawCandidateOutputReturned",
+  "manifestFileExists",
+  "manifestDownloadable",
+  "downloadEnabled",
+  "downloadAvailable",
+]);
+
+const CANDIDATE_OUTPUT_MANIFEST_READY_STATE =
+  "redacted_ies_first_narrow_candidate_output_manifest_summary_persisted";
+const RAW_IES_TEXT_PATTERN = /IESNA:|TILT=/i;
+const DATA_BASE64_PATTERN = /data:[^\s"']*base64|base64,/i;
+const OUTPUT_FILE_VALUE_PATTERN = /(?:^|[\s\\/])[^\s\\/]+\.(?:ies|pdf|csv|json)(?:$|[\s?#])/i;
 
 const READBACK_RAW_OR_PRIVATE_KEYS = Object.freeze([
   "body",
@@ -411,6 +550,13 @@ function orderedSelectedProjectIesExportResultReadbackDetailSummary(fields) {
   );
 }
 
+function orderedSelectedProjectCandidateOutputManifestReadbackSummary(fields) {
+  return Object.fromEntries(
+    PROJECT_BROWSER_SELECTED_PROJECT_CANDIDATE_OUTPUT_MANIFEST_READBACK_SUMMARY_FIELD_ORDER
+      .map((key) => [key, fields[key]]),
+  );
+}
+
 function safeToken(value, fallback = null, maxLength = 220) {
   const raw = String(value ?? "").trim();
   if (!raw || PRIVATE_VALUE_PATTERN.test(raw)) return fallback;
@@ -432,6 +578,11 @@ function safeSchemaVersion(value) {
   if (value === null || value === undefined || String(value).trim() === "") return null;
   const version = Number(value);
   return Number.isFinite(version) ? version : null;
+}
+
+function safeNonNegativeInteger(value, fallback = 0) {
+  const number = Number(value);
+  return Number.isInteger(number) && number >= 0 ? number : fallback;
 }
 
 function hasNonNullBlocker(value) {
@@ -680,6 +831,97 @@ function findUnsafeProjectIesExportResultReadbackField(status) {
       return `blocked-unsafe-true-flag-${safeToken(key, "unknown")}`;
     }
     if (typeof value === "string" && PRIVATE_VALUE_PATTERN.test(value)) return "blocked-private-value";
+  }
+  return null;
+}
+
+function findUnsafeCandidateOutputManifestReadbackField(value, seen = new Set()) {
+  if (value === null || value === undefined) return null;
+  if (typeof value === "string") {
+    if (PRIVATE_VALUE_PATTERN.test(value)) return "blocked-private-value";
+    if (RAW_IES_TEXT_PATTERN.test(value)) return "blocked-raw-ies-value";
+    if (DATA_BASE64_PATTERN.test(value)) return "blocked-base64-value";
+    if (OUTPUT_FILE_VALUE_PATTERN.test(value)) return "blocked-output-file-value";
+    return null;
+  }
+  if (typeof value !== "object") return null;
+  if (seen.has(value)) return "blocked-cyclic-source";
+  seen.add(value);
+
+  const entries = Array.isArray(value) ? value.entries() : Object.entries(value);
+  for (const [keyOrIndex, entryValue] of entries) {
+    const key = String(keyOrIndex);
+    if (!Array.isArray(value)) {
+      if (CANDIDATE_OUTPUT_MANIFEST_RAW_OR_PRIVATE_KEYS.includes(key)
+        && entryValue !== false
+        && entryValue !== null
+        && entryValue !== undefined
+        && entryValue !== "") {
+        return `blocked-raw-field-${safeToken(key, "unknown")}`;
+      }
+      if (CANDIDATE_OUTPUT_MANIFEST_UNSAFE_TRUE_KEYS.includes(key) && entryValue === true) {
+        return `blocked-unsafe-true-flag-${safeToken(key, "unknown")}`;
+      }
+    }
+    const nested = findUnsafeCandidateOutputManifestReadbackField(entryValue, seen);
+    if (nested) return nested;
+  }
+  return null;
+}
+
+function validateCandidateOutputManifestReadbackSource(summary) {
+  if (!isPlainObject(summary)) return "candidate-output-manifest-summary-missing";
+  const unsafe = findUnsafeCandidateOutputManifestReadbackField(summary);
+  if (unsafe) return unsafe;
+  if (summary.schemaId !== RUNTIME_IES_FIRST_NARROW_CANDIDATE_OUTPUT_MANIFEST_SUMMARY_SCHEMA_ID
+    || summary.schemaVersion !== RUNTIME_IES_FIRST_NARROW_CANDIDATE_OUTPUT_MANIFEST_SUMMARY_SCHEMA_VERSION
+    || summary.contractId !== RUNTIME_IES_FIRST_NARROW_CANDIDATE_OUTPUT_MANIFEST_CONTRACT_ID) {
+    return "candidate-output-manifest-summary-schema-or-contract-mismatch";
+  }
+  if (summary.state !== CANDIDATE_OUTPUT_MANIFEST_READY_STATE) {
+    return "candidate-output-manifest-summary-not-ready";
+  }
+  if (summary.summaryOnly !== true
+    || summary.diagnosticOnly !== true
+    || summary.safeSummaryOnly !== true
+    || summary.redacted !== true
+    || summary.machineValueSafe !== true
+    || summary.readOnly !== true) {
+    return "candidate-output-manifest-summary-safety-flags-invalid";
+  }
+  if (summary.readyForManifestBoundary !== true
+    || summary.readyForFutureOutput !== true
+    || summary.manifestJoined !== true
+    || summary.runTableFirstNarrowRowsReady !== true
+    || summary.iesFirstNarrowMetadataHandoffReady !== true
+    || summary.iesFirstNarrowCandidateOutputSummaryReady !== true) {
+    return "candidate-output-manifest-summary-readiness-invalid";
+  }
+  if (safeNonNegativeInteger(summary.sourceRunTableRowCount, -1) !== 1
+    || safeNonNegativeInteger(summary.candidateOutputRecordCount, -1) !== 1
+    || safeNonNegativeInteger(summary.manifestRecordCount, -1) !== 1
+    || safeNonNegativeInteger(summary.manifestEntryCount, -1) !== 1) {
+    return "candidate-output-manifest-summary-counts-invalid";
+  }
+  if (!safeToken(summary.firstCandidateOutputKind, null, 760)) {
+    return "candidate-output-manifest-summary-first-output-kind-missing";
+  }
+  for (const fingerprintKey of [
+    "policyFingerprint",
+    "sourceFingerprint",
+    "sourceInputFingerprint",
+    "iesFirstNarrowMetadataHandoffSummaryFingerprint",
+    "iesFirstNarrowCandidateOutputSummaryFingerprint",
+    "iesFirstNarrowCandidateOutputManifestSummaryFingerprint",
+  ]) {
+    if (!safeToken(summary[fingerprintKey], null, 760)) {
+      return `candidate-output-manifest-summary-${fingerprintKey}-missing`;
+    }
+  }
+  for (const key of RUNTIME_IES_FIRST_NARROW_CANDIDATE_OUTPUT_MANIFEST_REQUIRED_FALSE_FLAGS) {
+    if (summary[key] !== false) {
+      return `candidate-output-manifest-summary-required-false-flag-invalid-${safeToken(key, "unknown")}`;
+    }
   }
   return null;
 }
@@ -1284,6 +1526,144 @@ export function buildProjectBrowserSelectedProjectIesExportResultReadbackDetailS
   }));
 }
 
+export function buildProjectBrowserSelectedProjectCandidateOutputManifestReadbackSummary(
+  selectedProjectEnvelope = null,
+  selectedProjectId = null,
+  sourceAccessBlocker = null,
+) {
+  const selectedProjectToken = selectedProjectId === null ? null : safeToken(selectedProjectId, null);
+  const selectedProjectFound = isPlainObject(selectedProjectEnvelope);
+  const projectId = selectedProjectFound ? safeToken(selectedProjectEnvelope.projectId, null) : null;
+  const envelopeId = selectedProjectFound
+    ? safeToken(selectedProjectEnvelope.envelopeId || selectedProjectEnvelope.projectId, null)
+    : null;
+  const downstreamContext = selectedProjectFound
+    && isPlainObject(selectedProjectEnvelope?.modules?.cs_selector?.downstreamContext)
+    ? selectedProjectEnvelope.modules.cs_selector.downstreamContext
+    : null;
+  const sourceSummary = isPlainObject(downstreamContext?.iesFirstNarrowCandidateOutputManifestSummary)
+    ? downstreamContext.iesFirstNarrowCandidateOutputManifestSummary
+    : null;
+  const manifestSummaryPresent = isPlainObject(sourceSummary) && Object.keys(sourceSummary).length > 0;
+
+  let state = PROJECT_BROWSER_SELECTED_PROJECT_CANDIDATE_OUTPUT_MANIFEST_READBACK_STATES.missing;
+  let readiness = "missing";
+  let ready = false;
+  let failClosed = true;
+  let blocker = null;
+
+  if (selectedProjectId === null) {
+    blocker = "project-browser-selected-project-not-selected";
+  } else if (!selectedProjectToken) {
+    state = PROJECT_BROWSER_SELECTED_PROJECT_CANDIDATE_OUTPUT_MANIFEST_READBACK_STATES.blockedFailClosed;
+    readiness = "blocked_fail_closed";
+    blocker = "project-browser-selected-project-id-invalid";
+  } else if (sourceAccessBlocker) {
+    state = PROJECT_BROWSER_SELECTED_PROJECT_CANDIDATE_OUTPUT_MANIFEST_READBACK_STATES.blockedFailClosed;
+    readiness = "blocked_fail_closed";
+    blocker = safeToken(
+      sourceAccessBlocker,
+      "project-browser-selected-project-candidate-output-manifest-accessor-failed",
+    );
+  } else if (!selectedProjectFound) {
+    blocker = "project-browser-selected-project-not-found";
+  } else if (selectedProjectToken !== projectId && selectedProjectToken !== envelopeId) {
+    state = PROJECT_BROWSER_SELECTED_PROJECT_CANDIDATE_OUTPUT_MANIFEST_READBACK_STATES.blockedFailClosed;
+    readiness = "blocked_fail_closed";
+    blocker = "project-browser-selected-project-envelope-identity-mismatch";
+  } else if (!manifestSummaryPresent) {
+    blocker = "project-browser-selected-project-candidate-output-manifest-summary-missing";
+  } else {
+    const validationBlocker = validateCandidateOutputManifestReadbackSource(sourceSummary);
+    if (validationBlocker) {
+      state = PROJECT_BROWSER_SELECTED_PROJECT_CANDIDATE_OUTPUT_MANIFEST_READBACK_STATES.blockedFailClosed;
+      readiness = "blocked_fail_closed";
+      blocker = safeToken(
+        validationBlocker,
+        "project-browser-selected-project-candidate-output-manifest-summary-blocked",
+        760,
+      );
+    } else {
+      state = PROJECT_BROWSER_SELECTED_PROJECT_CANDIDATE_OUTPUT_MANIFEST_READBACK_STATES.ready;
+      readiness = "ready";
+      ready = true;
+      failClosed = false;
+    }
+  }
+
+  const base = {
+    schemaId: PROJECT_BROWSER_SELECTED_PROJECT_CANDIDATE_OUTPUT_MANIFEST_READBACK_SUMMARY_SCHEMA_ID,
+    schemaVersion: PROJECT_BROWSER_SELECTED_PROJECT_CANDIDATE_OUTPUT_MANIFEST_READBACK_SUMMARY_SCHEMA_VERSION,
+    owner: "shell",
+    source: PROJECT_BROWSER_SELECTED_PROJECT_CANDIDATE_OUTPUT_MANIFEST_READBACK_SOURCE,
+    state,
+    readiness,
+    ready,
+    failClosed,
+    blocker,
+    selectedProjectId: selectedProjectToken,
+    selectedProjectFound,
+    projectId,
+    envelopeId,
+    manifestSummaryPresent,
+    manifestBoundaryReady: ready,
+    runTableRowCount: ready ? safeNonNegativeInteger(sourceSummary.sourceRunTableRowCount) : 0,
+    candidateOutputRecordCount: ready ? safeNonNegativeInteger(sourceSummary.candidateOutputRecordCount) : 0,
+    manifestRecordCount: ready ? safeNonNegativeInteger(sourceSummary.manifestRecordCount) : 0,
+    manifestEntryCount: ready ? safeNonNegativeInteger(sourceSummary.manifestEntryCount) : 0,
+    firstCandidateOutputKind: ready ? safeToken(sourceSummary.firstCandidateOutputKind, null, 760) : null,
+    policyFingerprint: ready ? safeToken(sourceSummary.policyFingerprint, null, 760) : null,
+    sourceFingerprint: ready ? safeToken(sourceSummary.sourceFingerprint, null, 760) : null,
+    sourceInputFingerprint: ready ? safeToken(sourceSummary.sourceInputFingerprint, null, 760) : null,
+    iesFirstNarrowMetadataHandoffSummaryFingerprint: ready
+      ? safeToken(sourceSummary.iesFirstNarrowMetadataHandoffSummaryFingerprint, null, 760)
+      : null,
+    iesFirstNarrowCandidateOutputSummaryFingerprint: ready
+      ? safeToken(sourceSummary.iesFirstNarrowCandidateOutputSummaryFingerprint, null, 760)
+      : null,
+    iesFirstNarrowCandidateOutputManifestSummaryFingerprint: ready
+      ? safeToken(sourceSummary.iesFirstNarrowCandidateOutputManifestSummaryFingerprint, null, 760)
+      : null,
+    targetLocation: RUNTIME_IES_FIRST_NARROW_CANDIDATE_OUTPUT_MANIFEST_TARGET,
+    selectedProjectOnly: true,
+    summaryOnly: true,
+    diagnosticOnly: true,
+    readOnly: true,
+    redacted: true,
+    machineValueSafe: true,
+    manifestFileExists: false,
+    manifestDownloadable: false,
+    manifestFileOutputEnabled: false,
+    manifestFileOutputWritten: false,
+    downloadEnabled: false,
+    downloadAvailable: false,
+    sourceRowsReturned: false,
+    candidateOutputDetailsReturned: false,
+    artifactListReturned: false,
+    rawManifestReturned: false,
+    rawCandidateOutputReturned: false,
+    rawIesReturned: false,
+    rawPhotometryReturned: false,
+    candelaArraysReturned: false,
+    governancePayloadReturned: false,
+    base64ArtifactsReturned: false,
+    filenamesReturned: false,
+    privatePathsReturned: false,
+    routesAdded: false,
+    postEndpointsAdded: false,
+    runtimeDataMutated: false,
+    boardDataMutated: false,
+  };
+
+  return Object.freeze(orderedSelectedProjectCandidateOutputManifestReadbackSummary({
+    ...base,
+    projectBrowserSelectedProjectCandidateOutputManifestReadbackSummaryFingerprint: stableFingerprint(
+      "safe-project-browser-selected-project-candidate-output-manifest-readback-summary",
+      base,
+    ),
+  }));
+}
+
 export function buildProjectBrowserSelectedProjectSelectedResultPersistedSummaryReadbackStatus(projects = [], selectedProjectId = null) {
   const projectSummaries = Array.isArray(projects) ? projects : [];
   const selectedProjectToken = selectedProjectId === null ? null : safeToken(selectedProjectId, null);
@@ -1570,6 +1950,27 @@ export function createProjectBrowserService({ savedProjectStore, projectService,
       storeSnapshot.projects,
       savedProjectStore.getIesFirstNarrowProjectIesExportResultReadbackStatus?.bind(savedProjectStore),
     );
+    let selectedProjectEnvelope = null;
+    let selectedProjectManifestAccessBlocker = null;
+    if (state.selectedProjectId !== null) {
+      if (typeof savedProjectStore.getProjectEnvelope !== "function") {
+        selectedProjectManifestAccessBlocker =
+          "project-browser-selected-project-candidate-output-manifest-accessor-unavailable";
+      } else {
+        try {
+          selectedProjectEnvelope = savedProjectStore.getProjectEnvelope(state.selectedProjectId);
+        } catch {
+          selectedProjectManifestAccessBlocker =
+            "project-browser-selected-project-candidate-output-manifest-accessor-failed";
+        }
+      }
+    }
+    const selectedProjectCandidateOutputManifestReadbackSummary =
+      buildProjectBrowserSelectedProjectCandidateOutputManifestReadbackSummary(
+        selectedProjectEnvelope,
+        state.selectedProjectId,
+        selectedProjectManifestAccessBlocker,
+      );
     return {
       owner: state.owner,
       status: state.status,
@@ -1607,6 +2008,7 @@ export function createProjectBrowserService({ savedProjectStore, projectService,
         projectIesExportResultReadbackSummary,
         state.selectedProjectId,
       ),
+      selectedProjectCandidateOutputManifestReadbackSummary,
       filters: { ...state.filters },
       projects: clone(storeSnapshot.projects),
       projectCount: storeSnapshot.count,
