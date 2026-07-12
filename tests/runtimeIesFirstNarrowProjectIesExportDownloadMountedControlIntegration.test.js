@@ -38,6 +38,7 @@ import {
 } from "../packages/modules/ies-builder/iesBuilderSelectedProjectIesExportDownloadSourceBoundary.js";
 import {
   createIesBuilderViewModel,
+  IES_BUILDER_FIRST_PROJECT_IES_EXPORT_DOWNLOAD_OUTCOME_STATES,
   prepareIesBuilderProjectIesExportDownloadCapabilityAction,
   triggerIesBuilderProjectIesExportDownloadAction,
 } from "../packages/modules/ies-builder/iesBuilderViewModel.js";
@@ -487,6 +488,7 @@ test("real mounted runtime materialiser enables and operates the landed visible 
   });
   assert.equal(directReceipt.downloadTriggered, true);
   assert.equal(directReceipt.failClosed, false);
+  assert.equal(directReceipt.downloadMetadata.mediaType, "application/ies");
   assert.deepEqual(directHarness.calls, EXPECTED_BROWSER_CALLS);
 
   const visibleControlHarness = browserHarness("mounted-control-visible");
@@ -540,6 +542,14 @@ test("real mounted runtime materialiser enables and operates the landed visible 
     status.textContent,
     /^Download started: controlstack-project-ies-1200mm-[0-9a-f]{12}\.ies \([1-9][0-9]* bytes\)\.$/,
   );
+  assert.deepEqual(viewModel.projectIesExportDownloadOutcomeState.getSnapshot(), {
+    state: IES_BUILDER_FIRST_PROJECT_IES_EXPORT_DOWNLOAD_OUTCOME_STATES.started,
+    filename: directReceipt.downloadMetadata.filename,
+    mediaType: "application/ies",
+    extension: ".ies",
+    byteLength: directReceipt.downloadMetadata.byteLength,
+    blocker: null,
+  });
 
   assertNoPrivatePayload(chain.boundarySummary);
   assertNoPrivatePayload(chain.boundaryReadbackStatus);

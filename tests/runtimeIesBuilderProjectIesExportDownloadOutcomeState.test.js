@@ -93,7 +93,7 @@ function safeStartedReceipt(overrides = {}) {
     blocker: null,
     downloadMetadata: Object.freeze({
       filename: "controlstack-project-ies-1200mm-a1b2c3d4e5f6.ies",
-      mediaType: "application/octet-stream",
+      mediaType: "application/ies",
       extension: ".ies",
       byteLength: 321,
       contentFingerprint: `safe-content:${"b".repeat(40)}`,
@@ -150,7 +150,7 @@ test("started outcome retains only the five approved safe receipt metadata field
   assert.deepEqual(snapshot, {
     state: IES_BUILDER_FIRST_PROJECT_IES_EXPORT_DOWNLOAD_OUTCOME_STATES.started,
     filename: "controlstack-project-ies-1200mm-a1b2c3d4e5f6.ies",
-    mediaType: "application/octet-stream",
+    mediaType: "application/ies",
     extension: ".ies",
     byteLength: 321,
     blocker: null,
@@ -251,7 +251,7 @@ test("rendered action transitions explicit outcome state before projecting safe 
   assert.deepEqual(viewModel.projectIesExportDownloadOutcomeState.getSnapshot(), {
     state: IES_BUILDER_FIRST_PROJECT_IES_EXPORT_DOWNLOAD_OUTCOME_STATES.started,
     filename: "controlstack-project-ies-1200mm-a1b2c3d4e5f6.ies",
-    mediaType: "application/octet-stream",
+    mediaType: "application/ies",
     extension: ".ies",
     byteLength: 321,
     blocker: null,
@@ -264,7 +264,7 @@ test("rendered action transitions explicit outcome state before projecting safe 
     status.textContent,
     "Download started: controlstack-project-ies-1200mm-a1b2c3d4e5f6.ies (321 bytes).",
   );
-  assert.equal(status.textContent.includes("application/octet-stream"), false);
+  assert.equal(status.textContent.includes("application/ies"), false);
 });
 
 test("blocked receipt and thrown action both transition explicit state without retaining unsafe values", () => {

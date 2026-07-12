@@ -4,6 +4,7 @@ import {
 } from "./iesBuilderSelectedProjectIesExportDownloadSourceBoundary.js";
 import {
   buildRuntimeIesFirstNarrowProjectIesExportDownloadMaterialisationBoundary,
+  RUNTIME_IES_FIRST_NARROW_PROJECT_IES_EXPORT_DOWNLOAD_MEDIA_TYPE,
 } from "../../workspace-kernel/iesFirstNarrowProjectIesExportDownloadMaterialisationBoundary.js";
 
 const STATUS_ENDPOINT = "/api/ies-builder/status";
@@ -59,7 +60,7 @@ export const IES_BUILDER_FIRST_VISIBLE_PROJECT_IES_EXPORT_DOWNLOAD_CONTROL_FIELD
 
 const PROJECT_IES_EXPORT_DOWNLOAD_FILENAME_PATTERN =
   /^controlstack-project-ies-[1-9][0-9]*mm-[0-9a-f]{12}\.ies$/;
-const PROJECT_IES_EXPORT_DOWNLOAD_MEDIA_TYPE = "application/octet-stream";
+const PROJECT_IES_EXPORT_DOWNLOAD_LEGACY_MEDIA_TYPE = "application/octet-stream";
 const PROJECT_IES_EXPORT_DOWNLOAD_BLOCKER_PATTERN = /^[0-9A-Za-z_.:-]{1,760}$/;
 
 const REQUIRED_BOUNDARY_STATEMENTS = Object.freeze([
@@ -570,7 +571,8 @@ function safeProjectIesExportDownloadStartedMetadata(receipt) {
   if (receipt?.downloadTriggered !== true
     || !metadata
     || !PROJECT_IES_EXPORT_DOWNLOAD_FILENAME_PATTERN.test(String(metadata.filename || ""))
-    || metadata.mediaType !== PROJECT_IES_EXPORT_DOWNLOAD_MEDIA_TYPE
+    || (metadata.mediaType !== RUNTIME_IES_FIRST_NARROW_PROJECT_IES_EXPORT_DOWNLOAD_MEDIA_TYPE
+      && metadata.mediaType !== PROJECT_IES_EXPORT_DOWNLOAD_LEGACY_MEDIA_TYPE)
     || metadata.extension !== ".ies"
     || !Number.isSafeInteger(metadata.byteLength)
     || metadata.byteLength <= 0) {
