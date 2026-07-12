@@ -311,7 +311,7 @@ img.cs-shell__rail-icon,
 .cs-shell select:focus, .cs-shell input:focus { outline: 2px solid rgba(1, 109, 225, 0.2); outline-offset: 1px; }
 
 .cs-shell__button-row, .cs-shell__start-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
-.cs-shell__auth-button, .cs-shell__company-button, .cs-shell__project-browser-save, .cs-shell__project-browser-restore, .cs-shell__project-browser-handoff {
+.cs-shell__auth-button, .cs-shell__company-button, .cs-shell__project-browser-save, .cs-shell__project-browser-restore, .cs-shell__project-browser-handoff, .cs-shell__project-browser-export-download {
   display: inline-flex; align-items: center; justify-content: center; min-height: 40px; margin: 0; padding: 10px 24px;
   border: 1px solid rgba(20, 20, 20, 0); border-radius: var(--cs-radius-sm); background: var(--cs-text); color: #ffffff;
   font-size: 14px; font-weight: 600; line-height: 18px; text-align: center; text-decoration: none; transition: background var(--cs-transition-fast), color var(--cs-transition-fast), border-color var(--cs-transition-fast), opacity var(--cs-transition-fast);
@@ -323,7 +323,7 @@ img.cs-shell__rail-icon,
 .cs-shell__start-actions .cs-shell__auth-button { width: auto; }
 .cs-shell__company-button { flex: 1 1 170px; }
 .cs-shell__project-browser-save, .cs-shell__project-browser-restore, .cs-shell__project-browser-handoff { margin: 0 8px 12px 0; }
-.cs-shell__auth-button:disabled, .cs-shell__company-button:disabled, .cs-shell__project-browser-save:disabled, .cs-shell__project-browser-restore:disabled, .cs-shell__project-browser-handoff:disabled { cursor: not-allowed; opacity: 0.55; }
+.cs-shell__auth-button:disabled, .cs-shell__company-button:disabled, .cs-shell__project-browser-save:disabled, .cs-shell__project-browser-restore:disabled, .cs-shell__project-browser-handoff:disabled, .cs-shell__project-browser-export-download:disabled { cursor: not-allowed; opacity: 0.55; }
 
 .cs-shell__checkbox-row { min-height: 32px; display: flex !important; align-items: center; gap: 8px; margin-bottom: 6px; user-select: none; }
 .cs-shell__checkbox-row input { width: 1.25em; height: 1.25em; flex: 0 0 auto; accent-color: var(--cs-text); }
@@ -332,6 +332,18 @@ img.cs-shell__rail-icon,
 .cs-shell dt { color: var(--cs-muted); font-weight: 600; }
 .cs-shell dd { margin: 0; color: var(--cs-text); word-break: break-word; }
 .cs-shell__inline-summary { margin-bottom: 12px !important; }
+
+.cs-shell__project-browser-exports {
+  margin: 14px 0 16px; padding: 14px; border: 1px solid var(--cs-border); border-radius: var(--cs-radius-md); background: var(--cs-surface-subtle, #f7f8fa);
+}
+.cs-shell__project-browser-exports h4 { margin-bottom: 4px; }
+.cs-shell__project-browser-exports-project { margin-bottom: 10px; font-size: 12px; line-height: 18px; }
+.cs-shell__project-browser-export-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.cs-shell__project-browser-export-item > div { display: grid; gap: 2px; min-width: 0; }
+.cs-shell__project-browser-export-item strong { font-size: 13px; font-weight: 600; }
+.cs-shell__project-browser-export-item span { color: var(--cs-muted); font-size: 12px; }
+.cs-shell__project-browser-export-download { flex: 0 0 auto; min-height: 36px; padding: 8px 14px; }
+.cs-shell__project-browser-export-status { margin: 10px 0 0; font-size: 12px; line-height: 18px; }
 
 .cs-shell__project-browser-list { display: grid; gap: 8px; margin: 12px 0 0; padding: 0; list-style: none; }
 .cs-shell__project-browser-list li {
