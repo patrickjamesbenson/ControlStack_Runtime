@@ -1,3 +1,8 @@
+import {
+  createIesBuilderProjectIesExportDownloadOutcomeState,
+  IES_BUILDER_FIRST_PROJECT_IES_EXPORT_DOWNLOAD_OUTCOME_STATES,
+} from "./iesBuilderViewModel.js";
+
 function clearElement(element) {
   while (element.firstChild) element.removeChild(element.firstChild);
 }
@@ -43,30 +48,34 @@ function appendListSection(parent, heading, items) {
   parent.appendChild(section);
 }
 
-function projectIesExportDownloadReceiptStatus(receipt) {
-  const metadata = receipt?.downloadMetadata;
-  const safeDownloadStarted = receipt?.downloadTriggered === true
-    && metadata
-    && typeof metadata.filename === "string"
-    && metadata.filename.endsWith(".ies")
-    && typeof metadata.mediaType === "string"
-    && metadata.mediaType.length > 0
-    && metadata.extension === ".ies"
-    && Number.isSafeInteger(metadata.byteLength)
-    && metadata.byteLength > 0;
-
-  if (safeDownloadStarted) {
-    return `Download started: ${metadata.filename} (${metadata.byteLength} bytes).`;
+function projectIesExportDownloadOutcomeStatus(outcome, unavailable = false) {
+  if (outcome?.state === IES_BUILDER_FIRST_PROJECT_IES_EXPORT_DOWNLOAD_OUTCOME_STATES.started) {
+    return `Download started: ${outcome.filename} (${outcome.byteLength} bytes).`;
   }
 
-  const blocker = typeof receipt?.blocker === "string" && receipt.blocker
-    ? receipt.blocker
-    : "project-ies-export-download-action-blocked";
-  return `Project IES download blocked: ${blocker}.`;
+  if (outcome?.state === IES_BUILDER_FIRST_PROJECT_IES_EXPORT_DOWNLOAD_OUTCOME_STATES.blocked) {
+    return `Project IES download blocked: ${outcome.blocker}.`;
+  }
+
+  return unavailable
+    ? "Project IES download is unavailable."
+    : "Download the ready IES export for the selected project.";
 }
 
-export function appendProjectIesExportDownloadControl(parent, control, action) {
+export function appendProjectIesExportDownloadControl(
+  parent,
+  control,
+  action,
+  outcomeState = null,
+) {
   if (!control || control.visible !== true) return null;
+
+  const downloadOutcomeState = outcomeState
+    && typeof outcomeState.getSnapshot === "function"
+    && typeof outcomeState.recordReceipt === "function"
+    && typeof outcomeState.recordBlocked === "function"
+    ? outcomeState
+    : createIesBuilderProjectIesExportDownloadOutcomeState();
 
   const section = document.createElement("section");
   section.className = "cs-selector-proof__section cs-ies-builder__download-control";
@@ -82,21 +91,28 @@ export function appendProjectIesExportDownloadControl(parent, control, action) {
   const status = appendText(
     section,
     "p",
-    button.disabled
-      ? "Project IES download is unavailable."
-      : "Download the ready IES export for the selected project.",
+    "",
     "cs-shell__status",
   );
   status.dataset.iesBuilderDownloadStatus = "project-ies-export";
+
+  function renderDownloadOutcome() {
+    const outcome = downloadOutcomeState.getSnapshot();
+    status.dataset.iesBuilderDownloadOutcomeState = outcome.state;
+    status.textContent = projectIesExportDownloadOutcomeStatus(outcome, button.disabled);
+  }
+
+  renderDownloadOutcome();
 
   if (!button.disabled) {
     button.addEventListener("click", () => {
       try {
         const receipt = action();
-        status.textContent = projectIesExportDownloadReceiptStatus(receipt);
+        downloadOutcomeState.recordReceipt(receipt);
       } catch {
-        status.textContent = "Project IES download blocked: project-ies-export-download-action-failed.";
+        downloadOutcomeState.recordBlocked("project-ies-export-download-action-failed");
       }
+      renderDownloadOutcome();
     });
   }
 
@@ -123,6 +139,7 @@ export function renderIesBuilderView(container, viewModel) {
     article,
     viewModel.projectIesExportDownloadControl,
     viewModel["projectIesExport" + "DownloadAction"],
+    viewModel.projectIesExportDownloadOutcomeState,
   );
 
   appendSection(article, "IES Builder status", viewModel.statusRows);

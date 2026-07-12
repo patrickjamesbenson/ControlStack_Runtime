@@ -14,6 +14,27 @@ export const IES_BUILDER_FIRST_VISIBLE_PROJECT_IES_EXPORT_DOWNLOAD_CONTROL_SCHEM
   "controlstack.runtime.ies-builder.first-visible-project-ies-export-download-control.v1";
 export const IES_BUILDER_FIRST_VISIBLE_PROJECT_IES_EXPORT_DOWNLOAD_CONTROL_SCHEMA_VERSION = 1;
 
+export const IES_BUILDER_FIRST_PROJECT_IES_EXPORT_DOWNLOAD_OUTCOME_STATE_CONTRACT_ID =
+  "IES-BUILDER-FIRST-PROJECT-IES-EXPORT-DOWNLOAD-OUTCOME-STATE-1";
+export const IES_BUILDER_FIRST_PROJECT_IES_EXPORT_DOWNLOAD_OUTCOME_STATE_SCHEMA_ID =
+  "controlstack.runtime.ies-builder.first-project-ies-export-download-outcome-state.v1";
+export const IES_BUILDER_FIRST_PROJECT_IES_EXPORT_DOWNLOAD_OUTCOME_STATE_SCHEMA_VERSION = 1;
+
+export const IES_BUILDER_FIRST_PROJECT_IES_EXPORT_DOWNLOAD_OUTCOME_STATES = Object.freeze({
+  idle: "ies_builder_project_ies_export_download_idle",
+  started: "ies_builder_project_ies_export_download_started",
+  blocked: "ies_builder_project_ies_export_download_blocked",
+});
+
+export const IES_BUILDER_FIRST_PROJECT_IES_EXPORT_DOWNLOAD_OUTCOME_FIELD_ORDER = Object.freeze([
+  "state",
+  "filename",
+  "mediaType",
+  "extension",
+  "byteLength",
+  "blocker",
+]);
+
 export const IES_BUILDER_FIRST_VISIBLE_PROJECT_IES_EXPORT_DOWNLOAD_CONTROL_STATES = Object.freeze({
   actionAvailable: "ies_builder_project_ies_export_download_action_available",
   blockedFailClosed: "ies_builder_project_ies_export_download_blocked_fail_closed",
@@ -35,6 +56,11 @@ export const IES_BUILDER_FIRST_VISIBLE_PROJECT_IES_EXPORT_DOWNLOAD_CONTROL_FIELD
   "ephemeral",
   "inMemoryOnly",
 ]);
+
+const PROJECT_IES_EXPORT_DOWNLOAD_FILENAME_PATTERN =
+  /^controlstack-project-ies-[1-9][0-9]*mm-[0-9a-f]{12}\.ies$/;
+const PROJECT_IES_EXPORT_DOWNLOAD_MEDIA_TYPE = "application/octet-stream";
+const PROJECT_IES_EXPORT_DOWNLOAD_BLOCKER_PATTERN = /^[0-9A-Za-z_.:-]{1,760}$/;
 
 const REQUIRED_BOUNDARY_STATEMENTS = Object.freeze([
   "IES Builder is read-only and diagnostic in this slice.",
@@ -507,6 +533,96 @@ function oneMmPolicyRows(status = {}) {
   ];
 }
 
+function createIesBuilderProjectIesExportDownloadOutcomeSnapshot({
+  state = IES_BUILDER_FIRST_PROJECT_IES_EXPORT_DOWNLOAD_OUTCOME_STATES.idle,
+  filename = null,
+  mediaType = null,
+  extension = null,
+  byteLength = null,
+  blocker = null,
+} = {}) {
+  const fields = {
+    state,
+    filename,
+    mediaType,
+    extension,
+    byteLength,
+    blocker,
+  };
+
+  return Object.freeze(Object.fromEntries(
+    IES_BUILDER_FIRST_PROJECT_IES_EXPORT_DOWNLOAD_OUTCOME_FIELD_ORDER
+      .map((key) => [key, fields[key]]),
+  ));
+}
+
+function safeProjectIesExportDownloadBlocker(
+  blocker,
+  fallback = "project-ies-export-download-action-blocked",
+) {
+  return typeof blocker === "string" && PROJECT_IES_EXPORT_DOWNLOAD_BLOCKER_PATTERN.test(blocker)
+    ? blocker
+    : fallback;
+}
+
+function safeProjectIesExportDownloadStartedMetadata(receipt) {
+  const metadata = receipt?.downloadMetadata;
+  if (receipt?.downloadTriggered !== true
+    || !metadata
+    || !PROJECT_IES_EXPORT_DOWNLOAD_FILENAME_PATTERN.test(String(metadata.filename || ""))
+    || metadata.mediaType !== PROJECT_IES_EXPORT_DOWNLOAD_MEDIA_TYPE
+    || metadata.extension !== ".ies"
+    || !Number.isSafeInteger(metadata.byteLength)
+    || metadata.byteLength <= 0) {
+    return null;
+  }
+
+  return {
+    filename: metadata.filename,
+    mediaType: metadata.mediaType,
+    extension: metadata.extension,
+    byteLength: metadata.byteLength,
+  };
+}
+
+export function createIesBuilderProjectIesExportDownloadOutcomeState() {
+  let snapshot = createIesBuilderProjectIesExportDownloadOutcomeSnapshot();
+
+  return Object.freeze({
+    getSnapshot() {
+      return snapshot;
+    },
+
+    recordReceipt(receipt = {}) {
+      const metadata = safeProjectIesExportDownloadStartedMetadata(receipt);
+      if (metadata) {
+        snapshot = createIesBuilderProjectIesExportDownloadOutcomeSnapshot({
+          state: IES_BUILDER_FIRST_PROJECT_IES_EXPORT_DOWNLOAD_OUTCOME_STATES.started,
+          ...metadata,
+        });
+        return snapshot;
+      }
+
+      snapshot = createIesBuilderProjectIesExportDownloadOutcomeSnapshot({
+        state: IES_BUILDER_FIRST_PROJECT_IES_EXPORT_DOWNLOAD_OUTCOME_STATES.blocked,
+        blocker: safeProjectIesExportDownloadBlocker(receipt?.blocker),
+      });
+      return snapshot;
+    },
+
+    recordBlocked(blocker = "project-ies-export-download-action-failed") {
+      snapshot = createIesBuilderProjectIesExportDownloadOutcomeSnapshot({
+        state: IES_BUILDER_FIRST_PROJECT_IES_EXPORT_DOWNLOAD_OUTCOME_STATES.blocked,
+        blocker: safeProjectIesExportDownloadBlocker(
+          blocker,
+          "project-ies-export-download-action-failed",
+        ),
+      });
+      return snapshot;
+    },
+  });
+}
+
 export function createIesBuilderProjectIesExportDownloadControl(
   action,
   { unavailableBlocker = "project-ies-export-download-action-seam-unavailable" } = {},
@@ -594,6 +710,8 @@ export function createIesBuilderViewModel({
     : null;
   const selectedProjectDownloadAction = selectedProjectDownloadControlAction
     || triggerIesBuilderProjectIesExportDownloadAction;
+  const projectIesExportDownloadOutcomeState =
+    createIesBuilderProjectIesExportDownloadOutcomeState();
 
   return {
     moduleId: "ies_builder",
@@ -604,6 +722,7 @@ export function createIesBuilderViewModel({
     shellRoute: context?.route?.moduleId || "ies_builder",
     projectIesExportDownloadSourceBoundary: selectedProjectDownloadSourceBoundary,
     projectIesExportDownloadAction: selectedProjectDownloadAction,
+    projectIesExportDownloadOutcomeState,
     projectIesExportDownloadControl: createIesBuilderProjectIesExportDownloadControl(
       selectedProjectDownloadControlAction,
       { unavailableBlocker: "project-ies-download-materialiser-capability-not-wired" },
