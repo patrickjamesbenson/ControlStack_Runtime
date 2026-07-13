@@ -1,3 +1,4 @@
+import { spawn } from "node:child_process";
 import { createReadStream } from "node:fs";
 import { access, copyFile, mkdir, readFile, readdir, stat } from "node:fs/promises";
 import { createServer } from "node:http";
@@ -17,10 +18,22 @@ import { buildSelectorReferenceOptions, SELECTOR_REFERENCE_OPTIONS_PATH } from "
 
 import { buildBoardDataStatus, BOARD_DATA_STATUS_PATH } from "./packages/workspace-kernel/boardDataStatusService.js";
 import { buildIesBuilderStatus, IES_BUILDER_STATUS_PATH } from "./packages/workspace-kernel/iesBuilderStatusService.js";
+import { createSavedProjectStore } from "./packages/workspace-kernel/savedProjectStore.js";
+import {
+  createRuntimeEngineRunTableSelectedProjectShellInvokeHostTransportMount,
+  RUNTIME_ENGINE_RUNTABLE_SELECTED_PROJECT_SHELL_INVOKE_HOST_TRANSPORT_METHOD,
+  RUNTIME_ENGINE_RUNTABLE_SELECTED_PROJECT_SHELL_INVOKE_HOST_TRANSPORT_PATH,
+} from "./packages/workspace-kernel/engineRunTableSelectedProjectShellInvokeHostTransportMount.js";
 
 const PORT = Number.parseInt(process.env.CONTROLSTACK_RUNTIME_PORT || "8787", 10);
 const HOST = process.env.CONTROLSTACK_RUNTIME_HOST || "127.0.0.1";
 const ROOT = resolve(process.cwd());
+const SELECTED_PROJECT_ENGINE_READONLY_HOST_ADAPTER_PATH = resolve(
+  ROOT,
+  "tools/runtime/engine_runtable_selected_project_readonly_host_adapter.py",
+);
+const SELECTED_PROJECT_ENGINE_READONLY_HOST_ADAPTER_MAX_OUTPUT_BYTES = 1024 * 1024;
+const SELECTED_PROJECT_ENGINE_READONLY_HOST_ADAPTER_TIMEOUT_MS = 120000;
 const NVB_READ_PATH = "/api/nvb-" + String.fromCharCode(97, 117, 116, 104, 111, 114, 105, 116, 121) + "/read";
 const HUBSPOT_READ_PATH = "/api/hubspot/read";
 const HUBSPOT_AUTH_STATUS_PATH = "/api/hubspot/auth-status";
@@ -2434,12 +2447,160 @@ async function serveFile(res, absolutePath) {
   createReadStream(absolutePath).pipe(res);
 }
 
+function isLoopbackRemoteAddress(req) {
+  const address = String(req.socket?.remoteAddress || "").trim().toLowerCase();
+  return address === "127.0.0.1"
+    || address === "::1"
+    || address === "::ffff:127.0.0.1"
+    || address.startsWith("127.");
+}
+
+function invokeRuntimeEngineRunTableSelectedProjectHostLocalReadonlySeam(bridgeRequest) {
+  return new Promise((resolveInvocation, rejectInvocation) => {
+    const pythonCommand = String(process.env.CONTROLSTACK_PYTHON || "python").trim() || "python";
+    const child = spawn(
+      pythonCommand,
+      [SELECTED_PROJECT_ENGINE_READONLY_HOST_ADAPTER_PATH],
+      {
+        cwd: ROOT,
+        windowsHide: true,
+        stdio: ["pipe", "pipe", "pipe"],
+        env: {
+          ...process.env,
+          CONTROLSTACK_RUNTIME_ROOT: ROOT,
+        },
+      },
+    );
+    const stdoutChunks = [];
+    let stdoutBytes = 0;
+    let stderrBytes = 0;
+    let settled = false;
+
+    const finishReject = (code) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timeout);
+      rejectInvocation(new Error(code));
+    };
+    const timeout = setTimeout(() => {
+      child.kill();
+      finishReject("selected-project-host-seam-timeout");
+    }, SELECTED_PROJECT_ENGINE_READONLY_HOST_ADAPTER_TIMEOUT_MS);
+
+    child.stdout.on("data", (chunk) => {
+      stdoutBytes += chunk.length;
+      if (stdoutBytes > SELECTED_PROJECT_ENGINE_READONLY_HOST_ADAPTER_MAX_OUTPUT_BYTES) {
+        child.kill();
+        finishReject("selected-project-host-seam-output-too-large");
+        return;
+      }
+      stdoutChunks.push(chunk);
+    });
+    child.stderr.on("data", (chunk) => {
+      stderrBytes += chunk.length;
+      if (stderrBytes > SELECTED_PROJECT_ENGINE_READONLY_HOST_ADAPTER_MAX_OUTPUT_BYTES) {
+        child.kill();
+        finishReject("selected-project-host-seam-stderr-too-large");
+      }
+    });
+    child.on("error", () => finishReject("selected-project-host-seam-process-unavailable"));
+    child.on("close", (code) => {
+      if (settled) return;
+      if (code !== 0) {
+        finishReject("selected-project-host-seam-process-failed");
+        return;
+      }
+      let parsed;
+      try {
+        parsed = JSON.parse(Buffer.concat(stdoutChunks).toString("utf-8"));
+      } catch {
+        finishReject("selected-project-host-seam-response-invalid");
+        return;
+      }
+      settled = true;
+      clearTimeout(timeout);
+      resolveInvocation(parsed);
+    });
+
+    try {
+      child.stdin.end(JSON.stringify(bridgeRequest));
+    } catch {
+      child.kill();
+      finishReject("selected-project-host-seam-request-write-failed");
+    }
+  });
+}
+
+const selectedProjectEngineRunHostSavedProjects = createSavedProjectStore();
+const selectedProjectEngineRunHostTransport =
+  createRuntimeEngineRunTableSelectedProjectShellInvokeHostTransportMount({
+    savedProjects: selectedProjectEngineRunHostSavedProjects,
+    invokeHostLocalReadonlySeam:
+      invokeRuntimeEngineRunTableSelectedProjectHostLocalReadonlySeam,
+  });
+
+async function sendSelectedProjectEngineRunHostTransport(res, req) {
+  if (!isLoopbackRemoteAddress(req)) {
+    sendJson(res, 403, {
+      ok: false,
+      failClosed: true,
+      blocker: "selected-project-host-transport-loopback-only",
+      readOnly: true,
+      selectedProjectOnly: true,
+      redactedOutcomeOnly: true,
+    });
+    return;
+  }
+
+  let request;
+  try {
+    request = await requestJson(req, { maxBytes: 8192 });
+  } catch {
+    sendJson(res, 400, {
+      ok: false,
+      failClosed: true,
+      blocker: "selected-project-host-transport-request-json-invalid",
+      readOnly: true,
+      selectedProjectOnly: true,
+      redactedOutcomeOnly: true,
+    });
+    return;
+  }
+
+  const response = await selectedProjectEngineRunHostTransport.invoke(request);
+  const status = response.ok === true ? 200 : response.requestAccepted === true ? 422 : 400;
+  sendJson(res, status, response);
+}
+
 const server = createServer(async (req, res) => {
   const requestUrl = new URL(req.url || "/", `http://${req.headers.host || `${HOST}:${PORT}`}`);
 
   const isAllowedAuthorityReferencePost = req.method === "POST" && AUTH_REF_POST_PATHS.has(requestUrl.pathname);
-  if (req.method !== "GET" && req.method !== "HEAD" && !isAllowedAuthorityReferencePost) {
+  const isAllowedSelectedProjectEngineHostTransportPost =
+    req.method === RUNTIME_ENGINE_RUNTABLE_SELECTED_PROJECT_SHELL_INVOKE_HOST_TRANSPORT_METHOD
+    && requestUrl.pathname
+      === RUNTIME_ENGINE_RUNTABLE_SELECTED_PROJECT_SHELL_INVOKE_HOST_TRANSPORT_PATH;
+  if (req.method !== "GET"
+    && req.method !== "HEAD"
+    && !isAllowedAuthorityReferencePost
+    && !isAllowedSelectedProjectEngineHostTransportPost) {
     sendJson(res, 405, { ok: false, error: "method_not_allowed" });
+    return;
+  }
+
+  if (requestUrl.pathname
+      === RUNTIME_ENGINE_RUNTABLE_SELECTED_PROJECT_SHELL_INVOKE_HOST_TRANSPORT_PATH) {
+    if (req.method
+        !== RUNTIME_ENGINE_RUNTABLE_SELECTED_PROJECT_SHELL_INVOKE_HOST_TRANSPORT_METHOD) {
+      sendJson(res, 405, {
+        ok: false,
+        error: "method_not_allowed",
+        requiredMethod:
+          RUNTIME_ENGINE_RUNTABLE_SELECTED_PROJECT_SHELL_INVOKE_HOST_TRANSPORT_METHOD,
+      });
+      return;
+    }
+    await sendSelectedProjectEngineRunHostTransport(res, req);
     return;
   }
 

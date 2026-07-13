@@ -669,12 +669,16 @@ test("premount contract lock keeps all runtime invoke ownership out of shell wir
     actionLaneSource,
     workflowSource,
     servicesSource,
-    serverSource,
   ].join("\n");
   assert.doesNotMatch(
     shellOwnedSources,
     /engineRunTableSelectedProjectReadonlyInvokeCapability|engineRunTableSelectedProjectShellInvokeTransportBoundary|getProjectBrowserSelectedProjectEngineRunActionInternalCandidate|resolveProjectBrowserSelectedProjectEngineRunActionSourceBoundary|engine-runtable-internal-readonly-invoke/,
   );
+  assert.match(
+    serverSource,
+    /engineRunTableSelectedProjectShellInvokeHostTransportMount/,
+  );
+  assert.doesNotMatch(serverSource, /engine_runtable_internal_readonly_invoke_probe/);
   assert.equal(actionLaneSource.includes("packages/workspace-kernel"), false);
   assert.doesNotMatch(
     actionLaneSource,

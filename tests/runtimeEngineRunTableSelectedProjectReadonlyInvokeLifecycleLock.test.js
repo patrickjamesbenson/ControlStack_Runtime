@@ -605,9 +605,14 @@ test("lifecycle ownership remains module-private, server-owned, unmounted, memor
   );
   assert.match(transportSource, /const invokeReadonlyCapability\s*=/);
   assert.doesNotMatch(
-    `${shellSource}\n${servicesSource}\n${serverSource}`,
+    `${shellSource}\n${servicesSource}`,
     /engineRunTableSelectedProjectShellInvokeTransportBoundary|RUNTIME-ENGINE-RUNTABLE-FIRST-SELECTED-PROJECT-READONLY-INVOKE-LIFECYCLE-LOCK-1|engine_runtable_internal_readonly_invoke/,
   );
+  assert.match(
+    serverSource,
+    /engineRunTableSelectedProjectShellInvokeHostTransportMount/,
+  );
+  assert.doesNotMatch(serverSource, /engine_runtable_internal_readonly_invoke_probe/);
 
   for (const source of [capabilitySource, transportSource]) {
     assert.doesNotMatch(

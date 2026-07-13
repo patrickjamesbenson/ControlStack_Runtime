@@ -155,6 +155,7 @@ function buildResponse({
   sourceBoundaryReady = false,
   capabilityInvoked = false,
   capabilityCompleted = false,
+  hostTransportMounted = false,
 } = {}) {
   const completed = state
     === RUNTIME_ENGINE_RUNTABLE_SELECTED_PROJECT_SHELL_INVOKE_TRANSPORT_STATES.completed
@@ -197,28 +198,33 @@ function buildResponse({
     mcpExposed: false,
     shellDirectInternalCallAllowed: false,
     shellMounted: false,
-    routesAdded: false,
-    postEndpointsAdded: false,
+    routesAdded: hostTransportMounted === true,
+    postEndpointsAdded: hostTransportMounted === true,
   });
 }
 
 export function createRuntimeEngineRunTableSelectedProjectShellInvokeTransportBoundary({
   savedProjects = null,
   hostLocalReadonlySeamAdapter = null,
+  hostTransportMounted = false,
 } = {}) {
   const invokeReadonlyCapability =
     createRuntimeEngineRunTableSelectedProjectReadonlyInvokeCapability({
       hostLocalReadonlySeamAdapter,
     });
+  const respond = (options = {}) => buildResponse({
+    ...options,
+    hostTransportMounted: hostTransportMounted === true,
+  });
 
   return async function invokeSelectedProjectFromShellTransport(request = null) {
     const requestBlocker = validateRequest(request);
-    if (requestBlocker) return buildResponse({ request, blocker: requestBlocker });
+    if (requestBlocker) return respond({ request, blocker: requestBlocker });
 
     const selectedProjectId = request.selectedProjectId;
     const getProjectEnvelope = savedProjects?.getProjectEnvelope;
     if (typeof getProjectEnvelope !== "function") {
-      return buildResponse({
+      return respond({
         request,
         state:
           RUNTIME_ENGINE_RUNTABLE_SELECTED_PROJECT_SHELL_INVOKE_TRANSPORT_STATES.unavailable,
@@ -232,7 +238,7 @@ export function createRuntimeEngineRunTableSelectedProjectShellInvokeTransportBo
       privateEnvelope = await getProjectEnvelope.call(savedProjects, selectedProjectId);
       privateEnvelope = clonePlain(privateEnvelope);
     } catch {
-      return buildResponse({
+      return respond({
         request,
         blocker: "selected-project-shell-invoke-transport-selected-envelope-read-failed",
         requestAccepted: true,
@@ -246,7 +252,7 @@ export function createRuntimeEngineRunTableSelectedProjectShellInvokeTransportBo
         selectedProjectId,
       );
     } catch {
-      return buildResponse({
+      return respond({
         request,
         blocker: "selected-project-shell-invoke-transport-readiness-reconstruction-failed",
         requestAccepted: true,
@@ -272,7 +278,7 @@ export function createRuntimeEngineRunTableSelectedProjectShellInvokeTransportBo
         },
       });
     } catch {
-      return buildResponse({
+      return respond({
         request,
         blocker: "selected-project-shell-invoke-transport-source-boundary-reconstruction-failed",
         requestAccepted: true,
@@ -280,7 +286,7 @@ export function createRuntimeEngineRunTableSelectedProjectShellInvokeTransportBo
     }
 
     if (sourceBoundary?.ready !== true) {
-      return buildResponse({
+      return respond({
         request,
         blocker: safeToken(
           sourceBoundary?.blocker,
@@ -295,7 +301,7 @@ export function createRuntimeEngineRunTableSelectedProjectShellInvokeTransportBo
     try {
       capabilityResult = await invokeReadonlyCapability(sourceBoundary);
     } catch {
-      return buildResponse({
+      return respond({
         request,
         blocker: "selected-project-shell-invoke-transport-capability-threw",
         requestAccepted: true,
@@ -317,7 +323,7 @@ export function createRuntimeEngineRunTableSelectedProjectShellInvokeTransportBo
         : RUNTIME_ENGINE_RUNTABLE_SELECTED_PROJECT_SHELL_INVOKE_TRANSPORT_STATES
           .blockedFailClosed;
 
-    return buildResponse({
+    return respond({
       request,
       state,
       blocker: capabilityCompleted

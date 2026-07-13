@@ -613,7 +613,7 @@ test("keeps the transport unavailable without a real host-local adapter after su
   );
 });
 
-test("transport source stays server-owned and unmounted while shell and server routes cannot call internal or MCP seams directly", async () => {
+test("transport source stays server-owned while the host route mounts only the wrapper and the shell remains unmounted", async () => {
   const [transportSource, shellSource, serverSource] = await Promise.all([
     readFile(
       new URL(
@@ -650,8 +650,12 @@ test("transport source stays server-owned and unmounted while shell and server r
     shellSource,
     /engineRunTableSelectedProjectShellInvokeTransportBoundary|engineRunTableSelectedProjectReadonlyInvokeCapability|projectBrowserSelectedProjectEngineRunActionSourceBoundary|engine_runtable_internal_readonly_invoke|engine_runtable_internal_readonly_invoke_probe/,
   );
+  assert.match(
+    serverSource,
+    /engineRunTableSelectedProjectShellInvokeHostTransportMount/,
+  );
   assert.doesNotMatch(
     serverSource,
-    /engineRunTableSelectedProjectShellInvokeTransportBoundary|RUNTIME-ENGINE-RUNTABLE-FIRST-SELECTED-PROJECT-SHELL-INVOKE-TRANSPORT-BOUNDARY-1/,
+    /engine_runtable_internal_readonly_invoke_probe|getProjectBrowserSelectedProjectEngineRunActionInternalCandidate/,
   );
 });
