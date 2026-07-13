@@ -17,8 +17,7 @@
   details.origin{ background:#fff; border:1px solid var(--line2); border-radius:10px; padding:6px 14px; margin-bottom:14px; }
   details.origin>summary{ font-size:13px; font-weight:600; cursor:pointer; padding:8px 0; color:#333; text-transform:uppercase; letter-spacing:.04em; }
   details.origin[open]>summary{ border-bottom:1px solid #f2f2f2; margin-bottom:12px; }
-  .commence{ background:linear-gradient(90deg,#eef3fd,#fff); border:1px solid #cfdcf7; border-radius:10px; padding:12px 16px; margin-bottom:14px; display:flex; align-items:center; gap:10px; }
-  .commence b{ font-size:14px; color:var(--blue); } .commence span{ color:var(--muted); font-size:12px; }
+  .banner{ font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:#556; background:#eef1f6; border:1px solid #dde3ee; border-radius:8px; padding:8px 14px; margin:16px 0 6px; }
   .badge1{ display:inline-flex; width:20px; height:20px; border-radius:50%; background:#eee; color:#666; font-size:11px; align-items:center; justify-content:center; font-weight:700; margin-right:6px; vertical-align:middle; }
   .badge1.on{ background:var(--blue); color:#fff; } .badge1.done{ background:var(--ok); color:#fff; }
   .kv{ display:flex; justify-content:space-between; gap:12px; padding:3px 0; font-size:13px; border-bottom:1px solid #f2f2f2; }
@@ -29,6 +28,7 @@
   table.dim th,table.dim td{ border:1px solid var(--line2); padding:5px 8px; text-align:center; }
   table.dim th{ background:#f6f6f6; font-weight:600; } table.dim td.h{ text-align:left; color:var(--muted); } table.dim th small{ color:#999; font-weight:400; }
   table.dim input,table.dim select{ font-size:12px; padding:2px 4px; width:78px; }
+  .info{ color:var(--blue); cursor:help; font-weight:700; border:1px solid var(--blue); border-radius:50%; width:15px; height:15px; display:inline-flex; align-items:center; justify-content:center; font-size:10px; margin-left:5px; }
   .flag{ display:inline-block; font-size:11px; padding:2px 7px; border-radius:20px; font-weight:600; }
   .flag.ok{ background:#e6f6ef; color:var(--ok); } .flag.bad{ background:#fde7e7; color:var(--red); }
   .flag.noise{ background:#e6f6ef; color:var(--ok); } .flag.large{ background:#fbf0dc; color:var(--amber); }
@@ -38,20 +38,23 @@
   .norm .n{ width:22px; height:22px; border-radius:50%; background:#eee; color:#666; font-size:12px; display:inline-flex; align-items:center; justify-content:center; font-weight:700; }
   .norm .n.on{ background:var(--blue); color:#fff; } .norm .n.done{ background:var(--ok); color:#fff; }
   .norm .lbl{ flex:1; font-size:13px; } .norm .lbl small{ color:var(--muted); display:block; font-size:11px; }
-  .norm select,.norm button,.orient input,.orient button,.prov input,.prov select,.prov button{ font-size:12.5px; padding:4px 8px; }
-  .norm button,.orient button,.prov button{ background:var(--blue); color:#fff; border:none; border-radius:6px; cursor:pointer; }
-  .norm button[disabled],.orient button[disabled],.prov button[disabled],.prov input[disabled],.prov select[disabled]{ background:#e3e3e3; color:#999; cursor:not-allowed; }
-  .norm .res,.orient .res,.prov .res{ font-size:12px; color:#444; }
+  .norm select,.norm button,.orient input,.orient button,.meta input,.meta select,.meta button{ font-size:12.5px; padding:4px 8px; }
+  .norm button,.orient button,.meta button{ background:var(--blue); color:#fff; border:none; border-radius:6px; cursor:pointer; }
+  button[disabled],.meta input[disabled],.meta select[disabled]{ background:#e3e3e3 !important; color:#999 !important; cursor:not-allowed; }
+  .norm .res,.orient .res,.meta .res{ font-size:12px; color:#444; }
   .orient .row{ display:flex; align-items:center; gap:8px; font-size:13px; margin-bottom:7px; flex-wrap:wrap; } .orient input{ width:70px; }
-  .prov .pform{ display:grid; grid-template-columns:1fr 1fr; gap:10px 24px; font-size:12.5px; max-width:840px; }
-  .prov label{ display:flex; align-items:center; gap:6px; color:#444; } .prov input{ width:80px; } .prov input[type=number]{ width:80px; }
+  .meta .cols{ display:grid; grid-template-columns:1fr 1fr 1.2fr; gap:16px 22px; }
+  .meta .sublbl{ font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#556; margin-bottom:6px; }
+  .meta label{ display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:12.5px; color:#444; margin-bottom:6px; }
+  .meta label input{ width:82px; } .meta select{ width:100%; }
+  .gtag{ font-family:var(--mono); font-size:10.5px; background:#eef; color:var(--blue); border-radius:4px; padding:1px 4px; }
   .log{ font-family:var(--mono); font-size:11.5px; } .log .row{ padding:5px 0; border-bottom:1px solid #f2f2f2; } .log .op{ color:var(--blue); font-weight:700; }
   .muted{ color:var(--muted); } .full{ grid-column:1/3; } .hidden{ display:none; } .diag{ display:flex; gap:16px; align-items:center; }
   .bar button{ font-size:12.5px; padding:5px 12px; border:none; border-radius:6px; cursor:pointer; color:#fff; }
 </style>
 
 <h1>Summary + Normalise</h1>
-<p class="sub">Load any IES, review the origin summary, accept its dimensions, normalise in order, orient it, then write the lab provenance. Undo reverts a step so only what you keep is recorded. Nothing here touches the runtime.</p>
+<p class="sub">Load an IES, review the origin summary, then edit its metadata &amp; keywords on the original file, then run the provenanced mutations. Undo reverts a step so only what you keep is recorded. Nothing here touches the runtime.</p>
 
 <div class="drop" id="drop">Drop a reference <b>.ies</b> here, or click to choose<input type="file" id="file" accept=".ies,.txt" class="hidden" /></div>
 
@@ -69,34 +72,61 @@
     </div>
   </details>
 
+  <div class="banner">IES metadata &amp; keywords &mdash; edited on the original file (G-values = tabled header metadata; [_&hellip;] = keywords)</div>
   <div class="grid">
-    <div class="card full"><h2><span class="badge1" id="dimBadge">1</span>Dimensions - accept the luminous opening (unlocks normalise)</h2>
+    <div class="card full"><h2><span class="badge1" id="dimBadge">1</span>Dimensions - luminous opening <span class="gtag">G7 / G8 / G9</span></h2>
       <table class="dim" id="dims"></table>
-      <p class="muted" style="font-size:11.5px;margin:8px 0 0">Physical L&times;W&times;H is the carton, not the luminous opening. For a <b>stretchable</b> IES, any gap is multiplied per metre - so length is the active LED length, with the end capture method. The width&gt;length check runs here, once. These write to the IES header <b>G7 (width) / G8 (length) / G9 (height)</b>.</p>
     </div>
 
-    <div class="commence full" id="commence"><b>Commence normalisation</b> <span>dimensions accepted - work steps 2-6 in order, orient (7), then write provenance (8)</span></div>
+    <div class="card full meta"><h2><span class="badge1" id="metaBadge">2</span>Power, thermal &amp; other</h2>
+      <div class="cols">
+        <div>
+          <div class="sublbl">Power</div>
+          <label>Tested mains voltage (V) <input id="mainsV" type="number" step="1" disabled/></label>
+          <label>Input watts <span class="gtag">G12</span> <input id="wattsIn" type="number" step="0.1" disabled/></label>
+          <div class="muted" id="wattsTag" style="font-size:11px;text-align:right"></div>
+        </div>
+        <div>
+          <div class="sublbl">Thermal - tested °C</div>
+          <label>Board Tc <input id="boardTc" type="number" step="0.1" disabled/></label>
+          <label>Driver Tc <input id="driverTc" type="number" step="0.1" disabled/></label>
+          <label>System internal ambient <input id="sysTa" type="number" step="0.1" disabled/></label>
+          <label>Lab ambient <input id="labTa" type="number" step="0.1" disabled/></label>
+        </div>
+        <div>
+          <div class="sublbl">Other</div>
+          <label style="display:block">File generation type <span class="gtag">G11</span></label>
+          <select id="fileGen" disabled></select>
+          <label style="display:block;margin-top:8px">Intended use</label>
+          <select id="intendedUse" disabled><option value="Pure reference gear tray">Pure ref gear tray (cold battery)</option><option value="Pure reference optic">Pure ref optic (hot battery)</option><option value="General reference">General reference</option></select>
+        </div>
+      </div>
+      <div style="margin-top:12px"><button id="metaApply" disabled>Apply metadata &amp; keywords &rarr; continue</button> <span class="res" id="metaRes"></span></div>
+      <p class="muted" style="font-size:11.5px;margin:8px 0 0">Edited on the original file so no 1&nbsp;mm conversion is needed. <b>File generation type</b> is the LM-63-2019 rename of the old &lt;future use&gt; field - selecting one declares the file <b>LM-63-2019</b>; skip to keep the original standard and value. If you change input watts it is auto-tagged "entered manually".</p>
+    </div>
+  </div>
 
-    <div class="card"><h2>Polar - C0 / C90</h2><div class="polarbox" id="polar"></div>
+  <div class="banner">Mutations (provenanced) &mdash; each changes the photometry and is logged to the trail</div>
+  <div class="grid">
+    <div class="card full"><h2>Polar - C0 / C90</h2><div class="polarbox" id="polar"></div>
       <div class="leg"><span class="sw" style="background:var(--red)"></span>C0 / C180 &nbsp;&nbsp; <span class="sw" style="background:var(--blue)"></span>C90 / C270 &nbsp;&nbsp;<span class="muted">uncaptured quadrants mirrored for display</span></div>
     </div>
-    <div class="card"><h2>UGR - CIE 190:2010</h2><div id="ugr" style="overflow:auto"></div></div>
 
     <div class="card full norm"><h2>Normalise (ordered recipe)</h2>
-      <div class="step"><span class="n" id="n2">2</span><span class="lbl">Level <small>tilt-correct so the peak sits at nadir - skip if an off-nadir peak is intended</small></span>
-        <span class="res" id="levelRes">accept dimensions first</span><button id="levelSkip" class="hidden" style="background:#777">Skip</button><button id="levelBtn" disabled>Level</button></div>
-      <div class="step"><span class="n" id="n3">3</span><span class="lbl">Symmetrise <small>enforce azimuth symmetry &amp; record the imbalance - skip if the asymmetry is intended</small></span>
+      <div class="step"><span class="n" id="n3">3</span><span class="lbl">Level <small>tilt-correct so the peak sits at nadir - skip if an off-nadir peak is intended</small></span>
+        <span class="res" id="levelRes">complete steps 1-2 first</span><button id="levelSkip" class="hidden" style="background:#777">Skip</button><button id="levelBtn" disabled>Level</button></div>
+      <div class="step"><span class="n" id="n4">4</span><span class="lbl">Symmetrise <small>enforce azimuth symmetry &amp; record the imbalance - skip if the asymmetry is intended</small></span>
         <select id="symMode"><option value="auto">auto</option><option value="quadrant">quadrant</option><option value="mirror-c0">mirror C0-C180</option><option value="mirror-c90">mirror C90-C270</option><option value="rotational">rotational</option></select>
         <span class="res" id="symRes"></span><button id="symSkip" class="hidden" style="background:#777">Skip</button><button id="symBtn" disabled>Symmetrise</button></div>
-      <div class="step"><span class="n" id="n4">4</span><span class="lbl">Interpolate <small>resample to the standard grid (default 181&times;25, adjustable)</small></span>
+      <div class="step"><span class="n" id="n5">5</span><span class="lbl">Interpolate <small>resample to the standard grid (default 181&times;25, adjustable)</small></span>
         <span class="res muted" id="interpRes"></span><button id="interpBtn" disabled>Interpolate</button></div>
-      <div class="step"><span class="n" id="n5">5</span><span class="lbl">Pad hemisphere <small>zero the non-emitting hemisphere (after interpolate)</small></span>
+      <div class="step"><span class="n" id="n6">6</span><span class="lbl">Pad hemisphere <small>zero the non-emitting hemisphere (after interpolate)</small></span>
         <span class="res muted" id="padRes"></span><button id="padBtn" disabled>Pad</button></div>
-      <div class="step"><span class="n" id="n6">6</span><span class="lbl">Reduce to 1&nbsp;mm <small>scale candela + power + length to the 1&nbsp;mm base</small></span>
+      <div class="step"><span class="n" id="n7">7</span><span class="lbl">Reduce to 1&nbsp;mm <small>scale candela + power + length to the 1&nbsp;mm base</small></span>
         <span class="res muted" id="mmRes"></span><button id="mmBtn" disabled>1&nbsp;mm</button></div>
     </div>
 
-    <div class="card full orient"><h2><span class="badge1" id="orientBadge">7</span>Orient - tilt about the width axis (undoable)</h2>
+    <div class="card full orient"><h2><span class="badge1" id="orientBadge">8</span>Orient - tilt about the width axis (undoable)</h2>
       <div class="diag">
         <div id="orientDiag"></div>
         <div style="flex:1;min-width:320px">
@@ -107,25 +137,6 @@
       </div>
     </div>
 
-    <div class="card full prov"><h2><span class="badge1" id="provBadge">8</span>Lab provenance &amp; write (G-values + keywords)</h2>
-      <div class="pform">
-        <label>Board thermal Tc (°C) <input id="boardTc" type="number" step="0.1" disabled/></label>
-        <label>Driver thermal Tc (°C) <input id="driverTc" type="number" step="0.1" disabled/></label>
-        <label>System ambient Ta (°C) <input id="ambientTa" type="number" step="0.1" disabled/></label>
-        <label>Circuit / drive current (mA) <input id="circuitmA" type="number" step="1" disabled/></label>
-        <label>Mains voltage (V) <input id="mainsV" type="number" step="1" value="230" disabled/></label>
-        <label>Wall current (A) <input id="wallA" type="number" step="0.001" disabled/></label>
-        <label>Input watts (G12) <select id="wattsMode" disabled><option value="calc">= mains V × wall A</option><option value="file">accept file value</option><option value="manual">enter manually</option></select><input id="wattsManual" type="number" step="0.1" disabled/></label>
-        <label>Intended use <select id="intendedUse" disabled><option value="Pure reference gear tray">Pure ref gear tray (cold battery)</option><option value="Pure reference optic">Pure ref optic (hot battery)</option><option value="General reference">General reference</option></select></label>
-      </div>
-      <div style="margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <button id="provApply" disabled>Write provenance</button>
-        <button id="dlBtn" disabled style="background:var(--ok)">Download .ies</button>
-        <span class="res" id="provRes"></span>
-      </div>
-      <p class="muted" style="font-size:11.5px;margin:8px 0 0">Writes the canonical LM-63-2002 header - <b>G0=1, G1=-1 (absolute), G2=1, G5=1 (Type C), G6=2 (metres), G10=1, G11=1, G12=watts</b> - plus keywords <span class="mono">[_BOARD_TC_C] [_DRIVER_TC_C] [_AMBIENT_TA_C] [_INTENDED_USE] [INPUT_WATTS]</span>. Gear tray needs a <b>cold</b> battery test; optic needs a <b>hot</b> one. Outgoing text formatting is refined next.</p>
-    </div>
-
     <div class="card full"><h2>Mutation log (provenance) - only kept steps</h2><div class="log" id="log"></div></div>
   </div>
 </div>
@@ -133,11 +144,26 @@
 <script type="module">
 const _b = "?b=" + Date.now();
 let parseIes, computeMetrics, checkDimensions, fixDimensionTranspose, analyzeSymmetry, symmetrize, level, detectTilt,
-    standardize, maskHemisphere, setDimensions, toOneMm, tilt, writeIes, renderUgrTableHTML, UGR_CSS, computeUgr190Table;
+    standardize, maskHemisphere, setDimensions, toOneMm, tilt;
 let origin = null, working = null, log = [], normStep = 1, wTilt = 0, history = [];
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? "").replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
 const peakCd = (m) => { let p=0; for(const r of m.photometry.candela) for(const c of r) p=Math.max(p,Number(c)); return p; };
+
+// LM-63-2019 File Generation Types (Table 2), reverse order so accredited sits on top
+const FGT = [
+  ["1.11100","Test at an accredited lab with interpolated angle set that has been lumen scaled"],
+  ["1.11000","Test at an accredited lab with interpolated angle set"],
+  ["1.10100","Test at an accredited lab that has been lumen scaled"],
+  ["1.10000","Test at an accredited lab"],
+  ["1.01100","Test at an unaccredited lab with interpolated angle set that has been lumen scaled"],
+  ["1.01000","Test at an unaccredited lab with interpolated angle set"],
+  ["1.00100","Test at an unaccredited lab that has been lumen scaled"],
+  ["1.00000","Test at an unaccredited lab"],
+  ["1.00010","Computer Simulation"],
+  ["1.00001","Undefined"],
+];
+const LUM_TIP = "LM-63-2019 sec 5.10 - Luminous Dimensions: these refer to the light-emitting opening, NOT the physical carton. They approximate the luminous opening for lighting calculations (not for renderings). Width = distance across the opening perpendicular to the 0-deg photometric plane; Length = distance across it parallel to that plane (length MAY be less than width); Height = overall height. Applies to the luminaire aimed at photometric zero (0-deg horizontal, 0-deg vertical).";
 
 async function boot(){
   ({ parseIes } = await import("./iesParse.js"+_b));
@@ -148,17 +174,14 @@ async function boot(){
   ({ standardize, maskHemisphere, setDimensions } = await import("./iesTransforms.js"+_b));
   ({ toOneMm } = await import("./iesOneMm.js"+_b));
   ({ tilt } = await import("./iesTilt.js"+_b));
-  ({ writeIes } = await import("./iesWrite.js"+_b));
-  ({ renderUgrTableHTML, UGR_CSS } = await import("./iesUgr.js"+_b));
-  ({ computeUgr190Table } = await import("./iesUgrCie190.js"+_b));
-  const s = document.createElement("style"); s.textContent = UGR_CSS; document.head.appendChild(s);
+  $("fileGen").innerHTML = `<option value="">— keep original / skip —</option>` + FGT.map(([v,t])=>`<option value="${v}">${esc(t)} · ${v}</option>`).join("");
 }
 
 function fp(model){ let h = 2166136261 >>> 0; const I = model.photometry.candela;
   for (const row of I) for (const c of row){ h ^= Math.round(Number(c)*100); h = Math.imul(h, 16777619) >>> 0; }
   return "cd-" + h.toString(16).padStart(8,"0"); }
 function kw(model, key){ const r = (model.meta?.keywords_order||[]).find(x => String(x.key).toUpperCase() === key.toUpperCase()); return r ? r.value.trim() : ""; }
-function upsertKw(meta, key, value){ meta.keywords_order = meta.keywords_order || []; const b = key.replace(/^\[|\]$/g,"").toUpperCase();
+function upsertKw(meta, key, value){ if(value===""||value==null) return; meta.keywords_order = meta.keywords_order || []; const b = key.replace(/^\[|\]$/g,"").toUpperCase();
   const e = meta.keywords_order.find(r => String(r.key).replace(/^\[|\]$/g,"").toUpperCase()===b); if(e) e.value=String(value); else meta.keywords_order.push({ key:b, value:String(value) }); }
 
 function renderLog(){ $("log").innerHTML = [`<div class="row"><span class="op">origin</span> loaded · ${esc(fp(origin))}</div>`]
@@ -168,7 +191,7 @@ function addLog(op, params, result){ log.push({ op, params, result, fp: fp(worki
 function pushHistory(){ history.push({ w: JSON.stringify(working), ns: normStep, wt: wTilt, ll: log.length }); $("undoBtn").disabled = false; }
 function undo(){ if(!history.length) return; const s = history.pop();
   working = JSON.parse(s.w); normStep = s.ns; wTilt = s.wt; log.length = s.ll;
-  ["symRes","interpRes","padRes","mmRes","tiltRes","provRes"].forEach(id=>{ if($(id)) $(id).innerHTML=""; });
+  ["symRes","interpRes","padRes","mmRes","tiltRes","metaRes"].forEach(id=>{ if($(id)) $(id).innerHTML=""; });
   renderLog(); renderAll(); $("undoBtn").disabled = history.length===0; }
 
 function renderIdentity(m){
@@ -192,19 +215,19 @@ function renderDims(){
   const phys = checkDimensions(origin);
   let lumRow;
   if (normStep === 1){
-    lumRow = `<tr><td class="h">Luminous opening</td>
+    lumRow = `<tr><td class="h">Luminous opening <span class="info" title="${esc(LUM_TIP)}">i</span></td>
       <td><input id="lumL" type="number" step="0.001" value="${phys.lengthM}"/> m</td><td><input id="lumW" type="number" step="0.001" value="${phys.widthM}"/> m</td>
       <td><input id="lumH" type="number" step="0.001" value="${phys.heightM}"/> m</td>
       <td><select id="lumMethod"><option value="end-plate">end-plate</option><option value="BCLT +300/+300">BCLT +300/+300</option></select>
         <button id="dimAccept" style="margin-left:6px;background:var(--blue);color:#fff;border:none;border-radius:6px;padding:4px 10px;cursor:pointer">Accept</button></td></tr>`;
   } else { const L = working.meta?.luminous || {};
-    lumRow = `<tr><td class="h">Luminous opening <span class="flag ok">locked ✓</span></td><td>${L.lengthM} m</td><td>${L.widthM} m</td><td>${L.heightM} m</td><td>${esc(L.method||"")}</td></tr>`; }
-  $("dims").innerHTML = `<tr><th></th><th>Length <small>(G8)</small></th><th>Width <small>(G7)</small></th><th>Height <small>(G9)</small></th><th>Method</th></tr>`+
+    lumRow = `<tr><td class="h">Luminous opening <span class="info" title="${esc(LUM_TIP)}">i</span> <span class="flag ok">locked ✓</span></td><td>${L.lengthM} m</td><td>${L.widthM} m</td><td>${L.heightM} m</td><td>${esc(L.method||"")}</td></tr>`; }
+  $("dims").innerHTML = `<tr><th></th><th>Length <small>(G8)</small></th><th>Width <small>(G7)</small></th><th>Height <small>(G9)</small></th><th>Capture</th></tr>`+
     `<tr><td class="h">Physical (as tested)</td><td>${phys.lengthM} m</td><td>${phys.widthM} m</td><td>${phys.heightM} m</td><td class="muted">carton</td></tr>`+lumRow;
   if (normStep === 1) $("dimAccept").onclick = () => {
     const L=Number($("lumL").value), W=Number($("lumW").value), H=Number($("lumH").value), method=$("lumMethod").value;
     if (!(L>0)){ alert("Enter a luminous length > 0"); return; }
-    if (W > L && !confirm("Width ("+W+" m) > length ("+L+" m) - usually a transposition. Accept anyway?")) return;
+    if (W > L && !confirm("Width ("+W+" m) > length ("+L+" m). Note: per LM-63-2019 length MAY legitimately be less than width. Accept?")) return;
     pushHistory();
     working = { ...working, photometry: setDimensions(working.photometry, { g7:W, g8:L, g9:H }) };
     working.meta = working.meta || {}; working.meta.luminous = { lengthM:L, widthM:W, heightM:H, method };
@@ -226,9 +249,7 @@ function polarSVG(m){
     <path d="${pts(90,1)}" fill="none" stroke="var(--blue)" stroke-width="1.6"/><path d="${pts(270,-1)}" fill="none" stroke="var(--blue)" stroke-width="1.6"/>
     <text x="${cx}" y="${cy+R+16}" font-size="10" fill="#888" text-anchor="middle" font-family="Arial">nadir 0° · peak ${peak<10?peak.toFixed(2):Math.round(peak)} cd</text></svg>`;
 }
-function renderUgr(m){ try{ $("ugr").innerHTML = renderUgrTableHTML(computeUgr190Table(m)); }catch(e){ $("ugr").innerHTML = `<span class="muted">UGR error: ${esc(e.message)}</span>`; } }
 
-// end-on view (portrait: height 20% > width) with W & H dims, rotating about the width axis (same sense as the polar red curve)
 function renderOrient(){
   const a = ((wTilt%360)+360)%360; const up = a>90 && a<270;
   const svg = `<svg viewBox="0 0 180 158" width="180" height="158"><rect width="180" height="150" fill="#fff" stroke="#eee"/>
@@ -248,35 +269,35 @@ function renderOrient(){
 }
 
 function refreshSteps(){
-  const dimsOk = normStep >= 2;
   $("dimBadge").classList.toggle("on", normStep===1); $("dimBadge").classList.toggle("done", normStep>1);
-  $("commence").style.display = dimsOk ? "flex" : "none";
-  const t = dimsOk && normStep<7 ? detectTilt(working) : { tiltDeg:0, tiltAzimuthDeg:0 };
-  const hasTilt = t.tiltDeg > 1;
-  if (normStep === 2 && !hasTilt) normStep = 3;
-  const btns = { 2:$("levelBtn"), 3:$("symBtn"), 4:$("interpBtn"), 5:$("padBtn"), 6:$("mmBtn") };
-  for (let i=2;i<=6;i++){ if(btns[i]) btns[i].disabled = (i !== normStep); const n=$("n"+i); if(n){ n.classList.toggle("on",i===normStep); n.classList.toggle("done", i<normStep); } }
-  $("levelSkip").classList.toggle("hidden", normStep !== 2); $("symSkip").classList.toggle("hidden", normStep !== 3);
-  $("orientBadge").classList.toggle("on", normStep===7); $("orientBadge").classList.toggle("done", normStep>7);
-  ["tiltBtn","tiltDeg"].forEach(id=>{ if($(id)) $(id).disabled = normStep < 7; });
-  $("tiltSkip").classList.toggle("hidden", normStep !== 7);
-  $("provBadge").classList.toggle("on", normStep===8); $("provBadge").classList.toggle("done", normStep>8);
-  ["boardTc","driverTc","ambientTa","circuitmA","mainsV","wallA","wattsMode","wattsManual","intendedUse","provApply","dlBtn"].forEach(id=>{ if($(id)) $(id).disabled = normStep < 8; });
+  $("metaBadge").classList.toggle("on", normStep===2); $("metaBadge").classList.toggle("done", normStep>2);
+  ["mainsV","wattsIn","boardTc","driverTc","sysTa","labTa","fileGen","intendedUse","metaApply"].forEach(id=>{ if($(id)) $(id).disabled = normStep!==2; });
 
-  if (!dimsOk){ $("levelRes").textContent = "accept dimensions first"; }
-  else if (normStep>=7){ /* leave levelRes as-is */ }
+  const t = normStep===3 ? detectTilt(working) : { tiltDeg:0, tiltAzimuthDeg:0 };
+  const hasTilt = t.tiltDeg > 1;
+  if (normStep === 3 && !hasTilt) normStep = 4;
+  const btns = { 3:$("levelBtn"), 4:$("symBtn"), 5:$("interpBtn"), 6:$("padBtn"), 7:$("mmBtn") };
+  for (let i=3;i<=7;i++){ if(btns[i]) btns[i].disabled = (i !== normStep); const n=$("n"+i); if(n){ n.classList.toggle("on",i===normStep); n.classList.toggle("done", i<normStep); } }
+  $("levelSkip").classList.toggle("hidden", normStep !== 3); $("symSkip").classList.toggle("hidden", normStep !== 4);
+  $("orientBadge").classList.toggle("on", normStep===8); $("orientBadge").classList.toggle("done", normStep>8);
+  ["tiltBtn","tiltDeg"].forEach(id=>{ if($(id)) $(id).disabled = normStep < 8; });
+  $("tiltSkip").classList.toggle("hidden", normStep !== 8);
+
+  if (normStep<3){ $("levelRes").textContent = normStep===1 ? "accept dimensions first" : "apply metadata to continue"; }
+  else if (normStep>3){ /* leave */ }
   else if (hasTilt){ const b=computeMetrics(working).beam;
     const ratio = (b.c0Deg!=null && b.c90Deg!=null && Math.min(b.c0Deg,b.c90Deg)>0) ? Math.max(b.c0Deg,b.c90Deg)/Math.min(b.c0Deg,b.c90Deg) : 1;
     $("levelRes").innerHTML = ratio > 1.5 ? `off-nadir <b>${t.tiltDeg}°</b> @ C${Math.round(t.tiltAzimuthDeg)} <span class="flag large">asymmetric ${ratio.toFixed(1)}× - may be intended, Skip unless rig tilt</span>`
       : `tilt <b>${t.tiltDeg}°</b> @ C${Math.round(t.tiltAzimuthDeg)} <span class="flag noise">symmetric fixture - level recommended</span>`;
-  } else if (normStep === 2){ $("levelRes").textContent = "peak at nadir - no tilt"; }
-  if (normStep === 3){ const a = analyzeSymmetry(working);
+  } else { $("levelRes").textContent = "peak at nadir - no tilt"; }
+  if (normStep === 4){ const a = analyzeSymmetry(working);
     $("symRes").innerHTML = `recommend <b>${a.recommended}</b> · plane spread ${a.rotationalSpreadPct}% `+(a.rotationalSpreadPct > 5 ? `<span class="flag large">sizable - may be intended, Skip to keep</span>` : `<span class="flag noise">likely noise - fold</span>`); }
 }
-function renderAll(){ renderIdentity(origin); renderMetrics(origin); renderDims(); $("polar").innerHTML = polarSVG(working); renderUgr(working); renderOrient(); refreshSteps(); }
+function renderAll(){ renderIdentity(origin); renderMetrics(origin); renderDims(); $("polar").innerHTML = polarSVG(working); renderOrient(); refreshSteps(); }
 
 function loadModel(text){ origin = parseIes(text); working = JSON.parse(JSON.stringify(origin)); log = []; history = []; normStep = 1; wTilt = 0;
-  ["symRes","interpRes","padRes","mmRes","tiltRes","provRes"].forEach(id=>$(id).innerHTML=""); $("undoBtn").disabled = true;
+  ["symRes","interpRes","padRes","mmRes","tiltRes","metaRes","wattsTag"].forEach(id=>{ if($(id)) $(id).innerHTML=""; }); $("undoBtn").disabled = true;
+  $("wattsIn").value = Number(origin.photometry.geometry.G12)||""; $("mainsV").value = 230; $("fileGen").value="";
   $("root").classList.remove("hidden"); addLog("parse", "read "+working.photometry.h_angles.length+" planes", "loaded"); renderAll(); }
 
 function wire(){
@@ -286,42 +307,45 @@ function wire(){
   drop.ondrop=e=>{ e.preventDefault(); drop.classList.remove("over"); const f=e.dataTransfer.files[0]; if(f) f.text().then(loadModel); };
 
   $("undoBtn").onclick=undo;
-  $("levelBtn").onclick=()=>{ pushHistory(); const r=level(working); working=r.model; normStep=3; addLog("level","tilt "+r.tiltDeg+"° @ C"+Math.round(r.tiltAzimuthDeg),"re-nadir"); renderAll(); };
-  $("levelSkip").onclick=()=>{ pushHistory(); normStep=3; addLog("level","skipped","peak left as measured"); renderAll(); };
+  $("wattsIn").oninput=()=>{ const w=Number($("wattsIn").value), o=Number(origin?.photometry.geometry.G12)||0; $("wattsTag").textContent = (Math.abs(w-o)>1e-9)?"entered manually":""; };
+
+  $("metaApply").onclick=()=>{ pushHistory();
+    const g = working.photometry.geometry;
+    const w = Number($("wattsIn").value); const o = Number(origin.photometry.geometry.G12)||0; const manual = !isNaN(w) && Math.abs(w-o)>1e-9;
+    if(!isNaN(w)) g.G12 = w;
+    const fg = $("fileGen").value; if(fg) g.G11 = Number(fg);
+    const meta = working.meta = working.meta || {};
+    upsertKw(meta,"_MAINS_V",$("mainsV").value); upsertKw(meta,"INPUT_WATTS", (isNaN(w)?String(o):String(w))+(manual?" (entered manually)":""));
+    upsertKw(meta,"_BOARD_TC_C",$("boardTc").value); upsertKw(meta,"_DRIVER_TC_C",$("driverTc").value);
+    upsertKw(meta,"_AMBIENT_TA_C",$("sysTa").value); upsertKw(meta,"_LAB_AMBIENT_C",$("labTa").value);
+    const use=$("intendedUse").value; upsertKw(meta,"_INTENDED_USE",use);
+    if(fg){ const title=(FGT.find(x=>x[0]===fg)||[])[1]||""; upsertKw(meta,"FILEGENINFO",title); meta.iesVersion="LM-63-2019"; }
+    meta.provenance = { mainsV:$("mainsV").value, watts:g.G12, wattsManual:manual, boardTc:$("boardTc").value, driverTc:$("driverTc").value, sysTa:$("sysTa").value, labTa:$("labTa").value, fileGenType:fg||"(kept original)", intendedUse:use };
+    const need = use.includes("gear tray")?"cold battery test":use.includes("optic")?"hot battery test":"no battery test";
+    normStep = 3;
+    $("metaRes").innerHTML = `<span class="flag ok">applied</span> G12 ${g.G12}W${manual?" (manual)":""}${fg?" · file-gen "+fg+" → LM-63-2019":" · standard kept"} <span class="muted">· needs ${need}</span>`;
+    addLog("metadata","power/thermal/other"+(fg?" · file-gen "+fg:""), "G-values + keywords written"); renderAll(); };
+
+  $("levelBtn").onclick=()=>{ pushHistory(); const r=level(working); working=r.model; normStep=4; addLog("level","tilt "+r.tiltDeg+"° @ C"+Math.round(r.tiltAzimuthDeg),"re-nadir"); renderAll(); };
+  $("levelSkip").onclick=()=>{ pushHistory(); normStep=4; addLog("level","skipped","peak left as measured"); renderAll(); };
   $("symBtn").onclick=()=>{ pushHistory(); const mode=$("symMode").value; const a=analyzeSymmetry(working); const r=symmetrize(working, mode);
-    working={ ...working, photometry:r.photometry }; normStep=4; const large=r.imbalance.maxRelPct>5;
+    working={ ...working, photometry:r.photometry }; normStep=5; const large=r.imbalance.maxRelPct>5;
     $("symRes").innerHTML=`imbalance <b>${r.imbalance.maxRelPct}%</b> max / ${r.imbalance.rmsRelPct}% rms `+(large?`<span class="flag large">large - check fixture</span>`:`<span class="flag noise">within noise</span>`);
     addLog("symmetrize","mode "+r.imbalance.mode+" (recommended "+a.recommended+")", r.imbalance.maxRelPct+"% max"); renderAll(); };
-  $("symSkip").onclick=()=>{ pushHistory(); normStep=4; $("symRes").innerHTML=`<span class="flag large">kept as measured - asymmetry intended</span>`; addLog("symmetrize","skipped","asymmetry kept"); renderAll(); };
-  $("interpBtn").onclick=()=>{ pushHistory(); working={ ...working, photometry:standardize(working.photometry) }; normStep=5;
+  $("symSkip").onclick=()=>{ pushHistory(); normStep=5; $("symRes").innerHTML=`<span class="flag large">kept as measured - asymmetry intended</span>`; addLog("symmetrize","skipped","asymmetry kept"); renderAll(); };
+  $("interpBtn").onclick=()=>{ pushHistory(); working={ ...working, photometry:standardize(working.photometry) }; normStep=6;
     const g=working.photometry.v_angles.length+"×"+working.photometry.h_angles.length; $("interpRes").textContent="grid "+g; addLog("interpolate","standard grid","grid "+g); renderAll(); };
-  $("padBtn").onclick=()=>{ pushHistory(); working={ ...working, photometry:maskHemisphere(working.photometry,"auto") }; normStep=6; $("padRes").textContent="hemisphere zeroed"; addLog("pad","auto hemisphere","zeroed"); renderAll(); };
-  $("mmBtn").onclick=()=>{ pushHistory(); working=toOneMm(working); normStep=7; const p=peakCd(working); $("mmRes").textContent="1 mm base · peak "+p.toFixed(2)+" cd"; addLog("reduce-1mm","base 0.001 m","peak "+p.toFixed(2)+" cd"); renderAll(); };
+  $("padBtn").onclick=()=>{ pushHistory(); working={ ...working, photometry:maskHemisphere(working.photometry,"auto") }; normStep=7; $("padRes").textContent="hemisphere zeroed"; addLog("pad","auto hemisphere","zeroed"); renderAll(); };
+  $("mmBtn").onclick=()=>{ pushHistory(); working=toOneMm(working); normStep=8; const p=peakCd(working); $("mmRes").textContent="1 mm base · peak "+p.toFixed(2)+" cd"; addLog("reduce-1mm","base 0.001 m","peak "+p.toFixed(2)+" cd"); renderAll(); };
 
   $("tiltBtn").onclick=()=>{ pushHistory(); const d=Number($("tiltDeg").value)||0; working={ ...working, photometry:tilt(working.photometry, d, "short") }; wTilt+=d;
     const tot=((wTilt%360)+360)%360; const up=tot>90 && tot<270; $("tiltRes").innerHTML=`<span class="flag noise">tilted ${d}° · total ${tot}° · beam ${up?"up":"down"}</span>`;
     addLog("tilt-width","about width axis "+d+"°","total "+tot+"°"); renderAll(); };
-  $("tiltSkip").onclick=()=>{ pushHistory(); normStep=8; addLog("orient","skipped / done","orientation complete"); renderAll(); };
-
-  $("provApply").onclick=()=>{ pushHistory();
-    const g = working.photometry.geometry || (working.photometry.geometry={});
-    const V=Number($("mainsV").value)||230, wA=Number($("wallA").value)||0, mode=$("wattsMode").value;
-    const watts = mode==="calc" ? +(V*wA).toFixed(1) : mode==="file" ? (Number(g.G12)||0) : (Number($("wattsManual").value)||0);
-    g.G0=1; g.G1=-1; g.G2=1; g.G5=1; g.G6=2; g.G10=1; g.G11=1; g.G12=watts;
-    const meta = working.meta = working.meta || {};
-    upsertKw(meta,"_BOARD_TC_C",$("boardTc").value||""); upsertKw(meta,"_DRIVER_TC_C",$("driverTc").value||""); upsertKw(meta,"_AMBIENT_TA_C",$("ambientTa").value||"");
-    upsertKw(meta,"_CIRCUIT_MA",$("circuitmA").value||""); upsertKw(meta,"INPUT_WATTS",String(watts)); const use=$("intendedUse").value; upsertKw(meta,"_INTENDED_USE",use);
-    meta.provenance = { boardTc:$("boardTc").value, driverTc:$("driverTc").value, ambientTa:$("ambientTa").value, circuitmA:$("circuitmA").value, mainsV:V, wallA:wA, watts, intendedUse:use };
-    const need = use.includes("gear tray") ? "cold battery test" : use.includes("optic") ? "hot battery test" : "no battery test";
-    $("provRes").innerHTML = `<span class="flag ok">written · G12 ${watts}W</span> <span class="muted">requires ${need}</span>`;
-    addLog("provenance", use+" · "+watts+"W (G12) · canonical header", "keywords written"); renderAll(); };
-
-  $("dlBtn").onclick=()=>{ const textOut = writeIes(working); const blob = new Blob([textOut], { type:"text/plain" }); const url = URL.createObjectURL(blob);
-    const a = document.createElement("a"); a.href = url; a.download = (kw(working,"LUMCAT")||"reference").replace(/[^\w.-]+/g,"_")+"_normalised.ies"; a.click(); URL.revokeObjectURL(url);
-    addLog("export","writeIes",".ies downloaded"); };
+  $("tiltSkip").onclick=()=>{ pushHistory(); normStep=9; addLog("orient","skipped / done","orientation complete"); renderAll(); };
 
   $("resetBtn").onclick=()=>{ if(origin){ working=JSON.parse(JSON.stringify(origin)); log=[]; history=[]; normStep=1; wTilt=0;
-    ["symRes","interpRes","padRes","mmRes","tiltRes","provRes"].forEach(id=>$(id).innerHTML=""); $("undoBtn").disabled=true; addLog("reset","","back to original"); renderAll(); } };
+    ["symRes","interpRes","padRes","mmRes","tiltRes","metaRes","wattsTag"].forEach(id=>{ if($(id)) $(id).innerHTML=""; }); $("wattsIn").value=Number(origin.photometry.geometry.G12)||""; $("fileGen").value="";
+    $("undoBtn").disabled=true; addLog("reset","","back to original"); renderAll(); } };
 }
 boot().then(wire).catch(e => { document.body.insertAdjacentHTML("beforeend", `<p style="color:#d84a4a">boot error: ${esc(e.message)}</p>`); });
 </script>
