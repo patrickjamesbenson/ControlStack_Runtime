@@ -7,6 +7,13 @@ import {
   RUNTIME_IES_FIRST_NARROW_CANDIDATE_OUTPUT_MANIFEST_SUMMARY_SCHEMA_VERSION,
   RUNTIME_IES_FIRST_NARROW_CANDIDATE_OUTPUT_MANIFEST_TARGET,
 } from "./iesFirstNarrowCandidateOutputManifestSummary.js";
+import {
+  RUNTIME_IES_FIRST_NARROW_CANDIDATE_OUTPUT_DETAIL_CONTRACT_ID,
+  RUNTIME_IES_FIRST_NARROW_CANDIDATE_OUTPUT_DETAIL_REQUIRED_FALSE_FLAGS,
+  RUNTIME_IES_FIRST_NARROW_CANDIDATE_OUTPUT_DETAIL_SUMMARY_SCHEMA_ID,
+  RUNTIME_IES_FIRST_NARROW_CANDIDATE_OUTPUT_DETAIL_SUMMARY_SCHEMA_VERSION,
+  RUNTIME_IES_FIRST_NARROW_CANDIDATE_OUTPUT_DETAIL_TARGET,
+} from "./iesFirstNarrowCandidateOutputDetailSummary.js";
 
 export const PROJECT_BROWSER_SELECTED_RESULT_PERSISTED_SUMMARY_READBACK_SUMMARY_SCHEMA_ID =
   "controlstack.runtime.project-browser.selected-result-persisted-summary-readback-summary.v1";
@@ -101,6 +108,93 @@ export const PROJECT_BROWSER_SELECTED_PROJECT_CANDIDATE_OUTPUT_MANIFEST_READBACK
   "runtimeDataMutated",
   "boardDataMutated",
   "projectBrowserSelectedProjectCandidateOutputManifestReadbackSummaryFingerprint",
+]);
+
+export const PROJECT_BROWSER_SELECTED_PROJECT_CANDIDATE_OUTPUT_DETAIL_READBACK_SUMMARY_SCHEMA_ID =
+  "controlstack.runtime.project-browser.selected-project-candidate-output-detail-readback-summary.v1";
+export const PROJECT_BROWSER_SELECTED_PROJECT_CANDIDATE_OUTPUT_DETAIL_READBACK_SUMMARY_SCHEMA_VERSION = 1;
+
+export const PROJECT_BROWSER_SELECTED_PROJECT_CANDIDATE_OUTPUT_DETAIL_READBACK_SUMMARY_FIELD_ORDER = Object.freeze([
+  "schemaId",
+  "schemaVersion",
+  "owner",
+  "source",
+  "state",
+  "readiness",
+  "ready",
+  "failClosed",
+  "blocker",
+  "selectedProjectId",
+  "selectedProjectFound",
+  "projectId",
+  "envelopeId",
+  "detailSummaryPresent",
+  "detailBoundaryReady",
+  "sourceRunTableRowCount",
+  "candidateOutputRecordCount",
+  "manifestRecordCount",
+  "detailRecordCount",
+  "detailEntryCount",
+  "firstDetailEntryKind",
+  "firstCandidateOutputKind",
+  "firstManifestEntryKind",
+  "firstRowKey",
+  "firstRowKind",
+  "firstRunKey",
+  "firstRunIndex",
+  "firstRowAccepted",
+  "firstRowEngineVerified",
+  "firstRowBoardCount",
+  "firstRowSegmentCount",
+  "firstRowZoneCount",
+  "firstRowClipPointsCount",
+  "firstRowSuspensionPointsCount",
+  "firstRowGearTrayPlanCount",
+  "firstRowReservedRangesCount",
+  "policyFingerprint",
+  "sourceFingerprint",
+  "sourceInputFingerprint",
+  "boardDataSourceVersion",
+  "iesFirstNarrowMetadataHandoffSummaryFingerprint",
+  "iesFirstNarrowCandidateOutputSummaryFingerprint",
+  "iesFirstNarrowCandidateOutputManifestSummaryFingerprint",
+  "iesFirstNarrowCandidateOutputDetailSummaryFingerprint",
+  "targetLocation",
+  "selectedProjectOnly",
+  "summaryOnly",
+  "diagnosticOnly",
+  "detailOnly",
+  "readOnly",
+  "redacted",
+  "machineValueSafe",
+  "detailFileExists",
+  "detailDownloadable",
+  "detailFileOutputEnabled",
+  "detailFileOutputWritten",
+  "downloadEnabled",
+  "downloadAvailable",
+  "sourceRowsReturned",
+  "candidateOutputDetailsReturned",
+  "artifactListReturned",
+  "rawDetailReturned",
+  "rawManifestReturned",
+  "rawCandidateOutputReturned",
+  "rawIesReturned",
+  "rawPhotometryReturned",
+  "candelaArraysReturned",
+  "governancePayloadReturned",
+  "mutationDataReturned",
+  "base64ArtifactsReturned",
+  "blobsReturned",
+  "urlsReturned",
+  "filenamesReturned",
+  "privatePathsReturned",
+  "routesAdded",
+  "postEndpointsAdded",
+  "runtimeDataMutated",
+  "boardDataMutated",
+  "outputGenerationEnabled",
+  "projectBrowserSelectedProjectCandidateOutputDetailReadbackSummaryFingerprint",
 ]);
 
 export const PROJECT_BROWSER_SELECTED_PROJECT_IES_EXPORT_RESULT_READBACK_DETAIL_SUMMARY_FIELD_ORDER = Object.freeze([
@@ -312,6 +406,12 @@ export const PROJECT_BROWSER_SELECTED_PROJECT_CANDIDATE_OUTPUT_MANIFEST_READBACK
   blockedFailClosed: "project_browser_selected_project_candidate_output_manifest_readback_blocked_fail_closed",
 });
 
+export const PROJECT_BROWSER_SELECTED_PROJECT_CANDIDATE_OUTPUT_DETAIL_READBACK_STATES = Object.freeze({
+  ready: "project_browser_selected_project_candidate_output_detail_readback_ready",
+  missing: "project_browser_selected_project_candidate_output_detail_readback_missing",
+  blockedFailClosed: "project_browser_selected_project_candidate_output_detail_readback_blocked_fail_closed",
+});
+
 const PROJECT_BROWSER_SELECTED_RESULT_READBACK_SOURCE =
   "project-browser-project-summary-selected-result-readback-consumer";
 const PROJECT_BROWSER_SELECTED_PROJECT_SELECTED_RESULT_READBACK_STATUS_SOURCE =
@@ -328,6 +428,8 @@ export const PROJECT_BROWSER_SELECTED_PROJECT_IES_EXPORT_RESULT_READBACK_DETAIL_
   "project-browser-selected-project-project-ies-export-result-readback-detail-consumer";
 export const PROJECT_BROWSER_SELECTED_PROJECT_CANDIDATE_OUTPUT_MANIFEST_READBACK_SOURCE =
   "project-browser-selected-project-candidate-output-manifest-readback-summary-consumer";
+export const PROJECT_BROWSER_SELECTED_PROJECT_CANDIDATE_OUTPUT_DETAIL_READBACK_SOURCE =
+  "project-browser-selected-project-candidate-output-detail-readback-summary-consumer";
 const SELECTED_RESULT_READBACK_TARGET =
   "projectEnvelope.modules.cs_selector.downstreamContext.selectedResultSummary";
 const PROJECT_IES_EXPORT_BOUNDARY_READBACK_TARGET =
@@ -390,11 +492,43 @@ const CANDIDATE_OUTPUT_MANIFEST_UNSAFE_TRUE_KEYS = Object.freeze([
   "downloadAvailable",
 ]);
 
+const CANDIDATE_OUTPUT_DETAIL_RAW_OR_PRIVATE_KEYS = Object.freeze([
+  ...CANDIDATE_OUTPUT_MANIFEST_RAW_OR_PRIVATE_KEYS,
+  "detail",
+  "rawDetail",
+  "detailPayload",
+  "rawDetailPayload",
+  "candidateOutputDetail",
+  "candidateOutputDetailObject",
+  "rawCandidateOutputDetails",
+  "url",
+  "uri",
+  "downloadUrl",
+  "downloadUri",
+  "blob",
+  "blobs",
+]);
+
+const CANDIDATE_OUTPUT_DETAIL_UNSAFE_TRUE_KEYS = Object.freeze([
+  ...RUNTIME_IES_FIRST_NARROW_CANDIDATE_OUTPUT_DETAIL_REQUIRED_FALSE_FLAGS,
+  "detailGenerated",
+  "detailGenerationEnabled",
+  "detailGenerationAttempted",
+  "rawDetailReturned",
+  "detailFileExists",
+  "detailDownloadable",
+  "downloadEnabled",
+  "downloadAvailable",
+]);
+
 const CANDIDATE_OUTPUT_MANIFEST_READY_STATE =
   "redacted_ies_first_narrow_candidate_output_manifest_summary_persisted";
+const CANDIDATE_OUTPUT_DETAIL_READY_STATE =
+  "redacted_ies_first_narrow_candidate_output_detail_summary_persisted";
 const RAW_IES_TEXT_PATTERN = /IESNA:|TILT=/i;
 const DATA_BASE64_PATTERN = /data:[^\s"']*base64|base64,/i;
 const OUTPUT_FILE_VALUE_PATTERN = /(?:^|[\s\\/])[^\s\\/]+\.(?:ies|pdf|csv|json)(?:$|[\s?#])/i;
+const URL_OR_BLOB_VALUE_PATTERN = /(?:https?:\/\/|file:|blob:)/i;
 
 const READBACK_RAW_OR_PRIVATE_KEYS = Object.freeze([
   "body",
@@ -553,6 +687,13 @@ function orderedSelectedProjectIesExportResultReadbackDetailSummary(fields) {
 function orderedSelectedProjectCandidateOutputManifestReadbackSummary(fields) {
   return Object.fromEntries(
     PROJECT_BROWSER_SELECTED_PROJECT_CANDIDATE_OUTPUT_MANIFEST_READBACK_SUMMARY_FIELD_ORDER
+      .map((key) => [key, fields[key]]),
+  );
+}
+
+export function orderedSelectedProjectCandidateOutputDetailReadbackSummary(fields) {
+  return Object.fromEntries(
+    PROJECT_BROWSER_SELECTED_PROJECT_CANDIDATE_OUTPUT_DETAIL_READBACK_SUMMARY_FIELD_ORDER
       .map((key) => [key, fields[key]]),
   );
 }
@@ -921,6 +1062,143 @@ function validateCandidateOutputManifestReadbackSource(summary) {
   for (const key of RUNTIME_IES_FIRST_NARROW_CANDIDATE_OUTPUT_MANIFEST_REQUIRED_FALSE_FLAGS) {
     if (summary[key] !== false) {
       return `candidate-output-manifest-summary-required-false-flag-invalid-${safeToken(key, "unknown")}`;
+    }
+  }
+  return null;
+}
+
+export function findUnsafeCandidateOutputDetailReadbackField(value, seen = new Set()) {
+  if (value === null || value === undefined) return null;
+  if (typeof value === "string") {
+    if (PRIVATE_VALUE_PATTERN.test(value)) return "blocked-private-value";
+    if (RAW_IES_TEXT_PATTERN.test(value)) return "blocked-raw-ies-value";
+    if (DATA_BASE64_PATTERN.test(value)) return "blocked-base64-value";
+    if (OUTPUT_FILE_VALUE_PATTERN.test(value)) return "blocked-output-file-value";
+    if (URL_OR_BLOB_VALUE_PATTERN.test(value)) return "blocked-url-or-blob-value";
+    return null;
+  }
+  if (typeof value !== "object") return null;
+  if (seen.has(value)) return "blocked-cyclic-source";
+  seen.add(value);
+
+  const entries = Array.isArray(value) ? value.entries() : Object.entries(value);
+  for (const [keyOrIndex, entryValue] of entries) {
+    const key = String(keyOrIndex);
+    if (!Array.isArray(value)) {
+      if (CANDIDATE_OUTPUT_DETAIL_RAW_OR_PRIVATE_KEYS.includes(key)
+        && entryValue !== false
+        && entryValue !== null
+        && entryValue !== undefined
+        && entryValue !== "") {
+        return `blocked-raw-field-${safeToken(key, "unknown")}`;
+      }
+      if (CANDIDATE_OUTPUT_DETAIL_UNSAFE_TRUE_KEYS.includes(key) && entryValue === true) {
+        return `blocked-unsafe-true-flag-${safeToken(key, "unknown")}`;
+      }
+    }
+    const nested = findUnsafeCandidateOutputDetailReadbackField(entryValue, seen);
+    if (nested) return nested;
+  }
+  return null;
+}
+
+export function validateCandidateOutputDetailReadbackSource(summary) {
+  if (!isPlainObject(summary)) return "candidate-output-detail-summary-missing";
+  const unsafe = findUnsafeCandidateOutputDetailReadbackField(summary);
+  if (unsafe) return unsafe;
+  if (summary.schemaId !== RUNTIME_IES_FIRST_NARROW_CANDIDATE_OUTPUT_DETAIL_SUMMARY_SCHEMA_ID
+    || summary.schemaVersion !== RUNTIME_IES_FIRST_NARROW_CANDIDATE_OUTPUT_DETAIL_SUMMARY_SCHEMA_VERSION
+    || summary.contractId !== RUNTIME_IES_FIRST_NARROW_CANDIDATE_OUTPUT_DETAIL_CONTRACT_ID) {
+    return "candidate-output-detail-summary-schema-or-contract-mismatch";
+  }
+  if (summary.state !== CANDIDATE_OUTPUT_DETAIL_READY_STATE) {
+    return "candidate-output-detail-summary-not-ready";
+  }
+  if (summary.summaryOnly !== true
+    || summary.diagnosticOnly !== true
+    || summary.safeSummaryOnly !== true
+    || summary.redacted !== true
+    || summary.machineValueSafe !== true
+    || summary.readOnly !== true
+    || summary.deterministicOnly !== true
+    || summary.detailOnly !== true
+    || summary.candidateOutputOnly !== true) {
+    return "candidate-output-detail-summary-safety-flags-invalid";
+  }
+  if (summary.sourceBacked !== true
+    || summary.sourceAnchorOnly !== true
+    || summary.opaqueReferenceOnly !== true
+    || summary.runTableFirstNarrowRowsReady !== true
+    || summary.iesFirstNarrowMetadataHandoffReady !== true
+    || summary.iesFirstNarrowCandidateOutputSummaryReady !== true
+    || summary.iesFirstNarrowCandidateOutputManifestSummaryReady !== true
+    || summary.readyForDetailBoundary !== true
+    || summary.readyForFutureOutput !== true
+    || summary.detailsJoined !== true) {
+    return "candidate-output-detail-summary-readiness-invalid";
+  }
+  if (summary.sourceRowsIncluded !== false
+    || summary.candidateOutputDetailsIncluded !== true
+    || summary.artifactListIncluded !== false) {
+    return "candidate-output-detail-summary-inclusion-flags-invalid";
+  }
+  for (const countKey of [
+    "sourceRunTableRowCount",
+    "candidateOutputRecordCount",
+    "manifestRecordCount",
+    "detailRecordCount",
+    "detailEntryCount",
+  ]) {
+    if (!Number.isInteger(summary[countKey]) || summary[countKey] !== 1) {
+      return `candidate-output-detail-summary-${countKey}-invalid`;
+    }
+  }
+  if (summary.firstRowAccepted !== true || summary.firstRowEngineVerified !== true) {
+    return "candidate-output-detail-summary-first-row-verification-invalid";
+  }
+  for (const countKey of [
+    "firstRunIndex",
+    "firstRowBoardCount",
+    "firstRowSegmentCount",
+    "firstRowZoneCount",
+    "firstRowClipPointsCount",
+    "firstRowSuspensionPointsCount",
+    "firstRowGearTrayPlanCount",
+    "firstRowReservedRangesCount",
+  ]) {
+    if (!Number.isInteger(summary[countKey]) || summary[countKey] < 0) {
+      return `candidate-output-detail-summary-${countKey}-invalid`;
+    }
+  }
+  for (const tokenKey of [
+    "firstDetailEntryKind",
+    "firstCandidateOutputKind",
+    "firstManifestEntryKind",
+    "firstRowKey",
+    "firstRowKind",
+    "firstRunKey",
+    "boardDataSourceVersion",
+  ]) {
+    if (!safeToken(summary[tokenKey], null, 760)) {
+      return `candidate-output-detail-summary-${tokenKey}-missing`;
+    }
+  }
+  for (const fingerprintKey of [
+    "policyFingerprint",
+    "sourceFingerprint",
+    "sourceInputFingerprint",
+    "iesFirstNarrowMetadataHandoffSummaryFingerprint",
+    "iesFirstNarrowCandidateOutputSummaryFingerprint",
+    "iesFirstNarrowCandidateOutputManifestSummaryFingerprint",
+    "iesFirstNarrowCandidateOutputDetailSummaryFingerprint",
+  ]) {
+    if (!safeToken(summary[fingerprintKey], null, 760)) {
+      return `candidate-output-detail-summary-${fingerprintKey}-missing`;
+    }
+  }
+  for (const key of RUNTIME_IES_FIRST_NARROW_CANDIDATE_OUTPUT_DETAIL_REQUIRED_FALSE_FLAGS) {
+    if (summary[key] !== false) {
+      return `candidate-output-detail-summary-required-false-flag-invalid-${safeToken(key, "unknown")}`;
     }
   }
   return null;
@@ -1664,6 +1942,170 @@ export function buildProjectBrowserSelectedProjectCandidateOutputManifestReadbac
   }));
 }
 
+export function buildProjectBrowserSelectedProjectCandidateOutputDetailReadbackSummary(
+  selectedProjectEnvelope = null,
+  selectedProjectId = null,
+  sourceAccessBlocker = null,
+) {
+  const selectedProjectToken = selectedProjectId === null ? null : safeToken(selectedProjectId, null);
+  const selectedProjectFound = isPlainObject(selectedProjectEnvelope);
+  const projectId = selectedProjectFound ? safeToken(selectedProjectEnvelope.projectId, null) : null;
+  const envelopeId = selectedProjectFound
+    ? safeToken(selectedProjectEnvelope.envelopeId || selectedProjectEnvelope.projectId, null)
+    : null;
+  const downstreamContext = selectedProjectFound
+    && isPlainObject(selectedProjectEnvelope?.modules?.cs_selector?.downstreamContext)
+    ? selectedProjectEnvelope.modules.cs_selector.downstreamContext
+    : null;
+  const sourceSummary = isPlainObject(downstreamContext?.iesFirstNarrowCandidateOutputDetailSummary)
+    ? downstreamContext.iesFirstNarrowCandidateOutputDetailSummary
+    : null;
+  const detailSummaryPresent = isPlainObject(sourceSummary) && Object.keys(sourceSummary).length > 0;
+
+  let state = PROJECT_BROWSER_SELECTED_PROJECT_CANDIDATE_OUTPUT_DETAIL_READBACK_STATES.missing;
+  let readiness = "missing";
+  let ready = false;
+  let failClosed = true;
+  let blocker = null;
+
+  if (selectedProjectId === null) {
+    blocker = "project-browser-selected-project-not-selected";
+  } else if (!selectedProjectToken) {
+    state = PROJECT_BROWSER_SELECTED_PROJECT_CANDIDATE_OUTPUT_DETAIL_READBACK_STATES.blockedFailClosed;
+    readiness = "blocked_fail_closed";
+    blocker = "project-browser-selected-project-id-invalid";
+  } else if (sourceAccessBlocker) {
+    state = PROJECT_BROWSER_SELECTED_PROJECT_CANDIDATE_OUTPUT_DETAIL_READBACK_STATES.blockedFailClosed;
+    readiness = "blocked_fail_closed";
+    blocker = safeToken(
+      sourceAccessBlocker,
+      "project-browser-selected-project-candidate-output-detail-accessor-failed",
+    );
+  } else if (!selectedProjectFound) {
+    blocker = "project-browser-selected-project-not-found";
+  } else if (selectedProjectToken !== projectId && selectedProjectToken !== envelopeId) {
+    state = PROJECT_BROWSER_SELECTED_PROJECT_CANDIDATE_OUTPUT_DETAIL_READBACK_STATES.blockedFailClosed;
+    readiness = "blocked_fail_closed";
+    blocker = "project-browser-selected-project-envelope-identity-mismatch";
+  } else if (!detailSummaryPresent) {
+    blocker = "project-browser-selected-project-candidate-output-detail-summary-missing";
+  } else {
+    const validationBlocker = validateCandidateOutputDetailReadbackSource(sourceSummary);
+    if (validationBlocker) {
+      state = PROJECT_BROWSER_SELECTED_PROJECT_CANDIDATE_OUTPUT_DETAIL_READBACK_STATES.blockedFailClosed;
+      readiness = "blocked_fail_closed";
+      blocker = safeToken(
+        validationBlocker,
+        "project-browser-selected-project-candidate-output-detail-summary-blocked",
+        760,
+      );
+    } else {
+      state = PROJECT_BROWSER_SELECTED_PROJECT_CANDIDATE_OUTPUT_DETAIL_READBACK_STATES.ready;
+      readiness = "ready";
+      ready = true;
+      failClosed = false;
+    }
+  }
+
+  const base = {
+    schemaId: PROJECT_BROWSER_SELECTED_PROJECT_CANDIDATE_OUTPUT_DETAIL_READBACK_SUMMARY_SCHEMA_ID,
+    schemaVersion: PROJECT_BROWSER_SELECTED_PROJECT_CANDIDATE_OUTPUT_DETAIL_READBACK_SUMMARY_SCHEMA_VERSION,
+    owner: "shell",
+    source: PROJECT_BROWSER_SELECTED_PROJECT_CANDIDATE_OUTPUT_DETAIL_READBACK_SOURCE,
+    state,
+    readiness,
+    ready,
+    failClosed,
+    blocker,
+    selectedProjectId: selectedProjectToken,
+    selectedProjectFound,
+    projectId,
+    envelopeId,
+    detailSummaryPresent,
+    detailBoundaryReady: ready,
+    sourceRunTableRowCount: ready ? safeNonNegativeInteger(sourceSummary.sourceRunTableRowCount) : 0,
+    candidateOutputRecordCount: ready ? safeNonNegativeInteger(sourceSummary.candidateOutputRecordCount) : 0,
+    manifestRecordCount: ready ? safeNonNegativeInteger(sourceSummary.manifestRecordCount) : 0,
+    detailRecordCount: ready ? safeNonNegativeInteger(sourceSummary.detailRecordCount) : 0,
+    detailEntryCount: ready ? safeNonNegativeInteger(sourceSummary.detailEntryCount) : 0,
+    firstDetailEntryKind: ready ? safeToken(sourceSummary.firstDetailEntryKind, null, 760) : null,
+    firstCandidateOutputKind: ready ? safeToken(sourceSummary.firstCandidateOutputKind, null, 760) : null,
+    firstManifestEntryKind: ready ? safeToken(sourceSummary.firstManifestEntryKind, null, 760) : null,
+    firstRowKey: ready ? safeToken(sourceSummary.firstRowKey, null, 760) : null,
+    firstRowKind: ready ? safeToken(sourceSummary.firstRowKind, null, 760) : null,
+    firstRunKey: ready ? safeToken(sourceSummary.firstRunKey, null, 760) : null,
+    firstRunIndex: ready ? safeNonNegativeInteger(sourceSummary.firstRunIndex) : null,
+    firstRowAccepted: ready && sourceSummary.firstRowAccepted === true,
+    firstRowEngineVerified: ready && sourceSummary.firstRowEngineVerified === true,
+    firstRowBoardCount: ready ? safeNonNegativeInteger(sourceSummary.firstRowBoardCount) : 0,
+    firstRowSegmentCount: ready ? safeNonNegativeInteger(sourceSummary.firstRowSegmentCount) : 0,
+    firstRowZoneCount: ready ? safeNonNegativeInteger(sourceSummary.firstRowZoneCount) : 0,
+    firstRowClipPointsCount: ready ? safeNonNegativeInteger(sourceSummary.firstRowClipPointsCount) : 0,
+    firstRowSuspensionPointsCount: ready ? safeNonNegativeInteger(sourceSummary.firstRowSuspensionPointsCount) : 0,
+    firstRowGearTrayPlanCount: ready ? safeNonNegativeInteger(sourceSummary.firstRowGearTrayPlanCount) : 0,
+    firstRowReservedRangesCount: ready ? safeNonNegativeInteger(sourceSummary.firstRowReservedRangesCount) : 0,
+    policyFingerprint: ready ? safeToken(sourceSummary.policyFingerprint, null, 760) : null,
+    sourceFingerprint: ready ? safeToken(sourceSummary.sourceFingerprint, null, 760) : null,
+    sourceInputFingerprint: ready ? safeToken(sourceSummary.sourceInputFingerprint, null, 760) : null,
+    boardDataSourceVersion: ready ? safeToken(sourceSummary.boardDataSourceVersion, null, 760) : null,
+    iesFirstNarrowMetadataHandoffSummaryFingerprint: ready
+      ? safeToken(sourceSummary.iesFirstNarrowMetadataHandoffSummaryFingerprint, null, 760)
+      : null,
+    iesFirstNarrowCandidateOutputSummaryFingerprint: ready
+      ? safeToken(sourceSummary.iesFirstNarrowCandidateOutputSummaryFingerprint, null, 760)
+      : null,
+    iesFirstNarrowCandidateOutputManifestSummaryFingerprint: ready
+      ? safeToken(sourceSummary.iesFirstNarrowCandidateOutputManifestSummaryFingerprint, null, 760)
+      : null,
+    iesFirstNarrowCandidateOutputDetailSummaryFingerprint: ready
+      ? safeToken(sourceSummary.iesFirstNarrowCandidateOutputDetailSummaryFingerprint, null, 760)
+      : null,
+    targetLocation: RUNTIME_IES_FIRST_NARROW_CANDIDATE_OUTPUT_DETAIL_TARGET,
+    selectedProjectOnly: true,
+    summaryOnly: true,
+    diagnosticOnly: true,
+    detailOnly: true,
+    readOnly: true,
+    redacted: true,
+    machineValueSafe: true,
+    detailFileExists: false,
+    detailDownloadable: false,
+    detailFileOutputEnabled: false,
+    detailFileOutputWritten: false,
+    downloadEnabled: false,
+    downloadAvailable: false,
+    sourceRowsReturned: false,
+    candidateOutputDetailsReturned: false,
+    artifactListReturned: false,
+    rawDetailReturned: false,
+    rawManifestReturned: false,
+    rawCandidateOutputReturned: false,
+    rawIesReturned: false,
+    rawPhotometryReturned: false,
+    candelaArraysReturned: false,
+    governancePayloadReturned: false,
+    mutationDataReturned: false,
+    base64ArtifactsReturned: false,
+    blobsReturned: false,
+    urlsReturned: false,
+    filenamesReturned: false,
+    privatePathsReturned: false,
+    routesAdded: false,
+    postEndpointsAdded: false,
+    runtimeDataMutated: false,
+    boardDataMutated: false,
+    outputGenerationEnabled: false,
+  };
+
+  return Object.freeze(orderedSelectedProjectCandidateOutputDetailReadbackSummary({
+    ...base,
+    projectBrowserSelectedProjectCandidateOutputDetailReadbackSummaryFingerprint: stableFingerprint(
+      "safe-project-browser-selected-project-candidate-output-detail-readback-summary",
+      base,
+    ),
+  }));
+}
+
 export function buildProjectBrowserSelectedProjectSelectedResultPersistedSummaryReadbackStatus(projects = [], selectedProjectId = null) {
   const projectSummaries = Array.isArray(projects) ? projects : [];
   const selectedProjectToken = selectedProjectId === null ? null : safeToken(selectedProjectId, null);
@@ -1952,16 +2394,21 @@ export function createProjectBrowserService({ savedProjectStore, projectService,
     );
     let selectedProjectEnvelope = null;
     let selectedProjectManifestAccessBlocker = null;
+    let selectedProjectDetailAccessBlocker = null;
     if (state.selectedProjectId !== null) {
       if (typeof savedProjectStore.getProjectEnvelope !== "function") {
         selectedProjectManifestAccessBlocker =
           "project-browser-selected-project-candidate-output-manifest-accessor-unavailable";
+        selectedProjectDetailAccessBlocker =
+          "project-browser-selected-project-candidate-output-detail-accessor-unavailable";
       } else {
         try {
           selectedProjectEnvelope = savedProjectStore.getProjectEnvelope(state.selectedProjectId);
         } catch {
           selectedProjectManifestAccessBlocker =
             "project-browser-selected-project-candidate-output-manifest-accessor-failed";
+          selectedProjectDetailAccessBlocker =
+            "project-browser-selected-project-candidate-output-detail-accessor-failed";
         }
       }
     }
@@ -1970,6 +2417,12 @@ export function createProjectBrowserService({ savedProjectStore, projectService,
         selectedProjectEnvelope,
         state.selectedProjectId,
         selectedProjectManifestAccessBlocker,
+      );
+    const selectedProjectCandidateOutputDetailReadbackSummary =
+      buildProjectBrowserSelectedProjectCandidateOutputDetailReadbackSummary(
+        selectedProjectEnvelope,
+        state.selectedProjectId,
+        selectedProjectDetailAccessBlocker,
       );
     return {
       owner: state.owner,
@@ -2009,6 +2462,7 @@ export function createProjectBrowserService({ savedProjectStore, projectService,
         state.selectedProjectId,
       ),
       selectedProjectCandidateOutputManifestReadbackSummary,
+      selectedProjectCandidateOutputDetailReadbackSummary,
       filters: { ...state.filters },
       projects: clone(storeSnapshot.projects),
       projectCount: storeSnapshot.count,
