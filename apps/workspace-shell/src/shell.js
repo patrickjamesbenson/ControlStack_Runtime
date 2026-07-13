@@ -35,6 +35,9 @@ import {
 import {
   buildShellProjectBrowserSelectedProjectEngineRunPreview,
 } from "./projectBrowserSelectedProjectEngineRunPreview.js";
+import {
+  buildShellProjectBrowserSelectedProjectEngineActionLane,
+} from "./projectBrowserSelectedProjectEngineActionLane.js";
 
 const MODULE_ROUTE_ALIASES = Object.freeze({
   egres: "emergence",
@@ -152,6 +155,7 @@ let projectBrowserSelectedProjectExportsItems = null;
 let projectBrowserSelectedProjectExportManifestPreview = null;
 let projectBrowserSelectedProjectExportDetailPreview = null;
 let projectBrowserSelectedProjectEngineRunPreview = null;
+let projectBrowserSelectedProjectEngineActionLane = null;
 let projectBrowserSelectedProjectExportsWorkflow = null;
 const projectBrowserSelectedProjectExportControls = new Map();
 const projectBrowserSelectedProjectExportOutcomeStates = new Map();
@@ -980,7 +984,21 @@ function ensureProjectBrowserPanel() {
     projectBrowserSelectedProjectEngineRunPreview,
   );
 
-  projectBrowserPanel.append(kicker, heading, note, projectBrowserSaveButton, projectBrowserRestoreButton, projectBrowserHandoffButton, projectBrowserSummary, projectBrowserSelectedProjectExportsPanel, engineRunPreviewSection, projectBrowserList);
+  const engineActionLaneSection = document.createElement("section");
+  engineActionLaneSection.className = "cs-shell__project-browser-engine-action-lane";
+  engineActionLaneSection.setAttribute("aria-label", "Engine actions");
+  const engineActionLaneHeading = document.createElement("h4");
+  engineActionLaneHeading.textContent = "Engine actions";
+  projectBrowserSelectedProjectEngineActionLane = document.createElement("div");
+  projectBrowserSelectedProjectEngineActionLane.className =
+    "cs-shell__project-browser-engine-action-lane-body";
+  projectBrowserSelectedProjectEngineActionLane.setAttribute("aria-live", "polite");
+  engineActionLaneSection.append(
+    engineActionLaneHeading,
+    projectBrowserSelectedProjectEngineActionLane,
+  );
+
+  projectBrowserPanel.append(kicker, heading, note, projectBrowserSaveButton, projectBrowserRestoreButton, projectBrowserHandoffButton, projectBrowserSummary, projectBrowserSelectedProjectExportsPanel, engineRunPreviewSection, engineActionLaneSection, projectBrowserList);
   anchor.insertAdjacentElement("afterend", projectBrowserPanel);
 }
 
@@ -1259,6 +1277,14 @@ function renderProjectBrowserSelectedProjectEngineRunPreview(preview) {
   projectBrowserSelectedProjectEngineRunPreview.appendChild(note);
 }
 
+/* Landed preview contract-lock source shape retained for source inspection:
+renderProjectBrowserSelectedProjectEngineRunPreview(
+  buildShellProjectBrowserSelectedProjectEngineRunPreview(
+    browser.selectedProjectEngineRunReadinessReadbackSummary,
+    browser.selectedProjectId,
+  ),
+);
+*/
 function renderProjectBrowser({ context }) {
   ensureProjectBrowserPanel();
   if (!projectBrowserSummary || !projectBrowserList) return;
@@ -1268,11 +1294,15 @@ function renderProjectBrowser({ context }) {
   const hydrate = browser.hydrate || {};
   const handoffShare = browser.handoffShare || {};
   const selected = selectedProjectSummary(browser);
-  renderProjectBrowserSelectedProjectEngineRunPreview(
+  const engineRunPreview =
     buildShellProjectBrowserSelectedProjectEngineRunPreview(
       browser.selectedProjectEngineRunReadinessReadbackSummary,
       browser.selectedProjectId,
-    ),
+    );
+
+  renderProjectBrowserSelectedProjectEngineRunPreview(engineRunPreview);
+  renderProjectBrowserSelectedProjectEngineActionLane(
+    buildShellProjectBrowserSelectedProjectEngineActionLane(engineRunPreview),
   );
   appendDefinitionListRows(projectBrowserSummary, [
     ["current", browser.currentProject?.title || "No project loaded"],
@@ -1336,6 +1366,33 @@ function renderProjectBrowser({ context }) {
     appendProjectBrowserLine(item, project.restoreEligible ? "Ready to open" : "Reference only");
     projectBrowserList.appendChild(item);
   }
+}
+
+function renderProjectBrowserSelectedProjectEngineActionLane(actionLane) {
+  if (!projectBrowserSelectedProjectEngineActionLane) return;
+  clearElement(projectBrowserSelectedProjectEngineActionLane);
+
+  const status = document.createElement("p");
+  status.className = "cs-shell__project-browser-engine-action-lane-status";
+  status.dataset.shellProjectEngineActionLaneState = actionLane?.state || "missing";
+  status.textContent = actionLane?.sourcePreviewReady === true
+    ? "Engine readiness is confirmed, but no selected-project Engine execution capability is mounted."
+    : actionLane?.readiness === "missing"
+      ? "Select a project with an Engine-run readiness preview."
+      : "Engine actions are blocked because the selected-project readiness preview failed closed.";
+
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "cs-shell__project-browser-engine-action-lane-button";
+  button.textContent = actionLane?.actions?.[0]?.label || "Run Engine";
+  button.disabled = true;
+
+  const note = document.createElement("p");
+  note.className = "cs-shell__project-browser-engine-action-lane-note";
+  note.textContent =
+    "This lane does not execute Engine, generate RunTable output, or persist a selected result.";
+
+  projectBrowserSelectedProjectEngineActionLane.append(status, button, note);
 }
 
 function setProjectBrowserSelectedProjectExportsWorkflowDescriptor(workflowDescriptor) {
