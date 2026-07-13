@@ -13,6 +13,8 @@ export const SHELL_PROJECT_BROWSER_FIRST_SELECTED_PROJECT_EXPORTS_WORKFLOW_MANIF
   "SHELL-PROJECT-BROWSER-FIRST-SELECTED-PROJECT-EXPORTS-WORKFLOW-MANIFEST-PREVIEW-CONTRACT-LOCK-1";
 export const SHELL_PROJECT_BROWSER_FIRST_SELECTED_PROJECT_EXPORT_MANIFEST_PREVIEW_SURFACE_CONTRACT_ID =
   "SHELL-PROJECT-BROWSER-FIRST-SELECTED-PROJECT-EXPORT-MANIFEST-PREVIEW-SURFACE-1";
+export const SHELL_PROJECT_BROWSER_FIRST_SELECTED_PROJECT_EXPORT_DETAIL_PREVIEW_SURFACE_CONTRACT_ID =
+  "SHELL-PROJECT-BROWSER-FIRST-SELECTED-PROJECT-EXPORT-DETAIL-PREVIEW-SURFACE-1";
 export const SHELL_PROJECT_BROWSER_SELECTED_PROJECT_EXPORTS_WORKFLOW_SCHEMA_ID =
   "controlstack.runtime.shell.project-browser.selected-project-exports-workflow.v1";
 export const SHELL_PROJECT_BROWSER_SELECTED_PROJECT_EXPORTS_WORKFLOW_SCHEMA_VERSION = 1;
@@ -27,12 +29,22 @@ export const SHELL_PROJECT_BROWSER_FIRST_PROJECT_IES_EXPORT_DOWNLOAD_OUTCOME_STA
 export const SHELL_PROJECT_BROWSER_SELECTED_PROJECT_EXPORT_MANIFEST_PREVIEW_SCHEMA_ID =
   "controlstack.runtime.shell.project-browser.selected-project-export-manifest-preview.v1";
 export const SHELL_PROJECT_BROWSER_SELECTED_PROJECT_EXPORT_MANIFEST_PREVIEW_SCHEMA_VERSION = 1;
+export const SHELL_PROJECT_BROWSER_SELECTED_PROJECT_EXPORT_DETAIL_PREVIEW_SCHEMA_ID =
+  "controlstack.runtime.shell.project-browser.selected-project-export-detail-preview.v1";
+export const SHELL_PROJECT_BROWSER_SELECTED_PROJECT_EXPORT_DETAIL_PREVIEW_SCHEMA_VERSION = 1;
 
 export const SHELL_PROJECT_BROWSER_SELECTED_PROJECT_EXPORT_MANIFEST_PREVIEW_STATES = Object.freeze({
   ready: "shell_project_browser_selected_project_export_manifest_preview_ready",
   missing: "shell_project_browser_selected_project_export_manifest_preview_missing",
   blockedFailClosed:
     "shell_project_browser_selected_project_export_manifest_preview_blocked_fail_closed",
+});
+
+export const SHELL_PROJECT_BROWSER_SELECTED_PROJECT_EXPORT_DETAIL_PREVIEW_STATES = Object.freeze({
+  ready: "shell_project_browser_selected_project_export_detail_preview_ready",
+  missing: "shell_project_browser_selected_project_export_detail_preview_missing",
+  blockedFailClosed:
+    "shell_project_browser_selected_project_export_detail_preview_blocked_fail_closed",
 });
 
 export const SHELL_PROJECT_BROWSER_SELECTED_PROJECT_EXPORT_MANIFEST_PREVIEW_FIELD_ORDER = Object.freeze([
@@ -86,6 +98,80 @@ export const SHELL_PROJECT_BROWSER_SELECTED_PROJECT_EXPORT_MANIFEST_PREVIEW_FIEL
   "persistenceMutated",
   "runtimeDataMutated",
   "filesystemWriteAttempted",
+]);
+
+export const SHELL_PROJECT_BROWSER_SELECTED_PROJECT_EXPORT_DETAIL_PREVIEW_FIELD_ORDER = Object.freeze([
+  "schemaId",
+  "schemaVersion",
+  "contractId",
+  "owner",
+  "surfaceId",
+  "label",
+  "state",
+  "readiness",
+  "ready",
+  "failClosed",
+  "blocker",
+  "selectedProjectId",
+  "selectedProjectFound",
+  "selectedProjectOnly",
+  "sourceSummaryPresent",
+  "detailSummaryPresent",
+  "detailBoundaryReady",
+  "runTableRowCount",
+  "candidateOutputRecordCount",
+  "manifestRecordCount",
+  "detailRecordCount",
+  "detailEntryCount",
+  "firstDetailEntryKind",
+  "firstCandidateOutputKind",
+  "firstManifestEntryKind",
+  "firstRowKind",
+  "firstRunIndex",
+  "firstRowAccepted",
+  "firstRowEngineVerified",
+  "firstRowBoardCount",
+  "firstRowSegmentCount",
+  "firstRowZoneCount",
+  "firstRowClipPointsCount",
+  "firstRowSuspensionPointsCount",
+  "firstRowGearTrayPlanCount",
+  "firstRowReservedRangesCount",
+  "previewOnly",
+  "diagnosticOnly",
+  "detailOnly",
+  "readOnly",
+  "redacted",
+  "machineValueSafe",
+  "nonDownloadable",
+  "detailFileExists",
+  "detailDownloadable",
+  "detailFileOutputEnabled",
+  "detailFileOutputWritten",
+  "downloadEnabled",
+  "downloadAvailable",
+  "sourceRowsExposed",
+  "candidateOutputDetailsExposed",
+  "artifactListExposed",
+  "rawDetailExposed",
+  "rawManifestExposed",
+  "rawCandidateOutputExposed",
+  "rawIesExposed",
+  "candelaExposed",
+  "photometryExposed",
+  "governanceExposed",
+  "mutationLogExposed",
+  "privatePathExposed",
+  "blobExposed",
+  "urlExposed",
+  "base64Exposed",
+  "filenameExposed",
+  "routesAdded",
+  "postEndpointsAdded",
+  "persistenceMutated",
+  "runtimeDataMutated",
+  "filesystemWriteAttempted",
+  "outputGenerationEnabled",
 ]);
 
 export const SHELL_PROJECT_BROWSER_FIRST_PROJECT_IES_EXPORT_DOWNLOAD_OUTCOME_STATES = Object.freeze({
@@ -173,6 +259,7 @@ export const SHELL_PROJECT_BROWSER_PROJECT_IES_EXPORT_ITEM_FIELD_ORDER = Object.
 
 const PRIVATE_PREPARED_ACTIONS = new WeakMap();
 const PRIVATE_MANIFEST_PREVIEWS = new WeakMap();
+const PRIVATE_DETAIL_PREVIEWS = new WeakMap();
 const SAFE_ID_PATTERN = /^[0-9A-Za-z_.:-]{1,760}$/;
 const PRIVATE_VALUE_PATTERN = /(?:[A-Za-z]:[\\/]|\\\\|[\\/]Users[\\/]|[\\/]home[\\/]|[\\/]mnt[\\/]|file:|data:[^\s]*base64|\bbase64\s*[,=:])/i;
 const PROJECT_IES_EXPORT_DOWNLOAD_FILENAME_PATTERN =
@@ -182,6 +269,9 @@ const PROJECT_IES_EXPORT_DOWNLOAD_BLOCKER_PATTERN = /^[0-9A-Za-z_.:-]{1,760}$/;
 const PROJECT_BROWSER_CANDIDATE_OUTPUT_MANIFEST_READBACK_SUMMARY_SCHEMA_ID =
   "controlstack.runtime.project-browser.selected-project-candidate-output-manifest-readback-summary.v1";
 const PROJECT_BROWSER_CANDIDATE_OUTPUT_MANIFEST_READBACK_SUMMARY_SCHEMA_VERSION = 1;
+const PROJECT_BROWSER_CANDIDATE_OUTPUT_DETAIL_READBACK_SUMMARY_SCHEMA_ID =
+  "controlstack.runtime.project-browser.selected-project-candidate-output-detail-readback-summary.v1";
+const PROJECT_BROWSER_CANDIDATE_OUTPUT_DETAIL_READBACK_SUMMARY_SCHEMA_VERSION = 1;
 const REQUIRED_FALSE_MANIFEST_PREVIEW_SOURCE_FLAGS = Object.freeze([
   "manifestFileExists",
   "manifestDownloadable",
@@ -206,6 +296,35 @@ const REQUIRED_FALSE_MANIFEST_PREVIEW_SOURCE_FLAGS = Object.freeze([
   "runtimeDataMutated",
   "boardDataMutated",
 ]);
+const REQUIRED_FALSE_DETAIL_PREVIEW_SOURCE_FLAGS = Object.freeze([
+  "detailFileExists",
+  "detailDownloadable",
+  "detailFileOutputEnabled",
+  "detailFileOutputWritten",
+  "downloadEnabled",
+  "downloadAvailable",
+  "sourceRowsReturned",
+  "candidateOutputDetailsReturned",
+  "artifactListReturned",
+  "rawDetailReturned",
+  "rawManifestReturned",
+  "rawCandidateOutputReturned",
+  "rawIesReturned",
+  "rawPhotometryReturned",
+  "candelaArraysReturned",
+  "governancePayloadReturned",
+  "mutationDataReturned",
+  "base64ArtifactsReturned",
+  "blobsReturned",
+  "urlsReturned",
+  "filenamesReturned",
+  "privatePathsReturned",
+  "routesAdded",
+  "postEndpointsAdded",
+  "runtimeDataMutated",
+  "boardDataMutated",
+  "outputGenerationEnabled",
+]);
 
 function safeId(value) {
   if (typeof value !== "string") return null;
@@ -228,6 +347,10 @@ function safeNonNegativeInteger(value) {
   return Number.isSafeInteger(value) && value >= 0 ? value : 0;
 }
 
+function safeOptionalNonNegativeInteger(value) {
+  return Number.isSafeInteger(value) && value >= 0 ? value : null;
+}
+
 function manifestPreviewSourceIsSafe(summary) {
   return summary.schemaId === PROJECT_BROWSER_CANDIDATE_OUTPUT_MANIFEST_READBACK_SUMMARY_SCHEMA_ID
     && summary.schemaVersion === PROJECT_BROWSER_CANDIDATE_OUTPUT_MANIFEST_READBACK_SUMMARY_SCHEMA_VERSION
@@ -238,6 +361,19 @@ function manifestPreviewSourceIsSafe(summary) {
     && summary.redacted === true
     && summary.machineValueSafe === true
     && REQUIRED_FALSE_MANIFEST_PREVIEW_SOURCE_FLAGS.every((key) => summary[key] === false);
+}
+
+function detailPreviewSourceIsSafe(summary) {
+  return summary.schemaId === PROJECT_BROWSER_CANDIDATE_OUTPUT_DETAIL_READBACK_SUMMARY_SCHEMA_ID
+    && summary.schemaVersion === PROJECT_BROWSER_CANDIDATE_OUTPUT_DETAIL_READBACK_SUMMARY_SCHEMA_VERSION
+    && summary.selectedProjectOnly === true
+    && summary.summaryOnly === true
+    && summary.diagnosticOnly === true
+    && summary.detailOnly === true
+    && summary.readOnly === true
+    && summary.redacted === true
+    && summary.machineValueSafe === true
+    && REQUIRED_FALSE_DETAIL_PREVIEW_SOURCE_FLAGS.every((key) => summary[key] === false);
 }
 
 export function buildShellProjectBrowserSelectedProjectExportManifestPreview(
@@ -339,6 +475,150 @@ export function buildShellProjectBrowserSelectedProjectExportManifestPreview(
       persistenceMutated: false,
       runtimeDataMutated: false,
       filesystemWriteAttempted: false,
+    },
+  ));
+}
+
+export function buildShellProjectBrowserSelectedProjectExportDetailPreview(
+  sourceSummary = null,
+  expectedSelectedProjectId = null,
+) {
+  const sourceSummaryPresent = isPlainObject(sourceSummary);
+  const sourceSelectedProjectId = sourceSummaryPresent ? safeId(sourceSummary.selectedProjectId) : null;
+  const expectedSelection = safeId(expectedSelectedProjectId);
+  const selectedProjectMatches = !expectedSelection || sourceSelectedProjectId === expectedSelection;
+  const sourceSafe = sourceSummaryPresent
+    && selectedProjectMatches
+    && detailPreviewSourceIsSafe(sourceSummary);
+  const sourceReady = sourceSafe
+    && sourceSummary.ready === true
+    && sourceSummary.failClosed === false
+    && sourceSummary.readiness === "ready"
+    && sourceSummary.detailSummaryPresent === true
+    && sourceSummary.detailBoundaryReady === true;
+  const sourceMissing = sourceSafe && sourceSummary.readiness === "missing";
+  const state = sourceReady
+    ? SHELL_PROJECT_BROWSER_SELECTED_PROJECT_EXPORT_DETAIL_PREVIEW_STATES.ready
+    : !sourceSummaryPresent || sourceMissing
+      ? SHELL_PROJECT_BROWSER_SELECTED_PROJECT_EXPORT_DETAIL_PREVIEW_STATES.missing
+      : SHELL_PROJECT_BROWSER_SELECTED_PROJECT_EXPORT_DETAIL_PREVIEW_STATES.blockedFailClosed;
+  const readiness = sourceReady
+    ? "ready"
+    : state === SHELL_PROJECT_BROWSER_SELECTED_PROJECT_EXPORT_DETAIL_PREVIEW_STATES.missing
+      ? "missing"
+      : "blocked_fail_closed";
+  const blocker = sourceReady
+    ? null
+    : !sourceSummaryPresent
+      ? "selected-project-export-detail-preview-summary-missing"
+      : !selectedProjectMatches
+        ? "selected-project-export-detail-preview-selection-mismatch"
+        : sourceSafe
+          ? safeId(sourceSummary.blocker)
+            || "selected-project-export-detail-preview-not-ready"
+          : "selected-project-export-detail-preview-source-blocked";
+
+  return Object.freeze(orderedObject(
+    SHELL_PROJECT_BROWSER_SELECTED_PROJECT_EXPORT_DETAIL_PREVIEW_FIELD_ORDER,
+    {
+      schemaId: SHELL_PROJECT_BROWSER_SELECTED_PROJECT_EXPORT_DETAIL_PREVIEW_SCHEMA_ID,
+      schemaVersion: SHELL_PROJECT_BROWSER_SELECTED_PROJECT_EXPORT_DETAIL_PREVIEW_SCHEMA_VERSION,
+      contractId:
+        SHELL_PROJECT_BROWSER_FIRST_SELECTED_PROJECT_EXPORT_DETAIL_PREVIEW_SURFACE_CONTRACT_ID,
+      owner: "shell",
+      surfaceId: "selected-project-export-detail-preview",
+      label: "Export details",
+      state,
+      readiness,
+      ready: sourceReady,
+      failClosed: !sourceReady,
+      blocker,
+      selectedProjectId: sourceSelectedProjectId,
+      selectedProjectFound: sourceSummaryPresent && sourceSummary.selectedProjectFound === true,
+      selectedProjectOnly: true,
+      sourceSummaryPresent,
+      detailSummaryPresent: sourceReady,
+      detailBoundaryReady: sourceReady,
+      runTableRowCount: sourceReady
+        ? safeNonNegativeInteger(sourceSummary.sourceRunTableRowCount)
+        : 0,
+      candidateOutputRecordCount: sourceReady
+        ? safeNonNegativeInteger(sourceSummary.candidateOutputRecordCount)
+        : 0,
+      manifestRecordCount: sourceReady
+        ? safeNonNegativeInteger(sourceSummary.manifestRecordCount)
+        : 0,
+      detailRecordCount: sourceReady
+        ? safeNonNegativeInteger(sourceSummary.detailRecordCount)
+        : 0,
+      detailEntryCount: sourceReady
+        ? safeNonNegativeInteger(sourceSummary.detailEntryCount)
+        : 0,
+      firstDetailEntryKind: sourceReady ? safeId(sourceSummary.firstDetailEntryKind) : null,
+      firstCandidateOutputKind: sourceReady ? safeId(sourceSummary.firstCandidateOutputKind) : null,
+      firstManifestEntryKind: sourceReady ? safeId(sourceSummary.firstManifestEntryKind) : null,
+      firstRowKind: sourceReady ? safeId(sourceSummary.firstRowKind) : null,
+      firstRunIndex: sourceReady
+        ? safeOptionalNonNegativeInteger(sourceSummary.firstRunIndex)
+        : null,
+      firstRowAccepted: sourceReady && sourceSummary.firstRowAccepted === true,
+      firstRowEngineVerified: sourceReady && sourceSummary.firstRowEngineVerified === true,
+      firstRowBoardCount: sourceReady
+        ? safeNonNegativeInteger(sourceSummary.firstRowBoardCount)
+        : 0,
+      firstRowSegmentCount: sourceReady
+        ? safeNonNegativeInteger(sourceSummary.firstRowSegmentCount)
+        : 0,
+      firstRowZoneCount: sourceReady
+        ? safeNonNegativeInteger(sourceSummary.firstRowZoneCount)
+        : 0,
+      firstRowClipPointsCount: sourceReady
+        ? safeNonNegativeInteger(sourceSummary.firstRowClipPointsCount)
+        : 0,
+      firstRowSuspensionPointsCount: sourceReady
+        ? safeNonNegativeInteger(sourceSummary.firstRowSuspensionPointsCount)
+        : 0,
+      firstRowGearTrayPlanCount: sourceReady
+        ? safeNonNegativeInteger(sourceSummary.firstRowGearTrayPlanCount)
+        : 0,
+      firstRowReservedRangesCount: sourceReady
+        ? safeNonNegativeInteger(sourceSummary.firstRowReservedRangesCount)
+        : 0,
+      previewOnly: true,
+      diagnosticOnly: true,
+      detailOnly: true,
+      readOnly: true,
+      redacted: true,
+      machineValueSafe: true,
+      nonDownloadable: true,
+      detailFileExists: false,
+      detailDownloadable: false,
+      detailFileOutputEnabled: false,
+      detailFileOutputWritten: false,
+      downloadEnabled: false,
+      downloadAvailable: false,
+      sourceRowsExposed: false,
+      candidateOutputDetailsExposed: false,
+      artifactListExposed: false,
+      rawDetailExposed: false,
+      rawManifestExposed: false,
+      rawCandidateOutputExposed: false,
+      rawIesExposed: false,
+      candelaExposed: false,
+      photometryExposed: false,
+      governanceExposed: false,
+      mutationLogExposed: false,
+      privatePathExposed: false,
+      blobExposed: false,
+      urlExposed: false,
+      base64Exposed: false,
+      filenameExposed: false,
+      routesAdded: false,
+      postEndpointsAdded: false,
+      persistenceMutated: false,
+      runtimeDataMutated: false,
+      filesystemWriteAttempted: false,
+      outputGenerationEnabled: false,
     },
   ));
 }
@@ -551,6 +831,13 @@ function buildWorkflowDescriptor({ context, ready, blocker }) {
       selected.selectedProjectId,
     ),
   );
+  PRIVATE_DETAIL_PREVIEWS.set(
+    frozenDescriptor,
+    buildShellProjectBrowserSelectedProjectExportDetailPreview(
+      context?.projectBrowser?.selectedProjectCandidateOutputDetailReadbackSummary,
+      selected.selectedProjectId,
+    ),
+  );
   return frozenDescriptor;
 }
 
@@ -620,4 +907,8 @@ export function getShellProjectBrowserSelectedProjectExportAction(
 
 export function getShellProjectBrowserSelectedProjectExportManifestPreview(workflowDescriptor) {
   return PRIVATE_MANIFEST_PREVIEWS.get(workflowDescriptor) || null;
+}
+
+export function getShellProjectBrowserSelectedProjectExportDetailPreview(workflowDescriptor) {
+  return PRIVATE_DETAIL_PREVIEWS.get(workflowDescriptor) || null;
 }

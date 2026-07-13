@@ -27,6 +27,7 @@ import {
 import {
   createShellProjectBrowserProjectIesExportDownloadOutcomeState,
   getShellProjectBrowserSelectedProjectExportAction,
+  getShellProjectBrowserSelectedProjectExportDetailPreview,
   getShellProjectBrowserSelectedProjectExportManifestPreview,
   prepareShellProjectBrowserSelectedProjectExportsWorkflow,
   SHELL_PROJECT_BROWSER_FIRST_PROJECT_IES_EXPORT_DOWNLOAD_OUTCOME_STATES,
@@ -146,6 +147,7 @@ let projectBrowserSelectedProjectExportsPanel = null;
 let projectBrowserSelectedProjectExportsTitle = null;
 let projectBrowserSelectedProjectExportsItems = null;
 let projectBrowserSelectedProjectExportManifestPreview = null;
+let projectBrowserSelectedProjectExportDetailPreview = null;
 let projectBrowserSelectedProjectExportsWorkflow = null;
 const projectBrowserSelectedProjectExportControls = new Map();
 const projectBrowserSelectedProjectExportOutcomeStates = new Map();
@@ -938,11 +940,26 @@ function ensureProjectBrowserPanel() {
     projectBrowserSelectedProjectExportManifestPreview,
   );
 
+  const exportDetailPreviewSection = document.createElement("section");
+  exportDetailPreviewSection.className = "cs-shell__project-browser-export-detail-preview";
+  exportDetailPreviewSection.setAttribute("aria-label", "Export details");
+  const exportDetailPreviewHeading = document.createElement("h5");
+  exportDetailPreviewHeading.textContent = "Export details";
+  projectBrowserSelectedProjectExportDetailPreview = document.createElement("div");
+  projectBrowserSelectedProjectExportDetailPreview.className =
+    "cs-shell__project-browser-export-detail-preview-body";
+  projectBrowserSelectedProjectExportDetailPreview.setAttribute("aria-live", "polite");
+  exportDetailPreviewSection.append(
+    exportDetailPreviewHeading,
+    projectBrowserSelectedProjectExportDetailPreview,
+  );
+
   projectBrowserSelectedProjectExportsPanel.append(
     exportsHeading,
     projectBrowserSelectedProjectExportsTitle,
     projectBrowserSelectedProjectExportsItems,
     exportManifestPreviewSection,
+    exportDetailPreviewSection,
   );
 
   projectBrowserPanel.append(kicker, heading, note, projectBrowserSaveButton, projectBrowserRestoreButton, projectBrowserHandoffButton, projectBrowserSummary, projectBrowserSelectedProjectExportsPanel, projectBrowserList);
@@ -1398,11 +1415,142 @@ function renderProjectBrowserSelectedProjectExportManifestPreview(preview) {
   projectBrowserSelectedProjectExportManifestPreview.appendChild(note);
 }
 
+function appendProjectBrowserSelectedProjectExportDetailPreviewField(list, label, value) {
+  const term = document.createElement("dt");
+  term.textContent = label;
+  const detail = document.createElement("dd");
+  detail.textContent = String(value);
+  list.append(term, detail);
+}
+
+function renderProjectBrowserSelectedProjectExportDetailPreview(preview) {
+  if (!projectBrowserSelectedProjectExportDetailPreview) return;
+  clearElement(projectBrowserSelectedProjectExportDetailPreview);
+
+  const status = document.createElement("p");
+  status.className = "cs-shell__project-browser-export-detail-preview-status";
+  status.dataset.shellExportDetailPreviewState = preview?.state || "missing";
+  status.textContent = preview?.ready === true
+    ? "Redacted selected-project export details summary."
+    : preview?.readiness === "missing"
+      ? "No selected-project export details preview is available."
+      : "Export details preview is blocked fail-closed.";
+  projectBrowserSelectedProjectExportDetailPreview.appendChild(status);
+
+  if (preview?.ready === true) {
+    const fields = document.createElement("dl");
+    fields.className = "cs-shell__project-browser-export-detail-preview-fields";
+    appendProjectBrowserSelectedProjectExportDetailPreviewField(
+      fields,
+      "Run-table rows",
+      preview.runTableRowCount,
+    );
+    appendProjectBrowserSelectedProjectExportDetailPreviewField(
+      fields,
+      "Candidate outputs",
+      preview.candidateOutputRecordCount,
+    );
+    appendProjectBrowserSelectedProjectExportDetailPreviewField(
+      fields,
+      "Manifest records",
+      preview.manifestRecordCount,
+    );
+    appendProjectBrowserSelectedProjectExportDetailPreviewField(
+      fields,
+      "Detail records",
+      preview.detailRecordCount,
+    );
+    appendProjectBrowserSelectedProjectExportDetailPreviewField(
+      fields,
+      "Detail entries",
+      preview.detailEntryCount,
+    );
+    appendProjectBrowserSelectedProjectExportDetailPreviewField(
+      fields,
+      "First detail kind",
+      preview.firstDetailEntryKind || "Not reported",
+    );
+    appendProjectBrowserSelectedProjectExportDetailPreviewField(
+      fields,
+      "First output kind",
+      preview.firstCandidateOutputKind || "Not reported",
+    );
+    appendProjectBrowserSelectedProjectExportDetailPreviewField(
+      fields,
+      "First manifest kind",
+      preview.firstManifestEntryKind || "Not reported",
+    );
+    appendProjectBrowserSelectedProjectExportDetailPreviewField(
+      fields,
+      "First row kind",
+      preview.firstRowKind || "Not reported",
+    );
+    appendProjectBrowserSelectedProjectExportDetailPreviewField(
+      fields,
+      "First run index",
+      preview.firstRunIndex ?? "Not reported",
+    );
+    appendProjectBrowserSelectedProjectExportDetailPreviewField(
+      fields,
+      "First row accepted",
+      preview.firstRowAccepted,
+    );
+    appendProjectBrowserSelectedProjectExportDetailPreviewField(
+      fields,
+      "First row engine verified",
+      preview.firstRowEngineVerified,
+    );
+    appendProjectBrowserSelectedProjectExportDetailPreviewField(
+      fields,
+      "Boards",
+      preview.firstRowBoardCount,
+    );
+    appendProjectBrowserSelectedProjectExportDetailPreviewField(
+      fields,
+      "Segments",
+      preview.firstRowSegmentCount,
+    );
+    appendProjectBrowserSelectedProjectExportDetailPreviewField(
+      fields,
+      "Zones",
+      preview.firstRowZoneCount,
+    );
+    appendProjectBrowserSelectedProjectExportDetailPreviewField(
+      fields,
+      "Clip points",
+      preview.firstRowClipPointsCount,
+    );
+    appendProjectBrowserSelectedProjectExportDetailPreviewField(
+      fields,
+      "Suspension points",
+      preview.firstRowSuspensionPointsCount,
+    );
+    appendProjectBrowserSelectedProjectExportDetailPreviewField(
+      fields,
+      "Gear tray plans",
+      preview.firstRowGearTrayPlanCount,
+    );
+    appendProjectBrowserSelectedProjectExportDetailPreviewField(
+      fields,
+      "Reserved ranges",
+      preview.firstRowReservedRangesCount,
+    );
+    projectBrowserSelectedProjectExportDetailPreview.appendChild(fields);
+  }
+
+  const note = document.createElement("p");
+  note.className = "cs-shell__project-browser-export-detail-preview-note";
+  note.textContent =
+    "Preview only, redacted, selected-project-only, diagnostic, detail-only, and non-downloadable. No detail file is created or exposed.";
+  projectBrowserSelectedProjectExportDetailPreview.appendChild(note);
+}
+
 function renderProjectBrowserSelectedProjectExportsWorkflow(workflowDescriptor) {
   if (!projectBrowserSelectedProjectExportsPanel
     || !projectBrowserSelectedProjectExportsTitle
     || !projectBrowserSelectedProjectExportsItems
-    || !projectBrowserSelectedProjectExportManifestPreview) return;
+    || !projectBrowserSelectedProjectExportManifestPreview
+    || !projectBrowserSelectedProjectExportDetailPreview) return;
 
   setProjectBrowserSelectedProjectExportsWorkflowDescriptor(workflowDescriptor);
   projectBrowserSelectedProjectExportsTitle.textContent =
@@ -1410,6 +1558,9 @@ function renderProjectBrowserSelectedProjectExportsWorkflow(workflowDescriptor) 
   renderProjectBrowserSelectedProjectExportItems(workflowDescriptor);
   renderProjectBrowserSelectedProjectExportManifestPreview(
     getShellProjectBrowserSelectedProjectExportManifestPreview(workflowDescriptor),
+  );
+  renderProjectBrowserSelectedProjectExportDetailPreview(
+    getShellProjectBrowserSelectedProjectExportDetailPreview(workflowDescriptor),
   );
 }
 
@@ -1433,6 +1584,13 @@ async function refreshProjectBrowserSelectedProjectExportsWorkflow({ services, c
     checking.className = "cs-shell__project-browser-export-manifest-preview-status";
     checking.textContent = "Checking selected-project export contents...";
     projectBrowserSelectedProjectExportManifestPreview.appendChild(checking);
+  }
+  if (projectBrowserSelectedProjectExportDetailPreview) {
+    clearElement(projectBrowserSelectedProjectExportDetailPreview);
+    const checking = document.createElement("p");
+    checking.className = "cs-shell__project-browser-export-detail-preview-status";
+    checking.textContent = "Checking selected-project export details...";
+    projectBrowserSelectedProjectExportDetailPreview.appendChild(checking);
   }
 
   const workflowDescriptor =
@@ -2086,6 +2244,7 @@ function bootWorkspaceShell() {
         projectBrowserSelectedProjectExportsItems.appendChild(blocked);
       }
       renderProjectBrowserSelectedProjectExportManifestPreview(null);
+      renderProjectBrowserSelectedProjectExportDetailPreview(null);
     });
     renderIdentityVisibilityControls({ services, context });
     renderShellTopbarContext(context);

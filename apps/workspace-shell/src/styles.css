@@ -355,6 +355,13 @@ img.cs-shell__rail-icon,
 .cs-shell__project-browser-export-manifest-preview-note { margin: 0; font-size: 12px; line-height: 18px; overflow-wrap: anywhere; }
 .cs-shell__project-browser-export-manifest-preview-note { color: var(--cs-muted); }
 .cs-shell__project-browser-export-manifest-preview-fields { padding: 10px; border: 1px solid var(--cs-border); border-radius: var(--cs-radius-md); background: #ffffff; }
+.cs-shell__project-browser-export-detail-preview { display: grid; gap: 8px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--cs-border); }
+.cs-shell__project-browser-export-detail-preview h5 { margin: 0; font-size: 13px; font-weight: 600; }
+.cs-shell__project-browser-export-detail-preview-body { display: grid; gap: 8px; }
+.cs-shell__project-browser-export-detail-preview-status,
+.cs-shell__project-browser-export-detail-preview-note { margin: 0; font-size: 12px; line-height: 18px; overflow-wrap: anywhere; }
+.cs-shell__project-browser-export-detail-preview-note { color: var(--cs-muted); }
+.cs-shell__project-browser-export-detail-preview-fields { padding: 10px; border: 1px solid var(--cs-border); border-radius: var(--cs-radius-md); background: #ffffff; }
 
 .cs-shell__project-browser-list { display: grid; gap: 8px; margin: 12px 0 0; padding: 0; list-style: none; }
 .cs-shell__project-browser-list li {
