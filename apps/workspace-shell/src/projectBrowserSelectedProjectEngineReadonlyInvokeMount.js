@@ -1,15 +1,23 @@
 import {
   createRuntimeEngineRunTableSelectedProjectReadonlyInvokeCapability,
+  RUNTIME_ENGINE_RUNTABLE_FIRST_SELECTED_PROJECT_READONLY_INVOKE_CAPABILITY_ID,
+  RUNTIME_ENGINE_RUNTABLE_HOST_LOCAL_READONLY_SEAM_ADAPTER_CONTRACT_ID,
   RUNTIME_ENGINE_RUNTABLE_SELECTED_PROJECT_READONLY_INVOKE_OUTPUT_FIELD_ORDER,
+  RUNTIME_ENGINE_RUNTABLE_SELECTED_PROJECT_READONLY_INVOKE_OUTCOME_FIELD_ORDER,
+  RUNTIME_ENGINE_RUNTABLE_SELECTED_PROJECT_READONLY_INVOKE_SCHEMA_ID,
+  RUNTIME_ENGINE_RUNTABLE_SELECTED_PROJECT_READONLY_INVOKE_SCHEMA_VERSION,
   RUNTIME_ENGINE_RUNTABLE_SELECTED_PROJECT_READONLY_INVOKE_STATES,
 } from "../../../packages/workspace-kernel/engineRunTableSelectedProjectReadonlyInvokeCapability.js";
 import {
   PROJECT_BROWSER_SELECTED_PROJECT_ENGINE_RUN_ACTION_SOURCE_BOUNDARY_STATES,
   resolveProjectBrowserSelectedProjectEngineRunActionSourceBoundary,
 } from "../../../packages/workspace-kernel/projectBrowserSelectedProjectEngineRunActionSourceBoundary.js";
+import { stableFingerprint } from "../../../packages/workspace-kernel/stableFingerprint.js";
 
 export const SHELL_PROJECT_BROWSER_FIRST_SELECTED_PROJECT_READONLY_ENGINE_INVOKE_MOUNT_ID =
   "SHELL-PROJECT-BROWSER-FIRST-SELECTED-PROJECT-READONLY-ENGINE-INVOKE-MOUNT-1";
+export const SHELL_PROJECT_BROWSER_FIRST_SELECTED_PROJECT_READONLY_ENGINE_INVOKE_MOUNT_CONTRACT_LOCK_ID =
+  "SHELL-PROJECT-BROWSER-FIRST-SELECTED-PROJECT-READONLY-ENGINE-INVOKE-MOUNT-CONTRACT-LOCK-1";
 export const SHELL_PROJECT_BROWSER_SELECTED_PROJECT_READONLY_ENGINE_INVOKE_MOUNT_SCHEMA_ID =
   "controlstack.runtime.shell.project-browser.selected-project-readonly-engine-invoke-mount.v1";
 export const SHELL_PROJECT_BROWSER_SELECTED_PROJECT_READONLY_ENGINE_INVOKE_MOUNT_SCHEMA_VERSION = 1;
@@ -85,6 +93,8 @@ export const SHELL_PROJECT_BROWSER_SELECTED_PROJECT_READONLY_ENGINE_INVOKE_MOUNT
 const SAFE_TOKEN_PATTERN = /^[0-9A-Za-z_.:-]{1,760}$/;
 const PRIVATE_OR_OUTPUT_VALUE_PATTERN =
   /(?:[A-Za-z]:[\\/]|\\\\|[\\/]Users[\\/]|[\\/]home[\\/]|[\\/]mnt[\\/]|file:|blob:|https?:|data:[^\s]*base64|\bbase64\s*[,=:]|\bTILT\s*=|\bIESNA:LM-63\b|\.ies(?:$|[\s?#]))/i;
+const RUNTIME_OUTCOME_FINGERPRINT_PREFIX =
+  "safe-runtime-engine-runtable-selected-project-readonly-invoke-outcome";
 
 const REQUIRED_OUTCOME_FALSE_FLAGS = Object.freeze([
   "candidatePayloadReturned",
@@ -246,8 +256,19 @@ function validateRuntimeResult(runtimeResult, sourceBoundary) {
   const outcome = runtimeResult.outcomeDescriptor;
   if (!isPlainObject(outcome)
     || !Object.isFrozen(outcome)
+    || !hasExactKeys(
+      outcome,
+      RUNTIME_ENGINE_RUNTABLE_SELECTED_PROJECT_READONLY_INVOKE_OUTCOME_FIELD_ORDER,
+    )
     || !Object.values(outcome).every(isSafeScalar)) {
     return "selected-project-readonly-engine-mount-runtime-outcome-invalid";
+  }
+  if (outcome.schemaId !== RUNTIME_ENGINE_RUNTABLE_SELECTED_PROJECT_READONLY_INVOKE_SCHEMA_ID
+    || outcome.schemaVersion
+      !== RUNTIME_ENGINE_RUNTABLE_SELECTED_PROJECT_READONLY_INVOKE_SCHEMA_VERSION
+    || outcome.contractId
+      !== RUNTIME_ENGINE_RUNTABLE_FIRST_SELECTED_PROJECT_READONLY_INVOKE_CAPABILITY_ID) {
+    return "selected-project-readonly-engine-mount-runtime-outcome-schema-mismatch";
   }
   if (outcome.readOnly !== true || outcome.selectedProjectOnly !== true) {
     return "selected-project-readonly-engine-mount-runtime-safety-flags-invalid";
@@ -269,18 +290,76 @@ function validateRuntimeResult(runtimeResult, sourceBoundary) {
     || safeToken(outcome.envelopeId) !== safeToken(sourceBoundary?.envelopeId)) {
     return "selected-project-readonly-engine-mount-runtime-identity-mismatch";
   }
+  if (safeToken(outcome.sourceBoundaryContractId)
+      !== safeToken(sourceBoundary?.contractId)
+    || safeToken(outcome.sourceBoundaryFingerprint)
+      !== safeToken(sourceBoundary?.sourceBoundaryFingerprint)
+    || safeToken(outcome.candidateFingerprint)
+      !== safeToken(sourceBoundary?.candidateFingerprint)) {
+    return "selected-project-readonly-engine-mount-runtime-source-boundary-mismatch";
+  }
+  if (outcome.adapterMounted === true
+    ? outcome.adapterContractId
+      !== RUNTIME_ENGINE_RUNTABLE_HOST_LOCAL_READONLY_SEAM_ADAPTER_CONTRACT_ID
+    : outcome.adapterContractId !== null) {
+    return "selected-project-readonly-engine-mount-runtime-adapter-contract-invalid";
+  }
+  if ((outcome.adapterInvoked === true && outcome.adapterMounted !== true)
+    || (outcome.invocationConsumed === true && outcome.adapterInvoked !== true)
+    || (outcome.privateCandidateConsumed === true && outcome.invocationConsumed !== true)
+    || (outcome.step2ProjectionReady === true && outcome.step1Ready !== true)) {
+    return "selected-project-readonly-engine-mount-runtime-lifecycle-invalid";
+  }
+
+  const outcomeFingerprintSource = Object.fromEntries(
+    RUNTIME_ENGINE_RUNTABLE_SELECTED_PROJECT_READONLY_INVOKE_OUTCOME_FIELD_ORDER
+      .filter((key) => key !== "outcomeFingerprint")
+      .map((key) => [key, outcome[key]]),
+  );
+  if (outcome.outcomeFingerprint !== stableFingerprint(
+    RUNTIME_OUTCOME_FINGERPRINT_PREFIX,
+    outcomeFingerprintSource,
+  )) {
+    return "selected-project-readonly-engine-mount-runtime-outcome-fingerprint-mismatch";
+  }
 
   const completed = outcome.state
     === RUNTIME_ENGINE_RUNTABLE_SELECTED_PROJECT_READONLY_INVOKE_STATES.completed;
+  const unavailable = outcome.state
+    === RUNTIME_ENGINE_RUNTABLE_SELECTED_PROJECT_READONLY_INVOKE_STATES.unavailable;
+  const expectedReadiness = completed
+    ? "completed"
+    : unavailable
+      ? "unavailable"
+      : "blocked_fail_closed";
+  if (outcome.readiness !== expectedReadiness) {
+    return "selected-project-readonly-engine-mount-runtime-readiness-invalid";
+  }
   if (completed && (outcome.ok !== true
     || outcome.failClosed !== false
     || outcome.blocker !== null
     || outcome.adapterMounted !== true
-    || outcome.adapterInvoked !== true)) {
+    || outcome.adapterInvoked !== true
+    || outcome.invocationConsumed !== true
+    || outcome.privateCandidateConsumed !== true
+    || outcome.concurrentInvocationBlocked !== false
+    || outcome.replayBlocked !== false
+    || outcome.step1Ready !== true
+    || outcome.step2ProjectionReady !== true)) {
     return "selected-project-readonly-engine-mount-runtime-completed-contract-invalid";
   }
-  if (!completed && (outcome.ok !== false || outcome.failClosed !== true)) {
+  if (!completed && (outcome.ok !== false
+    || outcome.failClosed !== true
+    || safeToken(outcome.blocker) === null)) {
     return "selected-project-readonly-engine-mount-runtime-blocked-contract-invalid";
+  }
+  if (unavailable && (outcome.adapterMounted !== false
+    || outcome.adapterInvoked !== false
+    || outcome.invocationConsumed !== false
+    || outcome.privateCandidateConsumed !== false
+    || outcome.concurrentInvocationBlocked !== false
+    || outcome.replayBlocked !== false)) {
+    return "selected-project-readonly-engine-mount-runtime-unavailable-contract-invalid";
   }
   return null;
 }
@@ -326,7 +405,7 @@ export function createShellProjectBrowserSelectedProjectReadonlyEngineInvokeServ
   });
 }
 
-export async function mountShellProjectBrowserSelectedProjectReadonlyEngineInvoke({
+export async function prepareShellProjectBrowserSelectedProjectEngineReadonlyInvokeMount({
   context = {},
   services = {},
 } = {}) {
@@ -415,6 +494,9 @@ export async function mountShellProjectBrowserSelectedProjectReadonlyEngineInvok
   return projectRuntimeOutcome(runtimeResult, sourceBoundary);
 }
 
+export const mountShellProjectBrowserSelectedProjectReadonlyEngineInvoke =
+  prepareShellProjectBrowserSelectedProjectEngineReadonlyInvokeMount;
+
 function mountSelectionKey(context) {
   const browser = isPlainObject(context?.projectBrowser) ? context.projectBrowser : {};
   const summary = isPlainObject(browser.selectedProjectEngineRunReadinessReadbackSummary)
@@ -461,7 +543,7 @@ export function createShellProjectBrowserSelectedProjectReadonlyEngineInvokeMoun
       activeService = nextService;
       generation += 1;
       const requestGeneration = generation;
-      const request = mountShellProjectBrowserSelectedProjectReadonlyEngineInvoke({
+      const request = prepareShellProjectBrowserSelectedProjectEngineReadonlyInvokeMount({
         context,
         services,
       });
