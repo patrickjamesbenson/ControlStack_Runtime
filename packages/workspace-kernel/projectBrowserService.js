@@ -1,5 +1,15 @@
 import { stableFingerprint } from "./stableFingerprint.js";
 import { buildSelectedResultPersistedSummaryReadbackProjectSummary } from "./savedProjectStore.js";
+import { buildSelectedResultPersistedSummaryReadbackStatus } from "./selectedResultPersistedSummaryReadbackStatus.js";
+import {
+  PERSISTED_SELECTED_RESULT_SUMMARY_SCHEMA_ID,
+  PERSISTED_SELECTED_RESULT_SUMMARY_SCHEMA_VERSION,
+} from "./selectedResultPersistenceBoundaryContract.js";
+import {
+  RUNTABLE_FIRST_NARROW_OUTPUT_HANDOFF_REQUIRED_FALSE_FLAGS,
+  RUNTABLE_FIRST_NARROW_OUTPUT_HANDOFF_SUMMARY_SCHEMA_ID,
+  RUNTABLE_FIRST_NARROW_OUTPUT_HANDOFF_SUMMARY_SCHEMA_VERSION,
+} from "./runTableFirstNarrowOutputHandoffContract.js";
 import {
   RUNTIME_IES_FIRST_NARROW_CANDIDATE_OUTPUT_MANIFEST_CONTRACT_ID,
   RUNTIME_IES_FIRST_NARROW_CANDIDATE_OUTPUT_MANIFEST_REQUIRED_FALSE_FLAGS,
@@ -195,6 +205,92 @@ export const PROJECT_BROWSER_SELECTED_PROJECT_CANDIDATE_OUTPUT_DETAIL_READBACK_S
   "boardDataMutated",
   "outputGenerationEnabled",
   "projectBrowserSelectedProjectCandidateOutputDetailReadbackSummaryFingerprint",
+]);
+
+export const PROJECT_BROWSER_SELECTED_PROJECT_ENGINE_RUN_READINESS_READBACK_SUMMARY_SCHEMA_ID =
+  "controlstack.runtime.project-browser.selected-project-engine-run-readiness-readback-summary.v1";
+export const PROJECT_BROWSER_SELECTED_PROJECT_ENGINE_RUN_READINESS_READBACK_SUMMARY_SCHEMA_VERSION = 1;
+
+export const PROJECT_BROWSER_SELECTED_PROJECT_ENGINE_RUN_READINESS_READBACK_SUMMARY_FIELD_ORDER = Object.freeze([
+  "schemaId",
+  "schemaVersion",
+  "owner",
+  "source",
+  "state",
+  "readiness",
+  "ready",
+  "failClosed",
+  "blocker",
+  "selectedProjectId",
+  "selectedProjectFound",
+  "projectId",
+  "envelopeId",
+  "selectedResultSummaryPresent",
+  "runTableFirstNarrowOutputSummaryPresent",
+  "selectedResultReadbackState",
+  "selectedResultReadbackReadiness",
+  "selectedResultReadbackReady",
+  "selectedResultReadbackFailClosed",
+  "selectedResultReadbackBlocker",
+  "selectedResultSummarySchemaId",
+  "selectedResultSummarySchemaVersion",
+  "selectedResultSummaryState",
+  "runTableFirstNarrowOutputSummarySchemaId",
+  "runTableFirstNarrowOutputSummarySchemaVersion",
+  "runTableFirstNarrowOutputSummaryState",
+  "runTableFirstNarrowOutputHandoffContractState",
+  "runTableFirstNarrowOutputHandoffContractReady",
+  "acceptedSelectedResultAuthorityState",
+  "selectedResultPersistenceAuthorityPreflightState",
+  "selectedResultPersistenceBoundaryState",
+  "selectedResultOutputReadinessPreflightState",
+  "authorityStatesAligned",
+  "fingerprintsAligned",
+  "engineRunReadinessReadbackReady",
+  "policyFingerprint",
+  "sourceFingerprint",
+  "sourceInputFingerprint",
+  "sourceVersionFingerprint",
+  "persistedSelectedResultSummaryFingerprint",
+  "selectedResultPersistedSummarySlotContractFingerprint",
+  "runTableFirstNarrowOutputHandoffContractFingerprint",
+  "selectedResultPersistedSummaryReadbackFingerprint",
+  "selectedResultTargetLocation",
+  "runTableFirstNarrowOutputTargetLocation",
+  "selectedProjectOnly",
+  "summaryOnly",
+  "diagnosticOnly",
+  "readOnly",
+  "redacted",
+  "machineValueSafe",
+  "runTableRowsIncluded",
+  "runTableRowCount",
+  "engineExecutionEnabled",
+  "engineExecutionAttempted",
+  "selectedResultCreated",
+  "runTableGenerated",
+  "runTableGenerationEnabled",
+  "runTableGenerationAttempted",
+  "outputGenerated",
+  "outputGenerationEnabled",
+  "routesAdded",
+  "postEndpointsAdded",
+  "runtimeDataMutated",
+  "boardDataMutated",
+  "rawEnginePayloadReturned",
+  "rawEngineResultReturned",
+  "rawSelectedPayloadReturned",
+  "runTableRowsReturned",
+  "rawRunTableRowsReturned",
+  "rawCandidateOutputReturned",
+  "rawIesReturned",
+  "rawPhotometryReturned",
+  "candelaArraysReturned",
+  "governancePayloadReturned",
+  "base64ArtifactsReturned",
+  "filenamesReturned",
+  "privatePathsReturned",
+  "projectBrowserSelectedProjectEngineRunReadinessReadbackSummaryFingerprint",
 ]);
 
 export const PROJECT_BROWSER_SELECTED_PROJECT_IES_EXPORT_RESULT_READBACK_DETAIL_SUMMARY_FIELD_ORDER = Object.freeze([
@@ -412,6 +508,12 @@ export const PROJECT_BROWSER_SELECTED_PROJECT_CANDIDATE_OUTPUT_DETAIL_READBACK_S
   blockedFailClosed: "project_browser_selected_project_candidate_output_detail_readback_blocked_fail_closed",
 });
 
+export const PROJECT_BROWSER_SELECTED_PROJECT_ENGINE_RUN_READINESS_READBACK_STATES = Object.freeze({
+  ready: "project_browser_selected_project_engine_run_readiness_readback_ready",
+  missing: "project_browser_selected_project_engine_run_readiness_readback_missing",
+  blockedFailClosed: "project_browser_selected_project_engine_run_readiness_readback_blocked_fail_closed",
+});
+
 const PROJECT_BROWSER_SELECTED_RESULT_READBACK_SOURCE =
   "project-browser-project-summary-selected-result-readback-consumer";
 const PROJECT_BROWSER_SELECTED_PROJECT_SELECTED_RESULT_READBACK_STATUS_SOURCE =
@@ -430,8 +532,12 @@ export const PROJECT_BROWSER_SELECTED_PROJECT_CANDIDATE_OUTPUT_MANIFEST_READBACK
   "project-browser-selected-project-candidate-output-manifest-readback-summary-consumer";
 export const PROJECT_BROWSER_SELECTED_PROJECT_CANDIDATE_OUTPUT_DETAIL_READBACK_SOURCE =
   "project-browser-selected-project-candidate-output-detail-readback-summary-consumer";
+export const PROJECT_BROWSER_SELECTED_PROJECT_ENGINE_RUN_READINESS_READBACK_SOURCE =
+  "project-browser-selected-project-engine-run-readiness-readback-summary-consumer";
 const SELECTED_RESULT_READBACK_TARGET =
   "projectEnvelope.modules.cs_selector.downstreamContext.selectedResultSummary";
+const RUNTABLE_FIRST_NARROW_OUTPUT_READBACK_TARGET =
+  "projectEnvelope.modules.cs_selector.downstreamContext.runTableFirstNarrowOutputSummary";
 const PROJECT_IES_EXPORT_BOUNDARY_READBACK_TARGET =
   "projectEnvelope.modules.cs_selector.downstreamContext.iesFirstNarrowProjectIesExportBoundarySummary";
 const PROJECT_IES_EXPORT_RESULT_READBACK_TARGET =
@@ -606,6 +712,91 @@ const READBACK_UNSAFE_TRUE_KEYS = Object.freeze([
   "outputGenerationEnabled",
 ]);
 
+const ENGINE_RUN_READINESS_RAW_OR_PRIVATE_KEYS = Object.freeze([
+  ...new Set([
+    ...READBACK_RAW_OR_PRIVATE_KEYS,
+    ...CANDIDATE_OUTPUT_DETAIL_RAW_OR_PRIVATE_KEYS,
+    "rows",
+    "candidateOutput",
+    "candidateOutputs",
+    "candidateOutputBody",
+    "candidateOutputPayload",
+    "manifestBody",
+    "detailBody",
+    "artifactBody",
+    "outputBody",
+    "outputPayload",
+  ]),
+]);
+
+const ENGINE_RUN_READINESS_UNSAFE_TRUE_KEYS = Object.freeze([
+  ...new Set([
+    ...READBACK_UNSAFE_TRUE_KEYS,
+    ...RUNTABLE_FIRST_NARROW_OUTPUT_HANDOFF_REQUIRED_FALSE_FLAGS,
+    "engineExecutionEnabled",
+    "engineExecutionAttempted",
+    "engineInvoked",
+    "runEngineInvoked",
+    "selectedResultCreated",
+    "outputAvailable",
+    "candidateOutputAvailable",
+  ]),
+]);
+
+const ENGINE_RUN_READINESS_RUNTABLE_ALLOWED_FIELDS = Object.freeze([
+  "schemaId",
+  "schemaVersion",
+  "owner",
+  "slotOwner",
+  "targetKind",
+  "moduleId",
+  "state",
+  "summaryOnly",
+  "diagnosticOnly",
+  "safeSummaryOnly",
+  "redacted",
+  "machineValueSafe",
+  "sourceKind",
+  "futureOutputKind",
+  "rowsIncluded",
+  "rowCount",
+  "generated",
+  "generationEnabled",
+  "persisted",
+  "routeAdded",
+  "postEndpointAdded",
+  "runTableFirstNarrowOutputHandoffContractState",
+  "runTableFirstNarrowOutputHandoffContractReady",
+  "acceptedSelectedResultAuthorityState",
+  "selectedResultPersistenceAuthorityPreflightState",
+  "selectedResultPersistenceBoundaryState",
+  "selectedResultOutputReadinessPreflightState",
+  "policyFingerprint",
+  "sourceFingerprint",
+  "sourceInputFingerprint",
+  "sourceVersionFingerprint",
+  "persistedSelectedResultSummaryFingerprint",
+  "selectedResultPersistedSummarySlotContractFingerprint",
+  "runTableFirstNarrowOutputHandoffContractFingerprint",
+  ...RUNTABLE_FIRST_NARROW_OUTPUT_HANDOFF_REQUIRED_FALSE_FLAGS,
+]);
+
+const ENGINE_RUN_READINESS_AUTHORITY_STATE_FIELDS = Object.freeze([
+  "acceptedSelectedResultAuthorityState",
+  "selectedResultPersistenceAuthorityPreflightState",
+  "selectedResultPersistenceBoundaryState",
+  "selectedResultOutputReadinessPreflightState",
+]);
+
+const ENGINE_RUN_READINESS_ALIGNED_FINGERPRINT_FIELDS = Object.freeze([
+  "policyFingerprint",
+  "sourceFingerprint",
+  "sourceInputFingerprint",
+  "sourceVersionFingerprint",
+]);
+
+const SAFE_READBACK_FINGERPRINT_PATTERN = /^safe[-:][0-9A-Za-z_.:-]{4,700}$|^[0-9a-f]{32,128}$/i;
+
 const PROJECT_IES_EXPORT_BOUNDARY_RAW_OR_PRIVATE_KEYS = Object.freeze([
   "projectIes",
   "projectIES",
@@ -698,6 +889,13 @@ export function orderedSelectedProjectCandidateOutputDetailReadbackSummary(field
   );
 }
 
+export function orderedSelectedProjectEngineRunReadinessReadbackSummary(fields) {
+  return Object.fromEntries(
+    PROJECT_BROWSER_SELECTED_PROJECT_ENGINE_RUN_READINESS_READBACK_SUMMARY_FIELD_ORDER
+      .map((key) => [key, fields[key]]),
+  );
+}
+
 function safeToken(value, fallback = null, maxLength = 220) {
   const raw = String(value ?? "").trim();
   if (!raw || PRIVATE_VALUE_PATTERN.test(raw)) return fallback;
@@ -724,6 +922,11 @@ function safeSchemaVersion(value) {
 function safeNonNegativeInteger(value, fallback = 0) {
   const number = Number(value);
   return Number.isInteger(number) && number >= 0 ? number : fallback;
+}
+
+function safeReadbackFingerprint(value) {
+  const token = safeToken(value, null, 760);
+  return token && SAFE_READBACK_FINGERPRINT_PATTERN.test(token) ? token : null;
 }
 
 function hasNonNullBlocker(value) {
@@ -1199,6 +1402,170 @@ export function validateCandidateOutputDetailReadbackSource(summary) {
   for (const key of RUNTIME_IES_FIRST_NARROW_CANDIDATE_OUTPUT_DETAIL_REQUIRED_FALSE_FLAGS) {
     if (summary[key] !== false) {
       return `candidate-output-detail-summary-required-false-flag-invalid-${safeToken(key, "unknown")}`;
+    }
+  }
+  return null;
+}
+
+function findUnsafeSelectedProjectEngineRunReadinessReadbackNested(value, seen) {
+  if (value === null || value === undefined) return null;
+  if (typeof value === "string") {
+    if (PRIVATE_VALUE_PATTERN.test(value)) return "blocked-private-value";
+    if (RAW_IES_TEXT_PATTERN.test(value)) return "blocked-raw-ies-value";
+    if (DATA_BASE64_PATTERN.test(value)) return "blocked-base64-value";
+    if (OUTPUT_FILE_VALUE_PATTERN.test(value)) return "blocked-output-file-value";
+    if (URL_OR_BLOB_VALUE_PATTERN.test(value)) return "blocked-url-or-blob-value";
+    return null;
+  }
+  if (typeof value !== "object") return null;
+  if (seen.has(value)) return "blocked-cyclic-source";
+  seen.add(value);
+
+  if (Array.isArray(value)) {
+    if (value.length > 0) return "blocked-array-body";
+    return null;
+  }
+
+  for (const [key, nested] of Object.entries(value)) {
+    if (ENGINE_RUN_READINESS_RAW_OR_PRIVATE_KEYS.includes(key)
+      && nested !== false
+      && nested !== null
+      && nested !== undefined
+      && nested !== "") {
+      return `blocked-raw-field-${safeToken(key, "unknown")}`;
+    }
+    if (ENGINE_RUN_READINESS_UNSAFE_TRUE_KEYS.includes(key) && nested === true) {
+      return `blocked-unsafe-true-flag-${safeToken(key, "unknown")}`;
+    }
+    const child = findUnsafeSelectedProjectEngineRunReadinessReadbackNested(nested, seen);
+    if (child) return child;
+  }
+  return null;
+}
+
+export function findUnsafeSelectedProjectEngineRunReadinessReadbackField(value) {
+  return findUnsafeSelectedProjectEngineRunReadinessReadbackNested(value, new Set());
+}
+
+export function validateSelectedProjectEngineRunReadinessReadbackSources(
+  selectedResultSummary,
+  runTableFirstNarrowOutputSummary,
+) {
+  if (!isPlainObject(selectedResultSummary)) return "selected-result-summary-missing";
+  if (!isPlainObject(runTableFirstNarrowOutputSummary)) return "runtable-first-narrow-output-summary-missing";
+
+  const selectedResultUnsafe = findUnsafeSelectedProjectEngineRunReadinessReadbackField(selectedResultSummary);
+  if (selectedResultUnsafe) return selectedResultUnsafe;
+  const runTableUnsafe = findUnsafeSelectedProjectEngineRunReadinessReadbackField(
+    runTableFirstNarrowOutputSummary,
+  );
+  if (runTableUnsafe) return runTableUnsafe;
+
+  const selectedResultReadbackStatus = buildSelectedResultPersistedSummaryReadbackStatus({
+    modules: {
+      cs_selector: {
+        downstreamContext: { selectedResultSummary },
+      },
+    },
+  });
+  if (selectedResultReadbackStatus.ready !== true || selectedResultReadbackStatus.failClosed === true) {
+    return safeToken(
+      selectedResultReadbackStatus.blocker,
+      "selected-result-summary-readback-not-ready",
+      760,
+    );
+  }
+  if (selectedResultSummary.schemaId !== PERSISTED_SELECTED_RESULT_SUMMARY_SCHEMA_ID
+    || Number(selectedResultSummary.schemaVersion) !== PERSISTED_SELECTED_RESULT_SUMMARY_SCHEMA_VERSION) {
+    return "selected-result-summary-schema-mismatch";
+  }
+
+  const allowedRunTableFields = new Set(ENGINE_RUN_READINESS_RUNTABLE_ALLOWED_FIELDS);
+  for (const key of Object.keys(runTableFirstNarrowOutputSummary)) {
+    if (!allowedRunTableFields.has(key)) {
+      return `runtable-first-narrow-output-summary-field-not-allow-listed-${safeToken(key, "field")}`;
+    }
+  }
+  if (runTableFirstNarrowOutputSummary.schemaId !== RUNTABLE_FIRST_NARROW_OUTPUT_HANDOFF_SUMMARY_SCHEMA_ID
+    || Number(runTableFirstNarrowOutputSummary.schemaVersion)
+      !== RUNTABLE_FIRST_NARROW_OUTPUT_HANDOFF_SUMMARY_SCHEMA_VERSION) {
+    return "runtable-first-narrow-output-summary-schema-mismatch";
+  }
+  if (runTableFirstNarrowOutputSummary.owner !== "shell"
+    || runTableFirstNarrowOutputSummary.slotOwner !== "shell"
+    || runTableFirstNarrowOutputSummary.moduleId !== "cs_selector") {
+    return "runtable-first-narrow-output-summary-owner-slot-or-module-mismatch";
+  }
+  if (runTableFirstNarrowOutputSummary.state !== "redacted_runtable_first_narrow_output_summary_persisted") {
+    return "runtable-first-narrow-output-summary-state-not-ready";
+  }
+  if (runTableFirstNarrowOutputSummary.summaryOnly !== true
+    || runTableFirstNarrowOutputSummary.diagnosticOnly !== true
+    || runTableFirstNarrowOutputSummary.safeSummaryOnly !== true
+    || runTableFirstNarrowOutputSummary.redacted !== true
+    || runTableFirstNarrowOutputSummary.machineValueSafe !== true) {
+    return "runtable-first-narrow-output-summary-safety-flags-invalid";
+  }
+  if (runTableFirstNarrowOutputSummary.sourceKind !== "persisted-selected-result-summary"
+    || runTableFirstNarrowOutputSummary.futureOutputKind !== "runtable-first-narrow-output") {
+    return "runtable-first-narrow-output-summary-source-or-future-kind-mismatch";
+  }
+  if (runTableFirstNarrowOutputSummary.rowsIncluded !== false
+    || runTableFirstNarrowOutputSummary.rowCount !== 0
+    || runTableFirstNarrowOutputSummary.generated !== false
+    || runTableFirstNarrowOutputSummary.generationEnabled !== false
+    || runTableFirstNarrowOutputSummary.persisted !== false
+    || runTableFirstNarrowOutputSummary.routeAdded !== false
+    || runTableFirstNarrowOutputSummary.postEndpointAdded !== false) {
+    return "runtable-first-narrow-output-summary-generation-or-exposure-flags-invalid";
+  }
+  if (runTableFirstNarrowOutputSummary.runTableFirstNarrowOutputHandoffContractState
+      !== "runtable_first_narrow_output_handoff_contract_ready"
+    || runTableFirstNarrowOutputSummary.runTableFirstNarrowOutputHandoffContractReady !== true) {
+    return "runtable-first-narrow-output-handoff-contract-not-ready";
+  }
+  for (const key of RUNTABLE_FIRST_NARROW_OUTPUT_HANDOFF_REQUIRED_FALSE_FLAGS) {
+    if (runTableFirstNarrowOutputSummary[key] !== false) {
+      return `runtable-first-narrow-output-summary-required-false-flag-invalid-${safeToken(key, "flag")}`;
+    }
+  }
+
+  for (const key of ENGINE_RUN_READINESS_AUTHORITY_STATE_FIELDS) {
+    const selectedValue = safeToken(selectedResultSummary[key], null, 760);
+    const runTableValue = safeToken(runTableFirstNarrowOutputSummary[key], null, 760);
+    if (!selectedValue || !runTableValue) {
+      return `engine-run-readiness-authority-state-missing-${safeToken(key, "state")}`;
+    }
+    if (selectedValue !== runTableValue) {
+      return `engine-run-readiness-authority-state-mismatch-${safeToken(key, "state")}`;
+    }
+  }
+
+  for (const key of ENGINE_RUN_READINESS_ALIGNED_FINGERPRINT_FIELDS) {
+    const selectedValue = safeReadbackFingerprint(selectedResultSummary[key]);
+    const runTableValue = safeReadbackFingerprint(runTableFirstNarrowOutputSummary[key]);
+    if (!selectedValue || !runTableValue) {
+      return `engine-run-readiness-fingerprint-missing-${safeToken(key, "fingerprint")}`;
+    }
+    if (selectedValue !== runTableValue) {
+      return `engine-run-readiness-fingerprint-mismatch-${safeToken(key, "fingerprint")}`;
+    }
+  }
+
+  const expectedPersistedSelectedResultSummaryFingerprint = stableFingerprint(
+    "safe-persisted-selected-result-summary",
+    selectedResultSummary,
+  );
+  if (safeReadbackFingerprint(runTableFirstNarrowOutputSummary.persistedSelectedResultSummaryFingerprint)
+    !== expectedPersistedSelectedResultSummaryFingerprint) {
+    return "engine-run-readiness-persisted-selected-result-summary-fingerprint-mismatch";
+  }
+  for (const key of [
+    "selectedResultPersistedSummarySlotContractFingerprint",
+    "runTableFirstNarrowOutputHandoffContractFingerprint",
+  ]) {
+    if (!safeReadbackFingerprint(runTableFirstNarrowOutputSummary[key])) {
+      return `engine-run-readiness-fingerprint-missing-${safeToken(key, "fingerprint")}`;
     }
   }
   return null;
@@ -2106,6 +2473,218 @@ export function buildProjectBrowserSelectedProjectCandidateOutputDetailReadbackS
   }));
 }
 
+export function buildProjectBrowserSelectedProjectEngineRunReadinessReadbackSummary(
+  selectedProjectEnvelope = null,
+  selectedProjectId = null,
+  sourceAccessBlocker = null,
+) {
+  const selectedProjectToken = selectedProjectId === null ? null : safeToken(selectedProjectId, null);
+  const selectedProjectFound = isPlainObject(selectedProjectEnvelope);
+  const projectId = selectedProjectFound ? safeToken(selectedProjectEnvelope.projectId, null) : null;
+  const envelopeId = selectedProjectFound
+    ? safeToken(selectedProjectEnvelope.envelopeId || selectedProjectEnvelope.projectId, null)
+    : null;
+  const downstreamContext = selectedProjectFound
+    && isPlainObject(selectedProjectEnvelope?.modules?.cs_selector?.downstreamContext)
+    ? selectedProjectEnvelope.modules.cs_selector.downstreamContext
+    : null;
+  const selectedResultSummary = isPlainObject(downstreamContext?.selectedResultSummary)
+    ? downstreamContext.selectedResultSummary
+    : null;
+  const runTableFirstNarrowOutputSummary = isPlainObject(downstreamContext?.runTableFirstNarrowOutputSummary)
+    ? downstreamContext.runTableFirstNarrowOutputSummary
+    : null;
+  const selectedResultSummaryPresent = isPlainObject(selectedResultSummary)
+    && Object.keys(selectedResultSummary).length > 0;
+  const runTableFirstNarrowOutputSummaryPresent = isPlainObject(runTableFirstNarrowOutputSummary)
+    && Object.keys(runTableFirstNarrowOutputSummary).length > 0;
+  const selectedResultReadbackStatus = buildSelectedResultPersistedSummaryReadbackStatus(
+    selectedProjectFound ? selectedProjectEnvelope : {},
+  );
+
+  let state = PROJECT_BROWSER_SELECTED_PROJECT_ENGINE_RUN_READINESS_READBACK_STATES.missing;
+  let readiness = "missing";
+  let ready = false;
+  let failClosed = true;
+  let blocker = null;
+
+  if (selectedProjectId === null) {
+    blocker = "project-browser-selected-project-not-selected";
+  } else if (!selectedProjectToken) {
+    state = PROJECT_BROWSER_SELECTED_PROJECT_ENGINE_RUN_READINESS_READBACK_STATES.blockedFailClosed;
+    readiness = "blocked_fail_closed";
+    blocker = "project-browser-selected-project-id-invalid";
+  } else if (sourceAccessBlocker) {
+    state = PROJECT_BROWSER_SELECTED_PROJECT_ENGINE_RUN_READINESS_READBACK_STATES.blockedFailClosed;
+    readiness = "blocked_fail_closed";
+    blocker = safeToken(
+      sourceAccessBlocker,
+      "project-browser-selected-project-engine-run-readiness-accessor-failed",
+      760,
+    );
+  } else if (!selectedProjectFound) {
+    blocker = "project-browser-selected-project-not-found";
+  } else if (selectedProjectToken !== projectId && selectedProjectToken !== envelopeId) {
+    state = PROJECT_BROWSER_SELECTED_PROJECT_ENGINE_RUN_READINESS_READBACK_STATES.blockedFailClosed;
+    readiness = "blocked_fail_closed";
+    blocker = "project-browser-selected-project-envelope-identity-mismatch";
+  } else if (!selectedResultSummaryPresent) {
+    blocker = "project-browser-selected-project-selected-result-summary-missing";
+  } else if (!runTableFirstNarrowOutputSummaryPresent) {
+    blocker = "project-browser-selected-project-runtable-first-narrow-output-summary-missing";
+  } else {
+    const validationBlocker = validateSelectedProjectEngineRunReadinessReadbackSources(
+      selectedResultSummary,
+      runTableFirstNarrowOutputSummary,
+    );
+    if (validationBlocker) {
+      state = PROJECT_BROWSER_SELECTED_PROJECT_ENGINE_RUN_READINESS_READBACK_STATES.blockedFailClosed;
+      readiness = "blocked_fail_closed";
+      blocker = safeToken(
+        validationBlocker,
+        "project-browser-selected-project-engine-run-readiness-readback-blocked",
+        760,
+      );
+    } else {
+      state = PROJECT_BROWSER_SELECTED_PROJECT_ENGINE_RUN_READINESS_READBACK_STATES.ready;
+      readiness = "ready";
+      ready = true;
+      failClosed = false;
+    }
+  }
+
+  const base = {
+    schemaId: PROJECT_BROWSER_SELECTED_PROJECT_ENGINE_RUN_READINESS_READBACK_SUMMARY_SCHEMA_ID,
+    schemaVersion: PROJECT_BROWSER_SELECTED_PROJECT_ENGINE_RUN_READINESS_READBACK_SUMMARY_SCHEMA_VERSION,
+    owner: "shell",
+    source: PROJECT_BROWSER_SELECTED_PROJECT_ENGINE_RUN_READINESS_READBACK_SOURCE,
+    state,
+    readiness,
+    ready,
+    failClosed,
+    blocker,
+    selectedProjectId: selectedProjectToken,
+    selectedProjectFound,
+    projectId,
+    envelopeId,
+    selectedResultSummaryPresent,
+    runTableFirstNarrowOutputSummaryPresent,
+    selectedResultReadbackState: safeToken(selectedResultReadbackStatus.state, null, 760),
+    selectedResultReadbackReadiness:
+      safeToken(selectedResultReadbackStatus.readiness, "missing", 760) || "missing",
+    selectedResultReadbackReady: selectedResultReadbackStatus.ready === true,
+    selectedResultReadbackFailClosed: selectedResultReadbackStatus.failClosed !== false,
+    selectedResultReadbackBlocker: selectedResultReadbackStatus.blocker
+      ? safeToken(
+        selectedResultReadbackStatus.blocker,
+        "selected-result-summary-readback-blocked",
+        760,
+      )
+      : null,
+    selectedResultSummarySchemaId: selectedResultSummaryPresent
+      ? safeToken(selectedResultSummary.schemaId, null, 760)
+      : null,
+    selectedResultSummarySchemaVersion: selectedResultSummaryPresent
+      ? safeSchemaVersion(selectedResultSummary.schemaVersion)
+      : null,
+    selectedResultSummaryState: selectedResultSummaryPresent
+      ? safeToken(selectedResultSummary.state, null, 760)
+      : null,
+    runTableFirstNarrowOutputSummarySchemaId: runTableFirstNarrowOutputSummaryPresent
+      ? safeToken(runTableFirstNarrowOutputSummary.schemaId, null, 760)
+      : null,
+    runTableFirstNarrowOutputSummarySchemaVersion: runTableFirstNarrowOutputSummaryPresent
+      ? safeSchemaVersion(runTableFirstNarrowOutputSummary.schemaVersion)
+      : null,
+    runTableFirstNarrowOutputSummaryState: runTableFirstNarrowOutputSummaryPresent
+      ? safeToken(runTableFirstNarrowOutputSummary.state, null, 760)
+      : null,
+    runTableFirstNarrowOutputHandoffContractState: ready
+      ? safeToken(runTableFirstNarrowOutputSummary.runTableFirstNarrowOutputHandoffContractState, null, 760)
+      : null,
+    runTableFirstNarrowOutputHandoffContractReady:
+      ready && runTableFirstNarrowOutputSummary.runTableFirstNarrowOutputHandoffContractReady === true,
+    acceptedSelectedResultAuthorityState: ready
+      ? safeToken(selectedResultSummary.acceptedSelectedResultAuthorityState, null, 760)
+      : null,
+    selectedResultPersistenceAuthorityPreflightState: ready
+      ? safeToken(selectedResultSummary.selectedResultPersistenceAuthorityPreflightState, null, 760)
+      : null,
+    selectedResultPersistenceBoundaryState: ready
+      ? safeToken(selectedResultSummary.selectedResultPersistenceBoundaryState, null, 760)
+      : null,
+    selectedResultOutputReadinessPreflightState: ready
+      ? safeToken(selectedResultSummary.selectedResultOutputReadinessPreflightState, null, 760)
+      : null,
+    authorityStatesAligned: ready,
+    fingerprintsAligned: ready,
+    engineRunReadinessReadbackReady: ready,
+    policyFingerprint: ready ? safeReadbackFingerprint(selectedResultSummary.policyFingerprint) : null,
+    sourceFingerprint: ready ? safeReadbackFingerprint(selectedResultSummary.sourceFingerprint) : null,
+    sourceInputFingerprint: ready ? safeReadbackFingerprint(selectedResultSummary.sourceInputFingerprint) : null,
+    sourceVersionFingerprint: ready ? safeReadbackFingerprint(selectedResultSummary.sourceVersionFingerprint) : null,
+    persistedSelectedResultSummaryFingerprint: ready
+      ? safeReadbackFingerprint(runTableFirstNarrowOutputSummary.persistedSelectedResultSummaryFingerprint)
+      : null,
+    selectedResultPersistedSummarySlotContractFingerprint: ready
+      ? safeReadbackFingerprint(
+        runTableFirstNarrowOutputSummary.selectedResultPersistedSummarySlotContractFingerprint,
+      )
+      : null,
+    runTableFirstNarrowOutputHandoffContractFingerprint: ready
+      ? safeReadbackFingerprint(
+        runTableFirstNarrowOutputSummary.runTableFirstNarrowOutputHandoffContractFingerprint,
+      )
+      : null,
+    selectedResultPersistedSummaryReadbackFingerprint: safeReadbackFingerprint(
+      selectedResultReadbackStatus.selectedResultPersistedSummaryReadbackFingerprint,
+    ),
+    selectedResultTargetLocation: SELECTED_RESULT_READBACK_TARGET,
+    runTableFirstNarrowOutputTargetLocation: RUNTABLE_FIRST_NARROW_OUTPUT_READBACK_TARGET,
+    selectedProjectOnly: true,
+    summaryOnly: true,
+    diagnosticOnly: true,
+    readOnly: true,
+    redacted: true,
+    machineValueSafe: true,
+    runTableRowsIncluded: false,
+    runTableRowCount: 0,
+    engineExecutionEnabled: false,
+    engineExecutionAttempted: false,
+    selectedResultCreated: false,
+    runTableGenerated: false,
+    runTableGenerationEnabled: false,
+    runTableGenerationAttempted: false,
+    outputGenerated: false,
+    outputGenerationEnabled: false,
+    routesAdded: false,
+    postEndpointsAdded: false,
+    runtimeDataMutated: false,
+    boardDataMutated: false,
+    rawEnginePayloadReturned: false,
+    rawEngineResultReturned: false,
+    rawSelectedPayloadReturned: false,
+    runTableRowsReturned: false,
+    rawRunTableRowsReturned: false,
+    rawCandidateOutputReturned: false,
+    rawIesReturned: false,
+    rawPhotometryReturned: false,
+    candelaArraysReturned: false,
+    governancePayloadReturned: false,
+    base64ArtifactsReturned: false,
+    filenamesReturned: false,
+    privatePathsReturned: false,
+  };
+
+  return Object.freeze(orderedSelectedProjectEngineRunReadinessReadbackSummary({
+    ...base,
+    projectBrowserSelectedProjectEngineRunReadinessReadbackSummaryFingerprint: stableFingerprint(
+      "safe-project-browser-selected-project-engine-run-readiness-readback-summary",
+      base,
+    ),
+  }));
+}
+
 export function buildProjectBrowserSelectedProjectSelectedResultPersistedSummaryReadbackStatus(projects = [], selectedProjectId = null) {
   const projectSummaries = Array.isArray(projects) ? projects : [];
   const selectedProjectToken = selectedProjectId === null ? null : safeToken(selectedProjectId, null);
@@ -2395,12 +2974,15 @@ export function createProjectBrowserService({ savedProjectStore, projectService,
     let selectedProjectEnvelope = null;
     let selectedProjectManifestAccessBlocker = null;
     let selectedProjectDetailAccessBlocker = null;
+    let selectedProjectEngineRunReadinessAccessBlocker = null;
     if (state.selectedProjectId !== null) {
       if (typeof savedProjectStore.getProjectEnvelope !== "function") {
         selectedProjectManifestAccessBlocker =
           "project-browser-selected-project-candidate-output-manifest-accessor-unavailable";
         selectedProjectDetailAccessBlocker =
           "project-browser-selected-project-candidate-output-detail-accessor-unavailable";
+        selectedProjectEngineRunReadinessAccessBlocker =
+          "project-browser-selected-project-engine-run-readiness-accessor-unavailable";
       } else {
         try {
           selectedProjectEnvelope = savedProjectStore.getProjectEnvelope(state.selectedProjectId);
@@ -2409,6 +2991,8 @@ export function createProjectBrowserService({ savedProjectStore, projectService,
             "project-browser-selected-project-candidate-output-manifest-accessor-failed";
           selectedProjectDetailAccessBlocker =
             "project-browser-selected-project-candidate-output-detail-accessor-failed";
+          selectedProjectEngineRunReadinessAccessBlocker =
+            "project-browser-selected-project-engine-run-readiness-accessor-failed";
         }
       }
     }
@@ -2423,6 +3007,12 @@ export function createProjectBrowserService({ savedProjectStore, projectService,
         selectedProjectEnvelope,
         state.selectedProjectId,
         selectedProjectDetailAccessBlocker,
+      );
+    const selectedProjectEngineRunReadinessReadbackSummary =
+      buildProjectBrowserSelectedProjectEngineRunReadinessReadbackSummary(
+        selectedProjectEnvelope,
+        state.selectedProjectId,
+        selectedProjectEngineRunReadinessAccessBlocker,
       );
     return {
       owner: state.owner,
@@ -2463,6 +3053,7 @@ export function createProjectBrowserService({ savedProjectStore, projectService,
       ),
       selectedProjectCandidateOutputManifestReadbackSummary,
       selectedProjectCandidateOutputDetailReadbackSummary,
+      selectedProjectEngineRunReadinessReadbackSummary,
       filters: { ...state.filters },
       projects: clone(storeSnapshot.projects),
       projectCount: storeSnapshot.count,
