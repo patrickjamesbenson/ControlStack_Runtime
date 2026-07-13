@@ -32,6 +32,9 @@ import {
   prepareShellProjectBrowserSelectedProjectExportsWorkflow,
   SHELL_PROJECT_BROWSER_FIRST_PROJECT_IES_EXPORT_DOWNLOAD_OUTCOME_STATES,
 } from "./projectBrowserSelectedProjectExportsWorkflow.js";
+import {
+  buildShellProjectBrowserSelectedProjectEngineRunPreview,
+} from "./projectBrowserSelectedProjectEngineRunPreview.js";
 
 const MODULE_ROUTE_ALIASES = Object.freeze({
   egres: "emergence",
@@ -148,6 +151,7 @@ let projectBrowserSelectedProjectExportsTitle = null;
 let projectBrowserSelectedProjectExportsItems = null;
 let projectBrowserSelectedProjectExportManifestPreview = null;
 let projectBrowserSelectedProjectExportDetailPreview = null;
+let projectBrowserSelectedProjectEngineRunPreview = null;
 let projectBrowserSelectedProjectExportsWorkflow = null;
 const projectBrowserSelectedProjectExportControls = new Map();
 const projectBrowserSelectedProjectExportOutcomeStates = new Map();
@@ -962,7 +966,21 @@ function ensureProjectBrowserPanel() {
     exportDetailPreviewSection,
   );
 
-  projectBrowserPanel.append(kicker, heading, note, projectBrowserSaveButton, projectBrowserRestoreButton, projectBrowserHandoffButton, projectBrowserSummary, projectBrowserSelectedProjectExportsPanel, projectBrowserList);
+  const engineRunPreviewSection = document.createElement("section");
+  engineRunPreviewSection.className = "cs-shell__project-browser-engine-run-preview";
+  engineRunPreviewSection.setAttribute("aria-label", "Engine run readiness");
+  const engineRunPreviewHeading = document.createElement("h4");
+  engineRunPreviewHeading.textContent = "Engine run readiness";
+  projectBrowserSelectedProjectEngineRunPreview = document.createElement("div");
+  projectBrowserSelectedProjectEngineRunPreview.className =
+    "cs-shell__project-browser-engine-run-preview-body";
+  projectBrowserSelectedProjectEngineRunPreview.setAttribute("aria-live", "polite");
+  engineRunPreviewSection.append(
+    engineRunPreviewHeading,
+    projectBrowserSelectedProjectEngineRunPreview,
+  );
+
+  projectBrowserPanel.append(kicker, heading, note, projectBrowserSaveButton, projectBrowserRestoreButton, projectBrowserHandoffButton, projectBrowserSummary, projectBrowserSelectedProjectExportsPanel, engineRunPreviewSection, projectBrowserList);
   anchor.insertAdjacentElement("afterend", projectBrowserPanel);
 }
 
@@ -1176,6 +1194,71 @@ function renderProjectSelection({ services, context }) {
   });
 }
 
+function appendProjectBrowserSelectedProjectEngineRunPreviewField(list, label, value) {
+  const term = document.createElement("dt");
+  term.textContent = label;
+  const detail = document.createElement("dd");
+  detail.textContent = String(value);
+  list.append(term, detail);
+}
+
+function renderProjectBrowserSelectedProjectEngineRunPreview(preview) {
+  if (!projectBrowserSelectedProjectEngineRunPreview) return;
+  clearElement(projectBrowserSelectedProjectEngineRunPreview);
+
+  const status = document.createElement("p");
+  status.className = "cs-shell__project-browser-engine-run-preview-status";
+  status.dataset.shellProjectEngineRunPreviewState = preview?.state || "missing";
+  status.textContent = preview?.ready === true
+    ? "Redacted selected-project engine-run readiness summary."
+    : preview?.readiness === "missing"
+      ? "No selected-project engine-run readiness preview is available."
+      : "Engine-run readiness preview is blocked fail-closed.";
+  projectBrowserSelectedProjectEngineRunPreview.appendChild(status);
+
+  if (preview?.ready === true) {
+    const fields = document.createElement("dl");
+    fields.className = "cs-shell__project-browser-engine-run-preview-fields";
+    appendProjectBrowserSelectedProjectEngineRunPreviewField(
+      fields,
+      "Selected result available",
+      preview.selectedResultAvailable,
+    );
+    appendProjectBrowserSelectedProjectEngineRunPreviewField(
+      fields,
+      "Selected result accepted",
+      preview.selectedResultAccepted,
+    );
+    appendProjectBrowserSelectedProjectEngineRunPreviewField(
+      fields,
+      "Engine verified",
+      preview.engineVerified,
+    );
+    appendProjectBrowserSelectedProjectEngineRunPreviewField(
+      fields,
+      "Runs",
+      preview.runCount,
+    );
+    appendProjectBrowserSelectedProjectEngineRunPreviewField(
+      fields,
+      "Accepted runs",
+      preview.acceptedRunCount,
+    );
+    appendProjectBrowserSelectedProjectEngineRunPreviewField(
+      fields,
+      "Engine-verified runs",
+      preview.engineVerifiedRunCount,
+    );
+    projectBrowserSelectedProjectEngineRunPreview.appendChild(fields);
+  }
+
+  const note = document.createElement("p");
+  note.className = "cs-shell__project-browser-engine-run-preview-note";
+  note.textContent =
+    "Preview only, redacted, selected-project-only, diagnostic, and non-interactive. No Engine action is available from this surface.";
+  projectBrowserSelectedProjectEngineRunPreview.appendChild(note);
+}
+
 function renderProjectBrowser({ context }) {
   ensureProjectBrowserPanel();
   if (!projectBrowserSummary || !projectBrowserList) return;
@@ -1185,6 +1268,12 @@ function renderProjectBrowser({ context }) {
   const hydrate = browser.hydrate || {};
   const handoffShare = browser.handoffShare || {};
   const selected = selectedProjectSummary(browser);
+  renderProjectBrowserSelectedProjectEngineRunPreview(
+    buildShellProjectBrowserSelectedProjectEngineRunPreview(
+      browser.selectedProjectEngineRunReadinessReadbackSummary,
+      browser.selectedProjectId,
+    ),
+  );
   appendDefinitionListRows(projectBrowserSummary, [
     ["current", browser.currentProject?.title || "No project loaded"],
     ["saved projects", browser.savedCount || 0],
