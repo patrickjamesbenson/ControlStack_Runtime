@@ -9,6 +9,10 @@ export const SHELL_PROJECT_BROWSER_FIRST_SELECTED_PROJECT_EXPORTS_WORKFLOW_SURFA
   "SHELL-PROJECT-BROWSER-FIRST-SELECTED-PROJECT-EXPORTS-WORKFLOW-SURFACE-1";
 export const SHELL_PROJECT_BROWSER_FIRST_SELECTED_PROJECT_EXPORTS_WORKFLOW_OUTPUT_COLLECTION_ROUTING_CONTRACT_ID =
   "SHELL-PROJECT-BROWSER-FIRST-SELECTED-PROJECT-EXPORTS-WORKFLOW-OUTPUT-COLLECTION-ROUTING-1";
+export const SHELL_PROJECT_BROWSER_FIRST_SELECTED_PROJECT_EXPORTS_WORKFLOW_MANIFEST_PREVIEW_CONTRACT_LOCK_ID =
+  "SHELL-PROJECT-BROWSER-FIRST-SELECTED-PROJECT-EXPORTS-WORKFLOW-MANIFEST-PREVIEW-CONTRACT-LOCK-1";
+export const SHELL_PROJECT_BROWSER_FIRST_SELECTED_PROJECT_EXPORT_MANIFEST_PREVIEW_SURFACE_CONTRACT_ID =
+  "SHELL-PROJECT-BROWSER-FIRST-SELECTED-PROJECT-EXPORT-MANIFEST-PREVIEW-SURFACE-1";
 export const SHELL_PROJECT_BROWSER_SELECTED_PROJECT_EXPORTS_WORKFLOW_SCHEMA_ID =
   "controlstack.runtime.shell.project-browser.selected-project-exports-workflow.v1";
 export const SHELL_PROJECT_BROWSER_SELECTED_PROJECT_EXPORTS_WORKFLOW_SCHEMA_VERSION = 1;
@@ -20,6 +24,69 @@ export const SHELL_PROJECT_BROWSER_FIRST_PROJECT_IES_EXPORT_DOWNLOAD_OUTCOME_STA
 export const SHELL_PROJECT_BROWSER_FIRST_PROJECT_IES_EXPORT_DOWNLOAD_OUTCOME_STATE_SCHEMA_ID =
   "controlstack.runtime.shell.project-browser.first-project-ies-export-download-outcome-state.v1";
 export const SHELL_PROJECT_BROWSER_FIRST_PROJECT_IES_EXPORT_DOWNLOAD_OUTCOME_STATE_SCHEMA_VERSION = 1;
+export const SHELL_PROJECT_BROWSER_SELECTED_PROJECT_EXPORT_MANIFEST_PREVIEW_SCHEMA_ID =
+  "controlstack.runtime.shell.project-browser.selected-project-export-manifest-preview.v1";
+export const SHELL_PROJECT_BROWSER_SELECTED_PROJECT_EXPORT_MANIFEST_PREVIEW_SCHEMA_VERSION = 1;
+
+export const SHELL_PROJECT_BROWSER_SELECTED_PROJECT_EXPORT_MANIFEST_PREVIEW_STATES = Object.freeze({
+  ready: "shell_project_browser_selected_project_export_manifest_preview_ready",
+  missing: "shell_project_browser_selected_project_export_manifest_preview_missing",
+  blockedFailClosed:
+    "shell_project_browser_selected_project_export_manifest_preview_blocked_fail_closed",
+});
+
+export const SHELL_PROJECT_BROWSER_SELECTED_PROJECT_EXPORT_MANIFEST_PREVIEW_FIELD_ORDER = Object.freeze([
+  "schemaId",
+  "schemaVersion",
+  "contractId",
+  "owner",
+  "surfaceId",
+  "label",
+  "state",
+  "readiness",
+  "ready",
+  "failClosed",
+  "blocker",
+  "selectedProjectId",
+  "selectedProjectFound",
+  "selectedProjectOnly",
+  "sourceSummaryPresent",
+  "manifestSummaryPresent",
+  "manifestBoundaryReady",
+  "runTableRowCount",
+  "candidateOutputRecordCount",
+  "manifestRecordCount",
+  "manifestEntryCount",
+  "firstCandidateOutputKind",
+  "previewOnly",
+  "diagnosticOnly",
+  "readOnly",
+  "redacted",
+  "machineValueSafe",
+  "nonDownloadable",
+  "manifestFileExists",
+  "manifestDownloadable",
+  "manifestFileOutputEnabled",
+  "manifestFileOutputWritten",
+  "downloadEnabled",
+  "downloadAvailable",
+  "rawManifestExposed",
+  "candidateOutputDetailsExposed",
+  "artifactListExposed",
+  "rawIesExposed",
+  "candelaExposed",
+  "photometryExposed",
+  "governanceExposed",
+  "mutationLogExposed",
+  "privatePathExposed",
+  "base64Exposed",
+  "filenameExposed",
+  "routesAdded",
+  "postEndpointsAdded",
+  "persistenceMutated",
+  "runtimeDataMutated",
+  "filesystemWriteAttempted",
+]);
 
 export const SHELL_PROJECT_BROWSER_FIRST_PROJECT_IES_EXPORT_DOWNLOAD_OUTCOME_STATES = Object.freeze({
   idle: "shell_project_browser_project_ies_export_download_idle",
@@ -105,12 +172,40 @@ export const SHELL_PROJECT_BROWSER_PROJECT_IES_EXPORT_ITEM_FIELD_ORDER = Object.
 ]);
 
 const PRIVATE_PREPARED_ACTIONS = new WeakMap();
+const PRIVATE_MANIFEST_PREVIEWS = new WeakMap();
 const SAFE_ID_PATTERN = /^[0-9A-Za-z_.:-]{1,760}$/;
 const PRIVATE_VALUE_PATTERN = /(?:[A-Za-z]:[\\/]|\\\\|[\\/]Users[\\/]|[\\/]home[\\/]|[\\/]mnt[\\/]|file:|data:[^\s]*base64|\bbase64\s*[,=:])/i;
 const PROJECT_IES_EXPORT_DOWNLOAD_FILENAME_PATTERN =
   /^controlstack-project-ies-[1-9][0-9]*mm-[0-9a-f]{12}\.ies$/;
 const PROJECT_IES_EXPORT_DOWNLOAD_MEDIA_TYPE = "application/octet-stream";
 const PROJECT_IES_EXPORT_DOWNLOAD_BLOCKER_PATTERN = /^[0-9A-Za-z_.:-]{1,760}$/;
+const PROJECT_BROWSER_CANDIDATE_OUTPUT_MANIFEST_READBACK_SUMMARY_SCHEMA_ID =
+  "controlstack.runtime.project-browser.selected-project-candidate-output-manifest-readback-summary.v1";
+const PROJECT_BROWSER_CANDIDATE_OUTPUT_MANIFEST_READBACK_SUMMARY_SCHEMA_VERSION = 1;
+const REQUIRED_FALSE_MANIFEST_PREVIEW_SOURCE_FLAGS = Object.freeze([
+  "manifestFileExists",
+  "manifestDownloadable",
+  "manifestFileOutputEnabled",
+  "manifestFileOutputWritten",
+  "downloadEnabled",
+  "downloadAvailable",
+  "sourceRowsReturned",
+  "candidateOutputDetailsReturned",
+  "artifactListReturned",
+  "rawManifestReturned",
+  "rawCandidateOutputReturned",
+  "rawIesReturned",
+  "rawPhotometryReturned",
+  "candelaArraysReturned",
+  "governancePayloadReturned",
+  "base64ArtifactsReturned",
+  "filenamesReturned",
+  "privatePathsReturned",
+  "routesAdded",
+  "postEndpointsAdded",
+  "runtimeDataMutated",
+  "boardDataMutated",
+]);
 
 function safeId(value) {
   if (typeof value !== "string") return null;
@@ -123,6 +218,129 @@ function safeDisplayText(value, fallback) {
   if (typeof value !== "string") return fallback;
   const text = value.replace(/[\u0000-\u001f\u007f]/g, " ").trim().slice(0, 200);
   return text && !PRIVATE_VALUE_PATTERN.test(text) ? text : fallback;
+}
+
+function isPlainObject(value) {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+function safeNonNegativeInteger(value) {
+  return Number.isSafeInteger(value) && value >= 0 ? value : 0;
+}
+
+function manifestPreviewSourceIsSafe(summary) {
+  return summary.schemaId === PROJECT_BROWSER_CANDIDATE_OUTPUT_MANIFEST_READBACK_SUMMARY_SCHEMA_ID
+    && summary.schemaVersion === PROJECT_BROWSER_CANDIDATE_OUTPUT_MANIFEST_READBACK_SUMMARY_SCHEMA_VERSION
+    && summary.selectedProjectOnly === true
+    && summary.summaryOnly === true
+    && summary.diagnosticOnly === true
+    && summary.readOnly === true
+    && summary.redacted === true
+    && summary.machineValueSafe === true
+    && REQUIRED_FALSE_MANIFEST_PREVIEW_SOURCE_FLAGS.every((key) => summary[key] === false);
+}
+
+export function buildShellProjectBrowserSelectedProjectExportManifestPreview(
+  sourceSummary = null,
+  expectedSelectedProjectId = null,
+) {
+  const sourceSummaryPresent = isPlainObject(sourceSummary);
+  const sourceSelectedProjectId = sourceSummaryPresent ? safeId(sourceSummary.selectedProjectId) : null;
+  const expectedSelection = safeId(expectedSelectedProjectId);
+  const selectedProjectMatches = !expectedSelection || sourceSelectedProjectId === expectedSelection;
+  const sourceSafe = sourceSummaryPresent
+    && selectedProjectMatches
+    && manifestPreviewSourceIsSafe(sourceSummary);
+  const sourceReady = sourceSafe
+    && sourceSummary.ready === true
+    && sourceSummary.failClosed === false
+    && sourceSummary.readiness === "ready"
+    && sourceSummary.manifestSummaryPresent === true
+    && sourceSummary.manifestBoundaryReady === true;
+  const sourceMissing = sourceSafe && sourceSummary.readiness === "missing";
+  const state = sourceReady
+    ? SHELL_PROJECT_BROWSER_SELECTED_PROJECT_EXPORT_MANIFEST_PREVIEW_STATES.ready
+    : !sourceSummaryPresent || sourceMissing
+      ? SHELL_PROJECT_BROWSER_SELECTED_PROJECT_EXPORT_MANIFEST_PREVIEW_STATES.missing
+      : SHELL_PROJECT_BROWSER_SELECTED_PROJECT_EXPORT_MANIFEST_PREVIEW_STATES.blockedFailClosed;
+  const readiness = sourceReady
+    ? "ready"
+    : state === SHELL_PROJECT_BROWSER_SELECTED_PROJECT_EXPORT_MANIFEST_PREVIEW_STATES.missing
+      ? "missing"
+      : "blocked_fail_closed";
+  const blocker = sourceReady
+    ? null
+    : !sourceSummaryPresent
+      ? "selected-project-export-manifest-preview-summary-missing"
+      : !selectedProjectMatches
+        ? "selected-project-export-manifest-preview-selection-mismatch"
+        : sourceSafe
+          ? safeId(sourceSummary.blocker)
+            || "selected-project-export-manifest-preview-not-ready"
+          : "selected-project-export-manifest-preview-source-blocked";
+  const selectedProjectId = sourceSelectedProjectId;
+  const firstCandidateOutputKind = sourceReady
+    ? safeId(sourceSummary.firstCandidateOutputKind)
+    : null;
+
+  return Object.freeze(orderedObject(
+    SHELL_PROJECT_BROWSER_SELECTED_PROJECT_EXPORT_MANIFEST_PREVIEW_FIELD_ORDER,
+    {
+      schemaId: SHELL_PROJECT_BROWSER_SELECTED_PROJECT_EXPORT_MANIFEST_PREVIEW_SCHEMA_ID,
+      schemaVersion: SHELL_PROJECT_BROWSER_SELECTED_PROJECT_EXPORT_MANIFEST_PREVIEW_SCHEMA_VERSION,
+      contractId:
+        SHELL_PROJECT_BROWSER_FIRST_SELECTED_PROJECT_EXPORT_MANIFEST_PREVIEW_SURFACE_CONTRACT_ID,
+      owner: "shell",
+      surfaceId: "selected-project-export-manifest-preview",
+      label: "Export contents",
+      state,
+      readiness,
+      ready: sourceReady,
+      failClosed: !sourceReady,
+      blocker,
+      selectedProjectId,
+      selectedProjectFound: sourceSummaryPresent && sourceSummary.selectedProjectFound === true,
+      selectedProjectOnly: true,
+      sourceSummaryPresent,
+      manifestSummaryPresent: sourceReady,
+      manifestBoundaryReady: sourceReady,
+      runTableRowCount: sourceReady ? safeNonNegativeInteger(sourceSummary.runTableRowCount) : 0,
+      candidateOutputRecordCount: sourceReady
+        ? safeNonNegativeInteger(sourceSummary.candidateOutputRecordCount)
+        : 0,
+      manifestRecordCount: sourceReady ? safeNonNegativeInteger(sourceSummary.manifestRecordCount) : 0,
+      manifestEntryCount: sourceReady ? safeNonNegativeInteger(sourceSummary.manifestEntryCount) : 0,
+      firstCandidateOutputKind,
+      previewOnly: true,
+      diagnosticOnly: true,
+      readOnly: true,
+      redacted: true,
+      machineValueSafe: true,
+      nonDownloadable: true,
+      manifestFileExists: false,
+      manifestDownloadable: false,
+      manifestFileOutputEnabled: false,
+      manifestFileOutputWritten: false,
+      downloadEnabled: false,
+      downloadAvailable: false,
+      rawManifestExposed: false,
+      candidateOutputDetailsExposed: false,
+      artifactListExposed: false,
+      rawIesExposed: false,
+      candelaExposed: false,
+      photometryExposed: false,
+      governanceExposed: false,
+      mutationLogExposed: false,
+      privatePathExposed: false,
+      base64Exposed: false,
+      filenameExposed: false,
+      routesAdded: false,
+      postEndpointsAdded: false,
+      persistenceMutated: false,
+      runtimeDataMutated: false,
+      filesystemWriteAttempted: false,
+    },
+  ));
 }
 
 function selectedProjectSummary(context) {
@@ -325,7 +543,15 @@ function buildWorkflowDescriptor({ context, ready, blocker }) {
       filesystemWriteAttempted: false,
     },
   );
-  return Object.freeze(descriptor);
+  const frozenDescriptor = Object.freeze(descriptor);
+  PRIVATE_MANIFEST_PREVIEWS.set(
+    frozenDescriptor,
+    buildShellProjectBrowserSelectedProjectExportManifestPreview(
+      context?.projectBrowser?.selectedProjectCandidateOutputManifestReadbackSummary,
+      selected.selectedProjectId,
+    ),
+  );
+  return frozenDescriptor;
 }
 
 export async function prepareShellProjectBrowserSelectedProjectExportsWorkflow({
@@ -390,4 +616,8 @@ export function getShellProjectBrowserSelectedProjectExportAction(
 ) {
   if (typeof exportId !== "string") return null;
   return PRIVATE_PREPARED_ACTIONS.get(workflowDescriptor)?.get(exportId) || null;
+}
+
+export function getShellProjectBrowserSelectedProjectExportManifestPreview(workflowDescriptor) {
+  return PRIVATE_MANIFEST_PREVIEWS.get(workflowDescriptor) || null;
 }

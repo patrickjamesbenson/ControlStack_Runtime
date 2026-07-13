@@ -27,6 +27,7 @@ import {
 import {
   createShellProjectBrowserProjectIesExportDownloadOutcomeState,
   getShellProjectBrowserSelectedProjectExportAction,
+  getShellProjectBrowserSelectedProjectExportManifestPreview,
   prepareShellProjectBrowserSelectedProjectExportsWorkflow,
   SHELL_PROJECT_BROWSER_FIRST_PROJECT_IES_EXPORT_DOWNLOAD_OUTCOME_STATES,
 } from "./projectBrowserSelectedProjectExportsWorkflow.js";
@@ -144,6 +145,7 @@ let projectBrowserHandoffButton = null;
 let projectBrowserSelectedProjectExportsPanel = null;
 let projectBrowserSelectedProjectExportsTitle = null;
 let projectBrowserSelectedProjectExportsItems = null;
+let projectBrowserSelectedProjectExportManifestPreview = null;
 let projectBrowserSelectedProjectExportsWorkflow = null;
 const projectBrowserSelectedProjectExportControls = new Map();
 const projectBrowserSelectedProjectExportOutcomeStates = new Map();
@@ -921,10 +923,26 @@ function ensureProjectBrowserPanel() {
   projectBrowserSelectedProjectExportsItems = document.createElement("div");
   projectBrowserSelectedProjectExportsItems.className = "cs-shell__project-browser-export-items";
   projectBrowserSelectedProjectExportsItems.setAttribute("aria-live", "polite");
+
+  const exportManifestPreviewSection = document.createElement("section");
+  exportManifestPreviewSection.className = "cs-shell__project-browser-export-manifest-preview";
+  exportManifestPreviewSection.setAttribute("aria-label", "Export contents");
+  const exportManifestPreviewHeading = document.createElement("h5");
+  exportManifestPreviewHeading.textContent = "Export contents";
+  projectBrowserSelectedProjectExportManifestPreview = document.createElement("div");
+  projectBrowserSelectedProjectExportManifestPreview.className =
+    "cs-shell__project-browser-export-manifest-preview-body";
+  projectBrowserSelectedProjectExportManifestPreview.setAttribute("aria-live", "polite");
+  exportManifestPreviewSection.append(
+    exportManifestPreviewHeading,
+    projectBrowserSelectedProjectExportManifestPreview,
+  );
+
   projectBrowserSelectedProjectExportsPanel.append(
     exportsHeading,
     projectBrowserSelectedProjectExportsTitle,
     projectBrowserSelectedProjectExportsItems,
+    exportManifestPreviewSection,
   );
 
   projectBrowserPanel.append(kicker, heading, note, projectBrowserSaveButton, projectBrowserRestoreButton, projectBrowserHandoffButton, projectBrowserSummary, projectBrowserSelectedProjectExportsPanel, projectBrowserList);
@@ -1320,15 +1338,79 @@ function renderProjectBrowserSelectedProjectExportItems(workflowDescriptor) {
   }
 }
 
+function appendProjectBrowserSelectedProjectExportManifestPreviewField(list, label, value) {
+  const term = document.createElement("dt");
+  term.textContent = label;
+  const detail = document.createElement("dd");
+  detail.textContent = String(value);
+  list.append(term, detail);
+}
+
+function renderProjectBrowserSelectedProjectExportManifestPreview(preview) {
+  if (!projectBrowserSelectedProjectExportManifestPreview) return;
+  clearElement(projectBrowserSelectedProjectExportManifestPreview);
+
+  const status = document.createElement("p");
+  status.className = "cs-shell__project-browser-export-manifest-preview-status";
+  status.dataset.shellExportManifestPreviewState = preview?.state || "missing";
+  status.textContent = preview?.ready === true
+    ? "Redacted selected-project export contents summary."
+    : preview?.readiness === "missing"
+      ? "No selected-project export contents preview is available."
+      : "Export contents preview is blocked fail-closed.";
+  projectBrowserSelectedProjectExportManifestPreview.appendChild(status);
+
+  if (preview?.ready === true) {
+    const fields = document.createElement("dl");
+    fields.className = "cs-shell__project-browser-export-manifest-preview-fields";
+    appendProjectBrowserSelectedProjectExportManifestPreviewField(
+      fields,
+      "Run-table rows",
+      preview.runTableRowCount,
+    );
+    appendProjectBrowserSelectedProjectExportManifestPreviewField(
+      fields,
+      "Candidate outputs",
+      preview.candidateOutputRecordCount,
+    );
+    appendProjectBrowserSelectedProjectExportManifestPreviewField(
+      fields,
+      "Manifest records",
+      preview.manifestRecordCount,
+    );
+    appendProjectBrowserSelectedProjectExportManifestPreviewField(
+      fields,
+      "Manifest entries",
+      preview.manifestEntryCount,
+    );
+    appendProjectBrowserSelectedProjectExportManifestPreviewField(
+      fields,
+      "First output kind",
+      preview.firstCandidateOutputKind || "Not reported",
+    );
+    projectBrowserSelectedProjectExportManifestPreview.appendChild(fields);
+  }
+
+  const note = document.createElement("p");
+  note.className = "cs-shell__project-browser-export-manifest-preview-note";
+  note.textContent =
+    "Preview only, redacted, selected-project-only, diagnostic, and non-downloadable. No manifest file is created or exposed.";
+  projectBrowserSelectedProjectExportManifestPreview.appendChild(note);
+}
+
 function renderProjectBrowserSelectedProjectExportsWorkflow(workflowDescriptor) {
   if (!projectBrowserSelectedProjectExportsPanel
     || !projectBrowserSelectedProjectExportsTitle
-    || !projectBrowserSelectedProjectExportsItems) return;
+    || !projectBrowserSelectedProjectExportsItems
+    || !projectBrowserSelectedProjectExportManifestPreview) return;
 
   setProjectBrowserSelectedProjectExportsWorkflowDescriptor(workflowDescriptor);
   projectBrowserSelectedProjectExportsTitle.textContent =
     workflowDescriptor?.selectedProjectTitle || "Select a saved project";
   renderProjectBrowserSelectedProjectExportItems(workflowDescriptor);
+  renderProjectBrowserSelectedProjectExportManifestPreview(
+    getShellProjectBrowserSelectedProjectExportManifestPreview(workflowDescriptor),
+  );
 }
 
 async function refreshProjectBrowserSelectedProjectExportsWorkflow({ services, context }) {
@@ -1344,6 +1426,13 @@ async function refreshProjectBrowserSelectedProjectExportsWorkflow({ services, c
     checking.className = "cs-shell__project-browser-export-status";
     checking.textContent = "Checking project IES export readiness...";
     projectBrowserSelectedProjectExportsItems.appendChild(checking);
+  }
+  if (projectBrowserSelectedProjectExportManifestPreview) {
+    clearElement(projectBrowserSelectedProjectExportManifestPreview);
+    const checking = document.createElement("p");
+    checking.className = "cs-shell__project-browser-export-manifest-preview-status";
+    checking.textContent = "Checking selected-project export contents...";
+    projectBrowserSelectedProjectExportManifestPreview.appendChild(checking);
   }
 
   const workflowDescriptor =
@@ -1996,6 +2085,7 @@ function bootWorkspaceShell() {
         blocked.textContent = "Project IES is not ready for the selected project.";
         projectBrowserSelectedProjectExportsItems.appendChild(blocked);
       }
+      renderProjectBrowserSelectedProjectExportManifestPreview(null);
     });
     renderIdentityVisibilityControls({ services, context });
     renderShellTopbarContext(context);
