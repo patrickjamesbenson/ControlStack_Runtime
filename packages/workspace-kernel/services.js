@@ -35,7 +35,15 @@ function createEventBus() {
   };
 }
 
-export function createShellServices() {
+export function createShellServices({
+  invokeSelectedProjectReadonlyEngine: injectedSelectedProjectReadonlyEngineInvoker = null,
+} = {}) {
+  const invokeSelectedProjectReadonlyEngine =
+    typeof injectedSelectedProjectReadonlyEngineInvoker === "function"
+      ? injectedSelectedProjectReadonlyEngineInvoker
+      : async function unavailableSelectedProjectReadonlyEngineInvoker() {
+        return null;
+      };
   const materialiseProjectIesDownload =
     createRuntimeIesFirstNarrowProjectIesExportDownloadMaterialiserCapability();
   const eventBus = createEventBus();
@@ -55,6 +63,7 @@ export function createShellServices() {
 
   return {
     materialiseProjectIesDownload,
+    invokeSelectedProjectReadonlyEngine,
     adminTools: adminToolRegistry,
     auth: authAdapter,
     identity: identityAdapter,

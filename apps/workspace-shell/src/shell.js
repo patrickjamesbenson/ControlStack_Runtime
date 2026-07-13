@@ -38,6 +38,9 @@ import {
 import {
   buildShellProjectBrowserSelectedProjectEngineActionLane,
 } from "./projectBrowserSelectedProjectEngineActionLane.js";
+import {
+  createShellProjectBrowserSelectedProjectReadonlyEngineInvokeMount,
+} from "./projectBrowserSelectedProjectEngineReadonlyInvokeMount.js";
 
 const MODULE_ROUTE_ALIASES = Object.freeze({
   egres: "emergence",
@@ -155,6 +158,8 @@ let projectBrowserSelectedProjectExportsItems = null;
 let projectBrowserSelectedProjectExportManifestPreview = null;
 let projectBrowserSelectedProjectExportDetailPreview = null;
 let projectBrowserSelectedProjectEngineRunPreview = null;
+let projectBrowserSelectedProjectReadonlyEngineInvokeMountStatus = null;
+let projectBrowserSelectedProjectReadonlyEngineInvokeMountHost = null;
 let projectBrowserSelectedProjectEngineActionLane = null;
 let projectBrowserSelectedProjectExportsWorkflow = null;
 const projectBrowserSelectedProjectExportControls = new Map();
@@ -970,6 +975,27 @@ function ensureProjectBrowserPanel() {
     exportDetailPreviewSection,
   );
 
+  const readonlyEngineInvokeMountSection = document.createElement("section");
+  readonlyEngineInvokeMountSection.className =
+    "cs-shell__project-browser-readonly-engine-invoke-mount";
+  readonlyEngineInvokeMountSection.setAttribute(
+    "aria-label",
+    "Readonly Engine mount status",
+  );
+  const readonlyEngineInvokeMountHeading = document.createElement("h4");
+  readonlyEngineInvokeMountHeading.textContent = "Readonly Engine mount";
+  projectBrowserSelectedProjectReadonlyEngineInvokeMountHost = document.createElement("div");
+  projectBrowserSelectedProjectReadonlyEngineInvokeMountHost.className =
+    "cs-shell__project-browser-readonly-engine-invoke-mount-body";
+  projectBrowserSelectedProjectReadonlyEngineInvokeMountHost.setAttribute(
+    "aria-live",
+    "polite",
+  );
+  readonlyEngineInvokeMountSection.append(
+    readonlyEngineInvokeMountHeading,
+    projectBrowserSelectedProjectReadonlyEngineInvokeMountHost,
+  );
+
   const engineRunPreviewSection = document.createElement("section");
   engineRunPreviewSection.className = "cs-shell__project-browser-engine-run-preview";
   engineRunPreviewSection.setAttribute("aria-label", "Engine run readiness");
@@ -998,7 +1024,7 @@ function ensureProjectBrowserPanel() {
     projectBrowserSelectedProjectEngineActionLane,
   );
 
-  projectBrowserPanel.append(kicker, heading, note, projectBrowserSaveButton, projectBrowserRestoreButton, projectBrowserHandoffButton, projectBrowserSummary, projectBrowserSelectedProjectExportsPanel, engineRunPreviewSection, engineActionLaneSection, projectBrowserList);
+  projectBrowserPanel.append(kicker, heading, note, projectBrowserSaveButton, projectBrowserRestoreButton, projectBrowserHandoffButton, projectBrowserSummary, projectBrowserSelectedProjectExportsPanel, readonlyEngineInvokeMountSection, engineRunPreviewSection, engineActionLaneSection, projectBrowserList);
   anchor.insertAdjacentElement("afterend", projectBrowserPanel);
 }
 
@@ -1277,6 +1303,37 @@ function renderProjectBrowserSelectedProjectEngineRunPreview(preview) {
   projectBrowserSelectedProjectEngineRunPreview.appendChild(note);
 }
 
+function renderProjectBrowserSelectedProjectReadonlyEngineInvokeMountStatus(mountStatus) {
+  if (!projectBrowserSelectedProjectReadonlyEngineInvokeMountHost) return;
+  clearElement(projectBrowserSelectedProjectReadonlyEngineInvokeMountHost);
+
+  const status = document.createElement("p");
+  status.className = "cs-shell__project-browser-readonly-engine-invoke-mount-status";
+  status.dataset.shellProjectReadonlyEngineInvokeMountState =
+    mountStatus?.state || "missing";
+  status.textContent = mountStatus?.mounted !== true
+    ? "Readonly Engine mount is not available."
+    : mountStatus?.readiness === "completed"
+      ? "Readonly Engine mount completed through the real host-local readonly adapter."
+      : mountStatus?.readiness === "unavailable"
+        ? "Readonly Engine mount is mounted but unavailable because the real host-local readonly adapter is not mounted."
+        : mountStatus?.readiness === "missing"
+          ? "Readonly Engine mount is mounted; select a ready runtime-saved project."
+          : "Readonly Engine mount is mounted and blocked fail-closed.";
+  projectBrowserSelectedProjectReadonlyEngineInvokeMountHost.appendChild(status);
+
+  const fields = document.createElement("dl");
+  fields.className = "cs-shell__project-browser-readonly-engine-invoke-mount-fields";
+  appendDefinitionListRows(fields, [
+    ["mount", mountStatus?.mounted === true ? "mounted" : "unmounted"],
+    ["outcome", mountStatus?.readiness || "unavailable"],
+    ["host-local adapter", mountStatus?.adapterMounted === true ? "mounted" : "unavailable"],
+    ["read only", mountStatus?.readOnly === true],
+    ["Run Engine action", "disabled"],
+  ]);
+  projectBrowserSelectedProjectReadonlyEngineInvokeMountHost.appendChild(fields);
+}
+
 /* Landed preview contract-lock source shape retained for source inspection:
 renderProjectBrowserSelectedProjectEngineRunPreview(
   buildShellProjectBrowserSelectedProjectEngineRunPreview(
@@ -1303,6 +1360,9 @@ function renderProjectBrowser({ context }) {
   renderProjectBrowserSelectedProjectEngineRunPreview(engineRunPreview);
   renderProjectBrowserSelectedProjectEngineActionLane(
     buildShellProjectBrowserSelectedProjectEngineActionLane(engineRunPreview),
+  );
+  renderProjectBrowserSelectedProjectReadonlyEngineInvokeMountStatus(
+    projectBrowserSelectedProjectReadonlyEngineInvokeMountStatus,
   );
   appendDefinitionListRows(projectBrowserSummary, [
     ["current", browser.currentProject?.title || "No project loaded"],
@@ -2357,7 +2417,14 @@ function bootWorkspaceShell() {
   }
 
   const route = resolveWorkspaceRoute(window.location);
-  const services = createShellServices();
+  const selectedProjectReadonlyEngineInvokeMount =
+    createShellProjectBrowserSelectedProjectReadonlyEngineInvokeMount();
+  const services = createShellServices({
+    invokeSelectedProjectReadonlyEngine:
+      selectedProjectReadonlyEngineInvokeMount.invokeSelectedProjectReadonlyEngine,
+  });
+  projectBrowserSelectedProjectReadonlyEngineInvokeMountStatus =
+    selectedProjectReadonlyEngineInvokeMount.getSnapshot();
   const registry = createModuleRegistry();
   let context = createShellContext({ route, services });
   let mountedModuleApi = null;
@@ -2367,6 +2434,10 @@ function bootWorkspaceShell() {
   function refreshContext(reason = "context-refresh") {
     context = createShellContext({ route, services, mountedModuleId: route.moduleId });
     window.__csLatestShellContext = context;
+    const readonlyEngineInvokeMountRefresh =
+      selectedProjectReadonlyEngineInvokeMount.mount({ context, services });
+    projectBrowserSelectedProjectReadonlyEngineInvokeMountStatus =
+      selectedProjectReadonlyEngineInvokeMount.getSnapshot();
     renderAuthControls({ services, context });
     renderAccountOverview(context);
     renderDeveloperDiagnosticsAccess(context);
@@ -2375,6 +2446,13 @@ function bootWorkspaceShell() {
     renderContextSummary(context);
     renderProjectSelection({ services, context });
     renderProjectBrowser({ context });
+    void readonlyEngineInvokeMountRefresh.then((mountStatus) => {
+      if (mountStatus !== selectedProjectReadonlyEngineInvokeMount.getSnapshot()) return;
+      projectBrowserSelectedProjectReadonlyEngineInvokeMountStatus = mountStatus;
+      renderProjectBrowserSelectedProjectReadonlyEngineInvokeMountStatus(mountStatus);
+    }).catch((error) => {
+      console.error("[workspace-shell] readonly Engine mount failed", error);
+    });
     void refreshProjectBrowserSelectedProjectExportsWorkflow({ services, context }).catch((error) => {
       console.error("[workspace-shell] selected-project exports workflow failed", error);
       setProjectBrowserSelectedProjectExportsWorkflowDescriptor(null);
