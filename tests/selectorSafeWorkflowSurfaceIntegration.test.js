@@ -365,7 +365,14 @@ test("Selector view source keeps workflow diagnostics behind closed developer dr
   assert.match(view, /cs-selector-product__main-flow/);
   assert.match(view, /dataset\.defaultProductFlow = "product-first"/);
   assert.match(view, /dataset\.defaultReadiness = "plain-english"/);
-  assert.match(view, /Runs incomplete — add quantity and length before Engine readiness can be reviewed/);
+  assert.match(view, /Runs incomplete — add quantity, length, and length mode before Engine readiness can be reviewed/);
+  assert.match(view, /dataset\.singleRunIntentCapture = "module-local"/);
+  assert.match(view, /dataset\.fieldKey = "runQty"/);
+  assert.match(view, /dataset\.fieldKey = "runLength"/);
+  assert.match(view, /dataset\.fieldKey = "runLengthMode"/);
+  assert.doesNotMatch(view, /dataset\.fieldKey = "runCount"/);
+  assert.match(view, /zero accessories approved/);
+  assert.match(view, /IES \/ drawing \/ proof \/ persistence disabled/);
   assert.match(view, /cs-selector-dev-drawer/);
   assert.match(view, /dataset\.selectorDeveloperDrawer = "closed-default"/);
   assert.match(view, /diagnosticsDetails\.open = false/);

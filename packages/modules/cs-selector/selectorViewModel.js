@@ -1,7 +1,7 @@
 import { buildSelectedResultProjectionContract } from "../../workspace-kernel/selectedResultProjectionService.js";
 import { buildSelectorSpecialPartsEntitlementPreview } from "./selectorSpecialPartsEntitlementPreview.js";
 import { buildSelectorRunAccessoryPlacementPreview } from "./selectorRunAccessoryPlacementPreview.js";
-import { buildSelectorRunIntakePreview } from "./selectorRunIntakePreview.js";
+import { buildSelectorRunIntakePreview, SUPPORTED_SELECTOR_RUN_LENGTH_MODES } from "./selectorRunIntakePreview.js";
 import { buildSelectorFactoryApprovedInputsSummary } from "./selectorFactoryApprovedInputsSummary.js";
 import { buildSelectorSafeDraftProjectEnvelopePreview } from "./selectorSafeDraftProjectEnvelopePreview.js";
 import { buildSelectorSafeHydrateValidationPreview } from "./selectorSafeHydrateValidationPreview.js";
@@ -2167,6 +2167,140 @@ function createDbCommittedSelectorConstraints(selectorReferenceStatus = {}, loca
       writes: false,
     };
   });
+}
+
+const SELECTOR_RUN_INTENT_FIELD_KEYS = Object.freeze(["runQty", "runLength", "runLengthMode"]);
+
+const SELECTOR_RUN_INTENT_FIELD_LABELS = Object.freeze({
+  runQty: "Run quantity",
+  runLength: "Run length (mm)",
+  runLengthMode: "Run length mode",
+});
+
+const SELECTOR_RUN_LENGTH_MODE_LABELS = Object.freeze({
+  cut_to_length: "Cut to length",
+  nominal_module: "Nominal module",
+  site_trim: "Site trim",
+  overall: "Overall",
+  centreline: "Centreline",
+  nominal: "Nominal",
+  fixed: "Fixed",
+  same_length: "Same length",
+});
+
+const SELECTOR_RUN_INTENT_DIAGNOSTIC_COPY = Object.freeze({
+  "missing-run-quantity": "quantity is required",
+  "invalid-run-quantity": "quantity must be a positive integer",
+  "missing-run-length": "run length is required",
+  "invalid-run-length": "run length must be a positive millimetre value",
+  "missing-length-mode": "length mode is required",
+  "unsupported-length-mode": "length mode must be one of the supported options",
+  "missing-run-label": "run label is required",
+});
+
+function committedSelectorConstraintRecord(committedSelectorConstraints = [], fieldKey) {
+  return committedSelectorConstraints.find((constraint) => constraint.fieldKey === fieldKey) || null;
+}
+
+function selectorRunIntentConstraintValue(committedSelectorConstraints = [], fieldKey) {
+  const record = committedSelectorConstraintRecord(committedSelectorConstraints, fieldKey);
+  return record ? String(record.value ?? "").trim() : "";
+}
+
+function createSelectorSingleRunIntentCapture({
+  committedSelectorConstraints = [],
+  local = {},
+  selectorState,
+  onLocalStateChange,
+} = {}) {
+  const quantity = selectorRunIntentConstraintValue(committedSelectorConstraints, "runQty");
+  const runLengthMm = selectorRunIntentConstraintValue(committedSelectorConstraints, "runLength");
+  const lengthMode = selectorRunIntentConstraintValue(committedSelectorConstraints, "runLengthMode");
+  const committedRunConstraintPresent = SELECTOR_RUN_INTENT_FIELD_KEYS.some((fieldKey) => (
+    committedSelectorConstraintRecord(committedSelectorConstraints, fieldKey) !== null
+  ));
+  const compatibilityRuns = Array.isArray(local.runIntake?.runs) ? local.runIntake.runs : [];
+  const derivedRun = {
+    id: "run-1",
+    runNumber: 1,
+    label: "Run 1",
+    quantity,
+    runLengthMm,
+    lengthMode,
+  };
+  const compatibilityFallbackUsed = !committedRunConstraintPresent && compatibilityRuns.length > 0;
+  const runs = compatibilityFallbackUsed ? compatibilityRuns : [derivedRun];
+
+  return {
+    title: "Single-run intent capture",
+    source: committedRunConstraintPresent
+      ? "committed DB-backed Selector run constraints"
+      : compatibilityFallbackUsed
+        ? "programmatic local.runIntake.runs compatibility fallback"
+        : "empty committed DB-backed Selector run constraints",
+    fixedLabel: "Run 1",
+    runId: "run-1",
+    runNumber: 1,
+    quantity,
+    runLengthMm,
+    lengthMode,
+    supportedLengthModes: SUPPORTED_SELECTOR_RUN_LENGTH_MODES.map((value) => ({
+      value,
+      label: SELECTOR_RUN_LENGTH_MODE_LABELS[value] || value,
+    })),
+    committedConstraintsAuthoritative: committedRunConstraintPresent,
+    compatibilityFallbackUsed,
+    runCountDerived: true,
+    multiRunEditingEnabled: false,
+    accessoryPlacementControlsEnabled: false,
+    engineInvocationEnabled: false,
+    runTableGenerationEnabled: false,
+    iesGenerationEnabled: false,
+    drawingGenerationEnabled: false,
+    payloadGenerationEnabled: false,
+    proofGenerationEnabled: false,
+    persistenceEnabled: false,
+    writes: false,
+    runs,
+    setFieldValue(fieldKey, value) {
+      if (!SELECTOR_RUN_INTENT_FIELD_KEYS.includes(fieldKey)) return;
+      const nextValue = String(value ?? "").trim();
+      if (nextValue) {
+        selectorState?.setDbBackedSelectorFieldValue?.(
+          fieldKey,
+          nextValue,
+          SELECTOR_RUN_INTENT_FIELD_LABELS[fieldKey] || fieldKey,
+          {},
+        );
+      } else {
+        selectorState?.clearDbBackedSelectorFieldValue?.(fieldKey);
+      }
+      onLocalStateChange?.();
+    },
+    clearFieldValue(fieldKey) {
+      if (!SELECTOR_RUN_INTENT_FIELD_KEYS.includes(fieldKey)) return;
+      selectorState?.clearDbBackedSelectorFieldValue?.(fieldKey);
+      onLocalStateChange?.();
+    },
+  };
+}
+
+function selectorRunIntentCaptureWithPreview(capture = {}, runIntakePreview = {}) {
+  const run = Array.isArray(runIntakePreview.runs) ? runIntakePreview.runs[0] || {} : {};
+  const diagnostics = Array.isArray(run.diagnostics) ? run.diagnostics : [];
+  const explanationParts = diagnostics.map((diagnostic) => SELECTOR_RUN_INTENT_DIAGNOSTIC_COPY[diagnostic] || diagnostic);
+  return {
+    ...capture,
+    runIntakePreviewReady: runIntakePreview.runIntakePreviewReady === true,
+    completedRunCount: runIntakePreview.completedRunCount || 0,
+    incompleteRunCount: runIntakePreview.incompleteRunCount || 0,
+    runCount: runIntakePreview.runCount || 0,
+    completionCopy: `${runIntakePreview.completedRunCount || 0}/${runIntakePreview.runCount || 0} complete`,
+    missingOrInvalidDiagnostics: [...diagnostics],
+    missingFieldExplanation: explanationParts.length
+      ? `Run 1 incomplete: ${explanationParts.join("; ")}.`
+      : "Run 1 is complete as safe intent. Production outputs remain disabled.",
+  };
 }
 
 function createDbAvailableConsequence(fields = [], fieldKey, constraints = {}) {
@@ -6003,9 +6137,16 @@ function createDbBackedSelectorSurface(selectorReferenceStatus = {}, local = {},
     selectionTruthSummary,
     productSpine,
   });
-  const runIntakePreview = buildSelectorRunIntakePreview(local.runIntake?.runs || []);
+  const singleRunIntentCaptureBase = createSelectorSingleRunIntentCapture({
+    committedSelectorConstraints,
+    local,
+    selectorState,
+    onLocalStateChange,
+  });
+  const runIntakePreview = buildSelectorRunIntakePreview(singleRunIntentCaptureBase.runs);
+  const singleRunIntentCapture = selectorRunIntentCaptureWithPreview(singleRunIntentCaptureBase, runIntakePreview);
   const runAccessoryPlacementPreview = buildSelectorRunAccessoryPlacementPreview({
-    runs: local.runIntake?.runs || [],
+    runs: singleRunIntentCaptureBase.runs,
     intents: local.runAccessoryPlacement?.intents || [],
   });
   const selectorWorkflowPreview = createSelectorWorkflowPreview({
@@ -6113,6 +6254,7 @@ function createDbBackedSelectorSurface(selectorReferenceStatus = {}, local = {},
     selectionTruthSummary,
     sourceSpecReadinessExplanation,
     disabledHandoffSummary,
+    singleRunIntentCapture,
     runIntakePreview,
     runIntakePreviewReady: runIntakePreview.runIntakePreviewReady,
     runCount: runIntakePreview.runCount,
@@ -7293,6 +7435,9 @@ export function createSelectorViewModel({ adapter, selectorState, selectorRefere
     selectorDownstreamReadinessSummary: selectorSurface.selectorDownstreamReadinessSummary,
     specialPartsUserTest: selectorSurface.specialPartsUserTest,
     selectorTestCase: selectorSurface.selectorTestCase,
+    singleRunIntentCapture: selectorSurface.singleRunIntentCapture,
+    runIntakePreview: selectorSurface.runIntakePreview,
+    runIntakePreviewReady: selectorSurface.runIntakePreviewReady,
     lmTemperatureReadinessPreview: selectorSurface.lmTemperatureReadinessPreview,
     lmTemperatureReadinessPreviewReady: false,
     expanderShell: createSelectorExpanderShell(local, selectorState, onLocalStateChange, selectorReferenceStatus, selectorSurface),

@@ -1499,6 +1499,92 @@ function appendLightControlRowGrid(parent, visibleFields = [], surface = {}, idP
   return true;
 }
 
+function appendSelectorSingleRunIntentCapture(parent, capture = {}) {
+  const section = document.createElement("section");
+  section.className = "cs-selector-run-intent-capture";
+  section.dataset.singleRunIntentCapture = "module-local";
+  section.dataset.runCountDerived = capture.runCountDerived === false ? "false" : "true";
+  section.dataset.multiRunEditingEnabled = capture.multiRunEditingEnabled === true ? "true" : "false";
+  section.dataset.engineInvocationEnabled = capture.engineInvocationEnabled === true ? "true" : "false";
+
+  appendText(section, "h5", capture.title || "Single-run intent capture");
+  appendText(section, "p", "Run 1", "cs-selector-run-intent-capture__fixed-label");
+
+  const grid = document.createElement("div");
+  grid.className = "cs-selector-run-intent-capture__grid";
+
+  const quantityLabel = document.createElement("label");
+  quantityLabel.className = "cs-selector-run-intent-capture__control";
+  appendText(quantityLabel, "span", "Quantity");
+  const quantityInput = document.createElement("input");
+  quantityInput.type = "number";
+  quantityInput.min = "1";
+  quantityInput.step = "1";
+  quantityInput.inputMode = "numeric";
+  quantityInput.value = capture.quantity || "";
+  quantityInput.dataset.fieldKey = "runQty";
+  quantityInput.dataset.runIntentControl = "quantity";
+  quantityInput.addEventListener("input", () => capture.setFieldValue?.("runQty", quantityInput.value));
+  quantityLabel.appendChild(quantityInput);
+  grid.appendChild(quantityLabel);
+
+  const lengthLabel = document.createElement("label");
+  lengthLabel.className = "cs-selector-run-intent-capture__control";
+  appendText(lengthLabel, "span", "Run length (mm)");
+  const lengthInput = document.createElement("input");
+  lengthInput.type = "number";
+  lengthInput.min = "0.01";
+  lengthInput.step = "any";
+  lengthInput.inputMode = "decimal";
+  lengthInput.value = capture.runLengthMm || "";
+  lengthInput.dataset.fieldKey = "runLength";
+  lengthInput.dataset.runIntentControl = "run-length-mm";
+  lengthInput.addEventListener("input", () => capture.setFieldValue?.("runLength", lengthInput.value));
+  lengthLabel.appendChild(lengthInput);
+  grid.appendChild(lengthLabel);
+
+  const modeLabel = document.createElement("label");
+  modeLabel.className = "cs-selector-run-intent-capture__control";
+  appendText(modeLabel, "span", "Length mode");
+  const modeSelect = document.createElement("select");
+  modeSelect.value = capture.lengthMode || "";
+  modeSelect.dataset.fieldKey = "runLengthMode";
+  modeSelect.dataset.runIntentControl = "length-mode";
+  const blankOption = document.createElement("option");
+  blankOption.value = "";
+  blankOption.textContent = "Select length mode";
+  modeSelect.appendChild(blankOption);
+  for (const supportedMode of capture.supportedLengthModes || []) {
+    const option = document.createElement("option");
+    option.value = supportedMode.value || "";
+    option.textContent = supportedMode.label || supportedMode.value || "Length mode";
+    option.selected = option.value === capture.lengthMode;
+    modeSelect.appendChild(option);
+  }
+  modeSelect.value = capture.lengthMode || "";
+  modeSelect.addEventListener("change", () => capture.setFieldValue?.("runLengthMode", modeSelect.value));
+  modeLabel.appendChild(modeSelect);
+  grid.appendChild(modeLabel);
+
+  section.appendChild(grid);
+  appendText(section, "p", capture.completionCopy || "0/1 complete", "cs-selector-run-intent-capture__completion");
+  appendText(
+    section,
+    "p",
+    capture.missingFieldExplanation || "Run 1 incomplete: quantity is required; run length is required; length mode is required.",
+    "cs-selector-run-intent-capture__explanation",
+  );
+  appendBadgeList(section, [
+    "run count derived",
+    "zero accessories approved",
+    "Engine disabled",
+    "RunTable disabled",
+    "payload disabled",
+    "IES / drawing / proof / persistence disabled",
+  ]);
+  parent.appendChild(section);
+}
+
 function appendSelectorWorkflowSections(parent, surface = {}) {
   const sections = Array.isArray(surface.workflowSections) ? surface.workflowSections : [];
   if (!sections.length) return;
@@ -1527,6 +1613,9 @@ function appendSelectorWorkflowSections(parent, surface = {}) {
     appendWorkflowChipStrip(section, allFields);
     appendCollapsedOverrideDetails(section, overrideFields, surface, `cs-selector-workflow-${workflowSection.sectionKey}-override`);
 
+    const renderedSingleRunIntentCapture = workflowSection.sectionKey === "runs";
+    if (renderedSingleRunIntentCapture) appendSelectorSingleRunIntentCapture(section, surface.singleRunIntentCapture || {});
+
     if (visibleFields.length) {
       const renderedLightControlRows = workflowSection.sectionKey === "lightControl"
         ? appendLightControlRowGrid(section, visibleFields, surface, `cs-selector-workflow-${workflowSection.sectionKey}`)
@@ -1539,7 +1628,7 @@ function appendSelectorWorkflowSections(parent, surface = {}) {
         for (const field of visibleFields) appendSelectorProductFieldCard(grid, field, surface, `cs-selector-workflow-${workflowSection.sectionKey}`);
         section.appendChild(grid);
       }
-    } else {
+    } else if (!renderedSingleRunIntentCapture) {
       appendText(section, "p", "No active controls in this section yet.", "cs-selector-product__section-empty");
     }
 
@@ -2508,7 +2597,7 @@ function appendRailSelectionSources(parent, summary = {}) {
 
 function railNextSafeAction(surface = {}) {
   const runPreview = surface.runIntakePreview || {};
-  if (runPreview.runIntakePreviewReady !== true) return "Runs incomplete — add quantity and length before Engine readiness can be reviewed.";
+  if (runPreview.runIntakePreviewReady !== true) return "Runs incomplete — add quantity, length, and length mode before Engine readiness can be reviewed.";
   if ((surface.blockedItems || []).length) return "Review blocked selections before any future readiness review.";
   const workflow = surface.selectorWorkflowPreview || {};
   const blockedStage = (workflow.stageSummaries || workflow.selectorWorkflowStageSummaries || []).find((stage) => stage.blocked || stage.reviewRequired);
