@@ -4722,6 +4722,54 @@ export function createSavedProjectStore({ eventBus } = {}) {
     return result;
   }
 
+  function recordModuleHydrationResult(envelopeId, moduleId, moduleResult = {}) {
+    const sourceEnvelopeId = String(envelopeId || "").trim();
+    const sourceModuleId = String(moduleId || "").trim();
+    if (!sourceEnvelopeId || sourceEnvelopeId !== state.hydrate.lastHydratedEnvelopeId) {
+      return {
+        accepted: false,
+        status: "stale-hydration-envelope",
+        reason: "Module hydration result does not match the active restored envelope.",
+        hydrate: getHydrateSnapshot(),
+      };
+    }
+    if (!Object.prototype.hasOwnProperty.call(state.hydrate.moduleResults, sourceModuleId)) {
+      return {
+        accepted: false,
+        status: "unknown-hydration-module",
+        reason: `Hydration result module is not present in the restored envelope: ${sourceModuleId || "none"}.`,
+        hydrate: getHydrateSnapshot(),
+      };
+    }
+
+    const hydrated = sourceModuleId === "cs_selector"
+      && moduleResult?.accepted === true
+      && moduleResult?.status === "hydrated";
+    const recordedResult = {
+      ...state.hydrate.moduleResults[sourceModuleId],
+      moduleId: sourceModuleId,
+      status: hydrated ? "hydrated" : String(moduleResult?.status || "failed"),
+      payloadAvailable: state.hydrate.modulePayloads[sourceModuleId]?.payloadAvailable === true,
+      reason: moduleResult?.reason || (hydrated
+        ? "Selector hydration callback completed successfully."
+        : "Module hydration callback failed closed."),
+      callbackSucceeded: hydrated,
+      reportedAt: nowIso(),
+    };
+    state.hydrate.moduleResults[sourceModuleId] = recordedResult;
+    state.hydrate.status = hydrated ? "completed" : "completed-with-errors";
+    const result = {
+      accepted: true,
+      status: "recorded",
+      moduleHydrated: hydrated,
+      moduleResult: clone(recordedResult),
+      hydrate: getHydrateSnapshot(),
+      hydratedModules: Object.values(state.hydrate.moduleResults).map(clone),
+    };
+    eventBus?.emit("saved-project-store:module-hydration-result", result);
+    return result;
+  }
+
   function resolvePackageEnvelope(context = {}) {
     const envelopeId = context.project?.metadata?.restoredEnvelopeId || state.restore.lastRestoredEnvelopeId || state.save.lastSavedEnvelopeId || context.projectBrowser?.selectedProjectId || null;
     return envelopeId ? getProjectEnvelope(envelopeId) : null;
@@ -4789,6 +4837,7 @@ export function createSavedProjectStore({ eventBus } = {}) {
       return saveCurrentProjectEnvelope(context, moduleContributions);
     },
     restoreProjectEnvelope,
+    recordModuleHydrationResult,
     prepareHandoffSharePackage,
     requestHandoff(context = {}) {
       return prepareHandoffSharePackage(context);

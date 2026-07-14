@@ -57,6 +57,33 @@ export const SELECTOR_TEST_CASE_STORAGE_KEY = "controlstack.cs-selector.local-te
 const SELECTOR_TEST_CASE_VERSION = 1;
 const SELECTOR_TEST_CASE_KIND = "selector-local-test-case";
 
+export const SELECTOR_PROJECT_ENVELOPE_STATE_KIND = "cs-selector-project-envelope-ui-state";
+export const SELECTOR_PROJECT_ENVELOPE_STATE_VERSION = 1;
+export const SELECTOR_PROJECT_ENVELOPE_CONTRIBUTION_STATUS = "saved-ui-state";
+
+const SELECTOR_PROJECT_ENVELOPE_STATE_KEYS = Object.freeze([
+  "kind",
+  "version",
+  "selectedCategory",
+  "expanderSections",
+  "manualConstraints",
+  "timelineStatusTest",
+  "specialPartsUserTest",
+  "safety",
+]);
+
+const SELECTOR_PROJECT_ENVELOPE_SAFETY = Object.freeze({
+  serialisableUiStateOnly: true,
+  rawOptionRowsIncluded: false,
+  sourceRowsIncluded: false,
+  engineCandidatesIncluded: false,
+  resultsIncluded: false,
+  generatedOutputsIncluded: false,
+  runtimeDataMutationEnabled: false,
+  serverPersistenceEnabled: false,
+  writes: false,
+});
+
 const SAFE_SELECTOR_TEST_CASE_MANUAL_CONSTRAINT_KEYS = Object.freeze(new Set([
   "system",
   "application",
@@ -436,6 +463,123 @@ export function buildSelectorTestCaseFromSnapshot(snapshot = {}) {
     timelineStatusTest: snapshot.timelineStatusTest || {},
     specialPartsUserTest: snapshot.specialPartsUserTest || {},
   });
+}
+
+function selectorProjectEnvelopePlainObject(value) {
+  return Boolean(value && typeof value === "object" && !Array.isArray(value));
+}
+
+function cloneSelectorProjectEnvelopeManualConstraints(value = {}) {
+  const safe = cloneSafeSelectorTestCaseManualConstraints(value);
+  return Object.fromEntries(Object.entries(safe).map(([fieldKey, constraint]) => [fieldKey, {
+    fieldKey,
+    value: constraint.value,
+    valueLabel: constraint.valueLabel,
+    kind: "manual-constraint",
+    source: "Selector Project-envelope restored UI constraint",
+    mutable: true,
+    writes: false,
+  }]));
+}
+
+function cloneSelectorProjectEnvelopeExpanders(value = {}) {
+  return Object.fromEntries(Object.keys(DEFAULT_EXPANDER_SECTIONS).map((sectionId) => [
+    sectionId,
+    value?.[sectionId] !== false,
+  ]));
+}
+
+function safeSelectorProjectEnvelopeCategory(value = "overview") {
+  const category = String(value || "overview").trim().toLowerCase();
+  return /^[a-z0-9_-]{1,64}$/.test(category) ? category : "overview";
+}
+
+export function sanitiseSelectorProjectEnvelopeState(value = {}) {
+  const source = selectorProjectEnvelopePlainObject(value) ? value : {};
+  return {
+    kind: SELECTOR_PROJECT_ENVELOPE_STATE_KIND,
+    version: SELECTOR_PROJECT_ENVELOPE_STATE_VERSION,
+    selectedCategory: safeSelectorProjectEnvelopeCategory(source.selectedCategory),
+    expanderSections: cloneSelectorProjectEnvelopeExpanders(source.expanderSections),
+    manualConstraints: cloneSelectorProjectEnvelopeManualConstraints(
+      source.manualConstraints || source.dbBackedSelector?.manualConstraints || {},
+    ),
+    timelineStatusTest: cloneSafeTimelineStatusTestCaseState(source.timelineStatusTest || {}),
+    specialPartsUserTest: cloneSafeSpecialPartsUserTestCaseState(source.specialPartsUserTest || {}),
+    safety: { ...SELECTOR_PROJECT_ENVELOPE_SAFETY },
+  };
+}
+
+function exactObjectKeys(value, expectedKeys) {
+  if (!selectorProjectEnvelopePlainObject(value)) return false;
+  const actual = Object.keys(value).sort();
+  const expected = [...expectedKeys].sort();
+  return actual.length === expected.length && actual.every((key, index) => key === expected[index]);
+}
+
+function selectorProjectEnvelopeConstraintIsApproved(fieldKey, value) {
+  if (!selectorTestCaseFieldIsSafe(fieldKey) || !exactObjectKeys(value, [
+    "fieldKey",
+    "value",
+    "valueLabel",
+    "kind",
+    "source",
+    "mutable",
+    "writes",
+  ])) return false;
+  return value.fieldKey === fieldKey
+    && value.kind === "manual-constraint"
+    && value.source === "Selector Project-envelope restored UI constraint"
+    && value.mutable === true
+    && value.writes === false
+    && safeSelectorTestCaseString(value.value) === value.value
+    && safeSelectorTestCaseString(value.valueLabel) === value.valueLabel;
+}
+
+export function validateSelectorProjectEnvelopeState(value) {
+  if (!selectorProjectEnvelopePlainObject(value) || Object.keys(value).length === 0) {
+    return { valid: false, reason: "Selector Project-envelope state is missing or empty." };
+  }
+  if (!exactObjectKeys(value, SELECTOR_PROJECT_ENVELOPE_STATE_KEYS)) {
+    return { valid: false, reason: "Selector Project-envelope state contains unapproved fields." };
+  }
+  if (value.kind !== SELECTOR_PROJECT_ENVELOPE_STATE_KIND || value.version !== SELECTOR_PROJECT_ENVELOPE_STATE_VERSION) {
+    return { valid: false, reason: "Selector Project-envelope state kind or version is unsupported." };
+  }
+  if (safeSelectorProjectEnvelopeCategory(value.selectedCategory) !== value.selectedCategory) {
+    return { valid: false, reason: "Selector Project-envelope selected category is invalid." };
+  }
+  if (!exactObjectKeys(value.expanderSections, Object.keys(DEFAULT_EXPANDER_SECTIONS))
+    || Object.values(value.expanderSections).some((open) => typeof open !== "boolean")) {
+    return { valid: false, reason: "Selector Project-envelope expander state is invalid." };
+  }
+  if (!selectorProjectEnvelopePlainObject(value.manualConstraints)
+    || Object.entries(value.manualConstraints).some(([fieldKey, constraint]) => !selectorProjectEnvelopeConstraintIsApproved(fieldKey, constraint))) {
+    return { valid: false, reason: "Selector Project-envelope manual constraints are invalid." };
+  }
+  const safeTimeline = cloneSafeTimelineStatusTestCaseState(value.timelineStatusTest || {});
+  const safeSpecialParts = cloneSafeSpecialPartsUserTestCaseState(value.specialPartsUserTest || {});
+  if (JSON.stringify(safeTimeline) !== JSON.stringify(value.timelineStatusTest)
+    || JSON.stringify(safeSpecialParts) !== JSON.stringify(value.specialPartsUserTest)) {
+    return { valid: false, reason: "Selector Project-envelope diagnostic UI state is invalid." };
+  }
+  if (JSON.stringify(value.safety) !== JSON.stringify(SELECTOR_PROJECT_ENVELOPE_SAFETY)) {
+    return { valid: false, reason: "Selector Project-envelope safety declaration is invalid." };
+  }
+  return {
+    valid: true,
+    reason: "Selector Project-envelope state is approved.",
+    state: sanitiseSelectorProjectEnvelopeState(value),
+  };
+}
+
+export function createSelectorProjectEnvelopeContribution(snapshot = {}) {
+  return {
+    moduleId: "cs_selector",
+    status: SELECTOR_PROJECT_ENVELOPE_CONTRIBUTION_STATUS,
+    state: sanitiseSelectorProjectEnvelopeState(snapshot),
+    reason: null,
+  };
 }
 
 const DEFAULT_PREVIEW_DEFAULTS = Object.freeze(Object.fromEntries(
@@ -1650,6 +1794,36 @@ export function createSelectorState() {
       state.localDirty = true;
       state.lastAction = "selector-test-case-recalled";
       return this.getSnapshot();
+    },
+
+    hydrateSelectorProjectEnvelopeState(value = {}) {
+      const validation = validateSelectorProjectEnvelopeState(value);
+      if (!validation.valid) {
+        state.lastAction = "selector-project-envelope-hydrate-rejected";
+        return {
+          accepted: false,
+          status: "invalid-selector-project-envelope-state",
+          reason: validation.reason,
+          snapshot: this.getSnapshot(),
+        };
+      }
+      const restoredState = validation.state;
+      state.selectedCategory = restoredState.selectedCategory;
+      state.expanderSections = { ...restoredState.expanderSections };
+      state.dbBackedSelector = cloneDbBackedSelectorState({
+        manualConstraints: restoredState.manualConstraints,
+        lastAction: "db-backed-selector-project-envelope-restored",
+      });
+      state.timelineStatusTest = cloneTimelineStatusTestState(restoredState.timelineStatusTest);
+      state.specialPartsUserTest = cloneSpecialPartsUserTestState(restoredState.specialPartsUserTest);
+      state.localDirty = false;
+      state.lastAction = "selector-project-envelope-state-applied";
+      return {
+        accepted: true,
+        status: "selector-project-envelope-state-applied",
+        restoredConstraintCount: Object.keys(restoredState.manualConstraints).length,
+        snapshot: this.getSnapshot(),
+      };
     },
 
     clearSavedSelectorTestCaseSummary(status = "saved-test-case-cleared") {

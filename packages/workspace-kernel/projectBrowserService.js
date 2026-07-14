@@ -3143,6 +3143,24 @@ export function createProjectBrowserService({ savedProjectStore, projectService,
     return combined;
   }
 
+  function recordModuleHydrationResult(envelopeId, moduleId, moduleResult = {}, context = {}) {
+    const result = savedProjectStore.recordModuleHydrationResult?.(
+      envelopeId,
+      moduleId,
+      moduleResult,
+    ) || {
+      accepted: false,
+      status: "hydrate-result-recorder-unavailable",
+      reason: "Saved Project store does not expose a module hydration result recorder.",
+    };
+    const combined = {
+      ...result,
+      browser: getProjectBrowserSnapshot(context),
+    };
+    eventBus?.emit("project-browser:module-hydration-result", combined);
+    return combined;
+  }
+
   function prepareHandoffShare(context = {}) {
     const result = savedProjectStore.prepareHandoffSharePackage(context);
     if (result.accepted) {
@@ -3171,6 +3189,7 @@ export function createProjectBrowserService({ savedProjectStore, projectService,
     setSearch,
     saveProject,
     restoreProject,
+    recordModuleHydrationResult,
     prepareHandoffShare,
     requestHandoff(context = {}) {
       return prepareHandoffShare(context);

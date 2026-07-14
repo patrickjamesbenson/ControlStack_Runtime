@@ -176,11 +176,13 @@ test("Restore remains disabled with an exact visible reason and Save/Restore out
 
   const restoreSource = sourceSlice(
     shellSource,
-    "function handleProjectBrowserRestore()",
+    "async function handleProjectBrowserRestore()",
     "function handleProjectBrowserHandoffShare()",
   );
   assert.match(restoreSource, /setProjectTopbarActionOutcome\(/);
-  assert.match(restoreSource, /refreshContext\("project-restore-hydrate"\)/);
+  assert.match(restoreSource, /refreshContextSafely\("project-restore-hydrate"\)/);
+  assert.match(restoreSource, /mountedModuleApi\.hydrate\(selectorPayload, nextContext\)/);
+  assert.match(restoreSource, /recordModuleHydrationResult\(/);
   assert.doesNotMatch(restoreSource, /setPopout\(projectChip, projectPopout, false\)/);
 });
 

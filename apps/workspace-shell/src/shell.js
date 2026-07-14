@@ -2875,7 +2875,25 @@ function bootWorkspaceShell() {
 
   async function handleProjectBrowserSave() {
     const currentTitle = readProjectTitle(context.project);
-    const result = services.projectBrowser.saveProject(context);
+    const moduleContributions = {};
+    if (route.moduleId === "cs_selector"
+      && mountedModuleApi?.moduleId === "cs_selector"
+      && typeof mountedModuleApi.getProjectEnvelopeContribution === "function") {
+      const selectorContribution = mountedModuleApi.getProjectEnvelopeContribution();
+      if (!selectorContribution
+        || selectorContribution.moduleId !== "cs_selector"
+        || selectorContribution.status !== "saved-ui-state") {
+        setProjectTopbarActionOutcome({
+          action: "save-blocked",
+          reason: "Mounted Selector did not provide an approved Project-envelope contribution.",
+        });
+        refreshContext("project-save-selector-contribution-rejected");
+        setStatus("Browser-session save failed: mounted Selector contribution was missing or invalid.");
+        return;
+      }
+      moduleContributions.cs_selector = selectorContribution;
+    }
+    const result = services.projectBrowser.saveProject(context, moduleContributions);
     if (!result.accepted) {
       setProjectTopbarActionOutcome({
         action: "save-blocked",
@@ -2931,7 +2949,7 @@ function bootWorkspaceShell() {
     setStatus(`Browser-session envelope saved for ${readProjectTitle(nextContext.project)}. Server in-process registration ${registration.serverRevisionId} was acknowledged; durable persistence is unavailable.`);
   }
 
-  function handleProjectBrowserRestore() {
+  async function handleProjectBrowserRestore() {
     const selectedBeforeRestore = selectedProjectSummary(context.projectBrowser || {});
     const envelopeId = context.projectBrowser.selectedProjectId;
     const result = services.projectBrowser.restoreProject(envelopeId, context);
@@ -2944,15 +2962,55 @@ function bootWorkspaceShell() {
       setStatus(`Restore skipped: ${result.reason || result.status}`);
       return;
     }
-    const hydrated = result.hydratedModules?.map((item) => `${item.moduleId}:${item.status}`).join(", ") || "none";
+
+    let nextContext = refreshContextSafely("project-restore-hydrate");
+    const selectorPayload = result.hydrate?.modulePayloads?.cs_selector || null;
+    let selectorHydrationResult;
+    if (route.moduleId === "cs_selector"
+      && mountedModuleApi?.moduleId === "cs_selector"
+      && typeof mountedModuleApi.hydrate === "function"
+      && selectorPayload?.moduleId === "cs_selector") {
+      try {
+        selectorHydrationResult = await mountedModuleApi.hydrate(selectorPayload, nextContext);
+      } catch (error) {
+        selectorHydrationResult = {
+          accepted: false,
+          moduleId: "cs_selector",
+          status: "selector-hydration-callback-failed",
+          reason: error?.message || "Selector hydration callback failed.",
+        };
+      }
+    } else {
+      selectorHydrationResult = {
+        accepted: false,
+        moduleId: "cs_selector",
+        status: selectorPayload ? "no-mounted-handler" : "missing-selector-hydration-payload",
+        reason: selectorPayload
+          ? "The restored cs_selector payload was not dispatched because cs_selector is not the currently mounted module."
+          : "The restored envelope did not contain a cs_selector hydration payload.",
+      };
+    }
+
+    const hydrationRecord = services.projectBrowser.recordModuleHydrationResult(
+      result.envelopeId,
+      "cs_selector",
+      selectorHydrationResult,
+      nextContext,
+    );
+    const hydrationResults = hydrationRecord.hydratedModules || result.hydratedModules || [];
+    const hydrated = hydrationResults.map((item) => `${item.moduleId}:${item.status}`).join(", ") || "none";
     setProjectTopbarActionOutcome({
       action: "restore",
       title: result.envelope?.title || selectedBeforeRestore?.title || "Selected project",
       envelopeId: result.envelopeId || selectedBeforeRestore?.envelopeId || envelopeId,
       hydratedModules: hydrated,
     });
-    const nextContext = refreshContext("project-restore-hydrate");
-    setStatus(`Restored session envelope ${result.envelopeId || envelopeId} as ${readProjectTitle(nextContext.project)}. Hydration payloads were prepared (${hydrated}); durable persistence remains unavailable.`);
+    nextContext = refreshContextSafely("project-restore-hydrate-result-recorded");
+    const selectorOutcome = hydrationRecord.moduleResult || selectorHydrationResult;
+    const selectorSummary = selectorOutcome?.status === "hydrated"
+      ? "Selector hydration completed as cs_selector:hydrated"
+      : `Selector hydration failed closed as cs_selector:${selectorOutcome?.status || "failed"}`;
+    setStatus(`Restored session envelope ${result.envelopeId || envelopeId} as ${readProjectTitle(nextContext.project)}. ${selectorSummary}; hydration results: ${hydrated}. Durable persistence remains unavailable.`);
   }
 
   function handleProjectBrowserHandoffShare() {

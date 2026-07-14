@@ -1,5 +1,12 @@
 import { createSelectorContractAdapter } from "./selectorContractAdapter.js";
-import { SELECTOR_TEST_CASE_STORAGE_KEY, createSelectorState, sanitiseSelectorTestCase } from "./selectorState.js";
+import {
+  SELECTOR_PROJECT_ENVELOPE_CONTRIBUTION_STATUS,
+  SELECTOR_TEST_CASE_STORAGE_KEY,
+  createSelectorProjectEnvelopeContribution,
+  createSelectorState,
+  sanitiseSelectorTestCase,
+  validateSelectorProjectEnvelopeState,
+} from "./selectorState.js";
 import { renderSelectorView } from "./selectorView.js";
 import { createSelectorViewModel } from "./selectorViewModel.js";
 
@@ -154,6 +161,8 @@ function initialSelectorReferenceOptionsStatus() {
 }
 
 let mountedContainer = null;
+let mountedServices = null;
+let mountedContext = null;
 let selectorState = null;
 let selectorAdapter = null;
 let selectorReferenceStatus = initialSelectorReferenceStatus();
@@ -254,6 +263,114 @@ function renderCurrentView({ preserveViewport = true } = {}) {
     restoreSelectorViewportState(viewportState);
     requestAnimationFrame(() => restoreSelectorViewportState(viewportState));
   }
+}
+
+function renderSelectorHydrationFallback(reason = "Selector state could not be restored.") {
+  if (!mountedContainer) return;
+  while (mountedContainer.firstChild) mountedContainer.removeChild(mountedContainer.firstChild);
+  const surface = document.createElement("section");
+  surface.className = "cs-selector__hydrate-fallback";
+  const heading = document.createElement("h2");
+  heading.textContent = "Selector";
+  const message = document.createElement("p");
+  message.setAttribute("role", "status");
+  message.textContent = `${reason} A safe visible Selector surface was retained.`;
+  surface.append(heading, message);
+  mountedContainer.appendChild(surface);
+}
+
+function ensureVisibleSelectorSurface(reason = "Selector hydration failed.") {
+  try {
+    if (!selectorState) selectorState = createSelectorState();
+    if (!selectorAdapter && mountedServices && mountedContext) {
+      selectorAdapter = createSelectorContractAdapter({ services: mountedServices, context: mountedContext });
+    }
+    renderCurrentView({ preserveViewport: false });
+    if (!mountedContainer?.firstChild) renderSelectorHydrationFallback(reason);
+  } catch (error) {
+    renderSelectorHydrationFallback(`${reason} ${error?.message || "Render recovery failed."}`);
+  }
+}
+
+function selectorHydrationProjectIdentity(context = {}) {
+  return {
+    projectId: String(context.project?.metadata?.projectId || context.project?.currentProject?.projectId || "").trim(),
+    envelopeId: String(context.project?.metadata?.restoredEnvelopeId || context.project?.selection?.restoredEnvelopeId || "").trim(),
+  };
+}
+
+function validateSelectorHydrationPayload(hydrationPayload = {}, context = {}) {
+  if (!hydrationPayload || typeof hydrationPayload !== "object" || Array.isArray(hydrationPayload)) {
+    return { valid: false, status: "missing-selector-hydration-payload", reason: "Selector hydration payload is missing." };
+  }
+  if (hydrationPayload.moduleId !== "cs_selector" || hydrationPayload.payload?.moduleId !== "cs_selector") {
+    return { valid: false, status: "selector-module-id-mismatch", reason: "Selector hydration payload moduleId is not cs_selector." };
+  }
+  if (!hydrationPayload.sourceEnvelopeId || !hydrationPayload.sourceProjectId) {
+    return { valid: false, status: "selector-source-identity-missing", reason: "Selector hydration payload source identity is missing." };
+  }
+  const identity = selectorHydrationProjectIdentity(context);
+  if (identity.projectId !== hydrationPayload.sourceProjectId || identity.envelopeId !== hydrationPayload.sourceEnvelopeId) {
+    return { valid: false, status: "stale-selector-source-identity", reason: "Selector hydration payload does not match the restored shell project identity." };
+  }
+  if (hydrationPayload.payloadAvailable !== true
+    || hydrationPayload.payload?.status !== SELECTOR_PROJECT_ENVELOPE_CONTRIBUTION_STATUS) {
+    return { valid: false, status: "empty-selector-hydration-state", reason: "Selector Project-envelope state is missing or empty." };
+  }
+  const stateValidation = validateSelectorProjectEnvelopeState(hydrationPayload.payload?.state);
+  if (!stateValidation.valid) {
+    return { valid: false, status: "invalid-selector-hydration-state", reason: stateValidation.reason };
+  }
+  return { valid: true, state: stateValidation.state };
+}
+
+function selectorRestoredConstraintsValidation(optionsStatus = {}, restoredState = {}) {
+  if (optionsStatus?.ok !== true || !Array.isArray(optionsStatus.fields)) {
+    return {
+      valid: false,
+      status: "selector-source-options-unavailable",
+      reason: "Current source-backed Selector options could not be loaded for restore validation.",
+    };
+  }
+  const fields = new Map(optionsStatus.fields.map((field) => [String(field?.fieldKey || ""), field]));
+  const staleFields = [];
+  for (const [fieldKey, constraint] of Object.entries(restoredState.manualConstraints || {})) {
+    const field = fields.get(fieldKey);
+    const selectedValue = String(field?.selectedValue || "").trim();
+    const selectedValueStatus = String(field?.selectedValueStatus || "").trim();
+    const optionSelected = Array.isArray(field?.options)
+      && field.options.some((option) => option?.value === constraint.value && option?.selected === true);
+    if (!field
+      || selectedValue !== constraint.value
+      || selectedValueStatus === "diagnostic_unmapped"
+      || (!selectedValueStatus && !optionSelected)) {
+      staleFields.push(fieldKey);
+    }
+  }
+  if (staleFields.length) {
+    return {
+      valid: false,
+      status: "stale-selector-hydration-state",
+      reason: `Restored Selector constraints are stale or unavailable: ${staleFields.join(", ")}.`,
+      staleFields,
+    };
+  }
+  return { valid: true, staleFields: [] };
+}
+
+function failSelectorHydration(status, reason) {
+  ensureVisibleSelectorSurface(reason);
+  mountedServices?.eventBus?.emit("selector:hydrate-failed", {
+    moduleId: "cs_selector",
+    status,
+    reason,
+  });
+  return {
+    accepted: false,
+    moduleId: "cs_selector",
+    status,
+    reason,
+  };
 }
 
 function handleSelectorLocalStateChange() {
@@ -583,7 +700,7 @@ async function loadSelectorReferenceOptions() {
       endpoint: SELECTOR_REFERENCE_OPTIONS_ENDPOINT,
       warnings: ["Browser fetch is unavailable; Selector reference options could not be read."],
     });
-    return;
+    return selectorReferenceOptionsStatus;
   }
 
   const activeSignature = currentSelectorOptionConstraintSignature();
@@ -614,7 +731,7 @@ async function loadSelectorReferenceOptions() {
       responseConstraintFingerprint,
       activeConstraintFingerprint: currentSignature.constraintFingerprint,
       mounted: Boolean(mountedContainer),
-    })) return;
+    })) return selectorReferenceOptionsStatus;
     applySelectorReferenceOptionsStatus({
       ...payload,
       ok: response.ok && payload?.ok !== false,
@@ -623,6 +740,7 @@ async function loadSelectorReferenceOptions() {
       constraintQuery: currentSignature.constraintQuery,
       constraintFingerprint: responseConstraintFingerprint,
     }, currentSignature);
+    return selectorReferenceOptionsStatus;
   } catch (error) {
     const currentSignature = currentSelectorOptionConstraintSignature();
     if (!selectorReferenceOptionsResponseIsCurrent({
@@ -631,7 +749,7 @@ async function loadSelectorReferenceOptions() {
       responseConstraintFingerprint: activeSignature.constraintFingerprint,
       activeConstraintFingerprint: currentSignature.constraintFingerprint,
       mounted: Boolean(mountedContainer),
-    })) return;
+    })) return selectorReferenceOptionsStatus;
     applySelectorReferenceOptionsStatus({
       ok: false,
       status: "fetch-failed",
@@ -640,6 +758,7 @@ async function loadSelectorReferenceOptions() {
       constraintFingerprint: currentSignature.constraintFingerprint,
       warnings: [`Selector reference options request failed: ${error?.message || "unknown error"}.`],
     }, currentSignature);
+    return selectorReferenceOptionsStatus;
   }
 }
 
@@ -690,12 +809,16 @@ async function loadSelectorReferenceStatus() {
 }
 
 export const csSelectorModule = {
+  moduleId: "cs_selector",
+
   mount({ container, services, context }) {
     if (!(container instanceof HTMLElement)) {
       throw new Error("cs_selector requires an HTMLElement container");
     }
 
     mountedContainer = container;
+    mountedServices = services;
+    mountedContext = context;
     selectorState = createSelectorState();
     syncStoredSelectorTestCaseSummary();
     selectorAdapter = createSelectorContractAdapter({ services, context });
@@ -711,8 +834,61 @@ export const csSelectorModule = {
     });
   },
 
+  getProjectEnvelopeContribution() {
+    if (!mountedContainer || !selectorState) return null;
+    return createSelectorProjectEnvelopeContribution(selectorState.getSnapshot());
+  },
+
+  async hydrate(hydrationPayload, nextContext = mountedContext) {
+    if (!mountedContainer || !selectorState || !selectorAdapter || !nextContext) {
+      return failSelectorHydration(
+        "selector-not-mounted",
+        "The currently mounted module cannot accept Selector hydration.",
+      );
+    }
+    mountedContext = nextContext;
+    const validation = validateSelectorHydrationPayload(hydrationPayload, nextContext);
+    if (!validation.valid) return failSelectorHydration(validation.status, validation.reason);
+
+    const applyResult = selectorState.hydrateSelectorProjectEnvelopeState(validation.state);
+    if (!applyResult.accepted) {
+      return failSelectorHydration(applyResult.status, applyResult.reason);
+    }
+
+    ensureVisibleSelectorSurface("Selector Project-envelope state was applied before option validation.");
+    const optionsStatus = await loadSelectorReferenceOptions();
+    const restoredConstraintsValidation = selectorRestoredConstraintsValidation(
+      optionsStatus,
+      validation.state,
+    );
+    if (!restoredConstraintsValidation.valid) {
+      return failSelectorHydration(
+        restoredConstraintsValidation.status,
+        restoredConstraintsValidation.reason,
+      );
+    }
+
+    ensureVisibleSelectorSurface("Selector Project-envelope restore completed.");
+    const result = {
+      accepted: true,
+      moduleId: "cs_selector",
+      status: "hydrated",
+      reason: "Selector Project-envelope UI state was restored and revalidated against current source-backed options.",
+      sourceEnvelopeId: hydrationPayload.sourceEnvelopeId,
+      sourceProjectId: hydrationPayload.sourceProjectId,
+      restoredConstraintCount: applyResult.restoredConstraintCount,
+      staleFields: [],
+    };
+    mountedServices?.eventBus?.emit("selector:hydrated", {
+      ...result,
+      report: "cs_selector:hydrated",
+    });
+    return result;
+  },
+
   update(nextContext) {
     if (!mountedContainer || !selectorAdapter || !nextContext) return;
+    mountedContext = nextContext;
     mountedContainer.dataset.lastUpdate = new Date().toISOString();
     mountedContainer.dataset.module = nextContext.route?.moduleId || "cs_selector";
     selectorAdapter = createSelectorContractAdapter({
@@ -731,8 +907,11 @@ export const csSelectorModule = {
       }
     }
     mountedContainer = null;
+    mountedServices = null;
+    mountedContext = null;
     selectorState = null;
     selectorAdapter = null;
+    selectorReferenceStatus = initialSelectorReferenceStatus();
     selectorReferenceOptionsStatus = initialSelectorReferenceOptionsStatus();
   },
 };

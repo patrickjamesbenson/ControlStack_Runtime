@@ -46,6 +46,227 @@ function readSavedBy(identity = {}) {
   };
 }
 
+const CS_SELECTOR_PROJECT_ENVELOPE_STATE_KEYS = Object.freeze([
+  "kind",
+  "version",
+  "selectedCategory",
+  "expanderSections",
+  "manualConstraints",
+  "timelineStatusTest",
+  "specialPartsUserTest",
+  "safety",
+]);
+
+const CS_SELECTOR_PROJECT_ENVELOPE_EXPANDER_KEYS = Object.freeze([
+  "projectMetadata",
+  "system",
+  "environment",
+  "lightControl",
+  "mounting",
+  "penetrationsWiring",
+  "finishes",
+  "egressAccessories",
+  "runs",
+  "timelineDiagnostics",
+  "pureReferenceDiagnosticLater",
+]);
+
+const CS_SELECTOR_PROJECT_ENVELOPE_MANUAL_CONSTRAINT_KEYS = Object.freeze(new Set([
+  "system",
+  "application",
+  "interiorExterior",
+  "optic",
+  "controlType",
+  "driver",
+  "ipRating",
+  "ikRating",
+  "mountStyle",
+  "bodyFinish",
+  "emergency",
+  "sensor",
+  "specialParts",
+  "tier",
+  "variantKey",
+  "emission",
+  "directCapability",
+  "indirectCapability",
+  "opticSub",
+  "opticIndirect",
+  "diffuserVar1",
+  "diffuserVar2",
+  "directOpticVar1",
+  "directOpticVar2",
+  "indirectOpticVar1",
+  "indirectOpticVar2",
+  "electricalClass",
+  "ambient",
+  "targetLmPerM",
+  "cctCri",
+  "indirectMatchDirect",
+  "targetLmPerMIndirect",
+  "cctCriIndirect",
+  "controlTypeIndirect",
+  "mountSelection",
+  "mountParticulars",
+  "powerPenetration",
+  "powerLocation",
+  "flexLength",
+  "wiringType",
+  "finishDefault",
+  "finishCover",
+  "finishEnd",
+  "finishFlex",
+  "egressLight",
+  "egressSound",
+  "accessories",
+  "specialPartsEntitlement",
+  "specialPartsOptIn",
+  "userEntitlementStatus",
+]));
+
+const CS_SELECTOR_PROJECT_ENVELOPE_CONSTRAINT_KEYS = Object.freeze([
+  "fieldKey",
+  "value",
+  "valueLabel",
+  "kind",
+  "source",
+  "mutable",
+  "writes",
+]);
+
+const CS_SELECTOR_PROJECT_ENVELOPE_TIMELINE_KEYS = Object.freeze([
+  "timelineVisibilityMode",
+  "timelineAsOfDate",
+  "timelineVisibleStatuses",
+  "readOnly",
+  "diagnosticOnly",
+  "queryParamsOnly",
+  "productionActionsEnabled",
+]);
+
+const CS_SELECTOR_PROJECT_ENVELOPE_SPECIAL_PARTS_KEYS = Object.freeze([
+  "testPrincipal",
+  "showEntitlementBackedSpecialParts",
+  "readOnly",
+  "diagnosticOnly",
+  "queryParamsOnly",
+  "productionActionsEnabled",
+]);
+
+const CS_SELECTOR_PROJECT_ENVELOPE_SAFETY_KEYS = Object.freeze([
+  "serialisableUiStateOnly",
+  "rawOptionRowsIncluded",
+  "sourceRowsIncluded",
+  "engineCandidatesIncluded",
+  "resultsIncluded",
+  "generatedOutputsIncluded",
+  "runtimeDataMutationEnabled",
+  "serverPersistenceEnabled",
+  "writes",
+]);
+
+const CS_SELECTOR_PROJECT_ENVELOPE_TIMELINE_STATUSES = Object.freeze(new Set([
+  "available",
+  "approved",
+  "staged",
+  "roadmap",
+  "obsolete",
+  "unknown",
+]));
+
+const CS_SELECTOR_PROJECT_ENVELOPE_FORBIDDEN_VALUE_PATTERN = /(?:C:\\|\\ControlStack|\/mnt\/|novondb|raw_rows|rawRows|rawPayload|selectedResult|engineResult|credential|secret|apiKey)/i;
+
+function plainObject(value) {
+  return Boolean(value && typeof value === "object" && !Array.isArray(value));
+}
+
+function exactKeys(value, allowedKeys) {
+  if (!plainObject(value)) return false;
+  const actual = Object.keys(value).sort();
+  const expected = [...allowedKeys].sort();
+  return actual.length === expected.length && actual.every((key, index) => key === expected[index]);
+}
+
+function safeSelectorEnvelopeString(value, { maxLength = 512, pattern = null } = {}) {
+  if (typeof value !== "string" || value.length > maxLength) return false;
+  if (pattern && !pattern.test(value)) return false;
+  return !CS_SELECTOR_PROJECT_ENVELOPE_FORBIDDEN_VALUE_PATTERN.test(value);
+}
+
+function approvedSelectorEnvelopeConstraint(fieldKey, constraint) {
+  return CS_SELECTOR_PROJECT_ENVELOPE_MANUAL_CONSTRAINT_KEYS.has(fieldKey)
+    && exactKeys(constraint, CS_SELECTOR_PROJECT_ENVELOPE_CONSTRAINT_KEYS)
+    && constraint.fieldKey === fieldKey
+    && safeSelectorEnvelopeString(constraint.value)
+    && safeSelectorEnvelopeString(constraint.valueLabel)
+    && constraint.kind === "manual-constraint"
+    && constraint.source === "Selector Project-envelope restored UI constraint"
+    && constraint.mutable === true
+    && constraint.writes === false;
+}
+
+function approvedSelectorEnvelopeTimeline(value) {
+  return exactKeys(value, CS_SELECTOR_PROJECT_ENVELOPE_TIMELINE_KEYS)
+    && ["external-default", "internal-asof-test"].includes(value.timelineVisibilityMode)
+    && safeSelectorEnvelopeString(value.timelineAsOfDate, {
+      maxLength: 10,
+      pattern: /^\d{4}-\d{2}-\d{2}$/,
+    })
+    && Array.isArray(value.timelineVisibleStatuses)
+    && value.timelineVisibleStatuses.length > 0
+    && value.timelineVisibleStatuses.length <= CS_SELECTOR_PROJECT_ENVELOPE_TIMELINE_STATUSES.size
+    && new Set(value.timelineVisibleStatuses).size === value.timelineVisibleStatuses.length
+    && value.timelineVisibleStatuses.every((status) => CS_SELECTOR_PROJECT_ENVELOPE_TIMELINE_STATUSES.has(status))
+    && value.readOnly === true
+    && value.diagnosticOnly === true
+    && value.queryParamsOnly === true
+    && value.productionActionsEnabled === false;
+}
+
+function approvedSelectorEnvelopeSpecialParts(value) {
+  return exactKeys(value, CS_SELECTOR_PROJECT_ENVELOPE_SPECIAL_PARTS_KEYS)
+    && safeSelectorEnvelopeString(value.testPrincipal, { maxLength: 254 })
+    && typeof value.showEntitlementBackedSpecialParts === "boolean"
+    && value.readOnly === true
+    && value.diagnosticOnly === true
+    && value.queryParamsOnly === true
+    && value.productionActionsEnabled === false;
+}
+
+function approvedSelectorEnvelopeSafety(value) {
+  return exactKeys(value, CS_SELECTOR_PROJECT_ENVELOPE_SAFETY_KEYS)
+    && value.serialisableUiStateOnly === true
+    && value.rawOptionRowsIncluded === false
+    && value.sourceRowsIncluded === false
+    && value.engineCandidatesIncluded === false
+    && value.resultsIncluded === false
+    && value.generatedOutputsIncluded === false
+    && value.runtimeDataMutationEnabled === false
+    && value.serverPersistenceEnabled === false
+    && value.writes === false;
+}
+
+function approvedCsSelectorProjectState(state) {
+  if (!exactKeys(state, CS_SELECTOR_PROJECT_ENVELOPE_STATE_KEYS)) return false;
+  if (state.kind !== "cs-selector-project-envelope-ui-state" || state.version !== 1) return false;
+  if (!safeSelectorEnvelopeString(state.selectedCategory, {
+    maxLength: 64,
+    pattern: /^[a-z0-9_-]+$/,
+  })) return false;
+  if (!exactKeys(state.expanderSections, CS_SELECTOR_PROJECT_ENVELOPE_EXPANDER_KEYS)
+    || Object.values(state.expanderSections).some((open) => typeof open !== "boolean")) return false;
+  if (!plainObject(state.manualConstraints)
+    || Object.entries(state.manualConstraints).some(([fieldKey, constraint]) => !approvedSelectorEnvelopeConstraint(fieldKey, constraint))) return false;
+  if (!approvedSelectorEnvelopeTimeline(state.timelineStatusTest)) return false;
+  if (!approvedSelectorEnvelopeSpecialParts(state.specialPartsUserTest)) return false;
+  if (!approvedSelectorEnvelopeSafety(state.safety)) return false;
+  try {
+    return JSON.stringify(state).length <= 32768;
+  } catch {
+    return false;
+  }
+}
+
 function createModuleEnvelope({ moduleId, owner = moduleId, status = "empty", state = {}, downstreamContext = null, reason = "Module save contributor not implemented yet." } = {}) {
   return {
     owner,
@@ -62,13 +283,27 @@ function createModuleEnvelopeSet({ downstream = {}, moduleContributions = {} } =
   const selectorContribution = moduleContributions.cs_selector || {};
   const sceneBuilderContribution = moduleContributions.scene_builder || {};
   const emergenceContribution = moduleContributions.emergence || {};
+  const selectorUiStateContribution = selectorContribution.status === "saved-ui-state";
+  const selectorContributionApproved = selectorContribution.moduleId === "cs_selector"
+    && selectorContribution.status === "saved-ui-state"
+    && approvedCsSelectorProjectState(selectorContribution.state);
   return {
     cs_selector: createModuleEnvelope({
       moduleId: "cs_selector",
-      status: selectorContribution.status || "empty",
-      state: selectorContribution.state || {},
-      downstreamContext: selectorContribution.downstreamContext || downstream.selector || null,
-      reason: selectorContribution.reason || "Selector contribution placeholder saved by shell envelope.",
+      status: selectorUiStateContribution
+        ? selectorContributionApproved ? "saved-ui-state" : "empty"
+        : selectorContribution.status || "empty",
+      state: selectorUiStateContribution
+        ? selectorContributionApproved ? selectorContribution.state : {}
+        : selectorContribution.state || {},
+      downstreamContext: selectorUiStateContribution
+        ? null
+        : selectorContribution.downstreamContext || downstream.selector || null,
+      reason: selectorUiStateContribution
+        ? selectorContributionApproved
+          ? null
+          : "Selector Project-envelope contribution was missing, empty, or outside the approved serialisable UI-state shape."
+        : selectorContribution.reason || "Selector contribution placeholder saved by shell envelope.",
     }),
     scene_builder: createModuleEnvelope({
       moduleId: "scene_builder",
@@ -177,7 +412,7 @@ export function createHydrationPayloadsFromEnvelope(envelope) {
       moduleId,
       sourceEnvelopeId: envelope.envelopeId,
       sourceProjectId: envelope.projectId,
-      payloadAvailable: true,
+      payloadAvailable: moduleEnvelope?.status !== "empty",
       payload: clone(moduleEnvelope || {}),
     },
   ]));
@@ -185,16 +420,33 @@ export function createHydrationPayloadsFromEnvelope(envelope) {
 
 export function createHydrationResultsFromEnvelope(envelope) {
   const modules = envelope?.modules || {};
-  return Object.fromEntries(Object.entries(modules).map(([moduleId, moduleEnvelope]) => [
-    moduleId,
-    {
+  return Object.fromEntries(Object.entries(modules).map(([moduleId, moduleEnvelope]) => {
+    const payloadAvailable = moduleEnvelope?.status !== "empty";
+    if (moduleId === "cs_selector") {
+      return [
+        moduleId,
+        {
+          moduleId,
+          status: payloadAvailable ? "prepared" : "empty-state",
+          payloadAvailable,
+          reason: payloadAvailable
+            ? "Selector hydration payload is prepared for the currently mounted cs_selector handler."
+            : "Selector Project-envelope state is missing or empty.",
+          sourceStatus: moduleEnvelope?.status || "empty",
+        },
+      ];
+    }
+    return [
       moduleId,
-      status: "no-handler",
-      payloadAvailable: true,
-      reason: `Module hydrate handler not implemented yet for ${moduleId}. Payload is available through shell context.`,
-      sourceStatus: moduleEnvelope?.status || "empty",
-    },
-  ]));
+      {
+        moduleId,
+        status: "no-handler",
+        payloadAvailable,
+        reason: `Module hydrate handler not implemented yet for ${moduleId}.`,
+        sourceStatus: moduleEnvelope?.status || "empty",
+      },
+    ];
+  }));
 }
 
 export function summariseProjectEnvelope(envelope) {
