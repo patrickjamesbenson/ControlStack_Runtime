@@ -39,8 +39,14 @@ import {
   buildShellProjectBrowserSelectedProjectEngineActionLane,
 } from "./projectBrowserSelectedProjectEngineActionLane.js";
 import {
-  createShellProjectBrowserSelectedProjectReadonlyEngineInvokeMount,
+  createShellProjectBrowserSelectedProjectReadonlyEngineInvokeClientMount,
 } from "./projectBrowserSelectedProjectEngineReadonlyInvokeMount.js";
+import {
+  createShellProjectBrowserSelectedProjectReadonlyEngineInvokeClientTransport,
+} from "./projectBrowserSelectedProjectEngineReadonlyInvokeClientTransportBoundary.js";
+import {
+  createShellProjectBrowserSelectedProjectEngineReadonlyInvokeActivation,
+} from "./projectBrowserSelectedProjectEngineReadonlyInvokeActivation.js";
 import {
   createShellProjectBrowserSelectedProjectServerOwnedRegistrationClientTransport,
 } from "./projectBrowserSelectedProjectServerOwnedRegistrationClientTransport.js";
@@ -161,8 +167,11 @@ let projectBrowserSelectedProjectExportsItems = null;
 let projectBrowserSelectedProjectExportManifestPreview = null;
 let projectBrowserSelectedProjectExportDetailPreview = null;
 let projectBrowserSelectedProjectEngineRunPreview = null;
+let projectBrowserSelectedProjectEngineRunPreviewDescriptor = null;
 let projectBrowserSelectedProjectReadonlyEngineInvokeMountStatus = null;
 let projectBrowserSelectedProjectReadonlyEngineInvokeMountHost = null;
+let projectBrowserSelectedProjectEngineReadonlyInvokeActivationController = null;
+let projectBrowserSelectedProjectEngineReadonlyInvokeActivationStatus = null;
 let projectBrowserSelectedProjectEngineActionLane = null;
 let projectBrowserSelectedProjectExportsWorkflow = null;
 const projectBrowserSelectedProjectExportControls = new Map();
@@ -1306,7 +1315,10 @@ function renderProjectBrowserSelectedProjectEngineRunPreview(preview) {
   projectBrowserSelectedProjectEngineRunPreview.appendChild(note);
 }
 
-function renderProjectBrowserSelectedProjectReadonlyEngineInvokeMountStatus(mountStatus) {
+function renderProjectBrowserSelectedProjectReadonlyEngineInvokeMountStatus(
+  mountStatus,
+  activationStatus = null,
+) {
   if (!projectBrowserSelectedProjectReadonlyEngineInvokeMountHost) return;
   clearElement(projectBrowserSelectedProjectReadonlyEngineInvokeMountHost);
 
@@ -1314,25 +1326,18 @@ function renderProjectBrowserSelectedProjectReadonlyEngineInvokeMountStatus(moun
   status.className = "cs-shell__project-browser-readonly-engine-invoke-mount-status";
   status.dataset.shellProjectReadonlyEngineInvokeMountState =
     mountStatus?.state || "missing";
-  status.textContent = mountStatus?.mounted !== true
-    ? "Readonly Engine mount is not available."
-    : mountStatus?.readiness === "completed"
-      ? "Readonly Engine mount completed through the real host-local readonly adapter."
-      : mountStatus?.readiness === "unavailable"
-        ? "Readonly Engine mount is mounted but unavailable because the real host-local readonly adapter is not mounted."
-        : mountStatus?.readiness === "missing"
-          ? "Readonly Engine mount is mounted; select a ready runtime-saved project."
-          : "Readonly Engine mount is mounted and blocked fail-closed.";
+  status.textContent = mountStatus?.serviceMounted !== true
+    ? "Readonly Engine browser transport is not mounted."
+    : "Readonly Engine browser transport is mounted and waits for an eligible user gesture.";
   projectBrowserSelectedProjectReadonlyEngineInvokeMountHost.appendChild(status);
 
   const fields = document.createElement("dl");
   fields.className = "cs-shell__project-browser-readonly-engine-invoke-mount-fields";
   appendDefinitionListRows(fields, [
-    ["mount", mountStatus?.mounted === true ? "mounted" : "unmounted"],
-    ["outcome", mountStatus?.readiness || "unavailable"],
-    ["host-local adapter", mountStatus?.adapterMounted === true ? "mounted" : "unavailable"],
+    ["client transport", mountStatus?.serviceMounted === true ? "mounted" : "unmounted"],
+    ["delegated listener", activationStatus?.delegatedListenerMounted === true ? "mounted" : "unmounted"],
     ["read only", mountStatus?.readOnly === true],
-    ["Run Engine action", "disabled"],
+    ["Run Engine action", activationStatus?.actionEnabled === true ? "enabled" : "disabled"],
   ]);
   projectBrowserSelectedProjectReadonlyEngineInvokeMountHost.appendChild(fields);
 }
@@ -1359,13 +1364,24 @@ function renderProjectBrowser({ context }) {
       browser.selectedProjectEngineRunReadinessReadbackSummary,
       browser.selectedProjectId,
     );
+  projectBrowserSelectedProjectEngineRunPreviewDescriptor = engineRunPreview;
+  projectBrowserSelectedProjectEngineReadonlyInvokeActivationStatus =
+    projectBrowserSelectedProjectEngineReadonlyInvokeActivationController?.refresh({
+      context,
+      engineRunPreview,
+    }) || null;
 
   renderProjectBrowserSelectedProjectEngineRunPreview(engineRunPreview);
   renderProjectBrowserSelectedProjectEngineActionLane(
-    buildShellProjectBrowserSelectedProjectEngineActionLane(engineRunPreview),
+    buildShellProjectBrowserSelectedProjectEngineActionLane(
+      engineRunPreview,
+      projectBrowserSelectedProjectEngineReadonlyInvokeActivationStatus,
+    ),
+    projectBrowserSelectedProjectEngineReadonlyInvokeActivationStatus,
   );
   renderProjectBrowserSelectedProjectReadonlyEngineInvokeMountStatus(
     projectBrowserSelectedProjectReadonlyEngineInvokeMountStatus,
+    projectBrowserSelectedProjectEngineReadonlyInvokeActivationStatus,
   );
   appendDefinitionListRows(projectBrowserSummary, [
     ["current", browser.currentProject?.title || "No project loaded"],
@@ -1432,30 +1448,50 @@ function renderProjectBrowser({ context }) {
 }
 
 function renderProjectBrowserSelectedProjectEngineActionLane(actionLane) {
+  const activationStatus = arguments[1] || null;
   if (!projectBrowserSelectedProjectEngineActionLane) return;
   clearElement(projectBrowserSelectedProjectEngineActionLane);
 
   const status = document.createElement("p");
   status.className = "cs-shell__project-browser-engine-action-lane-status";
   status.dataset.shellProjectEngineActionLaneState = actionLane?.state || "missing";
-  status.textContent = actionLane?.sourcePreviewReady === true
-    ? "Engine readiness is confirmed, but no selected-project Engine execution capability is mounted."
-    : actionLane?.readiness === "missing"
-      ? "Select a project with an Engine-run readiness preview."
-      : "Engine actions are blocked because the selected-project readiness preview failed closed.";
+  status.textContent = actionLane?.readiness === "ready"
+    ? "Readonly Engine run is ready for the selected server-owned revision."
+    : actionLane?.readiness === "invoking"
+      ? "Readonly Engine run is in progress."
+      : actionLane?.readiness === "completed"
+        ? "Readonly Engine run completed."
+        : actionLane?.readiness === "missing"
+          ? "Select a project with an Engine-run readiness preview."
+          : "Readonly Engine run is blocked fail-closed.";
 
+  const actionItem = actionLane?.actions?.[0];
   const button = document.createElement("button");
   button.type = "button";
   button.className = "cs-shell__project-browser-engine-action-lane-button";
-  button.textContent = actionLane?.actions?.[0]?.label || "Run Engine";
+  button.textContent = actionItem?.label || "Run Engine";
+  button.dataset.shellProjectEngineActionId = actionItem?.actionId || "run-engine";
   button.disabled = true;
+  button.disabled = actionItem?.enabled !== true;
 
   const note = document.createElement("p");
   note.className = "cs-shell__project-browser-engine-action-lane-note";
   note.textContent =
-    "This lane does not execute Engine, generate RunTable output, or persist a selected result.";
+    "User-initiated, selected-project-only, read-only, redacted, and one-shot per acknowledged revision. No RunTable, IES, output, persistence, RuntimeData mutation, or filesystem write is enabled.";
 
   projectBrowserSelectedProjectEngineActionLane.append(status, button, note);
+
+  if (activationStatus?.responseReceived === true
+    || activationStatus?.responseDiscarded === true) {
+    const outcome = document.createElement("p");
+    outcome.className = "cs-shell__project-browser-engine-action-lane-outcome";
+    outcome.dataset.shellProjectEngineReadonlyInvokeOutcome =
+      activationStatus?.outcomeReadiness || activationStatus?.readiness || "blocked_fail_closed";
+    outcome.textContent = activationStatus?.outcomeReadiness === "completed"
+      ? "Readonly Engine run completed."
+      : `Readonly Engine run was blocked safely: ${activationStatus?.outcomeBlocker || activationStatus?.blocker || "blocked_fail_closed"}.`;
+    projectBrowserSelectedProjectEngineActionLane.appendChild(outcome);
+  }
 }
 
 function setProjectBrowserSelectedProjectExportsWorkflowDescriptor(workflowDescriptor) {
@@ -2480,18 +2516,28 @@ function bootWorkspaceShell() {
   }
 
   const route = resolveWorkspaceRoute(window.location);
+  const selectedProjectReadonlyEngineInvokeClientTransport =
+    createShellProjectBrowserSelectedProjectReadonlyEngineInvokeClientTransport();
   const selectedProjectReadonlyEngineInvokeMount =
-    createShellProjectBrowserSelectedProjectReadonlyEngineInvokeMount();
+    createShellProjectBrowserSelectedProjectReadonlyEngineInvokeClientMount({
+      invokeSelectedProjectReadonlyEngineClientTransport:
+        selectedProjectReadonlyEngineInvokeClientTransport,
+    });
+  projectBrowserSelectedProjectEngineReadonlyInvokeActivationController =
+    createShellProjectBrowserSelectedProjectEngineReadonlyInvokeActivation({
+      invokeSelectedProjectReadonlyEngineClientTransport:
+        selectedProjectReadonlyEngineInvokeMount.invokeSelectedProjectReadonlyEngine,
+    });
   const selectedProjectServerOwnedRegistrationClientTransport =
     createShellProjectBrowserSelectedProjectServerOwnedRegistrationClientTransport();
   const services = createShellServices({
-    invokeSelectedProjectReadonlyEngine:
-      selectedProjectReadonlyEngineInvokeMount.invokeSelectedProjectReadonlyEngine,
     registerSelectedProjectServerOwnership:
       selectedProjectServerOwnedRegistrationClientTransport,
   });
   projectBrowserSelectedProjectReadonlyEngineInvokeMountStatus =
     selectedProjectReadonlyEngineInvokeMount.getSnapshot();
+  projectBrowserSelectedProjectEngineReadonlyInvokeActivationStatus =
+    projectBrowserSelectedProjectEngineReadonlyInvokeActivationController.getSnapshot();
   const registry = createModuleRegistry();
   let context = applySelectedProjectServerOwnershipGate(
     createShellContext({ route, services }),
@@ -2507,8 +2553,6 @@ function bootWorkspaceShell() {
       services,
     );
     window.__csLatestShellContext = context;
-    const readonlyEngineInvokeMountRefresh =
-      selectedProjectReadonlyEngineInvokeMount.mount({ context, services });
     projectBrowserSelectedProjectReadonlyEngineInvokeMountStatus =
       selectedProjectReadonlyEngineInvokeMount.getSnapshot();
     renderAuthControls({ services, context });
@@ -2519,13 +2563,6 @@ function bootWorkspaceShell() {
     renderContextSummary(context);
     renderProjectSelection({ services, context });
     renderProjectBrowser({ context });
-    void readonlyEngineInvokeMountRefresh.then((mountStatus) => {
-      if (mountStatus !== selectedProjectReadonlyEngineInvokeMount.getSnapshot()) return;
-      projectBrowserSelectedProjectReadonlyEngineInvokeMountStatus = mountStatus;
-      renderProjectBrowserSelectedProjectReadonlyEngineInvokeMountStatus(mountStatus);
-    }).catch((error) => {
-      console.error("[workspace-shell] readonly Engine mount failed", error);
-    });
     void refreshProjectBrowserSelectedProjectExportsWorkflow({ services, context }).catch((error) => {
       console.error("[workspace-shell] selected-project exports workflow failed", error);
       setProjectBrowserSelectedProjectExportsWorkflowDescriptor(null);
@@ -2691,6 +2728,53 @@ function bootWorkspaceShell() {
     setStatus(`Prepared handoff/share package for ${readProjectTitle(nextContext.project)}. External delivery, email, and HubSpot writes remain deferred.`);
   }
 
+  function renderProjectBrowserSelectedProjectEngineReadonlyInvokeActivation() {
+    projectBrowserSelectedProjectEngineReadonlyInvokeActivationStatus =
+      projectBrowserSelectedProjectEngineReadonlyInvokeActivationController.getSnapshot();
+    renderProjectBrowserSelectedProjectEngineActionLane(
+      buildShellProjectBrowserSelectedProjectEngineActionLane(
+        projectBrowserSelectedProjectEngineRunPreviewDescriptor,
+        projectBrowserSelectedProjectEngineReadonlyInvokeActivationStatus,
+      ),
+      projectBrowserSelectedProjectEngineReadonlyInvokeActivationStatus,
+    );
+    renderProjectBrowserSelectedProjectReadonlyEngineInvokeMountStatus(
+      projectBrowserSelectedProjectReadonlyEngineInvokeMountStatus,
+      projectBrowserSelectedProjectEngineReadonlyInvokeActivationStatus,
+    );
+  }
+
+  async function handleProjectBrowserSelectedProjectEngineAction(event) {
+    const button = event.target.closest?.(
+      "button[data-shell-project-engine-action-id]",
+    );
+    if (button?.dataset?.shellProjectEngineActionId !== "run-engine") return;
+
+    const activationPromise =
+      projectBrowserSelectedProjectEngineReadonlyInvokeActivationController.activate();
+    renderProjectBrowserSelectedProjectEngineReadonlyInvokeActivation();
+
+    let gestureOutcome;
+    try {
+      gestureOutcome = await activationPromise;
+    } catch {
+      gestureOutcome = null;
+    }
+    renderProjectBrowserSelectedProjectEngineReadonlyInvokeActivation();
+
+    if (gestureOutcome?.responseDiscarded === true) {
+      setStatus("Readonly Engine response was discarded because the selected revision changed.");
+    } else if (gestureOutcome?.readiness === "completed") {
+      setStatus("Readonly Engine run completed for the captured selected-project revision.");
+    } else if (gestureOutcome?.browserConcurrentActivationBlocked === true) {
+      setStatus("Readonly Engine run is already in flight; the concurrent activation was blocked.");
+    } else if (gestureOutcome?.browserReplayBlocked === true) {
+      setStatus("Readonly Engine revision was already consumed; replay was blocked.");
+    } else {
+      setStatus(`Readonly Engine run was blocked safely: ${gestureOutcome?.outcomeBlocker || gestureOutcome?.blocker || "blocked_fail_closed"}.`);
+    }
+  }
+
   function handleProjectBrowserSelectedProjectExportAction(event) {
     const button = event.target.closest?.("button[data-shell-export-id]");
     const exportId = button?.dataset?.shellExportId;
@@ -2834,6 +2918,15 @@ function bootWorkspaceShell() {
   bindGroupedRailNavigation();
   bindShellTopbarControls();
   bindAssistiveCompanyIdentityHelper();
+
+  ensureProjectBrowserPanel();
+  projectBrowserSelectedProjectEngineActionLane?.addEventListener(
+    "click",
+    handleProjectBrowserSelectedProjectEngineAction,
+  );
+  projectBrowserSelectedProjectEngineReadonlyInvokeActivationStatus =
+    projectBrowserSelectedProjectEngineReadonlyInvokeActivationController
+      .setDelegatedListenerMounted(true);
 
   refreshContextSafely("initial-render");
   userMenuButton?.addEventListener("click", handleUserMenuToggle);

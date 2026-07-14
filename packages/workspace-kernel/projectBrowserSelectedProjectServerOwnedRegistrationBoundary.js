@@ -1,8 +1,12 @@
 import { createSavedProjectStore } from "./savedProjectStore.js";
 import { validateSavedProjectEnvelope } from "./projectEnvelope.js";
+import { validateSelectedProjectEngineRunReadinessReadbackSources } from "./projectBrowserService.js";
+import { stableFingerprint } from "./stableFingerprint.js";
 
 export const PROJECT_BROWSER_FIRST_SERVER_OWNED_RUNTIME_SAVED_SELECTED_PROJECT_REGISTRATION_ID =
   "PROJECT-BROWSER-FIRST-SERVER-OWNED-RUNTIME-SAVED-SELECTED-PROJECT-REGISTRATION-1";
+export const PROJECT_BROWSER_FIRST_SERVER_OWNED_RUNTIME_SAVED_SELECTED_PROJECT_ENGINE_READINESS_SUMMARY_REGISTRATION_ID =
+  "PROJECT-BROWSER-FIRST-SERVER-OWNED-RUNTIME-SAVED-SELECTED-PROJECT-ENGINE-READINESS-SUMMARY-REGISTRATION-1";
 export const PROJECT_BROWSER_SELECTED_PROJECT_SERVER_OWNED_REGISTRATION_SCHEMA_ID =
   "controlstack.runtime.project-browser.selected-project-server-owned-registration.v1";
 export const PROJECT_BROWSER_SELECTED_PROJECT_SERVER_OWNED_REGISTRATION_SCHEMA_VERSION = 1;
@@ -85,6 +89,8 @@ export const PROJECT_BROWSER_SELECTED_PROJECT_SERVER_OWNED_REGISTRATION_SELECTOR
     "factoryApprovedInputsSummary",
     "committedSelectorConstraints",
     "lmTemperatureReadinessPreview",
+    "selectedResultSummary",
+    "runTableFirstNarrowOutputSummary",
   ]);
 
 export const PROJECT_BROWSER_SELECTED_PROJECT_SERVER_OWNED_REGISTRATION_RESPONSE_FIELD_ORDER =
@@ -165,6 +171,38 @@ function clonePlain(value, depth = 0) {
   return Object.fromEntries(
     Object.entries(value).map(([key, nested]) => [key, clonePlain(nested, depth + 1)]),
   );
+}
+
+function readinessSummaryProjection(selectorModule) {
+  return {
+    selectedResultSummary: clonePlain(selectorModule.selectedResultSummary),
+    runTableFirstNarrowOutputSummary: clonePlain(
+      selectorModule.runTableFirstNarrowOutputSummary,
+    ),
+  };
+}
+
+function readinessSummaryProjectionFingerprint(projection) {
+  return stableFingerprint(
+    "selected-project-server-owned-readiness-summary-registration",
+    projection,
+  );
+}
+
+export function validateProjectBrowserSelectedProjectServerOwnedReadinessSummaryProjection(
+  projection,
+) {
+  if (!isPlainObject(projection?.selectedResultSummary)) {
+    return "selected-project-registration-selected-result-summary-missing";
+  }
+  if (!isPlainObject(projection?.runTableFirstNarrowOutputSummary)) {
+    return "selected-project-registration-runtable-first-narrow-output-summary-missing";
+  }
+  const blocker = validateSelectedProjectEngineRunReadinessReadbackSources(
+    projection.selectedResultSummary,
+    projection.runTableFirstNarrowOutputSummary,
+  );
+  return blocker ? `selected-project-registration-readiness-summary-${blocker}` : null;
 }
 
 function inspectSourceValue(value, depth = 0, seen = new Set()) {
@@ -292,6 +330,11 @@ function validateSourceProjection(sourceProjection, projectId) {
     || !isPlainObject(sourceProjection.selectorModule.lmTemperatureReadinessPreview)) {
     return "selected-project-registration-selector-stage3-inputs-invalid";
   }
+  const readinessSummaryBlocker =
+    validateProjectBrowserSelectedProjectServerOwnedReadinessSummaryProjection(
+      sourceProjection.selectorModule,
+    );
+  if (readinessSummaryBlocker) return readinessSummaryBlocker;
   return inspectSourceValue(sourceProjection);
 }
 
@@ -443,6 +486,33 @@ function aliasEnvelopeForLookup(envelope, activeRecord, lookupId) {
   return cloned;
 }
 
+function reconstructEnvelopeWithReadinessSummaries(
+  envelope,
+  activeRecord,
+  lookupId,
+  retainedProjection,
+) {
+  if (!retainedProjection
+    || retainedProjection.serverRevisionId !== activeRecord.serverRevisionId) {
+    return null;
+  }
+  const cloned = aliasEnvelopeForLookup(envelope, activeRecord, lookupId);
+  if (!isPlainObject(cloned?.modules?.cs_selector)) return null;
+  cloned.modules.cs_selector.downstreamContext = {
+    selectedResultSummary: clonePlain(retainedProjection.selectedResultSummary),
+    runTableFirstNarrowOutputSummary: clonePlain(
+      retainedProjection.runTableFirstNarrowOutputSummary,
+    ),
+  };
+  const readinessSummaryBlocker =
+    validateProjectBrowserSelectedProjectServerOwnedReadinessSummaryProjection(
+      cloned.modules.cs_selector.downstreamContext,
+    );
+  if (readinessSummaryBlocker) return null;
+  if (validateSavedProjectEnvelope(cloned).valid !== true) return null;
+  return cloned;
+}
+
 export function createProjectBrowserSelectedProjectServerOwnedRuntimeSavedRegistry({
   savedProjects = null,
 } = {}) {
@@ -450,11 +520,18 @@ export function createProjectBrowserSelectedProjectServerOwnedRuntimeSavedRegist
   const activeByProjectId = new Map();
   const activeProjectIdByLookupId = new Map();
   const revisionsById = new Map();
+  const readinessSummariesByRevisionId = new Map();
   let revisionSequence = 0;
 
   async function register(request = null) {
     const requestBlocker = validateRequest(request);
     if (requestBlocker) return response({ request, blocker: requestBlocker });
+
+    const requestReadinessSummaries = readinessSummaryProjection(
+      request.sourceProjection.selectorModule,
+    );
+    const requestReadinessSummaryFingerprint =
+      readinessSummaryProjectionFingerprint(requestReadinessSummaries);
 
     const existing = activeByProjectId.get(request.localProjectId) || null;
     if (existing
@@ -471,9 +548,14 @@ export function createProjectBrowserSelectedProjectServerOwnedRuntimeSavedRegist
     if (existing
       && existing.registrationSessionId === request.registrationSessionId
       && request.clientSaveOrdinal === existing.clientSaveOrdinal) {
+      const retainedProjection = readinessSummariesByRevisionId.get(
+        existing.serverRevisionId,
+      );
       if (request.localRevisionId !== existing.localRevisionId
         || request.localEnvelopeId !== existing.localEnvelopeId
-        || request.localSavedAt !== existing.localSavedAt) {
+        || request.localSavedAt !== existing.localSavedAt
+        || retainedProjection?.projectionFingerprint
+          !== requestReadinessSummaryFingerprint) {
         return response({
           request,
           blocker: "selected-project-registration-client-save-ordinal-conflict",
@@ -570,12 +652,20 @@ export function createProjectBrowserSelectedProjectServerOwnedRuntimeSavedRegist
       }));
       activeProjectIdByLookupId.delete(existing.localEnvelopeId);
       activeProjectIdByLookupId.delete(existing.serverEnvelopeId);
+      readinessSummariesByRevisionId.delete(existing.serverRevisionId);
     }
     activeByProjectId.set(record.projectId, record);
     activeProjectIdByLookupId.set(record.projectId, record.projectId);
     activeProjectIdByLookupId.set(record.localEnvelopeId, record.projectId);
     activeProjectIdByLookupId.set(record.serverEnvelopeId, record.projectId);
     revisionsById.set(record.serverRevisionId, record);
+    readinessSummariesByRevisionId.set(record.serverRevisionId, Object.freeze({
+      serverRevisionId: record.serverRevisionId,
+      projectionFingerprint: requestReadinessSummaryFingerprint,
+      selectedResultSummary: requestReadinessSummaries.selectedResultSummary,
+      runTableFirstNarrowOutputSummary:
+        requestReadinessSummaries.runTableFirstNarrowOutputSummary,
+    }));
 
     return response({
       request,
@@ -610,7 +700,12 @@ export function createProjectBrowserSelectedProjectServerOwnedRuntimeSavedRegist
       if (!activeRecord) return null;
       const envelope = runtimeSavedProjects.getProjectEnvelope(activeRecord.serverEnvelopeId);
       if (!envelope) return null;
-      return aliasEnvelopeForLookup(envelope, activeRecord, lookupId);
+      return reconstructEnvelopeWithReadinessSummaries(
+        envelope,
+        activeRecord,
+        lookupId,
+        readinessSummariesByRevisionId.get(activeRecord.serverRevisionId),
+      );
     },
     getActiveRevision(projectIdOrEnvelopeId) {
       const lookupId = safeToken(projectIdOrEnvelopeId);

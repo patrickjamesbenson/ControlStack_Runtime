@@ -274,6 +274,77 @@ test("sanitizes successful host-local seam output into summary-only Stage 4 Step
   assert.equal(summary.postEndpointsAdded, false);
 });
 
+test("projects an allowlisted seam failure code without exposing blocker detail", () => {
+  const mapperResult = goodMapperResult();
+  const summary = buildSelectorReadonlyEngineStep1SafeSummary({
+    mapperResult,
+    seamResult: {
+      ok: false,
+      seam: "engine-runtable-internal-readonly-invoke",
+      seam_version: "engine_runtable_internal_readonly_invoke.v1",
+      engine_execution_attempted: true,
+      engine_result_produced: false,
+      public_route_added: false,
+      post_endpoint_added: false,
+      runtime_data_mutation_enabled: false,
+      selected_result_persistence_enabled: false,
+      raw_rows_exposed: false,
+      raw_engine_payload_exposed: false,
+      raw_engine_result_returned: false,
+      private_paths_exposed: false,
+      credentials_exposed: false,
+      safe_engine_summary: {
+        success: false,
+        run_count: 0,
+        error_count: 1,
+        warning_count: 0,
+      },
+      blockers: [{
+        code: "direct-run-engine-no-success",
+        detail: "C:\\private\\RuntimeData\\donor-error.txt",
+      }],
+    },
+  });
+
+  assert.equal(summary.ok, false);
+  assert.equal(summary.readonlyEngineStep1Ready, false);
+  assert.equal(summary.blocker, "direct-run-engine-no-success");
+  assert.equal(JSON.stringify(summary).includes("donor-error.txt"), false);
+});
+
+test("retains the generic seam failure blocker when no safe recognized cause exists", () => {
+  const mapperResult = goodMapperResult();
+  const summary = buildSelectorReadonlyEngineStep1SafeSummary({
+    mapperResult,
+    seamResult: {
+      ok: false,
+      seam: "engine-runtable-internal-readonly-invoke",
+      seam_version: "engine_runtable_internal_readonly_invoke.v1",
+      engine_execution_attempted: true,
+      engine_result_produced: false,
+      public_route_added: false,
+      post_endpoint_added: false,
+      runtime_data_mutation_enabled: false,
+      selected_result_persistence_enabled: false,
+      raw_rows_exposed: false,
+      raw_engine_payload_exposed: false,
+      raw_engine_result_returned: false,
+      private_paths_exposed: false,
+      credentials_exposed: false,
+      safe_engine_summary: {
+        success: false,
+        run_count: 0,
+        error_count: 1,
+        warning_count: 0,
+      },
+      blockers: [{ code: "unrecognized-private-donor-failure" }],
+    },
+  });
+
+  assert.equal(summary.blocker, "readonly-engine-seam-did-not-produce-success");
+  assert.equal(JSON.stringify(summary).includes("unrecognized-private-donor-failure"), false);
+});
+
 test("Stage 4 Step 2 builds safe selected-result source and summary projection from readonly seam summary", () => {
   const mapperResult = goodMapperResult();
   const step1 = buildSelectorReadonlyEngineStep1SafeSummary({

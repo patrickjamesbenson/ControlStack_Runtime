@@ -5,6 +5,21 @@ import { readFile } from "node:fs/promises";
 import { createSavedProjectEnvelope } from "../packages/workspace-kernel/projectEnvelope.js";
 import { createShellServices } from "../packages/workspace-kernel/services.js";
 import {
+  PERSISTED_SELECTED_RESULT_SUMMARY_SCHEMA_ID,
+  PERSISTED_SELECTED_RESULT_SUMMARY_SCHEMA_VERSION,
+} from "../packages/workspace-kernel/selectedResultPersistenceBoundaryContract.js";
+import {
+  SELECTED_RESULT_PERSISTED_SUMMARY_SLOT_REQUIRED_FALSE_FLAGS,
+  SELECTED_RESULT_PERSISTED_SUMMARY_SLOT_SCHEMA_ID,
+  SELECTED_RESULT_PERSISTED_SUMMARY_SLOT_SCHEMA_VERSION,
+} from "../packages/workspace-kernel/selectedResultPersistedSummarySlotContract.js";
+import {
+  RUNTABLE_FIRST_NARROW_OUTPUT_HANDOFF_REQUIRED_FALSE_FLAGS,
+  RUNTABLE_FIRST_NARROW_OUTPUT_HANDOFF_SUMMARY_SCHEMA_ID,
+  RUNTABLE_FIRST_NARROW_OUTPUT_HANDOFF_SUMMARY_SCHEMA_VERSION,
+} from "../packages/workspace-kernel/runTableFirstNarrowOutputHandoffContract.js";
+import { stableFingerprint } from "../packages/workspace-kernel/stableFingerprint.js";
+import {
   PROJECT_BROWSER_FIRST_SERVER_OWNED_RUNTIME_SAVED_SELECTED_PROJECT_REGISTRATION_ID,
   PROJECT_BROWSER_SELECTED_PROJECT_SERVER_OWNED_REGISTRATION_REQUEST_FIELD_ORDER,
   PROJECT_BROWSER_SELECTED_PROJECT_SERVER_OWNED_REGISTRATION_RESPONSE_FIELD_ORDER,
@@ -18,6 +33,99 @@ import {
   SHELL_PROJECT_BROWSER_SELECTED_PROJECT_SERVER_OWNED_REGISTRATION_CLIENT_RESULT_FIELD_ORDER,
   SHELL_PROJECT_BROWSER_SELECTED_PROJECT_SERVER_OWNED_REGISTRATION_CLIENT_STATES,
 } from "../apps/workspace-shell/src/projectBrowserSelectedProjectServerOwnedRegistrationClientTransport.js";
+
+const AUTHORITY_STATES = Object.freeze({
+  acceptedSelectedResultAuthorityState: "accepted_selected_result_authority",
+  selectedResultPersistenceAuthorityPreflightState: "ready_for_persistence_authority",
+  selectedResultPersistenceBoundaryState: "selected_result_persistence_boundary_contract_ready",
+  selectedResultOutputReadinessPreflightState:
+    "selected_result_output_readiness_ready_for_persistence",
+});
+
+function selectedResultSummary(sourceSuffix = "registration-client") {
+  return {
+    schemaId: PERSISTED_SELECTED_RESULT_SUMMARY_SCHEMA_ID,
+    schemaVersion: PERSISTED_SELECTED_RESULT_SUMMARY_SCHEMA_VERSION,
+    slotSchemaId: SELECTED_RESULT_PERSISTED_SUMMARY_SLOT_SCHEMA_ID,
+    slotSchemaVersion: SELECTED_RESULT_PERSISTED_SUMMARY_SLOT_SCHEMA_VERSION,
+    owner: "shell",
+    slotOwner: "shell",
+    targetKind: "project-envelope-module-downstream-context-summary-slot",
+    moduleId: "cs_selector",
+    state: "redacted_selected_result_summary_persisted",
+    summaryOnly: true,
+    redacted: true,
+    machineValueSafe: true,
+    ...AUTHORITY_STATES,
+    selectedResultAuthorityGuardState: "engine_verified_selected_result_ready",
+    selectedResultProjectionState: "selected_accepted",
+    safeSelectedResultSourceState: "safe_selected_result_source_ready",
+    selectedResultHandoffScaffoldState: "runtime_selected_result_handoff_scaffold_ready",
+    policyFingerprint: `safe-policy:${sourceSuffix}`,
+    sourceFingerprint: `safe-source:${sourceSuffix}`,
+    sourceInputFingerprint: `safe-source-input:${sourceSuffix}`,
+    sourceVersionFingerprint: `safe-source-version:${sourceSuffix}`,
+    acceptedSelectedResultAuthorityGateFingerprint: `safe-authority-gate:${sourceSuffix}`,
+    selectedResultPersistenceAuthorityPreflightFingerprint:
+      `safe-persistence-preflight:${sourceSuffix}`,
+    selectedResultPersistenceBoundaryContractFingerprint:
+      `safe-persistence-boundary:${sourceSuffix}`,
+    selectedResultOutputReadinessPreflightFingerprint:
+      `safe-output-preflight:${sourceSuffix}`,
+    selectedResultAuthorityGuardFingerprint: `safe-authority-guard:${sourceSuffix}`,
+    selectedResultProjectionFingerprint: `safe-projection:${sourceSuffix}`,
+    safeSelectedResultSourceObjectFingerprint: `safe-source-object:${sourceSuffix}`,
+    selectedResultHandoffScaffoldFingerprint: `safe-handoff:${sourceSuffix}`,
+    ...Object.fromEntries(
+      SELECTED_RESULT_PERSISTED_SUMMARY_SLOT_REQUIRED_FALSE_FLAGS.map((key) => [key, false]),
+    ),
+  };
+}
+
+function runTableFirstNarrowOutputSummary(selectedResult, sourceSuffix = "registration-client") {
+  return {
+    schemaId: RUNTABLE_FIRST_NARROW_OUTPUT_HANDOFF_SUMMARY_SCHEMA_ID,
+    schemaVersion: RUNTABLE_FIRST_NARROW_OUTPUT_HANDOFF_SUMMARY_SCHEMA_VERSION,
+    owner: "shell",
+    slotOwner: "shell",
+    targetKind: "project-envelope-module-downstream-context-summary-slot",
+    moduleId: "cs_selector",
+    state: "redacted_runtable_first_narrow_output_summary_persisted",
+    summaryOnly: true,
+    diagnosticOnly: true,
+    safeSummaryOnly: true,
+    redacted: true,
+    machineValueSafe: true,
+    sourceKind: "persisted-selected-result-summary",
+    futureOutputKind: "runtable-first-narrow-output",
+    rowsIncluded: false,
+    rowCount: 0,
+    generated: false,
+    generationEnabled: false,
+    persisted: false,
+    routeAdded: false,
+    postEndpointAdded: false,
+    runTableFirstNarrowOutputHandoffContractState:
+      "runtable_first_narrow_output_handoff_contract_ready",
+    runTableFirstNarrowOutputHandoffContractReady: true,
+    ...AUTHORITY_STATES,
+    policyFingerprint: selectedResult.policyFingerprint,
+    sourceFingerprint: selectedResult.sourceFingerprint,
+    sourceInputFingerprint: selectedResult.sourceInputFingerprint,
+    sourceVersionFingerprint: selectedResult.sourceVersionFingerprint,
+    persistedSelectedResultSummaryFingerprint: stableFingerprint(
+      "safe-persisted-selected-result-summary",
+      selectedResult,
+    ),
+    selectedResultPersistedSummarySlotContractFingerprint:
+      `safe-selected-result-slot:${sourceSuffix}`,
+    runTableFirstNarrowOutputHandoffContractFingerprint:
+      `safe-runtable-handoff:${sourceSuffix}`,
+    ...Object.fromEntries(
+      RUNTABLE_FIRST_NARROW_OUTPUT_HANDOFF_REQUIRED_FALSE_FLAGS.map((key) => [key, false]),
+    ),
+  };
+}
 
 function stage3Inputs() {
   return {
@@ -40,6 +148,7 @@ function stage3Inputs() {
 }
 
 function localSave(projectId = "registration-client-project", overrides = {}) {
+  const selectedResult = selectedResultSummary(projectId);
   const envelope = createSavedProjectEnvelope({
     project: {
       metadata: {
@@ -84,6 +193,11 @@ function localSave(projectId = "registration-client-project", overrides = {}) {
       cs_selector: {
         status: "ready",
         state: { engineRunActionSource: stage3Inputs() },
+        downstreamContext: {
+          selectedResultSummary: selectedResult,
+          runTableFirstNarrowOutputSummary:
+            runTableFirstNarrowOutputSummary(selectedResult, projectId),
+        },
       },
     },
     source: "p2-shell-save-envelope",
@@ -207,6 +321,14 @@ test("client dispatches only the strictly ordered source projection over same-or
     "savedBy",
     "contractVersion",
     "selectorModule",
+  ]);
+  assert.deepEqual(Object.keys(capturedBody.sourceProjection.selectorModule), [
+    "status",
+    "factoryApprovedInputsSummary",
+    "committedSelectorConstraints",
+    "lmTemperatureReadinessPreview",
+    "selectedResultSummary",
+    "runTableFirstNarrowOutputSummary",
   ]);
   assert.equal(capturedBody.localProjectId, "registration-client-project");
   assert.equal(capturedBody.sourceProjection.selectorModule.status, "ready");

@@ -15,6 +15,7 @@ import {
   PROJECT_BROWSER_SELECTED_PROJECT_SERVER_OWNED_REGISTRATION_SELECTOR_MODULE_FIELD_ORDER,
   PROJECT_BROWSER_SELECTED_PROJECT_SERVER_OWNED_REGISTRATION_SOURCE_FIELD_ORDER,
   PROJECT_BROWSER_SELECTED_PROJECT_SERVER_OWNED_REGISTRATION_STATES,
+  validateProjectBrowserSelectedProjectServerOwnedReadinessSummaryProjection,
 } from "../../../packages/workspace-kernel/projectBrowserSelectedProjectServerOwnedRegistrationBoundary.js";
 
 export const SHELL_PROJECT_BROWSER_FIRST_SERVER_OWNED_RUNTIME_SAVED_SELECTED_PROJECT_REGISTRATION_CLIENT_TRANSPORT_ID =
@@ -284,10 +285,39 @@ function resolveStage3Inputs(envelope) {
   return null;
 }
 
+function resolveReadinessSummaries(envelope) {
+  const downstreamContext = envelope?.modules?.cs_selector?.downstreamContext;
+  const projection = {
+    selectedResultSummary: isPlainObject(downstreamContext?.selectedResultSummary)
+      ? clonePlain(downstreamContext.selectedResultSummary)
+      : null,
+    runTableFirstNarrowOutputSummary:
+      isPlainObject(downstreamContext?.runTableFirstNarrowOutputSummary)
+        ? clonePlain(downstreamContext.runTableFirstNarrowOutputSummary)
+        : null,
+  };
+  const blocker =
+    validateProjectBrowserSelectedProjectServerOwnedReadinessSummaryProjection(projection);
+  return {
+    blocker: blocker
+      ? blocker.replace(
+        /^selected-project-registration-/,
+        "selected-project-registration-client-",
+      )
+      : null,
+    projection: blocker ? null : projection,
+  };
+}
+
 function buildSourceProjection(envelope) {
   const stage3Inputs = resolveStage3Inputs(envelope);
   if (!stage3Inputs) return {
     blocker: "selected-project-registration-client-stage3-inputs-missing",
+    sourceProjection: null,
+  };
+  const readinessSummaries = resolveReadinessSummaries(envelope);
+  if (readinessSummaries.blocker) return {
+    blocker: readinessSummaries.blocker,
     sourceProjection: null,
   };
   const sourceProjection = orderedObject(
@@ -301,6 +331,7 @@ function buildSourceProjection(envelope) {
         {
           status: envelope?.modules?.cs_selector?.status ?? "ready",
           ...stage3Inputs,
+          ...readinessSummaries.projection,
         },
       ),
     },

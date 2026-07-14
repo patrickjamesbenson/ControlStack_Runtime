@@ -6,6 +6,7 @@ import {
   RUNTIME_ENGINE_RUNTABLE_FIRST_SELECTED_PROJECT_SHELL_INVOKE_TRANSPORT_BOUNDARY_ID,
   RUNTIME_ENGINE_RUNTABLE_SELECTED_PROJECT_SHELL_INVOKE_REQUEST_FIELD_ORDER,
   RUNTIME_ENGINE_RUNTABLE_SELECTED_PROJECT_SHELL_INVOKE_REQUEST_KIND,
+  RUNTIME_ENGINE_RUNTABLE_SELECTED_PROJECT_LIVE_READONLY_INVOKE_RESPONSE_FIELD_ORDER,
   RUNTIME_ENGINE_RUNTABLE_SELECTED_PROJECT_SHELL_INVOKE_RESPONSE_FIELD_ORDER,
   RUNTIME_ENGINE_RUNTABLE_SELECTED_PROJECT_SHELL_INVOKE_TRANSPORT_SCHEMA_ID,
   RUNTIME_ENGINE_RUNTABLE_SELECTED_PROJECT_SHELL_INVOKE_TRANSPORT_SCHEMA_VERSION,
@@ -106,6 +107,15 @@ const REQUIRED_SERVER_FALSE_FLAGS = Object.freeze([
   "mcpExposed",
   "shellDirectInternalCallAllowed",
   "shellMounted",
+]);
+const REQUIRED_LIVE_SERVER_FALSE_FLAGS = Object.freeze([
+  "filesystemWriteAttempted",
+  "auditJsonlWriteAttempted",
+  "runtimeDataMutated",
+  "selectedResultPersisted",
+  "runTableGenerated",
+  "iesGenerated",
+  "outputGenerated",
 ]);
 
 function isPlainObject(value) {
@@ -263,10 +273,15 @@ function buildTransportRequest(selectedProjectId) {
 }
 
 function validateResponseBody(body, selectedProjectId) {
-  if (!hasExactKeys(
+  const liveResponse = hasExactKeys(
+    body,
+    RUNTIME_ENGINE_RUNTABLE_SELECTED_PROJECT_LIVE_READONLY_INVOKE_RESPONSE_FIELD_ORDER,
+  );
+  const baselineResponse = hasExactKeys(
     body,
     RUNTIME_ENGINE_RUNTABLE_SELECTED_PROJECT_SHELL_INVOKE_RESPONSE_FIELD_ORDER,
-  ) || !Object.values(body).every(isSafeScalar)) {
+  );
+  if ((!liveResponse && !baselineResponse) || !Object.values(body).every(isSafeScalar)) {
     return "selected-project-readonly-engine-client-response-shape-invalid";
   }
   if (body.schemaId
@@ -288,6 +303,29 @@ function validateResponseBody(body, selectedProjectId) {
   for (const key of REQUIRED_SERVER_FALSE_FLAGS) {
     if (body[key] !== false) {
       return `selected-project-readonly-engine-client-response-required-flag-not-false-${key}`;
+    }
+  }
+  if (liveResponse) {
+    for (const key of REQUIRED_LIVE_SERVER_FALSE_FLAGS) {
+      if (body[key] !== false) {
+        return `selected-project-readonly-engine-client-response-live-required-flag-not-false-${key}`;
+      }
+    }
+    if (body.serverOwnedRevisionChecked !== true) {
+      return "selected-project-readonly-engine-client-response-live-server-revision-not-checked";
+    }
+    if (body.inFlightInvocationBlocked === true
+      && (body.capabilityInvoked === true || body.invocationConsumed === true)) {
+      return "selected-project-readonly-engine-client-response-live-concurrent-lifecycle-invalid";
+    }
+    if (body.replayBlocked === true && body.invocationConsumed !== true) {
+      return "selected-project-readonly-engine-client-response-live-replay-lifecycle-invalid";
+    }
+    if (body.capabilityCompleted === true
+      && (body.invocationConsumed !== true
+        || body.secondServerOwnedEnvelopeRevisionCheckPassed !== true
+        || body.filesystemWriteGuardActive !== true)) {
+      return "selected-project-readonly-engine-client-response-live-completed-lifecycle-invalid";
     }
   }
   if (body.sourceBoundaryReady === true

@@ -5,6 +5,13 @@ import {
   SHELL_PROJECT_BROWSER_SELECTED_PROJECT_ENGINE_RUN_PREVIEW_SCHEMA_VERSION,
   SHELL_PROJECT_BROWSER_SELECTED_PROJECT_ENGINE_RUN_PREVIEW_STATES,
 } from "./projectBrowserSelectedProjectEngineRunPreview.js";
+import {
+  SHELL_PROJECT_BROWSER_FIRST_ENABLED_SELECTED_PROJECT_READONLY_ENGINE_RUN_ID,
+  SHELL_PROJECT_BROWSER_SELECTED_PROJECT_ENGINE_READONLY_INVOKE_ACTIVATION_FIELD_ORDER,
+  SHELL_PROJECT_BROWSER_SELECTED_PROJECT_ENGINE_READONLY_INVOKE_ACTIVATION_SCHEMA_ID,
+  SHELL_PROJECT_BROWSER_SELECTED_PROJECT_ENGINE_READONLY_INVOKE_ACTIVATION_SCHEMA_VERSION,
+  SHELL_PROJECT_BROWSER_SELECTED_PROJECT_ENGINE_READONLY_INVOKE_ACTIVATION_STATES,
+} from "./projectBrowserSelectedProjectEngineReadonlyInvokeActivation.js";
 
 export const SHELL_PROJECT_BROWSER_FIRST_SELECTED_PROJECT_ENGINE_ACTION_LANE_SURFACE_CONTRACT_ID =
   "SHELL-PROJECT-BROWSER-FIRST-SELECTED-PROJECT-ENGINE-ACTION-LANE-SURFACE-1";
@@ -19,6 +26,8 @@ export const SHELL_PROJECT_BROWSER_SELECTED_PROJECT_ENGINE_ACTION_ITEM_SCHEMA_VE
 
 export const SHELL_PROJECT_BROWSER_SELECTED_PROJECT_ENGINE_ACTION_LANE_STATES = Object.freeze({
   ready: "shell_project_browser_selected_project_engine_action_lane_ready",
+  invoking: "shell_project_browser_selected_project_engine_action_lane_invoking",
+  completed: "shell_project_browser_selected_project_engine_action_lane_completed",
   missing: "shell_project_browser_selected_project_engine_action_lane_missing",
   blockedFailClosed:
     "shell_project_browser_selected_project_engine_action_lane_blocked_fail_closed",
@@ -188,6 +197,36 @@ function previewIsMissing(preview) {
     && preview.failClosed === true;
 }
 
+function activationContractIsSafe(activation) {
+  return isPlainObject(activation)
+    && Object.isFrozen(activation)
+    && exactFieldOrder(
+      activation,
+      SHELL_PROJECT_BROWSER_SELECTED_PROJECT_ENGINE_READONLY_INVOKE_ACTIVATION_FIELD_ORDER,
+    )
+    && Object.values(activation).every(isSafeScalar)
+    && activation.schemaId
+      === SHELL_PROJECT_BROWSER_SELECTED_PROJECT_ENGINE_READONLY_INVOKE_ACTIVATION_SCHEMA_ID
+    && activation.schemaVersion
+      === SHELL_PROJECT_BROWSER_SELECTED_PROJECT_ENGINE_READONLY_INVOKE_ACTIVATION_SCHEMA_VERSION
+    && activation.contractId
+      === SHELL_PROJECT_BROWSER_FIRST_ENABLED_SELECTED_PROJECT_READONLY_ENGINE_RUN_ID
+    && activation.owner === "shell-browser"
+    && activation.surfaceId === "selected-project-engine-readonly-invoke-activation"
+    && activation.readOnly === true
+    && activation.selectedProjectOnly === true
+    && activation.scalarSafe === true
+    && activation.redactedOutcomeOnly === true
+    && activation.userGestureRequired === true
+    && activation.automaticInvocationEnabled === false
+    && activation.runtimeDataMutated === false
+    && activation.selectedResultPersisted === false
+    && activation.runTableGenerated === false
+    && activation.iesGenerated === false
+    && activation.outputGenerated === false
+    && activation.filesystemWriteAttempted === false;
+}
+
 function orderedActionItem(fields) {
   return Object.fromEntries(
     SHELL_PROJECT_BROWSER_SELECTED_PROJECT_ENGINE_ACTION_ITEM_FIELD_ORDER
@@ -195,18 +234,25 @@ function orderedActionItem(fields) {
   );
 }
 
-function buildSelectedProjectEngineRunActionItem({ blocker }) {
+function buildSelectedProjectEngineRunActionItem({
+  state = "blocked",
+  readiness = "blocked_fail_closed",
+  available = false,
+  enabled = false,
+  failClosed = true,
+  blocker = "selected-project-engine-action-blocked",
+} = {}) {
   return Object.freeze(orderedActionItem({
     schemaId: SHELL_PROJECT_BROWSER_SELECTED_PROJECT_ENGINE_ACTION_ITEM_SCHEMA_ID,
     schemaVersion: SHELL_PROJECT_BROWSER_SELECTED_PROJECT_ENGINE_ACTION_ITEM_SCHEMA_VERSION,
     actionId: "run-engine",
     label: "Run Engine",
-    state: "blocked",
-    readiness: "blocked_fail_closed",
-    available: false,
-    enabled: false,
-    failClosed: true,
-    blocker,
+    state,
+    readiness,
+    available: available === true,
+    enabled: enabled === true,
+    failClosed: failClosed === true,
+    blocker: blocker === null ? null : safeId(blocker) || "selected-project-engine-action-blocked",
     userGestureRequired: true,
     selectedProjectOnly: true,
     preparedActionRetainedPrivately: false,
@@ -220,15 +266,29 @@ function orderedActionLane(fields) {
   );
 }
 
-export function buildShellProjectBrowserSelectedProjectEngineActionLane(engineRunPreview = null) {
+export function buildShellProjectBrowserSelectedProjectEngineActionLane(
+  engineRunPreview = null,
+  activation = null,
+) {
   const sourcePreviewPresent = isPlainObject(engineRunPreview);
   const sourcePreviewSafe = previewContractIsSafe(engineRunPreview);
   const sourcePreviewReady = sourcePreviewSafe && previewIsReady(engineRunPreview);
   const sourcePreviewMissing = sourcePreviewSafe && previewIsMissing(engineRunPreview);
+  const activationSafe = sourcePreviewReady
+    && activationContractIsSafe(activation)
+    && activation.selectedProjectId === engineRunPreview.selectedProjectId;
 
   let state = SHELL_PROJECT_BROWSER_SELECTED_PROJECT_ENGINE_ACTION_LANE_STATES.blockedFailClosed;
   let readiness = "blocked_fail_closed";
+  let ready = false;
+  let failClosed = true;
   let blocker = "selected-project-engine-action-readiness-preview-blocked";
+  let actionState = "blocked";
+  let actionReadiness = "blocked_fail_closed";
+  let actionAvailable = false;
+  let actionEnabled = false;
+  let actionFailClosed = true;
+  let actionBlocker = blocker;
 
   if (!sourcePreviewPresent || sourcePreviewMissing) {
     state = SHELL_PROJECT_BROWSER_SELECTED_PROJECT_ENGINE_ACTION_LANE_STATES.missing;
@@ -237,8 +297,70 @@ export function buildShellProjectBrowserSelectedProjectEngineActionLane(engineRu
   } else if (sourcePreviewReady) {
     blocker = "selected-project-engine-action-capability-not-mounted";
   }
+  actionBlocker = blocker;
 
-  const actionItem = buildSelectedProjectEngineRunActionItem({ blocker });
+  if (activationSafe) {
+    actionAvailable = activation.actionAvailable === true;
+    actionEnabled = activation.actionEnabled === true;
+    blocker = activation.blocker;
+    if (activation.state
+        === SHELL_PROJECT_BROWSER_SELECTED_PROJECT_ENGINE_READONLY_INVOKE_ACTIVATION_STATES.ready
+      && activation.ready === true
+      && actionAvailable
+      && actionEnabled) {
+      state = SHELL_PROJECT_BROWSER_SELECTED_PROJECT_ENGINE_ACTION_LANE_STATES.ready;
+      readiness = "ready";
+      ready = true;
+      failClosed = false;
+      blocker = null;
+      actionState = "ready";
+      actionReadiness = "ready";
+      actionFailClosed = false;
+      actionBlocker = null;
+    } else if (activation.state
+        === SHELL_PROJECT_BROWSER_SELECTED_PROJECT_ENGINE_READONLY_INVOKE_ACTIVATION_STATES
+          .invoking) {
+      state = SHELL_PROJECT_BROWSER_SELECTED_PROJECT_ENGINE_ACTION_LANE_STATES.invoking;
+      readiness = "invoking";
+      blocker = activation.blocker
+        || "selected-project-engine-readonly-invoke-in-flight";
+      actionState = "invoking";
+      actionReadiness = "invoking";
+      actionBlocker = blocker;
+    } else if (activation.state
+        === SHELL_PROJECT_BROWSER_SELECTED_PROJECT_ENGINE_READONLY_INVOKE_ACTIVATION_STATES
+          .completed) {
+      state = SHELL_PROJECT_BROWSER_SELECTED_PROJECT_ENGINE_ACTION_LANE_STATES.completed;
+      readiness = "completed";
+      failClosed = false;
+      blocker = null;
+      actionState = "completed";
+      actionReadiness = "completed";
+      actionFailClosed = false;
+      actionBlocker = null;
+    } else if (activation.state
+        === SHELL_PROJECT_BROWSER_SELECTED_PROJECT_ENGINE_READONLY_INVOKE_ACTIVATION_STATES
+          .missing) {
+      state = SHELL_PROJECT_BROWSER_SELECTED_PROJECT_ENGINE_ACTION_LANE_STATES.missing;
+      readiness = "missing";
+      blocker = activation.blocker
+        || "selected-project-engine-readonly-invoke-selection-missing";
+      actionBlocker = blocker;
+    } else {
+      blocker = activation.blocker
+        || "selected-project-engine-readonly-invoke-activation-blocked";
+      actionBlocker = blocker;
+    }
+  }
+
+  const actionItem = buildSelectedProjectEngineRunActionItem({
+    state: actionState,
+    readiness: actionReadiness,
+    available: actionAvailable,
+    enabled: actionEnabled,
+    failClosed: actionFailClosed,
+    blocker: actionBlocker,
+  });
   const actions = Object.freeze([actionItem]);
 
   return Object.freeze(orderedActionLane({
@@ -250,8 +372,8 @@ export function buildShellProjectBrowserSelectedProjectEngineActionLane(engineRu
     label: "Engine actions",
     state,
     readiness,
-    ready: false,
-    failClosed: true,
+    ready,
+    failClosed,
     blocker,
     selectedProjectId: sourcePreviewSafe ? engineRunPreview.selectedProjectId : null,
     selectedProjectFound: sourcePreviewReady,
@@ -265,19 +387,19 @@ export function buildShellProjectBrowserSelectedProjectEngineActionLane(engineRu
     engineVerified: sourcePreviewReady,
     runCount: sourcePreviewReady ? engineRunPreview.runCount : 0,
     actionItemCount: actions.length,
-    enabledActionItemCount: 0,
+    enabledActionItemCount: actionEnabled ? 1 : 0,
     actions,
     readOnly: true,
     redacted: true,
     machineValueSafe: true,
     userGestureRequired: true,
-    nonExecuting: true,
-    engineCapabilityMounted: false,
+    nonExecuting: !activationSafe,
+    engineCapabilityMounted: activationSafe && activation.clientTransportMounted === true,
     preparedActionRetainedPrivately: false,
-    engineActionAvailable: false,
-    engineActionEnabled: false,
-    engineExecutionRequested: false,
-    engineExecutionAttempted: false,
+    engineActionAvailable: actionAvailable,
+    engineActionEnabled: actionEnabled,
+    engineExecutionRequested: activationSafe && activation.requestDispatched === true,
+    engineExecutionAttempted: activationSafe && activation.requestDispatched === true,
     selectedResultCreated: false,
     selectedResultPersistenceEnabled: false,
     runTableGenerated: false,

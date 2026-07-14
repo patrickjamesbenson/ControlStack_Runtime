@@ -622,6 +622,48 @@ test("consumes only the private source-boundary candidate and returns Step-1, St
   );
 });
 
+test("propagates only the allowlisted donor non-success blocker through the redacted capability outcome", async () => {
+  const { boundary } = await readyBoundary();
+  const capability = createRuntimeEngineRunTableSelectedProjectReadonlyInvokeCapability({
+    hostLocalReadonlySeamAdapter: realAdapter(async () => safeSeamResult({
+      ok: false,
+      engine_result_produced: false,
+      safe_engine_summary: {
+        success: false,
+        run_count: 0,
+        error_count: 1,
+        warning_count: 0,
+      },
+      blockers: [{
+        code: "direct-run-engine-no-success",
+        detail: "raw donor failure prose must not escape",
+      }],
+    })),
+  });
+
+  const result = await capability(boundary);
+
+  assertOnlySafeCapabilityOutput(result);
+  assert.equal(result.readonlyEngineStep1SafeSummary.readonlyEngineStep1Ready, false);
+  assert.equal(
+    result.readonlyEngineStep1SafeSummary.blocker,
+    "direct-run-engine-no-success",
+  );
+  assert.equal(result.outcomeDescriptor.ok, false);
+  assert.equal(result.outcomeDescriptor.failClosed, true);
+  assert.equal(result.outcomeDescriptor.blocker, "direct-run-engine-no-success");
+  assert.equal(result.outcomeDescriptor.adapterInvoked, true);
+  assert.equal(result.outcomeDescriptor.invocationConsumed, true);
+  assert.equal(result.outcomeDescriptor.donorRunEngineAttempted, true);
+  assert.equal(result.outcomeDescriptor.filesystemWriteAttempted, false);
+  assert.equal(result.outcomeDescriptor.runtimeDataMutated, false);
+  assert.equal(result.outcomeDescriptor.selectedResultPersisted, false);
+  assert.equal(result.outcomeDescriptor.runTableGenerated, false);
+  assert.equal(result.outcomeDescriptor.iesGenerated, false);
+  assert.equal(result.outcomeDescriptor.outputGenerated, false);
+  assert.equal(JSON.stringify(result).includes("raw donor failure prose"), false);
+});
+
 test("rejects readiness and selected-result summaries as executable inputs before adapter invocation", async () => {
   const { readinessSummary, selectedResultSummary } = await readyBoundary();
   let calls = 0;

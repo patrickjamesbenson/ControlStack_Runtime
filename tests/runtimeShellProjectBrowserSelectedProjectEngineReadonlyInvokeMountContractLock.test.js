@@ -663,7 +663,7 @@ test("controller retains one non-interactive snapshot per selection and service 
   assert.equal(first.preparedActionRetained, false);
 });
 
-test("source and shell wiring expose status only: no callback, listener, enabled Run Engine action, route, persistence, output, direct MCP, or filesystem widening", async () => {
+test("source keeps the historical host-local mount locked while shell uses the inert client mount and delegated activation", async () => {
   const [mountSource, shellSource, actionLaneSource] = await Promise.all([
     readFile(
       new URL(
@@ -704,7 +704,7 @@ test("source and shell wiring expose status only: no callback, listener, enabled
   );
 
   const rendererStart = shellSource.indexOf(
-    "function renderProjectBrowserSelectedProjectEngineActionLane(actionLane)",
+    "function renderProjectBrowserSelectedProjectEngineActionLane(",
   );
   const rendererEnd = shellSource.indexOf(
     "function setProjectBrowserSelectedProjectExportsWorkflowDescriptor(workflowDescriptor)",
@@ -713,7 +713,11 @@ test("source and shell wiring expose status only: no callback, listener, enabled
   const actionRenderer = shellSource.slice(rendererStart, rendererEnd);
   assert.ok(rendererStart >= 0);
   assert.ok(rendererEnd > rendererStart);
-  assert.match(actionRenderer, /button\.disabled = true/);
+  assert.match(actionRenderer, /button\.disabled = actionItem\?\.enabled !== true/);
+  assert.match(shellSource,
+    /createShellProjectBrowserSelectedProjectReadonlyEngineInvokeClientMount\(\{/);
+  assert.doesNotMatch(shellSource,
+    /selectedProjectReadonlyEngineInvokeMount\.mount\(\{/);
   assert.doesNotMatch(
     actionRenderer,
     /addEventListener|onclick|onClick|href|callback|preparedAction|\bfetch\s*\(|services?\.|mcp/i,

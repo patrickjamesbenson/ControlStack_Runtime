@@ -154,6 +154,8 @@ const EXPECTED_ACTION_ITEM_FIELD_ORDER = Object.freeze([
 
 const EXPECTED_ACTION_LANE_STATES = Object.freeze({
   ready: "shell_project_browser_selected_project_engine_action_lane_ready",
+  invoking: "shell_project_browser_selected_project_engine_action_lane_invoking",
+  completed: "shell_project_browser_selected_project_engine_action_lane_completed",
   missing: "shell_project_browser_selected_project_engine_action_lane_missing",
   blockedFailClosed:
     "shell_project_browser_selected_project_engine_action_lane_blocked_fail_closed",
@@ -540,7 +542,7 @@ test("contract lock fixes the direct preview-to-action-lane wiring and separate 
   );
   const renderProjectBrowserStart = shellSource.indexOf("function renderProjectBrowser({ context })");
   const renderProjectBrowserEnd = shellSource.indexOf(
-    "function renderProjectBrowserSelectedProjectEngineActionLane(actionLane)",
+    "function renderProjectBrowserSelectedProjectEngineActionLane(",
     renderProjectBrowserStart,
   );
   const renderProjectBrowserSource = shellSource.slice(
@@ -572,7 +574,7 @@ test("contract lock fixes the direct preview-to-action-lane wiring and separate 
   );
   assert.match(
     renderProjectBrowserSource,
-    /renderProjectBrowserSelectedProjectEngineRunPreview\(engineRunPreview\);\s*renderProjectBrowserSelectedProjectEngineActionLane\(\s*buildShellProjectBrowserSelectedProjectEngineActionLane\(engineRunPreview\),\s*\);/,
+    /renderProjectBrowserSelectedProjectEngineRunPreview\(engineRunPreview\);\s*renderProjectBrowserSelectedProjectEngineActionLane\(\s*buildShellProjectBrowserSelectedProjectEngineActionLane\(\s*engineRunPreview,\s*projectBrowserSelectedProjectEngineReadonlyInvokeActivationStatus,\s*\),\s*projectBrowserSelectedProjectEngineReadonlyInvokeActivationStatus,\s*\);/,
   );
   assert.match(
     shellSource,
@@ -592,13 +594,13 @@ test("contract lock fixes the direct preview-to-action-lane wiring and separate 
   );
 });
 
-test("contract lock fixes one text-only disabled Run Engine button with no listener or invocation seam", async () => {
+test("contract lock fixes one scalar-projected Run Engine button while keeping listener and invocation outside the renderer", async () => {
   const shellSource = await readFile(
     new URL("../apps/workspace-shell/src/shell.js", import.meta.url),
     "utf8",
   );
   const rendererStart = shellSource.indexOf(
-    "function renderProjectBrowserSelectedProjectEngineActionLane(actionLane)",
+    "function renderProjectBrowserSelectedProjectEngineActionLane(",
   );
   const rendererEnd = shellSource.indexOf(
     "function setProjectBrowserSelectedProjectExportsWorkflowDescriptor(workflowDescriptor)",
@@ -609,7 +611,7 @@ test("contract lock fixes one text-only disabled Run Engine button with no liste
   assert.ok(rendererStart >= 0);
   assert.ok(rendererEnd > rendererStart);
   assert.equal((renderer.match(/createElement\("button"\)/g) || []).length, 1);
-  assert.equal((renderer.match(/createElement\("p"\)/g) || []).length, 2);
+  assert.equal((renderer.match(/createElement\("p"\)/g) || []).length, 3);
   assert.doesNotMatch(
     renderer,
     /createElement\("(?:a|input|form|select|textarea)"\)/,
@@ -621,12 +623,16 @@ test("contract lock fixes one text-only disabled Run Engine button with no liste
   );
   assert.match(
     renderer,
-    /button\.textContent = actionLane\?\.actions\?\.\[0\]\?\.label \|\| "Run Engine"/,
+    /button\.textContent = actionItem\?\.label \|\| "Run Engine"/,
   );
-  assert.match(renderer, /button\.disabled = true/);
+  assert.match(renderer, /button\.disabled = actionItem\?\.enabled !== true/);
+  assert.match(
+    renderer,
+    /button\.dataset\.shellProjectEngineActionId = actionItem\?\.actionId \|\| "run-engine"/,
+  );
   assert.equal(
     renderer.includes(
-      "Engine readiness is confirmed, but no selected-project Engine execution capability is mounted.",
+      "Readonly Engine run is ready for the selected server-owned revision.",
     ),
     true,
   );
@@ -635,14 +641,12 @@ test("contract lock fixes one text-only disabled Run Engine button with no liste
     true,
   );
   assert.equal(
-    renderer.includes(
-      "Engine actions are blocked because the selected-project readiness preview failed closed.",
-    ),
+    renderer.includes("Readonly Engine run is blocked fail-closed."),
     true,
   );
   assert.equal(
     renderer.includes(
-      "This lane does not execute Engine, generate RunTable output, or persist a selected result.",
+      "No RunTable, IES, output, persistence, RuntimeData mutation, or filesystem write is enabled.",
     ),
     true,
   );
@@ -683,7 +687,7 @@ test("contract lock adds no capability, export workflow, route, persistence, Run
   ]);
 
   assert.match(actionLaneSource, /from "\.\/projectBrowserSelectedProjectEngineRunPreview\.js"/);
-  assert.equal((actionLaneSource.match(/^import\s/gm) || []).length, 1);
+  assert.equal((actionLaneSource.match(/^import\s/gm) || []).length, 2);
   assert.equal(actionLaneSource.includes("packages/workspace-kernel"), false);
   assert.equal(actionLaneSource.includes("engineRunTableSelectedProjectReadonlyInvokeCapability"), false);
   assert.equal(actionLaneSource.includes("projectBrowserService"), false);

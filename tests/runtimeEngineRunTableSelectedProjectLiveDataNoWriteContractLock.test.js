@@ -307,4 +307,11 @@ test("live active RuntimeData reaches donor run_engine only in memory under the 
   assert.equal(result.raw_ies_exposed, false);
   assert.equal(result.private_paths_exposed, false);
   assert.equal(result.source_path_returned, false);
+  if (result.ok === false) {
+    assert.equal(
+      Array.isArray(result.blockers)
+        && result.blockers.some((blocker) => blocker?.code === "direct-run-engine-no-success"),
+      true,
+    );
+  }
 });

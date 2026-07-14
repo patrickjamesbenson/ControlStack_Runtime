@@ -4,7 +4,23 @@ import { readFile } from "node:fs/promises";
 
 import { createSavedProjectEnvelope } from "../packages/workspace-kernel/projectEnvelope.js";
 import {
+  PERSISTED_SELECTED_RESULT_SUMMARY_SCHEMA_ID,
+  PERSISTED_SELECTED_RESULT_SUMMARY_SCHEMA_VERSION,
+} from "../packages/workspace-kernel/selectedResultPersistenceBoundaryContract.js";
+import {
+  SELECTED_RESULT_PERSISTED_SUMMARY_SLOT_REQUIRED_FALSE_FLAGS,
+  SELECTED_RESULT_PERSISTED_SUMMARY_SLOT_SCHEMA_ID,
+  SELECTED_RESULT_PERSISTED_SUMMARY_SLOT_SCHEMA_VERSION,
+} from "../packages/workspace-kernel/selectedResultPersistedSummarySlotContract.js";
+import {
+  RUNTABLE_FIRST_NARROW_OUTPUT_HANDOFF_REQUIRED_FALSE_FLAGS,
+  RUNTABLE_FIRST_NARROW_OUTPUT_HANDOFF_SUMMARY_SCHEMA_ID,
+  RUNTABLE_FIRST_NARROW_OUTPUT_HANDOFF_SUMMARY_SCHEMA_VERSION,
+} from "../packages/workspace-kernel/runTableFirstNarrowOutputHandoffContract.js";
+import { stableFingerprint } from "../packages/workspace-kernel/stableFingerprint.js";
+import {
   createProjectBrowserSelectedProjectServerOwnedRuntimeSavedRegistry,
+  PROJECT_BROWSER_FIRST_SERVER_OWNED_RUNTIME_SAVED_SELECTED_PROJECT_ENGINE_READINESS_SUMMARY_REGISTRATION_ID,
   PROJECT_BROWSER_FIRST_SERVER_OWNED_RUNTIME_SAVED_SELECTED_PROJECT_REGISTRATION_ID,
   PROJECT_BROWSER_SELECTED_PROJECT_SERVER_OWNED_REGISTRATION_CURRENT_PROJECT_FIELD_ORDER,
   PROJECT_BROWSER_SELECTED_PROJECT_SERVER_OWNED_REGISTRATION_METHOD,
@@ -25,6 +41,99 @@ import {
 
 function ordered(order, fields) {
   return Object.fromEntries(order.map((key) => [key, fields[key]]));
+}
+
+const AUTHORITY_STATES = Object.freeze({
+  acceptedSelectedResultAuthorityState: "accepted_selected_result_authority",
+  selectedResultPersistenceAuthorityPreflightState: "ready_for_persistence_authority",
+  selectedResultPersistenceBoundaryState: "selected_result_persistence_boundary_contract_ready",
+  selectedResultOutputReadinessPreflightState:
+    "selected_result_output_readiness_ready_for_persistence",
+});
+
+function selectedResultSummary(sourceSuffix = "registration") {
+  return {
+    schemaId: PERSISTED_SELECTED_RESULT_SUMMARY_SCHEMA_ID,
+    schemaVersion: PERSISTED_SELECTED_RESULT_SUMMARY_SCHEMA_VERSION,
+    slotSchemaId: SELECTED_RESULT_PERSISTED_SUMMARY_SLOT_SCHEMA_ID,
+    slotSchemaVersion: SELECTED_RESULT_PERSISTED_SUMMARY_SLOT_SCHEMA_VERSION,
+    owner: "shell",
+    slotOwner: "shell",
+    targetKind: "project-envelope-module-downstream-context-summary-slot",
+    moduleId: "cs_selector",
+    state: "redacted_selected_result_summary_persisted",
+    summaryOnly: true,
+    redacted: true,
+    machineValueSafe: true,
+    ...AUTHORITY_STATES,
+    selectedResultAuthorityGuardState: "engine_verified_selected_result_ready",
+    selectedResultProjectionState: "selected_accepted",
+    safeSelectedResultSourceState: "safe_selected_result_source_ready",
+    selectedResultHandoffScaffoldState: "runtime_selected_result_handoff_scaffold_ready",
+    policyFingerprint: `safe-policy:${sourceSuffix}`,
+    sourceFingerprint: `safe-source:${sourceSuffix}`,
+    sourceInputFingerprint: `safe-source-input:${sourceSuffix}`,
+    sourceVersionFingerprint: `safe-source-version:${sourceSuffix}`,
+    acceptedSelectedResultAuthorityGateFingerprint: `safe-authority-gate:${sourceSuffix}`,
+    selectedResultPersistenceAuthorityPreflightFingerprint:
+      `safe-persistence-preflight:${sourceSuffix}`,
+    selectedResultPersistenceBoundaryContractFingerprint:
+      `safe-persistence-boundary:${sourceSuffix}`,
+    selectedResultOutputReadinessPreflightFingerprint:
+      `safe-output-preflight:${sourceSuffix}`,
+    selectedResultAuthorityGuardFingerprint: `safe-authority-guard:${sourceSuffix}`,
+    selectedResultProjectionFingerprint: `safe-projection:${sourceSuffix}`,
+    safeSelectedResultSourceObjectFingerprint: `safe-source-object:${sourceSuffix}`,
+    selectedResultHandoffScaffoldFingerprint: `safe-handoff:${sourceSuffix}`,
+    ...Object.fromEntries(
+      SELECTED_RESULT_PERSISTED_SUMMARY_SLOT_REQUIRED_FALSE_FLAGS.map((key) => [key, false]),
+    ),
+  };
+}
+
+function runTableFirstNarrowOutputSummary(selectedResult, sourceSuffix = "registration") {
+  return {
+    schemaId: RUNTABLE_FIRST_NARROW_OUTPUT_HANDOFF_SUMMARY_SCHEMA_ID,
+    schemaVersion: RUNTABLE_FIRST_NARROW_OUTPUT_HANDOFF_SUMMARY_SCHEMA_VERSION,
+    owner: "shell",
+    slotOwner: "shell",
+    targetKind: "project-envelope-module-downstream-context-summary-slot",
+    moduleId: "cs_selector",
+    state: "redacted_runtable_first_narrow_output_summary_persisted",
+    summaryOnly: true,
+    diagnosticOnly: true,
+    safeSummaryOnly: true,
+    redacted: true,
+    machineValueSafe: true,
+    sourceKind: "persisted-selected-result-summary",
+    futureOutputKind: "runtable-first-narrow-output",
+    rowsIncluded: false,
+    rowCount: 0,
+    generated: false,
+    generationEnabled: false,
+    persisted: false,
+    routeAdded: false,
+    postEndpointAdded: false,
+    runTableFirstNarrowOutputHandoffContractState:
+      "runtable_first_narrow_output_handoff_contract_ready",
+    runTableFirstNarrowOutputHandoffContractReady: true,
+    ...AUTHORITY_STATES,
+    policyFingerprint: selectedResult.policyFingerprint,
+    sourceFingerprint: selectedResult.sourceFingerprint,
+    sourceInputFingerprint: selectedResult.sourceInputFingerprint,
+    sourceVersionFingerprint: selectedResult.sourceVersionFingerprint,
+    persistedSelectedResultSummaryFingerprint: stableFingerprint(
+      "safe-persisted-selected-result-summary",
+      selectedResult,
+    ),
+    selectedResultPersistedSummarySlotContractFingerprint:
+      `safe-selected-result-slot:${sourceSuffix}`,
+    runTableFirstNarrowOutputHandoffContractFingerprint:
+      `safe-runtable-handoff:${sourceSuffix}`,
+    ...Object.fromEntries(
+      RUNTABLE_FIRST_NARROW_OUTPUT_HANDOFF_REQUIRED_FALSE_FLAGS.map((key) => [key, false]),
+    ),
+  };
 }
 
 function stage3Inputs(runLength = 3500) {
@@ -49,6 +158,7 @@ function stage3Inputs(runLength = 3500) {
 
 function localEnvelope(projectId = "registration-project", runLength = 3500) {
   const inputs = stage3Inputs(runLength);
+  const selectedResult = selectedResultSummary(`${projectId}-${runLength}`);
   return createSavedProjectEnvelope({
     project: {
       metadata: {
@@ -93,6 +203,11 @@ function localEnvelope(projectId = "registration-project", runLength = 3500) {
       cs_selector: {
         status: "ready",
         state: { engineRunActionSource: inputs },
+        downstreamContext: {
+          selectedResultSummary: selectedResult,
+          runTableFirstNarrowOutputSummary:
+            runTableFirstNarrowOutputSummary(selectedResult, `${projectId}-${runLength}`),
+        },
       },
     },
     source: "p2-shell-save-envelope",
@@ -131,6 +246,10 @@ function sourceProjection(envelope, runLength = 3500) {
         {
           status: "ready",
           ...inputs,
+          selectedResultSummary:
+            envelope.modules.cs_selector.downstreamContext.selectedResultSummary,
+          runTableFirstNarrowOutputSummary:
+            envelope.modules.cs_selector.downstreamContext.runTableFirstNarrowOutputSummary,
         },
       ),
     },
@@ -202,6 +321,10 @@ test("exports one fixed same-origin registration route distinct from Engine invo
     "PROJECT-BROWSER-FIRST-SERVER-OWNED-RUNTIME-SAVED-SELECTED-PROJECT-REGISTRATION-1",
   );
   assert.equal(
+    PROJECT_BROWSER_FIRST_SERVER_OWNED_RUNTIME_SAVED_SELECTED_PROJECT_ENGINE_READINESS_SUMMARY_REGISTRATION_ID,
+    "PROJECT-BROWSER-FIRST-SERVER-OWNED-RUNTIME-SAVED-SELECTED-PROJECT-ENGINE-READINESS-SUMMARY-REGISTRATION-1",
+  );
+  assert.equal(
     PROJECT_BROWSER_SELECTED_PROJECT_SERVER_OWNED_REGISTRATION_PATH,
     "/api/workspace-shell/selected-project-runtime-save-registration",
   );
@@ -244,6 +367,17 @@ test("server reconstructs and validates the runtime envelope while returning sca
     registeredEnvelope.modules.cs_selector.state.engineRunActionSource,
     stage3Inputs(),
   );
+  assert.deepEqual(
+    registeredEnvelope.modules.cs_selector.downstreamContext.selectedResultSummary,
+    envelope.modules.cs_selector.downstreamContext.selectedResultSummary,
+  );
+  assert.deepEqual(
+    registeredEnvelope.modules.cs_selector.downstreamContext.runTableFirstNarrowOutputSummary,
+    envelope.modules.cs_selector.downstreamContext.runTableFirstNarrowOutputSummary,
+  );
+  const activeRevision = registry.getActiveRevision(envelope.projectId);
+  assert.equal(Object.hasOwn(activeRevision, "selectedResultSummary"), false);
+  assert.equal(Object.hasOwn(activeRevision, "runTableFirstNarrowOutputSummary"), false);
   assert.notDeepEqual(registeredEnvelope, envelope);
 });
 

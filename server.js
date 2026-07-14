@@ -28,6 +28,7 @@ import {
   createProjectBrowserSelectedProjectServerOwnedRuntimeSavedRegistry,
   PROJECT_BROWSER_SELECTED_PROJECT_SERVER_OWNED_REGISTRATION_METHOD,
   PROJECT_BROWSER_SELECTED_PROJECT_SERVER_OWNED_REGISTRATION_PATH,
+  PROJECT_BROWSER_SELECTED_PROJECT_SERVER_OWNED_REGISTRATION_STATES,
 } from "./packages/workspace-kernel/projectBrowserSelectedProjectServerOwnedRegistrationBoundary.js";
 
 const PORT = Number.parseInt(process.env.CONTROLSTACK_RUNTIME_PORT || "8787", 10);
@@ -2561,6 +2562,23 @@ const selectedProjectEngineRunHostTransport =
       invokeRuntimeEngineRunTableSelectedProjectHostLocalReadonlySeam,
   });
 
+function selectedProjectServerOwnedRegistrationReconstructionReady(response) {
+  if (response?.ok !== true) return true;
+  const envelope = selectedProjectServerOwnedRuntimeSavedRegistry.getProjectEnvelope(
+    response.localEnvelopeId,
+  );
+  const downstreamContext = envelope?.modules?.cs_selector?.downstreamContext;
+  return downstreamContext !== null
+    && typeof downstreamContext === "object"
+    && !Array.isArray(downstreamContext)
+    && downstreamContext.selectedResultSummary !== null
+    && typeof downstreamContext.selectedResultSummary === "object"
+    && !Array.isArray(downstreamContext.selectedResultSummary)
+    && downstreamContext.runTableFirstNarrowOutputSummary !== null
+    && typeof downstreamContext.runTableFirstNarrowOutputSummary === "object"
+    && !Array.isArray(downstreamContext.runTableFirstNarrowOutputSummary);
+}
+
 async function sendSelectedProjectServerOwnedRegistration(res, req) {
   if (!isLoopbackRemoteAddress(req) || !isSameOriginRequest(req)) {
     sendJson(res, 403, {
@@ -2583,7 +2601,20 @@ async function sendSelectedProjectServerOwnedRegistration(res, req) {
     return;
   }
 
-  const response = await selectedProjectServerOwnedRuntimeSavedRegistry.register(request);
+  let response = await selectedProjectServerOwnedRuntimeSavedRegistry.register(request);
+  if (!selectedProjectServerOwnedRegistrationReconstructionReady(response)) {
+    response = Object.freeze({
+      ...response,
+      state:
+        PROJECT_BROWSER_SELECTED_PROJECT_SERVER_OWNED_REGISTRATION_STATES.blockedFailClosed,
+      readiness: "blocked_fail_closed",
+      ok: false,
+      failClosed: true,
+      blocker:
+        "selected-project-registration-server-owned-readiness-summary-reconstruction-missing",
+      activeRevision: false,
+    });
+  }
   const status = response.ok === true ? 200 : response.requestAccepted === true ? 422 : 400;
   sendJson(res, status, response);
 }

@@ -530,7 +530,7 @@ test("missing selection and invalid service outcomes fail closed without invokin
   assert.equal(calls, 1);
 });
 
-test("shell wiring keeps the Run Engine button disabled and adds no listener, route, fetch, direct MCP call, persistence, or output generation", async () => {
+test("shell wiring replaces refresh-time mount invocation with the inert client mount and delegated activation", async () => {
   const [mountSource, servicesSource, shellSource, actionLaneSource] = await Promise.all([
     readFile(
       new URL(
@@ -565,9 +565,13 @@ test("shell wiring keeps the Run Engine button disabled and adds no listener, ro
   assert.match(servicesSource, /^    invokeSelectedProjectReadonlyEngine,$/m);
   assert.match(
     shellSource,
-    /createShellProjectBrowserSelectedProjectReadonlyEngineInvokeMount\(\)/,
+    /createShellProjectBrowserSelectedProjectReadonlyEngineInvokeClientMount\(\{/,
   );
-  assert.match(shellSource, /button\.disabled = true/);
+  assert.doesNotMatch(
+    shellSource,
+    /selectedProjectReadonlyEngineInvokeMount\.mount\(\{/,
+  );
+  assert.match(shellSource, /button\.disabled = actionItem\?\.enabled !== true/);
   assert.equal(actionLaneSource.includes("packages/workspace-kernel"), false);
 
   const combined = `${mountSource}\n${servicesSource}\n${shellSource}`;

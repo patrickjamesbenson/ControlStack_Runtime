@@ -594,7 +594,7 @@ test("first mounted cross-layer lock keeps the fixed POST server-only and the Ru
   );
 
   const rendererStart = shellSource.indexOf(
-    "function renderProjectBrowserSelectedProjectEngineActionLane(actionLane)",
+    "function renderProjectBrowserSelectedProjectEngineActionLane(",
   );
   const rendererEnd = shellSource.indexOf(
     "function setProjectBrowserSelectedProjectExportsWorkflowDescriptor(workflowDescriptor)",
@@ -605,7 +605,7 @@ test("first mounted cross-layer lock keeps the fixed POST server-only and the Ru
   assert.ok(rendererEnd > rendererStart);
   assert.equal((renderer.match(/createElement\("button"\)/g) || []).length, 1);
   assert.match(renderer, /button\.type = "button"/);
-  assert.match(renderer, /button\.disabled = true/);
+  assert.match(renderer, /button\.disabled = actionItem\?\.enabled !== true/);
   assert.doesNotMatch(
     renderer,
     /addEventListener|onclick|onClick|dispatchEvent|\.click\s*\(|href|callback|preparedAction|executionCallback|userGestureCallback|\bfetch\s*\(|XMLHttpRequest|WebSocket|services?\.|mcp/i,
@@ -618,7 +618,7 @@ test("first mounted cross-layer lock keeps the fixed POST server-only and the Ru
   assert.ok(refreshEnd > refreshStart);
   assert.equal(
     (refreshSource.match(/selectedProjectReadonlyEngineInvokeMount\.mount\(\{/g) || []).length,
-    1,
+    0,
   );
   assert.doesNotMatch(
     refreshSource,

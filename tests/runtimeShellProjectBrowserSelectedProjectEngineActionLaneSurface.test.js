@@ -430,7 +430,7 @@ test("shell mounts a separate Engine actions section after the locked preview wi
     "const engineActionLaneSection = document.createElement(\"section\")",
   );
   const rendererStart = shellSource.indexOf(
-    "function renderProjectBrowserSelectedProjectEngineActionLane(actionLane)",
+    "function renderProjectBrowserSelectedProjectEngineActionLane(",
   );
   const rendererEnd = shellSource.indexOf(
     "function setProjectBrowserSelectedProjectExportsWorkflowDescriptor(workflowDescriptor)",
@@ -443,11 +443,13 @@ test("shell mounts a separate Engine actions section after the locked preview wi
   assert.equal(shellSource.includes("projectBrowserSelectedProjectEngineActionLane"), true);
   assert.equal(shellSource.includes("Engine actions"), true);
   assert.equal((rendererSource.match(/createElement\("button"\)/g) || []).length, 1);
-  assert.match(rendererSource, /button\.textContent = actionLane\?\.actions\?\.\[0\]\?\.label \|\| "Run Engine"/);
-  assert.match(rendererSource, /button\.disabled = true/);
+  assert.match(rendererSource, /button\.textContent = actionItem\?\.label \|\| "Run Engine"/);
+  assert.match(rendererSource, /button\.disabled = actionItem\?\.enabled !== true/);
+  assert.match(rendererSource,
+    /button\.dataset\.shellProjectEngineActionId = actionItem\?\.actionId \|\| "run-engine"/);
   assert.equal(
     rendererSource.includes(
-      "Engine readiness is confirmed, but no selected-project Engine execution capability is mounted.",
+      "Readonly Engine run is ready for the selected server-owned revision.",
     ),
     true,
   );
@@ -456,14 +458,12 @@ test("shell mounts a separate Engine actions section after the locked preview wi
     true,
   );
   assert.equal(
-    rendererSource.includes(
-      "Engine actions are blocked because the selected-project readiness preview failed closed.",
-    ),
+    rendererSource.includes("Readonly Engine run is blocked fail-closed."),
     true,
   );
   assert.equal(
     rendererSource.includes(
-      "This lane does not execute Engine, generate RunTable output, or persist a selected result.",
+      "No RunTable, IES, output, persistence, RuntimeData mutation, or filesystem write is enabled.",
     ),
     true,
   );
@@ -477,7 +477,7 @@ test("action-lane renderer has no listener callback getter execution network or 
     "utf8",
   );
   const rendererStart = shellSource.indexOf(
-    "function renderProjectBrowserSelectedProjectEngineActionLane(actionLane)",
+    "function renderProjectBrowserSelectedProjectEngineActionLane(",
   );
   const rendererEnd = shellSource.indexOf(
     "function setProjectBrowserSelectedProjectExportsWorkflowDescriptor(workflowDescriptor)",
@@ -527,7 +527,7 @@ test("existing preview renderer stays text-only and selected-project wiring buil
   );
   assert.match(
     renderProjectBrowserSource,
-    /renderProjectBrowserSelectedProjectEngineRunPreview\(engineRunPreview\);\s*renderProjectBrowserSelectedProjectEngineActionLane\(\s*buildShellProjectBrowserSelectedProjectEngineActionLane\(engineRunPreview\),\s*\);/,
+    /renderProjectBrowserSelectedProjectEngineRunPreview\(engineRunPreview\);\s*renderProjectBrowserSelectedProjectEngineActionLane\(\s*buildShellProjectBrowserSelectedProjectEngineActionLane\(\s*engineRunPreview,\s*projectBrowserSelectedProjectEngineReadonlyInvokeActivationStatus,\s*\),\s*projectBrowserSelectedProjectEngineReadonlyInvokeActivationStatus,\s*\);/,
   );
 });
 
@@ -602,6 +602,7 @@ test("source inspection rejects payload rows electrical values envelopes private
     rendererStart,
   );
   const rendererSource = shellSource.slice(rendererStart, rendererEnd);
-  assert.doesNotMatch(rendererSource, /path|filename|fileName|url|blob|base64|IES|candela|photometry/i);
+  assert.doesNotMatch(rendererSource, /path|filename|fileName|url|blob|base64|candela|photometry/i);
+  assert.doesNotMatch(rendererSource, /IESNA:LM-63|TILT=NONE/i);
   assertNoSensitiveProjection(buildShellProjectBrowserSelectedProjectEngineActionLane(readyPreview()));
 });

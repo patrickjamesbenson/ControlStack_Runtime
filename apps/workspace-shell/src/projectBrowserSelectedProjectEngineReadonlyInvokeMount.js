@@ -497,6 +497,33 @@ export async function prepareShellProjectBrowserSelectedProjectEngineReadonlyInv
 export const mountShellProjectBrowserSelectedProjectReadonlyEngineInvoke =
   prepareShellProjectBrowserSelectedProjectEngineReadonlyInvokeMount;
 
+export function createShellProjectBrowserSelectedProjectReadonlyEngineInvokeClientMount({
+  invokeSelectedProjectReadonlyEngineClientTransport = null,
+} = {}) {
+  const clientTransportMounted =
+    typeof invokeSelectedProjectReadonlyEngineClientTransport === "function";
+  const snapshot = mountStatus({
+    state: clientTransportMounted
+      ? SHELL_PROJECT_BROWSER_SELECTED_PROJECT_READONLY_ENGINE_INVOKE_MOUNT_STATES
+        .blockedFailClosed
+      : SHELL_PROJECT_BROWSER_SELECTED_PROJECT_READONLY_ENGINE_INVOKE_MOUNT_STATES.unavailable,
+    blocker: clientTransportMounted
+      ? "selected-project-readonly-engine-mount-awaiting-user-gesture"
+      : "selected-project-readonly-engine-mount-client-transport-unavailable",
+    serviceMounted: clientTransportMounted,
+  });
+
+  return Object.freeze({
+    clientTransportMounted,
+    invokeSelectedProjectReadonlyEngine: clientTransportMounted
+      ? invokeSelectedProjectReadonlyEngineClientTransport
+      : null,
+    getSnapshot() {
+      return snapshot;
+    },
+  });
+}
+
 function mountSelectionKey(context) {
   const browser = isPlainObject(context?.projectBrowser) ? context.projectBrowser : {};
   const summary = isPlainObject(browser.selectedProjectEngineRunReadinessReadbackSummary)

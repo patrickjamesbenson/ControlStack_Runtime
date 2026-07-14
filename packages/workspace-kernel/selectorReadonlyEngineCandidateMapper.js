@@ -81,6 +81,10 @@ const UNSAFE_TRUE_FIELDS = Object.freeze([
   "credentialsReturned",
 ]);
 
+const SAFE_SEAM_FAILURE_BLOCKER_CODES = Object.freeze([
+  "direct-run-engine-no-success",
+]);
+
 function isPlainObject(value) {
   return value !== null && typeof value === "object" && !Array.isArray(value);
 }
@@ -102,6 +106,16 @@ function safeToken(value, fallback = "") {
     .replace(/^-+|-+$/g, "")
     .slice(0, 140);
   return token || fallback;
+}
+
+function recognizedSeamFailureBlocker(seamResult = {}) {
+  const blockers = Array.isArray(seamResult?.blockers) ? seamResult.blockers : [];
+  for (const blocker of blockers) {
+    if (!isPlainObject(blocker)) continue;
+    const code = safeToken(blocker.code);
+    if (SAFE_SEAM_FAILURE_BLOCKER_CODES.includes(code)) return code;
+  }
+  return null;
 }
 
 function positiveInteger(value) {
@@ -657,7 +671,10 @@ export function buildSelectorReadonlyEngineStep1SafeSummary({ mapperResult = {},
     state: ready ? "selector_readonly_engine_step1_safe_summary_ready" : "selector_readonly_engine_step1_engine_not_successful",
     ok: ready,
     readonlyEngineStep1Ready: ready,
-    blocker: ready ? null : "readonly-engine-seam-did-not-produce-success",
+    blocker: ready
+      ? null
+      : recognizedSeamFailureBlocker(seamResult)
+        || "readonly-engine-seam-did-not-produce-success",
     mapperReady: true,
     hostLocalReadonlyEngineSeamInvoked: seamResult.engine_execution_attempted === true,
     hostLocalReadonlyEngineResultProduced: seamResult.engine_result_produced === true,

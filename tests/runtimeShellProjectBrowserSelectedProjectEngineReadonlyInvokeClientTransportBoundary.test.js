@@ -19,6 +19,7 @@ import {
   RUNTIME_ENGINE_RUNTABLE_FIRST_SELECTED_PROJECT_SHELL_INVOKE_TRANSPORT_BOUNDARY_ID,
   RUNTIME_ENGINE_RUNTABLE_SELECTED_PROJECT_SHELL_INVOKE_REQUEST_FIELD_ORDER,
   RUNTIME_ENGINE_RUNTABLE_SELECTED_PROJECT_SHELL_INVOKE_REQUEST_KIND,
+  RUNTIME_ENGINE_RUNTABLE_SELECTED_PROJECT_LIVE_READONLY_INVOKE_RESPONSE_FIELD_ORDER,
   RUNTIME_ENGINE_RUNTABLE_SELECTED_PROJECT_SHELL_INVOKE_RESPONSE_FIELD_ORDER,
   RUNTIME_ENGINE_RUNTABLE_SELECTED_PROJECT_SHELL_INVOKE_TRANSPORT_SCHEMA_ID,
   RUNTIME_ENGINE_RUNTABLE_SELECTED_PROJECT_SHELL_INVOKE_TRANSPORT_SCHEMA_VERSION,
@@ -161,6 +162,35 @@ function serverResponse({
     postEndpointsAdded: true,
     ...overrides,
   });
+}
+
+function liveServerResponse() {
+  const baseline = serverResponse();
+  const fields = {
+    ...baseline,
+    serverOwnedRevisionChecked: true,
+    inFlightInvocationBlocked: false,
+    invocationConsumed: true,
+    replayBlocked: false,
+    staleServerRevisionBlocked: false,
+    secondServerOwnedEnvelopeRevisionCheckPassed: true,
+    activeRuntimeDataLoadedReadOnly: true,
+    activeRuntimeDataPassedInMemoryOnly: true,
+    donorRunEngineAttempted: true,
+    donorBridgeUsed: false,
+    filesystemWriteGuardActive: true,
+    filesystemWriteAttempted: false,
+    auditJsonlWriteAttempted: false,
+    runtimeDataMutated: false,
+    selectedResultPersisted: false,
+    runTableGenerated: false,
+    iesGenerated: false,
+    outputGenerated: false,
+  };
+  return Object.fromEntries(
+    RUNTIME_ENGINE_RUNTABLE_SELECTED_PROJECT_LIVE_READONLY_INVOKE_RESPONSE_FIELD_ORDER
+      .map((key) => [key, fields[key]]),
+  );
 }
 
 function jsonResponse(body, status, {
@@ -350,6 +380,21 @@ test("client posts the exact selected-project-only request and projects one vali
   assert.equal(result.capabilityCompleted, true);
 });
 
+test("client accepts the live revision lifecycle and no-write response shape", async () => {
+  const invoke = createShellProjectBrowserSelectedProjectReadonlyEngineInvokeClientTransport({
+    fetchImpl() {
+      return jsonResponse(liveServerResponse(), 200);
+    },
+  });
+
+  const result = await invoke({ selectedProjectId: PROJECT_ID });
+  assertSafeClientResult(result);
+  assert.equal(result.state, EXPECTED_CLIENT_STATES.completed);
+  assert.equal(result.ok, true);
+  assert.equal(result.responseValidated, true);
+  assert.equal(result.capabilityCompleted, true);
+});
+
 test("client validates accepted fail-closed HTTP 422 responses without treating them as raw transport failures", async () => {
   const blockedBody = serverResponse({
     state:
@@ -489,7 +534,7 @@ test("client source remains separate from rendering, the disabled Run Engine but
 
   const clientModuleName =
     "projectBrowserSelectedProjectEngineReadonlyInvokeClientTransportBoundary";
-  assert.doesNotMatch(shellSource, new RegExp(clientModuleName));
+  assert.match(shellSource, new RegExp(clientModuleName));
   assert.doesNotMatch(actionLaneSource, new RegExp(clientModuleName));
   assert.doesNotMatch(mountSource, new RegExp(clientModuleName));
 
