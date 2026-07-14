@@ -57,15 +57,34 @@
             </div>
 
             <div class="cs-shell__topbar-chip-wrap">
-              <button id="cs-shell-project-chip" class="cs-shell__context-chip" type="button" aria-expanded="false" aria-controls="cs-shell-project-popout" aria-label="Project: select or change the current project and access project actions." title="Project: select or change the current project. Use the popout for save, restore/open, and handoff/share actions.">
+              <button id="cs-shell-project-chip" class="cs-shell__context-chip" type="button" aria-expanded="false" aria-controls="cs-shell-project-popout" aria-label="Project: choose a current workspace fixture or work with runtime-session saved project envelopes." title="Project: current workspace choices are fixtures. Save and restore use runtime-session envelopes only; durable persistence is unavailable.">
                 <span id="cs-shell-project-chip-label">Enter project</span>
               </button>
               <div id="cs-shell-project-popout" class="cs-shell__topbar-popout cs-shell__topbar-popout--wide" hidden>
                 <p class="cs-shell__section-kicker">Project</p>
                 <h3 id="cs-shell-project-popout-title">Project workspace</h3>
-                <p>Select or change the current project. New project creation is deferred for a later slice.</p>
-                <div id="cs-shell-project-popout-list" class="cs-shell__popout-list"></div>
+                <p>This surface separates current workspace fixtures from runtime-session saved project envelopes. Durable project persistence is unavailable.</p>
+                <section aria-label="Current workspace fixtures">
+                  <h4>Current workspace fixtures</h4>
+                  <p>Alpha, Bravo, and Charlie are current-project selection fixtures / reference workspaces. They are not saved projects.</p>
+                  <div id="cs-shell-project-popout-list" class="cs-shell__popout-list"></div>
+                </section>
+                <section aria-label="Runtime-session saved projects">
+                  <h4>Runtime-session saved projects</h4>
+                  <p>These envelopes exist only in the current browser/runtime session and may be selected here for restore.</p>
+                  <div id="cs-shell-project-popout-saved-list" class="cs-shell__popout-list"></div>
+                </section>
+                <section aria-label="Read-only Project Browser references">
+                  <h4>Read-only Project Browser references</h4>
+                  <p>These are reference fixtures from Project Browser data. They can be inspected but cannot be restored.</p>
+                  <div id="cs-shell-project-popout-reference-list" class="cs-shell__popout-list"></div>
+                </section>
+                <p id="cs-shell-project-popout-selection-summary">No saved envelope selected.</p>
                 <div id="cs-shell-project-popout-actions" class="cs-shell__popout-actions"></div>
+                <p id="cs-shell-project-popout-restore-reason" role="status">Restore disabled: select a runtime-session saved envelope first.</p>
+                <div id="cs-shell-project-popout-outcome" aria-live="polite">
+                  <p>No save or restore action has run in this session.</p>
+                </div>
               </div>
             </div>
 

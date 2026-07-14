@@ -109,7 +109,12 @@ const projectChipLabel = document.getElementById("cs-shell-project-chip-label");
 const projectPopout = document.getElementById("cs-shell-project-popout");
 const projectPopoutTitle = document.getElementById("cs-shell-project-popout-title");
 const projectPopoutList = document.getElementById("cs-shell-project-popout-list");
+const projectPopoutSavedList = document.getElementById("cs-shell-project-popout-saved-list");
+const projectPopoutReferenceList = document.getElementById("cs-shell-project-popout-reference-list");
+const projectPopoutSelectionSummary = document.getElementById("cs-shell-project-popout-selection-summary");
 const projectPopoutActions = document.getElementById("cs-shell-project-popout-actions");
+const projectPopoutRestoreReason = document.getElementById("cs-shell-project-popout-restore-reason");
+const projectPopoutOutcome = document.getElementById("cs-shell-project-popout-outcome");
 const companyChip = document.getElementById("cs-shell-company-chip");
 const companyChipLabel = document.getElementById("cs-shell-company-chip-label");
 const companyPopout = document.getElementById("cs-shell-company-popout");
@@ -138,6 +143,8 @@ const moduleStatusPanel = document.getElementById("cs-shell-module-status-panel"
 const SHELL_ROLE_ORDER = Object.freeze(["external_user", "internal_user", "internal_engineer", "developer", "admin"]);
 const NOVON_WEBSITE_MODULE_ID = "novon_website";
 const NOVON_WEBSITE_URL = "https://www.novonlighting.com.au/";
+const SHELL_PROJECT_BROWSER_FIRST_TRUTHFUL_SAVE_OPEN_SURFACE_CONTRACT_ID =
+  "SHELL-PROJECT-BROWSER-FIRST-TRUTHFUL-SAVE-OPEN-SURFACE-1";
 const SHELL_DEVELOPER_DIAGNOSTICS_CONTRACT = Object.freeze({
   heading: "DEV ORIENTATION",
   module: "Workspace Shell",
@@ -185,6 +192,8 @@ const projectBrowserProjectIesExportDownloadOutcomeState = Object.freeze({
 });
 let projectBrowserSelectedProjectExportsRefreshSequence = 0;
 let shellTopbarBound = false;
+let projectBrowserSharedActionHandlers = null;
+let projectTopbarActionOutcome = Object.freeze({ action: "idle" });
 
 const companyIdentityState = {
   debounceId: null,
@@ -788,10 +797,6 @@ function bindAssistiveCompanyIdentityHelper() {
   assistiveEmailInput?.addEventListener("input", scheduleAssistiveEmailDomainChange);
   assistiveCompanyNameInput?.addEventListener("input", handleAssistiveCompanyNameInput);
   assistiveCompanyLogoButton?.addEventListener("click", handleAssistiveCompanyLogoOverride);
-}
-
-function clickLegacy(selector) {
-  document.querySelector(selector)?.click?.();
 }
 
 function createLocalDeveloperSummary(label) {
@@ -1916,31 +1921,216 @@ function renderIdentityVisibilityControls({ services, context }) {
   ]);
 }
 
+function setProjectTopbarActionOutcome(outcome = {}) {
+  projectTopbarActionOutcome = Object.freeze({ action: "idle", ...outcome });
+}
+
+function appendProjectTopbarOutcomeLine(text) {
+  if (!projectPopoutOutcome) return null;
+  const line = document.createElement("p");
+  line.textContent = text;
+  projectPopoutOutcome.appendChild(line);
+  return line;
+}
+
+function renderProjectTopbarActionOutcome() {
+  if (!projectPopoutOutcome) return;
+  clearElement(projectPopoutOutcome);
+  const outcome = projectTopbarActionOutcome || { action: "idle" };
+  if (outcome.action === "save") {
+    appendProjectTopbarOutcomeLine(
+      `Browser-session envelope saved: ${outcome.title || "Current project"} (${outcome.envelopeId || "envelope id unavailable"}).`,
+    );
+    appendProjectTopbarOutcomeLine(
+      outcome.serverRegistrationState === "acknowledged"
+        ? `Server in-process registration acknowledged: ${outcome.serverRevisionId || "active revision acknowledged"}.`
+        : outcome.serverRegistrationState === "pending"
+          ? "Server in-process registration pending: awaiting acknowledgement for this runtime revision."
+          : `Server in-process registration blocked or unavailable: ${outcome.serverRegistrationReason || "acknowledgement not received"}.`,
+    );
+    appendProjectTopbarOutcomeLine(
+      "Durable persistence unavailable: this envelope exists only in the current browser/runtime session.",
+    );
+    return;
+  }
+  if (outcome.action === "save-blocked") {
+    appendProjectTopbarOutcomeLine(
+      `Browser-session save blocked: ${outcome.reason || "save was not accepted"}.`,
+    );
+    appendProjectTopbarOutcomeLine(
+      "Durable persistence unavailable; no filesystem, database, RuntimeData, or server persistence was added.",
+    );
+    return;
+  }
+  if (outcome.action === "restore") {
+    appendProjectTopbarOutcomeLine(
+      `Session envelope restored: ${outcome.title || "Selected project"} (${outcome.envelopeId || "envelope id unavailable"}).`,
+    );
+    appendProjectTopbarOutcomeLine(
+      `Hydration payloads prepared: ${outcome.hydratedModules || "none"}.`,
+    );
+    appendProjectTopbarOutcomeLine(
+      "Durable persistence remains unavailable; restore used the current runtime-session envelope.",
+    );
+    return;
+  }
+  if (outcome.action === "restore-blocked") {
+    appendProjectTopbarOutcomeLine(
+      `Restore blocked: ${outcome.reason || "select a runtime-session saved envelope first"}.`,
+    );
+    return;
+  }
+  appendProjectTopbarOutcomeLine("No save or restore action has run in this session.");
+}
+
+function appendProjectTopbarEmptyState(list, text) {
+  if (!list) return;
+  const empty = document.createElement("p");
+  empty.textContent = text;
+  list.appendChild(empty);
+}
+
+function createProjectTopbarEnvelopeButton(project, kind, selectedProjectId) {
+  const envelopeId = project.envelopeId || project.projectId;
+  const selected = envelopeId === selectedProjectId || project.projectId === selectedProjectId;
+  const kindLabel = kind === "runtime"
+    ? "Runtime-session save"
+    : "Read-only reference fixture";
+  const selectedLabel = selected ? " · Selected envelope" : "";
+  const item = createShellButton(
+    `${project.title || "Untitled project"} · ${kindLabel}${selectedLabel}`,
+    "cs-shell__popout-row",
+  );
+  item.dataset.projectBrowserEnvelopeId = envelopeId;
+  item.dataset.projectBrowserEnvelopeKind = kind;
+  item.setAttribute("aria-pressed", selected ? "true" : "false");
+  if (selected) item.classList.add("is-selected");
+  item.title = kind === "runtime"
+    ? "Select this runtime-session envelope for restore/open."
+    : project.restoreDisabledReason || "Read-only reference fixtures cannot be restored.";
+  return item;
+}
+
+function projectTopbarRestoreReason(browser, selected) {
+  if (browser.capabilities?.restore !== true) {
+    return "Restore disabled: Project Browser restore capability is unavailable.";
+  }
+  if (!selected) {
+    return "Restore disabled: select a runtime-session saved envelope first.";
+  }
+  if (selected.restoreEligible !== true) {
+    return `Restore disabled: ${selected.restoreDisabledReason || "the selected envelope is a read-only reference fixture"}`;
+  }
+  return `Restore enabled for runtime-session envelope: ${selected.title}.`;
+}
+
+function handleProjectTopbarInteraction(event) {
+  const actionButton = event.target.closest?.("[data-project-browser-action]");
+  if (actionButton) {
+    event.stopPropagation();
+    const actionId = actionButton.dataset.projectBrowserAction;
+    const handler = projectBrowserSharedActionHandlers?.[actionId];
+    if (typeof handler === "function") handler(event);
+    return;
+  }
+  const envelopeButton = event.target.closest?.("[data-project-browser-envelope-id]");
+  if (!envelopeButton) return;
+  event.stopPropagation();
+  const handler = projectBrowserSharedActionHandlers?.selectEnvelope;
+  if (typeof handler === "function") {
+    handler(envelopeButton.dataset.projectBrowserEnvelopeId, event);
+  }
+}
+
 function renderProjectTopbarPopout(context) {
   if (!projectPopoutList || !projectPopoutActions) return;
   clearElement(projectPopoutList);
+  clearElement(projectPopoutSavedList);
+  clearElement(projectPopoutReferenceList);
   clearElement(projectPopoutActions);
-  const selectedProjectId = currentProjectId(context);
+  const selectedCurrentProjectId = currentProjectId(context);
+  const browser = context.projectBrowser || {};
+  const browserProjects = Array.isArray(browser.projects) ? browser.projects : [];
+  const runtimeSessionProjects = browserProjects.filter(
+    (project) => project.readOnly !== true && project.browserOnly !== true,
+  );
+  const referenceProjects = browserProjects.filter(
+    (project) => project.readOnly === true || project.browserOnly === true,
+  );
+  const selectedEnvelope = selectedProjectSummary(browser);
   if (projectPopoutTitle) projectPopoutTitle.textContent = currentProjectTitle(context);
+
   for (const option of Array.from(projectSelect?.options || [])) {
-    const item = createShellButton(option.textContent, "cs-shell__popout-row");
+    const item = createShellButton(
+      `${option.textContent} · Current workspace fixture · Not a saved project`,
+      "cs-shell__popout-row",
+    );
     item.dataset.projectId = option.value;
-    if (option.value === selectedProjectId) item.classList.add("is-selected");
+    if (option.value === selectedCurrentProjectId) item.classList.add("is-selected");
     item.addEventListener("click", () => {
       dispatchLegacyChange(projectSelect, option.value);
       setPopout(projectChip, projectPopout, false);
     });
     projectPopoutList.appendChild(item);
   }
-  const newProject = createShellButton("New project later", "cs-shell__popout-button cs-shell__popout-button--disabled");
+
+  if (runtimeSessionProjects.length === 0) {
+    appendProjectTopbarEmptyState(
+      projectPopoutSavedList,
+      "No runtime-session saved projects yet. Save Project creates a browser-session envelope, not durable persistence.",
+    );
+  } else {
+    for (const project of runtimeSessionProjects) {
+      projectPopoutSavedList?.appendChild(
+        createProjectTopbarEnvelopeButton(project, "runtime", browser.selectedProjectId),
+      );
+    }
+  }
+
+  if (referenceProjects.length === 0) {
+    appendProjectTopbarEmptyState(
+      projectPopoutReferenceList,
+      "No read-only Project Browser reference fixtures are available.",
+    );
+  } else {
+    for (const project of referenceProjects) {
+      projectPopoutReferenceList?.appendChild(
+        createProjectTopbarEnvelopeButton(project, "reference", browser.selectedProjectId),
+      );
+    }
+  }
+
+  if (projectPopoutSelectionSummary) {
+    projectPopoutSelectionSummary.textContent = selectedEnvelope
+      ? `Selected saved envelope: ${selectedEnvelope.title} · ${selectedEnvelope.restoreEligible ? "runtime-session restore eligible" : "read-only reference; restore unavailable"}.`
+      : "No saved envelope selected. Current workspace fixture selection is separate from saved-envelope selection.";
+  }
+
+  const restoreReason = projectTopbarRestoreReason(browser, selectedEnvelope);
+  if (projectPopoutRestoreReason) projectPopoutRestoreReason.textContent = restoreReason;
+
+  const newProject = createShellButton(
+    "New project later",
+    "cs-shell__popout-button cs-shell__popout-button--disabled",
+  );
   newProject.disabled = true;
-  const save = createShellButton("Save project");
-  save.addEventListener("click", () => clickLegacy(".cs-shell__project-browser-save"));
-  const restore = createShellButton("Restore / open project");
-  restore.addEventListener("click", () => clickLegacy(".cs-shell__project-browser-restore"));
-  const handoff = createShellButton("Prepare handoff/share");
-  handoff.addEventListener("click", () => clickLegacy(".cs-shell__project-browser-handoff"));
+  const save = createShellButton(
+    browser.save?.status === "saving" ? "Saving browser-session envelope..." : "Save browser-session envelope",
+  );
+  save.dataset.projectBrowserAction = "save";
+  save.disabled = browser.capabilities?.save !== true;
+  const restore = createShellButton(
+    browser.restore?.status === "restoring" ? "Restoring session envelope..." : "Restore / open selected session envelope",
+  );
+  restore.dataset.projectBrowserAction = "restore";
+  restore.disabled = browser.capabilities?.restore !== true || selectedEnvelope?.restoreEligible !== true;
+  restore.title = restoreReason;
+  const handoff = createShellButton("Prepare handoff/share package");
+  handoff.dataset.projectBrowserAction = "handoff";
+  handoff.disabled = browser.capabilities?.prepareHandoff !== true
+    && browser.capabilities?.handoff !== true;
   projectPopoutActions.append(newProject, save, restore, handoff);
+  renderProjectTopbarActionOutcome();
 }
 
 function renderCompanyTopbarPopout(context) {
@@ -2200,6 +2390,7 @@ function bindShellTopbarControls() {
   });
   timelineChip?.addEventListener("click", () => toggleTopbarPopout(timelineChip, timelinePopout));
   projectChip?.addEventListener("click", () => toggleTopbarPopout(projectChip, projectPopout));
+  projectPopout?.addEventListener("click", handleProjectTopbarInteraction);
   companyChip?.addEventListener("click", () => toggleTopbarPopout(companyChip, companyPopout));
   viewChip?.addEventListener("click", () => toggleTopbarPopout(viewChip, viewPopout));
   contextInspectorButton?.addEventListener("click", () => {
@@ -2683,39 +2874,85 @@ function bootWorkspaceShell() {
   }
 
   async function handleProjectBrowserSave() {
+    const currentTitle = readProjectTitle(context.project);
     const result = services.projectBrowser.saveProject(context);
-    let nextContext = refreshContext("project-save-envelope-local");
     if (!result.accepted) {
-      setStatus(`Save failed: ${result.reason || result.status}`);
+      setProjectTopbarActionOutcome({
+        action: "save-blocked",
+        reason: result.reason || result.status || "save was not accepted",
+      });
+      refreshContext("project-save-envelope-rejected");
+      setStatus(`Browser-session save failed: ${result.reason || result.status}. Durable persistence remains unavailable.`);
       return;
     }
 
-    setStatus(`Saved ${readProjectTitle(nextContext.project)} locally. Confirming server-owned runtime revision.`);
+    const savedTitle = result.envelope?.title || currentTitle;
+    const savedEnvelopeId = result.envelopeId || result.envelope?.envelopeId || "envelope id unavailable";
+    setProjectTopbarActionOutcome({
+      action: "save",
+      title: savedTitle,
+      envelopeId: savedEnvelopeId,
+      serverRegistrationState: "pending",
+    });
+    let nextContext = refreshContext("project-save-envelope-browser-session");
+    setStatus(`Browser-session envelope saved for ${savedTitle}. Confirming optional server in-process registration; durable persistence is unavailable.`);
+
     let registration;
+    let registrationFailureReason = null;
     try {
       registration = await services.selectedProjectServerOwnedRegistration.registerLocalSave(result);
     } catch (error) {
       console.error("[workspace-shell] selected-project server registration failed", error);
       registration = null;
+      registrationFailureReason = "registration request failed";
     }
-    nextContext = refreshContext("project-save-envelope-server-registration");
-    if (registration?.ok !== true || registration?.activeRevision !== true) {
-      setStatus(`Saved ${readProjectTitle(nextContext.project)} locally, but Engine readiness remains blocked until server ownership is acknowledged.`);
+
+    const registrationAcknowledged = registration?.ok === true
+      && registration?.activeRevision === true;
+    setProjectTopbarActionOutcome({
+      action: "save",
+      title: savedTitle,
+      envelopeId: savedEnvelopeId,
+      serverRegistrationState: registrationAcknowledged ? "acknowledged" : "blocked",
+      serverRevisionId: registrationAcknowledged ? registration.serverRevisionId : null,
+      serverRegistrationReason: registrationAcknowledged
+        ? null
+        : registrationFailureReason
+          || registration?.blocker
+          || registration?.reason
+          || registration?.status
+          || "acknowledgement not received",
+    });
+    nextContext = refreshContext("project-save-envelope-server-in-process-registration");
+    if (!registrationAcknowledged) {
+      setStatus(`Browser-session envelope saved for ${readProjectTitle(nextContext.project)}. Server in-process registration was blocked or unavailable, and durable persistence is unavailable.`);
       return;
     }
-    setStatus(`Saved ${readProjectTitle(nextContext.project)}. Server-owned runtime revision ${registration.serverRevisionId} is active; restore/hydrate and handoff/share package preparation remain live.`);
+    setStatus(`Browser-session envelope saved for ${readProjectTitle(nextContext.project)}. Server in-process registration ${registration.serverRevisionId} was acknowledged; durable persistence is unavailable.`);
   }
 
   function handleProjectBrowserRestore() {
+    const selectedBeforeRestore = selectedProjectSummary(context.projectBrowser || {});
     const envelopeId = context.projectBrowser.selectedProjectId;
     const result = services.projectBrowser.restoreProject(envelopeId, context);
-    const nextContext = refreshContext("project-restore-hydrate");
     if (!result.accepted) {
+      setProjectTopbarActionOutcome({
+        action: "restore-blocked",
+        reason: result.reason || result.status || "restore was not accepted",
+      });
+      refreshContext("project-restore-hydrate-rejected");
       setStatus(`Restore skipped: ${result.reason || result.status}`);
       return;
     }
     const hydrated = result.hydratedModules?.map((item) => `${item.moduleId}:${item.status}`).join(", ") || "none";
-    setStatus(`Restored ${readProjectTitle(nextContext.project)}. Module hydration payloads prepared (${hydrated}).`);
+    setProjectTopbarActionOutcome({
+      action: "restore",
+      title: result.envelope?.title || selectedBeforeRestore?.title || "Selected project",
+      envelopeId: result.envelopeId || selectedBeforeRestore?.envelopeId || envelopeId,
+      hydratedModules: hydrated,
+    });
+    const nextContext = refreshContext("project-restore-hydrate");
+    setStatus(`Restored session envelope ${result.envelopeId || envelopeId} as ${readProjectTitle(nextContext.project)}. Hydration payloads were prepared (${hydrated}); durable persistence remains unavailable.`);
   }
 
   function handleProjectBrowserHandoffShare() {
@@ -2836,13 +3073,22 @@ function bootWorkspaceShell() {
     }
   }
 
+  function handleProjectBrowserEnvelopeSelection(envelopeId) {
+    const result = services.projectBrowser.inspectProject(envelopeId, context);
+    const nextContext = refreshContext("project-browser-select-envelope");
+    if (!result.accepted) {
+      setStatus(`Envelope selection failed: ${result.reason}`);
+      return result;
+    }
+    const selected = selectedProjectSummary(nextContext.projectBrowser || {});
+    setStatus(`Selected saved envelope ${selected?.title || result.envelopeId}. Restore is ${result.restoreEligible ? "enabled for this runtime-session save" : "disabled because this is a read-only reference"}.`);
+    return result;
+  }
+
   function handleProjectBrowserListClick(event) {
     const item = event.target.closest?.("[data-envelope-id]");
     if (!item) return;
-    const result = services.projectBrowser.inspectProject(item.dataset.envelopeId, context);
-    refreshContext("project-browser-select-envelope");
-    if (!result.accepted) setStatus(`Envelope selection failed: ${result.reason}`);
-    else setStatus(`Selected envelope ${result.envelopeId}. Restore is ${result.restoreEligible ? "enabled" : "disabled"}.`);
+    projectBrowserSharedActionHandlers?.selectEnvelope?.(item.dataset.envelopeId, event);
   }
 
   function handleIdentityChange(event) {
@@ -2888,6 +3134,13 @@ function bootWorkspaceShell() {
     const nextContext = refreshContext("project-visibility-mode-change");
     setStatus(`Visibility project input: ${nextContext.visibility.inputs.projectMode}.`);
   }
+
+  projectBrowserSharedActionHandlers = Object.freeze({
+    save: handleProjectBrowserSave,
+    restore: handleProjectBrowserRestore,
+    handoff: handleProjectBrowserHandoffShare,
+    selectEnvelope: handleProjectBrowserEnvelopeSelection,
+  });
 
   registry.register("cs_selector", csSelectorModule);
   registry.register("emergence", emergenceModule);
@@ -2939,9 +3192,9 @@ function bootWorkspaceShell() {
   companySelect?.addEventListener("change", () => {
     if (companyLinkButton) companyLinkButton.disabled = !companySelect.value;
   });
-  projectBrowserSaveButton?.addEventListener("click", handleProjectBrowserSave);
-  projectBrowserRestoreButton?.addEventListener("click", handleProjectBrowserRestore);
-  projectBrowserHandoffButton?.addEventListener("click", handleProjectBrowserHandoffShare);
+  projectBrowserSaveButton?.addEventListener("click", projectBrowserSharedActionHandlers.save);
+  projectBrowserRestoreButton?.addEventListener("click", projectBrowserSharedActionHandlers.restore);
+  projectBrowserHandoffButton?.addEventListener("click", projectBrowserSharedActionHandlers.handoff);
   projectBrowserSelectedProjectExportsItems?.addEventListener(
     "click",
     handleProjectBrowserSelectedProjectExportAction,
