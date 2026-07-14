@@ -2485,6 +2485,14 @@ function moduleLabel(moduleId) {
 
 function renderModuleDeveloperSurface(context) {
   if (!moduleHost) return;
+  const selectorProductSurface = moduleHost.querySelector(
+    ':scope > .cs-selector-proof[data-module="cs_selector"]',
+  );
+  if (context.route.moduleId === "cs_selector" && selectorProductSurface) {
+    moduleHost.querySelector(":scope > .cs-shell__module-user-surface")?.remove();
+    return;
+  }
+
   const debugSurface = moduleHost.querySelector(":scope > .cs-selector-proof");
   if (!debugSurface || debugSurface.closest(".cs-shell__local-dev-body")) return;
 

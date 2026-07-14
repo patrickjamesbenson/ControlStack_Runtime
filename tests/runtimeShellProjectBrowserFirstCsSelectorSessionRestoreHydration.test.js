@@ -217,10 +217,11 @@ test("Saved Project store reports cs_selector:hydrated only after a successful c
   assert.equal(hydrated.hydrate.moduleResults.emergence.status, "no-handler");
 });
 
-test("shell dispatches only the matching mounted cs_selector payload and records the callback result", async () => {
-  const [shellSource, selectorModuleSource, projectBrowserServiceSource] = await Promise.all([
+test("shell dispatches only the matching mounted cs_selector payload and preserves the visible product surface", async () => {
+  const [shellSource, selectorModuleSource, selectorViewSource, projectBrowserServiceSource] = await Promise.all([
     readFile(new URL("../apps/workspace-shell/src/shell.js", import.meta.url), "utf8"),
     readFile(new URL("../packages/modules/cs-selector/index.js", import.meta.url), "utf8"),
+    readFile(new URL("../packages/modules/cs-selector/selectorView.js", import.meta.url), "utf8"),
     readFile(new URL("../packages/workspace-kernel/projectBrowserService.js", import.meta.url), "utf8"),
   ]);
 
@@ -245,7 +246,70 @@ test("shell dispatches only the matching mounted cs_selector payload and records
   assert.match(restoreSource, /selectorPayload\?\.moduleId === "cs_selector"/);
   assert.match(restoreSource, /await mountedModuleApi\.hydrate\(selectorPayload, nextContext\)/);
   assert.match(restoreSource, /recordModuleHydrationResult\(\s*result\.envelopeId,\s*"cs_selector"/);
+  assert.match(restoreSource, /refreshContextSafely\("project-restore-hydrate-result-recorded"\)/);
+  assert.ok(restoreSource.includes('`${item.moduleId}:${item.status}`'));
   assert.doesNotMatch(restoreSource, /modulePayloads\?\.scene_builder|modulePayloads\?\.emergence/);
+
+  const hydrationDispatchIndex = restoreSource.indexOf("await mountedModuleApi.hydrate(selectorPayload, nextContext)");
+  const hydrationRecordIndex = restoreSource.indexOf("services.projectBrowser.recordModuleHydrationResult(");
+  const finalRefreshIndex = restoreSource.indexOf('refreshContextSafely("project-restore-hydrate-result-recorded")');
+  assert.ok(hydrationDispatchIndex >= 0);
+  assert.ok(hydrationRecordIndex > hydrationDispatchIndex);
+  assert.ok(finalRefreshIndex > hydrationRecordIndex);
+
+  const mountSource = sourceSlice(
+    shellSource,
+    "  const moduleApi = registry.get(route.moduleId);",
+    "  } catch (error) {",
+  );
+  assert.match(mountSource, /mountedModuleApi = moduleApi/);
+  assert.match(mountSource, /moduleApi\.mount\(\{ container: moduleHost, services, context \}\)/);
+  assert.match(mountSource, /renderModuleDeveloperSurface\(context\)/);
+
+  const refreshSource = sourceSlice(
+    shellSource,
+    "  function refreshContext(reason",
+    "  function refreshContextSafely",
+  );
+  const projectBrowserRenderIndex = refreshSource.indexOf("renderProjectBrowser({ context });");
+  const moduleUpdateIndex = refreshSource.indexOf("mountedModuleApi?.update?.(context);");
+  const modulePresentationIndex = refreshSource.indexOf("renderModuleDeveloperSurface(context);");
+  assert.ok(projectBrowserRenderIndex >= 0);
+  assert.ok(moduleUpdateIndex > projectBrowserRenderIndex);
+  assert.ok(modulePresentationIndex > moduleUpdateIndex);
+
+  const developerSurfaceSource = sourceSlice(
+    shellSource,
+    "function renderModuleDeveloperSurface(context)",
+    "function renderUnknownModuleFallback",
+  );
+  const selectorTakeoverSource = sourceSlice(
+    developerSurfaceSource,
+    "  const selectorProductSurface =",
+    "  const debugSurface =",
+  );
+  assert.match(selectorTakeoverSource, /:scope > \.cs-selector-proof\[data-module="cs_selector"\]/);
+  assert.match(selectorTakeoverSource, /context\.route\.moduleId === "cs_selector" && selectorProductSurface/);
+  assert.match(selectorTakeoverSource, /:scope > \.cs-shell__module-user-surface/);
+  assert.match(selectorTakeoverSource, /\.remove\(\)/);
+  assert.match(selectorTakeoverSource, /return;/);
+  assert.doesNotMatch(
+    selectorTakeoverSource,
+    /document\.createElement|ensureLocalDeveloperDetails|insertAdjacentElement|local-dev-body|appendChild\(selectorProductSurface\)|Project Browser|selectedProject|Engine|exports/i,
+  );
+  assert.ok(
+    developerSurfaceSource.indexOf("const selectorProductSurface")
+      < developerSurfaceSource.indexOf("const debugSurface"),
+  );
+  assert.match(developerSurfaceSource, /userSurface\.className = "cs-shell__module-user-surface"/);
+  assert.ok(developerSurfaceSource.includes("${moduleLabel(context.route.moduleId)} workspace"));
+  assert.match(developerSurfaceSource, /body\.appendChild\(debugSurface\)/);
+
+  assert.match(selectorViewSource, /article\.className = "cs-selector-proof"/);
+  assert.match(selectorViewSource, /article\.dataset\.module = viewModel\.moduleId/);
+  assert.match(selectorViewSource, /appendText\(intro, "h2", "CS Selector Preview"\)/);
+  assert.match(selectorViewSource, /diagnosticsDetails\.className = "cs-selector-diagnostics cs-selector-dev-drawer"/);
+  assert.match(selectorViewSource, /container\.appendChild\(article\)/);
 
   const hydrateSource = sourceSlice(
     selectorModuleSource,
