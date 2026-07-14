@@ -63,7 +63,7 @@ function selectorReferenceStatus() {
       fields: [],
       workflowSections: [
         { sectionKey: "system", title: "System", fields: [] },
-        { sectionKey: "runs", title: "Runs & Disabled Outputs", fields: [] },
+        { sectionKey: "runsPreview", title: "Runs & Disabled Outputs", fields: [] },
       ],
       manualConstraints: [],
       autoConsequences: [],
@@ -175,16 +175,17 @@ test("blank real UI state derives one incomplete safe Run 1 row and renders dedi
   const capture = model.singleRunIntentCapture;
   const preview = model.runIntakePreview;
   const container = renderModel(model);
-  const runsSection = descendants(container).find((element) => element.dataset.workflowSection === "runs");
+  const runsPreviewSection = descendants(container).find((element) => element.dataset.workflowSection === "runsPreview");
 
-  assert.ok(runsSection);
-  assert.ok(descendants(runsSection).some((element) => element.dataset.singleRunIntentCapture === "module-local"));
-  assert.equal(runIntentControl(runsSection, "runQty")?.type, "number");
-  assert.equal(runIntentControl(runsSection, "runLength")?.type, "number");
-  assert.equal(runIntentControl(runsSection, "runLengthMode")?.tagName, "SELECT");
-  assert.equal(runIntentControl(runsSection, "runCount"), null);
-  assert.match(descendantText(runsSection), /Run 1/);
-  assert.doesNotMatch(descendantText(runsSection), /No active controls in this section yet/);
+  assert.ok(runsPreviewSection);
+  assert.ok(descendants(runsPreviewSection).some((element) => element.dataset.singleRunIntentCapture === "module-local"));
+  assert.equal(runIntentControl(runsPreviewSection, "runQty")?.type, "number");
+  assert.equal(runIntentControl(runsPreviewSection, "runLength")?.type, "number");
+  assert.equal(runIntentControl(runsPreviewSection, "runLengthMode")?.tagName, "SELECT");
+  assert.equal(runIntentControl(runsPreviewSection, "runCount"), null);
+  assert.match(descendantText(runsPreviewSection), /Single-run intent capture active · Production outputs remain disabled\./);
+  assert.match(descendantText(runsPreviewSection), /Run 1/);
+  assert.doesNotMatch(descendantText(runsPreviewSection), /No active controls in this section yet/);
 
   assert.equal(capture.fixedLabel, "Run 1");
   assert.equal(capture.runCountDerived, true);

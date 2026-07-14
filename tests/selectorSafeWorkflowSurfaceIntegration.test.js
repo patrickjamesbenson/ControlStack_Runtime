@@ -87,7 +87,7 @@ function selectorReferenceStatus() {
             { fieldKey: "indirectMatchDirect", label: "Indirect match-direct", sourceTables: ["SYSTEM", "OPTICS"], options: [{ value: "match-direct", label: "Match direct", sourceTables: ["SYSTEM", "OPTICS"] }] },
           ],
         },
-        { sectionKey: "runs", title: "Runs", fields: [] },
+        { sectionKey: "runsPreview", title: "Runs & Disabled Outputs", fields: [] },
       ],
       manualConstraints: [],
       autoConsequences: [],
@@ -371,6 +371,9 @@ test("Selector view source keeps workflow diagnostics behind closed developer dr
   assert.match(view, /dataset\.fieldKey = "runLength"/);
   assert.match(view, /dataset\.fieldKey = "runLengthMode"/);
   assert.doesNotMatch(view, /dataset\.fieldKey = "runCount"/);
+  assert.match(view, /workflowSection\.sectionKey === "runsPreview"/);
+  assert.doesNotMatch(view, /workflowSection\.sectionKey === "runs"/);
+  assert.match(view, /Single-run intent capture active · Production outputs remain disabled\./);
   assert.match(view, /zero accessories approved/);
   assert.match(view, /IES \/ drawing \/ proof \/ persistence disabled/);
   assert.match(view, /cs-selector-dev-drawer/);

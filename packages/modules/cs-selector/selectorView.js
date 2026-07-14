@@ -1602,18 +1602,25 @@ function appendSelectorWorkflowSections(parent, surface = {}) {
     section.className = "cs-selector-product__workflow-section";
     section.dataset.workflowSection = workflowSection.sectionKey || "unknown";
     section.dataset.hiddenDiagnosticCount = String(diagnosticHiddenCount);
+    const renderedSingleRunIntentCapture = workflowSection.sectionKey === "runsPreview";
 
     const header = document.createElement("div");
     header.className = "cs-selector-product__workflow-header";
     appendText(header, "h4", workflowSection.title || workflowSection.sectionKey || "Workflow section");
     appendText(header, "span", workflowSection.status || "preview", "cs-selector-product__status-badge");
     section.appendChild(header);
-    appendText(section, "p", workflowSelectedSummary(workflowSection), "cs-selector-product__section-summary");
+    appendText(
+      section,
+      "p",
+      renderedSingleRunIntentCapture
+        ? "Single-run intent capture active · Production outputs remain disabled."
+        : workflowSelectedSummary(workflowSection),
+      "cs-selector-product__section-summary",
+    );
 
     appendWorkflowChipStrip(section, allFields);
     appendCollapsedOverrideDetails(section, overrideFields, surface, `cs-selector-workflow-${workflowSection.sectionKey}-override`);
 
-    const renderedSingleRunIntentCapture = workflowSection.sectionKey === "runs";
     if (renderedSingleRunIntentCapture) appendSelectorSingleRunIntentCapture(section, surface.singleRunIntentCapture || {});
 
     if (visibleFields.length) {
