@@ -307,13 +307,22 @@ function safeSeamResult(overrides = {}) {
     caller_supplied_db_allowed: false,
     active_source_db_loaded_read_only: true,
     active_source_db_passed_in_memory_only: true,
+    donor_run_engine_attempted: true,
     donor_bridge_used: false,
     donor_bridge_audit_jsonl_write_enabled: false,
+    filesystem_write_guard_active: true,
+    bytecode_writing_disabled: true,
     audit_jsonl_write_attempted: false,
     write_attempted: false,
+    filesystem_write_attempted: false,
     runtime_data_mutation_enabled: false,
+    runtime_data_mutated: false,
     donor_data_mutation_enabled: false,
     selected_result_persistence_enabled: false,
+    selected_result_persisted: false,
+    run_table_generated: false,
+    ies_generated: false,
+    output_generated: false,
     engine_execution_attempted: true,
     engine_result_produced: true,
     selected_result_created: false,
@@ -374,6 +383,8 @@ function realAdapter(invoke) {
     readOnly: true,
     realHostLocalSeam: true,
     fixtureAdapter: false,
+    filesystemWriteGuardRequired: true,
+    bytecodeWritingDisabled: true,
     invoke,
   };
 }
@@ -540,6 +551,8 @@ test("consumes only the private source-boundary candidate and returns Step-1, St
   assert.equal(received.execute, true);
   assert.equal(received.callerSuppliedDbAllowed, false);
   assert.equal(received.candidatePayloadReturned, false);
+  assert.equal(received.filesystemWriteGuardRequired, true);
+  assert.equal(received.bytecodeWritingDisabled, true);
   assert.equal(received.selectorPayload.tier, "Business");
   assert.equal(received.selectorPayload.runs[0].qty, 2);
   assert.equal(received.selectorPayload.runs[0].run_length_mm, 3500);
@@ -570,6 +583,18 @@ test("consumes only the private source-boundary candidate and returns Step-1, St
   assert.equal(outcome.adapterInvoked, true);
   assert.equal(outcome.invocationConsumed, true);
   assert.equal(outcome.privateCandidateConsumed, true);
+  assert.equal(outcome.activeRuntimeDataLoadedReadOnly, true);
+  assert.equal(outcome.activeRuntimeDataPassedInMemoryOnly, true);
+  assert.equal(outcome.donorRunEngineAttempted, true);
+  assert.equal(outcome.donorBridgeUsed, false);
+  assert.equal(outcome.filesystemWriteGuardActive, true);
+  assert.equal(outcome.filesystemWriteAttempted, false);
+  assert.equal(outcome.auditJsonlWriteAttempted, false);
+  assert.equal(outcome.runtimeDataMutated, false);
+  assert.equal(outcome.selectedResultPersisted, false);
+  assert.equal(outcome.runTableGenerated, false);
+  assert.equal(outcome.iesGenerated, false);
+  assert.equal(outcome.outputGenerated, false);
   assert.equal(outcome.step1Ready, true);
   assert.equal(outcome.step2ProjectionReady, true);
   assert.equal(outcome.step3AuthorityResultAvailable, true);
@@ -702,10 +727,10 @@ test("fails closed on mutation, persistence, RunTable/output generation, raw pay
     assert.equal(result.outcomeDescriptor.candidatePayloadReturned, false, key);
     assert.equal(result.outcomeDescriptor.selectedResultPersisted, false, key);
     assert.equal(result.outcomeDescriptor.runTableWritten, false, key);
-    assert.equal(result.outcomeDescriptor.runTableGenerated, false, key);
-    assert.equal(result.outcomeDescriptor.outputGenerated, false, key);
+    assert.equal(result.outcomeDescriptor.runTableGenerated, key === "run_table_generated", key);
+    assert.equal(result.outcomeDescriptor.outputGenerated, key === "output_generated", key);
     assert.equal(result.outcomeDescriptor.runtimeDataMutated, false, key);
-    assert.equal(result.outcomeDescriptor.filesystemWriteAttempted, false, key);
+    assert.equal(result.outcomeDescriptor.filesystemWriteAttempted, key === "write_attempted", key);
     assert.equal(calls, 1, key);
   }
 });

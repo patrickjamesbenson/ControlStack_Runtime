@@ -2477,7 +2477,7 @@ function invokeRuntimeEngineRunTableSelectedProjectHostLocalReadonlySeam(bridgeR
     const pythonCommand = String(process.env.CONTROLSTACK_PYTHON || "python").trim() || "python";
     const child = spawn(
       pythonCommand,
-      [SELECTED_PROJECT_ENGINE_READONLY_HOST_ADAPTER_PATH],
+      ["-B", SELECTED_PROJECT_ENGINE_READONLY_HOST_ADAPTER_PATH],
       {
         cwd: ROOT,
         windowsHide: true,
@@ -2485,6 +2485,7 @@ function invokeRuntimeEngineRunTableSelectedProjectHostLocalReadonlySeam(bridgeR
         env: {
           ...process.env,
           CONTROLSTACK_RUNTIME_ROOT: ROOT,
+          PYTHONDONTWRITEBYTECODE: "1",
         },
       },
     );

@@ -43,6 +43,8 @@ function adapterRequest(selectorPayload) {
     callerSuppliedDbAllowed: false,
     publicRouteAdded: false,
     postEndpointAdded: false,
+    filesystemWriteGuardRequired: true,
+    bytecodeWritingDisabled: true,
   });
 }
 
@@ -67,6 +69,8 @@ test("exports one fixed loopback host transport mount contract without mounting 
   assert.equal(mount.readOnly, true);
   assert.equal(mount.selectedProjectOnly, true);
   assert.equal(mount.redactedOutcomeOnly, true);
+  assert.equal(mount.filesystemWriteGuardRequired, true);
+  assert.equal(mount.bytecodeWritingDisabled, true);
   assert.equal(mount.shellMounted, false);
   assert.equal(mount.routesAdded, true);
   assert.equal(mount.postEndpointsAdded, true);
@@ -108,6 +112,8 @@ test("real host-local adapter forwards only the private candidate through the fi
     "schemaVersion",
     "selectorPayload",
     "execute",
+    "filesystemWriteGuardRequired",
+    "bytecodeWritingDisabled",
   ]);
   assert.equal(
     received.schemaId,
@@ -118,6 +124,8 @@ test("real host-local adapter forwards only the private candidate through the fi
     RUNTIME_ENGINE_RUNTABLE_SELECTED_PROJECT_HOST_SEAM_BRIDGE_SCHEMA_VERSION,
   );
   assert.equal(received.execute, true);
+  assert.equal(received.filesystemWriteGuardRequired, true);
+  assert.equal(received.bytecodeWritingDisabled, true);
   assert.deepEqual(received.selectorPayload, selectorPayload);
   assert.notEqual(received.selectorPayload, selectorPayload);
   for (const forbidden of [
@@ -166,6 +174,16 @@ test("mounted transport accepts only the fixed shell request and reports the hos
       getProjectEnvelope() {
         reads += 1;
         return null;
+      },
+      getActiveRevision() {
+        return {
+          projectId: "env-host-mount",
+          localEnvelopeId: "env-host-mount",
+          serverEnvelopeId: "env-host-mount",
+          serverRevisionId: "server-revision-env-host-mount",
+          localRevisionId: "local-revision-env-host-mount",
+          active: true,
+        };
       },
     },
     invokeHostLocalReadonlySeam() {

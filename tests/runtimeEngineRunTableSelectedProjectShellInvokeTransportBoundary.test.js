@@ -8,6 +8,7 @@ import {
   RUNTIME_ENGINE_RUNTABLE_SELECTED_PROJECT_SHELL_INVOKE_REQUEST_FIELD_ORDER,
   RUNTIME_ENGINE_RUNTABLE_SELECTED_PROJECT_SHELL_INVOKE_REQUEST_KIND,
   RUNTIME_ENGINE_RUNTABLE_SELECTED_PROJECT_SHELL_INVOKE_RESPONSE_FIELD_ORDER,
+  RUNTIME_ENGINE_RUNTABLE_SELECTED_PROJECT_LIVE_READONLY_INVOKE_RESPONSE_FIELD_ORDER,
   RUNTIME_ENGINE_RUNTABLE_SELECTED_PROJECT_SHELL_INVOKE_TRANSPORT_SCHEMA_ID,
   RUNTIME_ENGINE_RUNTABLE_SELECTED_PROJECT_SHELL_INVOKE_TRANSPORT_SCHEMA_VERSION,
   RUNTIME_ENGINE_RUNTABLE_SELECTED_PROJECT_SHELL_INVOKE_TRANSPORT_STATES,
@@ -276,6 +277,18 @@ function transportRequest(selectedProjectId, overrides = {}) {
   };
 }
 
+function activeRevision(identity, overrides = {}) {
+  return {
+    projectId: identity.projectId,
+    localEnvelopeId: identity.envelopeId,
+    serverEnvelopeId: identity.envelopeId,
+    serverRevisionId: `server-revision-${identity.suffix}`,
+    localRevisionId: `local-revision-${identity.suffix}`,
+    active: true,
+    ...overrides,
+  };
+}
+
 function safeSeamResult(overrides = {}) {
   return {
     ok: true,
@@ -289,13 +302,22 @@ function safeSeamResult(overrides = {}) {
     caller_supplied_db_allowed: false,
     active_source_db_loaded_read_only: true,
     active_source_db_passed_in_memory_only: true,
+    donor_run_engine_attempted: true,
     donor_bridge_used: false,
     donor_bridge_audit_jsonl_write_enabled: false,
+    filesystem_write_guard_active: true,
+    bytecode_writing_disabled: true,
     audit_jsonl_write_attempted: false,
     write_attempted: false,
+    filesystem_write_attempted: false,
     runtime_data_mutation_enabled: false,
+    runtime_data_mutated: false,
     donor_data_mutation_enabled: false,
     selected_result_persistence_enabled: false,
+    selected_result_persisted: false,
+    run_table_generated: false,
+    ies_generated: false,
+    output_generated: false,
     engine_execution_attempted: true,
     engine_result_produced: true,
     selected_result_created: false,
@@ -356,6 +378,8 @@ function realAdapter(invoke) {
     readOnly: true,
     realHostLocalSeam: true,
     fixtureAdapter: false,
+    filesystemWriteGuardRequired: true,
+    bytecodeWritingDisabled: true,
     invoke,
   };
 }
@@ -364,7 +388,7 @@ function assertRedactedTransportResponse(response) {
   assert.equal(Object.isFrozen(response), true);
   assert.deepEqual(
     Object.keys(response),
-    RUNTIME_ENGINE_RUNTABLE_SELECTED_PROJECT_SHELL_INVOKE_RESPONSE_FIELD_ORDER,
+    RUNTIME_ENGINE_RUNTABLE_SELECTED_PROJECT_LIVE_READONLY_INVOKE_RESPONSE_FIELD_ORDER,
   );
   assert.equal(
     Object.values(response).every((value) => (
@@ -420,7 +444,6 @@ function assertRedactedTransportResponse(response) {
     "safe-runtime-engine-runtable-selected-project-readonly-invoke-outcome:",
     "TILT=",
     "IESNA:LM-63",
-    "RuntimeData",
   ]) {
     assert.equal(serialized.includes(forbidden), false, forbidden);
   }
@@ -475,6 +498,10 @@ test("accepts only the shell-selected project identity, reconstructs the source 
         reads.push(selectedProjectId);
         return structuredClone(envelope);
       },
+      getActiveRevision(selectedProjectId) {
+        assert.equal(selectedProjectId, identity.envelopeId);
+        return activeRevision(identity);
+      },
     },
     hostLocalReadonlySeamAdapter: realAdapter(async (request) => {
       adapterCalls += 1;
@@ -488,7 +515,7 @@ test("accepts only the shell-selected project identity, reconstructs the source 
   );
 
   assertRedactedTransportResponse(response);
-  assert.deepEqual(reads, [identity.envelopeId]);
+  assert.deepEqual(reads, [identity.envelopeId, identity.envelopeId]);
   assert.equal(adapterCalls, 1);
   assert.ok(privateRequest);
   assert.equal(privateRequest.selectorPayload.tier, "Business");
@@ -503,6 +530,24 @@ test("accepts only the shell-selected project identity, reconstructs the source 
   assert.equal(response.blocker, null);
   assert.equal(response.requestAccepted, true);
   assert.equal(response.serverOwned, true);
+  assert.equal(response.serverOwnedRevisionChecked, true);
+  assert.equal(response.inFlightInvocationBlocked, false);
+  assert.equal(response.invocationConsumed, true);
+  assert.equal(response.replayBlocked, false);
+  assert.equal(response.staleServerRevisionBlocked, false);
+  assert.equal(response.secondServerOwnedEnvelopeRevisionCheckPassed, true);
+  assert.equal(response.activeRuntimeDataLoadedReadOnly, true);
+  assert.equal(response.activeRuntimeDataPassedInMemoryOnly, true);
+  assert.equal(response.donorRunEngineAttempted, true);
+  assert.equal(response.donorBridgeUsed, false);
+  assert.equal(response.filesystemWriteGuardActive, true);
+  assert.equal(response.filesystemWriteAttempted, false);
+  assert.equal(response.auditJsonlWriteAttempted, false);
+  assert.equal(response.runtimeDataMutated, false);
+  assert.equal(response.selectedResultPersisted, false);
+  assert.equal(response.runTableGenerated, false);
+  assert.equal(response.iesGenerated, false);
+  assert.equal(response.outputGenerated, false);
   assert.equal(response.sourceBoundaryReconstructedServerSide, true);
   assert.equal(response.sourceBoundaryReady, true);
   assert.equal(response.capabilityInvoked, true);
@@ -560,6 +605,10 @@ test("fails closed when the server-loaded envelope does not match the shell-sele
         assert.equal(selectedProjectId, shellIdentity.envelopeId);
         return structuredClone(otherEnvelope);
       },
+      getActiveRevision(selectedProjectId) {
+        assert.equal(selectedProjectId, shellIdentity.envelopeId);
+        return activeRevision(shellIdentity);
+      },
     },
     hostLocalReadonlySeamAdapter: realAdapter(async () => {
       adapterCalls += 1;
@@ -590,6 +639,9 @@ test("keeps the transport unavailable without a real host-local adapter after su
       getProjectEnvelope() {
         return structuredClone(envelope);
       },
+      getActiveRevision() {
+        return activeRevision(identity);
+      },
     },
   });
 
@@ -610,6 +662,117 @@ test("keeps the transport unavailable without a real host-local adapter after su
   assert.equal(
     response.blocker,
     "selected-project-readonly-invoke-host-local-adapter-unavailable",
+  );
+});
+
+test("blocks concurrent and replayed transport invocation by server-owned revision string across transport service recreation", async () => {
+  const identity = fixtureIdentity();
+  const envelope = selectedEnvelope(identity);
+  let adapterCalls = 0;
+  let releaseAdapter;
+  let markStarted;
+  const started = new Promise((resolve) => {
+    markStarted = resolve;
+  });
+  const pending = new Promise((resolve) => {
+    releaseAdapter = resolve;
+  });
+  const savedProjects = {
+    getProjectEnvelope() {
+      return structuredClone(envelope);
+    },
+    getActiveRevision() {
+      return activeRevision(identity);
+    },
+  };
+  const adapter = realAdapter(async () => {
+    adapterCalls += 1;
+    markStarted();
+    await pending;
+    return safeSeamResult();
+  });
+  const firstTransport = createRuntimeEngineRunTableSelectedProjectShellInvokeTransportBoundary({
+    savedProjects,
+    hostLocalReadonlySeamAdapter: adapter,
+  });
+
+  const firstPromise = firstTransport(transportRequest(identity.envelopeId));
+  await started;
+  const concurrent = await firstTransport(transportRequest(identity.envelopeId));
+  releaseAdapter();
+  const first = await firstPromise;
+
+  const recreatedTransport = createRuntimeEngineRunTableSelectedProjectShellInvokeTransportBoundary({
+    savedProjects,
+    hostLocalReadonlySeamAdapter: realAdapter(async () => {
+      adapterCalls += 1;
+      return safeSeamResult();
+    }),
+  });
+  const replay = await recreatedTransport(transportRequest(identity.envelopeId));
+
+  assert.equal(first.ok, true);
+  assert.equal(first.invocationConsumed, true);
+  assert.equal(concurrent.ok, false);
+  assert.equal(concurrent.inFlightInvocationBlocked, true);
+  assert.equal(
+    concurrent.blocker,
+    "selected-project-shell-invoke-transport-concurrent-invocation-blocked",
+  );
+  assert.equal(concurrent.capabilityInvoked, false);
+  assert.equal(replay.ok, false);
+  assert.equal(replay.invocationConsumed, true);
+  assert.equal(replay.replayBlocked, true);
+  assert.equal(
+    replay.blocker,
+    "selected-project-shell-invoke-transport-replay-blocked",
+  );
+  assert.equal(replay.capabilityInvoked, false);
+  assert.equal(adapterCalls, 1);
+});
+
+test("rechecks the server-owned envelope revision immediately before the adapter and blocks revision drift without invoking it", async () => {
+  const identity = fixtureIdentity();
+  const envelope = selectedEnvelope(identity);
+  let revisionReads = 0;
+  let adapterCalls = 0;
+  const transport = createRuntimeEngineRunTableSelectedProjectShellInvokeTransportBoundary({
+    savedProjects: {
+      getProjectEnvelope() {
+        return structuredClone(envelope);
+      },
+      getActiveRevision() {
+        revisionReads += 1;
+        return activeRevision(identity, revisionReads === 1 ? {} : {
+          serverRevisionId: `server-revision-drifted-${identity.suffix}`,
+        });
+      },
+    },
+    hostLocalReadonlySeamAdapter: realAdapter(async () => {
+      adapterCalls += 1;
+      return safeSeamResult();
+    }),
+  });
+
+  const response = await transport(transportRequest(identity.envelopeId));
+
+  assertRedactedTransportResponse(response);
+  assert.equal(revisionReads, 2);
+  assert.equal(adapterCalls, 0);
+  assert.equal(response.ok, false);
+  assert.equal(response.failClosed, true);
+  assert.equal(response.invocationConsumed, true);
+  assert.equal(response.staleServerRevisionBlocked, true);
+  assert.equal(response.secondServerOwnedEnvelopeRevisionCheckPassed, false);
+  assert.equal(response.capabilityInvoked, false);
+  assert.equal(response.capabilityCompleted, false);
+  assert.equal(
+    response.blocker,
+    "selected-project-readonly-invoke-stale-server-owned-revision-blocked",
+  );
+  assert.equal(
+    JSON.stringify(response).includes(`server-revision-drifted-${identity.suffix}`),
+    false,
   );
 });
 
@@ -644,7 +807,7 @@ test("transport source stays server-owned while the host route mounts only the w
   );
   assert.doesNotMatch(
     transportSource,
-    /engine_runtable_internal_readonly_invoke_probe|webhook|MCP|fetch\s*\(|XMLHttpRequest|WebSocket|\/api\/|\bPOST\b|node:fs|writeFile|appendFile|RuntimeData/,
+    /engine_runtable_internal_readonly_invoke_probe|webhook|MCP|fetch\s*\(|XMLHttpRequest|WebSocket|\/api\/|\bPOST\b|node:fs|writeFile|appendFile/,
   );
   assert.doesNotMatch(
     shellSource,

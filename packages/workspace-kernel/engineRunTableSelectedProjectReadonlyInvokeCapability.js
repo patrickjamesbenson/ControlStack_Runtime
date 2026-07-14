@@ -59,6 +59,9 @@ export const RUNTIME_ENGINE_RUNTABLE_SELECTED_PROJECT_READONLY_INVOKE_OUTCOME_FI
     "invocationConsumed",
     "concurrentInvocationBlocked",
     "replayBlocked",
+    "serverOwnedRevisionGuarded",
+    "secondServerOwnedEnvelopeRevisionCheckPassed",
+    "staleServerRevisionBlocked",
     "step1Ready",
     "step2ProjectionReady",
     "step3AuthorityResultAvailable",
@@ -66,6 +69,11 @@ export const RUNTIME_ENGINE_RUNTABLE_SELECTED_PROJECT_READONLY_INVOKE_OUTCOME_FI
     "readOnly",
     "selectedProjectOnly",
     "privateCandidateConsumed",
+    "activeRuntimeDataLoadedReadOnly",
+    "activeRuntimeDataPassedInMemoryOnly",
+    "donorRunEngineAttempted",
+    "donorBridgeUsed",
+    "filesystemWriteGuardActive",
     "candidatePayloadReturned",
     "rawEnginePayloadReturned",
     "rawEngineResultReturned",
@@ -76,6 +84,7 @@ export const RUNTIME_ENGINE_RUNTABLE_SELECTED_PROJECT_READONLY_INVOKE_OUTCOME_FI
     "iesGenerated",
     "runtimeDataMutated",
     "filesystemWriteAttempted",
+    "auditJsonlWriteAttempted",
     "routesAdded",
     "postEndpointsAdded",
     "fixtureFallbackUsed",
@@ -128,8 +137,20 @@ const REQUIRED_SEAM_FALSE_FLAGS = Object.freeze([
   "private_paths_exposed",
   "source_path_returned",
 ]);
+const LIVE_NO_WRITE_REQUIRED_FALSE_FLAGS = Object.freeze([
+  "filesystem_write_attempted",
+  "runtime_data_mutated",
+  "selected_result_persisted",
+  "run_table_generated",
+  "ies_generated",
+  "output_generated",
+]);
 
 const UNSAFE_TRUE_KEY_PATTERN = /(?:write|written|mutation|mutated|persist|generated|generation_enabled|generation_attempted|output_created|output_returned|raw_.+(?:returned|exposed)|private_.+(?:returned|exposed)|credentials?_.+(?:returned|exposed)|routes?_added|post_endpoints?_added|fixture_(?:used|fallback)|synthetic_success)/i;
+const ALLOWED_SEAM_TRUE_FLAGS = new Set([
+  "filesystem_write_guard_active",
+  "bytecode_writing_disabled",
+]);
 const FORBIDDEN_CANDIDATE_KEY_PATTERN = /^(?:db|database|selectedResultSummary|runTableFirstNarrowOutputSummary|readinessSummary|projectEnvelope|fixture|fixturePayload|runtimeData|filePath|sourcePath|privatePath)$/i;
 
 const IN_FLIGHT_BOUNDARIES = new WeakSet();
@@ -197,7 +218,9 @@ function unsafeNestedValue(value, depth = 0, seen = new Set()) {
   }
   if (!isPlainObject(value)) return "non-plain-value-returned";
   for (const [key, nested] of Object.entries(value)) {
-    if (UNSAFE_TRUE_KEY_PATTERN.test(key) && nested === true) {
+    if (UNSAFE_TRUE_KEY_PATTERN.test(key)
+      && !ALLOWED_SEAM_TRUE_FLAGS.has(key)
+      && nested === true) {
       return `unsafe-seam-result-flag-${safeToken(key, "unknown")}`;
     }
     const blocker = unsafeNestedValue(nested, depth + 1, seen);
@@ -344,13 +367,16 @@ function validateAdapter(adapter) {
   return null;
 }
 
-function validateSeamResult(seamResult) {
+function validateSeamResult(seamResult, { enforceLiveNoWriteLock = false } = {}) {
   if (!isPlainObject(seamResult)) return "selected-project-readonly-invoke-seam-result-invalid";
   if (seamResult.seam !== HOST_LOCAL_READONLY_SEAM
     || seamResult.seam_version !== HOST_LOCAL_READONLY_SEAM_VERSION) {
     return "selected-project-readonly-invoke-seam-result-schema-mismatch";
   }
-  for (const key of REQUIRED_SEAM_FALSE_FLAGS) {
+  const requiredFalseFlags = enforceLiveNoWriteLock
+    ? [...REQUIRED_SEAM_FALSE_FLAGS, ...LIVE_NO_WRITE_REQUIRED_FALSE_FLAGS]
+    : REQUIRED_SEAM_FALSE_FLAGS;
+  for (const key of requiredFalseFlags) {
     if (seamResult[key] !== false) {
       return `selected-project-readonly-invoke-seam-safety-flag-not-false-${key}`;
     }
@@ -364,14 +390,60 @@ function validateSeamResult(seamResult) {
     || typeof seamResult.engine_result_produced !== "boolean") {
     return "selected-project-readonly-invoke-seam-result-contract-invalid";
   }
+  if (enforceLiveNoWriteLock
+    && (seamResult.filesystem_write_guard_active !== true
+      || seamResult.bytecode_writing_disabled !== true
+      || typeof seamResult.donor_run_engine_attempted !== "boolean")) {
+    return "selected-project-readonly-invoke-seam-live-no-write-contract-invalid";
+  }
+  if (enforceLiveNoWriteLock
+    && seamResult.donor_run_engine_attempted !== seamResult.engine_execution_attempted) {
+    return "selected-project-readonly-invoke-seam-engine-attempt-inconsistent";
+  }
   if (seamResult.ok === true
     && (seamResult.engine_execution_attempted !== true
+      || (enforceLiveNoWriteLock
+        && (seamResult.active_source_db_loaded_read_only !== true
+          || seamResult.active_source_db_passed_in_memory_only !== true))
       || seamResult.engine_result_produced !== true
       || !isPlainObject(seamResult.safe_engine_summary)
       || seamResult.safe_engine_summary.success !== true)) {
     return "selected-project-readonly-invoke-seam-success-inconsistent";
   }
   return null;
+}
+
+function seamSafetyProjection(seamResult = null) {
+  return {
+    activeRuntimeDataLoadedReadOnly:
+      seamResult?.active_source_db_loaded_read_only === true,
+    activeRuntimeDataPassedInMemoryOnly:
+      seamResult?.active_source_db_passed_in_memory_only === true,
+    donorRunEngineAttempted: seamResult?.donor_run_engine_attempted === true,
+    donorBridgeUsed: seamResult?.donor_bridge_used === true,
+    filesystemWriteGuardActive: seamResult?.filesystem_write_guard_active === true,
+    filesystemWriteAttempted:
+      seamResult?.filesystem_write_attempted === true || seamResult?.write_attempted === true,
+    auditJsonlWriteAttempted: seamResult?.audit_jsonl_write_attempted === true,
+    runtimeDataMutated: seamResult?.runtime_data_mutated === true,
+    selectedResultPersisted: seamResult?.selected_result_persisted === true,
+    runTableGenerated: seamResult?.run_table_generated === true,
+    iesGenerated: seamResult?.ies_generated === true,
+    outputGenerated: seamResult?.output_generated === true,
+  };
+}
+
+function adapterLifecycleProjection(adapter, blocker = null) {
+  const guarded = adapter?.serverOwnedRevisionGuarded === true;
+  const secondCheckPassed = guarded
+    && typeof adapter?.secondServerOwnedEnvelopeRevisionCheckPassed === "function"
+    && adapter.secondServerOwnedEnvelopeRevisionCheckPassed() === true;
+  return {
+    serverOwnedRevisionGuarded: guarded,
+    secondServerOwnedEnvelopeRevisionCheckPassed: secondCheckPassed,
+    staleServerRevisionBlocked:
+      blocker === "selected-project-readonly-invoke-stale-server-owned-revision-blocked",
+  };
 }
 
 function mapperSummaryFromBoundary(boundary, candidate = null) {
@@ -429,7 +501,11 @@ function outcomeFields({
   invocationConsumed = false,
   concurrentInvocationBlocked = false,
   replayBlocked = false,
+  serverOwnedRevisionGuarded = false,
+  secondServerOwnedEnvelopeRevisionCheckPassed = false,
+  staleServerRevisionBlocked = false,
   privateCandidateConsumed = false,
+  seamSafety = null,
   summaries,
 } = {}) {
   const step1Ready = summaries?.step1?.readonlyEngineStep1Ready === true;
@@ -466,6 +542,9 @@ function outcomeFields({
     invocationConsumed,
     concurrentInvocationBlocked,
     replayBlocked,
+    serverOwnedRevisionGuarded,
+    secondServerOwnedEnvelopeRevisionCheckPassed,
+    staleServerRevisionBlocked,
     step1Ready,
     step2ProjectionReady,
     step3AuthorityResultAvailable,
@@ -473,16 +552,24 @@ function outcomeFields({
     readOnly: true,
     selectedProjectOnly: true,
     privateCandidateConsumed,
+    activeRuntimeDataLoadedReadOnly:
+      seamSafety?.activeRuntimeDataLoadedReadOnly === true,
+    activeRuntimeDataPassedInMemoryOnly:
+      seamSafety?.activeRuntimeDataPassedInMemoryOnly === true,
+    donorRunEngineAttempted: seamSafety?.donorRunEngineAttempted === true,
+    donorBridgeUsed: seamSafety?.donorBridgeUsed === true,
+    filesystemWriteGuardActive: seamSafety?.filesystemWriteGuardActive === true,
     candidatePayloadReturned: false,
     rawEnginePayloadReturned: false,
     rawEngineResultReturned: false,
-    selectedResultPersisted: false,
+    selectedResultPersisted: seamSafety?.selectedResultPersisted === true,
     runTableWritten: false,
-    runTableGenerated: false,
-    outputGenerated: false,
-    iesGenerated: false,
-    runtimeDataMutated: false,
-    filesystemWriteAttempted: false,
+    runTableGenerated: seamSafety?.runTableGenerated === true,
+    outputGenerated: seamSafety?.outputGenerated === true,
+    iesGenerated: seamSafety?.iesGenerated === true,
+    runtimeDataMutated: seamSafety?.runtimeDataMutated === true,
+    filesystemWriteAttempted: seamSafety?.filesystemWriteAttempted === true,
+    auditJsonlWriteAttempted: seamSafety?.auditJsonlWriteAttempted === true,
     routesAdded: false,
     postEndpointsAdded: false,
     fixtureFallbackUsed: false,
@@ -533,6 +620,8 @@ function blockedResult({
   replayBlocked = false,
   privateCandidateConsumed = false,
   preserveMapperReady = false,
+  seamResult = null,
+  lifecycleProjection = null,
 } = {}) {
   const summaries = preserveMapperReady
     ? buildResultSummaries({ boundary, seamResult: null })
@@ -546,7 +635,9 @@ function blockedResult({
     invocationConsumed,
     concurrentInvocationBlocked,
     replayBlocked,
+    ...(lifecycleProjection || {}),
     privateCandidateConsumed,
+    seamSafety: seamSafetyProjection(seamResult),
   });
 }
 
@@ -626,21 +717,36 @@ export function createRuntimeEngineRunTableSelectedProjectReadonlyInvokeCapabili
         callerSuppliedDbAllowed: false,
         publicRouteAdded: false,
         postEndpointAdded: false,
+        filesystemWriteGuardRequired: true,
+        bytecodeWritingDisabled: true,
       }));
-    } catch {
+    } catch (error) {
+      const adapterBlocker = error?.message
+        === "selected-project-readonly-invoke-stale-server-owned-revision-blocked"
+        ? error.message
+        : "selected-project-readonly-invoke-host-local-adapter-threw";
       return blockedResult({
         boundary: sourceBoundary,
-        blocker: "selected-project-readonly-invoke-host-local-adapter-threw",
+        blocker: adapterBlocker,
         adapterMounted: true,
-        adapterInvoked: true,
+        adapterInvoked: adapterBlocker
+          !== "selected-project-readonly-invoke-stale-server-owned-revision-blocked",
         invocationConsumed: true,
         privateCandidateConsumed: true,
+        lifecycleProjection: adapterLifecycleProjection(
+          hostLocalReadonlySeamAdapter,
+          adapterBlocker,
+        ),
       });
     } finally {
       IN_FLIGHT_BOUNDARIES.delete(sourceBoundary);
     }
 
-    const seamBlocker = validateSeamResult(seamResult);
+    const seamBlocker = validateSeamResult(seamResult, {
+      enforceLiveNoWriteLock:
+        hostLocalReadonlySeamAdapter.filesystemWriteGuardRequired === true
+        && hostLocalReadonlySeamAdapter.bytecodeWritingDisabled === true,
+    });
     if (seamBlocker) {
       return blockedResult({
         boundary: sourceBoundary,
@@ -649,6 +755,8 @@ export function createRuntimeEngineRunTableSelectedProjectReadonlyInvokeCapabili
         adapterInvoked: true,
         invocationConsumed: true,
         privateCandidateConsumed: true,
+        seamResult,
+        lifecycleProjection: adapterLifecycleProjection(hostLocalReadonlySeamAdapter),
       });
     }
 
@@ -669,6 +777,8 @@ export function createRuntimeEngineRunTableSelectedProjectReadonlyInvokeCapabili
       adapterInvoked: true,
       invocationConsumed: true,
       privateCandidateConsumed: true,
+      seamSafety: seamSafetyProjection(seamResult),
+      ...adapterLifecycleProjection(hostLocalReadonlySeamAdapter),
     });
   };
 }

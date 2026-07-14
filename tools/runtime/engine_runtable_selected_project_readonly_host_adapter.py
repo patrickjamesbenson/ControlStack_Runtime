@@ -2,14 +2,25 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import os
 import re
 import sys
 from pathlib import Path
 from typing import Any, Mapping
 
+sys.dont_write_bytecode = True
+os.environ["PYTHONDONTWRITEBYTECODE"] = "1"
+
 BRIDGE_SCHEMA_ID = "controlstack.runtime.engine-runtable.selected-project-host-seam-bridge.v1"
 BRIDGE_SCHEMA_VERSION = 1
-BRIDGE_FIELD_ORDER = ["schemaId", "schemaVersion", "selectorPayload", "execute"]
+BRIDGE_FIELD_ORDER = [
+    "schemaId",
+    "schemaVersion",
+    "selectorPayload",
+    "execute",
+    "filesystemWriteGuardRequired",
+    "bytecodeWritingDisabled",
+]
 MAX_STDIN_BYTES = 256 * 1024
 MCP_SOURCE_PATH = Path(__file__).resolve().parents[1] / "controlstack-mcp" / "controlstack_mcp.py"
 FORBIDDEN_KEY_PATTERN = re.compile(
@@ -35,13 +46,22 @@ def safe_failure(code: str) -> dict[str, Any]:
         "caller_supplied_db_allowed": False,
         "active_source_db_loaded_read_only": False,
         "active_source_db_passed_in_memory_only": False,
+        "donor_run_engine_attempted": False,
         "donor_bridge_used": False,
         "donor_bridge_audit_jsonl_write_enabled": False,
+        "filesystem_write_guard_active": True,
+        "bytecode_writing_disabled": True,
         "audit_jsonl_write_attempted": False,
         "write_attempted": False,
+        "filesystem_write_attempted": False,
         "runtime_data_mutation_enabled": False,
+        "runtime_data_mutated": False,
         "donor_data_mutation_enabled": False,
         "selected_result_persistence_enabled": False,
+        "selected_result_persisted": False,
+        "run_table_generated": False,
+        "ies_generated": False,
+        "output_generated": False,
         "engine_execution_attempted": False,
         "engine_result_produced": False,
         "selected_result_created": False,
@@ -65,7 +85,11 @@ def safe_failure(code: str) -> dict[str, Any]:
         "private_paths_exposed": False,
         "source_path_returned": False,
         "safe_engine_summary": None,
-        "blockers": [{"code": code, "severity": "blocking", "reason": "Host-local readonly seam invocation was blocked fail-closed."}],
+        "blockers": [{
+            "code": code,
+            "severity": "blocking",
+            "reason": "Host-local readonly seam invocation was blocked fail-closed.",
+        }],
         "warnings": [],
     }
 
@@ -108,13 +132,17 @@ def read_bridge_request() -> tuple[dict[str, Any] | None, str | None]:
         return None, "host-bridge-request-shape-invalid"
     if parsed.get("schemaId") != BRIDGE_SCHEMA_ID or parsed.get("schemaVersion") != BRIDGE_SCHEMA_VERSION:
         return None, "host-bridge-request-schema-mismatch"
-    if parsed.get("execute") is not True or not isinstance(parsed.get("selectorPayload"), dict):
+    if (parsed.get("execute") is not True
+            or parsed.get("filesystemWriteGuardRequired") is not True
+            or parsed.get("bytecodeWritingDisabled") is not True
+            or not isinstance(parsed.get("selectorPayload"), dict)):
         return None, "host-bridge-request-contract-invalid"
     blocker = find_forbidden_value(parsed["selectorPayload"])
     return (None, blocker) if blocker else (parsed, None)
 
 
 def load_internal_seam_module() -> Any:
+    sys.dont_write_bytecode = True
     spec = importlib.util.spec_from_file_location(
         "controlstack_runtime_selected_project_host_seam",
         MCP_SOURCE_PATH,

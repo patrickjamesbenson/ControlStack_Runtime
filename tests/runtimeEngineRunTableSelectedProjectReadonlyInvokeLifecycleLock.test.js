@@ -307,6 +307,18 @@ function transportRequest(selectedProjectId) {
   };
 }
 
+function activeRevision(identity, overrides = {}) {
+  return {
+    projectId: identity.projectId,
+    localEnvelopeId: identity.envelopeId,
+    serverEnvelopeId: identity.envelopeId,
+    serverRevisionId: `server-revision-${identity.suffix}`,
+    localRevisionId: `local-revision-${identity.suffix}`,
+    active: true,
+    ...overrides,
+  };
+}
+
 function safeSeamResult() {
   return {
     ok: true,
@@ -320,13 +332,22 @@ function safeSeamResult() {
     caller_supplied_db_allowed: false,
     active_source_db_loaded_read_only: true,
     active_source_db_passed_in_memory_only: true,
+    donor_run_engine_attempted: true,
     donor_bridge_used: false,
     donor_bridge_audit_jsonl_write_enabled: false,
+    filesystem_write_guard_active: true,
+    bytecode_writing_disabled: true,
     audit_jsonl_write_attempted: false,
     write_attempted: false,
+    filesystem_write_attempted: false,
     runtime_data_mutation_enabled: false,
+    runtime_data_mutated: false,
     donor_data_mutation_enabled: false,
     selected_result_persistence_enabled: false,
+    selected_result_persisted: false,
+    run_table_generated: false,
+    ies_generated: false,
+    output_generated: false,
     engine_execution_attempted: true,
     engine_result_produced: true,
     selected_result_created: false,
@@ -386,6 +407,8 @@ function realAdapter(invoke) {
     readOnly: true,
     realHostLocalSeam: true,
     fixtureAdapter: false,
+    filesystemWriteGuardRequired: true,
+    bytecodeWritingDisabled: true,
     invoke,
   };
 }
@@ -532,8 +555,13 @@ test("transport reconstruction rejects a stale selected-project request after th
   let adapterCalls = 0;
   const transport = createRuntimeEngineRunTableSelectedProjectShellInvokeTransportBoundary({
     savedProjects: {
-      getProjectEnvelope() {
+      getProjectEnvelope(selectedProjectId) {
+        if (selectedProjectId !== activeEnvelope.envelopeId) return null;
         return structuredClone(activeEnvelope);
+      },
+      getActiveRevision() {
+        const identity = activeEnvelope === firstEnvelope ? firstIdentity : secondIdentity;
+        return activeRevision(identity);
       },
     },
     hostLocalReadonlySeamAdapter: realAdapter(async () => {
@@ -555,7 +583,9 @@ test("transport reconstruction rejects a stale selected-project request after th
   assert.equal(stale.ok, false);
   assert.equal(stale.failClosed, true);
   assert.equal(stale.selectedProjectId, firstIdentity.envelopeId);
-  assert.equal(stale.sourceBoundaryReconstructedServerSide, true);
+  assert.equal(stale.serverOwnedRevisionChecked, true);
+  assert.equal(stale.staleServerRevisionBlocked, true);
+  assert.equal(stale.sourceBoundaryReconstructedServerSide, false);
   assert.equal(stale.sourceBoundaryReady, false);
   assert.equal(stale.capabilityInvoked, false);
   assert.equal(JSON.stringify(stale).includes(secondIdentity.projectId), false);

@@ -8,17 +8,24 @@ arbitrary terminal execution, caller-supplied shell commands, force-push, or
 unbounded filesystem access.
 """
 
+import builtins
+import copy
 import difflib
 import fnmatch
 import hashlib
+import io
 import json
 import logging
 import os
 import re
 import shutil
+import sqlite3
 import subprocess
 import sys
+import tempfile
+import threading
 import time
+from contextlib import contextmanager
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -781,6 +788,128 @@ def runtime_data_active_source_probe() -> dict[str, Any]:
     )
 
 
+class _ReadonlyFilesystemWriteBlocked(RuntimeError):
+    pass
+
+
+class _ReadonlyFilesystemWriteAttempt:
+    def __init__(self) -> None:
+        self.attempted = False
+        self.audit_jsonl_attempted = False
+        self.operation = ""
+
+    def block(self, operation: str, path: Any = None) -> None:
+        self.attempted = True
+        self.operation = operation
+        path_text = str(path or "").lower()
+        if ".jsonl" in path_text or "audit" in path_text:
+            self.audit_jsonl_attempted = True
+        raise _ReadonlyFilesystemWriteBlocked("readonly-filesystem-write-blocked")
+
+
+_READONLY_ENGINE_WRITE_GUARD_LOCK = threading.RLock()
+
+
+def _mode_allows_write(mode: Any) -> bool:
+    return any(flag in str(mode or "r") for flag in ("w", "a", "x", "+"))
+
+
+@contextmanager
+def _deny_engine_filesystem_writes() -> Any:
+    tracker = _ReadonlyFilesystemWriteAttempt()
+    originals: list[tuple[Any, str, Any]] = []
+
+    def patch(owner: Any, name: str, replacement: Any) -> None:
+        if not hasattr(owner, name):
+            return
+        originals.append((owner, name, getattr(owner, name)))
+        setattr(owner, name, replacement)
+
+    with _READONLY_ENGINE_WRITE_GUARD_LOCK:
+        original_builtin_open = builtins.open
+        original_io_open = io.open
+        original_os_open = os.open
+        original_os_fdopen = os.fdopen
+        original_path_open = Path.open
+
+        def guarded_builtin_open(file: Any, mode: str = "r", *args: Any, **kwargs: Any) -> Any:
+            if _mode_allows_write(mode):
+                tracker.block("open", file)
+            return original_builtin_open(file, mode, *args, **kwargs)
+
+        def guarded_io_open(file: Any, mode: str = "r", *args: Any, **kwargs: Any) -> Any:
+            if _mode_allows_write(mode):
+                tracker.block("io.open", file)
+            return original_io_open(file, mode, *args, **kwargs)
+
+        def guarded_os_open(path: Any, flags: int, *args: Any, **kwargs: Any) -> Any:
+            write_flags = (
+                getattr(os, "O_WRONLY", 0)
+                | getattr(os, "O_RDWR", 0)
+                | getattr(os, "O_CREAT", 0)
+                | getattr(os, "O_APPEND", 0)
+                | getattr(os, "O_TRUNC", 0)
+            )
+            if flags & write_flags:
+                tracker.block("os.open", path)
+            return original_os_open(path, flags, *args, **kwargs)
+
+        def guarded_os_fdopen(fd: int, mode: str = "r", *args: Any, **kwargs: Any) -> Any:
+            if _mode_allows_write(mode):
+                tracker.block("os.fdopen", None)
+            return original_os_fdopen(fd, mode, *args, **kwargs)
+
+        def guarded_path_open(path_self: Path, mode: str = "r", *args: Any, **kwargs: Any) -> Any:
+            if _mode_allows_write(mode):
+                tracker.block("Path.open", path_self)
+            return original_path_open(path_self, mode, *args, **kwargs)
+
+        def blocked_path_operation(operation: str):
+            def blocked(*args: Any, **_kwargs: Any) -> Any:
+                tracker.block(operation, args[0] if args else None)
+            return blocked
+
+        patch(builtins, "open", guarded_builtin_open)
+        patch(io, "open", guarded_io_open)
+        patch(os, "open", guarded_os_open)
+        patch(os, "fdopen", guarded_os_fdopen)
+        patch(Path, "open", guarded_path_open)
+
+        for name in (
+            "mkdir", "makedirs", "remove", "unlink", "rename", "replace",
+            "rmdir", "removedirs", "truncate", "link", "symlink",
+        ):
+            patch(os, name, blocked_path_operation(f"os.{name}"))
+        for name in (
+            "write_text", "write_bytes", "touch", "mkdir", "unlink", "rename",
+            "replace", "rmdir", "symlink_to", "hardlink_to",
+        ):
+            patch(Path, name, blocked_path_operation(f"Path.{name}"))
+        for name in (
+            "copy", "copy2", "copyfile", "copytree", "move", "rmtree",
+            "make_archive", "unpack_archive",
+        ):
+            patch(shutil, name, blocked_path_operation(f"shutil.{name}"))
+        for name in (
+            "NamedTemporaryFile", "TemporaryFile", "SpooledTemporaryFile",
+            "TemporaryDirectory", "mkstemp", "mkdtemp",
+        ):
+            patch(tempfile, name, blocked_path_operation(f"tempfile.{name}"))
+        for name in (
+            "spawnl", "spawnle", "spawnlp", "spawnlpe", "spawnv", "spawnve",
+            "spawnvp", "spawnvpe", "startfile",
+        ):
+            patch(os, name, blocked_path_operation(f"os.{name}"))
+        patch(sqlite3, "connect", blocked_path_operation("sqlite3.connect"))
+        patch(subprocess, "Popen", blocked_path_operation("subprocess.Popen"))
+        patch(os, "system", blocked_path_operation("os.system"))
+
+        try:
+            yield tracker
+        finally:
+            for owner, name, original in reversed(originals):
+                setattr(owner, name, original)
+
 
 def _engine_readonly_invoke_base(**overrides: Any) -> dict[str, Any]:
     result: dict[str, Any] = {
@@ -795,13 +924,22 @@ def _engine_readonly_invoke_base(**overrides: Any) -> dict[str, Any]:
         "caller_supplied_db_allowed": False,
         "active_source_db_loaded_read_only": False,
         "active_source_db_passed_in_memory_only": False,
+        "donor_run_engine_attempted": False,
         "donor_bridge_used": False,
         "donor_bridge_audit_jsonl_write_enabled": False,
+        "filesystem_write_guard_active": True,
+        "bytecode_writing_disabled": True,
         "audit_jsonl_write_attempted": False,
         "write_attempted": False,
+        "filesystem_write_attempted": False,
         "runtime_data_mutation_enabled": False,
+        "runtime_data_mutated": False,
         "donor_data_mutation_enabled": False,
         "selected_result_persistence_enabled": False,
+        "selected_result_persisted": False,
+        "run_table_generated": False,
+        "ies_generated": False,
+        "output_generated": False,
         "engine_execution_attempted": False,
         "engine_result_produced": False,
         "selected_result_created": False,
@@ -1038,6 +1176,7 @@ def engine_runtable_internal_readonly_invoke_probe(selector_payload: dict[str, A
             blockers=[_engine_blocker("donor-reference-root-unavailable", "Donor reference root is unavailable, so direct run_engine cannot be imported.")],
         )
 
+    snapshot_before = copy.deepcopy(snapshot)
     payload = dict(candidate)
     payload["db"] = snapshot
     payload.setdefault("disable_run_memo", True)
@@ -1048,20 +1187,48 @@ def engine_runtable_internal_readonly_invoke_probe(selector_payload: dict[str, A
         sys.path.insert(0, donor_root_text)
         inserted = True
 
+    sys.dont_write_bytecode = True
+    os.environ["PYTHONDONTWRITEBYTECODE"] = "1"
+    donor_run_engine_attempted = False
+    write_tracker: _ReadonlyFilesystemWriteAttempt | None = None
     started = time.monotonic()
     try:
-        from lib.planning.run_engine import run_engine  # type: ignore
+        with _deny_engine_filesystem_writes() as active_write_tracker:
+            write_tracker = active_write_tracker
+            from lib.planning.run_engine import run_engine  # type: ignore
 
-        engine_result = run_engine(payload)
-    except Exception as exc:  # noqa: BLE001 - safe diagnostic summary only
+            donor_run_engine_attempted = True
+            engine_result = run_engine(payload)
+    except _ReadonlyFilesystemWriteBlocked:
+        runtime_data_mutated = snapshot != snapshot_before
         return _engine_readonly_invoke_base(
             ok=False,
             source=source_meta.get("source"),
             source_summary=source_summary,
             active_source_db_loaded_read_only=True,
             active_source_db_passed_in_memory_only=True,
+            donor_run_engine_attempted=donor_run_engine_attempted,
             candidate_field_status=candidate_status,
-            engine_execution_attempted=True,
+            engine_execution_attempted=donor_run_engine_attempted,
+            filesystem_write_attempted=True,
+            write_attempted=True,
+            audit_jsonl_write_attempted=bool(write_tracker and write_tracker.audit_jsonl_attempted),
+            runtime_data_mutated=runtime_data_mutated,
+            blockers=[_engine_blocker("filesystem-write-attempt-blocked", "Donor import or run_engine attempted a filesystem write and was blocked fail-closed.")],
+            warnings=["Write target and exception details were redacted."],
+        )
+    except Exception as exc:  # noqa: BLE001 - safe diagnostic summary only
+        runtime_data_mutated = snapshot != snapshot_before
+        return _engine_readonly_invoke_base(
+            ok=False,
+            source=source_meta.get("source"),
+            source_summary=source_summary,
+            active_source_db_loaded_read_only=True,
+            active_source_db_passed_in_memory_only=True,
+            donor_run_engine_attempted=donor_run_engine_attempted,
+            candidate_field_status=candidate_status,
+            engine_execution_attempted=donor_run_engine_attempted,
+            runtime_data_mutated=runtime_data_mutated,
             blockers=[_engine_blocker("direct-run-engine-exception", f"Direct donor run_engine raised {exc.__class__.__name__}.")],
             warnings=["Exception message redacted to avoid leaking raw payload/source details."],
         )
@@ -1071,6 +1238,37 @@ def engine_runtable_internal_readonly_invoke_probe(selector_payload: dict[str, A
                 sys.path.remove(donor_root_text)
             except ValueError:
                 pass
+
+    runtime_data_mutated = snapshot != snapshot_before
+    if write_tracker and write_tracker.attempted:
+        return _engine_readonly_invoke_base(
+            ok=False,
+            source=source_meta.get("source"),
+            source_summary=source_summary,
+            active_source_db_loaded_read_only=True,
+            active_source_db_passed_in_memory_only=True,
+            donor_run_engine_attempted=donor_run_engine_attempted,
+            candidate_field_status=candidate_status,
+            engine_execution_attempted=donor_run_engine_attempted,
+            filesystem_write_attempted=True,
+            write_attempted=True,
+            audit_jsonl_write_attempted=write_tracker.audit_jsonl_attempted,
+            runtime_data_mutated=runtime_data_mutated,
+            blockers=[_engine_blocker("filesystem-write-attempt-blocked", "Donor import or run_engine attempted a filesystem write and was blocked fail-closed.")],
+        )
+    if runtime_data_mutated:
+        return _engine_readonly_invoke_base(
+            ok=False,
+            source=source_meta.get("source"),
+            source_summary=source_summary,
+            active_source_db_loaded_read_only=True,
+            active_source_db_passed_in_memory_only=True,
+            donor_run_engine_attempted=donor_run_engine_attempted,
+            candidate_field_status=candidate_status,
+            engine_execution_attempted=donor_run_engine_attempted,
+            runtime_data_mutated=True,
+            blockers=[_engine_blocker("runtime-data-mutation-blocked", "Donor run_engine mutated the in-memory RuntimeData snapshot and was blocked fail-closed.")],
+        )
 
     duration_ms = int((time.monotonic() - started) * 1000)
     safe_summary = _safe_engine_result_summary(engine_result)
@@ -1083,12 +1281,13 @@ def engine_runtable_internal_readonly_invoke_probe(selector_payload: dict[str, A
         source_summary=source_summary,
         active_source_db_loaded_read_only=True,
         active_source_db_passed_in_memory_only=True,
+        donor_run_engine_attempted=True,
         candidate_field_status=candidate_status,
         engine_execution_attempted=True,
         engine_result_produced=bool(safe_summary.get("success")),
         safe_engine_summary={**safe_summary, "duration_ms": duration_ms},
         blockers=result_blockers,
-        warnings=["Direct donor run_engine was invoked without donor bridge or audit JSONL write."],
+        warnings=["Direct donor run_engine was invoked without donor bridge or audit JSONL write under the bytecode-disabled filesystem write guard."],
     )
 
 @mcp.tool()

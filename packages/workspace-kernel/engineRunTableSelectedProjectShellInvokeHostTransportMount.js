@@ -25,12 +25,16 @@ const HOST_ADAPTER_REQUEST_FIELD_ORDER = Object.freeze([
   "callerSuppliedDbAllowed",
   "publicRouteAdded",
   "postEndpointAdded",
+  "filesystemWriteGuardRequired",
+  "bytecodeWritingDisabled",
 ]);
 const HOST_SEAM_BRIDGE_REQUEST_FIELD_ORDER = Object.freeze([
   "schemaId",
   "schemaVersion",
   "selectorPayload",
   "execute",
+  "filesystemWriteGuardRequired",
+  "bytecodeWritingDisabled",
 ]);
 const FORBIDDEN_CALLER_KEY_PATTERN =
   /^(?:db|database|databasePath|dbPath|filePath|sourcePath|privatePath|runtimeData|projectEnvelope|engineOptions|options)$/i;
@@ -108,6 +112,8 @@ function validateHostAdapterRequest(request) {
     || request.callerSuppliedDbAllowed !== false
     || request.publicRouteAdded !== false
     || request.postEndpointAdded !== false
+    || request.filesystemWriteGuardRequired !== true
+    || request.bytecodeWritingDisabled !== true
     || !isPlainObject(request.selectorPayload)) {
     return "selected-project-host-transport-adapter-request-contract-invalid";
   }
@@ -121,6 +127,8 @@ function buildHostBridgeRequest(selectorPayload) {
       schemaVersion: RUNTIME_ENGINE_RUNTABLE_SELECTED_PROJECT_HOST_SEAM_BRIDGE_SCHEMA_VERSION,
       selectorPayload: clonePlain(selectorPayload),
       execute: true,
+      filesystemWriteGuardRequired: true,
+      bytecodeWritingDisabled: true,
     }[key]]),
   ));
 }
@@ -136,6 +144,8 @@ export function createRuntimeEngineRunTableSelectedProjectHostLocalReadonlySeamA
     readOnly: true,
     realHostLocalSeam: true,
     fixtureAdapter: false,
+    filesystemWriteGuardRequired: true,
+    bytecodeWritingDisabled: true,
     async invoke(request) {
       const blocker = validateHostAdapterRequest(request);
       if (blocker) throw new Error(blocker);
@@ -172,6 +182,8 @@ export function createRuntimeEngineRunTableSelectedProjectShellInvokeHostTranspo
     readOnly: true,
     selectedProjectOnly: true,
     redactedOutcomeOnly: true,
+    filesystemWriteGuardRequired: true,
+    bytecodeWritingDisabled: true,
     shellMounted: false,
     routesAdded: true,
     postEndpointsAdded: true,
