@@ -24,6 +24,11 @@ import {
   RUNTIME_ENGINE_RUNTABLE_SELECTED_PROJECT_SHELL_INVOKE_HOST_TRANSPORT_METHOD,
   RUNTIME_ENGINE_RUNTABLE_SELECTED_PROJECT_SHELL_INVOKE_HOST_TRANSPORT_PATH,
 } from "./packages/workspace-kernel/engineRunTableSelectedProjectShellInvokeHostTransportMount.js";
+import {
+  createProjectBrowserSelectedProjectServerOwnedRuntimeSavedRegistry,
+  PROJECT_BROWSER_SELECTED_PROJECT_SERVER_OWNED_REGISTRATION_METHOD,
+  PROJECT_BROWSER_SELECTED_PROJECT_SERVER_OWNED_REGISTRATION_PATH,
+} from "./packages/workspace-kernel/projectBrowserSelectedProjectServerOwnedRegistrationBoundary.js";
 
 const PORT = Number.parseInt(process.env.CONTROLSTACK_RUNTIME_PORT || "8787", 10);
 const HOST = process.env.CONTROLSTACK_RUNTIME_HOST || "127.0.0.1";
@@ -2455,6 +2460,18 @@ function isLoopbackRemoteAddress(req) {
     || address.startsWith("127.");
 }
 
+function isSameOriginRequest(req) {
+  const origin = String(req.headers?.origin || "").trim();
+  if (!origin) return true;
+  try {
+    const expected = new URL(`http://${req.headers.host || `${HOST}:${PORT}`}`);
+    const actual = new URL(origin);
+    return actual.protocol === expected.protocol && actual.host === expected.host;
+  } catch {
+    return false;
+  }
+}
+
 function invokeRuntimeEngineRunTableSelectedProjectHostLocalReadonlySeam(bridgeRequest) {
   return new Promise((resolveInvocation, rejectInvocation) => {
     const pythonCommand = String(process.env.CONTROLSTACK_PYTHON || "python").trim() || "python";
@@ -2532,12 +2549,43 @@ function invokeRuntimeEngineRunTableSelectedProjectHostLocalReadonlySeam(bridgeR
 }
 
 const selectedProjectEngineRunHostSavedProjects = createSavedProjectStore();
+const selectedProjectServerOwnedRuntimeSavedRegistry =
+  createProjectBrowserSelectedProjectServerOwnedRuntimeSavedRegistry({
+    savedProjects: selectedProjectEngineRunHostSavedProjects,
+  });
 const selectedProjectEngineRunHostTransport =
   createRuntimeEngineRunTableSelectedProjectShellInvokeHostTransportMount({
-    savedProjects: selectedProjectEngineRunHostSavedProjects,
+    savedProjects: selectedProjectServerOwnedRuntimeSavedRegistry,
     invokeHostLocalReadonlySeam:
       invokeRuntimeEngineRunTableSelectedProjectHostLocalReadonlySeam,
   });
+
+async function sendSelectedProjectServerOwnedRegistration(res, req) {
+  if (!isLoopbackRemoteAddress(req) || !isSameOriginRequest(req)) {
+    sendJson(res, 403, {
+      ok: false,
+      failClosed: true,
+      blocker: "selected-project-registration-same-origin-loopback-only",
+    });
+    return;
+  }
+
+  let request;
+  try {
+    request = await requestJson(req, { maxBytes: 262144 });
+  } catch {
+    sendJson(res, 400, {
+      ok: false,
+      failClosed: true,
+      blocker: "selected-project-registration-request-json-invalid",
+    });
+    return;
+  }
+
+  const response = await selectedProjectServerOwnedRuntimeSavedRegistry.register(request);
+  const status = response.ok === true ? 200 : response.requestAccepted === true ? 422 : 400;
+  sendJson(res, status, response);
+}
 
 async function sendSelectedProjectEngineRunHostTransport(res, req) {
   if (!isLoopbackRemoteAddress(req)) {
@@ -2580,11 +2628,30 @@ const server = createServer(async (req, res) => {
     req.method === RUNTIME_ENGINE_RUNTABLE_SELECTED_PROJECT_SHELL_INVOKE_HOST_TRANSPORT_METHOD
     && requestUrl.pathname
       === RUNTIME_ENGINE_RUNTABLE_SELECTED_PROJECT_SHELL_INVOKE_HOST_TRANSPORT_PATH;
+  const isAllowedSelectedProjectRegistrationPost =
+    req.method === PROJECT_BROWSER_SELECTED_PROJECT_SERVER_OWNED_REGISTRATION_METHOD
+    && requestUrl.pathname
+      === PROJECT_BROWSER_SELECTED_PROJECT_SERVER_OWNED_REGISTRATION_PATH;
   if (req.method !== "GET"
     && req.method !== "HEAD"
     && !isAllowedAuthorityReferencePost
-    && !isAllowedSelectedProjectEngineHostTransportPost) {
+    && !isAllowedSelectedProjectEngineHostTransportPost
+    && !isAllowedSelectedProjectRegistrationPost) {
     sendJson(res, 405, { ok: false, error: "method_not_allowed" });
+    return;
+  }
+
+  if (requestUrl.pathname
+      === PROJECT_BROWSER_SELECTED_PROJECT_SERVER_OWNED_REGISTRATION_PATH) {
+    if (req.method !== PROJECT_BROWSER_SELECTED_PROJECT_SERVER_OWNED_REGISTRATION_METHOD) {
+      sendJson(res, 405, {
+        ok: false,
+        error: "method_not_allowed",
+        requiredMethod: PROJECT_BROWSER_SELECTED_PROJECT_SERVER_OWNED_REGISTRATION_METHOD,
+      });
+      return;
+    }
+    await sendSelectedProjectServerOwnedRegistration(res, req);
     return;
   }
 

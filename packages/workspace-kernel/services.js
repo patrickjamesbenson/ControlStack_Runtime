@@ -35,8 +35,16 @@ function createEventBus() {
   };
 }
 
+let selectedProjectRegistrationSessionSequence = 0;
+
+function createSelectedProjectRegistrationSessionId() {
+  selectedProjectRegistrationSessionSequence += 1;
+  return `shell-registration-session-${Date.now()}-${selectedProjectRegistrationSessionSequence}`;
+}
+
 export function createShellServices({
   invokeSelectedProjectReadonlyEngine: injectedSelectedProjectReadonlyEngineInvoker = null,
+  registerSelectedProjectServerOwnership: injectedSelectedProjectServerOwnershipRegistrar = null,
 } = {}) {
   const invokeSelectedProjectReadonlyEngine =
     typeof injectedSelectedProjectReadonlyEngineInvoker === "function"
@@ -60,10 +68,89 @@ export function createShellServices({
   const specialPartsPolicyAdapter = createSpecialPartsPolicyService({ eventBus });
   const timelinePolicyAdapter = createTimelinePolicyService({ eventBus, specialPartsPolicy: specialPartsPolicyAdapter });
   const adminToolRegistry = createAdminToolRegistry();
+  const selectedProjectRegistrationSessionId = createSelectedProjectRegistrationSessionId();
+  const selectedProjectRegistrationState = {
+    nextOrdinal: 0,
+    activeByLocalEnvelopeId: new Map(),
+    pendingByLocalEnvelopeId: new Map(),
+  };
+
+  const selectedProjectServerOwnedRegistration = Object.freeze({
+    owner: "shell",
+    sessionId: selectedProjectRegistrationSessionId,
+    async registerLocalSave(localSave) {
+      const envelope = localSave?.envelope;
+      if (localSave?.accepted !== true || !envelope?.projectId || !envelope?.envelopeId || !envelope?.savedAt) {
+        return null;
+      }
+      selectedProjectRegistrationState.nextOrdinal += 1;
+      const clientSaveOrdinal = selectedProjectRegistrationState.nextOrdinal;
+      const localRevisionId =
+        `local-revision-${selectedProjectRegistrationSessionId}-${clientSaveOrdinal}`;
+      const pending = Object.freeze({
+        projectId: envelope.projectId,
+        localEnvelopeId: envelope.envelopeId,
+        localSavedAt: envelope.savedAt,
+        localRevisionId,
+        clientSaveOrdinal,
+      });
+      selectedProjectRegistrationState.pendingByLocalEnvelopeId.set(
+        envelope.envelopeId,
+        pending,
+      );
+      selectedProjectRegistrationState.activeByLocalEnvelopeId.delete(envelope.envelopeId);
+
+      if (typeof injectedSelectedProjectServerOwnershipRegistrar !== "function") return null;
+      const result = await injectedSelectedProjectServerOwnershipRegistrar({
+        localSave,
+        registrationSessionId: selectedProjectRegistrationSessionId,
+        clientSaveOrdinal,
+        localRevisionId,
+      });
+      const latestPending = selectedProjectRegistrationState.pendingByLocalEnvelopeId.get(
+        envelope.envelopeId,
+      );
+      if (latestPending?.localRevisionId !== localRevisionId) return result;
+      if (result?.ok === true
+        && result?.activeRevision === true
+        && result?.projectId === envelope.projectId
+        && result?.localEnvelopeId === envelope.envelopeId
+        && result?.localSavedAt === envelope.savedAt
+        && result?.localRevisionId === localRevisionId) {
+        selectedProjectRegistrationState.activeByLocalEnvelopeId.set(
+          envelope.envelopeId,
+          Object.freeze({ ...result }),
+        );
+      }
+      return result;
+    },
+    getAcknowledgementForEnvelope(envelope) {
+      if (!envelope?.envelopeId) return null;
+      const acknowledgement = selectedProjectRegistrationState.activeByLocalEnvelopeId.get(
+        envelope.envelopeId,
+      );
+      if (!acknowledgement
+        || acknowledgement.projectId !== envelope.projectId
+        || acknowledgement.localSavedAt !== envelope.savedAt
+        || acknowledgement.activeRevision !== true
+        || acknowledgement.ok !== true) {
+        return null;
+      }
+      return acknowledgement;
+    },
+    isAcknowledgedEnvelope(envelope) {
+      return this.getAcknowledgementForEnvelope(envelope) !== null;
+    },
+    invalidateEnvelope(envelopeId) {
+      selectedProjectRegistrationState.activeByLocalEnvelopeId.delete(envelopeId);
+      selectedProjectRegistrationState.pendingByLocalEnvelopeId.delete(envelopeId);
+    },
+  });
 
   return {
     materialiseProjectIesDownload,
     invokeSelectedProjectReadonlyEngine,
+    selectedProjectServerOwnedRegistration,
     adminTools: adminToolRegistry,
     auth: authAdapter,
     identity: identityAdapter,

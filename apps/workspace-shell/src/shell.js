@@ -41,6 +41,9 @@ import {
 import {
   createShellProjectBrowserSelectedProjectReadonlyEngineInvokeMount,
 } from "./projectBrowserSelectedProjectEngineReadonlyInvokeMount.js";
+import {
+  createShellProjectBrowserSelectedProjectServerOwnedRegistrationClientTransport,
+} from "./projectBrowserSelectedProjectServerOwnedRegistrationClientTransport.js";
 
 const MODULE_ROUTE_ALIASES = Object.freeze({
   egres: "emergence",
@@ -2410,6 +2413,66 @@ function scheduleOptionalDiagnosticsPlugin({ services, getContext, registry, onP
   }, 0);
 }
 
+function applySelectedProjectServerOwnershipGate(context, services) {
+  const browser = context?.projectBrowser;
+  const selectedProjectId = browser?.selectedProjectId;
+  const summary = browser?.selectedProjectEngineRunReadinessReadbackSummary;
+  if (!selectedProjectId || !summary || typeof summary !== "object") return context;
+
+  const envelope = services?.savedProjects?.getProjectEnvelope?.(selectedProjectId);
+  const acknowledgement =
+    services?.selectedProjectServerOwnedRegistration?.getAcknowledgementForEnvelope?.(envelope);
+  const registration = acknowledgement
+    ? Object.freeze({
+      ok: true,
+      activeRevision: true,
+      projectId: acknowledgement.projectId,
+      localEnvelopeId: acknowledgement.localEnvelopeId,
+      localSavedAt: acknowledgement.localSavedAt,
+      localRevisionId: acknowledgement.localRevisionId,
+      serverEnvelopeId: acknowledgement.serverEnvelopeId,
+      serverRevisionId: acknowledgement.serverRevisionId,
+      serverOwned: true,
+      retainedInProcessMemory: true,
+      filesystemPersistenceEnabled: false,
+    })
+    : Object.freeze({
+      ok: false,
+      activeRevision: false,
+      projectId: envelope?.projectId || null,
+      localEnvelopeId: envelope?.envelopeId || null,
+      localSavedAt: envelope?.savedAt || null,
+      localRevisionId: null,
+      serverEnvelopeId: null,
+      serverRevisionId: null,
+      serverOwned: false,
+      retainedInProcessMemory: false,
+      filesystemPersistenceEnabled: false,
+    });
+
+  const nextBrowser = {
+    ...browser,
+    selectedProjectServerOwnedRegistration: registration,
+  };
+  if (summary.ready === true && acknowledgement === null) {
+    nextBrowser.selectedProjectEngineRunReadinessReadbackSummary = {
+      ...summary,
+      state: "project_browser_selected_project_engine_run_readiness_blocked_fail_closed",
+      readiness: "blocked_fail_closed",
+      ready: false,
+      failClosed: true,
+      blocker: "selected-project-server-owned-registration-not-acknowledged",
+      engineRunReadinessReadbackReady: false,
+      engineExecutionEnabled: false,
+      engineExecutionAttempted: false,
+    };
+  }
+  return {
+    ...context,
+    projectBrowser: nextBrowser,
+  };
+}
+
 function bootWorkspaceShell() {
   if (!moduleHost) {
     setStatus("Shell boot failed: missing module host.");
@@ -2419,20 +2482,30 @@ function bootWorkspaceShell() {
   const route = resolveWorkspaceRoute(window.location);
   const selectedProjectReadonlyEngineInvokeMount =
     createShellProjectBrowserSelectedProjectReadonlyEngineInvokeMount();
+  const selectedProjectServerOwnedRegistrationClientTransport =
+    createShellProjectBrowserSelectedProjectServerOwnedRegistrationClientTransport();
   const services = createShellServices({
     invokeSelectedProjectReadonlyEngine:
       selectedProjectReadonlyEngineInvokeMount.invokeSelectedProjectReadonlyEngine,
+    registerSelectedProjectServerOwnership:
+      selectedProjectServerOwnedRegistrationClientTransport,
   });
   projectBrowserSelectedProjectReadonlyEngineInvokeMountStatus =
     selectedProjectReadonlyEngineInvokeMount.getSnapshot();
   const registry = createModuleRegistry();
-  let context = createShellContext({ route, services });
+  let context = applySelectedProjectServerOwnershipGate(
+    createShellContext({ route, services }),
+    services,
+  );
   let mountedModuleApi = null;
   let diagnosticsPluginApi = null;
   let diagnosticsPluginRegistry = null;
 
   function refreshContext(reason = "context-refresh") {
-    context = createShellContext({ route, services, mountedModuleId: route.moduleId });
+    context = applySelectedProjectServerOwnershipGate(
+      createShellContext({ route, services, mountedModuleId: route.moduleId }),
+      services,
+    );
     window.__csLatestShellContext = context;
     const readonlyEngineInvokeMountRefresh =
       selectedProjectReadonlyEngineInvokeMount.mount({ context, services });
@@ -2572,14 +2645,28 @@ function bootWorkspaceShell() {
     setStatus(`Selected ${readProjectTitle(nextContext.project)}. Authority source: ${nextContext.authority.actualRole?.source}.`);
   }
 
-  function handleProjectBrowserSave() {
+  async function handleProjectBrowserSave() {
     const result = services.projectBrowser.saveProject(context);
-    const nextContext = refreshContext("project-save-envelope");
+    let nextContext = refreshContext("project-save-envelope-local");
     if (!result.accepted) {
       setStatus(`Save failed: ${result.reason || result.status}`);
       return;
     }
-    setStatus(`Saved ${readProjectTitle(nextContext.project)}. Restore/hydrate and handoff/share package preparation are live.`);
+
+    setStatus(`Saved ${readProjectTitle(nextContext.project)} locally. Confirming server-owned runtime revision.`);
+    let registration;
+    try {
+      registration = await services.selectedProjectServerOwnedRegistration.registerLocalSave(result);
+    } catch (error) {
+      console.error("[workspace-shell] selected-project server registration failed", error);
+      registration = null;
+    }
+    nextContext = refreshContext("project-save-envelope-server-registration");
+    if (registration?.ok !== true || registration?.activeRevision !== true) {
+      setStatus(`Saved ${readProjectTitle(nextContext.project)} locally, but Engine readiness remains blocked until server ownership is acknowledged.`);
+      return;
+    }
+    setStatus(`Saved ${readProjectTitle(nextContext.project)}. Server-owned runtime revision ${registration.serverRevisionId} is active; restore/hydrate and handoff/share package preparation remain live.`);
   }
 
   function handleProjectBrowserRestore() {

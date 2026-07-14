@@ -234,6 +234,18 @@ test("server mount is loopback-only, fixed-path, process-local, and shell-unmoun
   );
   assert.match(
     serverSource,
+    /const selectedProjectServerOwnedRuntimeSavedRegistry/,
+  );
+  assert.match(
+    serverSource,
+    /savedProjects: selectedProjectServerOwnedRuntimeSavedRegistry/,
+  );
+  assert.match(
+    serverSource,
+    /selectedProjectServerOwnedRuntimeSavedRegistry\.register/,
+  );
+  assert.match(
+    serverSource,
     /engine_runtable_selected_project_readonly_host_adapter\.py/,
   );
   assert.doesNotMatch(serverSource, /engine_runtable_internal_readonly_invoke_probe/);
