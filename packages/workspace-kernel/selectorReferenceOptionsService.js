@@ -1844,11 +1844,9 @@ function collectOptions(snapshot, timelineContext = createSelectorTimelineContex
     // describe an option, but they never create a committed protocol without a compatible
     // board option/native value and a real driver protocol relationship.
     const lightControlMeta = { sourceTables: ["BOARDS"], lightControlGlobalSource: true };
-    const systemMeta = sourceRowSystemReferenceMeta(systemOptions, row);
     const protocolMeta = {
       sourceTables: ["BOARDS", "DRIVERS"],
       lightControlSourceBacked: true,
-      ...systemMeta,
     };
     const controls = compatibleBoardDriverControlOptions(row, drivers, systemOptions);
     for (const cctCri of cctCriPairOptions(row)) {
@@ -1869,12 +1867,14 @@ function collectOptions(snapshot, timelineContext = createSelectorTimelineContex
     for (const control of controls) {
       addOption(bucket, "controlType", control.label, {
         ...protocolMeta,
+        ...control.systemMeta,
         value: control.value,
         compatibleControlTypes: control.compatibleDriverValues,
         ...sourceDefaultMeta(row, [control.value, control.label]),
       });
       addOption(bucket, "controlTypeIndirect", control.label, {
         ...protocolMeta,
+        ...control.systemMeta,
         value: control.value,
         compatibleControlTypes: control.compatibleDriverValues,
         ...sourceDefaultMeta(row, [control.value, control.label]),
@@ -2059,6 +2059,23 @@ const DRIVER_SUPPORTED_CONTROL_ALIAS_COLUMNS = Object.freeze([
   "control_protocol",
 ]);
 
+const PROTOCOL_SELECTOR_SYSTEM_REFERENCE_COLUMNS = Object.freeze([
+  "selector_system_reference",
+  "selector_system_ref",
+  "selector_system",
+  "luminaire_system_reference",
+  "luminaire_system",
+  "system",
+  "system_name",
+  "system_key",
+  "system_id",
+]);
+const PROTOCOL_SELECTOR_SYSTEM_VARIANT_COLUMNS = Object.freeze([
+  "selector_system_variant_reference",
+  "selector_system_variant",
+  "system_variant_1",
+]);
+
 function sourceRowSystemReferenceMeta(systemOptions = [], row = {}) {
   const option = systemOptionForRow(systemOptions, row) || systemOptionForSourceRowAlias(systemOptions, row);
   const tokens = systemTokens(row);
@@ -2074,6 +2091,47 @@ function sourceRowSystemReferenceMeta(systemOptions = [], row = {}) {
     systemReferenceKey: keys[0] || "",
     systemReferenceKeys: keys,
     systemVariantKey: safeString(option?.systemVariantKey || tokens.variant),
+  };
+}
+
+function protocolSourceRowSystemReferenceMeta(systemOptions = [], row = {}) {
+  const explicitReference = rowText(row, PROTOCOL_SELECTOR_SYSTEM_REFERENCE_COLUMNS);
+  if (!explicitReference) {
+    return {
+      systemReferenceKey: "",
+      systemReferenceKeys: [],
+      systemVariantKey: "",
+    };
+  }
+  if (systemReferenceValueIsWildcard(explicitReference)) {
+    return {
+      systemReferenceKey: "*",
+      systemReferenceKeys: ["*"],
+      systemVariantKey: "",
+    };
+  }
+
+  const explicitVariant = rowText(row, PROTOCOL_SELECTOR_SYSTEM_VARIANT_COLUMNS);
+  const explicitIdentity = [explicitReference, explicitVariant].map(safeString).filter(Boolean).join("|");
+  const option = systemOptions
+    .map((candidate, index) => ({
+      option: candidate,
+      index,
+      score: systemAliasSelectionMatchScore(candidate, explicitIdentity || explicitReference),
+    }))
+    .filter((item) => item.score > 0)
+    .sort((left, right) => right.score - left.score || left.index - right.index)[0]?.option || null;
+  const referenceKey = safeString(option?.systemReferenceKey || explicitReference);
+  const keys = uniqueStrings([
+    option ? systemOptionIdentityValue(option) : explicitIdentity,
+    safeString(option?.value),
+    referenceKey,
+    ...systemIdentityValuesForSourceSystem(systemOptions, referenceKey),
+  ].filter(Boolean));
+  return {
+    systemReferenceKey: keys[0] || "",
+    systemReferenceKeys: keys,
+    systemVariantKey: safeString(option?.systemVariantKey || explicitVariant),
   };
 }
 
@@ -2119,7 +2177,7 @@ function driverProtocolDescriptors(row = {}, systemOptions = []) {
   const nativeValues = rowOptionValues(row, DRIVER_NATIVE_CONTROL_COLUMNS);
   if (!nativeValues.length) return [];
   const aliases = rowOptionValues(row, DRIVER_SUPPORTED_CONTROL_ALIAS_COLUMNS);
-  const systemMeta = sourceRowSystemReferenceMeta(systemOptions, row);
+  const systemMeta = protocolSourceRowSystemReferenceMeta(systemOptions, row);
   return nativeValues.map((nativeValue, index) => {
     const value = canonicalControlProtocolLabel(nativeValue);
     if (!value) return null;
@@ -2163,8 +2221,53 @@ function systemApplicabilityIntersects(left = {}, right = {}) {
   return leftKeys.some((leftKey) => rightKeys.some((rightKey) => systemReferenceValuesMatch(leftKey, rightKey)));
 }
 
+function protocolSystemMetaIsGlobal(meta = {}) {
+  const keys = Array.isArray(meta.systemReferenceKeys) ? meta.systemReferenceKeys : [];
+  return !keys.length || keys.some(systemReferenceValueIsWildcard);
+}
+
+function protocolSystemApplicabilityForPair(boardMeta = {}, driverMeta = {}) {
+  const boardGlobal = protocolSystemMetaIsGlobal(boardMeta);
+  const driverGlobal = protocolSystemMetaIsGlobal(driverMeta);
+  if (boardGlobal && driverGlobal) {
+    const explicitWildcard = [boardMeta, driverMeta].some((meta) => (
+      (Array.isArray(meta.systemReferenceKeys) ? meta.systemReferenceKeys : []).some(systemReferenceValueIsWildcard)
+    ));
+    return {
+      systemReferenceKey: explicitWildcard ? "*" : "",
+      systemReferenceKeys: explicitWildcard ? ["*"] : [],
+      systemVariantKey: "",
+    };
+  }
+
+  const scoped = boardGlobal ? driverMeta : driverGlobal ? boardMeta : null;
+  const keys = scoped
+    ? uniqueStrings(Array.isArray(scoped.systemReferenceKeys) ? scoped.systemReferenceKeys : [])
+    : uniqueStrings([
+      ...(Array.isArray(boardMeta.systemReferenceKeys) ? boardMeta.systemReferenceKeys : []),
+      ...(Array.isArray(driverMeta.systemReferenceKeys) ? driverMeta.systemReferenceKeys : []),
+    ]);
+  return {
+    systemReferenceKey: keys[0] || "",
+    systemReferenceKeys: keys,
+    systemVariantKey: safeString(scoped?.systemVariantKey || boardMeta.systemVariantKey || driverMeta.systemVariantKey),
+  };
+}
+
+function combinedProtocolSystemApplicability(boardMeta = {}, driverDescriptors = []) {
+  const pairMetas = driverDescriptors.map((driver) => protocolSystemApplicabilityForPair(boardMeta, driver.systemMeta));
+  const globalPair = pairMetas.find(protocolSystemMetaIsGlobal);
+  if (globalPair) return globalPair;
+  const keys = uniqueStrings(pairMetas.flatMap((meta) => meta.systemReferenceKeys || []));
+  return {
+    systemReferenceKey: keys[0] || "",
+    systemReferenceKeys: keys,
+    systemVariantKey: safeString(pairMetas.find((meta) => meta.systemVariantKey)?.systemVariantKey),
+  };
+}
+
 function compatibleBoardDriverControlOptions(boardRow = {}, driverRows = [], systemOptions = []) {
-  const boardSystemMeta = sourceRowSystemReferenceMeta(systemOptions, boardRow);
+  const boardSystemMeta = protocolSourceRowSystemReferenceMeta(systemOptions, boardRow);
   const driverDescriptors = driverRows.flatMap((row) => driverProtocolDescriptors(row, systemOptions));
   return boardProtocolDescriptors(boardRow).flatMap((boardDescriptor) => {
     const compatibleDrivers = driverDescriptors.filter((driverDescriptor) => (
@@ -2176,6 +2279,7 @@ function compatibleBoardDriverControlOptions(boardRow = {}, driverRows = [], sys
       value: boardDescriptor.value,
       label: boardDescriptor.label,
       compatibleDriverValues: uniqueStrings(compatibleDrivers.map((driver) => driver.value)),
+      systemMeta: combinedProtocolSystemApplicability(boardSystemMeta, compatibleDrivers),
     }];
   });
 }
@@ -2360,20 +2464,21 @@ function collectRecords(snapshot, bucket, timelineContext = createSelectorTimeli
   const boardRowsForRelationships = liveTableRows(snapshot, "BOARDS", timelineContext);
   const driverRowsForRelationships = liveTableRows(snapshot, "DRIVERS", timelineContext);
   for (const row of boardRowsForRelationships) {
-    const systemMeta = sourceRowSystemReferenceMeta(systemOptions, row);
-    const controls = compatibleBoardDriverControlOptions(row, driverRowsForRelationships, systemOptions).map((control) => control.value);
-    pushRelationshipRecord(records, ["BOARDS", "DRIVERS"], {
-      system: systemMeta.systemReferenceKeys,
-      controlType: controls,
-      controlTypeIndirect: controls,
-    }, "BOARDS row maps authoritative board control options to compatible DRIVERS native control types and preserves source-provided system applicability.");
+    const controls = compatibleBoardDriverControlOptions(row, driverRowsForRelationships, systemOptions);
+    for (const control of controls) {
+      pushRelationshipRecord(records, ["BOARDS", "DRIVERS"], {
+        system: control.systemMeta.systemReferenceKeys,
+        controlType: [control.value],
+        controlTypeIndirect: [control.value],
+      }, "BOARDS row maps an authoritative board control option to matching DRIVERS native control types and their combined explicit Selector system applicability.");
+    }
   }
 
   for (const row of driverRowsForRelationships) {
     const driver = rowText(row, ["driver_id", "driver", "driver_name", "name", "label", "sku", "part_number"]);
     const control = driverAvailableControlValues(row);
     const wiring = rowOptionValues(row, ["wiring_type", "wiring", "cable_type", "control_cores"]);
-    const systemMeta = sourceRowSystemReferenceMeta(systemOptions, row);
+    const systemMeta = protocolSourceRowSystemReferenceMeta(systemOptions, row);
     pushRelationshipRecord(records, ["DRIVERS"], {
       system: systemMeta.systemReferenceKeys,
       driver,

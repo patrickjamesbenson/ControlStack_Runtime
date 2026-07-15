@@ -1074,6 +1074,57 @@ test("wildcard BOARDS profile system keys keep authored protocol choices selecta
   assert.ok(renderedSelectsForField(container, "controlTypeIndirect").some((select) => select.disabled !== true && renderedSelectOptionLabels(select).includes("DALI-2 DT6")));
 });
 
+test("direct-only DNX 60 Opal keeps unscoped component protocols selectable without defaulting control", () => {
+  const snapshot = {
+    SYSTEM: [
+      { system: "60", system_variant_1: "Linear", label: "DNX 60", emission: "Direct", approved: "yes" },
+      { system: "ALT", system_variant_1: "40", label: "ALT 40", emission: "Direct", approved: "yes" },
+    ],
+    OPTICS: [{ system: "60", optic_var_1: "Opal", emission_permission: "Direct", approved: "yes" }],
+    BOARDS: [{
+      board_family: "LM70-20E8",
+      architecture: "linear-board",
+      variant: "constant-current-board",
+      board_lm_per_m: "1200",
+      c1_cct: "4000",
+      c1_cri_min: "90",
+      control_type_options: "DALI-2 DT6;Fixed (On/Off);PWM",
+      control_type_labels: "DALI-2 DT6;Fixed (On/Off);PWM",
+      approved: "yes",
+    }],
+    DRIVERS: [
+      { driver_id: "DT6 Driver", series: "OT FIT", architecture: "remote-driver", variant: "DT6", native_control_type: "DALI-2 DT6", approved: "yes" },
+      { driver_id: "Fixed Driver", series: "LC FIT", architecture: "remote-driver", variant: "Fixed", native_control_type: "Fixed (On/Off)", approved: "yes" },
+      { system: "ALT", system_variant_1: "40", driver_id: "ALT PWM Driver", native_control_type: "PWM", approved: "yes" },
+    ],
+  };
+  const constraints = {
+    system: "DNX 60",
+    directOpticVar1: "60|Opal",
+    targetLmPerM: "1200",
+    cctCri: "cct_cri:4000K|CRI90",
+  };
+  const result = deriveSelectorReferenceOptionsFromSnapshot(snapshot, { source: sourceReady(), constraints });
+  const model = selectorViewModelFor(result, constraints);
+  const serviceControl = workflowField(result, "controlType");
+  const visibleControl = viewModelField(result, "controlType", constraints);
+  const indirectControl = viewModelField(result, "controlTypeIndirect", constraints);
+  const container = renderedSelectorContainer(model);
+
+  assert.equal(serviceControl.status, "available");
+  assert.equal(serviceControl.selectedValue, "");
+  assert.ok(compatibleLabels(serviceControl).includes("DALI-2 DT6"));
+  assert.ok(compatibleLabels(serviceControl).includes("Fixed (On/Off)"));
+  assert.equal(compatibleLabels(serviceControl).includes("PWM"), false);
+  assert.equal(visibleControl.displayMode, "choice");
+  assert.equal(visibleControl.selectedValue, "");
+  assert.equal(visibleControl.selectedOptionBlocked, false);
+  assert.ok(renderedSelectsForField(container, "controlType").some((select) => select.disabled !== true && renderedSelectOptionLabels(select).includes("DALI-2 DT6")));
+  assert.equal(indirectControl.displayMode, "hidden-diagnostic");
+  assert.equal(indirectControl.primaryControl, false);
+  assert.equal(model.selectorSurface.payloadPreview.lightControl.controlType, null);
+});
+
 test("direct-only systems suppress indirect Light and Control lane while preserving direct choices", () => {
   const constraints = { system: "DNX 80 Direct" };
   const result = deriveSelectorReferenceOptionsFromSnapshot(identityCascadeSnapshot(), { source: sourceReady(), constraints });

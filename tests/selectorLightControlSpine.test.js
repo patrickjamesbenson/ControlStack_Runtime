@@ -222,6 +222,32 @@ function emissionLaneSnapshot() {
   };
 }
 
+function directOnlyDnx60UnscopedProtocolSnapshot() {
+  return {
+    SYSTEM: [
+      { system: "60", system_variant_1: "Linear", label: "DNX 60", emission: "Direct", approved: "yes" },
+      { system: "ALT", system_variant_1: "40", label: "ALT 40", emission: "Direct", approved: "yes" },
+    ],
+    OPTICS: [{ system: "60", optic_var_1: "Opal", emission_permission: "Direct", approved: "yes" }],
+    BOARDS: [{
+      board_family: "LM70-20E8",
+      architecture: "linear-board",
+      variant: "constant-current-board",
+      board_lm_per_m: "1200",
+      c1_cct: "4000",
+      c1_cri_min: "90",
+      control_type_options: "DALI-2 DT6;Fixed (On/Off);PWM",
+      control_type_labels: "DALI-2 DT6;Fixed (On/Off);PWM",
+      approved: "yes",
+    }],
+    DRIVERS: [
+      { driver_id: "DT6 Driver", series: "OT FIT", architecture: "remote-driver", variant: "DT6", native_control_type: "DALI-2 DT6", approved: "yes" },
+      { driver_id: "Fixed Driver", series: "LC FIT", architecture: "remote-driver", variant: "Fixed", native_control_type: "Fixed (On/Off)", approved: "yes" },
+      { system: "ALT", system_variant_1: "40", driver_id: "ALT PWM Driver", native_control_type: "PWM", approved: "yes" },
+    ],
+  };
+}
+
 test("empty Light & Control spine rows render as em dash", () => {
   const model = createModel();
   const spine = model.selectorSurface.productSpine;
@@ -325,6 +351,31 @@ test("direct and indirect Light & Control inputs follow emission lane capability
   assert.equal(workflowField(model, "targetLmPerM").displayMode, "hidden-diagnostic");
   assert.equal(workflowField(model, "controlType").displayMode, "hidden-diagnostic");
   assert.equal(workflowField(model, "targetLmPerMIndirect").displayMode, "manual-input");
+});
+
+test("direct-only DNX 60 Opal exposes unscoped BOARDS and DRIVERS protocols without selecting one", () => {
+  const snapshot = directOnlyDnx60UnscopedProtocolSnapshot();
+  const selectorState = createSelectorState();
+  let model = selectAndReload(selectorState, "system", "60|Linear", snapshot);
+  model = selectAndReload(selectorState, "directOpticVar1", "60|Opal", snapshot);
+  model = selectAndReload(selectorState, "targetLmPerM", "1200", snapshot);
+  model = selectAndReload(selectorState, "cctCri", "cct_cri:4000K|CRI90", snapshot);
+
+  const directControl = workflowField(model, "controlType");
+  const indirectControl = workflowField(model, "controlTypeIndirect");
+
+  assert.equal(directControl.status, "available");
+  assert.equal(directControl.displayMode, "choice");
+  assert.equal(directControl.selectedValue, "");
+  assert.equal(directControl.selectedOptionBlocked, false);
+  assert.ok(dropdownValues(model, "controlType").includes("DALI-2 DT6"));
+  assert.ok(dropdownValues(model, "controlType").includes("Fixed (On/Off)"));
+  assert.equal(dropdownValues(model, "controlType").includes("PWM"), false);
+  assert.equal(indirectControl.displayMode, "hidden-diagnostic");
+  assert.equal(indirectControl.primaryControl, false);
+  assert.equal(lightRow(model.selectorSurface.productSpine, "control").displayValue, "—");
+  assert.equal(model.selectorSurface.selectionTruthSummary.blockers.some((item) => item.fieldKey === "controlType"), false);
+  assert.equal(model.selectorSurface.payloadPreview.lightControl.controlType, null);
 });
 
 test("selecting control type changes the compatible driver consequence", () => {
