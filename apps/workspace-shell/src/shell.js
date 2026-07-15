@@ -69,6 +69,18 @@ function isSameModuleRoute(linkModuleId, routeModuleId) {
 const shellRoot = document.getElementById("cs-shell-root");
 const statusEl = document.getElementById("cs-shell-status");
 const moduleHost = document.getElementById("cs-shell-module-host");
+const restoredCsSelectorEngineActionLaneSurface = document.getElementById(
+  "cs-shell-restored-cs-selector-engine-action-host",
+);
+const restoredCsSelectorEngineActionLaneHost = restoredCsSelectorEngineActionLaneSurface?.querySelector(
+  "[data-shell-restored-cs-selector-engine-action-lane]",
+);
+const restoredCsSelectorEngineActionLaneOwnership = restoredCsSelectorEngineActionLaneSurface?.querySelector(
+  ".cs-shell__restored-selector-engine-action-lane-ownership",
+);
+const RESTORED_CS_SELECTOR_ENGINE_ACTION_LANE_OWNERSHIP_COPY =
+  "Shell-owned readonly action lane for the selected, server-acknowledged Selector revision.";
+// Rerender-survival guard: moduleHost?.addEventListener must not own restored Selector Engine actions.
 const pluginHost = document.getElementById("cs-shell-plugin-host");
 const homePanel = document.getElementById("cs-workspace-home");
 const contextSummary = document.getElementById("cs-shell-context-summary");
@@ -179,7 +191,6 @@ let projectBrowserSelectedProjectExportDetailPreview = null;
 let projectBrowserSelectedProjectEngineRunPreview = null;
 let projectBrowserSelectedProjectEngineRunPreviewDescriptor = null;
 let projectBrowserSelectedProjectEngineActionEligibilityDescriptor = null;
-let restoredCsSelectorEngineActionLaneHost = null;
 let projectBrowserSelectedProjectReadonlyEngineInvokeMountStatus = null;
 let projectBrowserSelectedProjectReadonlyEngineInvokeMountHost = null;
 let projectBrowserSelectedProjectEngineReadonlyInvokeActivationController = null;
@@ -2765,32 +2776,19 @@ function bootWorkspaceShell() {
   let diagnosticsPluginRegistry = null;
 
   function ensureRestoredCsSelectorEngineActionLaneSurface() {
-    if (route.moduleId !== "cs_selector" || !moduleHost) {
-      restoredCsSelectorEngineActionLaneHost = null;
-      return;
+    const isRestoredCsSelectorRoute = route.moduleId === "cs_selector";
+    if (restoredCsSelectorEngineActionLaneOwnership) {
+      restoredCsSelectorEngineActionLaneOwnership.textContent =
+        RESTORED_CS_SELECTOR_ENGINE_ACTION_LANE_OWNERSHIP_COPY;
     }
-    let surface = moduleHost.querySelector(
-      "[data-shell-restored-cs-selector-engine-action-lane-surface]",
-    );
-    if (!surface) {
-      surface = document.createElement("section");
-      surface.className = "cs-shell__restored-selector-engine-action-lane";
-      surface.dataset.shellRestoredCsSelectorEngineActionLaneSurface = "true";
-
-      const title = document.createElement("h2");
-      title.textContent = "Engine actions";
-      const ownership = document.createElement("p");
-      ownership.textContent =
-        "Shell-owned readonly action lane for the selected, server-acknowledged Selector revision.";
-      const host = document.createElement("div");
-      host.dataset.shellRestoredCsSelectorEngineActionLane = "true";
-      host.dataset.shellProjectEngineActionLaneMirror = "cs_selector";
-      surface.append(title, ownership, host);
-      moduleHost.appendChild(surface);
+    if (restoredCsSelectorEngineActionLaneSurface) {
+      restoredCsSelectorEngineActionLaneSurface.hidden = !isRestoredCsSelectorRoute;
+      restoredCsSelectorEngineActionLaneSurface.dataset
+        .shellRestoredCsSelectorEngineActionLaneRouteActive = String(
+          isRestoredCsSelectorRoute,
+        );
     }
-    restoredCsSelectorEngineActionLaneHost = surface.querySelector(
-      "[data-shell-restored-cs-selector-engine-action-lane]",
-    );
+    if (!isRestoredCsSelectorRoute || !restoredCsSelectorEngineActionLaneHost) return;
     renderRestoredCsSelectorEngineActionLaneMirror();
   }
 
@@ -3293,7 +3291,7 @@ function bootWorkspaceShell() {
     "click",
     handleProjectBrowserSelectedProjectEngineAction,
   );
-  moduleHost?.addEventListener(
+  restoredCsSelectorEngineActionLaneHost?.addEventListener(
     "click",
     handleProjectBrowserSelectedProjectEngineAction,
   );
