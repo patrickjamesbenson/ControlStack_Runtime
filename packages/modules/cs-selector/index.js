@@ -171,26 +171,73 @@ let latestSelectorViewModel = null;
 let selectorReferenceRequestId = 0;
 let selectorReferenceOptionsRequestId = 0;
 
-function activeSelectorOptionsPayload() {
-  const payload = selectorReferenceOptionsStatus.status !== "not-requested" || selectorReferenceOptionsStatus.fields?.length
-    ? selectorReferenceOptionsStatus
-    : selectorReferenceStatus.selectorOptions || selectorReferenceOptionsStatus;
-  const activeSignature = currentSelectorOptionConstraintSignature();
-  const payloadFingerprint = String(payload?.constraintFingerprint || "");
-  if (payloadFingerprint && payloadFingerprint !== activeSignature.constraintFingerprint) {
-    return resolveSelectorReferenceOptionsStatus(
-      payload,
-      {
-        ok: null,
-        status: "loading",
-        endpoint: payload?.endpoint || SELECTOR_REFERENCE_OPTIONS_ENDPOINT,
-        constraintQuery: activeSignature.constraintQuery,
-        constraintFingerprint: activeSignature.constraintFingerprint,
-        warnings: ["Selector reference options are loading."],
+function selectorOptionsPayloadHasUsableStructure(payload = {}) {
+  const fields = Array.isArray(payload?.fields) ? payload.fields : [];
+  const workflowSections = Array.isArray(payload?.workflowSections) ? payload.workflowSections : [];
+  return fields.length > 0
+    || workflowSections.some((section) => Array.isArray(section?.fields) && section.fields.length > 0);
+}
+
+function selectorOptionsPayloadConstraintFingerprint(payload = {}) {
+  const explicitFingerprint = String(payload?.constraintFingerprint || "").trim();
+  if (explicitFingerprint) return explicitFingerprint;
+  return selectorConstraintFingerprintFromQuery(payload?.constraintQuery || "");
+}
+
+function selectorOptionsLoadingProjection(payload = {}, activeSignature = currentSelectorOptionConstraintSignature()) {
+  const sourceVersionIdentity = selectorSourceVersionIdentity(payload);
+  return resolveSelectorReferenceOptionsStatus(
+    payload,
+    {
+      ok: null,
+      status: "loading",
+      endpoint: payload?.endpoint || SELECTOR_REFERENCE_OPTIONS_ENDPOINT,
+      constraintQuery: activeSignature.constraintQuery,
+      constraintFingerprint: activeSignature.constraintFingerprint,
+      sourceReady: payload?.sourceReady,
+      source: payload?.source,
+      sourceReadiness: payload?.sourceReadiness,
+      safeSnapshotState: payload?.safeSnapshotState,
+      referenceOptionSourceCoverage: payload?.referenceOptionSourceCoverage,
+      futureMappedFieldExplanation: payload?.futureMappedFieldExplanation,
+      sourceInputFingerprint: sourceVersionIdentity.sourceInputFingerprint,
+      boardDataSourceVersion: sourceVersionIdentity.boardDataSourceVersion,
+      sourceVersionBinding: payload?.sourceVersionBinding,
+      candidateSummary: {
+        ...(payload?.candidateSummary || {}),
+        state: "loading",
+        specGateComplete: false,
+        labProof: false,
+        writesEnabled: false,
       },
-      activeSignature.constraintFingerprint,
-      activeSignature.constraintQuery
-    );
+      warnings: ["Selector reference options are loading."],
+    },
+    activeSignature.constraintFingerprint,
+    activeSignature.constraintQuery
+  );
+}
+
+function activeSelectorOptionsPayload() {
+  const activeSignature = currentSelectorOptionConstraintSignature();
+  const standalonePayload = selectorReferenceOptionsStatus;
+  const statusBackedPayload = selectorReferenceStatus.selectorOptions || null;
+  const standaloneUsable = selectorOptionsPayloadHasUsableStructure(standalonePayload);
+  const statusBackedUsable = selectorOptionsPayloadHasUsableStructure(statusBackedPayload);
+
+  if (standalonePayload.status === "loading" && !standaloneUsable && statusBackedUsable) {
+    return selectorOptionsLoadingProjection(statusBackedPayload, activeSignature);
+  }
+
+  const payload = standaloneUsable
+    ? standalonePayload
+    : statusBackedUsable
+      ? statusBackedPayload
+      : standalonePayload.status !== "not-requested"
+        ? standalonePayload
+        : statusBackedPayload || standalonePayload;
+  const payloadFingerprint = selectorOptionsPayloadConstraintFingerprint(payload);
+  if (payloadFingerprint !== activeSignature.constraintFingerprint) {
+    return selectorOptionsLoadingProjection(payload, activeSignature);
   }
   return payload;
 }
@@ -650,6 +697,15 @@ export function resolveSelectorReferenceOptionsStatus(
         : [];
   const stalePreviousFieldsCount = sameReusablePayload ? 0 : previousFields.length;
   const stalePreviousWorkflowSectionCount = sameReusablePayload ? 0 : previousWorkflowSections.length;
+  const candidateSummary = nextStatus?.candidateSummary || (nextStatus?.status === "loading"
+    ? {
+      ...(sameReusablePayload ? currentStatus?.candidateSummary : base.candidateSummary),
+      state: "loading",
+      specGateComplete: false,
+      labProof: false,
+      writesEnabled: false,
+    }
+    : sameReusablePayload ? currentStatus?.candidateSummary : base.candidateSummary);
 
   return {
     ...base,
@@ -664,7 +720,7 @@ export function resolveSelectorReferenceOptionsStatus(
     staleSourceVersionBinding: sameConstraintFingerprint && !sameSourceVersionBinding,
     fields: fieldsFromCurrentPayload,
     workflowSections: workflowSectionsFromCurrentPayload,
-    candidateSummary: nextStatus?.candidateSummary || (sameReusablePayload ? currentStatus?.candidateSummary : base.candidateSummary),
+    candidateSummary,
     previousFieldsReused: !Array.isArray(nextStatus?.fields) && (sameReusablePayload || loadingWithPreviousPayload) && previousFields.length > 0,
     previousWorkflowSectionsReused: !Array.isArray(nextStatus?.workflowSections) && (sameReusablePayload || loadingWithPreviousPayload) && previousWorkflowSections.length > 0,
     loadingPreviousFieldsRetained: loadingWithPreviousPayload,
