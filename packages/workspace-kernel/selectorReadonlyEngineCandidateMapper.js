@@ -190,7 +190,10 @@ function directLightIntent(lmTemperatureReadinessPreview = {}) {
     cctCriLabel: safeString(directCctCri.valueLabel),
     cctCriReady: directCctCri.ready === true && Boolean(cct) && Boolean(cri),
     controlType: safeString(directControl.valueLabel),
-    controlTypeReady: directControl.ready === true && Boolean(safeString(directControl.valueLabel)),
+    controlTypeSourceBacked: directControl.sourceBacked === true,
+    controlTypeReady: directControl.ready === true
+      && directControl.sourceBacked === true
+      && Boolean(safeString(directControl.valueLabel)),
   };
 }
 
@@ -344,8 +347,19 @@ export function buildSelectorReadonlyEngineCandidateForInternalSeam({
     const summary = failSummary("unsafe-stage3-or-selector-summary", [`unsafe true flag detected: ${unsafe}`]);
     return { ok: false, candidate: null, summary };
   }
-  if (!isPlainObject(factoryApprovedInputsSummary) || factoryApprovedInputsSummary.factoryApprovedInputsReady !== true) {
-    const summary = failSummary(factoryApprovedInputsSummary?.blocker || "stage3-factory-approved-inputs-not-ready");
+  const hasDedicatedCandidateReadiness = isPlainObject(factoryApprovedInputsSummary)
+    && Object.prototype.hasOwnProperty.call(factoryApprovedInputsSummary, "readonlyEngineCandidateInputsReady");
+  const legacyFactoryApprovedCompatibility = !hasDedicatedCandidateReadiness
+    && factoryApprovedInputsSummary?.factoryApprovedInputsReady === true
+    && factoryApprovedInputsSummary?.stage2Ready === true;
+  const readonlyEngineCandidateInputsReady = hasDedicatedCandidateReadiness
+    ? factoryApprovedInputsSummary.readonlyEngineCandidateInputsReady === true
+    : legacyFactoryApprovedCompatibility;
+  if (!isPlainObject(factoryApprovedInputsSummary) || readonlyEngineCandidateInputsReady !== true) {
+    const summary = failSummary(
+      factoryApprovedInputsSummary?.readonlyEngineCandidateInputsBlocker
+        || "readonly-engine-candidate-inputs-not-ready",
+    );
     return { ok: false, candidate: null, summary };
   }
 
@@ -361,7 +375,17 @@ export function buildSelectorReadonlyEngineCandidateForInternalSeam({
   const committedCctCri = parseCctCri(constraintValue(map, ["cctCri", "cct"]));
   const cct = light.cct || committedCctCri.cct;
   const cri = light.cri || committedCctCri.cri;
-  const controlType = light.controlType || constraintValue(map, ["controlType"]);
+  const committedControlType = constraintValue(map, ["controlType"]);
+  const legacyCommittedControlAuthority = legacyFactoryApprovedCompatibility
+    && lmTemperatureReadinessPreview?.controlIntent?.direct?.sourceBacked !== false
+    && Boolean(light.controlType)
+    && Boolean(committedControlType)
+    && safeToken(light.controlType) === safeToken(committedControlType);
+  const controlType = light.controlTypeReady
+    ? light.controlType
+    : legacyCommittedControlAuthority
+      ? committedControlType
+      : "";
 
   const lighting = {};
   if (targetLmPerM !== null) {
@@ -430,8 +454,9 @@ export function buildSelectorReadonlyEngineCandidateForInternalSeam({
 
   const summary = candidateSummary(candidate, fieldStatusRows, {
     stage3Mode: factoryApprovedInputsSummary.stage3Mode,
-    factoryApprovedInputsReady: factoryApprovedInputsSummary.factoryApprovedInputsReady,
-    factoryApprovedBlocker: factoryApprovedInputsSummary.blocker || null,
+    readonlyEngineCandidateInputsReady,
+    readonlyEngineCandidateInputsBlocker:
+      factoryApprovedInputsSummary.readonlyEngineCandidateInputsBlocker || null,
     lmTemperatureFingerprint: lmTemperatureReadinessPreview.fingerprint || null,
   });
   return { ok: true, candidate, summary };

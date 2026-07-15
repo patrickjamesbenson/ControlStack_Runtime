@@ -15,6 +15,15 @@ function stage3Summary(overrides = {}) {
     diagnosticOnly: true,
     safeSummaryOnly: true,
     factoryApprovedInputsReady: true,
+    stage2Ready: true,
+    readonlyEngineCandidateInputsReady: true,
+    readonlyEngineCandidateInputsBlocker: null,
+    readonlyEngineCandidateApplicability: {
+      directSupported: true,
+      indirectRequired: false,
+      directOnly: true,
+      supportedSlice: "first-readonly-engine-direct-only",
+    },
     stage3Mode: "simple-run-stage3a-zero-accessory",
     blocker: null,
     committedRunIntakeSummary: {
@@ -125,9 +134,31 @@ test("maps Stage 3 supported selector state into the host-local readonly seam ca
   assert.equal(result.summary.postEndpointsAdded, false);
 });
 
-test("fails closed when Stage 3 factory-approved inputs are not ready", () => {
+test("maps the direct-only readonly candidate when full Stage 2 and factory readiness remain blocked", () => {
   const result = buildSelectorReadonlyEngineCandidateForInternalSeam({
-    factoryApprovedInputsSummary: stage3Summary({ factoryApprovedInputsReady: false, blocker: "stage3-blocked" }),
+    factoryApprovedInputsSummary: stage3Summary({
+      factoryApprovedInputsReady: false,
+      stage2Ready: false,
+      blocker: "Ambient missing from full spec gate",
+      readonlyEngineCandidateInputsReady: true,
+      readonlyEngineCandidateInputsBlocker: null,
+    }),
+    committedSelectorConstraints: constraints(),
+    lmTemperatureReadinessPreview: lmTemperaturePreview(),
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.candidate.control_type, "DALI-2");
+  assert.equal(result.candidate.lighting.control_type, "DALI-2");
+  assert.equal(result.summary.readonlyEngineCandidateMapperReady, true);
+});
+
+test("fails closed when dedicated readonly candidate inputs are not ready", () => {
+  const result = buildSelectorReadonlyEngineCandidateForInternalSeam({
+    factoryApprovedInputsSummary: stage3Summary({
+      readonlyEngineCandidateInputsReady: false,
+      readonlyEngineCandidateInputsBlocker: "missing-readonly-engine-candidate-input-controlType",
+    }),
     committedSelectorConstraints: constraints(),
     lmTemperatureReadinessPreview: lmTemperaturePreview(),
   });
@@ -135,8 +166,47 @@ test("fails closed when Stage 3 factory-approved inputs are not ready", () => {
   assert.equal(result.ok, false);
   assert.equal(result.candidate, null);
   assert.equal(result.summary.readonlyEngineCandidateMapperReady, false);
-  assert.equal(result.summary.blocker, "stage3-blocked");
+  assert.equal(result.summary.blocker, "missing-readonly-engine-candidate-input-controlType");
   assert.equal(result.summary.candidatePayloadReturned, false);
+});
+
+test("fails closed when committed Control is not backed by the source-valid control preview", () => {
+  const result = buildSelectorReadonlyEngineCandidateForInternalSeam({
+    factoryApprovedInputsSummary: stage3Summary(),
+    committedSelectorConstraints: constraints(),
+    lmTemperatureReadinessPreview: lmTemperaturePreview({
+      controlIntent: {
+        direct: { ready: true, valueLabel: "DALI-2", sourceBacked: false },
+      },
+    }),
+  });
+
+  assert.equal(result.ok, false);
+  assert.equal(result.candidate, null);
+  assert.equal(result.summary.blocker, "missing-candidate-field-control_type");
+  assert.ok(result.summary.fieldStatus.some((row) => row.field === "control_type" && row.present === false));
+});
+
+test("direct-only readonly mapping does not require Ambient or indirect light/control inputs", () => {
+  const result = buildSelectorReadonlyEngineCandidateForInternalSeam({
+    factoryApprovedInputsSummary: stage3Summary({
+      stage2Ready: false,
+      factoryApprovedInputsReady: false,
+      blocker: "Ambient missing from full spec gate",
+      readonlyEngineCandidateInputsReady: true,
+    }),
+    committedSelectorConstraints: constraints(),
+    lmTemperatureReadinessPreview: lmTemperaturePreview({
+      targetIntent: { direct: { ready: true, valueLabel: "1200", intentOnly: true } },
+      cctCriPairing: { direct: { ready: true, valueLabel: "4000K / CRI90", boardBacked: true } },
+      controlIntent: { direct: { ready: true, valueLabel: "DALI-2", sourceBacked: true } },
+    }),
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.candidate.control_type, "DALI-2");
+  assert.equal(Object.prototype.hasOwnProperty.call(result.candidate.lighting, "target_lm_per_m_indirect"), false);
+  assert.equal(Object.prototype.hasOwnProperty.call(result.candidate.lighting, "control_type_indirect"), false);
 });
 
 test("fails closed for missing required seam candidate fields", () => {

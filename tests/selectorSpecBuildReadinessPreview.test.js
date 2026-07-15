@@ -236,6 +236,21 @@ function completeSpecReadyCandidate(selectorState) {
   return selectAndReload(selectorState, "controlType", "DALI-2");
 }
 
+function completeDirectReadonlyCandidateWithoutAmbient(selectorState, { includeControl = true } = {}) {
+  let model = selectAndReload(selectorState, "system", "DNX|80");
+  model = selectAndReload(selectorState, "directOpticVar1", "80|Inlay");
+  model = selectAndReload(selectorState, "ipRating", "IP65");
+  model = selectAndReload(selectorState, "ikRating", "IK10");
+  model = selectAndReload(selectorState, "electricalClass", "Class I");
+  model = selectAndReload(selectorState, "targetLmPerM", "1200");
+  model = selectAndReload(selectorState, "cctCri", "cct_cri:4000K|CRI90");
+  if (includeControl) model = selectAndReload(selectorState, "controlType", "DALI-2");
+  selectorState.acceptDbBackedSelectorDefaults([
+    { fieldKey: "tier", label: "Tier", value: "Business", valueLabel: "Business" },
+  ]);
+  return model;
+}
+
 function addBuildOrderContext(selectorState) {
   selectorState.setDbBackedSelectorFieldValue("mountStyle", "Suspended", "Suspended");
   selectorState.setDbBackedSelectorFieldValue("mountSelection", "Wire", "Wire");
@@ -509,6 +524,57 @@ test("Stage 4 Step 1 readonly mapper uses Stage 3-supported selector state witho
   assert.equal(summaryRows["Stage 4 Step 1 readonly mapper"], "ready");
   assert.equal(summaryRows["Stage 4 Step 1 readonly seam"], "host-local-readonly-engine-seam-not-invoked");
   assert.equal(stageRows["Stage 4 — Engine Outcome Proven"], "false");
+  assertNoGenerationAuthority(value);
+});
+
+test("direct-only readonly candidate becomes pre-Engine ready while Ambient still blocks the full spec/build gate", () => {
+  const selectorState = createSelectorState();
+  completeDirectReadonlyCandidateWithoutAmbient(selectorState);
+  const model = acceptBuildOrderContext(selectorState);
+  const value = preview(model);
+  const projection = model.selectorSurface.preEngineReadonlyActionEligibilityProjection;
+
+  assert.equal(value.specReady, false);
+  assert.equal(value.buildReady, false);
+  assert.ok(value.missingSpecRequirements.includes("Ambient"));
+  assert.equal(value.factoryApprovedInputsReady, false);
+  assert.equal(value.factoryApprovedInputsSummary.stage2Ready, false);
+  assert.equal(value.factoryApprovedInputsSummary.blocker, "Stage 2 is not ready");
+  assert.equal(value.readonlyEngineCandidateInputsReady, true);
+  assert.equal(value.factoryApprovedInputsSummary.readonlyEngineCandidateInputsReady, true);
+  assert.equal(value.factoryApprovedInputsSummary.readonlyEngineCandidateInputAvailabilitySummary.ambientRequired, false);
+  assert.equal(value.readonlyEngineCandidateApplicability.directOnly, true);
+  assert.equal(value.readonlyEngineCandidateApplicability.indirectRequired, false);
+  assert.equal(value.readonlyEngineCandidateReady, true);
+  assert.equal(projection.ready, true);
+  assert.equal(projection.runIntakePreviewReady, true);
+  assert.equal(projection.factoryApprovedInputsReady, true);
+  assert.equal(projection.candidateMapperReady, true);
+  assert.equal(projection.factoryApprovedInputsSummary.stage2Ready, true);
+  assert.equal(projection.factoryApprovedInputsSummary.factoryApprovedInputsReady, true);
+  assertNoGenerationAuthority(value);
+});
+
+test("direct-only readonly candidate remains fail closed when source-backed Control is absent", () => {
+  const selectorState = createSelectorState();
+  completeDirectReadonlyCandidateWithoutAmbient(selectorState, { includeControl: false });
+  const model = acceptBuildOrderContext(selectorState);
+  const value = preview(model);
+  const projection = model.selectorSurface.preEngineReadonlyActionEligibilityProjection;
+
+  assert.equal(value.specReady, false);
+  assert.ok(value.missingSpecRequirements.includes("Ambient"));
+  assert.ok(value.missingSpecRequirements.includes("Control"));
+  assert.equal(value.factoryApprovedInputsSummary.readonlyEngineCandidateInputsReady, false);
+  assert.equal(
+    value.factoryApprovedInputsSummary.readonlyEngineCandidateInputsBlocker,
+    "missing-readonly-engine-candidate-input-controlType",
+  );
+  assert.equal(value.readonlyEngineCandidateReady, false);
+  assert.equal(value.readonlyEngineCandidateMapperSummary.blocker, "missing-readonly-engine-candidate-input-controlType");
+  assert.equal(projection.ready, false);
+  assert.equal(projection.candidateMapperReady, false);
+  assert.equal(projection.blocker, "missing-readonly-engine-candidate-input-controlType");
   assertNoGenerationAuthority(value);
 });
 

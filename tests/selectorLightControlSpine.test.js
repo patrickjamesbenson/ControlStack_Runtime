@@ -196,9 +196,9 @@ function protocolScopedSnapshot() {
       { system: "ALT", system_variant_1: "40", c1_cct: "3000", c1_cri_min: "80", control_type_labels: "PWM", control_type_options: "PWM", approved: "yes" },
     ],
     DRIVERS: [
-      { driver_id: "DALI Driver", native_control_type: "Dali2 DT6", approved: "yes" },
-      { driver_id: "Fixed Driver", native_control_type: "Fixed (On/Off)", approved: "yes" },
-      { driver_id: "Internal Diagnostic Driver", native_control_type: "internal-driver-bus", approved: "yes" },
+      { system: "DNX", system_variant_1: "80", driver_id: "DALI Driver", native_control_type: "Dali2 DT6", supported_control_aliases: "Dali2 DT6 (1 channel);DALI-2 DT6", approved: "yes" },
+      { system: "DNX", system_variant_1: "80", driver_id: "Fixed Driver", native_control_type: "Fixed (On/Off)", supported_aliases: "Fixed;Non-dim", approved: "yes" },
+      { system: "DNX", system_variant_1: "80", driver_id: "Internal Diagnostic Driver", native_control_type: "internal-driver-bus", approved: "yes" },
     ],
   };
 }
@@ -284,10 +284,16 @@ test("control protocol dropdown is source-scoped and excludes broad driver/inter
   const snapshot = protocolScopedSnapshot();
   const selectorState = createSelectorState();
   const model = selectAndReload(selectorState, "system", "DNX|80", snapshot);
+  const controlField = workflowField(model, "controlType");
   const controlValues = dropdownValues(model, "controlType");
-  const incompatibleValues = (workflowField(model, "controlType").incompatibleOptions || []).map((item) => item.value);
+  const incompatibleValues = (controlField.incompatibleOptions || []).map((item) => item.value);
+  const daliOption = (controlField.dropdownOptions || []).find((item) => item.value === "DALI-2 DT6");
 
   assert.ok(controlValues.includes("DALI-2 DT6"));
+  assert.ok(daliOption);
+  assert.ok(daliOption.sourceTables.includes("BOARDS"));
+  assert.ok(daliOption.sourceTables.includes("DRIVERS"));
+  assert.ok(daliOption.systemReferenceKeys.includes("DNX|80"));
   assert.ok(controlValues.includes("Fixed (On/Off)"));
   assert.equal(controlValues.includes("PWM"), false);
   assert.equal(controlValues.includes("internal-driver-bus"), false);

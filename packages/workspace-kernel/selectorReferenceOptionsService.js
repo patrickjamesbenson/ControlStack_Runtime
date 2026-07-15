@@ -1838,18 +1838,19 @@ function collectOptions(snapshot, timelineContext = createSelectorTimelineContex
 
   const boards = liveTableRows(snapshot, "BOARDS", timelineContext);
   const drivers = liveTableRows(snapshot, "DRIVERS", timelineContext);
-  const authoredControlLabelsAvailable = [...boards, ...drivers]
-    .some((row) => rowOptionValues(row, CONTROL_PROTOCOL_LABEL_COLUMNS).length > 0);
-  const availableDriverControls = uniqueStrings(drivers.flatMap((row) => driverAvailableControlValues(row)));
-  const availableDriverControlKeys = new Set(availableDriverControls.map(controlProtocolMatchKey).filter(Boolean));
   for (const row of boards) {
     // Donor Light & Control keeps CCT/CRI source-backed, while lm/m remains typed/manual.
-    // Control protocols are the board/driver intersection: BOARDS.control_type_options matched to DRIVERS.native_control_type by aliases.
+    // Control protocols are the authoritative board/driver intersection. Display labels may
+    // describe an option, but they never create a committed protocol without a compatible
+    // board option/native value and a real driver protocol relationship.
     const lightControlMeta = { sourceTables: ["BOARDS"], lightControlGlobalSource: true };
-    const protocolMeta = { sourceTables: ["BOARDS"], lightControlSourceBacked: true };
-    const boardControlKeys = new Set(boardCompatibleControlValues(row, authoredControlLabelsAvailable).map(controlProtocolMatchKey).filter(Boolean));
-    const boardDriverIntersectionKeys = new Set([...boardControlKeys].filter((key) => availableDriverControlKeys.has(key)));
-    const controls = controlValuesMatchingKeys(boardDisplayControlValues(row, authoredControlLabelsAvailable), boardDriverIntersectionKeys);
+    const systemMeta = sourceRowSystemReferenceMeta(systemOptions, row);
+    const protocolMeta = {
+      sourceTables: ["BOARDS", "DRIVERS"],
+      lightControlSourceBacked: true,
+      ...systemMeta,
+    };
+    const controls = compatibleBoardDriverControlOptions(row, drivers, systemOptions);
     for (const cctCri of cctCriPairOptions(row)) {
       const pairMeta = {
         ...lightControlMeta,
@@ -1866,8 +1867,18 @@ function collectOptions(snapshot, timelineContext = createSelectorTimelineContex
       addOption(bucket, "cctCriIndirect", cctCri.label, pairMeta);
     }
     for (const control of controls) {
-      addOption(bucket, "controlType", control, protocolMeta);
-      addOption(bucket, "controlTypeIndirect", control, protocolMeta);
+      addOption(bucket, "controlType", control.label, {
+        ...protocolMeta,
+        value: control.value,
+        compatibleControlTypes: control.compatibleDriverValues,
+        ...sourceDefaultMeta(row, [control.value, control.label]),
+      });
+      addOption(bucket, "controlTypeIndirect", control.label, {
+        ...protocolMeta,
+        value: control.value,
+        compatibleControlTypes: control.compatibleDriverValues,
+        ...sourceDefaultMeta(row, [control.value, control.label]),
+      });
     }
     for (const lex of rowOptionValues(row, ["lexWeight", "lex_weight", "lex_weight_g", "lex_weight_kg", "lexDirect", "lex_direct", "lex"])) {
       addOption(bucket, "lexWeight", lex, { ...lightControlMeta, metadataOnly: true });
@@ -2017,11 +2028,36 @@ function systemIdentityValuesForSourceSystem(systemOptions = [], sourceSystem = 
   return uniqueStrings(matches.length ? matches : [source]);
 }
 
-const CONTROL_PROTOCOL_LABEL_COLUMNS = Object.freeze(["control_type_labels"]);
-const BOARD_CONTROL_PROTOCOL_COLUMNS = Object.freeze(["control_type_options"]);
-const CONTROL_PROTOCOL_FALLBACK_COLUMNS = Object.freeze(["control_type_options", "native_control_type"]);
-const DRIVER_NATIVE_CONTROL_COLUMNS = Object.freeze(["native_control_type"]);
-const DRIVER_COMPATIBLE_CONTROL_COLUMNS = Object.freeze(["control_type_labels", "control_type", "control", "protocol", "dimming", "dimming_type", "driver_control", "control_protocol", "native_control_type"]);
+const CONTROL_PROTOCOL_LABEL_COLUMNS = Object.freeze([
+  "control_type_labels",
+  "control_type_label",
+]);
+const BOARD_CONTROL_PROTOCOL_COLUMNS = Object.freeze([
+  "control_type_options",
+  "control_type_option",
+]);
+const BOARD_CONTROL_NATIVE_COLUMNS = Object.freeze([
+  "native_control_type",
+  "control_type",
+]);
+const DRIVER_NATIVE_CONTROL_COLUMNS = Object.freeze([
+  "native_control_type",
+  "control_type",
+]);
+const DRIVER_SUPPORTED_CONTROL_ALIAS_COLUMNS = Object.freeze([
+  "supported_aliases",
+  "supported_control_aliases",
+  "supported_control_type_aliases",
+  "control_type_aliases",
+  "control_type_labels",
+  "control_type_options",
+  "control",
+  "protocol",
+  "dimming",
+  "dimming_type",
+  "driver_control",
+  "control_protocol",
+]);
 
 function sourceRowSystemReferenceMeta(systemOptions = [], row = {}) {
   const option = systemOptionForRow(systemOptions, row) || systemOptionForSourceRowAlias(systemOptions, row);
@@ -2057,13 +2093,6 @@ function canonicalControlProtocolLabel(value = "") {
   return raw;
 }
 
-function userFacingControlValues(row = {}, authoredLabelsAvailable = false) {
-  const labels = rowOptionValues(row, CONTROL_PROTOCOL_LABEL_COLUMNS);
-  if (labels.length) return uniqueStrings(labels.map(canonicalControlProtocolLabel).filter(Boolean)).slice(0, 12);
-  if (authoredLabelsAvailable) return [];
-  return uniqueStrings(rowOptionValues(row, CONTROL_PROTOCOL_FALLBACK_COLUMNS).map(canonicalControlProtocolLabel).filter(Boolean)).slice(0, 12);
-}
-
 function controlProtocolMatchKey(value = "") {
   const label = canonicalControlProtocolLabel(value);
   const key = normaliseKey(label || value).replace(/\s+/g, " ").trim();
@@ -2079,25 +2108,80 @@ function controlProtocolMatchKey(value = "") {
   return key;
 }
 
-function controlValuesMatchingKeys(values = [], allowedKeys = new Set()) {
-  return uniqueStrings(values.map(canonicalControlProtocolLabel).filter((value) => allowedKeys.has(controlProtocolMatchKey(value))));
+function indexedProtocolLabel(labels = [], index = 0, authorityValue = "") {
+  const direct = safeString(labels[index]);
+  if (direct) return direct;
+  const authorityKey = controlProtocolMatchKey(authorityValue);
+  return labels.find((label) => controlProtocolMatchKey(label) === authorityKey) || authorityValue;
+}
+
+function driverProtocolDescriptors(row = {}, systemOptions = []) {
+  const nativeValues = rowOptionValues(row, DRIVER_NATIVE_CONTROL_COLUMNS);
+  if (!nativeValues.length) return [];
+  const aliases = rowOptionValues(row, DRIVER_SUPPORTED_CONTROL_ALIAS_COLUMNS);
+  const systemMeta = sourceRowSystemReferenceMeta(systemOptions, row);
+  return nativeValues.map((nativeValue, index) => {
+    const value = canonicalControlProtocolLabel(nativeValue);
+    if (!value) return null;
+    const indexedAlias = safeString(aliases[index]);
+    const matchValues = nativeValues.length === 1
+      ? [nativeValue, ...aliases]
+      : [nativeValue, indexedAlias, ...aliases.filter((alias) => controlProtocolMatchKey(alias) === controlProtocolMatchKey(nativeValue))];
+    return {
+      value,
+      matchKeys: uniqueStrings(matchValues.map(controlProtocolMatchKey).filter(Boolean)),
+      systemMeta,
+    };
+  }).filter(Boolean);
+}
+
+function boardProtocolDescriptors(row = {}) {
+  const optionValues = rowOptionValues(row, BOARD_CONTROL_PROTOCOL_COLUMNS);
+  const nativeValues = rowOptionValues(row, BOARD_CONTROL_NATIVE_COLUMNS);
+  const labels = rowOptionValues(row, CONTROL_PROTOCOL_LABEL_COLUMNS);
+  const authorityValues = optionValues.length ? optionValues : nativeValues.length ? nativeValues : labels;
+  return authorityValues.map((authorityValue, index) => {
+    const value = canonicalControlProtocolLabel(authorityValue);
+    if (!value) return null;
+    const displaySource = indexedProtocolLabel(labels, index, authorityValue);
+    return {
+      value,
+      label: canonicalControlProtocolLabel(displaySource) || value,
+      matchKeys: uniqueStrings([
+        controlProtocolMatchKey(authorityValue),
+        controlProtocolMatchKey(displaySource),
+        controlProtocolMatchKey(value),
+      ].filter(Boolean)),
+    };
+  }).filter(Boolean);
+}
+
+function systemApplicabilityIntersects(left = {}, right = {}) {
+  const leftKeys = Array.isArray(left.systemReferenceKeys) ? left.systemReferenceKeys : [];
+  const rightKeys = Array.isArray(right.systemReferenceKeys) ? right.systemReferenceKeys : [];
+  if (!leftKeys.length || !rightKeys.length) return true;
+  return leftKeys.some((leftKey) => rightKeys.some((rightKey) => systemReferenceValuesMatch(leftKey, rightKey)));
+}
+
+function compatibleBoardDriverControlOptions(boardRow = {}, driverRows = [], systemOptions = []) {
+  const boardSystemMeta = sourceRowSystemReferenceMeta(systemOptions, boardRow);
+  const driverDescriptors = driverRows.flatMap((row) => driverProtocolDescriptors(row, systemOptions));
+  return boardProtocolDescriptors(boardRow).flatMap((boardDescriptor) => {
+    const compatibleDrivers = driverDescriptors.filter((driverDescriptor) => (
+      systemApplicabilityIntersects(boardSystemMeta, driverDescriptor.systemMeta)
+      && boardDescriptor.matchKeys.some((key) => driverDescriptor.matchKeys.includes(key))
+    ));
+    if (!compatibleDrivers.length) return [];
+    return [{
+      value: boardDescriptor.value,
+      label: boardDescriptor.label,
+      compatibleDriverValues: uniqueStrings(compatibleDrivers.map((driver) => driver.value)),
+    }];
+  });
 }
 
 function driverAvailableControlValues(row = {}) {
-  const nativeValues = rowOptionValues(row, DRIVER_NATIVE_CONTROL_COLUMNS);
-  const values = nativeValues.length ? nativeValues : rowOptionValues(row, DRIVER_COMPATIBLE_CONTROL_COLUMNS);
-  return uniqueStrings(values.map(canonicalControlProtocolLabel).filter(Boolean));
-}
-
-function boardCompatibleControlValues(row = {}, authoredLabelsAvailable = false) {
-  const optionValues = rowOptionValues(row, BOARD_CONTROL_PROTOCOL_COLUMNS);
-  const values = optionValues.length ? optionValues : userFacingControlValues(row, authoredLabelsAvailable);
-  return uniqueStrings(values.map(canonicalControlProtocolLabel).filter(Boolean));
-}
-
-function boardDisplayControlValues(row = {}, authoredLabelsAvailable = false) {
-  const labels = userFacingControlValues(row, authoredLabelsAvailable);
-  return labels.length ? labels : boardCompatibleControlValues(row, authoredLabelsAvailable);
+  return uniqueStrings(driverProtocolDescriptors(row).map((descriptor) => descriptor.value));
 }
 
 function opticFieldValue(row) {
@@ -2275,30 +2359,28 @@ function collectRecords(snapshot, bucket, timelineContext = createSelectorTimeli
 
   const boardRowsForRelationships = liveTableRows(snapshot, "BOARDS", timelineContext);
   const driverRowsForRelationships = liveTableRows(snapshot, "DRIVERS", timelineContext);
-  const relationshipAuthoredControlLabelsAvailable = [...boardRowsForRelationships, ...driverRowsForRelationships]
-    .some((row) => rowOptionValues(row, CONTROL_PROTOCOL_LABEL_COLUMNS).length > 0);
-  const relationshipAvailableDriverControls = uniqueStrings(driverRowsForRelationships.flatMap((row) => driverAvailableControlValues(row)));
-  const relationshipAvailableDriverControlKeys = new Set(relationshipAvailableDriverControls.map(controlProtocolMatchKey).filter(Boolean));
   for (const row of boardRowsForRelationships) {
-    const boardControlKeys = new Set(boardCompatibleControlValues(row, relationshipAuthoredControlLabelsAvailable).map(controlProtocolMatchKey).filter(Boolean));
-    const boardDriverIntersectionKeys = new Set([...boardControlKeys].filter((key) => relationshipAvailableDriverControlKeys.has(key)));
-    const controls = controlValuesMatchingKeys(boardDisplayControlValues(row, relationshipAuthoredControlLabelsAvailable), boardDriverIntersectionKeys);
-    pushRelationshipRecord(records, ["BOARDS"], {
+    const systemMeta = sourceRowSystemReferenceMeta(systemOptions, row);
+    const controls = compatibleBoardDriverControlOptions(row, driverRowsForRelationships, systemOptions).map((control) => control.value);
+    pushRelationshipRecord(records, ["BOARDS", "DRIVERS"], {
+      system: systemMeta.systemReferenceKeys,
       controlType: controls,
       controlTypeIndirect: controls,
-    }, "BOARDS row maps board control_type_options to DRIVERS native_control_type aliases; lm/m remains typed/manual and system/optic do not constrain protocols.");
+    }, "BOARDS row maps authoritative board control options to compatible DRIVERS native control types and preserves source-provided system applicability.");
   }
 
   for (const row of driverRowsForRelationships) {
     const driver = rowText(row, ["driver_id", "driver", "driver_name", "name", "label", "sku", "part_number"]);
     const control = driverAvailableControlValues(row);
     const wiring = rowOptionValues(row, ["wiring_type", "wiring", "cable_type", "control_cores"]);
+    const systemMeta = sourceRowSystemReferenceMeta(systemOptions, row);
     pushRelationshipRecord(records, ["DRIVERS"], {
+      system: systemMeta.systemReferenceKeys,
       driver,
       controlType: control,
       controlTypeIndirect: control,
       wiringType: wiring,
-    }, "DRIVERS row maps driver native_control_type to compatible control type and wiring type consequences.");
+    }, "DRIVERS row maps authoritative native control type plus supported aliases to compatible control and wiring consequences.");
   }
 
   for (const row of liveTableRows(snapshot, "ACCESSORIES", timelineContext)) {

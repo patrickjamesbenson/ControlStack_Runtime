@@ -105,17 +105,21 @@ function projectCommittedSelectorConstraint(constraint = {}) {
   };
 }
 
-function projectFactoryApprovedInputsSummary(summary = {}) {
+function projectFactoryApprovedInputsSummary(summary = {}, candidateInputsReady = false) {
   const run = summary?.committedRunIntakeSummary || {};
+  const candidateBlocker = summary.readonlyEngineCandidateInputsBlocker || null;
   return {
     readOnly: true,
     diagnosticOnly: true,
     safeSummaryOnly: true,
-    factoryApprovedInputsReady: summary.factoryApprovedInputsReady === true,
-    ready: summary.ready === true,
+    // The persisted pre-Engine envelope has a locked legacy Stage-3-shaped schema.
+    // These compatibility booleans carry the dedicated candidate-input readiness only;
+    // the full local Stage 2/Stage 3 meanings remain unchanged on the source summary.
+    factoryApprovedInputsReady: candidateInputsReady === true,
+    ready: candidateInputsReady === true,
     stage3Mode: String(summary.stage3Mode || "blocked"),
-    blocker: summary.blocker || null,
-    stage2Ready: summary.stage2Ready === true,
+    blocker: candidateInputsReady === true ? null : candidateBlocker,
+    stage2Ready: candidateInputsReady === true,
     committedSelectorConstraintCount: Number.isSafeInteger(
       summary.committedSelectorConstraintCount,
     ) ? summary.committedSelectorConstraintCount : 0,
@@ -182,29 +186,35 @@ export function buildSelectorPreEngineReadonlyActionEligibilityProjection({
     factoryApprovedInputsSummary?.runIntakePreviewSummary || {};
   const accessoryPlacementIntentSummary =
     factoryApprovedInputsSummary?.accessoryPlacementIntentSummary || {};
-  const runIntakePreviewReady = runIntakePreviewSummary.runIntakePreviewReady === true;
-  const factoryApprovedInputsReady =
-    specBuildReadinessPreview?.factoryApprovedInputsReady === true
-    && factoryApprovedInputsSummary?.factoryApprovedInputsReady === true
-    && factoryApprovedInputsSummary?.stage2Ready === true;
+  const runIntakePreviewReady = runIntakePreviewSummary.runIntakePreviewReady === true
+    && factoryApprovedInputsSummary?.committedRunIntakeSummary?.ready === true;
+  const hasDedicatedCandidateReadiness = Object.prototype.hasOwnProperty.call(
+    factoryApprovedInputsSummary,
+    "readonlyEngineCandidateInputsReady",
+  );
+  const readonlyEngineCandidateInputsReady = hasDedicatedCandidateReadiness
+    ? factoryApprovedInputsSummary.readonlyEngineCandidateInputsReady === true
+    : specBuildReadinessPreview?.factoryApprovedInputsReady === true
+      && factoryApprovedInputsSummary?.factoryApprovedInputsReady === true
+      && factoryApprovedInputsSummary?.stage2Ready === true;
   const candidateMapperReady =
     specBuildReadinessPreview?.readonlyEngineCandidateReady === true
     && candidateMapperSummary?.readonlyEngineCandidateMapperReady === true
     && candidateMapperSummary?.candidateReadyForHostLocalReadonlySeam === true;
   const ready = runIntakePreviewReady
-    && factoryApprovedInputsReady
+    && readonlyEngineCandidateInputsReady
     && candidateMapperReady;
   const blocker = ready
     ? null
-    : factoryApprovedInputsSummary?.blocker
+    : factoryApprovedInputsSummary?.readonlyEngineCandidateInputsBlocker
       || candidateMapperSummary?.blocker
       || (runIntakePreviewReady
-        ? "selector-pre-engine-stage3-eligibility-incomplete"
+        ? "selector-pre-engine-readonly-candidate-inputs-incomplete"
         : "selector-pre-engine-run-intake-not-ready");
   const candidateFingerprint =
     candidateMapperSummary?.candidateShapeSummary?.readonlyEngineCandidateFingerprint || null;
   const projectedFactoryApprovedInputsSummary =
-    projectFactoryApprovedInputsSummary(factoryApprovedInputsSummary);
+    projectFactoryApprovedInputsSummary(factoryApprovedInputsSummary, readonlyEngineCandidateInputsReady);
   const projectedCommittedSelectorConstraints = (Array.isArray(committedSelectorConstraints)
     ? committedSelectorConstraints
     : []).map(projectCommittedSelectorConstraint);
@@ -227,7 +237,7 @@ export function buildSelectorPreEngineReadonlyActionEligibilityProjection({
     lmTemperatureReadinessPreview:
       cloneAndFreezePreEngineProjectionValue(projectedLmTemperatureReadinessPreview),
     runIntakePreviewReady,
-    factoryApprovedInputsReady,
+    factoryApprovedInputsReady: readonlyEngineCandidateInputsReady,
     candidateMapperReady,
     policyFingerprint: SELECTOR_WORKFLOW_POLICY_FINGERPRINT,
     sourceFingerprint: SELECTOR_WORKFLOW_SOURCE_FINGERPRINT,
@@ -5278,6 +5288,15 @@ function createSpecBuildReadinessPreview({
   summary = {},
 } = {}) {
   const spec = productSpine.specGateCandidateReadiness || payloadPreview.specGateCandidateReadiness || {};
+  const specRequirements = Array.isArray(spec.requirements) ? spec.requirements : [];
+  const readonlyEngineCandidateApplicability = {
+    directSupported: true,
+    indirectRequired: specRequirements.some((requirement) => [
+      "indirectTargetLmPerM",
+      "indirectCctCri",
+      "indirectControl",
+    ].includes(requirement?.key)),
+  };
   const buildAuthorityConstraints = Array.isArray(committedSelectorConstraints) ? committedSelectorConstraints : manualConstraints;
   const buildRequirements = SPEC_BUILD_READINESS_BUILD_REQUIREMENTS.map((requirement) => createSpecBuildRequirementStatus(requirement, productSpine, buildAuthorityConstraints));
   const missingBuildRequirements = buildRequirements.filter((requirement) => requirement.complete !== true).map((requirement) => requirement.label);
@@ -5301,6 +5320,7 @@ function createSpecBuildReadinessPreview({
     runIntakePreviewSummary: runIntakePreview,
     runAccessoryPlacementPreviewSummary: runAccessoryPlacementPreview,
     sourceBackedLengthPolicySummary,
+    readonlyEngineCandidateApplicability,
   });
   const factoryApprovedInputsReady = factoryApprovedInputsSummary.factoryApprovedInputsReady === true;
   const readonlyEngineCandidateMapperResult = buildSelectorReadonlyEngineCandidateForInternalSeam({
@@ -5386,6 +5406,9 @@ function createSpecBuildReadinessPreview({
     factoryApprovedInputsReady,
     factoryApprovedInputsSummary,
     factoryApprovedInputsRows: factoryApprovedInputsSummary.summaryRows,
+    readonlyEngineCandidateInputsReady: factoryApprovedInputsSummary.readonlyEngineCandidateInputsReady === true,
+    readonlyEngineCandidateInputsBlocker: factoryApprovedInputsSummary.readonlyEngineCandidateInputsBlocker || null,
+    readonlyEngineCandidateApplicability: factoryApprovedInputsSummary.readonlyEngineCandidateApplicability,
     readonlyEngineCandidateReady: readonlyEngineCandidateMapperSummary?.readonlyEngineCandidateMapperReady === true,
     readonlyEngineCandidateMapperSummary,
     readonlyEngineStep1SafeSummary,

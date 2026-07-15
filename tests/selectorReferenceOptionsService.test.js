@@ -151,6 +151,87 @@ test("auto consequences are labelled as consequences and remain non-authoritativ
   assert.equal(driver.writes, false);
 });
 
+test("source-backed Control uses the authoritative BOARDS and DRIVERS intersection across mixed aliases", () => {
+  const result = deriveSelectorReferenceOptionsFromSnapshot({
+    SYSTEM: [
+      { system: "DNX", system_variant_1: "80", label: "DNX 80", emission: "Direct", approved: "yes" },
+      { system: "LNX", system_variant_1: "60", label: "LNX 60", emission: "Direct", approved: "yes" },
+    ],
+    BOARDS: [
+      {
+        system: "DNX",
+        system_variant_1: "80",
+        control_type_options: "DALI",
+        control_type_labels: "Digital addressable control",
+        approved: "yes",
+      },
+      {
+        system: "LNX",
+        system_variant_1: "60",
+        native_control_type: "PWM",
+        control_type_labels: "PWM dimming",
+        approved: "yes",
+      },
+    ],
+    DRIVERS: [
+      {
+        system: "DNX",
+        system_variant_1: "80",
+        driver_id: "DNX DT6 Driver",
+        native_control_type: "DALI-2 DT6",
+        supported_control_aliases: "DALI;DALI-2",
+        approved: "yes",
+      },
+      {
+        system: "LNX",
+        system_variant_1: "60",
+        driver_id: "LNX PWM Driver",
+        native_control_type: "PWM",
+        supported_aliases: "PWM dimming",
+        approved: "yes",
+      },
+    ],
+  }, { source: sourceReady(), constraints: { system: "DNX|80" } });
+
+  const control = field(result, "controlType");
+  assert.deepEqual(control.options.map((item) => item.value), ["DALI-2", "PWM"]);
+  const dali = option(result, "controlType", "DALI-2");
+  assert.equal(dali.label, "Digital addressable control");
+  assert.equal(dali.status, "available");
+  assert.ok(dali.sourceTables.includes("BOARDS"));
+  assert.ok(dali.sourceTables.includes("DRIVERS"));
+  assert.ok(dali.systemReferenceKeys.includes("DNX|80"));
+  assert.equal(option(result, "controlType", "PWM").status, "blocked");
+  assert.equal(control.options.some((item) => item.value === "Digital addressable control"), false);
+});
+
+test("Control fails closed when labels have no genuine compatible driver protocol", () => {
+  const result = deriveSelectorReferenceOptionsFromSnapshot({
+    SYSTEM: [{ system: "DNX", system_variant_1: "80", label: "DNX 80", emission: "Direct", approved: "yes" }],
+    BOARDS: [{
+      system: "DNX",
+      system_variant_1: "80",
+      control_type_labels: "Marketing smart control",
+      approved: "yes",
+    }],
+    DRIVERS: [{
+      system: "DNX",
+      system_variant_1: "80",
+      driver_id: "DALI Driver",
+      native_control_type: "DALI-2",
+      approved: "yes",
+    }],
+  }, { source: sourceReady(), constraints: { system: "DNX|80" } });
+
+  const control = field(result, "controlType");
+  assert.deepEqual(control.options, []);
+  assert.equal(control.status, "blocked");
+  assert.equal(control.unavailable, true);
+  assert.equal(control.blocked, true);
+  assert.equal(control.sourceStatus, "unavailable from current source");
+  assert.match(control.unavailableReason, /no fake values/i);
+});
+
 test("missing source fields are future-mapped rather than faked", () => {
   const result = deriveSelectorReferenceOptionsFromSnapshot({ SYSTEM: sampleSnapshot().SYSTEM }, { source: sourceReady() });
 

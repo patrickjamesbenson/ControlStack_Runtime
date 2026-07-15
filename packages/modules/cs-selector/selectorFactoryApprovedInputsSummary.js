@@ -42,6 +42,13 @@ const UNSAFE_TRUE_FIELDS = Object.freeze([
 ]);
 
 const RUN_CONSTRAINT_KEYS = Object.freeze(["runQty", "runLength", "runLengthMode"]);
+const READONLY_ENGINE_DIRECT_CANDIDATE_REQUIREMENTS = Object.freeze([
+  Object.freeze({ key: "tier", label: "Tier", fields: Object.freeze(["tier", "selectedTier", "tierToken"]) }),
+  Object.freeze({ key: "optic", label: "Direct optic", fields: Object.freeze(["directOpticVar1", "optic", "opticVar1", "diffuserVar1"]) }),
+  Object.freeze({ key: "targetLmPerM", label: "Direct target lm/m", fields: Object.freeze(["targetLmPerM", "lightTarget"]) }),
+  Object.freeze({ key: "cctCri", label: "Direct CCT/CRI", fields: Object.freeze(["cctCri", "cct"]) }),
+  Object.freeze({ key: "controlType", label: "Direct Control", fields: Object.freeze(["controlType"]) }),
+]);
 const STAGE3B_SELECTOR_BOARD_LENGTH_MM = 1400;
 const STAGE3B_SELECTOR_BOARD_PITCH_MM = 70;
 const STAGE3B_SELECTOR_BOARD_FAMILY_LENGTHS = Object.freeze([STAGE3B_SELECTOR_BOARD_LENGTH_MM]);
@@ -1015,6 +1022,49 @@ function buildCheck(key, label, ready, status) {
   };
 }
 
+function buildReadonlyEngineCandidateInputAvailabilitySummary(
+  committedSelectorConstraints = [],
+  applicability = {},
+) {
+  const map = constraintMap(committedSelectorConstraints);
+  const directSupported = applicability.directSupported !== false;
+  const indirectRequired = applicability.indirectRequired === true;
+  const requirementRows = READONLY_ENGINE_DIRECT_CANDIDATE_REQUIREMENTS.map((requirement) => {
+    const fieldKey = requirement.fields.find((key) => map.has(key)) || null;
+    return {
+      key: requirement.key,
+      label: requirement.label,
+      ready: Boolean(fieldKey),
+      fieldKey,
+      status: fieldKey ? "committed-candidate-input-available" : "missing/fail-closed",
+    };
+  });
+  const missingRequirements = requirementRows.filter((row) => row.ready !== true).map((row) => row.label);
+  const blocker = !directSupported
+    ? "readonly-engine-direct-candidate-not-applicable"
+    : indirectRequired
+      ? "readonly-engine-indirect-inputs-required-outside-first-slice"
+      : missingRequirements.length
+        ? `missing-readonly-engine-candidate-input-${requirementRows.find((row) => row.ready !== true)?.key || "unknown"}`
+        : null;
+  return {
+    ready: blocker === null,
+    candidateInputAvailabilityReady: blocker === null,
+    blocker,
+    directSupported,
+    indirectRequired,
+    directOnly: directSupported && !indirectRequired,
+    supportedSlice: "first-readonly-engine-direct-only",
+    requiredInputs: requirementRows,
+    missingRequirements,
+    sourceAuthority: "committed selector state only; no product-spine, display-only, or provisional-default fallback",
+    ambientRequired: false,
+    indirectInputsRequired: indirectRequired,
+    writes: false,
+    rawRowsExposed: false,
+  };
+}
+
 export function buildSelectorFactoryApprovedInputsSummary({
   stage2Ready = false,
   committedSelectorConstraints = [],
@@ -1022,6 +1072,7 @@ export function buildSelectorFactoryApprovedInputsSummary({
   runAccessoryPlacementPreviewSummary = {},
   sourceBackedLengthPolicySummary = null,
   accessoryReservationSummary = null,
+  readonlyEngineCandidateApplicability = {},
 } = {}) {
   const committedRunIntakeSummary = buildCommittedRunIntakeSummary(committedSelectorConstraints);
   const accessoryPlacementIntentSummary = buildAccessoryPlacementIntentSummary(runAccessoryPlacementPreviewSummary);
@@ -1045,6 +1096,10 @@ export function buildSelectorFactoryApprovedInputsSummary({
   const accessoryReservationStatus = accessoryReservationReady
     ? "ready"
     : (selectedReservationSummary?.blocker || "safe-accessory-reservation-summary-not-ready");
+  const readonlyEngineCandidateInputAvailabilitySummary = buildReadonlyEngineCandidateInputAvailabilitySummary(
+    committedSelectorConstraints,
+    readonlyEngineCandidateApplicability,
+  );
   const checks = [
     buildCheck("stage2Ready", "Stage 2 baseline", stage2Ready === true, "Stage 2 is not ready"),
     buildCheck("committedSelectorConstraints", "Committed selector constraints", Array.isArray(committedSelectorConstraints) && committedSelectorConstraints.length > 0, "no committed selector constraints"),
@@ -1052,8 +1107,16 @@ export function buildSelectorFactoryApprovedInputsSummary({
     buildCheck("committedAccessoryPlacementIntent", "Committed accessory placement intent", accessoryPlacementIntentSummary.ready, accessoryPlacementIntentSummary.diagnostics.join("; ") || "accessory placement intent not ready"),
     buildCheck("safeAccessoryReservation", "Safe reservation / cut / mutation representation", accessoryReservationReady, accessoryReservationStatus),
   ];
+  const readonlyEngineCandidateInputChecks = [
+    buildCheck("committedRunIntake", "Committed run intake", committedRunIntakeSummary.ready, committedRunIntakeSummary.diagnostics.join("; ") || "committed run intake missing"),
+    buildCheck("committedAccessoryPlacementIntent", "Safe accessory intent representation", accessoryPlacementIntentSummary.ready, accessoryPlacementIntentSummary.diagnostics.join("; ") || "accessory placement intent not ready"),
+    buildCheck("safeAccessoryReservation", "Safe reservation / cut / mutation representation", accessoryReservationReady, accessoryReservationStatus),
+    buildCheck("candidateInputAvailability", "Readonly Engine candidate inputs", readonlyEngineCandidateInputAvailabilitySummary.ready, readonlyEngineCandidateInputAvailabilitySummary.blocker),
+  ];
   const blocker = checks.find((check) => check.ready !== true)?.status || null;
   const factoryApprovedInputsReady = checks.every((check) => check.ready === true);
+  const readonlyEngineCandidateInputsBlocker = readonlyEngineCandidateInputChecks.find((check) => check.ready !== true)?.status || null;
+  const readonlyEngineCandidateInputsReady = readonlyEngineCandidateInputChecks.every((check) => check.ready === true);
   const accessoryIntentCount = accessoryPlacementIntentSummary.accessoryIntentCount;
   const stage3Mode = accessoryIntentCount === 0 ? "simple-run-stage3a-zero-accessory" : "accessory-reservation-required";
 
@@ -1066,6 +1129,15 @@ export function buildSelectorFactoryApprovedInputsSummary({
     safeSummaryOnly: true,
     factoryApprovedInputsReady,
     ready: factoryApprovedInputsReady,
+    readonlyEngineCandidateInputsReady,
+    readonlyEngineCandidateInputsBlocker,
+    readonlyEngineCandidateInputAvailabilitySummary,
+    readonlyEngineCandidateApplicability: {
+      directSupported: readonlyEngineCandidateInputAvailabilitySummary.directSupported,
+      indirectRequired: readonlyEngineCandidateInputAvailabilitySummary.indirectRequired,
+      directOnly: readonlyEngineCandidateInputAvailabilitySummary.directOnly,
+      supportedSlice: readonlyEngineCandidateInputAvailabilitySummary.supportedSlice,
+    },
     stage3Mode,
     blocker,
     sourceAuthority: "Stage 2 committed selector state plus safe run/accessory/reservation summaries; no Engine, RunTable, IES, selected-result, or RuntimeData authority",
@@ -1086,8 +1158,12 @@ export function buildSelectorFactoryApprovedInputsSummary({
     accessoryReservationSummary: selectedReservationSummary,
     accessoryReservationRequired: accessoryIntentCount > 0,
     checks,
+    readonlyEngineCandidateInputChecks,
     summaryRows: [
       ["factoryApprovedInputsReady", factoryApprovedInputsReady ? "true" : "false"],
+      ["readonlyEngineCandidateInputsReady", readonlyEngineCandidateInputsReady ? "true" : "false"],
+      ["readonly Engine candidate blocker", readonlyEngineCandidateInputsBlocker || "none"],
+      ["readonly Engine applicability", readonlyEngineCandidateInputAvailabilitySummary.directOnly ? "direct-only" : "indirect-required/outside-first-slice"],
       ["stage3Mode", stage3Mode],
       ["blocker", blocker || "none"],
       ["Stage 2 baseline", stage2Ready === true ? "ready" : "not ready"],

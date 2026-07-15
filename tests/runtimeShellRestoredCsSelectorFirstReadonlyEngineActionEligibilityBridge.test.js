@@ -61,11 +61,19 @@ function readyProjection() {
     readOnly: true,
     diagnosticOnly: true,
     safeSummaryOnly: true,
-    factoryApprovedInputsReady: true,
-    ready: true,
+    factoryApprovedInputsReady: false,
+    ready: false,
+    readonlyEngineCandidateInputsReady: true,
+    readonlyEngineCandidateInputsBlocker: null,
+    readonlyEngineCandidateApplicability: {
+      directSupported: true,
+      indirectRequired: false,
+      directOnly: true,
+      supportedSlice: "first-readonly-engine-direct-only",
+    },
     stage3Mode: "simple-run-stage3a-zero-accessory",
-    blocker: null,
-    stage2Ready: true,
+    blocker: "Ambient missing from full spec gate",
+    stage2Ready: false,
     committedSelectorConstraintCount: committedSelectorConstraints.length,
     committedRunIntakeSummary: {
       ready: true,
@@ -92,7 +100,7 @@ function readyProjection() {
   const lmTemperatureReadinessPreview = {
     targetIntent: { direct: { ready: true, valueLabel: "1200" } },
     cctCriPairing: { direct: { ready: true, valueLabel: "4000K / CRI90" } },
-    controlIntent: { direct: { ready: true, valueLabel: "DALI-2" } },
+    controlIntent: { direct: { ready: true, valueLabel: "DALI-2", sourceBacked: true } },
     fingerprint: "safe-selector-lm-temperature:restored-first-readonly",
     rawRowsReturned: false,
     rawEnginePayloadReturned: false,
@@ -106,7 +114,7 @@ function readyProjection() {
   assert.equal(mapper.ok, true);
   return buildSelectorPreEngineReadonlyActionEligibilityProjection({
     specBuildReadinessPreview: {
-      factoryApprovedInputsReady: true,
+      factoryApprovedInputsReady: false,
       factoryApprovedInputsSummary,
       readonlyEngineCandidateReady: true,
       readonlyEngineCandidateMapperSummary: mapper.summary,
@@ -286,7 +294,7 @@ test("restored Selector first-run bridge enables the shell-owned readonly action
   assert.equal(invocationCalls, 0);
 });
 
-test("restored Selector bridge stays fail closed when run intake is complete but Stage-3 or server authority is incomplete", async () => {
+test("restored Selector bridge stays fail closed when run intake is complete but readonly candidate or server authority is incomplete", async () => {
   const projection = readyProjection();
   const runOnlyProjection = structuredClone(projection);
   runOnlyProjection.factoryApprovedInputsReady = false;
@@ -295,7 +303,7 @@ test("restored Selector bridge stays fail closed when run intake is complete but
   runOnlyProjection.state =
     "selector_pre_engine_readonly_action_eligibility_blocked_fail_closed";
   runOnlyProjection.readiness = "blocked_fail_closed";
-  runOnlyProjection.blocker = "selector-pre-engine-stage3-eligibility-incomplete";
+  runOnlyProjection.blocker = "selector-pre-engine-readonly-candidate-inputs-incomplete";
 
   const registry = createProjectBrowserSelectedProjectServerOwnedRuntimeSavedRegistry();
   const rejected = await registry.register(registrationRequest(runOnlyProjection));
