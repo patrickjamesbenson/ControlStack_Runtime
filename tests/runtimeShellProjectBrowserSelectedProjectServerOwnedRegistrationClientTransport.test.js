@@ -2,257 +2,177 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
-import { createSavedProjectEnvelope } from "../packages/workspace-kernel/projectEnvelope.js";
-import { createShellServices } from "../packages/workspace-kernel/services.js";
 import {
-  PERSISTED_SELECTED_RESULT_SUMMARY_SCHEMA_ID,
-  PERSISTED_SELECTED_RESULT_SUMMARY_SCHEMA_VERSION,
-} from "../packages/workspace-kernel/selectedResultPersistenceBoundaryContract.js";
+  buildSelectorPreEngineReadonlyActionEligibilityProjection,
+} from "../packages/modules/cs-selector/selectorViewModel.js";
 import {
-  SELECTED_RESULT_PERSISTED_SUMMARY_SLOT_REQUIRED_FALSE_FLAGS,
-  SELECTED_RESULT_PERSISTED_SUMMARY_SLOT_SCHEMA_ID,
-  SELECTED_RESULT_PERSISTED_SUMMARY_SLOT_SCHEMA_VERSION,
-} from "../packages/workspace-kernel/selectedResultPersistedSummarySlotContract.js";
+  buildSelectorReadonlyEngineCandidateForInternalSeam,
+} from "../packages/workspace-kernel/selectorReadonlyEngineCandidateMapper.js";
 import {
-  RUNTABLE_FIRST_NARROW_OUTPUT_HANDOFF_REQUIRED_FALSE_FLAGS,
-  RUNTABLE_FIRST_NARROW_OUTPUT_HANDOFF_SUMMARY_SCHEMA_ID,
-  RUNTABLE_FIRST_NARROW_OUTPUT_HANDOFF_SUMMARY_SCHEMA_VERSION,
-} from "../packages/workspace-kernel/runTableFirstNarrowOutputHandoffContract.js";
-import { stableFingerprint } from "../packages/workspace-kernel/stableFingerprint.js";
-import {
-  PROJECT_BROWSER_FIRST_SERVER_OWNED_RUNTIME_SAVED_SELECTED_PROJECT_REGISTRATION_ID,
-  PROJECT_BROWSER_SELECTED_PROJECT_SERVER_OWNED_REGISTRATION_REQUEST_FIELD_ORDER,
-  PROJECT_BROWSER_SELECTED_PROJECT_SERVER_OWNED_REGISTRATION_RESPONSE_FIELD_ORDER,
-  PROJECT_BROWSER_SELECTED_PROJECT_SERVER_OWNED_REGISTRATION_SCHEMA_ID,
-  PROJECT_BROWSER_SELECTED_PROJECT_SERVER_OWNED_REGISTRATION_SCHEMA_VERSION,
-  PROJECT_BROWSER_SELECTED_PROJECT_SERVER_OWNED_REGISTRATION_STATES,
+  createProjectBrowserSelectedProjectServerOwnedRuntimeSavedRegistry,
+  PROJECT_BROWSER_SELECTED_PROJECT_SERVER_OWNED_REGISTRATION_PATH,
 } from "../packages/workspace-kernel/projectBrowserSelectedProjectServerOwnedRegistrationBoundary.js";
 import {
   createShellProjectBrowserSelectedProjectServerOwnedRegistrationClientTransport,
-  SHELL_PROJECT_BROWSER_FIRST_SERVER_OWNED_RUNTIME_SAVED_SELECTED_PROJECT_REGISTRATION_CLIENT_TRANSPORT_ID,
+  SHELL_PROJECT_BROWSER_SELECTED_PROJECT_SERVER_OWNED_REGISTRATION_CLIENT_REQUEST_FIELD_ORDER,
   SHELL_PROJECT_BROWSER_SELECTED_PROJECT_SERVER_OWNED_REGISTRATION_CLIENT_RESULT_FIELD_ORDER,
   SHELL_PROJECT_BROWSER_SELECTED_PROJECT_SERVER_OWNED_REGISTRATION_CLIENT_STATES,
 } from "../apps/workspace-shell/src/projectBrowserSelectedProjectServerOwnedRegistrationClientTransport.js";
 
-const AUTHORITY_STATES = Object.freeze({
-  acceptedSelectedResultAuthorityState: "accepted_selected_result_authority",
-  selectedResultPersistenceAuthorityPreflightState: "ready_for_persistence_authority",
-  selectedResultPersistenceBoundaryState: "selected_result_persistence_boundary_contract_ready",
-  selectedResultOutputReadinessPreflightState:
-    "selected_result_output_readiness_ready_for_persistence",
-});
+const PROJECT_ID = "registration-client-project";
+const ENVELOPE_ID = "local-envelope-registration-client";
+const SAVED_AT = "2026-07-15T01:30:00.000Z";
 
-function selectedResultSummary(sourceSuffix = "registration-client") {
-  return {
-    schemaId: PERSISTED_SELECTED_RESULT_SUMMARY_SCHEMA_ID,
-    schemaVersion: PERSISTED_SELECTED_RESULT_SUMMARY_SCHEMA_VERSION,
-    slotSchemaId: SELECTED_RESULT_PERSISTED_SUMMARY_SLOT_SCHEMA_ID,
-    slotSchemaVersion: SELECTED_RESULT_PERSISTED_SUMMARY_SLOT_SCHEMA_VERSION,
-    owner: "shell",
-    slotOwner: "shell",
-    targetKind: "project-envelope-module-downstream-context-summary-slot",
-    moduleId: "cs_selector",
-    state: "redacted_selected_result_summary_persisted",
-    summaryOnly: true,
-    redacted: true,
-    machineValueSafe: true,
-    ...AUTHORITY_STATES,
-    selectedResultAuthorityGuardState: "engine_verified_selected_result_ready",
-    selectedResultProjectionState: "selected_accepted",
-    safeSelectedResultSourceState: "safe_selected_result_source_ready",
-    selectedResultHandoffScaffoldState: "runtime_selected_result_handoff_scaffold_ready",
-    policyFingerprint: `safe-policy:${sourceSuffix}`,
-    sourceFingerprint: `safe-source:${sourceSuffix}`,
-    sourceInputFingerprint: `safe-source-input:${sourceSuffix}`,
-    sourceVersionFingerprint: `safe-source-version:${sourceSuffix}`,
-    acceptedSelectedResultAuthorityGateFingerprint: `safe-authority-gate:${sourceSuffix}`,
-    selectedResultPersistenceAuthorityPreflightFingerprint:
-      `safe-persistence-preflight:${sourceSuffix}`,
-    selectedResultPersistenceBoundaryContractFingerprint:
-      `safe-persistence-boundary:${sourceSuffix}`,
-    selectedResultOutputReadinessPreflightFingerprint:
-      `safe-output-preflight:${sourceSuffix}`,
-    selectedResultAuthorityGuardFingerprint: `safe-authority-guard:${sourceSuffix}`,
-    selectedResultProjectionFingerprint: `safe-projection:${sourceSuffix}`,
-    safeSelectedResultSourceObjectFingerprint: `safe-source-object:${sourceSuffix}`,
-    selectedResultHandoffScaffoldFingerprint: `safe-handoff:${sourceSuffix}`,
-    ...Object.fromEntries(
-      SELECTED_RESULT_PERSISTED_SUMMARY_SLOT_REQUIRED_FALSE_FLAGS.map((key) => [key, false]),
-    ),
-  };
-}
-
-function runTableFirstNarrowOutputSummary(selectedResult, sourceSuffix = "registration-client") {
-  return {
-    schemaId: RUNTABLE_FIRST_NARROW_OUTPUT_HANDOFF_SUMMARY_SCHEMA_ID,
-    schemaVersion: RUNTABLE_FIRST_NARROW_OUTPUT_HANDOFF_SUMMARY_SCHEMA_VERSION,
-    owner: "shell",
-    slotOwner: "shell",
-    targetKind: "project-envelope-module-downstream-context-summary-slot",
-    moduleId: "cs_selector",
-    state: "redacted_runtable_first_narrow_output_summary_persisted",
-    summaryOnly: true,
+function readyProjection() {
+  const committedSelectorConstraints = [
+    { fieldKey: "tier", value: "Business", valueLabel: "Business", committedSelectorState: true, blocked: false, authoritySource: "acceptedDefaults" },
+    { fieldKey: "directOpticVar1", value: "80|Inlay", valueLabel: "Inlay", committedSelectorState: true, blocked: false, authoritySource: "manualConstraints" },
+    { fieldKey: "targetLmPerM", value: "1200", valueLabel: "1200", committedSelectorState: true, blocked: false, authoritySource: "manualConstraints" },
+    { fieldKey: "cctCri", value: "4000K / CRI90", valueLabel: "4000K / CRI90", committedSelectorState: true, blocked: false, authoritySource: "manualConstraints" },
+    { fieldKey: "controlType", value: "DALI-2", valueLabel: "DALI-2", committedSelectorState: true, blocked: false, authoritySource: "manualConstraints" },
+  ];
+  const factoryApprovedInputsSummary = {
+    readOnly: true,
     diagnosticOnly: true,
     safeSummaryOnly: true,
-    redacted: true,
-    machineValueSafe: true,
-    sourceKind: "persisted-selected-result-summary",
-    futureOutputKind: "runtable-first-narrow-output",
-    rowsIncluded: false,
-    rowCount: 0,
-    generated: false,
-    generationEnabled: false,
-    persisted: false,
-    routeAdded: false,
-    postEndpointAdded: false,
-    runTableFirstNarrowOutputHandoffContractState:
-      "runtable_first_narrow_output_handoff_contract_ready",
-    runTableFirstNarrowOutputHandoffContractReady: true,
-    ...AUTHORITY_STATES,
-    policyFingerprint: selectedResult.policyFingerprint,
-    sourceFingerprint: selectedResult.sourceFingerprint,
-    sourceInputFingerprint: selectedResult.sourceInputFingerprint,
-    sourceVersionFingerprint: selectedResult.sourceVersionFingerprint,
-    persistedSelectedResultSummaryFingerprint: stableFingerprint(
-      "safe-persisted-selected-result-summary",
-      selectedResult,
-    ),
-    selectedResultPersistedSummarySlotContractFingerprint:
-      `safe-selected-result-slot:${sourceSuffix}`,
-    runTableFirstNarrowOutputHandoffContractFingerprint:
-      `safe-runtable-handoff:${sourceSuffix}`,
-    ...Object.fromEntries(
-      RUNTABLE_FIRST_NARROW_OUTPUT_HANDOFF_REQUIRED_FALSE_FLAGS.map((key) => [key, false]),
-    ),
-  };
-}
-
-function stage3Inputs() {
-  return {
-    factoryApprovedInputsSummary: {
-      schemaId: "controlstack.selector.factory-approved-inputs-summary.v1",
-      schemaVersion: 1,
-      tier: "Business",
-      runs: [{ qty: 2, runLengthMm: 3500 }],
-      lighting: { targetLmPerM: 1200 },
-    },
-    committedSelectorConstraints: [
-      { constraintId: "max-segment-length", value: 3500, unit: "mm" },
-    ],
-    lmTemperatureReadinessPreview: {
-      schemaId: "controlstack.selector.lm-temperature-readiness-preview.v1",
-      schemaVersion: 1,
+    factoryApprovedInputsReady: true,
+    ready: true,
+    stage3Mode: "simple-run-stage3a-zero-accessory",
+    blocker: null,
+    stage2Ready: true,
+    committedSelectorConstraintCount: committedSelectorConstraints.length,
+    committedRunIntakeSummary: {
       ready: true,
+      committedRunIntakeReady: true,
+      sourceAuthority: "committed-selector-state",
+      runQuantity: 1,
+      runLengthMm: 3500,
+      lengthMode: "cut_to_length",
     },
+    runIntakePreviewSummary: {
+      runIntakePreviewReady: true,
+      runCount: 1,
+      totalQuantity: 1,
+    },
+    accessoryPlacementIntentSummary: { accessoryIntentCount: 0 },
+    accessoryReservationRequired: false,
+    engineExecuted: false,
+    donorEngineInvoked: false,
+    runTableGenerated: false,
+    iesGenerated: false,
+    selectedResultPersisted: false,
+    runtimeDataMutated: false,
   };
+  const lmTemperatureReadinessPreview = {
+    targetIntent: { direct: { ready: true, valueLabel: "1200" } },
+    cctCriPairing: { direct: { ready: true, valueLabel: "4000K / CRI90" } },
+    controlIntent: { direct: { ready: true, valueLabel: "DALI-2" } },
+    fingerprint: "safe-selector-lm-temperature:client-registration",
+    rawRowsReturned: false,
+    rawEnginePayloadReturned: false,
+    rawEngineResultReturned: false,
+  };
+  const mapper = buildSelectorReadonlyEngineCandidateForInternalSeam({
+    factoryApprovedInputsSummary,
+    committedSelectorConstraints,
+    lmTemperatureReadinessPreview,
+  });
+  assert.equal(mapper.ok, true);
+  return buildSelectorPreEngineReadonlyActionEligibilityProjection({
+    specBuildReadinessPreview: {
+      factoryApprovedInputsReady: true,
+      factoryApprovedInputsSummary,
+      readonlyEngineCandidateReady: true,
+      readonlyEngineCandidateMapperSummary: mapper.summary,
+    },
+    committedSelectorConstraints,
+    lmTemperatureReadinessPreview,
+    sourceInputFingerprint: "safe-source-input:client-registration",
+    boardDataSourceVersion: "safe-board-version:client-registration",
+  });
 }
 
-function localSave(projectId = "registration-client-project", overrides = {}) {
-  const selectedResult = selectedResultSummary(projectId);
-  const envelope = createSavedProjectEnvelope({
-    project: {
-      metadata: {
-        projectId,
-        title: "Registration Client Project",
-        readiness: "ready",
-        source: "runtime-test",
-        browserReady: true,
-        browserStatus: "ready",
-        restoredFromEnvelope: false,
-        restoredAt: null,
-        restoredEnvelopeId: null,
-      },
-      currentProject: {
-        projectId,
-        title: "Registration Client Project",
-        client: "Client",
-        site: "Sydney",
-        readiness: "ready",
-        source: "runtime-test",
-      },
-      selection: {
-        owner: "shell",
-        selectedProjectId: projectId,
-        selectedAt: "2026-07-14T00:00:00.000Z",
-        source: "runtime-test",
-        restoredEnvelopeId: null,
-      },
-    },
-    identity: {
-      identityState: "internal_authenticated",
-      classification: "internal",
-      actualRole: "developer",
-      derivedActualRole: "developer",
-      actualRoleSource: "test",
-      displayRole: "developer",
-      displayRoleClamped: false,
-      currentUser: { name: "Runtime Test", email: "runtime@example.com" },
-    },
-    contractVersion: "workspace-contract-test",
-    moduleContributions: {
-      cs_selector: {
-        status: "ready",
-        state: { engineRunActionSource: stage3Inputs() },
-        downstreamContext: {
-          selectedResultSummary: selectedResult,
-          runTableFirstNarrowOutputSummary:
-            runTableFirstNarrowOutputSummary(selectedResult, projectId),
-        },
-      },
-    },
-    source: "p2-shell-save-envelope",
-  });
+function localSave(projection = readyProjection()) {
   return {
     accepted: true,
     envelope: {
-      ...envelope,
-      ...overrides,
+      schema: "workspace_saved_project.v2-runtime",
+      owner: "shell",
+      source: "p2-shell-save-envelope",
+      readOnly: false,
+      browserOnly: false,
+      projectId: PROJECT_ID,
+      envelopeId: ENVELOPE_ID,
+      savedAt: SAVED_AT,
+      title: "Registration Client Project",
+      client: "Client",
+      site: "Sydney",
+      shell: { contractVersion: "workspace-contract-test" },
+      savedBy: {
+        identityState: "internal_authenticated",
+        classification: "internal",
+        actualRole: "developer",
+        derivedActualRole: "developer",
+        actualRoleSource: "test",
+        displayRole: "developer",
+        displayRoleClamped: false,
+        name: "Runtime Test",
+        email: "runtime@example.test",
+      },
+      project: {
+        metadata: {
+          projectId: PROJECT_ID,
+          title: "Registration Client Project",
+          readiness: "ready",
+          source: "runtime-test",
+          browserReady: true,
+          browserStatus: "ready",
+          restoredFromEnvelope: false,
+          restoredAt: null,
+          restoredEnvelopeId: null,
+        },
+        currentProject: {
+          projectId: PROJECT_ID,
+          title: "Registration Client Project",
+          client: "Client",
+          site: "Sydney",
+          readiness: "ready",
+          source: "runtime-test",
+        },
+        selection: {
+          owner: "shell",
+          selectedProjectId: PROJECT_ID,
+          selectedAt: SAVED_AT,
+          source: "runtime-test",
+          restoredEnvelopeId: null,
+        },
+      },
+      modules: {
+        cs_selector: {
+          status: "saved-ui-state",
+          state: {},
+          downstreamContext: {
+            preEngineActionEligibilityProjection: structuredClone(projection),
+          },
+        },
+      },
     },
   };
 }
 
-function serverResponse(request, overrides = {}) {
-  const fields = {
-    schemaId: PROJECT_BROWSER_SELECTED_PROJECT_SERVER_OWNED_REGISTRATION_SCHEMA_ID,
-    schemaVersion:
-      PROJECT_BROWSER_SELECTED_PROJECT_SERVER_OWNED_REGISTRATION_SCHEMA_VERSION,
-    contractId:
-      PROJECT_BROWSER_FIRST_SERVER_OWNED_RUNTIME_SAVED_SELECTED_PROJECT_REGISTRATION_ID,
-    state: PROJECT_BROWSER_SELECTED_PROJECT_SERVER_OWNED_REGISTRATION_STATES.registered,
-    readiness: "registered",
-    ok: true,
-    failClosed: false,
-    blocker: null,
-    requestAccepted: true,
-    projectId: request.localProjectId,
-    localEnvelopeId: request.localEnvelopeId,
-    localSavedAt: request.localSavedAt,
-    localRevisionId: request.localRevisionId,
-    serverEnvelopeId: `env-server-${request.localProjectId}`,
-    serverRevisionId: `server-revision-${request.localProjectId}-1`,
-    supersededServerRevisionId: null,
-    serverOwned: true,
-    envelopeConstructedServerSide: true,
-    envelopeValidated: true,
-    retainedInProcessMemory: true,
-    activeRevision: true,
-    filesystemPersistenceEnabled: false,
-    projectEnvelopeReturned: false,
-    enginePayloadReturned: false,
-    privateCandidateReturned: false,
-    databasePathReturned: false,
-    filePathReturned: false,
-    sourcePathReturned: false,
-    engineOptionsReturned: false,
-    ...overrides,
-  };
+function clientRequest(save = localSave()) {
   return Object.fromEntries(
-    PROJECT_BROWSER_SELECTED_PROJECT_SERVER_OWNED_REGISTRATION_RESPONSE_FIELD_ORDER
-      .map((key) => [key, fields[key]]),
+    SHELL_PROJECT_BROWSER_SELECTED_PROJECT_SERVER_OWNED_REGISTRATION_CLIENT_REQUEST_FIELD_ORDER
+      .map((key) => [key, {
+        localSave: save,
+        registrationSessionId: "client-registration-session",
+        clientSaveOrdinal: 1,
+        localRevisionId: "local-revision-client-1",
+      }[key]]),
   );
 }
 
-function response(body, status = 200) {
+function responseFor(body, status = body.ok === true ? 200 : 422) {
   return {
     status,
     redirected: false,
@@ -264,264 +184,151 @@ function response(body, status = 200) {
       },
     },
     async json() {
-      return structuredClone(body);
+      return body;
     },
   };
 }
 
-function clientRequest(save = localSave(), overrides = {}) {
-  return {
-    localSave: save,
-    registrationSessionId: "shell-registration-session-test-1",
-    clientSaveOrdinal: 1,
-    localRevisionId: "local-revision-shell-registration-session-test-1-1",
-    ...overrides,
-  };
-}
-
-test("client dispatches only the strictly ordered source projection over same-origin POST", async () => {
-  let capturedPath = null;
-  let capturedOptions = null;
-  let capturedBody = null;
-  const transport = createShellProjectBrowserSelectedProjectServerOwnedRegistrationClientTransport({
-    async fetchImpl(path, options) {
-      capturedPath = path;
-      capturedOptions = options;
-      capturedBody = JSON.parse(options.body);
-      return response(serverResponse(capturedBody));
-    },
-  });
-
-  const result = await transport(clientRequest());
-
-  assert.equal(result.state, SHELL_PROJECT_BROWSER_SELECTED_PROJECT_SERVER_OWNED_REGISTRATION_CLIENT_STATES.registered);
-  assert.equal(result.ok, true);
-  assert.equal(result.failClosed, false);
-  assert.equal(result.serverOwned, true);
-  assert.equal(result.activeRevision, true);
-  assert.equal(result.sameOrigin, true);
-  assert.equal(result.scalarAcknowledgementOnly, true);
+function assertScalarClientResult(result) {
   assert.deepEqual(
     Object.keys(result),
     SHELL_PROJECT_BROWSER_SELECTED_PROJECT_SERVER_OWNED_REGISTRATION_CLIENT_RESULT_FIELD_ORDER,
   );
-  assert.equal(
-    result.contractId,
-    SHELL_PROJECT_BROWSER_FIRST_SERVER_OWNED_RUNTIME_SAVED_SELECTED_PROJECT_REGISTRATION_CLIENT_TRANSPORT_ID,
-  );
-
-  assert.equal(capturedPath, "/api/workspace-shell/selected-project-runtime-save-registration");
-  assert.equal(capturedOptions.method, "POST");
-  assert.equal(capturedOptions.credentials, "same-origin");
-  assert.equal(capturedOptions.cache, "no-store");
-  assert.equal(capturedOptions.redirect, "error");
-  assert.deepEqual(Object.keys(capturedBody), PROJECT_BROWSER_SELECTED_PROJECT_SERVER_OWNED_REGISTRATION_REQUEST_FIELD_ORDER);
-  assert.deepEqual(Object.keys(capturedBody.sourceProjection), [
-    "project",
-    "savedBy",
-    "contractVersion",
-    "selectorModule",
-  ]);
-  assert.deepEqual(Object.keys(capturedBody.sourceProjection.selectorModule), [
-    "status",
-    "factoryApprovedInputsSummary",
-    "committedSelectorConstraints",
-    "lmTemperatureReadinessPreview",
-    "selectedResultSummary",
-    "runTableFirstNarrowOutputSummary",
-  ]);
-  assert.equal(capturedBody.localProjectId, "registration-client-project");
-  assert.equal(capturedBody.sourceProjection.selectorModule.status, "ready");
-  assert.deepEqual(
-    capturedBody.sourceProjection.selectorModule.factoryApprovedInputsSummary,
-    stage3Inputs().factoryApprovedInputsSummary,
-  );
-
-  const serialised = JSON.stringify(capturedBody);
+  assert.equal(Object.values(result).every((value) => (
+    value === null
+      || typeof value === "string"
+      || typeof value === "boolean"
+      || Number.isSafeInteger(value)
+  )), true);
+  const serialised = JSON.stringify(result);
   for (const forbidden of [
-    '"projectEnvelope"',
-    '"completedEnvelope"',
-    '"enginePayload"',
-    '"privateCandidate"',
-    '"databasePath"',
-    '"filePath"',
-    '"sourcePath"',
-    '"engineOptions"',
-    '"modules":',
-    '"shell":',
-    '"lifecycle":',
-    '"restore":',
-  ]) {
-    assert.equal(serialised.includes(forbidden), false, forbidden);
-  }
-  for (const key of [
-    "projectEnvelopeSent",
-    "projectEnvelopeReturned",
-    "enginePayloadSent",
-    "enginePayloadReturned",
-    "privateCandidateSent",
-    "privateCandidateReturned",
-    "databasePathSent",
-    "databasePathReturned",
-    "filePathSent",
-    "filePathReturned",
-    "sourcePathSent",
-    "sourcePathReturned",
-    "engineOptionsSent",
-    "engineOptionsReturned",
-    "filesystemPersistenceEnabled",
-  ]) {
-    assert.equal(result[key], false, key);
-  }
-});
+    '"factoryApprovedInputsSummary":',
+    '"committedSelectorConstraints":',
+    '"lmTemperatureReadinessPreview":',
+    '"privateCandidate":',
+    '"candidatePayload":',
+    '"projectEnvelope":',
+    '"databasePath":',
+    '"filePath":',
+    '"sourcePath":',
+    '"engineOptions":',
+  ]) assert.equal(serialised.includes(forbidden), false, forbidden);
+}
 
-test("client fails closed before fetch for invalid local saves, missing Stage 3 inputs, and unsafe source material", async () => {
-  let calls = 0;
-  const transport = createShellProjectBrowserSelectedProjectServerOwnedRegistrationClientTransport({
-    async fetchImpl() {
-      calls += 1;
-      throw new Error("must not dispatch");
-    },
-  });
-
-  const invalidLocalSave = await transport(clientRequest({ accepted: false, envelope: null }));
-  assert.equal(invalidLocalSave.ok, false);
-  assert.equal(invalidLocalSave.requestDispatched, false);
-
-  const missingInputsSave = localSave();
-  missingInputsSave.envelope.modules.cs_selector.state = {};
-  const missingInputs = await transport(clientRequest(missingInputsSave));
-  assert.equal(missingInputs.ok, false);
-  assert.equal(missingInputs.requestDispatched, false);
-  assert.equal(missingInputs.blocker, "selected-project-registration-client-stage3-inputs-missing");
-
-  const unsafeSave = localSave();
-  unsafeSave.envelope.modules.cs_selector.state.engineRunActionSource
-    .factoryApprovedInputsSummary.privateCandidate = { tier: "Business" };
-  const unsafe = await transport(clientRequest(unsafeSave));
-  assert.equal(unsafe.ok, false);
-  assert.equal(unsafe.requestDispatched, false);
-  assert.match(unsafe.blocker, /forbidden-key-privateCandidate/);
-
-  const unsafePathSave = localSave();
-  unsafePathSave.envelope.modules.cs_selector.state.engineRunActionSource
-    .factoryApprovedInputsSummary.note = "C:\\ControlStack_RuntimeData\\private\\candidate.json";
-  const unsafePath = await transport(clientRequest(unsafePathSave));
-  assert.equal(unsafePath.ok, false);
-  assert.equal(unsafePath.requestDispatched, false);
-  assert.match(unsafePath.blocker, /private-or-output-value-refused/);
-
-  assert.equal(calls, 0);
-});
-
-test("client rejects non-scalar, cross-revision, or unsafe server acknowledgements", async () => {
-  const cases = [
-    (body) => ({ ...body, projectEnvelopeReturned: { unsafe: true } }),
-    (body) => ({ ...body, localRevisionId: "other-revision" }),
-    (body) => ({ ...body, privateCandidateReturned: true }),
-    (body) => ({ ...body, serverRevisionId: "C:\\private\\revision" }),
-  ];
-
-  for (const mutate of cases) {
-    const transport = createShellProjectBrowserSelectedProjectServerOwnedRegistrationClientTransport({
+test("client sends only the allowlisted pre-Engine projection and accepts the scalar server acknowledgement", async () => {
+  const registry = createProjectBrowserSelectedProjectServerOwnedRuntimeSavedRegistry();
+  let fetchCalls = 0;
+  let sentBody = null;
+  const transport =
+    createShellProjectBrowserSelectedProjectServerOwnedRegistrationClientTransport({
       async fetchImpl(path, options) {
-        const request = JSON.parse(options.body);
-        return response(mutate(serverResponse(request)));
+        fetchCalls += 1;
+        assert.equal(path, PROJECT_BROWSER_SELECTED_PROJECT_SERVER_OWNED_REGISTRATION_PATH);
+        assert.equal(options.method, "POST");
+        assert.equal(options.credentials, "same-origin");
+        sentBody = JSON.parse(options.body);
+        return responseFor(await registry.register(sentBody));
       },
     });
-    const result = await transport(clientRequest());
-    assert.equal(result.ok, false);
-    assert.equal(result.responseValidated, false);
-  }
-});
 
-test("shell services associate acknowledgement with the exact local save revision and ignore stale completion", async () => {
-  const deferred = [];
-  const services = createShellServices({
-    registerSelectedProjectServerOwnership(request) {
-      return new Promise((resolve) => deferred.push({ request, resolve }));
-    },
-  });
-  const firstSave = localSave("services-registration-project");
-  const secondSave = localSave("services-registration-project");
-  secondSave.envelope.envelopeId = firstSave.envelope.envelopeId;
-  secondSave.envelope.savedAt = new Date(Date.parse(firstSave.envelope.savedAt) + 1000).toISOString();
-
-  const firstPromise = services.selectedProjectServerOwnedRegistration.registerLocalSave(firstSave);
-  const secondPromise = services.selectedProjectServerOwnedRegistration.registerLocalSave(secondSave);
-  assert.equal(deferred.length, 2);
-
-  const secondRequest = deferred[1].request;
-  deferred[1].resolve({
-    ok: true,
-    activeRevision: true,
-    projectId: secondSave.envelope.projectId,
-    localEnvelopeId: secondSave.envelope.envelopeId,
-    localSavedAt: secondSave.envelope.savedAt,
-    localRevisionId: secondRequest.localRevisionId,
-    serverEnvelopeId: "server-env-2",
-    serverRevisionId: "server-revision-2",
-  });
-  await secondPromise;
+  const result = await transport(clientRequest());
+  assertScalarClientResult(result);
+  assert.equal(fetchCalls, 1);
   assert.equal(
-    services.selectedProjectServerOwnedRegistration.isAcknowledgedEnvelope(secondSave.envelope),
+    result.state,
+    SHELL_PROJECT_BROWSER_SELECTED_PROJECT_SERVER_OWNED_REGISTRATION_CLIENT_STATES.registered,
+  );
+  assert.equal(result.ok, true);
+  assert.equal(result.preEngineActionSourceReady, true);
+  assert.equal(result.candidateReconstructionPreflightEligible, true);
+  assert.match(
+    result.preEngineEligibilityProjectionFingerprint,
+    /^safe-selector-pre-engine-readonly-action-eligibility:[0-9a-f]{40}$/,
+  );
+  assert.equal(result.serverOwned, true);
+  assert.equal(result.activeRevision, true);
+  assert.equal(sentBody.sourceProjection.selectorModule.selectedResultSummary, null);
+  assert.equal(sentBody.sourceProjection.selectorModule.runTableFirstNarrowOutputSummary, null);
+  assert.equal(
+    sentBody.sourceProjection.selectorModule.preEngineActionEligibilityProjection.ready,
     true,
   );
+  assert.equal(Object.prototype.hasOwnProperty.call(sentBody, "projectEnvelope"), false);
+  assert.equal(Object.prototype.hasOwnProperty.call(sentBody, "enginePayload"), false);
+});
 
-  const firstRequest = deferred[0].request;
-  deferred[0].resolve({
-    ok: true,
-    activeRevision: true,
-    projectId: firstSave.envelope.projectId,
-    localEnvelopeId: firstSave.envelope.envelopeId,
-    localSavedAt: firstSave.envelope.savedAt,
-    localRevisionId: firstRequest.localRevisionId,
-    serverEnvelopeId: "server-env-1",
-    serverRevisionId: "server-revision-1",
-  });
-  await firstPromise;
+test("client fails closed before fetch when the projection is absent, blocked, tampered, or path-bearing", async () => {
+  let fetchCalls = 0;
+  const transport =
+    createShellProjectBrowserSelectedProjectServerOwnedRegistrationClientTransport({
+      async fetchImpl() {
+        fetchCalls += 1;
+        throw new Error("invalid projection must not dispatch");
+      },
+    });
 
+  const absent = localSave();
+  delete absent.envelope.modules.cs_selector.downstreamContext
+    .preEngineActionEligibilityProjection;
+  const absentResult = await transport(clientRequest(absent));
+  assert.equal(absentResult.ok, false);
+  assert.equal(absentResult.requestDispatched, false);
+
+  const tampered = localSave();
+  tampered.envelope.modules.cs_selector.downstreamContext
+    .preEngineActionEligibilityProjection.runIntakePreviewReady = false;
+  const tamperedResult = await transport(clientRequest(tampered));
+  assert.equal(tamperedResult.ok, false);
+  assert.equal(tamperedResult.requestDispatched, false);
+
+  const pathBearing = localSave();
+  pathBearing.envelope.modules.cs_selector.downstreamContext
+    .preEngineActionEligibilityProjection.factoryApprovedInputsSummary
+    .committedRunIntakeSummary.sourceAuthority =
+      "C:\\ControlStack_RuntimeData\\private\\candidate.json";
+  const pathResult = await transport(clientRequest(pathBearing));
+  assert.equal(pathResult.ok, false);
+  assert.equal(pathResult.requestDispatched, false);
+  assert.equal(fetchCalls, 0);
+});
+
+test("client rejects a registered response that omits either server preflight acknowledgement", async () => {
+  const registry = createProjectBrowserSelectedProjectServerOwnedRuntimeSavedRegistry();
+  const transport =
+    createShellProjectBrowserSelectedProjectServerOwnedRegistrationClientTransport({
+      async fetchImpl(_path, options) {
+        const body = await registry.register(JSON.parse(options.body));
+        return responseFor({
+          ...body,
+          candidateReconstructionPreflightEligible: false,
+        });
+      },
+    });
+  const result = await transport(clientRequest());
+  assertScalarClientResult(result);
+  assert.equal(result.ok, false);
+  assert.equal(result.responseReceived, true);
+  assert.equal(result.responseValidated, false);
   assert.equal(
-    services.selectedProjectServerOwnedRegistration.isAcknowledgedEnvelope(firstSave.envelope),
-    false,
-  );
-  assert.equal(
-    services.selectedProjectServerOwnedRegistration.getAcknowledgementForEnvelope(secondSave.envelope)
-      .serverRevisionId,
-    "server-revision-2",
+    result.blocker,
+    "selected-project-registration-client-response-required-flag-not-true-candidateReconstructionPreflightEligible",
   );
 });
 
-test("shell wiring blocks Engine readiness until exact server acknowledgement and keeps transport implementation separate", async () => {
-  const [clientSource, shellSource, servicesSource, invokeBoundarySource] = await Promise.all([
-    readFile(
-      new URL(
-        "../apps/workspace-shell/src/projectBrowserSelectedProjectServerOwnedRegistrationClientTransport.js",
-        import.meta.url,
-      ),
-      "utf8",
+test("registration client protocol remains same-origin, one-request, scalar-only, and no-write", async () => {
+  const source = await readFile(
+    new URL(
+      "../apps/workspace-shell/src/projectBrowserSelectedProjectServerOwnedRegistrationClientTransport.js",
+      import.meta.url,
     ),
-    readFile(new URL("../apps/workspace-shell/src/shell.js", import.meta.url), "utf8"),
-    readFile(new URL("../packages/workspace-kernel/services.js", import.meta.url), "utf8"),
-    readFile(
-      new URL(
-        "../packages/workspace-kernel/engineRunTableSelectedProjectShellInvokeTransportBoundary.js",
-        import.meta.url,
-      ),
-      "utf8",
-    ),
-  ]);
-
-  assert.match(clientSource, /credentials: "same-origin"/);
-  assert.match(clientSource, /sourceProjection/);
-  assert.doesNotMatch(clientSource, /node:fs|writeFile|appendFile|mkdir|createWriteStream/);
-  assert.match(shellSource, /applySelectedProjectServerOwnershipGate/);
-  assert.match(shellSource, /selected-project-server-owned-registration-not-acknowledged/);
-  assert.match(shellSource, /registerLocalSave\(result\)/);
-  assert.match(servicesSource, /localRevisionId/);
-  assert.match(servicesSource, /latestPending\?\.localRevisionId !== localRevisionId/);
+    "utf8",
+  );
+  assert.equal((source.match(/browserFetch\(/g) || []).length, 1);
+  assert.match(source, /credentials: "same-origin"/);
+  assert.match(source, /cache: "no-store"/);
+  assert.match(source, /preEngineActionEligibilityProjection/);
   assert.doesNotMatch(
-    invokeBoundarySource,
-    /selected-project-runtime-save-registration|sourceProjection|registerLocalSave/,
+    source,
+    /writeFile|appendFile|mkdir|createWriteStream|RuntimeData\s*[.\[]|generateRunTable|generateIes|persistSelectedResult/,
   );
 });

@@ -39,6 +39,9 @@ import {
   buildShellProjectBrowserSelectedProjectEngineActionLane,
 } from "./projectBrowserSelectedProjectEngineActionLane.js";
 import {
+  buildShellProjectBrowserSelectedProjectEngineActionEligibility,
+} from "./projectBrowserSelectedProjectEngineActionEligibility.js";
+import {
   createShellProjectBrowserSelectedProjectReadonlyEngineInvokeClientMount,
 } from "./projectBrowserSelectedProjectEngineReadonlyInvokeMount.js";
 import {
@@ -175,6 +178,8 @@ let projectBrowserSelectedProjectExportManifestPreview = null;
 let projectBrowserSelectedProjectExportDetailPreview = null;
 let projectBrowserSelectedProjectEngineRunPreview = null;
 let projectBrowserSelectedProjectEngineRunPreviewDescriptor = null;
+let projectBrowserSelectedProjectEngineActionEligibilityDescriptor = null;
+let restoredCsSelectorEngineActionLaneHost = null;
 let projectBrowserSelectedProjectReadonlyEngineInvokeMountStatus = null;
 let projectBrowserSelectedProjectReadonlyEngineInvokeMountHost = null;
 let projectBrowserSelectedProjectEngineReadonlyInvokeActivationController = null;
@@ -1370,10 +1375,18 @@ function renderProjectBrowser({ context }) {
       browser.selectedProjectId,
     );
   projectBrowserSelectedProjectEngineRunPreviewDescriptor = engineRunPreview;
+  const engineActionEligibility =
+    buildShellProjectBrowserSelectedProjectEngineActionEligibility(
+      browser.selectedProjectPreEngineActionEligibility,
+      browser.selectedProjectServerOwnedRegistration,
+      browser.selectedProjectId,
+    );
+  projectBrowserSelectedProjectEngineActionEligibilityDescriptor =
+    engineActionEligibility;
   projectBrowserSelectedProjectEngineReadonlyInvokeActivationStatus =
     projectBrowserSelectedProjectEngineReadonlyInvokeActivationController?.refresh({
       context,
-      engineRunPreview,
+      engineActionEligibility,
     }) || null;
 
   renderProjectBrowserSelectedProjectEngineRunPreview(engineRunPreview);
@@ -1381,6 +1394,7 @@ function renderProjectBrowser({ context }) {
     buildShellProjectBrowserSelectedProjectEngineActionLane(
       engineRunPreview,
       projectBrowserSelectedProjectEngineReadonlyInvokeActivationStatus,
+      engineActionEligibility,
     ),
     projectBrowserSelectedProjectEngineReadonlyInvokeActivationStatus,
   );
@@ -1496,6 +1510,16 @@ function renderProjectBrowserSelectedProjectEngineActionLane(actionLane) {
       ? "Readonly Engine run completed."
       : `Readonly Engine run was blocked safely: ${activationStatus?.outcomeBlocker || activationStatus?.blocker || "blocked_fail_closed"}.`;
     projectBrowserSelectedProjectEngineActionLane.appendChild(outcome);
+  }
+  renderRestoredCsSelectorEngineActionLaneMirror();
+}
+
+function renderRestoredCsSelectorEngineActionLaneMirror() {
+  if (!restoredCsSelectorEngineActionLaneHost) return;
+  clearElement(restoredCsSelectorEngineActionLaneHost);
+  if (!projectBrowserSelectedProjectEngineActionLane) return;
+  for (const child of projectBrowserSelectedProjectEngineActionLane.childNodes) {
+    restoredCsSelectorEngineActionLaneHost.appendChild(child.cloneNode(true));
   }
 }
 
@@ -2651,8 +2675,7 @@ function scheduleOptionalDiagnosticsPlugin({ services, getContext, registry, onP
 function applySelectedProjectServerOwnershipGate(context, services) {
   const browser = context?.projectBrowser;
   const selectedProjectId = browser?.selectedProjectId;
-  const summary = browser?.selectedProjectEngineRunReadinessReadbackSummary;
-  if (!selectedProjectId || !summary || typeof summary !== "object") return context;
+  if (!browser || !selectedProjectId) return context;
 
   const envelope = services?.savedProjects?.getProjectEnvelope?.(selectedProjectId);
   const acknowledgement =
@@ -2667,6 +2690,12 @@ function applySelectedProjectServerOwnershipGate(context, services) {
       localRevisionId: acknowledgement.localRevisionId,
       serverEnvelopeId: acknowledgement.serverEnvelopeId,
       serverRevisionId: acknowledgement.serverRevisionId,
+      preEngineActionSourceReady:
+        acknowledgement.preEngineActionSourceReady === true,
+      candidateReconstructionPreflightEligible:
+        acknowledgement.candidateReconstructionPreflightEligible === true,
+      preEngineEligibilityProjectionFingerprint:
+        acknowledgement.preEngineEligibilityProjectionFingerprint || null,
       serverOwned: true,
       retainedInProcessMemory: true,
       filesystemPersistenceEnabled: false,
@@ -2680,31 +2709,20 @@ function applySelectedProjectServerOwnershipGate(context, services) {
       localRevisionId: null,
       serverEnvelopeId: null,
       serverRevisionId: null,
+      preEngineActionSourceReady: false,
+      candidateReconstructionPreflightEligible: false,
+      preEngineEligibilityProjectionFingerprint: null,
       serverOwned: false,
       retainedInProcessMemory: false,
       filesystemPersistenceEnabled: false,
     });
 
-  const nextBrowser = {
-    ...browser,
-    selectedProjectServerOwnedRegistration: registration,
-  };
-  if (summary.ready === true && acknowledgement === null) {
-    nextBrowser.selectedProjectEngineRunReadinessReadbackSummary = {
-      ...summary,
-      state: "project_browser_selected_project_engine_run_readiness_blocked_fail_closed",
-      readiness: "blocked_fail_closed",
-      ready: false,
-      failClosed: true,
-      blocker: "selected-project-server-owned-registration-not-acknowledged",
-      engineRunReadinessReadbackReady: false,
-      engineExecutionEnabled: false,
-      engineExecutionAttempted: false,
-    };
-  }
   return {
     ...context,
-    projectBrowser: nextBrowser,
+    projectBrowser: {
+      ...browser,
+      selectedProjectServerOwnedRegistration: registration,
+    },
   };
 }
 
@@ -2746,6 +2764,36 @@ function bootWorkspaceShell() {
   let diagnosticsPluginApi = null;
   let diagnosticsPluginRegistry = null;
 
+  function ensureRestoredCsSelectorEngineActionLaneSurface() {
+    if (route.moduleId !== "cs_selector" || !moduleHost) {
+      restoredCsSelectorEngineActionLaneHost = null;
+      return;
+    }
+    let surface = moduleHost.querySelector(
+      "[data-shell-restored-cs-selector-engine-action-lane-surface]",
+    );
+    if (!surface) {
+      surface = document.createElement("section");
+      surface.className = "cs-shell__restored-selector-engine-action-lane";
+      surface.dataset.shellRestoredCsSelectorEngineActionLaneSurface = "true";
+
+      const title = document.createElement("h2");
+      title.textContent = "Engine actions";
+      const ownership = document.createElement("p");
+      ownership.textContent =
+        "Shell-owned readonly action lane for the selected, server-acknowledged Selector revision.";
+      const host = document.createElement("div");
+      host.dataset.shellRestoredCsSelectorEngineActionLane = "true";
+      host.dataset.shellProjectEngineActionLaneMirror = "cs_selector";
+      surface.append(title, ownership, host);
+      moduleHost.appendChild(surface);
+    }
+    restoredCsSelectorEngineActionLaneHost = surface.querySelector(
+      "[data-shell-restored-cs-selector-engine-action-lane]",
+    );
+    renderRestoredCsSelectorEngineActionLaneMirror();
+  }
+
   function refreshContext(reason = "context-refresh") {
     context = applySelectedProjectServerOwnershipGate(
       createShellContext({ route, services, mountedModuleId: route.moduleId }),
@@ -2786,6 +2834,7 @@ function bootWorkspaceShell() {
     markActiveLink(route.moduleId);
     renderModuleStatusRail();
     mountedModuleApi?.update?.(context);
+    ensureRestoredCsSelectorEngineActionLaneSurface();
     renderModuleDeveloperSurface(context);
     if (diagnosticsPluginApi && diagnosticsPluginRegistry) {
       diagnosticsPluginApi.update?.({
@@ -3038,6 +3087,7 @@ function bootWorkspaceShell() {
       buildShellProjectBrowserSelectedProjectEngineActionLane(
         projectBrowserSelectedProjectEngineRunPreviewDescriptor,
         projectBrowserSelectedProjectEngineReadonlyInvokeActivationStatus,
+        projectBrowserSelectedProjectEngineActionEligibilityDescriptor,
       ),
       projectBrowserSelectedProjectEngineReadonlyInvokeActivationStatus,
     );
@@ -3243,6 +3293,10 @@ function bootWorkspaceShell() {
     "click",
     handleProjectBrowserSelectedProjectEngineAction,
   );
+  moduleHost?.addEventListener(
+    "click",
+    handleProjectBrowserSelectedProjectEngineAction,
+  );
   projectBrowserSelectedProjectEngineReadonlyInvokeActivationStatus =
     projectBrowserSelectedProjectEngineReadonlyInvokeActivationController
       .setDelegatedListenerMounted(true);
@@ -3308,6 +3362,7 @@ function bootWorkspaceShell() {
     if (moduleHost) moduleHost.hidden = false;
     mountedModuleApi = moduleApi;
     moduleApi.mount({ container: moduleHost, services, context });
+    ensureRestoredCsSelectorEngineActionLaneSurface();
     renderModuleDeveloperSurface(context);
     setStatus(`Mounted ${route.moduleId}. Authority is shell-owned and read-only; NVB is used when available.`);
     services.eventBus.emit("module:mounted", { moduleId: route.moduleId, route });

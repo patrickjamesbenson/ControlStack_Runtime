@@ -1,4 +1,9 @@
 import { stableFingerprint } from "./stableFingerprint.js";
+import {
+  CS_SELECTOR_PRE_ENGINE_ACTION_ELIGIBILITY_SCHEMA_ID,
+  CS_SELECTOR_PRE_ENGINE_ACTION_ELIGIBILITY_SCHEMA_VERSION,
+  validateCsSelectorPreEngineActionEligibilityProjection,
+} from "./projectEnvelope.js";
 import { buildSelectedResultPersistedSummaryReadbackProjectSummary } from "./savedProjectStore.js";
 import { buildSelectedResultPersistedSummaryReadbackStatus } from "./selectedResultPersistedSummaryReadbackStatus.js";
 import {
@@ -206,6 +211,58 @@ export const PROJECT_BROWSER_SELECTED_PROJECT_CANDIDATE_OUTPUT_DETAIL_READBACK_S
   "outputGenerationEnabled",
   "projectBrowserSelectedProjectCandidateOutputDetailReadbackSummaryFingerprint",
 ]);
+
+export const PROJECT_BROWSER_SELECTED_PROJECT_PRE_ENGINE_ACTION_ELIGIBILITY_SOURCE =
+  "selected-project-selector-pre-engine-action-eligibility-projection";
+export const PROJECT_BROWSER_SELECTED_PROJECT_PRE_ENGINE_ACTION_ELIGIBILITY_SCHEMA_ID =
+  "controlstack.runtime.project-browser.selected-project-pre-engine-action-eligibility.v1";
+export const PROJECT_BROWSER_SELECTED_PROJECT_PRE_ENGINE_ACTION_ELIGIBILITY_SCHEMA_VERSION = 1;
+export const PROJECT_BROWSER_SELECTED_PROJECT_PRE_ENGINE_ACTION_ELIGIBILITY_STATES = Object.freeze({
+  ready: "project_browser_selected_project_pre_engine_action_eligibility_ready",
+  missing: "project_browser_selected_project_pre_engine_action_eligibility_missing",
+  blockedFailClosed:
+    "project_browser_selected_project_pre_engine_action_eligibility_blocked_fail_closed",
+});
+export const PROJECT_BROWSER_SELECTED_PROJECT_PRE_ENGINE_ACTION_ELIGIBILITY_FIELD_ORDER =
+  Object.freeze([
+    "schemaId",
+    "schemaVersion",
+    "owner",
+    "source",
+    "state",
+    "readiness",
+    "ready",
+    "failClosed",
+    "blocker",
+    "selectedProjectId",
+    "selectedProjectFound",
+    "projectId",
+    "envelopeId",
+    "projectionPresent",
+    "projectionSchemaId",
+    "projectionSchemaVersion",
+    "projectionState",
+    "projectionReadiness",
+    "projectionFingerprint",
+    "runIntakePreviewReady",
+    "factoryApprovedInputsReady",
+    "candidateMapperReady",
+    "runCount",
+    "totalQuantity",
+    "accessoryIntentCount",
+    "selectedProjectOnly",
+    "summaryOnly",
+    "readOnly",
+    "scalarSafe",
+    "candidatePayloadReturned",
+    "projectEnvelopeReturned",
+    "selectedResultRequired",
+    "runTableSummaryRequired",
+    "engineExecutionEnabled",
+    "runtimeDataMutated",
+    "filesystemWriteAttempted",
+    "projectBrowserSelectedProjectPreEngineActionEligibilityFingerprint",
+  ]);
 
 export const PROJECT_BROWSER_SELECTED_PROJECT_ENGINE_RUN_READINESS_READBACK_SUMMARY_SCHEMA_ID =
   "controlstack.runtime.project-browser.selected-project-engine-run-readiness-readback-summary.v1";
@@ -2473,6 +2530,138 @@ export function buildProjectBrowserSelectedProjectCandidateOutputDetailReadbackS
   }));
 }
 
+export function buildProjectBrowserSelectedProjectPreEngineActionEligibilitySummary(
+  selectedProjectEnvelope = null,
+  selectedProjectId = null,
+  sourceAccessBlocker = null,
+) {
+  const selectedProjectToken = selectedProjectId === null ? null : safeToken(selectedProjectId, null);
+  const selectedProjectFound = isPlainObject(selectedProjectEnvelope);
+  const projectId = selectedProjectFound ? safeToken(selectedProjectEnvelope.projectId, null) : null;
+  const envelopeId = selectedProjectFound
+    ? safeToken(selectedProjectEnvelope.envelopeId || selectedProjectEnvelope.projectId, null)
+    : null;
+  const projection = selectedProjectFound
+    && isPlainObject(
+      selectedProjectEnvelope?.modules?.cs_selector?.downstreamContext
+        ?.preEngineActionEligibilityProjection,
+    )
+    ? selectedProjectEnvelope.modules.cs_selector.downstreamContext
+      .preEngineActionEligibilityProjection
+    : null;
+  const projectionPresent = isPlainObject(projection);
+  const projectionValidation = projectionPresent
+    ? validateCsSelectorPreEngineActionEligibilityProjection(projection, { requireReady: true })
+    : { valid: false, reason: "project-browser-selected-project-pre-engine-projection-missing" };
+
+  let state = PROJECT_BROWSER_SELECTED_PROJECT_PRE_ENGINE_ACTION_ELIGIBILITY_STATES.missing;
+  let readiness = "missing";
+  let ready = false;
+  let failClosed = true;
+  let blocker = null;
+  if (selectedProjectId === null) {
+    blocker = "project-browser-selected-project-not-selected";
+  } else if (!selectedProjectToken) {
+    state = PROJECT_BROWSER_SELECTED_PROJECT_PRE_ENGINE_ACTION_ELIGIBILITY_STATES
+      .blockedFailClosed;
+    readiness = "blocked_fail_closed";
+    blocker = "project-browser-selected-project-id-invalid";
+  } else if (sourceAccessBlocker) {
+    state = PROJECT_BROWSER_SELECTED_PROJECT_PRE_ENGINE_ACTION_ELIGIBILITY_STATES
+      .blockedFailClosed;
+    readiness = "blocked_fail_closed";
+    blocker = safeToken(
+      sourceAccessBlocker,
+      "project-browser-selected-project-pre-engine-eligibility-accessor-failed",
+      760,
+    );
+  } else if (!selectedProjectFound) {
+    blocker = "project-browser-selected-project-not-found";
+  } else if (selectedProjectToken !== projectId && selectedProjectToken !== envelopeId) {
+    state = PROJECT_BROWSER_SELECTED_PROJECT_PRE_ENGINE_ACTION_ELIGIBILITY_STATES
+      .blockedFailClosed;
+    readiness = "blocked_fail_closed";
+    blocker = "project-browser-selected-project-envelope-identity-mismatch";
+  } else if (!projectionPresent) {
+    blocker = "project-browser-selected-project-pre-engine-projection-missing";
+  } else if (projectionValidation.valid !== true) {
+    state = PROJECT_BROWSER_SELECTED_PROJECT_PRE_ENGINE_ACTION_ELIGIBILITY_STATES
+      .blockedFailClosed;
+    readiness = "blocked_fail_closed";
+    blocker = safeToken(
+      projectionValidation.reason,
+      "project-browser-selected-project-pre-engine-projection-invalid",
+      760,
+    );
+  } else {
+    state = PROJECT_BROWSER_SELECTED_PROJECT_PRE_ENGINE_ACTION_ELIGIBILITY_STATES.ready;
+    readiness = "ready";
+    ready = true;
+    failClosed = false;
+  }
+
+  const base = {
+    schemaId: PROJECT_BROWSER_SELECTED_PROJECT_PRE_ENGINE_ACTION_ELIGIBILITY_SCHEMA_ID,
+    schemaVersion:
+      PROJECT_BROWSER_SELECTED_PROJECT_PRE_ENGINE_ACTION_ELIGIBILITY_SCHEMA_VERSION,
+    owner: "shell",
+    source: PROJECT_BROWSER_SELECTED_PROJECT_PRE_ENGINE_ACTION_ELIGIBILITY_SOURCE,
+    state,
+    readiness,
+    ready,
+    failClosed,
+    blocker,
+    selectedProjectId: selectedProjectToken,
+    selectedProjectFound,
+    projectId,
+    envelopeId,
+    projectionPresent,
+    projectionSchemaId: projectionPresent
+      ? safeToken(projection.schemaId, null, 760)
+      : null,
+    projectionSchemaVersion: projectionPresent && Number.isSafeInteger(projection.schemaVersion)
+      ? projection.schemaVersion
+      : null,
+    projectionState: projectionPresent ? safeToken(projection.state, null, 760) : null,
+    projectionReadiness: projectionPresent ? safeToken(projection.readiness, null, 760) : null,
+    projectionFingerprint: projectionPresent
+      ? safeToken(projection.projectionFingerprint, null, 760)
+      : null,
+    runIntakePreviewReady: ready && projection.runIntakePreviewReady === true,
+    factoryApprovedInputsReady: ready && projection.factoryApprovedInputsReady === true,
+    candidateMapperReady: ready && projection.candidateMapperReady === true,
+    runCount: ready && Number.isSafeInteger(projection.runCount) ? projection.runCount : 0,
+    totalQuantity: ready && Number.isSafeInteger(projection.totalQuantity)
+      ? projection.totalQuantity
+      : 0,
+    accessoryIntentCount: ready && Number.isSafeInteger(projection.accessoryIntentCount)
+      ? projection.accessoryIntentCount
+      : 0,
+    selectedProjectOnly: true,
+    summaryOnly: true,
+    readOnly: true,
+    scalarSafe: true,
+    candidatePayloadReturned: false,
+    projectEnvelopeReturned: false,
+    selectedResultRequired: false,
+    runTableSummaryRequired: false,
+    engineExecutionEnabled: false,
+    runtimeDataMutated: false,
+    filesystemWriteAttempted: false,
+  };
+  return Object.freeze(Object.fromEntries(
+    PROJECT_BROWSER_SELECTED_PROJECT_PRE_ENGINE_ACTION_ELIGIBILITY_FIELD_ORDER.map((key) => [
+      key,
+      key === "projectBrowserSelectedProjectPreEngineActionEligibilityFingerprint"
+        ? stableFingerprint(
+          "safe-project-browser-selected-project-pre-engine-action-eligibility",
+          base,
+        )
+        : base[key],
+    ]),
+  ));
+}
+
 export function buildProjectBrowserSelectedProjectEngineRunReadinessReadbackSummary(
   selectedProjectEnvelope = null,
   selectedProjectId = null,
@@ -2974,6 +3163,7 @@ export function createProjectBrowserService({ savedProjectStore, projectService,
     let selectedProjectEnvelope = null;
     let selectedProjectManifestAccessBlocker = null;
     let selectedProjectDetailAccessBlocker = null;
+    let selectedProjectPreEngineActionEligibilityAccessBlocker = null;
     let selectedProjectEngineRunReadinessAccessBlocker = null;
     if (state.selectedProjectId !== null) {
       if (typeof savedProjectStore.getProjectEnvelope !== "function") {
@@ -2981,6 +3171,8 @@ export function createProjectBrowserService({ savedProjectStore, projectService,
           "project-browser-selected-project-candidate-output-manifest-accessor-unavailable";
         selectedProjectDetailAccessBlocker =
           "project-browser-selected-project-candidate-output-detail-accessor-unavailable";
+        selectedProjectPreEngineActionEligibilityAccessBlocker =
+          "project-browser-selected-project-pre-engine-eligibility-accessor-unavailable";
         selectedProjectEngineRunReadinessAccessBlocker =
           "project-browser-selected-project-engine-run-readiness-accessor-unavailable";
       } else {
@@ -2991,6 +3183,8 @@ export function createProjectBrowserService({ savedProjectStore, projectService,
             "project-browser-selected-project-candidate-output-manifest-accessor-failed";
           selectedProjectDetailAccessBlocker =
             "project-browser-selected-project-candidate-output-detail-accessor-failed";
+          selectedProjectPreEngineActionEligibilityAccessBlocker =
+            "project-browser-selected-project-pre-engine-eligibility-accessor-failed";
           selectedProjectEngineRunReadinessAccessBlocker =
             "project-browser-selected-project-engine-run-readiness-accessor-failed";
         }
@@ -3007,6 +3201,12 @@ export function createProjectBrowserService({ savedProjectStore, projectService,
         selectedProjectEnvelope,
         state.selectedProjectId,
         selectedProjectDetailAccessBlocker,
+      );
+    const selectedProjectPreEngineActionEligibility =
+      buildProjectBrowserSelectedProjectPreEngineActionEligibilitySummary(
+        selectedProjectEnvelope,
+        state.selectedProjectId,
+        selectedProjectPreEngineActionEligibilityAccessBlocker,
       );
     const selectedProjectEngineRunReadinessReadbackSummary =
       buildProjectBrowserSelectedProjectEngineRunReadinessReadbackSummary(
@@ -3053,6 +3253,7 @@ export function createProjectBrowserService({ savedProjectStore, projectService,
       ),
       selectedProjectCandidateOutputManifestReadbackSummary,
       selectedProjectCandidateOutputDetailReadbackSummary,
+      selectedProjectPreEngineActionEligibility,
       selectedProjectEngineRunReadinessReadbackSummary,
       filters: { ...state.filters },
       projects: clone(storeSnapshot.projects),

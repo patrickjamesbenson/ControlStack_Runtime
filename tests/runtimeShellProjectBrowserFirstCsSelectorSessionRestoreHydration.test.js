@@ -232,6 +232,8 @@ test("shell dispatches only the matching mounted cs_selector payload and preserv
   );
   assert.match(saveSource, /mountedModuleApi\?\.moduleId === "cs_selector"/);
   assert.match(saveSource, /getProjectEnvelopeContribution\(\)/);
+  assert.match(selectorModuleSource, /preEngineActionEligibilityProjection/);
+  assert.match(selectorModuleSource, /latestSelectorViewModel/);
   assert.match(saveSource, /selectorContribution\.status !== "saved-ui-state"/);
   assert.match(saveSource, /saveProject\(context, moduleContributions\)/);
 
@@ -324,6 +326,11 @@ test("shell dispatches only the matching mounted cs_selector payload and preserv
   assert.match(hydrateSource, /status: "hydrated"/);
   assert.match(hydrateSource, /report: "cs_selector:hydrated"/);
 
+  assert.match(shellSource, /ensureRestoredCsSelectorEngineActionLaneSurface/);
+  assert.match(shellSource, /data-shell-restored-cs-selector-engine-action-lane/);
+  assert.match(shellSource, /Shell-owned readonly action lane/);
+  assert.match(shellSource, /moduleHost\?\.addEventListener/);
+  assert.match(projectBrowserServiceSource, /selectedProjectPreEngineActionEligibility/);
   assert.match(projectBrowserServiceSource, /function recordModuleHydrationResult\(/);
   assert.match(projectBrowserServiceSource, /savedProjectStore\.recordModuleHydrationResult\?\./);
 });
@@ -363,6 +370,6 @@ test("session restore hydration adds no Engine, RunTable, IES, route, POST, file
 
   assert.doesNotMatch(
     boundedSource,
-    /invokeSelectedProjectReadonlyEngine|donorEngine|RunTable|runTableGenerated|iesGenerated|rawIes|writeFile|appendFile|mkdir|unlink|createServer|listen\s*\(|method\s*:\s*["']POST["']|RuntimeData\s*=|database/i,
+    /invokeSelectedProjectReadonlyEngine|invoke\w*DonorEngine|generateRunTable\s*\(|generateIes\s*\(|rawIes\s*:|writeFile|appendFile|mkdir|unlink|createServer|listen\s*\(|method\s*:\s*["']POST["']|RuntimeData\s*=|databasePath\s*:|dbPath\s*:/i,
   );
 });

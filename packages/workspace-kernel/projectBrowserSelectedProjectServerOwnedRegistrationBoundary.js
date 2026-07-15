@@ -1,6 +1,10 @@
 import { createSavedProjectStore } from "./savedProjectStore.js";
-import { validateSavedProjectEnvelope } from "./projectEnvelope.js";
+import {
+  validateCsSelectorPreEngineActionEligibilityProjection,
+  validateSavedProjectEnvelope,
+} from "./projectEnvelope.js";
 import { validateSelectedProjectEngineRunReadinessReadbackSources } from "./projectBrowserService.js";
+import { buildSelectorReadonlyEngineCandidateForInternalSeam } from "./selectorReadonlyEngineCandidateMapper.js";
 import { stableFingerprint } from "./stableFingerprint.js";
 
 export const PROJECT_BROWSER_FIRST_SERVER_OWNED_RUNTIME_SAVED_SELECTED_PROJECT_REGISTRATION_ID =
@@ -40,13 +44,7 @@ export const PROJECT_BROWSER_SELECTED_PROJECT_SERVER_OWNED_REGISTRATION_REQUEST_
   ]);
 
 export const PROJECT_BROWSER_SELECTED_PROJECT_SERVER_OWNED_REGISTRATION_SOURCE_FIELD_ORDER =
-  Object.freeze([
-    "project",
-    "savedBy",
-    "contractVersion",
-    "selectorModule",
-  ]);
-
+  Object.freeze(["project", "savedBy", "contractVersion", "selectorModule"]);
 export const PROJECT_BROWSER_SELECTED_PROJECT_SERVER_OWNED_REGISTRATION_PROJECT_FIELD_ORDER =
   Object.freeze(["metadata", "currentProject", "selection"]);
 export const PROJECT_BROWSER_SELECTED_PROJECT_SERVER_OWNED_REGISTRATION_PROJECT_METADATA_FIELD_ORDER =
@@ -86,9 +84,7 @@ export const PROJECT_BROWSER_SELECTED_PROJECT_SERVER_OWNED_REGISTRATION_SAVED_BY
 export const PROJECT_BROWSER_SELECTED_PROJECT_SERVER_OWNED_REGISTRATION_SELECTOR_MODULE_FIELD_ORDER =
   Object.freeze([
     "status",
-    "factoryApprovedInputsSummary",
-    "committedSelectorConstraints",
-    "lmTemperatureReadinessPreview",
+    "preEngineActionEligibilityProjection",
     "selectedResultSummary",
     "runTableFirstNarrowOutputSummary",
   ]);
@@ -111,6 +107,9 @@ export const PROJECT_BROWSER_SELECTED_PROJECT_SERVER_OWNED_REGISTRATION_RESPONSE
     "serverEnvelopeId",
     "serverRevisionId",
     "supersededServerRevisionId",
+    "preEngineActionSourceReady",
+    "candidateReconstructionPreflightEligible",
+    "preEngineEligibilityProjectionFingerprint",
     "serverOwned",
     "envelopeConstructedServerSide",
     "envelopeValidated",
@@ -132,6 +131,8 @@ const PRIVATE_OR_OUTPUT_VALUE_PATTERN =
   /(?:[A-Za-z]:[\\/]|\\\\|[\\/]Users[\\/]|[\\/]home[\\/]|[\\/]mnt[\\/]|file:|blob:|https?:|data:[^\s]*base64|\bbase64\s*[,=:]|\bTILT\s*=|\bIESNA:LM-63\b|\.ies(?:$|[\s?#]))/i;
 const FORBIDDEN_SOURCE_KEY_PATTERN =
   /^(?:projectEnvelope|completedEnvelope|enginePayload|rawEnginePayload|rawEngineResult|privateCandidate|candidatePayload|database|databasePath|dbPath|filePath|sourcePath|privatePath|runtimeData|engineOptions|options)$/i;
+const CANDIDATE_FINGERPRINT_PATTERN =
+  /^safe-selector-readonly-engine-candidate:[0-9a-f]{40}$/;
 
 function isPlainObject(value) {
   if (value === null || typeof value !== "object" || Array.isArray(value)) return false;
@@ -173,38 +174,6 @@ function clonePlain(value, depth = 0) {
   );
 }
 
-function readinessSummaryProjection(selectorModule) {
-  return {
-    selectedResultSummary: clonePlain(selectorModule.selectedResultSummary),
-    runTableFirstNarrowOutputSummary: clonePlain(
-      selectorModule.runTableFirstNarrowOutputSummary,
-    ),
-  };
-}
-
-function readinessSummaryProjectionFingerprint(projection) {
-  return stableFingerprint(
-    "selected-project-server-owned-readiness-summary-registration",
-    projection,
-  );
-}
-
-export function validateProjectBrowserSelectedProjectServerOwnedReadinessSummaryProjection(
-  projection,
-) {
-  if (!isPlainObject(projection?.selectedResultSummary)) {
-    return "selected-project-registration-selected-result-summary-missing";
-  }
-  if (!isPlainObject(projection?.runTableFirstNarrowOutputSummary)) {
-    return "selected-project-registration-runtable-first-narrow-output-summary-missing";
-  }
-  const blocker = validateSelectedProjectEngineRunReadinessReadbackSources(
-    projection.selectedResultSummary,
-    projection.runTableFirstNarrowOutputSummary,
-  );
-  return blocker ? `selected-project-registration-readiness-summary-${blocker}` : null;
-}
-
 function inspectSourceValue(value, depth = 0, seen = new Set()) {
   if (depth > 40) return "selected-project-registration-source-depth-invalid";
   if (typeof value === "string") {
@@ -241,6 +210,21 @@ function inspectSourceValue(value, depth = 0, seen = new Set()) {
     if (blocker) return blocker;
   }
   return null;
+}
+
+export function validateProjectBrowserSelectedProjectServerOwnedReadinessSummaryProjection(
+  projection,
+) {
+  const selected = projection?.selectedResultSummary;
+  const runTable = projection?.runTableFirstNarrowOutputSummary;
+  const bothAbsent = selected === null && runTable === null;
+  if (bothAbsent) return null;
+  if (!isPlainObject(selected) || !isPlainObject(runTable)) {
+    return "selected-project-registration-post-engine-summary-pair-incomplete";
+  }
+  if (Object.keys(selected).length === 0 && Object.keys(runTable).length === 0) return null;
+  const blocker = validateSelectedProjectEngineRunReadinessReadbackSources(selected, runTable);
+  return blocker ? `selected-project-registration-readiness-summary-${blocker}` : null;
 }
 
 function validateProjectProjection(project, projectId) {
@@ -296,7 +280,6 @@ function validateSourceProjection(sourceProjection, projectId) {
     sourceProjection,
     PROJECT_BROWSER_SELECTED_PROJECT_SERVER_OWNED_REGISTRATION_SOURCE_FIELD_ORDER,
   )) return "selected-project-registration-source-projection-shape-invalid";
-
   const projectBlocker = validateProjectProjection(sourceProjection.project, projectId);
   if (projectBlocker) return projectBlocker;
   if (!hasExactKeys(
@@ -307,7 +290,6 @@ function validateSourceProjection(sourceProjection, projectId) {
     sourceProjection.selectorModule,
     PROJECT_BROWSER_SELECTED_PROJECT_SERVER_OWNED_REGISTRATION_SELECTOR_MODULE_FIELD_ORDER,
   )) return "selected-project-registration-selector-module-shape-invalid";
-
   for (const value of [
     sourceProjection.savedBy.identityState,
     sourceProjection.savedBy.classification,
@@ -325,17 +307,55 @@ function validateSourceProjection(sourceProjection, projectId) {
     || !safeText(sourceProjection.savedBy.email, { nullable: true })) {
     return "selected-project-registration-saved-by-scalar-invalid";
   }
-  if (!isPlainObject(sourceProjection.selectorModule.factoryApprovedInputsSummary)
-    || !Array.isArray(sourceProjection.selectorModule.committedSelectorConstraints)
-    || !isPlainObject(sourceProjection.selectorModule.lmTemperatureReadinessPreview)) {
-    return "selected-project-registration-selector-stage3-inputs-invalid";
+  const eligibilityValidation = validateCsSelectorPreEngineActionEligibilityProjection(
+    sourceProjection.selectorModule.preEngineActionEligibilityProjection,
+    { requireReady: true },
+  );
+  if (eligibilityValidation.valid !== true) {
+    return "selected-project-registration-pre-engine-eligibility-invalid";
   }
-  const readinessSummaryBlocker =
+  const postEngineBlocker =
     validateProjectBrowserSelectedProjectServerOwnedReadinessSummaryProjection(
       sourceProjection.selectorModule,
     );
-  if (readinessSummaryBlocker) return readinessSummaryBlocker;
+  if (postEngineBlocker) return postEngineBlocker;
   return inspectSourceValue(sourceProjection);
+}
+
+function candidatePreflight(projection) {
+  let mapperResult;
+  try {
+    mapperResult = buildSelectorReadonlyEngineCandidateForInternalSeam({
+      factoryApprovedInputsSummary: projection.factoryApprovedInputsSummary,
+      committedSelectorConstraints: projection.committedSelectorConstraints,
+      lmTemperatureReadinessPreview: projection.lmTemperatureReadinessPreview,
+    });
+  } catch {
+    return {
+      eligible: false,
+      blocker: "selected-project-registration-candidate-preflight-threw",
+    };
+  }
+  const summary = mapperResult?.summary;
+  const shape = summary?.candidateShapeSummary;
+  const eligible = mapperResult?.ok === true
+    && isPlainObject(mapperResult.candidate)
+    && summary?.ready === true
+    && summary?.readonlyEngineCandidateMapperReady === true
+    && summary?.candidateReadyForHostLocalReadonlySeam === true
+    && summary?.candidatePayloadReturned === false
+    && CANDIDATE_FINGERPRINT_PATTERN.test(
+      String(shape?.readonlyEngineCandidateFingerprint || ""),
+    )
+    && shape.readonlyEngineCandidateFingerprint === projection.candidateFingerprint
+    && shape.runCount === projection.runCount
+    && shape.totalQuantity === projection.totalQuantity;
+  return {
+    eligible,
+    blocker: eligible
+      ? null
+      : "selected-project-registration-candidate-reconstruction-preflight-ineligible",
+  };
 }
 
 function validateRequest(request) {
@@ -387,13 +407,18 @@ function response({
   serverEnvelopeId = null,
   serverRevisionId = null,
   supersededServerRevisionId = null,
+  preEngineActionSourceReady = false,
+  candidateReconstructionPreflightEligible = false,
+  preEngineEligibilityProjectionFingerprint = null,
   envelopeConstructedServerSide = false,
   envelopeValidated = false,
   activeRevision = false,
 } = {}) {
   const registered = state
     === PROJECT_BROWSER_SELECTED_PROJECT_SERVER_OWNED_REGISTRATION_STATES.registered
-    && activeRevision;
+    && activeRevision
+    && preEngineActionSourceReady
+    && candidateReconstructionPreflightEligible;
   return orderedResponse({
     schemaId: PROJECT_BROWSER_SELECTED_PROJECT_SERVER_OWNED_REGISTRATION_SCHEMA_ID,
     schemaVersion: PROJECT_BROWSER_SELECTED_PROJECT_SERVER_OWNED_REGISTRATION_SCHEMA_VERSION,
@@ -418,6 +443,11 @@ function response({
     serverEnvelopeId: safeToken(serverEnvelopeId),
     serverRevisionId: safeToken(serverRevisionId),
     supersededServerRevisionId: safeToken(supersededServerRevisionId),
+    preEngineActionSourceReady: registered,
+    candidateReconstructionPreflightEligible: registered,
+    preEngineEligibilityProjectionFingerprint: registered
+      ? safeToken(preEngineEligibilityProjectionFingerprint)
+      : null,
     serverOwned: true,
     envelopeConstructedServerSide,
     envelopeValidated,
@@ -435,17 +465,7 @@ function response({
 }
 
 function buildSaveInputs(sourceProjection) {
-  const stage3Inputs = {
-    factoryApprovedInputsSummary: clonePlain(
-      sourceProjection.selectorModule.factoryApprovedInputsSummary,
-    ),
-    committedSelectorConstraints: clonePlain(
-      sourceProjection.selectorModule.committedSelectorConstraints,
-    ),
-    lmTemperatureReadinessPreview: clonePlain(
-      sourceProjection.selectorModule.lmTemperatureReadinessPreview,
-    ),
-  };
+  const selectorModule = sourceProjection.selectorModule;
   return {
     context: {
       project: clonePlain(sourceProjection.project),
@@ -469,10 +489,14 @@ function buildSaveInputs(sourceProjection) {
     },
     moduleContributions: {
       cs_selector: {
-        status: sourceProjection.selectorModule.status,
-        state: {
-          engineRunActionSource: stage3Inputs,
-        },
+        moduleId: "cs_selector",
+        status: "pre-engine-action-source-ready",
+        state: {},
+        preEngineActionEligibilityProjection: Object.freeze(clonePlain(
+          selectorModule.preEngineActionEligibilityProjection,
+        )),
+        selectedResultSummary: {},
+        runTableFirstNarrowOutputSummary: {},
       },
     },
   };
@@ -480,36 +504,7 @@ function buildSaveInputs(sourceProjection) {
 
 function aliasEnvelopeForLookup(envelope, activeRecord, lookupId) {
   const cloned = clonePlain(envelope);
-  if (lookupId === activeRecord.localEnvelopeId) {
-    cloned.envelopeId = activeRecord.localEnvelopeId;
-  }
-  return cloned;
-}
-
-function reconstructEnvelopeWithReadinessSummaries(
-  envelope,
-  activeRecord,
-  lookupId,
-  retainedProjection,
-) {
-  if (!retainedProjection
-    || retainedProjection.serverRevisionId !== activeRecord.serverRevisionId) {
-    return null;
-  }
-  const cloned = aliasEnvelopeForLookup(envelope, activeRecord, lookupId);
-  if (!isPlainObject(cloned?.modules?.cs_selector)) return null;
-  cloned.modules.cs_selector.downstreamContext = {
-    selectedResultSummary: clonePlain(retainedProjection.selectedResultSummary),
-    runTableFirstNarrowOutputSummary: clonePlain(
-      retainedProjection.runTableFirstNarrowOutputSummary,
-    ),
-  };
-  const readinessSummaryBlocker =
-    validateProjectBrowserSelectedProjectServerOwnedReadinessSummaryProjection(
-      cloned.modules.cs_selector.downstreamContext,
-    );
-  if (readinessSummaryBlocker) return null;
-  if (validateSavedProjectEnvelope(cloned).valid !== true) return null;
+  if (lookupId === activeRecord.localEnvelopeId) cloned.envelopeId = activeRecord.localEnvelopeId;
   return cloned;
 }
 
@@ -520,19 +515,31 @@ export function createProjectBrowserSelectedProjectServerOwnedRuntimeSavedRegist
   const activeByProjectId = new Map();
   const activeProjectIdByLookupId = new Map();
   const revisionsById = new Map();
-  const readinessSummariesByRevisionId = new Map();
   let revisionSequence = 0;
 
   async function register(request = null) {
     const requestBlocker = validateRequest(request);
     if (requestBlocker) return response({ request, blocker: requestBlocker });
-
-    const requestReadinessSummaries = readinessSummaryProjection(
-      request.sourceProjection.selectorModule,
+    const projection = request.sourceProjection.selectorModule
+      .preEngineActionEligibilityProjection;
+    const preflight = candidatePreflight(projection);
+    if (!preflight.eligible) {
+      return response({
+        request,
+        blocker: preflight.blocker,
+        requestAccepted: true,
+      });
+    }
+    const registrationFingerprint = stableFingerprint(
+      "selected-project-server-owned-pre-engine-registration",
+      {
+        projection,
+        selectedResultSummary:
+          request.sourceProjection.selectorModule.selectedResultSummary,
+        runTableFirstNarrowOutputSummary:
+          request.sourceProjection.selectorModule.runTableFirstNarrowOutputSummary,
+      },
     );
-    const requestReadinessSummaryFingerprint =
-      readinessSummaryProjectionFingerprint(requestReadinessSummaries);
-
     const existing = activeByProjectId.get(request.localProjectId) || null;
     if (existing
       && existing.registrationSessionId === request.registrationSessionId
@@ -548,14 +555,10 @@ export function createProjectBrowserSelectedProjectServerOwnedRuntimeSavedRegist
     if (existing
       && existing.registrationSessionId === request.registrationSessionId
       && request.clientSaveOrdinal === existing.clientSaveOrdinal) {
-      const retainedProjection = readinessSummariesByRevisionId.get(
-        existing.serverRevisionId,
-      );
       if (request.localRevisionId !== existing.localRevisionId
         || request.localEnvelopeId !== existing.localEnvelopeId
         || request.localSavedAt !== existing.localSavedAt
-        || retainedProjection?.projectionFingerprint
-          !== requestReadinessSummaryFingerprint) {
+        || registrationFingerprint !== existing.registrationFingerprint) {
         return response({
           request,
           blocker: "selected-project-registration-client-save-ordinal-conflict",
@@ -574,13 +577,15 @@ export function createProjectBrowserSelectedProjectServerOwnedRuntimeSavedRegist
         localRevisionId: existing.localRevisionId,
         serverEnvelopeId: existing.serverEnvelopeId,
         serverRevisionId: existing.serverRevisionId,
-        supersededServerRevisionId: null,
+        preEngineActionSourceReady: true,
+        candidateReconstructionPreflightEligible: true,
+        preEngineEligibilityProjectionFingerprint:
+          existing.preEngineEligibilityProjectionFingerprint,
         envelopeConstructedServerSide: true,
         envelopeValidated: true,
         activeRevision: true,
       });
     }
-
     if (typeof runtimeSavedProjects?.saveCurrentProjectEnvelope !== "function"
       || typeof runtimeSavedProjects?.getProjectEnvelope !== "function") {
       return response({
@@ -613,9 +618,15 @@ export function createProjectBrowserSelectedProjectServerOwnedRuntimeSavedRegist
         envelopeConstructedServerSide: true,
       });
     }
-
     const validation = validateSavedProjectEnvelope(saveResult.envelope);
+    const retainedProjection = saveResult.envelope?.modules?.cs_selector?.downstreamContext
+      ?.preEngineActionEligibilityProjection;
+    const retainedProjectionValidation =
+      validateCsSelectorPreEngineActionEligibilityProjection(retainedProjection, {
+        requireReady: true,
+      });
     if (validation.valid !== true
+      || retainedProjectionValidation.valid !== true
       || saveResult.envelope.projectId !== request.localProjectId
       || saveResult.envelope.source !== "p2-shell-save-envelope"
       || saveResult.envelope.readOnly === true
@@ -629,8 +640,7 @@ export function createProjectBrowserSelectedProjectServerOwnedRuntimeSavedRegist
     }
 
     revisionSequence += 1;
-    const serverRevisionId =
-      `server-revision-${request.localProjectId}-${revisionSequence}`;
+    const serverRevisionId = `server-revision-${request.localProjectId}-${revisionSequence}`;
     const record = Object.freeze({
       projectId: request.localProjectId,
       registrationSessionId: request.registrationSessionId,
@@ -641,9 +651,12 @@ export function createProjectBrowserSelectedProjectServerOwnedRuntimeSavedRegist
       serverEnvelopeId: saveResult.envelope.envelopeId,
       serverRevisionId,
       supersededServerRevisionId: existing?.serverRevisionId || null,
+      registrationFingerprint,
+      preEngineEligibilityProjectionFingerprint: projection.projectionFingerprint,
+      preEngineActionSourceReady: true,
+      candidateReconstructionPreflightEligible: true,
       active: true,
     });
-
     if (existing) {
       revisionsById.set(existing.serverRevisionId, Object.freeze({
         ...existing,
@@ -652,20 +665,12 @@ export function createProjectBrowserSelectedProjectServerOwnedRuntimeSavedRegist
       }));
       activeProjectIdByLookupId.delete(existing.localEnvelopeId);
       activeProjectIdByLookupId.delete(existing.serverEnvelopeId);
-      readinessSummariesByRevisionId.delete(existing.serverRevisionId);
     }
     activeByProjectId.set(record.projectId, record);
     activeProjectIdByLookupId.set(record.projectId, record.projectId);
     activeProjectIdByLookupId.set(record.localEnvelopeId, record.projectId);
     activeProjectIdByLookupId.set(record.serverEnvelopeId, record.projectId);
     revisionsById.set(record.serverRevisionId, record);
-    readinessSummariesByRevisionId.set(record.serverRevisionId, Object.freeze({
-      serverRevisionId: record.serverRevisionId,
-      projectionFingerprint: requestReadinessSummaryFingerprint,
-      selectedResultSummary: requestReadinessSummaries.selectedResultSummary,
-      runTableFirstNarrowOutputSummary:
-        requestReadinessSummaries.runTableFirstNarrowOutputSummary,
-    }));
 
     return response({
       request,
@@ -678,6 +683,10 @@ export function createProjectBrowserSelectedProjectServerOwnedRuntimeSavedRegist
       serverEnvelopeId: record.serverEnvelopeId,
       serverRevisionId: record.serverRevisionId,
       supersededServerRevisionId: record.supersededServerRevisionId,
+      preEngineActionSourceReady: true,
+      candidateReconstructionPreflightEligible: true,
+      preEngineEligibilityProjectionFingerprint:
+        record.preEngineEligibilityProjectionFingerprint,
       envelopeConstructedServerSide: true,
       envelopeValidated: true,
       activeRevision: true,
@@ -700,12 +709,7 @@ export function createProjectBrowserSelectedProjectServerOwnedRuntimeSavedRegist
       if (!activeRecord) return null;
       const envelope = runtimeSavedProjects.getProjectEnvelope(activeRecord.serverEnvelopeId);
       if (!envelope) return null;
-      return reconstructEnvelopeWithReadinessSummaries(
-        envelope,
-        activeRecord,
-        lookupId,
-        readinessSummariesByRevisionId.get(activeRecord.serverRevisionId),
-      );
+      return aliasEnvelopeForLookup(envelope, activeRecord, lookupId);
     },
     getActiveRevision(projectIdOrEnvelopeId) {
       const lookupId = safeToken(projectIdOrEnvelopeId);

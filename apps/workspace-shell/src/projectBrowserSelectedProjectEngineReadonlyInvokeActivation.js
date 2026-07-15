@@ -1,4 +1,7 @@
 import {
+  validateShellProjectBrowserSelectedProjectEngineActionEligibility,
+} from "./projectBrowserSelectedProjectEngineActionEligibility.js";
+import {
   SHELL_PROJECT_BROWSER_SELECTED_PROJECT_ENGINE_RUN_PREVIEW_FIELD_ORDER,
   SHELL_PROJECT_BROWSER_SELECTED_PROJECT_ENGINE_RUN_PREVIEW_SCHEMA_ID,
   SHELL_PROJECT_BROWSER_SELECTED_PROJECT_ENGINE_RUN_PREVIEW_SCHEMA_VERSION,
@@ -43,6 +46,9 @@ export const SHELL_PROJECT_BROWSER_SELECTED_PROJECT_ENGINE_READONLY_INVOKE_ACTIV
     "blocker",
     "selectedProjectId",
     "previewReady",
+    "selectedProjectAndRevisionMatch",
+    "stage3ActionSourceReady",
+    "candidateReconstructionPreflightEligible",
     "serverOwnershipAcknowledged",
     "clientTransportMounted",
     "delegatedListenerMounted",
@@ -135,7 +141,12 @@ function isSafeScalar(value) {
       && !PRIVATE_OR_OUTPUT_VALUE_PATTERN.test(value));
 }
 
-function previewReadyForSelection(preview, selectedProjectId) {
+function eligibilityReadyForSelection(eligibility, selectedProjectId) {
+  return validateShellProjectBrowserSelectedProjectEngineActionEligibility(eligibility) === null
+    && eligibility.selectedProjectId === selectedProjectId;
+}
+
+function legacyPostEnginePreviewReadyForSelection(preview, selectedProjectId) {
   return isPlainObject(preview)
     && Object.isFrozen(preview)
     && hasExactKeys(
@@ -162,12 +173,22 @@ function previewReadyForSelection(preview, selectedProjectId) {
     && preview.nonInteractive === true;
 }
 
-function matchingServerOwnershipAcknowledgement(browser, selectedProjectId) {
+function matchingServerOwnershipAcknowledgement(
+  browser,
+  selectedProjectId,
+  { requirePreEngineAuthority = true } = {},
+) {
   const acknowledgement = browser?.selectedProjectServerOwnedRegistration;
   if (!isPlainObject(acknowledgement)
     || acknowledgement.ok !== true
     || acknowledgement.activeRevision !== true
     || acknowledgement.serverOwned !== true
+    || (requirePreEngineAuthority
+      && acknowledgement.preEngineActionSourceReady !== true)
+    || (requirePreEngineAuthority
+      && acknowledgement.candidateReconstructionPreflightEligible !== true)
+    || (requirePreEngineAuthority
+      && safeToken(acknowledgement.preEngineEligibilityProjectionFingerprint) === null)
     || acknowledgement.retainedInProcessMemory !== true
     || acknowledgement.filesystemPersistenceEnabled !== false
     || safeToken(acknowledgement.projectId) === null
@@ -203,6 +224,9 @@ function activationSnapshot({
   blocker = "selected-project-engine-readonly-invoke-activation-blocked",
   selectedProjectId = null,
   previewReady = false,
+  selectedProjectAndRevisionMatch = false,
+  stage3ActionSourceReady = false,
+  candidateReconstructionPreflightEligible = false,
   serverOwnershipAcknowledged = false,
   clientTransportMounted = false,
   delegatedListenerMounted = false,
@@ -244,6 +268,10 @@ function activationSnapshot({
       : safeToken(blocker, "selected-project-engine-readonly-invoke-activation-blocked"),
     selectedProjectId: safeToken(selectedProjectId),
     previewReady: previewReady === true,
+    selectedProjectAndRevisionMatch: selectedProjectAndRevisionMatch === true,
+    stage3ActionSourceReady: stage3ActionSourceReady === true,
+    candidateReconstructionPreflightEligible:
+      candidateReconstructionPreflightEligible === true,
     serverOwnershipAcknowledged: serverOwnershipAcknowledged === true,
     clientTransportMounted: clientTransportMounted === true,
     delegatedListenerMounted: delegatedListenerMounted === true,
@@ -348,11 +376,14 @@ export function createShellProjectBrowserSelectedProjectEngineReadonlyInvokeActi
   let activeInvocation = null;
   let current = Object.freeze({
     context: {},
-    preview: null,
+    eligibility: null,
     selectedProjectId: null,
     acknowledgement: null,
     revisionKey: null,
     previewReady: false,
+    selectedProjectAndRevisionMatch: false,
+    stage3ActionSourceReady: false,
+    candidateReconstructionPreflightEligible: false,
   });
   let snapshot = activationSnapshot({ clientTransportMounted });
 
@@ -362,20 +393,37 @@ export function createShellProjectBrowserSelectedProjectEngineReadonlyInvokeActi
     return snapshot;
   }
 
-  function deriveCurrent({ context = {}, engineRunPreview = null } = {}) {
+  function deriveCurrent({
+    context = {},
+    engineActionEligibility = null,
+    engineRunPreview = null,
+  } = {}) {
     const browser = isPlainObject(context?.projectBrowser) ? context.projectBrowser : {};
     const selectedProjectId = safeToken(browser.selectedProjectId);
+    const preEngineEligibilityReady = eligibilityReadyForSelection(
+      engineActionEligibility,
+      selectedProjectId,
+    );
+    const legacyPostEngineReady = engineActionEligibility === null
+      && legacyPostEnginePreviewReadyForSelection(engineRunPreview, selectedProjectId);
     const acknowledgement = matchingServerOwnershipAcknowledgement(
       browser,
       selectedProjectId,
+      { requirePreEngineAuthority: !legacyPostEngineReady },
     );
     return Object.freeze({
       context,
-      preview: engineRunPreview,
+      eligibility: engineActionEligibility,
       selectedProjectId,
       acknowledgement,
       revisionKey: revisionKey(selectedProjectId, acknowledgement),
-      previewReady: previewReadyForSelection(engineRunPreview, selectedProjectId),
+      previewReady: preEngineEligibilityReady || legacyPostEngineReady,
+      selectedProjectAndRevisionMatch: preEngineEligibilityReady
+        && engineActionEligibility.selectedProjectAndRevisionMatch === true,
+      stage3ActionSourceReady: preEngineEligibilityReady
+        && engineActionEligibility.stage3ActionSourceReady === true,
+      candidateReconstructionPreflightEligible: preEngineEligibilityReady
+        && engineActionEligibility.candidateReconstructionPreflightEligible === true,
     });
   }
 
@@ -385,6 +433,9 @@ export function createShellProjectBrowserSelectedProjectEngineReadonlyInvokeActi
       acknowledgement,
       revisionKey: selectedRevisionKey,
       previewReady,
+      selectedProjectAndRevisionMatch,
+      stage3ActionSourceReady,
+      candidateReconstructionPreflightEligible,
     } = current;
     const serverOwnershipAcknowledged = acknowledgement !== null;
     const revisionConsumed = selectedRevisionKey !== null
@@ -397,6 +448,9 @@ export function createShellProjectBrowserSelectedProjectEngineReadonlyInvokeActi
     const common = {
       selectedProjectId,
       previewReady,
+      selectedProjectAndRevisionMatch,
+      stage3ActionSourceReady,
+      candidateReconstructionPreflightEligible,
       serverOwnershipAcknowledged,
       clientTransportMounted,
       delegatedListenerMounted,
@@ -437,7 +491,7 @@ export function createShellProjectBrowserSelectedProjectEngineReadonlyInvokeActi
     if (!previewReady) {
       return activationSnapshot({
         ...common,
-        blocker: "selected-project-engine-readonly-invoke-readiness-preview-blocked",
+        blocker: "selected-project-engine-readonly-invoke-action-eligibility-blocked",
       });
     }
     if (!serverOwnershipAcknowledged || !selectedRevisionKey) {
@@ -544,6 +598,9 @@ export function createShellProjectBrowserSelectedProjectEngineReadonlyInvokeActi
         blocker: "selected-project-engine-readonly-invoke-stale-response-discarded",
         selectedProjectId: capturedSelectedProjectId,
         previewReady: true,
+        selectedProjectAndRevisionMatch: true,
+        stage3ActionSourceReady: true,
+        candidateReconstructionPreflightEligible: true,
         serverOwnershipAcknowledged: true,
         clientTransportMounted,
         delegatedListenerMounted,

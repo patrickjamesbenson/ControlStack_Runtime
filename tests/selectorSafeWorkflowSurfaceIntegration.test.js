@@ -3,7 +3,13 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
 import { createSelectorState } from "../packages/modules/cs-selector/selectorState.js";
-import { createSelectorViewModel } from "../packages/modules/cs-selector/selectorViewModel.js";
+import {
+  buildSelectorPreEngineReadonlyActionEligibilityProjection,
+  createSelectorViewModel,
+} from "../packages/modules/cs-selector/selectorViewModel.js";
+import {
+  buildSelectorReadonlyEngineCandidateForInternalSeam,
+} from "../packages/workspace-kernel/selectorReadonlyEngineCandidateMapper.js";
 
 function createAdapter() {
   return {
@@ -413,4 +419,91 @@ test("Selector view source keeps workflow diagnostics behind closed developer dr
   assert.equal(/method\s*:\s*["']POST["']/.test(combined), false);
   assert.equal(/app\.(post|route)\s*\(/.test(combined), false);
   assert.equal(/router\.(post|route)\s*\(/.test(combined), false);
+});
+
+test("full Stage-3 readiness emits a frozen allowlisted pre-Engine action projection", () => {
+  const committedSelectorConstraints = [
+    { fieldKey: "tier", value: "Business", valueLabel: "Business", committedSelectorState: true, blocked: false, authoritySource: "acceptedDefaults" },
+    { fieldKey: "directOpticVar1", value: "80|Inlay", valueLabel: "Inlay", committedSelectorState: true, blocked: false, authoritySource: "manualConstraints" },
+    { fieldKey: "targetLmPerM", value: "1200", valueLabel: "1200", committedSelectorState: true, blocked: false, authoritySource: "manualConstraints" },
+    { fieldKey: "cctCri", value: "4000K / CRI90", valueLabel: "4000K / CRI90", committedSelectorState: true, blocked: false, authoritySource: "manualConstraints" },
+    { fieldKey: "controlType", value: "DALI-2", valueLabel: "DALI-2", committedSelectorState: true, blocked: false, authoritySource: "manualConstraints" },
+  ];
+  const factoryApprovedInputsSummary = {
+    readOnly: true,
+    diagnosticOnly: true,
+    safeSummaryOnly: true,
+    factoryApprovedInputsReady: true,
+    ready: true,
+    stage3Mode: "simple-run-stage3a-zero-accessory",
+    blocker: null,
+    stage2Ready: true,
+    committedSelectorConstraintCount: committedSelectorConstraints.length,
+    committedRunIntakeSummary: {
+      ready: true,
+      committedRunIntakeReady: true,
+      sourceAuthority: "committed-selector-state",
+      runQuantity: 2,
+      runLengthMm: 3500,
+      lengthMode: "cut_to_length",
+    },
+    runIntakePreviewSummary: {
+      runIntakePreviewReady: true,
+      runCount: 1,
+      totalQuantity: 2,
+    },
+    accessoryPlacementIntentSummary: {
+      accessoryIntentCount: 0,
+    },
+    accessoryReservationRequired: false,
+    engineExecuted: false,
+    donorEngineInvoked: false,
+    runTableGenerated: false,
+    iesGenerated: false,
+    selectedResultPersisted: false,
+    runtimeDataMutated: false,
+  };
+  const lmTemperatureReadinessPreview = {
+    targetIntent: { direct: { ready: true, valueLabel: "1200" } },
+    cctCriPairing: { direct: { ready: true, valueLabel: "4000K / CRI90" } },
+    controlIntent: { direct: { ready: true, valueLabel: "DALI-2" } },
+    fingerprint: "safe-selector-lm-temperature:test",
+    rawRowsReturned: false,
+    rawEnginePayloadReturned: false,
+    rawEngineResultReturned: false,
+  };
+  const mapper = buildSelectorReadonlyEngineCandidateForInternalSeam({
+    factoryApprovedInputsSummary,
+    committedSelectorConstraints,
+    lmTemperatureReadinessPreview,
+  });
+  assert.equal(mapper.ok, true);
+
+  const projection = buildSelectorPreEngineReadonlyActionEligibilityProjection({
+    specBuildReadinessPreview: {
+      factoryApprovedInputsReady: true,
+      factoryApprovedInputsSummary,
+      readonlyEngineCandidateReady: true,
+      readonlyEngineCandidateMapperSummary: mapper.summary,
+    },
+    committedSelectorConstraints,
+    lmTemperatureReadinessPreview,
+    sourceInputFingerprint: "safe-source-input:selector-pre-engine-test",
+    boardDataSourceVersion: "safe-board-version:selector-pre-engine-test",
+  });
+
+  assert.equal(Object.isFrozen(projection), true);
+  assert.equal(projection.ready, true);
+  assert.equal(projection.runIntakePreviewReady, true);
+  assert.equal(projection.factoryApprovedInputsReady, true);
+  assert.equal(projection.candidateMapperReady, true);
+  assert.equal(projection.accessoryIntentCount, 0);
+  assert.match(
+    projection.projectionFingerprint,
+    /^safe-selector-pre-engine-readonly-action-eligibility:[0-9a-f]{40}$/,
+  );
+  const serialised = JSON.stringify(projection);
+  for (const forbidden of ["safeRunIntentSummaries", "rows", "paths", "payload", "selectedResultSummary", "runTableFirstNarrowOutputSummary"]) {
+    assert.equal(serialised.includes(forbidden), false, forbidden);
+  }
 });

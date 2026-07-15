@@ -271,6 +271,19 @@ test("visible controls commit the three existing DB-backed constraints and produ
   assert.equal(model.selectorSurface.enginePayloadReady, false);
   assert.equal(model.selectorSurface.runTableReady, false);
   assert.equal(model.selectorSurface.iesReady, false);
+
+  const eligibility = model.selectorSurface.preEngineReadonlyActionEligibilityProjection;
+  assert.equal(Object.isFrozen(eligibility), true);
+  assert.equal(eligibility.runIntakePreviewReady, true);
+  assert.equal(eligibility.factoryApprovedInputsReady, false);
+  assert.equal(eligibility.candidateMapperReady, false);
+  assert.equal(eligibility.ready, false);
+  assert.equal(eligibility.readiness, "blocked_fail_closed");
+  assert.equal(
+    JSON.stringify(eligibility).includes("safeRunIntentSummaries"),
+    false,
+  );
+  assert.equal(JSON.stringify(eligibility).includes('"rawRows":'), false);
 });
 
 test("partial input and clearing any required committed field fail closed immediately", () => {

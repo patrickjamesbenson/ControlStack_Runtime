@@ -22,11 +22,244 @@ import {
   buildSelectorReadonlyEngineStep2SelectedResultProjection,
   buildSelectorReadonlyEngineStep3SelectedResultAuthorityGuard,
 } from "../../workspace-kernel/selectorReadonlyEngineCandidateMapper.js";
+import { stableFingerprint } from "../../workspace-kernel/stableFingerprint.js";
 
 const SELECTOR_WORKFLOW_POLICY_FINGERPRINT = "safe-policy:selector-workflow-preview";
 const SELECTOR_WORKFLOW_SOURCE_FINGERPRINT = "safe-source:selector-workflow-preview";
 const SELECTOR_WORKFLOW_REFERENCE_OPTIONS_FINGERPRINT = "safe-reference-options:selector-workflow-preview";
 const SELECTOR_WORKFLOW_STATE_FINGERPRINT = "safe-selector-state:selector-workflow-preview";
+
+export const SELECTOR_PRE_ENGINE_READONLY_ACTION_ELIGIBILITY_CONTRACT_ID =
+  "SHELL-CS-SELECTOR-FIRST-PRE-ENGINE-READONLY-ACTION-ELIGIBILITY-BRIDGE-1";
+export const SELECTOR_PRE_ENGINE_READONLY_ACTION_ELIGIBILITY_SCHEMA_ID =
+  "controlstack.selector.pre-engine-readonly-action-eligibility.v1";
+export const SELECTOR_PRE_ENGINE_READONLY_ACTION_ELIGIBILITY_SCHEMA_VERSION = 1;
+export const SELECTOR_PRE_ENGINE_READONLY_ACTION_ELIGIBILITY_FIELD_ORDER = Object.freeze([
+  "schemaId",
+  "schemaVersion",
+  "contractId",
+  "state",
+  "readiness",
+  "ready",
+  "blocker",
+  "factoryApprovedInputsSummary",
+  "committedSelectorConstraints",
+  "lmTemperatureReadinessPreview",
+  "runIntakePreviewReady",
+  "factoryApprovedInputsReady",
+  "candidateMapperReady",
+  "policyFingerprint",
+  "sourceFingerprint",
+  "sourceInputFingerprint",
+  "selectorStateFingerprint",
+  "referenceOptionsFingerprint",
+  "boardDataSourceVersion",
+  "candidateFingerprint",
+  "committedSelectorConstraintCount",
+  "runCount",
+  "totalQuantity",
+  "accessoryIntentCount",
+  "projectionFingerprint",
+]);
+
+function cloneAndFreezePreEngineProjectionValue(value) {
+  if (value === null || ["string", "number", "boolean"].includes(typeof value)) {
+    return value;
+  }
+  if (Array.isArray(value)) {
+    return Object.freeze(value.map(cloneAndFreezePreEngineProjectionValue));
+  }
+  if (!value || typeof value !== "object") {
+    throw new Error("selector-pre-engine-action-eligibility-value-invalid");
+  }
+  const prototype = Object.getPrototypeOf(value);
+  if (prototype !== Object.prototype && prototype !== null) {
+    throw new Error("selector-pre-engine-action-eligibility-value-non-plain");
+  }
+  return Object.freeze(Object.fromEntries(
+    Object.entries(value).map(([key, nested]) => [
+      key,
+      cloneAndFreezePreEngineProjectionValue(nested),
+    ]),
+  ));
+}
+
+function orderedSelectorPreEngineEligibility(fields) {
+  return Object.fromEntries(
+    SELECTOR_PRE_ENGINE_READONLY_ACTION_ELIGIBILITY_FIELD_ORDER
+      .map((key) => [key, fields[key]]),
+  );
+}
+
+function projectCommittedSelectorConstraint(constraint = {}) {
+  return {
+    fieldKey: String(constraint.fieldKey || ""),
+    value: String(constraint.value || ""),
+    valueLabel: String(constraint.valueLabel || constraint.value || ""),
+    committedSelectorState: constraint.committedSelectorState === true,
+    blocked: constraint.blocked === true,
+    authoritySource: String(constraint.authoritySource || "committed-selector-state"),
+    provenance: String(constraint.provenance || constraint.authoritySource || "committed-selector-state"),
+    kind: String(constraint.kind || "committed-selector-constraint"),
+    source: String(constraint.source || "selector-view-model"),
+  };
+}
+
+function projectFactoryApprovedInputsSummary(summary = {}) {
+  const run = summary?.committedRunIntakeSummary || {};
+  return {
+    readOnly: true,
+    diagnosticOnly: true,
+    safeSummaryOnly: true,
+    factoryApprovedInputsReady: summary.factoryApprovedInputsReady === true,
+    ready: summary.ready === true,
+    stage3Mode: String(summary.stage3Mode || "blocked"),
+    blocker: summary.blocker || null,
+    stage2Ready: summary.stage2Ready === true,
+    committedSelectorConstraintCount: Number.isSafeInteger(
+      summary.committedSelectorConstraintCount,
+    ) ? summary.committedSelectorConstraintCount : 0,
+    committedRunIntakeSummary: {
+      ready: run.ready === true,
+      committedRunIntakeReady: run.committedRunIntakeReady === true,
+      sourceAuthority: String(run.sourceAuthority || "committed-selector-state"),
+      runQuantity: Number.isSafeInteger(run.runQuantity) ? run.runQuantity : 0,
+      runLengthMm: Number.isSafeInteger(run.runLengthMm) ? run.runLengthMm : 0,
+      lengthMode: String(run.lengthMode || ""),
+      writes: false,
+      rawRowsExposed: false,
+    },
+    accessoryReservationRequired: summary.accessoryReservationRequired === true,
+    engineOutcomeProven: false,
+    engineExecuted: false,
+    donorEngineInvoked: false,
+    runTableGenerated: false,
+    iesGenerated: false,
+    selectedResultPersisted: false,
+    runtimeDataMutated: false,
+  };
+}
+
+function projectLmTemperatureReadinessPreview(preview = {}) {
+  const projectIntent = (intent = {}) => ({
+    ready: intent.ready === true,
+    valueLabel: String(intent.valueLabel || ""),
+  });
+  return {
+    targetIntent: {
+      direct: projectIntent(preview?.targetIntent?.direct),
+      indirect: projectIntent(preview?.targetIntent?.indirect),
+    },
+    cctCriPairing: {
+      direct: projectIntent(preview?.cctCriPairing?.direct),
+      indirect: projectIntent(preview?.cctCriPairing?.indirect),
+    },
+    controlIntent: {
+      direct: projectIntent(preview?.controlIntent?.direct),
+      indirect: projectIntent(preview?.controlIntent?.indirect),
+    },
+    fingerprint: preview?.fingerprint || null,
+    temperatureAdjustedOutputCalculated: false,
+    deliveredLmPerMVerified: false,
+    rawRowsReturned: false,
+    rawEnginePayloadReturned: false,
+    rawEngineResultReturned: false,
+  };
+}
+
+export function buildSelectorPreEngineReadonlyActionEligibilityProjection({
+  specBuildReadinessPreview = {},
+  committedSelectorConstraints = [],
+  lmTemperatureReadinessPreview = {},
+  sourceInputFingerprint = null,
+  boardDataSourceVersion = null,
+} = {}) {
+  const factoryApprovedInputsSummary =
+    specBuildReadinessPreview?.factoryApprovedInputsSummary || {};
+  const candidateMapperSummary =
+    specBuildReadinessPreview?.readonlyEngineCandidateMapperSummary || {};
+  const runIntakePreviewSummary =
+    factoryApprovedInputsSummary?.runIntakePreviewSummary || {};
+  const accessoryPlacementIntentSummary =
+    factoryApprovedInputsSummary?.accessoryPlacementIntentSummary || {};
+  const runIntakePreviewReady = runIntakePreviewSummary.runIntakePreviewReady === true;
+  const factoryApprovedInputsReady =
+    specBuildReadinessPreview?.factoryApprovedInputsReady === true
+    && factoryApprovedInputsSummary?.factoryApprovedInputsReady === true
+    && factoryApprovedInputsSummary?.stage2Ready === true;
+  const candidateMapperReady =
+    specBuildReadinessPreview?.readonlyEngineCandidateReady === true
+    && candidateMapperSummary?.readonlyEngineCandidateMapperReady === true
+    && candidateMapperSummary?.candidateReadyForHostLocalReadonlySeam === true;
+  const ready = runIntakePreviewReady
+    && factoryApprovedInputsReady
+    && candidateMapperReady;
+  const blocker = ready
+    ? null
+    : factoryApprovedInputsSummary?.blocker
+      || candidateMapperSummary?.blocker
+      || (runIntakePreviewReady
+        ? "selector-pre-engine-stage3-eligibility-incomplete"
+        : "selector-pre-engine-run-intake-not-ready");
+  const candidateFingerprint =
+    candidateMapperSummary?.candidateShapeSummary?.readonlyEngineCandidateFingerprint || null;
+  const projectedFactoryApprovedInputsSummary =
+    projectFactoryApprovedInputsSummary(factoryApprovedInputsSummary);
+  const projectedCommittedSelectorConstraints = (Array.isArray(committedSelectorConstraints)
+    ? committedSelectorConstraints
+    : []).map(projectCommittedSelectorConstraint);
+  const projectedLmTemperatureReadinessPreview =
+    projectLmTemperatureReadinessPreview(lmTemperatureReadinessPreview);
+  const projectionFields = {
+    schemaId: SELECTOR_PRE_ENGINE_READONLY_ACTION_ELIGIBILITY_SCHEMA_ID,
+    schemaVersion: SELECTOR_PRE_ENGINE_READONLY_ACTION_ELIGIBILITY_SCHEMA_VERSION,
+    contractId: SELECTOR_PRE_ENGINE_READONLY_ACTION_ELIGIBILITY_CONTRACT_ID,
+    state: ready
+      ? "selector_pre_engine_readonly_action_eligibility_ready"
+      : "selector_pre_engine_readonly_action_eligibility_blocked_fail_closed",
+    readiness: ready ? "ready" : "blocked_fail_closed",
+    ready,
+    blocker,
+    factoryApprovedInputsSummary:
+      cloneAndFreezePreEngineProjectionValue(projectedFactoryApprovedInputsSummary),
+    committedSelectorConstraints:
+      cloneAndFreezePreEngineProjectionValue(projectedCommittedSelectorConstraints),
+    lmTemperatureReadinessPreview:
+      cloneAndFreezePreEngineProjectionValue(projectedLmTemperatureReadinessPreview),
+    runIntakePreviewReady,
+    factoryApprovedInputsReady,
+    candidateMapperReady,
+    policyFingerprint: SELECTOR_WORKFLOW_POLICY_FINGERPRINT,
+    sourceFingerprint: SELECTOR_WORKFLOW_SOURCE_FINGERPRINT,
+    sourceInputFingerprint: sourceInputFingerprint || null,
+    selectorStateFingerprint: SELECTOR_WORKFLOW_STATE_FINGERPRINT,
+    referenceOptionsFingerprint: SELECTOR_WORKFLOW_REFERENCE_OPTIONS_FINGERPRINT,
+    boardDataSourceVersion: boardDataSourceVersion || null,
+    candidateFingerprint,
+    committedSelectorConstraintCount: Array.isArray(committedSelectorConstraints)
+      ? committedSelectorConstraints.length
+      : 0,
+    runCount: Number.isSafeInteger(runIntakePreviewSummary.runCount)
+      ? runIntakePreviewSummary.runCount
+      : 0,
+    totalQuantity: Number.isSafeInteger(runIntakePreviewSummary.totalQuantity)
+      ? runIntakePreviewSummary.totalQuantity
+      : 0,
+    accessoryIntentCount: Number.isSafeInteger(
+      accessoryPlacementIntentSummary.accessoryIntentCount,
+    )
+      ? accessoryPlacementIntentSummary.accessoryIntentCount
+      : 0,
+  };
+  const projectionFingerprint = stableFingerprint(
+    "safe-selector-pre-engine-readonly-action-eligibility",
+    projectionFields,
+  );
+  return Object.freeze(orderedSelectorPreEngineEligibility({
+    ...projectionFields,
+    projectionFingerprint,
+  }));
+}
 
 const TIMELINE_STATUS_ALIASES = Object.freeze({
   available: "live",
@@ -6186,6 +6419,14 @@ function createDbBackedSelectorSurface(selectorReferenceStatus = {}, local = {},
     readonlyEngineStep1SafeSummaryOverride,
     summary,
   });
+  const preEngineReadonlyActionEligibilityProjection =
+    buildSelectorPreEngineReadonlyActionEligibilityProjection({
+      specBuildReadinessPreview,
+      committedSelectorConstraints,
+      lmTemperatureReadinessPreview,
+      sourceInputFingerprint: sourceVersionBinding.sourceInputFingerprint || null,
+      boardDataSourceVersion: sourceVersionBinding.boardDataSourceVersion || null,
+    });
   const productSurfaceParityLock = createProductSurfaceParityLock({
     productSpine,
     payloadPreview,
@@ -6282,6 +6523,7 @@ function createDbBackedSelectorSurface(selectorReferenceStatus = {}, local = {},
     runTableReady: false,
     iesReady: false,
     specBuildReadinessPreview,
+    preEngineReadonlyActionEligibilityProjection,
     productSurfaceParityLock,
     manualConstraints,
     autoConsequences,

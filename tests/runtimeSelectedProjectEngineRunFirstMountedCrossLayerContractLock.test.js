@@ -3,6 +3,12 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
 import {
+  buildSelectorPreEngineReadonlyActionEligibilityProjection,
+} from "../packages/modules/cs-selector/selectorViewModel.js";
+import {
+  buildSelectorReadonlyEngineCandidateForInternalSeam,
+} from "../packages/workspace-kernel/selectorReadonlyEngineCandidateMapper.js";
+import {
   buildShellProjectBrowserSelectedProjectEngineActionLane,
   SHELL_PROJECT_BROWSER_SELECTED_PROJECT_ENGINE_ACTION_LANE_STATES,
 } from "../apps/workspace-shell/src/projectBrowserSelectedProjectEngineActionLane.js";
@@ -155,8 +161,11 @@ function stage3Inputs() {
       diagnosticOnly: true,
       safeSummaryOnly: true,
       factoryApprovedInputsReady: true,
+      ready: true,
       stage3Mode: "simple-run-stage3a-zero-accessory",
       blocker: null,
+      stage2Ready: true,
+      committedSelectorConstraintCount: 5,
       committedRunIntakeSummary: {
         ready: true,
         committedRunIntakeReady: true,
@@ -165,6 +174,13 @@ function stage3Inputs() {
         runLengthMm: 3500,
         lengthMode: "cut_to_length",
       },
+      runIntakePreviewSummary: {
+        runIntakePreviewReady: true,
+        runCount: 1,
+        totalQuantity: 2,
+      },
+      accessoryPlacementIntentSummary: { accessoryIntentCount: 0 },
+      accessoryReservationRequired: false,
       engineExecuted: false,
       donorEngineInvoked: false,
       runTableGenerated: false,
@@ -239,6 +255,24 @@ function stage3Inputs() {
   };
 }
 
+function preEngineProjection() {
+  const inputs = stage3Inputs();
+  const mapper = buildSelectorReadonlyEngineCandidateForInternalSeam(inputs);
+  assert.equal(mapper.ok, true);
+  return buildSelectorPreEngineReadonlyActionEligibilityProjection({
+    specBuildReadinessPreview: {
+      factoryApprovedInputsReady: true,
+      factoryApprovedInputsSummary: inputs.factoryApprovedInputsSummary,
+      readonlyEngineCandidateReady: true,
+      readonlyEngineCandidateMapperSummary: mapper.summary,
+    },
+    committedSelectorConstraints: inputs.committedSelectorConstraints,
+    lmTemperatureReadinessPreview: inputs.lmTemperatureReadinessPreview,
+    sourceInputFingerprint: `safe-source-input:${FIXTURE_SUFFIX}`,
+    boardDataSourceVersion: `safe-board-version:${FIXTURE_SUFFIX}`,
+  });
+}
+
 function selectedEnvelope() {
   const selectedResultSummary = readySelectedResultSummary();
   return {
@@ -255,6 +289,7 @@ function selectedEnvelope() {
         moduleId: "cs_selector",
         state: { engineRunActionSource: stage3Inputs() },
         downstreamContext: {
+          preEngineActionEligibilityProjection: preEngineProjection(),
           selectedResultSummary,
           runTableFirstNarrowOutputSummary:
             readyRunTableFirstNarrowOutputSummary(selectedResultSummary),

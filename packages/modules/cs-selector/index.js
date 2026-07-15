@@ -167,6 +167,7 @@ let selectorState = null;
 let selectorAdapter = null;
 let selectorReferenceStatus = initialSelectorReferenceStatus();
 let selectorReferenceOptionsStatus = initialSelectorReferenceOptionsStatus();
+let latestSelectorViewModel = null;
 let selectorReferenceRequestId = 0;
 let selectorReferenceOptionsRequestId = 0;
 
@@ -258,6 +259,7 @@ function renderCurrentView({ preserveViewport = true } = {}) {
       clearSavedTestCase: clearSavedSelectorTestCase,
     },
   });
+  latestSelectorViewModel = viewModel;
   renderSelectorView(mountedContainer, viewModel);
   if (viewportState) {
     restoreSelectorViewportState(viewportState);
@@ -836,7 +838,14 @@ export const csSelectorModule = {
 
   getProjectEnvelopeContribution() {
     if (!mountedContainer || !selectorState) return null;
-    return createSelectorProjectEnvelopeContribution(selectorState.getSnapshot());
+    const contribution = createSelectorProjectEnvelopeContribution(selectorState.getSnapshot());
+    const projection = latestSelectorViewModel?.selectorSurface?.preEngineReadonlyActionEligibilityProjection;
+    return projection
+      ? Object.freeze({
+        ...contribution,
+        preEngineActionEligibilityProjection: projection,
+      })
+      : contribution;
   },
 
   async hydrate(hydrationPayload, nextContext = mountedContext) {
@@ -911,6 +920,7 @@ export const csSelectorModule = {
     mountedContext = null;
     selectorState = null;
     selectorAdapter = null;
+    latestSelectorViewModel = null;
     selectorReferenceStatus = initialSelectorReferenceStatus();
     selectorReferenceOptionsStatus = initialSelectorReferenceOptionsStatus();
   },

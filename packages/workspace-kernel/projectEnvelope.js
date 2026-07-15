@@ -1,3 +1,5 @@
+import { stableFingerprint } from "./stableFingerprint.js";
+
 export const SAVED_PROJECT_SCHEMA = "workspace_saved_project.v2-runtime";
 
 function clone(value) {
@@ -174,6 +176,107 @@ const CS_SELECTOR_PROJECT_ENVELOPE_TIMELINE_STATUSES = Object.freeze(new Set([
   "unknown",
 ]));
 
+export const CS_SELECTOR_PRE_ENGINE_ACTION_ELIGIBILITY_CONTRACT_ID =
+  "SHELL-CS-SELECTOR-FIRST-PRE-ENGINE-READONLY-ACTION-ELIGIBILITY-BRIDGE-1";
+export const CS_SELECTOR_PRE_ENGINE_ACTION_ELIGIBILITY_SCHEMA_ID =
+  "controlstack.selector.pre-engine-readonly-action-eligibility.v1";
+export const CS_SELECTOR_PRE_ENGINE_ACTION_ELIGIBILITY_SCHEMA_VERSION = 1;
+export const CS_SELECTOR_PRE_ENGINE_ACTION_ELIGIBILITY_FIELD_ORDER = Object.freeze([
+  "schemaId",
+  "schemaVersion",
+  "contractId",
+  "state",
+  "readiness",
+  "ready",
+  "blocker",
+  "factoryApprovedInputsSummary",
+  "committedSelectorConstraints",
+  "lmTemperatureReadinessPreview",
+  "runIntakePreviewReady",
+  "factoryApprovedInputsReady",
+  "candidateMapperReady",
+  "policyFingerprint",
+  "sourceFingerprint",
+  "sourceInputFingerprint",
+  "selectorStateFingerprint",
+  "referenceOptionsFingerprint",
+  "boardDataSourceVersion",
+  "candidateFingerprint",
+  "committedSelectorConstraintCount",
+  "runCount",
+  "totalQuantity",
+  "accessoryIntentCount",
+  "projectionFingerprint",
+]);
+
+const CS_SELECTOR_PRE_ENGINE_FACTORY_SUMMARY_KEYS = Object.freeze([
+  "readOnly",
+  "diagnosticOnly",
+  "safeSummaryOnly",
+  "factoryApprovedInputsReady",
+  "ready",
+  "stage3Mode",
+  "blocker",
+  "stage2Ready",
+  "committedSelectorConstraintCount",
+  "committedRunIntakeSummary",
+  "accessoryReservationRequired",
+  "engineOutcomeProven",
+  "engineExecuted",
+  "donorEngineInvoked",
+  "runTableGenerated",
+  "iesGenerated",
+  "selectedResultPersisted",
+  "runtimeDataMutated",
+]);
+const CS_SELECTOR_PRE_ENGINE_RUN_SUMMARY_KEYS = Object.freeze([
+  "ready",
+  "committedRunIntakeReady",
+  "sourceAuthority",
+  "runQuantity",
+  "runLengthMm",
+  "lengthMode",
+  "writes",
+  "rawRowsExposed",
+]);
+const CS_SELECTOR_PRE_ENGINE_CONSTRAINT_KEYS = Object.freeze([
+  "fieldKey",
+  "value",
+  "valueLabel",
+  "committedSelectorState",
+  "blocked",
+  "authoritySource",
+  "provenance",
+  "kind",
+  "source",
+]);
+const CS_SELECTOR_PRE_ENGINE_LM_PREVIEW_KEYS = Object.freeze([
+  "targetIntent",
+  "cctCriPairing",
+  "controlIntent",
+  "fingerprint",
+  "temperatureAdjustedOutputCalculated",
+  "deliveredLmPerMVerified",
+  "rawRowsReturned",
+  "rawEnginePayloadReturned",
+  "rawEngineResultReturned",
+]);
+const CS_SELECTOR_PRE_ENGINE_INTENT_PAIR_KEYS = Object.freeze(["direct", "indirect"]);
+const CS_SELECTOR_PRE_ENGINE_INTENT_KEYS = Object.freeze(["ready", "valueLabel"]);
+const CS_SELECTOR_PRE_ENGINE_CANDIDATE_FINGERPRINT_PATTERN =
+  /^safe-selector-readonly-engine-candidate:[0-9a-f]{40}$/;
+const CS_SELECTOR_PRE_ENGINE_PROJECTION_FINGERPRINT_PATTERN =
+  /^safe-selector-pre-engine-readonly-action-eligibility:[0-9a-f]{40}$/;
+const CS_SELECTOR_PRE_ENGINE_REGISTRATION_STATUS = "pre-engine-action-source-ready";
+const CS_SELECTOR_PRE_ENGINE_REGISTRATION_CONTRIBUTION_KEYS = Object.freeze([
+  "moduleId",
+  "status",
+  "state",
+  "preEngineActionEligibilityProjection",
+  "selectedResultSummary",
+  "runTableFirstNarrowOutputSummary",
+]);
+
 const CS_SELECTOR_PROJECT_ENVELOPE_FORBIDDEN_VALUE_PATTERN = /(?:C:\\|\\ControlStack|\/mnt\/|novondb|raw_rows|rawRows|rawPayload|selectedResult|engineResult|credential|secret|apiKey)/i;
 
 function plainObject(value) {
@@ -191,6 +294,177 @@ function safeSelectorEnvelopeString(value, { maxLength = 512, pattern = null } =
   if (typeof value !== "string" || value.length > maxLength) return false;
   if (pattern && !pattern.test(value)) return false;
   return !CS_SELECTOR_PROJECT_ENVELOPE_FORBIDDEN_VALUE_PATTERN.test(value);
+}
+
+function safeNullableSelectorEnvelopeString(value, options = {}) {
+  return value === null || safeSelectorEnvelopeString(value, options);
+}
+
+function approvedPreEngineIntent(intent) {
+  return exactKeys(intent, CS_SELECTOR_PRE_ENGINE_INTENT_KEYS)
+    && typeof intent.ready === "boolean"
+    && safeSelectorEnvelopeString(intent.valueLabel, { maxLength: 512 });
+}
+
+function approvedPreEngineIntentPair(pair) {
+  return exactKeys(pair, CS_SELECTOR_PRE_ENGINE_INTENT_PAIR_KEYS)
+    && approvedPreEngineIntent(pair.direct)
+    && approvedPreEngineIntent(pair.indirect);
+}
+
+function projectionFingerprintSource(projection) {
+  return Object.fromEntries(
+    CS_SELECTOR_PRE_ENGINE_ACTION_ELIGIBILITY_FIELD_ORDER
+      .filter((key) => key !== "projectionFingerprint")
+      .map((key) => [key, projection[key]]),
+  );
+}
+
+export function validateCsSelectorPreEngineActionEligibilityProjection(
+  projection,
+  { requireReady = false, requireFrozen = false } = {},
+) {
+  if (!exactKeys(projection, CS_SELECTOR_PRE_ENGINE_ACTION_ELIGIBILITY_FIELD_ORDER)) {
+    return { valid: false, reason: "Selector pre-Engine eligibility projection shape is invalid." };
+  }
+  if (requireFrozen && !Object.isFrozen(projection)) {
+    return { valid: false, reason: "Selector pre-Engine eligibility projection is not frozen." };
+  }
+  if (projection.schemaId !== CS_SELECTOR_PRE_ENGINE_ACTION_ELIGIBILITY_SCHEMA_ID
+    || projection.schemaVersion !== CS_SELECTOR_PRE_ENGINE_ACTION_ELIGIBILITY_SCHEMA_VERSION
+    || projection.contractId !== CS_SELECTOR_PRE_ENGINE_ACTION_ELIGIBILITY_CONTRACT_ID) {
+    return { valid: false, reason: "Selector pre-Engine eligibility projection schema is invalid." };
+  }
+  const ready = projection.state === "selector_pre_engine_readonly_action_eligibility_ready"
+    && projection.readiness === "ready"
+    && projection.ready === true
+    && projection.blocker === null;
+  const blocked = projection.state
+      === "selector_pre_engine_readonly_action_eligibility_blocked_fail_closed"
+    && projection.readiness === "blocked_fail_closed"
+    && projection.ready === false
+    && safeSelectorEnvelopeString(projection.blocker || "", { maxLength: 760 });
+  if (!ready && !blocked) {
+    return { valid: false, reason: "Selector pre-Engine eligibility state is inconsistent." };
+  }
+  if (requireReady && !ready) {
+    return { valid: false, reason: projection.blocker || "Selector pre-Engine eligibility is not ready." };
+  }
+  const factory = projection.factoryApprovedInputsSummary;
+  const run = factory?.committedRunIntakeSummary;
+  if (!exactKeys(factory, CS_SELECTOR_PRE_ENGINE_FACTORY_SUMMARY_KEYS)
+    || !exactKeys(run, CS_SELECTOR_PRE_ENGINE_RUN_SUMMARY_KEYS)
+    || factory.readOnly !== true
+    || factory.diagnosticOnly !== true
+    || factory.safeSummaryOnly !== true
+    || !safeSelectorEnvelopeString(factory.stage3Mode, { maxLength: 120 })
+    || !safeNullableSelectorEnvelopeString(factory.blocker, { maxLength: 760 })
+    || !Number.isSafeInteger(factory.committedSelectorConstraintCount)
+    || factory.committedSelectorConstraintCount < 0
+    || typeof factory.accessoryReservationRequired !== "boolean"
+    || factory.engineOutcomeProven !== false
+    || factory.engineExecuted !== false
+    || factory.donorEngineInvoked !== false
+    || factory.runTableGenerated !== false
+    || factory.iesGenerated !== false
+    || factory.selectedResultPersisted !== false
+    || factory.runtimeDataMutated !== false
+    || !safeSelectorEnvelopeString(run.sourceAuthority, { maxLength: 760 })
+    || !Number.isSafeInteger(run.runQuantity)
+    || run.runQuantity < 0
+    || !Number.isSafeInteger(run.runLengthMm)
+    || run.runLengthMm < 0
+    || !safeSelectorEnvelopeString(run.lengthMode, { maxLength: 120 })
+    || run.writes !== false
+    || run.rawRowsExposed !== false) {
+    return { valid: false, reason: "Selector pre-Engine factory-approved input summary is invalid." };
+  }
+  if (!Array.isArray(projection.committedSelectorConstraints)
+    || projection.committedSelectorConstraints.length > 256
+    || projection.committedSelectorConstraints.some((constraint) => (
+      !exactKeys(constraint, CS_SELECTOR_PRE_ENGINE_CONSTRAINT_KEYS)
+      || !safeSelectorEnvelopeString(constraint.fieldKey, { maxLength: 120 })
+      || !safeSelectorEnvelopeString(constraint.value, { maxLength: 512 })
+      || !safeSelectorEnvelopeString(constraint.valueLabel, { maxLength: 512 })
+      || constraint.committedSelectorState !== true
+      || constraint.blocked !== false
+      || !safeSelectorEnvelopeString(constraint.authoritySource, { maxLength: 760 })
+      || !safeSelectorEnvelopeString(constraint.provenance, { maxLength: 760 })
+      || !safeSelectorEnvelopeString(constraint.kind, { maxLength: 120 })
+      || !safeSelectorEnvelopeString(constraint.source, { maxLength: 760 })
+    ))) {
+    return { valid: false, reason: "Selector pre-Engine committed constraints are invalid." };
+  }
+  const lmPreview = projection.lmTemperatureReadinessPreview;
+  if (!exactKeys(lmPreview, CS_SELECTOR_PRE_ENGINE_LM_PREVIEW_KEYS)
+    || !approvedPreEngineIntentPair(lmPreview.targetIntent)
+    || !approvedPreEngineIntentPair(lmPreview.cctCriPairing)
+    || !approvedPreEngineIntentPair(lmPreview.controlIntent)
+    || !safeNullableSelectorEnvelopeString(lmPreview.fingerprint, { maxLength: 760 })
+    || lmPreview.temperatureAdjustedOutputCalculated !== false
+    || lmPreview.deliveredLmPerMVerified !== false
+    || lmPreview.rawRowsReturned !== false
+    || lmPreview.rawEnginePayloadReturned !== false
+    || lmPreview.rawEngineResultReturned !== false) {
+    return { valid: false, reason: "Selector pre-Engine light-intent preview is invalid." };
+  }
+  for (const value of [
+    projection.policyFingerprint,
+    projection.sourceFingerprint,
+    projection.selectorStateFingerprint,
+    projection.referenceOptionsFingerprint,
+  ]) {
+    if (!safeSelectorEnvelopeString(value, { maxLength: 760 })) {
+      return { valid: false, reason: "Selector pre-Engine identity fingerprint is invalid." };
+    }
+  }
+  if (!safeNullableSelectorEnvelopeString(projection.sourceInputFingerprint, { maxLength: 760 })
+    || !safeNullableSelectorEnvelopeString(projection.boardDataSourceVersion, { maxLength: 760 })
+    || !Number.isSafeInteger(projection.committedSelectorConstraintCount)
+    || projection.committedSelectorConstraintCount !== projection.committedSelectorConstraints.length
+    || !Number.isSafeInteger(projection.runCount)
+    || projection.runCount < 0
+    || !Number.isSafeInteger(projection.totalQuantity)
+    || projection.totalQuantity < 0
+    || !Number.isSafeInteger(projection.accessoryIntentCount)
+    || projection.accessoryIntentCount < 0) {
+    return { valid: false, reason: "Selector pre-Engine identity or count fields are invalid." };
+  }
+  if (ready && (projection.runIntakePreviewReady !== true
+    || projection.factoryApprovedInputsReady !== true
+    || projection.candidateMapperReady !== true
+    || factory.factoryApprovedInputsReady !== true
+    || factory.ready !== true
+    || factory.stage2Ready !== true
+    || run.ready !== true
+    || run.committedRunIntakeReady !== true
+    || !CS_SELECTOR_PRE_ENGINE_CANDIDATE_FINGERPRINT_PATTERN.test(
+      String(projection.candidateFingerprint || ""),
+    ))) {
+    return { valid: false, reason: "Selector pre-Engine Stage-3 authority is incomplete." };
+  }
+  if (!ready && projection.candidateFingerprint !== null
+    && !CS_SELECTOR_PRE_ENGINE_CANDIDATE_FINGERPRINT_PATTERN.test(
+      String(projection.candidateFingerprint),
+    )) {
+    return { valid: false, reason: "Selector pre-Engine candidate fingerprint is invalid." };
+  }
+  if (!CS_SELECTOR_PRE_ENGINE_PROJECTION_FINGERPRINT_PATTERN.test(
+    String(projection.projectionFingerprint || ""),
+  ) || projection.projectionFingerprint !== stableFingerprint(
+    "safe-selector-pre-engine-readonly-action-eligibility",
+    projectionFingerprintSource(projection),
+  )) {
+    return { valid: false, reason: "Selector pre-Engine projection fingerprint is invalid." };
+  }
+  try {
+    if (JSON.stringify(projection).length > 65536) {
+      return { valid: false, reason: "Selector pre-Engine eligibility projection is too large." };
+    }
+  } catch {
+    return { valid: false, reason: "Selector pre-Engine eligibility projection is not serialisable." };
+  }
+  return { valid: true, ready, reason: ready ? null : projection.blocker };
 }
 
 function approvedSelectorEnvelopeConstraint(fieldKey, constraint) {
@@ -267,6 +541,30 @@ function approvedCsSelectorProjectState(state) {
   }
 }
 
+function approvedCsSelectorPreEngineRegistrationContribution(contribution) {
+  if (!exactKeys(
+    contribution,
+    CS_SELECTOR_PRE_ENGINE_REGISTRATION_CONTRIBUTION_KEYS,
+  )) return { valid: false, reason: "Selector pre-Engine registration contribution shape is invalid." };
+  if (contribution.moduleId !== "cs_selector"
+    || contribution.status !== CS_SELECTOR_PRE_ENGINE_REGISTRATION_STATUS
+    || !plainObject(contribution.state)
+    || Object.keys(contribution.state).length !== 0
+    || !plainObject(contribution.selectedResultSummary)
+    || Object.keys(contribution.selectedResultSummary).length !== 0
+    || !plainObject(contribution.runTableFirstNarrowOutputSummary)
+    || Object.keys(contribution.runTableFirstNarrowOutputSummary).length !== 0) {
+    return {
+      valid: false,
+      reason: "Selector pre-Engine registration contribution must contain empty UI and post-Engine placeholders.",
+    };
+  }
+  return validateCsSelectorPreEngineActionEligibilityProjection(
+    contribution.preEngineActionEligibilityProjection,
+    { requireReady: true, requireFrozen: true },
+  );
+}
+
 function createModuleEnvelope({ moduleId, owner = moduleId, status = "empty", state = {}, downstreamContext = null, reason = "Module save contributor not implemented yet." } = {}) {
   return {
     owner,
@@ -284,26 +582,74 @@ function createModuleEnvelopeSet({ downstream = {}, moduleContributions = {} } =
   const sceneBuilderContribution = moduleContributions.scene_builder || {};
   const emergenceContribution = moduleContributions.emergence || {};
   const selectorUiStateContribution = selectorContribution.status === "saved-ui-state";
-  const selectorContributionApproved = selectorContribution.moduleId === "cs_selector"
+  const selectorPreEngineRegistrationContribution =
+    selectorContribution.status === CS_SELECTOR_PRE_ENGINE_REGISTRATION_STATUS;
+  const selectorProjectionProvided = Object.prototype.hasOwnProperty.call(
+    selectorContribution,
+    "preEngineActionEligibilityProjection",
+  );
+  const selectorProjectionValidation = selectorProjectionProvided
+    ? validateCsSelectorPreEngineActionEligibilityProjection(
+      selectorContribution.preEngineActionEligibilityProjection,
+      { requireFrozen: true },
+    )
+    : { valid: true, ready: false, reason: null };
+  const selectorUiStateContributionApproved = selectorContribution.moduleId === "cs_selector"
     && selectorContribution.status === "saved-ui-state"
-    && approvedCsSelectorProjectState(selectorContribution.state);
+    && approvedCsSelectorProjectState(selectorContribution.state)
+    && selectorProjectionValidation.valid === true;
+  const selectorPreEngineRegistrationValidation = selectorPreEngineRegistrationContribution
+    ? approvedCsSelectorPreEngineRegistrationContribution(selectorContribution)
+    : { valid: false, reason: null };
+  const selectorPreEngineRegistrationApproved =
+    selectorPreEngineRegistrationValidation.valid === true;
+  const selectorStatus = selectorUiStateContribution
+    ? selectorUiStateContributionApproved ? "saved-ui-state" : "empty"
+    : selectorPreEngineRegistrationContribution
+      ? selectorPreEngineRegistrationApproved
+        ? CS_SELECTOR_PRE_ENGINE_REGISTRATION_STATUS
+        : "empty"
+      : selectorContribution.status || "empty";
+  const selectorState = selectorUiStateContribution
+    ? selectorUiStateContributionApproved ? selectorContribution.state : {}
+    : selectorPreEngineRegistrationContribution
+      ? {}
+      : selectorContribution.state || {};
+  const selectorDownstreamContext = selectorUiStateContribution
+    ? selectorUiStateContributionApproved && selectorProjectionProvided
+      ? {
+        preEngineActionEligibilityProjection:
+          selectorContribution.preEngineActionEligibilityProjection,
+      }
+      : null
+    : selectorPreEngineRegistrationContribution
+      ? selectorPreEngineRegistrationApproved
+        ? {
+          preEngineActionEligibilityProjection:
+            selectorContribution.preEngineActionEligibilityProjection,
+          selectedResultSummary: {},
+          runTableFirstNarrowOutputSummary: {},
+        }
+        : null
+      : selectorContribution.downstreamContext || downstream.selector || null;
+  const selectorReason = selectorUiStateContribution
+    ? selectorUiStateContributionApproved
+      ? null
+      : selectorProjectionValidation.valid !== true
+        ? selectorProjectionValidation.reason
+        : "Selector Project-envelope contribution was missing, empty, or outside the approved serialisable UI-state shape."
+    : selectorPreEngineRegistrationContribution
+      ? selectorPreEngineRegistrationApproved
+        ? null
+        : selectorPreEngineRegistrationValidation.reason
+      : selectorContribution.reason || "Selector contribution placeholder saved by shell envelope.";
   return {
     cs_selector: createModuleEnvelope({
       moduleId: "cs_selector",
-      status: selectorUiStateContribution
-        ? selectorContributionApproved ? "saved-ui-state" : "empty"
-        : selectorContribution.status || "empty",
-      state: selectorUiStateContribution
-        ? selectorContributionApproved ? selectorContribution.state : {}
-        : selectorContribution.state || {},
-      downstreamContext: selectorUiStateContribution
-        ? null
-        : selectorContribution.downstreamContext || downstream.selector || null,
-      reason: selectorUiStateContribution
-        ? selectorContributionApproved
-          ? null
-          : "Selector Project-envelope contribution was missing, empty, or outside the approved serialisable UI-state shape."
-        : selectorContribution.reason || "Selector contribution placeholder saved by shell envelope.",
+      status: selectorStatus,
+      state: selectorState,
+      downstreamContext: selectorDownstreamContext,
+      reason: selectorReason,
     }),
     scene_builder: createModuleEnvelope({
       moduleId: "scene_builder",
