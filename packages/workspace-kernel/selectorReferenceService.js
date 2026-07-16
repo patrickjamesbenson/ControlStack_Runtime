@@ -1,10 +1,12 @@
-import { readFile, stat } from "node:fs/promises";
-
 import {
   AUTHORITY_REFERENCE_MATERIALISED_TARGET_PATH,
   AUTHORITY_REFERENCE_MATERIALISER_TARGET_LABEL,
 } from "./authorityReferenceMaterialiserService.js";
-import { deriveSelectorReferenceOptionsFromSnapshot } from "./selectorReferenceOptionsService.js";
+import {
+  deriveSelectorReferenceOptionsFromSnapshot,
+  loadSelectorReferenceRuntimeSnapshotIndex,
+} from "./selectorReferenceOptionsService.js";
+import { DEFAULT_SELECTOR_REFERENCE_FS_API } from "./selectorReferenceRuntimeSnapshotCache.js";
 
 export const SELECTOR_REFERENCE_STATUS_PATH = "/api/selector-reference/status";
 
@@ -93,10 +95,7 @@ const SAFE_SELECTOR_REFERENCE_FLAGS = Object.freeze({
   rawLabEvidenceExposed: false,
 });
 
-const DEFAULT_FS_API = Object.freeze({
-  readFile,
-  stat,
-});
+
 
 function isPlainObject(value) {
   return Boolean(value && typeof value === "object" && !Array.isArray(value));
@@ -578,7 +577,7 @@ function fileMetadata({ label, fileStat = null, present = Boolean(fileStat), rea
   };
 }
 
-async function safeFileMetadata({ label, pathValue, fsApi = DEFAULT_FS_API } = {}) {
+async function safeFileMetadata({ label, pathValue, fsApi = DEFAULT_SELECTOR_REFERENCE_FS_API } = {}) {
   if (!pathValue) return fileMetadata({ label, present: false, readable: false });
   try {
     const fileStat = await fsApi.stat(pathValue);
@@ -686,7 +685,8 @@ function statusFailure({ sourceStat = null, materialisedSnapshot = null, readabl
 export async function buildSelectorReferenceStatus({
   sourcePath,
   materialisedSnapshotPath = AUTHORITY_REFERENCE_MATERIALISED_TARGET_PATH,
-  fsApi = DEFAULT_FS_API,
+  fsApi = DEFAULT_SELECTOR_REFERENCE_FS_API,
+  runtimeSnapshotCache,
 } = {}) {
   const materialisedSnapshot = await safeFileMetadata({
     label: AUTHORITY_REFERENCE_MATERIALISER_TARGET_LABEL,
@@ -696,9 +696,13 @@ export async function buildSelectorReferenceStatus({
 
   let sourceStat = null;
   try {
-    sourceStat = await fsApi.stat(sourcePath);
-    const text = await fsApi.readFile(sourcePath, "utf-8");
-    const snapshot = JSON.parse(text);
+    const loaded = await loadSelectorReferenceRuntimeSnapshotIndex({
+      sourcePath,
+      fsApi,
+      runtimeSnapshotCache,
+    });
+    sourceStat = loaded.sourceStat;
+    const snapshot = loaded.snapshot;
     const safeSnapshot = isPlainObject(snapshot) ? snapshot : {};
     const parseable = isPlainObject(snapshot);
     const tableSummaryRows = SELECTOR_CRITICAL_TABLES.map((table) => tableSummary(safeSnapshot, table));
@@ -720,6 +724,7 @@ export async function buildSelectorReferenceStatus({
       ok: parseable,
       source,
       constraints: {},
+      runtimeIndex: loaded.index,
     });
     const tableReadiness = expectedTableReadiness(safeSnapshot);
     const sourceReadiness = buildSafeSnapshotState({

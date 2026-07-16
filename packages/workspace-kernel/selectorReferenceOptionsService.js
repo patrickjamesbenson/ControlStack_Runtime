@@ -1,9 +1,10 @@
-import { readFile, stat } from "node:fs/promises";
 import { buildSourceBackedLengthPolicySummary } from "./engineRunTableRuntimePolicyIndexKernel.js";
+import {
+  DEFAULT_SELECTOR_REFERENCE_FS_API,
+  selectorReferenceRuntimeSnapshotCache,
+} from "./selectorReferenceRuntimeSnapshotCache.js";
 
 export const SELECTOR_REFERENCE_OPTIONS_PATH = "/api/selector-reference/options";
-
-const DEFAULT_FS_API = Object.freeze({ readFile, stat });
 
 const TARGET_FIELDS = Object.freeze([
   { fieldKey: "system", label: "System", role: "manual-constraint", sourceTables: ["SYSTEM"] },
@@ -5022,7 +5023,40 @@ function failurePayload({ source = {}, reason = "selector_reference_options_unav
   };
 }
 
-export function deriveSelectorReferenceOptionsFromSnapshot(snapshot = {}, { constraints = {}, source = {}, ok = true, timelineVisibilityMode = "", timelineAsOfDate = "", timelineVisibleStatuses = DEFAULT_TIMELINE_VISIBLE_STATUSES, specialPartsTestPrincipal = "", showSpecialParts = false } = {}) {
+function selectorReferenceRuntimeIndexKey(timelineContext = createSelectorTimelineContext()) {
+  return JSON.stringify([
+    timelineContext.timelineVisibilityMode || "",
+    timelineContext.timelineAsOfDate || "",
+    ...(timelineContext.timelineVisibleStatuses || DEFAULT_TIMELINE_VISIBLE_STATUSES),
+  ]);
+}
+
+function buildSelectorReferenceRuntimeIndex(snapshot = {}, timelineContext = createSelectorTimelineContext()) {
+  const safeSnapshot = isPlainObject(snapshot) ? snapshot : {};
+  const bucket = collectOptions(safeSnapshot, timelineContext);
+  const records = collectRecords(safeSnapshot, bucket, timelineContext);
+  return { bucket, records };
+}
+
+export async function loadSelectorReferenceRuntimeSnapshotIndex({
+  sourcePath,
+  fsApi = DEFAULT_SELECTOR_REFERENCE_FS_API,
+  runtimeSnapshotCache = selectorReferenceRuntimeSnapshotCache,
+  timelineVisibilityMode = "",
+  timelineAsOfDate = "",
+  timelineVisibleStatuses = DEFAULT_TIMELINE_VISIBLE_STATUSES,
+} = {}) {
+  const timelineContext = createSelectorTimelineContext({ timelineVisibilityMode, timelineAsOfDate, timelineVisibleStatuses });
+  const loaded = await runtimeSnapshotCache.getIndex({
+    sourcePath,
+    fsApi,
+    indexKey: selectorReferenceRuntimeIndexKey(timelineContext),
+    buildIndex: (snapshot) => buildSelectorReferenceRuntimeIndex(snapshot, timelineContext),
+  });
+  return { ...loaded, timelineContext };
+}
+
+export function deriveSelectorReferenceOptionsFromSnapshot(snapshot = {}, { constraints = {}, source = {}, ok = true, timelineVisibilityMode = "", timelineAsOfDate = "", timelineVisibleStatuses = DEFAULT_TIMELINE_VISIBLE_STATUSES, specialPartsTestPrincipal = "", showSpecialParts = false, runtimeIndex = null } = {}) {
   const safeSnapshot = isPlainObject(snapshot) ? snapshot : {};
   const safeConstraints = sanitiseConstraints(constraints);
   const timelineContext = createSelectorTimelineContext({ timelineVisibilityMode, timelineAsOfDate, timelineVisibleStatuses });
@@ -5030,8 +5064,10 @@ export function deriveSelectorReferenceOptionsFromSnapshot(snapshot = {}, { cons
   if (!sourceReady) return failurePayload({ source, reason: "Selector Reference source is unavailable or not parseable.", constraints: safeConstraints, timelineContext, specialPartsTestPrincipal, showSpecialParts });
 
   const sourceVersionBinding = createSourceVersionBinding({ snapshot: safeSnapshot, source });
-  const bucket = collectOptions(safeSnapshot, timelineContext);
-  const records = collectRecords(safeSnapshot, bucket, timelineContext);
+  const preparedIndex = runtimeIndex?.bucket && Array.isArray(runtimeIndex?.records)
+    ? runtimeIndex
+    : buildSelectorReferenceRuntimeIndex(safeSnapshot, timelineContext);
+  const { bucket, records } = preparedIndex;
   const cascadeConstraints = cascadeConstraintsForOptions(bucket, safeConstraints, safeSnapshot);
   const parentConstraints = workflowParentConstraintsForAutoConsequences({ bucket, records, constraints: safeConstraints, cascadeConstraints });
   const fields = createFields({ bucket, records, constraints: safeConstraints, cascadeConstraints, sourceReady })
@@ -5132,20 +5168,27 @@ export function deriveSelectorReferenceOptionsFromSnapshot(snapshot = {}, { cons
   };
 }
 
-export async function buildSelectorReferenceOptions({ sourcePath, fsApi = DEFAULT_FS_API, constraints = {}, timelineVisibilityMode = "", timelineAsOfDate = "", timelineVisibleStatuses = DEFAULT_TIMELINE_VISIBLE_STATUSES, specialPartsTestPrincipal = "", showSpecialParts = false } = {}) {
+export async function buildSelectorReferenceOptions({ sourcePath, fsApi = DEFAULT_SELECTOR_REFERENCE_FS_API, runtimeSnapshotCache = selectorReferenceRuntimeSnapshotCache, constraints = {}, timelineVisibilityMode = "", timelineAsOfDate = "", timelineVisibleStatuses = DEFAULT_TIMELINE_VISIBLE_STATUSES, specialPartsTestPrincipal = "", showSpecialParts = false } = {}) {
   if (!sourcePath) {
     return failurePayload({ reason: "Selector Reference options source path is not configured.", constraints, specialPartsTestPrincipal, showSpecialParts });
   }
 
   let sourceStat = null;
   try {
-    sourceStat = await fsApi.stat(sourcePath);
-    const text = await fsApi.readFile(sourcePath, "utf-8");
-    const snapshot = JSON.parse(text);
+    const loaded = await loadSelectorReferenceRuntimeSnapshotIndex({
+      sourcePath,
+      fsApi,
+      runtimeSnapshotCache,
+      timelineVisibilityMode,
+      timelineAsOfDate,
+      timelineVisibleStatuses,
+    });
+    sourceStat = loaded.sourceStat;
+    const snapshot = loaded.snapshot;
     const parseable = isPlainObject(snapshot);
     const source = sourceMetadata({ sourceStat, present: true, readable: true, parseable });
     if (!parseable) return failurePayload({ source, reason: "Selector Reference options source parsed but did not contain a table object.", constraints, specialPartsTestPrincipal, showSpecialParts });
-    return deriveSelectorReferenceOptionsFromSnapshot(snapshot, { constraints, source, ok: true, timelineVisibilityMode, timelineAsOfDate, timelineVisibleStatuses, specialPartsTestPrincipal, showSpecialParts });
+    return deriveSelectorReferenceOptionsFromSnapshot(snapshot, { constraints, source, ok: true, timelineVisibilityMode, timelineAsOfDate, timelineVisibleStatuses, specialPartsTestPrincipal, showSpecialParts, runtimeIndex: loaded.index });
   } catch (error) {
     const source = sourceMetadata({ sourceStat, present: Boolean(sourceStat), readable: error?.name === "SyntaxError", parseable: false });
     return failurePayload({ source, reason: error?.code || error?.message || "Selector Reference options source could not be read.", constraints, specialPartsTestPrincipal, showSpecialParts });
