@@ -81,8 +81,31 @@ EXCLUDED_GLOBS = {"*.pyc", "*.pyo", "*.bak", "*.bak_*", "*.log"}
 GIT_INDEX_JUNK_DIRS = {"node_modules", "__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache"}
 GIT_INDEX_ARCHIVE_EXTS = {".zip", ".tar", ".tgz", ".rar", ".7z", ".gz", ".bz2", ".xz"}
 GIT_INDEX_GLOB_CHARS = {"*", "?", "[", "]"}
-ALLOWED_GATES = {"selector", "test", "runtime"}
-FIXED_GATE_COMMAND = ["python", "scripts/controlstack_gate.py", "<gate>"]
+DEFAULT_ALLOWED_GATES = {"selector-engine", "lab-ies", "program-integrate", "tooling-policy"}
+ALLOWED_GATES = {
+    item.strip().lower()
+    for item in os.environ.get("CONTROLSTACK_ALLOWED_GATES", ",".join(sorted(DEFAULT_ALLOWED_GATES))).split(",")
+    if item.strip()
+}
+GATE_RUNNER_PATH = Path(
+    os.environ.get(
+        "CONTROLSTACK_GATE_RUNNER",
+        str(Path(__file__).resolve().parents[2] / "scripts" / "controlstack_lane_gate.py"),
+    )
+).resolve()
+LANE_NAME = os.environ.get("CONTROLSTACK_LANE_NAME", "unconfigured").strip().lower()
+REQUIRED_BRANCH = os.environ.get("CONTROLSTACK_REQUIRED_BRANCH", "").strip()
+ALLOWED_WRITE_GLOBS = tuple(
+    item.strip().replace("\\", "/")
+    for item in os.environ.get("CONTROLSTACK_ALLOWED_WRITE_GLOBS", "").split(";")
+    if item.strip()
+)
+IGNORED_DIRTY_GLOBS = tuple(
+    item.strip().replace("\\", "/")
+    for item in os.environ.get("CONTROLSTACK_IGNORED_DIRTY_GLOBS", "").split(";")
+    if item.strip()
+)
+FIXED_GATE_COMMAND = [sys.executable, str(GATE_RUNNER_PATH), "<gate>", "--root", str(RUNTIME_ROOT)]
 RUNTIMEDATA_SELECTOR_CRITICAL_TABLES = [
     "SYSTEM",
     "OPTICS",
@@ -115,6 +138,8 @@ ENABLE_WRITE = _env_bool("CONTROLSTACK_ENABLE_WRITE", default=ACTIVE_TRANSPORT =
 ENABLE_GIT_STAGE = _env_bool("CONTROLSTACK_ENABLE_GIT_STAGE", default=ENABLE_WRITE)
 ENABLE_GIT_COMMIT = _env_bool("CONTROLSTACK_ENABLE_GIT_COMMIT", default=False)
 ENABLE_GIT_PUSH = _env_bool("CONTROLSTACK_ENABLE_GIT_PUSH", default=False)
+ENABLE_DESTRUCTIVE = _env_bool("CONTROLSTACK_ENABLE_DESTRUCTIVE", default=False)
+ENABLE_CROSS_ROOT_COPY = _env_bool("CONTROLSTACK_ENABLE_CROSS_ROOT_COPY", default=False)
 
 
 def _root_label(root: str = "runtime") -> str:
@@ -174,6 +199,57 @@ def _require_remote_update_enabled() -> None:
     _require_write_enabled()
     if not ENABLE_GIT_PUSH:
         raise PermissionError("Git remote update is disabled. Set CONTROLSTACK_ENABLE_GIT_PUSH=1 to enable it.")
+
+
+def _current_branch() -> str:
+    result = _run_git(["rev-parse", "--abbrev-ref", "HEAD"], timeout_s=30, max_chars=2_000)
+    if not result.get("ok"):
+        raise PermissionError("Current Git branch could not be verified.")
+    return str(result.get("stdout") or "").strip()
+
+
+def _require_lane_branch(*, for_push: bool = False) -> str:
+    branch = _current_branch()
+    if not branch.startswith("lane/"):
+        raise PermissionError(f"Lane mutation requires a lane/* branch; found {branch!r}.")
+    if REQUIRED_BRANCH and branch != REQUIRED_BRANCH:
+        raise PermissionError(f"Configured branch guard requires {REQUIRED_BRANCH!r}; found {branch!r}.")
+    if for_push and branch == "main":
+        raise PermissionError("Pushes to main are forbidden from lane apps.")
+    return branch
+
+
+def _path_in_write_scope(relative_path: str) -> bool:
+    relp = str(relative_path or "").replace("\\", "/").lstrip("./")
+    return bool(ALLOWED_WRITE_GLOBS) and any(fnmatch.fnmatch(relp, pattern) for pattern in ALLOWED_WRITE_GLOBS)
+
+
+def _require_scoped_paths(paths: list[str]) -> list[str]:
+    _require_lane_branch()
+    normalised = _normalise_paths(paths)
+    rejected = [path for path in normalised if not _path_in_write_scope(path)]
+    if rejected:
+        raise PermissionError(
+            f"Paths are outside the configured {LANE_NAME!r} lane scope: {', '.join(rejected)}"
+        )
+    return normalised
+
+
+def _visible_dirty_paths(paths: list[str]) -> list[str]:
+    return [
+        path for path in paths
+        if not any(fnmatch.fnmatch(path.replace("\\", "/"), pattern) for pattern in IGNORED_DIRTY_GLOBS)
+    ]
+
+
+def _require_destructive_enabled() -> None:
+    if not ENABLE_DESTRUCTIVE:
+        raise PermissionError("Delete and movement operations are disabled for lane apps.")
+
+
+def _require_cross_root_copy_enabled() -> None:
+    if not ENABLE_CROSS_ROOT_COPY:
+        raise PermissionError("Cross-root copy and promotion operations are disabled for lane apps.")
 
 
 def _path_has_control_chars(value: str) -> bool:
@@ -455,6 +531,9 @@ def _gate_green() -> bool:
 def _copy_file_between(from_root: str, from_path: str, to_root: str, to_path: str, *, overwrite: bool, dry_run: bool, make_parents: bool) -> dict[str, Any]:
     source_label = _root_label(from_root)
     target_label = _root_label(to_root)
+    if source_label != target_label:
+        _require_cross_root_copy_enabled()
+    _require_scoped_paths([to_path])
     if target_label != "runtime":
         raise PermissionError("Copy destinations must be inside the runtime root. Donor reference is read-only.")
     _reject_bad_path_string(from_path)
@@ -1312,8 +1391,18 @@ def repo_info() -> dict[str, Any]:
         "git_stage_enabled": ENABLE_GIT_STAGE,
         "git_commit_enabled": ENABLE_GIT_COMMIT,
         "git_push_enabled": ENABLE_GIT_PUSH,
+        "commit_push_gated": True,
         "arbitrary_shell_execution": False,
-        "allowed_roots": ["runtime", "repo", "donor"],
+        "delete_enabled": ENABLE_DESTRUCTIVE,
+        "movement_enabled": ENABLE_DESTRUCTIVE,
+        "cross_root_copy_enabled": ENABLE_CROSS_ROOT_COPY,
+        "lane_name": LANE_NAME,
+        "required_branch": REQUIRED_BRANCH,
+        "allowed_write_globs": list(ALLOWED_WRITE_GLOBS),
+        "ignored_dirty_globs": list(IGNORED_DIRTY_GLOBS),
+        "allowed_gates": sorted(ALLOWED_GATES),
+        "gate_runner": str(GATE_RUNNER_PATH),
+        "allowed_roots": ["runtime", "repo", "donor-readonly"],
         "runtime_gate_command": FIXED_GATE_COMMAND,
     }
 
@@ -1367,6 +1456,7 @@ def write_repo_file(relative_path: str, content: str, overwrite: bool = True, ma
     _require_runtime(root)
     _require_write_enabled()
     _reject_bad_path_string(relative_path)
+    _require_scoped_paths([relative_path])
     target = _resolve_path("runtime", relative_path)
     if target.exists() and target.is_dir():
         raise IsADirectoryError(f"Path is a directory, not a file: {target}")
@@ -1413,6 +1503,7 @@ def copy_repo_file(from_path: str, to_path: str, dry_run: bool = True, timeout_s
 @mcp.tool()
 def move_between_roots(from_root: str, from_path: str, to_root: str, to_path: str, overwrite: bool = False, dry_run: bool = True, make_parents: bool = True) -> dict[str, Any]:
     """Move a file from one configured root to another. Non-dry moves are runtime-only."""
+    _require_destructive_enabled()
     if _root_label(from_root) != "runtime" or _root_label(to_root) != "runtime":
         if dry_run:
             preview = _copy_file_between(from_root, from_path, to_root, to_path, overwrite=overwrite, dry_run=True, make_parents=make_parents)
@@ -1439,6 +1530,7 @@ def move_repo_file(from_path: str, to_path: str, dry_run: bool = True, timeout_s
 def move_repo_directory(from_path: str, to_path: str, dry_run: bool = True, skip_subdirs: list[str] | None = None, timeout_s: int = 30, max_chars: int = DEFAULT_MAX_CHARS, root: str = "runtime") -> dict[str, Any]:
     """Move one directory inside the runtime root. Dry-run defaults to true."""
     _require_runtime(root)
+    _require_destructive_enabled()
     _reject_bad_path_string(from_path)
     _reject_bad_path_string(to_path)
     source = _resolve_path("runtime", from_path)
@@ -1479,6 +1571,7 @@ def delete_runtime_file(relative_path: str, dry_run: bool = True) -> dict[str, A
 def delete_repo_file(relative_path: str, dry_run: bool = True, timeout_s: int = 30, max_chars: int = DEFAULT_MAX_CHARS, root: str = "runtime") -> dict[str, Any]:
     """Delete one explicit file inside the runtime root. Dry-run defaults to true."""
     _require_runtime(root)
+    _require_destructive_enabled()
     _reject_bad_path_string(relative_path)
     target = _resolve_path("runtime", relative_path)
     exists = target.exists()
@@ -1572,6 +1665,7 @@ def repo_safe_patch(root: str = "runtime", relative_path: str = "", operation: s
     """Apply or preview a structured safe edit to one selected-root file."""
     _require_runtime(root)
     _reject_bad_path_string(relative_path)
+    _require_scoped_paths([relative_path])
     target_path = _resolve_path("runtime", relative_path)
     if not target_path.exists() or not target_path.is_file():
         raise FileNotFoundError(f"File does not exist or is not a file: {relative_path}")
@@ -1625,6 +1719,7 @@ def repo_apply_unified_diff(root: str = "runtime", diff_text: str = "", dry_run:
     if not allow_new_files and any(line.startswith("--- /dev/null") for line in diff_text.splitlines()):
         raise PermissionError("New files are refused when allow_new_files=False")
     touched_paths = _extract_diff_paths(diff_text)
+    _require_scoped_paths(touched_paths)
     if not touched_paths:
         raise ValueError("No confined file paths could be extracted from diff_text")
     check = _run_git(["apply", "--check", "--whitespace=nowarn", "-"], timeout_s=60, max_chars=DEFAULT_MAX_CHARS, input_text=diff_text)
@@ -1640,7 +1735,7 @@ def repo_affected_gate_plan(root: str = "runtime", changed_files: list[str] | No
     """Suggest which whitelisted gates should run for changed files."""
     _require_runtime(root)
     files = changed_files or (_git_status_details().get("modified", []) + _git_status_details().get("staged", []) + _git_status_details().get("untracked", []))
-    gates = ["selector"] if any(path.startswith(("apps/", "packages/", "server/", "scripts/", "tools/")) for path in files) else ["test"]
+    gates = sorted(ALLOWED_GATES)
     return {"ok": True, "root": "runtime", "changed_files": sorted(set(files)), "recommended_gates": gates, "allowed_gates": sorted(ALLOWED_GATES)}
 
 
@@ -1718,17 +1813,18 @@ def run_controlstack_gate(gate: str, changed_files: list[str] | None = None, tim
     """Run a named, whitelisted ControlStack quality gate in the runtime root."""
     global LAST_RUNTIME_GATE_RESULT
     _require_runtime(root)
+    _require_lane_branch()
     gate_name = str(gate or "").strip().lower()
     if gate_name not in ALLOWED_GATES:
         result = {"ok": False, "gate": gate_name, "root": str(RUNTIME_ROOT), "command": FIXED_GATE_COMMAND, "exit_code": 2, "returncode": 2, "stdout": "", "stderr": f"Unsupported gate: {gate_name}", "duration_s": 0.0, "truncated": False, "error": "disallowed_gate"}
         LAST_RUNTIME_GATE_RESULT = result
         return result
-    script_path = RUNTIME_ROOT / "scripts" / "controlstack_gate.py"
+    script_path = GATE_RUNNER_PATH
     if not script_path.exists():
         result = {"ok": False, "gate": gate_name, "root": str(RUNTIME_ROOT), "command": [str(script_path), gate_name], "exit_code": 127, "returncode": 127, "stdout": "", "stderr": f"Gate runner not found: {script_path}", "duration_s": 0.0, "truncated": False, "error": "gate_runner_not_found"}
         LAST_RUNTIME_GATE_RESULT = result
         return result
-    cmd = [sys.executable, str(script_path), gate_name, "--json", "--max-chars", str(max_chars)]
+    cmd = [sys.executable, str(script_path), gate_name, "--root", str(RUNTIME_ROOT), "--required-branch", REQUIRED_BRANCH or _current_branch(), "--json", "--max-chars", str(max_chars)]
     started = time.monotonic()
     try:
         proc = subprocess.run(cmd, cwd=str(RUNTIME_ROOT), env=_safe_env_for_child(), capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=timeout_s, shell=False)
@@ -1769,6 +1865,7 @@ def repo_git_stage(paths: list[str], root: str = "runtime", dry_run: bool = True
     """Safely stage explicit file paths in runtime. Dry-run defaults to true."""
     _require_runtime(root)
     accepted_paths, rejected_paths = _prepare_git_index_paths(paths, require_existing_files=True, allow_missing=False, allow_junk=allow_junk)
+    _require_scoped_paths(accepted_paths)
     command_args = ["add", "--", *accepted_paths]
     git_result = None
     changed = False
@@ -1785,6 +1882,7 @@ def repo_git_unstage(paths: list[str], root: str = "runtime", dry_run: bool = Tr
     """Safely unstage explicit paths without touching working-tree changes."""
     _require_runtime(root)
     accepted_paths, rejected_paths = _prepare_git_index_paths(paths, require_existing_files=False, allow_missing=True, allow_junk=True)
+    _require_scoped_paths(accepted_paths)
     command_args = ["restore", "--staged", "--", *accepted_paths]
     git_result = None
     changed = False
@@ -1824,16 +1922,19 @@ def repo_git_recent(root: str = "runtime", limit: int = 20) -> dict[str, Any]:
 
 @mcp.tool()
 def repo_git_commit(message: str, root: str = "runtime") -> dict[str, Any]:
-    """Commit already-staged runtime changes after a green runtime gate. Does not stage files."""
+    """Commit already-staged runtime changes after a green lane gate. Does not stage files."""
     _require_runtime(root)
+    _require_lane_branch()
     message_clean = str(message or "").strip()
     if not message_clean:
         return {"ok": False, "error": "empty_commit_message", "commit_hash": "", "stdout": "", "stderr": "Commit message must not be empty.", "final_git_status": _git_status_details()}
     status = _git_status_details()
-    if status.get("modified"):
-        return {"ok": False, "error": "unstaged_modified_files", "commit_hash": "", "stdout": "", "stderr": "Refusing commit because modified files are not staged.", "unstaged_modified_files": status.get("modified"), "final_git_status": status}
-    if status.get("untracked"):
-        return {"ok": False, "error": "untracked_files_not_staged", "commit_hash": "", "stdout": "", "stderr": "Refusing commit because untracked files are present and not explicitly staged.", "untracked_files": status.get("untracked"), "final_git_status": status}
+    visible_modified = _visible_dirty_paths(status.get("modified") or [])
+    visible_untracked = _visible_dirty_paths(status.get("untracked") or [])
+    if visible_modified:
+        return {"ok": False, "error": "unstaged_modified_files", "commit_hash": "", "stdout": "", "stderr": "Refusing commit because modified files are not staged.", "unstaged_modified_files": visible_modified, "final_git_status": status}
+    if visible_untracked:
+        return {"ok": False, "error": "untracked_files_not_staged", "commit_hash": "", "stdout": "", "stderr": "Refusing commit because untracked files are present and not explicitly staged.", "untracked_files": visible_untracked, "final_git_status": status}
     if not status.get("staged"):
         return {"ok": False, "error": "no_staged_changes", "commit_hash": "", "stdout": "", "stderr": "Refusing commit because no files are staged.", "final_git_status": status}
     if not _gate_green():
@@ -1853,6 +1954,7 @@ def repo_git_push(root: str = "runtime") -> dict[str, Any]:
     """Push the current runtime branch to origin. No force push."""
     _require_runtime(root)
     _require_remote_update_enabled()
+    _require_lane_branch(for_push=True)
     branch = _run_git(["rev-parse", "--abbrev-ref", "HEAD"], timeout_s=30, max_chars=2_000)
     branch_name = str(branch.get("stdout") or "").strip()
     if not branch.get("ok") or not branch_name or branch_name == "HEAD":
@@ -1862,9 +1964,10 @@ def repo_git_push(root: str = "runtime") -> dict[str, Any]:
 
 
 @mcp.tool()
-def repo_green_commit_push(message: str, expected_staged_paths: list[str], gate: str = "selector", root: str = "runtime") -> dict[str, Any]:
+def repo_green_commit_push(message: str, expected_staged_paths: list[str], gate: str = "selector-engine", root: str = "runtime") -> dict[str, Any]:
     """Run a fixed runtime gate, verify explicit staged set, commit, and push. Does not stage files."""
     _require_runtime(root)
+    _require_scoped_paths(expected_staged_paths)
     gate_result = run_controlstack_gate(gate=gate, root="runtime")
     if not gate_result.get("ok"):
         return {"ok": False, "stage": "gate", "gate_result": gate_result, "commit": None, "push": None, "final_git_status": _git_status_details()}
@@ -1873,8 +1976,10 @@ def repo_green_commit_push(message: str, expected_staged_paths: list[str], gate:
     staged = sorted(status.get("staged") or [])
     if staged != expected:
         return {"ok": False, "stage": "staged_path_guard", "error": "staged_paths_do_not_match_expected", "expected_staged_paths": expected, "actual_staged_paths": staged, "commit": None, "push": None, "final_git_status": status}
-    if status.get("modified") or status.get("untracked"):
-        return {"ok": False, "stage": "worktree_guard", "error": "unstaged_or_untracked_files_present", "modified": status.get("modified"), "untracked": status.get("untracked"), "commit": None, "push": None, "final_git_status": status}
+    visible_modified = _visible_dirty_paths(status.get("modified") or [])
+    visible_untracked = _visible_dirty_paths(status.get("untracked") or [])
+    if visible_modified or visible_untracked:
+        return {"ok": False, "stage": "worktree_guard", "error": "unstaged_or_untracked_files_present", "modified": visible_modified, "untracked": visible_untracked, "commit": None, "push": None, "final_git_status": status}
     commit = repo_git_commit(message=message, root="runtime")
     if not commit.get("ok"):
         return {"ok": False, "stage": "commit", "gate_result": gate_result, "commit": commit, "push": None, "final_git_status": _git_status_details()}
