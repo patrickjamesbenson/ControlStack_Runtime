@@ -2582,7 +2582,12 @@ function systemReferenceValueIsWildcard(value = "") {
 }
 
 function systemReferenceValuesMatch(candidateValue, selectedValue) {
-  if (systemReferenceValueIsWildcard(candidateValue)) return true;
+  if (
+    systemReferenceValueIsWildcard(candidateValue)
+    || systemReferenceValueIsWildcard(selectedValue)
+  ) {
+    return true;
+  }
   if (valuesMatch(candidateValue, selectedValue)) return true;
   const candidateTokens = normalisedSystemTokenSet(candidateValue);
   const selectedTokens = normalisedSystemTokenSet(selectedValue);
