@@ -230,20 +230,21 @@ function directOnlyDnx60UnscopedProtocolSnapshot() {
     ],
     OPTICS: [{ system: "60", optic_var_1: "Opal", emission_permission: "Direct", approved: "yes" }],
     BOARDS: [{
-      board_family: "LM70-20E8",
-      architecture: "linear-board",
-      variant: "constant-current-board",
+      approved: "TRUE",
+      status: "available",
+      system: "*",
+      vendor: "tci",
+      family: "lm70-20e8",
       board_lm_per_m: "1200",
       c1_cct: "4000",
       c1_cri_min: "90",
-      control_type_options: "DALI-2 DT6;Fixed (On/Off);PWM",
-      control_type_labels: "DALI-2 DT6;Fixed (On/Off);PWM",
-      approved: "yes",
+      control_type_options: "dali2 dt6, fixed, dali2 dt8, dali+, dmx, d4i",
+      control_type_labels: "Dali2 DT6 (1 channel), Fixed (On/Off), Dali2 DT8 (2 channel), Dali+ (Wireless), DMX (Theatre), D4i (PWR for acc & wireless)",
     }],
     DRIVERS: [
-      { driver_id: "DT6 Driver", series: "OT FIT", architecture: "remote-driver", variant: "DT6", native_control_type: "DALI-2 DT6", approved: "yes" },
-      { driver_id: "Fixed Driver", series: "LC FIT", architecture: "remote-driver", variant: "Fixed", native_control_type: "Fixed (On/Off)", approved: "yes" },
-      { system: "ALT", system_variant_1: "40", driver_id: "ALT PWM Driver", native_control_type: "PWM", approved: "yes" },
+      { approved: "TRUE", status: "available", system: "*", vendor: "tci", series: "T_LED", native_control_type: "Dali2 (DT6)", model: "DT6 Driver" },
+      { approved: "TRUE", status: "available", system: "*", vendor: "boke", series: "CWL", native_control_type: "Fixed (On/Off)", model: "Fixed Driver" },
+      { approved: "TRUE", status: "available", system: "ALT", system_variant_1: "40", native_control_type: "PWM", model: "ALT PWM Driver" },
     ],
   };
 }
@@ -361,15 +362,21 @@ test("direct-only DNX 60 Opal exposes unscoped BOARDS and DRIVERS protocols with
   model = selectAndReload(selectorState, "targetLmPerM", "1200", snapshot);
   model = selectAndReload(selectorState, "cctCri", "cct_cri:4000K|CRI90", snapshot);
 
+  const directLm = workflowField(model, "targetLmPerM");
+  const directCctCri = workflowField(model, "cctCri");
   const directControl = workflowField(model, "controlType");
   const indirectControl = workflowField(model, "controlTypeIndirect");
 
+  assert.equal(directLm.displayMode, "manual-input");
+  assert.equal(directLm.effectiveValue, "1200");
+  assert.equal(directCctCri.displayMode, "choice");
+  assert.equal(directCctCri.selectedValue, "cct_cri:4000K|CRI90");
   assert.equal(directControl.status, "available");
   assert.equal(directControl.displayMode, "choice");
   assert.equal(directControl.selectedValue, "");
   assert.equal(directControl.selectedOptionBlocked, false);
   assert.ok(dropdownValues(model, "controlType").includes("DALI-2 DT6"));
-  assert.ok(dropdownValues(model, "controlType").includes("Fixed (On/Off)"));
+  assert.ok((directControl.dropdownOptions || []).some((item) => item.value === "fixed" && item.label === "Fixed (On/Off)"));
   assert.equal(dropdownValues(model, "controlType").includes("PWM"), false);
   assert.equal(indirectControl.displayMode, "hidden-diagnostic");
   assert.equal(indirectControl.primaryControl, false);

@@ -205,6 +205,88 @@ test("source-backed Control uses the authoritative BOARDS and DRIVERS intersecti
   assert.equal(control.options.some((item) => item.value === "Digital addressable control"), false);
 });
 
+test("live-shaped global BOARDS and DRIVERS rows expose genuine native control authority without selecting a protocol", () => {
+  const result = deriveSelectorReferenceOptionsFromSnapshot({
+    SYSTEM: [{ system: "60", system_variant_1: "Linear", label: "DNX 60", emission: "Direct", approved: "TRUE", status: "available" }],
+    OPTICS: [{ system: "60", optic_var_1: "Opal", emission_permission: "Direct", approved: "TRUE", status: "available" }],
+    BOARDS: [{
+      approved: "TRUE",
+      status: "available",
+      system: "*",
+      vendor: "tci",
+      family: "lm70-20e8",
+      c1_cct: 4000,
+      c1_cri_min: 90,
+      control_type_options: "dali2 dt6, fixed, dali2 dt8, dali+, dmx, d4i",
+      control_type_labels: "Dali2 DT6 (1 channel), Fixed (On/Off), Dali2 DT8 (2 channel), Dali+ (Wireless), DMX (Theatre), D4i (PWR for acc & wireless)",
+    }],
+    DRIVERS: [
+      {
+        approved: "TRUE",
+        status: "available",
+        system: "*",
+        vendor: "tci",
+        series: "T_LED",
+        native_control_type: "Dali2 (DT6)",
+        model: "driver-dt6-live-shape",
+      },
+      {
+        approved: "TRUE",
+        status: "available",
+        system: "*",
+        vendor: "boke",
+        series: "CWL",
+        native_control_type: "Fixed (On/Off)",
+        model: "driver-fixed-live-shape",
+      },
+    ],
+  }, {
+    source: sourceReady(),
+    constraints: {
+      system: "60|Linear",
+      directOpticVar1: "60|Opal",
+      targetLmPerM: "1200",
+      cctCri: "cct_cri:4000K|CRI90",
+    },
+  });
+
+  const control = field(result, "controlType");
+  assert.equal(control.selectedValue, "");
+  assert.equal(control.status, "available");
+  assert.ok(control.options.some((item) => item.value === "DALI-2 DT6" && item.status === "available"));
+  assert.ok(control.options.some((item) => item.value === "fixed" && item.label === "Fixed (On/Off)" && item.status === "available"));
+  assert.equal(control.options.some((item) => item.value === "DALI-2 DT8" && item.status === "available"), false);
+  assert.equal(control.options.some((item) => item.value === "DALI+ (Wireless)" && item.status === "available"), false);
+  assert.ok(field(result, "driver").options.some((item) => item.value === "driver-dt6-live-shape"));
+  assert.ok(field(result, "driver").options.some((item) => item.value === "driver-fixed-live-shape"));
+});
+
+test("driver aliases do not create protocol authority without native or legacy control authority", () => {
+  const result = deriveSelectorReferenceOptionsFromSnapshot({
+    SYSTEM: [{ system: "60", system_variant_1: "Linear", label: "DNX 60", emission: "Direct", approved: "TRUE" }],
+    BOARDS: [{
+      system: "*",
+      c1_cct: 4000,
+      c1_cri_min: 90,
+      control_type_options: "dali2 dt6",
+      control_type_labels: "Dali2 DT6 (1 channel)",
+      approved: "TRUE",
+    }],
+    DRIVERS: [{
+      system: "*",
+      model: "alias-only-driver",
+      dimming: "Dali2 DT6",
+      protocol: "DALI-2 DT6",
+      approved: "TRUE",
+    }],
+  }, { source: sourceReady(), constraints: { system: "60|Linear" } });
+
+  const control = field(result, "controlType");
+  assert.deepEqual(control.options, []);
+  assert.equal(control.status, "blocked");
+  assert.equal(field(result, "driver").options.some((item) => item.value === "alias-only-driver"), true);
+});
+
 test("Control fails closed when labels have no genuine compatible driver protocol", () => {
   const result = deriveSelectorReferenceOptionsFromSnapshot({
     SYSTEM: [{ system: "DNX", system_variant_1: "80", label: "DNX 80", emission: "Direct", approved: "yes" }],

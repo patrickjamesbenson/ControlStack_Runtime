@@ -1886,7 +1886,7 @@ function collectOptions(snapshot, timelineContext = createSelectorTimelineContex
   }
 
   for (const row of drivers) {
-    const driver = rowText(row, ["driver_id", "driver", "driver_name", "name", "label", "sku", "part_number"]);
+    const driver = driverIdentityValue(row);
     const controls = driverAvailableControlValues(row);
     if (driver) addOption(bucket, "driver", driver, { sourceTables: ["DRIVERS"], compatibleControlTypes: controls });
     for (const wiring of rowOptionValues(row, ["wiring_type", "wiring", "cable_type", "control_cores"])) addOption(bucket, "wiringType", wiring, { sourceTables: ["DRIVERS"] });
@@ -2040,9 +2040,22 @@ const BOARD_CONTROL_NATIVE_COLUMNS = Object.freeze([
   "native_control_type",
   "control_type",
 ]);
-const DRIVER_NATIVE_CONTROL_COLUMNS = Object.freeze([
+const DRIVER_NATIVE_CONTROL_AUTHORITY_COLUMNS = Object.freeze([
   "native_control_type",
+]);
+const DRIVER_LEGACY_CONTROL_AUTHORITY_COLUMNS = Object.freeze([
   "control_type",
+]);
+const DRIVER_IDENTITY_COLUMNS = Object.freeze([
+  "driver_id",
+  "driver",
+  "driver_name",
+  "name",
+  "label",
+  "sku",
+  "part_number",
+  "model",
+  "code_or_article",
 ]);
 const DRIVER_SUPPORTED_CONTROL_ALIAS_COLUMNS = Object.freeze([
   "supported_aliases",
@@ -2173,8 +2186,18 @@ function indexedProtocolLabel(labels = [], index = 0, authorityValue = "") {
   return labels.find((label) => controlProtocolMatchKey(label) === authorityKey) || authorityValue;
 }
 
+function driverAuthorityControlValues(row = {}) {
+  const nativeValues = rowOptionValues(row, DRIVER_NATIVE_CONTROL_AUTHORITY_COLUMNS);
+  if (nativeValues.length) return nativeValues;
+  return rowOptionValues(row, DRIVER_LEGACY_CONTROL_AUTHORITY_COLUMNS);
+}
+
+function driverIdentityValue(row = {}) {
+  return rowText(row, DRIVER_IDENTITY_COLUMNS);
+}
+
 function driverProtocolDescriptors(row = {}, systemOptions = []) {
-  const nativeValues = rowOptionValues(row, DRIVER_NATIVE_CONTROL_COLUMNS);
+  const nativeValues = driverAuthorityControlValues(row);
   if (!nativeValues.length) return [];
   const aliases = rowOptionValues(row, DRIVER_SUPPORTED_CONTROL_ALIAS_COLUMNS);
   const systemMeta = protocolSourceRowSystemReferenceMeta(systemOptions, row);
@@ -2475,7 +2498,7 @@ function collectRecords(snapshot, bucket, timelineContext = createSelectorTimeli
   }
 
   for (const row of driverRowsForRelationships) {
-    const driver = rowText(row, ["driver_id", "driver", "driver_name", "name", "label", "sku", "part_number"]);
+    const driver = driverIdentityValue(row);
     const control = driverAvailableControlValues(row);
     const wiring = rowOptionValues(row, ["wiring_type", "wiring", "cable_type", "control_cores"]);
     const systemMeta = protocolSourceRowSystemReferenceMeta(systemOptions, row);
