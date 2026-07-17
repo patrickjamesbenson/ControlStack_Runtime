@@ -1,17 +1,20 @@
 #requires -Version 5.1
 
 [CmdletBinding()]
-param()
+param(
+    [switch]$AuditOnly
+)
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
 
-$RepairVersion = '1.0.0'
+$RepairVersion = '2.0.0'
 $StartedAt = Get-Date
 $Timestamp = $StartedAt.ToString('yyyyMMdd-HHmmss')
+$RepairMode = $(if ($AuditOnly) { 'AUDIT' } else { 'EXECUTE' })
 $ReceiptRoot = 'C:\ControlStack_Receipts'
-$ReceiptPath = Join-Path $ReceiptRoot ("CONTROLSTACK_ENVIRONMENT_REPAIR_{0}.json" -f $Timestamp)
+$ReceiptPath = Join-Path $ReceiptRoot ("CONTROLSTACK_ENVIRONMENT_REPAIR_{0}_{1}.json" -f $RepairMode, $Timestamp)
 $BackupRoot = Join-Path $ReceiptRoot ("CONTROLSTACK_ENVIRONMENT_REPAIR_{0}_backups" -f $Timestamp)
 
 $ProgramRoot = 'C:\ControlStack_Worktrees\program-integrate'
@@ -27,6 +30,7 @@ $ExpectedBranches = [ordered]@{
 
 $ExpectedPorts = [ordered]@{
     SelectorMcp = 8000
+    SelectorMcpCandidate = 8100
     SelectorRuntime = 8788
     SelectorTunnel = 8082
     LabMcp = 8021
@@ -50,20 +54,25 @@ $LabStagedPaths = @(
 
 $Receipt = [ordered]@{
     repairVersion = $RepairVersion
+    mode = $RepairMode.ToLowerInvariant()
     startedAt = $StartedAt.ToString('o')
-    computer = $env:COMPUTERNAME
-    user = "$env:USERDOMAIN\$env:USERNAME"
-    userSid = $null
+    completedAt = $null
     status = 'started'
-    preflight = [ordered]@{}
+    failureCode = 'NONE'
+    branches = [ordered]@{ program = $null; selector = $null; lab = $null }
+    validations = New-Object System.Collections.ArrayList
     changes = New-Object System.Collections.ArrayList
-    preservedServices = New-Object System.Collections.ArrayList
-    backups = New-Object System.Collections.ArrayList
-    tunnelRuntimeReferences = New-Object System.Collections.ArrayList
-    lab = [ordered]@{}
-    selector = [ordered]@{}
-    services = [ordered]@{}
-    errors = New-Object System.Collections.ArrayList
+    services = New-Object System.Collections.ArrayList
+    lab = [ordered]@{ gate = 'not-run'; gateExitCode = $null; commit = $null; push = 'not-run'; protectedDigest = $null }
+    selector = [ordered]@{ scope = $SelectorWriteScope; activation = 'not-run'; candidatePort = 8100 }
+    preservation = [ordered]@{
+        existingManagerFileCount = 0
+        existingServiceCount = 0
+        unknownServiceCount = 0
+        csTunnelRuntimeReferenceCount = 0
+        existingManagersUntouched = $true
+        existingStartupUntouched = $true
+    }
 }
 
 $MutationStarted = $false
@@ -71,6 +80,7 @@ $TemporaryTunnelProcesses = New-Object System.Collections.ArrayList
 $NewCanonicalTunnelProcesses = New-Object System.Collections.ArrayList
 $OldTunnelProcesses = @{}
 $StoppedOriginalTunnelIds = New-Object System.Collections.ArrayList
+$TunnelLoadBearing = @{}
 $SecretPlainText = $null
 $SecretSecure = $null
 $NewSecretFile = $null
@@ -82,20 +92,53 @@ $StartupEntryPath = $null
 $SelectorConfigPlan = $null
 $SelectorConfigBackup = $null
 $ProtectedLabFingerprintBefore = $null
+$FailureCode = 'NONE'
+$CurrentUserSid = $null
+
+function Set-FailureCode {
+    param([Parameter(Mandatory = $true)][string]$Code)
+    $script:FailureCode = $Code
+}
 
 function Add-ReceiptChange {
     param([string]$Kind, [string]$Path, [string]$Detail)
-    [void]$Receipt.changes.Add([ordered]@{ kind = $Kind; path = $Path; detail = $Detail })
+    $serviceId = $null
+    if (-not [string]::IsNullOrWhiteSpace($Path) -and $Path -match '^[a-z0-9-]{1,64}$') { $serviceId = $Path }
+    [void]$Receipt.changes.Add([ordered]@{ kind = [string]$Kind; status = 'recorded'; serviceId = $serviceId; resultCode = 'OK' })
 }
 
 function Add-PreservedService {
     param([string]$Name, [string]$Source, [string]$Detail)
-    [void]$Receipt.preservedServices.Add([ordered]@{ name = $Name; source = $Source; detail = $Detail })
+    # Existing services remain under their existing manager. Free-text source
+    # data is deliberately not copied into the structured receipt.
 }
 
 function Add-ReceiptError {
     param([string]$Message)
-    [void]$Receipt.errors.Add($Message)
+    if ($script:FailureCode -eq 'NONE') { $script:FailureCode = 'SAFE_FAILURE' }
+}
+
+function Add-ReceiptValidation {
+    param([string]$Code, [string]$Status, [string]$ServiceId = $null, [Nullable[int]]$Port = $null, [Nullable[uint32]]$ProcessId = $null)
+    [void]$Receipt.validations.Add([ordered]@{
+        code = [string]$Code
+        status = [string]$Status
+        serviceId = $ServiceId
+        port = $Port
+        processId = $ProcessId
+        resultCode = 'OK'
+    })
+}
+
+function Add-ReceiptService {
+    param([string]$ServiceId, [int]$Port, [uint32]$ProcessId, [string]$ExecutableName, [string]$Status)
+    [void]$Receipt.services.Add([ordered]@{
+        serviceId = $ServiceId
+        port = $Port
+        processId = $ProcessId
+        executableName = $ExecutableName
+        status = $Status
+    })
 }
 
 function Ensure-Directory {
@@ -105,12 +148,62 @@ function Ensure-Directory {
     }
 }
 
+function Get-StructuredReceiptSnapshot {
+    return [ordered]@{
+        repairVersion = [string]$Receipt.repairVersion
+        mode = [string]$Receipt.mode
+        startedAt = [string]$Receipt.startedAt
+        completedAt = [string]$Receipt.completedAt
+        status = [string]$Receipt.status
+        failureCode = [string]$Receipt.failureCode
+        branches = [ordered]@{
+            program = [string]$Receipt.branches.program
+            selector = [string]$Receipt.branches.selector
+            lab = [string]$Receipt.branches.lab
+        }
+        validations = @($Receipt.validations | ForEach-Object {
+            [ordered]@{ code=[string]$_.code; status=[string]$_.status; serviceId=$_.serviceId; port=$_.port; processId=$_.processId; resultCode=[string]$_.resultCode }
+        })
+        changes = @($Receipt.changes | ForEach-Object {
+            [ordered]@{ kind=[string]$_.kind; status=[string]$_.status; serviceId=$_.serviceId; resultCode=[string]$_.resultCode }
+        })
+        services = @($Receipt.services | ForEach-Object {
+            [ordered]@{ serviceId=[string]$_.serviceId; port=[int]$_.port; processId=[uint32]$_.processId; executableName=[string]$_.executableName; status=[string]$_.status }
+        })
+        lab = [ordered]@{
+            gate = [string]$Receipt.lab.gate
+            gateExitCode = $Receipt.lab.gateExitCode
+            commit = $Receipt.lab.commit
+            push = [string]$Receipt.lab.push
+            protectedDigest = $Receipt.lab.protectedDigest
+        }
+        selector = [ordered]@{
+            scope = [string]$Receipt.selector.scope
+            activation = [string]$Receipt.selector.activation
+            candidatePort = [int]$Receipt.selector.candidatePort
+        }
+        preservation = [ordered]@{
+            existingManagerFileCount = [int]$Receipt.preservation.existingManagerFileCount
+            existingServiceCount = [int]$Receipt.preservation.existingServiceCount
+            unknownServiceCount = [int]$Receipt.preservation.unknownServiceCount
+            csTunnelRuntimeReferenceCount = [int]$Receipt.preservation.csTunnelRuntimeReferenceCount
+            existingManagersUntouched = [bool]$Receipt.preservation.existingManagersUntouched
+            existingStartupUntouched = [bool]$Receipt.preservation.existingStartupUntouched
+        }
+    }
+}
+
 function Write-Receipt {
     param([string]$Status)
+    if ($null -ne $script:SecretPlainText) {
+        $script:SecretPlainText = '<cleared-before-receipt>'
+        $script:SecretPlainText = $null
+    }
     $Receipt.status = $Status
+    $Receipt.failureCode = $script:FailureCode
     $Receipt.completedAt = (Get-Date).ToString('o')
     Ensure-Directory -Path $ReceiptRoot
-    $json = $Receipt | ConvertTo-Json -Depth 20
+    $json = (Get-StructuredReceiptSnapshot) | ConvertTo-Json -Depth 12
     [System.IO.File]::WriteAllText($ReceiptPath, $json, (New-Object System.Text.UTF8Encoding($false)))
     Write-Host "Receipt: $ReceiptPath"
 }
@@ -123,16 +216,19 @@ function Invoke-External {
         [switch]$AllowFailure
     )
     $original = Get-Location
+    $output = @()
+    $exitCode = 0
     try {
         if ($WorkingDirectory) { Set-Location -LiteralPath $WorkingDirectory }
-        $output = & $FilePath @Arguments 2>&1
+        $output = @(& $FilePath @Arguments 2>&1)
         $exitCode = $LASTEXITCODE
     }
     finally {
         Set-Location -LiteralPath $original
     }
     if (-not $AllowFailure -and $exitCode -ne 0) {
-        throw "Command failed with exit code $exitCode: $FilePath $($Arguments -join ' ')`n$($output -join [Environment]::NewLine)"
+        Set-FailureCode -Code 'EXTERNAL_COMMAND_FAILED'
+        throw 'EXTERNAL_COMMAND_FAILED'
     }
     return [ordered]@{ exitCode = $exitCode; output = @($output | ForEach-Object { [string]$_ }) }
 }
@@ -429,7 +525,7 @@ function Backup-ChangedFile {
     param([string]$Path)
     if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) { return $null }
     Ensure-Directory -Path $BackupRoot
-    Protect-PrivateDirectory -Path $BackupRoot -Sid $Receipt.userSid
+    Protect-PrivateDirectory -Path $BackupRoot -Sid $CurrentUserSid
     $safeName = ($Path -replace '[:\\/]', '_')
     $pathBytes = [System.Text.Encoding]::UTF8.GetBytes([System.IO.Path]::GetFullPath($Path).ToLowerInvariant())
     $pathHasher = [System.Security.Cryptography.SHA256]::Create()
@@ -437,7 +533,7 @@ function Backup-ChangedFile {
     finally { $pathHasher.Dispose() }
     $backup = Join-Path $BackupRoot ($safeName + '.' + $pathId + '.bak')
     Copy-Item -LiteralPath $Path -Destination $backup -Force
-    [void]$Receipt.backups.Add([ordered]@{ source = $Path; backup = $backup })
+    Add-ReceiptChange -Kind 'backup' -Path 'configuration' -Detail 'created-before-mutation'
     return $backup
 }
 
@@ -601,6 +697,51 @@ function Set-LauncherEnvironmentValue {
     throw "Unsupported Selector launcher format: $Path"
 }
 
+function Set-LauncherPortValue {
+    param([string]$Content, [int]$OldPort, [int]$NewPort)
+    $escaped = [regex]::Escape([string]$OldPort)
+    $patterns = @(
+        ('(?im)^\s*\$env:(?:CONTROLSTACK_HTTP_PORT|CONTROLSTACK_MCP_PORT|MCP_PORT|PORT)\s*=\s*["''](?<port>' + $escaped + ')["'']\s*$'),
+        ('(?im)^\s*set\s+"?(?:CONTROLSTACK_HTTP_PORT|CONTROLSTACK_MCP_PORT|MCP_PORT|PORT)=(?<port>' + $escaped + ')"?\s*$'),
+        ('(?i)--port(?:=|\s+)(?<port>' + $escaped + ')\b')
+    )
+    $groups = New-Object System.Collections.ArrayList
+    foreach ($pattern in $patterns) {
+        foreach ($match in [regex]::Matches($Content, $pattern)) { [void]$groups.Add($match.Groups['port']) }
+    }
+    if ($groups.Count -ne 1) { Set-FailureCode -Code 'SELECTOR_PORT_REWRITE_NOT_EXACT'; throw 'SELECTOR_PORT_REWRITE_NOT_EXACT' }
+    $group = $groups[0]
+    return $Content.Remove($group.Index, $group.Length).Insert($group.Index, [string]$NewPort)
+}
+
+function Start-LauncherProcess {
+    param([string]$Path, [string]$WorkingDirectory)
+    $extension = [System.IO.Path]::GetExtension($Path).ToLowerInvariant()
+    if ($extension -in @('.bat','.cmd')) {
+        return Start-Process cmd.exe -ArgumentList @('/d','/s','/c',('"' + $Path + '"')) -WorkingDirectory $WorkingDirectory -WindowStyle Hidden -PassThru
+    }
+    if ($extension -eq '.ps1') {
+        return Start-Process powershell.exe -ArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-File',$Path) -WorkingDirectory $WorkingDirectory -WindowStyle Hidden -PassThru
+    }
+    Set-FailureCode -Code 'SELECTOR_LAUNCHER_FORMAT_REJECTED'
+    throw 'SELECTOR_LAUNCHER_FORMAT_REJECTED'
+}
+
+function Wait-SelectorMcpHealthy {
+    param([int]$Port, [string]$Label)
+    for ($attempt = 0; $attempt -lt 60; $attempt++) {
+        try {
+            $record = Assert-ProcessIdentity -ServiceName $Label -Port $Port -RequiredAnyMarkers @($SelectorRoot, [string]$Port, 'controlstack_mcp') -RequiredProcessNames @('python*.exe')
+            $health = Get-HealthCheck -Port $Port -Attempts 1
+            if ($health.healthy) { return $record }
+        }
+        catch { }
+        Start-Sleep -Milliseconds 500
+    }
+    Set-FailureCode -Code 'SELECTOR_CANDIDATE_HEALTH_FAILED'
+    throw 'SELECTOR_CANDIDATE_HEALTH_FAILED'
+}
+
 function New-SelectorConfigPlan {
     param([object]$ScopeSource)
     $envName = $ScopeSource.envName
@@ -608,45 +749,84 @@ function New-SelectorConfigPlan {
     $path = $candidate.path
     $content = $candidate.content
     $extension = [System.IO.Path]::GetExtension($path).ToLowerInvariant()
+    if ($extension -notin @('.ps1','.bat','.cmd')) { Set-FailureCode -Code 'SELECTOR_LAUNCHER_FORMAT_REJECTED'; throw 'SELECTOR_LAUNCHER_FORMAT_REJECTED' }
     $boundRuntimeRoot = Get-LauncherEnvironmentValue -Path $path -Content $content -Name 'CONTROLSTACK_RUNTIME_ROOT'
-    if ($boundRuntimeRoot -ne $SelectorRoot) {
-        throw "Selector launcher runtime-root binding mismatch. Expected '$SelectorRoot'; found '$boundRuntimeRoot'."
-    }
+    if ($boundRuntimeRoot -ne $SelectorRoot) { Set-FailureCode -Code 'SELECTOR_ROOT_BINDING_MISMATCH'; throw 'SELECTOR_ROOT_BINDING_MISMATCH' }
     $encoding = Get-ListEncoding -SourceText $ScopeSource.content -EnvName $envName
     $currentValue = Get-LauncherEnvironmentValue -Path $path -Content $content -Name $envName
     if ($null -eq $currentValue) { $currentValue = '' }
-    $encoded = Encode-ScopeValue -Values @($SelectorWriteScope) -Encoding $encoding
-    $newContent = Set-LauncherEnvironmentValue -Path $path -Content $content -Name $envName -Value $encoded
-    $newContent = Set-LauncherEnvironmentValue -Path $path -Content $newContent -Name 'CONTROLSTACK_ENABLE_WRITE' -Value '1'
-    $writeValue = Get-LauncherEnvironmentValue -Path $path -Content $newContent -Name 'CONTROLSTACK_ENABLE_WRITE'
-    if ($writeValue -ne '1') { throw 'Selector write capability was not enabled in the selected launcher.' }
-
     $currentScopes = Decode-ScopeValue -Value $currentValue -Encoding $encoding
-    $unexpected = @($currentScopes | Where-Object { $_ -ne $SelectorWriteScope })
-    if ($unexpected.Count -gt 0) {
-        throw "Selector write scope contains unexpected existing paths and will not be rewritten: $($unexpected -join ', ')."
-    }
-    $writtenScopeValue = Get-LauncherEnvironmentValue -Path $path -Content $newContent -Name $envName
-    $writtenScopes = Decode-ScopeValue -Value $writtenScopeValue -Encoding $encoding
+    if (@($currentScopes | Where-Object { $_ -ne $SelectorWriteScope }).Count -gt 0) { Set-FailureCode -Code 'SELECTOR_EXISTING_SCOPE_REJECTED'; throw 'SELECTOR_EXISTING_SCOPE_REJECTED' }
+    $newContent = Set-LauncherEnvironmentValue -Path $path -Content $content -Name $envName -Value (Encode-ScopeValue -Values @($SelectorWriteScope) -Encoding $encoding)
+    $newContent = Set-LauncherEnvironmentValue -Path $path -Content $newContent -Name 'CONTROLSTACK_ENABLE_WRITE' -Value '1'
+    $writtenScopes = Decode-ScopeValue -Value (Get-LauncherEnvironmentValue -Path $path -Content $newContent -Name $envName) -Encoding $encoding
     Assert-SameStringSet -Actual $writtenScopes -Expected @($SelectorWriteScope) -Label 'Selector repaired write scope'
-    if ($newContent -match '(?im)CONTROLSTACK_ENABLE_(ARBITRARY_SHELL|DELETE|MOVEMENT|MOVE|CROSS_ROOT_COPY)\s*=\s*(1|true|yes|on)') {
-        throw 'Selector configuration enables a prohibited capability; refusing repair.'
-    }
-    if ($newContent.IndexOf($SelectorRoot, [System.StringComparison]::OrdinalIgnoreCase) -lt 0) {
-        throw 'Selector configuration does not retain the exact Selector root.'
-    }
-    if ($newContent -notmatch [regex]::Escape([string]$ExpectedPorts.SelectorMcp)) {
-        throw 'Selector configuration does not retain MCP port 8000.'
+    if ((Get-LauncherEnvironmentValue -Path $path -Content $newContent -Name 'CONTROLSTACK_ENABLE_WRITE') -ne '1') { Set-FailureCode -Code 'SELECTOR_WRITE_NOT_ENABLED'; throw 'SELECTOR_WRITE_NOT_ENABLED' }
+    if ($newContent -match '(?im)CONTROLSTACK_ENABLE_(ARBITRARY_SHELL|DELETE|MOVEMENT|MOVE|CROSS_ROOT_COPY)\s*=\s*(1|true|yes|on)') { Set-FailureCode -Code 'SELECTOR_PROHIBITED_CAPABILITY'; throw 'SELECTOR_PROHIBITED_CAPABILITY' }
+    if ($newContent.IndexOf($SelectorRoot, [System.StringComparison]::OrdinalIgnoreCase) -lt 0) { Set-FailureCode -Code 'SELECTOR_ROOT_NOT_RETAINED'; throw 'SELECTOR_ROOT_NOT_RETAINED' }
+    $candidateContent = Set-LauncherPortValue -Content $newContent -OldPort $ExpectedPorts.SelectorMcp -NewPort $ExpectedPorts.SelectorMcpCandidate
+    $candidatePath = Join-Path $BackupRoot ("selector-mcp-candidate-{0}{1}" -f $Timestamp, $extension)
+    if ($extension -eq '.ps1') {
+        Assert-PowerShellTextParses -Text $newContent -Label 'Selector canonical launcher'
+        Assert-PowerShellTextParses -Text $candidateContent -Label 'Selector candidate launcher'
     }
     return [ordered]@{
         path = $path
         envName = $envName
         encoding = $encoding
-        oldScopes = @($currentScopes)
-        newScopes = @($SelectorWriteScope)
         oldContent = $content
         newContent = $newContent
+        candidateContent = $candidateContent
+        candidatePath = $candidatePath
         changed = ($content -cne $newContent)
+    }
+}
+
+function Invoke-SelectorBlueGreenActivation {
+    param([object]$Plan, [object]$OriginalEvidence)
+    if (-not $Plan.changed) { $Receipt.selector.activation = 'already-current'; return $OriginalEvidence }
+    Ensure-Directory -Path $BackupRoot
+    Protect-PrivateDirectory -Path $BackupRoot -Sid $CurrentUserSid
+    Write-Utf8NoBomAtomic -Path $Plan.candidatePath -Content $Plan.candidateContent
+    $candidate = $null
+    $canonical = $null
+    $originalRestored = $false
+    try {
+        [void](Start-LauncherProcess -Path $Plan.candidatePath -WorkingDirectory $SelectorRoot)
+        $candidate = Wait-SelectorMcpHealthy -Port $ExpectedPorts.SelectorMcpCandidate -Label 'Selector MCP blue-green candidate'
+        if ((Get-GitBranch -Root $SelectorRoot) -ne $ExpectedBranches.Selector) { Set-FailureCode -Code 'SELECTOR_CANDIDATE_BRANCH_MISMATCH'; throw 'SELECTOR_CANDIDATE_BRANCH_MISMATCH' }
+        $candidateText = [System.IO.File]::ReadAllText($Plan.candidatePath)
+        $candidateScope = Decode-ScopeValue -Value (Get-LauncherEnvironmentValue -Path $Plan.candidatePath -Content $candidateText -Name $Plan.envName) -Encoding $Plan.encoding
+        Assert-SameStringSet -Actual $candidateScope -Expected @($SelectorWriteScope) -Label 'Selector candidate scope'
+        [void](Assert-ProcessIdentity -ServiceName 'Selector MCP original preserved' -Port $ExpectedPorts.SelectorMcp -RequiredAnyMarkers @($SelectorRoot, [string]$ExpectedPorts.SelectorMcp, 'controlstack_mcp') -RequiredProcessNames @('python*.exe'))
+        $SelectorConfigBackup = Backup-ChangedFile -Path $Plan.path
+        if (-not $SelectorConfigBackup) { Set-FailureCode -Code 'SELECTOR_BACKUP_MISSING'; throw 'SELECTOR_BACKUP_MISSING' }
+        Write-Utf8NoBomAtomic -Path $Plan.path -Content $Plan.newContent
+        Stop-ExactProcess -ProcessId ([uint32]$OriginalEvidence.processId) -Name 'selector-mcp-original' -ExpectedPort $ExpectedPorts.SelectorMcp -ExpectedExecutable $OriginalEvidence.executablePath -IdentityMarkers @($SelectorRoot,[string]$ExpectedPorts.SelectorMcp)
+        [void](Start-LauncherProcess -Path $Plan.path -WorkingDirectory $SelectorRoot)
+        $canonical = Wait-SelectorMcpHealthy -Port $ExpectedPorts.SelectorMcp -Label 'Selector MCP canonical replacement'
+        Stop-ExactProcess -ProcessId ([uint32]$candidate.processId) -Name 'selector-mcp-candidate' -ExpectedPort $ExpectedPorts.SelectorMcpCandidate -ExpectedExecutable $candidate.executablePath -IdentityMarkers @($SelectorRoot,[string]$ExpectedPorts.SelectorMcpCandidate)
+        $Receipt.selector.activation = 'blue-green-completed'
+        return $canonical
+    }
+    catch {
+        Set-FailureCode -Code 'SELECTOR_BLUE_GREEN_FAILED'
+        if ($null -ne $canonical) {
+            try { Stop-ExactProcess -ProcessId ([uint32]$canonical.processId) -Name 'selector-mcp-failed-canonical' -ExpectedPort $ExpectedPorts.SelectorMcp -ExpectedExecutable $canonical.executablePath -IdentityMarkers @($SelectorRoot,[string]$ExpectedPorts.SelectorMcp) } catch { }
+        }
+        if ($SelectorConfigBackup -and (Test-Path -LiteralPath $SelectorConfigBackup -PathType Leaf)) { Copy-Item -LiteralPath $SelectorConfigBackup -Destination $Plan.path -Force }
+        try {
+            $listener = @(Get-NetTCPConnection -State Listen -LocalPort $ExpectedPorts.SelectorMcp -ErrorAction SilentlyContinue)
+            if ($listener.Count -eq 0) { [void](Start-LauncherProcess -Path $Plan.path -WorkingDirectory $SelectorRoot) }
+            [void](Wait-SelectorMcpHealthy -Port $ExpectedPorts.SelectorMcp -Label 'Selector MCP restored original')
+            $originalRestored = $true
+        }
+        catch { }
+        if ($originalRestored -and $null -ne $candidate) {
+            try { Stop-ExactProcess -ProcessId ([uint32]$candidate.processId) -Name 'selector-mcp-candidate' -ExpectedPort $ExpectedPorts.SelectorMcpCandidate -ExpectedExecutable $candidate.executablePath -IdentityMarkers @($SelectorRoot,[string]$ExpectedPorts.SelectorMcpCandidate) } catch { }
+        }
+        $Receipt.selector.activation = $(if ($originalRestored) { 'rolled-back-original-restored' } else { 'candidate-preserved' })
+        throw 'SELECTOR_BLUE_GREEN_FAILED'
     }
 }
 
@@ -661,7 +841,9 @@ function Get-ManagerDiscovery {
     ) | Select-Object -Unique
     $files = Get-TextFilesUnderRoots -Roots $candidateRoots -NamePatterns @('*.ps1', '*.py', '*.cmd', '*.bat', '*.json')
     $explicit = New-Object System.Collections.ArrayList
+    $additiveManagerRoot = Join-Path $env:LOCALAPPDATA 'ControlStack\lane-managed-services'
     foreach ($file in $files) {
+        if ($file.StartsWith($additiveManagerRoot, [System.StringComparison]::OrdinalIgnoreCase)) { continue }
         $name = [System.IO.Path]::GetFileName($file)
         $isNamedManager = $name -match '(?i)service.*manager|managed.*service'
         $isContentManager = $false
@@ -798,81 +980,136 @@ public static extern System.IntPtr LocalFree(System.IntPtr hMem);
     finally { [void][CommandLine.NativeMethods]::LocalFree($ptr) }
 }
 
-function Remove-CredentialArguments {
-    param([string[]]$Arguments)
+function Assert-SafeTunnelIdentifier {
+    param([string]$Value, [string]$FailureCode)
+    if ($Value -notmatch '^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$') {
+        Set-FailureCode -Code $FailureCode
+        throw $FailureCode
+    }
+}
+
+function ConvertTo-ApprovedLoopbackTarget {
+    param([string]$Value, [int]$ExpectedPort)
+    try { $uri = [Uri]$Value } catch { Set-FailureCode -Code 'TUNNEL_TARGET_REJECTED'; throw 'TUNNEL_TARGET_REJECTED' }
+    if ($uri.Scheme -ne 'http' -or $uri.Host -notin @('127.0.0.1','localhost','::1') -or $uri.Port -ne $ExpectedPort -or $uri.AbsolutePath.TrimEnd('/') -ne '/mcp' -or $uri.Query -or $uri.Fragment) {
+        Set-FailureCode -Code 'TUNNEL_TARGET_REJECTED'
+        throw 'TUNNEL_TARGET_REJECTED'
+    }
+    return $uri.AbsoluteUri.TrimEnd('/')
+}
+
+function ConvertTo-ApprovedHealthAddress {
+    param([string]$Value, [int]$ExpectedPort)
+    $hadScheme = $Value -match '^https?://'
+    $candidate = $(if ($hadScheme) { $Value } else { 'http://' + $Value })
+    try { $uri = [Uri]$candidate } catch { Set-FailureCode -Code 'TUNNEL_HEALTH_REJECTED'; throw 'TUNNEL_HEALTH_REJECTED' }
+    if ($uri.Scheme -ne 'http' -or $uri.Host -notin @('127.0.0.1','localhost','::1') -or $uri.Port -ne $ExpectedPort -or $uri.AbsolutePath -ne '/' -or $uri.Query -or $uri.Fragment) {
+        Set-FailureCode -Code 'TUNNEL_HEALTH_REJECTED'
+        throw 'TUNNEL_HEALTH_REJECTED'
+    }
+    if ($hadScheme) { return $uri.AbsoluteUri.TrimEnd('/') }
+    return ("{0}:{1}" -f $uri.Host, $uri.Port)
+}
+
+function Set-ApprovedHealthPort {
+    param([string]$Address, [int]$NewPort)
+    $hadScheme = $Address -match '^https?://'
+    $candidate = $(if ($hadScheme) { $Address } else { 'http://' + $Address })
+    $builder = New-Object System.UriBuilder([Uri]$candidate)
+    $builder.Port = $NewPort
+    if ($hadScheme) { return $builder.Uri.AbsoluteUri.TrimEnd('/') }
+    return ("{0}:{1}" -f $builder.Host, $builder.Port)
+}
+
+function ConvertFrom-ApprovedTunnelArguments {
+    param([string[]]$Arguments, [int]$McpPort, [int]$HealthPort)
+    if ($Arguments.Count -lt 9 -or $Arguments[0] -ne 'run') {
+        Set-FailureCode -Code 'TUNNEL_OPERATION_REJECTED'
+        throw 'TUNNEL_OPERATION_REJECTED'
+    }
+    $allowed = [ordered]@{
+        '--profile' = 'profileName'
+        '--tunnel' = 'tunnelIdentity'
+        '--target' = 'mcpTarget'
+        '--health-address' = 'healthAddress'
+        '--log-level' = 'logLevel'
+        '--log-format' = 'logFormat'
+    }
+    $values = [ordered]@{}
+    for ($i = 1; $i -lt $Arguments.Count; $i++) {
+        $token = [string]$Arguments[$i]
+        if ($token -match '^[A-Za-z_][A-Za-z0-9_]*=') { Set-FailureCode -Code 'TUNNEL_ENV_ASSIGNMENT_REJECTED'; throw 'TUNNEL_ENV_ASSIGNMENT_REJECTED' }
+        $name = $token
+        $value = $null
+        $equals = $token.IndexOf('=')
+        if ($equals -gt 0) { $name = $token.Substring(0,$equals); $value = $token.Substring($equals + 1) }
+        if (-not $allowed.Contains($name)) { Set-FailureCode -Code 'TUNNEL_ARGUMENT_REJECTED'; throw 'TUNNEL_ARGUMENT_REJECTED' }
+        $property = [string]$allowed[$name]
+        if ($values.Contains($property)) { Set-FailureCode -Code 'TUNNEL_ARGUMENT_DUPLICATED'; throw 'TUNNEL_ARGUMENT_DUPLICATED' }
+        if ($null -eq $value) {
+            $i++
+            if ($i -ge $Arguments.Count) { Set-FailureCode -Code 'TUNNEL_ARGUMENT_VALUE_MISSING'; throw 'TUNNEL_ARGUMENT_VALUE_MISSING' }
+            $value = [string]$Arguments[$i]
+        }
+        if ([string]::IsNullOrWhiteSpace($value) -or $value -match '\s' -or $value -match '^[A-Za-z_][A-Za-z0-9_]*=') {
+            Set-FailureCode -Code 'TUNNEL_ARGUMENT_VALUE_REJECTED'
+            throw 'TUNNEL_ARGUMENT_VALUE_REJECTED'
+        }
+        $values[$property] = $value
+    }
+    foreach ($required in @('profileName','tunnelIdentity','mcpTarget','healthAddress')) {
+        if (-not $values.Contains($required)) { Set-FailureCode -Code 'TUNNEL_REQUIRED_ARGUMENT_MISSING'; throw 'TUNNEL_REQUIRED_ARGUMENT_MISSING' }
+    }
+    Assert-SafeTunnelIdentifier -Value ([string]$values.profileName) -FailureCode 'TUNNEL_PROFILE_REJECTED'
+    Assert-SafeTunnelIdentifier -Value ([string]$values.tunnelIdentity) -FailureCode 'TUNNEL_IDENTITY_REJECTED'
+    $logLevel = $null
+    if ($values.Contains('logLevel')) {
+        $logLevel = ([string]$values.logLevel).ToLowerInvariant()
+        if ($logLevel -notin @('error','warn','info')) { Set-FailureCode -Code 'TUNNEL_LOG_LEVEL_REJECTED'; throw 'TUNNEL_LOG_LEVEL_REJECTED' }
+    }
+    $logFormat = $null
+    if ($values.Contains('logFormat')) {
+        $logFormat = ([string]$values.logFormat).ToLowerInvariant()
+        if ($logFormat -notin @('json','text')) { Set-FailureCode -Code 'TUNNEL_LOG_FORMAT_REJECTED'; throw 'TUNNEL_LOG_FORMAT_REJECTED' }
+    }
+    return [ordered]@{
+        operation = 'run'
+        profileName = [string]$values.profileName
+        tunnelIdentity = [string]$values.tunnelIdentity
+        mcpTarget = ConvertTo-ApprovedLoopbackTarget -Value ([string]$values.mcpTarget) -ExpectedPort $McpPort
+        healthAddress = ConvertTo-ApprovedHealthAddress -Value ([string]$values.healthAddress) -ExpectedPort $HealthPort
+        logLevel = $logLevel
+        logFormat = $logFormat
+    }
+}
+
+function New-ApprovedTunnelArguments {
+    param([object]$Definition, [string]$HealthAddress)
     $result = New-Object System.Collections.ArrayList
-    $secretSwitches = @('--api-key', '--token', '--secret', '--openai-api-key', '--service-api-key', '-k')
-    for ($i = 0; $i -lt $Arguments.Count; $i++) {
-        $arg = $Arguments[$i]
-        $lower = $arg.ToLowerInvariant()
-        if ($secretSwitches -contains $lower) { $i++; continue }
-        if ($lower -match '^--(api-key|token|secret|openai-api-key|service-api-key)=') { continue }
-        [void]$result.Add($arg)
-    }
+    [void]$result.Add('run')
+    [void]$result.Add('--profile'); [void]$result.Add([string]$Definition.profileName)
+    [void]$result.Add('--tunnel'); [void]$result.Add([string]$Definition.tunnelIdentity)
+    [void]$result.Add('--target'); [void]$result.Add([string]$Definition.mcpTarget)
+    [void]$result.Add('--health-address'); [void]$result.Add($HealthAddress)
+    if ($Definition.logLevel) { [void]$result.Add('--log-level'); [void]$result.Add([string]$Definition.logLevel) }
+    if ($Definition.logFormat) { [void]$result.Add('--log-format'); [void]$result.Add([string]$Definition.logFormat) }
     return @($result)
-}
-
-function Replace-HealthPortArgument {
-    param([string[]]$Arguments, [int]$OldPort, [int]$NewPort)
-    $copy = @($Arguments)
-    $changed = $false
-    for ($i = 0; $i -lt $copy.Count; $i++) {
-        if ($copy[$i] -match "^(--[^=]*(health|status|metrics|listen)[^=]*)=$OldPort$") {
-            $copy[$i] = $Matches[1] + '=' + [string]$NewPort
-            $changed = $true
-            continue
-        }
-        if ($copy[$i] -eq [string]$OldPort -and $i -gt 0 -and $copy[$i - 1] -match '(?i)health|status|metrics|listen') {
-            $copy[$i] = [string]$NewPort
-            $changed = $true
-        }
-    }
-    if (-not $changed) {
-        $indices = New-Object System.Collections.ArrayList
-        for ($i = 0; $i -lt $copy.Count; $i++) {
-            if ($copy[$i] -eq [string]$OldPort -or $copy[$i] -match "=$OldPort$") { [void]$indices.Add($i) }
-        }
-        if ($indices.Count -eq 1) {
-            $idx = [int]$indices[0]
-            if ($copy[$idx] -eq [string]$OldPort) { $copy[$idx] = [string]$NewPort }
-            else { $copy[$idx] = $copy[$idx] -replace "=$OldPort$", ('=' + [string]$NewPort) }
-            $changed = $true
-        }
-    }
-    if (-not $changed) { throw "Could not prove which tunnel argument controls health port $OldPort." }
-    return $copy
-}
-
-function Get-ExistingManagedTunnelSecretFile {
-    param([Parameter(Mandatory = $true)][string]$ServiceId)
-    if ([string]::IsNullOrWhiteSpace($ManagerRegistryPath) -or -not (Test-Path -LiteralPath $ManagerRegistryPath -PathType Leaf)) { return $null }
-    $registry = [System.IO.File]::ReadAllText($ManagerRegistryPath) | ConvertFrom-Json
-    $matches = @($registry.services | Where-Object {
-        $_.PSObject.Properties.Name -contains 'id' -and [string]$_.id -eq $ServiceId
-    })
-    if ($matches.Count -eq 0) { return $null }
-    if ($matches.Count -ne 1) { throw "Existing manager registry contains multiple entries for $ServiceId." }
-    $entry = $matches[0]
-    if (-not ($entry.PSObject.Properties.Name -contains 'secretFile') -or [string]::IsNullOrWhiteSpace([string]$entry.secretFile)) { return $null }
-    if ($entry.PSObject.Properties.Name -contains 'ownerSid' -and [string]$entry.ownerSid -ne $Receipt.userSid) {
-        throw "Existing managed secret for $ServiceId belongs to a different Windows SID."
-    }
-    $path = [string]$entry.secretFile
-    if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { throw "Existing managed secret file is missing for $ServiceId: $path" }
-    return $path
 }
 
 function Get-TunnelDefinition {
     param([string]$Id, [string]$Name, [int]$HealthPort, [string]$LaneRoot, [int]$TemporaryPort)
-    $evidence = Assert-ProcessIdentity -ServiceName $Name -Port $HealthPort -RequiredAnyMarkers @('openai', 'tunnel', 'cloudflared', 'ngrok') -RequiredProcessNames @('*')
+    $mcpPort = switch ($Id) {
+        'selector-openai-tunnel' { $ExpectedPorts.SelectorMcp }
+        'lab-openai-tunnel' { $ExpectedPorts.LabMcp }
+        'program-openai-tunnel' { $ExpectedPorts.ProgramMcp }
+        default { Set-FailureCode -Code 'TUNNEL_SERVICE_ID_REJECTED'; throw 'TUNNEL_SERVICE_ID_REJECTED' }
+    }
+    $evidence = Assert-ProcessIdentity -ServiceName $Name -Port $HealthPort -RequiredAnyMarkers @('run') -RequiredProcessNames @('*')
     $argv = Get-CommandLineArguments -CommandLine $evidence.commandLine
-    if ($argv.Count -lt 1) { throw "Cannot parse command line for $Name." }
+    if ($argv.Count -lt 2) { Set-FailureCode -Code 'TUNNEL_COMMAND_LINE_EMPTY'; throw 'TUNNEL_COMMAND_LINE_EMPTY' }
     $exe = $evidence.executablePath
-    if ([string]::IsNullOrWhiteSpace($exe)) { $exe = $argv[0] }
-    $args = @($argv | Select-Object -Skip 1)
-    $sanitized = Remove-CredentialArguments -Arguments $args
-    $tempArgs = Replace-HealthPortArgument -Arguments $sanitized -OldPort $HealthPort -NewPort $TemporaryPort
-    $canonicalArgs = Replace-HealthPortArgument -Arguments $tempArgs -OldPort $TemporaryPort -NewPort $HealthPort
+    if ([string]::IsNullOrWhiteSpace($exe)) { Set-FailureCode -Code 'TUNNEL_EXECUTABLE_MISSING'; throw 'TUNNEL_EXECUTABLE_MISSING' }
+    $approved = ConvertFrom-ApprovedTunnelArguments -Arguments @($argv | Select-Object -Skip 1) -McpPort $mcpPort -HealthPort $HealthPort
     return [ordered]@{
         id = $Id
         name = $Name
@@ -881,33 +1118,42 @@ function Get-TunnelDefinition {
         temporaryPort = $TemporaryPort
         oldProcessId = $evidence.processId
         executable = $exe
-        oldArguments = $args
-        rollbackSecretFile = (Get-ExistingManagedTunnelSecretFile -ServiceId $Id)
-        managedArguments = $canonicalArgs
-        temporaryArguments = $tempArgs
+        executableName = [System.IO.Path]::GetFileName($exe)
+        operation = 'run'
+        profileName = $approved.profileName
+        tunnelIdentity = $approved.tunnelIdentity
+        mcpTarget = $approved.mcpTarget
+        healthAddress = $approved.healthAddress
+        temporaryHealthAddress = Set-ApprovedHealthPort -Address $approved.healthAddress -NewPort $TemporaryPort
+        logLevel = $approved.logLevel
+        logFormat = $approved.logFormat
         workingDirectory = $LaneRoot
-        identityMarkers = @('openai', 'tunnel')
+        identityMarkers = @('run', $approved.profileName, $approved.tunnelIdentity)
         evidence = $evidence
     }
 }
 
 function Start-ProcessWithCredential {
-    param([object]$Definition, [string[]]$Arguments, [System.Security.SecureString]$SecureCredential)
+    param([object]$Definition, [string]$HealthAddress, [System.Security.SecureString]$SecureCredential)
     $bstr = [IntPtr]::Zero
     try {
         $bstr = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($SecureCredential)
         $plain = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($bstr)
         $oldOpenAi = [Environment]::GetEnvironmentVariable('OPENAI_API_KEY', 'Process')
-        $oldService = [Environment]::GetEnvironmentVariable('OPENAI_SERVICE_API_KEY', 'Process')
+        $prohibitedCredentialVariables = @('OPENAI_SERVICE_API_KEY','OPENAI_TOKEN','OPENAI_API_TOKEN','OPENAI_SERVICE_TOKEN')
+        $previousProhibitedValues = @{}
+        foreach ($name in $prohibitedCredentialVariables) {
+            $previousProhibitedValues[$name] = [Environment]::GetEnvironmentVariable($name, 'Process')
+        }
         try {
+            foreach ($name in $prohibitedCredentialVariables) { [Environment]::SetEnvironmentVariable($name, $null, 'Process') }
             [Environment]::SetEnvironmentVariable('OPENAI_API_KEY', $plain, 'Process')
-            [Environment]::SetEnvironmentVariable('OPENAI_SERVICE_API_KEY', $plain, 'Process')
-            $proc = Start-Process -FilePath $Definition.executable -ArgumentList $Arguments -WorkingDirectory $Definition.workingDirectory -WindowStyle Hidden -PassThru
-            return $proc
+            $arguments = New-ApprovedTunnelArguments -Definition $Definition -HealthAddress $HealthAddress
+            return Start-Process -FilePath $Definition.executable -ArgumentList $arguments -WorkingDirectory $Definition.workingDirectory -WindowStyle Hidden -PassThru
         }
         finally {
             [Environment]::SetEnvironmentVariable('OPENAI_API_KEY', $oldOpenAi, 'Process')
-            [Environment]::SetEnvironmentVariable('OPENAI_SERVICE_API_KEY', $oldService, 'Process')
+            foreach ($name in $prohibitedCredentialVariables) { [Environment]::SetEnvironmentVariable($name, $previousProhibitedValues[$name], 'Process') }
             $plain = $null
         }
     }
@@ -917,37 +1163,48 @@ function Start-ProcessWithCredential {
 }
 
 function Stop-ExactProcess {
-    param([uint32]$ProcessId, [string]$Name)
-    $proc = Get-Process -Id $ProcessId -ErrorAction SilentlyContinue
-    if (-not $proc) { return }
+    param(
+        [uint32]$ProcessId,
+        [string]$Name,
+        [int]$ExpectedPort,
+        [string]$ExpectedExecutable,
+        [string[]]$IdentityMarkers
+    )
+    if ($ExpectedPort -le 0 -or [string]::IsNullOrWhiteSpace($ExpectedExecutable) -or @($IdentityMarkers).Count -eq 0) {
+        Set-FailureCode -Code 'PROCESS_STOP_GUARD_MISSING'
+        throw 'PROCESS_STOP_GUARD_MISSING'
+    }
+    $listener = Get-ListeningProcess -Port $ExpectedPort
+    if ([uint32]$listener.ProcessId -ne $ProcessId) { Set-FailureCode -Code 'PROCESS_STOP_PORT_OWNER_MISMATCH'; throw 'PROCESS_STOP_PORT_OWNER_MISMATCH' }
+    if ([System.IO.Path]::GetFullPath([string]$listener.ExecutablePath) -ne [System.IO.Path]::GetFullPath($ExpectedExecutable)) {
+        Set-FailureCode -Code 'PROCESS_STOP_EXECUTABLE_MISMATCH'
+        throw 'PROCESS_STOP_EXECUTABLE_MISMATCH'
+    }
+    $commandLine = [string]$listener.CommandLine
+    foreach ($marker in $IdentityMarkers) {
+        if ($commandLine.IndexOf([string]$marker, [System.StringComparison]::OrdinalIgnoreCase) -lt 0) {
+            Set-FailureCode -Code 'PROCESS_STOP_IDENTITY_MISMATCH'
+            throw 'PROCESS_STOP_IDENTITY_MISMATCH'
+        }
+    }
     Stop-Process -Id $ProcessId -Force
     try { Wait-Process -Id $ProcessId -Timeout 15 -ErrorAction SilentlyContinue } catch { }
-    Add-ReceiptChange -Kind 'process-stop' -Path ([string]$ProcessId) -Detail $Name
+    Add-ReceiptChange -Kind 'process-stop' -Path $Name -Detail 'verified-exact-pid'
 }
 
-function Start-OldTunnelRollback {
-    param([object]$Definition)
-    $rollbackSecure = $null
-    try {
-        if ($Definition.rollbackSecretFile) {
-            $encryptedRollbackSecret = [System.IO.File]::ReadAllText([string]$Definition.rollbackSecretFile)
-            $rollbackSecure = ConvertTo-SecureString $encryptedRollbackSecret
-            $proc = Start-ProcessWithCredential -Definition $Definition -Arguments $Definition.oldArguments -SecureCredential $rollbackSecure
-        }
-        else {
-            $proc = Start-Process -FilePath $Definition.executable -ArgumentList $Definition.oldArguments -WorkingDirectory $Definition.workingDirectory -WindowStyle Hidden -PassThru
-        }
-        Assert-StableTunnelHealth -Port $Definition.healthPort -Label ($Definition.name + ' rollback')
-        Add-ReceiptChange -Kind 'rollback' -Path $Definition.name -Detail $(if ($Definition.rollbackSecretFile) { 'Previous DPAPI-managed tunnel credential restored after replacement failure.' } else { 'Original tunnel command restarted after replacement failure.' })
-        return $proc
+function Assert-FreshTunnelRollbackRoute {
+    param([object]$Definition, [uint32]$TemporaryProcessId)
+    $listener = Get-ListeningProcess -Port $Definition.temporaryPort
+    if ([uint32]$listener.ProcessId -ne $TemporaryProcessId) { Set-FailureCode -Code 'TUNNEL_ROLLBACK_ROUTE_MISSING'; throw 'TUNNEL_ROLLBACK_ROUTE_MISSING' }
+    if ([System.IO.Path]::GetFullPath([string]$listener.ExecutablePath) -ne [System.IO.Path]::GetFullPath([string]$Definition.executable)) {
+        Set-FailureCode -Code 'TUNNEL_ROLLBACK_EXECUTABLE_MISMATCH'
+        throw 'TUNNEL_ROLLBACK_EXECUTABLE_MISMATCH'
     }
-    catch {
-        Add-ReceiptError -Message ("Rollback failed for {0}: {1}" -f $Definition.name, $_.Exception.Message)
-        throw
+    foreach ($marker in $Definition.identityMarkers) {
+        if ([string]$listener.CommandLine -notlike ('*' + [string]$marker + '*')) { Set-FailureCode -Code 'TUNNEL_ROLLBACK_IDENTITY_MISMATCH'; throw 'TUNNEL_ROLLBACK_IDENTITY_MISMATCH' }
     }
-    finally {
-        if ($rollbackSecure) { $rollbackSecure.Dispose() }
-    }
+    Assert-StableTunnelHealth -Port $Definition.temporaryPort -Label ($Definition.name + ' fresh-key rollback route')
+    return $listener
 }
 
 function Protect-SecretFile {
@@ -981,14 +1238,22 @@ function Convert-DefinitionForRegistry {
         port = $Definition.healthPort
         healthPort = $Definition.healthPort
         executable = $Definition.executable
-        arguments = @($Definition.managedArguments)
+        executableName = $Definition.executableName
+        operation = 'run'
+        profileName = $Definition.profileName
+        tunnelIdentity = $Definition.tunnelIdentity
+        mcpTarget = $Definition.mcpTarget
+        healthAddress = $Definition.healthAddress
+        logLevel = $Definition.logLevel
+        logFormat = $Definition.logFormat
         workingDirectory = $Definition.workingDirectory
         secretFile = $SecretFile
-        ownerSid = $Receipt.userSid
+        ownerSid = $CurrentUserSid
         pidFile = (Join-Path $ManagerRoot ('pids\' + $Definition.id + '.pid'))
         identityMarkers = @($Definition.identityMarkers)
         managedCredential = $true
         managedByRepair = $true
+        laneManagerOwned = $true
     }
 }
 
@@ -996,7 +1261,6 @@ function New-NonTunnelRegistryDefinition {
     param([string]$Id, [string]$Name, [int]$Port, [string]$LaneRoot, [string]$Branch, [object]$Evidence, [object]$Launcher, [string]$Category)
     $markers = New-Object System.Collections.ArrayList
     [void]$markers.Add($LaneRoot)
-    [void]$markers.Add([System.IO.Path]::GetFileName($Launcher.path))
     if ($Category -eq 'mcp') { [void]$markers.Add('controlstack_mcp') }
     elseif ($Category -eq 'runtime') { [void]$markers.Add('server.js') }
     elseif ($Category -eq 'specification') {
@@ -1013,10 +1277,12 @@ function New-NonTunnelRegistryDefinition {
         healthPort = $Port
         launcher = $Launcher.path
         workingDirectory = $LaneRoot
+        executable = $Evidence.executablePath
+        executableName = $Evidence.processName
         identityMarkers = @($markers | Select-Object -Unique)
-        observedProcess = [ordered]@{ name = $Evidence.processName; executable = $Evidence.executablePath }
         managedCredential = $false
         managedByRepair = $true
+        laneManagerOwned = $true
     }
 }
 
@@ -1040,36 +1306,66 @@ function Test-ManagerRegistrySchema {
 function Merge-ManagerRegistry {
     param([string]$Path, [object[]]$ManagedDefinitions, [object]$Discovery)
     $existing = $null
-    if (Test-Path -LiteralPath $Path -PathType Leaf) {
-        $existing = ([System.IO.File]::ReadAllText($Path) | ConvertFrom-Json)
+    if (Test-Path -LiteralPath $Path -PathType Leaf) { $existing = ([System.IO.File]::ReadAllText($Path) | ConvertFrom-Json) }
+    if (-not $existing) { $existing = [pscustomobject]@{ schemaVersion = 2; services = @() } }
+    if (-not ($existing.PSObject.Properties.Name -contains 'services')) { Set-FailureCode -Code 'LANE_MANAGER_REGISTRY_INVALID'; throw 'LANE_MANAGER_REGISTRY_INVALID' }
+
+    $externalMatches = @{}
+    foreach ($file in @($Discovery.discoveredFiles)) {
+        if ([System.IO.Path]::GetExtension($file).ToLowerInvariant() -ne '.json') { continue }
+        try {
+            $json = [System.IO.File]::ReadAllText($file) | ConvertFrom-Json
+            if (-not ($json.PSObject.Properties.Name -contains 'services')) { continue }
+            foreach ($service in @($json.services)) {
+                if (-not ($service.PSObject.Properties.Name -contains 'id') -or -not $service.id) { continue }
+                $id = [string]$service.id
+                if (-not $externalMatches.ContainsKey($id)) { $externalMatches[$id] = New-Object System.Collections.ArrayList }
+                [void]$externalMatches[$id].Add($service)
+            }
+        }
+        catch { }
     }
-    if (-not $existing) {
-        $existing = [pscustomobject]@{ schemaVersion = 1; services = @(); preservedExternalManagerFiles = @() }
-    }
-    if (-not ($existing.PSObject.Properties.Name -contains 'services')) { throw "Existing manager registry $Path has no services array." }
+
     $map = [ordered]@{}
     foreach ($service in @($existing.services)) {
-        if (-not ($service.PSObject.Properties.Name -contains 'id') -or -not $service.id) {
-            throw "Existing manager registry contains a service without an id; refusing destructive merge."
-        }
+        if (-not ($service.PSObject.Properties.Name -contains 'id') -or -not $service.id) { Set-FailureCode -Code 'LANE_MANAGER_SERVICE_ID_MISSING'; throw 'LANE_MANAGER_SERVICE_ID_MISSING' }
         $map[[string]$service.id] = $service
     }
-    foreach ($service in $ManagedDefinitions) { $map[[string]$service.id] = $service }
-    foreach ($service in @($existing.services)) {
-        if (-not ($ManagedDefinitions.id -contains [string]$service.id)) {
-            Add-PreservedService -Name ([string]$service.id) -Source $Path -Detail 'Unknown existing managed entry preserved unchanged.'
+
+    $repairOwnedNames = @(
+        'id','name','category','laneRoot','branch','port','healthPort','executable','executableName',
+        'arguments','args','command','commandLine','environment','env','variables','workingDirectory',
+        'secretFile','ownerSid','pidFile','identityMarkers','managedCredential','managedByRepair','launcher',
+        'observedProcess','operation','profileName','tunnelIdentity','mcpTarget','healthAddress','logLevel',
+        'logFormat','laneManagerOwned'
+    )
+
+    foreach ($definition in $ManagedDefinitions) {
+        $id = [string]$definition.id
+        $base = $null
+        if ($map.Contains($id)) { $base = $map[$id] }
+        elseif ($externalMatches.ContainsKey($id)) {
+            if (@($externalMatches[$id]).Count -ne 1) { Set-FailureCode -Code 'EXISTING_SERVICE_ID_AMBIGUOUS'; throw 'EXISTING_SERVICE_ID_AMBIGUOUS' }
+            $base = $externalMatches[$id][0]
         }
+        $merged = [ordered]@{}
+        if ($null -ne $base) {
+            foreach ($property in $base.PSObject.Properties) {
+                if ($repairOwnedNames -notcontains $property.Name) { $merged[$property.Name] = $property.Value }
+            }
+        }
+        foreach ($key in $definition.Keys) { $merged[[string]$key] = $definition[$key] }
+        $map[$id] = [pscustomobject]$merged
     }
+
     $result = [ordered]@{}
-    foreach ($property in $existing.PSObject.Properties) { $result[$property.Name] = $property.Value }
-    $result['schemaVersion'] = 1
-    $result['updatedAt'] = (Get-Date).ToString('o')
-    $result['updatedBy'] = "$env:USERDOMAIN\$env:USERNAME"
-    $result['services'] = @($map.Values)
-    $existingExternalFiles = @()
-    if ($existing.PSObject.Properties.Name -contains 'preservedExternalManagerFiles') { $existingExternalFiles = @($existing.preservedExternalManagerFiles) }
-    $result['preservedExternalManagerFiles'] = @($existingExternalFiles + @($Discovery.discoveredFiles | Where-Object { $_ -ne $Path }) | Where-Object { $_ } | Sort-Object -Unique)
-    $result['downstreamArtifactsActive'] = $false
+    foreach ($property in $existing.PSObject.Properties) {
+        if ($property.Name -notin @('services','schemaVersion','updatedAt','updatedBy')) { $result[$property.Name] = $property.Value }
+    }
+    $result.schemaVersion = 2
+    $result.updatedAt = (Get-Date).ToString('o')
+    $result.updatedBy = "$env:USERDOMAIN\$env:USERNAME"
+    $result.services = @($map.Values)
     return ($result | ConvertTo-Json -Depth 30)
 }
 
@@ -1097,7 +1393,7 @@ $RegistryPath = Join-Path $PSScriptRoot 'controlstack-managed-services.json'
 $TunnelHostPath = Join-Path $PSScriptRoot 'ControlStack-TunnelHost.ps1'
 if (-not (Test-Path -LiteralPath $RegistryPath)) { throw "Registry missing: $RegistryPath" }
 $registry = Get-Content -LiteralPath $RegistryPath -Raw | ConvertFrom-Json
-$services = @($registry.services | Where-Object { $_.PSObject.Properties.Name -contains 'managedByRepair' -and $_.managedByRepair -eq $true })
+$services = @($registry.services | Where-Object { $_.PSObject.Properties.Name -contains 'laneManagerOwned' -and $_.laneManagerOwned -eq $true })
 if ($Service -ne 'all') {
     $services = @($services | Where-Object { $_.id -eq $Service })
     if ($services.Count -ne 1) { throw "Unknown managed service: $Service" }
@@ -1122,45 +1418,28 @@ function Get-IdentityText([uint32]$ListenerProcessId) {
     return "{0} {1} {2}" -f $p.Name, $p.ExecutablePath, $p.CommandLine
 }
 function Assert-Identity($entry, [uint32]$ListenerProcessId) {
+    $currentOwners = Get-Listener ([int]$entry.port)
+    if ($currentOwners.Count -ne 1 -or [uint32]$currentOwners[0] -ne $ListenerProcessId) { throw 'Current port ownership does not match the expected PID.' }
     $process = Get-CimInstance Win32_Process -Filter ("ProcessId={0}" -f $ListenerProcessId) -ErrorAction SilentlyContinue
-    if (-not $process) { throw "Listener PID $ListenerProcessId no longer exists." }
-    $expectedExecutable = $null
-    if ($entry.category -eq 'openai-tunnel') { $expectedExecutable = [string]$entry.executable }
-    elseif ($entry.PSObject.Properties.Name -contains 'observedProcess' -and $entry.observedProcess) { $expectedExecutable = [string]$entry.observedProcess.executable }
-    if (-not [string]::IsNullOrWhiteSpace($expectedExecutable)) {
-        $actualExecutable = [string]$process.ExecutablePath
-        if ([System.IO.Path]::GetFullPath($actualExecutable) -ne [System.IO.Path]::GetFullPath($expectedExecutable)) {
-            throw "Port $($entry.port) executable mismatch for PID $ListenerProcessId; refusing action."
-        }
-    }
+    if (-not $process) { throw 'Expected listener process no longer exists.' }
+    $expectedExecutable = [string]$entry.executable
+    if ([string]::IsNullOrWhiteSpace($expectedExecutable)) { throw 'Expected executable is missing.' }
+    $actualExecutable = [string]$process.ExecutablePath
+    if ([System.IO.Path]::GetFullPath($actualExecutable) -ne [System.IO.Path]::GetFullPath($expectedExecutable)) { throw 'Listener executable identity mismatch.' }
     $text = "{0} {1} {2}" -f $process.Name, $process.ExecutablePath, $process.CommandLine
-    $hit = $false
     foreach ($marker in @($entry.identityMarkers)) {
-        if ($text.IndexOf([string]$marker, [System.StringComparison]::OrdinalIgnoreCase) -ge 0) { $hit = $true; break }
+        if ($text.IndexOf([string]$marker, [System.StringComparison]::OrdinalIgnoreCase) -lt 0) { throw 'Listener command-line identity mismatch.' }
     }
-    if (-not $hit) { throw "Port $($entry.port) is owned by PID $ListenerProcessId with an unexpected identity; refusing action." }
 }
 function Start-Entry($entry) {
     $listeners = Get-Listener ([int]$entry.port)
     if ($listeners.Count -gt 0) {
         foreach ($listenerProcessId in $listeners) { Assert-Identity $entry ([uint32]$listenerProcessId) }
-        if ($entry.category -eq 'openai-tunnel') {
-            $managedPid = $null
-            if ($entry.PSObject.Properties.Name -contains 'pidFile' -and (Test-Path -LiteralPath ([string]$entry.pidFile) -PathType Leaf)) {
-                $managedPidText = (Get-Content -LiteralPath ([string]$entry.pidFile) -Raw).Trim()
-                if ($managedPidText -match '^\d+$') { $managedPid = [uint32]$managedPidText }
-            }
-            if ($listeners.Count -eq 1 -and $managedPid -eq [uint32]$listeners[0] -and (Test-ManagedHealth $entry)) {
-                Write-Host "$($entry.id): already running with managed credential (PID $($listeners[0]))"
-                return
-            }
-            foreach ($listenerProcessId in $listeners) { Stop-Process -Id ([uint32]$listenerProcessId) -Force }
-            Write-Host "$($entry.id): replaced recognised legacy or stale tunnel listener"
-        }
-        else {
+        if (Test-ManagedHealth $entry) {
             Write-Host "$($entry.id): already running (PID $($listeners[0]))"
             return
         }
+        throw 'Recognised service is present but unhealthy; refusing non-transactional replacement.'
     }
     if ($entry.category -eq 'openai-tunnel') {
         Start-Process powershell.exe -ArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-File',$TunnelHostPath,'-ServiceId',$entry.id) -WorkingDirectory $PSScriptRoot -WindowStyle Hidden | Out-Null
@@ -1227,37 +1506,52 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 $RegistryPath = Join-Path $PSScriptRoot 'controlstack-managed-services.json'
 $registry = Get-Content -LiteralPath $RegistryPath -Raw | ConvertFrom-Json
-$entry = @($registry.services | Where-Object { $_.id -eq $ServiceId })
-if ($entry.Count -ne 1 -or $entry[0].category -ne 'openai-tunnel') { throw "Unknown tunnel service: $ServiceId" }
+$entry = @($registry.services | Where-Object { $_.id -eq $ServiceId -and $_.laneManagerOwned -eq $true })
+if ($entry.Count -ne 1 -or $entry[0].category -ne 'openai-tunnel') { throw 'Unknown lane-managed tunnel.' }
 $entry = $entry[0]
 $currentSid = [System.Security.Principal.WindowsIdentity]::GetCurrent().User.Value
-if ($currentSid -ne [string]$entry.ownerSid) { throw "Tunnel credential is bound to SID $($entry.ownerSid); current SID is $currentSid." }
+if ($currentSid -ne [string]$entry.ownerSid) { throw 'Tunnel credential owner mismatch.' }
+if ([string]$entry.operation -ne 'run') { throw 'Tunnel operation rejected.' }
+if ([string]$entry.profileName -notmatch '^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$') { throw 'Tunnel profile rejected.' }
+if ([string]$entry.tunnelIdentity -notmatch '^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$') { throw 'Tunnel identity rejected.' }
+$target = [Uri]([string]$entry.mcpTarget)
+if ($target.Scheme -ne 'http' -or $target.Host -notin @('127.0.0.1','localhost','::1') -or $target.AbsolutePath.TrimEnd('/') -ne '/mcp' -or $target.Query -or $target.Fragment) { throw 'Tunnel target rejected.' }
+$healthText = [string]$entry.healthAddress
+$healthCandidate = $(if ($healthText -match '^https?://') { $healthText } else { 'http://' + $healthText })
+$health = [Uri]$healthCandidate
+if ($health.Scheme -ne 'http' -or $health.Host -notin @('127.0.0.1','localhost','::1') -or $health.Port -ne [int]$entry.healthPort -or $health.AbsolutePath -ne '/' -or $health.Query -or $health.Fragment) { throw 'Tunnel health address rejected.' }
+if ($entry.logLevel -and [string]$entry.logLevel -notin @('error','warn','info')) { throw 'Tunnel log level rejected.' }
+if ($entry.logFormat -and [string]$entry.logFormat -notin @('json','text')) { throw 'Tunnel log format rejected.' }
 $encrypted = Get-Content -LiteralPath ([string]$entry.secretFile) -Raw
 $secure = ConvertTo-SecureString $encrypted
 $bstr = [IntPtr]::Zero
 try {
     $bstr = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secure)
     $plain = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($bstr)
-    $env:OPENAI_API_KEY = $plain
-    $env:OPENAI_SERVICE_API_KEY = $plain
-    $process = Start-Process -FilePath ([string]$entry.executable) -ArgumentList @($entry.arguments) -WorkingDirectory ([string]$entry.workingDirectory) -WindowStyle Hidden -PassThru
-    for ($attempt = 0; $attempt -lt 60; $attempt++) {
-        Start-Sleep -Milliseconds 500
-        $listeners = @(Get-NetTCPConnection -State Listen -LocalPort ([int]$entry.healthPort) -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique)
-        if ($listeners.Count -eq 1) {
-            $pidDirectory = Split-Path -Parent ([string]$entry.pidFile)
-            if (-not (Test-Path -LiteralPath $pidDirectory -PathType Container)) { New-Item -ItemType Directory -Path $pidDirectory -Force | Out-Null }
-            [System.IO.File]::WriteAllText([string]$entry.pidFile, [string]$listeners[0], (New-Object System.Text.UTF8Encoding($false)))
-            Write-Host "$ServiceId started with managed listener PID $($listeners[0])."
-            return
-        }
+    $previous = [Environment]::GetEnvironmentVariable('OPENAI_API_KEY','Process')
+    $prohibitedCredentialVariables = @('OPENAI_SERVICE_API_KEY','OPENAI_TOKEN','OPENAI_API_TOKEN','OPENAI_SERVICE_TOKEN')
+    $previousProhibitedValues = @{}
+    foreach ($name in $prohibitedCredentialVariables) { $previousProhibitedValues[$name] = [Environment]::GetEnvironmentVariable($name,'Process') }
+    try {
+        foreach ($name in $prohibitedCredentialVariables) { [Environment]::SetEnvironmentVariable($name,$null,'Process') }
+        [Environment]::SetEnvironmentVariable('OPENAI_API_KEY',$plain,'Process')
+        $arguments = New-Object System.Collections.ArrayList
+        [void]$arguments.Add('run')
+        [void]$arguments.Add('--profile'); [void]$arguments.Add([string]$entry.profileName)
+        [void]$arguments.Add('--tunnel'); [void]$arguments.Add([string]$entry.tunnelIdentity)
+        [void]$arguments.Add('--target'); [void]$arguments.Add([string]$entry.mcpTarget)
+        [void]$arguments.Add('--health-address'); [void]$arguments.Add([string]$entry.healthAddress)
+        if ($entry.logLevel) { [void]$arguments.Add('--log-level'); [void]$arguments.Add([string]$entry.logLevel) }
+        if ($entry.logFormat) { [void]$arguments.Add('--log-format'); [void]$arguments.Add([string]$entry.logFormat) }
+        Start-Process -FilePath ([string]$entry.executable) -ArgumentList @($arguments) -WorkingDirectory ([string]$entry.workingDirectory) -WindowStyle Hidden | Out-Null
     }
-    throw "$ServiceId did not expose one listener on health port $($entry.healthPort)."
+    finally {
+        [Environment]::SetEnvironmentVariable('OPENAI_API_KEY',$previous,'Process')
+        foreach ($name in $prohibitedCredentialVariables) { [Environment]::SetEnvironmentVariable($name,$previousProhibitedValues[$name],'Process') }
+        $plain = $null
+    }
 }
 finally {
-    $env:OPENAI_API_KEY = $null
-    $env:OPENAI_SERVICE_API_KEY = $null
-    $plain = $null
     if ($bstr -ne [IntPtr]::Zero) { [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($bstr) }
 }
 '@
@@ -1294,7 +1588,7 @@ function Register-ManagerFiles {
     }
 
     $startupFolder = [Environment]::GetFolderPath('Startup')
-    $script:StartupEntryPath = Join-Path $startupFolder 'ControlStack-ManagedServices.cmd'
+    $script:StartupEntryPath = Join-Path $startupFolder 'ControlStack-LaneManagedServices.cmd'
     $startupContent = "@echo off`r`ncall `"$ManagerRoot\ControlStack-Start.cmd`"`r`n"
     $oldStartup = $null
     if (Test-Path -LiteralPath $StartupEntryPath -PathType Leaf) { $oldStartup = [System.IO.File]::ReadAllText($StartupEntryPath) }
@@ -1406,7 +1700,8 @@ function Invoke-LabGateCommitPush {
     if (-not (Test-Path -LiteralPath $gateRunner -PathType Leaf)) { throw "Gate runner missing: $gateRunner" }
     $python = (Get-Command python.exe -ErrorAction Stop).Source
     $gateResult = Invoke-External -FilePath $python -Arguments @($gateRunner, $LabGate, '--root', $LabRoot) -WorkingDirectory $ToolingRoot
-    $Receipt.lab.gate = [ordered]@{ name = $LabGate; exitCode = $gateResult.exitCode; output = @($gateResult.output) }
+    $Receipt.lab.gate = $LabGate
+    $Receipt.lab.gateExitCode = [int]$gateResult.exitCode
     Assert-LabProtectedInventory -Before $FingerprintBefore -After (Get-ProtectedLabFingerprint -Root $LabRoot) -Phase 'Lab gate'
     Assert-SameStringSet -Actual (Get-GitInventory -Root $LabRoot).staged -Expected $LabStagedPaths -Label 'Lab staged documentation set after gate'
 
@@ -1414,7 +1709,6 @@ function Invoke-LabGateCommitPush {
     $commit = Invoke-Git -Root $LabRoot -Arguments @('commit', '-m', $LabCommitMessage)
     $head = (Invoke-Git -Root $LabRoot -Arguments @('rev-parse', 'HEAD')).output -join ''
     $Receipt.lab.commit = $head.Trim()
-    $Receipt.lab.commitOutput = @($commit.output)
 
     $postCommitInventory = Get-GitInventory -Root $LabRoot
     if ($postCommitInventory.staged.Count -ne 0) { throw "Lab staged index is not empty after commit: $($postCommitInventory.staged -join ', ')." }
@@ -1422,145 +1716,93 @@ function Invoke-LabGateCommitPush {
 
     if ((Get-GitBranch -Root $LabRoot) -ne $ExpectedBranches.Lab) { throw 'Lab branch changed before push.' }
     $push = Invoke-Git -Root $LabRoot -Arguments @('push', 'origin', ($ExpectedBranches.Lab + ':' + $ExpectedBranches.Lab))
-    $Receipt.lab.push = [ordered]@{ branch = $ExpectedBranches.Lab; output = @($push.output) }
+    $Receipt.lab.push = 'pushed-lane-code-pilot-lab'
     Assert-LabProtectedInventory -Before $FingerprintBefore -After (Get-ProtectedLabFingerprint -Root $LabRoot) -Phase 'Lab push'
 }
 
 try {
-    Write-Host 'ControlStack environment repair preflight...'
+    Write-Host ("ControlStack environment repair {0} preflight..." -f $RepairMode.ToLowerInvariant())
 
-    foreach ($command in @('git.exe', 'python.exe', 'powershell.exe', 'icacls.exe')) {
-        if (-not (Get-Command $command -ErrorAction SilentlyContinue)) { throw "Required command is unavailable: $command" }
+    foreach ($command in @('git.exe','python.exe','powershell.exe','icacls.exe')) {
+        if (-not (Get-Command $command -ErrorAction SilentlyContinue)) { Set-FailureCode -Code 'REQUIRED_COMMAND_MISSING'; throw 'REQUIRED_COMMAND_MISSING' }
     }
-
     $identity = [System.Security.Principal.WindowsIdentity]::GetCurrent()
-    $Receipt.userSid = $identity.User.Value
-    $Receipt.preflight.identity = [ordered]@{ name = $identity.Name; sid = $identity.User.Value }
+    $CurrentUserSid = $identity.User.Value
 
-    foreach ($root in @($ProgramRoot, $SelectorRoot, $LabRoot, $ToolingRoot)) {
-        if (-not (Test-Path -LiteralPath $root -PathType Container)) { throw "Required root is missing: $root" }
+    foreach ($root in @($ProgramRoot,$SelectorRoot,$LabRoot,$ToolingRoot)) {
+        if (-not (Test-Path -LiteralPath $root -PathType Container)) { Set-FailureCode -Code 'REQUIRED_ROOT_MISSING'; throw 'REQUIRED_ROOT_MISSING' }
     }
     $scriptExpected = Join-Path $ProgramRoot 'scripts\CONTROLSTACK_ENVIRONMENT_REPAIR.ps1'
-    if ([System.IO.Path]::GetFullPath($PSCommandPath) -ne [System.IO.Path]::GetFullPath($scriptExpected)) {
-        throw "Run the tracked script from its exact Program path: $scriptExpected"
-    }
+    if ([System.IO.Path]::GetFullPath($PSCommandPath) -ne [System.IO.Path]::GetFullPath($scriptExpected)) { Set-FailureCode -Code 'SCRIPT_PATH_MISMATCH'; throw 'SCRIPT_PATH_MISMATCH' }
+    Assert-PowerShellTextParses -Text ([System.IO.File]::ReadAllText($PSCommandPath)) -Label 'Repair script'
 
-    $branches = [ordered]@{
-        Program = Get-GitBranch -Root $ProgramRoot
-        Selector = Get-GitBranch -Root $SelectorRoot
-        Lab = Get-GitBranch -Root $LabRoot
-    }
-    if ($branches.Program -ne $ExpectedBranches.Program) { throw "Program branch mismatch: $($branches.Program)" }
-    if ($branches.Selector -ne $ExpectedBranches.Selector) { throw "Selector branch mismatch: $($branches.Selector)" }
-    if ($branches.Lab -ne $ExpectedBranches.Lab) { throw "Lab branch mismatch: $($branches.Lab)" }
-    $Receipt.preflight.rootsAndBranches = [ordered]@{
-        program = [ordered]@{ root = $ProgramRoot; branch = $branches.Program }
-        selector = [ordered]@{ root = $SelectorRoot; branch = $branches.Selector }
-        lab = [ordered]@{ root = $LabRoot; branch = $branches.Lab }
-        tooling = $ToolingRoot
-    }
+    $Receipt.branches.program = Get-GitBranch -Root $ProgramRoot
+    $Receipt.branches.selector = Get-GitBranch -Root $SelectorRoot
+    $Receipt.branches.lab = Get-GitBranch -Root $LabRoot
+    if ($Receipt.branches.program -ne $ExpectedBranches.Program) { Set-FailureCode -Code 'PROGRAM_BRANCH_MISMATCH'; throw 'PROGRAM_BRANCH_MISMATCH' }
+    if ($Receipt.branches.selector -ne $ExpectedBranches.Selector) { Set-FailureCode -Code 'SELECTOR_BRANCH_MISMATCH'; throw 'SELECTOR_BRANCH_MISMATCH' }
+    if ($Receipt.branches.lab -ne $ExpectedBranches.Lab) { Set-FailureCode -Code 'LAB_BRANCH_MISMATCH'; throw 'LAB_BRANCH_MISMATCH' }
+    Add-ReceiptValidation -Code 'ROOTS_BRANCHES_AND_SCRIPT' -Status 'passed'
 
     $programInventory = Get-GitInventory -Root $ProgramRoot
-    if ($programInventory.staged.Count -gt 0 -or $programInventory.modified.Count -gt 0 -or $programInventory.untracked.Count -gt 0) {
-        throw 'Program worktree must be clean before executing the environment repair.'
-    }
+    if ($programInventory.staged.Count -gt 0 -or $programInventory.modified.Count -gt 0 -or $programInventory.untracked.Count -gt 0) { Set-FailureCode -Code 'PROGRAM_WORKTREE_NOT_CLEAN'; throw 'PROGRAM_WORKTREE_NOT_CLEAN' }
 
     $labInventory = Get-GitInventory -Root $LabRoot
     $labMemoryCommit = Find-LabMemoryCommit
     $labAlreadyCommitted = $false
-    if ($labInventory.staged.Count -eq 0 -and $labMemoryCommit) {
-        $labAlreadyCommitted = $true
-    }
-    elseif ($labInventory.staged.Count -gt 0) {
-        Assert-SameStringSet -Actual $labInventory.staged -Expected $LabStagedPaths -Label 'Lab staged documentation set'
-    }
-    else {
-        throw 'Lab staged documentation is neither exactly present nor already committed in recent reachable history.'
-    }
-    if ($labInventory.modified.Count -ne 10 -or $labInventory.untracked.Count -ne 66) {
-        throw "Lab protected inventory mismatch. Expected 10 modified and 66 untracked; found $($labInventory.modified.Count) modified and $($labInventory.untracked.Count) untracked."
-    }
+    if ($labInventory.staged.Count -eq 0 -and $labMemoryCommit) { $labAlreadyCommitted = $true }
+    elseif ($labInventory.staged.Count -gt 0) { Assert-SameStringSet -Actual $labInventory.staged -Expected $LabStagedPaths -Label 'Lab staged documentation set' }
+    else { Set-FailureCode -Code 'LAB_DOCUMENTATION_STATE_INVALID'; throw 'LAB_DOCUMENTATION_STATE_INVALID' }
+    if ($labInventory.modified.Count -ne 10 -or $labInventory.untracked.Count -ne 66) { Set-FailureCode -Code 'LAB_PROTECTED_COUNT_MISMATCH'; throw 'LAB_PROTECTED_COUNT_MISMATCH' }
     $protectedIntersection = @($labInventory.staged | Where-Object { $labInventory.modified -contains $_ -or $labInventory.untracked -contains $_ })
-    if ($protectedIntersection.Count -gt 0) { throw "Protected Lab files are staged: $($protectedIntersection -join ', ')" }
+    if ($protectedIntersection.Count -gt 0) { Set-FailureCode -Code 'LAB_PROTECTED_PATH_STAGED'; throw 'LAB_PROTECTED_PATH_STAGED' }
     $ProtectedLabFingerprintBefore = Get-ProtectedLabFingerprint -Root $LabRoot
-    $Receipt.lab.preflight = [ordered]@{
-        staged = @($labInventory.staged)
-        modifiedCount = $labInventory.modified.Count
-        untrackedCount = $labInventory.untracked.Count
-        protectedDigest = $ProtectedLabFingerprintBefore.digest
-        alreadyCommitted = $labAlreadyCommitted
-        existingCommit = $labMemoryCommit
-    }
+    $Receipt.lab.protectedDigest = $ProtectedLabFingerprintBefore.digest
+    Add-ReceiptValidation -Code 'LAB_PROTECTED_STATE' -Status 'passed'
 
     $serviceEvidence = [ordered]@{}
-    $serviceEvidence.selectorMcp = Assert-ProcessIdentity -ServiceName 'Selector MCP' -Port $ExpectedPorts.SelectorMcp -RequiredAnyMarkers @($SelectorRoot, $ToolingRoot, 'controlstack_mcp') -RequiredProcessNames @('python*.exe')
-    $serviceEvidence.selectorRuntime = Assert-ProcessIdentity -ServiceName 'Selector runtime' -Port $ExpectedPorts.SelectorRuntime -RequiredAnyMarkers @($SelectorRoot, 'server.js', 'workspace') -RequiredProcessNames @('node*.exe')
-    $serviceEvidence.labMcp = Assert-ProcessIdentity -ServiceName 'Lab MCP' -Port $ExpectedPorts.LabMcp -RequiredAnyMarkers @($LabRoot, $ToolingRoot, 'controlstack_mcp') -RequiredProcessNames @('python*.exe')
-    $serviceEvidence.labSpecification = Assert-ProcessIdentity -ServiceName 'Lab specification service' -Port $ExpectedPorts.LabSpecification -RequiredAnyMarkers @($LabRoot, 'streamlit', 'specification', 'demo') -RequiredProcessNames @('python*.exe', 'node*.exe')
-    $serviceEvidence.programMcp = Assert-ProcessIdentity -ServiceName 'Program MCP' -Port $ExpectedPorts.ProgramMcp -RequiredAnyMarkers @($ProgramRoot, $ToolingRoot, 'controlstack_mcp') -RequiredProcessNames @('python*.exe')
+    $serviceEvidence.selectorMcp = Assert-ProcessIdentity -ServiceName 'Selector MCP' -Port $ExpectedPorts.SelectorMcp -RequiredAnyMarkers @($SelectorRoot,$ToolingRoot,'controlstack_mcp') -RequiredProcessNames @('python*.exe')
+    $serviceEvidence.selectorRuntime = Assert-ProcessIdentity -ServiceName 'Selector runtime' -Port $ExpectedPorts.SelectorRuntime -RequiredAnyMarkers @($SelectorRoot,'server.js','workspace') -RequiredProcessNames @('node*.exe')
+    $serviceEvidence.labMcp = Assert-ProcessIdentity -ServiceName 'Lab MCP' -Port $ExpectedPorts.LabMcp -RequiredAnyMarkers @($LabRoot,$ToolingRoot,'controlstack_mcp') -RequiredProcessNames @('python*.exe')
+    $serviceEvidence.labSpecification = Assert-ProcessIdentity -ServiceName 'Lab specification service' -Port $ExpectedPorts.LabSpecification -RequiredAnyMarkers @($LabRoot,'streamlit','specification','demo') -RequiredProcessNames @('python*.exe','node*.exe')
+    $serviceEvidence.programMcp = Assert-ProcessIdentity -ServiceName 'Program MCP' -Port $ExpectedPorts.ProgramMcp -RequiredAnyMarkers @($ProgramRoot,$ToolingRoot,'controlstack_mcp') -RequiredProcessNames @('python*.exe')
 
     $launchers = [ordered]@{}
-    $launchers.selectorMcp = Find-LauncherFile -ServiceName 'Selector MCP' -Port $ExpectedPorts.SelectorMcp -LaneRoot $SelectorRoot -SearchRoots @($ToolingRoot, $SelectorRoot) -ExtraMarkers @('controlstack_mcp', 'selector-engine')
-    $launchers.selectorRuntime = Find-LauncherFile -ServiceName 'Selector runtime' -Port $ExpectedPorts.SelectorRuntime -LaneRoot $SelectorRoot -SearchRoots @($ToolingRoot, $SelectorRoot) -ExtraMarkers @('server.js', 'runtime')
-    $launchers.labMcp = Find-LauncherFile -ServiceName 'Lab MCP' -Port $ExpectedPorts.LabMcp -LaneRoot $LabRoot -SearchRoots @($ToolingRoot, $LabRoot) -ExtraMarkers @('controlstack_mcp', 'lab-ies')
-    $launchers.labSpecification = Find-LauncherFile -ServiceName 'Lab specification service' -Port $ExpectedPorts.LabSpecification -LaneRoot $LabRoot -SearchRoots @($ToolingRoot, $LabRoot) -ExtraMarkers @('streamlit', 'specification', 'demo')
-    $launchers.programMcp = Find-LauncherFile -ServiceName 'Program MCP' -Port $ExpectedPorts.ProgramMcp -LaneRoot $ProgramRoot -SearchRoots @($ToolingRoot, $ProgramRoot) -ExtraMarkers @('controlstack_mcp', 'program-integrate')
+    $launchers.selectorMcp = Find-LauncherFile -ServiceName 'Selector MCP' -Port $ExpectedPorts.SelectorMcp -LaneRoot $SelectorRoot -SearchRoots @($ToolingRoot,$SelectorRoot) -ExtraMarkers @('controlstack_mcp','selector-engine')
+    $launchers.selectorRuntime = Find-LauncherFile -ServiceName 'Selector runtime' -Port $ExpectedPorts.SelectorRuntime -LaneRoot $SelectorRoot -SearchRoots @($ToolingRoot,$SelectorRoot) -ExtraMarkers @('server.js','runtime')
+    $launchers.labMcp = Find-LauncherFile -ServiceName 'Lab MCP' -Port $ExpectedPorts.LabMcp -LaneRoot $LabRoot -SearchRoots @($ToolingRoot,$LabRoot) -ExtraMarkers @('controlstack_mcp','lab-ies')
+    $launchers.labSpecification = Find-LauncherFile -ServiceName 'Lab specification service' -Port $ExpectedPorts.LabSpecification -LaneRoot $LabRoot -SearchRoots @($ToolingRoot,$LabRoot) -ExtraMarkers @('streamlit','specification','demo')
+    $launchers.programMcp = Find-LauncherFile -ServiceName 'Program MCP' -Port $ExpectedPorts.ProgramMcp -LaneRoot $ProgramRoot -SearchRoots @($ToolingRoot,$ProgramRoot) -ExtraMarkers @('controlstack_mcp','program-integrate')
 
     $scopeSource = Find-SelectorScopeSource
     $SelectorConfigPlan = New-SelectorConfigPlan -ScopeSource $scopeSource
-    $Receipt.selector.preflight = [ordered]@{
-        configPath = $SelectorConfigPlan.path
-        scopeEnvironmentVariable = $SelectorConfigPlan.envName
-        scopeEncoding = $SelectorConfigPlan.encoding
-        existingScopes = @($SelectorConfigPlan.oldScopes)
-        intendedScopes = @($SelectorConfigPlan.newScopes)
-        changed = $SelectorConfigPlan.changed
-        writeEnabled = $true
-    }
+    Add-ReceiptValidation -Code 'SELECTOR_BLUE_GREEN_PLAN' -Status 'passed' -ServiceId 'selector-mcp' -Port $ExpectedPorts.SelectorMcpCandidate
 
     $managerDiscovery = Get-ManagerDiscovery
-    $ManagerRoot = $managerDiscovery.root
+    $ManagerRoot = Join-Path $env:LOCALAPPDATA 'ControlStack\lane-managed-services'
     $ManagerRegistryPath = Join-Path $ManagerRoot 'controlstack-managed-services.json'
     $ManagerScriptPath = Join-Path $ManagerRoot 'ControlStack-ManagedServices.ps1'
     $TunnelHostPath = Join-Path $ManagerRoot 'ControlStack-TunnelHost.ps1'
-    $StartupEntryPath = Join-Path ([Environment]::GetFolderPath('Startup')) 'ControlStack-ManagedServices.cmd'
-    Assert-PowerShellTextParses -Text (Get-ManagerScriptContent) -Label 'Generated ControlStack service manager'
-    Assert-PowerShellTextParses -Text (Get-TunnelHostScriptContent) -Label 'Generated ControlStack tunnel host'
+    $StartupEntryPath = Join-Path ([Environment]::GetFolderPath('Startup')) 'ControlStack-LaneManagedServices.cmd'
+    Assert-PowerShellTextParses -Text (Get-ManagerScriptContent) -Label 'Generated lane service manager'
+    Assert-PowerShellTextParses -Text (Get-TunnelHostScriptContent) -Label 'Generated lane tunnel host'
     Test-ManagerRegistrySchema -Path $ManagerRegistryPath
-    foreach ($protectedTarget in @($ManagerRegistryPath, $ManagerScriptPath, $TunnelHostPath, $StartupEntryPath)) {
-        if (Test-Path -LiteralPath $protectedTarget -PathType Leaf) {
-            $protectedText = [System.IO.File]::ReadAllText($protectedTarget)
-            if ($protectedText -match 'CS_tunnel_runtime') {
-                throw "Protected CS_tunnel_runtime reference exists in a repair target and will not be touched: $protectedTarget"
-            }
-        }
-    }
     $existingManagerServices = Get-ExistingManagerServiceNames -Files $managerDiscovery.discoveredFiles
-    foreach ($service in $existingManagerServices) { Add-PreservedService -Name $service.name -Source $service.source -Detail 'Existing service discovered before repair and preserved.' }
-    $existingOperationalServices = Get-ExistingOperationalServices
-    foreach ($service in $existingOperationalServices) { Add-PreservedService -Name $service.name -Source $service.source -Detail $service.detail }
+    $Receipt.preservation.existingManagerFileCount = @($managerDiscovery.discoveredFiles).Count
+    $Receipt.preservation.existingServiceCount = @($existingManagerServices).Count
+    $managedIds = @('selector-mcp','selector-runtime','selector-openai-tunnel','lab-mcp','lab-specification','lab-openai-tunnel','program-mcp','program-openai-tunnel')
+    $Receipt.preservation.unknownServiceCount = @($existingManagerServices | Where-Object { $managedIds -notcontains $_.name }).Count
     Assert-NoDownstreamArtifactsActivation -Files $managerDiscovery.discoveredFiles
 
     $topLevelControlStackRoots = @(Get-ChildItem -LiteralPath 'C:\' -Directory -Filter 'ControlStack*' -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName)
-    $referenceRoots = @(
-        $ToolingRoot,
-        $ProgramRoot,
-        $SelectorRoot,
-        $LabRoot,
-        $ManagerRoot,
-        (Join-Path $env:LOCALAPPDATA 'ControlStack'),
-        (Join-Path $env:ProgramData 'ControlStack'),
-        ([Environment]::GetFolderPath('Startup'))
-    ) + $topLevelControlStackRoots
-    $referenceRoots = @($referenceRoots | Where-Object { $_ } | Sort-Object -Unique)
-    $Receipt.preflight.csTunnelRuntimeScanRoots = @($referenceRoots)
-    $references = Find-CSRuntimeReferences -Roots $referenceRoots
+    $referenceRoots = @($ToolingRoot,$ProgramRoot,$SelectorRoot,$LabRoot,$ManagerRoot,(Join-Path $env:LOCALAPPDATA 'ControlStack'),(Join-Path $env:ProgramData 'ControlStack'),([Environment]::GetFolderPath('Startup'))) + $topLevelControlStackRoots
+    $references = @(Find-CSRuntimeReferences -Roots @($referenceRoots | Where-Object { $_ } | Sort-Object -Unique))
     $references += @(Get-ControlStackRegistryReferences)
-    foreach ($reference in $references) { [void]$Receipt.tunnelRuntimeReferences.Add($reference) }
+    $Receipt.preservation.csTunnelRuntimeReferenceCount = $references.Count
+    $references = $null
 
-    foreach ($temporaryPort in @(8180, 8181, 8182)) {
-        $temporaryListeners = @(Get-NetTCPConnection -State Listen -LocalPort $temporaryPort -ErrorAction SilentlyContinue)
-        if ($temporaryListeners.Count -gt 0) { throw "Temporary tunnel health port $temporaryPort is already occupied." }
+    foreach ($temporaryPort in @($ExpectedPorts.SelectorMcpCandidate,8180,8181,8182)) {
+        if (@(Get-NetTCPConnection -State Listen -LocalPort $temporaryPort -ErrorAction SilentlyContinue).Count -gt 0) { Set-FailureCode -Code 'TEMPORARY_PORT_OCCUPIED'; throw 'TEMPORARY_PORT_OCCUPIED' }
     }
 
     $tunnels = [ordered]@{}
@@ -1569,63 +1811,61 @@ try {
     $tunnels.program = Get-TunnelDefinition -Id 'program-openai-tunnel' -Name 'Program OpenAI tunnel' -HealthPort $ExpectedPorts.ProgramTunnel -LaneRoot $ProgramRoot -TemporaryPort 8180
     foreach ($tunnel in $tunnels.Values) {
         $health = Get-HealthCheck -Port $tunnel.healthPort -Attempts 3 -DelayMilliseconds 300
-        if (-not $health.healthy) { throw "$($tunnel.name) is not healthy on port $($tunnel.healthPort)." }
+        if (-not $health.healthy) { Set-FailureCode -Code 'EXISTING_TUNNEL_UNHEALTHY'; throw 'EXISTING_TUNNEL_UNHEALTHY' }
         $OldTunnelProcesses[$tunnel.id] = $tunnel
+        $TunnelLoadBearing[$tunnel.id] = 'original'
+        Add-ReceiptValidation -Code 'TUNNEL_ARGUMENT_ALLOWLIST' -Status 'passed' -ServiceId $tunnel.id -Port $tunnel.healthPort -ProcessId $tunnel.oldProcessId
     }
 
-    $Receipt.preflight.services = [ordered]@{
-        selectorMcp = [ordered]@{ port = $ExpectedPorts.SelectorMcp; pid = $serviceEvidence.selectorMcp.processId; launcher = $launchers.selectorMcp.path }
-        selectorRuntime = [ordered]@{ port = $ExpectedPorts.SelectorRuntime; pid = $serviceEvidence.selectorRuntime.processId; launcher = $launchers.selectorRuntime.path }
-        labMcp = [ordered]@{ port = $ExpectedPorts.LabMcp; pid = $serviceEvidence.labMcp.processId; launcher = $launchers.labMcp.path }
-        labSpecification = [ordered]@{ port = $ExpectedPorts.LabSpecification; pid = $serviceEvidence.labSpecification.processId; launcher = $launchers.labSpecification.path }
-        programMcp = [ordered]@{ port = $ExpectedPorts.ProgramMcp; pid = $serviceEvidence.programMcp.processId; launcher = $launchers.programMcp.path }
-        selectorTunnel = [ordered]@{ healthPort = $ExpectedPorts.SelectorTunnel; pid = $tunnels.selector.oldProcessId }
-        labTunnel = [ordered]@{ healthPort = $ExpectedPorts.LabTunnel; pid = $tunnels.lab.oldProcessId }
-        programTunnel = [ordered]@{ healthPort = $ExpectedPorts.ProgramTunnel; pid = $tunnels.program.oldProcessId }
-    }
-    $Receipt.preflight.manager = [ordered]@{ root = $ManagerRoot; discoveredFiles = @($managerDiscovery.discoveredFiles) }
-    $Receipt.preflight.complete = $true
+    foreach ($entry in @(
+        [ordered]@{ id='selector-mcp'; port=$ExpectedPorts.SelectorMcp; evidence=$serviceEvidence.selectorMcp },
+        [ordered]@{ id='selector-runtime'; port=$ExpectedPorts.SelectorRuntime; evidence=$serviceEvidence.selectorRuntime },
+        [ordered]@{ id='lab-mcp'; port=$ExpectedPorts.LabMcp; evidence=$serviceEvidence.labMcp },
+        [ordered]@{ id='lab-specification'; port=$ExpectedPorts.LabSpecification; evidence=$serviceEvidence.labSpecification },
+        [ordered]@{ id='program-mcp'; port=$ExpectedPorts.ProgramMcp; evidence=$serviceEvidence.programMcp }
+    )) { Add-ReceiptService -ServiceId $entry.id -Port $entry.port -ProcessId $entry.evidence.processId -ExecutableName $entry.evidence.processName -Status 'running-validated' }
+    foreach ($tunnel in $tunnels.Values) { Add-ReceiptService -ServiceId $tunnel.id -Port $tunnel.healthPort -ProcessId $tunnel.oldProcessId -ExecutableName $tunnel.executableName -Status 'running-validated' }
 
-    Write-Host ''
+    if ($AuditOnly) {
+        $Receipt.lab.gate = 'not-run-audit-only'
+        $Receipt.lab.push = 'not-run-audit-only'
+        $Receipt.selector.activation = 'validated-not-run'
+        Write-Receipt -Status 'audit-passed'
+        Write-Host 'CONTROLSTACK ENVIRONMENT REPAIR AUDIT PASSED'
+        exit 0
+    }
+
     Write-Host 'Preflight passed. Create a fresh dedicated OpenAI service API key, copy it to the Windows clipboard, then return here.'
     [void](Read-Host 'Press Enter after the fresh key is on the clipboard')
     $SecretPlainText = Get-Clipboard -Raw
-    if ([string]::IsNullOrWhiteSpace($SecretPlainText)) { throw 'Clipboard did not contain a non-empty service API key.' }
+    if ([string]::IsNullOrWhiteSpace($SecretPlainText)) { Set-FailureCode -Code 'CLIPBOARD_KEY_MISSING'; throw 'CLIPBOARD_KEY_MISSING' }
     $SecretPlainText = $SecretPlainText.Trim()
-    if ($SecretPlainText.Length -lt 20 -or $SecretPlainText -match '\s') { throw 'Clipboard content does not have a plausible API-key shape.' }
+    if ($SecretPlainText.Length -lt 20 -or $SecretPlainText -match '\s') { Set-FailureCode -Code 'CLIPBOARD_KEY_REJECTED'; throw 'CLIPBOARD_KEY_REJECTED' }
     $SecretSecure = ConvertTo-SecureString -String $SecretPlainText -AsPlainText -Force
-    $MutationStarted = $true
     Set-Clipboard -Value 'ControlStack credential captured securely.'
     $SecretPlainText = $null
+    $MutationStarted = $true
+
     $secretRoot = Join-Path $env:LOCALAPPDATA 'ControlStack\secrets'
     Ensure-Directory -Path $secretRoot
+    Protect-PrivateDirectory -Path $secretRoot -Sid $CurrentUserSid
     $NewSecretFile = Join-Path $secretRoot ("openai-service-api-key-{0}.dpapi" -f $Timestamp)
     $encrypted = ConvertFrom-SecureString -SecureString $SecretSecure
     Write-Utf8NoBomAtomic -Path $NewSecretFile -Content $encrypted
-    Protect-SecretFile -Path $NewSecretFile -Sid $Receipt.userSid
-    Add-ReceiptChange -Kind 'credential' -Path $NewSecretFile -Detail 'Created a versioned DPAPI CurrentUser credential; no existing key was removed.'
+    Protect-SecretFile -Path $NewSecretFile -Sid $CurrentUserSid
+    Add-ReceiptChange -Kind 'dpapi-credential' -Path 'credential' -Detail 'current-user-dpapi'
 
-    Write-Host 'Testing replacement tunnels on temporary health ports while current tunnels remain running...'
     foreach ($tunnel in $tunnels.Values) {
-        $proc = Start-ProcessWithCredential -Definition $tunnel -Arguments $tunnel.temporaryArguments -SecureCredential $SecretSecure
-        $temporaryRecord = [ordered]@{ definition = $tunnel; process = $proc; listenerProcessId = $null }
-        [void]$TemporaryTunnelProcesses.Add($temporaryRecord)
-        Assert-StableTunnelHealth -Port $tunnel.temporaryPort -Label ($tunnel.name + ' temporary replacement')
+        [void](Start-ProcessWithCredential -Definition $tunnel -HealthAddress $tunnel.temporaryHealthAddress -SecureCredential $SecretSecure)
+        Assert-StableTunnelHealth -Port $tunnel.temporaryPort -Label ($tunnel.name + ' fresh-key temporary replacement')
         $temporaryListener = Get-ListeningProcess -Port $tunnel.temporaryPort
-        $temporaryRecord.listenerProcessId = [uint32]$temporaryListener.ProcessId
-        Add-ReceiptChange -Kind 'tunnel-parallel-health' -Path $tunnel.name -Detail ("Replacement healthy on temporary port {0}; original PID {1} still running." -f $tunnel.temporaryPort, $tunnel.oldProcessId)
+        [void](Assert-FreshTunnelRollbackRoute -Definition $tunnel -TemporaryProcessId ([uint32]$temporaryListener.ProcessId))
+        $record = [ordered]@{ definition=$tunnel; listenerProcessId=[uint32]$temporaryListener.ProcessId }
+        [void]$TemporaryTunnelProcesses.Add($record)
     }
 
     Invoke-LabGateCommitPush -FingerprintBefore $ProtectedLabFingerprintBefore -AlreadyCommitted $labAlreadyCommitted
-
-    if ($SelectorConfigPlan.changed) {
-        $SelectorConfigBackup = Backup-ChangedFile -Path $SelectorConfigPlan.path
-        Write-Utf8NoBomAtomic -Path $SelectorConfigPlan.path -Content $SelectorConfigPlan.newContent
-        Add-ReceiptChange -Kind 'selector-scope' -Path $SelectorConfigPlan.path -Detail ("Set only {0} through {1}; backup {2}." -f $SelectorWriteScope, $SelectorConfigPlan.envName, $SelectorConfigBackup)
-    }
-    else {
-        Add-ReceiptChange -Kind 'selector-scope' -Path $SelectorConfigPlan.path -Detail 'Exact restricted documentation scope already configured; no write required.'
-    }
+    $serviceEvidence.selectorMcp = Invoke-SelectorBlueGreenActivation -Plan $SelectorConfigPlan -OriginalEvidence $serviceEvidence.selectorMcp
 
     $definitions = @(
         (New-NonTunnelRegistryDefinition -Id 'selector-mcp' -Name 'Selector MCP' -Port $ExpectedPorts.SelectorMcp -LaneRoot $SelectorRoot -Branch $ExpectedBranches.Selector -Evidence $serviceEvidence.selectorMcp -Launcher $launchers.selectorMcp -Category 'mcp'),
@@ -1637,72 +1877,51 @@ try {
         (New-NonTunnelRegistryDefinition -Id 'program-mcp' -Name 'Program MCP' -Port $ExpectedPorts.ProgramMcp -LaneRoot $ProgramRoot -Branch $ExpectedBranches.Program -Evidence $serviceEvidence.programMcp -Launcher $launchers.programMcp -Category 'mcp'),
         (Convert-DefinitionForRegistry -Definition $tunnels.program -SecretFile $NewSecretFile)
     )
+    if ($definitions.Count -ne 8) { Set-FailureCode -Code 'MANAGED_SERVICE_COUNT_MISMATCH'; throw 'MANAGED_SERVICE_COUNT_MISMATCH' }
     Register-ManagerFiles -Definitions $definitions -Discovery $managerDiscovery
 
-    if ($SelectorConfigPlan.changed) {
-        try {
-            $selectorRestart = Invoke-External -FilePath 'powershell.exe' -Arguments @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $ManagerScriptPath, '-Action', 'restart', '-Service', 'selector-mcp') -WorkingDirectory $ManagerRoot
-            $restartedSelector = Assert-ProcessIdentity -ServiceName 'Restarted Selector MCP' -Port $ExpectedPorts.SelectorMcp -RequiredAnyMarkers @($SelectorRoot, $ToolingRoot, 'controlstack_mcp') -RequiredProcessNames @('python*.exe')
-            $Receipt.selector.restart = [ordered]@{ exitCode = $selectorRestart.exitCode; processId = $restartedSelector.processId; port = $ExpectedPorts.SelectorMcp }
-            Add-ReceiptChange -Kind 'service-restart' -Path 'selector-mcp' -Detail 'Restarted only Selector MCP to activate the restricted documentation write scope.'
-        }
-        catch {
-            if ($SelectorConfigBackup -and (Test-Path -LiteralPath $SelectorConfigBackup -PathType Leaf)) {
-                Copy-Item -LiteralPath $SelectorConfigBackup -Destination $SelectorConfigPlan.path -Force
-                try {
-                    [void](Invoke-External -FilePath 'powershell.exe' -Arguments @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $ManagerScriptPath, '-Action', 'start', '-Service', 'selector-mcp') -WorkingDirectory $ManagerRoot)
-                    [void](Assert-ProcessIdentity -ServiceName 'Rolled-back Selector MCP' -Port $ExpectedPorts.SelectorMcp -RequiredAnyMarkers @($SelectorRoot, $ToolingRoot, 'controlstack_mcp') -RequiredProcessNames @('python*.exe'))
-                    Add-ReceiptChange -Kind 'rollback' -Path $SelectorConfigPlan.path -Detail 'Restored original Selector launcher and restarted Selector MCP after activation failure.'
-                }
-                catch { Add-ReceiptError -Message ("Selector launcher was restored but MCP restart also failed: {0}" -f $_.Exception.Message) }
-            }
-            throw
-        }
-    }
-    else {
-        $Receipt.selector.restart = 'not-required-already-current'
-    }
-
-    Write-Host 'Cutting over tunnel processes to the managed DPAPI credential...'
     foreach ($temporary in @($TemporaryTunnelProcesses)) {
         $tunnel = $temporary.definition
-        Stop-ExactProcess -ProcessId ([uint32]$tunnel.oldProcessId) -Name ("Original " + $tunnel.name)
-        if (-not ($StoppedOriginalTunnelIds -contains $tunnel.id)) { [void]$StoppedOriginalTunnelIds.Add($tunnel.id) }
-        Stop-ExactProcess -ProcessId ([uint32]$temporary.listenerProcessId) -Name ("Temporary replacement " + $tunnel.name)
+        [void](Assert-FreshTunnelRollbackRoute -Definition $tunnel -TemporaryProcessId ([uint32]$temporary.listenerProcessId))
+        Stop-ExactProcess -ProcessId ([uint32]$tunnel.oldProcessId) -Name ($tunnel.id + '-original') -ExpectedPort $tunnel.healthPort -ExpectedExecutable $tunnel.executable -IdentityMarkers @($tunnel.identityMarkers)
+        $TunnelLoadBearing[$tunnel.id] = 'temporary'
+        $canonicalStarted = $null
         try {
-            $newProc = Start-ProcessWithCredential -Definition $tunnel -Arguments $tunnel.managedArguments -SecureCredential $SecretSecure
-            $canonicalRecord = [ordered]@{ definition = $tunnel; process = $newProc; listenerProcessId = $null }
-            [void]$NewCanonicalTunnelProcesses.Add($canonicalRecord)
+            $canonicalStarted = Start-ProcessWithCredential -Definition $tunnel -HealthAddress $tunnel.healthAddress -SecureCredential $SecretSecure
             Assert-StableTunnelHealth -Port $tunnel.healthPort -Label ($tunnel.name + ' canonical replacement')
             $canonicalListener = Get-ListeningProcess -Port $tunnel.healthPort
-            $canonicalRecord.listenerProcessId = [uint32]$canonicalListener.ProcessId
+            $canonicalRecord = [ordered]@{ definition=$tunnel; listenerProcessId=[uint32]$canonicalListener.ProcessId }
+            [void]$NewCanonicalTunnelProcesses.Add($canonicalRecord)
+            $TunnelLoadBearing[$tunnel.id] = 'canonical'
+            Stop-ExactProcess -ProcessId ([uint32]$temporary.listenerProcessId) -Name ($tunnel.id + '-temporary') -ExpectedPort $tunnel.temporaryPort -ExpectedExecutable $tunnel.executable -IdentityMarkers @($tunnel.identityMarkers)
+            $temporary.listenerProcessId = $null
             $managedPidFile = Write-ManagedTunnelPid -TunnelId $tunnel.id -ListenerProcessId ([uint32]$canonicalListener.ProcessId)
-            Add-ReceiptChange -Kind 'managed-pid' -Path $managedPidFile -Detail ("Recorded managed listener PID {0}." -f $canonicalListener.ProcessId)
-            Add-ReceiptChange -Kind 'tunnel-cutover' -Path $tunnel.name -Detail ("Managed credential healthy on canonical port {0}." -f $tunnel.healthPort)
+            Add-ReceiptChange -Kind 'tunnel-cutover' -Path $tunnel.id -Detail 'fresh-key-canonical-healthy'
         }
         catch {
-            Start-OldTunnelRollback -Definition $tunnel | Out-Null
-            throw
+            $TunnelLoadBearing[$tunnel.id] = 'temporary'
+            if ($null -ne $canonicalStarted) {
+                try {
+                    $owners = @(Get-NetTCPConnection -State Listen -LocalPort $tunnel.healthPort -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique)
+                    if ($owners.Count -eq 1 -and [uint32]$owners[0] -eq [uint32]$canonicalStarted.Id) {
+                        Stop-ExactProcess -ProcessId ([uint32]$owners[0]) -Name ($tunnel.id + '-failed-canonical') -ExpectedPort $tunnel.healthPort -ExpectedExecutable $tunnel.executable -IdentityMarkers @($tunnel.identityMarkers)
+                    }
+                }
+                catch { }
+            }
+            Set-FailureCode -Code 'TUNNEL_CANONICAL_CUTOVER_FAILED'
+            throw 'TUNNEL_CANONICAL_CUTOVER_FAILED'
         }
     }
 
     $finalLab = Get-GitInventory -Root $LabRoot
     Assert-LabProtectedInventory -Before $ProtectedLabFingerprintBefore -After (Get-ProtectedLabFingerprint -Root $LabRoot) -Phase 'final verification'
-    if ($finalLab.staged.Count -ne 0) { throw "Lab has staged files after final verification: $($finalLab.staged -join ', ')" }
-    $Receipt.lab.final = [ordered]@{
-        modifiedCount = $finalLab.modified.Count
-        untrackedCount = $finalLab.untracked.Count
-        stagedCount = $finalLab.staged.Count
-        protectedDigest = (Get-ProtectedLabFingerprint -Root $LabRoot).digest
-    }
+    if ($finalLab.staged.Count -ne 0) { Set-FailureCode -Code 'LAB_FINAL_INDEX_NOT_EMPTY'; throw 'LAB_FINAL_INDEX_NOT_EMPTY' }
 
     foreach ($definition in $definitions) {
-        $listeners = @(Get-NetTCPConnection -State Listen -LocalPort ([int]$definition.port) -ErrorAction SilentlyContinue)
-        if ($listeners.Count -eq 0) { throw "Managed service final status failed: $($definition.id) has no listener on $($definition.port)." }
-        $Receipt.services[$definition.id] = [ordered]@{ port = $definition.port; status = 'running'; managerRoot = $ManagerRoot }
+        $listener = Get-ListeningProcess -Port ([int]$definition.port)
+        Add-ReceiptService -ServiceId ([string]$definition.id) -Port ([int]$definition.port) -ProcessId ([uint32]$listener.ProcessId) -ExecutableName ([string]$listener.Name) -Status 'running-managed'
     }
-    $Receipt.services.downstreamArtifacts = [ordered]@{ status = 'inactive'; preserved = $true }
-    $Receipt.services.csTunnelRuntime = [ordered]@{ status = 'untouched'; referenceCount = $Receipt.tunnelRuntimeReferences.Count }
 
     $SecretSecure.Dispose()
     $SecretSecure = $null
@@ -1710,46 +1929,21 @@ try {
     Write-Host 'CONTROLSTACK ENVIRONMENT REPAIR COMPLETED'
 }
 catch {
-    $message = $_.Exception.Message
-    Add-ReceiptError -Message $message
-    Write-Error $message
-
+    if ($FailureCode -eq 'NONE') { Set-FailureCode -Code 'UNCLASSIFIED_FAILURE' }
     foreach ($temporary in @($TemporaryTunnelProcesses)) {
         try {
-            $temporaryStopId = [uint32]$temporary.process.Id
-            if ($temporary.listenerProcessId) { $temporaryStopId = [uint32]$temporary.listenerProcessId }
-            Stop-ExactProcess -ProcessId $temporaryStopId -Name ("Failed temporary replacement " + $temporary.definition.name)
+            $tunnel = $temporary.definition
+            $state = [string]$TunnelLoadBearing[$tunnel.id]
+            if (($state -eq 'original' -or $state -eq 'canonical') -and $temporary.listenerProcessId) {
+                Stop-ExactProcess -ProcessId ([uint32]$temporary.listenerProcessId) -Name ($tunnel.id + '-temporary-cleanup') -ExpectedPort $tunnel.temporaryPort -ExpectedExecutable $tunnel.executable -IdentityMarkers @($tunnel.identityMarkers)
+            }
         }
         catch { }
     }
-    foreach ($canonical in @($NewCanonicalTunnelProcesses)) {
-        try {
-            $canonicalStopId = [uint32]$canonical.process.Id
-            if ($canonical.listenerProcessId) { $canonicalStopId = [uint32]$canonical.listenerProcessId }
-            Stop-ExactProcess -ProcessId $canonicalStopId -Name ("Failed canonical replacement " + $canonical.definition.name)
-        }
-        catch { }
-    }
-    foreach ($stoppedId in @($StoppedOriginalTunnelIds)) {
-        try {
-            $definition = $OldTunnelProcesses[$stoppedId]
-            if (-not $definition) { continue }
-            $listeners = @(Get-NetTCPConnection -State Listen -LocalPort ([int]$definition.healthPort) -ErrorAction SilentlyContinue)
-            if ($listeners.Count -eq 0) {
-                Start-OldTunnelRollback -Definition $definition | Out-Null
-            }
-            else {
-                $rollbackHealth = Get-HealthCheck -Port $definition.healthPort -Attempts 10 -DelayMilliseconds 500
-                if (-not $rollbackHealth.healthy) {
-                    Add-ReceiptError -Message ("A listener remained on {0} during rollback, but its health check failed; no duplicate process was started." -f $definition.healthPort)
-                }
-            }
-        }
-        catch { Add-ReceiptError -Message ("Cross-lane tunnel rollback failed for {0}: {1}" -f $stoppedId, $_.Exception.Message) }
-    }
-    if ($SecretPlainText) { $SecretPlainText = $null }
+    if ($SecretPlainText) { $SecretPlainText = '<cleared-after-failure>'; $SecretPlainText = $null }
     if ($SecretSecure) { $SecretSecure.Dispose(); $SecretSecure = $null }
-    try { Set-Clipboard -Value 'ControlStack repair stopped safely.' } catch { }
+    if (-not $AuditOnly) { try { Set-Clipboard -Value 'ControlStack repair stopped safely.' } catch { } }
     try { Write-Receipt -Status $(if ($MutationStarted) { 'failed-after-mutation-started' } else { 'preflight-failed-no-mutation' }) } catch { }
+    Write-Error ("ControlStack repair failed with safe result code: {0}" -f $FailureCode)
     exit 1
 }
