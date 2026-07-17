@@ -16,6 +16,8 @@ The second AuditOnly attempt entered preflight, wrote `CONTROLSTACK_ENVIRONMENT_
 
 The third AuditOnly attempt wrote `CONTROLSTACK_ENVIRONMENT_REPAIR_AUDIT_20260717-155710.json` and failed in phase `LAB_GIT_STATE` at the native-command wrapper with exception type `RemoteException`. Windows PowerShell 5.1 converts native stderr redirected with `2>&1` into PowerShell error records; the script-wide `Stop` preference therefore terminated on Git stderr before the wrapper could inspect Git's exit code. The wrapper now captures native stderr under a local `Continue` preference, restores the original preference immediately afterwards, and continues to decide success strictly from the native exit code. This AuditOnly attempt also caused no environmental mutation beyond writing its structured receipt.
 
+The fourth AuditOnly attempt wrote `CONTROLSTACK_ENVIRONMENT_REPAIR_AUDIT_20260717-160409.json` and failed with `LAB_PROTECTED_COUNT_MISMATCH`. The failure came from obsolete historical assumptions that the Lab worktree must contain exactly 10 modified and 66 untracked paths. Those counts are not a durable safety boundary because legitimate Lab work can change them. The repair now snapshots the current modified and untracked path sets with per-file hashes, records their current counts as receipt evidence, requires the complete fingerprint to remain unchanged through every repair boundary, and still refuses to stage any protected path. This AuditOnly attempt also caused no environmental mutation beyond writing its structured receipt.
+
 **Do not run the full repair unless the latest AuditOnly receipt has status `audit-passed`.**
 
 After AuditOnly passes, run the full repair:

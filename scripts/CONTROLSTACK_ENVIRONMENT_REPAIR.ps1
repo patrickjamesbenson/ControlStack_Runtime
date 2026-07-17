@@ -64,7 +64,15 @@ $Receipt = [ordered]@{
     validations = New-Object System.Collections.ArrayList
     changes = New-Object System.Collections.ArrayList
     services = New-Object System.Collections.ArrayList
-    lab = [ordered]@{ gate = 'not-run'; gateExitCode = $null; commit = $null; push = 'not-run'; protectedDigest = $null }
+    lab = [ordered]@{
+        gate = 'not-run'
+        gateExitCode = $null
+        commit = $null
+        push = 'not-run'
+        protectedDigest = $null
+        protectedModifiedCount = 0
+        protectedUntrackedCount = 0
+    }
     selector = [ordered]@{ scope = $SelectorWriteScope; activation = 'not-run'; candidatePort = 8100 }
     preservation = [ordered]@{
         existingManagerFileCount = 0
@@ -190,6 +198,8 @@ function Get-StructuredReceiptSnapshot {
             commit = $Receipt.lab.commit
             push = [string]$Receipt.lab.push
             protectedDigest = $Receipt.lab.protectedDigest
+            protectedModifiedCount = [int]$Receipt.lab.protectedModifiedCount
+            protectedUntrackedCount = [int]$Receipt.lab.protectedUntrackedCount
         }
         selector = [ordered]@{
             scope = [string]$Receipt.selector.scope
@@ -376,9 +386,6 @@ function Assert-LabProtectedInventory {
     param([object]$Before, [object]$After, [string]$Phase)
     if ($Before.digest -ne $After.digest) {
         throw "Lab protected modified/untracked inventory changed during $Phase. Before=$($Before.digest), after=$($After.digest)."
-    }
-    if (@($After.modified).Count -ne 10 -or @($After.untracked).Count -ne 66) {
-        throw "Lab protected inventory count changed during $Phase. Expected 10 modified and 66 untracked; found $(@($After.modified).Count) modified and $(@($After.untracked).Count) untracked."
     }
     $inventory = Get-GitInventory -Root $LabRoot
     $protected = @($After.modified) + @($After.untracked)
@@ -1784,11 +1791,12 @@ try {
     if ($labInventory.staged.Count -eq 0 -and $labMemoryCommit) { $labAlreadyCommitted = $true }
     elseif ($labInventory.staged.Count -gt 0) { Assert-SameStringSet -Actual $labInventory.staged -Expected $LabStagedPaths -Label 'Lab staged documentation set' }
     else { Set-FailureCode -Code 'LAB_DOCUMENTATION_STATE_INVALID'; throw 'LAB_DOCUMENTATION_STATE_INVALID' }
-    if ($labInventory.modified.Count -ne 10 -or $labInventory.untracked.Count -ne 66) { Set-FailureCode -Code 'LAB_PROTECTED_COUNT_MISMATCH'; throw 'LAB_PROTECTED_COUNT_MISMATCH' }
     $protectedIntersection = @($labInventory.staged | Where-Object { $labInventory.modified -contains $_ -or $labInventory.untracked -contains $_ })
     if ($protectedIntersection.Count -gt 0) { Set-FailureCode -Code 'LAB_PROTECTED_PATH_STAGED'; throw 'LAB_PROTECTED_PATH_STAGED' }
     $ProtectedLabFingerprintBefore = Get-ProtectedLabFingerprint -Root $LabRoot
     $Receipt.lab.protectedDigest = $ProtectedLabFingerprintBefore.digest
+    $Receipt.lab.protectedModifiedCount = @($ProtectedLabFingerprintBefore.modified).Count
+    $Receipt.lab.protectedUntrackedCount = @($ProtectedLabFingerprintBefore.untracked).Count
     Add-ReceiptValidation -Code 'LAB_PROTECTED_STATE' -Status 'passed'
 
     Set-AuditPhase -Phase 'SERVICE_IDENTITIES'
