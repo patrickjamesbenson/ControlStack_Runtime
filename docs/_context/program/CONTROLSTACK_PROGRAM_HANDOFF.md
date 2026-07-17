@@ -278,3 +278,27 @@ The final response for this bootstrap must state:
 - confirmation that the Selector interruption was not executed through the wrong app.
 
 The commit containing this handoff is the durable repository receipt. Tool-returned gate, commit, push, and final status details are the execution receipt.
+
+## 2026-07-18 replacement-orchestrator start point
+
+This section supersedes earlier pending deployment and lane-memory instructions.
+
+### Accepted current evidence
+
+- All eight Deployment v2 services are READY / MANAGED.
+- Selector memory: `678cf83c9f97bfcdc397b574c4eab08b306656ee`, pushed, gate 100/100, clean.
+- Lab memory: `1b154c482978a9c77a9ea5325cd103bfe40b14ed`, pushed, gate 147/147; 10 modified and 66 untracked IES paths intentionally preserved with zero staged/deleted.
+- Program pre-update head: `2e72aa80d39507ff7aa530d3fa8f8ed0e5b9cb0a`, pushed, gate 26/26, clean.
+
+### Exact first Program action
+
+Read the current lane handoffs at:
+
+- Selector: `docs/selector/_context/SESSION_HANDOFF.md` on `lane/selector-engine`.
+- Lab: `docs/_context/lanes/lab-ies/SESSION_HANDOFF.md` on `lane/code-pilot-lab`.
+
+Reconcile their accepted heads against Program history, record seam dependencies and the safe integration order, and update Program state/queue. Do not begin feature work, write another worktree, merge to `main`, or activate downstream artifacts.
+
+### Orchestrator rule
+
+Patrick supplies objectives and accepts outcomes. He is not required to reconstruct state, paste old handoffs, select files, or approve code line by line. The repository handoffs, lane scopes, named gates, and gated Git paths are the control system.

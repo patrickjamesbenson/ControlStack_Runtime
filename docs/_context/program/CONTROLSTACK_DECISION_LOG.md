@@ -320,3 +320,13 @@ The Selector cutover authorisation received during this bootstrap is retained as
 ### Seam impact
 
 Worker commissioning and all lane-memory bootstraps.
+
+## 2026-07-18 — Three-lane memory and managed deployment accepted
+
+**Decision:** Accept the managed eight-service topology and the committed Program, Selector, and Lab memory documents as the authoritative starting point for new orchestrators.
+
+**Evidence:** all eight services READY / MANAGED; Selector memory `678cf83c…` with 100/100; Lab memory `1b154c4…` with 147/147 and protected dirty inventory unchanged; Program tooling `2e72aa8…` with 26/26.
+
+**Consequence:** Patrick is no longer the relay for historical handoff content. Each orchestrator reads its repository handoff. Chat history is non-authoritative. Feature work resumes independently inside the lane boundaries; Program governs only seams and integration.
+
+**Held decision:** downstream-artifacts activation remains deferred until the Engine output contract is stable.

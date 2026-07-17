@@ -99,3 +99,13 @@ A new lane or a change to an existing lane identity requires all of the followin
 6. Program approval before any seam or integration queue item depends on the changed identity.
 
 No chat-only lane identity change is authoritative.
+
+## 2026-07-18 accepted lane-memory heads
+
+| Lane | Durable memory commit | Gate evidence | Final state |
+|---|---|---|---|
+| Selector & Engine | `678cf83c9f97bfcdc397b574c4eab08b306656ee` | `selector-engine` 100/100 | clean |
+| Lab & IES | `1b154c482978a9c77a9ea5325cd103bfe40b14ed` | `lab-ies` 147/147 | 10 modified and 66 untracked IES paths preserved; zero staged/deleted |
+| Program & Integrate | `2e72aa80d39507ff7aa530d3fa8f8ed0e5b9cb0a` | `program-integrate` 26/26 | clean |
+
+These commits are **VERIFIED** execution receipts. The user-facing Selector connector is `CS Selector & Engine v2`; the old non-v2 Selector connector is retired coordination state and must not be used.

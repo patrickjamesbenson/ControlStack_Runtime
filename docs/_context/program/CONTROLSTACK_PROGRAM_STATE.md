@@ -142,3 +142,13 @@ No feature file is authorised for modification in this parcel. **VERIFIED task b
 - Gated commit and push: **TO BE IDENTIFIED by the commit containing this document and the connected-app execution receipt.**
 
 The commit containing this document, the gate result above, the push receipt, and final `repo_git_status` are the authoritative execution evidence for this bootstrap parcel.
+
+## 2026-07-18 environment and lane-memory closeout
+
+- **VERIFIED:** Service Manager v2 reports all eight Selector, Lab, Program, runtime/specification, and OpenAI tunnel services READY / MANAGED.
+- **VERIFIED:** Selector lane memory is committed and pushed at `678cf83c9f97bfcdc397b574c4eab08b306656ee`; `selector-engine` passed 100/100 and the lane ended clean.
+- **VERIFIED:** Lab lane memory is committed and pushed at `1b154c482978a9c77a9ea5325cd103bfe40b14ed`; `lab-ies` passed 147/147.
+- **VERIFIED:** The Lab feature parcel remains preserved after the memory checkpoint: 10 modified, 66 untracked, zero staged, zero deleted.
+- **VERIFIED:** Program checkpoint tooling repair is committed and pushed at `2e72aa80d39507ff7aa530d3fa8f8ed0e5b9cb0a`; `program-integrate` passed 26/26 and Program ended clean.
+- **VERIFIED:** No feature lane was merged to `main`; downstream artifacts remain held.
+- **Current milestone:** lane orchestrators may resume independently from their committed `SESSION_HANDOFF.md` files. Program next reconciles the two lane-memory heads and maintains seam governance.

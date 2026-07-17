@@ -177,3 +177,13 @@ Every new queue item must state:
 12. Program approval status.
 
 Chat requests that lack this envelope remain coordination input, not an accepted integration parcel.
+
+## 2026-07-18 queue closeout and next order
+
+- Priority 1A, Selector lane memory: **COMPLETE** at `678cf83c9f97bfcdc397b574c4eab08b306656ee`, gate 100/100, pushed, clean.
+- Priority 1B, Lab lane memory: **COMPLETE** at `1b154c482978a9c77a9ea5325cd103bfe40b14ed`, gate 147/147, pushed; protected IES inventory unchanged.
+- Secure tunnel/service restart acceptance: **COMPLETE**; all eight services READY / MANAGED.
+- Next Program action: **Priority 2 — reconcile accepted bases and lane heads**, using the committed lane handoffs. This is evidence and integration planning, not feature implementation.
+- Selector next feature action is owned by its committed handoff: single-slice E2E closeout before widening.
+- Lab next feature action is owned by its committed handoff; its existing feature parcel must remain preserved and be checkpointed in bounded slices.
+- Downstream artifacts remain **HELD** pending a stable Engine output contract.
