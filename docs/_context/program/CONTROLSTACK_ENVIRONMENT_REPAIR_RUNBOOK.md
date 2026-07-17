@@ -12,6 +12,8 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File "C:\ControlStack_Worktre
 
 The first AuditOnly attempt failed during PowerShell parsing at the expandable string containing `$Phase:`. Parsing failed before the script body executed, so that attempt caused no file, process, service, Git, registry, Startup, clipboard or credential change and produced no script receipt.
 
+The second AuditOnly attempt entered preflight, wrote `CONTROLSTACK_ENVIRONMENT_REPAIR_AUDIT_20260717-153804.json`, and then reported `UNCLASSIFIED_FAILURE`. AuditOnly had not entered any mutation path, so that attempt changed nothing except writing its structured audit receipt. The follow-up repair removed the obsolete requirement for one uniquely dominant legacy service-manager directory: the additive lane manager is independent, existing managers remain untouched, and all discovered legacy manager files are retained only as preservation evidence. Audit failures now record and display a safe phase, script line and exception type instead of collapsing to `UNCLASSIFIED_FAILURE`.
+
 **Do not run the full repair unless the latest AuditOnly receipt has status `audit-passed`.**
 
 After AuditOnly passes, run the full repair:

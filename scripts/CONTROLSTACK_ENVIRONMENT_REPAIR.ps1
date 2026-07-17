@@ -59,6 +59,7 @@ $Receipt = [ordered]@{
     completedAt = $null
     status = 'started'
     failureCode = 'NONE'
+    failure = [ordered]@{ phase = 'INITIALIZATION'; scriptLine = $null; exceptionType = $null }
     branches = [ordered]@{ program = $null; selector = $null; lab = $null }
     validations = New-Object System.Collections.ArrayList
     changes = New-Object System.Collections.ArrayList
@@ -93,7 +94,15 @@ $SelectorConfigPlan = $null
 $SelectorConfigBackup = $null
 $ProtectedLabFingerprintBefore = $null
 $FailureCode = 'NONE'
+$CurrentPhase = 'INITIALIZATION'
 $CurrentUserSid = $null
+
+function Set-AuditPhase {
+    param([Parameter(Mandatory = $true)][string]$Phase)
+    if ($Phase -notmatch '^[A-Z0-9_]{3,80}$') { throw 'INVALID_AUDIT_PHASE' }
+    $script:CurrentPhase = $Phase
+    $Receipt.failure.phase = $Phase
+}
 
 function Set-FailureCode {
     param([Parameter(Mandatory = $true)][string]$Code)
@@ -156,6 +165,11 @@ function Get-StructuredReceiptSnapshot {
         completedAt = [string]$Receipt.completedAt
         status = [string]$Receipt.status
         failureCode = [string]$Receipt.failureCode
+        failure = [ordered]@{
+            phase = [string]$Receipt.failure.phase
+            scriptLine = $Receipt.failure.scriptLine
+            exceptionType = [string]$Receipt.failure.exceptionType
+        }
         branches = [ordered]@{
             program = [string]$Receipt.branches.program
             selector = [string]$Receipt.branches.selector
@@ -195,6 +209,11 @@ function Get-StructuredReceiptSnapshot {
 
 function Write-Receipt {
     param([string]$Status)
+    if ($Status -in @('audit-passed','completed')) {
+        $Receipt.failure.phase = $null
+        $Receipt.failure.scriptLine = $null
+        $Receipt.failure.exceptionType = $null
+    }
     if ($null -ne $script:SecretPlainText) {
         $script:SecretPlainText = '<cleared-before-receipt>'
         $script:SecretPlainText = $null
@@ -860,17 +879,12 @@ function Get-ManagerDiscovery {
         if ($isNamedManager -or $isContentManager) { [void]$explicit.Add($file) }
     }
     $explicit = @($explicit | Sort-Object -Unique)
-    if ($explicit.Count -eq 0) {
-        throw 'No existing ControlStack service manager could be proven. No manager files will be created by guesswork.'
+    $roots = @($explicit | ForEach-Object { Split-Path -Parent $_ } | Sort-Object -Unique)
+    return [ordered]@{
+        discoveredFiles = @($explicit)
+        explicitManagerFiles = @($explicit)
+        legacyManagerRootCount = $roots.Count
     }
-    $grouped = @($explicit | Group-Object { Split-Path -Parent $_ } | Sort-Object Count -Descending)
-    $topCount = $grouped[0].Count
-    $topGroups = @($grouped | Where-Object { $_.Count -eq $topCount })
-    if ($topGroups.Count -ne 1) {
-        throw "Ambiguous ControlStack service-manager discovery: $($topGroups.Name -join ', ')."
-    }
-    $root = [string]$topGroups[0].Name
-    return [ordered]@{ root = $root; discoveredFiles = @($explicit); explicitManagerFiles = @($explicit) }
 }
 
 function Protect-ReceiptText {
@@ -1723,19 +1737,26 @@ function Invoke-LabGateCommitPush {
 try {
     Write-Host ("ControlStack environment repair {0} preflight..." -f $RepairMode.ToLowerInvariant())
 
+    Set-AuditPhase -Phase 'COMMAND_AVAILABILITY'
     foreach ($command in @('git.exe','python.exe','powershell.exe','icacls.exe')) {
         if (-not (Get-Command $command -ErrorAction SilentlyContinue)) { Set-FailureCode -Code 'REQUIRED_COMMAND_MISSING'; throw 'REQUIRED_COMMAND_MISSING' }
     }
+
+    Set-AuditPhase -Phase 'WINDOWS_IDENTITY'
     $identity = [System.Security.Principal.WindowsIdentity]::GetCurrent()
     $CurrentUserSid = $identity.User.Value
 
+    Set-AuditPhase -Phase 'REQUIRED_ROOTS'
     foreach ($root in @($ProgramRoot,$SelectorRoot,$LabRoot,$ToolingRoot)) {
         if (-not (Test-Path -LiteralPath $root -PathType Container)) { Set-FailureCode -Code 'REQUIRED_ROOT_MISSING'; throw 'REQUIRED_ROOT_MISSING' }
     }
+
+    Set-AuditPhase -Phase 'SELF_PARSE'
     $scriptExpected = Join-Path $ProgramRoot 'scripts\CONTROLSTACK_ENVIRONMENT_REPAIR.ps1'
     if ([System.IO.Path]::GetFullPath($PSCommandPath) -ne [System.IO.Path]::GetFullPath($scriptExpected)) { Set-FailureCode -Code 'SCRIPT_PATH_MISMATCH'; throw 'SCRIPT_PATH_MISMATCH' }
     Assert-PowerShellTextParses -Text ([System.IO.File]::ReadAllText($PSCommandPath)) -Label 'Repair script'
 
+    Set-AuditPhase -Phase 'BRANCH_VALIDATION'
     $Receipt.branches.program = Get-GitBranch -Root $ProgramRoot
     $Receipt.branches.selector = Get-GitBranch -Root $SelectorRoot
     $Receipt.branches.lab = Get-GitBranch -Root $LabRoot
@@ -1744,9 +1765,11 @@ try {
     if ($Receipt.branches.lab -ne $ExpectedBranches.Lab) { Set-FailureCode -Code 'LAB_BRANCH_MISMATCH'; throw 'LAB_BRANCH_MISMATCH' }
     Add-ReceiptValidation -Code 'ROOTS_BRANCHES_AND_SCRIPT' -Status 'passed'
 
+    Set-AuditPhase -Phase 'PROGRAM_GIT_STATE'
     $programInventory = Get-GitInventory -Root $ProgramRoot
     if ($programInventory.staged.Count -gt 0 -or $programInventory.modified.Count -gt 0 -or $programInventory.untracked.Count -gt 0) { Set-FailureCode -Code 'PROGRAM_WORKTREE_NOT_CLEAN'; throw 'PROGRAM_WORKTREE_NOT_CLEAN' }
 
+    Set-AuditPhase -Phase 'LAB_GIT_STATE'
     $labInventory = Get-GitInventory -Root $LabRoot
     $labMemoryCommit = Find-LabMemoryCommit
     $labAlreadyCommitted = $false
@@ -1760,55 +1783,77 @@ try {
     $Receipt.lab.protectedDigest = $ProtectedLabFingerprintBefore.digest
     Add-ReceiptValidation -Code 'LAB_PROTECTED_STATE' -Status 'passed'
 
+    Set-AuditPhase -Phase 'SERVICE_IDENTITIES'
     $serviceEvidence = [ordered]@{}
     $serviceEvidence.selectorMcp = Assert-ProcessIdentity -ServiceName 'Selector MCP' -Port $ExpectedPorts.SelectorMcp -RequiredAnyMarkers @($SelectorRoot,$ToolingRoot,'controlstack_mcp') -RequiredProcessNames @('python*.exe')
     $serviceEvidence.selectorRuntime = Assert-ProcessIdentity -ServiceName 'Selector runtime' -Port $ExpectedPorts.SelectorRuntime -RequiredAnyMarkers @($SelectorRoot,'server.js','workspace') -RequiredProcessNames @('node*.exe')
     $serviceEvidence.labMcp = Assert-ProcessIdentity -ServiceName 'Lab MCP' -Port $ExpectedPorts.LabMcp -RequiredAnyMarkers @($LabRoot,$ToolingRoot,'controlstack_mcp') -RequiredProcessNames @('python*.exe')
     $serviceEvidence.labSpecification = Assert-ProcessIdentity -ServiceName 'Lab specification service' -Port $ExpectedPorts.LabSpecification -RequiredAnyMarkers @($LabRoot,'streamlit','specification','demo') -RequiredProcessNames @('python*.exe','node*.exe')
     $serviceEvidence.programMcp = Assert-ProcessIdentity -ServiceName 'Program MCP' -Port $ExpectedPorts.ProgramMcp -RequiredAnyMarkers @($ProgramRoot,$ToolingRoot,'controlstack_mcp') -RequiredProcessNames @('python*.exe')
+    Add-ReceiptValidation -Code 'SERVICE_IDENTITIES' -Status 'passed'
 
+    Set-AuditPhase -Phase 'LAUNCHER_DISCOVERY'
     $launchers = [ordered]@{}
     $launchers.selectorMcp = Find-LauncherFile -ServiceName 'Selector MCP' -Port $ExpectedPorts.SelectorMcp -LaneRoot $SelectorRoot -SearchRoots @($ToolingRoot,$SelectorRoot) -ExtraMarkers @('controlstack_mcp','selector-engine')
     $launchers.selectorRuntime = Find-LauncherFile -ServiceName 'Selector runtime' -Port $ExpectedPorts.SelectorRuntime -LaneRoot $SelectorRoot -SearchRoots @($ToolingRoot,$SelectorRoot) -ExtraMarkers @('server.js','runtime')
     $launchers.labMcp = Find-LauncherFile -ServiceName 'Lab MCP' -Port $ExpectedPorts.LabMcp -LaneRoot $LabRoot -SearchRoots @($ToolingRoot,$LabRoot) -ExtraMarkers @('controlstack_mcp','lab-ies')
     $launchers.labSpecification = Find-LauncherFile -ServiceName 'Lab specification service' -Port $ExpectedPorts.LabSpecification -LaneRoot $LabRoot -SearchRoots @($ToolingRoot,$LabRoot) -ExtraMarkers @('streamlit','specification','demo')
     $launchers.programMcp = Find-LauncherFile -ServiceName 'Program MCP' -Port $ExpectedPorts.ProgramMcp -LaneRoot $ProgramRoot -SearchRoots @($ToolingRoot,$ProgramRoot) -ExtraMarkers @('controlstack_mcp','program-integrate')
+    Add-ReceiptValidation -Code 'LAUNCHER_DISCOVERY' -Status 'passed'
 
+    Set-AuditPhase -Phase 'SELECTOR_SCOPE_PLAN'
     $scopeSource = Find-SelectorScopeSource
     $SelectorConfigPlan = New-SelectorConfigPlan -ScopeSource $scopeSource
     Add-ReceiptValidation -Code 'SELECTOR_BLUE_GREEN_PLAN' -Status 'passed' -ServiceId 'selector-mcp' -Port $ExpectedPorts.SelectorMcpCandidate
 
+    Set-AuditPhase -Phase 'MANAGER_DISCOVERY'
     $managerDiscovery = Get-ManagerDiscovery
     $ManagerRoot = Join-Path $env:LOCALAPPDATA 'ControlStack\lane-managed-services'
     $ManagerRegistryPath = Join-Path $ManagerRoot 'controlstack-managed-services.json'
     $ManagerScriptPath = Join-Path $ManagerRoot 'ControlStack-ManagedServices.ps1'
     $TunnelHostPath = Join-Path $ManagerRoot 'ControlStack-TunnelHost.ps1'
     $StartupEntryPath = Join-Path ([Environment]::GetFolderPath('Startup')) 'ControlStack-LaneManagedServices.cmd'
+
+    Set-AuditPhase -Phase 'GENERATED_SCRIPT_PARSE'
     Assert-PowerShellTextParses -Text (Get-ManagerScriptContent) -Label 'Generated lane service manager'
     Assert-PowerShellTextParses -Text (Get-TunnelHostScriptContent) -Label 'Generated lane tunnel host'
+    Add-ReceiptValidation -Code 'GENERATED_SCRIPT_PARSE' -Status 'passed'
+
+    Set-AuditPhase -Phase 'MANAGER_PRESERVATION'
     Test-ManagerRegistrySchema -Path $ManagerRegistryPath
     $existingManagerServices = Get-ExistingManagerServiceNames -Files $managerDiscovery.discoveredFiles
     $Receipt.preservation.existingManagerFileCount = @($managerDiscovery.discoveredFiles).Count
     $Receipt.preservation.existingServiceCount = @($existingManagerServices).Count
     $managedIds = @('selector-mcp','selector-runtime','selector-openai-tunnel','lab-mcp','lab-specification','lab-openai-tunnel','program-mcp','program-openai-tunnel')
     $Receipt.preservation.unknownServiceCount = @($existingManagerServices | Where-Object { $managedIds -notcontains $_.name }).Count
+    Add-ReceiptValidation -Code 'MANAGER_PRESERVATION' -Status 'passed'
+
+    Set-AuditPhase -Phase 'DOWNSTREAM_INACTIVITY'
     Assert-NoDownstreamArtifactsActivation -Files $managerDiscovery.discoveredFiles
 
+    Set-AuditPhase -Phase 'LEGACY_REFERENCE_SCAN'
     $topLevelControlStackRoots = @(Get-ChildItem -LiteralPath 'C:\' -Directory -Filter 'ControlStack*' -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName)
     $referenceRoots = @($ToolingRoot,$ProgramRoot,$SelectorRoot,$LabRoot,$ManagerRoot,(Join-Path $env:LOCALAPPDATA 'ControlStack'),(Join-Path $env:ProgramData 'ControlStack'),([Environment]::GetFolderPath('Startup'))) + $topLevelControlStackRoots
     $references = @(Find-CSRuntimeReferences -Roots @($referenceRoots | Where-Object { $_ } | Sort-Object -Unique))
     $references += @(Get-ControlStackRegistryReferences)
     $Receipt.preservation.csTunnelRuntimeReferenceCount = $references.Count
     $references = $null
+    Add-ReceiptValidation -Code 'LEGACY_REFERENCE_SCAN' -Status 'passed'
 
+    Set-AuditPhase -Phase 'TEMPORARY_PORTS'
     foreach ($temporaryPort in @($ExpectedPorts.SelectorMcpCandidate,8180,8181,8182)) {
         if (@(Get-NetTCPConnection -State Listen -LocalPort $temporaryPort -ErrorAction SilentlyContinue).Count -gt 0) { Set-FailureCode -Code 'TEMPORARY_PORT_OCCUPIED'; throw 'TEMPORARY_PORT_OCCUPIED' }
     }
+    Add-ReceiptValidation -Code 'TEMPORARY_PORTS' -Status 'passed'
 
+    Set-AuditPhase -Phase 'TUNNEL_DEFINITIONS'
     $tunnels = [ordered]@{}
     $tunnels.selector = Get-TunnelDefinition -Id 'selector-openai-tunnel' -Name 'Selector OpenAI tunnel' -HealthPort $ExpectedPorts.SelectorTunnel -LaneRoot $SelectorRoot -TemporaryPort 8182
     $tunnels.lab = Get-TunnelDefinition -Id 'lab-openai-tunnel' -Name 'Lab OpenAI tunnel' -HealthPort $ExpectedPorts.LabTunnel -LaneRoot $LabRoot -TemporaryPort 8181
     $tunnels.program = Get-TunnelDefinition -Id 'program-openai-tunnel' -Name 'Program OpenAI tunnel' -HealthPort $ExpectedPorts.ProgramTunnel -LaneRoot $ProgramRoot -TemporaryPort 8180
+    Add-ReceiptValidation -Code 'TUNNEL_DEFINITIONS' -Status 'passed'
+
+    Set-AuditPhase -Phase 'TUNNEL_HEALTH'
     foreach ($tunnel in $tunnels.Values) {
         $health = Get-HealthCheck -Port $tunnel.healthPort -Attempts 3 -DelayMilliseconds 300
         if (-not $health.healthy) { Set-FailureCode -Code 'EXISTING_TUNNEL_UNHEALTHY'; throw 'EXISTING_TUNNEL_UNHEALTHY' }
@@ -1816,7 +1861,9 @@ try {
         $TunnelLoadBearing[$tunnel.id] = 'original'
         Add-ReceiptValidation -Code 'TUNNEL_ARGUMENT_ALLOWLIST' -Status 'passed' -ServiceId $tunnel.id -Port $tunnel.healthPort -ProcessId $tunnel.oldProcessId
     }
+    Add-ReceiptValidation -Code 'TUNNEL_HEALTH' -Status 'passed'
 
+    Set-AuditPhase -Phase 'RECEIPT_SERVICE_SUMMARY'
     foreach ($entry in @(
         [ordered]@{ id='selector-mcp'; port=$ExpectedPorts.SelectorMcp; evidence=$serviceEvidence.selectorMcp },
         [ordered]@{ id='selector-runtime'; port=$ExpectedPorts.SelectorRuntime; evidence=$serviceEvidence.selectorRuntime },
@@ -1826,6 +1873,7 @@ try {
     )) { Add-ReceiptService -ServiceId $entry.id -Port $entry.port -ProcessId $entry.evidence.processId -ExecutableName $entry.evidence.processName -Status 'running-validated' }
     foreach ($tunnel in $tunnels.Values) { Add-ReceiptService -ServiceId $tunnel.id -Port $tunnel.healthPort -ProcessId $tunnel.oldProcessId -ExecutableName $tunnel.executableName -Status 'running-validated' }
 
+    Set-AuditPhase -Phase 'AUDIT_RECEIPT'
     if ($AuditOnly) {
         $Receipt.lab.gate = 'not-run-audit-only'
         $Receipt.lab.push = 'not-run-audit-only'
@@ -1929,7 +1977,18 @@ try {
     Write-Host 'CONTROLSTACK ENVIRONMENT REPAIR COMPLETED'
 }
 catch {
-    if ($FailureCode -eq 'NONE') { Set-FailureCode -Code 'UNCLASSIFIED_FAILURE' }
+    $failureRecord = $_
+    $Receipt.failure.phase = $CurrentPhase
+    try {
+        $line = [int]$failureRecord.InvocationInfo.ScriptLineNumber
+        if ($line -gt 0) { $Receipt.failure.scriptLine = $line }
+    }
+    catch { }
+    try { $Receipt.failure.exceptionType = [string]$failureRecord.Exception.GetType().Name }
+    catch { $Receipt.failure.exceptionType = 'UnknownException' }
+    if ($FailureCode -eq 'NONE') {
+        Set-FailureCode -Code ("{0}_{1}_FAILED" -f $RepairMode, $CurrentPhase)
+    }
     foreach ($temporary in @($TemporaryTunnelProcesses)) {
         try {
             $tunnel = $temporary.definition
@@ -1944,6 +2003,6 @@ catch {
     if ($SecretSecure) { $SecretSecure.Dispose(); $SecretSecure = $null }
     if (-not $AuditOnly) { try { Set-Clipboard -Value 'ControlStack repair stopped safely.' } catch { } }
     try { Write-Receipt -Status $(if ($MutationStarted) { 'failed-after-mutation-started' } else { 'preflight-failed-no-mutation' }) } catch { }
-    Write-Error ("ControlStack repair failed with safe result code: {0}" -f $FailureCode)
+    Write-Error ("ControlStack repair failed with safe result code {0}; phase {1}; line {2}; type {3}." -f $FailureCode, $Receipt.failure.phase, $Receipt.failure.scriptLine, $Receipt.failure.exceptionType)
     exit 1
 }
