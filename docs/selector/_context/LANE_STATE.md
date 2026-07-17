@@ -79,3 +79,11 @@ A pre-memory acceptance reported `selector-engine` as 100 passed and 0 failed. *
 - Durable lane memory: IN PROGRESS in this documentation parcel.
 - Single-slice user-level E2E closeout: NEXT MILESTONE.
 - Widening: HELD until closeout evidence and Program seam approval.
+
+## 2026-07-18 bounded closeout evidence
+
+Worker `CS-SELECTOR-E2E-SINGLE-SLICE-CLOSEOUT-01` reached the committed internal read-only Engine seam with a complete candidate and active RuntimeData loaded internally. Donor `run_engine` was attempted under the filesystem-write guard; no filesystem write, audit JSONL write, RuntimeData mutation, selected-result persistence, IES generation, or other output side effect occurred.
+
+The first reproducible failing boundary is Engine run-length feasibility: the live safe summary returns `success: false`, `run_count: 0`, and `length_pref="nearest" but no feasible run length found within ±28000mm`. The failure occurs after server-owned invocation and before a useful run-table row exists. Control/Protocol, rendering, cold boot, and reference caching were not reopened.
+
+Priority 1 remains IN PROGRESS. The next bounded worker is `CS-SELECTOR-E2E-LENGTH-FEASIBILITY-BOUNDARY-01`, restricted to proving why the selected source-backed candidate cannot produce one feasible run length and correcting only the exact Selector-to-Engine candidate/length-policy boundary if current evidence requires code.

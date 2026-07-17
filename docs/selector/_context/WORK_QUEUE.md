@@ -19,7 +19,7 @@ Acceptance:
 
 ## Priority 1 — Single-slice E2E closeout
 
-**Status:** READY AFTER Priority 0.
+**Status:** IN PROGRESS — blocked at first reproducible Engine length-feasibility boundary.
 
 **Worker name:** `CS-SELECTOR-E2E-SINGLE-SLICE-CLOSEOUT-01`
 
@@ -44,6 +44,10 @@ Acceptance:
 - no hidden browser-only source of truth;
 - no unrelated feature widening;
 - exact before/after Git evidence.
+
+**Current blocker evidence:** active RuntimeData loads read-only and donor `run_engine` executes under the no-write guard, but the safe summary returns `success: false`, `run_count: 0`, and `length_pref="nearest" but no feasible run length found within ±28000mm` before any useful run-table output.
+
+**Next bounded worker:** `CS-SELECTOR-E2E-LENGTH-FEASIBILITY-BOUNDARY-01` — prove the exact source-backed candidate/length-policy incompatibility and change only that boundary plus focused tests when required.
 
 ## Priority 2 — Declare Engine output contract candidate
 

@@ -43,7 +43,9 @@ Commit hashes and subjects are VERIFIED. Behaviour beyond the subject requires t
 
 - Pre-memory `selector-engine`: 100 passed, 0 failed — REPORTED accepted receipt.
 - Post-documentation gate, commit, and push — recorded by the commit containing this index and its execution receipt.
-- Current browser-level single-slice acceptance — UNKNOWN; queued as `CS-SELECTOR-E2E-SINGLE-SLICE-CLOSEOUT-01`.
+- Current single-slice closeout — BLOCKED at first reproducible Engine run-length feasibility boundary.
+- Live internal seam evidence: active RuntimeData loaded read-only; donor `run_engine` attempted; filesystem/audit writes false; RuntimeData mutation false; safe summary `success: false`, `run_count: 0`, first error `length_pref="nearest" but no feasible run length found within ±28000mm`.
+- Next worker: `CS-SELECTOR-E2E-LENGTH-FEASIBILITY-BOUNDARY-01`.
 
 ## Historical reports
 
