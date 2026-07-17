@@ -15,7 +15,6 @@
     {
       "id": "selector-mcp",
       "name": "CS Selector & Engine MCP",
-      "taskName": "ControlStack-Selector-MCP",
       "port": 8000,
       "executable": "C:\\Users\\Patrick\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
       "args": ["tools\\controlstack-mcp\\controlstack_mcp.py"],
@@ -50,7 +49,6 @@
     {
       "id": "selector-runtime",
       "name": "CS Selector Runtime",
-      "taskName": "ControlStack-Selector-Runtime",
       "port": 8788,
       "executable": "C:\\Program Files\\nodejs\\node.exe",
       "args": ["server.js"],
@@ -67,7 +65,6 @@
     {
       "id": "selector-tunnel",
       "name": "CS Selector OpenAI Tunnel",
-      "taskName": "ControlStack-Selector-Tunnel",
       "port": 8082,
       "executable": "C:\\ControlStack_Tunnel\\tunnel-client.exe",
       "args": ["run", "--profile", "controlstack-selector-engine-noauth", "--health.listen-addr", "127.0.0.1:8082", "--log.level=warn", "--log.format=struct-text"],
@@ -79,7 +76,6 @@
     {
       "id": "lab-mcp",
       "name": "CS Lab & IES MCP",
-      "taskName": "ControlStack-Lab-MCP",
       "port": 8021,
       "executable": "C:\\Users\\Patrick\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
       "args": ["tools\\controlstack-mcp\\controlstack_mcp.py"],
@@ -114,7 +110,6 @@
     {
       "id": "lab-specification",
       "name": "CS Lab Specification",
-      "taskName": "ControlStack-Lab-Specification",
       "port": 8899,
       "executable": "C:\\Users\\Patrick\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
       "args": ["-m", "http.server", "8899"],
@@ -126,7 +121,6 @@
     {
       "id": "lab-tunnel",
       "name": "CS Lab OpenAI Tunnel",
-      "taskName": "ControlStack-Lab-Tunnel",
       "port": 8081,
       "executable": "C:\\ControlStack_Tunnel\\tunnel-client.exe",
       "args": ["run", "--profile", "controlstack-lab-ies-noauth", "--health.listen-addr", "127.0.0.1:8081", "--log.level=warn", "--log.format=struct-text"],
@@ -138,7 +132,6 @@
     {
       "id": "program-mcp",
       "name": "CS Program & Integrate MCP",
-      "taskName": "ControlStack-Program-MCP",
       "port": 8022,
       "executable": "C:\\Users\\Patrick\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
       "args": ["tools\\controlstack-mcp\\controlstack_mcp.py"],
@@ -173,7 +166,6 @@
     {
       "id": "program-tunnel",
       "name": "CS Program OpenAI Tunnel",
-      "taskName": "ControlStack-Program-Tunnel",
       "port": 8080,
       "executable": "C:\\ControlStack_Tunnel\\tunnel-client.exe",
       "args": ["run", "--profile", "controlstack-program-integrate-noauth", "--health.listen-addr", "127.0.0.1:8080", "--log.level=warn", "--log.format=struct-text"],

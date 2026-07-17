@@ -16,7 +16,7 @@ test("deployment manifest defines the accepted eight-service topology", () => {
   assert.equal(manifest.worktrees.length, 4);
   assert.deepEqual(manifest.services.map((x) => x.port).sort((a, b) => a - b), [8000, 8021, 8022, 8080, 8081, 8082, 8788, 8899]);
   assert.equal(manifest.services.filter((x) => x.credential === "control-plane-api-key").length, 3);
-  assert.equal(new Set(manifest.services.map((x) => x.taskName)).size, 8);
+  assert.equal(manifest.services.some((x) => Object.hasOwn(x, "taskName")), false);
 });
 
 test("service host accepts the same manifest and no tunnel key appears in it", () => {
@@ -51,4 +51,18 @@ test("credential storage uses the Windows PowerShell SecureString DPAPI path", (
   assert.match(host, /SecureStringToBSTR/);
   assert.doesNotMatch(installer, /ProtectedData/);
   assert.doesNotMatch(host, /ProtectedData/);
+});
+
+test("deployment uses one per-user startup entry and no Scheduled Task commands", () => {
+  const installer = readFileSync(path.join(root, "..", "scripts", "CONTROLSTACK_DEPLOYMENT_V2_INSTALL.mjs"), "utf8");
+  const manager = readFileSync(path.join(root, "..", "scripts", "deployment-v2", "controlstack_lane_manager.mjs"), "utf8");
+  const startup = readFileSync(path.join(root, "..", "scripts", "deployment-v2", "ControlStack-Lane-Services.vbs"), "utf8");
+
+  assert.match(installer, /Microsoft.*Windows.*Start Menu.*Programs.*Startup/s);
+  assert.match(installer, /Reusing the already protected deployment key/);
+  assert.match(manager, /spawn\(process\.execPath, \[hostPath, "--service", service\.id\]/);
+  assert.match(manager, /READY \/ MANAGED/);
+  assert.match(startup, /controlstack_lane_manager\.mjs"" start/);
+  assert.doesNotMatch(installer, /schtasks\.exe/i);
+  assert.doesNotMatch(manager, /schtasks\.exe/i);
 });

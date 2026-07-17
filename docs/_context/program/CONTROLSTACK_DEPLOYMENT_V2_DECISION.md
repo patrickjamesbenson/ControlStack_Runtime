@@ -1,14 +1,15 @@
 # ControlStack Deployment v2 Decision
 
-Status: ACCEPTED ARCHITECTURE — HOST INVENTORY REQUIRED BEFORE INSTALLATION  
+Status: ACCEPTED ARCHITECTURE — PER-USER STARTUP SUPERVISION  
 Owner: Program & Integrate  
-Decision date: 2026-07-17
+Decision date: 2026-07-17  
+Revised: 2026-07-18
 
 ## Outcome
 
-The monolithic `CONTROLSTACK_ENVIRONMENT_REPAIR.ps1` deployment path is retired. It must not be patched or executed again.
+The monolithic `CONTROLSTACK_ENVIRONMENT_REPAIR.ps1` path remains retired.
 
-ControlStack Deployment v2 will use native Windows Scheduled Tasks as the process supervisor and the existing Service Manager v2 as a dashboard and control surface. The service manager will not be replaced, and unknown/logo/asset services will not be removed.
+Deployment v2 uses one per-user Windows Startup launcher to invoke Service Manager v2. Service Manager v2 directly owns eight lane supervisors. Windows Scheduled Tasks were rejected after the host proved that task registration introduced an unnecessary administrator boundary.
 
 This is an engineering decision owned by Program & Integrate. Patrick is not expected to review or approve implementation details.
 
@@ -29,25 +30,20 @@ The downstream-artifacts tunnel remains reserved and inactive until the Engine o
 
 ## Locked safety rules
 
-- Deployment does not modify feature code.
-- Deployment does not repair Selector documentation scope or commit Lab work.
-- Deployment does not merge, reset, clean, restore or delete Git state.
-- Existing Service Manager v2 data is preserved and extended additively.
-- Unknown, logo and asset services are preserved.
-- Existing live processes remain load-bearing until a replacement is independently healthy.
-- Credentials are handled as a separate bounded operation and never written to repository files, receipts, task arguments or command logs.
-- Each lane process is independently startable, stoppable, restartable and observable.
-- Scheduled Tasks run in Patrick's user session at logon; they are not pre-login machine services.
-- Every task has a bounded restart-on-failure policy and a lane-specific log/receipt.
-- Removal of ngrok, legacy managers or `CS_tunnel_runtime` is a later cleanup parcel requiring positive evidence that nothing references them.
+- Deployment does not modify feature code or Git state.
+- Unknown, logo and asset services remain outside this manager and are preserved.
+- Installation leaves all currently running lane processes unchanged.
+- One protected runtime API key is shared by the three active OpenAI tunnel processes.
+- Each managed entry is independently startable, stoppable, restartable and observable.
+- Stop operations require recorded PID, executable, port and supervisor identity matches.
+- Post-reboot verification requires both health and Deployment v2 ownership.
+- Startup supervision runs only in Patrick's logged-in Windows session and needs no administrator rights.
+- Removal of ngrok, legacy managers, old keys or `CS_tunnel_runtime` remains a later evidenced cleanup parcel.
 
 ## Delivery sequence
 
-1. Generate a read-only, secret-free host inventory.
-2. Derive an exact deployment manifest from that inventory.
-3. Validate the manifest without process mutation.
-4. Install Scheduled Tasks additively and connect them to Service Manager v2.
-5. Verify all eight entries, then verify restart durability.
-6. Perform legacy cleanup only as a separate, evidenced parcel.
-
-No step is allowed to guess a launcher, process identity, service-manager schema or credential source.
+1. Inventory the live host without mutation.
+2. Derive and test the exact eight-entry manifest.
+3. Install the manager, encrypted credential and one per-user Startup launcher additively.
+4. Restart Windows once and verify all eight entries are healthy and managed.
+5. Perform legacy cleanup only after that green verification.
