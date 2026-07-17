@@ -130,7 +130,7 @@ No feature file is authorised for modification in this parcel. **VERIFIED task b
 - Program branch divergence from `origin/lane/program-integrate` is not quantified by the status response beyond the branch display. **UNKNOWN.**
 - Main-branch state and promotion mechanism are outside the connected root and were not inspected. **UNKNOWN.**
 - The Engine output contract is not yet declared stable; therefore downstream-artifact activation must remain held. **REPORTED.**
-- The secure tunnel restart automation is not evidenced in this repository inspection. **REPORTED requirement; implementation state UNKNOWN.**
+- Deployment v2 is implemented in the Program lane from the accepted 2026-07-17 host inventory. Source validation is green; Windows installation and post-reboot acceptance remain pending. **VERIFIED repository state / PENDING host activation.**
 
 ## Acceptance status
 

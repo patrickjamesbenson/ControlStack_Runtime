@@ -207,7 +207,7 @@ This is the required wrong-app outcome under the orchestration contract.
 
 ## 12. Integration queue and exact next actions
 
-### Immediate next action after this documentation parcel
+### Historical next action after the original documentation parcel — SUPERSEDED 2026-07-17
 
 Use the correct connected Selector app to execute a fresh Selector lane-memory bootstrap. Do not execute it through CS Integrate.
 
@@ -223,13 +223,31 @@ Commission the equivalent Lab lane-memory bootstrap using only the correct Lab a
 
 Program reconciles fresh lane heads against Program HEAD and establishes an evidence-backed integration order. Do not activate downstream artifacts and do not begin secure tunnel restart feature work.
 
+## 12A. Current operational handoff — Deployment v2
+
+This section supersedes the historical lane-memory sequence above as the immediate operational action.
+
+Deployment v2 is derived from the 2026-07-17 host inventory and manages exactly eight logon tasks: Selector MCP/runtime/tunnel, Lab MCP/specification/tunnel, and Program MCP/tunnel. The old ngrok/router manager is backed up and left untouched; unknown/logo services and downstream artifacts are outside the parcel.
+
+Repository implementation:
+
+- `scripts/CONTROLSTACK_DEPLOYMENT_V2_INSTALL.mjs`
+- `scripts/deployment-v2/controlstack-services.v2.json`
+- `scripts/deployment-v2/controlstack_service_host.mjs`
+- `scripts/deployment-v2/controlstack_lane_manager.mjs`
+- `scripts/deployment-v2/CONTROLSTACK MANAGER.bat`
+- `tests/controlstackDeploymentV2.test.js`
+- `docs/_context/program/CONTROLSTACK_DEPLOYMENT_V2_RUNBOOK.md`
+
+Immediate next action: copy one fresh OpenAI runtime API key with Tunnels Read + Use, run the bounded installer, restart Windows once, and use Service Manager option 5 to verify all eight services. No legacy cleanup is authorised before that green receipt.
+
 ## 13. Known defects, blockers, and risks
 
 - Current Selector live payload state is UNKNOWN to Program. Historical Control/Protocol defects and recent fixes require fresh Selector evidence.
 - Current Lab dirty inventory and exact accepted commit are UNKNOWN.
 - The Engine output contract has not been declared stable in Program memory.
 - Main promotion procedure is UNKNOWN and not authorised by this app.
-- Secure tunnel restart implementation status is UNKNOWN.
+- Deployment v2 source is implemented and self-tested; Windows task installation and post-reboot eight-service verification remain pending.
 - Program branch ahead/behind counts were not numerically returned by the status tool. UNKNOWN.
 - A worker following pasted identity instead of `repo_info` could write documentation into the wrong lane; the wrong-app protocol now explicitly blocks this.
 

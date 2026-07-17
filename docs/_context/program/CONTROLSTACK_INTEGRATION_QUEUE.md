@@ -132,8 +132,8 @@ No implementation or activation is authorised until the Engine output contract i
 
 ## Priority 6 — Secure tunnel restart automation
 
-**Status:** HELD AS OPERATIONAL HARDENING.  
-**Dependency:** Named owner, current service inventory, health contract, and explicit commission.
+**Status:** IMPLEMENTED IN REPOSITORY; WINDOWS INSTALLATION AND POST-REBOOT ACCEPTANCE PENDING.  
+**Dependency:** One fresh OpenAI runtime key copied to the Windows clipboard, additive installation, one Windows restart, and an eight-service verification receipt.
 
 ### Acceptance criteria
 

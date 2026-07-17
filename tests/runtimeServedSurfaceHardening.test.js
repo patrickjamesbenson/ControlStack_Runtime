@@ -2,6 +2,9 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
+// Keep Deployment v2 safety assertions inside the bounded Program gate.
+await import("./controlstackDeploymentV2.test.js");
+
 const serverSourceUrl = new URL("../server.js", import.meta.url);
 
 async function serverText() {
