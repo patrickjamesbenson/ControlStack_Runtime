@@ -65,3 +65,19 @@ Every completed worker updates this index with:
 - starting and ending Git state;
 - paths changed;
 - status classification and timestamp.
+
+## 2026-07-18 — Runtime 8788 saved-project acceptance attempt
+
+- Worker: `CS-SELECTOR-E2E-RUNTIME-8788-ACCEPTANCE-01`.
+- Starting HEAD: `ca973ce76ca8183b3255adc182da04cfba19cc89`; starting Git inventory: 0 staged, 0 modified, 0 untracked, 0 deleted — VERIFIED.
+- Feature commit in starting history: `6e5e6cee398e1dd1e82d331c81a719625e0d076b` — VERIFIED.
+- Runtime root receipt: 8788 reachable; current host-transport route mounted — VERIFIED.
+- Safe selected-project lookup probes: `project-alpha`, `project-bravo`, and `project-charlie` each returned HTTP 422, `requestAccepted: true`, `serverOwnedRevisionChecked: true`, and blocker `selected-project-shell-invoke-transport-active-server-revision-invalid` — VERIFIED.
+- Registration receipt: NOT DISPATCHED. The exact accepted local save envelope and source projection required by the registration contract were absent; creating them from fixtures was prohibited — VERIFIED boundary.
+- Selected-project/revision attribution: no active server revision exists for any supported current project identity — VERIFIED.
+- Useful safe run row: unavailable because execution stopped before source reconstruction and capability invocation — BLOCKED by precondition.
+- No-write receipt on every live probe: `filesystemWriteAttempted`, `auditJsonlWriteAttempted`, `runtimeDataMutated`, `selectedResultPersisted`, `runTableGenerated`, `iesGenerated`, and `outputGenerated` were all false — VERIFIED.
+- Active RuntimeData probe fingerprint: `266de269e3e8f8b7191e4653d45580c251eb46025411574e0d1f2a27daca209d`; loaded read-only, write disabled, write not attempted, path and raw rows not returned — VERIFIED.
+- Changed paths: `LANE_STATE.md`, `WORK_QUEUE.md`, `EVIDENCE_INDEX.md`, and `SESSION_HANDOFF.md` only. No feature code changed.
+- Gate: `selector-engine`, 102 passed, 0 failed, exit code 0 — VERIFIED.
+- Documentation evidence commit: recorded by the subsequent closeout entry.

@@ -73,3 +73,17 @@ The worker must derive the smallest exact set from the first failing boundary. L
 ## Handoff discipline
 
 At the end of every orchestrator session, update these repository documents before handoff. A detailed chat summary without a committed `SESSION_HANDOFF.md` is not completion.
+
+## 2026-07-18 worker closeout — live saved-project precondition missing
+
+`CS-SELECTOR-E2E-RUNTIME-8788-ACCEPTANCE-01` started clean at `ca973ce76ca8183b3255adc182da04cfba19cc89`. Runtime 8788 was reachable and the selected-project read-only host route was mounted. Read-only lookups for all supported current project identities (`project-alpha`, `project-bravo`, and `project-charlie`) each returned `selected-project-shell-invoke-transport-active-server-revision-invalid` before source reconstruction or Engine invocation.
+
+This is the exact stop boundary: no active server-owned revision exists from an already-saved selected project. The registration route requires the exact accepted browser-session local save envelope and its source projection. The worker did not invent one from fixtures or tests, did not mutate project truth, and did not dispatch registration. Therefore no attributable safe run row was produced and the final live acceptance remains blocked by a user-created saved-project precondition rather than a newly proven code defect.
+
+All live probe receipts kept filesystem write, audit write, RuntimeData mutation, selected-result persistence, RunTable generation, IES generation, and output generation false. The active RuntimeData source fingerprint remained available only through the redacted read-only probe.
+
+**Required external action before the next worker:** in the live 8788 workspace, deliberately complete and save one suitable source-backed Selector project so the existing save flow can perform server-owned registration. Do not use Alpha/Bravo reference fixtures merely to manufacture a receipt.
+
+The complete permitted `selector-engine` gate passed 102/102 with exit code 0. No focused feature test was required because no feature code changed.
+
+**Recommended next worker after that action:** `CS-SELECTOR-E2E-RUNTIME-8788-ACCEPTANCE-02`. It should repeat only registration and selected-project read-only invocation, capture the safe project/revision acknowledgement and at least one useful safe run projection, rerun `selector-engine`, and patch only a new reproducible boundary if one appears. Do not execute or commission that worker from this handoff.

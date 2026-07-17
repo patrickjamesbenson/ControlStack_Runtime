@@ -51,6 +51,18 @@ Acceptance:
 
 **Next bounded worker:** `CS-SELECTOR-E2E-RUNTIME-8788-ACCEPTANCE-01` — exercise only the existing server-owned saved-project route, capture the attributable safe result, and patch only a newly reproducible first boundary if one remains.
 
+### 2026-07-18 acceptance precondition result
+
+**Status:** BLOCKED by live saved-project precondition; no code defect was established.
+
+Runtime 8788 was reachable, but read-only active-revision checks for all supported current workspace project identities (`project-alpha`, `project-bravo`, and `project-charlie`) returned `selected-project-shell-invoke-transport-active-server-revision-invalid`. No source boundary or Engine capability was invoked, and every persistence, mutation, RunTable, IES, and output flag remained false.
+
+The registration route can only be called truthfully with the exact accepted local save envelope produced by a real browser-session save. No such saved-project evidence exists in the current live runtime. Do not construct one from fixtures or test data.
+
+**External precondition:** a user must deliberately complete and save one suitable source-backed Selector project in the live 8788 browser session so the existing save flow dispatches server-owned registration.
+
+**Recommended next bounded worker after that precondition:** `CS-SELECTOR-E2E-RUNTIME-8788-ACCEPTANCE-02` — repeat only the two existing routes, capture project/revision attribution and one useful safe run result, and patch only a newly reproducible first boundary.
+
 ## Priority 2 — Declare Engine output contract candidate
 
 **Status:** BLOCKED by Priority 1.

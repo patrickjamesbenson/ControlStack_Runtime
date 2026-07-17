@@ -90,3 +90,13 @@ Commit `6e5e6cee398e1dd1e82d331c81a719625e0d076b` adds one server-owned, read-on
 Focused and lane evidence: `selector-engine` passed 102/102. Live internal-seam validation against active RuntimeData returned `success: true`, `run_count: 1`, one segment, three boards, one zone, and no filesystem write, audit JSONL write, RuntimeData mutation, selected-result persistence, RunTable write, IES generation, or output generation.
 
 Priority 1 remains IN PROGRESS only for final selected-and-saved project acceptance through the live 8788 registration/invocation route. Runtime 8788 was reachable, but this worker did not fabricate or replace a user's saved project merely to exercise that route. The next bounded worker is `CS-SELECTOR-E2E-RUNTIME-8788-ACCEPTANCE-01`.
+
+## 2026-07-18 runtime 8788 acceptance precondition stop
+
+Worker `CS-SELECTOR-E2E-RUNTIME-8788-ACCEPTANCE-01` started clean at `ca973ce76ca8183b3255adc182da04cfba19cc89` on `lane/selector-engine`. Feature commit `6e5e6cee398e1dd1e82d331c81a719625e0d076b` is present directly below the starting documentation handoff commit. Runtime `127.0.0.1:8788` was reachable and returned the current selected-project host-transport contract.
+
+The supported current workspace project identities are `project-alpha`, `project-bravo`, and `project-charlie`. A read-only invocation lookup was issued for each identity through `/api/workspace-shell/selected-project-engine-readonly-invoke`. Every request returned HTTP 422 with `requestAccepted: true`, `serverOwnedRevisionChecked: true`, and blocker `selected-project-shell-invoke-transport-active-server-revision-invalid`. In every receipt, source reconstruction, capability invocation, RuntimeData loading, donor Engine execution, persistence, RunTable generation, IES generation, and output generation remained false.
+
+**Exact first boundary:** runtime 8788 contains no active server-owned revision attributable to an already-saved selected project for any supported current project identity. The registration contract requires an accepted local save envelope and its exact saved source projection. Creating that request from current-project fixtures or repository test data would manufacture project truth and was therefore refused. The worker stopped before dispatching `/api/workspace-shell/selected-project-runtime-save-registration`; no useful safe run row can be attributed until a real browser-session project is deliberately saved and registered.
+
+No feature code was changed. Only the four required durable handoff files are in the documentation parcel. The complete permitted `selector-engine` gate passed 102/102 with exit code 0. The exact documentation commit is recorded by the subsequent closeout entry.
