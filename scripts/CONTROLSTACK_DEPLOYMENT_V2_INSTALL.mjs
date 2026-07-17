@@ -234,10 +234,79 @@ async function install(manifest) {
   }
 }
 
+function processOnPort(port) {
+  const script = [
+    "$ProgressPreference='SilentlyContinue'",
+    "$c=Get-NetTCPConnection -State Listen -LocalPort " + port + " -ErrorAction SilentlyContinue|Select-Object -First 1",
+    "if($null -eq $c){'{}';exit 0}",
+    "$p=Get-CimInstance Win32_Process -Filter ('ProcessId='+$c.OwningProcess)",
+    "[pscustomobject]@{ProcessId=[int]$c.OwningProcess;ExecutablePath=[string]$p.ExecutablePath;CommandLine=[string]$p.CommandLine}|ConvertTo-Json -Compress",
+  ].join(";");
+  const value = powershell(script);
+  return JSON.parse(value || "{}");
+}
+
+function stopValidatedTemporaryTunnel(service) {
+  const identity = processOnPort(service.port);
+  if (!identity.ProcessId) return;
+  const expectedExecutable = path.win32.normalize(service.executable).toLowerCase();
+  const actualExecutable = path.win32.normalize(String(identity.ExecutablePath || "")).toLowerCase();
+  const profileIndex = service.args.indexOf("--profile");
+  const expectedProfile = profileIndex >= 0 ? service.args[profileIndex + 1] : "";
+  const commandLine = String(identity.CommandLine || "").toLowerCase();
+  if (actualExecutable !== expectedExecutable || !expectedProfile || !commandLine.includes(expectedProfile.toLowerCase())) {
+    throw new Error("Refusing to replace an unexpected listener on tunnel port " + service.port);
+  }
+  const stopped = spawnSync("taskkill.exe", ["/PID", String(identity.ProcessId), "/T", "/F"], {
+    encoding: "utf8", windowsHide: true,
+  });
+  if (stopped.status !== 0) throw new Error("Could not stop the validated temporary tunnel on port " + service.port);
+}
+
+async function repairTunnels(manifest) {
+  if (process.platform !== "win32") throw new Error("Tunnel recovery runs only on Patrick's Windows host.");
+  if (os.hostname().toLowerCase() !== manifest.host.toLowerCase()) throw new Error("Wrong Windows host.");
+  if (os.userInfo().username.toLowerCase() !== manifest.user.toLowerCase()) throw new Error("Wrong Windows user.");
+  selfTest(manifest);
+
+  const protectedKey = existingProtectedCredential(manifest.credentialFile);
+  if (!protectedKey) throw new Error("The protected deployment key is missing or invalid.");
+
+  const installRoot = manifest.installRoot;
+  const installedManager = path.join(installRoot, "controlstack_lane_manager.mjs");
+  const files = ["controlstack_service_host.mjs", "controlstack_lane_manager.mjs", "controlstack-services.v2.json"];
+  for (const file of files) copyFileSync(path.join(sourceRoot, file), path.join(installRoot, file));
+
+  const tunnelServices = manifest.services.filter((service) => service.credential === "control-plane-api-key");
+  for (const service of tunnelServices) stopValidatedTemporaryTunnel(service);
+
+  const started = spawnSync(process.execPath, [installedManager, "start"], { stdio: "inherit", windowsHide: false });
+  if (started.status !== 0) throw new Error("Service Manager v2 could not start the repaired tunnel services.");
+
+  const verified = spawnSync(process.execPath, [installedManager, "verify"], { stdio: "inherit", windowsHide: false });
+  if (verified.status !== 0) throw new Error("Service Manager v2 verification did not pass after tunnel recovery.");
+
+  const receipt = {
+    schema: "controlstack-deployment-v2-tunnel-repair/1",
+    status: "repaired-and-verified",
+    repairedAt: new Date().toISOString(),
+    host: manifest.host,
+    user: manifest.user,
+    credentialReused: true,
+    services: tunnelServices.map((service) => ({ id: service.id, port: service.port })),
+    otherManagedServicesRestarted: false,
+  };
+  const receiptPath = path.join(manifest.receiptRoot, "CONTROLSTACK_DEPLOYMENT_V2_TUNNEL_REPAIR_" + stamp() + ".json");
+  writeFileSync(receiptPath, JSON.stringify(receipt, null, 2) + "\n", "utf8");
+  console.log("CONTROLSTACK TUNNEL RECOVERY: PASS");
+  console.log("Receipt: " + receiptPath);
+}
+
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const manifest = loadAndValidateManifest();
   const action = process.argv[2] || "--self-test";
   if (action === "--self-test") selfTest(manifest);
   else if (action === "--install") await install(manifest);
-  else throw new Error("Use --self-test or --install.");
+  else if (action === "--repair-tunnels") await repairTunnels(manifest);
+  else throw new Error("Use --self-test, --install or --repair-tunnels.");
 }

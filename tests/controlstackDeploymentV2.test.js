@@ -66,3 +66,19 @@ test("deployment uses one per-user startup entry and no Scheduled Task commands"
   assert.doesNotMatch(installer, /schtasks\.exe/i);
   assert.doesNotMatch(manager, /schtasks\.exe/i);
 });
+
+
+test("tunnel recovery reuses the protected key and replaces only validated tunnel listeners", () => {
+  const installer = readFileSync(path.join(root, "..", "scripts", "CONTROLSTACK_DEPLOYMENT_V2_INSTALL.mjs"), "utf8");
+  const host = readFileSync(path.join(root, "..", "scripts", "deployment-v2", "controlstack_service_host.mjs"), "utf8");
+  const manager = readFileSync(path.join(root, "..", "scripts", "deployment-v2", "controlstack_lane_manager.mjs"), "utf8");
+
+  assert.match(installer, /--repair-tunnels/);
+  assert.match(installer, /stopValidatedTemporaryTunnel/);
+  assert.match(installer, /service\.credential === "control-plane-api-key"/);
+  assert.match(installer, /otherManagedServicesRestarted: false/);
+  assert.match(host, /input: protectedValue/);
+  assert.doesNotMatch(host, /encodedPowerShell\(script\), credentialFile/);
+  assert.match(manager, /"-OutputFormat", "Text"/);
+  assert.doesNotMatch(manager, /execFileSync/);
+});

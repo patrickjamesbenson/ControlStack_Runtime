@@ -59,3 +59,16 @@ After it reports `CONTROLSTACK DEPLOYMENT V2 INSTALLED`, restart Windows once. T
 The original manager backup path is recorded in the installation receipt. Legacy cleanup remains separate. No ngrok/router connector, old tunnel key, old manager or `CS_tunnel_runtime` is deleted until the post-reboot verification is green.
 
 The downstream-artifacts tunnel remains reserved and inactive.
+
+
+## Tunnel recovery
+
+The first post-reboot start exposed a Windows PowerShell 5.1 argument-boundary defect in the tunnel credential decoder. MCP, runtime and specification services were healthy; only the three tunnel supervisors failed before log creation.
+
+The corrected decoder receives the DPAPI ciphertext through standard input, matching the already-validated installer path. Recovery copies only the corrected deployment host/manager/manifest, replaces only tunnel listeners whose executable and profile identity match, starts the three managed tunnels, and verifies all eight managed services:
+
+```powershell
+node C:\ControlStack_Worktrees\program-integrate\scripts\CONTROLSTACK_DEPLOYMENT_V2_INSTALL.mjs --repair-tunnels
+```
+
+No new key, reboot, elevation or restart of the five healthy non-tunnel services is required.

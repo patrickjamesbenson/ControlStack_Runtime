@@ -45,22 +45,29 @@ function encodedPowerShell(script) {
 }
 
 function decryptCredential(credentialFile) {
+  const protectedValue = readFileSync(credentialFile, "utf8").trim();
   const script = [
     "$ErrorActionPreference='Stop'",
-    "$p=$args[0]",
-    "$s=ConvertTo-SecureString ([IO.File]::ReadAllText($p).Trim())",
+    "$ProgressPreference='SilentlyContinue'",
+    "$c=[Console]::In.ReadToEnd().Trim()",
+    "$s=ConvertTo-SecureString $c",
     "$b=[Runtime.InteropServices.Marshal]::SecureStringToBSTR($s)",
     "try{$v=[Runtime.InteropServices.Marshal]::PtrToStringBSTR($b)}finally{[Runtime.InteropServices.Marshal]::ZeroFreeBSTR($b)}",
     "[Console]::OutputEncoding=[Text.Encoding]::UTF8",
     "[Console]::Write($v)",
   ].join(";");
-  const result = spawnSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-EncodedCommand", encodedPowerShell(script), credentialFile], {
+  const result = spawnSync("powershell.exe", [
+    "-NoProfile", "-NonInteractive", "-InputFormat", "Text", "-OutputFormat", "Text",
+    "-EncodedCommand", encodedPowerShell(script),
+  ], {
+    input: protectedValue,
     encoding: "utf8",
     windowsHide: true,
     maxBuffer: 1024 * 1024,
   });
-  if (result.status !== 0 || !result.stdout.startsWith("sk-")) throw new Error("Tunnel credential could not be decrypted.");
-  return result.stdout.trim();
+  const value = result.stdout.trim();
+  if (result.status !== 0 || !value.startsWith("sk-")) throw new Error("Tunnel credential could not be decrypted.");
+  return value;
 }
 
 function writeState(stateRoot, service, childPid, status) {

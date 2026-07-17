@@ -1,4 +1,4 @@
-import { execFileSync, spawn, spawnSync } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import { existsSync, readFileSync, rmSync } from "node:fs";
 import http from "node:http";
 import net from "node:net";
@@ -53,10 +53,14 @@ function processIdentity(pid) {
     "if($null -eq $p){'{}';exit 0}",
     "[pscustomobject]@{ProcessId=[int]$p.ProcessId;ExecutablePath=[string]$p.ExecutablePath;CommandLine=[string]$p.CommandLine}|ConvertTo-Json -Compress",
   ].join(";");
-  const output = execFileSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-EncodedCommand", encodedPowerShell(script)], {
+  const result = spawnSync("powershell.exe", [
+    "-NoProfile", "-NonInteractive", "-InputFormat", "Text", "-OutputFormat", "Text",
+    "-EncodedCommand", encodedPowerShell("$ProgressPreference='SilentlyContinue';" + script),
+  ], {
     encoding: "utf8", windowsHide: true,
-  }).trim();
-  return JSON.parse(output || "{}");
+  });
+  if (result.status !== 0) return {};
+  return JSON.parse(result.stdout.trim() || "{}");
 }
 
 function listenerIdentity(port) {
@@ -66,10 +70,14 @@ function listenerIdentity(port) {
     "$p=Get-CimInstance Win32_Process -Filter ('ProcessId='+$c.OwningProcess)",
     "[pscustomobject]@{ProcessId=[int]$c.OwningProcess;ExecutablePath=[string]$p.ExecutablePath}|ConvertTo-Json -Compress",
   ].join(";");
-  const output = execFileSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-EncodedCommand", encodedPowerShell(script)], {
+  const result = spawnSync("powershell.exe", [
+    "-NoProfile", "-NonInteractive", "-InputFormat", "Text", "-OutputFormat", "Text",
+    "-EncodedCommand", encodedPowerShell("$ProgressPreference='SilentlyContinue';" + script),
+  ], {
     encoding: "utf8", windowsHide: true,
-  }).trim();
-  return JSON.parse(output || "{}");
+  });
+  if (result.status !== 0) return {};
+  return JSON.parse(result.stdout.trim() || "{}");
 }
 
 function stateFor(service) {
