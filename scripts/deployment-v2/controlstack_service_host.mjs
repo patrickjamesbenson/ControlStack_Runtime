@@ -48,10 +48,11 @@ function decryptCredential(credentialFile) {
   const script = [
     "$ErrorActionPreference='Stop'",
     "$p=$args[0]",
-    "$b=[Convert]::FromBase64String([IO.File]::ReadAllText($p).Trim())",
-    "$u=[Security.Cryptography.ProtectedData]::Unprotect($b,$null,[Security.Cryptography.DataProtectionScope]::CurrentUser)",
+    "$s=ConvertTo-SecureString ([IO.File]::ReadAllText($p).Trim())",
+    "$b=[Runtime.InteropServices.Marshal]::SecureStringToBSTR($s)",
+    "try{$v=[Runtime.InteropServices.Marshal]::PtrToStringBSTR($b)}finally{[Runtime.InteropServices.Marshal]::ZeroFreeBSTR($b)}",
     "[Console]::OutputEncoding=[Text.Encoding]::UTF8",
-    "[Console]::Write([Text.Encoding]::UTF8.GetString($u))",
+    "[Console]::Write($v)",
   ].join(";");
   const result = spawnSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-EncodedCommand", encodedPowerShell(script), credentialFile], {
     encoding: "utf8",

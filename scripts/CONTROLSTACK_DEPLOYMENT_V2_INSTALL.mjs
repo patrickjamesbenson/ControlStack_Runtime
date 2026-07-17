@@ -95,9 +95,8 @@ async function waitForKeyCopy() {
 function encryptForCurrentUser(value) {
   const script = [
     "$v=[Console]::In.ReadToEnd().Trim()",
-    "$b=[Text.Encoding]::UTF8.GetBytes($v)",
-    "$p=[Security.Cryptography.ProtectedData]::Protect($b,$null,[Security.Cryptography.DataProtectionScope]::CurrentUser)",
-    "[Console]::Write([Convert]::ToBase64String($p))",
+    "$s=ConvertTo-SecureString -String $v -AsPlainText -Force",
+    "[Console]::Write((ConvertFrom-SecureString -SecureString $s))",
   ].join(";");
   return powershell(script, value);
 }

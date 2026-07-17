@@ -40,3 +40,15 @@ test("installer waits for the user to copy the key after the command has started
   assert.match(installer, /await prompt\.question/);
   assert.match(installer, /let key = await waitForKeyCopy\(\)/);
 });
+
+test("credential storage uses the Windows PowerShell SecureString DPAPI path", () => {
+  const installer = readFileSync(path.join(root, "..", "scripts", "CONTROLSTACK_DEPLOYMENT_V2_INSTALL.mjs"), "utf8");
+  const host = readFileSync(path.join(root, "..", "scripts", "deployment-v2", "controlstack_service_host.mjs"), "utf8");
+
+  assert.match(installer, /ConvertTo-SecureString/);
+  assert.match(installer, /ConvertFrom-SecureString/);
+  assert.match(host, /ConvertTo-SecureString/);
+  assert.match(host, /SecureStringToBSTR/);
+  assert.doesNotMatch(installer, /ProtectedData/);
+  assert.doesNotMatch(host, /ProtectedData/);
+});
