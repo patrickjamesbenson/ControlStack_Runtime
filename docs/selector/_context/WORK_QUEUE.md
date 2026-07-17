@@ -19,9 +19,9 @@ Acceptance:
 
 ## Priority 1 — Single-slice E2E closeout
 
-**Status:** IN PROGRESS — blocked at first reproducible Engine length-feasibility boundary.
+**Status:** IN PROGRESS — Engine length-feasibility boundary closed; final live saved-project route acceptance remains.
 
-**Worker name:** `CS-SELECTOR-E2E-SINGLE-SLICE-CLOSEOUT-01`
+**Worker name:** `CS-SELECTOR-E2E-RUNTIME-8788-ACCEPTANCE-01`
 
 **Objective:** complete and prove one real, source-backed selection through the existing read-only Engine path to a useful result/run-table output on the current runtime.
 
@@ -45,9 +45,11 @@ Acceptance:
 - no unrelated feature widening;
 - exact before/after Git evidence.
 
-**Current blocker evidence:** active RuntimeData loads read-only and donor `run_engine` executes under the no-write guard, but the safe summary returns `success: false`, `run_count: 0`, and `length_pref="nearest" but no feasible run length found within ±28000mm` before any useful run-table output.
+**Closed boundary evidence:** commit `6e5e6cee398e1dd1e82d331c81a719625e0d076b` binds one unambiguous selected-optic efficiency from active `OPTICS` authority inside the server-owned bridge. `selector-engine` passed 102/102, and live internal-seam execution returned one useful run with no write or mutation side effect.
 
-**Next bounded worker:** `CS-SELECTOR-E2E-LENGTH-FEASIBILITY-BOUNDARY-01` — prove the exact source-backed candidate/length-policy incompatibility and change only that boundary plus focused tests when required.
+**Remaining acceptance:** prove the already-saved selected project through the live 8788 registration/invocation route after the committed server reload. Do not fabricate or replace project truth merely to create a green receipt.
+
+**Next bounded worker:** `CS-SELECTOR-E2E-RUNTIME-8788-ACCEPTANCE-01` — exercise only the existing server-owned saved-project route, capture the attributable safe result, and patch only a newly reproducible first boundary if one remains.
 
 ## Priority 2 — Declare Engine output contract candidate
 

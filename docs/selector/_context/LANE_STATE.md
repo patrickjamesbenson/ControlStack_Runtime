@@ -8,9 +8,9 @@
 |---|---|---|
 | Root | `C:\ControlStack_Worktrees\selector-engine` | VERIFIED |
 | Branch | `lane/selector-engine` | VERIFIED |
-| HEAD before this documentation parcel | `08df070890300058353cc621c1383f16492063f1` | VERIFIED |
-| HEAD subject | `Fix wildcard selector system applicability` | VERIFIED |
-| Working tree before this parcel | clean | VERIFIED |
+| Accepted feature HEAD before this handoff update | `6e5e6cee398e1dd1e82d331c81a719625e0d076b` | VERIFIED |
+| HEAD subject | `Fix selected-project Engine optic efficiency boundary` | VERIFIED |
+| Working tree before this handoff update | clean | VERIFIED |
 | Runtime | `127.0.0.1:8788` | VERIFIED configuration |
 | MCP | `127.0.0.1:8000/mcp` | VERIFIED |
 | Gate | `selector-engine` | VERIFIED |
@@ -19,7 +19,7 @@
 
 Close and evidence the first real single-slice Selector-to-Engine run, then widen through contract-preserving passes. The existing implementation history shows that the selected-project shell, invocation transport, registration, lifecycle, read-only run, intent capture, action visibility, source arbitration, reference snapshot caching, and direct Control/Protocol corrections have been built. **VERIFIED from commit subjects.**
 
-Whether the complete current live slice satisfies its final user-level acceptance from selection through useful Engine output is **UNKNOWN** until the lane runs its bounded closeout against the current runtime. This is the next feature milestone; it is not permission to reopen already-closed Control/Protocol or cold-boot repairs without new evidence.
+The Engine-side slice now produces one useful safe run after exact source-backed optic-efficiency enrichment. Final user-level acceptance remains **UNKNOWN** only at the selected-and-saved project registration/invocation route on runtime 8788. This is the next bounded milestone; it is not permission to reopen the closed electrical-capacity, Control/Protocol, rendering, caching, or cold-boot repairs without new evidence.
 
 ## Completed parcels evidenced by current history
 
@@ -76,14 +76,17 @@ A pre-memory acceptance reported `selector-engine` as 100 passed and 0 failed. *
 - Lane identity and isolation: VERIFIED PASS.
 - Clean accepted base: VERIFIED PASS.
 - Control/Protocol correction durability: VERIFIED in history.
-- Durable lane memory: IN PROGRESS in this documentation parcel.
-- Single-slice user-level E2E closeout: NEXT MILESTONE.
-- Widening: HELD until closeout evidence and Program seam approval.
+- Durable lane memory: VERIFIED PASS.
+- Engine-side useful single-run result: VERIFIED PASS.
+- Selected-and-saved project route acceptance on runtime 8788: NEXT MILESTONE.
+- Widening: HELD until route acceptance and Program seam approval.
 
-## 2026-07-18 bounded closeout evidence
+## 2026-07-18 length-feasibility boundary closeout
 
-Worker `CS-SELECTOR-E2E-SINGLE-SLICE-CLOSEOUT-01` reached the committed internal read-only Engine seam with a complete candidate and active RuntimeData loaded internally. Donor `run_engine` was attempted under the filesystem-write guard; no filesystem write, audit JSONL write, RuntimeData mutation, selected-result persistence, IES generation, or other output side effect occurred.
+Worker `CS-SELECTOR-E2E-LENGTH-FEASIBILITY-BOUNDARY-01` proved that the reported nearest-length failure was downstream masking, not genuine 5600 mm geometry infeasibility. Diagnostic exact-mode execution exposed zero electrical capacity because the selected-project candidate reached donor Engine with neither a usable current nor the selected optic's source-backed efficiency. Board watt-per-millimetre therefore resolved to zero before length feasibility.
 
-The first reproducible failing boundary is Engine run-length feasibility: the live safe summary returns `success: false`, `run_count: 0`, and `length_pref="nearest" but no feasible run length found within ±28000mm`. The failure occurs after server-owned invocation and before a useful run-table row exists. Control/Protocol, rendering, cold boot, and reference caching were not reopened.
+Commit `6e5e6cee398e1dd1e82d331c81a719625e0d076b` adds one server-owned, read-only `OPTICS` enrichment boundary. It binds efficiency only when the selected optic has one unambiguous numeric source value; conflicting, missing, percent-like, or invented values fail closed. The existing bridge request order, server-owned invocation, private candidate handling, and no-write guarantees remain unchanged.
 
-Priority 1 remains IN PROGRESS. The next bounded worker is `CS-SELECTOR-E2E-LENGTH-FEASIBILITY-BOUNDARY-01`, restricted to proving why the selected source-backed candidate cannot produce one feasible run length and correcting only the exact Selector-to-Engine candidate/length-policy boundary if current evidence requires code.
+Focused and lane evidence: `selector-engine` passed 102/102. Live internal-seam validation against active RuntimeData returned `success: true`, `run_count: 1`, one segment, three boards, one zone, and no filesystem write, audit JSONL write, RuntimeData mutation, selected-result persistence, RunTable write, IES generation, or output generation.
+
+Priority 1 remains IN PROGRESS only for final selected-and-saved project acceptance through the live 8788 registration/invocation route. Runtime 8788 was reachable, but this worker did not fabricate or replace a user's saved project merely to exercise that route. The next bounded worker is `CS-SELECTOR-E2E-RUNTIME-8788-ACCEPTANCE-01`.

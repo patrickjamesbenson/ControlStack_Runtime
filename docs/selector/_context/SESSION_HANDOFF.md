@@ -24,17 +24,17 @@ The verified pre-memory base is `08df070890300058353cc621c1383f16492063f1`, and 
 
 The repository history contains the selected-project shell/invocation path, server-owned registration, read-only lifecycle, first Engine run, project/session truth, single-run intent capture, action visibility, cold-boot source arbitration, direct Control/Protocol authority corrections, reference caching, and wildcard applicability.
 
-The direct Control/Protocol bug is not the current assignment. The next objective is to close one useful end-to-end slice and prove whether the implementation is ready for economical widening.
+The direct Control/Protocol bug is not the current assignment. Worker `CS-SELECTOR-E2E-LENGTH-FEASIBILITY-BOUNDARY-01` closed the masked electrical-capacity boundary in commit `6e5e6cee398e1dd1e82d331c81a719625e0d076b`. `selector-engine` passed 102/102, and live internal-seam execution against active RuntimeData returned one useful run with no write or mutation side effect. Final selected-and-saved project acceptance through runtime 8788 remains unproven.
 
 ## Exact next action
 
 Commission exactly one worker:
 
-**Name:** `CS-SELECTOR-E2E-LENGTH-FEASIBILITY-BOUNDARY-01`
+**Name:** `CS-SELECTOR-E2E-RUNTIME-8788-ACCEPTANCE-01`
 
 **Worker prompt:**
 
-> Use only the connected CS Selector & Engine v2 app. Verify root `C:\ControlStack_Worktrees\selector-engine`, branch `lane/selector-engine`, and current HEAD, then read all files in `docs/selector/_context/`. Reproduce the current live internal-seam failure where active RuntimeData loads read-only and donor `run_engine` executes, but the safe summary returns `success: false`, `run_count: 0`, and `length_pref="nearest" but no feasible run length found within ±28000mm`. Prove the exact first incompatibility between the selected source-backed candidate, its controlled run geometry, and resolved tier length policy. Do not reopen rendering, cold boot, reference caching, or Control/Protocol authority; do not widen Selector scope or touch another lane. If code is required, change only the exact candidate/length-policy boundary and focused tests while preserving server-owned registration, deterministic blocked/error semantics, and the no-write Engine guarantee. Run focused tests and `selector-engine`, live-validate one useful run-table row, stage only commissioned paths, gated-commit and push only `lane/selector-engine`, then update `LANE_STATE.md`, `WORK_QUEUE.md`, `EVIDENCE_INDEX.md`, and this handoff with exact commit, gate, live evidence, Git inventory, remaining blocker, and the next worker commission.
+> Use only the connected CS Selector & Engine v2 app. Verify root `C:\ControlStack_Worktrees\selector-engine`, branch `lane/selector-engine`, and current HEAD, then read every file in `docs/selector/_context/`. Confirm runtime 8788 is running the committed server-owned selected-project bridge from `6e5e6cee398e1dd1e82d331c81a719625e0d076b`. Using only an already-saved selected project and the existing registration/invocation contracts, prove one deliberate request through `/api/workspace-shell/selected-project-runtime-save-registration` and `/api/workspace-shell/selected-project-engine-readonly-invoke` to an attributable safe result with at least one run row. Do not fabricate, replace, or mutate project truth merely to create a receipt. Do not reopen rendering, cold boot, reference caching, Control/Protocol authority, or the closed optic-efficiency boundary without a new current failure. Preserve server ownership, deterministic blocked/error semantics, replay/revision guards, and the no-write Engine guarantee. If a first new boundary appears, patch only that exact boundary and focused tests. Run `selector-engine`, live-validate runtime 8788, stage only commissioned paths, gated-commit and push only `lane/selector-engine`, then update `LANE_STATE.md`, `WORK_QUEUE.md`, `EVIDENCE_INDEX.md`, and this handoff with exact commits, gate counts, route receipts, Git inventory, remaining blocker, and the next worker commission.
 
 ## Acceptance criteria
 

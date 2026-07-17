@@ -27,6 +27,7 @@
 
 ## Relevant commits
 
+- `6e5e6cee398e1dd1e82d331c81a719625e0d076b` — selected-project source-backed optic-efficiency Engine boundary.
 - `08df070890300058353cc621c1383f16492063f1` — wildcard system applicability.
 - `3d1d9f8e1902a47f4c2f86bb8312f61194981e30` — reference snapshot/index cache.
 - `17ff4521ec137a09d198c7f1a74b1e689db5d7b4` — live direct Control/Protocol authority intersection.
@@ -43,9 +44,12 @@ Commit hashes and subjects are VERIFIED. Behaviour beyond the subject requires t
 
 - Pre-memory `selector-engine`: 100 passed, 0 failed — REPORTED accepted receipt.
 - Post-documentation gate, commit, and push — recorded by the commit containing this index and its execution receipt.
-- Current single-slice closeout — BLOCKED at first reproducible Engine run-length feasibility boundary.
-- Live internal seam evidence: active RuntimeData loaded read-only; donor `run_engine` attempted; filesystem/audit writes false; RuntimeData mutation false; safe summary `success: false`, `run_count: 0`, first error `length_pref="nearest" but no feasible run length found within ±28000mm`.
-- Next worker: `CS-SELECTOR-E2E-LENGTH-FEASIBILITY-BOUNDARY-01`.
+- Length-feasibility boundary commit: `6e5e6cee398e1dd1e82d331c81a719625e0d076b` — VERIFIED committed and pushed to `lane/selector-engine`.
+- Named gate on the committed parcel: `selector-engine`, 102 passed, 0 failed, exit code 0 — VERIFIED.
+- Root cause: the nearest-length error masked zero board W/mm because the selected-project candidate omitted both usable current and selected-optic source-backed efficiency — VERIFIED by diagnostic exact-mode execution.
+- Live internal seam after source-backed efficiency binding: active RuntimeData loaded read-only; donor `run_engine` attempted; `success: true`; `run_count: 1`; one segment, three boards, one zone; filesystem/audit writes false; RuntimeData mutation false; persistence/generation flags false — VERIFIED.
+- Runtime 8788 root status: reachable at `http://127.0.0.1:8788` — VERIFIED. Final selected-and-saved project registration/invocation receipt remains UNKNOWN.
+- Next worker: `CS-SELECTOR-E2E-RUNTIME-8788-ACCEPTANCE-01`.
 
 ## Historical reports
 
