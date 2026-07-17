@@ -1,0 +1,262 @@
+# ControlStack Program Handoff
+
+**Purpose:** Self-contained replacement-orchestrator briefing for Program & Integrate.  
+**State date:** 2026-07-17, Australia/Sydney.  
+**Read first:** `CONTROLSTACK_PROGRAM_STATE.md`, `CONTROLSTACK_LANE_REGISTRY.md`, `CONTROLSTACK_SEAM_CONTRACTS.md`, `CONTROLSTACK_INTEGRATION_QUEUE.md`, `CONTROLSTACK_DECISION_LOG.md`, and `CONTROLSTACK_ORCHESTRATION_CONTRACT.md` in this directory.
+
+## 1. Evidence language
+
+- **VERIFIED** — directly observed in this Program worktree or connected CS Integrate app.
+- **REPORTED** — supplied as accepted coordination input but not independently inspected from the relevant lane.
+- **INFERRED** — reasoned conclusion based on evidence.
+- **UNKNOWN** — unresolved; must not be presented as current fact.
+
+Repository evidence overrides historical chat claims. A lane's fresh repository handoff may supersede older reported information after Program verifies branch, commit, and gate evidence.
+
+## 2. Program identity
+
+| Item | Current value | Evidence |
+|---|---|---|
+| App/server | `ControlStack Program and Integrate Lane` | VERIFIED by `repo_info` |
+| User-facing secure app | `CS Integrate` | REPORTED accepted environment |
+| Lane | `program-integrate` | VERIFIED |
+| Root | `C:\ControlStack_Worktrees\program-integrate` | VERIFIED |
+| Branch | `lane/program-integrate` | VERIFIED |
+| HEAD at bootstrap start | `08df070890300058353cc621c1383f16492063f1` | VERIFIED |
+| MCP | `127.0.0.1:8022/mcp` | VERIFIED |
+| Gate | `program-integrate` | VERIFIED |
+| Starting Git state | clean; no staged, modified, untracked, or deleted paths | VERIFIED |
+| Pre-bootstrap accepted gate | 18 passed, 0 failed | REPORTED |
+
+## 3. Verified capability and safety boundary
+
+The connected app reports:
+
+- writes enabled within `C:\ControlStack_Worktrees\program-integrate`;
+- explicit Git staging enabled within that worktree;
+- commit enabled through a gated path;
+- push enabled through a gated path;
+- allowed gate limited to `program-integrate`;
+- arbitrary shell execution disabled;
+- deletion disabled;
+- movement disabled;
+- cross-root copy disabled;
+- no active donor/reference root.
+
+These controls are **VERIFIED**. Exact external filesystem ACLs are **UNKNOWN**, but the app does not expose mutation of main, another lane, or a donor.
+
+## 4. Original objective
+
+### Business objective
+
+Replace fragile chat-only orchestration memory with durable, version-controlled Program documentation so a fresh orchestrator can continue safely without reconstructing the project from prior conversations. **VERIFIED authorised task.**
+
+### Technical objective
+
+Establish seven canonical Program documents under `docs/_context/program/`, while changing no feature code, then stage exactly those files, run the `program-integrate` gate, commit with `docs(program): establish durable orchestration memory`, and push only `lane/program-integrate` through the gated path. **VERIFIED authorised task.**
+
+### Acceptance definition
+
+The parcel is accepted only when:
+
+1. Program identity/capabilities are verified.
+2. Existing docs are inspected and no competing canonical files are created.
+3. The seven named files exist.
+4. No feature file changes occur.
+5. Only those seven files are staged.
+6. The `program-integrate` gate is green.
+7. Gated commit and push succeed on `lane/program-integrate`.
+8. Final Git state is reported exactly.
+
+## 5. Repository inspection findings
+
+- Before this parcel, `docs/` contained `docs/ies-report-card-generator.md` and `docs/donor-reference/selector/DONOR_TRACE_RULES.md`; no equivalent Program context or handoff files existed. **VERIFIED.**
+- The repository package is `controlstack-runtime` `0.1.0`, private ESM, with `npm test` invoking `node --test tests/*.test.js`. **VERIFIED from `package.json`.**
+- The repository includes a workspace shell, runtime server, packages, tools, scripts, and a large Node test suite. **VERIFIED.**
+- Recent shared history through HEAD `08df070…` includes Selector and runtime fixes, notably wildcard Selector system applicability, reference snapshot caching, direct Control/Protocol authority intersection, and cold-boot source arbitration. **VERIFIED commit subjects only.**
+- The detailed behaviour and current live runtime state were not revalidated in this documentation parcel. **UNKNOWN.**
+
+## 6. Program architecture and authority boundaries
+
+### Program-owned documents
+
+- `CONTROLSTACK_PROGRAM_STATE.md` — current program identity, accepted environment, milestone, risks, and acceptance state.
+- `CONTROLSTACK_LANE_REGISTRY.md` — canonical lane identity tuples and restrictions.
+- `CONTROLSTACK_SEAM_CONTRACTS.md` — producer/consumer contracts and held seams.
+- `CONTROLSTACK_INTEGRATION_QUEUE.md` — ordered cross-lane and Program acceptance work.
+- `CONTROLSTACK_DECISION_LOG.md` — append-oriented program decisions.
+- `CONTROLSTACK_ORCHESTRATION_CONTRACT.md` — mandatory orchestrator/worker operating rules.
+- `CONTROLSTACK_PROGRAM_HANDOFF.md` — this replacement-orchestrator briefing.
+
+### Lane authority
+
+- Selector & Engine owns its lane-local implementation and lane memory in `C:\ControlStack_Worktrees\selector-engine`. **REPORTED.**
+- Lab & IES owns its lane-local implementation and lane memory in `C:\ControlStack_Worktrees\code-pilot-lab`; `C:\ControlStack_Lab` is donor-readonly. **REPORTED.**
+- Program & Integrate owns Program memory and gated integration acceptance in the verified Program worktree. **VERIFIED current worktree / REPORTED sole-path policy.**
+- Main/release promotion is outside the current app's evidenced capability. The procedure is **UNKNOWN** and remains queued.
+
+### Key seams
+
+1. Selector intent to Engine input.
+2. Engine selected-result/run-table output.
+3. Engine output to Lab & IES.
+4. Lab evidence to Program acceptance.
+5. Lane parcel to Program integration.
+6. Program integration to main/promotion.
+7. Reserved downstream-artifacts tunnel.
+8. Secure tunnel/service restart operational seam.
+
+See `CONTROLSTACK_SEAM_CONTRACTS.md` for requirements and activation conditions.
+
+## 7. Accepted lane environment
+
+### Selector & Engine — REPORTED unless stated otherwise
+
+- root `C:\ControlStack_Worktrees\selector-engine`;
+- branch `lane/selector-engine`;
+- MCP `8000`;
+- runtime `8788`;
+- secure app `CS Selector & Engine Secure`;
+- gate `selector-engine`;
+- latest accepted gate `100 passed, 0 failed`;
+- accepted base `08df070890300058353cc621c1383f16492063f1`.
+
+The accepted base matches Program's bootstrap-start HEAD by hash comparison. **VERIFIED comparison.** Current Selector HEAD, dirty state, and live runtime are **UNKNOWN** to CS Integrate.
+
+### Lab & IES — REPORTED unless stated otherwise
+
+- root `C:\ControlStack_Worktrees\code-pilot-lab`;
+- branch `lane/code-pilot-lab`;
+- MCP `8021`;
+- specification/demo `8899`;
+- secure app `CS Lab & IES Secure v2`;
+- gate `lab-ies`;
+- donor `C:\ControlStack_Lab` read-only;
+- Selector leaks removed;
+- existing modified and untracked IES work deliberately preserved;
+- bounded gate accepted green.
+
+Exact Lab HEAD, pass count, dirty paths, and removed leak paths are **UNKNOWN** to this app.
+
+### Program & Integrate
+
+- root, branch, MCP, gate, starting HEAD, and starting clean state are **VERIFIED** as listed above.
+
+## 8. Completed work in this parcel
+
+At handoff authoring time, the following documentation files have been created in the Program worktree:
+
+- `docs/_context/program/CONTROLSTACK_PROGRAM_STATE.md`
+- `docs/_context/program/CONTROLSTACK_LANE_REGISTRY.md`
+- `docs/_context/program/CONTROLSTACK_SEAM_CONTRACTS.md`
+- `docs/_context/program/CONTROLSTACK_INTEGRATION_QUEUE.md`
+- `docs/_context/program/CONTROLSTACK_DECISION_LOG.md`
+- `docs/_context/program/CONTROLSTACK_ORCHESTRATION_CONTRACT.md`
+- `docs/_context/program/CONTROLSTACK_PROGRAM_HANDOFF.md`
+
+Their creation and exact scoped staging are **VERIFIED** after repository listing and Git status. The `program-integrate` gate is **VERIFIED GREEN: 18 passed, 0 failed**. Commit, push, and final Git status must be taken from the connected-app completion receipt and the commit containing this file.
+
+No feature file was authorised or intentionally modified. **VERIFIED task boundary; final status must confirm.**
+
+## 9. Current work and Git inventory
+
+### Starting inventory
+
+- staged: none;
+- modified: none;
+- untracked: none;
+- deleted: none.
+
+**VERIFIED at bootstrap start.**
+
+### Documentation parcel inventory
+
+All current intended changes are the seven new Program documents listed above. Before staging, Git may summarise them as the untracked parent directory `docs/_context/`; the exact file list must be verified by directory listing and explicit staging.
+
+### Feature inventory
+
+No feature path belongs to this parcel. Any feature change appearing in status or staged diff blocks commit until explained and removed from the staged set without discarding the working-tree content.
+
+## 10. Decisions now in force
+
+The decision log records:
+
+- repository context is authoritative;
+- one writer per worktree;
+- Program is the sole gated integration path;
+- explicit staging and gated commit/push;
+- no arbitrary shell, deletion, movement, or cross-root copy;
+- dirty worktrees are preserved and classified;
+- downstream-artifacts remains held;
+- secure tunnel restart automation is operational hardening;
+- the seven-file Program memory structure is canonical;
+- connected-app evidence controls lane identity.
+
+## 11. Mid-task Selector instruction and wrong-app handling
+
+During this Program bootstrap, a new instruction asserted that the connected app was the Selector app and authorised creation of six Selector lane-memory files in `C:\ControlStack_Worktrees\selector-engine`.
+
+Current `repo_info` had already **VERIFIED** that the actual connected app is Program & Integrate at `C:\ControlStack_Worktrees\program-integrate`, branch `lane/program-integrate`, MCP `8022`. Therefore:
+
+- no Selector worktree was accessed;
+- no Selector lane file was written;
+- no retired `C:\ControlStack_Runtime` or `main` access occurred;
+- the instruction is retained as coordination input for a future worker using the correct Selector app.
+
+This is the required wrong-app outcome under the orchestration contract.
+
+## 12. Integration queue and exact next actions
+
+### Immediate next action after this documentation parcel
+
+Use the correct connected Selector app to execute a fresh Selector lane-memory bootstrap. Do not execute it through CS Integrate.
+
+### Exact first worker commission
+
+> Use only the connected ControlStack Selector and Engine Lane app. Verify with `repo_info`, `repo_git_status`, and `repo_git_recent` that the lane is `selector-engine`, root is `C:\ControlStack_Worktrees\selector-engine`, branch is `lane/selector-engine`, MCP is `8000`, runtime is `8788`, gate is `selector-engine`, and accepted base is `08df070890300058353cc621c1383f16492063f1`. Do not access or modify `C:\ControlStack_Runtime`, `main`, Program, Lab, or another worktree. Reconcile recovered handoff claims against current repository evidence. Inspect existing canonical context documents and create or update exactly: `docs/_context/lanes/selector-engine/LANE_CHARTER.md`, `LANE_STATE.md`, `WORK_QUEUE.md`, `DECISION_LOG.md`, `EVIDENCE_INDEX.md`, and `SESSION_HANDOFF.md`. Record historical Control Protocol work as completed and durable at commit `08df070890300058353cc621c1383f16492063f1` only where current repository evidence supports that conclusion; mark stale historical unknowns superseded only when current evidence resolves them. Do not modify feature code. Stage exactly those six documentation files, run the `selector-engine` gate, commit through the gated path with `docs(selector): establish durable lane memory`, push only `lane/selector-engine`, and return starting/final Git state, exact files, gate counts, commit, push result, and confirmation no feature files changed. Stop if `repo_info` does not match.
+
+### Following action
+
+Commission the equivalent Lab lane-memory bootstrap using only the correct Lab app, with strict preservation of intentional modified/untracked IES work and exact proof that removed Selector leak paths remain absent.
+
+### Then
+
+Program reconciles fresh lane heads against Program HEAD and establishes an evidence-backed integration order. Do not activate downstream artifacts and do not begin secure tunnel restart feature work.
+
+## 13. Known defects, blockers, and risks
+
+- Current Selector live payload state is UNKNOWN to Program. Historical Control/Protocol defects and recent fixes require fresh Selector evidence.
+- Current Lab dirty inventory and exact accepted commit are UNKNOWN.
+- The Engine output contract has not been declared stable in Program memory.
+- Main promotion procedure is UNKNOWN and not authorised by this app.
+- Secure tunnel restart implementation status is UNKNOWN.
+- Program branch ahead/behind counts were not numerically returned by the status tool. UNKNOWN.
+- A worker following pasted identity instead of `repo_info` could write documentation into the wrong lane; the wrong-app protocol now explicitly blocks this.
+
+## 14. Prohibitions for the replacement orchestrator
+
+- Do not use chat as current truth without repository verification.
+- Do not write feature code while completing memory or integration documentation.
+- Do not access or modify retired `C:\ControlStack_Runtime` or `main` based on historical instructions.
+- Do not write Selector or Lab files from CS Integrate.
+- Do not clean, reset, delete, move, or stage unrelated dirty work.
+- Do not activate `downstream-artifacts` before Engine output stability approval.
+- Do not combine secure tunnel restart hardening with feature work.
+- Do not accept a lane parcel without exact commit and named gate evidence.
+
+## 15. Completion receipt fields
+
+The final response for this bootstrap must state:
+
+- capability verification;
+- starting Git state;
+- exact seven documents created;
+- exact staged set;
+- `program-integrate` gate result and counts;
+- commit hash and message;
+- push result and branch;
+- final Git state;
+- confirmation that no feature files were changed;
+- confirmation that the Selector interruption was not executed through the wrong app.
+
+The commit containing this handoff is the durable repository receipt. Tool-returned gate, commit, push, and final status details are the execution receipt.
