@@ -80,4 +80,6 @@ Every completed worker updates this index with:
 - Active RuntimeData probe fingerprint: `266de269e3e8f8b7191e4653d45580c251eb46025411574e0d1f2a27daca209d`; loaded read-only, write disabled, write not attempted, path and raw rows not returned — VERIFIED.
 - Changed paths: `LANE_STATE.md`, `WORK_QUEUE.md`, `EVIDENCE_INDEX.md`, and `SESSION_HANDOFF.md` only. No feature code changed.
 - Gate: `selector-engine`, 102 passed, 0 failed, exit code 0 — VERIFIED.
-- Documentation evidence commit: recorded by the subsequent closeout entry.
+- Documentation evidence commit: `0ad8bee0995c29bb15c227e6f885038ecd105001`; push `ca973ce..0ad8bee` to `origin/lane/selector-engine` succeeded — VERIFIED.
+- Post-gate live repeat: all three supported current project identities reproduced HTTP 422 and `selected-project-shell-invoke-transport-active-server-revision-invalid`; no capability or write/mutation/generation flag became true — VERIFIED.
+- Post-gate RuntimeData fingerprint remained `266de269e3e8f8b7191e4653d45580c251eb46025411574e0d1f2a27daca209d` — VERIFIED.

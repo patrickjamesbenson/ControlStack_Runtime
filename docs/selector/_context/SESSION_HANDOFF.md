@@ -84,6 +84,6 @@ All live probe receipts kept filesystem write, audit write, RuntimeData mutation
 
 **Required external action before the next worker:** in the live 8788 workspace, deliberately complete and save one suitable source-backed Selector project so the existing save flow can perform server-owned registration. Do not use Alpha/Bravo reference fixtures merely to manufacture a receipt.
 
-The complete permitted `selector-engine` gate passed 102/102 with exit code 0. No focused feature test was required because no feature code changed.
+The complete permitted `selector-engine` gate passed 102/102 with exit code 0. No focused feature test was required because no feature code changed. Documentation evidence commit `0ad8bee0995c29bb15c227e6f885038ecd105001` was pushed successfully. Post-gate live checks reproduced the same missing-active-revision blocker for all three supported current project identities, and the redacted RuntimeData fingerprint remained unchanged.
 
 **Recommended next worker after that action:** `CS-SELECTOR-E2E-RUNTIME-8788-ACCEPTANCE-02`. It should repeat only registration and selected-project read-only invocation, capture the safe project/revision acknowledgement and at least one useful safe run projection, rerun `selector-engine`, and patch only a new reproducible boundary if one appears. Do not execute or commission that worker from this handoff.

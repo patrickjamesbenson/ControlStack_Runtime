@@ -99,4 +99,8 @@ The supported current workspace project identities are `project-alpha`, `project
 
 **Exact first boundary:** runtime 8788 contains no active server-owned revision attributable to an already-saved selected project for any supported current project identity. The registration contract requires an accepted local save envelope and its exact saved source projection. Creating that request from current-project fixtures or repository test data would manufacture project truth and was therefore refused. The worker stopped before dispatching `/api/workspace-shell/selected-project-runtime-save-registration`; no useful safe run row can be attributed until a real browser-session project is deliberately saved and registered.
 
-No feature code was changed. Only the four required durable handoff files are in the documentation parcel. The complete permitted `selector-engine` gate passed 102/102 with exit code 0. The exact documentation commit is recorded by the subsequent closeout entry.
+No feature code was changed. Only the four required durable handoff files are in the documentation parcel. The complete permitted `selector-engine` gate passed 102/102 with exit code 0.
+
+### Hash and post-gate closeout
+
+Documentation evidence commit `0ad8bee0995c29bb15c227e6f885038ecd105001` was pushed to `origin/lane/selector-engine`. After that gated push, runtime 8788 was rechecked for `project-alpha`, `project-bravo`, and `project-charlie`; all three again returned HTTP 422 with blocker `selected-project-shell-invoke-transport-active-server-revision-invalid`, no source reconstruction, no capability invocation, and all write/mutation/generation flags false. The redacted RuntimeData fingerprint remained `266de269e3e8f8b7191e4653d45580c251eb46025411574e0d1f2a27daca209d`. The evidence parcel ending HEAD before this hash-index closeout is `0ad8bee0995c29bb15c227e6f885038ecd105001`.

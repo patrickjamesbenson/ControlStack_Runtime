@@ -63,6 +63,8 @@ The registration route can only be called truthfully with the exact accepted loc
 
 **Recommended next bounded worker after that precondition:** `CS-SELECTOR-E2E-RUNTIME-8788-ACCEPTANCE-02` — repeat only the two existing routes, capture project/revision attribution and one useful safe run result, and patch only a newly reproducible first boundary.
 
+Evidence commit `0ad8bee0995c29bb15c227e6f885038ecd105001` was gated and pushed. Post-gate live checks reproduced the same missing-active-revision boundary for all three supported current project identities, with no writes, mutations, or outputs.
+
 ## Priority 2 — Declare Engine output contract candidate
 
 **Status:** BLOCKED by Priority 1.
