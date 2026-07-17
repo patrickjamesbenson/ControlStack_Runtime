@@ -72,3 +72,27 @@ node C:\ControlStack_Worktrees\program-integrate\scripts\CONTROLSTACK_DEPLOYMENT
 ```
 
 No new key, reboot, elevation or restart of the five healthy non-tunnel services is required.
+
+
+## Lab lane-memory checkpoint
+
+The Lab worktree intentionally contains an unstaged IES feature parcel. The normal MCP commit guard correctly refuses any commit while that unexplained dirty state exists, even when only the six lane-memory documents are staged.
+
+The bounded checkpoint utility `scripts/CONTROLSTACK_LAB_MEMORY_CHECKPOINT.mjs` handles this one known parcel without weakening the permanent app guard. It:
+
+- requires the exact Lab root, branch, and base commit;
+- requires the exact six staged documentation paths;
+- fingerprints the exact 10 modified, 66 untracked, and zero deleted protected paths;
+- runs the `lab-ies` gate;
+- creates a commit containing only the six documentation files;
+- verifies the protected inventory is unchanged after the commit;
+- pushes only `lane/code-pilot-lab`;
+- writes a secret-free receipt under `C:\ControlStack_Receipts`.
+
+It contains no reset, clean, restore, checkout, deletion, movement, or feature-staging operation. A changed inventory fails closed.
+
+Mechanical execution:
+
+```powershell
+node C:\ControlStack_Worktrees\program-integrate\scripts\CONTROLSTACK_LAB_MEMORY_CHECKPOINT.mjs
+```

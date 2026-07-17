@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import test from "node:test";
@@ -81,4 +82,22 @@ test("tunnel recovery reuses the protected key and replaces only validated tunne
   assert.doesNotMatch(host, /encodedPowerShell\(script\), credentialFile/);
   assert.match(manager, /"-OutputFormat", "Text"/);
   assert.doesNotMatch(manager, /execFileSync/);
+});
+
+
+test("Lab memory checkpoint preserves the dirty IES parcel and commits only six staged docs", () => {
+  const checkpointPath = path.join(root, "..", "scripts", "CONTROLSTACK_LAB_MEMORY_CHECKPOINT.mjs");
+  const syntax = spawnSync(process.execPath, ["--check", checkpointPath], { encoding: "utf8" });
+  assert.equal(syntax.status, 0, syntax.stderr);
+  const checkpoint = readFileSync(checkpointPath, "utf8");
+  assert.match(checkpoint, /lane\/code-pilot-lab/);
+  assert.match(checkpoint, /c4ab11e09e2469e43b84d507890fe802a9ebb85b/);
+  assert.match(checkpoint, /docs\(lab\): establish durable lane memory/);
+  assert.match(checkpoint, /GATE_RUNNER, "lab-ies", "--root", LAB_ROOT, "--required-branch", REQUIRED_BRANCH/);
+  assert.match(checkpoint, /verifyInitialState\(before\)/);
+  assert.match(checkpoint, /verifyProtectedAfterCommit\(gitState\(\)\)/);
+  assert.match(checkpoint, /Committed paths/);
+  assert.equal((checkpoint.match(/docs\/_context\/lanes\/lab-ies\//g) || []).length >= 6, true);
+  assert.doesNotMatch(checkpoint, /\b(reset|clean|restore|checkout)\b/);
+  assert.doesNotMatch(checkpoint, /rmSync|unlinkSync|rmdirSync/);
 });
