@@ -96,3 +96,8 @@ Mechanical execution:
 ```powershell
 node C:\ControlStack_Worktrees\program-integrate\scripts\CONTROLSTACK_LAB_MEMORY_CHECKPOINT.mjs
 ```
+
+
+### First checkpoint execution
+
+The first execution on 2026-07-18 passed `lab-ies` 147/147 and created the correct six-file commit `1b154c482978a9c77a9ea5325cd103bfe40b14ed`. It then stopped before push because trimming porcelain output removed the leading status space from the first protected modified path. Repository verification confirmed zero staged paths and the exact original 10 modified plus 66 untracked IES paths remained. The parser now preserves leading porcelain status characters; rerunning the same command verifies the existing checkpoint and completes only the branch push and receipt.

@@ -96,6 +96,7 @@ test("Lab memory checkpoint preserves the dirty IES parcel and commits only six 
   assert.match(checkpoint, /GATE_RUNNER, "lab-ies", "--root", LAB_ROOT, "--required-branch", REQUIRED_BRANCH/);
   assert.match(checkpoint, /verifyInitialState\(before\)/);
   assert.match(checkpoint, /verifyProtectedAfterCommit\(gitState\(\)\)/);
+  assert.match(checkpoint, /preserveLeading: true/);
   assert.match(checkpoint, /Committed paths/);
   assert.equal((checkpoint.match(/docs\/_context\/lanes\/lab-ies\//g) || []).length >= 6, true);
   assert.doesNotMatch(checkpoint, /\b(reset|clean|restore|checkout)\b/);

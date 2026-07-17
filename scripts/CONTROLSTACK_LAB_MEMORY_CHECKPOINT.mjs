@@ -104,12 +104,14 @@ const EXPECTED = {
 };
 
 function git(args, options = {}) {
+  const { preserveLeading = false, ...execOptions } = options;
   const result = execFileSync("git.exe", ["-C", LAB_ROOT, ...args], {
     encoding: "utf8",
     windowsHide: true,
-    ...options,
+    ...execOptions,
   });
-  return typeof result === "string" ? result.trim() : "";
+  if (typeof result !== "string") return "";
+  return preserveLeading ? result.replace(/\r?\n$/, "") : result.trim();
 }
 
 function sorted(values) {
@@ -124,7 +126,7 @@ function equal(label, actual, expected) {
 
 function gitState() {
   const state = { staged: [], modified: [], untracked: [], deleted: [] };
-  const raw = git(["status", "--porcelain=v1", "--untracked-files=normal"]);
+  const raw = git(["status", "--porcelain=v1", "--untracked-files=normal"], { preserveLeading: true });
   for (const line of raw ? raw.split(/\r?\n/) : []) {
     const x = line[0];
     const y = line[1];
