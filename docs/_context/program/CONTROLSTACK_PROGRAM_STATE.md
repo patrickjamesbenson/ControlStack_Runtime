@@ -152,3 +152,45 @@ The commit containing this document, the gate result above, the push receipt, an
 - **VERIFIED:** Program checkpoint tooling repair is committed and pushed at `2e72aa80d39507ff7aa530d3fa8f8ed0e5b9cb0a`; `program-integrate` passed 26/26 and Program ended clean.
 - **VERIFIED:** No feature lane was merged to `main`; downstream artifacts remain held.
 - **Current milestone:** lane orchestrators may resume independently from their committed `SESSION_HANDOFF.md` files. Program next reconciles the two lane-memory heads and maintains seam governance.
+
+## 2026-07-18 accepted-head reconciliation and integration order
+
+### Reconciled evidence
+
+- **VERIFIED:** Program began this reconciliation clean at `eaa6d93f73163150028b361c16a2f194b687b68a` on `lane/program-integrate`.
+- **VERIFIED:** Program history contains the shared accepted feature base `08df070890300058353cc621c1383f16492063f1`, the Program tooling checkpoint `2e72aa80d39507ff7aa530d3fa8f8ed0e5b9cb0a`, and the three-lane memory acceptance commit `eaa6d93f73163150028b361c16a2f194b687b68a`.
+- **VERIFIED:** Selector memory head `678cf83c9f97bfcdc397b574c4eab08b306656ee` is pushed, passed `selector-engine` 100/100, and ended clean.
+- **VERIFIED:** Lab memory head `1b154c482978a9c77a9ea5325cd103bfe40b14ed` is pushed and passed `lab-ies` 147/147; the 10 modified and 66 untracked IES paths remain deliberate working-tree content with zero staged or deleted paths.
+- **UNKNOWN:** Exact commit ancestry from either lane-memory head to the current Program head is not exposed by the connected Program app. No merge-base, cherry-pick range, or absence/presence claim is inferred from commit subjects alone.
+
+### Head classification
+
+| Head | Program classification | Integration consequence |
+|---|---|---|
+| Program `eaa6d93f73163150028b361c16a2f194b687b68a` | accepted current Program history | documentation and orchestration authority for this reconciliation |
+| Selector `678cf83c9f97bfcdc397b574c4eab08b306656ee` | accepted lane-memory evidence anchor | not itself a feature integration parcel; future Selector parcels must declare an exact base/head range from this accepted lane state or a verified descendant |
+| Lab `1b154c482978a9c77a9ea5325cd103bfe40b14ed` | accepted lane-memory evidence anchor | not itself a feature integration parcel; preserved dirty IES work remains outside the accepted commit and must be checkpointed only in bounded Lab parcels |
+
+### Seam dependencies
+
+The cross-lane dependency chain is:
+
+1. Seam A — source-backed Selector intent and authority.
+2. Seam B — accepted selected-result persistence and versioned Engine run-table output.
+3. Seam C — Lab consumes only that accepted output through the safe handoff boundary.
+4. Seam D — Lab supplies consumer compatibility and preserved-dirt evidence.
+5. Seam E — Program accepts immutable producer and consumer parcels serially.
+
+Current repository tests show that the selected-result, run-table-first, and IES handoff surfaces are still intentionally diagnostic/read-only/fail-closed, with production RunTable and IES generation disabled. **VERIFIED from current Program-history test fixtures.** Therefore a memory checkpoint cannot be treated as proof that the Engine output contract is stable.
+
+### Safe integration order
+
+1. Complete this Program documentation reconciliation only.
+2. In the Selector lane, complete and checkpoint the bounded single-slice E2E producer closeout and the exact Engine output contract evidence.
+3. Program accepts that Selector producer parcel first, reviews Seams A/B, and runs `program-integrate` on a bounded integration parcel.
+4. Lab may continue independent lane-local IES checkpoints, but no Lab change that consumes a new Engine shape enters Program before step 3.
+5. After an exact Program-accepted producer schema exists, Lab validates or adapts Seam C in a bounded parcel while preserving unrelated IES dirt.
+6. Program accepts the Lab consumer parcel second, using Seam D evidence and another bounded `program-integrate` gate.
+7. Only after producer and consumer evidence is green may Program consider a decision declaring Seam B stable. `main` promotion and `downstream-artifacts` activation remain unauthorised and held.
+
+**Current milestone:** accepted-head reconciliation and safe cross-lane ordering are complete. The next integration dependency is Selector-owned producer evidence, not Program feature implementation.

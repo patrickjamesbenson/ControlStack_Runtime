@@ -196,3 +196,33 @@ A breaking seam change requires a Program decision entry containing:
 - effective commit(s).
 
 Without that entry, workers must preserve the current contract or stop with a blocker.
+
+## 2026-07-18 accepted-head seam reconciliation
+
+### Evidence anchors
+
+- Selector lane memory: `678cf83c9f97bfcdc397b574c4eab08b306656ee`, `selector-engine` 100/100, clean. **VERIFIED accepted receipt.**
+- Lab lane memory: `1b154c482978a9c77a9ea5325cd103bfe40b14ed`, `lab-ies` 147/147, with 10 modified and 66 untracked IES paths preserved outside the memory commit. **VERIFIED accepted receipt.**
+- Program reconciliation start: `eaa6d93f73163150028b361c16a2f194b687b68a`, clean. **VERIFIED.**
+- Exact Git ancestry between the two lane heads and Program HEAD is **UNKNOWN** through this connected app and is not a basis for integration ordering.
+
+### Dependency map now in force
+
+`Seam A -> Seam B -> Seam C -> Seam D -> Seam E`
+
+- Seam A establishes deterministic Selector authority and candidate identity.
+- Seam B owns selected-result persistence, schema/version identity, deterministic RunTable output, and blocked/error semantics.
+- Seam C may consume only an exact Program-accepted Seam B contract through a safe, read-only handoff boundary.
+- Seam D proves consumer compatibility, Lab gate status, and exclusion of unrelated preserved IES work.
+- Seam E accepts producer first and consumer second as separate immutable parcels.
+
+The current selected-result and IES handoff tests remain scaffold/contract-first and fail closed: production RunTable generation, IES generation, raw payload return, and write paths are disabled in the accepted Program history. **VERIFIED.** This is safe pre-activation evidence, not a stability declaration.
+
+### Integration constraints
+
+1. Lane-memory heads remain lane-local evidence anchors; Program does not merge them merely to copy their handoff documents.
+2. A Selector producer parcel changing Seam A or B must be accepted before any dependent Lab consumer parcel.
+3. Independent Lab work that does not consume a changed Engine contract may proceed lane-locally, but it does not bypass the producer-first Program order.
+4. A Lab consumer parcel must name the exact accepted producer schema/version and base/head commit range.
+5. Program runs a bounded gate after each accepted parcel; producer and consumer are not combined into one unexplained integration batch.
+6. Seam F remains unauthorised and Seam G remains reserved/inactive.

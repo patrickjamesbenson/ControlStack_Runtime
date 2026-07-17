@@ -178,12 +178,36 @@ Every new queue item must state:
 
 Chat requests that lack this envelope remain coordination input, not an accepted integration parcel.
 
-## 2026-07-18 queue closeout and next order
+## 2026-07-18 accepted-head reconciliation and safe queue order
 
-- Priority 1A, Selector lane memory: **COMPLETE** at `678cf83c9f97bfcdc397b574c4eab08b306656ee`, gate 100/100, pushed, clean.
-- Priority 1B, Lab lane memory: **COMPLETE** at `1b154c482978a9c77a9ea5325cd103bfe40b14ed`, gate 147/147, pushed; protected IES inventory unchanged.
+### Priority 1 closeout
+
+- Selector lane memory: **COMPLETE** at `678cf83c9f97bfcdc397b574c4eab08b306656ee`, gate 100/100, pushed, clean.
+- Lab lane memory: **COMPLETE** at `1b154c482978a9c77a9ea5325cd103bfe40b14ed`, gate 147/147, pushed; 10 modified and 66 untracked IES paths remain protected outside the accepted commit.
 - Secure tunnel/service restart acceptance: **COMPLETE**; all eight services READY / MANAGED.
-- Next Program action: **Priority 2 — reconcile accepted bases and lane heads**, using the committed lane handoffs. This is evidence and integration planning, not feature implementation.
-- Selector next feature action is owned by its committed handoff: single-slice E2E closeout before widening.
-- Lab next feature action is owned by its committed handoff; its existing feature parcel must remain preserved and be checkpointed in bounded slices.
-- Downstream artifacts remain **HELD** pending a stable Engine output contract.
+
+### Priority 2 — reconcile accepted bases and lane heads
+
+**Status:** COMPLETE AS AN EVIDENCE/ORDERING PARCEL. No feature commit was merged or activated.
+
+| Lane head | Classification | Queue treatment |
+|---|---|---|
+| Selector `678cf83c9f97bfcdc397b574c4eab08b306656ee` | accepted lane-memory anchor | retain as the evidence baseline for the next Selector parcel; do not merge merely to import lane-local docs |
+| Lab `1b154c482978a9c77a9ea5325cd103bfe40b14ed` | accepted lane-memory anchor | retain as the evidence baseline; preserved dirty IES paths are pending lane-local bounded checkpoints, not accepted integration content |
+| Program `eaa6d93f73163150028b361c16a2f194b687b68a` | accepted Program history at reconciliation start | owns this dependency and ordering record |
+
+Exact cross-branch ancestry is **UNKNOWN** through the Program app. Integration will use explicit future base/head ranges and changed-path evidence rather than inferred cherry-pick ranges.
+
+### Safe integration queue
+
+1. **NEXT — Selector producer closeout:** the Selector lane completes its committed single-slice E2E closeout and supplies the exact Seam A/B contract, changed paths, focused tests, `selector-engine` result, and base/head range.
+2. **THEN — Program producer acceptance:** Program reviews and accepts that immutable Selector parcel alone, runs `program-integrate`, and records the accepted Engine schema/version and blocked/error semantics.
+3. **LANE-LOCAL / NON-BLOCKING:** Lab may checkpoint independent IES work in bounded slices while preserving unrelated dirt. Such checkpoints do not become Engine-consumer integration parcels unless they declare a Seam C impact.
+4. **HELD FOR PRODUCER ACCEPTANCE — Lab consumer compatibility:** after step 2, Lab validates or adapts the safe handoff against the exact accepted Engine contract and supplies Seam D evidence with `lab-ies` green.
+5. **THEN — Program consumer acceptance:** Program accepts the Lab consumer parcel separately and runs `program-integrate` again.
+6. **DECISION GATE:** only after steps 2 and 5 may Program consider Priority 3 complete and declare the Engine output contract stable.
+7. **HELD:** Priority 5 downstream-artifacts activation and Priority 7 main promotion remain unauthorised.
+
+### Dependency rationale
+
+The producer/consumer chain is `Selector authority -> selected-result persistence -> RunTable output contract -> Lab safe handoff -> Lab evidence -> Program acceptance`. Current repository contracts are diagnostic/read-only/fail-closed and keep production RunTable/IES output disabled, so consumer widening before producer acceptance would freeze an unapproved shape.

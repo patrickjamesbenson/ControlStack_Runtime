@@ -302,3 +302,30 @@ Reconcile their accepted heads against Program history, record seam dependencies
 ### Orchestrator rule
 
 Patrick supplies objectives and accepts outcomes. He is not required to reconstruct state, paste old handoffs, select files, or approve code line by line. The repository handoffs, lane scopes, named gates, and gated Git paths are the control system.
+
+## 2026-07-18 first Program action completion
+
+### Completed action
+
+Program reconciled the accepted lane-memory heads against the history visible in `lane/program-integrate`, recorded the seam dependency chain, and established the safe integration order. This was a documentation and integration-planning parcel only.
+
+### Evidence and limitation
+
+- Program reconciliation start: `eaa6d93f73163150028b361c16a2f194b687b68a`, clean.
+- Selector accepted memory head: `678cf83c9f97bfcdc397b574c4eab08b306656ee`, gate 100/100, clean.
+- Lab accepted memory head: `1b154c482978a9c77a9ea5325cd103bfe40b14ed`, gate 147/147, with 10 modified and 66 untracked IES paths preserved outside the accepted commit.
+- The Program app cannot inspect another worktree's current `SESSION_HANDOFF.md` or calculate cross-branch ancestry. Those details remain **UNKNOWN** here; no merge or cherry-pick range was invented.
+- The accepted Program receipts are sufficient to classify both lane heads as durable evidence anchors, not feature integration parcels.
+
+### Safe order now in force
+
+1. Selector owns the next bounded producer parcel: single-slice E2E closeout and exact Seam A/B Engine output evidence.
+2. Program accepts that producer parcel first and records the accepted schema/version.
+3. Independent Lab IES checkpoints may continue lane-locally, but any Seam C consumer adaptation waits for the accepted producer contract.
+4. Lab then supplies a bounded consumer compatibility parcel and preserved-dirt evidence.
+5. Program accepts the Lab parcel second.
+6. Downstream artifacts remain held; no main promotion is authorised.
+
+### Exact next Program action
+
+Commission the Selector producer closeout through the correct Selector app using its committed handoff. Program must not implement the feature, write the Selector worktree, merge to `main`, or activate downstream artifacts. When the immutable Selector parcel returns, perform a separate Program producer-acceptance task.
