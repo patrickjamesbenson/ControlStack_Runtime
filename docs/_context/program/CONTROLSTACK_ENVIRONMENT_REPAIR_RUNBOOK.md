@@ -14,6 +14,8 @@ The first AuditOnly attempt failed during PowerShell parsing at the expandable s
 
 The second AuditOnly attempt entered preflight, wrote `CONTROLSTACK_ENVIRONMENT_REPAIR_AUDIT_20260717-153804.json`, and then reported `UNCLASSIFIED_FAILURE`. AuditOnly had not entered any mutation path, so that attempt changed nothing except writing its structured audit receipt. The follow-up repair removed the obsolete requirement for one uniquely dominant legacy service-manager directory: the additive lane manager is independent, existing managers remain untouched, and all discovered legacy manager files are retained only as preservation evidence. Audit failures now record and display a safe phase, script line and exception type instead of collapsing to `UNCLASSIFIED_FAILURE`.
 
+The third AuditOnly attempt wrote `CONTROLSTACK_ENVIRONMENT_REPAIR_AUDIT_20260717-155710.json` and failed in phase `LAB_GIT_STATE` at the native-command wrapper with exception type `RemoteException`. Windows PowerShell 5.1 converts native stderr redirected with `2>&1` into PowerShell error records; the script-wide `Stop` preference therefore terminated on Git stderr before the wrapper could inspect Git's exit code. The wrapper now captures native stderr under a local `Continue` preference, restores the original preference immediately afterwards, and continues to decide success strictly from the native exit code. This AuditOnly attempt also caused no environmental mutation beyond writing its structured receipt.
+
 **Do not run the full repair unless the latest AuditOnly receipt has status `audit-passed`.**
 
 After AuditOnly passes, run the full repair:

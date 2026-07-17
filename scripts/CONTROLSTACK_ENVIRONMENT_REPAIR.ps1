@@ -235,14 +235,22 @@ function Invoke-External {
         [switch]$AllowFailure
     )
     $original = Get-Location
+    $previousErrorActionPreference = $ErrorActionPreference
     $output = @()
     $exitCode = 0
     try {
         if ($WorkingDirectory) { Set-Location -LiteralPath $WorkingDirectory }
+        # Windows PowerShell 5.1 converts native stderr redirected with 2>&1
+        # into ErrorRecord objects. Under the script-wide Stop preference,
+        # even a warning becomes a terminating RemoteException before the
+        # native exit code can be evaluated. Capture the records here and let
+        # the explicit exit-code policy below decide success or failure.
+        $ErrorActionPreference = 'Continue'
         $output = @(& $FilePath @Arguments 2>&1)
         $exitCode = $LASTEXITCODE
     }
     finally {
+        $ErrorActionPreference = $previousErrorActionPreference
         Set-Location -LiteralPath $original
     }
     if (-not $AllowFailure -and $exitCode -ne 0) {
@@ -534,10 +542,10 @@ function Find-LauncherFile {
 
 function Protect-PrivateDirectory {
     param([Parameter(Mandatory = $true)][string]$Path, [Parameter(Mandatory = $true)][string]$Sid)
-    & icacls.exe $Path /inheritance:r | Out-Null
-    if ($LASTEXITCODE -ne 0) { throw "Failed to disable inherited ACLs on private directory $Path." }
-    & icacls.exe $Path /grant:r ("*{0}:(OI)(CI)F" -f $Sid) | Out-Null
-    if ($LASTEXITCODE -ne 0) { throw "Failed to restrict private directory $Path to SID $Sid." }
+    $inheritance = Invoke-External -FilePath 'icacls.exe' -Arguments @($Path, '/inheritance:r') -AllowFailure
+    if ($inheritance.exitCode -ne 0) { throw "Failed to disable inherited ACLs on private directory $Path." }
+    $grant = Invoke-External -FilePath 'icacls.exe' -Arguments @($Path, '/grant:r', ("*{0}:(OI)(CI)F" -f $Sid)) -AllowFailure
+    if ($grant.exitCode -ne 0) { throw "Failed to restrict private directory $Path to SID $Sid." }
 }
 
 function Backup-ChangedFile {
@@ -1223,10 +1231,10 @@ function Assert-FreshTunnelRollbackRoute {
 
 function Protect-SecretFile {
     param([string]$Path, [string]$Sid)
-    & icacls.exe $Path /inheritance:r | Out-Null
-    if ($LASTEXITCODE -ne 0) { throw "Failed to disable inherited ACLs on secret file $Path." }
-    & icacls.exe $Path /grant:r ("*{0}:(R,W)" -f $Sid) | Out-Null
-    if ($LASTEXITCODE -ne 0) { throw "Failed to restrict secret file $Path to SID $Sid." }
+    $inheritance = Invoke-External -FilePath 'icacls.exe' -Arguments @($Path, '/inheritance:r') -AllowFailure
+    if ($inheritance.exitCode -ne 0) { throw "Failed to disable inherited ACLs on secret file $Path." }
+    $grant = Invoke-External -FilePath 'icacls.exe' -Arguments @($Path, '/grant:r', ("*{0}:(R,W)" -f $Sid)) -AllowFailure
+    if ($grant.exitCode -ne 0) { throw "Failed to restrict secret file $Path to SID $Sid." }
 }
 
 function Write-ManagedTunnelPid {
