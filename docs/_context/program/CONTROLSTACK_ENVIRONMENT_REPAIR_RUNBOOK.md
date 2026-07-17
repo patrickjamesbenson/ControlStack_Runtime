@@ -8,6 +8,10 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File "C:\ControlStack_Worktre
 
 `-AuditOnly` performs discovery and validation only. It does not request an API key and does not change files, processes, services, Git state, registry state, Startup entries or credentials. Its only write is a structured, secret-free audit receipt under `C:\ControlStack_Receipts`, named `CONTROLSTACK_ENVIRONMENT_REPAIR_AUDIT_<timestamp>.json`.
 
+## Audit evidence
+
+The first AuditOnly attempt failed during PowerShell parsing at the expandable string containing `$Phase:`. Parsing failed before the script body executed, so that attempt caused no file, process, service, Git, registry, Startup, clipboard or credential change and produced no script receipt.
+
 **Do not run the full repair unless the latest AuditOnly receipt has status `audit-passed`.**
 
 After AuditOnly passes, run the full repair:

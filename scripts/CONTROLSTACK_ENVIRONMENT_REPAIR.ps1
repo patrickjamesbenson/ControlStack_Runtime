@@ -357,7 +357,7 @@ function Assert-LabProtectedInventory {
     $protected = @($After.modified) + @($After.untracked)
     $intersection = @($inventory.staged | Where-Object { $protected -contains $_ })
     if ($intersection.Count -gt 0) {
-        throw "Protected Lab paths became staged during $Phase: $($intersection -join ', ')"
+        throw "Protected Lab paths became staged during ${Phase}: $($intersection -join ', ')"
     }
 }
 
