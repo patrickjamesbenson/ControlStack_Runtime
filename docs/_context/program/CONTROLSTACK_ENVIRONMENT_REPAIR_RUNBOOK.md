@@ -18,7 +18,8 @@ The inventory:
 
 - reads listeners on ports 8000, 8021, 8022, 8080, 8081, 8082, 8788 and 8899;
 - records relevant process identities, Scheduled Tasks, Windows services and Startup entries;
-- records configuration file paths, sizes, timestamps and hashes without copying their contents;
+- records configuration file paths, sizes, timestamps and hashes;
+- captures redacted text from Service Manager v2 and the known lane launchers so their actual control format can be derived without guesswork;
 - records the four known worktree branches, HEADs and Git status;
 - records only whether known credential environment variables are present, never their values;
 - redacts key/token/password-shaped command-line material;

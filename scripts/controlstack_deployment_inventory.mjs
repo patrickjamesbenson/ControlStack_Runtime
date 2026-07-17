@@ -64,7 +64,7 @@ function sha256(value) {
 }
 
 const receipt = {
-  schema: "controlstack-deployment-v2-inventory/1",
+  schema: "controlstack-deployment-v2-inventory/1.1",
   generatedAt: new Date().toISOString(),
   host: os.hostname(),
   user: os.userInfo().username,
@@ -155,7 +155,7 @@ try {
 
 try {
   receipt.configurationFiles = powershellJson([
-    "$roots = @('C:\\ControlStack_Lanes','C:\\ControlStack_CodePilot_Lane_Kit',($env:LOCALAPPDATA + '\\ControlStack'),($env:APPDATA + '\\tunnel-client'),'C:\\ControlStack_Worktrees\\controlstack-tooling-v2\\tools')",
+    "$roots = @('C:\\ControlStack_Service_Manager','C:\\ControlStack_Lanes','C:\\ControlStack_CodePilot_Lane_Kit',($env:LOCALAPPDATA + '\\ControlStack'),($env:APPDATA + '\\tunnel-client'),'C:\\ControlStack_Worktrees\\controlstack-tooling-v2\\tools')",
     "$items = foreach ($root in $roots) {",
     "  if (Test-Path -LiteralPath $root) {",
     "    Get-ChildItem -LiteralPath $root -File -Recurse -ErrorAction SilentlyContinue | Where-Object {",
@@ -170,6 +170,29 @@ try {
 } catch (error) {
   receipt.errors.push({ section: "configurationFiles", ...safeError(error) });
   receipt.configurationFiles = [];
+}
+
+try {
+  receipt.serviceManagerSource = powershellJson([
+    "$roots = @('C:\\ControlStack_Service_Manager','C:\\ControlStack_Worktrees\\controlstack-tooling-v2\\tools\\controlstack-mcp')",
+    "$explicit = @('C:\\ControlStack_Lab\\packages\\lab-kernel\\ies-toolkit\\START Lab Bench 8899.bat')",
+    "$items = New-Object System.Collections.ArrayList",
+    "foreach ($root in $roots) {",
+    "  if (Test-Path -LiteralPath $root) {",
+    "    Get-ChildItem -LiteralPath $root -File -Recurse -ErrorAction SilentlyContinue | Where-Object {",
+    "      $_.Extension -in @('.json','.yaml','.yml','.js','.mjs','.cjs','.html','.css','.ps1','.cmd','.bat','.xml') -and $_.Length -le 262144 -and $_.FullName -notmatch '(?i)node_modules|\\.git'",
+    "    } | Select-Object -First 150 | ForEach-Object { [void]$items.Add($_) }",
+    "  }",
+    "}",
+    "foreach ($file in $explicit) { if (Test-Path -LiteralPath $file -PathType Leaf) { [void]$items.Add((Get-Item -LiteralPath $file)) } }",
+    "$records = $items | Sort-Object FullName -Unique | ForEach-Object {",
+    "  [pscustomobject]@{ Path = $_.FullName; Size = $_.Length; ModifiedUtc = $_.LastWriteTimeUtc.ToString('o'); Sha256 = (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash; Content = [IO.File]::ReadAllText($_.FullName) }",
+    "}",
+    "ConvertTo-Json -InputObject @($records) -Depth 6 -Compress",
+  ]).map((file) => ({ ...file, Content: redact(file.Content) }));
+} catch (error) {
+  receipt.errors.push({ section: "serviceManagerSource", ...safeError(error) });
+  receipt.serviceManagerSource = [];
 }
 
 receipt.worktrees = WORKTREES.map((worktreeRoot) => ({
@@ -191,6 +214,7 @@ receipt.summary = {
   serviceCount: receipt.services.length,
   startupEntryCount: receipt.startupEntries.length,
   configurationFileCount: receipt.configurationFiles.length,
+  serviceManagerSourceCount: receipt.serviceManagerSource.length,
   errorCount: receipt.errors.length,
 };
 
