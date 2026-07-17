@@ -42,15 +42,16 @@ It does not stop, restart or delete any existing process. It does not change Git
 
 ## Mechanical installation
 
-1. Create one fresh OpenAI runtime API key with **Tunnels Read + Use** and copy it using the site's Copy button. Do not paste it into PowerShell or Notepad.
-2. Run:
+1. Run:
 
 ```powershell
 node "C:\ControlStack_Worktrees\program-integrate\scripts\CONTROLSTACK_DEPLOYMENT_V2_INSTALL.mjs" --install
 ```
 
-3. Restart Windows once.
-4. Open the existing **ControlStack Service Manager** desktop shortcut and choose **5 — Verify all eight lane services**.
+2. Leave the installer waiting at its key-copy prompt.
+3. Create one fresh OpenAI runtime API key with **Tunnels Read + Use**, click the site's **Copy** button, return to PowerShell and press **Enter**. Do not paste the key.
+4. Restart Windows once after the installer reports success.
+5. Open the existing **ControlStack Service Manager** desktop shortcut and choose **5 — Verify all eight lane services**.
 
 ## Rollback and cleanup boundaries
 

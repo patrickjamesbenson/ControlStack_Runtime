@@ -2,6 +2,7 @@ import { execFileSync, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { copyFileSync, cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import os from "node:os";
+import { createInterface } from "node:readline/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -76,8 +77,19 @@ function deleteTask(name) {
 
 function clipboardKey() {
   const value = powershell("[Console]::OutputEncoding=[Text.Encoding]::UTF8;[Console]::Write((Get-Clipboard -Raw))").trim();
-  if (!/^sk-[\x21-\x7e]{20,}$/.test(value)) throw new Error("Copy a fresh OpenAI runtime API key before running the installer.");
-  return value;
+  const match = value.match(/sk-[\x21-\x7e]{20,}/);
+  if (!match) throw new Error("The clipboard does not contain a fresh OpenAI runtime API key.");
+  return match[0];
+}
+
+async function waitForKeyCopy() {
+  const prompt = createInterface({ input: process.stdin, output: process.stdout });
+  try {
+    await prompt.question("\nOpen the Runtime API key page, create a fresh key, click Copy, then return here and press Enter.\nThe key must not be pasted into PowerShell. ");
+  } finally {
+    prompt.close();
+  }
+  return clipboardKey();
 }
 
 function encryptForCurrentUser(value) {
@@ -115,7 +127,7 @@ function selfTest(manifest) {
   console.log("ControlStack Deployment v2 source self-test: PASS");
 }
 
-function install(manifest) {
+async function install(manifest) {
   if (process.platform !== "win32") throw new Error("Installation runs only on Patrick's Windows host.");
   if (os.hostname().toLowerCase() !== manifest.host.toLowerCase()) throw new Error("Wrong Windows host.");
   if (os.userInfo().username.toLowerCase() !== manifest.user.toLowerCase()) throw new Error("Wrong Windows user.");
@@ -133,7 +145,7 @@ function install(manifest) {
   const before = listeners(manifest.services.map((x) => x.port));
   if (before.length !== manifest.services.length) throw new Error("All eight current services must be live before additive installation.");
 
-  let key = clipboardKey();
+  let key = await waitForKeyCopy();
   const protectedKey = encryptForCurrentUser(key);
   key = null;
   clearClipboard();
@@ -203,6 +215,6 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   const manifest = loadAndValidateManifest();
   const action = process.argv[2] || "--self-test";
   if (action === "--self-test") selfTest(manifest);
-  else if (action === "--install") install(manifest);
+  else if (action === "--install") await install(manifest);
   else throw new Error("Use --self-test or --install.");
 }

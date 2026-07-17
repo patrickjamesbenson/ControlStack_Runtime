@@ -32,3 +32,11 @@ test("deployment keeps destructive cleanup and downstream services out of scope"
   assert.equal(manifest.services.some((x) => /ngrok|router|logo|downstream/i.test(x.id + x.name)), false);
   assert.equal(manifest.services.some((x) => [path.basename(x.executable), ...x.args].some((token) => /^(rm|del|clean|reset)(\.exe)?$/i.test(token))), false);
 });
+
+
+test("installer waits for the user to copy the key after the command has started", () => {
+  const installer = readFileSync(path.join(root, "..", "scripts", "CONTROLSTACK_DEPLOYMENT_V2_INSTALL.mjs"), "utf8");
+  assert.match(installer, /async function waitForKeyCopy/);
+  assert.match(installer, /await prompt\.question/);
+  assert.match(installer, /let key = await waitForKeyCopy\(\)/);
+});
