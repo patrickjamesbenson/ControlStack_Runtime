@@ -433,6 +433,157 @@ function Get-AncestryText {
     return (($Ancestry | ForEach-Object { "{0} {1} {2}" -f $_.name, $_.executablePath, $_.commandLine }) -join "`n")
 }
 
+function ConvertFrom-McpHttpResponse {
+    param(
+        [Parameter(Mandatory = $true)][string]$Content,
+        [Parameter(Mandatory = $true)][int]$ExpectedId
+    )
+    $messages = New-Object System.Collections.ArrayList
+    $trimmed = $Content.Trim()
+    if (-not [string]::IsNullOrWhiteSpace($trimmed)) {
+        try {
+            $parsed = $trimmed | ConvertFrom-Json
+            foreach ($item in @($parsed)) { [void]$messages.Add($item) }
+        }
+        catch {
+            foreach ($line in [regex]::Split($Content, '\r?\n')) {
+                if (-not $line.StartsWith('data:', [System.StringComparison]::OrdinalIgnoreCase)) { continue }
+                $payload = $line.Substring(5).Trim()
+                if ([string]::IsNullOrWhiteSpace($payload) -or $payload -eq '[DONE]') { continue }
+                try { [void]$messages.Add(($payload | ConvertFrom-Json)) }
+                catch { }
+            }
+        }
+    }
+    $matching = @($messages | Where-Object {
+        $_.PSObject.Properties.Name -contains 'id' -and [string]$_.id -eq [string]$ExpectedId
+    })
+    if ($matching.Count -ne 1) { throw 'MCP_RESPONSE_INVALID' }
+    if ($matching[0].PSObject.Properties.Name -contains 'error' -and $null -ne $matching[0].error) { throw 'MCP_RESPONSE_ERROR' }
+    return $matching[0]
+}
+
+function Invoke-McpJsonRpcRequest {
+    param(
+        [Parameter(Mandatory = $true)][int]$Port,
+        [Parameter(Mandatory = $true)][int]$Id,
+        [Parameter(Mandatory = $true)][string]$Method,
+        [Parameter(Mandatory = $true)][object]$Params,
+        [string]$SessionId = $null,
+        [string]$ProtocolVersion = $null
+    )
+    $headers = @{ Accept = 'application/json, text/event-stream' }
+    if (-not [string]::IsNullOrWhiteSpace($SessionId)) { $headers['Mcp-Session-Id'] = $SessionId }
+    if (-not [string]::IsNullOrWhiteSpace($ProtocolVersion)) { $headers['MCP-Protocol-Version'] = $ProtocolVersion }
+    $body = [ordered]@{ jsonrpc = '2.0'; id = $Id; method = $Method; params = $Params } | ConvertTo-Json -Depth 20 -Compress
+    $response = Invoke-WebRequest -UseBasicParsing -Method Post -Uri ("http://127.0.0.1:{0}/mcp" -f $Port) -Headers $headers -ContentType 'application/json' -Body $body -TimeoutSec 8
+    $responseSessionId = [string]$response.Headers['Mcp-Session-Id']
+    return [ordered]@{
+        message = ConvertFrom-McpHttpResponse -Content ([string]$response.Content) -ExpectedId $Id
+        sessionId = $(if (-not [string]::IsNullOrWhiteSpace($responseSessionId)) { $responseSessionId } else { $SessionId })
+    }
+}
+
+function Send-McpInitializedNotification {
+    param(
+        [Parameter(Mandatory = $true)][int]$Port,
+        [string]$SessionId = $null,
+        [string]$ProtocolVersion = $null
+    )
+    $headers = @{ Accept = 'application/json, text/event-stream' }
+    if (-not [string]::IsNullOrWhiteSpace($SessionId)) { $headers['Mcp-Session-Id'] = $SessionId }
+    if (-not [string]::IsNullOrWhiteSpace($ProtocolVersion)) { $headers['MCP-Protocol-Version'] = $ProtocolVersion }
+    $body = [ordered]@{ jsonrpc = '2.0'; method = 'notifications/initialized'; params = [ordered]@{} } | ConvertTo-Json -Depth 8 -Compress
+    [void](Invoke-WebRequest -UseBasicParsing -Method Post -Uri ("http://127.0.0.1:{0}/mcp" -f $Port) -Headers $headers -ContentType 'application/json' -Body $body -TimeoutSec 8)
+}
+
+function ConvertFrom-McpRepoInfoResult {
+    param([Parameter(Mandatory = $true)][object]$Result)
+    $candidates = New-Object System.Collections.ArrayList
+    [void]$candidates.Add($Result)
+    if ($Result.PSObject.Properties.Name -contains 'structuredContent' -and $null -ne $Result.structuredContent) {
+        [void]$candidates.Add($Result.structuredContent)
+    }
+    if ($Result.PSObject.Properties.Name -contains 'content') {
+        foreach ($entry in @($Result.content)) {
+            if ($entry.PSObject.Properties.Name -contains 'text' -and -not [string]::IsNullOrWhiteSpace([string]$entry.text)) {
+                try { [void]$candidates.Add(([string]$entry.text | ConvertFrom-Json)) }
+                catch { }
+            }
+        }
+    }
+    foreach ($candidate in @($candidates)) {
+        if ($null -eq $candidate) { continue }
+        if ($candidate.PSObject.Properties.Name -contains 'runtime_root') { return $candidate }
+        if ($candidate.PSObject.Properties.Name -contains 'result' -and $null -ne $candidate.result -and $candidate.result.PSObject.Properties.Name -contains 'runtime_root') {
+            return $candidate.result
+        }
+    }
+    throw 'MCP_REPO_INFO_RESULT_INVALID'
+}
+
+function Get-McpRepoInfo {
+    param([Parameter(Mandatory = $true)][int]$Port)
+    $lastFailure = $null
+    foreach ($protocolVersion in @('2025-06-18','2025-03-26','2024-11-05')) {
+        try {
+            $initialize = Invoke-McpJsonRpcRequest -Port $Port -Id 1 -Method 'initialize' -Params ([ordered]@{
+                protocolVersion = $protocolVersion
+                capabilities = [ordered]@{}
+                clientInfo = [ordered]@{ name = 'controlstack-environment-repair-audit'; version = '2.0.0' }
+            })
+            if (-not ($initialize.message.PSObject.Properties.Name -contains 'result')) { throw 'MCP_INITIALIZE_RESULT_MISSING' }
+            $negotiatedVersion = [string]$initialize.message.result.protocolVersion
+            if ([string]::IsNullOrWhiteSpace($negotiatedVersion)) { $negotiatedVersion = $protocolVersion }
+            Send-McpInitializedNotification -Port $Port -SessionId $initialize.sessionId -ProtocolVersion $negotiatedVersion
+            $toolCall = Invoke-McpJsonRpcRequest -Port $Port -Id 2 -Method 'tools/call' -Params ([ordered]@{ name = 'repo_info'; arguments = [ordered]@{} }) -SessionId $initialize.sessionId -ProtocolVersion $negotiatedVersion
+            if (-not ($toolCall.message.PSObject.Properties.Name -contains 'result')) { throw 'MCP_TOOL_RESULT_MISSING' }
+            return ConvertFrom-McpRepoInfoResult -Result $toolCall.message.result
+        }
+        catch { $lastFailure = $_ }
+    }
+    Set-FailureCode -Code 'MCP_REPO_INFO_UNAVAILABLE'
+    throw 'MCP_REPO_INFO_UNAVAILABLE'
+}
+
+function Assert-McpServiceIdentity {
+    param(
+        [Parameter(Mandatory = $true)][string]$ServiceName,
+        [Parameter(Mandatory = $true)][int]$Port,
+        [Parameter(Mandatory = $true)][string]$ExpectedRoot,
+        [Parameter(Mandatory = $true)][string[]]$ExpectedLanes,
+        [Parameter(Mandatory = $true)][string]$ExpectedBranch
+    )
+    $proc = Get-ListeningProcess -Port $Port
+    $leafName = ([string]$proc.Name).ToLowerInvariant()
+    if ($leafName -notlike 'python*.exe') { Set-FailureCode -Code 'MCP_PROCESS_NAME_MISMATCH'; throw 'MCP_PROCESS_NAME_MISMATCH' }
+    $repoInfo = Get-McpRepoInfo -Port $Port
+    foreach ($requiredField in @('runtime_root','lane_name','required_branch','http_port','transport','http_path','mcp_server_name')) {
+        if (-not ($repoInfo.PSObject.Properties.Name -contains $requiredField) -or [string]::IsNullOrWhiteSpace([string]$repoInfo.$requiredField)) {
+            Set-FailureCode -Code 'MCP_REPO_INFO_FIELD_MISSING'
+            throw 'MCP_REPO_INFO_FIELD_MISSING'
+        }
+    }
+    $actualRoot = [System.IO.Path]::GetFullPath([string]$repoInfo.runtime_root).TrimEnd('\')
+    $requiredRoot = [System.IO.Path]::GetFullPath($ExpectedRoot).TrimEnd('\')
+    if (-not $actualRoot.Equals($requiredRoot, [System.StringComparison]::OrdinalIgnoreCase)) { Set-FailureCode -Code 'MCP_RUNTIME_ROOT_MISMATCH'; throw 'MCP_RUNTIME_ROOT_MISMATCH' }
+    if ($ExpectedLanes -notcontains [string]$repoInfo.lane_name) { Set-FailureCode -Code 'MCP_LANE_MISMATCH'; throw 'MCP_LANE_MISMATCH' }
+    if ([string]$repoInfo.required_branch -ne $ExpectedBranch) { Set-FailureCode -Code 'MCP_REQUIRED_BRANCH_MISMATCH'; throw 'MCP_REQUIRED_BRANCH_MISMATCH' }
+    if ([int]$repoInfo.http_port -ne $Port) { Set-FailureCode -Code 'MCP_PORT_IDENTITY_MISMATCH'; throw 'MCP_PORT_IDENTITY_MISMATCH' }
+    if ([string]$repoInfo.transport -ne 'streamable-http' -or [string]$repoInfo.http_path -ne '/mcp') { Set-FailureCode -Code 'MCP_TRANSPORT_IDENTITY_MISMATCH'; throw 'MCP_TRANSPORT_IDENTITY_MISMATCH' }
+    $ancestry = Get-ProcessAncestry -ProcessId ([uint32]$proc.ProcessId)
+    return [ordered]@{
+        name = $ServiceName
+        port = $Port
+        processId = [uint32]$proc.ProcessId
+        processName = [string]$proc.Name
+        executablePath = [string]$proc.ExecutablePath
+        commandLine = [string]$proc.CommandLine
+        ancestry = $ancestry
+        mcpServerName = [string]$repoInfo.mcp_server_name
+    }
+}
+
 function Assert-ProcessIdentity {
     param(
         [string]$ServiceName,
@@ -765,9 +916,7 @@ function Wait-SelectorMcpHealthy {
     param([int]$Port, [string]$Label)
     for ($attempt = 0; $attempt -lt 60; $attempt++) {
         try {
-            $record = Assert-ProcessIdentity -ServiceName $Label -Port $Port -RequiredAnyMarkers @($SelectorRoot, [string]$Port, 'controlstack_mcp') -RequiredProcessNames @('python*.exe')
-            $health = Get-HealthCheck -Port $Port -Attempts 1
-            if ($health.healthy) { return $record }
+            return Assert-McpServiceIdentity -ServiceName $Label -Port $Port -ExpectedRoot $SelectorRoot -ExpectedLanes @('selector-engine') -ExpectedBranch $ExpectedBranches.Selector
         }
         catch { }
         Start-Sleep -Milliseconds 500
@@ -832,7 +981,7 @@ function Invoke-SelectorBlueGreenActivation {
         $candidateText = [System.IO.File]::ReadAllText($Plan.candidatePath)
         $candidateScope = Decode-ScopeValue -Value (Get-LauncherEnvironmentValue -Path $Plan.candidatePath -Content $candidateText -Name $Plan.envName) -Encoding $Plan.encoding
         Assert-SameStringSet -Actual $candidateScope -Expected @($SelectorWriteScope) -Label 'Selector candidate scope'
-        [void](Assert-ProcessIdentity -ServiceName 'Selector MCP original preserved' -Port $ExpectedPorts.SelectorMcp -RequiredAnyMarkers @($SelectorRoot, [string]$ExpectedPorts.SelectorMcp, 'controlstack_mcp') -RequiredProcessNames @('python*.exe'))
+        [void](Assert-McpServiceIdentity -ServiceName 'Selector MCP original preserved' -Port $ExpectedPorts.SelectorMcp -ExpectedRoot $SelectorRoot -ExpectedLanes @('selector-engine') -ExpectedBranch $ExpectedBranches.Selector)
         $SelectorConfigBackup = Backup-ChangedFile -Path $Plan.path
         if (-not $SelectorConfigBackup) { Set-FailureCode -Code 'SELECTOR_BACKUP_MISSING'; throw 'SELECTOR_BACKUP_MISSING' }
         Write-Utf8NoBomAtomic -Path $Plan.path -Content $Plan.newContent
@@ -1799,13 +1948,24 @@ try {
     $Receipt.lab.protectedUntrackedCount = @($ProtectedLabFingerprintBefore.untracked).Count
     Add-ReceiptValidation -Code 'LAB_PROTECTED_STATE' -Status 'passed'
 
-    Set-AuditPhase -Phase 'SERVICE_IDENTITIES'
     $serviceEvidence = [ordered]@{}
-    $serviceEvidence.selectorMcp = Assert-ProcessIdentity -ServiceName 'Selector MCP' -Port $ExpectedPorts.SelectorMcp -RequiredAnyMarkers @($SelectorRoot,$ToolingRoot,'controlstack_mcp') -RequiredProcessNames @('python*.exe')
+
+    Set-AuditPhase -Phase 'SERVICE_SELECTOR_MCP'
+    $serviceEvidence.selectorMcp = Assert-McpServiceIdentity -ServiceName 'Selector MCP' -Port $ExpectedPorts.SelectorMcp -ExpectedRoot $SelectorRoot -ExpectedLanes @('selector-engine') -ExpectedBranch $ExpectedBranches.Selector
+
+    Set-AuditPhase -Phase 'SERVICE_SELECTOR_RUNTIME'
     $serviceEvidence.selectorRuntime = Assert-ProcessIdentity -ServiceName 'Selector runtime' -Port $ExpectedPorts.SelectorRuntime -RequiredAnyMarkers @($SelectorRoot,'server.js','workspace') -RequiredProcessNames @('node*.exe')
-    $serviceEvidence.labMcp = Assert-ProcessIdentity -ServiceName 'Lab MCP' -Port $ExpectedPorts.LabMcp -RequiredAnyMarkers @($LabRoot,$ToolingRoot,'controlstack_mcp') -RequiredProcessNames @('python*.exe')
+
+    Set-AuditPhase -Phase 'SERVICE_LAB_MCP'
+    $serviceEvidence.labMcp = Assert-McpServiceIdentity -ServiceName 'Lab MCP' -Port $ExpectedPorts.LabMcp -ExpectedRoot $LabRoot -ExpectedLanes @('code-pilot-lab','lab-ies') -ExpectedBranch $ExpectedBranches.Lab
+
+    Set-AuditPhase -Phase 'SERVICE_LAB_SPECIFICATION'
     $serviceEvidence.labSpecification = Assert-ProcessIdentity -ServiceName 'Lab specification service' -Port $ExpectedPorts.LabSpecification -RequiredAnyMarkers @($LabRoot,'streamlit','specification','demo') -RequiredProcessNames @('python*.exe','node*.exe')
-    $serviceEvidence.programMcp = Assert-ProcessIdentity -ServiceName 'Program MCP' -Port $ExpectedPorts.ProgramMcp -RequiredAnyMarkers @($ProgramRoot,$ToolingRoot,'controlstack_mcp') -RequiredProcessNames @('python*.exe')
+
+    Set-AuditPhase -Phase 'SERVICE_PROGRAM_MCP'
+    $serviceEvidence.programMcp = Assert-McpServiceIdentity -ServiceName 'Program MCP' -Port $ExpectedPorts.ProgramMcp -ExpectedRoot $ProgramRoot -ExpectedLanes @('program-integrate') -ExpectedBranch $ExpectedBranches.Program
+
+    Set-AuditPhase -Phase 'SERVICE_IDENTITIES'
     Add-ReceiptValidation -Code 'SERVICE_IDENTITIES' -Status 'passed'
 
     Set-AuditPhase -Phase 'LAUNCHER_DISCOVERY'
