@@ -616,6 +616,52 @@ function Assert-ProcessIdentity {
     }
 }
 
+function Get-StreamlitHealthCheck {
+    param([Parameter(Mandatory = $true)][int]$Port)
+    try {
+        $response = Invoke-WebRequest -UseBasicParsing -Uri ("http://127.0.0.1:{0}/_stcore/health" -f $Port) -TimeoutSec 5
+        $body = ([string]$response.Content).Trim()
+        return [ordered]@{
+            healthy = ([int]$response.StatusCode -ge 200 -and [int]$response.StatusCode -lt 400 -and $body.Equals('ok', [System.StringComparison]::OrdinalIgnoreCase))
+            path = '/_stcore/health'
+            statusCode = [int]$response.StatusCode
+        }
+    }
+    catch {
+        return [ordered]@{ healthy = $false; path = '/_stcore/health'; statusCode = $null }
+    }
+}
+
+function Assert-StreamlitServiceIdentity {
+    param(
+        [Parameter(Mandatory = $true)][string]$ServiceName,
+        [Parameter(Mandatory = $true)][int]$Port
+    )
+    $proc = Get-ListeningProcess -Port $Port
+    $leafName = ([string]$proc.Name).ToLowerInvariant()
+    if (-not (@('python*.exe','node*.exe') | Where-Object { $leafName -like $_ })) {
+        Set-FailureCode -Code 'STREAMLIT_PROCESS_NAME_MISMATCH'
+        throw 'STREAMLIT_PROCESS_NAME_MISMATCH'
+    }
+    $health = Get-StreamlitHealthCheck -Port $Port
+    if (-not $health.healthy) {
+        Set-FailureCode -Code 'STREAMLIT_HEALTH_IDENTITY_FAILED'
+        throw 'STREAMLIT_HEALTH_IDENTITY_FAILED'
+    }
+    $ancestry = Get-ProcessAncestry -ProcessId ([uint32]$proc.ProcessId)
+    return [ordered]@{
+        name = $ServiceName
+        port = $Port
+        processId = [uint32]$proc.ProcessId
+        processName = [string]$proc.Name
+        executablePath = [string]$proc.ExecutablePath
+        commandLine = [string]$proc.CommandLine
+        ancestry = $ancestry
+        healthPath = [string]$health.path
+        healthStatusCode = [int]$health.statusCode
+    }
+}
+
 function Get-HealthCheck {
     param([int]$Port, [int]$Attempts = 1, [int]$DelayMilliseconds = 500)
     $paths = @('/health', '/healthz', '/status', '/')
@@ -1438,12 +1484,16 @@ function Convert-DefinitionForRegistry {
 function New-NonTunnelRegistryDefinition {
     param([string]$Id, [string]$Name, [int]$Port, [string]$LaneRoot, [string]$Branch, [object]$Evidence, [object]$Launcher, [string]$Category)
     $markers = New-Object System.Collections.ArrayList
-    [void]$markers.Add($LaneRoot)
-    if ($Category -eq 'mcp') { [void]$markers.Add('controlstack_mcp') }
-    elseif ($Category -eq 'runtime') { [void]$markers.Add('server.js') }
-    elseif ($Category -eq 'specification') {
-        [void]$markers.Add('streamlit')
-        [void]$markers.Add('specification')
+    $healthPath = $null
+    $healthBody = $null
+    if ($Category -eq 'specification') {
+        $healthPath = '/_stcore/health'
+        $healthBody = 'ok'
+    }
+    else {
+        [void]$markers.Add($LaneRoot)
+        if ($Category -eq 'mcp') { [void]$markers.Add('controlstack_mcp') }
+        elseif ($Category -eq 'runtime') { [void]$markers.Add('server.js') }
     }
     return [ordered]@{
         id = $Id
@@ -1453,6 +1503,8 @@ function New-NonTunnelRegistryDefinition {
         branch = $Branch
         port = $Port
         healthPort = $Port
+        healthPath = $healthPath
+        healthBody = $healthBody
         launcher = $Launcher.path
         workingDirectory = $LaneRoot
         executable = $Evidence.executablePath
@@ -1511,7 +1563,7 @@ function Merge-ManagerRegistry {
     }
 
     $repairOwnedNames = @(
-        'id','name','category','laneRoot','branch','port','healthPort','executable','executableName',
+        'id','name','category','laneRoot','branch','port','healthPort','healthPath','healthBody','executable','executableName',
         'arguments','args','command','commandLine','environment','env','variables','workingDirectory',
         'secretFile','ownerSid','pidFile','identityMarkers','managedCredential','managedByRepair','launcher',
         'observedProcess','operation','profileName','tunnelIdentity','mcpTarget','healthAddress','logLevel',
@@ -1580,6 +1632,17 @@ function Get-Listener([int]$Port) {
     return @(Get-NetTCPConnection -State Listen -LocalPort $Port -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique)
 }
 function Test-ManagedHealth($entry) {
+    if ($entry.category -eq 'specification') {
+        $path = [string]$entry.healthPath
+        $expectedBody = [string]$entry.healthBody
+        if ([string]::IsNullOrWhiteSpace($path) -or [string]::IsNullOrWhiteSpace($expectedBody)) { return $false }
+        try {
+            $response = Invoke-WebRequest -UseBasicParsing -Uri ("http://127.0.0.1:{0}{1}" -f $entry.healthPort, $path) -TimeoutSec 3
+            $body = ([string]$response.Content).Trim()
+            return ([int]$response.StatusCode -ge 200 -and [int]$response.StatusCode -lt 400 -and $body.Equals($expectedBody, [System.StringComparison]::OrdinalIgnoreCase))
+        }
+        catch { return $false }
+    }
     if ($entry.category -ne 'openai-tunnel') { return $true }
     foreach ($path in @('/health','/healthz','/status','/')) {
         try {
@@ -1604,6 +1667,10 @@ function Assert-Identity($entry, [uint32]$ListenerProcessId) {
     if ([string]::IsNullOrWhiteSpace($expectedExecutable)) { throw 'Expected executable is missing.' }
     $actualExecutable = [string]$process.ExecutablePath
     if ([System.IO.Path]::GetFullPath($actualExecutable) -ne [System.IO.Path]::GetFullPath($expectedExecutable)) { throw 'Listener executable identity mismatch.' }
+    if ($entry.category -eq 'specification') {
+        if (-not (Test-ManagedHealth $entry)) { throw 'Specification health identity mismatch.' }
+        return
+    }
     $text = "{0} {1} {2}" -f $process.Name, $process.ExecutablePath, $process.CommandLine
     foreach ($marker in @($entry.identityMarkers)) {
         if ($text.IndexOf([string]$marker, [System.StringComparison]::OrdinalIgnoreCase) -lt 0) { throw 'Listener command-line identity mismatch.' }
@@ -1960,7 +2027,7 @@ try {
     $serviceEvidence.labMcp = Assert-McpServiceIdentity -ServiceName 'Lab MCP' -Port $ExpectedPorts.LabMcp -ExpectedRoot $LabRoot -ExpectedLanes @('code-pilot-lab','lab-ies') -ExpectedBranch $ExpectedBranches.Lab
 
     Set-AuditPhase -Phase 'SERVICE_LAB_SPECIFICATION'
-    $serviceEvidence.labSpecification = Assert-ProcessIdentity -ServiceName 'Lab specification service' -Port $ExpectedPorts.LabSpecification -RequiredAnyMarkers @($LabRoot,'streamlit','specification','demo') -RequiredProcessNames @('python*.exe','node*.exe')
+    $serviceEvidence.labSpecification = Assert-StreamlitServiceIdentity -ServiceName 'Lab specification service' -Port $ExpectedPorts.LabSpecification
 
     Set-AuditPhase -Phase 'SERVICE_PROGRAM_MCP'
     $serviceEvidence.programMcp = Assert-McpServiceIdentity -ServiceName 'Program MCP' -Port $ExpectedPorts.ProgramMcp -ExpectedRoot $ProgramRoot -ExpectedLanes @('program-integrate') -ExpectedBranch $ExpectedBranches.Program
