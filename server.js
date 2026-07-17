@@ -30,6 +30,7 @@ import {
   PROJECT_BROWSER_SELECTED_PROJECT_SERVER_OWNED_REGISTRATION_PATH,
   PROJECT_BROWSER_SELECTED_PROJECT_SERVER_OWNED_REGISTRATION_STATES,
 } from "./packages/workspace-kernel/projectBrowserSelectedProjectServerOwnedRegistrationBoundary.js";
+import { enrichSelectedProjectReadonlyEngineBridgeRequest } from "./packages/workspace-kernel/engineRunTableSelectedProjectSourceBackedOpticEfficiency.js";
 
 const PORT = Number.parseInt(process.env.CONTROLSTACK_RUNTIME_PORT || "8787", 10);
 const HOST = process.env.CONTROLSTACK_RUNTIME_HOST || "127.0.0.1";
@@ -2473,7 +2474,19 @@ function isSameOriginRequest(req) {
   }
 }
 
-function invokeRuntimeEngineRunTableSelectedProjectHostLocalReadonlySeam(bridgeRequest) {
+async function invokeRuntimeEngineRunTableSelectedProjectHostLocalReadonlySeam(bridgeRequest) {
+  let preparedBridgeRequest = bridgeRequest;
+  try {
+    const snapshot = await readJsonSnapshot(readAuthorityReferenceSnapshotPath());
+    const enrichment = enrichSelectedProjectReadonlyEngineBridgeRequest({
+      bridgeRequest,
+      snapshot,
+    });
+    preparedBridgeRequest = enrichment.bridgeRequest;
+  } catch {
+    preparedBridgeRequest = bridgeRequest;
+  }
+
   return new Promise((resolveInvocation, rejectInvocation) => {
     const pythonCommand = String(process.env.CONTROLSTACK_PYTHON || "python").trim() || "python";
     const child = spawn(
@@ -2542,7 +2555,7 @@ function invokeRuntimeEngineRunTableSelectedProjectHostLocalReadonlySeam(bridgeR
     });
 
     try {
-      child.stdin.end(JSON.stringify(bridgeRequest));
+      child.stdin.end(JSON.stringify(preparedBridgeRequest));
     } catch {
       child.kill();
       finishReject("selected-project-host-seam-request-write-failed");

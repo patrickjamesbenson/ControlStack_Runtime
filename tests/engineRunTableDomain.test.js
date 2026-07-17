@@ -11,6 +11,10 @@ import {
   packGreedyBoardRun,
 } from "../packages/workspace-kernel/engineRunTableDomain.js";
 import { createSelectedResultPerRunDisplayRowShape } from "../packages/workspace-kernel/selectedResultProjectionService.js";
+import {
+  enrichSelectedProjectReadonlyEngineBridgeRequest,
+  resolveSelectedProjectSourceBackedOpticEfficiency,
+} from "../packages/workspace-kernel/engineRunTableSelectedProjectSourceBackedOpticEfficiency.js";
 
 const domainSourceUrl = new URL("../packages/workspace-kernel/engineRunTableDomain.js", import.meta.url);
 const serverSourceUrl = new URL("../server.js", import.meta.url);
@@ -255,10 +259,85 @@ test("domain output can be shaped toward selected-result projection without maki
   assertRawExposureDisabled(projection.safetyFlags);
 });
 
+test("selected-project bridge enriches only one exact source-backed optic efficiency", () => {
+  const bridgeRequest = {
+    schemaId: "controlstack.runtime.engine-runtable.selected-project-host-seam-bridge.v1",
+    schemaVersion: 1,
+    selectorPayload: {
+      tier: "First",
+      runs: [{ qty: 1, run_length_mm: 1200 }],
+      optic: { key: "Inlay" },
+      lighting: {
+        target_lm_per_m: "2000",
+        cct: "4000",
+        cri: "80",
+        optic_key: "Inlay",
+        control_type: "Fixed Output",
+      },
+      control_type: "Fixed Output",
+      electrical: {},
+    },
+    execute: true,
+    filesystemWriteGuardRequired: true,
+    bytecodeWritingDisabled: true,
+  };
+  const snapshot = {
+    OPTICS: [{ system: "80", optic: "Inlay", optical_eff: "0.8", private_note: "not-returned" }],
+  };
+
+  const result = enrichSelectedProjectReadonlyEngineBridgeRequest({ bridgeRequest, snapshot });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.enriched, true);
+  assert.equal(result.sourceResolution.efficiency, 0.8);
+  assert.deepEqual(Object.keys(result.bridgeRequest), Object.keys(bridgeRequest));
+  assert.equal(result.bridgeRequest.selectorPayload.lighting.eff_optical, 0.8);
+  assert.equal(result.bridgeRequest.selectorPayload.lighting.optical_eff, 0.8);
+  assert.equal(result.bridgeRequest.selectorPayload.lighting.optical_efficiency, 0.8);
+  assert.equal(bridgeRequest.selectorPayload.lighting.optical_eff, undefined);
+  assert.equal(JSON.stringify(result).includes("not-returned"), false);
+  assert.equal(result.rawRowsReturned, false);
+  assert.equal(result.rawValuesReturned, false);
+  assert.equal(result.fallbackUsed, false);
+});
+
+test("selected-project optic efficiency enrichment fails closed on conflicts and percent-like values", () => {
+  const selectorPayload = {
+    optic: { key: "Inlay" },
+    lighting: { optic_key: "Inlay" },
+    electrical: {},
+  };
+  const conflict = resolveSelectedProjectSourceBackedOpticEfficiency({
+    selectorPayload,
+    snapshot: {
+      OPTICS: [
+        { optic: "Inlay", optical_eff: 0.8 },
+        { optic: "Inlay", optical_eff: 0.75 },
+      ],
+    },
+  });
+  assert.equal(conflict.ok, false);
+  assert.equal(conflict.blocker, "selected-project-source-backed-optic-efficiency-conflict");
+  assert.equal(conflict.efficiency, null);
+  assert.equal(conflict.fallbackUsed, false);
+
+  const percentLike = resolveSelectedProjectSourceBackedOpticEfficiency({
+    selectorPayload,
+    snapshot: { OPTICS: [{ optic: "Inlay", optical_eff: "80%" }] },
+  });
+  assert.equal(percentLike.ok, false);
+  assert.equal(percentLike.blocker, "selected-project-source-backed-optic-efficiency-unavailable");
+  assert.equal(percentLike.efficiency, null);
+  assert.equal(percentLike.fallbackUsed, false);
+});
+
 test("domain slice adds no Engine route, Selector run route, POST endpoint, or generation/proof/write flag", async () => {
   const serverText = await readFile(serverSourceUrl, "utf-8");
   const domainText = await readFile(domainSourceUrl, "utf-8");
 
+  assert.match(serverText, /enrichSelectedProjectReadonlyEngineBridgeRequest/);
+  assert.match(serverText, /readJsonSnapshot\(readAuthorityReferenceSnapshotPath\(\)\)/);
+  assert.match(serverText, /JSON\.stringify\(preparedBridgeRequest\)/);
   assert.equal(serverText.includes("/api/engine/run"), false);
   assert.equal(serverText.includes("/api/selector/run"), false);
   assert.equal(serverText.includes("selected-result"), false);
