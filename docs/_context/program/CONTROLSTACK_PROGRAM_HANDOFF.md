@@ -329,3 +329,31 @@ Program reconciled the accepted lane-memory heads against the history visible in
 ### Exact next Program action
 
 Commission the Selector producer closeout through the correct Selector app using its committed handoff. Program must not implement the feature, write the Selector worktree, merge to `main`, or activate downstream artifacts. When the immutable Selector parcel returns, perform a separate Program producer-acceptance task.
+
+## 2026-07-18 Lab P2 Checkpoint 1 stop receipt
+
+### Accepted result
+
+Lab correctly stopped with the valid four-file keyword-foundation parcel still staged. Focused tests passed 5/5 and `lab-ies` passed 147/147. No protected file was absorbed, reset, cleaned, restored, copied, moved, deleted, or staged. No commit or push occurred.
+
+Current Lab classification:
+
+- HEAD `1b154c482978a9c77a9ea5325cd103bfe40b14ed`;
+- staged: exactly the four P2 Checkpoint 1 files;
+- modified: 11 protected paths including `SESSION_HANDOFF.md`;
+- untracked: 62 remaining paths;
+- deleted: zero.
+
+### Exact failing boundary
+
+The deployed shared MCP `repo_green_commit_push` accepts the exact staged-path set and green gate, then rejects because unrelated modified or untracked paths exist. This contradicts the Program rule that protected dirty work remains unstaged while bounded parcels commit by exact index content.
+
+Deployment v2 proves the live MCP executable is sourced from `C:\ControlStack_Worktrees\controlstack-tooling-v2`. The `tools/controlstack-mcp/controlstack_mcp.py` copy visible in the Program worktree is not the deployed authority and lacks current lane-aware `repo_info` behaviour. Do not patch that stale copy as a substitute for a tooling-lane repair.
+
+### Immediate next action
+
+Use a correctly connected shared-tooling app for `C:\ControlStack_Worktrees\controlstack-tooling-v2`, branch `lane/controlstack-tooling-v2`. Implement and test the path-confined commit repair there, commit and push the tooling lane, restart the Lab MCP service, and verify the connector. Until that is complete, do not send Lab another feature commission and do not disturb its current staged parcel.
+
+### Lab resume action after tooling activation
+
+The Lab worker resumes the existing staged four-file parcel, verifies the cached diff, reruns `lab-ies`, commits with `lab: checkpoint canonical keyword foundation`, pushes `lane/code-pilot-lab`, and updates its durable handoff. Only then may the two-file `iesWorkingRecord` checkpoint be commissioned.

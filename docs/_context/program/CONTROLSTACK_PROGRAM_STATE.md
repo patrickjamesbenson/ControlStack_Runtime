@@ -194,3 +194,26 @@ Current repository tests show that the selected-result, run-table-first, and IES
 7. Only after producer and consumer evidence is green may Program consider a decision declaring Seam B stable. `main` promotion and `downstream-artifacts` activation remain unauthorised and held.
 
 **Current milestone:** accepted-head reconciliation and safe cross-lane ordering are complete. The next integration dependency is Selector-owned producer evidence, not Program feature implementation.
+
+## 2026-07-18 Lab P2 Checkpoint 1 tooling blocker
+
+### Verified Lab receipt
+
+- **VERIFIED FROM LANE RECEIPT:** P2 Checkpoint 1 is confined to exactly four files:
+  - `packages/lab-kernel/ies-toolkit/iesKeywordContract.js`
+  - `packages/lab-kernel/ies-toolkit/iesLabFormKeywords.js`
+  - `tests/lab-kernel/iesKeywordContract.test.js`
+  - `tests/lab-kernel/iesLabFormKeywords.test.js`
+- **VERIFIED FROM LANE RECEIPT:** focused keyword coverage passed 5/5 and `lab-ies` passed 147/147.
+- **VERIFIED FROM LANE RECEIPT:** the four-file parcel remains staged; 11 unrelated protected modified paths and 62 remaining untracked paths remain unstaged; zero deleted paths; HEAD remains `1b154c482978a9c77a9ea5325cd103bfe40b14ed`.
+- **VERIFIED FROM LANE RECEIPT:** no commit or push occurred because the live shared MCP returned `worktree_guard / unstaged_or_untracked_files_present` after confirming the exact staged parcel.
+
+### Program diagnosis
+
+- **VERIFIED:** Deployment v2 runs all three MCP services from `C:\ControlStack_Worktrees\controlstack-tooling-v2`, not from the Program, Selector, or Lab worktrees.
+- **VERIFIED:** The MCP source copy currently visible in `lane/program-integrate` is not the deployed tooling authority: its `repo_info` implementation lacks lane-aware fields that the live service returns.
+- **CONSEQUENCE:** Program must not patch the stale worktree copy and claim the Lab connector is repaired. The correction must be implemented, tested, committed, pushed, and activated in the dedicated `controlstack-tooling-v2` worktree, then the Lab MCP service must be restarted and reverified.
+
+### Current Lab status
+
+P2 Checkpoint 1 is **IMPLEMENTATION COMPLETE / GATE GREEN / COMMIT BLOCKED BY SHARED TOOLING**. The next two-file `iesWorkingRecord` checkpoint remains unauthorised until the staged four-file checkpoint is committed and pushed. The Lab lane must remain paused with its current classified state intact.

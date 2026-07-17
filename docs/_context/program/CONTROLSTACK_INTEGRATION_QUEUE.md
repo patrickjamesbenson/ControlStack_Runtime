@@ -211,3 +211,39 @@ Exact cross-branch ancestry is **UNKNOWN** through the Program app. Integration 
 ### Dependency rationale
 
 The producer/consumer chain is `Selector authority -> selected-result persistence -> RunTable output contract -> Lab safe handoff -> Lab evidence -> Program acceptance`. Current repository contracts are diagnostic/read-only/fail-closed and keep production RunTable/IES output disabled, so consumer widening before producer acceptance would freeze an unapproved shape.
+
+## Immediate operational blocker — shared path-confined commit capability
+
+**Status:** BLOCKED pending repair in `lane/controlstack-tooling-v2`.
+
+### Accepted evidence
+
+- Lab P2 Checkpoint 1 is staged as exactly four authorised files.
+- Focused tests are green 5/5 and `lab-ies` is green 147/147.
+- The live `repo_green_commit_push` rejected the parcel solely because unrelated protected modified and untracked paths remain unstaged.
+- No commit or push occurred; the staged parcel and protected dirty inventory remain intact.
+
+### Required tooling parcel
+
+**Producing lane:** dedicated shared tooling worktree `C:\ControlStack_Worktrees\controlstack-tooling-v2`, branch `lane/controlstack-tooling-v2`.
+
+The repair must:
+
+1. retain exact `expected_staged_paths` equality;
+2. retain fresh named-gate and required-branch checks;
+3. allow unrelated modified and untracked paths to remain unstaged;
+4. refuse any staged path with additional unstaged changes;
+5. refuse deleted paths and staged-set mismatches;
+6. commit only the Git index and preserve all unrelated working-tree state;
+7. include regression tests covering successful preserved-dirt commit and all refusal cases;
+8. commit and push only the tooling lane;
+9. restart the Lab MCP service and verify its identity before retrying Lab.
+
+### Recovery order
+
+1. Repair and activate the shared tooling service.
+2. Resume the existing Lab staged parcel; do not recreate or restage other work.
+3. Rerun `lab-ies`, commit with `lab: checkpoint canonical keyword foundation`, push `lane/code-pilot-lab`, and update the durable Lab handoff.
+4. Only after that closeout may Program authorise the two-file `iesWorkingRecord` checkpoint.
+
+No further Lab feature slice is authorised while this blocker remains open.

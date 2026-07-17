@@ -330,3 +330,24 @@ Worker commissioning and all lane-memory bootstraps.
 **Consequence:** Patrick is no longer the relay for historical handoff content. Each orchestrator reads its repository handoff. Chat history is non-authoritative. Feature work resumes independently inside the lane boundaries; Program governs only seams and integration.
 
 **Held decision:** downstream-artifacts activation remains deferred until the Engine output contract is stable.
+
+## 2026-07-18 — Shared MCP tooling authority is the dedicated tooling worktree
+
+**Status:** ACCEPTED.
+
+**Evidence:** Deployment v2 service manifest runs Selector, Lab, and Program MCP processes from `C:\ControlStack_Worktrees\controlstack-tooling-v2`. The Program worktree MCP source copy does not expose the lane-aware `repo_info` fields returned by the live service.
+
+### Decision
+
+Repairs to shared MCP behaviour must be implemented and accepted in the dedicated `lane/controlstack-tooling-v2` worktree. A similarly named source copy in Program or a feature lane is not deployment evidence and must not be patched as a substitute.
+
+### Rationale
+
+The Lab P2 Checkpoint 1 parcel proved that live commit behaviour can block a valid exact staged parcel while preserving unrelated dirty work. Repairing a stale copy would produce a misleading green commit without changing the running connector.
+
+### Consequences
+
+- Program records and commissions the tooling repair but does not cross-write the tooling worktree.
+- The tooling parcel must preserve exact staged-path, gate, branch, deletion, and same-path unstaged-change guards while allowing unrelated modified/untracked paths to remain unstaged.
+- The affected MCP service must be restarted and identity-verified before a blocked lane retries.
+- Lab remains paused with its valid staged P2 Checkpoint 1 parcel intact until the live tooling repair is activated.
