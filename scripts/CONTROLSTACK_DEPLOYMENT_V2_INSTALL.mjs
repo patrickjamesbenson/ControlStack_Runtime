@@ -1,9 +1,11 @@
 import { execFileSync, spawn, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import {
+  closeSync,
   copyFileSync,
   existsSync,
   mkdirSync,
+  openSync,
   readFileSync,
   readdirSync,
   renameSync,
@@ -569,6 +571,27 @@ async function waitForHttp(url, timeoutMs = 45000) {
   throw new Error("The Deployment v2 control interface did not become ready.");
 }
 
+function waitForManagerReady(child, url, logPath) {
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    const finish = (callback, value) => {
+      if (settled) return;
+      settled = true;
+      child.off("error", onError);
+      child.off("exit", onExit);
+      callback(value);
+    };
+    const onError = () => finish(reject, new Error("The Deployment v2 control manager could not start. Manager log: " + logPath));
+    const onExit = (code) => finish(reject, new Error("The Deployment v2 control manager exited before readiness (code " + String(code) + "). Manager log: " + logPath));
+    child.once("error", onError);
+    child.once("exit", onExit);
+    waitForHttp(url).then(
+      (response) => finish(resolve, response),
+      () => finish(reject, new Error("The Deployment v2 control interface did not become ready. Manager log: " + logPath)),
+    );
+  });
+}
+
 function managerListenerMatches(identity, installedManager) {
   if (!identity.ProcessId) return false;
   const commandLine = normaliseCommandLine(identity.CommandLine);
@@ -596,16 +619,23 @@ async function ensureControlUi(manifest, installedManager) {
     if (processOnPort(manifest.controlUi.port).ProcessId) throw new Error("The validated Deployment v2 UI manager did not release its loopback port.");
   }
 
-  const child = spawn(process.execPath, [installedManager, "serve"], {
-    cwd: manifest.installRoot,
-    detached: true,
-    windowsHide: true,
-    stdio: "ignore",
-  });
-  child.unref();
+  const managerLogPath = path.join(manifest.installRoot, "logs", "controlstack-manager-ui.log");
+  const managerLogHandle = openSync(managerLogPath, "a");
+  let child;
+  try {
+    child = spawn(process.execPath, [installedManager, "serve"], {
+      cwd: manifest.installRoot,
+      detached: true,
+      windowsHide: true,
+      stdio: ["ignore", managerLogHandle, managerLogHandle],
+    });
+  } finally {
+    closeSync(managerLogHandle);
+  }
 
   const url = "http://" + manifest.controlUi.host + ":" + manifest.controlUi.port + "/api/status";
-  const response = await waitForHttp(url);
+  const response = await waitForManagerReady(child, url, managerLogPath);
+  child.unref();
   const activeIdentity = processOnPort(manifest.controlUi.port);
   if (!managerListenerMatches(activeIdentity, installedManager)) {
     throw new Error("The Deployment v2 control UI listener identity did not validate after activation.");

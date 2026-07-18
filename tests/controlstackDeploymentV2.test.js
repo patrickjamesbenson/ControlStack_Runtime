@@ -115,6 +115,11 @@ test("manager is the sole process-control authority and exposes only bounded loo
   assert.match(manager, /Refusing to stop an external listener/);
   assert.match(manager, /stopAuthority/);
   assert.match(manager, /new Map\(manifest\.services\.map/);
+  const serveStart = manager.indexOf("async function serve()");
+  const listenBoundary = manager.indexOf("server.listen", serveStart);
+  const startupBoundary = manager.indexOf("const startup = mutationQueue.then", serveStart);
+  assert.ok(serveStart >= 0 && listenBoundary > serveStart && startupBoundary > listenBoundary, "control UI must bind before managed-service startup");
+  assert.match(manager, /managed-service startup failed/);
   assert.match(startup, /controlstack_lane_manager\.mjs"" serve/);
   assert.doesNotMatch(manager, /exec\s*\(/);
   assert.doesNotMatch(manager, /shell:\s*true/);
@@ -157,6 +162,9 @@ test("installer performs one idempotent consolidation operation and restarts onl
   assert.match(installer, /http:\/\/127\.0\.0\.1:8788\/workspace/);
   assert.match(installer, /sourceBackedLogoUrlProduced/);
   assert.match(installer, /controlUiManagerReloaded/);
+  assert.match(installer, /waitForManagerReady/);
+  assert.match(installer, /controlstack-manager-ui\.log/);
+  assert.match(installer, /stdio: \["ignore", managerLogHandle, managerLogHandle\]/);
   assert.match(installer, /taskkill\.exe", \["\/PID", String\(identity\.ProcessId\), "\/F"\]/);
   assert.match(installer, /port8787ManagedOrRequired: false/);
   assert.doesNotMatch(installer, /LOGODEV_PUBLISHABLE_KEY=.*(?:pk|sk)-/);

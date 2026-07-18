@@ -349,13 +349,20 @@ function createControlServer() {
 
 async function serve() {
   if (!existsSync(uiPath)) throw new Error("The Deployment v2 control UI is missing.");
-  await startAll();
   const server = createControlServer();
   await new Promise((resolve, reject) => {
     server.once("error", reject);
     server.listen(manifest.controlUi.port, manifest.controlUi.host, resolve);
   });
   console.log("ControlStack Deployment v2 control UI: http://" + manifest.controlUi.host + ":" + manifest.controlUi.port + manifest.controlUi.path);
+
+  const startup = mutationQueue.then(async () => {
+    await startAll();
+    console.log("ControlStack Deployment v2 managed-service startup: PASS");
+  });
+  mutationQueue = startup.catch((error) => {
+    console.error("ControlStack Deployment v2 managed-service startup failed: " + (error?.message || "unknown error"));
+  });
 }
 
 function selfTest() {
