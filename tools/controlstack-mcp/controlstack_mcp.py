@@ -1920,9 +1920,14 @@ def repo_git_recent(root: str = "runtime", limit: int = 20) -> dict[str, Any]:
     return {"ok": bool(out.get("ok")), "root": "runtime", "root_path": str(RUNTIME_ROOT), "count": len(commits), "commits": commits, "raw": out if not out.get("ok") else None}
 
 
-@mcp.tool()
-def repo_git_commit(message: str, root: str = "runtime") -> dict[str, Any]:
-    """Commit already-staged runtime changes after a green lane gate. Does not stage files."""
+def _repo_git_commit_impl(message: str, root: str = "runtime", allow_unrelated_dirty: bool = False) -> dict[str, Any]:
+    """Shared commit implementation.
+
+    allow_unrelated_dirty is deliberately NOT exposed as an MCP tool parameter. It is set only by
+    repo_green_commit_push, which has already proven that the staged set matches expected_staged_paths
+    exactly. Direct repo_git_commit calls keep the strict whole-worktree guard. Every other protection
+    (green gate, lane branch, runtime root, commit-enabled flag) is unchanged in both paths.
+    """
     _require_runtime(root)
     _require_lane_branch()
     message_clean = str(message or "").strip()
@@ -1931,10 +1936,11 @@ def repo_git_commit(message: str, root: str = "runtime") -> dict[str, Any]:
     status = _git_status_details()
     visible_modified = _visible_dirty_paths(status.get("modified") or [])
     visible_untracked = _visible_dirty_paths(status.get("untracked") or [])
-    if visible_modified:
-        return {"ok": False, "error": "unstaged_modified_files", "commit_hash": "", "stdout": "", "stderr": "Refusing commit because modified files are not staged.", "unstaged_modified_files": visible_modified, "final_git_status": status}
-    if visible_untracked:
-        return {"ok": False, "error": "untracked_files_not_staged", "commit_hash": "", "stdout": "", "stderr": "Refusing commit because untracked files are present and not explicitly staged.", "untracked_files": visible_untracked, "final_git_status": status}
+    if not allow_unrelated_dirty:
+        if visible_modified:
+            return {"ok": False, "error": "unstaged_modified_files", "commit_hash": "", "stdout": "", "stderr": "Refusing commit because modified files are not staged.", "unstaged_modified_files": visible_modified, "final_git_status": status}
+        if visible_untracked:
+            return {"ok": False, "error": "untracked_files_not_staged", "commit_hash": "", "stdout": "", "stderr": "Refusing commit because untracked files are present and not explicitly staged.", "untracked_files": visible_untracked, "final_git_status": status}
     if not status.get("staged"):
         return {"ok": False, "error": "no_staged_changes", "commit_hash": "", "stdout": "", "stderr": "Refusing commit because no files are staged.", "final_git_status": status}
     if not _gate_green():
@@ -1947,6 +1953,12 @@ def repo_git_commit(message: str, root: str = "runtime") -> dict[str, Any]:
         if rev.get("ok"):
             commit_hash = str(rev.get("stdout") or "").strip()
     return {"ok": bool(commit.get("ok")), "commit_hash": commit_hash, "stdout": commit.get("stdout", ""), "stderr": commit.get("stderr", ""), "final_git_status": _git_status_details()}
+
+
+@mcp.tool()
+def repo_git_commit(message: str, root: str = "runtime") -> dict[str, Any]:
+    """Commit already-staged runtime changes after a green lane gate. Does not stage files."""
+    return _repo_git_commit_impl(message=message, root=root, allow_unrelated_dirty=False)
 
 
 @mcp.tool()
@@ -1976,11 +1988,11 @@ def repo_green_commit_push(message: str, expected_staged_paths: list[str], gate:
     staged = sorted(status.get("staged") or [])
     if staged != expected:
         return {"ok": False, "stage": "staged_path_guard", "error": "staged_paths_do_not_match_expected", "expected_staged_paths": expected, "actual_staged_paths": staged, "commit": None, "push": None, "final_git_status": status}
-    visible_modified = _visible_dirty_paths(status.get("modified") or [])
-    visible_untracked = _visible_dirty_paths(status.get("untracked") or [])
-    if visible_modified or visible_untracked:
-        return {"ok": False, "stage": "worktree_guard", "error": "unstaged_or_untracked_files_present", "modified": visible_modified, "untracked": visible_untracked, "commit": None, "push": None, "final_git_status": status}
-    commit = repo_git_commit(message=message, root="runtime")
+    # Whole-worktree guard intentionally removed at this point. The staged set has already been proven
+    # to equal expected_staged_paths exactly (staged_path_guard above), so unrelated modified/untracked
+    # paths are preserved rather than blocking. Lanes such as lab-ies are deliberately dirty and must
+    # still be able to checkpoint an exact parcel. Direct repo_git_commit calls remain strictly guarded.
+    commit = _repo_git_commit_impl(message=message, root="runtime", allow_unrelated_dirty=True)
     if not commit.get("ok"):
         return {"ok": False, "stage": "commit", "gate_result": gate_result, "commit": commit, "push": None, "final_git_status": _git_status_details()}
     push = repo_git_push(root="runtime")
