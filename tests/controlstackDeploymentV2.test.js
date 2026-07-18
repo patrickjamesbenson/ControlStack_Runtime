@@ -21,6 +21,7 @@ const repoRoot = path.join(root, "..");
 const deploymentRoot = path.join(repoRoot, "scripts", "deployment-v2");
 const manifestPath = path.join(deploymentRoot, "controlstack-services.v2.json");
 const installerPath = path.join(repoRoot, "scripts", "CONTROLSTACK_DEPLOYMENT_V2_INSTALL.mjs");
+const launcherPath = path.join(repoRoot, "scripts", "CONTROLSTACK_DEPLOYMENT_V2_CONSOLIDATE.bat");
 const managerPath = path.join(deploymentRoot, "controlstack_lane_manager.mjs");
 const hostPath = path.join(deploymentRoot, "controlstack_service_host.mjs");
 const secretPath = path.join(deploymentRoot, "controlstack_secret_store.mjs");
@@ -149,6 +150,15 @@ test("installer, manager and service host self-tests pass without starting Windo
   assert.match(host.stdout, /8 services/);
 });
 
+test("Windows consolidation launcher preserves the complete console result", () => {
+  const launcher = readFileSync(launcherPath, "utf8");
+  assert.match(launcher, /CONTROLSTACK_DEPLOYMENT_V2_INSTALL\.mjs" --consolidate/);
+  assert.match(launcher, /set "EXIT_CODE=%ERRORLEVEL%"/);
+  assert.match(launcher, /pause/i);
+  assert.match(launcher, /exit \/b %EXIT_CODE%/i);
+  assert.doesNotMatch(launcher, /LOGODEV|OPENAI_API_KEY|CONTROL_PLANE_API_KEY/i);
+});
+
 test("installer performs one idempotent consolidation operation and restarts only selector-runtime when required", () => {
   const installer = readFileSync(installerPath, "utf8");
   assert.match(installer, /--consolidate/);
@@ -165,6 +175,12 @@ test("installer performs one idempotent consolidation operation and restarts onl
   assert.match(installer, /waitForManagerReady/);
   assert.match(installer, /controlstack-manager-ui\.log/);
   assert.match(installer, /stdio: \["ignore", managerLogHandle, managerLogHandle\]/);
+  assert.match(installer, /Validating Windows host and user/);
+  assert.match(installer, /Checking that all eight managed service ports are listening/);
+  assert.match(installer, /Missing listener ports:/);
+  assert.match(installer, /timeout: 30000/);
+  assert.match(installer, /CONTROLSTACK PROGRAM SHELL V2: FAILED/);
+  assert.match(installer, /Stage: /);
   assert.match(installer, /taskkill\.exe", \["\/PID", String\(identity\.ProcessId\), "\/F"\]/);
   assert.match(installer, /port8787ManagedOrRequired: false/);
   assert.doesNotMatch(installer, /LOGODEV_PUBLISHABLE_KEY=.*(?:pk|sk)-/);

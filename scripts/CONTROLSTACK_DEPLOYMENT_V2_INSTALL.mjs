@@ -40,6 +40,14 @@ const sourceFiles = [
   "controlstack_manager_ui.html",
 ];
 
+let progressIndex = 0;
+let currentProgressMessage = "not started";
+function progress(message) {
+  progressIndex += 1;
+  currentProgressMessage = message;
+  console.log("[" + String(progressIndex).padStart(2, "0") + "] " + message);
+}
+
 function sha256(file) {
   return createHash("sha256").update(readFileSync(file)).digest("hex");
 }
@@ -57,7 +65,9 @@ function powershell(script, input = undefined) {
     encoding: "utf8",
     windowsHide: true,
     maxBuffer: 8 * 1024 * 1024,
+    timeout: 30000,
   });
+  if (result.error?.code === "ETIMEDOUT") throw new Error("A bounded Windows operation timed out after 30 seconds.");
   if (result.status !== 0) throw new Error("A bounded Windows operation failed.");
   return result.stdout.trim();
 }
@@ -134,7 +144,11 @@ export function loadAndValidateManifest(file = sourceManifest) {
 }
 
 function git(root, args) {
-  return execFileSync("git.exe", ["-C", root, ...args], { encoding: "utf8", windowsHide: true }).trim();
+  return execFileSync("git.exe", ["-C", root, ...args], {
+    encoding: "utf8",
+    windowsHide: true,
+    timeout: 30000,
+  }).trim();
 }
 
 function worktreeState(manifest) {
@@ -801,14 +815,21 @@ function writeReceipts(manifest, runStamp, runRoot, result) {
 }
 
 async function consolidate(manifest) {
+  progressIndex = 0;
+  progress("Validating Windows host and user");
   ensureHostIdentity(manifest);
+  progress("Running Deployment v2 source self-test");
   selfTest(manifest);
+  progress("Verifying all four ControlStack worktree identities");
   assertWorktrees(manifest);
+  progress("Checking the eight configured service executables and working directories");
   for (const service of manifest.services) {
     if (!existsSync(service.executable) || !existsSync(service.cwd)) throw new Error("Missing executable or working directory for " + service.name);
   }
+  progress("Validating the existing protected tunnel credential");
   if (!existingProtectedTunnelCredential(manifest.credentialFile)) throw new Error("The existing Deployment v2 tunnel credential is missing or invalid.");
 
+  progress("Preflighting canonical startup and manager ownership");
   const preflightManagerRoot = path.dirname(manifest.installRoot);
   const preflightInstalledManager = path.join(manifest.installRoot, "controlstack_lane_manager.mjs");
   const canonicalStartup = startupEntryPath();
@@ -817,11 +838,18 @@ async function consolidate(manifest) {
   const preInstallLegacyInventory = startupInventory(preflightManagerRoot, canonicalStartup, preflightInstalledManager);
   const preInstallManagerFileInventory = managerFileInventory(preflightManagerRoot);
 
+  progress("Capturing pre-deployment worktree state");
   const beforeWorktrees = worktreeState(manifest);
   const servicePorts = manifest.services.map((service) => service.port);
+  progress("Checking that all eight managed service ports are listening");
   const beforeListeners = listeners(servicePorts);
-  if (beforeListeners.length !== manifest.services.length) throw new Error("All eight managed services must be live before consolidation.");
+  if (beforeListeners.length !== manifest.services.length) {
+    const listeningPorts = beforeListeners.map((item) => Number(item.Port)).sort((a, b) => a - b);
+    const missingPorts = servicePorts.filter((port) => !listeningPorts.includes(port));
+    throw new Error("All eight managed services must be live before consolidation. Missing listener ports: " + missingPorts.join(", "));
+  }
 
+  progress("Creating the timestamped archive and receipt workspace");
   mkdirSync(manifest.receiptRoot, { recursive: true });
   const runStamp = stamp();
   const runRoot = path.join(manifest.receiptRoot, "CONTROLSTACK_PROGRAM_SHELL_V2_ARCHIVE_" + runStamp);
@@ -829,21 +857,30 @@ async function consolidate(manifest) {
   const backups = [];
   backupFile(manifest.protectedEnvironment[0].protectedFile, runRoot, "previous-protected-secrets", backups);
 
+  progress("Importing and protecting the allowlisted Logo.dev value");
   const logo = storeLogoDevSecret(manifest);
+  progress("Installing Deployment v2 manager, host, UI and startup files");
   const installed = installSources(manifest, runRoot, backups);
+  progress("Activating the loopback control UI on port " + manifest.controlUi.port);
   const controlUiActivation = await ensureControlUi(manifest, installed.installedManager);
 
   let selectorRestarted = false;
   let afterActivation = beforeListeners;
+  progress("Checking whether Selector requires Logo.dev activation");
   const selectorActivationRequired = logo.changed || !(await runtimeReportsLogoConfigured());
   if (selectorActivationRequired) {
+    progress("Restarting selector-runtime only");
     runManager(installed.installedManager, "restart", "selector-runtime");
     selectorRestarted = true;
     afterActivation = listeners(servicePorts);
     assertOnlySelectorRestarted(manifest, beforeListeners, afterActivation);
+  } else {
+    progress("Selector already reports Logo.dev configured; restart not required");
   }
 
+  progress("Running live service, workspace and secret-redaction validation");
   const live = await validateLive(manifest, installed.installedManager, logo.plaintext);
+  progress("Archiving only proven legacy ControlStack control surfaces");
   const legacy = consolidateLegacy(
     installed.managerRoot,
     installed.startupEntry,
@@ -852,9 +889,11 @@ async function consolidate(manifest) {
     preInstallLegacyInventory,
     preInstallManagerFileInventory,
   );
+  progress("Confirming protected feature worktrees are unchanged");
   const afterWorktrees = worktreeState(manifest);
   assertFeatureWorktreesUnchanged(beforeWorktrees, afterWorktrees);
 
+  progress("Writing consolidation and restoration receipts");
   const receipts = writeReceipts(manifest, runStamp, runRoot, {
     logo,
     live,
@@ -944,11 +983,19 @@ async function repairTunnels(manifest) {
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  const manifest = loadAndValidateManifest();
-  const action = process.argv[2] || "--self-test";
-  if (action === "--self-test") selfTest(manifest);
-  else if (action === "--install") await install(manifest);
-  else if (action === "--consolidate") await consolidate(manifest);
-  else if (action === "--repair-tunnels") await repairTunnels(manifest);
-  else throw new Error("Use --self-test, --install, --consolidate or --repair-tunnels.");
+  try {
+    const manifest = loadAndValidateManifest();
+    const action = process.argv[2] || "--self-test";
+    if (action === "--self-test") selfTest(manifest);
+    else if (action === "--install") await install(manifest);
+    else if (action === "--consolidate") await consolidate(manifest);
+    else if (action === "--repair-tunnels") await repairTunnels(manifest);
+    else throw new Error("Use --self-test, --install, --consolidate or --repair-tunnels.");
+  } catch (error) {
+    console.error("");
+    console.error("CONTROLSTACK PROGRAM SHELL V2: FAILED");
+    console.error("Stage: " + currentProgressMessage);
+    console.error("Reason: " + (error?.message || "unknown error"));
+    process.exitCode = 1;
+  }
 }
