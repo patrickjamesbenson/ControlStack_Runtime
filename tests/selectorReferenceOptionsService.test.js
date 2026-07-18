@@ -261,6 +261,56 @@ test("live-shaped global BOARDS and DRIVERS rows expose genuine native control a
   assert.ok(field(result, "driver").options.some((item) => item.value === "driver-fixed-live-shape"));
 });
 
+test("duplicate-normalised active DRIVERS authority overrides its boolean marker", () => {
+  const snapshot = {
+    SYSTEM: [{ system: "80", system_variant_1: "Square", label: "DNX 80", emission: "Direct", approved: "TRUE", status: "available" }],
+    BOARDS: [{
+      approved: "TRUE",
+      status: "available",
+      system: "*",
+      control_type_options: "dali2 dt6, fixed",
+      control_type_labels: "Dali2 DT6 (1 channel), Fixed (On/Off)",
+    }],
+    DRIVERS: [
+      {
+        approved: "TRUE",
+        status: "available",
+        system: "*",
+        model: "driver-dt6-duplicate-header-shape",
+        native_control_type: false,
+        native_control_type__2: "Dali2 (DT6)",
+      },
+      {
+        approved: "TRUE",
+        status: "available",
+        system: "*",
+        model: "driver-fixed-duplicate-header-shape",
+        native_control_type: true,
+        native_control_type__2: "Fixed (On/Off)",
+      },
+    ],
+  };
+  const result = deriveSelectorReferenceOptionsFromSnapshot(snapshot, {
+    source: sourceReady(),
+    constraints: { system: "80|Square" },
+  });
+
+  const control = field(result, "controlType");
+  assert.equal(control.status, "available");
+  assert.equal(control.selectedValue, "");
+  assert.deepEqual(control.options.filter((item) => item.status === "available").map((item) => item.value), ["DALI-2 DT6", "fixed"]);
+  assert.ok(control.options.every((item) => item.value !== "true" && item.value !== "false"));
+  assert.ok(control.options.every((item) => item.sourceTables.includes("BOARDS") && item.sourceTables.includes("DRIVERS")));
+  const driverControls = field(result, "driver").options.flatMap((item) => item.compatibleControlTypes || []);
+  assert.ok(driverControls.includes("DALI-2 DT6"));
+  assert.ok(driverControls.includes("Fixed (On/Off)"));
+  assert.equal(driverControls.includes("true"), false);
+  assert.equal(driverControls.includes("false"), false);
+
+  assert.equal(JSON.stringify(result).includes("must not leak"), false);
+  assert.equal(result.rawRowsExposed, false);
+});
+
 test("driver aliases do not create protocol authority without native or legacy control authority", () => {
   const result = deriveSelectorReferenceOptionsFromSnapshot({
     SYSTEM: [{ system: "60", system_variant_1: "Linear", label: "DNX 60", emission: "Direct", approved: "TRUE" }],

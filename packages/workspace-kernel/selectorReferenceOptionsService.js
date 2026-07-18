@@ -2188,6 +2188,8 @@ function indexedProtocolLabel(labels = [], index = 0, authorityValue = "") {
 }
 
 function driverAuthorityControlValues(row = {}) {
+  const duplicateNormalisedNativeValues = rowOptionValues(row, ["native_control_type__2"]);
+  if (duplicateNormalisedNativeValues.length) return duplicateNormalisedNativeValues;
   const nativeValues = rowOptionValues(row, DRIVER_NATIVE_CONTROL_AUTHORITY_COLUMNS);
   if (nativeValues.length) return nativeValues;
   return rowOptionValues(row, DRIVER_LEGACY_CONTROL_AUTHORITY_COLUMNS);
