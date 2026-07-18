@@ -181,3 +181,6 @@ Every completed worker updates this index with:
 - Classification: **O — Source-shape observability boundary.**
 - Documentation paths: `LANE_STATE.md`, `WORK_QUEUE.md`, `EVIDENCE_INDEX.md`, and `SESSION_HANDOFF.md` only. No feature code changed.
 - Exact next action: the runtime/materialiser owner must correct or safely expose the bounded cause of `google-reader-failed` and make the existing guarded dry-run return the required redacted DRIVERS/BOARDS authority-shape receipt; rerun this worker from Phase 1 and do not promote by counts or widen into projection repair.
+- Documentation evidence commit: `ef29bc846ed9832b84b64d95936b79b4eab8bcd8` — `docs(selector): record authority refresh observability boundary`; gated at 103/103; push `ae41a4a..ef29bc8` to `origin/lane/selector-engine` succeeded — VERIFIED.
+- Evidence-commit ending tree: clean, with 0 staged, modified, untracked, or deleted paths — VERIFIED.
+- The commit containing this hash-index closeout is the final ending HEAD for the worker; its exact hash is reported in the completion response.
