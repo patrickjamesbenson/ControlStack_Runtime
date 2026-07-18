@@ -282,6 +282,187 @@ function cellHasValue(value) {
   return true;
 }
 
+function rowHasOwnField(row, field) {
+  return isPlainObject(row) && Object.prototype.hasOwnProperty.call(row, field);
+}
+
+function splitSummaryValues(value) {
+  if (Array.isArray(value)) return value.flatMap(splitSummaryValues);
+  if (!cellHasValue(value)) return [];
+  if (typeof value !== "string") return [value];
+  return value
+    .split(/[;,|\r\n]+/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function isBooleanLikeAuthorityValue(value) {
+  if (typeof value === "boolean") return true;
+  const key = String(value ?? "").trim().toLowerCase();
+  return ["true", "false", "yes", "no", "1", "0"].includes(key);
+}
+
+function protocolFamilyForSummary(value) {
+  if (isBooleanLikeAuthorityValue(value)) return "";
+  const raw = String(value ?? "").trim();
+  const key = raw.toLowerCase().replace(/[_/]+/g, " ").replace(/\s+/g, " ").trim();
+  if (!key) return "";
+  if (key.includes("dali+") || (key.includes("dali") && key.includes("wireless"))) return "DALI+";
+  if (key.includes("d4i")) return "D4i";
+  if (key.includes("dali") && key.includes("dt8")) return "DALI-2 DT8";
+  if (key.includes("dali") && key.includes("dt6")) return "DALI-2 DT6";
+  if (key.includes("dmx")) return "DMX";
+  if (key.includes("pwm")) return "PWM";
+  if (key.includes("fixed") || key.includes("on off") || key.includes("on-off") || key.includes("switched") || key.includes("non dim")) return "Fixed/On-Off";
+  if (/^dali(?:\s*-?\s*2)?$/.test(key) || key === "dali2") return "DALI-2";
+  return "";
+}
+
+function uniqueInSourceOrder(values = []) {
+  const seen = new Set();
+  const result = [];
+  for (const value of values) {
+    const key = String(value || "").trim().toLowerCase();
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    result.push(value);
+  }
+  return result;
+}
+
+function summariseAuthorityField(rows, field) {
+  const populatedRows = rows.filter((row) => rowHasOwnField(row, field) && cellHasValue(row[field]));
+  let booleanLikeValueCount = 0;
+  let protocolAuthorityValueCount = 0;
+  let protocolAuthorityRowCount = 0;
+  let unclassifiedPopulatedRowCount = 0;
+  const protocolFamilies = [];
+
+  for (const row of populatedRows) {
+    const values = splitSummaryValues(row[field]);
+    const rowFamilies = [];
+    let rowHasUnclassifiedValue = false;
+    for (const value of values) {
+      if (isBooleanLikeAuthorityValue(value)) {
+        booleanLikeValueCount += 1;
+        continue;
+      }
+      const family = protocolFamilyForSummary(value);
+      if (family) {
+        protocolAuthorityValueCount += 1;
+        rowFamilies.push(family);
+        protocolFamilies.push(family);
+      } else {
+        rowHasUnclassifiedValue = true;
+      }
+    }
+    if (rowFamilies.length > 0) protocolAuthorityRowCount += 1;
+    if (rowHasUnclassifiedValue) unclassifiedPopulatedRowCount += 1;
+  }
+
+  return {
+    existsInMaterialisedRows: rows.some((row) => rowHasOwnField(row, field)),
+    populatedRowCount: populatedRows.length,
+    booleanLikeValueCount,
+    protocolAuthorityRowCount,
+    protocolAuthorityValueCount,
+    unclassifiedPopulatedRowCount,
+    protocolFamilies: uniqueInSourceOrder(protocolFamilies),
+  };
+}
+
+function duplicateRemovalWouldChange(values = []) {
+  const normalised = values.map((value) => String(value ?? "").trim().toLowerCase()).filter(Boolean);
+  return new Set(normalised).size !== normalised.length;
+}
+
+function duplicateAuthorityAssessment(summary) {
+  if (!summary.existsInMaterialisedRows) return "absent";
+  if (summary.populatedRowCount === 0) return "present-unpopulated";
+  if (
+    summary.protocolAuthorityRowCount === summary.populatedRowCount
+    && summary.booleanLikeValueCount === 0
+    && summary.unclassifiedPopulatedRowCount === 0
+  ) return "appears-protocol-authoritative";
+  return "non-authoritative-or-mixed";
+}
+
+export function buildCurrentAuthoritySourceShapeSummary(snapshot) {
+  const drivers = tableRows(snapshot, "DRIVERS");
+  const boards = tableRows(snapshot, "BOARDS");
+  const unsuffixedDriverAuthority = summariseAuthorityField(drivers, "native_control_type");
+  const duplicateDriverAuthority = summariseAuthorityField(drivers, "native_control_type__2");
+  const boardOptionRows = boards.map((row) => splitSummaryValues(row?.control_type_options));
+  const boardLabelRows = boards.map((row) => splitSummaryValues(row?.control_type_labels));
+  let pairLengthMatchRowCount = 0;
+  let pairLengthMismatchRowCount = 0;
+  let optionDuplicatesWouldChangeRowCount = 0;
+  let labelDuplicatesWouldChangeRowCount = 0;
+  const boardProtocolFamilies = [];
+
+  boards.forEach((row, index) => {
+    const options = boardOptionRows[index];
+    const labels = boardLabelRows[index];
+    if (options.length > 0 || labels.length > 0) {
+      if (options.length === labels.length) pairLengthMatchRowCount += 1;
+      else pairLengthMismatchRowCount += 1;
+    }
+    if (duplicateRemovalWouldChange(options)) optionDuplicatesWouldChangeRowCount += 1;
+    if (duplicateRemovalWouldChange(labels)) labelDuplicatesWouldChangeRowCount += 1;
+    for (const value of options) {
+      const family = protocolFamilyForSummary(value);
+      if (family) boardProtocolFamilies.push(family);
+    }
+  });
+
+  const boardsAuthority = uniqueInSourceOrder(boardProtocolFamilies);
+  const driversUnsuffixedAuthority = unsuffixedDriverAuthority.protocolFamilies;
+  const driverSet = new Set(driversUnsuffixedAuthority);
+  const intersection = boardsAuthority.filter((family) => driverSet.has(family));
+
+  return {
+    drivers: {
+      tablePresent: Array.isArray(snapshot?.DRIVERS),
+      rowCount: drivers.length,
+      nativeControlType: unsuffixedDriverAuthority,
+      nativeControlTypeDuplicate: {
+        ...duplicateDriverAuthority,
+        authorityAssessment: duplicateAuthorityAssessment(duplicateDriverAuthority),
+      },
+    },
+    boards: {
+      tablePresent: Array.isArray(snapshot?.BOARDS),
+      rowCount: boards.length,
+      controlTypeOptionsPopulatedRowCount: boardOptionRows.filter((values) => values.length > 0).length,
+      controlTypeLabelsPopulatedRowCount: boardLabelRows.filter((values) => values.length > 0).length,
+      pairLengthMatchRowCount,
+      pairLengthMismatchRowCount,
+      optionDuplicatesWouldChangeRowCount,
+      labelDuplicatesWouldChangeRowCount,
+      independentDuplicateRemovalWouldChange: optionDuplicatesWouldChangeRowCount > 0 || labelDuplicatesWouldChangeRowCount > 0,
+      sourceOrderRetained: true,
+      independentDuplicateRemovalApplied: false,
+      protocolFamilies: boardsAuthority,
+    },
+    protocolAgreement: {
+      boardsAuthority,
+      driversUnsuffixedAuthority,
+      intersection,
+      genericDali: {
+        boards: boardsAuthority.includes("DALI-2"),
+        driversUnsuffixed: driversUnsuffixedAuthority.includes("DALI-2"),
+        intersection: intersection.includes("DALI-2"),
+      },
+    },
+    rawRowsExposed: false,
+    rawHeadersExposed: false,
+    usersRowsExposed: false,
+    credentialValuesExposed: false,
+    sheetIdExposed: false,
+    fullMaterialisedJsonExposed: false,
+  };
+}
+
 export function normaliseGoogleSheetHeaders(headerRow = [], columnCount = headerRow.length) {
   const headers = [];
   const used = new Set();
@@ -377,6 +558,44 @@ export async function buildAuthorityReferenceGoogleReaderPreflight({
   };
 }
 
+const GOOGLE_READER_SAFE_FAILURE_CODES = new Set([
+  "google-reader-preflight-blocked",
+  "googleapis-unavailable",
+  "google-auth-client-failed",
+  "google-spreadsheet-metadata-request-failed",
+  "google-spreadsheet-access-denied",
+  "google-spreadsheet-not-found",
+  "google-expected-tabs-missing",
+  "google-values-request-failed",
+  "google-values-response-invalid",
+  "google-reader-unknown-failure",
+]);
+
+function googleReaderStageError(code) {
+  const error = new Error("google_reader_stage_failed");
+  error.code = code;
+  return error;
+}
+
+function spreadsheetMetadataFailureCode(error) {
+  const status = Number(error?.response?.status ?? error?.status ?? error?.code);
+  if (status === 401 || status === 403) return "google-spreadsheet-access-denied";
+  if (status === 404) return "google-spreadsheet-not-found";
+  return "google-spreadsheet-metadata-request-failed";
+}
+
+function safeGoogleReaderFailureCode(error) {
+  const code = String(error?.code || "").trim();
+  return GOOGLE_READER_SAFE_FAILURE_CODES.has(code) ? code : "google-reader-unknown-failure";
+}
+
+function googleValueRangesResponseIsValid(response, expectedCount) {
+  const valueRanges = response?.data?.valueRanges;
+  if (!Array.isArray(valueRanges) || valueRanges.length !== expectedCount) return false;
+  return valueRanges.every((range) => isPlainObject(range)
+    && (range.values === undefined || (Array.isArray(range.values) && range.values.every((row) => Array.isArray(row)))));
+}
+
 export function createGoogleSheetsAuthorityReferenceReader({
   env = process.env,
   fsApi = DEFAULT_FS_API,
@@ -391,47 +610,77 @@ export function createGoogleSheetsAuthorityReferenceReader({
     async read() {
       const preflight = await buildAuthorityReferenceGoogleReaderPreflight({ env, fsApi });
       if (!preflight.allowed) {
-        const error = new Error("google_reader_preflight_blocked");
-        error.code = "google-reader-preflight-blocked";
-        throw error;
+        throw googleReaderStageError("google-reader-preflight-blocked");
       }
 
       const sheetId = readTextEnv(env, GOOGLE_SHEET_ID_ENV);
-      const apiModule = googleApiModule || await import("googleapis");
+      let apiModule = googleApiModule;
+      if (!apiModule) {
+        try {
+          apiModule = await import("googleapis");
+        } catch {
+          throw googleReaderStageError("googleapis-unavailable");
+        }
+      }
       const google = apiModule.google || apiModule.default?.google;
       if (!google?.auth?.GoogleAuth || typeof google?.sheets !== "function") {
-        const error = new Error("googleapis_unavailable");
-        error.code = "googleapis-unavailable";
-        throw error;
+        throw googleReaderStageError("googleapis-unavailable");
       }
 
-      const auth = new google.auth.GoogleAuth({
-        keyFile: readTextEnv(env, GOOGLE_CREDENTIALS_ENV),
-        scopes: [GOOGLE_SHEETS_READONLY_SCOPE],
-      });
-      const authClient = await auth.getClient();
+      let authClient;
+      try {
+        const auth = new google.auth.GoogleAuth({
+          keyFile: readTextEnv(env, GOOGLE_CREDENTIALS_ENV),
+          scopes: [GOOGLE_SHEETS_READONLY_SCOPE],
+        });
+        authClient = await auth.getClient();
+      } catch {
+        throw googleReaderStageError("google-auth-client-failed");
+      }
       const sheets = google.sheets({ version: "v4", auth: authClient });
+      if (typeof sheets?.spreadsheets?.get !== "function" || typeof sheets?.spreadsheets?.values?.batchGet !== "function") {
+        throw googleReaderStageError("googleapis-unavailable");
+      }
 
-      const metadataResponse = await sheets.spreadsheets.get({
-        spreadsheetId: sheetId,
-        fields: "sheets.properties.title",
-      });
+      let metadataResponse;
+      try {
+        metadataResponse = await sheets.spreadsheets.get({
+          spreadsheetId: sheetId,
+          fields: "sheets.properties.title",
+        });
+      } catch (error) {
+        throw googleReaderStageError(spreadsheetMetadataFailureCode(error));
+      }
+      if (!Array.isArray(metadataResponse?.data?.sheets)) {
+        throw googleReaderStageError("google-spreadsheet-metadata-request-failed");
+      }
       const sheetTitles = sheetTitlesFromMetadata(metadataResponse);
       const expectedByCanonical = expectedTableLookup();
       const presentExpectedTitles = sheetTitles.filter((title) => expectedByCanonical.has(canonicalTableName(title)));
-      if (presentExpectedTitles.length === 0) return {};
+      const presentCanonical = new Set(presentExpectedTitles.map(canonicalTableName));
+      if (AUTHORITY_REFERENCE_GOOGLE_EXPECTED_TABLES.some((table) => !presentCanonical.has(canonicalTableName(table)))) {
+        throw googleReaderStageError("google-expected-tabs-missing");
+      }
 
-      const valuesResponse = await sheets.spreadsheets.values.batchGet({
-        spreadsheetId: sheetId,
-        ranges: presentExpectedTitles.map(quoteGoogleSheetTitle),
-        majorDimension: "ROWS",
-        valueRenderOption: "UNFORMATTED_VALUE",
-        dateTimeRenderOption: "FORMATTED_STRING",
-      });
+      let valuesResponse;
+      try {
+        valuesResponse = await sheets.spreadsheets.values.batchGet({
+          spreadsheetId: sheetId,
+          ranges: presentExpectedTitles.map(quoteGoogleSheetTitle),
+          majorDimension: "ROWS",
+          valueRenderOption: "UNFORMATTED_VALUE",
+          dateTimeRenderOption: "FORMATTED_STRING",
+        });
+      } catch {
+        throw googleReaderStageError("google-values-request-failed");
+      }
+      if (!googleValueRangesResponseIsValid(valuesResponse, presentExpectedTitles.length)) {
+        throw googleReaderStageError("google-values-response-invalid");
+      }
 
       return materialiseGoogleSheetValueRanges({
         sheetTitles: presentExpectedTitles,
-        valueRanges: valuesResponse?.data?.valueRanges || [],
+        valueRanges: valuesResponse.data.valueRanges,
       });
     },
   };
@@ -634,11 +883,11 @@ async function readFromInjectedReader(reader) {
   }
 }
 
-async function readFromGoogleReader({ env, fsApi, reader = null } = {}) {
+async function readFromGoogleReader({ env, fsApi, reader = null, googleApiModule = null } = {}) {
   const injected = await readFromInjectedReader(reader);
   if (injected) return injected;
 
-  const googleReader = createGoogleSheetsAuthorityReferenceReader({ env, fsApi });
+  const googleReader = createGoogleSheetsAuthorityReferenceReader({ env, fsApi, googleApiModule });
   const preflight = await googleReader.preflight();
   if (!preflight.allowed) {
     return {
@@ -660,11 +909,12 @@ async function readFromGoogleReader({ env, fsApi, reader = null } = {}) {
       googleNetworkCallAttempted: true,
       preflight,
     };
-  } catch {
+  } catch (error) {
+    const code = safeGoogleReaderFailureCode(error);
     return {
       ok: false,
-      code: "google-reader-failed",
-      reason: "Google Sheets reader failed without exposing raw provider responses, credentials, or sheet rows.",
+      code,
+      reason: "Google Sheets reader failed at a bounded provider stage without exposing raw provider responses, credentials, or sheet rows.",
       provider: "google-sheets",
       googleNetworkCallAttempted: true,
       preflight,
@@ -691,6 +941,7 @@ export async function refreshAuthorityReferenceMaterialiser({
   dryRun = true,
   body = {},
   reader = null,
+  googleApiModule = null,
   targetPath = AUTHORITY_REFERENCE_MATERIALISED_TARGET_PATH,
   allowMaterialisedWrite = false,
 } = {}) {
@@ -710,13 +961,15 @@ export async function refreshAuthorityReferenceMaterialiser({
 
   if (!targetValidation.ok) blockers.push(blocker(targetValidation.code, targetValidation.reason));
 
-  const readerResult = await readFromGoogleReader({ env, fsApi, reader });
+  const readerResult = await readFromGoogleReader({ env, fsApi, reader, googleApiModule });
   let validation = null;
+  let currentSourceShape = null;
   if (!readerResult.ok) {
     if (dryRun || !readerResult.preflight?.blockers?.length) {
       blockers.push(blocker(readerResult.code, readerResult.reason, dryRun ? "configuration" : "blocking"));
     }
   } else {
+    currentSourceShape = buildCurrentAuthoritySourceShapeSummary(readerResult.value);
     validation = validateMaterialisedAuthorityReferenceObject(readerResult.value);
     blockers.push(...validation.blockers);
   }
@@ -773,6 +1026,12 @@ export async function refreshAuthorityReferenceMaterialiser({
     rawSheetRowsExposed: false,
     rawRowsExposed: false,
     fullMaterialisedJsonExposed: false,
+    failureCategory: !readerResult.ok
+      ? readerResult.code
+      : validation?.ok === false
+        ? "materialised-authority-validation-failed"
+        : null,
+    currentSourceShape,
     activeSnapshotWriteAttempted: false,
     activeSnapshotWriteEnabled: false,
     materialisedWriteAttempted: canWriteMaterialised,
@@ -785,12 +1044,14 @@ export async function refreshAuthorityReferenceMaterialiser({
     google: {
       ...status.google,
       readerProvider: readerResult.provider,
+      readerFailureCode: readerResult.ok ? null : readerResult.code,
       networkCallAttempted: readerResult.googleNetworkCallAttempted === true,
       preflight: googlePreflight,
     },
     validation: validation
       ? {
           ok: validation.ok,
+          failureCategory: validation.ok ? null : "materialised-authority-validation-failed",
           summary: validation.summary,
           blockers: validation.blockers,
         }
