@@ -27,6 +27,8 @@
 
 ## Relevant commits
 
+- `4de9274325eac235c6044f5595bf8f2e0c8fae25` — close runtime acceptance receipt documentation.
+- `0ad8bee0995c29bb15c227e6f885038ecd105001` — record runtime saved-project precondition documentation.
 - `6e5e6cee398e1dd1e82d331c81a719625e0d076b` — selected-project source-backed optic-efficiency Engine boundary.
 - `08df070890300058353cc621c1383f16492063f1` — wildcard system applicability.
 - `3d1d9f8e1902a47f4c2f86bb8312f61194981e30` — reference snapshot/index cache.
@@ -48,8 +50,11 @@ Commit hashes and subjects are VERIFIED. Behaviour beyond the subject requires t
 - Named gate on the committed parcel: `selector-engine`, 102 passed, 0 failed, exit code 0 — VERIFIED.
 - Root cause: the nearest-length error masked zero board W/mm because the selected-project candidate omitted both usable current and selected-optic source-backed efficiency — VERIFIED by diagnostic exact-mode execution.
 - Live internal seam after source-backed efficiency binding: active RuntimeData loaded read-only; donor `run_engine` attempted; `success: true`; `run_count: 1`; one segment, three boards, one zone; filesystem/audit writes false; RuntimeData mutation false; persistence/generation flags false — VERIFIED.
-- Runtime 8788 root status: reachable at `http://127.0.0.1:8788` — VERIFIED. Final selected-and-saved project registration/invocation receipt remains UNKNOWN.
-- Next worker: `CS-SELECTOR-E2E-RUNTIME-8788-ACCEPTANCE-01`.
+- Runtime 8788 root status: reachable at `http://127.0.0.1:8788` — VERIFIED.
+- User-supplied current browser evidence: one runtime-session save exists for `project-alpha`; server-registration acknowledgement remains UNKNOWN.
+- User-supplied current Selector evidence: direct Control/Protocol is blocked while System, optic, target lm/m, and CCT/CRI remain source-backed — CURRENT DEFECT EVIDENCE.
+- Tier is an Engine/Lex consequence after run, not a required manual Selector option — USER-CONFIRMED PRODUCT RULE.
+- Next worker: `CS-SELECTOR-LIVE-CONTROL-OPTIONS-DIAGNOSIS-01`.
 
 ## Historical reports
 
@@ -83,3 +88,14 @@ Every completed worker updates this index with:
 - Documentation evidence commit: `0ad8bee0995c29bb15c227e6f885038ecd105001`; push `ca973ce..0ad8bee` to `origin/lane/selector-engine` succeeded — VERIFIED.
 - Post-gate live repeat: all three supported current project identities reproduced HTTP 422 and `selected-project-shell-invoke-transport-active-server-revision-invalid`; no capability or write/mutation/generation flag became true — VERIFIED.
 - Post-gate RuntimeData fingerprint remained `266de269e3e8f8b7191e4653d45580c251eb46025411574e0d1f2a27daca209d` — VERIFIED.
+
+## 2026-07-18 — User live-screen evidence after browser save
+
+- Current project: `project-alpha` / Alpha Linear Workspace — USER-PROVIDED LIVE EVIDENCE.
+- Selected runtime envelope: `env-project-alpha-1784332898092`; runtime saved count `1`; source `p2-shell-save-envelope`; saved at `2026-07-18T00:01:38.091Z`; last error `none` — USER-PROVIDED LIVE EVIDENCE.
+- Server registration acknowledgement or active server revision: not present in the screen dump — UNKNOWN.
+- Current source-backed candidate: System `DNX 80`, direct optic `Opal · 80`, direct target `1200 lm/m`, CCT/CRI `3000K / CRI80` — USER-PROVIDED LIVE EVIDENCE.
+- Current Control state: `Not selected / blocked`; direct control protocol unavailable from current source; Control type blocked — USER-PROVIDED LIVE DEFECT EVIDENCE.
+- Current run intake: Run 1 quantity, length, and length mode missing; `0/1 complete` — USER-PROVIDED LIVE EVIDENCE.
+- Tier: unavailable as a Selector input, consistent with the user-confirmed rule that Tier is computed by Engine/Lex after run — NOT A SELECTOR INPUT DEFECT.
+- Next worker: `CS-SELECTOR-LIVE-CONTROL-OPTIONS-DIAGNOSIS-01`, read-only, no repository or project mutation.

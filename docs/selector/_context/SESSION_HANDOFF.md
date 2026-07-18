@@ -24,33 +24,33 @@ The verified pre-memory base is `08df070890300058353cc621c1383f16492063f1`, and 
 
 The repository history contains the selected-project shell/invocation path, server-owned registration, read-only lifecycle, first Engine run, project/session truth, single-run intent capture, action visibility, cold-boot source arbitration, direct Control/Protocol authority corrections, reference caching, and wildcard applicability.
 
-The direct Control/Protocol bug is not the current assignment. Worker `CS-SELECTOR-E2E-LENGTH-FEASIBILITY-BOUNDARY-01` closed the masked electrical-capacity boundary in commit `6e5e6cee398e1dd1e82d331c81a719625e0d076b`. `selector-engine` passed 102/102, and live internal-seam execution against active RuntimeData returned one useful run with no write or mutation side effect. Final selected-and-saved project acceptance through runtime 8788 remains unproven.
+Worker `CS-SELECTOR-E2E-LENGTH-FEASIBILITY-BOUNDARY-01` closed the masked electrical-capacity boundary in commit `6e5e6cee398e1dd1e82d331c81a719625e0d076b`. `selector-engine` passed 102/102, and live internal-seam execution against active RuntimeData returned one useful run with no write or mutation side effect.
+
+New current browser evidence supplied on 2026-07-18 reopens the direct Control/Protocol options boundary: the live Selector shows `Control: Not selected / blocked`, `Direct control protocol: unavailable from current source`, and `Control type: blocked`, while nearby system, optic, and CCT/CRI fields are source-backed. Tier is not a user-selectable Selector input; it is an Engine/Lex consequence after the run. A real browser-session save now exists for `project-alpha`, but the screen dump does not expose a server-registration acknowledgement or active server revision. Final runtime 8788 acceptance therefore remains unproven.
 
 ## Exact next action
 
-Commission exactly one worker:
+Commission exactly one read-only diagnosis worker:
 
-**Name:** `CS-SELECTOR-E2E-RUNTIME-8788-ACCEPTANCE-01`
+**Name:** `CS-SELECTOR-LIVE-CONTROL-OPTIONS-DIAGNOSIS-01`
 
 **Worker prompt:**
 
-> Use only the connected CS Selector & Engine v2 app. Verify root `C:\ControlStack_Worktrees\selector-engine`, branch `lane/selector-engine`, and current HEAD, then read every file in `docs/selector/_context/`. Confirm runtime 8788 is running the committed server-owned selected-project bridge from `6e5e6cee398e1dd1e82d331c81a719625e0d076b`. Using only an already-saved selected project and the existing registration/invocation contracts, prove one deliberate request through `/api/workspace-shell/selected-project-runtime-save-registration` and `/api/workspace-shell/selected-project-engine-readonly-invoke` to an attributable safe result with at least one run row. Do not fabricate, replace, or mutate project truth merely to create a receipt. Do not reopen rendering, cold boot, reference caching, Control/Protocol authority, or the closed optic-efficiency boundary without a new current failure. Preserve server ownership, deterministic blocked/error semantics, replay/revision guards, and the no-write Engine guarantee. If a first new boundary appears, patch only that exact boundary and focused tests. Run `selector-engine`, live-validate runtime 8788, stage only commissioned paths, gated-commit and push only `lane/selector-engine`, then update `LANE_STATE.md`, `WORK_QUEUE.md`, `EVIDENCE_INDEX.md`, and this handoff with exact commits, gate counts, route receipts, Git inventory, remaining blocker, and the next worker commission.
+> Use only the connected CS Selector & Engine v2 app. Verify root `C:\ControlStack_Worktrees\selector-engine`, branch `lane/selector-engine`, current HEAD, and a clean starting tree, then read every file in `docs/selector/_context/`. This is a read-only diagnosis. Do not patch, stage, commit, push, mutate project truth, or create fixtures. Reproduce the current live runtime 8788 Selector options result in which `system` and `cctCri` are source-backed but direct `controlType` / Control Protocol is blocked with zero usable options. Trace the exact current server-side derivation from active RuntimeData through Selector Reference field metadata, applicability, aliases, direct/indirect mapping, projection, caching, and `/api/selector-reference/options`. Identify the first exact failing boundary and the smallest repair ownership. Treat Tier as an Engine/Lex consequence after run, not as a missing Selector input or required UI control. Use the existing real browser-session save for `project-alpha` only as read-only evidence; separately establish whether an active server-owned revision exists, without fabricating a registration request. Do not reopen rendering, cold boot, optic-efficiency enrichment, or length feasibility unless current evidence directly places the failure there. Return the exact live payload evidence, code boundary, why nearby fields remain available, why Control is blocked, server-revision state, files that would require a repair, and one recommended bounded repair worker.
 
 ## Acceptance criteria
 
-- One selected and saved project produces a deliberate Engine request.
-- The server owns registration and invocation.
-- A useful result/run-table payload is returned and visibly attributable.
-- Blocked and error outcomes are truthful and deterministic.
-- No write/mutation side effect is introduced.
-- Focused tests and `selector-engine` are green.
-- Live evidence matches tests.
-- Exact scoped commit and push exist.
-- Updated handoff makes the following session independent of chat history.
+- Current live `/api/selector-reference/options` evidence is captured for `system`, `cctCri`, and direct `controlType`.
+- The first exact boundary producing blocked/zero Control options is identified from current code and source authority.
+- Tier is explicitly excluded as a user-selectable prerequisite.
+- Browser-session save state and active server-revision state are distinguished.
+- No feature or documentation files are changed by the diagnosis worker.
+- No project, RuntimeData, selected result, RunTable, IES, or output mutation occurs.
+- The returned evidence is sufficient to commission one smallest bounded repair worker.
 
 ## Files in scope
 
-The worker must derive the smallest exact set from the first failing boundary. Likely ownership is within Selector/Engine runtime code and focused tests already permitted by the app. Documentation updates belong under `docs/selector/_context/`.
+Read-only inspection of current Selector/Engine runtime code, focused tests, active-source safe metadata, route receipts, and `docs/selector/_context/`. The diagnosis worker must not change any file. Its report must identify the smallest prospective repair set without implementing it.
 
 ## Files and actions out of scope
 
@@ -82,8 +82,12 @@ This is the exact stop boundary: no active server-owned revision exists from an 
 
 All live probe receipts kept filesystem write, audit write, RuntimeData mutation, selected-result persistence, RunTable generation, IES generation, and output generation false. The active RuntimeData source fingerprint remained available only through the redacted read-only probe.
 
-**Required external action before the next worker:** in the live 8788 workspace, deliberately complete and save one suitable source-backed Selector project so the existing save flow can perform server-owned registration. Do not use Alpha/Bravo reference fixtures merely to manufacture a receipt.
-
 The complete permitted `selector-engine` gate passed 102/102 with exit code 0. No focused feature test was required because no feature code changed. Documentation evidence commit `0ad8bee0995c29bb15c227e6f885038ecd105001` was pushed successfully. Post-gate live checks reproduced the same missing-active-revision blocker for all three supported current project identities, and the redacted RuntimeData fingerprint remained unchanged.
 
-**Recommended next worker after that action:** `CS-SELECTOR-E2E-RUNTIME-8788-ACCEPTANCE-02`. It should repeat only registration and selected-project read-only invocation, capture the safe project/revision acknowledgement and at least one useful safe run projection, rerun `selector-engine`, and patch only a new reproducible boundary if one appears. Do not execute or commission that worker from this handoff.
+## 2026-07-18 user live-screen update
+
+The user subsequently performed the correct shell action, **Save browser session envelope**, for current project `project-alpha`. The supplied live screen dump reports one runtime-session save selected as `env-project-alpha-1784332898092`, source `p2-shell-save-envelope`, saved at `2026-07-18T00:01:38.091Z`, with no save error. This satisfies the browser-session-save precondition but does not by itself prove server-owned registration; no registration acknowledgement or active server revision is visible in the dump.
+
+The same current dump provides new evidence that direct Control/Protocol remains blocked in the live Selector: `Control: Not selected / blocked`, `Direct control protocol: unavailable from current source`, and `Control type: blocked`. Nearby System, optic, direct lm/m, and CCT/CRI values are source-backed. Run intake is also incomplete because quantity, run length, and length mode have not yet been entered. Tier is correctly absent as a manual control because it is intended to be computed after run by the Engine/Lex path.
+
+**Next worker:** `CS-SELECTOR-LIVE-CONTROL-OPTIONS-DIAGNOSIS-01`. It is read-only and must identify the exact live options-derivation boundary before any repair or continuation of runtime acceptance. Do not commission Acceptance 02 until this diagnosis establishes whether Control options and active server revision are independently healthy.

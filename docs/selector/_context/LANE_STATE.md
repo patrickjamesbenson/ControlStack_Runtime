@@ -8,9 +8,10 @@
 |---|---|---|
 | Root | `C:\ControlStack_Worktrees\selector-engine` | VERIFIED |
 | Branch | `lane/selector-engine` | VERIFIED |
-| Accepted feature HEAD before this handoff update | `6e5e6cee398e1dd1e82d331c81a719625e0d076b` | VERIFIED |
-| HEAD subject | `Fix selected-project Engine optic efficiency boundary` | VERIFIED |
-| Working tree before this handoff update | clean | VERIFIED |
+| Current HEAD before this normalisation | `4de9274325eac235c6044f5595bf8f2e0c8fae25` | VERIFIED |
+| HEAD subject | `docs(selector): close runtime acceptance receipt` | VERIFIED |
+| Accepted feature commit | `6e5e6cee398e1dd1e82d331c81a719625e0d076b` | VERIFIED |
+| Working tree before this normalisation | clean | VERIFIED |
 | Runtime | `127.0.0.1:8788` | VERIFIED configuration |
 | MCP | `127.0.0.1:8000/mcp` | VERIFIED |
 | Gate | `selector-engine` | VERIFIED |
@@ -19,7 +20,7 @@
 
 Close and evidence the first real single-slice Selector-to-Engine run, then widen through contract-preserving passes. The existing implementation history shows that the selected-project shell, invocation transport, registration, lifecycle, read-only run, intent capture, action visibility, source arbitration, reference snapshot caching, and direct Control/Protocol corrections have been built. **VERIFIED from commit subjects.**
 
-The Engine-side slice now produces one useful safe run after exact source-backed optic-efficiency enrichment. Final user-level acceptance remains **UNKNOWN** only at the selected-and-saved project registration/invocation route on runtime 8788. This is the next bounded milestone; it is not permission to reopen the closed electrical-capacity, Control/Protocol, rendering, caching, or cold-boot repairs without new evidence.
+The Engine-side slice produces one useful safe run after exact source-backed optic-efficiency enrichment. Final user-level acceptance remains **UNKNOWN**. A real browser-session envelope now exists for `project-alpha`, but server-registration acknowledgement is not visible in the user dump. New current live evidence also reopens direct Control/Protocol options: Control is blocked and unavailable from current source while nearby source-backed fields remain available. Tier is an Engine/Lex consequence after run and is not a missing Selector control. The next bounded milestone is read-only diagnosis of that live options boundary and server-revision state; electrical-capacity, rendering, caching, and cold-boot repairs remain closed without direct new evidence.
 
 ## Completed parcels evidenced by current history
 
@@ -65,20 +66,26 @@ A pre-memory acceptance reported `selector-engine` as 100 passed and 0 failed. *
 ## Known risks and unknowns
 
 - Current browser-level completion of the full single slice is UNKNOWN.
+- A browser-session save exists, but active server-owned revision acknowledgement remains UNKNOWN.
+- Direct Control/Protocol option derivation is a current defect candidate supported by new live user evidence.
+- Tier must remain an Engine/Lex consequence, not a manually invented Selector prerequisite.
 - The exact stable Engine output schema/version is UNKNOWN and remains a Program queue dependency.
 - Widening cost cannot be judged until the closeout proves that new options reuse the existing authority and execution contracts.
 - Program-to-main promotion is outside this lane.
 - Downstream-artifacts remains HELD until Program declares the Engine output contract stable.
-- No current evidence justifies reopening UI rendering, cold boot, or direct Control/Protocol authority as active defects.
+- No current evidence justifies reopening UI rendering, cold boot, caching, or the optic-efficiency boundary.
 
 ## Acceptance state
 
 - Lane identity and isolation: VERIFIED PASS.
 - Clean accepted base: VERIFIED PASS.
-- Control/Protocol correction durability: VERIFIED in history.
+- Historical Control/Protocol correction commits: VERIFIED in history; current live behaviour is REOPENED by new evidence.
 - Durable lane memory: VERIFIED PASS.
 - Engine-side useful single-run result: VERIFIED PASS.
-- Selected-and-saved project route acceptance on runtime 8788: NEXT MILESTONE.
+- Browser-session save for `project-alpha`: USER-PROVIDED LIVE EVIDENCE PASS.
+- Active server-owned revision: UNKNOWN.
+- Direct Control/Protocol live options: BLOCKED; next diagnosis milestone.
+- Selected-and-saved project route acceptance on runtime 8788: HELD behind diagnosis.
 - Widening: HELD until route acceptance and Program seam approval.
 
 ## 2026-07-18 length-feasibility boundary closeout
@@ -89,7 +96,7 @@ Commit `6e5e6cee398e1dd1e82d331c81a719625e0d076b` adds one server-owned, read-on
 
 Focused and lane evidence: `selector-engine` passed 102/102. Live internal-seam validation against active RuntimeData returned `success: true`, `run_count: 1`, one segment, three boards, one zone, and no filesystem write, audit JSONL write, RuntimeData mutation, selected-result persistence, RunTable write, IES generation, or output generation.
 
-Priority 1 remains IN PROGRESS only for final selected-and-saved project acceptance through the live 8788 registration/invocation route. Runtime 8788 was reachable, but this worker did not fabricate or replace a user's saved project merely to exercise that route. The next bounded worker is `CS-SELECTOR-E2E-RUNTIME-8788-ACCEPTANCE-01`.
+Priority 1 remains IN PROGRESS for final selected-and-saved project acceptance through runtime 8788. Acceptance 01 later proved that no real browser-session save existed at that time. The user has since created one, but new live Control/Protocol blocking evidence now requires read-only diagnosis before route acceptance continues. The next bounded worker is `CS-SELECTOR-LIVE-CONTROL-OPTIONS-DIAGNOSIS-01`.
 
 ## 2026-07-18 runtime 8788 acceptance precondition stop
 
@@ -104,3 +111,11 @@ No feature code was changed. Only the four required durable handoff files are in
 ### Hash and post-gate closeout
 
 Documentation evidence commit `0ad8bee0995c29bb15c227e6f885038ecd105001` was pushed to `origin/lane/selector-engine`. After that gated push, runtime 8788 was rechecked for `project-alpha`, `project-bravo`, and `project-charlie`; all three again returned HTTP 422 with blocker `selected-project-shell-invoke-transport-active-server-revision-invalid`, no source reconstruction, no capability invocation, and all write/mutation/generation flags false. The redacted RuntimeData fingerprint remained `266de269e3e8f8b7191e4653d45580c251eb46025411574e0d1f2a27daca209d`. The evidence parcel ending HEAD before this hash-index closeout is `0ad8bee0995c29bb15c227e6f885038ecd105001`.
+
+## 2026-07-18 current user live evidence
+
+The user supplied a full live screen dump after pressing **Save browser session envelope**. It reports current project `project-alpha`, selected envelope `env-project-alpha-1784332898092`, runtime saved count `1`, save state `saved`, source `p2-shell-save-envelope`, saved timestamp `2026-07-18T00:01:38.091Z`, and no save error. This establishes a real browser-session save. It does not establish server-owned registration because no registration acknowledgement or server revision appears in the dump.
+
+The dump also reports a current source-backed Selector candidate with System `DNX 80`, direct optic `Opal · 80`, direct target `1200 lm/m`, and `3000K / CRI80`, while `Control` is `Not selected / blocked`, `Direct control protocol` is unavailable from current source, and `Control type` is blocked. Run 1 is incomplete because quantity, length, and length mode are empty. Tier is shown as unavailable from the current source, which is not a UI defect because Tier is intended to be derived by Engine/Lex after run.
+
+This is new evidence sufficient to reopen only the direct Control/Protocol options-derivation boundary. The next task is read-only `CS-SELECTOR-LIVE-CONTROL-OPTIONS-DIAGNOSIS-01`; runtime acceptance remains held until the exact options boundary and active server-revision state are separated.

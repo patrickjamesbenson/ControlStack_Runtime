@@ -5,23 +5,15 @@
 
 ## Priority 0 — Durable lane memory
 
-**Status:** IN PROGRESS.
+**Status:** COMPLETE.
 
-Create, gate, commit, and push exactly the six files under `docs/selector/_context/`. No feature files belong to this parcel.
-
-Acceptance:
-
-- `selector-engine` gate green;
-- exact six documentation paths staged;
-- gated commit `docs(selector): establish durable lane memory`;
-- push only `lane/selector-engine`;
-- final tree clean.
+The six files under `docs/selector/_context/` were created, gated, committed, and pushed in commit `678cf83c9f97bfcdc397b574c4eab08b306656ee`. Later workers have continued to maintain the durable handoff.
 
 ## Priority 1 — Single-slice E2E closeout
 
-**Status:** IN PROGRESS — Engine length-feasibility boundary closed; final live saved-project route acceptance remains.
+**Status:** IN PROGRESS — browser-session save exists, but current live Control/Protocol options are blocked and server-registration acknowledgement remains unproven.
 
-**Worker name:** `CS-SELECTOR-E2E-RUNTIME-8788-ACCEPTANCE-01`
+**Worker name:** `CS-SELECTOR-LIVE-CONTROL-OPTIONS-DIAGNOSIS-01`
 
 **Objective:** complete and prove one real, source-backed selection through the existing read-only Engine path to a useful result/run-table output on the current runtime.
 
@@ -47,9 +39,9 @@ Acceptance:
 
 **Closed boundary evidence:** commit `6e5e6cee398e1dd1e82d331c81a719625e0d076b` binds one unambiguous selected-optic efficiency from active `OPTICS` authority inside the server-owned bridge. `selector-engine` passed 102/102, and live internal-seam execution returned one useful run with no write or mutation side effect.
 
-**Remaining acceptance:** prove the already-saved selected project through the live 8788 registration/invocation route after the committed server reload. Do not fabricate or replace project truth merely to create a green receipt.
+**Remaining acceptance:** first identify why the current live Selector returns direct `controlType` / Control Protocol as blocked while nearby source-backed fields remain available. Then prove whether the existing browser-session save has an active server-owned revision and continue the selected-project read-only invocation route. Tier must not be introduced as a manual prerequisite; it is computed after run.
 
-**Next bounded worker:** `CS-SELECTOR-E2E-RUNTIME-8788-ACCEPTANCE-01` — exercise only the existing server-owned saved-project route, capture the attributable safe result, and patch only a newly reproducible first boundary if one remains.
+**Next bounded worker:** `CS-SELECTOR-LIVE-CONTROL-OPTIONS-DIAGNOSIS-01` — read-only reproduction and exact boundary tracing only. No patch, stage, commit, push, or project mutation.
 
 ### 2026-07-18 acceptance precondition result
 
@@ -57,13 +49,15 @@ Acceptance:
 
 Runtime 8788 was reachable, but read-only active-revision checks for all supported current workspace project identities (`project-alpha`, `project-bravo`, and `project-charlie`) returned `selected-project-shell-invoke-transport-active-server-revision-invalid`. No source boundary or Engine capability was invoked, and every persistence, mutation, RunTable, IES, and output flag remained false.
 
-The registration route can only be called truthfully with the exact accepted local save envelope produced by a real browser-session save. No such saved-project evidence exists in the current live runtime. Do not construct one from fixtures or test data.
+The registration route can only be called truthfully with the exact accepted local save envelope produced by a real browser-session save. At the time of Acceptance 01, no such envelope existed and none was constructed from fixtures or test data.
 
-**External precondition:** a user must deliberately complete and save one suitable source-backed Selector project in the live 8788 browser session so the existing save flow dispatches server-owned registration.
+The user subsequently completed the correct **Save browser session envelope** action. Current user-supplied live evidence shows `project-alpha` with selected runtime envelope `env-project-alpha-1784332898092`, runtime saved count `1`, save source `p2-shell-save-envelope`, and no save error. This proves the browser-session save exists, but the dump contains no server-registration acknowledgement or active server revision.
 
-**Recommended next bounded worker after that precondition:** `CS-SELECTOR-E2E-RUNTIME-8788-ACCEPTANCE-02` — repeat only the two existing routes, capture project/revision attribution and one useful safe run result, and patch only a newly reproducible first boundary.
+The same live evidence reopens direct Control/Protocol as a current defect candidate: Control is not selected and blocked, direct control protocol is reported unavailable from current source, and Control type is blocked while system, optic, lm/m, and CCT/CRI are available. Run intake remains incomplete because quantity, length, and length mode are empty. Tier is correctly not selectable and must remain an Engine/Lex consequence.
 
-Evidence commit `0ad8bee0995c29bb15c227e6f885038ecd105001` was gated and pushed. Post-gate live checks reproduced the same missing-active-revision boundary for all three supported current project identities, with no writes, mutations, or outputs.
+**Recommended next bounded worker:** `CS-SELECTOR-LIVE-CONTROL-OPTIONS-DIAGNOSIS-01`. Acceptance 02 is held until that read-only diagnosis separates the live options failure from server-revision state.
+
+Evidence commit `0ad8bee0995c29bb15c227e6f885038ecd105001` was gated and pushed. Post-gate live checks at that time reproduced the missing-active-revision boundary for all three supported current project identities, with no writes, mutations, or outputs.
 
 ## Priority 2 — Declare Engine output contract candidate
 
@@ -91,7 +85,7 @@ DXF resizing, quotation, reports, and other post-payload artifacts remain outsid
 
 ## Must remain closed without new evidence
 
-- Control/Protocol authority repairs.
+- Control/Protocol work beyond the exact current live options-derivation boundary.
 - Cold-boot source arbitration.
 - Reference snapshot caching.
 - Browser rendering as an assumed cause.

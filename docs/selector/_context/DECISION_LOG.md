@@ -47,3 +47,27 @@ This log is append-oriented. Do not silently rewrite historical decisions.
 **Decision:** Any change to the Selector-to-Engine or Engine-output contract is proposed to Program & Integrate with producer and consumer evidence.
 
 **Consequence:** This lane cannot activate Lab or downstream-artifact work unilaterally.
+
+## 2026-07-18 — Tier is derived after run
+
+**Decision:** Tier is not a user-selectable Selector prerequisite. It is a consequence computed by the Engine/Lex path after run intent and source-backed candidate inputs are available.
+
+**Rationale:** The user confirmed the product rule, and the current live Selector correctly does not expose a Tier choice.
+
+**Consequence:** Workers must not add, fake, or require a Tier dropdown merely to satisfy Engine payload shape. Any bridge needing Tier must derive or bind it at the correct post-run boundary.
+
+## 2026-07-18 — Browser save and server registration are separate evidence
+
+**Decision:** A saved browser-session envelope proves local shell save state only. Server-owned registration requires its own acknowledgement or active-revision receipt.
+
+**Rationale:** The current user dump shows a real `project-alpha` runtime-session envelope but does not show server-registration acknowledgement.
+
+**Consequence:** Runtime acceptance must report browser save and active server revision separately and must not infer one from the other.
+
+## 2026-07-18 — Reopen only the live Control options boundary
+
+**Decision:** Direct Control/Protocol options are reopened for read-only diagnosis because new current live evidence shows Control blocked while nearby source-backed fields remain available.
+
+**Rationale:** This satisfies the earlier closed-repair rule: there is now a current reproducible live failure. Historical repair commits do not override current payload truth.
+
+**Consequence:** The next worker diagnoses the exact options-derivation boundary without patching. Rendering, cold boot, caching, optic-efficiency enrichment, and length feasibility remain closed unless the diagnosis directly implicates them.
