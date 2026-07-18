@@ -30,27 +30,29 @@ New current browser evidence supplied on 2026-07-18 reopens the direct Control/P
 
 ## Exact next action
 
-Commission exactly one read-only diagnosis worker:
+Commission exactly one guarded repair worker:
 
-**Name:** `CS-SELECTOR-LIVE-CONTROL-OPTIONS-DIAGNOSIS-01`
+**Name:** `CS-SELECTOR-LIVE-CONTROL-AUTHORITY-INTERSECTION-REPAIR-01`
 
 **Worker prompt:**
 
-> Use only the connected CS Selector & Engine v2 app. Verify root `C:\ControlStack_Worktrees\selector-engine`, branch `lane/selector-engine`, current HEAD, and a clean starting tree, then read every file in `docs/selector/_context/`. This is a read-only diagnosis. Do not patch, stage, commit, push, mutate project truth, or create fixtures. Reproduce the current live runtime 8788 Selector options result in which `system` and `cctCri` are source-backed but direct `controlType` / Control Protocol is blocked with zero usable options. Trace the exact current server-side derivation from active RuntimeData through Selector Reference field metadata, applicability, aliases, direct/indirect mapping, projection, caching, and `/api/selector-reference/options`. Identify the first exact failing boundary and the smallest repair ownership. Treat Tier as an Engine/Lex consequence after run, not as a missing Selector input or required UI control. Use the existing real browser-session save for `project-alpha` only as read-only evidence; separately establish whether an active server-owned revision exists, without fabricating a registration request. Do not reopen rendering, cold boot, optic-efficiency enrichment, or length feasibility unless current evidence directly places the failure there. Return the exact live payload evidence, code boundary, why nearby fields remain available, why Control is blocked, server-revision state, files that would require a repair, and one recommended bounded repair worker.
+> Use only the connected CS Selector & Engine v2 app. Verify root `C:\ControlStack_Worktrees\selector-engine`, branch `lane/selector-engine`, current HEAD, and a clean starting tree, then read every file in `docs/selector/_context/`. Start from the accepted diagnosis that live direct `controlType` is blocked because `compatibleBoardDriverControlOptions()` produces no genuine BOARDS × DRIVERS protocol-authority pair. First establish the exact active-source mismatch using only approved read-only source access and safe summaries: determine whether a genuine authoritative DRIVERS protocol value exists under an unmapped column/value form, whether canonicalisation fails, or whether genuine DRIVERS authority is absent. Do not promote descriptive aliases into authority merely to make the endpoint green. If and only if a genuine active-source authority form is proven, patch the smallest exact descriptor/canonicalisation boundary in `packages/workspace-kernel/selectorReferenceOptionsService.js` with focused regression tests. Preserve the BOARDS × DRIVERS intersection, system/wildcard applicability, no-union rule, no default Control selection, fail-closed semantics, source ordering, and redaction. Tier remains an Engine/Lex consequence after run and must not be added or required. Do not change rendering, server routes, cache code, Selector default-preview data, optic-efficiency enrichment, length feasibility, Engine contracts, Lab/IES, Program, or main unless the proven first boundary directly requires it. If genuine DRIVERS authority is absent, make no code repair and stop with an exact upstream data-ownership recommendation. For a valid code repair, run focused tests and `selector-engine`, live-validate `/api/selector-reference/options` on runtime 8788 so direct Control has at least one genuine available option while no option is auto-selected, stage only the exact commissioned paths, gated-commit and push only `lane/selector-engine`, then update the durable context with exact source evidence, files, tests, live receipt, commit, push, clean Git state, server-revision state, and the next bounded worker.
 
 ## Acceptance criteria
 
-- Current live `/api/selector-reference/options` evidence is captured for `system`, `cctCri`, and direct `controlType`.
-- The first exact boundary producing blocked/zero Control options is identified from current code and source authority.
-- Tier is explicitly excluded as a user-selectable prerequisite.
-- Browser-session save state and active server-revision state are distinguished.
-- No feature or documentation files are changed by the diagnosis worker.
-- No project, RuntimeData, selected result, RunTable, IES, or output mutation occurs.
-- The returned evidence is sufficient to commission one smallest bounded repair worker.
+- The exact active-source mismatch is proven as mapping/canonicalisation or upstream authority absence.
+- Descriptive aliases remain non-authoritative and no broad union/default is introduced.
+- A code patch is made only when genuine active-source authority is proven.
+- For a code repair, live direct `controlType` has one or more genuine available options and remains unselected by default.
+- System/wildcard applicability and the BOARDS × DRIVERS intersection remain enforced.
+- Tier remains excluded as a user-selectable prerequisite.
+- Focused tests and `selector-engine` are green; live runtime behaviour matches the tests.
+- No project, RuntimeData, selected-result, RunTable, IES, or output mutation occurs.
+- Exact scoped commit/push and durable handoff updates exist, or the worker stops cleanly with a proven upstream data-owner boundary.
 
 ## Files in scope
 
-Read-only inspection of current Selector/Engine runtime code, focused tests, active-source safe metadata, route receipts, and `docs/selector/_context/`. The diagnosis worker must not change any file. Its report must identify the smallest prospective repair set without implementing it.
+Primary prospective ownership is `packages/workspace-kernel/selectorReferenceOptionsService.js` with the smallest focused Selector tests, likely `tests/selectorReferenceOptionsService.test.js` and only if required `tests/selectorLightControlSpine.test.js`. Durable closeout belongs under `docs/selector/_context/`. The worker must derive the exact set from the proven active-source mismatch and must not change unrelated files.
 
 ## Files and actions out of scope
 
@@ -90,4 +92,12 @@ The user subsequently performed the correct shell action, **Save browser session
 
 The same current dump provides new evidence that direct Control/Protocol remains blocked in the live Selector: `Control: Not selected / blocked`, `Direct control protocol: unavailable from current source`, and `Control type: blocked`. Nearby System, optic, direct lm/m, and CCT/CRI values are source-backed. Run intake is also incomplete because quantity, run length, and length mode have not yet been entered. Tier is correctly absent as a manual control because it is intended to be computed after run by the Engine/Lex path.
 
-**Next worker:** `CS-SELECTOR-LIVE-CONTROL-OPTIONS-DIAGNOSIS-01`. It is read-only and must identify the exact live options-derivation boundary before any repair or continuation of runtime acceptance. Do not commission Acceptance 02 until this diagnosis establishes whether Control options and active server revision are independently healthy.
+## 2026-07-18 Control authority-intersection diagnosis accepted
+
+`CS-SELECTOR-LIVE-CONTROL-OPTIONS-DIAGNOSIS-01` started and ended clean at `806569719412df89ba6b4856c542ff69863ae42f`; `selector-engine` passed 102/102. Live `/api/selector-reference/options` returned System available with 8 options, CCT/CRI available with 9 options, and direct `controlType` blocked with zero options against a healthy active source containing 265 BOARDS and 48 DRIVERS rows.
+
+The exact failing boundary is `compatibleBoardDriverControlOptions()` in `packages/workspace-kernel/selectorReferenceOptionsService.js`. No active BOARDS protocol descriptor produced a matching genuine DRIVERS native/legacy protocol descriptor under intersecting system applicability, so `collectOptions()` emitted no `controlType`, the index cached an empty bucket, and `createUnavailableField()` produced the truthful blocked field. Descriptive driver aliases remain intentionally non-authoritative. Nearby fields remain available because System reads SYSTEM directly, optic reads OPTICS, and CCT/CRI reads BOARDS without the DRIVERS intersection.
+
+The worker also confirmed that `project-alpha` has a browser-session envelope but still no active server-owned revision; read-only invocation returned `selected-project-shell-invoke-transport-active-server-revision-invalid`. No registration was fabricated and all write/mutation/generation flags remained false.
+
+**Next worker:** `CS-SELECTOR-LIVE-CONTROL-AUTHORITY-INTERSECTION-REPAIR-01`. It must first prove the exact active-source authority form. It may patch only a genuine mapping/canonicalisation mismatch; if genuine DRIVERS authority is absent, it must make no code change and stop at the upstream data-owner boundary. Runtime Acceptance 02 remains held until this repair or upstream authority correction is complete.

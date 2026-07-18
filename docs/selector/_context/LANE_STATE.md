@@ -96,7 +96,7 @@ Commit `6e5e6cee398e1dd1e82d331c81a719625e0d076b` adds one server-owned, read-on
 
 Focused and lane evidence: `selector-engine` passed 102/102. Live internal-seam validation against active RuntimeData returned `success: true`, `run_count: 1`, one segment, three boards, one zone, and no filesystem write, audit JSONL write, RuntimeData mutation, selected-result persistence, RunTable write, IES generation, or output generation.
 
-Priority 1 remains IN PROGRESS for final selected-and-saved project acceptance through runtime 8788. Acceptance 01 later proved that no real browser-session save existed at that time. The user has since created one, but new live Control/Protocol blocking evidence now requires read-only diagnosis before route acceptance continues. The next bounded worker is `CS-SELECTOR-LIVE-CONTROL-OPTIONS-DIAGNOSIS-01`.
+Priority 1 remains IN PROGRESS for final selected-and-saved project acceptance through runtime 8788. Acceptance 01 later proved that no real browser-session save existed at that time. The user has since created one. The subsequent read-only diagnosis proved that direct Control is lost at the genuine BOARDS × DRIVERS authority intersection, before projection or rendering. The next bounded worker is `CS-SELECTOR-LIVE-CONTROL-AUTHORITY-INTERSECTION-REPAIR-01`.
 
 ## 2026-07-18 runtime 8788 acceptance precondition stop
 
@@ -118,4 +118,4 @@ The user supplied a full live screen dump after pressing **Save browser session 
 
 The dump also reports a current source-backed Selector candidate with System `DNX 80`, direct optic `Opal · 80`, direct target `1200 lm/m`, and `3000K / CRI80`, while `Control` is `Not selected / blocked`, `Direct control protocol` is unavailable from current source, and `Control type` is blocked. Run 1 is incomplete because quantity, length, and length mode are empty. Tier is shown as unavailable from the current source, which is not a UI defect because Tier is intended to be derived by Engine/Lex after run.
 
-This is new evidence sufficient to reopen only the direct Control/Protocol options-derivation boundary. The next task is read-only `CS-SELECTOR-LIVE-CONTROL-OPTIONS-DIAGNOSIS-01`; runtime acceptance remains held until the exact options boundary and active server-revision state are separated.
+This was sufficient to reopen only the direct Control/Protocol options-derivation boundary. The completed read-only diagnosis then located the first exact failure in `compatibleBoardDriverControlOptions()`: the active BOARDS and DRIVERS rows yield no mutually compatible genuine protocol-authority pair under system applicability. Runtime acceptance remains held until a guarded repair maps a proven authority form or an upstream DRIVERS authority-data defect is corrected.

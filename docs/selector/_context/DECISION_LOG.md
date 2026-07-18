@@ -71,3 +71,11 @@ This log is append-oriented. Do not silently rewrite historical decisions.
 **Rationale:** This satisfies the earlier closed-repair rule: there is now a current reproducible live failure. Historical repair commits do not override current payload truth.
 
 **Consequence:** The next worker diagnoses the exact options-derivation boundary without patching. Rendering, cold boot, caching, optic-efficiency enrichment, and length feasibility remain closed unless the diagnosis directly implicates them.
+
+## 2026-07-18 — Control repair requires proven genuine authority
+
+**Decision:** The accepted diagnosis locates live Control loss at the BOARDS × DRIVERS protocol-authority intersection. A repair may map only a proven genuine active-source authority column or canonical value form.
+
+**Rationale:** Descriptive aliases are intentionally non-authoritative. Broadening them, unioning BOARDS and DRIVERS labels, or defaulting DALI-2 would create unsupported product authority.
+
+**Consequence:** `CS-SELECTOR-LIVE-CONTROL-AUTHORITY-INTERSECTION-REPAIR-01` must first distinguish mapping/canonicalisation mismatch from missing upstream DRIVERS authority. It patches only the former; for the latter it stops without code changes and identifies the upstream data owner.

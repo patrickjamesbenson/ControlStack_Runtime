@@ -54,7 +54,9 @@ Commit hashes and subjects are VERIFIED. Behaviour beyond the subject requires t
 - User-supplied current browser evidence: one runtime-session save exists for `project-alpha`; server-registration acknowledgement remains UNKNOWN.
 - User-supplied current Selector evidence: direct Control/Protocol is blocked while System, optic, target lm/m, and CCT/CRI remain source-backed — CURRENT DEFECT EVIDENCE.
 - Tier is an Engine/Lex consequence after run, not a required manual Selector option — USER-CONFIRMED PRODUCT RULE.
-- Next worker: `CS-SELECTOR-LIVE-CONTROL-OPTIONS-DIAGNOSIS-01`.
+- Control diagnosis: live direct `controlType` loss occurs at the genuine BOARDS × DRIVERS protocol-authority intersection in `compatibleBoardDriverControlOptions()`; System and CCT/CRI use independent source paths — VERIFIED by read-only worker.
+- Diagnosis gate and Git: `selector-engine` 102/102; starting and ending tree clean at `806569719412df89ba6b4856c542ff69863ae42f` — VERIFIED.
+- Next worker: `CS-SELECTOR-LIVE-CONTROL-AUTHORITY-INTERSECTION-REPAIR-01`.
 
 ## Historical reports
 
@@ -98,4 +100,5 @@ Every completed worker updates this index with:
 - Current Control state: `Not selected / blocked`; direct control protocol unavailable from current source; Control type blocked — USER-PROVIDED LIVE DEFECT EVIDENCE.
 - Current run intake: Run 1 quantity, length, and length mode missing; `0/1 complete` — USER-PROVIDED LIVE EVIDENCE.
 - Tier: unavailable as a Selector input, consistent with the user-confirmed rule that Tier is computed by Engine/Lex after run — NOT A SELECTOR INPUT DEFECT.
-- Next worker: `CS-SELECTOR-LIVE-CONTROL-OPTIONS-DIAGNOSIS-01`, read-only, no repository or project mutation.
+- Completed diagnosis worker: `CS-SELECTOR-LIVE-CONTROL-OPTIONS-DIAGNOSIS-01`; no repository or project mutation; gate 102/102; exact failure at `compatibleBoardDriverControlOptions()`.
+- Next worker: `CS-SELECTOR-LIVE-CONTROL-AUTHORITY-INTERSECTION-REPAIR-01`, guarded repair or clean upstream-data stop.

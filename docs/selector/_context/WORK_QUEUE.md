@@ -13,7 +13,7 @@ The six files under `docs/selector/_context/` were created, gated, committed, an
 
 **Status:** IN PROGRESS — browser-session save exists, but current live Control/Protocol options are blocked and server-registration acknowledgement remains unproven.
 
-**Worker name:** `CS-SELECTOR-LIVE-CONTROL-OPTIONS-DIAGNOSIS-01`
+**Worker name:** `CS-SELECTOR-LIVE-CONTROL-AUTHORITY-INTERSECTION-REPAIR-01`
 
 **Objective:** complete and prove one real, source-backed selection through the existing read-only Engine path to a useful result/run-table output on the current runtime.
 
@@ -39,9 +39,9 @@ The six files under `docs/selector/_context/` were created, gated, committed, an
 
 **Closed boundary evidence:** commit `6e5e6cee398e1dd1e82d331c81a719625e0d076b` binds one unambiguous selected-optic efficiency from active `OPTICS` authority inside the server-owned bridge. `selector-engine` passed 102/102, and live internal-seam execution returned one useful run with no write or mutation side effect.
 
-**Remaining acceptance:** first identify why the current live Selector returns direct `controlType` / Control Protocol as blocked while nearby source-backed fields remain available. Then prove whether the existing browser-session save has an active server-owned revision and continue the selected-project read-only invocation route. Tier must not be introduced as a manual prerequisite; it is computed after run.
+**Remaining acceptance:** repair only a proven active-source Control authority mapping/canonicalisation mismatch, or confirm and escalate missing upstream DRIVERS authority. After genuine direct Control options are live, prove server-owned registration for the existing browser-session save and continue the selected-project read-only invocation route. Tier must not be introduced as a manual prerequisite; it is computed after run.
 
-**Next bounded worker:** `CS-SELECTOR-LIVE-CONTROL-OPTIONS-DIAGNOSIS-01` — read-only reproduction and exact boundary tracing only. No patch, stage, commit, push, or project mutation.
+**Next bounded worker:** `CS-SELECTOR-LIVE-CONTROL-AUTHORITY-INTERSECTION-REPAIR-01` — prove the exact active-source authority form first, then patch only a genuine mapping/canonicalisation mismatch. If genuine DRIVERS authority is absent, stop without code changes and identify the upstream data owner.
 
 ### 2026-07-18 acceptance precondition result
 
@@ -55,7 +55,11 @@ The user subsequently completed the correct **Save browser session envelope** ac
 
 The same live evidence reopens direct Control/Protocol as a current defect candidate: Control is not selected and blocked, direct control protocol is reported unavailable from current source, and Control type is blocked while system, optic, lm/m, and CCT/CRI are available. Run intake remains incomplete because quantity, length, and length mode are empty. Tier is correctly not selectable and must remain an Engine/Lex consequence.
 
-**Recommended next bounded worker:** `CS-SELECTOR-LIVE-CONTROL-OPTIONS-DIAGNOSIS-01`. Acceptance 02 is held until that read-only diagnosis separates the live options failure from server-revision state.
+### 2026-07-18 Control authority diagnosis result
+
+`CS-SELECTOR-LIVE-CONTROL-OPTIONS-DIAGNOSIS-01` proved that the live blocked field originates before cascade, projection, caching presentation, or rendering. `compatibleBoardDriverControlOptions()` emits no matching genuine BOARDS × DRIVERS protocol pair, so no `controlType` option or relationship record exists and the field fails closed. System and CCT/CRI remain available because they use independent SYSTEM and BOARDS-only paths. The lane gate passed 102/102 and the tree remained clean.
+
+**Recommended next bounded worker:** `CS-SELECTOR-LIVE-CONTROL-AUTHORITY-INTERSECTION-REPAIR-01`. Acceptance 02 remains held until genuine active-source protocol authority is mapped correctly or an upstream DRIVERS authority-data defect is confirmed and corrected.
 
 Evidence commit `0ad8bee0995c29bb15c227e6f885038ecd105001` was gated and pushed. Post-gate live checks at that time reproduced the missing-active-revision boundary for all three supported current project identities, with no writes, mutations, or outputs.
 
