@@ -139,3 +139,21 @@ Every completed worker updates this index with:
 - Complete gate: `selector-engine`, 103 passed, 0 failed, exit code 0 — VERIFIED.
 - Classification: **C — No supported activation authority**. Code/runtime agreement remains UNPROVEN, not contradicted.
 - Exact external action: the lifecycle owner of the `controlstack-runtime-shell` / `runtime-server` process bound to `127.0.0.1:8788` must restart or reload it from the current `lane/selector-engine` checkout, then the same bounded validation must be rerun. The supervising service name is not exposed and must not be guessed.
+
+## 2026-07-18 — Post-activation live Control acceptance
+
+- Worker: `CS-SELECTOR-LIVE-CONTROL-POST-ACTIVATION-ACCEPTANCE-01`.
+- Starting identity: root `C:\ControlStack_Worktrees\selector-engine`; branch `lane/selector-engine`; starting HEAD `973741861cac63fa3a9671ed9a4e68b9cb2179f2`; required repair `5ae1cf8e9f4e488ec4921632ef730a35db44d1fc`; starting tree clean — VERIFIED.
+- Context read: all six files under `docs/selector/_context/` — VERIFIED.
+- Current-code evidence: runtime 8788 returned HTTP 200 and `ready` from `/api/runtime-config/status`, including the HEAD-only Logo.dev status shape with configured true, secret true, browser-sensitive true, browser value redacted, and browser secrets not exposed — VERIFIED.
+- Required options request: exact constraints `80|Square`, `80|Opal`, `1200`, and `cct_cri:3000K|CRI80`; HTTP 200; owner `runtime-server`; all constraints echoed; source present/readable/parseable; System available — VERIFIED.
+- Observability limit: the successful response is too large for the connected app's bounded display and truncates inside `system.options` before `fieldKey: controlType`. The route handler exposes no field-projection parameter and always sends the complete options payload. Hidden response-resource search/read did not provide a safe extractable remainder — VERIFIED boundary.
+- Direct Control receipt: NOT EXTRACTABLE. Status, source status, selected value, option count, values/labels, per-option source tables, Boolean absence, automatic-selection absence, alias-authority absence, and driver consequence are therefore NOT CLAIMED.
+- Nearby fields: System available and selected constraints echoed; direct optic, CCT/CRI, target-lm/m role/status, and unrelated-field regression beyond the visible prefix are NOT EXTRACTABLE — HELD.
+- Active source fingerprint: `266de269e3e8f8b7191e4653d45580c251eb46025411574e0d1f2a27daca209d`; present/readable/parseable; loaded read-only; writes disabled/not attempted; RuntimeData mutation disabled; raw rows/headers/users/snapshot/path redacted — VERIFIED.
+- No-write live operations: no POST, project mutation, selected-result persistence, runtime filesystem/audit write, RunTable generation, IES generation, output generation, Engine invocation, or registration invocation — VERIFIED. Repository documentation writes are separately authorised.
+- Classification: **O — Observability boundary**. Runtime current-code service and request success are proven; Control acceptance and a new defect are both unproven.
+- Exact next action: the connected-app/tooling owner must expose safe bounded JSON-field extraction for the existing GET response without changing Selector route or payload semantics, then this same acceptance must be rerun.
+- Documentation paths: `LANE_STATE.md`, `WORK_QUEUE.md`, `EVIDENCE_INDEX.md`, and `SESSION_HANDOFF.md` only.
+- Complete gate before staging: `selector-engine`, 103 passed, 0 failed, exit code 0 — VERIFIED.
+- Documentation commit/push: pending gated closeout of the four documentation paths above.

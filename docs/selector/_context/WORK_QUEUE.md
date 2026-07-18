@@ -11,9 +11,9 @@ The six files under `docs/selector/_context/` were created, gated, committed, an
 
 ## Priority 1 — Single-slice E2E closeout
 
-**Status:** IN PROGRESS — the Control authority mapping repair is committed and pushed; runtime 8788 activation/receipt and server-registration acknowledgement remain unproven.
+**Status:** IN PROGRESS — runtime 8788 is demonstrably serving the current checkout, but the post-activation direct-Control receipt is blocked by the connected app's response-extraction boundary. Server registration remains held.
 
-**Next worker name:** `CS-SELECTOR-RUNTIME-8788-CONTROL-ACTIVATION-VALIDATION-01`
+**Next prerequisite:** the connected-app/tooling owner must provide safe bounded extraction of `fieldKey: controlType` from the existing successful options GET without changing Selector route or payload semantics. No next Selector worker is commissioned here.
 
 **Objective:** complete and prove one real, source-backed selection through the existing read-only Engine path to a useful result/run-table output on the current runtime.
 
@@ -39,9 +39,9 @@ The six files under `docs/selector/_context/` were created, gated, committed, an
 
 **Closed boundary evidence:** commit `6e5e6cee398e1dd1e82d331c81a719625e0d076b` binds one unambiguous selected-optic efficiency from active `OPTICS` authority inside the server-owned bridge. `selector-engine` passed 102/102, and live internal-seam execution returned one useful run with no write or mutation side effect.
 
-**Remaining acceptance:** activate/reload runtime 8788 from accepted feature commit `5ae1cf8e9f4e488ec4921632ef730a35db44d1fc` and obtain a bounded live receipt showing at least one genuine direct Control option with empty `selectedValue`. After that, prove server-owned registration for the existing browser-session save and continue the selected-project read-only invocation route. Tier must not be introduced as a manual prerequisite; it is computed after run.
+**Remaining acceptance:** obtain a bounded live receipt from the already-current runtime showing the exact `controlType` field, genuine BOARDS and DRIVERS attribution, at least one option, empty `selectedValue`, no Boolean value, no fabricated/default/automatic selection, and no descriptive alias without driver authority. After that, prove server-owned registration for the existing browser-session save and continue the selected-project read-only invocation route. Tier must not be introduced as a manual prerequisite; it is computed after run.
 
-**Next bounded worker:** `CS-SELECTOR-RUNTIME-8788-CONTROL-ACTIVATION-VALIDATION-01` — perform only the operational activation/reload and live options validation. Do not widen into registration, Engine invocation, rendering, RuntimeData changes, or further Control semantics.
+**Next action boundary:** no Selector feature worker is authorised. First restore bounded response-field extraction in the connected app/tooling, then repeat only the canonical read-only options request. Do not widen into registration, Engine invocation, rendering, RuntimeData changes, or further Control semantics.
 
 ### 2026-07-18 acceptance precondition result
 
@@ -113,3 +113,13 @@ The lane is cleanly repaired and gated at 103/103, but runtime activation cannot
 **External prerequisite:** the lifecycle owner of the `controlstack-runtime-shell` / `runtime-server` process must restart or reload port 8788 from the current `lane/selector-engine` checkout. The external supervisor name is not exposed by this app and must not be guessed.
 
 **Next bounded worker after that prerequisite:** repeat `CS-SELECTOR-RUNTIME-8788-CONTROL-ACTIVATION-VALIDATION-01` only. Validate direct `controlType`, nearby fields, source fingerprint, no-write evidence, and code/runtime agreement. Do not reopen the mapping, invoke Engine, address project registration, or widen another field.
+
+## 2026-07-18 post-activation acceptance result
+
+**Status:** OUTCOME O — OBSERVABILITY BOUNDARY.
+
+Runtime 8788 now proves current-code activation through the HEAD-only Logo.dev runtime-status shape. The exact canonical Selector options GET succeeds with HTTP 200, echoes all four constraints, reports source ready, and visibly confirms System available. However, the connected app truncates the large full response inside the first System option list and cannot extract the later `controlType` field. The route itself has no existing bounded field-projection parameter, and no Selector route or response change was made.
+
+Control availability, option authority, empty selection, Boolean exclusion, default/automatic-selection exclusion, alias rejection, driver consequence, and full nearby-field regression remain unproven rather than failed. The source fingerprint remains unchanged and the live operation was read-only and redacted.
+
+**Current prerequisite:** connected-app/tooling must expose safe bounded extraction from the existing GET response. After that, rerun the same four-constraint acceptance. Do not reopen activation, Logo.dev, Control mapping, registration, Engine, Tier, Lab/IES, Program, or another Selector feature.

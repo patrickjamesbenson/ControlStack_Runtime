@@ -141,3 +141,23 @@ Runtime 8788 remained reachable. A read-only GET to `/api/selector-reference/opt
 The active source fingerprint remained `266de269e3e8f8b7191e4653d45580c251eb46025411574e0d1f2a27daca209d`; it was loaded read-only with writes disabled and not attempted. RuntimeData mutation, project mutation, selected-result persistence, filesystem/audit writes, RunTable generation, IES generation, and output generation were not performed. Raw rows, headers, users, snapshots, private paths, credentials, and personal identifiers were not exposed. The complete `selector-engine` gate passed 103/103 with exit code 0.
 
 **Classification:** C — no supported activation authority. Code/runtime agreement remains unproven rather than failed. The exact next external action is for the lifecycle owner of the `controlstack-runtime-shell` / `runtime-server` process bound to `127.0.0.1:8788` to restart or reload it from the current `lane/selector-engine` checkout, then rerun this bounded live validation. The connected app does not expose the external supervisor name, so it must not be guessed.
+
+## 2026-07-18 post-activation live Control acceptance — outcome O
+
+Worker `CS-SELECTOR-LIVE-CONTROL-POST-ACTIVATION-ACCEPTANCE-01` started clean at `973741861cac63fa3a9671ed9a4e68b9cb2179f2` on `lane/selector-engine`; required Control repair commit `5ae1cf8e9f4e488ec4921632ef730a35db44d1fc` is present in history. Every file under `docs/selector/_context/` was read before live inspection.
+
+Runtime `127.0.0.1:8788` is reachable and demonstrably serves the current HEAD-only Logo.dev status boundary: `/api/runtime-config/status` returned HTTP 200, `status: ready`, `runtimeConfigBridge.companyIdentity.logoDevPublishableKey.configured: true`, `browserVisibleValue: redacted`, and `browserSecretsExposed: false`. This removes the prior activation-authority uncertainty without reopening the Logo.dev parcel.
+
+The required read-only GET to `/api/selector-reference/options` used exactly `system=80|Square`, `directOpticVar1=80|Opal`, `targetLmPerM=1200`, and `cctCri=cct_cri:3000K|CRI80`. It returned HTTP 200 from owner `runtime-server`, echoed all four selected constraints, reported source present/readable/parseable, and exposed `system.status: available` before the connector display boundary.
+
+The connected app cannot safely extract the later `fieldKey: controlType` object from this successful response. The response is a very large pretty-printed JSON document; the connector display truncates inside the first `system.options` array before the seventh target field, `controlType`. The existing server handler accepts only Selector constraints, timeline options, and special-parts test options, then sends the complete `buildSelectorReferenceOptions()` payload. It exposes no bounded field projection. No route or response-semantic change was made merely to improve inspection.
+
+Therefore Control status, source status, selected value, option count, canonical values/labels, per-option source tables, Boolean-value absence, automatic-selection absence, alias-authority absence, and compatible-driver consequence remain unproven from the live receipt. Nearby-field evidence is likewise limited: System is confirmed available and all requested constraints are echoed, but direct optic, CCT/CRI, target-lm/m field roles/statuses, and unrelated-field regression cannot be safely extracted from the hidden response remainder.
+
+The active source fingerprint remains `266de269e3e8f8b7191e4653d45580c251eb46025411574e0d1f2a27daca209d`; source present/readable/parseable, loaded read-only, writes disabled and not attempted, RuntimeData mutation disabled, and raw rows/headers/users/snapshot/path redacted.
+
+**Classification:** O — Observability boundary. The runtime is current and the route succeeds, but live Control acceptance is not claimed because the connected app has no working bounded extraction path for the hidden field. This is not evidence of a new Selector defect.
+
+No Engine route, registration route, POST, project mutation, selected-result persistence, RuntimeData mutation, runtime filesystem/audit write, RunTable generation, IES generation, or output generation occurred. No raw rows, raw headers, private paths, credentials, or personal identifiers were exposed. Authorised repository documentation writes are separate from the no-write live acceptance operations.
+
+**Exact next action:** the connected-app/tooling owner must provide safe bounded JSON-field extraction for an existing successful GET response, without changing the Selector route or payload semantics. Then rerun this same bounded acceptance against the four canonical constraints and classify only A or D from the extracted live `controlType` receipt.
