@@ -444,6 +444,16 @@ function runtimeConfigStatus() {
       nonSecretOnly: true,
       exposesHeaders: false,
       exposesTokens: false,
+      companyIdentity: {
+        logoDevPublishableKey: {
+          ...envStatus({
+            primary: "LOGODEV_PUBLISHABLE_KEY",
+            secret: true,
+            valueKind: "browser-publishable-logo-dev-key",
+          }),
+          browserSensitive: true,
+        },
+      },
       nvbAuthority: {
         endpoint: envStatus({ primary: "CONTROLSTACK_NVB_AUTHORITY_ENDPOINT", valueKind: "same-origin-or-admin-configured-url" }),
         enabled: envStatus({ primary: "CONTROLSTACK_NVB_AUTHORITY_ENABLED", valueKind: "boolean" }),
