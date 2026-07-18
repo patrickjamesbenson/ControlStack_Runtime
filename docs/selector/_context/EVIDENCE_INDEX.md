@@ -161,6 +161,28 @@ Every completed worker updates this index with:
 - Evidence-commit ending tree: clean, with 0 staged, modified, untracked, or deleted paths — VERIFIED.
 - The commit containing this hash-index closeout is the final ending HEAD for the worker; its exact hash is reported in the completion response.
 
+## 2026-07-19 — Bounded Google reader diagnostics repair
+
+- Worker: `CS-SELECTOR-GOOGLE-READER-BOUNDED-DIAGNOSIS-REPAIR-01`.
+- Starting identity: root `C:\ControlStack_Worktrees\selector-engine`; branch `lane/selector-engine`; starting HEAD `bace456d5e7f136863901cf77682492955205867`; runtime 8788; MCP 8000; gate `selector-engine`; starting tree clean — VERIFIED.
+- Context read: all six files under `docs/selector/_context/` — VERIFIED.
+- Pre-repair live reproduction: empty-body dry-run returned HTTP 200, `dry-run-reader-blocked`, allowed preflight, network attempted, blocker `google-reader-failed`, validation unavailable, no materialised/active write, promotion null — VERIFIED.
+- Exact code defect: `readFromGoogleReader()` collapsed every post-preflight provider exception into `google-reader-failed`; the old response contained no safe evidence capable of locating the live provider substage — VERIFIED.
+- Feature repair: allowlisted classifications cover API module validity, auth-client creation, metadata request, access denied, not found, missing expected tabs, values request, invalid values response, and unknown failures; validation failure remains separate — VERIFIED by code inspection.
+- Redaction design: raw exception messages, stacks, request URLs, headers, account identities, tokens, credentials, credential paths, Sheet ID, provider response bodies, raw rows, USERS rows, and full materialised JSON are not propagated — VERIFIED by implementation and authored tests; focused execution pending.
+- Shape-summary design: redacted DRIVERS unsuffixed authority counts, Boolean-like exclusion, duplicate-column assessment, BOARDS option/label population and mismatch counts, duplicate sensitivity, retained source order, conservative protocol families, unsuffixed intersection, and separate generic DALI evidence — VERIFIED by implementation and authored tests; live current-source receipt pending activation.
+- Feature paths: `packages/workspace-kernel/authorityReferenceMaterialiserService.js`; `tests/runtimeAuthorityReferenceMaterialiserDiagnostics.test.js` — VERIFIED.
+- Legacy test paths: `tests/authorityReferenceGoogleReader.test.js` and `tests/authorityReferenceMaterialiserService.test.js` were read but not changed because the connected app rejected writes outside enforced lane globs — VERIFIED tool boundary.
+- Focused tests: nine focused tests were authored in the new runtime diagnostic suite. Neither it nor the two existing authority suites was executed because the only exposed fixed gate omits them and no separate focused runner is available — NOT CLAIMED.
+- Complete gate: `selector-engine`, 103 passed, 0 failed, exit code 0; fixed command covered the existing five Selector/Engine files only — VERIFIED.
+- Feature commit/push: `8d274983aa08669a671e5f5e9ac03aa77bdda8ff` — `Fix bounded Google reader diagnostics`; push `bace456..8d27498` to `origin/lane/selector-engine` succeeded — VERIFIED.
+- Runtime lifecycle: no approved restart, reload, recycle, or process-control operation is exposed by the connected app — VERIFIED boundary.
+- Post-commit live dry-run: runtime 8788 still returned the old generic `google-reader-failed` schema and omitted `failureCategory` and `currentSourceShape`, proving feature activation is pending — VERIFIED.
+- Active snapshot after feature commit: fingerprint `266de269e3e8f8b7191e4653d45580c251eb46025411574e0d1f2a27daca209d`; size 983727; modified `2026-07-14T10:07:13.715322+00:00`; BOARDS 265; DRIVERS 48; read-only; no write/mutation; raw rows/users/path redacted — VERIFIED.
+- Current Google-source DRIVERS/BOARDS/protocol summary: unavailable until activation; stale snapshot table counts are not accepted as current-source authority proof — HELD.
+- Classification: **R — Repair committed, runtime activation pending.**
+- Exact next action: lifecycle owner reloads runtime 8788 from `8d27498`; an approved runner executes the two authority suites plus `tests/runtimeAuthorityReferenceMaterialiserDiagnostics.test.js`; repeat only the empty-body dry-run and classify A, C, or D. No materialisation, archive, promotion, Selector projection repair, Engine invocation, or external Google change is authorised.
+
 ## 2026-07-19 — Authority snapshot refresh activation attempt
 
 - Worker: `CS-SELECTOR-AUTHORITY-SNAPSHOT-REFRESH-ACTIVATION-01`.
