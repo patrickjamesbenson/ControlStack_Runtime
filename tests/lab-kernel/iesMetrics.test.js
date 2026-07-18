@@ -28,3 +28,43 @@ test("flux half azimuth ~= 4*pi*100 with symmetry x2", () => {
   assert.equal(f.symmetryFactor, 2);
   assert.ok(Math.abs(f.lumens - EXPECT) < 0.5, `flux ${f.lumens} vs ${EXPECT}`);
 });
+
+test("single stored horizontal plane integrates over the full azimuth", () => {
+  // Source equation: luminous flux is the spherical integral of I(theta, phi) sin(theta).
+  // A rotationally symmetric single plane therefore contributes across phi = 0..2*pi.
+  const vAngles = Array.from({ length: 181 }, (_, angle) => angle);
+  const m = {
+    photometry: {
+      v_angles: vAngles,
+      h_angles: [0],
+      candela: [vAngles.map(() => 100)],
+    },
+  };
+
+  const f = luminousFlux(m);
+  assert.equal(f.azimuthCoverageDeg, 0);
+  assert.equal(f.symmetryFactor, 1);
+  assert.ok(Math.abs(f.lumens - EXPECT) < 0.05, `flux ${f.lumens} vs ${EXPECT}`);
+});
+
+test("C0 and C90 FWHM are independent with nadir and zenith half-curves", () => {
+  // FWHM is the angular width between half-maximum crossings. LM-63 stores the
+  // principal-plane curves independently; boundary-centred half-curves are doubled.
+  const vAngles = Array.from({ length: 19 }, (_, index) => index * 10);
+  const c0Nadir = vAngles.map((angle) => Math.max(0, 100 - 2.5 * angle));
+  const c90Zenith = vAngles.map((angle) => Math.max(0, 100 - 1.25 * (180 - angle)));
+  const m = {
+    photometry: {
+      v_angles: vAngles,
+      h_angles: [0, 90],
+      candela: [c0Nadir, c90Zenith],
+    },
+  };
+
+  assert.deepEqual(beamAngleFwhm(m), {
+    fwhmDeg: 40,
+    c0Deg: 40,
+    c90Deg: 80,
+    onHorizontalPlane: 0,
+  });
+});

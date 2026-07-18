@@ -19,8 +19,11 @@ export function luminousFlux(model){
   const Vr = V.map(d2r), Hr = H.map(d2r), sV = Vr.map(Math.sin);
   const row = [];
   for (let h = 0; h < H.length; h++){ const yv = I[h].map((c, v) => Number(c) * sV[v]); row.push(trapz(yv, Vr)); }
-  const phi = trapz(row, Hr);
   const cov = azimuthCoverageDeg(H);
+  // A single stored plane is rotationally symmetric — integrate it over the full 2π azimuth.
+  // (Integrating `row` over a one-point Hr with trapz would be 0, which is wrong.)
+  if (H.length === 1) return { lumens: row[0] * 2 * Math.PI, symmetryFactor: 1, azimuthCoverageDeg: cov };
+  const phi = trapz(row, Hr);
   const mul = replicationFromCoverage(cov);
   return { lumens: phi * mul, symmetryFactor: mul, azimuthCoverageDeg: cov };
 }
@@ -34,17 +37,11 @@ export function peakIntensity(model){
   return { maxCandela: max, atVertical: V[vi] ?? null, atHorizontal: H[hi] ?? null };
 }
 
-export function beamAngleFwhm(model){
-  const P = model.photometry || {};
-  const V = (P.v_angles || []).map(Number), H = (P.h_angles || []).map(Number), I = P.candela || [];
-  if (!V.length || !H.length || !I.length) return { fwhmDeg: null, onHorizontalPlane: null };
-  let j = 0, best = -Infinity;
-  for (let h = 0; h < I.length; h++){ const m = Math.max(...I[h].map(Number)); if (m > best){ best = m; j = h; } }
-  const line = I[j].map(Number);
-  const peak = Math.max(...line);
-  if (!(peak > 0)) return { fwhmDeg: null, onHorizontalPlane: H[j] };
-  const half = 0.5 * peak;
-  const k = line.indexOf(peak);
+// Full-width-half-max of a single plane's candela-vs-vertical-angle line. Nadir/zenith-aware: a symmetric beam is
+// stored as a half-curve, so if it straddles the nadir (or zenith) the measured side is doubled to the full angle.
+function fwhmForLine(V, line){
+  const peak = Math.max(...line); if (!(peak > 0)) return null;
+  const half = 0.5 * peak; const k = line.indexOf(peak);
   let li = k; while (li > 0 && line[li] >= half) li--;
   let leftAng;
   if (line[li] >= half) leftAng = V[0];
@@ -53,7 +50,30 @@ export function beamAngleFwhm(model){
   let rightAng;
   if (line[ri] >= half) rightAng = V[V.length - 1];
   else { const x0 = line[ri-1], x1 = line[ri]; rightAng = (x1 !== x0) ? V[ri-1] + (half - x0) * (V[ri] - V[ri-1]) / (x1 - x0) : V[ri]; }
-  return { fwhmDeg: rightAng - leftAng, onHorizontalPlane: H[j] };
+  const nadirLit = line[0] >= half, zenithLit = line[line.length - 1] >= half;
+  if (nadirLit && !zenithLit) return 2 * (rightAng - V[0]);
+  if (zenithLit && !nadirLit) return 2 * (V[V.length - 1] - leftAng);
+  return rightAng - leftAng;
+}
+// candela-vs-V for the stored plane nearest a requested C-plane (symmetry-folded so half-stored files resolve).
+function planeLineFor(H, I, targetC){
+  const Hmax = H.length ? Math.max(...H) : 0;
+  const fold = (t) => { t = ((t % 360) + 360) % 360; if (Hmax <= 1) return 0; if (Hmax <= 91){ t = t > 180 ? 360 - t : t; return t > 90 ? 180 - t : t; } if (Hmax <= 181) return t > 180 ? 360 - t : t; return t; };
+  const t = fold(targetC); let bi = 0, bd = Infinity;
+  for (let h = 0; h < H.length; h++){ let d = Math.abs(((H[h] - t) % 360 + 360) % 360); d = Math.min(d, 360 - d); if (d < bd){ bd = d; bi = h; } }
+  return (I[bi] || []).map(Number);
+}
+// Beam angle PER principal plane. An elliptical beam (e.g. 8°x45° grazer) needs two numbers, not one; a single
+// "peak plane" pick lands on an ambiguous in-between value. Headline the narrower plane, as Viso does.
+export function beamAngleFwhm(model){
+  const P = model.photometry || {};
+  const V = (P.v_angles || []).map(Number), H = (P.h_angles || []).map(Number), I = P.candela || [];
+  if (!V.length || !H.length || !I.length) return { fwhmDeg: null, c0Deg: null, c90Deg: null, onHorizontalPlane: null };
+  const c0 = fwhmForLine(V, planeLineFor(H, I, 0));
+  const c90 = fwhmForLine(V, planeLineFor(H, I, 90));
+  const vals = [c0, c90].filter((x) => x != null);
+  const fwhmDeg = vals.length ? Math.min(...vals) : null;
+  return { fwhmDeg, c0Deg: c0, c90Deg: c90, onHorizontalPlane: 0 };
 }
 
 export function lmPerW(lumens, watts){ return (watts > 0 && lumens != null) ? lumens / watts : null; }
