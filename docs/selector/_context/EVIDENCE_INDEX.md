@@ -123,3 +123,19 @@ Every completed worker updates this index with:
 - Recommended next worker: `CS-SELECTOR-RUNTIME-8788-CONTROL-ACTIVATION-VALIDATION-01`.
 - Documentation evidence commit: `e31f960d72a56e43c19266183bbc08357f02c741`; push `5ae1cf8..e31f960` to `origin/lane/selector-engine` succeeded after a 103/103 gated run — VERIFIED.
 - Evidence-parcel ending HEAD before this hash-index closeout: `e31f960d72a56e43c19266183bbc08357f02c741`; Git inventory clean — VERIFIED.
+
+## 2026-07-18 — Runtime 8788 activation authority validation
+
+- Worker: `CS-SELECTOR-RUNTIME-8788-CONTROL-ACTIVATION-VALIDATION-01`.
+- Starting HEAD: `184aa50f90b03ecb55e0402f9ba9fb00b643cbe2`; starting Git inventory: 0 staged, 0 modified, 0 untracked, 0 deleted — VERIFIED.
+- Required feature commit `5ae1cf8e9f4e488ec4921632ef730a35db44d1fc` present in history — VERIFIED.
+- Connected-app lifecycle capability: no supported restart, reload, recycle, or process-control operation; no lifecycle command dispatched — VERIFIED boundary.
+- Runtime self-identification: `controlstack-runtime-shell`; route owner `runtime-server`; external supervisor identity not exposed by the connected app — VERIFIED without guessing.
+- Runtime reachability: root and constrained Selector options GET returned HTTP 200 — VERIFIED.
+- Exact accepted constraints: System `DNX 80`; direct optic token `80|Opal` (`Opal · 80`); direct target `1200`; CCT/CRI token `cct_cri:3000K|CRI80` (`3000K / CRI80`) — VERIFIED.
+- Bounded visible receipt: source ready; selected constraints echoed; System available; read-only and raw-row exposure false. Direct `controlType` post-activation status and nearby fields beyond System were not claimable because activation authority and a bounded Control-only projection were unavailable — HELD.
+- Active source fingerprint: `266de269e3e8f8b7191e4653d45580c251eb46025411574e0d1f2a27daca209d`; loaded read-only; write disabled; write not attempted; RuntimeData mutation disabled — VERIFIED.
+- No-write/redaction: no project mutation, selected-result persistence, filesystem/audit write, RunTable, IES, or output generation; no raw rows, raw headers, users, snapshots, private paths, credentials, personal identifiers, or user data exposed — VERIFIED for the operations performed.
+- Complete gate: `selector-engine`, 103 passed, 0 failed, exit code 0 — VERIFIED.
+- Classification: **C — No supported activation authority**. Code/runtime agreement remains UNPROVEN, not contradicted.
+- Exact external action: the lifecycle owner of the `controlstack-runtime-shell` / `runtime-server` process bound to `127.0.0.1:8788` must restart or reload it from the current `lane/selector-engine` checkout, then the same bounded validation must be rerun. The supervising service name is not exposed and must not be guessed.
