@@ -1,13 +1,14 @@
-// Lab IES toolkit — record-maker acceptance: template merge (from-file / aliased / computed / needs-lab-input) + 1mm seed.
+// Lab IES toolkit — template merge plus rich one-millimetre authority-record construction.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { buildLabForm, buildOneMmRecord } from "../../packages/lab-kernel/ies-toolkit/iesLabForm.js";
 import { toOneMm } from "../../packages/lab-kernel/ies-toolkit/iesOneMm.js";
+import { buildSafeHandoff } from "../../packages/lab-kernel/ies-toolkit/iesHandoff.js";
 
 const model = {
   meta: { keywords_order: [
     { key: "[MANUFAC]", value: "NOVON" },
-    { key: "[COLOUR]", value: "4000K" }, // supplier's odd name for colour temp
+    { key: "[COLOUR]", value: "4000K" },
   ]},
   photometry: { v_angles: [0, 90], h_angles: [0], candela: [[100, 200]], geometry: { G8: 1, G12: 22.5 } },
 };
@@ -20,7 +21,7 @@ const TEMPLATE = [
 
 test("merge marks from-file, aliased, computed, needs-lab-input", () => {
   const rows = buildLabForm(model, TEMPLATE, { COLOUR: "_COLORTEMP" });
-  const by = Object.fromEntries(rows.map((r) => [r.bareField, r]));
+  const by = Object.fromEntries(rows.map((row) => [row.bareField, row]));
   assert.equal(by.MANUFAC.value, "NOVON");
   assert.equal(by.MANUFAC.source, "from-file");
   assert.equal(by._COLORTEMP.value, "4000K");
@@ -36,9 +37,27 @@ test("1mm seed scales candela by 0.001 / length", () => {
   assert.ok(Math.abs(one.photometry.candela[0][0] - 0.1) < 1e-9);
 });
 
-test("record surfaces 1mm flags, recordType, reference link, unresolved list", () => {
-  const rec = buildOneMmRecord(model, { baseLabForm: TEMPLATE, aliasMap: { COLOUR: "_COLORTEMP" } });
-  assert.equal(rec.oneMmNormalised, true);
-  assert.equal(rec.baseLengthM, 0.001);
-  assert.ok(rec.unresolvedFields.includes("_TEST_TYPE"));
+test("record surfaces the canonical rich authority skeleton", () => {
+  const record = buildOneMmRecord(model, {
+    baseLabForm: TEMPLATE,
+    aliasMap: { COLOUR: "_COLORTEMP" },
+    origin: {
+      artifactRef: "lab/origins/test/origin.ies",
+      byteLength: 999,
+      mediaType: "text/plain",
+      fingerprint: null,
+    },
+  });
+  assert.equal(record.oneMmNormalised, true);
+  assert.equal(record.baseLengthM, 0.001);
+  assert.equal(record.photometry.geometry.G8, 0.001);
+  assert.equal(record.recordKind, null);
+  assert.equal(record.revisionState, "draft");
+  assert.equal(record.labProofState, "pending");
+  assert.equal(record.recipe.operation, "normalise_1mm_candidate");
+  assert.ok(record.unresolvedFields.includes("/labForm/_TEST_TYPE"));
+  assert.ok(record.unresolvedFields.includes("/recordKind"));
+  assert.equal("recordType" in record, false);
+  assert.equal("referenceEngineId" in record, false);
+  assert.deepEqual(record.safeRuntimeHandoff, buildSafeHandoff(record));
 });

@@ -1,8 +1,12 @@
-// Lab IES toolkit — metadata merge against BASE_LAB_FORM (kind-aware) + alias map, and the 1mm record builder.
-// kind: ies (fill from file) | lab (human/thermal-test fills) | check (ratification, starts "pending").
-// gates_reference (y/n): must be filled/ratified before the record can be stamped a reference.
-// Template passed IN (caller reads BASE_LAB_FORM from novondb). Pure, browser-safe.
+// Lab IES toolkit — metadata merge against BASE_LAB_FORM and rich 1 mm authority-record builder.
+// Template passed IN by the caller. Pure and browser-safe.
 import { toOneMm } from "./iesOneMm.js";
+import {
+  assertAuthorityRecord,
+  createAuthorityRecord,
+  deriveRecordKind,
+} from "./iesAuthorityRecord.js";
+import { refreshSafeRuntimeHandoff } from "./iesHandoff.js";
 
 function bareKey(k){ return String(k || "").trim().replace(/^\[|\]$/g, "").toUpperCase(); }
 function fileValueMap(model){
@@ -50,19 +54,44 @@ export function buildLabForm(model, baseLabForm = [], aliasMap = {}){
 }
 
 export function buildOneMmRecord(model, opts = {}){
-  const { baseLabForm = [], aliasMap = {}, originName = null } = opts;
+  const { baseLabForm = [], aliasMap = {} } = opts;
   const labForm = buildLabForm(model, baseLabForm, aliasMap);
   const oneMm = toOneMm(model);
-  const get = (f) => { const r = labForm.find((x) => x.bareField === f); return r ? r.value : null; };
-  return {
-    schemaId: "controlstack.lab.one-mm-ies-record.v1", schemaVersion: 1,
-    oneMmNormalised: true, baseLengthM: 0.001, photometryMode: "normalise_1mm_candidate",
-    recordType: get("_TEST_TYPE") || null, referenceEngineId: get("_ENGINE_ID") || null,
-    labForm, photometry: oneMm.photometry,
-    origin: { statedName: originName, asReceived: true, fingerprint: null },
-    sourceFingerprint: null, recordFingerprint: null,
-    provenance: { fingerprintsSealed: false, mutationLog: [] },
-    approvalState: "draft",
-    unresolvedFields: labForm.filter((r) => r.source === "needs-lab-input").map((r) => r.bareField),
+  const get = (field) => labForm.find((row) => row.bareField === field)?.value || null;
+  const testType = get("_TEST_TYPE");
+  const referenceEngineId = get("_ENGINE_ID");
+  const recordKind = deriveRecordKind(opts.recordKind) || deriveRecordKind(testType);
+  const derivationReferences = Array.isArray(opts.derivationReferences)
+    ? opts.derivationReferences.map((entry) => ({ ...entry }))
+    : [];
+  if (referenceEngineId && !derivationReferences.some((entry) => entry?.referenceId === referenceEngineId)) {
+    derivationReferences.push({ relation: "reference_engine", referenceId: referenceEngineId });
+  }
+
+  const origin = opts.origin || {
+    artifactRef: opts.originArtifactRef ?? null,
+    byteLength: opts.originByteLength ?? null,
+    mediaType: opts.originMediaType ?? null,
+    fingerprint: null,
   };
+
+  const record = createAuthorityRecord({
+    recordId: opts.recordId ?? null,
+    recordKind,
+    origin,
+    labForm,
+    photometry: oneMm.photometry,
+    recipe: opts.recipe || {
+      operation: "normalise_1mm_candidate",
+      paramsSummary: { oneMmNormalised: true, baseLengthM: 0.001 },
+    },
+    originReferences: opts.originReferences || [],
+    evidenceReferences: opts.evidenceReferences || [],
+    derivationReferences,
+    parentLineage: opts.parentLineage || [],
+  });
+
+  refreshSafeRuntimeHandoff(record);
+  assertAuthorityRecord(record);
+  return record;
 }
