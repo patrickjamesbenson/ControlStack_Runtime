@@ -244,6 +244,7 @@ test("readiness probing tolerates a slow final topology scan and preserves all e
       livenessTimeoutMs: 500,
       startupTimeoutMs: 500,
       statusTimeoutMs: 1000,
+      statusRetryDelayMs: 10,
     });
     assert.equal(payload.services.length, 8);
     assert.deepEqual(payload.services.map((service) => service.id), sourceManifest.services.map((service) => service.id));
@@ -251,6 +252,124 @@ test("readiness probing tolerates a slow final topology scan and preserves all e
   } finally {
     await close(server);
   }
+});
+
+test("stable readiness tolerates rotating transitional services and accepts recovery", async () => {
+  const manifest = loadAndValidateManifest(manifestPath);
+  const healthyServices = manifest.services.map((service) => ({
+    id: service.id,
+    name: service.name,
+    port: service.port,
+    healthy: true,
+    managed: true,
+  }));
+  const snapshots = [
+    healthyServices.map((service) => service.id === "selector-runtime" ? { ...service, healthy: false } : service),
+    healthyServices.map((service) => service.id === "program-tunnel" ? { ...service, healthy: false } : service),
+    healthyServices,
+    healthyServices,
+  ];
+  let statusCalls = 0;
+  const request = async (url) => {
+    if (url.endsWith("/healthz")) {
+      return { statusCode: 200, body: JSON.stringify({ ok: true, ...DEPLOYMENT_V2_MANAGER_IDENTITY, liveness: "live" }) };
+    }
+    if (url.endsWith("/readyz")) {
+      return { statusCode: 200, body: JSON.stringify({ ok: true, ...DEPLOYMENT_V2_MANAGER_IDENTITY, readiness: "ready" }) };
+    }
+    const services = snapshots[Math.min(statusCalls, snapshots.length - 1)];
+    statusCalls += 1;
+    return { statusCode: 200, body: JSON.stringify({ ok: true, verified: false, services }) };
+  };
+
+  const payload = await probeControlUiReadiness(manifest, {
+    livenessTimeoutMs: 50,
+    startupTimeoutMs: 50,
+    statusTimeoutMs: 50,
+    statusRetryDelayMs: 1,
+    request,
+    wait: async () => {},
+  });
+  assert.equal(statusCalls, 4);
+  assert.equal(payload.services.every((service) => service.healthy && service.managed), true);
+});
+
+test("stable readiness requires two consecutive fully green observations", async () => {
+  const manifest = loadAndValidateManifest(manifestPath);
+  const healthyServices = manifest.services.map((service) => ({
+    id: service.id,
+    name: service.name,
+    port: service.port,
+    healthy: true,
+    managed: true,
+  }));
+  const transitional = healthyServices.map((service) => service.id === "lab-tunnel" ? { ...service, managed: false } : service);
+  const snapshots = [healthyServices, transitional, healthyServices, healthyServices];
+  let statusCalls = 0;
+  const request = async (url) => {
+    if (url.endsWith("/healthz")) {
+      return { statusCode: 200, body: JSON.stringify({ ok: true, ...DEPLOYMENT_V2_MANAGER_IDENTITY, liveness: "live" }) };
+    }
+    if (url.endsWith("/readyz")) {
+      return { statusCode: 200, body: JSON.stringify({ ok: true, ...DEPLOYMENT_V2_MANAGER_IDENTITY, readiness: "ready" }) };
+    }
+    const services = snapshots[Math.min(statusCalls, snapshots.length - 1)];
+    statusCalls += 1;
+    return { statusCode: 200, body: JSON.stringify({ ok: true, verified: false, services }) };
+  };
+
+  await probeControlUiReadiness(manifest, {
+    livenessTimeoutMs: 50,
+    startupTimeoutMs: 50,
+    statusTimeoutMs: 50,
+    statusRetryDelayMs: 1,
+    request,
+    wait: async () => {},
+  });
+  assert.equal(statusCalls, 4, "a transitional observation must reset the consecutive-green count");
+});
+
+test("persistent single-service readiness failure reports exact safe service details", async () => {
+  const manifest = loadAndValidateManifest(manifestPath);
+  const failedService = manifest.services.find((service) => service.id === "program-tunnel");
+  const services = manifest.services.map((service) => ({
+    id: service.id,
+    name: service.name,
+    port: service.port,
+    healthy: service.id !== failedService.id,
+    managed: true,
+  }));
+  let clock = 0;
+  const request = async (url) => {
+    if (url.endsWith("/healthz")) {
+      return { statusCode: 200, body: JSON.stringify({ ok: true, ...DEPLOYMENT_V2_MANAGER_IDENTITY, liveness: "live" }) };
+    }
+    if (url.endsWith("/readyz")) {
+      return { statusCode: 200, body: JSON.stringify({ ok: true, ...DEPLOYMENT_V2_MANAGER_IDENTITY, readiness: "ready" }) };
+    }
+    return { statusCode: 200, body: JSON.stringify({ ok: true, verified: false, services }) };
+  };
+
+  await assert.rejects(
+    validateLiveEndpoints(manifest, "", {
+      controlUi: {
+        livenessTimeoutMs: 50,
+        startupTimeoutMs: 50,
+        statusTimeoutMs: 4,
+        statusRetryDelayMs: 1,
+      },
+      request,
+      now: () => clock,
+      wait: async (ms) => { clock += Math.max(1, ms); },
+    }),
+    {
+      code: "DEPLOYMENT_V2_STABLE_READINESS_FAILED",
+      message: "Deployment v2 stable readiness failed: service ID=" + failedService.id +
+        "; service name=" + failedService.name +
+        "; port=" + failedService.port +
+        "; healthy=false; managed=true; consecutive fully green observations=0/2; last safe local health result=HTTP 200.",
+    },
+  );
 });
 
 test("Selector readiness retries temporary restart unavailability and accepts the new runtime identity", async () => {
@@ -333,7 +452,7 @@ test("live validation reuses the slow-tolerant control probe and validates Selec
       throw new Error("unexpected local request");
     };
     const live = await validateLiveEndpoints(manifest, "pk_public-test-secret", {
-      controlUi: { livenessTimeoutMs: 500, startupTimeoutMs: 500, statusTimeoutMs: 1000 },
+      controlUi: { livenessTimeoutMs: 500, startupTimeoutMs: 500, statusTimeoutMs: 1000, statusRetryDelayMs: 10 },
       selector: { startupTimeoutMs: 500, requestTimeoutMs: 250, retryDelayMs: 1 },
       request,
       processIdentity: () => selectorProcessIdentity(selector, 4200),
@@ -478,7 +597,8 @@ test("installer performs one idempotent consolidation operation and restarts onl
   assert.match(installer, /probeControlUiReadiness/);
   assert.match(installer, /\/healthz/);
   assert.match(installer, /\/readyz/);
-  assert.match(installer, /CONTROL_UI_STATUS_TIMEOUT_MS = 120000/);
+  assert.match(installer, /CONTROL_UI_STATUS_TIMEOUT_MS = 180000/);
+  assert.match(installer, /CONTROL_UI_REQUIRED_GREEN_OBSERVATIONS = 2/);
   assert.match(installer, /--verify-consolidation/);
   assert.match(installer, /controlstack-manager-ui\.log/);
   assert.match(installer, /stdio: \["ignore", managerLogHandle, managerLogHandle\]/);

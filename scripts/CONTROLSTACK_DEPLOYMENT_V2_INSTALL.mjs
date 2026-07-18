@@ -42,7 +42,10 @@ const sourceFiles = [
 ];
 const CONTROL_UI_LIVENESS_TIMEOUT_MS = 30000;
 const CONTROL_UI_STARTUP_TIMEOUT_MS = 390000;
-const CONTROL_UI_STATUS_TIMEOUT_MS = 120000;
+const CONTROL_UI_STATUS_TIMEOUT_MS = 180000;
+const CONTROL_UI_STATUS_REQUEST_TIMEOUT_MS = 30000;
+const CONTROL_UI_STATUS_RETRY_DELAY_MS = 1000;
+const CONTROL_UI_REQUIRED_GREEN_OBSERVATIONS = 2;
 const SELECTOR_RUNTIME_STARTUP_TIMEOUT_MS = 120000;
 const SELECTOR_RUNTIME_REQUEST_TIMEOUT_MS = 30000;
 const SELECTOR_WORKSPACE_REQUEST_TIMEOUT_MS = 30000;
@@ -699,19 +702,98 @@ export function validateServiceTopology(payload, manifest) {
   return payload;
 }
 
+function transientLocalHealthError(error) {
+  return error?.transient === true || /^A local health (?:request|response)/.test(error?.message || "");
+}
+
+function stableReadinessFailure(manifest, lastPayload, lastSafeLocalHealthResult, consecutiveGreenObservations) {
+  const services = Array.isArray(lastPayload?.services) ? lastPayload.services : [];
+  const observed = services.find((service) => service.healthy !== true || service.managed !== true) || services[0];
+  const configured = manifest.services.find((service) => service.id === observed?.id) || manifest.services[0];
+  const healthy = observed ? String(observed.healthy) : "unknown";
+  const managed = observed ? String(observed.managed) : "unknown";
+  const error = new Error(
+    "Deployment v2 stable readiness failed: service ID=" + configured.id +
+    "; service name=" + configured.name +
+    "; port=" + configured.port +
+    "; healthy=" + healthy +
+    "; managed=" + managed +
+    "; consecutive fully green observations=" + consecutiveGreenObservations + "/" + CONTROL_UI_REQUIRED_GREEN_OBSERVATIONS +
+    "; last safe local health result=" + lastSafeLocalHealthResult + ".",
+  );
+  error.code = "DEPLOYMENT_V2_STABLE_READINESS_FAILED";
+  return error;
+}
+
+async function waitForStableServiceStatus(baseUrl, manifest, timeoutMs, {
+  request = httpRequest,
+  wait = delay,
+  now = Date.now,
+  retryDelayMs = CONTROL_UI_STATUS_RETRY_DELAY_MS,
+} = {}) {
+  const deadline = now() + timeoutMs;
+  let consecutiveGreenObservations = 0;
+  let lastPayload;
+  let lastSafeLocalHealthResult = "no completed local status request";
+
+  while (now() < deadline) {
+    const remainingMs = Math.max(1, deadline - now());
+    try {
+      const response = await request(
+        baseUrl + "/api/status",
+        Math.min(CONTROL_UI_STATUS_REQUEST_TIMEOUT_MS, remainingMs),
+      );
+      lastSafeLocalHealthResult = "HTTP " + String(response.statusCode);
+      if (response.statusCode === 200) {
+        const payload = validateServiceTopology(parseJsonResponse(response, "api/status"), manifest);
+        lastPayload = payload;
+        if (payload.services.every((service) => service.healthy === true && service.managed === true)) {
+          consecutiveGreenObservations += 1;
+          if (consecutiveGreenObservations >= CONTROL_UI_REQUIRED_GREEN_OBSERVATIONS) return payload;
+        } else {
+          consecutiveGreenObservations = 0;
+        }
+      } else {
+        consecutiveGreenObservations = 0;
+      }
+    } catch (error) {
+      if (!transientLocalHealthError(error)) throw error;
+      lastSafeLocalHealthResult = "transient local transport failure";
+      consecutiveGreenObservations = 0;
+    }
+
+    const remainingAfterObservationMs = deadline - now();
+    if (remainingAfterObservationMs > 0) {
+      await wait(Math.min(retryDelayMs, remainingAfterObservationMs));
+    }
+  }
+
+  throw stableReadinessFailure(
+    manifest,
+    lastPayload,
+    lastSafeLocalHealthResult,
+    consecutiveGreenObservations,
+  );
+}
+
 export async function probeControlUiReadiness(manifest, {
   livenessTimeoutMs = CONTROL_UI_LIVENESS_TIMEOUT_MS,
   startupTimeoutMs = CONTROL_UI_STARTUP_TIMEOUT_MS,
   statusTimeoutMs = CONTROL_UI_STATUS_TIMEOUT_MS,
   request = httpRequest,
   wait = delay,
+  now = Date.now,
+  statusRetryDelayMs = CONTROL_UI_STATUS_RETRY_DELAY_MS,
 } = {}) {
   const baseUrl = "http://" + manifest.controlUi.host + ":" + manifest.controlUi.port;
   await waitForHealthz(baseUrl, livenessTimeoutMs, { request, wait });
   await waitForReadyz(baseUrl, startupTimeoutMs, { request, wait });
-  const response = await request(baseUrl + "/api/status", statusTimeoutMs);
-  if (response.statusCode !== 200) throw new Error("The Deployment v2 control API status request failed.");
-  return validateServiceTopology(parseJsonResponse(response, "api/status"), manifest);
+  return waitForStableServiceStatus(baseUrl, manifest, statusTimeoutMs, {
+    request,
+    wait,
+    now,
+    retryDelayMs: statusRetryDelayMs,
+  });
 }
 
 export function waitForManagerReady(child, readinessOperation, logPath) {
@@ -915,11 +997,12 @@ export async function validateLiveEndpoints(manifest, logoPlaintext, {
 } = {}) {
   let statusPayload;
   try {
-    statusPayload = await probeControlUiReadiness(manifest, { ...controlUi, request, wait });
+    statusPayload = await probeControlUiReadiness(manifest, { ...controlUi, request, wait, now });
     if (!statusPayload.services.every((service) => service.healthy && service.managed)) {
       throw new Error("The Deployment v2 control API reported an unhealthy service.");
     }
-  } catch {
+  } catch (error) {
+    if (error?.code === "DEPLOYMENT_V2_STABLE_READINESS_FAILED") throw error;
     throw safeLocalRequestFailure("control-ui-status");
   }
 
