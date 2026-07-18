@@ -27,6 +27,7 @@ import {
   readLogoDevBat,
   unprotectForCurrentUser,
 } from "./deployment-v2/controlstack_secret_store.mjs";
+import { DEPLOYMENT_V2_MANAGER_IDENTITY } from "./deployment-v2/controlstack_lane_manager.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const sourceRoot = path.join(here, "deployment-v2");
@@ -39,6 +40,9 @@ const sourceFiles = [
   "controlstack_secret_store.mjs",
   "controlstack_manager_ui.html",
 ];
+const CONTROL_UI_LIVENESS_TIMEOUT_MS = 30000;
+const CONTROL_UI_STARTUP_TIMEOUT_MS = 390000;
+const CONTROL_UI_STATUS_TIMEOUT_MS = 120000;
 
 let progressIndex = 0;
 let currentProgressMessage = "not started";
@@ -560,32 +564,134 @@ function consolidateLegacy(managerRoot, canonicalStartup, canonicalManager, arch
   return { inventory, managerFiles, stoppedProcesses, archived };
 }
 
-function httpRequest(url, timeoutMs = 5000) {
+export function httpRequest(url, timeoutMs = 5000) {
   return new Promise((resolve, reject) => {
-    const request = http.get(url, { timeout: timeoutMs }, (response) => {
-      let body = "";
+    let settled = false;
+    let request;
+    let response;
+    let body = "";
+    const finish = (callback, value) => {
+      if (settled) return;
+      settled = true;
+      request.setTimeout(0);
+      request.off("timeout", onTimeout);
+      request.off("error", onError);
+      if (response) {
+        response.off("data", onData);
+        response.off("end", onEnd);
+        response.off("error", onResponseError);
+      }
+      callback(value);
+    };
+    const onData = (chunk) => { body += chunk; };
+    const onEnd = () => finish(resolve, { statusCode: response.statusCode, headers: response.headers, body });
+    const onResponseError = () => finish(reject, new Error("A local health response failed."));
+    const onTimeout = () => {
+      request.destroy();
+      finish(reject, new Error("A local health request timed out."));
+    };
+    const onError = () => finish(reject, new Error("A local health request failed."));
+    request = http.get(url, (incoming) => {
+      response = incoming;
       response.setEncoding("utf8");
-      response.on("data", (chunk) => { body += chunk; });
-      response.on("end", () => resolve({ statusCode: response.statusCode, headers: response.headers, body }));
+      response.on("data", onData);
+      response.once("end", onEnd);
+      response.once("error", onResponseError);
     });
-    request.once("timeout", () => { request.destroy(); reject(new Error("A local health request timed out.")); });
-    request.once("error", () => reject(new Error("A local health request failed.")));
+    request.setTimeout(timeoutMs);
+    request.once("timeout", onTimeout);
+    request.once("error", onError);
   });
 }
 
-async function waitForHttp(url, timeoutMs = 45000) {
+function parseJsonResponse(response, endpoint) {
+  try {
+    return JSON.parse(response.body);
+  } catch {
+    throw new Error("The Deployment v2 " + endpoint + " endpoint did not return valid JSON.");
+  }
+}
+
+function assertManagerIdentity(payload, endpoint) {
+  for (const [key, value] of Object.entries(DEPLOYMENT_V2_MANAGER_IDENTITY)) {
+    if (payload?.[key] !== value) throw new Error("The Deployment v2 " + endpoint + " endpoint returned an unexpected manager identity.");
+  }
+}
+
+async function waitForHealthz(baseUrl, timeoutMs) {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
     try {
-      const response = await httpRequest(url, 2500);
-      if (response.statusCode === 200) return response;
-    } catch { /* keep waiting */ }
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+      const response = await httpRequest(baseUrl + "/healthz", 2500);
+      if (response.statusCode === 200) {
+        const payload = parseJsonResponse(response, "healthz");
+        assertManagerIdentity(payload, "healthz");
+        if (payload.ok !== true || payload.liveness !== "live") throw new Error("The Deployment v2 healthz endpoint returned an invalid liveness state.");
+        return payload;
+      }
+    } catch (error) {
+      if (!/^A local health (?:request|response)/.test(error?.message || "")) throw error;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 500));
   }
-  throw new Error("The Deployment v2 control interface did not become ready.");
+  throw new Error("The Deployment v2 control interface did not become live.");
 }
 
-function waitForManagerReady(child, url, logPath) {
+async function waitForReadyz(baseUrl, timeoutMs) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    try {
+      const response = await httpRequest(baseUrl + "/readyz", 2500);
+      if (response.statusCode === 200 || response.statusCode === 503) {
+        const payload = parseJsonResponse(response, "readyz");
+        assertManagerIdentity(payload, "readyz");
+        if (response.statusCode === 200 && payload.ok === true && payload.readiness === "ready") return payload;
+        if (response.statusCode === 503 && payload.ok === false && payload.readiness === "failed") {
+          throw new Error("The Deployment v2 manager reported failed managed-service startup.");
+        }
+        if (response.statusCode !== 503 || payload.ok !== false || payload.readiness !== "starting") {
+          throw new Error("The Deployment v2 readyz endpoint returned an invalid readiness state.");
+        }
+      }
+    } catch (error) {
+      if (!/^A local health (?:request|response)/.test(error?.message || "")) throw error;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  }
+  throw new Error("The Deployment v2 managed services did not become ready within the bounded startup window.");
+}
+
+export function validateServiceTopology(payload, manifest) {
+  if (!payload?.ok || !Array.isArray(payload.services) || payload.services.length !== 8) {
+    throw new Error("The Deployment v2 control API returned an invalid service topology.");
+  }
+  const expected = new Map(manifest.services.map((service) => [service.id, service]));
+  const seen = new Set();
+  for (const service of payload.services) {
+    const configured = expected.get(service.id);
+    if (!configured || seen.has(service.id) || configured.name !== service.name || configured.port !== service.port) {
+      throw new Error("The Deployment v2 control API returned an unexpected configured service.");
+    }
+    seen.add(service.id);
+  }
+  if (seen.size !== manifest.services.length) throw new Error("The Deployment v2 control API omitted a configured service.");
+  return payload;
+}
+
+export async function probeControlUiReadiness(manifest, {
+  livenessTimeoutMs = CONTROL_UI_LIVENESS_TIMEOUT_MS,
+  startupTimeoutMs = CONTROL_UI_STARTUP_TIMEOUT_MS,
+  statusTimeoutMs = CONTROL_UI_STATUS_TIMEOUT_MS,
+} = {}) {
+  const baseUrl = "http://" + manifest.controlUi.host + ":" + manifest.controlUi.port;
+  await waitForHealthz(baseUrl, livenessTimeoutMs);
+  await waitForReadyz(baseUrl, startupTimeoutMs);
+  const response = await httpRequest(baseUrl + "/api/status", statusTimeoutMs);
+  if (response.statusCode !== 200) throw new Error("The Deployment v2 control API status request failed.");
+  return validateServiceTopology(parseJsonResponse(response, "api/status"), manifest);
+}
+
+export function waitForManagerReady(child, readinessOperation, logPath) {
   return new Promise((resolve, reject) => {
     let settled = false;
     const finish = (callback, value) => {
@@ -599,9 +705,9 @@ function waitForManagerReady(child, url, logPath) {
     const onExit = (code) => finish(reject, new Error("The Deployment v2 control manager exited before readiness (code " + String(code) + "). Manager log: " + logPath));
     child.once("error", onError);
     child.once("exit", onExit);
-    waitForHttp(url).then(
+    Promise.resolve().then(readinessOperation).then(
       (response) => finish(resolve, response),
-      () => finish(reject, new Error("The Deployment v2 control interface did not become ready. Manager log: " + logPath)),
+      (error) => finish(reject, new Error((error?.message || "The Deployment v2 control interface did not become ready.") + " Manager log: " + logPath)),
     );
   });
 }
@@ -647,15 +753,15 @@ async function ensureControlUi(manifest, installedManager) {
     closeSync(managerLogHandle);
   }
 
-  const url = "http://" + manifest.controlUi.host + ":" + manifest.controlUi.port + "/api/status";
-  const response = await waitForManagerReady(child, url, managerLogPath);
+  const payload = await waitForManagerReady(child, async () => {
+    const readyPayload = await probeControlUiReadiness(manifest);
+    const activeIdentity = processOnPort(manifest.controlUi.port);
+    if (!managerListenerMatches(activeIdentity, installedManager)) {
+      throw new Error("The Deployment v2 control UI listener identity did not validate after activation.");
+    }
+    return readyPayload;
+  }, managerLogPath);
   child.unref();
-  const activeIdentity = processOnPort(manifest.controlUi.port);
-  if (!managerListenerMatches(activeIdentity, installedManager)) {
-    throw new Error("The Deployment v2 control UI listener identity did not validate after activation.");
-  }
-  const payload = JSON.parse(response.body);
-  if (!payload.ok || !Array.isArray(payload.services) || payload.services.length !== 8) throw new Error("The Deployment v2 control API returned an invalid service topology.");
   return { payload, replacedExistingManager };
 }
 
@@ -747,6 +853,73 @@ async function validateLive(manifest, installedManager, logoPlaintext) {
     logoDevConfigured: true,
     sourceBackedLogoUrlProduced: true,
   };
+}
+
+function latestConsolidationReceipt(manifest) {
+  if (!existsSync(manifest.receiptRoot)) throw new Error("The Deployment v2 receipt root does not exist.");
+  const prefix = "CONTROLSTACK_PROGRAM_SHELL_V2_CONSOLIDATION_";
+  const names = readdirSync(manifest.receiptRoot)
+    .filter((name) => name.startsWith(prefix) && name.endsWith(".json"))
+    .sort()
+    .reverse();
+  if (!names.length) throw new Error("No Deployment v2 consolidation receipt exists.");
+  const receiptPath = path.join(manifest.receiptRoot, names[0]);
+  const suffix = names[0].slice(prefix.length);
+  const restorationPath = path.join(manifest.receiptRoot, "CONTROLSTACK_PROGRAM_SHELL_V2_RESTORATION_" + suffix);
+  if (!existsSync(restorationPath)) throw new Error("The matching Deployment v2 restoration receipt is missing.");
+  const receipt = JSON.parse(readFileSync(receiptPath, "utf8"));
+  const restoration = JSON.parse(readFileSync(restorationPath, "utf8"));
+  return { receiptPath, restorationPath, receipt, restoration };
+}
+
+async function verifyConsolidation(manifest) {
+  progressIndex = 0;
+  progress("Validating Windows host and user");
+  ensureHostIdentity(manifest);
+  progress("Running Deployment v2 source self-test");
+  selfTest(manifest);
+  progress("Verifying installed Deployment v2 manager identity and readiness");
+  const installedManager = path.join(manifest.installRoot, "controlstack_lane_manager.mjs");
+  if (!existsSync(installedManager)) throw new Error("The installed Deployment v2 manager is missing.");
+  const listener = processOnPort(manifest.controlUi.port);
+  if (!managerListenerMatches(listener, installedManager)) throw new Error("The installed Deployment v2 manager does not own the control UI port.");
+  const payload = await probeControlUiReadiness(manifest);
+  if (!payload.services.every((service) => service.healthy && service.managed)) {
+    throw new Error("Not all eight Deployment v2 services are healthy and managed.");
+  }
+  progress("Verifying all eight configured listener ports");
+  const activeListeners = listeners(manifest.services.map((service) => service.port));
+  if (activeListeners.length !== manifest.services.length) throw new Error("One or more configured Deployment v2 service ports are not listening.");
+  progress("Verifying the canonical 8788 workspace and Logo.dev configured state");
+  const runtimeConfig = await httpRequest("http://127.0.0.1:8788/api/runtime-config/status", 30000);
+  if (runtimeConfig.statusCode !== 200 || !recursivelyReportsLogoConfigured(parseJsonResponse(runtimeConfig, "runtime-config/status"))) {
+    throw new Error("Selector runtime does not report Logo.dev as configured.");
+  }
+  const workspace = await httpRequest("http://127.0.0.1:8788/workspace", 30000);
+  if (workspace.statusCode !== 200 || !workspace.body) throw new Error("The canonical 8788 workspace is unavailable.");
+  const logoSpec = manifest.protectedEnvironment[0];
+  if (!existsSync(logoSpec.protectedFile) || !protectedSecretIsValid(readFileSync(logoSpec.protectedFile, "utf8").trim(), logoSpec.validator)) {
+    throw new Error("The protected Logo.dev state is missing or invalid.");
+  }
+  progress("Verifying consolidation and restoration receipt state");
+  const receipts = latestConsolidationReceipt(manifest);
+  validateServiceTopology({ ok: true, services: receipts.receipt.services }, manifest);
+  if (
+    receipts.receipt.status !== "installed-consolidated-verified" ||
+    receipts.receipt.canonicalRuntimeShell !== "http://127.0.0.1:8788/workspace" ||
+    receipts.receipt.logoDev?.configured !== true ||
+    receipts.receipt.health?.allEightManagedServicesHealthy !== true ||
+    path.win32.normalize(receipts.restoration.sourceReceipt || "").toLowerCase() !== path.win32.normalize(receipts.receiptPath).toLowerCase()
+  ) {
+    throw new Error("The Deployment v2 consolidation receipt state is incomplete or inconsistent.");
+  }
+  console.log("CONTROLSTACK PROGRAM SHELL V2 READ-ONLY VERIFICATION: PASS");
+  console.log("Control UI: http://" + manifest.controlUi.host + ":" + manifest.controlUi.port + manifest.controlUi.path);
+  console.log("Workspace shell: http://127.0.0.1:8788/workspace");
+  console.log("Services: 8 healthy and managed");
+  console.log("Logo.dev: configured; protected state valid; value not displayed.");
+  console.log("Receipt: " + receipts.receiptPath);
+  console.log("Restoration receipt: " + receipts.restorationPath);
 }
 
 function writeReceipts(manifest, runStamp, runRoot, result) {
@@ -989,8 +1162,9 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     if (action === "--self-test") selfTest(manifest);
     else if (action === "--install") await install(manifest);
     else if (action === "--consolidate") await consolidate(manifest);
+    else if (action === "--verify-consolidation") await verifyConsolidation(manifest);
     else if (action === "--repair-tunnels") await repairTunnels(manifest);
-    else throw new Error("Use --self-test, --install, --consolidate or --repair-tunnels.");
+    else throw new Error("Use --self-test, --install, --consolidate, --verify-consolidation or --repair-tunnels.");
   } catch (error) {
     console.error("");
     console.error("CONTROLSTACK PROGRAM SHELL V2: FAILED");

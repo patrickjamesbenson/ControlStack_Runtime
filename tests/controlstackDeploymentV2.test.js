@@ -1,15 +1,26 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
+import { EventEmitter } from "node:events";
 import { readFileSync } from "node:fs";
+import http from "node:http";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import {
   extractManagerTargets,
+  httpRequest,
   loadAndValidateManifest,
+  probeControlUiReadiness,
   processControlSource,
+  validateServiceTopology,
+  waitForManagerReady,
 } from "../scripts/CONTROLSTACK_DEPLOYMENT_V2_INSTALL.mjs";
+import {
+  createControlServer,
+  createManagerReadinessState,
+  DEPLOYMENT_V2_MANAGER_IDENTITY,
+} from "../scripts/deployment-v2/controlstack_lane_manager.mjs";
 import {
   LOGODEV_VARIABLE,
   parseAllowlistedBatAssignment,
@@ -26,6 +37,18 @@ const managerPath = path.join(deploymentRoot, "controlstack_lane_manager.mjs");
 const hostPath = path.join(deploymentRoot, "controlstack_service_host.mjs");
 const secretPath = path.join(deploymentRoot, "controlstack_secret_store.mjs");
 const uiPath = path.join(deploymentRoot, "controlstack_manager_ui.html");
+
+async function listen(server) {
+  await new Promise((resolve, reject) => {
+    server.once("error", reject);
+    server.listen(0, "127.0.0.1", resolve);
+  });
+  return server.address().port;
+}
+
+async function close(server) {
+  await new Promise((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
+}
 
 test("deployment manifest defines the accepted eight-service topology and canonical 8788 shell", () => {
   const manifest = loadAndValidateManifest(manifestPath);
@@ -121,6 +144,8 @@ test("manager is the sole process-control authority and exposes only bounded loo
   const startupBoundary = manager.indexOf("const startup = mutationQueue.then", serveStart);
   assert.ok(serveStart >= 0 && listenBoundary > serveStart && startupBoundary > listenBoundary, "control UI must bind before managed-service startup");
   assert.match(manager, /managed-service startup failed/);
+  assert.match(manager, /\/healthz/);
+  assert.match(manager, /\/readyz/);
   assert.match(startup, /controlstack_lane_manager\.mjs"" serve/);
   assert.doesNotMatch(manager, /exec\s*\(/);
   assert.doesNotMatch(manager, /shell:\s*true/);
@@ -134,6 +159,96 @@ test("manager is the sole process-control authority and exposes only bounded loo
   assert.match(ui, /127\.0\.0\.1:8788\/workspace/);
   assert.doesNotMatch(ui, /command box|raw shell|eval\s*\(|new Function/i);
   assert.doesNotMatch(ui, /<input[^>]+(?:command|shell)/i);
+});
+
+test("control UI liveness is available before managed-service readiness", async () => {
+  const readiness = createManagerReadinessState();
+  let statusCalls = 0;
+  const server = createControlServer({
+    readiness,
+    statusProvider: async () => {
+      statusCalls += 1;
+      return { verified: false, services: [] };
+    },
+  });
+  const port = await listen(server);
+  try {
+    const health = await httpRequest(`http://127.0.0.1:${port}/healthz`, 500);
+    assert.equal(health.statusCode, 200);
+    assert.deepEqual(JSON.parse(health.body), { ok: true, ...DEPLOYMENT_V2_MANAGER_IDENTITY, liveness: "live" });
+    const starting = await httpRequest(`http://127.0.0.1:${port}/readyz`, 500);
+    assert.equal(starting.statusCode, 503);
+    assert.equal(JSON.parse(starting.body).readiness, "starting");
+    assert.equal(statusCalls, 0, "liveness and readiness probes must not scan service status");
+    readiness.state = "ready";
+    const ready = await httpRequest(`http://127.0.0.1:${port}/readyz`, 500);
+    assert.equal(ready.statusCode, 200);
+    assert.equal(JSON.parse(ready.body).readiness, "ready");
+    assert.equal(statusCalls, 0);
+  } finally {
+    await close(server);
+  }
+});
+
+test("readiness probing tolerates a slow final topology scan and preserves all eight services", async () => {
+  const sourceManifest = loadAndValidateManifest(manifestPath);
+  const readiness = createManagerReadinessState();
+  readiness.state = "ready";
+  const expectedServices = sourceManifest.services.map((service) => ({
+    id: service.id,
+    name: service.name,
+    port: service.port,
+    healthy: true,
+    managed: true,
+  }));
+  const server = createControlServer({
+    readiness,
+    statusProvider: async () => {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      return { verified: true, services: expectedServices };
+    },
+  });
+  const port = await listen(server);
+  try {
+    const manifest = { ...sourceManifest, controlUi: { ...sourceManifest.controlUi, port } };
+    const payload = await probeControlUiReadiness(manifest, {
+      livenessTimeoutMs: 500,
+      startupTimeoutMs: 500,
+      statusTimeoutMs: 1000,
+    });
+    assert.equal(payload.services.length, 8);
+    assert.deepEqual(payload.services.map((service) => service.id), sourceManifest.services.map((service) => service.id));
+    assert.equal(validateServiceTopology(payload, manifest), payload);
+  } finally {
+    await close(server);
+  }
+});
+
+test("readiness probing rejects an unrelated HTTP 200 listener", async () => {
+  const sourceManifest = loadAndValidateManifest(manifestPath);
+  const server = http.createServer((_request, response) => {
+    response.writeHead(200, { "Content-Type": "application/json" });
+    response.end(JSON.stringify({ ok: true, managerId: "unrelated-listener" }));
+  });
+  const port = await listen(server);
+  try {
+    const manifest = { ...sourceManifest, controlUi: { ...sourceManifest.controlUi, port } };
+    await assert.rejects(
+      probeControlUiReadiness(manifest, { livenessTimeoutMs: 500, startupTimeoutMs: 500, statusTimeoutMs: 500 }),
+      /unexpected manager identity/,
+    );
+  } finally {
+    await close(server);
+  }
+});
+
+test("resolved manager readiness detaches child error and exit handlers", async () => {
+  const child = new EventEmitter();
+  const result = await waitForManagerReady(child, async () => "ready", "manager.log");
+  assert.equal(result, "ready");
+  assert.equal(child.listenerCount("error"), 0);
+  assert.equal(child.listenerCount("exit"), 0);
+  child.emit("exit", 1);
 });
 
 test("installer, manager and service host self-tests pass without starting Windows services", () => {
@@ -173,6 +288,11 @@ test("installer performs one idempotent consolidation operation and restarts onl
   assert.match(installer, /sourceBackedLogoUrlProduced/);
   assert.match(installer, /controlUiManagerReloaded/);
   assert.match(installer, /waitForManagerReady/);
+  assert.match(installer, /probeControlUiReadiness/);
+  assert.match(installer, /\/healthz/);
+  assert.match(installer, /\/readyz/);
+  assert.match(installer, /CONTROL_UI_STATUS_TIMEOUT_MS = 120000/);
+  assert.match(installer, /--verify-consolidation/);
   assert.match(installer, /controlstack-manager-ui\.log/);
   assert.match(installer, /stdio: \["ignore", managerLogHandle, managerLogHandle\]/);
   assert.match(installer, /Validating Windows host and user/);

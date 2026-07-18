@@ -12,6 +12,15 @@ const manifest = loadManifest(path.join(here, "controlstack-services.v2.json"));
 const hostPath = path.join(here, "controlstack_service_host.mjs");
 const uiPath = path.join(here, "controlstack_manager_ui.html");
 const ALLOWED_ACTIONS = new Set(["status", "verify", "start", "stop", "restart"]);
+export const DEPLOYMENT_V2_MANAGER_IDENTITY = Object.freeze({
+  schema: "controlstack-deployment-v2-manager/1",
+  managerId: "controlstack-deployment-v2-manager",
+  deployment: "v2",
+});
+
+export function createManagerReadinessState() {
+  return { state: "starting" };
+}
 
 function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -315,7 +324,10 @@ function serialisedAction(action, serviceId) {
   return pending;
 }
 
-function createControlServer() {
+export function createControlServer({
+  readiness = createManagerReadinessState(),
+  statusProvider = () => status(false, false),
+} = {}) {
   return http.createServer(async (request, response) => {
     if (!isLoopback(request.socket.remoteAddress)) {
       sendJson(response, 403, { ok: false, error: "Loopback access only." });
@@ -326,8 +338,25 @@ function createControlServer() {
       sendHtml(response);
       return;
     }
+    if (request.method === "GET" && requestUrl.pathname === "/healthz") {
+      sendJson(response, 200, {
+        ok: true,
+        ...DEPLOYMENT_V2_MANAGER_IDENTITY,
+        liveness: "live",
+      });
+      return;
+    }
+    if (request.method === "GET" && requestUrl.pathname === "/readyz") {
+      const ready = readiness.state === "ready";
+      sendJson(response, ready ? 200 : 503, {
+        ok: ready,
+        ...DEPLOYMENT_V2_MANAGER_IDENTITY,
+        readiness: readiness.state,
+      });
+      return;
+    }
     if (request.method === "GET" && requestUrl.pathname === "/api/status") {
-      const result = await status(false, false);
+      const result = await statusProvider();
       sendJson(response, 200, { ok: true, ...result });
       return;
     }
@@ -349,7 +378,8 @@ function createControlServer() {
 
 async function serve() {
   if (!existsSync(uiPath)) throw new Error("The Deployment v2 control UI is missing.");
-  const server = createControlServer();
+  const readiness = createManagerReadinessState();
+  const server = createControlServer({ readiness });
   await new Promise((resolve, reject) => {
     server.once("error", reject);
     server.listen(manifest.controlUi.port, manifest.controlUi.host, resolve);
@@ -358,9 +388,11 @@ async function serve() {
 
   const startup = mutationQueue.then(async () => {
     await startAll();
+    readiness.state = "ready";
     console.log("ControlStack Deployment v2 managed-service startup: PASS");
   });
   mutationQueue = startup.catch((error) => {
+    readiness.state = "failed";
     console.error("ControlStack Deployment v2 managed-service startup failed: " + (error?.message || "unknown error"));
   });
 }
