@@ -1,5 +1,5 @@
 // Lab IES toolkit — write. Ports lib/photometry/ies.py build_ies_text (donor). Pure, browser-safe.
-import { ensureHxV, g, wrapNumbersPerLine } from "./iesShared.js";
+import { ensureHxV, g, wrapNumbersPerLine, formatNumber } from "./iesShared.js";
 
 export function writeIes(w) {
   const meta = w.meta || {};
@@ -42,8 +42,10 @@ export function writeIes(w) {
   lines.push("TILT=NONE");
   const header10 = [G0, G1, G2, vCount, hCount, G5, G6, G7, G8, G9];
   lines.push(wrapNumbersPerLine(header10, header10.length)[0]);
-  const header3 = [G10, G11, G12];
-  lines.push(wrapNumbersPerLine(header3, header3.length)[0]);
+  // G11 holds the LM-63-2019 file-generation type (e.g. 1.11100) where trailing zeros are meaningful
+  // flags — keep 5 decimals so they are not stripped. A plain future-use G11 (no decimal) formats normally.
+  const g11str = (geom.G11 != null && String(geom.G11).includes(".")) ? Number(geom.G11).toFixed(5) : formatNumber(G11);
+  lines.push([formatNumber(G10), g11str, formatNumber(G12)].join(" "));
   for (const l of wrapNumbersPerLine(vAngles)) lines.push(l);
   for (const l of wrapNumbersPerLine(hAngles)) lines.push(l);
   const flat = [];
