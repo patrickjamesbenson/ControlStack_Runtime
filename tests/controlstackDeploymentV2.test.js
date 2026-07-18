@@ -13,8 +13,11 @@ import {
   loadAndValidateManifest,
   probeControlUiReadiness,
   processControlSource,
+  restartSelectorRuntimeOnly,
+  validateLiveEndpoints,
   validateServiceTopology,
   waitForManagerReady,
+  waitForSelectorRuntimeReady,
 } from "../scripts/CONTROLSTACK_DEPLOYMENT_V2_INSTALL.mjs";
 import {
   createControlServer,
@@ -48,6 +51,32 @@ async function listen(server) {
 
 async function close(server) {
   await new Promise((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
+}
+
+function selectorRuntimePayload() {
+  return {
+    owner: "runtime-server",
+    status: "ready",
+    source: "white-label-config-boundary-foundation",
+    browserSecretsExposed: false,
+    repoLocalSecrets: false,
+    logoDev: { configured: true },
+  };
+}
+
+function selectorProcessIdentity(service, processId) {
+  return {
+    ProcessId: processId,
+    ExecutablePath: service.executable,
+    CommandLine: `"${service.executable}" ${service.args.join(" ")}`,
+  };
+}
+
+function listenerSnapshot(manifest, selectorProcessId) {
+  return manifest.services.map((service, index) => ({
+    Port: service.port,
+    ProcessId: service.id === "selector-runtime" ? selectorProcessId : 20000 + index,
+  }));
 }
 
 test("deployment manifest defines the accepted eight-service topology and canonical 8788 shell", () => {
@@ -224,6 +253,159 @@ test("readiness probing tolerates a slow final topology scan and preserves all e
   }
 });
 
+test("Selector readiness retries temporary restart unavailability and accepts the new runtime identity", async () => {
+  const manifest = loadAndValidateManifest(manifestPath);
+  const selector = manifest.services.find((service) => service.id === "selector-runtime");
+  let clock = 0;
+  let identityCalls = 0;
+  let requestCalls = 0;
+  const result = await waitForSelectorRuntimeReady(manifest, {
+    previousProcessId: 4100,
+    requireNewProcess: true,
+    startupTimeoutMs: 20,
+    requestTimeoutMs: 5,
+    retryDelayMs: 1,
+    now: () => clock,
+    wait: async (ms) => { clock += Math.max(1, ms); },
+    processIdentity: () => {
+      identityCalls += 1;
+      return selectorProcessIdentity(selector, identityCalls < 3 ? 4100 : 4200);
+    },
+    request: async () => {
+      requestCalls += 1;
+      if (requestCalls === 1) throw new Error("temporary connection refusal");
+      return { statusCode: 200, headers: {}, body: JSON.stringify(selectorRuntimePayload()) };
+    },
+  });
+  assert.equal(result.identity.ProcessId, 4200);
+  assert.equal(requestCalls, 2);
+  assert.ok(identityCalls >= 4);
+});
+
+test("permanently unavailable Selector runtime fails with the exact safe request label", async () => {
+  const manifest = loadAndValidateManifest(manifestPath);
+  const selector = manifest.services.find((service) => service.id === "selector-runtime");
+  let clock = 0;
+  await assert.rejects(
+    waitForSelectorRuntimeReady(manifest, {
+      previousProcessId: 4100,
+      requireNewProcess: true,
+      startupTimeoutMs: 5,
+      requestTimeoutMs: 2,
+      retryDelayMs: 1,
+      now: () => clock,
+      wait: async (ms) => { clock += Math.max(1, ms); },
+      processIdentity: () => selectorProcessIdentity(selector, 4200),
+      request: async () => { throw new Error("connection refused"); },
+    }),
+    { message: "Local health request failed: selector-runtime-config." },
+  );
+});
+
+test("live validation reuses the slow-tolerant control probe and validates Selector endpoints", async () => {
+  const sourceManifest = loadAndValidateManifest(manifestPath);
+  const readiness = createManagerReadinessState();
+  readiness.state = "ready";
+  const expectedServices = sourceManifest.services.map((service) => ({
+    id: service.id,
+    name: service.name,
+    port: service.port,
+    healthy: true,
+    managed: true,
+  }));
+  const server = createControlServer({
+    readiness,
+    statusProvider: async () => {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      return { verified: true, services: expectedServices };
+    },
+  });
+  const port = await listen(server);
+  try {
+    const manifest = { ...sourceManifest, controlUi: { ...sourceManifest.controlUi, port } };
+    const selector = manifest.services.find((service) => service.id === "selector-runtime");
+    const request = async (url, timeoutMs) => {
+      if (url.startsWith(`http://127.0.0.1:${port}/`)) return httpRequest(url, timeoutMs);
+      if (url.endsWith("/api/runtime-config/status")) {
+        return { statusCode: 200, headers: {}, body: JSON.stringify(selectorRuntimePayload()) };
+      }
+      if (url.endsWith("/workspace")) return { statusCode: 200, headers: {}, body: "<html>workspace</html>" };
+      throw new Error("unexpected local request");
+    };
+    const live = await validateLiveEndpoints(manifest, "pk_public-test-secret", {
+      controlUi: { livenessTimeoutMs: 500, startupTimeoutMs: 500, statusTimeoutMs: 1000 },
+      selector: { startupTimeoutMs: 500, requestTimeoutMs: 250, retryDelayMs: 1 },
+      request,
+      processIdentity: () => selectorProcessIdentity(selector, 4200),
+    });
+    assert.equal(live.statusPayload.services.length, 8);
+    assert.equal(live.runtime.response.statusCode, 200);
+    assert.equal(live.workspace.statusCode, 200);
+  } finally {
+    await close(server);
+  }
+});
+
+test("Selector restart action cannot restart a non-Selector managed service", async () => {
+  const manifest = loadAndValidateManifest(manifestPath);
+  const selector = manifest.services.find((service) => service.id === "selector-runtime");
+  const before = listenerSnapshot(manifest, 4100);
+  const after = listenerSnapshot(manifest, 4200);
+  const actions = [];
+  const result = await restartSelectorRuntimeOnly(manifest, "installed-manager.mjs", before, {
+    runAction: (...args) => { actions.push(args); },
+    readListeners: () => after,
+    processIdentity: () => selectorProcessIdentity(selector, 4200),
+    request: async () => ({ statusCode: 200, headers: {}, body: JSON.stringify(selectorRuntimePayload()) }),
+    selector: { startupTimeoutMs: 20, requestTimeoutMs: 5, retryDelayMs: 1 },
+  });
+  assert.deepEqual(actions, [["installed-manager.mjs", "restart", "selector-runtime"]]);
+  assert.deepEqual(result.afterListeners, after);
+  const beforeMap = new Map(before.map((item) => [item.Port, item.ProcessId]));
+  for (const item of after) {
+    if (item.Port !== selector.port) assert.equal(item.ProcessId, beforeMap.get(item.Port));
+  }
+});
+
+test("local HTTP request detaches timeout and response handlers after settlement", async () => {
+  const request = new EventEmitter();
+  const response = new EventEmitter();
+  request.setTimeout = () => {};
+  request.destroy = () => {};
+  response.setEncoding = () => {};
+  const resultPromise = httpRequest("http://127.0.0.1/test", 50, {
+    get: (_url, onResponse) => {
+      queueMicrotask(() => {
+        onResponse(response);
+        response.emit("data", "ok");
+        response.emit("end");
+      });
+      return request;
+    },
+  });
+  assert.equal((await resultPromise).body, "ok");
+  assert.equal(request.listenerCount("timeout"), 0);
+  assert.equal(request.listenerCount("error"), 0);
+  assert.equal(response.listenerCount("data"), 0);
+  assert.equal(response.listenerCount("end"), 0);
+  assert.equal(response.listenerCount("error"), 0);
+
+  const timedRequest = new EventEmitter();
+  timedRequest.setTimeout = () => {};
+  timedRequest.destroy = () => {};
+  await assert.rejects(
+    httpRequest("http://127.0.0.1/timeout", 1, {
+      get: () => {
+        queueMicrotask(() => timedRequest.emit("timeout"));
+        return timedRequest;
+      },
+    }),
+    /timed out/,
+  );
+  assert.equal(timedRequest.listenerCount("timeout"), 0);
+  assert.equal(timedRequest.listenerCount("error"), 0);
+});
+
 test("readiness probing rejects an unrelated HTTP 200 listener", async () => {
   const sourceManifest = loadAndValidateManifest(manifestPath);
   const server = http.createServer((_request, response) => {
@@ -278,8 +460,13 @@ test("installer performs one idempotent consolidation operation and restarts onl
   const installer = readFileSync(installerPath, "utf8");
   assert.match(installer, /--consolidate/);
   assert.match(installer, /storeLogoDevSecret/);
-  assert.match(installer, /runManager\(installed\.installedManager, "restart", "selector-runtime"\)/);
+  assert.match(installer, /restartSelectorRuntimeOnly\(manifest, installed\.installedManager, beforeListeners\)/);
+  assert.match(installer, /runAction\(installedManager, "restart", "selector-runtime"\)/);
+  assert.match(installer, /waitForSelectorRuntimeReady/);
   assert.match(installer, /assertOnlySelectorRestarted/);
+  assert.match(installer, /selector-runtime-config/);
+  assert.match(installer, /selector-workspace/);
+  assert.match(installer, /control-ui-status/);
   assert.match(installer, /runtimeReportsLogoConfigured/);
   assert.match(installer, /assertDeploymentLogsDoNotContain/);
   assert.match(installer, /assertFeatureWorktreesUnchanged/);

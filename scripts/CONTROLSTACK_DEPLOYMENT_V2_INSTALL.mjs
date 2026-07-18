@@ -43,6 +43,10 @@ const sourceFiles = [
 const CONTROL_UI_LIVENESS_TIMEOUT_MS = 30000;
 const CONTROL_UI_STARTUP_TIMEOUT_MS = 390000;
 const CONTROL_UI_STATUS_TIMEOUT_MS = 120000;
+const SELECTOR_RUNTIME_STARTUP_TIMEOUT_MS = 120000;
+const SELECTOR_RUNTIME_REQUEST_TIMEOUT_MS = 30000;
+const SELECTOR_WORKSPACE_REQUEST_TIMEOUT_MS = 30000;
+const SELECTOR_RUNTIME_RETRY_DELAY_MS = 500;
 
 let progressIndex = 0;
 let currentProgressMessage = "not started";
@@ -50,6 +54,10 @@ function progress(message) {
   progressIndex += 1;
   currentProgressMessage = message;
   console.log("[" + String(progressIndex).padStart(2, "0") + "] " + message);
+}
+
+function delay(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 function sha256(file) {
@@ -564,7 +572,14 @@ function consolidateLegacy(managerRoot, canonicalStartup, canonicalManager, arch
   return { inventory, managerFiles, stoppedProcesses, archived };
 }
 
-export function httpRequest(url, timeoutMs = 5000) {
+function localTransportError(message, cause = undefined) {
+  const error = new Error(message);
+  error.code = cause?.code;
+  error.transient = true;
+  return error;
+}
+
+export function httpRequest(url, timeoutMs = 5000, { get = http.get } = {}) {
   return new Promise((resolve, reject) => {
     let settled = false;
     let request;
@@ -573,9 +588,11 @@ export function httpRequest(url, timeoutMs = 5000) {
     const finish = (callback, value) => {
       if (settled) return;
       settled = true;
-      request.setTimeout(0);
-      request.off("timeout", onTimeout);
-      request.off("error", onError);
+      if (request) {
+        request.setTimeout(0);
+        request.off("timeout", onTimeout);
+        request.off("error", onError);
+      }
       if (response) {
         response.off("data", onData);
         response.off("end", onEnd);
@@ -585,22 +602,26 @@ export function httpRequest(url, timeoutMs = 5000) {
     };
     const onData = (chunk) => { body += chunk; };
     const onEnd = () => finish(resolve, { statusCode: response.statusCode, headers: response.headers, body });
-    const onResponseError = () => finish(reject, new Error("A local health response failed."));
+    const onResponseError = (error) => finish(reject, localTransportError("A local health response failed.", error));
     const onTimeout = () => {
       request.destroy();
-      finish(reject, new Error("A local health request timed out."));
+      finish(reject, localTransportError("A local health request timed out."));
     };
-    const onError = () => finish(reject, new Error("A local health request failed."));
-    request = http.get(url, (incoming) => {
-      response = incoming;
-      response.setEncoding("utf8");
-      response.on("data", onData);
-      response.once("end", onEnd);
-      response.once("error", onResponseError);
-    });
-    request.setTimeout(timeoutMs);
-    request.once("timeout", onTimeout);
-    request.once("error", onError);
+    const onError = (error) => finish(reject, localTransportError("A local health request failed.", error));
+    try {
+      request = get(url, (incoming) => {
+        response = incoming;
+        response.setEncoding("utf8");
+        response.on("data", onData);
+        response.once("end", onEnd);
+        response.once("error", onResponseError);
+      });
+      request.setTimeout(timeoutMs);
+      request.once("timeout", onTimeout);
+      request.once("error", onError);
+    } catch (error) {
+      finish(reject, localTransportError("A local health request failed.", error));
+    }
   });
 }
 
@@ -618,11 +639,11 @@ function assertManagerIdentity(payload, endpoint) {
   }
 }
 
-async function waitForHealthz(baseUrl, timeoutMs) {
+async function waitForHealthz(baseUrl, timeoutMs, { request = httpRequest, wait = delay } = {}) {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
     try {
-      const response = await httpRequest(baseUrl + "/healthz", 2500);
+      const response = await request(baseUrl + "/healthz", 2500);
       if (response.statusCode === 200) {
         const payload = parseJsonResponse(response, "healthz");
         assertManagerIdentity(payload, "healthz");
@@ -632,16 +653,16 @@ async function waitForHealthz(baseUrl, timeoutMs) {
     } catch (error) {
       if (!/^A local health (?:request|response)/.test(error?.message || "")) throw error;
     }
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    await wait(500);
   }
   throw new Error("The Deployment v2 control interface did not become live.");
 }
 
-async function waitForReadyz(baseUrl, timeoutMs) {
+async function waitForReadyz(baseUrl, timeoutMs, { request = httpRequest, wait = delay } = {}) {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
     try {
-      const response = await httpRequest(baseUrl + "/readyz", 2500);
+      const response = await request(baseUrl + "/readyz", 2500);
       if (response.statusCode === 200 || response.statusCode === 503) {
         const payload = parseJsonResponse(response, "readyz");
         assertManagerIdentity(payload, "readyz");
@@ -656,7 +677,7 @@ async function waitForReadyz(baseUrl, timeoutMs) {
     } catch (error) {
       if (!/^A local health (?:request|response)/.test(error?.message || "")) throw error;
     }
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    await wait(500);
   }
   throw new Error("The Deployment v2 managed services did not become ready within the bounded startup window.");
 }
@@ -682,11 +703,13 @@ export async function probeControlUiReadiness(manifest, {
   livenessTimeoutMs = CONTROL_UI_LIVENESS_TIMEOUT_MS,
   startupTimeoutMs = CONTROL_UI_STARTUP_TIMEOUT_MS,
   statusTimeoutMs = CONTROL_UI_STATUS_TIMEOUT_MS,
+  request = httpRequest,
+  wait = delay,
 } = {}) {
   const baseUrl = "http://" + manifest.controlUi.host + ":" + manifest.controlUi.port;
-  await waitForHealthz(baseUrl, livenessTimeoutMs);
-  await waitForReadyz(baseUrl, startupTimeoutMs);
-  const response = await httpRequest(baseUrl + "/api/status", statusTimeoutMs);
+  await waitForHealthz(baseUrl, livenessTimeoutMs, { request, wait });
+  await waitForReadyz(baseUrl, startupTimeoutMs, { request, wait });
+  const response = await request(baseUrl + "/api/status", statusTimeoutMs);
   if (response.statusCode !== 200) throw new Error("The Deployment v2 control API status request failed.");
   return validateServiceTopology(parseJsonResponse(response, "api/status"), manifest);
 }
@@ -773,6 +796,186 @@ function runManager(installedManager, action, serviceId = undefined) {
   return result.stdout;
 }
 
+const SAFE_LOCAL_REQUEST_LABELS = new Set([
+  "control-ui-status",
+  "selector-runtime-config",
+  "selector-workspace",
+]);
+
+function safeLocalRequestFailure(label) {
+  if (!SAFE_LOCAL_REQUEST_LABELS.has(label)) throw new Error("An invalid local request label was used.");
+  return new Error("Local health request failed: " + label + ".");
+}
+
+function selectorRuntimeService(manifest) {
+  const service = manifest.services.find((item) => item.id === "selector-runtime");
+  if (!service || service.port !== 8788) throw new Error("The canonical Selector runtime service is missing.");
+  return service;
+}
+
+export function validateControlStackRuntimeIdentity(payload) {
+  if (
+    payload?.owner !== "runtime-server" ||
+    payload?.status !== "ready" ||
+    payload?.source !== "white-label-config-boundary-foundation" ||
+    payload?.browserSecretsExposed !== false ||
+    payload?.repoLocalSecrets !== false
+  ) {
+    throw new Error("The Selector runtime identity is invalid.");
+  }
+  return payload;
+}
+
+export function selectorRuntimeProcessMatches(identity, service) {
+  if (!Number.isInteger(Number(identity?.ProcessId)) || Number(identity.ProcessId) <= 0) return false;
+  if (normaliseWindows(identity.ExecutablePath) !== normaliseWindows(service.executable)) return false;
+  const commandLine = normaliseCommandLine(identity.CommandLine);
+  return service.args.every((argument) => commandLine.includes(String(argument).toLowerCase().replaceAll("/", "\\")));
+}
+
+export async function waitForSelectorRuntimeReady(manifest, {
+  previousProcessId = 0,
+  requireNewProcess = false,
+  startupTimeoutMs = SELECTOR_RUNTIME_STARTUP_TIMEOUT_MS,
+  requestTimeoutMs = SELECTOR_RUNTIME_REQUEST_TIMEOUT_MS,
+  retryDelayMs = SELECTOR_RUNTIME_RETRY_DELAY_MS,
+  request = httpRequest,
+  processIdentity = processOnPort,
+  wait = delay,
+  now = Date.now,
+} = {}) {
+  const service = selectorRuntimeService(manifest);
+  const deadline = now() + startupTimeoutMs;
+  const url = "http://127.0.0.1:" + service.port + "/api/runtime-config/status";
+
+  while (now() < deadline) {
+    let identity = {};
+    try {
+      identity = processIdentity(service.port) || {};
+    } catch {
+      identity = {};
+    }
+    const processReady = selectorRuntimeProcessMatches(identity, service) && (
+      !requireNewProcess || Number(identity.ProcessId) !== Number(previousProcessId)
+    );
+    if (processReady) {
+      const remainingMs = Math.max(1, deadline - now());
+      try {
+        const response = await request(url, Math.min(requestTimeoutMs, remainingMs));
+        if (response.statusCode === 200) {
+          const payload = validateControlStackRuntimeIdentity(JSON.parse(response.body));
+          return { identity, response, payload };
+        }
+      } catch {
+        // The authorised Selector restart may briefly refuse connections or return incomplete startup state.
+      }
+    }
+    const remainingMs = deadline - now();
+    if (remainingMs > 0) await wait(Math.min(retryDelayMs, remainingMs));
+  }
+  throw safeLocalRequestFailure("selector-runtime-config");
+}
+
+async function requestSelectorWorkspace(manifest, logoPlaintext, {
+  startupTimeoutMs = SELECTOR_RUNTIME_STARTUP_TIMEOUT_MS,
+  requestTimeoutMs = SELECTOR_WORKSPACE_REQUEST_TIMEOUT_MS,
+  retryDelayMs = SELECTOR_RUNTIME_RETRY_DELAY_MS,
+  request = httpRequest,
+  wait = delay,
+  now = Date.now,
+} = {}) {
+  const service = selectorRuntimeService(manifest);
+  const deadline = now() + startupTimeoutMs;
+  const url = "http://127.0.0.1:" + service.port + "/workspace";
+  while (now() < deadline) {
+    const remainingMs = Math.max(1, deadline - now());
+    try {
+      const response = await request(url, Math.min(requestTimeoutMs, remainingMs));
+      const exposesSecret = Boolean(logoPlaintext) && response.body?.includes(logoPlaintext);
+      if (response.statusCode === 200 && response.body && !exposesSecret) return response;
+      if (exposesSecret) throw new Error("Secret-redaction validation failed.");
+    } catch (error) {
+      if (error?.message === "Secret-redaction validation failed.") throw error;
+    }
+    const waitMs = deadline - now();
+    if (waitMs > 0) await wait(Math.min(retryDelayMs, waitMs));
+  }
+  throw safeLocalRequestFailure("selector-workspace");
+}
+
+export async function validateLiveEndpoints(manifest, logoPlaintext, {
+  previousSelectorProcessId = 0,
+  requireNewSelectorProcess = false,
+  controlUi = {},
+  selector = {},
+  request = httpRequest,
+  processIdentity = processOnPort,
+  wait = delay,
+  now = Date.now,
+} = {}) {
+  let statusPayload;
+  try {
+    statusPayload = await probeControlUiReadiness(manifest, { ...controlUi, request, wait });
+    if (!statusPayload.services.every((service) => service.healthy && service.managed)) {
+      throw new Error("The Deployment v2 control API reported an unhealthy service.");
+    }
+  } catch {
+    throw safeLocalRequestFailure("control-ui-status");
+  }
+
+  const runtime = await waitForSelectorRuntimeReady(manifest, {
+    previousProcessId: previousSelectorProcessId,
+    requireNewProcess: requireNewSelectorProcess,
+    request,
+    processIdentity,
+    wait,
+    now,
+    ...selector,
+  });
+  if (logoPlaintext && runtime.response.body.includes(logoPlaintext)) throw new Error("Secret-redaction validation failed.");
+  if (!recursivelyReportsLogoConfigured(runtime.payload)) throw new Error("Runtime configuration does not report Logo.dev as configured.");
+
+  const workspace = await requestSelectorWorkspace(manifest, logoPlaintext, {
+    request,
+    wait,
+    now,
+    ...selector,
+  });
+  return { statusPayload, runtime, workspace };
+}
+
+export async function restartSelectorRuntimeOnly(manifest, installedManager, beforeListeners, {
+  runAction = runManager,
+  readListeners = listeners,
+  request = httpRequest,
+  processIdentity = processOnPort,
+  wait = delay,
+  now = Date.now,
+  selector = {},
+} = {}) {
+  const service = selectorRuntimeService(manifest);
+  const beforeMap = listenerMap(beforeListeners);
+  const previousProcessId = beforeMap.get(service.port);
+  if (!previousProcessId) throw new Error("Selector runtime listener identity is missing before restart.");
+
+  runAction(installedManager, "restart", "selector-runtime");
+  const readiness = await waitForSelectorRuntimeReady(manifest, {
+    previousProcessId,
+    requireNewProcess: true,
+    request,
+    processIdentity,
+    wait,
+    now,
+    ...selector,
+  });
+  const afterListeners = readListeners(manifest.services.map((item) => item.port));
+  assertOnlySelectorRestarted(manifest, beforeListeners, afterListeners);
+  if (listenerMap(afterListeners).get(service.port) !== Number(readiness.identity.ProcessId)) {
+    throw safeLocalRequestFailure("selector-runtime-config");
+  }
+  return { afterListeners, readiness };
+}
+
 function assertOnlySelectorRestarted(manifest, before, after) {
   const beforeMap = listenerMap(before);
   const afterMap = listenerMap(after);
@@ -822,21 +1025,8 @@ function assertDeploymentLogsDoNotContain(installRoot, plaintext) {
   }
 }
 
-async function validateLive(manifest, installedManager, logoPlaintext) {
-  runManager(installedManager, "verify");
-  const statusResponse = await httpRequest("http://" + manifest.controlUi.host + ":" + manifest.controlUi.port + "/api/status");
-  const statusPayload = JSON.parse(statusResponse.body);
-  if (statusResponse.statusCode !== 200 || !statusPayload.ok || statusPayload.services.length !== 8) throw new Error("Deployment v2 status validation failed.");
-  if (!statusPayload.services.every((service) => service.healthy && service.managed)) throw new Error("Not all eight Deployment v2 services are healthy and managed.");
-
-  const runtimeConfig = await httpRequest("http://127.0.0.1:8788/api/runtime-config/status");
-  if (runtimeConfig.statusCode !== 200 || runtimeConfig.body.includes(logoPlaintext)) throw new Error("Runtime configuration validation failed or exposed the Logo.dev value.");
-  let runtimePayload;
-  try { runtimePayload = JSON.parse(runtimeConfig.body); } catch { throw new Error("Runtime configuration status is not valid JSON."); }
-  if (!recursivelyReportsLogoConfigured(runtimePayload)) throw new Error("Runtime configuration does not report Logo.dev as configured.");
-
-  const workspace = await httpRequest("http://127.0.0.1:8788/workspace");
-  if (workspace.statusCode !== 200 || !workspace.body || workspace.body.includes(logoPlaintext)) throw new Error("The canonical workspace shell did not load safely.");
+async function validateLive(manifest, logoPlaintext) {
+  const { statusPayload, runtime, workspace } = await validateLiveEndpoints(manifest, logoPlaintext);
 
   assertDeploymentLogsDoNotContain(manifest.installRoot, logoPlaintext);
 
@@ -848,7 +1038,7 @@ async function validateLive(manifest, installedManager, logoPlaintext) {
 
   return {
     services: statusPayload.services.map((service) => ({ id: service.id, name: service.name, port: service.port, healthy: service.healthy, managed: service.managed })),
-    runtimeConfigStatus: runtimeConfig.statusCode,
+    runtimeConfigStatus: runtime.response.statusCode,
     workspaceStatus: workspace.statusCode,
     logoDevConfigured: true,
     sourceBackedLogoUrlProduced: true,
@@ -1043,16 +1233,15 @@ async function consolidate(manifest) {
   const selectorActivationRequired = logo.changed || !(await runtimeReportsLogoConfigured());
   if (selectorActivationRequired) {
     progress("Restarting selector-runtime only");
-    runManager(installed.installedManager, "restart", "selector-runtime");
+    const selectorRestart = await restartSelectorRuntimeOnly(manifest, installed.installedManager, beforeListeners);
     selectorRestarted = true;
-    afterActivation = listeners(servicePorts);
-    assertOnlySelectorRestarted(manifest, beforeListeners, afterActivation);
+    afterActivation = selectorRestart.afterListeners;
   } else {
     progress("Selector already reports Logo.dev configured; restart not required");
   }
 
   progress("Running live service, workspace and secret-redaction validation");
-  const live = await validateLive(manifest, installed.installedManager, logo.plaintext);
+  const live = await validateLive(manifest, logo.plaintext);
   progress("Archiving only proven legacy ControlStack control surfaces");
   const legacy = consolidateLegacy(
     installed.managerRoot,
