@@ -160,3 +160,24 @@ Every completed worker updates this index with:
 - Push: `9737418..aa1436b` to `origin/lane/selector-engine` succeeded — VERIFIED.
 - Evidence-commit ending tree: clean, with 0 staged, modified, untracked, or deleted paths — VERIFIED.
 - The commit containing this hash-index closeout is the final ending HEAD for the worker; its exact hash is reported in the completion response.
+
+## 2026-07-19 — Authority snapshot refresh activation attempt
+
+- Worker: `CS-SELECTOR-AUTHORITY-SNAPSHOT-REFRESH-ACTIVATION-01`.
+- Starting identity: root `C:\ControlStack_Worktrees\selector-engine`; branch `lane/selector-engine`; starting HEAD `ae41a4ababd3c1394a8c1f3b68ddfddd4b97dd60`; runtime 8788; MCP 8000; gate `selector-engine`; starting tree clean — VERIFIED.
+- Context read: all six files under `docs/selector/_context/` — VERIFIED.
+- Old active snapshot: present, readable, parseable, loaded read-only; fingerprint `266de269e3e8f8b7191e4653d45580c251eb46025411574e0d1f2a27daca209d`; modified `2026-07-14T10:07:13.715322+00:00`; size 983727 bytes; required 15 tables present; raw rows, headers, users, snapshot, and path redacted — VERIFIED.
+- Old materialised target: present and readable; modified `2026-07-14T10:07:13.715Z`; size 983727 bytes; path redacted — VERIFIED.
+- Materialiser status: HTTP 200; server-side Google preflight allowed; Sheet and credentials configured/readable; network policy explicit-refresh-only; normal boot dependency false; credential path/value/contents, Sheet ID, raw provider response, raw rows, full materialised JSON, and private target path not returned — VERIFIED.
+- Google dry-run: `POST /api/authority-reference/materialiser/refresh?dryRun=true`, empty JSON body, HTTP 200; status `dry-run-reader-blocked`; Google network call attempted only through this explicit refresh; blocker `google-reader-failed`; validation false — VERIFIED.
+- No-write receipt: `materialisedWriteAttempted: false`; `activeSnapshotWriteAttempted: false`; `dryRunWritesNothing: true`; promotion null; no Google/external-provider write, archive, active replacement, repository feature write, project mutation, Engine invocation, or output generation — VERIFIED.
+- Mandatory DRIVERS shape proof: unavailable. The dry-run returned no safe evidence that current `DRIVERS.native_control_type` is populated genuine protocol authority, no Boolean-marker exclusion, no duplicate `native_control_type__2` absence/non-authority proof, and no BOARDS/DRIVERS exact protocol option-label order/intersection receipt — OBSERVABILITY BOUNDARY.
+- Phase 2 materialised live write: NOT DISPATCHED. Phase 3 archive and promotion: NOT DISPATCHED. Post-activation source-versus-projection diagnosis: NOT APPLICABLE because activation did not occur.
+- Post-stop source materialisation GET: stale materialised target and target snapshot remained present, readable, size 983727, modified `2026-07-14T10:07:13.715Z`; archive configured/available but not live; paths redacted — VERIFIED.
+- Repeated active RuntimeData probe: old fingerprint, timestamp, and size unchanged; loaded read-only; writes disabled/not attempted; RuntimeData mutation false; required tables present; redactions preserved — VERIFIED.
+- BOARDS list/order evidence: unavailable from the failed dry-run; only stale table presence/count evidence exists and is insufficient for promotion — HELD.
+- Selector projection and generic `DALI-2` source backing: not rechecked because no corrected source was activated — HELD. Existing shared-tooling extraction parcel remains external and was not commissioned.
+- Complete gate: `selector-engine`, 103 passed, 0 failed, exit code 0 — VERIFIED.
+- Classification: **O — Source-shape observability boundary.**
+- Documentation paths: `LANE_STATE.md`, `WORK_QUEUE.md`, `EVIDENCE_INDEX.md`, and `SESSION_HANDOFF.md` only. No feature code changed.
+- Exact next action: the runtime/materialiser owner must correct or safely expose the bounded cause of `google-reader-failed` and make the existing guarded dry-run return the required redacted DRIVERS/BOARDS authority-shape receipt; rerun this worker from Phase 1 and do not promote by counts or widen into projection repair.
