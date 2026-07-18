@@ -4,6 +4,8 @@ import net from "node:net";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { LOGODEV_VARIABLE, unprotectForCurrentUser } from "./controlstack_secret_store.mjs";
+
 const here = path.dirname(fileURLToPath(import.meta.url));
 const manifestPath = path.join(here, "controlstack-services.v2.json");
 
@@ -12,15 +14,47 @@ export function loadManifest(file = manifestPath) {
   if (manifest.schema !== "controlstack-deployment-v2/1" || !Array.isArray(manifest.services)) {
     throw new Error("Invalid ControlStack deployment manifest.");
   }
+  if (!Array.isArray(manifest.protectedEnvironment) || manifest.protectedEnvironment.length !== 1) {
+    throw new Error("Exactly one protected environment definition is required.");
+  }
+
+  const protectedIds = new Set();
+  for (const item of manifest.protectedEnvironment) {
+    if (item.id !== "logodev-publishable-key" || item.variable !== LOGODEV_VARIABLE) {
+      throw new Error("Invalid protected environment definition.");
+    }
+    if (!path.win32.isAbsolute(item.protectedFile) || item.validator !== "logodev-publishable-key") {
+      throw new Error("Invalid protected environment storage definition.");
+    }
+    if (!Array.isArray(item.serviceIds) || item.serviceIds.length !== 1 || item.serviceIds[0] !== "selector-runtime") {
+      throw new Error("Logo.dev may be supplied only to selector-runtime.");
+    }
+    protectedIds.add(item.id);
+  }
+
   const ids = new Set();
   const ports = new Set();
   for (const service of manifest.services) {
     if (!/^[a-z0-9-]+$/.test(service.id) || ids.has(service.id)) throw new Error("Invalid or duplicate service id.");
-    if (!Number.isInteger(service.port) || ports.has(service.port)) throw new Error("Invalid or duplicate service port.");
+    if (!Number.isInteger(service.port) || ports.has(service.port) || service.port === 8787) throw new Error("Invalid or duplicate service port.");
     if (!path.win32.isAbsolute(service.executable) || !path.win32.isAbsolute(service.cwd)) throw new Error("Service paths must be absolute.");
     if (!Array.isArray(service.args) || !service.env || typeof service.env !== "object") throw new Error("Invalid service command shape.");
+    if (Object.hasOwn(service.env, LOGODEV_VARIABLE)) throw new Error("Logo.dev plaintext must not appear in service env configuration.");
+    if (!Array.isArray(service.protectedSecretIds)) throw new Error("Invalid protected secret binding.");
+    for (const protectedId of service.protectedSecretIds) {
+      if (!protectedIds.has(protectedId)) throw new Error("Unknown protected secret binding.");
+      const spec = manifest.protectedEnvironment.find((item) => item.id === protectedId);
+      if (!spec.serviceIds.includes(service.id)) throw new Error("Protected secret is bound to an unauthorised service.");
+    }
     ids.add(service.id);
     ports.add(service.port);
+  }
+  const selector = manifest.services.find((service) => service.id === "selector-runtime");
+  if (!selector || selector.port !== 8788 || selector.protectedSecretIds.length !== 1 || selector.protectedSecretIds[0] !== "logodev-publishable-key") {
+    throw new Error("The canonical selector-runtime protected environment binding is invalid.");
+  }
+  if (manifest.services.some((service) => service.id !== "selector-runtime" && service.protectedSecretIds.length > 0)) {
+    throw new Error("Logo.dev may be injected only into selector-runtime.");
   }
   return manifest;
 }
@@ -70,6 +104,14 @@ function decryptCredential(credentialFile) {
   return value;
 }
 
+function protectedEnvironmentFor(manifest, service) {
+  return service.protectedSecretIds.map((id) => {
+    const spec = manifest.protectedEnvironment.find((item) => item.id === id);
+    if (!spec || !spec.serviceIds.includes(service.id)) throw new Error("Protected environment binding is invalid.");
+    return spec;
+  });
+}
+
 function writeState(stateRoot, service, childPid, status) {
   mkdirSync(stateRoot, { recursive: true });
   const target = path.join(stateRoot, service.id + ".json");
@@ -115,10 +157,17 @@ async function run() {
     }
 
     const childEnv = { ...process.env, ...service.env };
+    delete childEnv.OPENAI_API_KEY;
+    delete childEnv[LOGODEV_VARIABLE];
+
     if (service.credential === "control-plane-api-key") {
       childEnv.CONTROL_PLANE_API_KEY = decryptCredential(manifest.credentialFile);
     }
-    delete childEnv.OPENAI_API_KEY;
+    for (const spec of protectedEnvironmentFor(manifest, service)) {
+      const protectedValue = readFileSync(spec.protectedFile, "utf8").trim();
+      childEnv[spec.variable] = unprotectForCurrentUser(protectedValue, spec.validator);
+    }
+
     const logHandle = openSync(logPath, "a");
     const child = spawn(service.executable, service.args, {
       cwd: service.cwd,
@@ -127,6 +176,8 @@ async function run() {
       stdio: ["ignore", logHandle, logHandle],
     });
     delete childEnv.CONTROL_PLANE_API_KEY;
+    delete childEnv[LOGODEV_VARIABLE];
+
     writeState(stateRoot, service, child.pid, "running");
     appendFileSync(logPath, new Date().toISOString() + " started PID " + child.pid + "\n");
 

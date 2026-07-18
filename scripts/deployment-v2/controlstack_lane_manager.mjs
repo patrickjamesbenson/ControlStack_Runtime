@@ -5,9 +5,17 @@ import net from "node:net";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { loadManifest } from "./controlstack_service_host.mjs";
+
 const here = path.dirname(fileURLToPath(import.meta.url));
-const manifest = JSON.parse(readFileSync(path.join(here, "controlstack-services.v2.json"), "utf8"));
+const manifest = loadManifest(path.join(here, "controlstack-services.v2.json"));
 const hostPath = path.join(here, "controlstack_service_host.mjs");
+const uiPath = path.join(here, "controlstack_manager_ui.html");
+const ALLOWED_ACTIONS = new Set(["status", "verify", "start", "stop", "restart"]);
+
+function delay(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 function portOpen(port, timeout = 900) {
   return new Promise((resolve) => {
@@ -60,7 +68,7 @@ function processIdentity(pid) {
     encoding: "utf8", windowsHide: true,
   });
   if (result.status !== 0) return {};
-  return JSON.parse(result.stdout.trim() || "{}");
+  try { return JSON.parse(result.stdout.trim() || "{}"); } catch { return {}; }
 }
 
 function listenerIdentity(port) {
@@ -77,7 +85,7 @@ function listenerIdentity(port) {
     encoding: "utf8", windowsHide: true,
   });
   if (result.status !== 0) return {};
-  return JSON.parse(result.stdout.trim() || "{}");
+  try { return JSON.parse(result.stdout.trim() || "{}"); } catch { return {}; }
 }
 
 function stateFor(service) {
@@ -99,7 +107,20 @@ function hostIdentityMatches(service, state) {
   return commandLine.includes(hostPath.toLowerCase()) && commandLine.includes("--service") && commandLine.includes(service.id.toLowerCase());
 }
 
+function serviceById(serviceId) {
+  const service = manifest.services.find((item) => item.id === serviceId);
+  if (!service) throw new Error("The requested service id is not allowlisted.");
+  return service;
+}
+
+function assertStartable(service) {
+  if (!existsSync(service.executable) || !existsSync(service.cwd)) {
+    throw new Error("Service executable or working directory is missing for " + service.name);
+  }
+}
+
 function startHost(service) {
+  assertStartable(service);
   const child = spawn(process.execPath, [hostPath, "--service", service.id], {
     cwd: here,
     detached: true,
@@ -109,14 +130,13 @@ function startHost(service) {
   child.unref();
 }
 
-async function stopService(service) {
+function stopAuthority(service) {
   const { statePath, state } = stateFor(service);
   const listener = listenerIdentity(service.port);
 
   if (!state || !hostIdentityMatches(service, state)) {
     if (listener.ProcessId) throw new Error("Refusing to stop an external listener on port " + service.port);
-    rmSync(statePath, { force: true });
-    return;
+    return { statePath, state: null };
   }
 
   if (listener.ProcessId) {
@@ -124,6 +144,15 @@ async function stopService(service) {
     if (path.win32.normalize(listener.ExecutablePath).toLowerCase() !== path.win32.normalize(service.executable).toLowerCase()) {
       throw new Error("Refusing to stop an unexpected executable on port " + service.port);
     }
+  }
+  return { statePath, state };
+}
+
+async function stopService(service, authority = stopAuthority(service)) {
+  const { statePath, state } = authority;
+  if (!state) {
+    rmSync(statePath, { force: true });
+    return;
   }
 
   const killed = spawnSync("taskkill.exe", ["/PID", String(state.hostPid), "/T", "/F"], { encoding: "utf8", windowsHide: true });
@@ -135,7 +164,7 @@ async function waitFor(service, expected, timeoutMs = 45000) {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
     if ((await healthy(service)) === expected) return true;
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await delay(1000);
   }
   return false;
 }
@@ -145,58 +174,218 @@ async function managed(service) {
   return hostIdentityMatches(service, state);
 }
 
-async function status(requireManaged = false) {
-  let all = true;
-  console.log("\nControlStack Service Manager v2 — lane deployment\n");
-  for (const service of manifest.services) {
-    const ok = await healthy(service);
-    const owned = await managed(service);
-    const accepted = ok && (!requireManaged || owned);
-    all &&= accepted;
-    const label = ok ? (owned ? "READY / MANAGED" : "READY / EXTERNAL") : "STOPPED / UNHEALTHY";
-    console.log(String(service.port).padStart(4) + "  " + service.name.padEnd(31) + label);
+async function serviceSnapshot(serviceId = "all") {
+  const selected = serviceId === "all" ? manifest.services : [serviceById(serviceId)];
+  return Promise.all(selected.map(async (service) => ({
+    id: service.id,
+    name: service.name,
+    port: service.port,
+    healthy: await healthy(service),
+    managed: await managed(service),
+  })));
+}
+
+async function status(requireManaged = false, print = true, serviceId = "all") {
+  const services = await serviceSnapshot(serviceId);
+  const verified = services.every((service) => service.healthy && (!requireManaged || service.managed));
+  if (print) {
+    console.log("\nControlStack Service Manager Deployment v2\n");
+    for (const service of services) {
+      const label = service.healthy ? (service.managed ? "READY / MANAGED" : "READY / EXTERNAL") : "STOPPED / UNHEALTHY";
+      console.log(String(service.port).padStart(4) + "  " + service.name.padEnd(38) + label);
+    }
+    console.log("\nCanonical runtime shell: http://127.0.0.1:8788/workspace");
+    console.log("Control UI: http://" + manifest.controlUi.host + ":" + manifest.controlUi.port + manifest.controlUi.path);
+    console.log("Port 8787 and unknown/logo services are outside this manager and remain untouched.");
   }
-  console.log("\nLegacy ngrok/router and unknown/logo services are outside this manager and remain untouched.");
-  return all;
+  return { verified, services };
+}
+
+async function startService(service) {
+  if (await healthy(service)) return;
+  const { statePath, state } = stateFor(service);
+  if (hostIdentityMatches(service, state)) {
+    if (!(await waitFor(service, true))) throw new Error(service.name + " did not become ready.");
+    return;
+  }
+  rmSync(statePath, { force: true });
+  startHost(service);
+  if (!(await waitFor(service, true))) throw new Error(service.name + " did not become ready.");
 }
 
 async function startAll() {
-  for (const service of manifest.services) {
-    if (await healthy(service)) continue;
-    const { statePath, state } = stateFor(service);
-    if (hostIdentityMatches(service, state)) continue;
-    rmSync(statePath, { force: true });
-    startHost(service);
-  }
-  const failed = [];
-  for (const service of manifest.services) if (!(await waitFor(service, true))) failed.push(service.name);
-  if (failed.length) throw new Error("Services did not become ready: " + failed.join(", "));
+  for (const service of manifest.services) assertStartable(service);
+  for (const service of manifest.services) await startService(service);
 }
 
 async function stopAll() {
-  for (const service of [...manifest.services].reverse()) await stopService(service);
+  const authorities = new Map(manifest.services.map((service) => [service.id, stopAuthority(service)]));
+  for (const service of [...manifest.services].reverse()) await stopService(service, authorities.get(service.id));
   for (const service of manifest.services) {
     if (!(await waitFor(service, false, 15000))) throw new Error(service.name + " did not stop.");
   }
 }
 
+async function restartService(service) {
+  await stopService(service);
+  if (!(await waitFor(service, false, 15000))) throw new Error(service.name + " did not stop.");
+  await startService(service);
+}
+
+async function performAction(action, serviceId = "all") {
+  if (!ALLOWED_ACTIONS.has(action)) throw new Error("The requested action is not allowlisted.");
+  if (serviceId !== "all") serviceById(serviceId);
+
+  if (action === "status") return status(false, false, serviceId);
+  if (action === "verify") return status(true, false, serviceId);
+
+  if (serviceId === "all") {
+    if (action === "start") await startAll();
+    else if (action === "stop") await stopAll();
+    else if (action === "restart") {
+      for (const service of manifest.services) assertStartable(service);
+      await stopAll();
+      await startAll();
+    }
+  } else {
+    const service = serviceById(serviceId);
+    if (action === "start") await startService(service);
+    else if (action === "stop") {
+      await stopService(service);
+      if (!(await waitFor(service, false, 15000))) throw new Error(service.name + " did not stop.");
+    } else if (action === "restart") {
+      assertStartable(service);
+      await restartService(service);
+    }
+  }
+
+  return status(false, false, serviceId);
+}
+
+function isLoopback(address) {
+  return address === "127.0.0.1" || address === "::1" || address === "::ffff:127.0.0.1";
+}
+
+function sendJson(response, statusCode, value) {
+  const body = JSON.stringify(value);
+  response.writeHead(statusCode, {
+    "Content-Type": "application/json; charset=utf-8",
+    "Content-Length": Buffer.byteLength(body),
+    "Cache-Control": "no-store",
+    "X-Content-Type-Options": "nosniff",
+    "Content-Security-Policy": "default-src 'none'",
+  });
+  response.end(body);
+}
+
+function sendHtml(response) {
+  const body = readFileSync(uiPath);
+  response.writeHead(200, {
+    "Content-Type": "text/html; charset=utf-8",
+    "Content-Length": body.length,
+    "Cache-Control": "no-store",
+    "X-Content-Type-Options": "nosniff",
+    "Referrer-Policy": "no-referrer",
+    "Content-Security-Policy": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src 'self'; img-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'",
+  });
+  response.end(body);
+}
+
+function readJsonBody(request) {
+  return new Promise((resolve, reject) => {
+    let body = "";
+    request.setEncoding("utf8");
+    request.on("data", (chunk) => {
+      body += chunk;
+      if (body.length > 4096) reject(new Error("The control request is too large."));
+    });
+    request.on("end", () => {
+      try { resolve(JSON.parse(body || "{}")); } catch { reject(new Error("The control request is not valid JSON.")); }
+    });
+    request.on("error", () => reject(new Error("The control request could not be read.")));
+  });
+}
+
+let mutationQueue = Promise.resolve();
+function serialisedAction(action, serviceId) {
+  const run = () => performAction(action, serviceId);
+  if (action === "status" || action === "verify") return run();
+  const pending = mutationQueue.then(run, run);
+  mutationQueue = pending.catch(() => undefined);
+  return pending;
+}
+
+function createControlServer() {
+  return http.createServer(async (request, response) => {
+    if (!isLoopback(request.socket.remoteAddress)) {
+      sendJson(response, 403, { ok: false, error: "Loopback access only." });
+      return;
+    }
+    const requestUrl = new URL(request.url || "/", "http://127.0.0.1");
+    if (request.method === "GET" && (requestUrl.pathname === "/" || requestUrl.pathname === "/index.html")) {
+      sendHtml(response);
+      return;
+    }
+    if (request.method === "GET" && requestUrl.pathname === "/api/status") {
+      const result = await status(false, false);
+      sendJson(response, 200, { ok: true, ...result });
+      return;
+    }
+    if (request.method === "POST" && requestUrl.pathname === "/api/control") {
+      try {
+        const body = await readJsonBody(request);
+        const action = typeof body.action === "string" ? body.action.toLowerCase() : "";
+        const serviceId = typeof body.serviceId === "string" ? body.serviceId : "all";
+        const result = await serialisedAction(action, serviceId);
+        sendJson(response, 200, { ok: true, action, serviceId, ...result });
+      } catch (error) {
+        sendJson(response, 400, { ok: false, error: error?.message || "The bounded control operation failed." });
+      }
+      return;
+    }
+    sendJson(response, 404, { ok: false, error: "Not found." });
+  });
+}
+
+async function serve() {
+  if (!existsSync(uiPath)) throw new Error("The Deployment v2 control UI is missing.");
+  await startAll();
+  const server = createControlServer();
+  await new Promise((resolve, reject) => {
+    server.once("error", reject);
+    server.listen(manifest.controlUi.port, manifest.controlUi.host, resolve);
+  });
+  console.log("ControlStack Deployment v2 control UI: http://" + manifest.controlUi.host + ":" + manifest.controlUi.port + manifest.controlUi.path);
+}
+
+function selfTest() {
+  if (manifest.services.length !== 8 || !existsSync(hostPath) || !existsSync(uiPath)) {
+    throw new Error("Expected eight services, the service host and the control UI.");
+  }
+  if (manifest.services.some((service) => service.port === 8787)) throw new Error("Port 8787 must not be managed.");
+  const selector = serviceById("selector-runtime");
+  if (selector.port !== 8788 || selector.protectedSecretIds?.length !== 1) throw new Error("Selector runtime configuration is incomplete.");
+  if (manifest.controlUi.host !== "127.0.0.1" || manifest.controlUi.port === 8787) throw new Error("The control UI must bind to a dedicated loopback port.");
+  console.log("ControlStack lane manager self-test: PASS");
+}
+
 async function main() {
   const action = (process.argv[2] || "status").toLowerCase();
+  const serviceId = process.argv[3] || "all";
   if (action === "self-test") {
-    if (manifest.services.length !== 8 || !existsSync(hostPath)) throw new Error("Expected eight services and the service host.");
-    console.log("ControlStack lane manager self-test: PASS");
+    selfTest();
     return;
   }
   if (process.platform !== "win32") throw new Error("ControlStack lane manager runs only on Windows.");
-  if (action === "start") await startAll();
-  else if (action === "stop") await stopAll();
-  else if (action === "restart") { await stopAll(); await startAll(); }
-  else if (action === "status" || action === "verify") {
-    const ok = await status(action === "verify");
-    if (!ok && action === "verify") process.exitCode = 2;
+  if (action === "serve") {
+    await serve();
     return;
-  } else throw new Error("Use start, stop, restart, status or verify.");
-  await status(false);
+  }
+  if (!ALLOWED_ACTIONS.has(action)) throw new Error("Use serve, start, stop, restart, status or verify with an optional allowlisted service id.");
+  const result = await performAction(action, serviceId);
+  if (action === "status" || action === "verify") await status(action === "verify", true, serviceId);
+  else await status(false, true, serviceId);
+  if (action === "verify" && !result.verified) process.exitCode = 2;
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

@@ -5,6 +5,21 @@
   "installRoot": "C:\\ControlStack_Service_Manager\\deployment-v2",
   "receiptRoot": "C:\\ControlStack_Receipts",
   "credentialFile": "C:\\ControlStack_Service_Manager\\deployment-v2\\secrets\\tunnel-runtime-key.dpapi",
+  "controlUi": {
+    "host": "127.0.0.1",
+    "port": 8790,
+    "path": "/"
+  },
+  "protectedEnvironment": [
+    {
+      "id": "logodev-publishable-key",
+      "variable": "LOGODEV_PUBLISHABLE_KEY",
+      "validator": "logodev-publishable-key",
+      "sourceFile": "C:\\_secrets\\ControlStack\\logo.env.bat",
+      "protectedFile": "C:\\ControlStack_Service_Manager\\deployment-v2\\secrets\\logodev-publishable-key.dpapi",
+      "serviceIds": ["selector-runtime"]
+    }
+  ],
   "worktrees": [
     { "root": "C:\\ControlStack_Worktrees\\selector-engine", "branch": "lane/selector-engine" },
     { "root": "C:\\ControlStack_Worktrees\\code-pilot-lab", "branch": "lane/code-pilot-lab" },
@@ -20,6 +35,7 @@
       "args": ["tools\\controlstack-mcp\\controlstack_mcp.py"],
       "cwd": "C:\\ControlStack_Worktrees\\controlstack-tooling-v2",
       "credential": "none",
+      "protectedSecretIds": [],
       "health": { "type": "tcp", "host": "127.0.0.1", "port": 8000 },
       "env": {
         "CONTROLSTACK_RUNTIME_ROOT": "C:\\ControlStack_Worktrees\\selector-engine",
@@ -48,12 +64,13 @@
     },
     {
       "id": "selector-runtime",
-      "name": "CS Selector Runtime",
+      "name": "CS Selector Runtime / Workspace Shell",
       "port": 8788,
       "executable": "C:\\Program Files\\nodejs\\node.exe",
       "args": ["server.js"],
       "cwd": "C:\\ControlStack_Worktrees\\selector-engine",
       "credential": "none",
+      "protectedSecretIds": ["logodev-publishable-key"],
       "health": { "type": "http", "url": "http://127.0.0.1:8788/api/runtime-config/status", "acceptedStatus": [200] },
       "env": {
         "CONTROLSTACK_RUNTIME_HOST": "127.0.0.1",
@@ -70,6 +87,7 @@
       "args": ["run", "--profile", "controlstack-selector-engine-noauth", "--health.listen-addr", "127.0.0.1:8082", "--log.level=warn", "--log.format=struct-text"],
       "cwd": "C:\\ControlStack_Tunnel",
       "credential": "control-plane-api-key",
+      "protectedSecretIds": [],
       "health": { "type": "http-body", "url": "http://127.0.0.1:8082/readyz", "acceptedStatus": [200], "body": "ready" },
       "env": {}
     },
@@ -81,6 +99,7 @@
       "args": ["tools\\controlstack-mcp\\controlstack_mcp.py"],
       "cwd": "C:\\ControlStack_Worktrees\\controlstack-tooling-v2",
       "credential": "none",
+      "protectedSecretIds": [],
       "health": { "type": "tcp", "host": "127.0.0.1", "port": 8021 },
       "env": {
         "CONTROLSTACK_RUNTIME_ROOT": "C:\\ControlStack_Worktrees\\code-pilot-lab",
@@ -115,6 +134,7 @@
       "args": ["-m", "http.server", "8899"],
       "cwd": "C:\\ControlStack_Lab\\packages\\lab-kernel\\ies-toolkit",
       "credential": "none",
+      "protectedSecretIds": [],
       "health": { "type": "http", "url": "http://127.0.0.1:8899/lab.html", "acceptedStatus": [200] },
       "env": {}
     },
@@ -126,6 +146,7 @@
       "args": ["run", "--profile", "controlstack-lab-ies-noauth", "--health.listen-addr", "127.0.0.1:8081", "--log.level=warn", "--log.format=struct-text"],
       "cwd": "C:\\ControlStack_Tunnel",
       "credential": "control-plane-api-key",
+      "protectedSecretIds": [],
       "health": { "type": "http-body", "url": "http://127.0.0.1:8081/readyz", "acceptedStatus": [200], "body": "ready" },
       "env": {}
     },
@@ -137,6 +158,7 @@
       "args": ["tools\\controlstack-mcp\\controlstack_mcp.py"],
       "cwd": "C:\\ControlStack_Worktrees\\controlstack-tooling-v2",
       "credential": "none",
+      "protectedSecretIds": [],
       "health": { "type": "tcp", "host": "127.0.0.1", "port": 8022 },
       "env": {
         "CONTROLSTACK_RUNTIME_ROOT": "C:\\ControlStack_Worktrees\\program-integrate",
@@ -171,6 +193,7 @@
       "args": ["run", "--profile", "controlstack-program-integrate-noauth", "--health.listen-addr", "127.0.0.1:8080", "--log.level=warn", "--log.format=struct-text"],
       "cwd": "C:\\ControlStack_Tunnel",
       "credential": "control-plane-api-key",
+      "protectedSecretIds": [],
       "health": { "type": "http-body", "url": "http://127.0.0.1:8080/readyz", "acceptedStatus": [200], "body": "ready" },
       "env": {}
     }
