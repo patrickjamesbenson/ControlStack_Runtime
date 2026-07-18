@@ -119,3 +119,5 @@ The `project-alpha` browser-session envelope remains separate from server regist
 **Recommended worker:** `CS-SELECTOR-RUNTIME-8788-CONTROL-ACTIVATION-VALIDATION-01`.
 
 Activate or reload runtime 8788 from commit `5ae1cf8e9f4e488ec4921632ef730a35db44d1fc`, then obtain a bounded live `/api/selector-reference/options` receipt. Acceptance is limited to genuine direct Control availability, BOARDS plus DRIVERS attribution, no invented options, and no automatic selection. Do not patch Selector semantics, mutate RuntimeData, fabricate registration, invoke Engine, or widen into rendering, Tier, caching, length feasibility, Lab/IES, Program, or main. If the runtime cannot be activated by the connected app, report the exact service-ownership boundary and stop.
+
+Documentation evidence commit `e31f960d72a56e43c19266183bbc08357f02c741` was gated at 103/103 and pushed to `origin/lane/selector-engine`. The tree was clean at that evidence-parcel HEAD before the hash-index closeout.

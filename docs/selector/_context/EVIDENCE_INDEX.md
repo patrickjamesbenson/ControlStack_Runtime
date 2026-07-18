@@ -121,3 +121,5 @@ Every completed worker updates this index with:
 - Post-commit live options transport: runtime 8788 returned HTTP 200 for the constrained GET, but the app exposes no restart/reload action and no bounded Control-only response projection. Live `controlType.status = available` is therefore NOT CLAIMED; operational activation/receipt remains HELD.
 - Browser/server revision: `project-alpha` read-only invocation returned HTTP 422 and `selected-project-shell-invoke-transport-active-server-revision-invalid`; capability/Engine invocation and every write, persistence, RunTable, IES, and output flag remained false — VERIFIED.
 - Recommended next worker: `CS-SELECTOR-RUNTIME-8788-CONTROL-ACTIVATION-VALIDATION-01`.
+- Documentation evidence commit: `e31f960d72a56e43c19266183bbc08357f02c741`; push `5ae1cf8..e31f960` to `origin/lane/selector-engine` succeeded after a 103/103 gated run — VERIFIED.
+- Evidence-parcel ending HEAD before this hash-index closeout: `e31f960d72a56e43c19266183bbc08357f02c741`; Git inventory clean — VERIFIED.
