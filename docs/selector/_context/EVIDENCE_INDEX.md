@@ -102,3 +102,22 @@ Every completed worker updates this index with:
 - Tier: unavailable as a Selector input, consistent with the user-confirmed rule that Tier is computed by Engine/Lex after run — NOT A SELECTOR INPUT DEFECT.
 - Completed diagnosis worker: `CS-SELECTOR-LIVE-CONTROL-OPTIONS-DIAGNOSIS-01`; no repository or project mutation; gate 102/102; exact failure at `compatibleBoardDriverControlOptions()`.
 - Next worker: `CS-SELECTOR-LIVE-CONTROL-AUTHORITY-INTERSECTION-REPAIR-01`, guarded repair or clean upstream-data stop.
+
+## 2026-07-18 — Control authority intersection repair
+
+- Worker: `CS-SELECTOR-LIVE-CONTROL-AUTHORITY-INTERSECTION-REPAIR-01`.
+- Starting identity: root `C:\ControlStack_Worktrees\selector-engine`; branch `lane/selector-engine`; starting HEAD `f131346eca23f08661c9950094388dc8414ddca4`; MCP 8000; runtime 8788; gate `selector-engine`; starting tree clean — VERIFIED.
+- Context read: every file under `docs/selector/_context/` — VERIFIED.
+- Active source: BOARDS 265, DRIVERS 48, SYSTEM 8, no missing required tables; fingerprint `266de269e3e8f8b7191e4653d45580c251eb46025411574e0d1f2a27daca209d` — VERIFIED read-only.
+- Exact mismatch: `native_control_type` is a boolean marker in the current DRIVERS materialisation, while genuine protocol authority is in duplicate-normalised `native_control_type__2`; redacted field-level evidence included Fixed (On/Off) and DALI2 DT6 — VERIFIED mapping defect.
+- Classification: genuine authority exists under an unmapped source column; not a canonicalisation defect and not missing upstream authority — VERIFIED.
+- Changed feature paths: `packages/workspace-kernel/selectorReferenceOptionsService.js`; `tests/selectorReferenceOptionsService.test.js` — VERIFIED.
+- Repair: `driverAuthorityControlValues()` prefers populated `native_control_type__2`, then preserves existing native and legacy authority fallback — VERIFIED.
+- Preservation evidence: BOARDS × DRIVERS intersection, system/wildcard applicability, descriptive aliases non-authoritative, unmatched fail closed, no fallback/default/automatic Control selection, selected Control driver consequence, and redaction tests all passed — VERIFIED.
+- Focused/affected gate: `selector-engine`, 103 passed, 0 failed, exit code 0 — VERIFIED.
+- Gated feature commit/push: `5ae1cf8e9f4e488ec4921632ef730a35db44d1fc`; push `f131346..5ae1cf8` to `origin/lane/selector-engine` succeeded — VERIFIED.
+- Post-repair RuntimeData probe: fingerprint unchanged; write enabled false; write attempted false; RuntimeData mutation false; raw rows, headers, users, snapshot, and path not returned — VERIFIED.
+- Materialiser dry-run: reader blocked safely; active/materialised snapshot write attempts false; promotion null; dry-run writes nothing — VERIFIED.
+- Post-commit live options transport: runtime 8788 returned HTTP 200 for the constrained GET, but the app exposes no restart/reload action and no bounded Control-only response projection. Live `controlType.status = available` is therefore NOT CLAIMED; operational activation/receipt remains HELD.
+- Browser/server revision: `project-alpha` read-only invocation returned HTTP 422 and `selected-project-shell-invoke-transport-active-server-revision-invalid`; capability/Engine invocation and every write, persistence, RunTable, IES, and output flag remained false — VERIFIED.
+- Recommended next worker: `CS-SELECTOR-RUNTIME-8788-CONTROL-ACTIVATION-VALIDATION-01`.

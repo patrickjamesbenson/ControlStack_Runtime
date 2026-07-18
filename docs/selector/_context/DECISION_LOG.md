@@ -79,3 +79,11 @@ This log is append-oriented. Do not silently rewrite historical decisions.
 **Rationale:** Descriptive aliases are intentionally non-authoritative. Broadening them, unioning BOARDS and DRIVERS labels, or defaulting DALI-2 would create unsupported product authority.
 
 **Consequence:** `CS-SELECTOR-LIVE-CONTROL-AUTHORITY-INTERSECTION-REPAIR-01` must first distinguish mapping/canonicalisation mismatch from missing upstream DRIVERS authority. It patches only the former; for the latter it stops without code changes and identifies the upstream data owner.
+
+## 2026-07-18 — Duplicate-normalised DRIVERS protocol field is authoritative when populated
+
+**Decision:** In the current active-source shape, populated `native_control_type__2` is treated as the genuine DRIVERS protocol authority ahead of the boolean marker in `native_control_type`; existing native and legacy fallbacks remain unchanged when the duplicate-normalised field is absent.
+
+**Rationale:** Approved read-only active-source comparison proved that duplicate header normalisation preserved the genuine protocol values in `native_control_type__2`, while `native_control_type` now contains boolean markers. Treating the marker as protocol authority creates non-matching `true`/`false` descriptors and empties the truthful BOARDS × DRIVERS Control intersection.
+
+**Consequence:** The Selector may map only this proven duplicate-normalised authority boundary. Descriptive aliases remain non-authoritative; no source union, fallback Control, DALI default, automatic selection, RuntimeData mutation, or broader schema reinterpretation is authorised. Runtime activation remains a separate operational acceptance step.

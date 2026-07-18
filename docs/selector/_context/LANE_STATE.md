@@ -8,9 +8,9 @@
 |---|---|---|
 | Root | `C:\ControlStack_Worktrees\selector-engine` | VERIFIED |
 | Branch | `lane/selector-engine` | VERIFIED |
-| Current HEAD before this normalisation | `4de9274325eac235c6044f5595bf8f2e0c8fae25` | VERIFIED |
-| HEAD subject | `docs(selector): close runtime acceptance receipt` | VERIFIED |
-| Accepted feature commit | `6e5e6cee398e1dd1e82d331c81a719625e0d076b` | VERIFIED |
+| Starting HEAD for the Control authority repair | `f131346eca23f08661c9950094388dc8414ddca4` | VERIFIED |
+| Starting HEAD subject | `docs(selector): accept control authority diagnosis` | VERIFIED |
+| Accepted Control authority repair commit | `5ae1cf8e9f4e488ec4921632ef730a35db44d1fc` | VERIFIED and pushed |
 | Working tree before this normalisation | clean | VERIFIED |
 | Runtime | `127.0.0.1:8788` | VERIFIED configuration |
 | MCP | `127.0.0.1:8000/mcp` | VERIFIED |
@@ -119,3 +119,15 @@ The user supplied a full live screen dump after pressing **Save browser session 
 The dump also reports a current source-backed Selector candidate with System `DNX 80`, direct optic `Opal · 80`, direct target `1200 lm/m`, and `3000K / CRI80`, while `Control` is `Not selected / blocked`, `Direct control protocol` is unavailable from current source, and `Control type` is blocked. Run 1 is incomplete because quantity, length, and length mode are empty. Tier is shown as unavailable from the current source, which is not a UI defect because Tier is intended to be derived by Engine/Lex after run.
 
 This was sufficient to reopen only the direct Control/Protocol options-derivation boundary. The completed read-only diagnosis then located the first exact failure in `compatibleBoardDriverControlOptions()`: the active BOARDS and DRIVERS rows yield no mutually compatible genuine protocol-authority pair under system applicability. Runtime acceptance remains held until a guarded repair maps a proven authority form or an upstream DRIVERS authority-data defect is corrected.
+
+## 2026-07-18 Control authority repair closeout — latest controlling state
+
+Worker `CS-SELECTOR-LIVE-CONTROL-AUTHORITY-INTERSECTION-REPAIR-01` started clean at `f131346eca23f08661c9950094388dc8414ddca4`. Approved read-only active-source evidence proved a mapping defect, not missing upstream authority and not a canonicalisation defect: the current DRIVERS materialisation contains a boolean marker in `native_control_type`, while the genuine protocol authority is retained by duplicate-header normalisation in `native_control_type__2`. Redacted field-level comparisons showed genuine values including Fixed (On/Off) and DALI2 DT6 without returning full rows, private paths, users, or credentials.
+
+Feature commit `5ae1cf8e9f4e488ec4921632ef730a35db44d1fc` makes the smallest descriptor repair: `driverAuthorityControlValues()` prefers `native_control_type__2` when populated, then preserves the existing native and legacy authority fallbacks. Descriptive aliases remain non-authoritative. BOARDS × DRIVERS intersection, system and wildcard applicability, fail-closed unmatched behaviour, source ordering/default metadata, no fallback option, and no automatic Control selection remain covered.
+
+The exact active-source-shape regression and the permitted `selector-engine` gate passed 103/103. The gated feature commit was pushed to `origin/lane/selector-engine`. The RuntimeData fingerprint remained `266de269e3e8f8b7191e4653d45580c251eb46025411574e0d1f2a27daca209d` before and after the repair; write attempts and RuntimeData mutation remained false.
+
+Post-commit runtime 8788 remained reachable and accepted the options GET, but this app exposes no runtime restart/reload action and the endpoint response could not be reduced to a bounded post-reload Control-field receipt. Therefore live `controlType.status = available` is **NOT CLAIMED** in this closeout; operational activation of commit `5ae1cf8e` on 8788 remains the first next boundary. The separate `project-alpha` read-only invocation still returned HTTP 422 with blocker `selected-project-shell-invoke-transport-active-server-revision-invalid`; capability invocation, RuntimeData loading, donor Engine execution, persistence, RunTable generation, IES generation, and output generation all remained false.
+
+**Recommended next bounded worker:** `CS-SELECTOR-RUNTIME-8788-CONTROL-ACTIVATION-VALIDATION-01` — activate/reload runtime 8788 from accepted commit `5ae1cf8e`, obtain a bounded live options receipt proving genuine available Control remains unselected by default, and stop without widening into registration or Engine execution.

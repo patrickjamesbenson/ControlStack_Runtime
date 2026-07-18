@@ -11,9 +11,9 @@ The six files under `docs/selector/_context/` were created, gated, committed, an
 
 ## Priority 1 — Single-slice E2E closeout
 
-**Status:** IN PROGRESS — browser-session save exists, but current live Control/Protocol options are blocked and server-registration acknowledgement remains unproven.
+**Status:** IN PROGRESS — the Control authority mapping repair is committed and pushed; runtime 8788 activation/receipt and server-registration acknowledgement remain unproven.
 
-**Worker name:** `CS-SELECTOR-LIVE-CONTROL-AUTHORITY-INTERSECTION-REPAIR-01`
+**Next worker name:** `CS-SELECTOR-RUNTIME-8788-CONTROL-ACTIVATION-VALIDATION-01`
 
 **Objective:** complete and prove one real, source-backed selection through the existing read-only Engine path to a useful result/run-table output on the current runtime.
 
@@ -39,9 +39,9 @@ The six files under `docs/selector/_context/` were created, gated, committed, an
 
 **Closed boundary evidence:** commit `6e5e6cee398e1dd1e82d331c81a719625e0d076b` binds one unambiguous selected-optic efficiency from active `OPTICS` authority inside the server-owned bridge. `selector-engine` passed 102/102, and live internal-seam execution returned one useful run with no write or mutation side effect.
 
-**Remaining acceptance:** repair only a proven active-source Control authority mapping/canonicalisation mismatch, or confirm and escalate missing upstream DRIVERS authority. After genuine direct Control options are live, prove server-owned registration for the existing browser-session save and continue the selected-project read-only invocation route. Tier must not be introduced as a manual prerequisite; it is computed after run.
+**Remaining acceptance:** activate/reload runtime 8788 from accepted feature commit `5ae1cf8e9f4e488ec4921632ef730a35db44d1fc` and obtain a bounded live receipt showing at least one genuine direct Control option with empty `selectedValue`. After that, prove server-owned registration for the existing browser-session save and continue the selected-project read-only invocation route. Tier must not be introduced as a manual prerequisite; it is computed after run.
 
-**Next bounded worker:** `CS-SELECTOR-LIVE-CONTROL-AUTHORITY-INTERSECTION-REPAIR-01` — prove the exact active-source authority form first, then patch only a genuine mapping/canonicalisation mismatch. If genuine DRIVERS authority is absent, stop without code changes and identify the upstream data owner.
+**Next bounded worker:** `CS-SELECTOR-RUNTIME-8788-CONTROL-ACTIVATION-VALIDATION-01` — perform only the operational activation/reload and live options validation. Do not widen into registration, Engine invocation, rendering, RuntimeData changes, or further Control semantics.
 
 ### 2026-07-18 acceptance precondition result
 
@@ -95,3 +95,11 @@ DXF resizing, quotation, reports, and other post-payload artifacts remain outsid
 - Browser rendering as an assumed cause.
 - Indirect-control changes merely to unblock direct control.
 - Whole-repository test runs when the named bounded gate is available.
+
+## 2026-07-18 Control authority repair result
+
+**Status:** CODE REPAIR COMPLETE; LIVE ACTIVATION RECEIPT HELD.
+
+Read-only source inspection proved that the active DRIVERS materialisation has a boolean marker at `native_control_type` and the genuine duplicate-normalised authority at `native_control_type__2`. Commit `5ae1cf8e9f4e488ec4921632ef730a35db44d1fc` now prefers the genuine field while preserving native/legacy fallback and all authority-intersection safeguards. The exact-shape regression and complete `selector-engine` gate passed 103/103; push to `origin/lane/selector-engine` succeeded.
+
+RuntimeData remained unchanged and redacted. Runtime 8788 answered the post-commit GET, but no restart/reload action or bounded Control-only receipt is available in this app, so live availability is not overstated. `project-alpha` remains separately blocked by `selected-project-shell-invoke-transport-active-server-revision-invalid`, with no invocation or write/generation side effect.

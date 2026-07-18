@@ -28,9 +28,9 @@ Worker `CS-SELECTOR-E2E-LENGTH-FEASIBILITY-BOUNDARY-01` closed the masked electr
 
 New current browser evidence supplied on 2026-07-18 reopens the direct Control/Protocol options boundary: the live Selector shows `Control: Not selected / blocked`, `Direct control protocol: unavailable from current source`, and `Control type: blocked`, while nearby system, optic, and CCT/CRI fields are source-backed. Tier is not a user-selectable Selector input; it is an Engine/Lex consequence after the run. A real browser-session save now exists for `project-alpha`, but the screen dump does not expose a server-registration acknowledgement or active server revision. Final runtime 8788 acceptance therefore remains unproven.
 
-## Exact next action
+## Prior repair commission — completed
 
-Commission exactly one guarded repair worker:
+The following guarded repair worker has now completed:
 
 **Name:** `CS-SELECTOR-LIVE-CONTROL-AUTHORITY-INTERSECTION-REPAIR-01`
 
@@ -101,3 +101,21 @@ The exact failing boundary is `compatibleBoardDriverControlOptions()` in `packag
 The worker also confirmed that `project-alpha` has a browser-session envelope but still no active server-owned revision; read-only invocation returned `selected-project-shell-invoke-transport-active-server-revision-invalid`. No registration was fabricated and all write/mutation/generation flags remained false.
 
 **Next worker:** `CS-SELECTOR-LIVE-CONTROL-AUTHORITY-INTERSECTION-REPAIR-01`. It must first prove the exact active-source authority form. It may patch only a genuine mapping/canonicalisation mismatch; if genuine DRIVERS authority is absent, it must make no code change and stop at the upstream data-owner boundary. Runtime Acceptance 02 remains held until this repair or upstream authority correction is complete.
+
+## 2026-07-18 Control authority repair completed — latest handoff
+
+The repair worker started clean at `f131346eca23f08661c9950094388dc8414ddca4` and proved active-source case 1: genuine DRIVERS protocol authority exists under an unmapped duplicate-normalised source column. In the current materialisation, `native_control_type` is a boolean marker and `native_control_type__2` contains the genuine protocol value. This was established through approved read-only, redacted field-level comparison; no full row, source path, user data, credential, or unrestricted payload was returned.
+
+Feature commit `5ae1cf8e9f4e488ec4921632ef730a35db44d1fc` is pushed on `lane/selector-engine`. The only feature paths changed are `packages/workspace-kernel/selectorReferenceOptionsService.js` and `tests/selectorReferenceOptionsService.test.js`. The descriptor now prefers populated `native_control_type__2`, then preserves existing native/legacy fallback. It does not promote dimming/protocol labels or aliases into authority, union source values, invent a fallback, default DALI-2, or auto-select Control.
+
+The exact active-source-shape regression and the complete permitted gate passed 103/103. Existing focused regressions also prove system/wildcard enforcement, descriptive-alias rejection, unmatched fail-closed behaviour, no automatic Control selection, compatible driver consequences after selection, and redaction. The active RuntimeData fingerprint stayed `266de269e3e8f8b7191e4653d45580c251eb46025411574e0d1f2a27daca209d`; no RuntimeData or project mutation occurred.
+
+Runtime 8788 returned HTTP 200 after the commit, but the connected app provides no runtime restart/reload action and the full options response cannot be reduced to a bounded Control-only receipt. Do not claim live `controlType` acceptance until the committed code is explicitly activated and a concise field receipt proves status available, genuine BOARDS+DRIVERS attribution, at least one option, and empty `selectedValue`.
+
+The `project-alpha` browser-session envelope remains separate from server registration. A read-only invocation after the repair returned HTTP 422 with `selected-project-shell-invoke-transport-active-server-revision-invalid`; no source reconstruction, capability invocation, RuntimeData load, donor Engine call, persistence, RunTable, IES, or output generation occurred.
+
+## Latest exact next action
+
+**Recommended worker:** `CS-SELECTOR-RUNTIME-8788-CONTROL-ACTIVATION-VALIDATION-01`.
+
+Activate or reload runtime 8788 from commit `5ae1cf8e9f4e488ec4921632ef730a35db44d1fc`, then obtain a bounded live `/api/selector-reference/options` receipt. Acceptance is limited to genuine direct Control availability, BOARDS plus DRIVERS attribution, no invented options, and no automatic selection. Do not patch Selector semantics, mutate RuntimeData, fabricate registration, invoke Engine, or widen into rendering, Tier, caching, length feasibility, Lab/IES, Program, or main. If the runtime cannot be activated by the connected app, report the exact service-ownership boundary and stop.
