@@ -156,4 +156,7 @@ Every completed worker updates this index with:
 - Exact next action: the connected-app/tooling owner must expose safe bounded JSON-field extraction for the existing GET response without changing Selector route or payload semantics, then this same acceptance must be rerun.
 - Documentation paths: `LANE_STATE.md`, `WORK_QUEUE.md`, `EVIDENCE_INDEX.md`, and `SESSION_HANDOFF.md` only.
 - Complete gate before staging: `selector-engine`, 103 passed, 0 failed, exit code 0 — VERIFIED.
-- Documentation commit/push: pending gated closeout of the four documentation paths above.
+- Documentation evidence commit: `aa1436b8afae57304096a284a09b5549a84e8bde` — `docs(selector): record live control observability boundary`.
+- Push: `9737418..aa1436b` to `origin/lane/selector-engine` succeeded — VERIFIED.
+- Evidence-commit ending tree: clean, with 0 staged, modified, untracked, or deleted paths — VERIFIED.
+- The commit containing this hash-index closeout is the final ending HEAD for the worker; its exact hash is reported in the completion response.
