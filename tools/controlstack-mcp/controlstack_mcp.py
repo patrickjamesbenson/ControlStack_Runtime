@@ -1,6 +1,16 @@
 from __future__ import annotations
 
-r"""Runtime-owned ControlStack MCP server.
+# NON-AUTHORITATIVE PROGRAM CONTRACT SNAPSHOT — DO NOT PATCH OR DEPLOY.
+# Canonical shared-tooling source:
+#   C:\ControlStack_Worktrees\controlstack-tooling-v2\tools\controlstack-mcp\controlstack_mcp.py
+# Canonical lane: lane/controlstack-tooling-v2
+# Last confirmed canonical guard repair: 2e4d880
+#
+# This Program-local copy remains only because Program tests inspect its guarded
+# contracts. Tooling fixes must be made in the connected shared-tooling app and
+# may be refreshed here only by an explicit, source-hash-evidenced sync parcel.
+
+r"""Program-local contract snapshot of the ControlStack MCP server.
 
 This MCP exposes a deliberately small, guarded tool surface for the local
 ControlStack runtime repo and optional donor-reference repo. It does not expose

@@ -65,7 +65,19 @@ When a conflict exists, Program first classifies it as mechanical or semantic:
 
 After any conflict resolution, Program reruns the affected main/integration gates and verifies the final diff before merging. No conflict is resolved by deleting protected work, resetting another worktree, staging unrelated files or force-pushing a shared lane branch.
 
-## 6. Completion record
+## 6. Execution capability required
+
+The Program connection executing a promotion must expose all of the following without weakening lane isolation:
+
+- read access to the pushed source lane and exact candidate commit;
+- read access to the target `main` state and candidate diff;
+- a supported pull-request create/update and merge operation, or an authorised dedicated integration worktree with fetch, merge and push-to-`main` capability;
+- the ability to run the required integrated-state gates before finalising the promotion;
+- branch protections that permit `main` writes only from the Program promotion authority.
+
+A connection confined to `lane/program-integrate` with only current-worktree stage, commit and push operations cannot execute this policy. It may assess durable evidence available inside its root, but it cannot independently resolve the source candidate, create or merge the pull request, or write `main`. Program must stop rather than imitate promotion by copying files, committing feature content onto `lane/program-integrate`, or weakening root and branch guards.
+
+## 7. Completion record
 
 A promotion is complete only when Program & Integrate records:
 
