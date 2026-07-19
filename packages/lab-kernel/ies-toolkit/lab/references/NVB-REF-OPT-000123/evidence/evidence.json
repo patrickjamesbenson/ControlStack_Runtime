@@ -1,0 +1,16 @@
+{
+  "schemaId": "controlstack.lab.fixture.evidence-index.v1",
+  "schemaVersion": 1,
+  "fixtureStatus": "offline_demo_unapproved",
+  "productionAuthority": false,
+  "referenceId": "NVB-REF-OPT-000123",
+  "entries": [
+    {
+      "evidenceType": "LM-79",
+      "status": "unresolved",
+      "artifactRef": "/r/NVB-REF-OPT-000123/evidence/LM-79__safe-9f2a11.txt",
+      "contentSha256": null,
+      "note": "Filename suffix is diagnostic fixture text, not a cryptographic digest."
+    }
+  ]
+}

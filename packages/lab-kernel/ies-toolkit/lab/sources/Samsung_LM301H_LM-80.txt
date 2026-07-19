@@ -1,0 +1,5 @@
+CONTROLSTACK OFFLINE DEMO FIXTURE — UNAPPROVED
+Resolver path: /s/Samsung_LM301H_LM-80.txt
+Production authority: false
+
+Synthetic LM-80 category placeholder. It contains no accepted measurement tables, test conditions, sample population, laboratory accreditation, source digest, or evidence approval. It cannot satisfy an LM-80 evidence requirement.

@@ -1,0 +1,26 @@
+{
+  "schemaId": "controlstack.lab.fixture.extended-report.v1",
+  "schemaVersion": 1,
+  "fixtureStatus": "offline_demo_unapproved",
+  "productionAuthority": false,
+  "reportId": "LAB-20260715-142-EXT",
+  "resolverPath": "/reports/LAB-20260715-142-EXT",
+  "referenceRefs": ["/r/NVB-REF-OPT-000123"],
+  "sourceRefs": [
+    "/s/Emergency_test_report.txt",
+    "/s/EWIS_cartridge_report.txt"
+  ],
+  "results": [
+    {
+      "testId": "synthetic-photometry-review",
+      "state": "unresolved",
+      "value": null,
+      "unit": null,
+      "equipmentRef": null
+    }
+  ],
+  "contentSha256": null,
+  "approvalState": "fixture_only",
+  "unresolvedFields": ["measured_results", "equipment_evidence", "review", "approval"],
+  "note": "Synthetic offline report fixture. Not measured, signed, approved, or suitable for production evidence."
+}

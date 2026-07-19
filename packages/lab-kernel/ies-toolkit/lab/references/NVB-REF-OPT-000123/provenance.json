@@ -1,0 +1,31 @@
+{
+  "schemaId": "controlstack.lab.fixture.provenance.v1",
+  "schemaVersion": 1,
+  "fixtureStatus": "offline_demo_unapproved",
+  "productionAuthority": false,
+  "referenceId": "NVB-REF-OPT-000123",
+  "provenancePath": "/p/NVB-REF-OPT-000123",
+  "describesRef": "/r/NVB-REF-OPT-000123",
+  "originIesRef": "/r/NVB-REF-OPT-000123/origin.ies",
+  "reportRefs": ["/reports/LAB-20260715-142-EXT"],
+  "evidenceRefs": [
+    "/r/NVB-REF-OPT-000123/evidence/LM-79__safe-9f2a11.txt",
+    "/s/Emergency_test_report.txt",
+    "/s/EWIS_cartridge_report.txt"
+  ],
+  "componentRefs": [
+    "/c/board/BRD-DNX80",
+    "/c/chip/CHIP-LM301H",
+    "/c/driver/DRV-TRIDONIC-825"
+  ],
+  "parentReferenceRefs": ["/r/NVB-REF-GT-000045"],
+  "authorityRecordSha256": null,
+  "referenceSha256": null,
+  "approvalState": "fixture_only",
+  "assemblyVerification": {
+    "emergency": null,
+    "ewisCartridge": null
+  },
+  "unresolvedFields": ["authority_record", "approval", "seal", "accepted_evidence"],
+  "note": "Host-free synthetic provenance for offline resolver testing only."
+}

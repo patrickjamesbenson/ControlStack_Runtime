@@ -1,0 +1,25 @@
+{
+  "schemaId": "controlstack.lab.fixture.reference.v1",
+  "schemaVersion": 1,
+  "fixtureStatus": "offline_demo_unapproved",
+  "productionAuthority": false,
+  "referenceId": "NVB-REF-OPT-000124",
+  "referenceKind": "OPT",
+  "resolverPath": "/r/NVB-REF-OPT-000124",
+  "provenancePath": null,
+  "originIesRef": null,
+  "evidenceIndexRef": null,
+  "reportRefs": [],
+  "parentReferenceRefs": ["/r/NVB-REF-GT-000045"],
+  "componentRefs": ["/c/board/BRD-DNX80"],
+  "authorityRecordSha256": null,
+  "referenceSha256": null,
+  "approvalState": "fixture_only",
+  "photometryStatus": "unresolved",
+  "assemblyVerification": {
+    "emergency": null,
+    "ewisCartridge": null
+  },
+  "unresolvedFields": ["origin_ies", "provenance_record", "authority_record", "approval", "seal"],
+  "note": "Deliberately incomplete offline fixture used to prove fail-closed resolver presentation."
+}

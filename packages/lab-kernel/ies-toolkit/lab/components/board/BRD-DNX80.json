@@ -1,0 +1,18 @@
+{
+  "schemaId": "controlstack.lab.fixture.component.v1",
+  "schemaVersion": 1,
+  "fixtureStatus": "offline_demo_unapproved",
+  "productionAuthority": false,
+  "componentKind": "board",
+  "componentId": "BRD-DNX80",
+  "resolverPath": "/c/board/BRD-DNX80",
+  "family": 80,
+  "vendor": "Novon demo",
+  "platform": "DNX-80",
+  "ledChipRef": "/c/chip/CHIP-LM301H",
+  "cctOptions": ["3000", "4000"],
+  "criMinimum": 90,
+  "sourceRefs": ["/s/DNX-80_board_datasheet.txt"],
+  "unresolvedFields": ["live_source_revision", "verified_thermal_limits"],
+  "note": "Synthetic offline development fixture. Not a live catalogue row or approved component record."
+}

@@ -1,0 +1,5 @@
+CONTROLSTACK OFFLINE DEMO FIXTURE — UNAPPROVED
+Resolver path: /s/Tridonic_LC55_datasheet.txt
+Production authority: false
+
+Synthetic driver-datasheet summary for DRV-TRIDONIC-825. It is not an original manufacturer document, live model revision, verified efficiency record, thermal-derating source, or procurement specification.

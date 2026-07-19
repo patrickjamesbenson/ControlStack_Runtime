@@ -1,0 +1,5 @@
+CONTROLSTACK OFFLINE DEMO FIXTURE — UNAPPROVED
+Resolver path: /s/EWIS_cartridge_report.txt
+Production authority: false
+
+Synthetic EWIS evidence placeholder for resolver presentation only. It does not prove acoustic performance, fire-engineer acceptance, certification, installation suitability, or luminaire assembly verification. EWIS cartridge verification remains null.

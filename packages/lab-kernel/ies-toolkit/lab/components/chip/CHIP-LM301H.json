@@ -1,0 +1,21 @@
+{
+  "schemaId": "controlstack.lab.fixture.component.v1",
+  "schemaVersion": 1,
+  "fixtureStatus": "offline_demo_unapproved",
+  "productionAuthority": false,
+  "componentKind": "chip",
+  "componentId": "CHIP-LM301H",
+  "resolverPath": "/c/chip/CHIP-LM301H",
+  "vendor": "Samsung demo",
+  "part": "LM301H EVO",
+  "package": "3030 mid-power",
+  "cct": "4000",
+  "cri": 90,
+  "sourceRefs": [
+    "/s/Samsung_LM301H_datasheet.txt",
+    "/s/Samsung_LM301H_LM-80.txt",
+    "/s/Samsung_LM301H_TM-21.txt"
+  ],
+  "unresolvedFields": ["live_bin_confirmation", "verified_lifetime_projection"],
+  "note": "Synthetic offline development fixture. Source summaries are not accepted LM-80 or TM-21 evidence."
+}

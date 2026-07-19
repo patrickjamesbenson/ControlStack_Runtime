@@ -1,0 +1,24 @@
+{
+  "schemaId": "controlstack.lab.fixture.reference.v1",
+  "schemaVersion": 1,
+  "fixtureStatus": "offline_demo_unapproved",
+  "productionAuthority": false,
+  "referenceId": "NVB-REF-GT-000045",
+  "referenceKind": "GT",
+  "resolverPath": "/r/NVB-REF-GT-000045",
+  "provenancePath": null,
+  "componentRefs": [
+    "/c/board/BRD-DNX80",
+    "/c/driver/DRV-TRIDONIC-825",
+    "/c/converter/ZC-EM-SMART-50"
+  ],
+  "authorityRecordSha256": null,
+  "referenceSha256": null,
+  "approvalState": "fixture_only",
+  "assemblyVerification": {
+    "emergency": null,
+    "ewisCartridge": null
+  },
+  "unresolvedFields": ["authority_record", "approval", "seal", "verified_photometry"],
+  "note": "Offline resolver fixture only. The ID and path exercise parsing and are not allocated production authority."
+}

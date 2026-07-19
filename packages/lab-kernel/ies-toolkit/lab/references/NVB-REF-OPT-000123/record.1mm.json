@@ -1,0 +1,29 @@
+{
+  "schemaId": "controlstack.lab.fixture.reference.v1",
+  "schemaVersion": 1,
+  "fixtureStatus": "offline_demo_unapproved",
+  "productionAuthority": false,
+  "referenceId": "NVB-REF-OPT-000123",
+  "referenceKind": "OPT",
+  "resolverPath": "/r/NVB-REF-OPT-000123",
+  "provenancePath": "/p/NVB-REF-OPT-000123",
+  "originIesRef": "/r/NVB-REF-OPT-000123/origin.ies",
+  "evidenceIndexRef": "/r/NVB-REF-OPT-000123/evidence/evidence.json",
+  "reportRefs": ["/reports/LAB-20260715-142-EXT"],
+  "parentReferenceRefs": ["/r/NVB-REF-GT-000045"],
+  "componentRefs": [
+    "/c/board/BRD-DNX80",
+    "/c/chip/CHIP-LM301H",
+    "/c/driver/DRV-TRIDONIC-825"
+  ],
+  "authorityRecordSha256": null,
+  "referenceSha256": null,
+  "approvalState": "fixture_only",
+  "photometryStatus": "synthetic_demo",
+  "assemblyVerification": {
+    "emergency": null,
+    "ewisCartridge": null
+  },
+  "unresolvedFields": ["authority_record", "approval", "seal", "accepted_evidence"],
+  "note": "Offline resolver fixture only. It is not a sealed production reference DTO."
+}

@@ -1,0 +1,16 @@
+{
+  "schemaId": "controlstack.lab.fixture.component.v1",
+  "schemaVersion": 1,
+  "fixtureStatus": "offline_demo_unapproved",
+  "productionAuthority": false,
+  "componentKind": "driver",
+  "componentId": "DRV-TRIDONIC-825",
+  "resolverPath": "/c/driver/DRV-TRIDONIC-825",
+  "vendor": "Tridonic demo",
+  "model": "LC 55/350-1050 o4a NF",
+  "outputCurrentmA": 825,
+  "dimming": "DALI-2",
+  "sourceRefs": ["/s/Tridonic_LC55_datasheet.txt"],
+  "unresolvedFields": ["live_model_revision", "verified_efficiency", "thermal_derating"],
+  "note": "Synthetic offline development fixture. Not a live product or procurement record."
+}

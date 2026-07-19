@@ -1,0 +1,9 @@
+CONTROLSTACK OFFLINE DEMO FIXTURE — UNAPPROVED
+
+Artifact path: /r/NVB-REF-OPT-000123/evidence/LM-79__safe-9f2a11.txt
+Evidence type: LM-79
+Fixture status: unresolved
+Production authority: false
+Content SHA-256: not supplied
+
+This synthetic text exercises the resolver and evidence views only. The `safe-9f2a11` filename suffix is a diagnostic fixture label, not a cryptographic digest, accepted report, or certification result.

@@ -1,0 +1,5 @@
+CONTROLSTACK OFFLINE DEMO FIXTURE — UNAPPROVED
+Resolver path: /s/zc-em-smart-50_datasheet.txt
+Production authority: false
+
+Synthetic emergency-converter summary for ZC-EM-SMART-50. It is not an original manufacturer document, battery crosswalk, order code confirmation, procurement release, or final assembly verification.

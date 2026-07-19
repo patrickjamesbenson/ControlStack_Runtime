@@ -1,0 +1,5 @@
+CONTROLSTACK OFFLINE DEMO FIXTURE — UNAPPROVED
+Resolver path: /s/Samsung_LM301H_TM-21.txt
+Production authority: false
+
+Synthetic TM-21 category placeholder. It contains no accepted LM-80 input, projection calculation, reporting limit, review, source digest, or approval. It cannot support a rated-life claim.

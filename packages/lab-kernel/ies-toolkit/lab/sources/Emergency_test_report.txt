@@ -1,0 +1,5 @@
+CONTROLSTACK OFFLINE DEMO FIXTURE — UNAPPROVED
+Resolver path: /s/Emergency_test_report.txt
+Production authority: false
+
+Synthetic emergency evidence placeholder. It does not prove converter suitability, battery life, duration, changeover performance, procurement release, or final assembly verification. Emergency assembly verification remains null.

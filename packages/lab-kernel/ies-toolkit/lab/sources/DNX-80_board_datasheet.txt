@@ -1,0 +1,5 @@
+CONTROLSTACK OFFLINE DEMO FIXTURE — UNAPPROVED
+Resolver path: /s/DNX-80_board_datasheet.txt
+Production authority: false
+
+Synthetic board-platform summary for BRD-DNX80. Values are placeholders for resolver and document-association testing only. No live revision, manufacturer approval, verified thermal limit, or procurement release is asserted.

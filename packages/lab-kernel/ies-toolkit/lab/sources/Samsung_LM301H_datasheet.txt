@@ -1,0 +1,5 @@
+CONTROLSTACK OFFLINE DEMO FIXTURE — UNAPPROVED
+Resolver path: /s/Samsung_LM301H_datasheet.txt
+Production authority: false
+
+Synthetic chip-datasheet summary for CHIP-LM301H. It is not an original manufacturer document, accepted source revision, purchasing specification, or verified bin record.

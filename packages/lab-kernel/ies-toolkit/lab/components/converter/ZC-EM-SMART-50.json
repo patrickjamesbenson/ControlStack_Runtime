@@ -1,0 +1,18 @@
+{
+  "schemaId": "controlstack.lab.fixture.component.v1",
+  "schemaVersion": 1,
+  "fixtureStatus": "offline_demo_unapproved",
+  "productionAuthority": false,
+  "componentKind": "converter",
+  "componentId": "ZC-EM-SMART-50",
+  "resolverPath": "/c/converter/ZC-EM-SMART-50",
+  "vendor": "zencontrol demo",
+  "model": "zc-em-smart-50",
+  "publishedVoltageWindowV": [10, 50],
+  "publishedPowerOptionsW": [1.5, 2.5, 3.5],
+  "sourceRefs": ["/s/zc-em-smart-50_datasheet.txt"],
+  "procurementRelease": false,
+  "assemblyVerification": null,
+  "unresolvedFields": ["battery_pack_evidence", "efficiency", "derating"],
+  "note": "Synthetic offline development fixture. Not an orderable or verified emergency assembly."
+}
