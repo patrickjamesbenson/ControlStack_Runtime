@@ -1,0 +1,156 @@
+{
+  "family_worst_case": {
+    "45": {
+      "label": "DNX 45",
+      "variant": "Square",
+      "thermal_metal_volume_mm2": 202.5,
+      "thermal_air_volume_mm2": 4050
+    },
+    "60": {
+      "label": "DNX 60",
+      "variant": "Square",
+      "thermal_metal_volume_mm2": 270,
+      "thermal_air_volume_mm2": 5400
+    },
+    "80": {
+      "label": "DNX 80 DI",
+      "variant": "Square_DI",
+      "thermal_metal_volume_mm2": 360,
+      "thermal_air_volume_mm2": 7200
+    }
+  },
+  "optic_resolution": [
+    {
+      "optic": "Opal 45",
+      "spec_code": "OPL",
+      "emission_permission": "Direct",
+      "hot_test_battery_applies": "45_Square_Opal",
+      "emergency_capable": true,
+      "governing_worst_case": "DNX 45",
+      "gov_metal_mm2": 202.5,
+      "gov_air_mm2": 4050,
+      "eff_optical": 0.8
+    },
+    {
+      "optic": "Comfort 45",
+      "spec_code": "CMF",
+      "emission_permission": "Direct",
+      "hot_test_battery_applies": "45_Square_Opal",
+      "emergency_capable": true,
+      "governing_worst_case": "DNX 45",
+      "gov_metal_mm2": 202.5,
+      "gov_air_mm2": 4050,
+      "eff_optical": 0.7
+    },
+    {
+      "optic": "Daisy 45",
+      "spec_code": "DSY",
+      "emission_permission": "Direct",
+      "hot_test_battery_applies": "45_Square_Daisy_Narrow",
+      "emergency_capable": true,
+      "governing_worst_case": "DNX 45",
+      "gov_metal_mm2": 202.5,
+      "gov_air_mm2": 4050,
+      "eff_optical": 0.8
+    },
+    {
+      "optic": "Opal 60",
+      "spec_code": "OPL",
+      "emission_permission": "Direct, Indirect",
+      "hot_test_battery_applies": "60_Square_Opal",
+      "emergency_capable": true,
+      "governing_worst_case": "DNX 60",
+      "gov_metal_mm2": 270,
+      "gov_air_mm2": 5400,
+      "eff_optical": 0.7
+    },
+    {
+      "optic": "Comfort 60",
+      "spec_code": "CMF",
+      "emission_permission": "Direct",
+      "hot_test_battery_applies": "60_Square_Opal",
+      "emergency_capable": true,
+      "governing_worst_case": "DNX 60",
+      "gov_metal_mm2": 270,
+      "gov_air_mm2": 5400,
+      "eff_optical": 0.7
+    },
+    {
+      "optic": "Asymmetric 60",
+      "spec_code": "ASY",
+      "emission_permission": "Direct",
+      "hot_test_battery_applies": "60_Square_Opal",
+      "emergency_capable": true,
+      "governing_worst_case": "DNX 60",
+      "gov_metal_mm2": 270,
+      "gov_air_mm2": 5400,
+      "eff_optical": 0.7
+    },
+    {
+      "optic": "Batwing 60",
+      "spec_code": "BWG",
+      "emission_permission": "Indirect",
+      "hot_test_battery_applies": false,
+      "emergency_capable": false,
+      "governing_worst_case": "DNX 60",
+      "gov_metal_mm2": 270,
+      "gov_air_mm2": 5400,
+      "eff_optical": 0.7
+    },
+    {
+      "optic": "Opal 80",
+      "spec_code": "OPL",
+      "emission_permission": "Direct",
+      "hot_test_battery_applies": "80_Square_Opal",
+      "emergency_capable": true,
+      "governing_worst_case": "DNX 80 DI",
+      "gov_metal_mm2": 360,
+      "gov_air_mm2": 7200,
+      "eff_optical": 0.7
+    },
+    {
+      "optic": "Comfort 80",
+      "spec_code": "CMF",
+      "emission_permission": "Direct",
+      "hot_test_battery_applies": "80_Square_Opal",
+      "emergency_capable": true,
+      "governing_worst_case": "DNX 80 DI",
+      "gov_metal_mm2": 360,
+      "gov_air_mm2": 7200,
+      "eff_optical": 0.7
+    },
+    {
+      "optic": "Asymmetric 80",
+      "spec_code": "ASY",
+      "emission_permission": "Direct",
+      "hot_test_battery_applies": "80_Square_Opal",
+      "emergency_capable": true,
+      "governing_worst_case": "DNX 80 DI",
+      "gov_metal_mm2": 360,
+      "gov_air_mm2": 7200,
+      "eff_optical": 0.7
+    },
+    {
+      "optic": "Rope 80",
+      "spec_code": "ROP",
+      "emission_permission": "Indirect",
+      "hot_test_battery_applies": false,
+      "emergency_capable": false,
+      "governing_worst_case": "DNX 80 DI",
+      "gov_metal_mm2": 360,
+      "gov_air_mm2": 7200,
+      "eff_optical": 0.7
+    },
+    {
+      "optic": "Inlay 80",
+      "spec_code": "INL",
+      "emission_permission": "Direct",
+      "hot_test_battery_applies": "80_Square_Opal",
+      "emergency_capable": true,
+      "governing_worst_case": "DNX 80 DI",
+      "gov_metal_mm2": 360,
+      "gov_air_mm2": 7200,
+      "eff_optical": 0.7
+    }
+  ]
+}

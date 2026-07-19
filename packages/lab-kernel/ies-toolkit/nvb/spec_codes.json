@@ -1,0 +1,177 @@
+[
+  {
+    "domain": "finish",
+    "value": "White (Textured)",
+    "spec_code": "WHT",
+    "label_short": "White",
+    "notes": null
+  },
+  {
+    "domain": "finish",
+    "value": "Black (Textured)",
+    "spec_code": "BLK",
+    "label_short": "Black",
+    "notes": null
+  },
+  {
+    "domain": "finish",
+    "value": "Silver Kinetic",
+    "spec_code": "SLV",
+    "label_short": "Silver",
+    "notes": null
+  },
+  {
+    "domain": "finish",
+    "value": "Custom",
+    "spec_code": "CUS",
+    "label_short": "Custom",
+    "notes": null
+  },
+  {
+    "domain": "finish",
+    "value": "TBD",
+    "spec_code": "TBD",
+    "label_short": "TBD",
+    "notes": null
+  },
+  {
+    "domain": "flex_colour",
+    "value": "White",
+    "spec_code": "WHT",
+    "label_short": "White",
+    "notes": null
+  },
+  {
+    "domain": "flex_colour",
+    "value": "Black",
+    "spec_code": "BLK",
+    "label_short": "Black",
+    "notes": null
+  },
+  {
+    "domain": "flex_colour",
+    "value": "Grey",
+    "spec_code": "GRY",
+    "label_short": "Grey",
+    "notes": null
+  },
+  {
+    "domain": "flex_colour",
+    "value": "TBD",
+    "spec_code": "TBD",
+    "label_short": "TBD",
+    "notes": null
+  },
+  {
+    "domain": "ip",
+    "value": "IP20",
+    "spec_code": 20.0,
+    "label_short": null,
+    "notes": null
+  },
+  {
+    "domain": "ip",
+    "value": "IP40",
+    "spec_code": 40.0,
+    "label_short": null,
+    "notes": null
+  },
+  {
+    "domain": "ip",
+    "value": "IP44",
+    "spec_code": 44.0,
+    "label_short": null,
+    "notes": null
+  },
+  {
+    "domain": "ip",
+    "value": "IP65",
+    "spec_code": 65.0,
+    "label_short": null,
+    "notes": null
+  },
+  {
+    "domain": "ik",
+    "value": "Non",
+    "spec_code": "00",
+    "label_short": null,
+    "notes": null
+  },
+  {
+    "domain": "ik",
+    "value": "IK07",
+    "spec_code": "07",
+    "label_short": null,
+    "notes": null
+  },
+  {
+    "domain": "ik",
+    "value": "IK10",
+    "spec_code": 10.0,
+    "label_short": null,
+    "notes": null
+  },
+  {
+    "domain": "cct",
+    "value": 27.0,
+    "spec_code": 27.0,
+    "label_short": null,
+    "notes": null
+  },
+  {
+    "domain": "cct",
+    "value": 30.0,
+    "spec_code": 30.0,
+    "label_short": null,
+    "notes": null
+  },
+  {
+    "domain": "cct",
+    "value": 35.0,
+    "spec_code": 35.0,
+    "label_short": null,
+    "notes": null
+  },
+  {
+    "domain": "cct",
+    "value": 40.0,
+    "spec_code": 40.0,
+    "label_short": null,
+    "notes": null
+  },
+  {
+    "domain": "cri",
+    "value": 80.0,
+    "spec_code": 80.0,
+    "label_short": null,
+    "notes": null
+  },
+  {
+    "domain": "cri",
+    "value": 90.0,
+    "spec_code": 90.0,
+    "label_short": null,
+    "notes": null
+  },
+  {
+    "domain": "cri",
+    "value": 95.0,
+    "spec_code": 95.0,
+    "label_short": null,
+    "notes": null
+  },
+  {
+    "domain": "emission_join",
+    "value": "join",
+    "spec_code": "/",
+    "label_short": null,
+    "notes": null
+  },
+  {
+    "domain": "target_lm_m_join",
+    "value": "join",
+    "spec_code": "/",
+    "label_short": null,
+    "notes": null
+  }
+]

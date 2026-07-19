@@ -1,0 +1,18 @@
+[
+  { "IES_ORDER": 1,  "FIELD": "[TEST]",             "SOURCE": "lab provenance", "note": "internal reference number from lab provenance" },
+  { "IES_ORDER": 2,  "FIELD": "[TESTLAB]",          "SOURCE": "constant",       "value": "Novon Engineering" },
+  { "IES_ORDER": 3,  "FIELD": "[ISSUEDATE]",        "SOURCE": "lab provenance", "note": "seal date-time, to the second" },
+  { "IES_ORDER": 4,  "FIELD": "[MANUFAC]",          "SOURCE": "constant",       "value": "Novon Lighting" },
+  { "IES_ORDER": 5,  "FIELD": "[LUMCAT]",           "SOURCE": "selector",       "note": "optic slug" },
+  { "IES_ORDER": 6,  "FIELD": "[LUMINAIRE]",        "SOURCE": "selector",       "note": "luminaire slug" },
+  { "IES_ORDER": 7,  "FIELD": "[LAMP]",             "SOURCE": "selector",       "note": "Novon_Family" },
+  { "IES_ORDER": 8,  "FIELD": "[_CRI]",             "SOURCE": "selector" },
+  { "IES_ORDER": 9,  "FIELD": "[_COLORTEMP]",       "SOURCE": "selector" },
+  { "IES_ORDER": 10, "FIELD": "[_INTERNAL_AMBIENT_TA_C]", "SOURCE": "sealed reference", "note": "measured internal assembly ambient during the authority test; not Selector-owned and not rated operating ambient" },
+  { "IES_ORDER": 11, "FIELD": "[_DRIVER]",          "SOURCE": "run engine" },
+  { "IES_ORDER": 12, "FIELD": "[_DRIVER_SETTING]",  "SOURCE": "run engine" },
+  { "IES_ORDER": 13, "FIELD": "[_GEAR_TRAY_REF_ID]","SOURCE": "lab provenance" },
+  { "IES_ORDER": 14, "FIELD": "[_OPTIC_REF_ID]",    "SOURCE": "lab provenance" },
+  { "IES_ORDER": 15, "FIELD": "[_EMERGENCY_VERIFIED]","SOURCE": "lab provenance", "note": "approved for use as an emergency unit" },
+  { "IES_ORDER": 16, "FIELD": "[_EWIS_CARTRIDGE_VERIFIED]",     "SOURCE": "lab provenance", "note": "approved for EWIS cartridge use" }
+]
