@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>UGR table — ControlStack Lab</title>
+<link rel="stylesheet" href="./lab.css" />
+<style>
+  .wrap { max-width: 1100px; }
+  .drop { margin: 12px 0; }
+  .drop:focus-visible { outline: 3px solid var(--orange-wash); border-color: var(--orange); }
+  .status { min-height: 20px; margin: 8px 0 0; font-size: 12px; color: var(--muted); }
+  .status.ok { color: var(--green); }
+  .status.error { color: var(--red); }
+  .table-scroll { overflow-x: auto; padding-top: 8px; }
+  .method summary { cursor: pointer; font-weight: 600; color: var(--navy); }
+  .method .body { padding-top: 10px; }
+  .method p { margin: 6px 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brandhead">
+    <div class="mark">LAB</div>
+    <div><div class="bn">CONTROLSTACK</div><div class="bs">Lab &amp; IES authority lane</div></div>
+    <div class="pg"><div class="pgt">UGR table</div><div class="pgs">CIE 190 presentation</div></div>
+  </div>
+
+  <h1>Unified Glare Rating table</h1>
+  <p class="sub">Load one IES file to render the committed CIE 190 uncorrected table.</p>
+
+  <div class="hint">
+    Presentation only. This surface reads the uploaded file in memory and does not create, approve, seal, persist or publish a governed reference.
+  </div>
+
+  <div class="card">
+    <h2>IES input</h2>
+    <div class="drop" id="drop" role="button" tabindex="0" aria-controls="out">
+      Drop an <b>.ies</b> file here, or click to choose
+      <input type="file" id="file" accept=".ies,.txt" class="hidden" />
+    </div>
+    <div id="status" class="status" aria-live="polite">No file loaded.</div>
+    <div id="out" class="table-scroll" aria-live="polite"></div>
+  </div>
+
+  <details class="card method">
+    <summary>Calculation and verification boundary</summary>
+    <div class="body">
+      <p><b>Calculation:</b> this page contains no UGR calculation implementation. It delegates parsing to <code>parseIes</code>, table calculation to <code>computeUgr190Table</code>, and presentation markup to <code>renderUgrTableHTML</code>.</p>
+      <p><b>Result basis:</b> the committed kernel returns the CIE 190 uncorrected table normalised to 1000 lm, with crosswise and endwise viewing directions.</p>
+      <p><b>Regression evidence:</b> the kernel is tested against the CIE 190 worked example for the 2H × 4H, 70/50/20 cell: crosswise 11.0, endwise 13.1, and background luminance approximately 8.71 cd/m².</p>
+      <p><b>Authority:</b> a rendered table is calculation output only. It is not evidence of Lab approval, a sealed reference, or downstream project acceptance.</p>
+    </div>
+  </details>
+</div>
+
+<script type="module">
+import { parseIes } from "./iesParse.js";
+import { renderUgrTableHTML, UGR_CSS } from "./iesUgr.js";
+import { computeUgr190Table } from "./iesUgrCie190.js";
+
+const style = document.createElement("style");
+style.textContent = UGR_CSS;
+document.head.appendChild(style);
+
+const $ = (id) => document.getElementById(id);
+const drop = $("drop");
+const file = $("file");
+const out = $("out");
+const status = $("status");
+
+function setStatus(message, kind = "") {
+  status.className = `status${kind ? ` ${kind}` : ""}`;
+  status.textContent = message;
+}
+
+async function loadFile(selectedFile) {
+  if (!selectedFile) return;
+  out.replaceChildren();
+  setStatus(`Reading ${selectedFile.name}…`);
+  try {
+    const text = await selectedFile.text();
+    const model = parseIes(text);
+    const table = computeUgr190Table(model);
+    out.innerHTML = renderUgrTableHTML(table);
+    setStatus(`Rendered ${selectedFile.name} using ${table.method}.`, "ok");
+  } catch (error) {
+    out.replaceChildren();
+    const detail = error instanceof Error && error.message ? ` ${error.message}` : "";
+    setStatus(`Unable to render this IES file.${detail}`, "error");
+  }
+}
+
+function openPicker() {
+  file.click();
+}
+
+drop.addEventListener("click", openPicker);
+drop.addEventListener("keydown", (event) => {
+  if (event.key === "Enter" || event.key === " ") {
+    event.preventDefault();
+    openPicker();
+  }
+});
+file.addEventListener("change", () => loadFile(file.files[0]));
+drop.addEventListener("dragover", (event) => {
+  event.preventDefault();
+  drop.classList.add("over");
+});
+drop.addEventListener("dragleave", () => drop.classList.remove("over"));
+drop.addEventListener("drop", (event) => {
+  event.preventDefault();
+  drop.classList.remove("over");
+  loadFile(event.dataTransfer.files[0]);
+});
+</script>
+</body>
+</html>
