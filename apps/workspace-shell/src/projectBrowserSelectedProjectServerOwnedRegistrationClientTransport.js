@@ -117,6 +117,15 @@ const LEGACY_STAGE3_REQUIRED_FALSE_FLAGS = Object.freeze([
   "routesAdded",
   "postEndpointsAdded",
 ]);
+const CLIENT_TIER_CONSTRAINT_KEYS = Object.freeze(new Set([
+  "tier",
+  "selectedtier",
+  "tiertoken",
+]));
+const TIER_ONLY_ELIGIBILITY_BLOCKERS = Object.freeze(new Set([
+  "missing-readonly-engine-candidate-input-tier",
+  "missing-candidate-field-tier",
+]));
 const REQUIRED_SERVER_TRUE_FLAGS = Object.freeze([
   "requestAccepted",
   "preEngineActionSourceReady",
@@ -294,6 +303,112 @@ function savedByProjection(envelope) {
   );
 }
 
+function normalisedConstraintKey(value) {
+  return safeToken(String(value || ""), "")?.toLowerCase().replace(/[^0-9a-z]/g, "") || "";
+}
+
+function withoutClientTierConstraints(constraints = []) {
+  return (Array.isArray(constraints) ? constraints : [])
+    .filter((constraint) => !CLIENT_TIER_CONSTRAINT_KEYS.has(
+      normalisedConstraintKey(constraint?.fieldKey),
+    ));
+}
+
+function isTierOnlyEligibilityBlocker(value) {
+  return TIER_ONLY_ELIGIBILITY_BLOCKERS.has(safeToken(value, ""));
+}
+
+function normaliseFactoryForServerOwnedTier(factory = {}, committedSelectorConstraints = []) {
+  const tierOnlyBlocked = isTierOnlyEligibilityBlocker(
+    factory?.readonlyEngineCandidateInputsBlocker || factory?.blocker,
+  );
+  const alreadyReady = factory?.factoryApprovedInputsReady === true
+    && factory?.stage2Ready === true
+    && factory?.blocker === null;
+  if (!alreadyReady && !tierOnlyBlocked) {
+    return { ok: false, blocker: safeToken(factory?.blocker, "selector-pre-engine-candidate-inputs-not-ready"), factory: null };
+  }
+  return {
+    ok: true,
+    blocker: null,
+    factory: {
+      ...factory,
+      factoryApprovedInputsReady: true,
+      ready: true,
+      stage2Ready: true,
+      blocker: null,
+      committedSelectorConstraintCount: committedSelectorConstraints.length,
+    },
+  };
+}
+
+function rebuildTierNeutralEligibilityProjection({
+  factoryApprovedInputsSummary = {},
+  committedSelectorConstraints = [],
+  lmTemperatureReadinessPreview = {},
+  sourceInputFingerprint = null,
+  boardDataSourceVersion = null,
+  runCount = null,
+  totalQuantity = null,
+  accessoryIntentCount = null,
+} = {}) {
+  const tierNeutralConstraints = withoutClientTierConstraints(committedSelectorConstraints);
+  const normalisedFactory = normaliseFactoryForServerOwnedTier(
+    factoryApprovedInputsSummary,
+    tierNeutralConstraints,
+  );
+  if (!normalisedFactory.ok) {
+    return { blocker: normalisedFactory.blocker, projection: null };
+  }
+  const mapper = buildSelectorReadonlyEngineCandidateForInternalSeam({
+    factoryApprovedInputsSummary: normalisedFactory.factory,
+    committedSelectorConstraints: tierNeutralConstraints,
+    lmTemperatureReadinessPreview,
+  });
+  if (mapper?.ok !== true) {
+    return {
+      blocker: safeToken(mapper?.summary?.blocker, "selected-project-registration-client-candidate-preflight-ineligible"),
+      projection: null,
+    };
+  }
+  const run = normalisedFactory.factory.committedRunIntakeSummary || {};
+  const projectedFactory = {
+    ...normalisedFactory.factory,
+    runIntakePreviewSummary: {
+      runIntakePreviewReady: true,
+      runCount: Number.isSafeInteger(runCount) ? runCount : 1,
+      totalQuantity: Number.isSafeInteger(totalQuantity) ? totalQuantity : Number(run.runQuantity || 0),
+    },
+    accessoryPlacementIntentSummary: {
+      accessoryIntentCount: Number.isSafeInteger(accessoryIntentCount) ? accessoryIntentCount : 0,
+    },
+    accessoryReservationRequired: false,
+    engineOutcomeProven: false,
+  };
+  const projection = buildSelectorPreEngineReadonlyActionEligibilityProjection({
+    specBuildReadinessPreview: {
+      factoryApprovedInputsReady: true,
+      factoryApprovedInputsSummary: projectedFactory,
+      readonlyEngineCandidateReady: true,
+      readonlyEngineCandidateMapperSummary: mapper.summary,
+    },
+    committedSelectorConstraints: tierNeutralConstraints,
+    lmTemperatureReadinessPreview,
+    sourceInputFingerprint,
+    boardDataSourceVersion,
+  });
+  const validation = validateCsSelectorPreEngineActionEligibilityProjection(
+    projection,
+    { requireReady: true, requireFrozen: true },
+  );
+  return validation.valid === true
+    ? { blocker: null, projection }
+    : {
+      blocker: safeToken(projection?.blocker, "selected-project-registration-client-tier-neutral-projection-invalid"),
+      projection: null,
+    };
+}
+
 function buildLegacyStage3PreEngineProjection(envelope) {
   const selectorModule = envelope?.modules?.cs_selector;
   const source = selectorModule?.state?.engineRunActionSource;
@@ -310,6 +425,10 @@ function buildLegacyStage3PreEngineProjection(envelope) {
   const run = factory?.committedRunIntakeSummary;
   const constraints = source.committedSelectorConstraints;
   const lmPreview = source.lmTemperatureReadinessPreview;
+  const factoryReadyOrTierOnlyBlocked = factory?.factoryApprovedInputsReady === true
+    || isTierOnlyEligibilityBlocker(
+      factory?.readonlyEngineCandidateInputsBlocker || factory?.blocker,
+    );
   const legacySourceReady = isPlainObject(factory)
     && isPlainObject(run)
     && Array.isArray(constraints)
@@ -319,9 +438,8 @@ function buildLegacyStage3PreEngineProjection(envelope) {
     && factory.readOnly === true
     && factory.diagnosticOnly === true
     && factory.safeSummaryOnly === true
-    && factory.factoryApprovedInputsReady === true
+    && factoryReadyOrTierOnlyBlocked
     && factory.stage3Mode === "simple-run-stage3a-zero-accessory"
-    && factory.blocker === null
     && LEGACY_STAGE3_REQUIRED_FALSE_FLAGS.every((key) => factory[key] === false)
     && run.ready === true
     && run.committedRunIntakeReady === true
@@ -344,88 +462,79 @@ function buildLegacyStage3PreEngineProjection(envelope) {
     ));
   if (!legacySourceReady) {
     return {
-      blocker: "selected-project-registration-client-legacy-stage3-source-not-ready",
+      blocker: safeToken(
+        factory?.readonlyEngineCandidateInputsBlocker || factory?.blocker,
+        "selected-project-registration-client-legacy-stage3-source-not-ready",
+      ),
       projection: null,
     };
   }
 
-  const mapper = buildSelectorReadonlyEngineCandidateForInternalSeam({
+  return rebuildTierNeutralEligibilityProjection({
     factoryApprovedInputsSummary: factory,
     committedSelectorConstraints: constraints,
     lmTemperatureReadinessPreview: lmPreview,
+    runCount: 1,
+    totalQuantity: run.runQuantity,
+    accessoryIntentCount: 0,
   });
-  const shape = mapper?.summary?.candidateShapeSummary;
-  if (mapper?.ok !== true
-    || mapper?.summary?.ready !== true
-    || mapper?.summary?.readonlyEngineCandidateMapperReady !== true
-    || mapper?.summary?.candidateReadyForHostLocalReadonlySeam !== true
-    || mapper?.summary?.candidatePayloadReturned !== false
-    || !isPlainObject(shape)
-    || shape.runCount !== 1
-    || shape.totalQuantity !== run.runQuantity) {
-    return {
-      blocker: "selected-project-registration-client-legacy-stage3-candidate-preflight-ineligible",
-      projection: null,
-    };
-  }
-
-  const normalizedFactory = {
-    ...factory,
-    ready: true,
-    stage2Ready: true,
-    committedSelectorConstraintCount: constraints.length,
-    runIntakePreviewSummary: {
-      runIntakePreviewReady: true,
-      runCount: shape.runCount,
-      totalQuantity: shape.totalQuantity,
-    },
-    accessoryPlacementIntentSummary: { accessoryIntentCount: 0 },
-    accessoryReservationRequired: false,
-    engineOutcomeProven: false,
-  };
-  const projection = buildSelectorPreEngineReadonlyActionEligibilityProjection({
-    specBuildReadinessPreview: {
-      factoryApprovedInputsReady: true,
-      factoryApprovedInputsSummary: normalizedFactory,
-      readonlyEngineCandidateReady: true,
-      readonlyEngineCandidateMapperSummary: mapper.summary,
-    },
-    committedSelectorConstraints: constraints,
-    lmTemperatureReadinessPreview: lmPreview,
-  });
-  const validation = validateCsSelectorPreEngineActionEligibilityProjection(
-    projection,
-    { requireReady: true, requireFrozen: true },
-  );
-  return validation.valid === true
-    ? { blocker: null, projection }
-    : {
-      blocker: "selected-project-registration-client-legacy-stage3-projection-invalid",
-      projection: null,
-    };
 }
 
 function buildSourceProjection(envelope) {
   const downstream = envelope?.modules?.cs_selector?.downstreamContext;
   const declaredProjection = downstream?.preEngineActionEligibilityProjection;
-  const legacyProjection = declaredProjection === null || declaredProjection === undefined
-    ? buildLegacyStage3PreEngineProjection(envelope)
-    : { blocker: null, projection: null };
-  const preEngineActionEligibilityProjection = declaredProjection
-    ?? legacyProjection.projection;
-  if (legacyProjection.blocker) {
-    return { blocker: legacyProjection.blocker, sourceProjection: null };
+  let tierNeutralProjection;
+
+  if (declaredProjection === null || declaredProjection === undefined) {
+    const legacyProjection = buildLegacyStage3PreEngineProjection(envelope);
+    if (legacyProjection.blocker) {
+      return { blocker: legacyProjection.blocker, sourceProjection: null };
+    }
+    tierNeutralProjection = legacyProjection.projection;
+  } else {
+    const declaredBlocker = inspectSourceValue(declaredProjection);
+    if (declaredBlocker) {
+      return { blocker: declaredBlocker, sourceProjection: null };
+    }
+    const declaredValidation = validateCsSelectorPreEngineActionEligibilityProjection(
+      declaredProjection,
+      { requireReady: false },
+    );
+    if (declaredValidation.valid !== true) {
+      return {
+        blocker: "selected-project-registration-client-pre-engine-eligibility-shape-invalid",
+        sourceProjection: null,
+      };
+    }
+    if (declaredProjection.ready !== true
+      && !isTierOnlyEligibilityBlocker(declaredProjection.blocker)
+      && !isTierOnlyEligibilityBlocker(
+        declaredProjection.factoryApprovedInputsSummary?.blocker,
+      )) {
+      return {
+        blocker: safeToken(
+          declaredProjection.blocker,
+          "selected-project-registration-client-pre-engine-eligibility-not-ready",
+        ),
+        sourceProjection: null,
+      };
+    }
+    const rebuilt = rebuildTierNeutralEligibilityProjection({
+      factoryApprovedInputsSummary: declaredProjection.factoryApprovedInputsSummary,
+      committedSelectorConstraints: declaredProjection.committedSelectorConstraints,
+      lmTemperatureReadinessPreview: declaredProjection.lmTemperatureReadinessPreview,
+      sourceInputFingerprint: declaredProjection.sourceInputFingerprint,
+      boardDataSourceVersion: declaredProjection.boardDataSourceVersion,
+      runCount: declaredProjection.runCount,
+      totalQuantity: declaredProjection.totalQuantity,
+      accessoryIntentCount: declaredProjection.accessoryIntentCount,
+    });
+    if (rebuilt.blocker) {
+      return { blocker: rebuilt.blocker, sourceProjection: null };
+    }
+    tierNeutralProjection = rebuilt.projection;
   }
-  const eligibilityValidation = validateCsSelectorPreEngineActionEligibilityProjection(
-    preEngineActionEligibilityProjection,
-    { requireReady: true },
-  );
-  if (eligibilityValidation.valid !== true) {
-    return {
-      blocker: "selected-project-registration-client-pre-engine-eligibility-invalid",
-      sourceProjection: null,
-    };
-  }
+
   const sourceProjection = orderedObject(
     PROJECT_BROWSER_SELECTED_PROJECT_SERVER_OWNED_REGISTRATION_SOURCE_FIELD_ORDER,
     {
@@ -436,9 +545,7 @@ function buildSourceProjection(envelope) {
         PROJECT_BROWSER_SELECTED_PROJECT_SERVER_OWNED_REGISTRATION_SELECTOR_MODULE_FIELD_ORDER,
         {
           status: envelope?.modules?.cs_selector?.status ?? "saved-ui-state",
-          preEngineActionEligibilityProjection: clonePlain(
-            preEngineActionEligibilityProjection,
-          ),
+          preEngineActionEligibilityProjection: clonePlain(tierNeutralProjection),
           selectedResultSummary: null,
           runTableFirstNarrowOutputSummary: null,
         },

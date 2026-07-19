@@ -135,3 +135,11 @@ This log is append-oriented. Do not silently rewrite historical decisions.
 **Rationale:** SEL-011 proved the current registration and candidate contracts require a manually committed Tier that the Selector must never own. This makes successful registration impossible through truthful UI input. The donor Engine contract already treats Tier as an execution strategy/result concern, while the downstream selected Tier result field is established and must remain stable.
 
 **Consequence:** Tier is not a Selector control, committed constraint, default, cache, or client authority. The repair must preserve all other inputs, explicit Control selection, read-only/no-write behaviour, and the existing Tier result field meaning and shape. Unique source-backed derivation may bind Tier at the server execution boundary; zero or multiple valid derivations must stop with specific blockers. Any Lab/IES incompatibility or Tier output-contract change requires separate Program approval.
+
+## 2026-07-19 — Source-backed Tier binding is implemented only at host execution
+
+**Decision:** SEL-012 implements the approved ownership by removing Tier from Selector registration and candidate authority, stripping all browser Tier forms, and resolving exactly one valid Tier from `SYSTEM_POLICY` immediately before the existing protected host execution seam.
+
+**Rationale:** The active execution contract requires a single Tier-shaped input, but truthful Selector state cannot provide Tier. The smallest contract-preserving repair is to derive the Tier from approved Engine policy authority at the server boundary and then present the donor-compatible single-Tier shape internally.
+
+**Consequence:** One valid source Tier is bound only for host execution. Zero valid Tiers fail as unavailable; multiple valid Tiers fail as ambiguous. No default, guess, cache, union, browser authority, automatic Control selection, project fabrication, or downstream Tier-result schema change is permitted. Registration repairs only the Tier-only readiness defect and continues to expose the actual safe blocker for every other failed input.

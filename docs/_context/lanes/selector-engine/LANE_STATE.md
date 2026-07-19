@@ -219,3 +219,15 @@ Patrick reports the read-only SEL-011 diagnosis complete: both registration elig
 Patrick also reports Program & Integrate has approved and pushed the Tier ownership seam decision. Approved ownership is: Selector registration and candidate construction do not require or authorise Tier; client-supplied Tier is never authority; Tier is derived and bound only at the existing server-owned Engine/Lex execution boundary; unique, ambiguous, and unavailable derivation must remain explicit; the downstream Tier result field meaning and shape must not change. Lab/IES remains only a potential compatibility consumer, and any incompatibility or output-contract change requires separate approval.
 
 `SEL-012` is now the only top ready item. Its exact authorised paths, tests, blockers, prohibitions, and Program conditions are recorded in `WORK_QUEUE.md`. `SEL-002` remains blocked until SEL-012 is completed, pushed, and activated. SEL-003 remains blocked behind registration.
+
+## 2026-07-19 SEL-012 Tier ownership repair closeout — latest controlling state
+
+SEL-012 started from clean HEAD `ec689792d6baf4f3f83dae85ca7dbf550cfc2288` on the verified Selector lane. Program & Integrate approval was already recorded. The repair remained inside the twelve authorised feature, test, and durable-context paths; no move, cross-lane write, RuntimeData mutation, project mutation, registration retry, or live Engine invocation occurred.
+
+Selector candidate construction now excludes Tier from its required fields and emits no authoritative top-level Tier, selected Tier, candidate-Tier list, manual Tier strategy, cached Tier, or default Tier. Registration strips stale or injected client Tier, repairs only the exact Tier-only eligibility defect, and continues to fail closed on every other missing or unsafe input with the actual safe blocker. Explicit Control selection and source backing remain mandatory.
+
+The existing server-owned execution boundary now resolves Tier from the active source snapshot's `SYSTEM_POLICY` authority immediately before the protected host invocation. Exactly one Tier with the required Engine policy rows is bound in the donor-compatible single-Tier shape. Zero valid Tiers returns the specific unavailable condition; multiple valid Tiers return the specific ambiguous condition. No default, guess, cache, union, or silent choice is used. The established downstream selected-Tier result meaning and shape are unchanged.
+
+Focused bounded execution covered the normally omitted mapper and registration suites together with the affected lane set and passed 127/127. The normal complete `selector-engine` gate passed 105/105 with exit code 0. The donor Tier strategy was inspected read-only and confirmed compatible with the server-bound single-Tier shape. No Lab/IES consumer or output-contract change was required.
+
+SEL-012 is done. SEL-002 is now the top ready item. Its first acceptance step is to prove runtime 8788 has loaded this repair, then retry server-owned registration using only the genuine existing `project-alpha` browser-session envelope. SEL-003 remains blocked until an attributable active server-owned revision exists.

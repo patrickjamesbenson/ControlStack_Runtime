@@ -23,23 +23,31 @@ const PROJECT_ID = "registration-client-project";
 const ENVELOPE_ID = "local-envelope-registration-client";
 const SAVED_AT = "2026-07-15T01:30:00.000Z";
 
-function readyProjection() {
+function readyProjection({ includeTier = true, tierBlocked = false, missingControl = false } = {}) {
   const committedSelectorConstraints = [
-    { fieldKey: "tier", value: "Business", valueLabel: "Business", committedSelectorState: true, blocked: false, authoritySource: "acceptedDefaults" },
+    includeTier ? { fieldKey: "tier", value: "Stale Browser Tier", valueLabel: "Stale Browser Tier", committedSelectorState: true, blocked: false, authoritySource: "acceptedDefaults" } : null,
     { fieldKey: "directOpticVar1", value: "80|Inlay", valueLabel: "Inlay", committedSelectorState: true, blocked: false, authoritySource: "manualConstraints" },
     { fieldKey: "targetLmPerM", value: "1200", valueLabel: "1200", committedSelectorState: true, blocked: false, authoritySource: "manualConstraints" },
     { fieldKey: "cctCri", value: "4000K / CRI90", valueLabel: "4000K / CRI90", committedSelectorState: true, blocked: false, authoritySource: "manualConstraints" },
-    { fieldKey: "controlType", value: "DALI-2", valueLabel: "DALI-2", committedSelectorState: true, blocked: false, authoritySource: "manualConstraints" },
-  ];
+    missingControl ? null : { fieldKey: "controlType", value: "DALI-2", valueLabel: "DALI-2", committedSelectorState: true, blocked: false, authoritySource: "manualConstraints" },
+  ].filter(Boolean);
+  const candidateInputBlocker = tierBlocked
+    ? "missing-readonly-engine-candidate-input-tier"
+    : missingControl
+      ? "missing-readonly-engine-candidate-input-controlType"
+      : null;
+  const candidateInputsReady = candidateInputBlocker === null;
   const factoryApprovedInputsSummary = {
     readOnly: true,
     diagnosticOnly: true,
     safeSummaryOnly: true,
-    factoryApprovedInputsReady: true,
-    ready: true,
+    factoryApprovedInputsReady: candidateInputsReady,
+    ready: candidateInputsReady,
+    readonlyEngineCandidateInputsReady: candidateInputsReady,
+    readonlyEngineCandidateInputsBlocker: candidateInputBlocker,
     stage3Mode: "simple-run-stage3a-zero-accessory",
-    blocker: null,
-    stage2Ready: true,
+    blocker: candidateInputBlocker,
+    stage2Ready: candidateInputsReady,
     committedSelectorConstraintCount: committedSelectorConstraints.length,
     committedRunIntakeSummary: {
       ready: true,
@@ -66,7 +74,7 @@ function readyProjection() {
   const lmTemperatureReadinessPreview = {
     targetIntent: { direct: { ready: true, valueLabel: "1200" } },
     cctCriPairing: { direct: { ready: true, valueLabel: "4000K / CRI90" } },
-    controlIntent: { direct: { ready: true, valueLabel: "DALI-2" } },
+    controlIntent: { direct: { ready: true, valueLabel: "DALI-2", sourceBacked: true } },
     fingerprint: "safe-selector-lm-temperature:client-registration",
     rawRowsReturned: false,
     rawEnginePayloadReturned: false,
@@ -77,12 +85,12 @@ function readyProjection() {
     committedSelectorConstraints,
     lmTemperatureReadinessPreview,
   });
-  assert.equal(mapper.ok, true);
+  assert.equal(mapper.ok, !missingControl);
   return buildSelectorPreEngineReadonlyActionEligibilityProjection({
     specBuildReadinessPreview: {
-      factoryApprovedInputsReady: true,
+      factoryApprovedInputsReady: candidateInputsReady,
       factoryApprovedInputsSummary,
-      readonlyEngineCandidateReady: true,
+      readonlyEngineCandidateReady: mapper.ok === true,
       readonlyEngineCandidateMapperSummary: mapper.summary,
     },
     committedSelectorConstraints,
@@ -253,8 +261,68 @@ test("client sends only the allowlisted pre-Engine projection and accepts the sc
     sentBody.sourceProjection.selectorModule.preEngineActionEligibilityProjection.ready,
     true,
   );
+  assert.equal(
+    sentBody.sourceProjection.selectorModule.preEngineActionEligibilityProjection
+      .committedSelectorConstraints.some((row) => row.fieldKey === "tier"),
+    false,
+  );
+  assert.equal(
+    sentBody.sourceProjection.selectorModule.preEngineActionEligibilityProjection
+      .factoryApprovedInputsSummary.committedSelectorConstraintCount,
+    4,
+  );
   assert.equal(Object.prototype.hasOwnProperty.call(sentBody, "projectEnvelope"), false);
   assert.equal(Object.prototype.hasOwnProperty.call(sentBody, "enginePayload"), false);
+});
+
+test("client repairs a Tier-only blocked projection without accepting browser Tier authority", async () => {
+  const registry = createProjectBrowserSelectedProjectServerOwnedRuntimeSavedRegistry();
+  let sentBody = null;
+  const transport =
+    createShellProjectBrowserSelectedProjectServerOwnedRegistrationClientTransport({
+      async fetchImpl(_path, options) {
+        sentBody = JSON.parse(options.body);
+        return responseFor(await registry.register(sentBody));
+      },
+    });
+
+  const projection = readyProjection({ includeTier: false, tierBlocked: true });
+  assert.equal(projection.ready, false);
+  assert.equal(projection.blocker, "missing-readonly-engine-candidate-input-tier");
+
+  const result = await transport(clientRequest(localSave(projection)));
+  assert.equal(result.ok, true);
+  assert.equal(result.activeRevision, true);
+  assert.equal(
+    sentBody.sourceProjection.selectorModule.preEngineActionEligibilityProjection
+      .committedSelectorConstraints.some((row) => row.fieldKey === "tier"),
+    false,
+  );
+  assert.equal(
+    sentBody.sourceProjection.selectorModule.preEngineActionEligibilityProjection.ready,
+    true,
+  );
+});
+
+test("client returns the actual safe blocker when a remaining candidate input is missing", async () => {
+  let fetchCalls = 0;
+  const transport =
+    createShellProjectBrowserSelectedProjectServerOwnedRegistrationClientTransport({
+      async fetchImpl() {
+        fetchCalls += 1;
+        throw new Error("blocked candidate must not dispatch");
+      },
+    });
+
+  const projection = readyProjection({ includeTier: false, missingControl: true });
+  assert.equal(projection.ready, false);
+  assert.equal(projection.blocker, "missing-readonly-engine-candidate-input-controlType");
+
+  const result = await transport(clientRequest(localSave(projection)));
+  assert.equal(result.ok, false);
+  assert.equal(result.requestDispatched, false);
+  assert.equal(result.blocker, "missing-readonly-engine-candidate-input-controlType");
+  assert.equal(fetchCalls, 0);
 });
 
 test("client fails closed before fetch when the projection is absent, blocked, tampered, or path-bearing", async () => {

@@ -15,6 +15,10 @@ import {
   enrichSelectedProjectReadonlyEngineBridgeRequest,
   resolveSelectedProjectSourceBackedOpticEfficiency,
 } from "../packages/workspace-kernel/engineRunTableSelectedProjectSourceBackedOpticEfficiency.js";
+import {
+  bindSelectedProjectSourceBackedTier,
+  resolveSelectedProjectSourceBackedTier,
+} from "../packages/workspace-kernel/engineRunTableSelectedProjectSourceBackedTier.js";
 
 const domainSourceUrl = new URL("../packages/workspace-kernel/engineRunTableDomain.js", import.meta.url);
 const serverSourceUrl = new URL("../server.js", import.meta.url);
@@ -301,6 +305,82 @@ test("selected-project bridge enriches only one exact source-backed optic effici
   assert.equal(result.fallbackUsed, false);
 });
 
+test("selected-project Tier binding derives exactly one valid source Tier and ignores stale client Tier", () => {
+  const bridgeRequest = {
+    schemaId: "controlstack.runtime.engine-runtable.selected-project-host-seam-bridge.v1",
+    schemaVersion: 1,
+    selectorPayload: {
+      tier: "Stale Browser Tier",
+      selectedTier: "Cached Tier",
+      tier_strategy: {
+        mode: "manual",
+        selected_tier: "Default Tier",
+        candidate_tiers: ["Default Tier"],
+      },
+      runs: [{ qty: 1, run_length_mm: 1200 }],
+      lighting: { target_lm_per_m: "2000" },
+    },
+    execute: true,
+    filesystemWriteGuardRequired: true,
+    bytecodeWritingDisabled: true,
+  };
+  const snapshot = {
+    SYSTEM_POLICY: [
+      { item: "led_current_headroom_max_pct", Business: "10" },
+      { item: "led_headroom_watts_multi", Business: "1.1" },
+      { item: "segment_max_length_mm", Economy: "2800" },
+    ],
+  };
+
+  const result = bindSelectedProjectSourceBackedTier({ bridgeRequest, snapshot });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.bound, true);
+  assert.equal(result.sourceResolution.validTierCount, 1);
+  assert.equal(result.clientTierPresent, true);
+  assert.equal(result.clientTierAuthorityAccepted, false);
+  assert.equal(result.bridgeRequest.selectorPayload.tier, "Business");
+  assert.deepEqual(result.bridgeRequest.selectorPayload.tier_strategy, {
+    mode: "manual",
+    selected_tier: "Business",
+    candidate_tiers: ["Business"],
+    optimisation_intent: "locked_manual",
+  });
+  assert.equal(Object.prototype.hasOwnProperty.call(result.bridgeRequest.selectorPayload, "selectedTier"), false);
+  assert.equal(bridgeRequest.selectorPayload.tier, "Stale Browser Tier");
+  assert.equal(result.fallbackUsed, false);
+  assert.equal(result.defaultUsed, false);
+  assert.equal(result.guessed, false);
+});
+
+test("selected-project Tier derivation fails closed when source authority is unavailable or ambiguous", () => {
+  const unavailable = resolveSelectedProjectSourceBackedTier({
+    snapshot: {
+      SYSTEM_POLICY: [
+        { item: "led_current_headroom_max_pct", Business: "10" },
+      ],
+    },
+  });
+  assert.equal(unavailable.ok, false);
+  assert.equal(unavailable.blocker, "selected-project-source-backed-tier-derivation-unavailable");
+  assert.equal(unavailable.validTierCount, 0);
+  assert.equal(unavailable.fallbackUsed, false);
+
+  const ambiguous = resolveSelectedProjectSourceBackedTier({
+    snapshot: {
+      SYSTEM_POLICY: [
+        { item: "led_current_headroom_max_pct", Business: "10", First: "8" },
+        { item: "led_headroom_watts_multi", Business: "1.1", First: "1.05" },
+      ],
+    },
+  });
+  assert.equal(ambiguous.ok, false);
+  assert.equal(ambiguous.blocker, "selected-project-source-backed-tier-derivation-ambiguous");
+  assert.equal(ambiguous.validTierCount, 2);
+  assert.equal(ambiguous.tier, null);
+  assert.equal(ambiguous.fallbackUsed, false);
+});
+
 test("selected-project optic efficiency enrichment fails closed on conflicts and percent-like values", () => {
   const selectorPayload = {
     optic: { key: "Inlay" },
@@ -336,6 +416,8 @@ test("domain slice adds no Engine route, Selector run route, POST endpoint, or g
   const domainText = await readFile(domainSourceUrl, "utf-8");
 
   assert.match(serverText, /enrichSelectedProjectReadonlyEngineBridgeRequest/);
+  assert.match(serverText, /bindSelectedProjectSourceBackedTier/);
+  assert.match(serverText, /selected-project-source-backed-tier-derivation-unavailable/);
   assert.match(serverText, /readJsonSnapshot\(readAuthorityReferenceSnapshotPath\(\)\)/);
   assert.match(serverText, /JSON\.stringify\(preparedBridgeRequest\)/);
   assert.equal(serverText.includes("/api/engine/run"), false);

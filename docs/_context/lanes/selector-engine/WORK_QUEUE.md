@@ -30,7 +30,7 @@
 ### Q-2B Repair Tier ownership at the server-owned Engine/Lex boundary
 
 * id: SEL-012
-* status: ready
+* status: done
 * depends-on: SEL-011 and recorded Program & Integrate approval
 * seam change: yes — Program & Integrate approval reported by Patrick as recorded and pushed
 * gate: selector-engine
@@ -42,12 +42,12 @@
 ### Q-2 Register project-alpha active server-owned revision
 
 * id: SEL-002
-* status: blocked
+* status: ready
 * depends-on: SEL-001, SEL-011, and SEL-012
 * gate: selector-engine
 * authorised files: read-only repository inspection; no repository file writes unless a later orchestrator commission supplies exact bounded paths
 * objective: use the genuine existing `project-alpha` browser-session save envelope to complete the supported server-side registration contract and establish an active server-owned revision.
-* acceptance: registration acknowledgement and an attributable active server-owned revision are proven without constructing project truth from fixtures or repository test data. Blocker carried forward: the approved SEL-012 Tier-ownership repair must be completed, gated, committed, pushed, and activated before registration is retried. Server-side registration remains the gate on running the Engine.
+* acceptance: registration acknowledgement and an attributable active server-owned revision are proven without constructing project truth from fixtures or repository test data. SEL-012 is complete on the lane; before retrying registration, prove runtime 8788 has loaded the accepted Tier-ownership repair, then use only the genuine existing browser-session envelope. Server-side registration remains the gate on running the Engine.
 * prohibitions: do not invoke Engine in this item; do not fabricate, reconstruct, or substitute a save envelope; do not change Tier, Control, RuntimeData, Lab, or Program seams.
 
 ### Q-3 Execute selected-project Engine invocation

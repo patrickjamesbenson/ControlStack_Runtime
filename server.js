@@ -31,6 +31,7 @@ import {
   PROJECT_BROWSER_SELECTED_PROJECT_SERVER_OWNED_REGISTRATION_STATES,
 } from "./packages/workspace-kernel/projectBrowserSelectedProjectServerOwnedRegistrationBoundary.js";
 import { enrichSelectedProjectReadonlyEngineBridgeRequest } from "./packages/workspace-kernel/engineRunTableSelectedProjectSourceBackedOpticEfficiency.js";
+import { bindSelectedProjectSourceBackedTier } from "./packages/workspace-kernel/engineRunTableSelectedProjectSourceBackedTier.js";
 
 const PORT = Number.parseInt(process.env.CONTROLSTACK_RUNTIME_PORT || "8787", 10);
 const HOST = process.env.CONTROLSTACK_RUNTIME_HOST || "127.0.0.1";
@@ -2484,18 +2485,54 @@ function isSameOriginRequest(req) {
   }
 }
 
+function selectedProjectTierDerivationBlockedSeamResult(blocker) {
+  return Object.freeze({
+    ok: false,
+    seam: "engine-runtable-internal-readonly-invoke",
+    seam_version: "engine_runtable_internal_readonly_invoke.v1",
+    engine_execution_attempted: false,
+    engine_result_produced: false,
+    public_route_added: false,
+    post_endpoint_added: false,
+    runtime_data_mutation_enabled: false,
+    selected_result_persistence_enabled: false,
+    raw_rows_exposed: false,
+    raw_engine_payload_exposed: false,
+    raw_engine_result_returned: false,
+    private_paths_exposed: false,
+    credentials_exposed: false,
+    safe_engine_summary: null,
+    blockers: Object.freeze([Object.freeze({
+      code: blocker,
+      severity: "blocking",
+      reason: "Server-owned source-backed Tier derivation did not produce exactly one valid Tier.",
+    })]),
+    warnings: Object.freeze([]),
+  });
+}
+
 async function invokeRuntimeEngineRunTableSelectedProjectHostLocalReadonlySeam(bridgeRequest) {
-  let preparedBridgeRequest = bridgeRequest;
+  let snapshot;
   try {
-    const snapshot = await readJsonSnapshot(readAuthorityReferenceSnapshotPath());
-    const enrichment = enrichSelectedProjectReadonlyEngineBridgeRequest({
-      bridgeRequest,
-      snapshot,
-    });
-    preparedBridgeRequest = enrichment.bridgeRequest;
+    snapshot = await readJsonSnapshot(readAuthorityReferenceSnapshotPath());
   } catch {
-    preparedBridgeRequest = bridgeRequest;
+    return selectedProjectTierDerivationBlockedSeamResult(
+      "selected-project-source-backed-tier-derivation-unavailable",
+    );
   }
+
+  const opticEnrichment = enrichSelectedProjectReadonlyEngineBridgeRequest({
+    bridgeRequest,
+    snapshot,
+  });
+  const tierBinding = bindSelectedProjectSourceBackedTier({
+    bridgeRequest: opticEnrichment.bridgeRequest,
+    snapshot,
+  });
+  if (!tierBinding.ok) {
+    return selectedProjectTierDerivationBlockedSeamResult(tierBinding.blocker);
+  }
+  const preparedBridgeRequest = tierBinding.bridgeRequest;
 
   return new Promise((resolveInvocation, rejectInvocation) => {
     const pythonCommand = String(process.env.CONTROLSTACK_PYTHON || "python").trim() || "python";

@@ -17,7 +17,6 @@ export const SELECTOR_READONLY_ENGINE_STEP3_AUTHORITY_GUARD_SCHEMA_ID =
 export const SELECTOR_READONLY_ENGINE_STEP3_AUTHORITY_GUARD_SCHEMA_VERSION = 1;
 
 const REQUIRED_CANDIDATE_FIELDS = Object.freeze([
-  "tier",
   "runs",
   "lighting",
   "target_lm_per_m",
@@ -83,7 +82,15 @@ const UNSAFE_TRUE_FIELDS = Object.freeze([
 
 const SAFE_SEAM_FAILURE_BLOCKER_CODES = Object.freeze([
   "direct-run-engine-no-success",
+  "selected-project-source-backed-tier-derivation-unavailable",
+  "selected-project-source-backed-tier-derivation-ambiguous",
 ]);
+
+const CLIENT_TIER_CONSTRAINT_KEYS = Object.freeze(new Set([
+  "tier",
+  "selectedtier",
+  "tiertoken",
+]));
 
 function isPlainObject(value) {
   return value !== null && typeof value === "object" && !Array.isArray(value);
@@ -136,6 +143,7 @@ function constraintMap(committedSelectorConstraints = []) {
     const fieldKey = safeString(constraint.fieldKey);
     const value = safeString(constraint.value || constraint.valueLabel);
     if (!fieldKey || !value) continue;
+    if (CLIENT_TIER_CONSTRAINT_KEYS.has(safeToken(fieldKey).replace(/[^0-9a-z]/g, ""))) continue;
     if (!map.has(fieldKey)) map.set(fieldKey, constraint);
   }
   return map;
@@ -270,7 +278,6 @@ function candidateSummary(candidate, fieldStatusRows, sourceFingerprintInput) {
   const lighting = isPlainObject(candidate.lighting) ? candidate.lighting : {};
   const runs = Array.isArray(candidate.runs) ? candidate.runs : [];
   const fingerprint = stableFingerprint("safe-selector-readonly-engine-candidate", {
-    tier: candidate.tier,
     runCount: runs.length,
     runs: runs.map((run) => ({ qty: run.qty, runLengthMm: run.run_length_mm, lengthMode: run.lengthMode })),
     lighting: {
@@ -297,7 +304,8 @@ function candidateSummary(candidate, fieldStatusRows, sourceFingerprintInput) {
     fieldStatus: fieldStatusRows,
     requiredFields: [...REQUIRED_CANDIDATE_FIELDS],
     candidateShapeSummary: {
-      tierPresent: Boolean(candidate.tier),
+      clientTierPresent: false,
+      tierBindingOwner: "server-owned-engine-lex-boundary",
       runCount: runs.length,
       totalQuantity: runs.reduce((total, run) => total + (positiveInteger(run.qty) || 0), 0),
       runLengthBand: runs.length ? `${runs[0].run_length_mm}mm` : "none",
@@ -349,11 +357,15 @@ export function buildSelectorReadonlyEngineCandidateForInternalSeam({
   }
   const hasDedicatedCandidateReadiness = isPlainObject(factoryApprovedInputsSummary)
     && Object.prototype.hasOwnProperty.call(factoryApprovedInputsSummary, "readonlyEngineCandidateInputsReady");
+  const tierOnlyCandidateReadinessBlocker = safeToken(
+    factoryApprovedInputsSummary?.readonlyEngineCandidateInputsBlocker,
+  ) === "missing-readonly-engine-candidate-input-tier";
   const legacyFactoryApprovedCompatibility = !hasDedicatedCandidateReadiness
     && factoryApprovedInputsSummary?.factoryApprovedInputsReady === true
     && factoryApprovedInputsSummary?.stage2Ready === true;
   const readonlyEngineCandidateInputsReady = hasDedicatedCandidateReadiness
     ? factoryApprovedInputsSummary.readonlyEngineCandidateInputsReady === true
+      || tierOnlyCandidateReadinessBlocker
     : legacyFactoryApprovedCompatibility;
   if (!isPlainObject(factoryApprovedInputsSummary) || readonlyEngineCandidateInputsReady !== true) {
     const summary = failSummary(
@@ -365,7 +377,6 @@ export function buildSelectorReadonlyEngineCandidateForInternalSeam({
 
   const map = constraintMap(committedSelectorConstraints);
   const runSummary = factoryApprovedInputsSummary.committedRunIntakeSummary || {};
-  const tier = constraintValue(map, ["tier", "selectedTier", "tierToken"]);
   const runQuantity = positiveInteger(runSummary.runQuantity);
   const runLengthMm = positiveInteger(runSummary.runLengthMm);
   const lengthMode = safeToken(runSummary.lengthMode, "cut_to_length");
@@ -401,13 +412,6 @@ export function buildSelectorReadonlyEngineCandidateForInternalSeam({
   if (controlType) lighting.control_type = controlType;
 
   const candidate = {
-    tier,
-    tier_strategy: {
-      mode: "manual",
-      selected_tier: tier,
-      candidate_tiers: tier ? [tier] : [],
-      optimisation_intent: "locked_manual",
-    },
     runs: runQuantity && runLengthMm ? [{
       Run: "selector-readonly-engine-run-1",
       run: "selector-readonly-engine-run-1",
@@ -436,7 +440,6 @@ export function buildSelectorReadonlyEngineCandidateForInternalSeam({
   };
 
   const fieldStatusRows = [
-    fieldStatus("tier", Boolean(tier), "committed-selector-state-required", sourceLabelForConstraint(map, ["tier", "selectedTier", "tierToken"])),
     fieldStatus("runs", Boolean(runQuantity && runLengthMm), "stage3-committed-run-intake-required", runSummary.sourceAuthority || "committed selector run intake"),
     fieldStatus("lighting", Object.keys(lighting).length > 0, "selector-light-intent-required", "selector lm-temperature readiness preview"),
     fieldStatus("target_lm_per_m", Boolean(lighting.target_lm_per_m), "selector-controlled-intent-required", "selector targetLmPerM committed intent"),
@@ -853,10 +856,10 @@ function redactedStep2MetadataFromStep1(readonlyEngineStep1SafeSummary = {}) {
     },
     tier_strategy: {
       classification: "source-backed-tier-resolution-shape",
-      tier_strategy_mode: "manual",
-      top_level_tier_passed: true,
-      tier_strategy_selected_tier_passed: true,
-      tier_strategy_candidate_tiers_passed: true,
+      tier_strategy_mode: "server-owned-source-backed-binding",
+      top_level_tier_passed: false,
+      tier_strategy_selected_tier_passed: false,
+      tier_strategy_candidate_tiers_passed: false,
       raw_payload_returned: false,
     },
     field_source_map: fieldSourceMap.map((entry) => ({

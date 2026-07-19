@@ -251,3 +251,17 @@ Patrick also reports Program & Integrate approval is recorded and pushed. The ap
 The new top ready item is `SEL-012 — Repair Tier ownership at the server-owned Engine/Lex boundary`. Its exact paths and acceptance conditions are in `WORK_QUEUE.md`. The worker must cover missing Tier, injected stale Tier, successful unique derivation, ambiguous derivation, unavailable derivation, and all remaining required inputs. It must not run the live Engine, retry registration, fabricate project truth, write another lane, change the Tier output contract, or alter Lab/IES. Any Lab/IES incompatibility or Tier output-contract change is a clean `STOPPED` requiring separate Program approval.
 
 After SEL-012 is completed, gated, pushed, and activated, SEL-002 may be set ready for a genuine `project-alpha` registration retry. SEL-003 remains blocked behind SEL-002. Use the standing worker prompt at the top of this file verbatim; do not create a bespoke repair prompt.
+
+## 2026-07-19 SEL-012 handoff — Tier ownership repaired on lane
+
+SEL-012 began clean at `ec689792d6baf4f3f83dae85ca7dbf550cfc2288` with the Program-approved Tier seam already recorded. Selector registration and candidate construction no longer require or carry Tier authority. Browser Tier, selected-Tier, candidate-Tier, strategy, cached, and default forms are removed before registration and never accepted as source truth.
+
+The existing server-owned execution boundary now derives Tier from the active `SYSTEM_POLICY` authority immediately before the protected host adapter. Exactly one valid Tier is bound in the donor-compatible single-Tier shape. No valid Tier produces an unavailable stop; more than one valid Tier produces an ambiguous stop. No fallback, default, guess, union, or silent first-match choice exists. The downstream selected-Tier result contract remains unchanged.
+
+Every non-Tier input remains fail closed. Control still requires an explicit source-backed selection and is not auto-selected. Registration now repairs only the exact Tier-only readiness defect and returns the actual safe blocker for other missing inputs. No live Engine, registration retry, project mutation, RuntimeData mutation, persistence, RunTable, IES, or output generation was performed in SEL-012.
+
+Focused bounded execution passed 127/127, including the normally omitted mapper and registration suites. The normal complete lane gate passed 105/105. The final guarded commit/push receipt and exact clean ending state are reported in the SEL-012 completion response.
+
+### Next queue item
+
+`SEL-002 — Register project-alpha active server-owned revision` is ready. First prove runtime 8788 has loaded the accepted SEL-012 repair. Then use only the genuine existing `project-alpha` browser-session envelope to obtain a registration acknowledgement and attributable active server-owned revision. Do not invoke Engine, fabricate or reconstruct an envelope, or change Tier, Control, RuntimeData, Lab, Program, donor, or main. SEL-003 remains blocked behind SEL-002.

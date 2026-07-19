@@ -60,9 +60,9 @@ function stage3Summary(overrides = {}) {
   };
 }
 
-function constraints({ includeTier = true } = {}) {
+function constraints({ includeTier = false } = {}) {
   return [
-    includeTier ? { fieldKey: "tier", value: "Business", valueLabel: "Business", committedSelectorState: true, authoritySource: "acceptedDefaults" } : null,
+    includeTier ? { fieldKey: "tier", value: "Stale Browser Tier", valueLabel: "Stale Browser Tier", committedSelectorState: true, authoritySource: "acceptedDefaults" } : null,
     { fieldKey: "directOpticVar1", value: "80|Inlay", valueLabel: "Inlay", committedSelectorState: true, authoritySource: "manualConstraints" },
     { fieldKey: "targetLmPerM", value: "1200", valueLabel: "1200", committedSelectorState: true, authoritySource: "manualConstraints" },
     { fieldKey: "cctCri", value: "4000K / CRI90", valueLabel: "4000K / CRI90", committedSelectorState: true, authoritySource: "manualConstraints" },
@@ -107,12 +107,19 @@ function goodMapperResult() {
   });
 }
 
-test("maps Stage 3 supported selector state into the host-local readonly seam candidate shape", () => {
-  const result = goodMapperResult();
+test("maps Stage 3 supported selector state without carrying client Tier authority", () => {
+  const result = buildSelectorReadonlyEngineCandidateForInternalSeam({
+    factoryApprovedInputsSummary: stage3Summary(),
+    committedSelectorConstraints: constraints({ includeTier: true }),
+    lmTemperatureReadinessPreview: lmTemperaturePreview(),
+  });
 
   assert.equal(result.ok, true);
-  assert.equal(result.candidate.tier, "Business");
-  assert.equal(result.candidate.tier_strategy.mode, "manual");
+  assert.equal(Object.prototype.hasOwnProperty.call(result.candidate, "tier"), false);
+  assert.equal(Object.prototype.hasOwnProperty.call(result.candidate, "tier_strategy"), false);
+  assert.equal(result.summary.candidateShapeSummary.clientTierPresent, false);
+  assert.equal(result.summary.candidateShapeSummary.tierBindingOwner, "server-owned-engine-lex-boundary");
+  assert.equal(result.summary.requiredFields.includes("tier"), false);
   assert.equal(result.candidate.runs[0].run_length_mm, 3500);
   assert.equal(result.candidate.runs[0].qty, 2);
   assert.equal(result.candidate.lighting.target_lm_per_m, "1200");
@@ -209,18 +216,93 @@ test("direct-only readonly mapping does not require Ambient or indirect light/co
   assert.equal(Object.prototype.hasOwnProperty.call(result.candidate.lighting, "control_type_indirect"), false);
 });
 
-test("fails closed for missing required seam candidate fields", () => {
+test("accepts the readonly candidate when Tier is absent from committed Selector state", () => {
   const result = buildSelectorReadonlyEngineCandidateForInternalSeam({
-    factoryApprovedInputsSummary: stage3Summary(),
-    committedSelectorConstraints: constraints({ includeTier: false }),
+    factoryApprovedInputsSummary: stage3Summary({
+      readonlyEngineCandidateInputsReady: false,
+      readonlyEngineCandidateInputsBlocker: "missing-readonly-engine-candidate-input-tier",
+    }),
+    committedSelectorConstraints: constraints(),
     lmTemperatureReadinessPreview: lmTemperaturePreview(),
   });
 
-  assert.equal(result.ok, false);
-  assert.equal(result.candidate, null);
-  assert.equal(result.summary.blocker, "missing-candidate-field-tier");
-  assert.ok(result.summary.fieldStatus.some((row) => row.field === "tier" && row.present === false));
+  assert.equal(result.ok, true);
+  assert.equal(Object.prototype.hasOwnProperty.call(result.candidate, "tier"), false);
+  assert.equal(result.summary.requiredFields.includes("tier"), false);
   assert.equal(result.summary.rawEnginePayloadReturned, false);
+});
+
+test("fails closed for every remaining required readonly candidate input", () => {
+  const cases = [
+    {
+      blocker: "missing-candidate-field-runs",
+      factory: stage3Summary({
+        committedRunIntakeSummary: {
+          ready: false,
+          committedRunIntakeReady: false,
+          sourceAuthority: "committed selector state only",
+          runQuantity: 0,
+          runLengthMm: 0,
+          lengthMode: "cut_to_length",
+        },
+      }),
+      constraints: constraints(),
+      preview: lmTemperaturePreview(),
+    },
+    {
+      blocker: "missing-candidate-field-lighting",
+      factory: stage3Summary(),
+      constraints: [],
+      preview: lmTemperaturePreview({
+        targetIntent: { direct: { ready: false, valueLabel: "" } },
+        cctCriPairing: { direct: { ready: false, valueLabel: "" } },
+        controlIntent: { direct: { ready: false, valueLabel: "", sourceBacked: false } },
+      }),
+    },
+    {
+      blocker: "missing-candidate-field-target_lm_per_m",
+      factory: stage3Summary(),
+      constraints: constraints().filter((row) => row.fieldKey !== "targetLmPerM"),
+      preview: lmTemperaturePreview({ targetIntent: { direct: { ready: false, valueLabel: "" } } }),
+    },
+    {
+      blocker: "missing-candidate-field-cct",
+      factory: stage3Summary(),
+      constraints: constraints().filter((row) => row.fieldKey !== "cctCri"),
+      preview: lmTemperaturePreview({ cctCriPairing: { direct: { ready: false, valueLabel: "CRI90" } } }),
+    },
+    {
+      blocker: "missing-candidate-field-cri",
+      factory: stage3Summary(),
+      constraints: constraints().filter((row) => row.fieldKey !== "cctCri"),
+      preview: lmTemperaturePreview({ cctCriPairing: { direct: { ready: false, valueLabel: "4000K" } } }),
+    },
+    {
+      blocker: "missing-candidate-field-optic",
+      factory: stage3Summary(),
+      constraints: constraints().filter((row) => row.fieldKey !== "directOpticVar1"),
+      preview: lmTemperaturePreview(),
+    },
+    {
+      blocker: "missing-candidate-field-control_type",
+      factory: stage3Summary(),
+      constraints: constraints().filter((row) => row.fieldKey !== "controlType"),
+      preview: lmTemperaturePreview({
+        controlIntent: { direct: { ready: false, valueLabel: "", sourceBacked: false } },
+      }),
+    },
+  ];
+
+  for (const item of cases) {
+    const result = buildSelectorReadonlyEngineCandidateForInternalSeam({
+      factoryApprovedInputsSummary: item.factory,
+      committedSelectorConstraints: item.constraints,
+      lmTemperatureReadinessPreview: item.preview,
+    });
+    assert.equal(result.ok, false, item.blocker);
+    assert.equal(result.candidate, null, item.blocker);
+    assert.equal(result.summary.blocker, item.blocker);
+  }
 });
 
 test("returns mapper-ready fail-closed summary until the host-local seam is invoked", () => {
@@ -276,7 +358,8 @@ test("invokes supplied host-local readonly seam adapter and returns summary only
 
   assert.equal(received.seam, "engine-runtable-internal-readonly-invoke");
   assert.equal(received.execute, true);
-  assert.equal(received.selectorPayload.tier, "Business");
+  assert.equal(Object.prototype.hasOwnProperty.call(received.selectorPayload, "tier"), false);
+  assert.equal(Object.prototype.hasOwnProperty.call(received.selectorPayload, "tier_strategy"), false);
   assert.equal(received.candidatePayloadReturned, false);
   assert.equal(result.ok, true);
   assert.equal(result.readonlyEngineStep1Ready, true);
@@ -380,6 +463,39 @@ test("projects an allowlisted seam failure code without exposing blocker detail"
   assert.equal(summary.readonlyEngineStep1Ready, false);
   assert.equal(summary.blocker, "direct-run-engine-no-success");
   assert.equal(JSON.stringify(summary).includes("donor-error.txt"), false);
+});
+
+test("projects source-backed Tier derivation blockers without exposing source detail", () => {
+  const mapperResult = goodMapperResult();
+  for (const code of [
+    "selected-project-source-backed-tier-derivation-unavailable",
+    "selected-project-source-backed-tier-derivation-ambiguous",
+  ]) {
+    const summary = buildSelectorReadonlyEngineStep1SafeSummary({
+      mapperResult,
+      seamResult: {
+        ok: false,
+        seam: "engine-runtable-internal-readonly-invoke",
+        seam_version: "engine_runtable_internal_readonly_invoke.v1",
+        engine_execution_attempted: false,
+        engine_result_produced: false,
+        public_route_added: false,
+        post_endpoint_added: false,
+        runtime_data_mutation_enabled: false,
+        selected_result_persistence_enabled: false,
+        raw_rows_exposed: false,
+        raw_engine_payload_exposed: false,
+        raw_engine_result_returned: false,
+        private_paths_exposed: false,
+        credentials_exposed: false,
+        safe_engine_summary: null,
+        blockers: [{ code, detail: "C:\\private\\source-tier.json" }],
+      },
+    });
+    assert.equal(summary.blocker, code);
+    assert.equal(summary.hostLocalReadonlyEngineSeamInvoked, false);
+    assert.equal(JSON.stringify(summary).includes("source-tier.json"), false);
+  }
 });
 
 test("retains the generic seam failure blocker when no safe recognized cause exists", () => {

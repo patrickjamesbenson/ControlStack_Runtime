@@ -161,6 +161,24 @@ Every completed worker updates this index with:
 - Evidence-commit ending tree: clean, with 0 staged, modified, untracked, or deleted paths — VERIFIED.
 - The commit containing this hash-index closeout is the final ending HEAD for the worker; its exact hash is reported in the completion response.
 
+## 2026-07-19 — SEL-012 source-backed Tier ownership repair
+
+- Worker: standing Selector & Engine worker, queue item `SEL-012`.
+- Starting identity: verified Selector lane; starting HEAD `ec689792d6baf4f3f83dae85ca7dbf550cfc2288`; starting Git inventory clean with zero staged, modified, untracked, or deleted paths — VERIFIED.
+- Approval: Program & Integrate Tier-ownership seam approval was already recorded and pushed before execution — VERIFIED from durable lane context.
+- Authorised feature paths: registration transport, Selector candidate mapper, new source-backed Tier helper, runtime server, and the three specified test files; durable updates limited to five context files — VERIFIED by scope guard.
+- Selector candidate result: Tier removed from required fields, candidate payload, fingerprint, and client authority; injected or stale Tier constraints are ignored — VERIFIED by implementation and tests.
+- Registration result: Tier constraints are removed; exact Tier-only blocked projections are rebuilt safely; other missing inputs remain fail closed and return their actual safe condition before dispatch — VERIFIED by implementation and tests.
+- Server boundary result: `SYSTEM_POLICY` is read from the approved active source snapshot; exactly one Tier with the required policy rows is bound immediately before the protected host seam; zero and multiple valid Tiers return distinct unavailable and ambiguous conditions — VERIFIED by implementation and tests.
+- Donor compatibility: read-only inspection of donor Tier strategy confirmed the bound internal shape remains the established single-Tier manual execution shape; downstream selected-Tier result meaning and shape are unchanged — VERIFIED.
+- Required negative evidence: no Tier control, default, guess, cache, union, client authority, automatic Control selection, project truth, envelope, acknowledgement, revision, RuntimeData change, selected result, RunTable, IES, or output was fabricated — VERIFIED for this parcel.
+- Focused bounded test execution: mapper and registration suites were temporarily included through the approved lane runner with the affected lane set; final focused result 127 passed, 0 failed. Temporary harness imports were removed before final diff — VERIFIED.
+- Normal complete gate before closeout: `selector-engine`, 105 passed, 0 failed, exit code 0 — VERIFIED.
+- Changed paths: exactly seven feature/test paths and five durable context paths; no `LANE_CHARTER.md` change — VERIFIED before staging.
+- Queue result: SEL-012 done; SEL-002 ready; SEL-003 remains blocked behind an attributable active server-owned revision — RECORDED.
+- Commit/push: the commit containing this closeout is gated and pushed only to `lane/selector-engine`; its exact commit and push hashes are reported in the completion response.
+- Final Git inventory and final gated count are reported in the completion response after the guarded commit/push operation.
+
 ## 2026-07-19 — project-alpha registration refusal evidence and SEL-011 commission
 
 - Runtime/UI evidence supplied by Patrick: two accepted browser-session saves for `project-alpha`, envelope IDs `env-project-alpha-1784437597308` and `env-project-alpha-1784437964705` — USER-PROVIDED LIVE EVIDENCE.
