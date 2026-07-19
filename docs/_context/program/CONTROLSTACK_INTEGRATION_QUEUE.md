@@ -290,3 +290,30 @@ LAB-017 is not admitted for implementation because Program memory does not conta
 - **Owner of missing evidence:** Lab orchestrator.
 - **Owner of approval decision:** Program & Integrate.
 - **Current action:** none for Patrick; LAB-017 remains stopped until the lane-generated envelope is available for Program review.
+
+## 2026-07-19 — Selector Tier authority seam parcel
+
+**Status:** APPROVED WITH CONDITIONS; READY FOR SELECTOR IMPLEMENTATION.
+
+### Approved scope
+
+- Remove manually committed Tier from Selector registration eligibility.
+- Remove Tier as a required or authoritative field in Selector candidate construction.
+- Derive and bind Tier only at the existing server-owned Engine/Lex execution boundary.
+- Replace the generic eligibility refusal with a specific diagnostic for the actual unsatisfied condition.
+
+### Mandatory constraints
+
+- Preserve every other required Selector input and source-authority check.
+- Preserve read-only/no-write behaviour and the prohibition on automatic Control selection.
+- Do not invent, default, cache, guess, or accept caller-supplied Tier as authority.
+- Fail closed with a specific Tier-derivation blocker when the Engine/Lex boundary cannot derive Tier uniquely.
+- Preserve the downstream Tier result field name, meaning, and authority; output-shape changes require separate approval.
+
+### Acceptance evidence
+
+The Selector lane must return exact base/head commits and changed paths, old/new contract fixtures, focused tests covering absent and injected Tier plus successful/ambiguous/unavailable derivation, live or sealed registration and Engine invocation evidence, `selector-engine` green, final Git state, push receipt, and updated lane memory.
+
+### Consumer treatment
+
+No Lab implementation is authorised. Lab & IES is a potential compatibility consumer only if it reads the derived Tier result; any discovered incompatibility becomes a separate bounded Lab parcel after the Selector producer parcel is accepted.

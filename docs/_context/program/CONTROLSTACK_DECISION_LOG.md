@@ -398,3 +398,38 @@ Program approval attaches to a defined contract change, not a queue number. Appr
 - No LAB-017 implementation may begin while the item remains held.
 - The Lab orchestrator owns producing the exact approval envelope in lane memory; Program owns the subsequent approve/decline decision.
 - Patrick has no manual repository action in this boundary.
+
+---
+
+## 2026-07-19 — Selector Tier authority relocation approved with conditions
+
+**Status:** APPROVED WITH CONDITIONS.
+
+**Evidence:** The Selector & Engine lane reports read-only diagnosis proving that project registration and candidate construction currently require a manually committed Tier before Engine execution. The lane further reports that Tier is an Engine/Lex consequence derived only after execution, making the existing requirement unsatisfiable and blocking all Engine work. Program has not independently inspected the Selector worktree through this connection; the diagnosis is accepted as the producing lane's current evidence and must be re-proved by the implementation parcel.
+
+### Old contract
+
+Selector-side registration eligibility and candidate mapping require Tier as manually committed Selector input before the server-owned Engine/Lex execution boundary.
+
+### Approved contract
+
+Selector-side registration eligibility and candidate construction must not require or treat Tier as Selector input. Tier authority moves to the existing server-owned Engine/Lex execution boundary, where Tier is derived deterministically from source-backed candidate inputs and versioned Engine/Lex policy. Tier remains an execution consequence and downstream result, not user-entered or Selector-fabricated project truth.
+
+### Conditions
+
+1. No default, fallback, guessed, cached, UI-manufactured, or automatically selected Tier is permitted.
+2. Caller-supplied or stale client Tier must not become authoritative or override the derived result; the parcel must prove this fail-closed behaviour.
+3. When Tier cannot be derived uniquely from valid source-backed inputs, execution must stop with a specific Tier-derivation blocker rather than a generic eligibility refusal.
+4. All other required Selector inputs, source authority, read-only/no-write behaviour, and the prohibition on automatic Control selection remain unchanged.
+5. The Selector candidate schema/fixture and blocked/error semantics must be versioned or explicitly documented, with tests for Tier absence, stale Tier injection, successful derivation, ambiguous/unavailable derivation, and preservation of every other required field.
+6. The downstream Tier result field name, meaning, and authority must remain compatible. Any change to its output shape or semantics requires a separate Program seam decision.
+7. Completion evidence must include exact changed paths, focused tests, live or sealed registration/invocation proof, `selector-engine` green, immutable commit and push, final Git state, and updated Selector handoff.
+
+### Affected lanes
+
+- Selector & Engine owns this implementation across Seam A and the server-owned Engine/Lex boundary in Seam B.
+- Program memory does not identify a current Lab dependency on Tier by name. Lab & IES must nevertheless be treated as a potential downstream consumer of the derived Tier result. No Lab implementation is authorised by this decision; if Lab reads Tier, it must provide separate compatibility evidence before Program declares the producer contract stable.
+
+### Rollback
+
+Rollback restores the prior implementation only as a diagnostic baseline; it must not be reactivated as an accepted contract because manual pre-Engine Tier remains logically unsatisfiable. A failed implementation must instead remain blocked while preserving the approved authority model.

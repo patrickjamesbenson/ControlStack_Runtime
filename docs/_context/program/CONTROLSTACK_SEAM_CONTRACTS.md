@@ -226,3 +226,31 @@ The current selected-result and IES handoff tests remain scaffold/contract-first
 4. A Lab consumer parcel must name the exact accepted producer schema/version and base/head commit range.
 5. Program runs a bounded gate after each accepted parcel; producer and consumer are not combined into one unexplained integration batch.
 6. Seam F remains unauthorised and Seam G remains reserved/inactive.
+
+## 2026-07-19 approved Seam A/B amendment — Tier is an Engine/Lex consequence
+
+**Status:** APPROVED WITH CONDITIONS.
+
+### Contract amendment
+
+- Selector registration eligibility must not require a manually committed Tier.
+- Selector candidate construction must omit Tier as a required or authoritative input.
+- The existing server-owned Engine/Lex execution boundary is the sole authority that may derive and bind Tier.
+- The derived Tier remains part of the downstream Engine result contract; it is not Selector input or user-entered project truth.
+- Failure to derive Tier uniquely must remain distinguishable from ordinary eligibility failure and from a valid derived Tier.
+
+### Preserved boundaries
+
+- All non-Tier required candidate fields and source-authority checks remain mandatory.
+- Read-only/no-write behaviour remains mandatory.
+- Control selection remains explicit; no automatic Control choice is authorised.
+- No default, fallback, guessed, cached, or UI-manufactured Tier is authorised.
+- Client-supplied Tier cannot override Engine/Lex authority.
+
+### Producer evidence required
+
+The Selector parcel must provide old/new fixtures, explicit contract identity, tests for missing and injected Tier, deterministic derivation, derivation-unavailable and derivation-ambiguous outcomes, preservation of other required inputs, specific refusal text, live or sealed execution evidence, exact commit, and `selector-engine` green.
+
+### Consumer impact
+
+The approved change alters the Selector-to-Engine input contract but does not approve a change to the downstream Tier field name, meaning, or authority. Lab & IES is a potential downstream consumer and needs compatibility evidence only if it reads Tier; no Lab code change is authorised by this amendment. Any downstream output-shape change requires another Program decision.

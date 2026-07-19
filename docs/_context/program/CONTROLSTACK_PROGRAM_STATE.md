@@ -234,3 +234,12 @@ P2 Checkpoint 1 is **IMPLEMENTATION COMPLETE / GATE GREEN / COMMIT BLOCKED BY SH
 - **VERIFIED PROGRAM FINDING:** LAB-017 is absent from Program memory and its exact seam contract, files, producer/consumer impact, compatibility, rollback, and acceptance envelope are unknown here.
 - **DECISION:** LAB-017 remains held and is not authorised for implementation.
 - **OWNER:** the Lab orchestrator records the exact seam envelope; Program & Integrate then decides approval. Patrick has no action.
+
+## 2026-07-19 Selector Tier authority approval state
+
+- **REPORTED DIAGNOSIS:** Selector registration and candidate mapping require manually committed Tier before Engine execution, while Tier is derived only by Engine/Lex after execution; the current contract is therefore unsatisfiable and blocks Engine work.
+- **PROGRAM DECISION:** approved with conditions to remove Tier from Selector eligibility/candidate authority and derive it exclusively at the server-owned Engine/Lex boundary.
+- **PRESERVED:** all other required inputs, source authority, read-only/no-write operation, explicit Control selection, and no fabricated project truth.
+- **FAIL-CLOSED RULE:** no default or client-supplied Tier authority; ambiguous or unavailable derivation must produce a specific blocker.
+- **DOWNSTREAM:** no Tier output-shape change is approved. Lab & IES is a potential compatibility consumer only; no Lab implementation is authorised unless a separate incompatibility parcel is evidenced.
+- **NEXT:** Selector may commission the bounded implementation and cite the Program decision and seam-contract amendment recorded in this commit. Patrick has no action.

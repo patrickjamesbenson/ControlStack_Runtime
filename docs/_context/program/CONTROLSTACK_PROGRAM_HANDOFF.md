@@ -389,3 +389,11 @@ Lab reports LAB-016 complete and pushed with all checks green at 159/159 and a f
 LAB-017 remains **HELD / NOT APPROVED** because Program memory contains no definition of the proposed seam change. Approval requires a Lab-generated immutable envelope naming the objective, producer and consumer, old/new contract, exact files in and out of scope, LAB-016 dependency, compatibility and rollback, focused tests, `lab-ies` gate, dirty-tree protections, and expected commit/handoff evidence.
 
 No LAB-017 implementation is authorised. The Lab orchestrator supplies the missing envelope; Program then records the approve/decline decision. Patrick has no manual action.
+
+## 2026-07-19 Selector Tier seam approval
+
+Program has approved, with conditions, the Selector proposal to remove manually committed Tier from pre-Engine registration eligibility and candidate construction. Tier is now approved as a server-owned Engine/Lex consequence derived from source-backed inputs at execution, not as Selector input or manually committed project truth.
+
+The Selector parcel must preserve every other required field, read-only/no-write behaviour, explicit Control selection, and current downstream Tier result semantics. It must reject Tier as client authority, avoid defaults and fabrication, produce a specific blocker when derivation is unavailable or ambiguous, update the contract fixtures and tests, pass `selector-engine`, and supply live or sealed registration/invocation evidence plus the immutable commit receipt.
+
+No Lab code change is authorised. Lab & IES is treated as a potential compatibility consumer only if it reads the derived Tier result; any incompatibility or output-shape change requires a separate bounded decision and parcel. Selector may now proceed under the recorded Program decision. Patrick has no action.
