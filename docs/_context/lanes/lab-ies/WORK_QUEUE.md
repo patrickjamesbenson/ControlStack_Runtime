@@ -241,7 +241,7 @@ Evidence: `952b2ba40c5a5ea1c7e217c9c1dcd9a19170e648`, confirmed on origin.
   - `packages/lab-kernel/ies-toolkit/nvbComponents.js`
   - `tests/lab-kernel/nvbComponents.test.js`
 - seam envelope: `docs/_context/lanes/lab-ies/LAB-018_023_027_BATCH_SEAM_ENVELOPE.md`, version 1; approved unchanged by Program & Integrate on 2026-07-20.
-- batch sequence: active parcel; LAB-018 is completed and closed out.
+- batch sequence: completed parcel; LAB-018 and LAB-019 are completed and closed out.
 - prohibitions:
   - no embedded duplicate source catalogue;
   - no direct RuntimeData database access or Program reader copy;
@@ -254,7 +254,9 @@ Evidence: `952b2ba40c5a5ea1c7e217c9c1dcd9a19170e648`, confirmed on origin.
 - depends on: LAB-016-nvb-offline-fixtures
 - on success next: LAB-020-document-register-contract after recorded Integrate approval
 - seam change: yes
-- status: ready
+- status: done
+
+Evidence: `6c835a01811d6cb5ddf6558ed7cd65782403687b`, confirmed on origin.
 
 ### Q-10 Document register contract
 - id: LAB-020-document-register-contract
@@ -263,7 +265,7 @@ Evidence: `952b2ba40c5a5ea1c7e217c9c1dcd9a19170e648`, confirmed on origin.
   - `packages/lab-kernel/ies-toolkit/docRegister.js`
   - `tests/lab-kernel/docRegister.test.js`
 - seam envelope: `docs/_context/lanes/lab-ies/LAB-018_023_027_BATCH_SEAM_ENVELOPE.md`, version 1; approved unchanged by Program & Integrate on 2026-07-20.
-- batch sequence: approved but sequence-blocked until the active parcel is completed and closed out.
+- batch sequence: active parcel; LAB-019 is completed and closed out.
 - prohibitions:
   - no filesystem, browser-storage, network or database persistence;
   - no upload route or Program implementation;
@@ -275,7 +277,7 @@ Evidence: `952b2ba40c5a5ea1c7e217c9c1dcd9a19170e648`, confirmed on origin.
 - depends on: LAB-017-reference-resolver-contract
 - on success next: LAB-021-emergency-selection-contract after recorded Integrate approval
 - seam change: yes
-- status: blocked
+- status: ready
 
 ### Q-11 Emergency selection contract
 - id: LAB-021-emergency-selection-contract

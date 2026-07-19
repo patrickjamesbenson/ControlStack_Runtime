@@ -6,6 +6,53 @@
 - Historical handoff content is retained as reported context unless freshly reverified.
 - Test output proves only the behaviour exercised by the named tests; low-level merge tests do not by themselves prove completion of the final governed merge.
 
+## LAB-019 component projection contract — 2026-07-20
+
+### Identity and scope
+
+- starting HEAD: `9a8cce7f3963b999e8d495e5ff5b0f0c9bf224d8`;
+- queue item: `LAB-019-component-projection-contract`;
+- approved consolidated seam envelope: version 1, unchanged;
+- authorised implementation paths only:
+  - `packages/lab-kernel/ies-toolkit/nvbComponents.js`;
+  - `tests/lab-kernel/nvbComponents.test.js`.
+
+### Behaviour evidence
+
+The completed contract:
+
+- exports only the approved version-1 component-catalogue API and schema constants;
+- projects caller-supplied rows only and contains no loader or embedded catalogue;
+- groups boards by exact family, LED-chip and vendor tuple;
+- canonicalises, deduplicates and sorts CCT values numeric-first while applying the exact tunable rules;
+- fails closed on conflicting CRI, thermal, life, ambient, warranty or datasheet values instead of selecting the first row;
+- deduplicates drivers only by exact non-empty model and rejects conflicting duplicates;
+- requires unique exact optic BOM IDs and emits stable ascending output order;
+- returns deeply immutable plain-data projections without mutating source rows;
+- contains no direct RuntimeData/database access, copied Program reader, persistence, browser storage, clock, random or Selector option-generation seam.
+
+### Test and gate evidence
+
+- focused changed-file `lab-ies` execution: 191/191 passed;
+- independent full `lab-ies` gate: 191/191 passed;
+- gated feature commit execution: 191/191 passed;
+- failed, cancelled, skipped and todo counts were zero in every execution.
+
+### Commit and push evidence
+
+- feature commit: `6c835a01811d6cb5ddf6558ed7cd65782403687b`;
+- subject: `lab: checkpoint component projection contract`;
+- files: exactly the two authorised implementation paths;
+- push: origin `lane/code-pilot-lab`, confirmed successful;
+- no HTML, fixture, document-register, Program, Runtime, Engine or Selector path changed;
+- protected dirty paths and the unstaged branch-HEAD marker were preserved.
+
+### Resulting queue boundary
+
+- LAB-019 is `done`.
+- LAB-020 is approved and becomes the single next `ready` item.
+- LAB-021, LAB-022, LAB-023 and LAB-027 remain approved but sequence-blocked.
+
 ## LAB-018 NVB resolution contract — 2026-07-20
 
 ### Identity and scope
