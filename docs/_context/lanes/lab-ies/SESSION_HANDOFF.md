@@ -2,7 +2,7 @@
 
 ## Session purpose
 
-This handoff records the stale-head reconciliation of completed LAB-021 emergency selection, preserves the permanent charter authority for both standing prompts, and identifies LAB-022 as the single next runnable parcel.
+This handoff records completed LAB-022 governed reference composition, preserves the permanent charter authority for both standing prompts, and identifies LAB-023 as the single next runnable parcel.
 
 ## Identity
 
@@ -12,11 +12,11 @@ This handoff records the stale-head reconciliation of completed LAB-021 emergenc
 - Branch: `lane/code-pilot-lab`
 - Gate: `lab-ies`
 - Standing prompt authority: `docs/_context/lanes/lab-ies/LANE_CHARTER.md` contains both worker and orchestrator prompts
-- Starting HEAD for LAB-021: `5ac6b8bc80237de00ebe72f686aa740eeffa1522`
-- Completed feature checkpoint: `066fcc658491a65b85108b83e64f31341ba5e1bb`
-- Feature subject: `lab: checkpoint emergency selection contract`
-- Feature checkpoint present in current branch history and included in the next lane-only push
-- Consolidated seam envelope: `docs/_context/lanes/lab-ies/LAB-018_023_027_BATCH_SEAM_ENVELOPE.md`, version 1, approved unchanged for LAB-021 and expressly ratified for LAB-022
+- Starting HEAD for LAB-022: `340ab2130211567e0401e24a92c396b4319c63f4`
+- Completed feature checkpoint: `7fcb296c73ba52c7e70090b0b42323fcbe7a3feb`
+- Feature subject: `lab: checkpoint governed reference composition kernel`
+- Feature checkpoint confirmed on origin `lane/code-pilot-lab`
+- Consolidated seam envelope: `docs/_context/lanes/lab-ies/LAB-018_023_027_BATCH_SEAM_ENVELOPE.md`, version 1, expressly ratified for LAB-022 and approved unchanged for LAB-023
 - Branch-HEAD guard checkpoint: `6d34e500d407d5335e5eebb317636a67a5e98618`
 
 ## Branch-HEAD guard
@@ -27,27 +27,25 @@ After every documentation push, only the `Recorded branch HEAD` field is refresh
 
 ## Completed queue item
 
-`LAB-021-emergency-selection-contract` is complete.
+`LAB-022-reference-composition-kernel` is complete.
 
 Exactly these two feature files were committed:
 
 ```text
-packages/lab-kernel/ies-toolkit/zencontrolEmergency.js
-tests/lab-kernel/zencontrolEmergency.test.js
+packages/lab-kernel/ies-toolkit/iesMerge.js
+tests/lab-kernel/iesReferenceComposition.test.js
 ```
 
-The module now exposes only the approved version-1 advisory emergency-selection contract. Candidate selection uses published voltage windows, blocks the shared 50 V boundary, preserves published/derived/unconfirmed distinctions and permits only published power, duration and design-life combinations.
+The module now exposes only the approved version-1 governed reference-composition candidate contract. It requires exactly two unique direct GT/OPT parents, preserves their order as provenance-significant, validates their sealed identities and exact one-millimetre photometric basis, and sums candela only cell-by-cell on exactly matching grids.
 
-Unsupported inputs and the known battery-publication conflict fail closed. Nominal current is advisory arithmetic only; procurement release stays false; procurement blockers remain explicit; emergency and EWIS assembly verification remain null. No ordering, persistence, route, network, filesystem, browser-storage, HTML, Program, Runtime, Engine or Selector implementation was added.
-
-The feature checkpoint landed while this documentation task was in progress. The branch-HEAD guard therefore required memory-only reconciliation and prohibited execution of LAB-022 in this run.
+Each parent-owned G12 wall-power value is counted once while shared overhead remains unresolved. The output is a deeply immutable non-authoritative `MERGED_CANDIDATE` with no allocated identity, approval, authority hash, seal or inherited assembly-owned values. No interpolation, resampling, N-parent handling, UI, persistence, route, Program, Runtime, Engine or Selector implementation was added.
 
 ## Validation evidence
 
-- Independent changed-file/full `lab-ies` execution including the dedicated LAB-021 test: 215/215 passed.
-- Feature checkpoint subject and authorised file pair match current repository history.
+- Focused changed-file `lab-ies` execution including the dedicated LAB-022 test: 232/232 passed.
+- Independent full `lab-ies` gate: 232/232 passed.
+- Gated feature commit execution: 232/232 passed.
 - Failed, cancelled, skipped and todo counts were zero.
-- Documentation reconciliation gate: 215/215 passed with zero failed, cancelled, skipped or todo.
 
 ## Git and protected worktree state
 
@@ -57,10 +55,10 @@ The protected working-tree state after documentation closeout must remain:
 
 - staged: 0;
 - modified: 1 — only the unstaged `Recorded branch HEAD` synchronisation marker in `LANE_STATE.md`;
-- untracked: 28;
+- untracked: 27;
 - deleted: 0.
 
-The 28 protected untracked paths remain exactly those recorded in `LANE_STATE.md`. In particular, these explicitly non-queued paths remain untouched:
+The 27 protected untracked paths remain exactly those recorded in `LANE_STATE.md`. In particular, these explicitly non-queued paths remain untouched:
 
 ```text
 README.zip
@@ -84,19 +82,22 @@ tests/selectorCascadeCorrectness.test.js
 - `LAB-018-nvb-resolution-contract`: `done` and confirmed on origin.
 - `LAB-019-component-projection-contract`: `done` and confirmed on origin.
 - `LAB-020-document-register-contract`: `done` and confirmed on origin.
-- `LAB-021-emergency-selection-contract`: `done` and present in current branch history.
+- `LAB-021-emergency-selection-contract`: `done` and confirmed on origin.
+- `LAB-022-reference-composition-kernel`: `done` and confirmed on origin.
 - Consolidated envelope: `LAB-018_023_027_BATCH_SEAM_ENVELOPE.md`, version 1, approved for all seven seams.
-- `LAB-022-reference-composition-kernel`: `ready` and the only active parcel under its ratified owner policy.
-- LAB-023 and LAB-027: approved but sequence-blocked.
-- Ready items: exactly one — LAB-022.
+- `LAB-023-nvb-lab-adapter`: `ready` and the only active parcel.
+- LAB-027: approved but sequence-blocked.
+- Ready items: exactly one — LAB-023.
 
 Program reported gate 45/45 passed, the approval decision committed and pushed, and its tree clean. No parallel or combined implementation is authorised.
 
-LAB-022 is approved only under its ratified binary-composition policy: exactly two unique non-MERGED parents, immutable order-significant provenance, exactly matching photometric grids with no interpolation/resampling, and allocation/authority/approval/sealing outside the kernel. Duplicate or pre-composed parents, reordered or missing provenance, grid mismatch and governance-boundary crossings must fail closed.
+LAB-022 remains governed by its ratified binary-composition policy: exactly two unique non-MERGED parents, immutable order-significant provenance, exactly matching photometric grids with no interpolation/resampling, and allocation/authority/approval/sealing outside the kernel. Duplicate or pre-composed parents, reordered or missing provenance, grid mismatch and governance-boundary crossings fail closed.
+
+LAB-023 is approved under the exact version-1 immutable Lab projection contract. It may consume only the committed LAB-018 resolution and LAB-017 safe identity projections; unresolved values remain explicit, no ID or timestamp is generated, and assembly verification remains null.
 
 LAB-017 remains governed by its approved version-1 envelope. Program retains all production allocation, live source reading, hosting, routing, persistence, authentication, CRM integration, deployment and endpoint ownership.
 
-This reconciliation run stops after the documentation closeout and does not execute LAB-022. The next safe action is a fresh standing-worker batch beginning with LAB-022. After each successful documentation closeout, that worker may continue sequentially under the five-parcel charter until the first recorded boundary.
+The next safe action is LAB-023 in this same standing-worker batch. After its successful documentation closeout, the worker continues sequentially under the five-parcel charter until the first recorded boundary.
 
 ## LAB-017 immutable completion receipt
 

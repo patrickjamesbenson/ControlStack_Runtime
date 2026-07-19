@@ -64,6 +64,52 @@ For human-observation acceptance, the worker must stop before making a completio
 
 The operating model is recorded in `LANE_CHARTER.md`, `DECISION_LOG.md`, `LANE_STATE.md` and `WORK_QUEUE.md`. Both standing prompts live only in the stable charter; `SESSION_HANDOFF.md` carries launch pointers and current session evidence.
 
+## LAB-022 governed reference composition kernel — 2026-07-20
+
+### Identity and scope
+
+- starting HEAD: `340ab2130211567e0401e24a92c396b4319c63f4`;
+- queue item: `LAB-022-reference-composition-kernel`;
+- approved consolidated seam envelope: version 1 with the expressly ratified binary-composition policy;
+- authorised implementation paths only:
+  - `packages/lab-kernel/ies-toolkit/iesMerge.js`;
+  - `tests/lab-kernel/iesReferenceComposition.test.js`.
+
+### Behaviour evidence
+
+The completed kernel:
+
+- exports only the approved version-1 composition-candidate API and schema constants;
+- requires exactly two unique direct GT/OPT sealed-reference parents and preserves their input order as provenance-significant;
+- validates the bounded sealed DTO identity, approval, raw SHA fields, one-millimetre basis, metadata, angle counts, candela dimensions and exact parent-owned G12 value;
+- requires exact G5 photometric type, G6 units, G7/G8/G9 dimensions and coincident angle grids;
+- sums finite non-negative candela cell-by-cell without interpolation, resampling, rotation or translation;
+- sums each parent-owned wall-power value once and leaves shared overhead unresolved;
+- emits a deeply immutable non-authoritative `MERGED_CANDIDATE` without ID, serial, seal time, approval, authority hash, reference hash, inherited assembly identity, internal ambient, emergency verification or EWIS verification;
+- leaves caller inputs unchanged and contains no UI, persistence, route, allocation, Program, Runtime, Engine or Selector implementation seam.
+
+### Test and gate evidence
+
+- focused changed-file `lab-ies` execution: 232/232 passed;
+- independent full `lab-ies` gate: 232/232 passed;
+- gated feature commit execution: 232/232 passed;
+- failed, cancelled, skipped and todo counts were zero in every execution.
+
+### Commit and push evidence
+
+- feature commit: `7fcb296c73ba52c7e70090b0b42323fcbe7a3feb`;
+- subject: `lab: checkpoint governed reference composition kernel`;
+- files: exactly the two authorised implementation paths;
+- push: origin `lane/code-pilot-lab`, confirmed successful;
+- no HTML, fixture, authority, approval, sealing, Program, Runtime, Engine or Selector path changed;
+- protected dirty paths and the unstaged branch-HEAD marker were preserved.
+
+### Resulting queue boundary
+
+- LAB-022 is `done`.
+- LAB-023 is approved and becomes the single next `ready` item.
+- LAB-027 remains approved but sequence-blocked.
+
 ## LAB-021 emergency selection contract and stale-head reconciliation — 2026-07-20
 
 ### Trigger and classification

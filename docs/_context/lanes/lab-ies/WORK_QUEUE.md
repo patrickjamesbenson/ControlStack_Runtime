@@ -317,7 +317,7 @@ Evidence: `066fcc658491a65b85108b83e64f31341ba5e1bb`, confirmed by current repos
   - `packages/lab-kernel/ies-toolkit/iesMerge.js`
   - `tests/lab-kernel/iesReferenceComposition.test.js`
 - seam envelope: `docs/_context/lanes/lab-ies/LAB-018_023_027_BATCH_SEAM_ENVELOPE.md`, version 1; approved by Program & Integrate on 2026-07-20 with the exact ratified binary-composition policy.
-- batch sequence: active parcel; LAB-021 is completed and closed out.
+- batch sequence: completed parcel; LAB-018 through LAB-022 are completed and closed out.
 - ratified policy: exactly two unique non-MERGED parents; immutable order-significant provenance; exactly matching grids with no interpolation/resampling; allocation, authority, approval and sealing remain outside the kernel; all violations fail closed.
 - prohibitions:
   - no UI/HTML/CSS;
@@ -331,7 +331,9 @@ Evidence: `066fcc658491a65b85108b83e64f31341ba5e1bb`, confirmed by current repos
 - depends on: LAB-017-reference-resolver-contract
 - on success next: LAB-023-nvb-lab-adapter after recorded Integrate approval
 - seam change: yes
-- status: ready
+- status: done
+
+Evidence: `7fcb296c73ba52c7e70090b0b42323fcbe7a3feb`, confirmed on origin.
 
 ### Q-13 NVB Lab adapter
 - id: LAB-023-nvb-lab-adapter
@@ -340,7 +342,7 @@ Evidence: `066fcc658491a65b85108b83e64f31341ba5e1bb`, confirmed by current repos
   - `packages/lab-kernel/ies-toolkit/nvbLabAdapter.js`
   - `tests/lab-kernel/nvbLabAdapter.test.js`
 - seam envelope: `docs/_context/lanes/lab-ies/LAB-018_023_027_BATCH_SEAM_ENVELOPE.md`, version 1; approved unchanged by Program & Integrate on 2026-07-20.
-- batch sequence: approved but sequence-blocked until the active parcel is completed and closed out.
+- batch sequence: active parcel; LAB-022 is completed and closed out.
 - prohibitions:
   - no mutation of sealed DTOs or approved authority records;
   - no diagnostic `fingerprint()` identity generation;
@@ -352,7 +354,7 @@ Evidence: `066fcc658491a65b85108b83e64f31341ba5e1bb`, confirmed by current repos
 - depends on: LAB-017-reference-resolver-contract, LAB-018-nvb-resolution-contract
 - on success next: LAB-024-resolver-fixture-corpus
 - seam change: yes
-- status: blocked
+- status: ready
 
 ### Q-14 Offline resolver fixture corpus
 - id: LAB-024-resolver-fixture-corpus
