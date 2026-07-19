@@ -2,7 +2,7 @@
 
 ## Session purpose
 
-This handoff records completion of standing-worker queue item `LAB-012-lab-style-foundation` and the exact next safe action.
+This handoff records completion of standing-worker queue item `LAB-013-polar-renderer` and the exact next safe action.
 
 ## Identity
 
@@ -11,22 +11,24 @@ This handoff records completion of standing-worker queue item `LAB-012-lab-style
 - Root: `C:\ControlStack_Worktrees\code-pilot-lab`
 - Branch: `lane/code-pilot-lab`
 - Gate: `lab-ies`
-- Starting HEAD: `d0577a9d0157c53c56206ded32418a6746e0bdd8`
-- Completed feature checkpoint: `e7a869e99c8b504e842d861bb5b6cbf9708e4d8c`
-- Feature subject: `lab: checkpoint shared Lab style foundation`
+- Starting HEAD: `f397cd5928f9a33288c5f465517d5e241124708e`
+- Completed feature checkpoint: `4339ecc9beb86fe5a1996b0715c809211cdcd920`
+- Feature subject: `lab: checkpoint canonical polar renderer`
 - Feature checkpoint confirmed on origin `lane/code-pilot-lab`
 
 ## Completed queue item
 
-`LAB-012-lab-style-foundation` is complete.
+`LAB-013-polar-renderer` is complete.
 
 Exactly this feature file was committed:
 
 ```text
-packages/lab-kernel/ies-toolkit/lab.css
+packages/lab-kernel/ies-toolkit/iesPolar.js
 ```
 
-The stylesheet remains presentation-only and self-contained. The prohibited Google Fonts import was removed; existing local/system fallbacks, Lab classes and legacy variable aliases remain. No HTML, JavaScript, authority vocabulary, business logic, persistence, network or cross-lane styling path was changed.
+The module now provides the canonical deterministic `niceCeil` and `renderPolar` implementation. It fails safely to a stable empty projection for missing or malformed grids, preserves supported single-plane and symmetry-grid rendering, does not mutate input, and emits presentation-only SVG. Static search found no DOM lookup, storage, network, filesystem, authority, normalisation or photometric-mutation seam.
+
+Inline polar snippets remain in protected untracked `labbench.html` and `provenance.html`. They belong to later queue parcels and were not changed or absorbed. The committed `iesPolar.js` module is the canonical import target used by the protected `summary.html` and `bench.html` surfaces.
 
 ## Validation evidence
 
@@ -43,7 +45,7 @@ The final protected working-tree state after documentation closeout must remain:
 
 - staged: 0;
 - modified: 1;
-- untracked: 36;
+- untracked: 35;
 - deleted: 0.
 
 Protected modified path:
@@ -52,7 +54,7 @@ Protected modified path:
 packages/lab-kernel/ies-toolkit/summary.html
 ```
 
-The 36 protected untracked paths remain exactly those recorded in `LANE_STATE.md`. In particular, these explicitly non-queued paths remain untouched:
+The 35 protected untracked paths remain exactly those recorded in `LANE_STATE.md`. In particular, these explicitly non-queued paths remain untouched:
 
 ```text
 README.zip
@@ -71,22 +73,22 @@ tests/selectorCascadeCorrectness.test.js
 
 ## Queue state and next action
 
-- `LAB-012-lab-style-foundation`: `done`.
-- Declared `on success next`: `LAB-013-polar-renderer`.
-- `LAB-013-polar-renderer`: `ready`, because it has no dependencies and requires no owner or Program & Integrate seam approval.
+- `LAB-013-polar-renderer`: `done`.
+- Declared `on success next`: `LAB-014-summary-normalise-surface`.
+- `LAB-014-summary-normalise-surface`: `ready`, because `LAB-012` and `LAB-013` are done and no owner or Program & Integrate seam approval is required.
 
-The exact next safe action is to run a new standing worker against only `LAB-013-polar-renderer` and its sole authorised file:
+The exact next safe action is to run a new standing worker against only `LAB-014-summary-normalise-surface` and its sole authorised file:
 
 ```text
-packages/lab-kernel/ies-toolkit/iesPolar.js
+packages/lab-kernel/ies-toolkit/summary.html
 ```
 
 No subsequent item was executed in this session.
 
 ## Prohibited actions retained
 
-- no work outside the next queue item's authorised files;
-- no HTML/CSS, photometric mutation, normalisation, authority or duplicated polar implementation during LAB-013;
+- no work outside the next queue item's authorised file;
+- no production authority approval/sealing, merge, project generation, persistence, resolver publication, inline duplicate polar kernel or non-canonical keyword emission during LAB-014;
 - no reset, restore, clean, deletion or movement of protected dirty paths;
 - no execution of `scripts/clear_chaff.ps1`;
 - no donor write;

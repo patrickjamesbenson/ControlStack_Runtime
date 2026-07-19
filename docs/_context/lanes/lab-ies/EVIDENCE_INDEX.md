@@ -6,6 +6,52 @@
 - Historical handoff content is retained as reported context unless freshly reverified.
 - Test output proves only the behaviour exercised by the named tests; low-level merge tests do not by themselves prove completion of the final governed merge.
 
+## LAB-013 canonical polar renderer — 2026-07-19
+
+### Identity and scope
+
+Observed through `repo_info`, `repo_git_status`, `repo_git_recent`, `repo_scope_guard`, source inspection, repository grep and the connected gate:
+
+- app: `ControlStack Lab and IES Authority Lane`;
+- lane: `lab-ies`;
+- root: `C:\ControlStack_Worktrees\code-pilot-lab`;
+- branch: `lane/code-pilot-lab`;
+- starting HEAD: `f397cd5928f9a33288c5f465517d5e241124708e`;
+- queue item: `LAB-013-polar-renderer`;
+- authorised path only: `packages/lab-kernel/ies-toolkit/iesPolar.js`;
+- seam change: no.
+
+### Behaviour evidence
+
+The completed canonical renderer:
+
+- keeps `niceCeil` deterministic and bounded for invalid numeric input;
+- treats missing, malformed, non-finite, negative or dimensionally inconsistent photometry as empty presentation data rather than throwing;
+- clones numeric angle and candela rows before rendering and does not mutate caller input;
+- supports a single stored horizontal plane plus standard quadrant, half-azimuth and full-azimuth symmetry coverage;
+- emits deterministic presentation-only SVG;
+- contains no DOM lookup, import, browser-storage, network, filesystem, authority, normalisation or photometric-mutation seam;
+- avoids spreading the complete candela matrix when determining peak intensity.
+
+Repository search found inline polar snippets in protected untracked `labbench.html` and `provenance.html`. Those files are separate future queue items and were not changed or absorbed. `iesPolar.js` is the sole committed polar renderer and the canonical import target already used by the protected `summary.html` and `bench.html` surfaces.
+
+### Test and gate evidence
+
+- Focused changed-file `lab-ies` execution: 159/159 passed.
+- Full `lab-ies` gate: 159/159 passed.
+- Gated feature commit execution: 159/159 passed.
+- Failed, cancelled, skipped and todo counts were all zero in each execution.
+
+### Commit and push evidence
+
+- commit: `4339ecc9beb86fe5a1996b0715c809211cdcd920`;
+- subject: `lab: checkpoint canonical polar renderer`;
+- files: exactly `packages/lab-kernel/ies-toolkit/iesPolar.js`;
+- push: origin `lane/code-pilot-lab`, confirmed successful;
+- post-feature state: staged 0, modified 1, untracked 35, deleted 0;
+- protected modified path: `packages/lab-kernel/ies-toolkit/summary.html`;
+- all unrelated dirty paths were preserved.
+
 ## LAB-012 shared Lab style foundation — 2026-07-19
 
 ### Identity and scope

@@ -115,7 +115,9 @@ Evidence: `e7a869e99c8b504e842d861bb5b6cbf9708e4d8c`, confirmed on origin.
 - depends on: none
 - on success next: LAB-014-summary-normalise-surface
 - seam change: no
-- status: ready
+- status: done
+
+Evidence: `4339ecc9beb86fe5a1996b0715c809211cdcd920`, confirmed on origin.
 
 ### Q-4 Summary normalise surface
 - id: LAB-014-summary-normalise-surface
@@ -133,7 +135,7 @@ Evidence: `e7a869e99c8b504e842d861bb5b6cbf9708e4d8c`, confirmed on origin.
 - depends on: LAB-012-lab-style-foundation, LAB-013-polar-renderer
 - on success next: LAB-015-ugr-surface
 - seam change: no
-- status: queued
+- status: ready
 
 ### Q-5 UGR surface
 - id: LAB-015-ugr-surface
