@@ -191,3 +191,19 @@ This log is append-oriented. Do not silently rewrite historical decisions.
 **Rationale:** Ambient, Mounting, Finishes, the Tier summary, and legacy TIERS diagnostics belong to the broader build preview and are not inputs to the already-approved direct readonly candidate. Rejecting on that outer state before candidate reconstruction made a truthful first-slice registration impossible.
 
 **Consequence:** Broad preview blockers cannot override a complete direct candidate. Missing run, optic, target, CCT, CRI, or explicit source-backed Control; malformed or path-bearing state; blocked constraints; unsafe execution flags; accessories; and indirect emission remain fail closed before dispatch. Registration payload shape, Tier ownership and result meaning, Control authority, no-write flags, the full spec/build gate, and downstream seams remain unchanged. The next proof requires a genuine browser save and visible server-registration acknowledgement.
+
+## 2026-07-20 — Exact SYSTEM capability outranks broad OPTICS applicability
+
+**Decision:** The selected product's direct/indirect capability is determined by the exact selected SYSTEM option. A broad OPTICS system key may describe compatible optic direction but cannot make indirect capability available for another System variant sharing that broad key.
+
+**Rationale:** Current source truth distinguishes direct-only DNX 60 (`60|Square`) from DNX 60 Beam DI (`60|Beam`). Existing lane suppression already reads the exact SYSTEM row and correctly hides indirect lanes for the direct-only product. Broad OPTICS expansion across both `60` variants created only a false auto-consequence.
+
+**Consequence:** `SEL-015` may gate `indirectCapability` through the existing exact selected-System support state. It must preserve the two System variants, legitimate indirect OPTICS data for Beam DI, source authority, direct capability, and every unrelated cascade. No source edit or seam change is authorised.
+
+## 2026-07-20 — Diagnostic presentation text is never selected intent
+
+**Decision:** Hidden, blocked, unavailable, warning, and diagnostic labels cannot satisfy light-output readiness intent. Readiness may capture only an actual selected source-valid option, an explicit manual value, or a valid inherited value on a supported lane.
+
+**Rationale:** `fieldDisplayValue()` currently falls through to diagnostic `effectiveLabel` text. For hidden indirect fields, wording such as `not required or supported` can therefore become a non-empty value and incorrectly set readiness true. Registration then correctly rejects what appears to be indirect intent, even though no user intent exists.
+
+**Consequence:** `SEL-016` must remove diagnostic fallback text from intent capture while preserving truthful direct intent, valid supported indirect intent, and registration's existing refusal of genuine indirect emission. It must not manufacture values or weaken any first-slice safety rule.

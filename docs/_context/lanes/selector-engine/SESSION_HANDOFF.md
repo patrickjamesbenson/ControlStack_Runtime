@@ -306,6 +306,16 @@ The safety boundary remains intact. Missing run, optic, target, CCT, CRI, or exp
 
 The authorised temporary harness visibly executed all eight registration tests in a 113/113 passing gate. It was then removed and proved byte-identical to HEAD. The normal complete lane gate passed 105/105. Exactly the registration client transport and its test were committed and pushed in `c1def0d6c95b09050debc28ce28aceaebd86b811`. No browser save, registration, Engine invocation, RuntimeData mutation, persistence, RunTable, IES, or output generation occurred.
 
-## Next queue item — live registration observation required
+## 2026-07-20 latest diagnosis — two false indirect projections
 
-SEL-002 is ready. Its acceptance cannot be completed from repository evidence: Patrick must use the running application to create one new genuine `project-alpha` browser-session save and trigger server registration, then provide the visible acknowledgement. The worker must not reconstruct an envelope, fabricate project truth, or invoke Engine. SEL-003 remains blocked until an attributable active server-owned revision is proven.
+The attempted live-registration path stopped before acceptance and completed a read-only diagnosis with a clean tree and a 105/105 gate. Direct-only DNX 60 and DNX 60 Beam DI are truthfully distinct in the source. The direct-only product resolves to exact System option `60|Square`, which reports indirect unsupported; Beam DI resolves to `60|Beam` and supports indirect.
+
+The existing indirect-lane suppression is correct because it follows the exact selected System option. The `indirectCapability` auto-consequence is incorrect because a broad indirect OPTICS relationship keyed only to `60` expands across both variants and makes the direct-only product appear to support indirect.
+
+The light-output readiness preview has a separate defect. Hidden or blocked indirect fields can carry diagnostic `effectiveLabel` text such as `not required or supported`. `fieldDisplayValue()` treats that non-empty diagnostic copy as selected intent, so the indirect readiness summaries can become `ready: true`. Registration then correctly rejects the apparent indirect intent from the direct-only first slice. The registration rule must remain unchanged; the false projection must be corrected upstream.
+
+## Next worker batch
+
+`SEL-015` is the sole top ready item and must gate indirect capability through the exact selected SYSTEM support flag without changing source data or legitimate Beam DI optics. After its full closeout, the same worker continues immediately to `SEL-016`, which must ensure diagnostic, hidden, blocked, and unavailable labels never count as selected readiness intent. Both parcels have exact authorised files and regressions in `WORK_QUEUE.md`.
+
+After both repairs close, the worker reaches SEL-002 and must stop with `NEEDS YOU` because the final registration acceptance requires a new genuine browser save and visible acknowledgement. SEL-003 remains blocked until an attributable active server-owned revision is proven. Use the canonical standing worker prompt in `LANE_CHARTER.md`.

@@ -272,7 +272,7 @@ A fresh chat can start either role from one line: read `LANE_CHARTER.md` and act
 
 ## 2026-07-20 SEL-014 registration preflight repair closeout — latest controlling state
 
-**Recorded lane work HEAD:** `c1def0d6c95b09050debc28ce28aceaebd86b811` — `fix(selector): rebuild registration candidate before readiness`.
+**Recorded lane work HEAD:** `f75ef0478f61e987d2188639fbf9795d18441017` — `docs(selector): reconcile lane state after registration repair`.
 
 SEL-014 resumed from the two explicitly preserved authorised edits with no other dirty path. The worker used `tests/engineRunTableDomain.test.js` only as the authorised temporary gate harness, visibly executed all eight registration transport tests, then removed the import and proved the harness file byte-identical to HEAD and absent from the final diff.
 
@@ -280,4 +280,14 @@ Registration preflight now validates the declared projection shape, strips clien
 
 Focused harness execution passed 113/113, including the eight registration transport tests. After harness removal, the normal complete `selector-engine` gate passed 105/105. Exactly the registration client transport and its focused test were staged, gated, committed, and pushed. The ending feature tree was clean. No live browser save, server registration, Engine invocation, RuntimeData mutation, selected-result persistence, RunTable generation, IES generation, or output generation occurred.
 
-SEL-014 is done. SEL-002 is the next ready item, but its acceptance requires a genuine browser save and visible server-registration acknowledgement from the running application. Repository evidence cannot substitute for that live observation. SEL-003 remains blocked behind an attributable active server-owned revision.
+SEL-014 is done. SEL-002 reached a new read-only diagnosis before live registration could complete. SEL-003 remains blocked behind an attributable active server-owned revision.
+
+## 2026-07-20 direct-only indirect-projection diagnosis and repair commission
+
+The read-only worker proved two separate false projections for the current direct-only DNX 60 selection. The exact selected SYSTEM row is `60|Square` and truthfully reports indirect support false; the distinct DNX 60 Beam DI row is `60|Beam` and supports indirect. Existing lane suppression follows that exact selected SYSTEM row and is correct.
+
+The capability auto-consequence is wrong because a broad indirect OPTICS relationship keyed only to `60` expands across both System variants. That broad relationship makes `indirectCapability` appear as `Indirect supported` for direct-only DNX 60 even though the exact selected SYSTEM row forbids indirect. OPTICS direction compatibility must not override exact SYSTEM product capability.
+
+A second defect exists in `selectorLmTemperatureReadinessPreview`: hidden or blocked indirect fields can expose diagnostic `effectiveLabel` text such as `not required or supported`, and `fieldDisplayValue()` treats that diagnostic copy as selected intent. The preview then marks indirect target, CCT/CRI, or Control readiness true. Registration correctly rejects any genuine indirect intent from the first direct-only slice, so this false readiness can still stop registration even after the candidate-specific preflight repair.
+
+`SEL-015` is now the sole top ready item: gate the indirect-capability auto-consequence through the exact selected SYSTEM support flag while preserving legitimate broad OPTICS compatibility for the distinct direct-indirect product. `SEL-016` follows and must prevent hidden, blocked, unavailable, or diagnostic labels from counting as selected intent in the light-output readiness preview. Both are non-seam repairs. `SEL-002` is blocked until both are completed, pushed, activated, and then proven through a new genuine browser save. The current tree is clean and the complete lane gate passed 105/105 during diagnosis.

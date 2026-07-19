@@ -174,7 +174,14 @@ Every completed worker updates this index with:
 - Gated feature commit/push: `c1def0d6c95b09050debc28ce28aceaebd86b811` — `fix(selector): rebuild registration candidate before readiness`; push `10df6e4..c1def0d` to `origin/lane/selector-engine` succeeded — VERIFIED.
 - Feature ending Git state: clean, with no staged, modified, untracked, or deleted paths — VERIFIED.
 - Live operations: no browser save, registration POST, Engine invocation, project or RuntimeData mutation, selected-result persistence, RunTable generation, IES generation, or output generation — VERIFIED for this parcel.
-- Queue result: SEL-014 done; SEL-002 ready but requires genuine browser action and visible server-registration acknowledgement; SEL-003 remains blocked — RECORDED.
+- Queue result: SEL-014 done; SEL-002 initially became ready but then stopped at a newly diagnosed indirect-projection defect before live registration acceptance — RECORDED.
+- New diagnosis execution: read-only repository trace, no changed files, clean starting and ending tree, complete `selector-engine` gate 105/105 — USER-PROVIDED WORKER EVIDENCE AND CURRENT GIT STATUS.
+- Exact SYSTEM truth: direct-only DNX 60 is the exact `60|Square` option with indirect support false; DNX 60 Beam DI is the distinct `60|Beam` option — ACCEPTED SOURCE-BACKED DIAGNOSIS.
+- Correct path: lane suppression resolves the exact selected System option and correctly hides indirect optic and Light/Control lanes for direct-only DNX 60 — ACCEPTED REPOSITORY TRACE.
+- False capability path: broad OPTICS key `60` expands across both System variants and incorrectly leaves `indirectCapability` as `Indirect supported` for the direct-only product — ACCEPTED REPOSITORY TRACE.
+- False readiness path: `fieldDisplayValue()` can treat hidden or blocked diagnostic `effectiveLabel` text as selected intent, marking indirect readiness true without a selected indirect value — ACCEPTED REPOSITORY TRACE.
+- Registration classification: the first-slice refusal of genuine indirect intent remains correct; the defect is the false readiness input, not the registration policy — ACCEPTED DIAGNOSIS.
+- Queue result: SEL-015 ready for exact-System capability gating; SEL-016 blocked behind it for readiness-intent correction; SEL-002 blocked behind both; SEL-003 remains blocked — RECORDED.
 
 ## 2026-07-19 — SEL-012 source-backed Tier ownership repair
 
