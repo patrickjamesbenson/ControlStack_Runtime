@@ -258,6 +258,7 @@ P2 Checkpoint 1 is **IMPLEMENTATION COMPLETE / GATE GREEN / COMMIT BLOCKED BY SH
 - **REPORTED COMPLETE:** LAB-017 was implemented under version 1 with only the reference/resolver helper and its dedicated test committed.
 - **REPORTED VALIDATION:** focused, full, feature-commit, and documentation-closeout checks passed 169/169; pushes were confined to the Lab lane.
 - **REPORTED FINAL STATE:** zero staged, one expected HEAD-marker edit, 32 protected untracked, and zero deleted paths.
-- **PROGRAM ACCEPTANCE:** still open pending exact envelope, feature, and documentation commit identities; exact two implementation path names; exact staged-set proof; and final classified Git receipt.
+- **PROGRAM ACCEPTANCE:** closed on the complete immutable receipt now recorded in the Lab handoff.
+- **PROMOTION:** not performed; main promotion remains a separate Program action requiring the recorded promotion capability.
 - **LAB-018:** remains blocked and is absent from Program seam memory; no implementation is authorised until a separate immutable envelope is approved.
-- **OWNER:** Lab orchestrator supplies the LAB-017 acceptance identifiers and any LAB-018 seam request. Patrick has no action.
+- **OWNER:** Lab orchestrator supplies any LAB-018 seam request. Patrick has no action.

@@ -412,6 +412,8 @@ Lab must cite its exact envelope commit and this approval before commissioning o
 
 Lab reports LAB-017 complete under the approved version-1 envelope. Only the reference/resolver helper and dedicated test were committed; all focused, full, feature-commit, and documentation-closeout checks passed 169/169; both checkpoints were pushed only to the Lab lane; and final state is zero staged, one expected HEAD-marker edit, 32 protected untracked, and zero deleted paths.
 
-Program records this as lane-completion evidence. Final Program acceptance remains open because the receipt does not name the exact envelope, feature, and documentation commit identities, the exact two implementation paths, or the exact staged-set proof required by the approval. The Program app cannot resolve the Lab branch independently, so those identifiers must remain in the Lab handoff for later acceptance.
+Program records final LAB-017 acceptance as closed because the Lab handoff now contains the exact immutable envelope, feature and documentation closeout receipts, exact two implementation paths, exact staged-set proof, final classified Git state, push evidence, and green 169/169 gate. The receipt remains reported evidence because this Program app cannot independently resolve the Lab branch, but no acceptance item remains outstanding and no rework is commissioned.
+
+This is lane-parcel acceptance, not promotion to `main`. Promotion remains subject to the separate Program promotion path and required integration capability.
 
 LAB-018 remains blocked. It has no separate seam envelope in Program memory and no implementation is authorised. The Lab orchestrator prepares that request; Program decides it. Patrick has no action.

@@ -360,3 +360,18 @@ Program acceptance remains open until the Lab handoff carries the exact envelope
 ### LAB-018
 
 LAB-018 remains blocked because no separate seam envelope is recorded in Program memory. The Lab orchestrator prepares that envelope; Program decides it. No queue item is admitted as ready from this update.
+
+## 2026-07-20 — LAB-017 final acceptance closeout
+
+**Status:** ACCEPTED; AWAITING SEPARATE MAIN-PROMOTION CAPABILITY.
+
+### Acceptance closure
+
+The Lab handoff is reported to contain the complete immutable LAB-017 receipt: exact envelope, feature and documentation commits, exact two implementation paths, exact staged-set proof, final classified Git inventory, push evidence, and `lab-ies` 169/169. Program therefore closes the LAB-017 acceptance intake with no amendments and no rework.
+
+### Queue consequence
+
+- LAB-017 is complete and accepted as a lane parcel.
+- LAB-017 is not yet promoted to `main`; that remains a separate integration action.
+- LAB-018 remains blocked and is not admitted as ready until its own seam envelope is approved.
+- No action from Patrick.

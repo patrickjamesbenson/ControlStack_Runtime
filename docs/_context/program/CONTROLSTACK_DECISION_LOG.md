@@ -496,3 +496,22 @@ LAB-018 remains blocked. Program memory contains no LAB-018 seam envelope, so no
 - The reported 169/169 result and protected dirty-tree state are preserved as coordination evidence.
 - LAB-018 may not move to `ready` until its separate seam envelope is approved.
 - Patrick has no manual action.
+
+---
+
+## 2026-07-20 — LAB-017 final Program acceptance
+
+**Status:** ACCEPTED AS AN IMMUTABLE LAB PARCEL; PROMOTION REMAINS SEPARATE.
+
+**Evidence classification:** The Lab lane reports that its handoff now records the exact immutable LAB-017 envelope, feature, and documentation closeout receipts, exact implementation paths, exact staged-set proof, final classified Git state, push evidence, and a green 169/169 `lab-ies` gate. The current Program app cannot independently resolve the Lab branch, so the receipt remains `REPORTED` evidence bound to the immutable Lab handoff.
+
+### Decision
+
+Program closes final LAB-017 acceptance. The implementation is accepted as conforming to the approved version-1 seam envelope, its exact two-file implementation boundary, named compatibility break, rollback sequence, ownership split, and required test classes. No rework or further seam approval is required for LAB-017.
+
+### Boundaries and next state
+
+- This acceptance does not promote the parcel to `main`; promotion remains subject to the separate Program promotion path and tooling capability.
+- Program retains production serial allocation, resolver hosting, route-to-storage mapping, persistence, authentication, deployment, and endpoint ownership.
+- LAB-018 remains blocked and requires its own immutable seam envelope and Program decision.
+- Patrick has no manual action.
