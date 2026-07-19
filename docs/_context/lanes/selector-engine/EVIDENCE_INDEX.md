@@ -191,7 +191,11 @@ Every completed worker updates this index with:
 - Repository result: no files changed, no feature or reconciliation commit, ending tree clean — VERIFIED WORKER EVIDENCE.
 - Gate: complete `selector-engine`, 105 passed, 0 failed — VERIFIED WORKER EVIDENCE.
 - Orchestrator action: `SEL-013` commissioned as the sole top ready read-only diagnosis; `SEL-002` blocked behind it; SEL-003 remains blocked — RECORDED.
-- Required next proof: exact raw safe blocker or reason it is absent/invalid; independent run-intake, factory-input, candidate-mapper, and remaining-input readiness; UI-remediable field versus served-path repair classification — COMMISSIONED.
+- Additional live screen evidence: Run 1 is `1/1 complete` and complete as safe intent, so incomplete run intake is excluded as the present blocker — USER-PROVIDED LIVE EVIDENCE.
+- Live selected authority: Control `DALI-2 DT6`, System `DNX 60`, direct optic `Opal 60`, direct target `1000 lm/m`, and `3000K / CRI80` are selected; the Control authority repair is working live — USER-PROVIDED LIVE EVIDENCE.
+- Live readiness summary: 13 missing inputs, 18 blocked selections, next safe action to review blocked selections, and readonly Engine blocked fail-closed — USER-PROVIDED LIVE EVIDENCE.
+- Tier summary anomaly: Tier still appears as `missing`, represented for donor parity but unavailable from current source, despite SEL-012 removing Tier from registration eligibility — OPEN DIAGNOSIS QUESTION, NOT YET CLASSIFIED.
+- Required next proof: exact raw safe blocker or reason it is absent/invalid; whether Tier still contaminates broader readiness; itemised user-suppliable versus source-impossible missing/blocked selections; independent factory-input and candidate-mapper readiness; and whether current-source registration is possible or an authority refresh is prerequisite — COMMISSIONED.
 
 ## 2026-07-19 — project-alpha registration refusal evidence and SEL-011 commission
 

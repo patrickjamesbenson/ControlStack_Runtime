@@ -40,6 +40,34 @@ Use only the connected CS Selector & Engine v2 app. You are a worker, not the or
    feature and reconciliation commit/push hashes, final Git state, doc updates, next queue item.
 ```
 
+## Communication rule
+
+```text
+I am not a developer. Never make me read commit hashes, file paths, item ids or error codes.
+
+When you need something from me, use exactly this shape:
+
+NEEDS YOU
+What: one plain sentence, no jargon.
+Do: numbered steps, three maximum, click by click. If I must paste text, print the exact text
+    in a code block ready to copy. Never tell me to find, look up, scroll back to or re-use
+    something from another chat - if I need it, print it in full.
+Why: one short line on what it unblocks.
+Recommend: what you would do if it were your call.
+
+If you need nothing from me, do not print NEEDS YOU. Carry on and tell me in one line what you
+did and what happens next.
+
+Never ask a question you can answer yourself from the repository. Never ask me to confirm the
+obvious. If there is a clear best next move and it is safe and reversible, take it and tell me
+afterwards.
+
+Otherwise begin replies with one status line: AUTO / SEND TO INTEGRATE / NEEDS YOU / STOPPED.
+
+Never use NEEDS YOU for progress updates, status notes, or "don't interrupt me" messages.
+NEEDS YOU means I must physically do something. Everything else is one plain line.
+```
+
 **For:** A fresh Selector & Engine orchestrator with no chat history.
 **State date:** 2026-07-19, Australia/Sydney.
 
@@ -283,5 +311,7 @@ Focused bounded execution passed 127/127, including the normally omitted mapper 
 The top ready item is now `SEL-013 — Diagnose the current non-Tier pre-Engine readiness boundary`. It is strictly read-only. It must expose the actual safe condition hidden behind the fallback `selected-project-registration-client-pre-engine-eligibility-not-ready`, or prove why the saved projection lacks a usable blocker. It must report run-intake readiness, remaining factory-approved input readiness, candidate-mapper readiness, subordinate blockers, committed run state, and every remaining required input separately.
 
 The diagnosis must say plainly whether Patrick can fix the project by filling or selecting exact fields on screen or whether the served projection/registration path requires a bounded code repair. It may recommend but must not implement a repair. If genuine browser state cannot be inspected through the connected app, it must return `NEEDS YOU` with no more than three exact clicks and the exact safe fields to copy. It must not save again, dispatch registration, invoke Engine, fabricate state, reopen Tier, or write repository documentation.
+
+New live context is already part of SEL-013: Run 1 is `1/1 complete` as safe intent, so run intake is not the blocker; Control `DALI-2 DT6` is selected and live; System `DNX 60`, direct optic `Opal 60`, direct target `1000 lm/m`, and `3000K / CRI80` are selected. The screen reports 13 missing inputs and 18 blocked selections, directs review of blocked selections, keeps readonly Engine fail-closed, and still shows Tier as a missing donor-parity summary row unavailable from current source. The worker must determine whether Tier still contaminates general readiness, classify all missing/blocked items by user versus source authority, and decide whether current-source registration is possible or an authority refresh is prerequisite.
 
 `SEL-002` is blocked behind SEL-013. SEL-003 remains blocked behind SEL-002. Use the standing worker prompt at the top of this file verbatim; do not create a bespoke diagnosis prompt.
