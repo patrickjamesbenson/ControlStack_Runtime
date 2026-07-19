@@ -416,4 +416,12 @@ Program records final LAB-017 acceptance as closed because the Lab handoff now c
 
 This is lane-parcel acceptance, not promotion to `main`. Promotion remains subject to the separate Program promotion path and required integration capability.
 
-LAB-018 remains blocked. It has no separate seam envelope in Program memory and no implementation is authorised. The Lab orchestrator prepares that request; Program decides it. Patrick has no action.
+The earlier LAB-018 hold is superseded by the consolidated seven-seam decision below. LAB-018 is seam-approved but remains subject to the same one-parcel-at-a-time sequencing as the other approved seams. Patrick has no action.
+
+## 2026-07-20 consolidated seven-seam decision
+
+Program has approved the immutable consolidated Lab envelope covering seven blocked seams. The six ordinary seams are approved unchanged. The governed reference-composition kernel is approved only with exactly two unique non-merged parents, order-significant provenance, exact matching photometric grids with no interpolation or resampling, and all allocation, authority, approval, and sealing outside the kernel.
+
+The kernel must fail closed on duplicate or pre-composed parents, provenance loss or reordering, grid mismatch, or any attempt to cross the external governance boundary. It may validate and compose only; it does not gain production identity, authority, persistence, approval, sealing, resolver, route, endpoint, authentication, or deployment ownership.
+
+This approval is consolidated only at the seam-decision level. Lab implementation remains one parcel at a time: only the next eligible parcel may move to `ready`, and every subsequent parcel remains sequence-blocked until the current parcel is committed, pushed, closed out, and safe. Each parcel returns its own immutable acceptance receipt. Patrick has no action.

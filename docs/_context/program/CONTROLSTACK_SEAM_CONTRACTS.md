@@ -274,3 +274,28 @@ The compatibility break is accepted only for consumers explicitly named by the v
 ### Evidence and completion
 
 The Lab lane must bind the exact envelope commit to this Program approval before commissioning work. Acceptance requires the exact implementation commit, the two-file scope proof, focused evidence for all envelope test classes, full `lab-ies` green, protected-dirt exclusion, final Git inventory, push receipt, and updated lane handoff.
+
+## 2026-07-20 approved consolidated Lab seams — seven-parcel envelope
+
+**Status:** APPROVED AT SEAM LEVEL; IMPLEMENTATION SEQUENTIAL.
+
+### Six non-kernel seams
+
+The six non-kernel seams named by the immutable consolidated Lab envelope are approved unchanged. Their recorded interfaces, data shapes, implementation boundaries, consumers, compatibility terms, rollback sequences, ownership limits, rejection rules, and tests are the complete authority for those parcels.
+
+### Governed reference-composition kernel
+
+The kernel contract is approved only when all of the following remain true:
+
+- exactly two parent references are supplied;
+- the parents are unique and neither is already merged or composed;
+- first-parent and second-parent order is significant provenance and is preserved immutably;
+- both parents expose exactly matching photometric grids, including angles, dimensions, and sample positions;
+- interpolation, resampling, tolerance alignment, grid repair, and silent normalisation are prohibited;
+- production allocation, authority, approval, and sealing remain outside the kernel.
+
+The kernel is a pure, fail-closed validation and composition boundary. It must reject duplicate parents, pre-composed parents, missing or reordered provenance, non-identical grids, and attempts to allocate, authorise, approve, seal, persist, host, route, authenticate, deploy, or own an endpoint.
+
+### Sequencing rule
+
+This consolidated approval does not combine implementation parcels. Only one Lab parcel may be active. The next eligible parcel may move to `ready`; all later approved parcels remain sequence-blocked until the active parcel is completed and closed out. Every parcel requires an independent immutable receipt and Program acceptance. Any contract drift or additional seam requires a new decision.

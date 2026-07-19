@@ -260,5 +260,14 @@ P2 Checkpoint 1 is **IMPLEMENTATION COMPLETE / GATE GREEN / COMMIT BLOCKED BY SH
 - **REPORTED FINAL STATE:** zero staged, one expected HEAD-marker edit, 32 protected untracked, and zero deleted paths.
 - **PROGRAM ACCEPTANCE:** closed on the complete immutable receipt now recorded in the Lab handoff.
 - **PROMOTION:** not performed; main promotion remains a separate Program action requiring the recorded promotion capability.
-- **LAB-018:** remains blocked and is absent from Program seam memory; no implementation is authorised until a separate immutable envelope is approved.
-- **OWNER:** Lab orchestrator supplies any LAB-018 seam request. Patrick has no action.
+- **LAB-018 HISTORICAL HOLD:** superseded by the consolidated seven-seam approval below; current readiness is governed by one-parcel-at-a-time sequencing.
+- **OWNER:** no separate LAB-018 request remains outstanding. Patrick has no action.
+
+## 2026-07-20 consolidated seven-seam approval state
+
+- **REPORTED:** Lab has committed one immutable envelope covering seven blocked seams and reports `lab-ies` 169/169.
+- **PROGRAM DECISION:** approve the six non-kernel seams unchanged and approve the governed reference-composition kernel with explicit constraints.
+- **KERNEL CONTRACT:** exactly two unique non-merged parents; parent order preserved as significant provenance; exact matching photometric grids with no interpolation or resampling; allocation, authority, approval, and sealing remain external.
+- **FAIL-CLOSED:** duplicate or pre-composed parents, provenance loss/reordering, grid mismatch, or governance expansion must be rejected specifically.
+- **SEQUENCING:** only the next eligible parcel may become `ready`; all later approved parcels remain sequence-blocked. No parallel implementation is authorised.
+- **NEXT:** Lab records this approval, advances one parcel at a time, and returns a separate immutable receipt for each. Patrick has no action.

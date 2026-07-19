@@ -359,7 +359,7 @@ Program acceptance remains open until the Lab handoff carries the exact envelope
 
 ### LAB-018
 
-LAB-018 remains blocked because no separate seam envelope is recorded in Program memory. The Lab orchestrator prepares that envelope; Program decides it. No queue item is admitted as ready from this update.
+This historical LAB-018 hold is superseded by the consolidated seven-seam approval below. LAB-018 no longer requires a separate envelope decision; readiness is governed by the one-parcel-at-a-time sequencing rule.
 
 ## 2026-07-20 — LAB-017 final acceptance closeout
 
@@ -373,5 +373,23 @@ The Lab handoff is reported to contain the complete immutable LAB-017 receipt: e
 
 - LAB-017 is complete and accepted as a lane parcel.
 - LAB-017 is not yet promoted to `main`; that remains a separate integration action.
-- LAB-018 remains blocked and is not admitted as ready until its own seam envelope is approved.
+- The earlier LAB-018 envelope hold is superseded by the consolidated decision below; readiness remains sequence-controlled.
 - No action from Patrick.
+
+## 2026-07-20 — Consolidated seven-seam admission
+
+**Status:** ALL SEVEN SEAM-APPROVED; ONE PARCEL AT A TIME.
+
+### Admission decision
+
+- The six non-kernel seams named in the immutable consolidated Lab envelope are approved unchanged.
+- The governed reference-composition kernel is approved only with exactly two unique non-merged parents, order-significant provenance, exact matching photometric grids with no interpolation or resampling, and all allocation, authority, approval, and sealing outside the kernel.
+- The kernel must reject duplicate parents, already-composed parents, provenance loss or reordering, grid mismatch, and governance-boundary expansion.
+
+### Queue operation
+
+Only the next eligible Lab parcel may move to `ready`. Every later approved parcel remains sequence-blocked until the active parcel is completed, pushed, closed out, and its final state is safe. Parallel workers or combined implementation parcels are not authorised.
+
+### Acceptance return
+
+Each parcel must cite the immutable consolidated-envelope commit and this Program approval, preserve its exact approved file and consumer boundary, pass its focused checks and full `lab-ies` gate, commit and push only the Lab lane, and return an exact immutable receipt. Any drift requires a new Program decision. No action from Patrick.

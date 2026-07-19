@@ -480,7 +480,7 @@ No amendments are required. LAB-017 is authorised to move to `ready` unchanged.
 
 **Status:** LAB IMPLEMENTATION COMPLETE AS REPORTED; PROGRAM ACCEPTANCE NOT YET CLOSED.
 
-**Reported evidence:** The Lab lane reports that LAB-017 was implemented under the approved version-1 envelope; only the reference/resolver helper and its dedicated test were committed; focused validation, full validation, feature commit, and documentation closeout all passed 169/169; the feature and documentation checkpoints were pushed only to `lane/code-pilot-lab`; and final state is zero staged, one expected HEAD-marker edit, 32 protected untracked, and zero deleted paths. LAB-018 remains blocked, no queue item is ready, and no LAB-018 implementation has started.
+**Reported evidence:** The Lab lane reports that LAB-017 was implemented under the approved version-1 envelope; only the reference/resolver helper and its dedicated test were committed; focused validation, full validation, feature commit, and documentation closeout all passed 169/169; the feature and documentation checkpoints were pushed only to `lane/code-pilot-lab`; and final state is zero staged, one expected HEAD-marker edit, 32 protected untracked, and zero deleted paths. At that time LAB-018 remained blocked, no queue item was ready, and no LAB-018 implementation had started.
 
 ### Decision
 
@@ -488,7 +488,7 @@ Accept this as a lane-completion notification, not yet as the immutable Program 
 
 ### LAB-018
 
-LAB-018 remains blocked. Program memory contains no LAB-018 seam envelope, so no implementation is authorised. The Lab orchestrator owns preparing the separate immutable envelope; Program owns the subsequent approval decision.
+At that point LAB-018 remained blocked because Program memory contained no LAB-018 seam envelope. That historical hold is superseded by the consolidated seven-seam decision recorded below.
 
 ### Consequences
 
@@ -513,5 +513,40 @@ Program closes final LAB-017 acceptance. The implementation is accepted as confo
 
 - This acceptance does not promote the parcel to `main`; promotion remains subject to the separate Program promotion path and tooling capability.
 - Program retains production serial allocation, resolver hosting, route-to-storage mapping, persistence, authentication, deployment, and endpoint ownership.
-- LAB-018 remains blocked and requires its own immutable seam envelope and Program decision.
+- At that point LAB-018 still required its own immutable seam envelope; this is superseded by the consolidated approval below.
 - Patrick has no manual action.
+
+---
+
+## 2026-07-20 — Consolidated approval for seven blocked Lab seams
+
+**Status:** ALL SEVEN SEAMS APPROVED; IMPLEMENTATION REMAINS STRICTLY SEQUENTIAL.
+
+**Evidence classification:** The Lab lane reports that one immutable consolidated envelope now defines all seven blocked seams and that the full `lab-ies` gate passes 169/169. The current Program app cannot independently resolve the Lab branch, so the envelope and gate receipt remain `REPORTED` evidence until each immutable implementation parcel is returned for acceptance.
+
+### Six ordinary seams
+
+Program approves unchanged the six non-kernel seams exactly as recorded in the consolidated envelope. Their approved public interfaces, data shapes, file boundaries, consumers, compatibility rules, rollback sequences, ownership splits, prohibitions, and test obligations may not drift without a new Program decision.
+
+### Governed reference-composition kernel
+
+Program approves the governed reference-composition kernel only under all of these mandatory conditions:
+
+1. Each composition has exactly two unique parent references. The same parent cannot occupy both positions, and neither parent may already be a merged or composed reference.
+2. Parent order is provenance-significant. The first and second parent identities, roles, and order must be preserved exactly and must remain observable in the immutable result metadata.
+3. Both parents must have exactly matching photometric grids. Angle sets, dimensions, and sample positions must match exactly; interpolation, resampling, grid repair, tolerance-based alignment, or silent normalisation is prohibited.
+4. Allocation, authority, approval, and sealing remain entirely outside the kernel. The kernel may validate and compose only; it may not allocate production identities, claim authority, approve a result, seal an artifact, persist production state, host a resolver, own an endpoint, authenticate callers, or control deployment.
+
+The kernel must fail closed with specific rejection outcomes for duplicate parents, pre-merged parents, missing or reordered provenance, non-identical grids, and any request that attempts to cross the external governance boundary.
+
+### Sequencing and acceptance
+
+- This decision seam-approves all seven parcels but does not authorise parallel implementation.
+- The Lab orchestrator may move only the next queue parcel to `ready`; the remaining approved parcels stay sequence-blocked until the current parcel is committed, pushed, closed out, and the lane is safe to advance.
+- Each parcel must cite the exact consolidated-envelope commit and this Program approval commit before implementation begins.
+- Each parcel remains independently bounded and must return its own exact paths, focused tests, full `lab-ies` receipt, staged-set proof, immutable commit and push, final Git inventory, and updated handoff.
+- Any additional seam, widened file scope, altered consumer set, interface drift, or weakened kernel condition requires a new Program decision.
+
+### Decision
+
+No amendments are required. The six ordinary seams are approved unchanged, and the governed reference-composition kernel is approved with the four conditions above. The prior LAB-018 hold is superseded by this consolidated approval, but one-parcel-at-a-time sequencing remains mandatory. Patrick has no manual action.
