@@ -6,6 +6,54 @@
 - Historical handoff content is retained as reported context unless freshly reverified.
 - Test output proves only the behaviour exercised by the named tests; low-level merge tests do not by themselves prove completion of the final governed merge.
 
+## LAB-020 document register contract — 2026-07-20
+
+### Identity and scope
+
+- starting HEAD: `02479150d55cf8f26b8da74d621f0671e428755d`;
+- queue item: `LAB-020-document-register-contract`;
+- approved consolidated seam envelope: version 1, unchanged;
+- authorised implementation paths only:
+  - `packages/lab-kernel/ies-toolkit/docRegister.js`;
+  - `tests/lab-kernel/docRegister.test.js`.
+
+### Behaviour evidence
+
+The completed contract:
+
+- exports only the approved version-1 immutable document-register API and schema constants;
+- requires caller-supplied document and entity IDs and creates no counter or durable identity;
+- accepts only canonical host-free LAB-017 source, report or evidence paths;
+- accepts only lower-case raw 64-character SHA-256 content values and never computes a hash;
+- deduplicates only on identical non-null source references or SHA values;
+- fails closed on duplicate IDs, conflicting metadata, ambiguous dedupe ownership, malformed state and unsafe paths;
+- supports deterministic many-to-many linking, idempotent duplicate links and association-only unlinking without deleting source evidence;
+- returns deeply immutable sorted state and query projections without mutating prior state or caller inputs;
+- contains no upload, file read, network, database, browser storage, persistence, global counter, clock, random or diagnostic-fingerprint seam.
+
+### Test and gate evidence
+
+- initial focused execution: 202/203 passed; the sole failure was an over-broad static test matching the word `upload` in a boundary comment;
+- corrected focused changed-file `lab-ies` execution: 203/203 passed;
+- independent full `lab-ies` gate: 203/203 passed;
+- gated feature commit execution: 203/203 passed;
+- failed, cancelled, skipped and todo counts were zero in each successful execution.
+
+### Commit and push evidence
+
+- feature commit: `636d3d7c2023bf16e49def1d75f9d46d66b26482`;
+- subject: `lab: checkpoint document register contract`;
+- files: exactly the two authorised implementation paths;
+- push: origin `lane/code-pilot-lab`, confirmed up to date after the gated call returned without a result;
+- no HTML, fixture, upload, Program, Runtime, Engine or Selector path changed;
+- protected dirty paths and the unstaged branch-HEAD marker were preserved.
+
+### Resulting queue boundary
+
+- LAB-020 is `done`.
+- LAB-021 is approved and becomes the single next `ready` item.
+- LAB-022, LAB-023 and LAB-027 remain approved but sequence-blocked.
+
 ## LAB-019 component projection contract — 2026-07-20
 
 ### Identity and scope

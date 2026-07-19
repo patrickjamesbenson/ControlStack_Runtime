@@ -265,7 +265,7 @@ Evidence: `6c835a01811d6cb5ddf6558ed7cd65782403687b`, confirmed on origin.
   - `packages/lab-kernel/ies-toolkit/docRegister.js`
   - `tests/lab-kernel/docRegister.test.js`
 - seam envelope: `docs/_context/lanes/lab-ies/LAB-018_023_027_BATCH_SEAM_ENVELOPE.md`, version 1; approved unchanged by Program & Integrate on 2026-07-20.
-- batch sequence: active parcel; LAB-019 is completed and closed out.
+- batch sequence: completed parcel; LAB-018, LAB-019 and LAB-020 are completed and closed out.
 - prohibitions:
   - no filesystem, browser-storage, network or database persistence;
   - no upload route or Program implementation;
@@ -277,7 +277,9 @@ Evidence: `6c835a01811d6cb5ddf6558ed7cd65782403687b`, confirmed on origin.
 - depends on: LAB-017-reference-resolver-contract
 - on success next: LAB-021-emergency-selection-contract after recorded Integrate approval
 - seam change: yes
-- status: ready
+- status: done
+
+Evidence: `636d3d7c2023bf16e49def1d75f9d46d66b26482`, confirmed on origin.
 
 ### Q-11 Emergency selection contract
 - id: LAB-021-emergency-selection-contract
@@ -286,7 +288,7 @@ Evidence: `6c835a01811d6cb5ddf6558ed7cd65782403687b`, confirmed on origin.
   - `packages/lab-kernel/ies-toolkit/zencontrolEmergency.js`
   - `tests/lab-kernel/zencontrolEmergency.test.js`
 - seam envelope: `docs/_context/lanes/lab-ies/LAB-018_023_027_BATCH_SEAM_ENVELOPE.md`, version 1; approved unchanged by Program & Integrate on 2026-07-20.
-- batch sequence: approved but sequence-blocked until the active parcel is completed and closed out.
+- batch sequence: active parcel; LAB-020 is completed and closed out.
 - prohibitions:
   - no unsupported electrical, battery or thermal value hardened as confirmed;
   - no inherited `_EMERGENCY_VERIFIED` authority outcome;
@@ -298,7 +300,7 @@ Evidence: `6c835a01811d6cb5ddf6558ed7cd65782403687b`, confirmed on origin.
 - depends on: none
 - on success next: LAB-022-reference-composition-kernel after recorded owner and Integrate approval
 - seam change: yes
-- status: blocked
+- status: ready
 
 ### Q-12 Governed reference composition kernel
 - id: LAB-022-reference-composition-kernel

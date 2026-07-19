@@ -13,11 +13,11 @@ Current repository evidence overrides stale historical statements.
 - Root: `C:\ControlStack_Worktrees\code-pilot-lab`
 - Branch: `lane/code-pilot-lab`
 - Gate: `lab-ies`
-- Recorded branch HEAD: `6c835a01811d6cb5ddf6558ed7cd65782403687b`
+- Recorded branch HEAD: `636d3d7c2023bf16e49def1d75f9d46d66b26482`
 - Branch-HEAD guard checkpoint: `6d34e500d407d5335e5eebb317636a67a5e98618`
-- Starting HEAD for LAB-019: `9a8cce7f3963b999e8d495e5ff5b0f0c9bf224d8`
-- Completed feature HEAD: `6c835a01811d6cb5ddf6558ed7cd65782403687b`
-- Feature subject: `lab: checkpoint component projection contract`
+- Starting HEAD for LAB-020: `02479150d55cf8f26b8da74d621f0671e428755d`
+- Completed feature HEAD: `636d3d7c2023bf16e49def1d75f9d46d66b26482`
+- Feature subject: `lab: checkpoint document register contract`
 - Feature push: confirmed on origin `lane/code-pilot-lab`
 
 ## Branch-HEAD synchronisation invariant
@@ -42,7 +42,28 @@ Before any queue item is selected, a worker must compare `Recorded branch HEAD` 
 - Arbitrary shell execution: no
 - Allowed gate: `lab-ies`
 
-## Latest completed parcel — LAB-019
+## Latest completed parcel — LAB-020
+
+Queue item `LAB-020-document-register-contract` is complete.
+
+Exactly these two authorised files were changed and committed:
+
+```text
+packages/lab-kernel/ies-toolkit/docRegister.js
+tests/lab-kernel/docRegister.test.js
+```
+
+Verified outcome:
+
+- the module exposes only the approved version-1 immutable document-register API and schema constants;
+- callers supply document and entity IDs; the Lab contract allocates no durable identity or counter;
+- registration reuses only identical non-null canonical source references or lower-case raw SHA-256 values;
+- duplicate IDs, ambiguous dedupe keys and conflicting metadata fail closed;
+- many-to-many linking is deterministic and idempotent, while unlinking removes only one association and never deletes source evidence;
+- list, entity and document queries return stable sorted deeply immutable projections;
+- state and source inputs remain unchanged, and no upload, file read, hashing, persistence, network, database, browser storage, clock or diagnostic-fingerprint seam exists.
+
+## Previous completed parcel — LAB-019
 
 Queue item `LAB-019-component-projection-contract` is complete.
 
@@ -139,9 +160,9 @@ Verified outcome:
 
 The connected app exposes the fixed `lab-ies` gate as the available changed-file and full validation path.
 
-- Focused changed-file execution for the two LAB-019 files: 191 tests, 191 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
-- Full `lab-ies` gate: 191 tests, 191 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
-- Gated feature commit execution: 191 tests, 191 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
+- Focused changed-file execution for the two LAB-020 files: 203 tests, 203 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
+- Full `lab-ies` gate: 203 tests, 203 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
+- Gated feature commit execution: 203 tests, 203 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
 
 ## Protected final Git state
 
@@ -149,7 +170,7 @@ The protected working-tree state after documentation closeout is:
 
 - staged: 0;
 - modified: 1 — only the unstaged `Recorded branch HEAD` synchronisation marker in this file;
-- untracked: 30;
+- untracked: 29;
 - deleted: 0.
 
 Protected untracked paths:
@@ -160,7 +181,6 @@ docs/_context/ControlStack_summary_normalise_harness_spec.md
 packages/lab-kernel/ies-toolkit/bench.html
 packages/lab-kernel/ies-toolkit/component_library.html
 packages/lab-kernel/ies-toolkit/curator.html
-packages/lab-kernel/ies-toolkit/docRegister.js
 packages/lab-kernel/ies-toolkit/docs.html
 packages/lab-kernel/ies-toolkit/emergency.html
 packages/lab-kernel/ies-toolkit/equipment_register.html
@@ -217,9 +237,9 @@ tests/selectorCascadeCorrectness.test.js
 - Program reported gate 45/45 passed, the decision committed and pushed, and its tree clean.
 - The six ordinary seams are approved unchanged.
 - LAB-022 is approved with exactly two unique non-MERGED parents, immutable order-significant provenance, exactly matching grids without interpolation/resampling, and allocation/authority/approval/sealing outside the kernel; violations fail closed.
-- LAB-018 and LAB-019 are complete and confirmed on origin.
-- Only LAB-020 is active and ready.
-- LAB-021, LAB-022, LAB-023 and LAB-027 are approved but sequence-blocked until the active parcel is completed and closed out.
+- LAB-018, LAB-019 and LAB-020 are complete and confirmed on origin.
+- Only LAB-021 is active and ready.
+- LAB-022, LAB-023 and LAB-027 are approved but sequence-blocked until the active parcel is completed and closed out.
 - No parallel or combined implementation is authorised.
 - The earlier LAB-018 approval hold remains superseded.
 
@@ -235,9 +255,10 @@ tests/selectorCascadeCorrectness.test.js
 - `LAB-017-reference-resolver-contract`: done.
 - `LAB-018-nvb-resolution-contract`: done.
 - `LAB-019-component-projection-contract`: done.
-- Next ordered item: `LAB-020-document-register-contract`.
+- `LAB-020-document-register-contract`: done.
+- Next ordered item: `LAB-021-emergency-selection-contract`.
 - Resulting status: `ready`; its batch seam approval is already recorded.
-- Ready items: exactly one — LAB-020.
-- Approved sequence-blocked items: LAB-021, LAB-022, LAB-023 and LAB-027.
+- Ready items: exactly one — LAB-021.
+- Approved sequence-blocked items: LAB-022, LAB-023 and LAB-027.
 
-LAB-019 was implemented, validated, committed and pushed as the single active parcel.
+LAB-020 was implemented, validated, committed and pushed as the single active parcel.
