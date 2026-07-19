@@ -203,3 +203,11 @@ The orchestrator writes and orders queue items. Workers execute only the top `re
 The explicit next blocker is preserved: `project-alpha` has a browser-session envelope but no active server-owned revision; selected-project Engine invocation currently returns HTTP 422 `active-server-revision-invalid`. Server-side registration is the gate on running the Engine. SEL-002 must use the genuine existing envelope and must not invoke Engine or manufacture project truth.
 
 Repository-wide tracked search after editing inspected 449 files and returned zero stale references. No separate focused test target exists for this documentation-only migration. The complete `selector-engine` gate passed 103/103 with exit code 0. Exact staged-set, gated commit, push, and clean-tree receipts are recorded in the SEL-001 completion response.
+
+## 2026-07-19 SEL-002 registration refusal and diagnosis commission
+
+Patrick performed two genuine runtime 8788 UI saves for `project-alpha`: envelopes `env-project-alpha-1784437597308` and `env-project-alpha-1784437964705`. Both browser-session saves succeeded. Both server-owned registration attempts refused identically with `selected-project-registration-client-pre-engine-eligibility-invalid`; durable persistence remained unavailable and each envelope remained browser/runtime-session only.
+
+Repository inspection locates the generic refusal in `buildSourceProjection()` within `apps/workspace-shell/src/projectBrowserSelectedProjectServerOwnedRegistrationClientTransport.js`, after `validateCsSelectorPreEngineActionEligibilityProjection(..., { requireReady: true })` rejects the envelope's declared pre-Engine projection. This identifies the validation boundary only; it does not yet prove which internal readiness condition failed or whether the failure is user-suppliable.
+
+New top ready item `SEL-011` is a read-only diagnosis. It must trace the exact predicate, enumerate all conditions, compare them with current `project-alpha` evidence, classify UI input versus incomplete/unavailable served path, and separate durable-persistence messaging from the refusal cause. `SEL-002` is now blocked behind `SEL-011`. Engine invocation remains prohibited and SEL-003 remains blocked.

@@ -16,15 +16,26 @@
 * acceptance: all six canonical files are committed at the canonical path; no tracked stale-path reference remains; the complete `selector-engine` gate passes; exactly the six authorised paths are committed and pushed to `lane/selector-engine`; SEL-001 is done and SEL-002 is ready.
 * prohibitions: no move operation; no feature work; no SEL-002 execution; no writes outside the six authorised files; no clean, reset, restore, merge, rebase, deletion, donor, Lab, Program, or main operation.
 
-### Q-2 Register project-alpha active server-owned revision
+### Q-2A Diagnose project-alpha pre-Engine registration eligibility refusal
 
-* id: SEL-002
+* id: SEL-011
 * status: ready
 * depends-on: SEL-001
 * gate: selector-engine
+* authorised files: read-only repository and runtime inspection only; no repository writes, staging, commit, push, project mutation, RuntimeData mutation, or server registration dispatch
+* objective: diagnose the two genuine `project-alpha` browser-save registration refusals reporting `selected-project-registration-client-pre-engine-eligibility-invalid` without fabricating or reconstructing browser-held project truth.
+* acceptance: identify the exact failing pre-Engine eligibility predicate and the precise file/function that raises the refusal; enumerate every required condition explicitly; determine which condition or conditions the current `project-alpha` selection fails using current evidence only; classify plainly whether the boundary is a user-suppliable UI input or an incomplete/unavailable registration path in the currently served build; determine whether `durable persistence unavailable` is causal or merely a separate consequence; return the smallest recommended repair or exact UI action, but do not implement it. If browser-only evidence prevents a truthful condition-level conclusion, return `NEEDS YOU` with the exact bounded UI diagnostic fields or clicks required rather than guessing.
+* prohibitions: read-only; do not invoke Engine; do not POST registration; do not fabricate an envelope, acknowledgement, revision, candidate, fixture, or project truth; do not patch code or documentation; do not alter Tier, Control, RuntimeData, Lab, Program, or main; do not treat a generic client blocker as proof of server unavailability without tracing the predicate and dispatch flags.
+
+### Q-2 Register project-alpha active server-owned revision
+
+* id: SEL-002
+* status: blocked
+* depends-on: SEL-001 and SEL-011
+* gate: selector-engine
 * authorised files: read-only repository inspection; no repository file writes unless a later orchestrator commission supplies exact bounded paths
 * objective: use the genuine existing `project-alpha` browser-session save envelope to complete the supported server-side registration contract and establish an active server-owned revision.
-* acceptance: registration acknowledgement and an attributable active server-owned revision are proven without constructing project truth from fixtures or repository test data. Blocker carried forward: `project-alpha` has a browser-session envelope but no active server-owned revision; selected-project Engine invocation currently returns HTTP 422 `active-server-revision-invalid`. Server-side registration is the gate on running the Engine.
+* acceptance: registration acknowledgement and an attributable active server-owned revision are proven without constructing project truth from fixtures or repository test data. Blocker carried forward: two genuine UI attempts saved browser-session envelopes but registration refused before dispatch with `selected-project-registration-client-pre-engine-eligibility-invalid`. SEL-011 must first classify the exact failed predicate and whether the remedy is a UI input or a bounded code repair. Server-side registration remains the gate on running the Engine.
 * prohibitions: do not invoke Engine in this item; do not fabricate, reconstruct, or substitute a save envelope; do not change Tier, Control, RuntimeData, Lab, or Program seams.
 
 ### Q-3 Execute selected-project Engine invocation

@@ -161,6 +161,16 @@ Every completed worker updates this index with:
 - Evidence-commit ending tree: clean, with 0 staged, modified, untracked, or deleted paths — VERIFIED.
 - The commit containing this hash-index closeout is the final ending HEAD for the worker; its exact hash is reported in the completion response.
 
+## 2026-07-19 — project-alpha registration refusal evidence and SEL-011 commission
+
+- Runtime/UI evidence supplied by Patrick: two accepted browser-session saves for `project-alpha`, envelope IDs `env-project-alpha-1784437597308` and `env-project-alpha-1784437964705` — USER-PROVIDED LIVE EVIDENCE.
+- Both registration attempts returned `selected-project-registration-client-pre-engine-eligibility-invalid`; browser save succeeded, active server-owned revision was not established, and durable persistence remained unavailable — USER-PROVIDED LIVE EVIDENCE.
+- Exact generic refusal site: `buildSourceProjection()` in `apps/workspace-shell/src/projectBrowserSelectedProjectServerOwnedRegistrationClientTransport.js`, after `validateCsSelectorPreEngineActionEligibilityProjection(preEngineActionEligibilityProjection, { requireReady: true })` returns invalid — VERIFIED repository inspection.
+- Dispatch classification from code boundary: this blocker is produced before a source projection is returned and therefore before the registration request can be dispatched; it is not by itself proof that the server route is absent — VERIFIED repository inspection.
+- Internal failed readiness condition for the current browser-held `project-alpha` envelope: not yet proven from the generic blocker alone — UNKNOWN; guessing is prohibited.
+- Queue action: new top ready read-only item `SEL-011`; `SEL-002` blocked behind its diagnosis; SEL-003 remains blocked and Engine invocation remains prohibited — RECORDED.
+- Required diagnosis outcome: exact predicate and conditions, current failed condition(s), UI-input versus served-path classification, durable-persistence causality classification, and smallest unimplemented remedy — COMMISSIONED.
+
 ## 2026-07-19 — SEL-001 canonical context migration
 
 - Worker: standing Selector & Engine worker, queue item `SEL-001`.

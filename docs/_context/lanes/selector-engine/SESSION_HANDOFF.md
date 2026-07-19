@@ -231,3 +231,13 @@ The governing blocker is unchanged: `project-alpha` has a browser-session envelo
 SEL-002 must use the genuine existing browser-session save envelope. It must not invoke Engine, fabricate or reconstruct a save envelope, or change Tier, Control, RuntimeData, Lab, or Program seams. The exact queue boundary and acceptance criteria are in `WORK_QUEUE.md`.
 
 The repository-wide tracked search inspected 449 files and found zero stale references. This documentation-only migration has no separate focused test target. The complete `selector-engine` gate passed 103/103 with exit code 0. The SEL-001 completion response carries the final staged set, commit and push hashes, and clean ending Git state.
+
+## 2026-07-19 latest commission — read-only project-alpha eligibility diagnosis
+
+Patrick attempted registration twice from the live 8788 UI after successful browser-session saves. The exact envelopes were `env-project-alpha-1784437597308` and `env-project-alpha-1784437964705`. Both refused with `selected-project-registration-client-pre-engine-eligibility-invalid`; no active server-owned revision was acknowledged. The message that durable persistence is unavailable accompanied both attempts.
+
+Repository inspection proves the generic blocker is raised in `buildSourceProjection()` in `apps/workspace-shell/src/projectBrowserSelectedProjectServerOwnedRegistrationClientTransport.js` when `validateCsSelectorPreEngineActionEligibilityProjection(..., { requireReady: true })` rejects the saved envelope's declared pre-Engine projection. Because the source projection is not returned, request dispatch does not proceed. The exact internal readiness condition for the browser-held envelope is not yet proven.
+
+The new top ready item is `SEL-011 — Diagnose project-alpha pre-Engine registration eligibility refusal`. It is strictly read-only and must identify the complete predicate, every required condition, the exact current failed condition(s), whether the remedy is a UI-suppliable input or an incomplete/unavailable served registration path, and whether durable-persistence unavailability is causal or incidental. It must recommend but not implement the smallest repair or exact UI action. If current browser-only state cannot be inspected safely, it must return `NEEDS YOU` with exact bounded diagnostic clicks/fields rather than infer project truth.
+
+`SEL-002` is blocked behind SEL-011. SEL-003 and Engine invocation remain blocked. Use the standing worker prompt at the top of this file verbatim; do not create a parcel-specific prompt.

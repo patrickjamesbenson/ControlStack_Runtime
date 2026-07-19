@@ -119,3 +119,11 @@ This log is append-oriented. Do not silently rewrite historical decisions.
 **Rationale:** `project-alpha` has a browser-session envelope but no active server-owned revision; selected-project Engine invocation currently returns HTTP 422 `active-server-revision-invalid`.
 
 **Consequence:** Server-side registration is the gate on running the Engine. SEL-002 must not invoke Engine or fabricate, reconstruct, or substitute project truth. SEL-003 and later work remain unexecuted.
+
+## 2026-07-19 — Diagnose pre-Engine eligibility before retrying registration
+
+**Decision:** `SEL-011` is the new top ready read-only item. `SEL-002` is blocked until the two genuine `project-alpha` refusals at `selected-project-registration-client-pre-engine-eligibility-invalid` are diagnosed condition by condition.
+
+**Rationale:** Both browser-session saves succeeded, but the client transport rejected the declared pre-Engine eligibility projection before producing a dispatchable source projection. The generic blocker does not reveal which internal readiness condition failed and does not by itself prove server-route unavailability.
+
+**Consequence:** The diagnosis must distinguish a UI-suppliable missing input from an incomplete or unavailable served registration path, and must classify durable-persistence unavailability separately. It may recommend but not implement a repair or UI action. No Engine invocation or registration POST is authorised in SEL-011.
