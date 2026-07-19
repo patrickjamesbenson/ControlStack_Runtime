@@ -183,3 +183,11 @@ This log is append-oriented. Do not silently rewrite historical decisions.
 **Rationale:** The handoff is intentionally rewritten after parcels and has previously lost the worker prompt. A fresh orchestrator also had no repository-owned standing prompt. The charter is stable lane policy and does not churn with parcel closeouts.
 
 **Consequence:** Either role can start from one line directing it to read `LANE_CHARTER.md` and act per the recorded standing role prompt. Both prompts then require reading all six canonical files before action. Parcel closeouts must not duplicate, rewrite, or remove the canonical prompts from the charter; historical handoff references must point to the charter instead of the top of the handoff.
+
+## 2026-07-20 — Candidate-specific registration rebuild is the authoritative preflight
+
+**Decision:** SEL-014 is accepted. For the first readonly registration slice, the client validates the safe declared shape, strips client Tier, rejects unsupported accessory or indirect intent, then rebuilds and validates the dedicated candidate before considering the broader Stage-2/spec-build readiness state.
+
+**Rationale:** Ambient, Mounting, Finishes, the Tier summary, and legacy TIERS diagnostics belong to the broader build preview and are not inputs to the already-approved direct readonly candidate. Rejecting on that outer state before candidate reconstruction made a truthful first-slice registration impossible.
+
+**Consequence:** Broad preview blockers cannot override a complete direct candidate. Missing run, optic, target, CCT, CRI, or explicit source-backed Control; malformed or path-bearing state; blocked constraints; unsafe execution flags; accessories; and indirect emission remain fail closed before dispatch. Registration payload shape, Tier ownership and result meaning, Control authority, no-write flags, the full spec/build gate, and downstream seams remain unchanged. The next proof requires a genuine browser save and visible server-registration acknowledgement.

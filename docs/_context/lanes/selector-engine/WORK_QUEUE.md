@@ -54,7 +54,7 @@
 ### Q-2D Repair full-spec readiness contamination at registration preflight
 
 * id: SEL-014
-* status: ready
+* status: done
 * depends-on: SEL-013
 * seam change: no — this restores the already-approved Tier-neutral, candidate-specific registration contract without changing ownership, data shape, downstream Tier meaning, or the Engine/Lex boundary
 * gate: selector-engine
@@ -66,12 +66,12 @@
 ### Q-2 Register project-alpha active server-owned revision
 
 * id: SEL-002
-* status: blocked
+* status: ready
 * depends-on: SEL-001, SEL-011, SEL-012, SEL-013, and SEL-014
 * gate: selector-engine
 * authorised files: read-only repository inspection; no repository file writes unless a later orchestrator commission supplies exact bounded paths
 * objective: use the genuine existing `project-alpha` browser-session save envelope to complete the supported server-side registration contract and establish an active server-owned revision.
-* acceptance: registration acknowledgement and an attributable active server-owned revision are proven without constructing project truth from fixtures or repository test data. Runtime activation of SEL-012 is proven and SEL-013 has diagnosed full-spec readiness contamination; SEL-014 must repair and activate the candidate-specific registration preflight before the genuine browser-session envelope is saved and registered again. Server-side registration remains the gate on running the Engine.
+* acceptance: registration acknowledgement and an attributable active server-owned revision are proven from one new genuine browser-session save without constructing project truth from fixtures or repository test data. SEL-014 is committed and pushed; the running application must serve that repair before the save. Patrick must perform the browser save and registration action and provide the visible acknowledgement because repository evidence cannot prove browser-held envelope truth or human-visible runtime state. Server-side registration remains the gate on running the Engine.
 * prohibitions: do not invoke Engine in this item; do not fabricate, reconstruct, or substitute a save envelope; do not change Tier, Control, RuntimeData, Lab, or Program seams.
 
 ### Q-3 Execute selected-project Engine invocation

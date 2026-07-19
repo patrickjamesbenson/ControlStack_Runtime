@@ -161,6 +161,21 @@ Every completed worker updates this index with:
 - Evidence-commit ending tree: clean, with 0 staged, modified, untracked, or deleted paths — VERIFIED.
 - The commit containing this hash-index closeout is the final ending HEAD for the worker; its exact hash is reported in the completion response.
 
+## 2026-07-20 — SEL-014 candidate-specific registration preflight repair
+
+- Starting identity: root `C:\ControlStack_Worktrees\selector-engine`; branch `lane/selector-engine`; actual HEAD `10df6e43dc900483cda724f7b58d7adda93de092`; gate `selector-engine`; current HEAD was a dedicated reconciliation wrapper whose parent matched the recorded lane work HEAD — VERIFIED.
+- Starting Git state: exactly two modified and unstaged paths, both explicitly preserved and authorised for SEL-014; no staged, untracked, deleted, or unexplained path — VERIFIED.
+- Feature paths: `apps/workspace-shell/src/projectBrowserSelectedProjectServerOwnedRegistrationClientTransport.js` and `tests/runtimeShellProjectBrowserSelectedProjectServerOwnedRegistrationClientTransport.test.js` — VERIFIED.
+- Temporary focused harness: one side-effect import of the registration transport suite was added to `tests/engineRunTableDomain.test.js`, then removed. The harness file produced an empty final diff, was never staged, and remained byte-identical to HEAD — VERIFIED.
+- Focused execution: fixed `selector-engine` runner passed 113/113 and visibly executed all eight registration transport tests — VERIFIED.
+- Behaviour accepted: complete direct candidates rebuild despite outer blockers for Stage 2, Ambient, Mounting/Finishes, or legacy TIERS diagnostics; client Tier is stripped; missing run, optic, target, CCT, CRI, or explicit source-backed Control returns the specific candidate blocker before dispatch; accessories and indirect emission stop before dispatch; malformed/path-bearing projections, blocked constraints, and unsafe flags remain fail closed — VERIFIED by executed tests.
+- Normal complete gate after harness removal: 105 passed, 0 failed, exit code 0 — VERIFIED.
+- Exact staged set: only the two authorised feature/test paths — VERIFIED.
+- Gated feature commit/push: `c1def0d6c95b09050debc28ce28aceaebd86b811` — `fix(selector): rebuild registration candidate before readiness`; push `10df6e4..c1def0d` to `origin/lane/selector-engine` succeeded — VERIFIED.
+- Feature ending Git state: clean, with no staged, modified, untracked, or deleted paths — VERIFIED.
+- Live operations: no browser save, registration POST, Engine invocation, project or RuntimeData mutation, selected-result persistence, RunTable generation, IES generation, or output generation — VERIFIED for this parcel.
+- Queue result: SEL-014 done; SEL-002 ready but requires genuine browser action and visible server-registration acknowledgement; SEL-003 remains blocked — RECORDED.
+
 ## 2026-07-19 — SEL-012 source-backed Tier ownership repair
 
 - Worker: standing Selector & Engine worker, queue item `SEL-012`.

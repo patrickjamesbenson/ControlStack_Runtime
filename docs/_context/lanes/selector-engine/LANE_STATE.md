@@ -269,3 +269,15 @@ The batch stops immediately and successfully for seam approval, stale lane state
 `LANE_CHARTER.md` is now the canonical and stable home for both the standing worker prompt and the standing orchestrator prompt. `SESSION_HANDOFF.md` contains only the two one-line bootstrap pointers plus the permanent Communication rule and changing session evidence. A parcel closeout may rewrite the handoff without risking loss of either standing role prompt.
 
 A fresh chat can start either role from one line: read `LANE_CHARTER.md` and act as the standing worker or standing orchestrator per the prompt recorded there. Both prompts independently require identity verification, reading all six canonical files, preserving recorded dirty work, and following the current queue and evidence.
+
+## 2026-07-20 SEL-014 registration preflight repair closeout — latest controlling state
+
+**Recorded lane work HEAD:** `c1def0d6c95b09050debc28ce28aceaebd86b811` — `fix(selector): rebuild registration candidate before readiness`.
+
+SEL-014 resumed from the two explicitly preserved authorised edits with no other dirty path. The worker used `tests/engineRunTableDomain.test.js` only as the authorised temporary gate harness, visibly executed all eight registration transport tests, then removed the import and proved the harness file byte-identical to HEAD and absent from the final diff.
+
+Registration preflight now validates the declared projection shape, strips client Tier, checks the bounded first-readonly-slice exclusions, and rebuilds the dedicated candidate before allowing broad Stage-2/spec-build readiness to reject registration. Ambient unavailable, Mounting/Finishes incomplete, `Stage 2 is not ready`, and the legacy TIERS warning no longer block a complete direct candidate. Missing run, optic, target, CCT, CRI, or explicit source-backed Control still return their specific candidate blockers before dispatch. Malformed or path-bearing projections, blocked constraints, unsafe execution flags, non-zero accessory intent, and indirect emission remain fail closed.
+
+Focused harness execution passed 113/113, including the eight registration transport tests. After harness removal, the normal complete `selector-engine` gate passed 105/105. Exactly the registration client transport and its focused test were staged, gated, committed, and pushed. The ending feature tree was clean. No live browser save, server registration, Engine invocation, RuntimeData mutation, selected-result persistence, RunTable generation, IES generation, or output generation occurred.
+
+SEL-014 is done. SEL-002 is the next ready item, but its acceptance requires a genuine browser save and visible server-registration acknowledgement from the running application. Repository evidence cannot substitute for that live observation. SEL-003 remains blocked behind an attributable active server-owned revision.
