@@ -222,6 +222,10 @@ Patrick also reports Program & Integrate has approved and pushed the Tier owners
 
 ## 2026-07-19 SEL-012 Tier ownership repair closeout — latest controlling state
 
+**Recorded lane work HEAD:** `76bf306609b4a7d769d4b8d237bc4e9d5a2ea1e1` — `fix(selector): derive Tier at server Engine boundary`.
+
+This is the authoritative work HEAD for the standing worker guard. A later commit is considered synchronized only when it is the dedicated documentation-reconciliation commit and its immediate parent is this recorded work HEAD. Any other actual branch HEAD is stale lane memory and blocks queue execution until the orchestrator reconciles this file.
+
 SEL-012 started from clean HEAD `ec689792d6baf4f3f83dae85ca7dbf550cfc2288` on the verified Selector lane. Program & Integrate approval was already recorded. The repair remained inside the twelve authorised feature, test, and durable-context paths; no move, cross-lane write, RuntimeData mutation, project mutation, registration retry, or live Engine invocation occurred.
 
 Selector candidate construction now excludes Tier from its required fields and emits no authoritative top-level Tier, selected Tier, candidate-Tier list, manual Tier strategy, cached Tier, or default Tier. Registration strips stale or injected client Tier, repairs only the exact Tier-only eligibility defect, and continues to fail closed on every other missing or unsafe input with the actual safe blocker. Explicit Control selection and source backing remain mandatory.
