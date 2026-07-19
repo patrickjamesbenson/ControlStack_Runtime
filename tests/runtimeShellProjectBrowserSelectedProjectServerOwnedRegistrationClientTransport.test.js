@@ -23,18 +23,31 @@ const PROJECT_ID = "registration-client-project";
 const ENVELOPE_ID = "local-envelope-registration-client";
 const SAVED_AT = "2026-07-15T01:30:00.000Z";
 
-function readyProjection({ includeTier = true, tierBlocked = false, missingControl = false } = {}) {
+function readyProjection({
+  includeTier = true,
+  tierBlocked = false,
+  missingField = null,
+  outerBlocker = null,
+  accessoryIntentCount = 0,
+  indirectReady = false,
+} = {}) {
+  const cctCriValue = missingField === "cct"
+    ? "CRI90"
+    : missingField === "cri"
+      ? "4000K"
+      : "4000K / CRI90";
   const committedSelectorConstraints = [
     includeTier ? { fieldKey: "tier", value: "Stale Browser Tier", valueLabel: "Stale Browser Tier", committedSelectorState: true, blocked: false, authoritySource: "acceptedDefaults" } : null,
-    { fieldKey: "directOpticVar1", value: "80|Inlay", valueLabel: "Inlay", committedSelectorState: true, blocked: false, authoritySource: "manualConstraints" },
-    { fieldKey: "targetLmPerM", value: "1200", valueLabel: "1200", committedSelectorState: true, blocked: false, authoritySource: "manualConstraints" },
-    { fieldKey: "cctCri", value: "4000K / CRI90", valueLabel: "4000K / CRI90", committedSelectorState: true, blocked: false, authoritySource: "manualConstraints" },
-    missingControl ? null : { fieldKey: "controlType", value: "DALI-2", valueLabel: "DALI-2", committedSelectorState: true, blocked: false, authoritySource: "manualConstraints" },
+    { fieldKey: "system", value: "DNX 60", valueLabel: "DNX 60", committedSelectorState: true, blocked: false, authoritySource: "manualConstraints" },
+    missingField === "optic" ? null : { fieldKey: "directOpticVar1", value: "80|Inlay", valueLabel: "Inlay", committedSelectorState: true, blocked: false, authoritySource: "manualConstraints" },
+    missingField === "target_lm_per_m" ? null : { fieldKey: "targetLmPerM", value: "1200", valueLabel: "1200", committedSelectorState: true, blocked: false, authoritySource: "manualConstraints" },
+    { fieldKey: "cctCri", value: cctCriValue, valueLabel: cctCriValue, committedSelectorState: true, blocked: false, authoritySource: "manualConstraints" },
+    missingField === "control_type" ? null : { fieldKey: "controlType", value: "DALI-2", valueLabel: "DALI-2", committedSelectorState: true, blocked: false, authoritySource: "manualConstraints" },
   ].filter(Boolean);
   const candidateInputBlocker = tierBlocked
     ? "missing-readonly-engine-candidate-input-tier"
-    : missingControl
-      ? "missing-readonly-engine-candidate-input-controlType"
+    : missingField
+      ? `missing-readonly-engine-candidate-input-${missingField}`
       : null;
   const candidateInputsReady = candidateInputBlocker === null;
   const factoryApprovedInputsSummary = {
@@ -50,20 +63,20 @@ function readyProjection({ includeTier = true, tierBlocked = false, missingContr
     stage2Ready: candidateInputsReady,
     committedSelectorConstraintCount: committedSelectorConstraints.length,
     committedRunIntakeSummary: {
-      ready: true,
-      committedRunIntakeReady: true,
+      ready: missingField !== "runs",
+      committedRunIntakeReady: missingField !== "runs",
       sourceAuthority: "committed-selector-state",
-      runQuantity: 1,
-      runLengthMm: 3500,
+      runQuantity: missingField === "runs" ? 0 : 1,
+      runLengthMm: missingField === "runs" ? 0 : 3500,
       lengthMode: "cut_to_length",
     },
     runIntakePreviewSummary: {
-      runIntakePreviewReady: true,
-      runCount: 1,
-      totalQuantity: 1,
+      runIntakePreviewReady: missingField !== "runs",
+      runCount: missingField === "runs" ? 0 : 1,
+      totalQuantity: missingField === "runs" ? 0 : 1,
     },
-    accessoryPlacementIntentSummary: { accessoryIntentCount: 0 },
-    accessoryReservationRequired: false,
+    accessoryPlacementIntentSummary: { accessoryIntentCount },
+    accessoryReservationRequired: accessoryIntentCount > 0,
     engineExecuted: false,
     donorEngineInvoked: false,
     runTableGenerated: false,
@@ -72,9 +85,31 @@ function readyProjection({ includeTier = true, tierBlocked = false, missingContr
     runtimeDataMutated: false,
   };
   const lmTemperatureReadinessPreview = {
-    targetIntent: { direct: { ready: true, valueLabel: "1200" } },
-    cctCriPairing: { direct: { ready: true, valueLabel: "4000K / CRI90" } },
-    controlIntent: { direct: { ready: true, valueLabel: "DALI-2", sourceBacked: true } },
+    targetIntent: {
+      direct: {
+        ready: missingField !== "target_lm_per_m",
+        valueLabel: missingField === "target_lm_per_m" ? "" : "1200",
+      },
+      indirect: { ready: indirectReady, valueLabel: indirectReady ? "600" : "" },
+    },
+    cctCriPairing: {
+      direct: {
+        ready: !["cct", "cri"].includes(missingField),
+        valueLabel: cctCriValue,
+      },
+      indirect: {
+        ready: indirectReady,
+        valueLabel: indirectReady ? "4000K / CRI90" : "",
+      },
+    },
+    controlIntent: {
+      direct: {
+        ready: missingField !== "control_type",
+        valueLabel: missingField === "control_type" ? "" : "DALI-2",
+        sourceBacked: true,
+      },
+      indirect: { ready: indirectReady, valueLabel: indirectReady ? "DALI-2" : "" },
+    },
     fingerprint: "safe-selector-lm-temperature:client-registration",
     rawRowsReturned: false,
     rawEnginePayloadReturned: false,
@@ -85,13 +120,27 @@ function readyProjection({ includeTier = true, tierBlocked = false, missingContr
     committedSelectorConstraints,
     lmTemperatureReadinessPreview,
   });
-  assert.equal(mapper.ok, !missingControl);
+  assert.equal(mapper.ok, missingField === null);
+  const projectedFactory = outerBlocker === null
+    ? factoryApprovedInputsSummary
+    : {
+      ...factoryApprovedInputsSummary,
+      factoryApprovedInputsReady: false,
+      ready: false,
+      readonlyEngineCandidateInputsReady: false,
+      readonlyEngineCandidateInputsBlocker: outerBlocker,
+      blocker: outerBlocker,
+      stage2Ready: false,
+    };
+  const projectedMapperSummary = outerBlocker === null
+    ? mapper.summary
+    : { ...mapper.summary, blocker: outerBlocker };
   return buildSelectorPreEngineReadonlyActionEligibilityProjection({
     specBuildReadinessPreview: {
-      factoryApprovedInputsReady: candidateInputsReady,
-      factoryApprovedInputsSummary,
+      factoryApprovedInputsReady: outerBlocker === null && candidateInputsReady,
+      factoryApprovedInputsSummary: projectedFactory,
       readonlyEngineCandidateReady: mapper.ok === true,
-      readonlyEngineCandidateMapperSummary: mapper.summary,
+      readonlyEngineCandidateMapperSummary: projectedMapperSummary,
     },
     committedSelectorConstraints,
     lmTemperatureReadinessPreview,
@@ -269,7 +318,7 @@ test("client sends only the allowlisted pre-Engine projection and accepts the sc
   assert.equal(
     sentBody.sourceProjection.selectorModule.preEngineActionEligibilityProjection
       .factoryApprovedInputsSummary.committedSelectorConstraintCount,
-    4,
+    5,
   );
   assert.equal(Object.prototype.hasOwnProperty.call(sentBody, "projectEnvelope"), false);
   assert.equal(Object.prototype.hasOwnProperty.call(sentBody, "enginePayload"), false);
@@ -314,14 +363,91 @@ test("client returns the actual safe blocker when a remaining candidate input is
       },
     });
 
-  const projection = readyProjection({ includeTier: false, missingControl: true });
-  assert.equal(projection.ready, false);
-  assert.equal(projection.blocker, "missing-readonly-engine-candidate-input-controlType");
+  const cases = [
+    ["runs", "missing-candidate-field-runs"],
+    ["optic", "missing-candidate-field-optic"],
+    ["target_lm_per_m", "missing-candidate-field-target_lm_per_m"],
+    ["cct", "missing-candidate-field-cct"],
+    ["cri", "missing-candidate-field-cri"],
+    ["control_type", "missing-candidate-field-control_type"],
+  ];
+  for (const [missingField, expectedBlocker] of cases) {
+    const projection = readyProjection({ includeTier: false, missingField });
+    assert.equal(projection.ready, false, missingField);
+    const result = await transport(clientRequest(localSave(projection)));
+    assert.equal(result.ok, false, missingField);
+    assert.equal(result.requestDispatched, false, missingField);
+    assert.equal(result.blocker, expectedBlocker, missingField);
+  }
+  assert.equal(fetchCalls, 0);
+});
 
-  const result = await transport(clientRequest(localSave(projection)));
-  assert.equal(result.ok, false);
-  assert.equal(result.requestDispatched, false);
-  assert.equal(result.blocker, "missing-readonly-engine-candidate-input-controlType");
+test("client rebuilds the dedicated direct candidate when broader readiness is blocked", async () => {
+  const outerBlockers = [
+    "Stage 2 is not ready",
+    "ambient-unavailable-from-current-source",
+    "mounting-and-finishes-incomplete",
+    "legacy-tiers-source-warning",
+  ];
+  for (const outerBlocker of outerBlockers) {
+    const registry = createProjectBrowserSelectedProjectServerOwnedRuntimeSavedRegistry();
+    let sentBody = null;
+    const transport =
+      createShellProjectBrowserSelectedProjectServerOwnedRegistrationClientTransport({
+        async fetchImpl(_path, options) {
+          sentBody = JSON.parse(options.body);
+          return responseFor(await registry.register(sentBody));
+        },
+      });
+    const projection = readyProjection({ outerBlocker });
+    assert.equal(projection.ready, false, outerBlocker);
+    assert.equal(projection.blocker, outerBlocker, outerBlocker);
+    const result = await transport(clientRequest(localSave(projection)));
+    assert.equal(result.ok, true, outerBlocker);
+    assert.equal(result.requestDispatched, true, outerBlocker);
+    assert.equal(
+      sentBody.sourceProjection.selectorModule.preEngineActionEligibilityProjection.ready,
+      true,
+      outerBlocker,
+    );
+    assert.equal(
+      sentBody.sourceProjection.selectorModule.preEngineActionEligibilityProjection
+        .committedSelectorConstraints.some((row) => row.fieldKey === "tier"),
+      false,
+      outerBlocker,
+    );
+  }
+});
+
+test("client refuses accessories and indirect intent before registration dispatch", async () => {
+  let fetchCalls = 0;
+  const transport =
+    createShellProjectBrowserSelectedProjectServerOwnedRegistrationClientTransport({
+      async fetchImpl() {
+        fetchCalls += 1;
+        throw new Error("unsupported first-slice intent must not dispatch");
+      },
+    });
+
+  const accessoryResult = await transport(clientRequest(localSave(readyProjection({
+    accessoryIntentCount: 1,
+  }))));
+  assert.equal(accessoryResult.ok, false);
+  assert.equal(accessoryResult.requestDispatched, false);
+  assert.equal(
+    accessoryResult.blocker,
+    "selected-project-registration-client-accessory-intent-outside-first-slice",
+  );
+
+  const indirectResult = await transport(clientRequest(localSave(readyProjection({
+    indirectReady: true,
+  }))));
+  assert.equal(indirectResult.ok, false);
+  assert.equal(indirectResult.requestDispatched, false);
+  assert.equal(
+    indirectResult.blocker,
+    "selected-project-registration-client-indirect-emission-outside-first-slice",
+  );
   assert.equal(fetchCalls, 0);
 });
 
@@ -357,6 +483,20 @@ test("client fails closed before fetch when the projection is absent, blocked, t
   const pathResult = await transport(clientRequest(pathBearing));
   assert.equal(pathResult.ok, false);
   assert.equal(pathResult.requestDispatched, false);
+
+  const blockedConstraint = localSave();
+  blockedConstraint.envelope.modules.cs_selector.downstreamContext
+    .preEngineActionEligibilityProjection.committedSelectorConstraints[0].blocked = true;
+  const blockedConstraintResult = await transport(clientRequest(blockedConstraint));
+  assert.equal(blockedConstraintResult.ok, false);
+  assert.equal(blockedConstraintResult.requestDispatched, false);
+
+  const unsafe = localSave();
+  unsafe.envelope.modules.cs_selector.downstreamContext
+    .preEngineActionEligibilityProjection.factoryApprovedInputsSummary.engineExecuted = true;
+  const unsafeResult = await transport(clientRequest(unsafe));
+  assert.equal(unsafeResult.ok, false);
+  assert.equal(unsafeResult.requestDispatched, false);
   assert.equal(fetchCalls, 0);
 });
 

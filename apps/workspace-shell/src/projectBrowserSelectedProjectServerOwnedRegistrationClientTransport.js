@@ -319,14 +319,12 @@ function isTierOnlyEligibilityBlocker(value) {
 }
 
 function normaliseFactoryForServerOwnedTier(factory = {}, committedSelectorConstraints = []) {
-  const tierOnlyBlocked = isTierOnlyEligibilityBlocker(
-    factory?.readonlyEngineCandidateInputsBlocker || factory?.blocker,
-  );
-  const alreadyReady = factory?.factoryApprovedInputsReady === true
-    && factory?.stage2Ready === true
-    && factory?.blocker === null;
-  if (!alreadyReady && !tierOnlyBlocked) {
-    return { ok: false, blocker: safeToken(factory?.blocker, "selector-pre-engine-candidate-inputs-not-ready"), factory: null };
+  if (!isPlainObject(factory)) {
+    return {
+      ok: false,
+      blocker: "selector-pre-engine-candidate-inputs-not-ready",
+      factory: null,
+    };
   }
   return {
     ok: true,
@@ -342,6 +340,29 @@ function normaliseFactoryForServerOwnedTier(factory = {}, committedSelectorConst
   };
 }
 
+function firstReadonlySliceBlocker({
+  factoryApprovedInputsSummary = {},
+  lmTemperatureReadinessPreview = {},
+  accessoryIntentCount = null,
+} = {}) {
+  const projectedAccessoryIntentCount = Number.isSafeInteger(accessoryIntentCount)
+    ? accessoryIntentCount
+    : 0;
+  if (projectedAccessoryIntentCount !== 0
+    || factoryApprovedInputsSummary?.accessoryReservationRequired === true) {
+    return "selected-project-registration-client-accessory-intent-outside-first-slice";
+  }
+  const indirectIntents = [
+    lmTemperatureReadinessPreview?.targetIntent?.indirect,
+    lmTemperatureReadinessPreview?.cctCriPairing?.indirect,
+    lmTemperatureReadinessPreview?.controlIntent?.indirect,
+  ];
+  if (indirectIntents.some((intent) => intent?.ready === true)) {
+    return "selected-project-registration-client-indirect-emission-outside-first-slice";
+  }
+  return null;
+}
+
 function rebuildTierNeutralEligibilityProjection({
   factoryApprovedInputsSummary = {},
   committedSelectorConstraints = [],
@@ -352,6 +373,14 @@ function rebuildTierNeutralEligibilityProjection({
   totalQuantity = null,
   accessoryIntentCount = null,
 } = {}) {
+  const sliceBlocker = firstReadonlySliceBlocker({
+    factoryApprovedInputsSummary,
+    lmTemperatureReadinessPreview,
+    accessoryIntentCount,
+  });
+  if (sliceBlocker) {
+    return { blocker: sliceBlocker, projection: null };
+  }
   const tierNeutralConstraints = withoutClientTierConstraints(committedSelectorConstraints);
   const normalisedFactory = normaliseFactoryForServerOwnedTier(
     factoryApprovedInputsSummary,
@@ -503,19 +532,6 @@ function buildSourceProjection(envelope) {
     if (declaredValidation.valid !== true) {
       return {
         blocker: "selected-project-registration-client-pre-engine-eligibility-shape-invalid",
-        sourceProjection: null,
-      };
-    }
-    if (declaredProjection.ready !== true
-      && !isTierOnlyEligibilityBlocker(declaredProjection.blocker)
-      && !isTierOnlyEligibilityBlocker(
-        declaredProjection.factoryApprovedInputsSummary?.blocker,
-      )) {
-      return {
-        blocker: safeToken(
-          declaredProjection.blocker,
-          "selected-project-registration-client-pre-engine-eligibility-not-ready",
-        ),
         sourceProjection: null,
       };
     }
