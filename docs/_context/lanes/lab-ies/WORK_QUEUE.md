@@ -1,189 +1,72 @@
 # Lab/IES Work Queue
 
-## Queue rules
+## Operating model
 
-- Current repository evidence overrides historical claims.
-- No implementation task may begin until its exact path boundary and dirty-file collision risk are known.
-- Accepted, prototype, support and other-lane work must not be combined in one checkpoint.
-- The `lab-ies` gate must pass before gated commit/push.
-- Selector-owned paths are out of scope.
-- Donor and staging roots are read-only evidence sources.
+- This file controls worker parcel selection. Bespoke parcel prompts are retired.
+- The orchestrator writes and orders items, reviews `STOPPED` reports, obtains Integrate approval for seam changes, and decides when work is ready for main.
+- A worker takes only the top `ready` item whose dependency is `done`.
+- Root: `C:\ControlStack_Worktrees\code-pilot-lab`
+- Branch: `lane/code-pilot-lab`
+- Gate: `lab-ies`
+- The worktree is intentionally dirty. Preserve all unrelated modified and untracked paths.
+- Use `repo_green_commit_push` only after proving the staged set exactly equals the item's authorised files. Shared-tooling repair: `2e4d880`. Direct `repo_git_commit` remains guarded.
+- Push only `lane/code-pilot-lab`; never write to main, another lane, or the read-only donor `C:\ControlStack_Lab`.
+- The Selector leak paths must remain absent:
+  - `packages/workspace-kernel/selectorReferenceOptionsService.js`
+  - `tests/selectorCascadeCorrectness.test.js`
 
-## P0 — Establish durable lane memory
+## Reply status
 
-Status: authorised and in progress on 2026-07-17.
+Every orchestrator and worker reply begins with one of:
 
-Scope is exactly:
+- `AUTO - gate passed, parcel committed to lane/code-pilot-lab. Continuing. No action from Patrick.`
+- `SEND TO INTEGRATE - parcel ready for main. Patrick pastes this to Program & Integrate.`
+- `NEEDS YOU - <one-line action for Patrick>`
+- `STOPPED - <boundary>. Orchestrator decision needed.`
 
-- `docs/_context/lanes/lab-ies/LANE_CHARTER.md`
-- `docs/_context/lanes/lab-ies/LANE_STATE.md`
-- `docs/_context/lanes/lab-ies/WORK_QUEUE.md`
-- `docs/_context/lanes/lab-ies/DECISION_LOG.md`
-- `docs/_context/lanes/lab-ies/EVIDENCE_INDEX.md`
-- `docs/_context/lanes/lab-ies/SESSION_HANDOFF.md`
+`AUTO` is lane-only, never main. A genuine `STOPPED` is a successful boundary result.
 
-Acceptance:
+## Queue
 
-- only these six files are staged;
-- `lab-ies` gate passes;
-- commit message is `docs(lab): establish durable lane memory`;
-- only `lane/code-pilot-lab` is pushed;
-- original 10 modified and 66 untracked paths remain unchanged and unstaged.
+### Q-0 Reference-driven IES generation
+- id: LAB-010-reference-driven-generation
+- objective: Materialise deterministic LM-63 output from the committed sealed one-millimetre reference DTO.
+- authorised files:
+  - `packages/lab-kernel/ies-toolkit/iesFromReference.js`
+  - `tests/lab-kernel/iesFromReference.test.js`
+- prohibitions:
+  - no project workflow;
+  - no `iesMerge.js`;
+  - no UI/HTML/CSS;
+  - no keyword migration test;
+  - no persistence seam.
+- acceptance: Fixed sealed-reference validation, fail-closed deterministic generation, immutable inputs, canonical keywords and full gate are proven; exact files are committed and pushed.
+- gate: lab-ies
+- depends on: none
+- on success next: LAB-011-project-ies-generation
+- seam change: no
+- status: done
 
-## P1 — Read-only checkpoint-boundary audit
+Evidence: `bda7d61aaa037ea6a828f40d94ead77949ae7439`, confirmed on origin.
 
-Goal: produce a path-confined commit plan for accepted Slices 1–4B without altering feature files.
-
-Required work:
-
-1. inspect exact diffs for accepted foundation files;
-2. separate Slice 1–2, Slice 3, Slice 4A and Slice 4B dependencies;
-3. identify any dirty-file collisions with mixed photometric/export work;
-4. verify no accepted file is partially edited;
-5. keep UI, provenance, resolver and support prototypes excluded;
-6. keep Selector-owned paths excluded;
-7. rerun the full `lab-ies` gate after each proposed checkpoint boundary is identified.
-
-Expected dependency order:
-
-1. canonical keyword contract;
-2. Lab form and working record;
-3. normalisation and keyword migration;
-4. canonical JSON;
-5. authority fingerprints;
-6. rich authority record;
-7. provenance and approval;
-8. sealed reference DTO;
-9. safe handoff.
-
-No staging or commit is implied by this audit.
-
-## P2 — Accepted-slice checkpoint execution
-
-Blocked by P1 and explicit orchestrator authorisation.
-
-Goal: checkpoint accepted Slices 1–4B in path-confined dependency order.
-
-Constraints:
-
-- no blanket staging;
-- no prototypes;
-- no unexplained support files;
-- no Selector paths;
-- full `lab-ies` gate after each accepted checkpoint;
-- preserve all unrelated dirty work.
-
-## P3 — Builder ownership audit
-
-Goal: determine the canonical sealed-reference project IES builder boundary.
-
-Files requiring read-only comparison include:
-
-- `packages/lab-kernel/ies-toolkit/iesFromReference.js`
-- `packages/lab-kernel/ies-toolkit/iesProjectIes.js`
-- `packages/lab-kernel/ies-toolkit/iesWrite.js`
-- `packages/lab-kernel/ies-toolkit/iesKeywordContract.js`
-- associated tests.
-
-Questions to resolve:
-
-- which module owns `buildProjectIes`;
-- whether the builder consumes only the sealed DTO;
-- canonical filename format;
-- CRI and CCT formatting;
-- owned watt source;
-- numerical rounding;
-- decimal length policy;
-- unsafe filename characters;
-- provenance emitted with the project IES.
-
-Must not reopen:
-
-- sealed DTO schema;
-- canonical keyword order;
-- internal ambient semantics.
-
-## P4 — Metrics verification
-
-Goal: audit the exact current `iesMetrics.js` diff and isolate the intended flux correction.
-
-Current evidence:
-
-- the full gate verifies full-azimuth and half-azimuth constant-intensity cases;
-- the historical behavioural correction says single-plane rotational flux uses `2π`.
-
-Acceptance:
-
-- exact implementation matches the intended geometry;
-- no unrelated metric changes are hidden in the same modified file;
-- focused metric tests and full lane gate pass.
-
-## P5 — Governed reference merge
-
-### P5A — Pure photometric kernel
-
-Goal: deterministic N-parent grid registration/interpolation, candela summation and owned-power summation.
-
-Required decisions:
-
-- G8 compatibility;
-- geometry policy;
-- channel state;
-- duplicate parent instances;
-- quantity semantics;
-- interpolation and registration ownership.
-
-### P5B — Governance adapter
-
-Goal: bind ordered parents by ID, kind and `referenceSha256`, bind recipe/kernel identity, allocate a new assembly authority, require approval and seal a new immutable reference.
-
-Required controls:
-
-- DAG and cycle protection;
-- newly allocated identity;
-- no raw parent bytes;
-- assembly-minted emergency and EWIS outcomes;
-- explicit nested-MERGED policy;
-- explicit parent-order policy;
-- explicit duplicate-parent policy.
-
-### P5C — Harness/UI migration
-
-Goal: port only reviewed behaviour from the `:8899` behavioural demo after kernel and governance tests exist.
-
-Prohibition: do not copy demo files wholesale.
-
-## P6 — Provenance and resolver publication
-
-Goal: resolve sealed reference IDs through component and LED-chip evidence to immutable LM-80, TM-21 and datasheet artifacts.
-
-Open decisions:
-
-- governed artifact-reference format;
-- immutable manifest boundary;
-- resolver URL scheme;
-- publication ownership;
-- navigation URL versus authority identity.
-
-## P7 — Downstream integration
-
-Goal: integrate only approved safe contracts with Engine and other lanes.
-
-Allowed downstream inputs:
-
-- sealed reference DTO;
-- safe handoff projection;
-- generated project IES artifact.
-
-Prohibited downstream inputs:
-
-- rich private authority objects;
-- raw working bytes;
-- diagnostic hashes;
-- donor/staging implementation bodies.
-
-## Held and closed items
-
-- Historical app-name discrepancy: closed. `ControlStack Lab and IES Authority Lane` is the correct current app.
-- Historical HTTP 502 gate failure: currently closed by successful bounded `lab-ies` execution; reopen only if it recurs.
-- Historical Selector dirty paths: absent from the current status; do not infer how they were resolved.
+### Q-1 Project IES generation
+- id: LAB-011-project-ies-generation
+- objective: Replace the legacy rich-authority project builder with a deterministic project adapter over the committed sealed-reference generator.
+- authorised files:
+  - `packages/lab-kernel/ies-toolkit/iesProjectIes.js`
+  - `tests/lab-kernel/iesProjectIes.test.js`
+- prohibitions:
+  - no changes to `iesFromReference.js` or any completed dependency;
+  - no `iesMerge.js`;
+  - no UI/HTML/CSS;
+  - no `tests/lab-kernel/iesKeywordMigration.test.js`;
+  - no rich private authority input, raw working bytes or diagnostic fingerprints;
+  - no filesystem, network or browser-storage persistence;
+  - no new or changed cross-lane API, runtime route or Selector integration;
+  - no unrelated export, merge, normalisation, provenance-publication or generator work.
+- acceptance: The module consumes the committed sealed reference DTO, delegates core materialisation to the committed reference-driven generator, does not mutate inputs, fails closed on malformed or unsupported project input, emits deterministic project provenance bound to reference identity and `referenceSha256`, preserves canonical keywords, scales length/candela/owned watts consistently, has focused success/rejection/determinism/no-persistence coverage, and has no committed non-Lab caller affected; otherwise STOP as a seam boundary. Full `lab-ies` passes and exactly the two authorised files are committed as `lab: checkpoint project IES generation` and pushed only to the lane branch.
+- gate: lab-ies
+- depends on: LAB-010-reference-driven-generation
+- on success next: none
+- seam change: no
+- status: ready
