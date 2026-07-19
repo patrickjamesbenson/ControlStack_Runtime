@@ -2,7 +2,7 @@
 
 ## Session purpose
 
-This handoff preserves final LAB-017 acceptance and records the proposed consolidated version-1 seam envelope for LAB-018 to LAB-023 and LAB-027, while keeping every covered item blocked pending one Program & Integrate batch decision.
+This handoff preserves final LAB-017 acceptance, records Program & Integrate approval of all seven seams in consolidated envelope version 1, and authorises only LAB-018 as the single next runnable parcel.
 
 ## Identity
 
@@ -82,15 +82,18 @@ tests/selectorCascadeCorrectness.test.js
 
 - `LAB-016-nvb-offline-fixtures`: `done`.
 - `LAB-017-reference-resolver-contract`: `done` and finally accepted by Program & Integrate.
-- Consolidated proposed envelope: `LAB-018_023_027_BATCH_SEAM_ENVELOPE.md`, version 1.
-- Covered blocked items: LAB-018, LAB-019, LAB-020, LAB-021, LAB-022, LAB-023 and LAB-027.
-- Ready items: none.
+- Consolidated envelope: `LAB-018_023_027_BATCH_SEAM_ENVELOPE.md`, version 1, approved for all seven seams.
+- `LAB-018-nvb-resolution-contract`: `ready` and the only active parcel.
+- LAB-019, LAB-020, LAB-021, LAB-022, LAB-023 and LAB-027: approved but sequence-blocked.
+- Ready items: exactly one — LAB-018.
 
-Program & Integrate may decide all seven in one review. Approval remains item-specific inside the batch, and execution remains one parcel at a time under dependency order. LAB-022 is the only exceptional item: its binary merge policy must be expressly ratified; otherwise the other six may be approved while LAB-022 stays blocked.
+Program reported gate 45/45 passed, the approval decision committed and pushed, and its tree clean. No parallel or combined implementation is authorised.
+
+LAB-022 is approved only under its ratified binary-composition policy: exactly two unique non-MERGED parents, immutable order-significant provenance, exactly matching photometric grids with no interpolation/resampling, and allocation/authority/approval/sealing outside the kernel. Duplicate or pre-composed parents, reordered or missing provenance, grid mismatch and governance-boundary crossings must fail closed.
 
 LAB-017 remains governed by its approved version-1 envelope. Program retains all production allocation, live source reading, hosting, routing, persistence, authentication, CRM integration, deployment and endpoint ownership.
 
-The next safe action is one Program & Integrate batch decision against the committed consolidated envelope. No covered implementation may start before that decision is recorded.
+The next safe action is one bounded worker execution of LAB-018 only. Later approved parcels remain held until the active parcel is completed and closed out.
 
 ## LAB-017 immutable completion receipt
 
@@ -191,14 +194,14 @@ Program reported:
 - the acceptance checkpoint was committed and pushed;
 - the Program tree was clean.
 
-The immutable receipt remains byte-for-byte unchanged. Promotion to main is a separate Program & Integrate action and was not performed by the Lab lane. LAB-018 remains blocked pending its own seam envelope and approval.
+The immutable receipt remains byte-for-byte unchanged. Promotion to main is a separate Program & Integrate action and was not performed by the Lab lane. The later consolidated batch approval supersedes the former LAB-018 hold; LAB-018 is now the only ready parcel.
 
 ## Prohibited actions retained
 
 - no LAB-017 change outside the recorded version-1 approval without a new seam decision;
 - no reverse-authority reconstruction, legacy alternative reference schema, diagnostic authority identity or unsafe governed path;
 - no public resolver route, server implementation, HTML, fixture, Selector or Program ownership absorbed into the Lab contract;
-- no LAB-018, LAB-019, LAB-020, LAB-021, LAB-022, LAB-023 or LAB-027 implementation before the corresponding batch approval is recorded;
+- no implementation other than the single active LAB-018 parcel; LAB-019, LAB-020, LAB-021, LAB-022, LAB-023 and LAB-027 remain sequence-blocked until active-parcel closeout;
 - no reset, restore, clean, deletion or movement of protected dirty paths;
 - no execution of `scripts/clear_chaff.ps1`;
 - no donor write;

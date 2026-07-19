@@ -168,13 +168,20 @@ Program retains live data reading, durable IDs, persistence, uploads, routes, au
 
 LAB-022 is the only item needing an explicit owner sub-decision inside the batch. Version 1 proposes exactly two direct non-MERGED unique parents, provenance-significant order, exact coincident grids without interpolation, and downstream allocation/authority/approval/sealing. Program may approve the other six and hold LAB-022 if it does not ratify those policies.
 
-### Proposed document
+### Approval record and queue effect
 
-- `LAB-018_023_027_BATCH_SEAM_ENVELOPE.md`;
-- envelope version: 1;
-- status: awaiting Program & Integrate batch decision;
-- queue status: all seven remain blocked;
-- ready items: none.
+Program & Integrate approved all seven seams against `LAB-018_023_027_BATCH_SEAM_ENVELOPE.md`, version 1, on 2026-07-20.
+
+- Program gate: 45/45 passed;
+- Program decision: committed and pushed;
+- Program tree: clean;
+- six ordinary seams: approved unchanged;
+- LAB-022: approved with the exact ratified two-parent, order-significant, exact-grid, external-governance policy and fail-closed boundary cases;
+- active parcel: LAB-018 only;
+- sequence-blocked approved parcels: LAB-019, LAB-020, LAB-021, LAB-022, LAB-023 and LAB-027;
+- parallel or combined implementation: not authorised;
+- earlier LAB-018 approval hold: superseded;
+- ready items: exactly one, LAB-018.
 
 ## Reusable standing-worker prompt — 2026-07-19
 

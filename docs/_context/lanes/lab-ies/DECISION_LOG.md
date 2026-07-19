@@ -296,3 +296,21 @@ One consolidated version-1 seam envelope now covers:
 The envelope fixes each item's exact public contract, implementation and focused-test files, ownership boundary, known compatibility break, rollback sequence, success tests and failure tests. All seven remain blocked until approval is recorded. A batch approval may authorise multiple items, but queue dependency order and the single-top-ready rule remain mandatory.
 
 LAB-022 requires individual policy treatment inside the same batch decision. Program & Integrate must expressly ratify version-1 binary composition: exactly two direct non-MERGED unique parents, order-significant provenance, exact coincident grids without interpolation, and allocation/authority/approval/sealing outside the kernel. If that sub-decision is not ratified, the other six may be approved while LAB-022 remains blocked.
+
+## DL-024 — Seven-item batch seam approval and single-active sequence
+
+**Status:** Approved and recorded on 2026-07-20.
+
+Program & Integrate approved all seven seams in consolidated envelope version 1. Program reported its gate passed 45/45, the decision was committed and pushed, and the Program tree was clean.
+
+The six ordinary seams—LAB-018, LAB-019, LAB-020, LAB-021, LAB-023 and LAB-027—are approved unchanged.
+
+For LAB-022, Program expressly ratified:
+
+- exactly two unique, non-MERGED parents;
+- immutable order-significant provenance;
+- exactly matching photometric grids with no interpolation or resampling;
+- allocation, authority construction, approval and sealing outside the kernel;
+- fail-closed rejection of duplicate or pre-composed parents, reordered or missing provenance, grid mismatch and any attempted governance-boundary crossing.
+
+Only LAB-018 may move to `ready`. LAB-019, LAB-020, LAB-021, LAB-022, LAB-023 and LAB-027 remain approved but sequence-blocked until the active parcel is completed and closed out. No parallel or combined implementation is authorised. The earlier LAB-018 approval hold is superseded.

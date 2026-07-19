@@ -13,7 +13,7 @@ Current repository evidence overrides stale historical statements.
 - Root: `C:\ControlStack_Worktrees\code-pilot-lab`
 - Branch: `lane/code-pilot-lab`
 - Gate: `lab-ies`
-- Recorded branch HEAD: `9c2c32c2f6ce81d987c5017877ae9b32e1246a13`
+- Recorded branch HEAD: `615140cbbb1b653b2a042a5072e11914dabbbdf5`
 - Branch-HEAD guard checkpoint: `6d34e500d407d5335e5eebb317636a67a5e98618`
 - Starting HEAD for LAB-017: `09ac99cb35b6af45696b4c83e0051a1651bb2f14`
 - Completed feature HEAD: `2333c1197abf898e7a680455f99918823cb76e30`
@@ -169,13 +169,16 @@ tests/selectorCascadeCorrectness.test.js
 
 ## Consolidated seam envelope state
 
-- Proposed envelope: `docs/_context/lanes/lab-ies/LAB-018_023_027_BATCH_SEAM_ENVELOPE.md`.
+- Approved envelope: `docs/_context/lanes/lab-ies/LAB-018_023_027_BATCH_SEAM_ENVELOPE.md`.
 - Envelope version: `1`.
-- Covered blocked items: LAB-018, LAB-019, LAB-020, LAB-021, LAB-022, LAB-023 and LAB-027.
-- Each item now has an exact implementation file set plus dedicated focused-test scope.
-- Program & Integrate may make one batch decision, but approved items still enter execution one at a time under dependency order and the single-top-ready rule.
-- LAB-022 requires express owner ratification of its binary merge policy inside the batch decision; if not ratified, the other six may be approved while LAB-022 remains blocked.
-- No covered item is approved or ready yet.
+- Program & Integrate approved all seven covered seams on 2026-07-20.
+- Program reported gate 45/45 passed, the decision committed and pushed, and its tree clean.
+- The six ordinary seams are approved unchanged.
+- LAB-022 is approved with exactly two unique non-MERGED parents, immutable order-significant provenance, exactly matching grids without interpolation/resampling, and allocation/authority/approval/sealing outside the kernel; violations fail closed.
+- Only LAB-018 is active and ready.
+- LAB-019, LAB-020, LAB-021, LAB-022, LAB-023 and LAB-027 are approved but sequence-blocked until the active parcel is completed and closed out.
+- No parallel or combined implementation is authorised.
+- The earlier LAB-018 approval hold is superseded.
 
 ## Queue state
 
@@ -188,7 +191,8 @@ tests/selectorCascadeCorrectness.test.js
 - `LAB-016-nvb-offline-fixtures`: done.
 - `LAB-017-reference-resolver-contract`: done.
 - Next ordered item: `LAB-018-nvb-resolution-contract`.
-- Resulting status: `blocked`, because its separate Program & Integrate seam approval is not recorded.
-- Ready items: none.
+- Resulting status: `ready`; its batch seam approval is recorded and the earlier hold is superseded.
+- Ready items: exactly one — LAB-018.
+- Approved sequence-blocked items: LAB-019, LAB-020, LAB-021, LAB-022, LAB-023 and LAB-027.
 
-No subsequent queue item was executed.
+No implementation item was executed during this approval-recording parcel.

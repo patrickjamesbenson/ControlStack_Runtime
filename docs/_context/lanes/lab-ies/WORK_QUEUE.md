@@ -35,7 +35,7 @@ Every orchestrator and worker reply begins with one of:
 - `done` — committed and confirmed on origin.
 - `ready` — exactly one top parcel authorised for the next standing worker.
 - `queued` — bounded and ordered, but not yet the top runnable parcel.
-- `blocked` — requires a recorded owner or Integrate seam approval before it may become `ready`.
+- `blocked` — requires a recorded owner/Integrate decision, or is approved but held by the single-active-parcel sequence rule.
 
 ## Queue
 
@@ -216,7 +216,8 @@ Evidence: `2333c1197abf898e7a680455f99918823cb76e30`, confirmed on origin.
 - authorised files:
   - `packages/lab-kernel/ies-toolkit/nvbResolve.js`
   - `tests/lab-kernel/nvbResolve.test.js`
-- seam envelope: `docs/_context/lanes/lab-ies/LAB-018_023_027_BATCH_SEAM_ENVELOPE.md`, version 1; awaiting Program & Integrate batch decision.
+- seam envelope: `docs/_context/lanes/lab-ies/LAB-018_023_027_BATCH_SEAM_ENVELOPE.md`, version 1; approved unchanged by Program & Integrate on 2026-07-20.
+- batch sequence: active parcel; the earlier approval hold is superseded.
 - prohibitions:
   - no direct RuntimeData filesystem or database access;
   - no copied Runtime or Program reader implementation;
@@ -229,7 +230,7 @@ Evidence: `2333c1197abf898e7a680455f99918823cb76e30`, confirmed on origin.
 - depends on: LAB-016-nvb-offline-fixtures
 - on success next: LAB-019-component-projection-contract after recorded Integrate approval
 - seam change: yes
-- status: blocked
+- status: ready
 
 ### Q-9 Component projection contract
 - id: LAB-019-component-projection-contract
@@ -237,7 +238,8 @@ Evidence: `2333c1197abf898e7a680455f99918823cb76e30`, confirmed on origin.
 - authorised files:
   - `packages/lab-kernel/ies-toolkit/nvbComponents.js`
   - `tests/lab-kernel/nvbComponents.test.js`
-- seam envelope: `docs/_context/lanes/lab-ies/LAB-018_023_027_BATCH_SEAM_ENVELOPE.md`, version 1; awaiting Program & Integrate batch decision.
+- seam envelope: `docs/_context/lanes/lab-ies/LAB-018_023_027_BATCH_SEAM_ENVELOPE.md`, version 1; approved unchanged by Program & Integrate on 2026-07-20.
+- batch sequence: approved but sequence-blocked until the active parcel is completed and closed out.
 - prohibitions:
   - no embedded duplicate source catalogue;
   - no direct RuntimeData database access or Program reader copy;
@@ -258,7 +260,8 @@ Evidence: `2333c1197abf898e7a680455f99918823cb76e30`, confirmed on origin.
 - authorised files:
   - `packages/lab-kernel/ies-toolkit/docRegister.js`
   - `tests/lab-kernel/docRegister.test.js`
-- seam envelope: `docs/_context/lanes/lab-ies/LAB-018_023_027_BATCH_SEAM_ENVELOPE.md`, version 1; awaiting Program & Integrate batch decision.
+- seam envelope: `docs/_context/lanes/lab-ies/LAB-018_023_027_BATCH_SEAM_ENVELOPE.md`, version 1; approved unchanged by Program & Integrate on 2026-07-20.
+- batch sequence: approved but sequence-blocked until the active parcel is completed and closed out.
 - prohibitions:
   - no filesystem, browser-storage, network or database persistence;
   - no upload route or Program implementation;
@@ -278,7 +281,8 @@ Evidence: `2333c1197abf898e7a680455f99918823cb76e30`, confirmed on origin.
 - authorised files:
   - `packages/lab-kernel/ies-toolkit/zencontrolEmergency.js`
   - `tests/lab-kernel/zencontrolEmergency.test.js`
-- seam envelope: `docs/_context/lanes/lab-ies/LAB-018_023_027_BATCH_SEAM_ENVELOPE.md`, version 1; awaiting Program & Integrate batch decision.
+- seam envelope: `docs/_context/lanes/lab-ies/LAB-018_023_027_BATCH_SEAM_ENVELOPE.md`, version 1; approved unchanged by Program & Integrate on 2026-07-20.
+- batch sequence: approved but sequence-blocked until the active parcel is completed and closed out.
 - prohibitions:
   - no unsupported electrical, battery or thermal value hardened as confirmed;
   - no inherited `_EMERGENCY_VERIFIED` authority outcome;
@@ -298,7 +302,9 @@ Evidence: `2333c1197abf898e7a680455f99918823cb76e30`, confirmed on origin.
 - authorised files:
   - `packages/lab-kernel/ies-toolkit/iesMerge.js`
   - `tests/lab-kernel/iesReferenceComposition.test.js`
-- seam envelope: `docs/_context/lanes/lab-ies/LAB-018_023_027_BATCH_SEAM_ENVELOPE.md`, version 1; awaiting Program & Integrate batch decision and explicit LAB-022 owner sub-decision.
+- seam envelope: `docs/_context/lanes/lab-ies/LAB-018_023_027_BATCH_SEAM_ENVELOPE.md`, version 1; approved by Program & Integrate on 2026-07-20 with the exact ratified binary-composition policy.
+- batch sequence: approved but sequence-blocked until the active parcel is completed and closed out.
+- ratified policy: exactly two unique non-MERGED parents; immutable order-significant provenance; exactly matching grids with no interpolation/resampling; allocation, authority, approval and sealing remain outside the kernel; all violations fail closed.
 - prohibitions:
   - no UI/HTML/CSS;
   - no approval, allocation or sealing inside the composition kernel;
@@ -319,7 +325,8 @@ Evidence: `2333c1197abf898e7a680455f99918823cb76e30`, confirmed on origin.
 - authorised files:
   - `packages/lab-kernel/ies-toolkit/nvbLabAdapter.js`
   - `tests/lab-kernel/nvbLabAdapter.test.js`
-- seam envelope: `docs/_context/lanes/lab-ies/LAB-018_023_027_BATCH_SEAM_ENVELOPE.md`, version 1; awaiting Program & Integrate batch decision.
+- seam envelope: `docs/_context/lanes/lab-ies/LAB-018_023_027_BATCH_SEAM_ENVELOPE.md`, version 1; approved unchanged by Program & Integrate on 2026-07-20.
+- batch sequence: approved but sequence-blocked until the active parcel is completed and closed out.
 - prohibitions:
   - no mutation of sealed DTOs or approved authority records;
   - no diagnostic `fingerprint()` identity generation;
@@ -416,7 +423,8 @@ Evidence: `2333c1197abf898e7a680455f99918823cb76e30`, confirmed on origin.
   - `packages/lab-kernel/ies-toolkit/extended_report.html`
   - `packages/lab-kernel/ies-toolkit/onemm_contract.html`
   - `tests/lab-kernel/labRequestReportWorkflow.test.js`
-- seam envelope: `docs/_context/lanes/lab-ies/LAB-018_023_027_BATCH_SEAM_ENVELOPE.md`, version 1; awaiting Program & Integrate batch decision.
+- seam envelope: `docs/_context/lanes/lab-ies/LAB-018_023_027_BATCH_SEAM_ENVELOPE.md`, version 1; approved unchanged by Program & Integrate on 2026-07-20.
+- batch sequence: approved but sequence-blocked until the active parcel is completed and closed out.
 - prohibitions:
   - no Program database, CRM, file upload or workflow implementation;
   - no duplicate authority schema or reverse reconstruction;

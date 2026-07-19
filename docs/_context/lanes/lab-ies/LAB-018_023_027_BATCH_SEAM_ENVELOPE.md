@@ -11,9 +11,11 @@
   - `LAB-022-reference-composition-kernel`
   - `LAB-023-nvb-lab-adapter`
   - `LAB-027-request-report-workflow`
-- Status: proposed for one Program & Integrate batch decision.
-- Implementation status: all seven remain `blocked` until Program & Integrate records its decision against this committed envelope version.
-- Approval does not make seven items runnable at once. An approved item may move to `ready` only when it is the single top eligible queue item and every dependency is `done`.
+- Status: approved by Program & Integrate on 2026-07-20.
+- Program evidence: gate passed 45/45; the decision was committed and pushed; the Program tree was clean.
+- Approval scope: the six ordinary seams are approved unchanged. LAB-022 is approved with the exact version-1 owner policy already stated in this envelope.
+- Implementation status: only `LAB-018-nvb-resolution-contract` may move to `ready`. The other six approved items remain sequence-blocked until the active parcel is completed and closed out.
+- No parallel or combined implementation is authorised. An approved item may move to `ready` only when it is the single top eligible queue item and every dependency is `done`.
 - An amendment to one item reopens only that item. Approved unchanged sections for the other items remain valid.
 
 This document consolidates the seven seam decisions without combining their implementation parcels. Each item retains its own exact files, gate, commit, dependency order and rollback boundary.
@@ -1023,22 +1025,20 @@ Failure proof:
 
 ---
 
-# Batch approval record required
+# Batch approval record
 
-A Program & Integrate approval must identify:
+Program & Integrate approved all seven items on 2026-07-20 against this envelope version.
 
-- this committed envelope version and checkpoint;
-- which of the seven items are approved unchanged;
-- whether the LAB-022 owner sub-decision is expressly ratified;
-- acceptance of each exact implementation/test file set;
-- acceptance of the named temporary compatibility breaks;
-- retention of Program ownership listed in the batch-wide boundary;
-- confirmation that implementation remains one queue parcel at a time.
+The six ordinary seams were approved unchanged. For LAB-022, Program expressly ratified:
 
-Recommended single decision forms:
+1. exactly two unique, non-MERGED parents;
+2. immutable order-significant provenance;
+3. exactly matching photometric grids with no interpolation or resampling;
+4. allocation, authority construction, approval and sealing outside the kernel;
+5. fail-closed rejection of duplicate or pre-composed parents, reordered or missing provenance, grid mismatch and any attempted governance-boundary crossing.
 
-1. **Approve all seven unchanged**, including the six explicit LAB-022 version-1 owner policies.
-2. **Approve six unchanged and hold LAB-022**, if Program does not ratify the merge policy yet.
-3. **Reject or amend named item sections**, leaving all other sections eligible for approval unchanged.
+Program also accepted each exact implementation/test file set, the named temporary compatibility breaks and the batch-wide Program ownership boundary. Program reported gate 45/45 passed, the decision committed and pushed, and its tree clean.
 
-No covered item may move from `blocked` to `ready` until the corresponding approval is recorded in Lab lane memory. Any implementation that changes an approved API, schema, file set, ownership boundary, compatibility break, rollback or required tests needs a new decision for that item.
+Only LAB-018 may move to `ready`. LAB-019, LAB-020, LAB-021, LAB-022, LAB-023 and LAB-027 remain approved but sequence-blocked. No parallel or combined implementation is authorised.
+
+Any implementation that changes an approved API, schema, file set, ownership boundary, compatibility break, rollback or required tests needs a new decision for that item.
