@@ -473,3 +473,26 @@ The compatibility break is accepted only for the current consumers explicitly na
 ### Decision
 
 No amendments are required. LAB-017 is authorised to move to `ready` unchanged.
+
+---
+
+## 2026-07-19 — LAB-017 implementation completion received; Program acceptance pending immutable receipt
+
+**Status:** LAB IMPLEMENTATION COMPLETE AS REPORTED; PROGRAM ACCEPTANCE NOT YET CLOSED.
+
+**Reported evidence:** The Lab lane reports that LAB-017 was implemented under the approved version-1 envelope; only the reference/resolver helper and its dedicated test were committed; focused validation, full validation, feature commit, and documentation closeout all passed 169/169; the feature and documentation checkpoints were pushed only to `lane/code-pilot-lab`; and final state is zero staged, one expected HEAD-marker edit, 32 protected untracked, and zero deleted paths. LAB-018 remains blocked, no queue item is ready, and no LAB-018 implementation has started.
+
+### Decision
+
+Accept this as a lane-completion notification, not yet as the immutable Program acceptance return required by the approved envelope. Program acceptance of LAB-017 remains pending the exact envelope commit, feature commit, documentation closeout commit, exact two implementation path names, exact staged-set proof, and final classified Git receipt. The current Program connection cannot independently resolve the Lab branch, so those identifiers must be carried in the Lab handoff before acceptance can close.
+
+### LAB-018
+
+LAB-018 remains blocked. Program memory contains no LAB-018 seam envelope, so no implementation is authorised. The Lab orchestrator owns preparing the separate immutable envelope; Program owns the subsequent approval decision.
+
+### Consequences
+
+- No LAB-017 rework is commissioned from this receipt.
+- The reported 169/169 result and protected dirty-tree state are preserved as coordination evidence.
+- LAB-018 may not move to `ready` until its separate seam envelope is approved.
+- Patrick has no manual action.

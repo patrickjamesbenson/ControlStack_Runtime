@@ -340,3 +340,23 @@ Production serial allocation, resolver hosting, route-to-storage mapping, persis
 ### Acceptance return
 
 Lab must return the exact envelope and implementation commits, complete changed-path inventory, focused test receipt for every envelope test class, full `lab-ies` receipt, exact staged-set proof, final Git inventory, push receipt, and updated lane handoff. Any interface, shape, consumer, ownership, rollback, test, file-scope, or seam expansion requires new Program approval.
+
+## 2026-07-19 — LAB-017 completion intake and LAB-018 hold
+
+**Status:** LAB-017 COMPLETE AS REPORTED; ACCEPTANCE RECEIPT INCOMPLETE. LAB-018 BLOCKED.
+
+### Reported LAB-017 result
+
+- Version-1 implementation is reported complete without seam drift.
+- Only the reference/resolver helper and its dedicated test were committed.
+- Focused, full, feature-commit, and documentation-closeout validation passed 169/169.
+- Feature and documentation checkpoints were pushed only to the Lab lane.
+- Final state is zero staged, one expected HEAD-marker edit, 32 protected untracked, and zero deleted paths.
+
+### Acceptance intake still required
+
+Program acceptance remains open until the Lab handoff carries the exact envelope, feature, and documentation commit identities; exact implementation path names; exact staged-set proof; and final classified Git receipt. This does not authorise rework and does not invalidate the reported green result.
+
+### LAB-018
+
+LAB-018 remains blocked because no separate seam envelope is recorded in Program memory. The Lab orchestrator prepares that envelope; Program decides it. No queue item is admitted as ready from this update.

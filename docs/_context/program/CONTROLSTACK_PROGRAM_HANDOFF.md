@@ -407,3 +407,11 @@ The approval is confined to the exact public interface and data shapes, exact tw
 Program retains production serial allocation, resolver hosting, route-to-storage mapping, persistence, authentication, deployment, and endpoint ownership. The implementation must not cross those boundaries. Any change to the approved interface, data shape, consumers, ownership split, rollback, tests, file list, or seam count requires a new Program decision.
 
 Lab must cite its exact envelope commit and this approval before commissioning one bounded worker, then return the implementation commit, focused and full gate evidence, exact staged-set proof, final Git inventory, push receipt, and updated handoff. Patrick has no action.
+
+## 2026-07-19 LAB-017 completion intake
+
+Lab reports LAB-017 complete under the approved version-1 envelope. Only the reference/resolver helper and dedicated test were committed; all focused, full, feature-commit, and documentation-closeout checks passed 169/169; both checkpoints were pushed only to the Lab lane; and final state is zero staged, one expected HEAD-marker edit, 32 protected untracked, and zero deleted paths.
+
+Program records this as lane-completion evidence. Final Program acceptance remains open because the receipt does not name the exact envelope, feature, and documentation commit identities, the exact two implementation paths, or the exact staged-set proof required by the approval. The Program app cannot resolve the Lab branch independently, so those identifiers must remain in the Lab handoff for later acceptance.
+
+LAB-018 remains blocked. It has no separate seam envelope in Program memory and no implementation is authorised. The Lab orchestrator prepares that request; Program decides it. Patrick has no action.
