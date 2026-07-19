@@ -16,7 +16,7 @@ const hostAdapterPath = fileURLToPath(
   new URL("../tools/runtime/engine_runtable_selected_project_readonly_host_adapter.py", import.meta.url),
 );
 const mcpSourcePath = fileURLToPath(
-  new URL("../tools/controlstack-mcp/controlstack_mcp.py", import.meta.url),
+  new URL("../tools/controlstack-mcp/controlstack_mcp_program_contract_snapshot.py", import.meta.url),
 );
 
 function invokePythonJson(args, stdin = null) {
@@ -131,7 +131,7 @@ test("locks the live server lifecycle to string revisions while leaving the disa
         "../tools/runtime/engine_runtable_selected_project_readonly_host_adapter.py",
         import.meta.url,
       ), "utf8"),
-      readFile(new URL("../tools/controlstack-mcp/controlstack_mcp.py", import.meta.url), "utf8"),
+      readFile(new URL("../tools/controlstack-mcp/controlstack_mcp_program_contract_snapshot.py", import.meta.url), "utf8"),
       readFile(new URL("../server.js", import.meta.url), "utf8"),
     ]);
 

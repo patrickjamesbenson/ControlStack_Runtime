@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
-const mcpSourceUrl = new URL("../tools/controlstack-mcp/controlstack_mcp.py", import.meta.url);
+const mcpSourceUrl = new URL("../tools/controlstack-mcp/controlstack_mcp_program_contract_snapshot.py", import.meta.url);
 const serverSourceUrl = new URL("../server.js", import.meta.url);
 const donorBridgeUrl = new URL("../../ControlStack/lib/engine_bridge/service.py", import.meta.url);
 const donorRunEngineUrl = new URL("../../ControlStack/lib/planning/run_engine.py", import.meta.url);

@@ -21,7 +21,12 @@ from typing import Any, Mapping
 STAGE_NAME = "ENGINE-RUNTABLE-OPTIC-EFF-CURRENT-FEASIBILITY-1"
 SCRIPT_PATH = Path(__file__).resolve()
 RUNTIME_ROOT = SCRIPT_PATH.parents[2]
-MCP_SOURCE_PATH = RUNTIME_ROOT / "tools" / "controlstack-mcp" / "controlstack_mcp.py"
+MCP_SOURCE_PATH = (
+    RUNTIME_ROOT
+    / "tools"
+    / "controlstack-mcp"
+    / "controlstack_mcp_program_contract_snapshot.py"
+)
 REPORT_DIR = RUNTIME_ROOT / "_worker_reports"
 STAGE_REPORT_PATH = REPORT_DIR / f"{STAGE_NAME}.json"
 LATEST_REPORT_PATH = REPORT_DIR / "latest_engine_runtable_host_readonly_real_run.json"
@@ -700,7 +705,7 @@ def safe_schema_introspection(snapshot: Mapping[str, Any]) -> list[dict[str, Any
 def load_mcp_module() -> Any:
     spec = importlib.util.spec_from_file_location("controlstack_mcp_host_readonly", MCP_SOURCE_PATH)
     if spec is None or spec.loader is None:
-        raise RuntimeError("Unable to create import spec for local controlstack_mcp.py")
+        raise RuntimeError("Unable to create import spec for Program MCP contract snapshot")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
@@ -1339,8 +1344,8 @@ def base_report(mode: str) -> dict[str, Any]:
         "mode": mode,
         "runner": "tools/evidence/engine_runtable_host_readonly_real_run.py",
         "host_local_runner_added": True,
-        "internal_seam_source": "tools/controlstack-mcp/controlstack_mcp.py::engine_runtable_internal_readonly_invoke_probe",
-        "source_access_path": "tools/controlstack-mcp/controlstack_mcp.py::_load_runtime_data_active_source_internal",
+        "internal_seam_source": "tools/controlstack-mcp/controlstack_mcp_program_contract_snapshot.py::engine_runtable_internal_readonly_invoke_probe",
+        "source_access_path": "tools/controlstack-mcp/controlstack_mcp_program_contract_snapshot.py::_load_runtime_data_active_source_internal",
         "donor_bridge_used": False,
         "donor_bridge_audit_jsonl_write_enabled": False,
         "audit_jsonl_write_attempted": False,

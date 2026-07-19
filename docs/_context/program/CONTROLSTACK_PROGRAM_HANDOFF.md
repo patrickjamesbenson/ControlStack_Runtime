@@ -348,7 +348,7 @@ Current Lab classification:
 
 The deployed shared MCP `repo_green_commit_push` accepts the exact staged-path set and green gate, then rejects because unrelated modified or untracked paths exist. This contradicts the Program rule that protected dirty work remains unstaged while bounded parcels commit by exact index content.
 
-Deployment v2 proves the live MCP executable is sourced from `C:\ControlStack_Worktrees\controlstack-tooling-v2`. The `tools/controlstack-mcp/controlstack_mcp.py` copy visible in the Program worktree is not the deployed authority and lacks current lane-aware `repo_info` behaviour. Do not patch that stale copy as a substitute for a tooling-lane repair.
+Deployment v2 proves the live MCP executable is sourced from `C:\ControlStack_Worktrees\controlstack-tooling-v2`. The former executable-looking Program copy has now been resolved: `tools/controlstack-mcp/controlstack_mcp.py` is a fail-closed tombstone, while Program-only contract tests and evidence use `tools/controlstack-mcp/controlstack_mcp_program_contract_snapshot.py`, which also refuses direct server startup. Shared MCP changes remain owned exclusively by `lane/controlstack-tooling-v2`.
 
 ### Immediate next action
 
@@ -357,3 +357,27 @@ Use a correctly connected shared-tooling app for `C:\ControlStack_Worktrees\cont
 ### Lab resume action after tooling activation
 
 The Lab worker resumes the existing staged four-file parcel, verifies the cached diff, reruns `lab-ies`, commits with `lab: checkpoint canonical keyword foundation`, pushes `lane/code-pilot-lab`, and updates its durable handoff. Only then may the two-file `iesWorkingRecord` checkpoint be commissioned.
+
+## 2026-07-19 promotion attempt and stale-copy closeout
+
+This section supersedes the immediate tooling-repair action above.
+
+### Current identity
+
+- Program starting HEAD: `7cff9e8428e98c611a9d97d242502bebc9e157a3`.
+- Root: `C:\ControlStack_Worktrees\program-integrate`.
+- Branch: `lane/program-integrate`.
+- Gate: `program-integrate`.
+- Starting Git state: clean.
+
+### Promotion intake
+
+Current coordination evidence reports Lab commits `bda7d61`, `a2142952`, `8749bbe1`, and `d0577a9d` as gated, pushed, and awaiting promotion. The current Program app cannot resolve those commits from `lane/code-pilot-lab`, inspect `main`, create/update/merge a pull request, operate a dedicated integration worktree, or push `main`. The first promotion therefore stopped at the authorised capability boundary. The blocker owner is Program & Integrate tooling/connection authority, and the promotion path is not executable from this connection.
+
+### Required promotion capability
+
+Provide source-lane and `main` read access, exact candidate diff/ancestry, pull-request create/update/merge or dedicated integration-worktree operations, integrated-state gate execution, and guarded push-to-`main`. Do not substitute file copying, a feature commit on `lane/program-integrate`, force-push, or weakened branch/root guards.
+
+### Program-local MCP resolution
+
+The Program-only MCP seam implementation now lives at `tools/controlstack-mcp/controlstack_mcp_program_contract_snapshot.py`. It remains importable for contract tests but refuses direct server startup. The old `tools/controlstack-mcp/controlstack_mcp.py` path is a fail-closed tombstone naming the canonical shared-tooling authority. Dependent Program tests, the host adapter, and evidence runner use only the explicit snapshot path.

@@ -247,3 +247,25 @@ The repair must:
 4. Only after that closeout may Program authorise the two-file `iesWorkingRecord` checkpoint.
 
 No further Lab feature slice is authorised while this blocker remains open.
+
+## 2026-07-19 — Tooling repair closeout and first Lab promotion intake
+
+**Status:** SHARED-TOOLING BLOCKER SUPERSEDED; LAB PROMOTION AWAITING EXECUTABLE PROGRAM CONNECTION.
+
+### Reported lane evidence
+
+- Shared-tooling guard repair is committed and pushed at `2e4d880` on `lane/controlstack-tooling-v2`.
+- Lab accepted and pushed checkpoints awaiting promotion: `bda7d61` reference-driven IES generation, `a2142952` project IES generation, `8749bbe1` documentation closeout, and `d0577a9d` queue refill.
+- Selector context migration is reported pushed at `832684b4`, gate 103/103.
+
+These lane hashes are current coordination input but cannot be independently resolved through the present Program connection.
+
+### Program capability finding
+
+The verified CS Integrate app is confined to `C:\ControlStack_Worktrees\program-integrate` on `lane/program-integrate`. It exposes no read access to the pushed Lab branch or target `main`, no pull-request create/update/merge operation, no dedicated integration worktree, and no guarded push-to-`main` capability. Therefore the active main-promotion policy is not executable from this connection.
+
+### Blocker and owner
+
+- **Blocker:** missing Program promotion capability, not a Lab parcel defect.
+- **Owner:** Program & Integrate tooling/connection authority.
+- **Required next action:** provide a promotion-capable Program surface with source-lane and `main` read access, candidate diff/ancestry, PR create/update/merge or dedicated integration-worktree operations, integrated-state gates, and guarded main push. Program must then assess the exact Lab commits before merging; no file-copy or `lane/program-integrate` substitute is authorised.

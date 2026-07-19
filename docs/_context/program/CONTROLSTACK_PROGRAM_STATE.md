@@ -217,3 +217,12 @@ Current repository tests show that the selected-result, run-table-first, and IES
 ### Current Lab status
 
 P2 Checkpoint 1 is **IMPLEMENTATION COMPLETE / GATE GREEN / COMMIT BLOCKED BY SHARED TOOLING**. The next two-file `iesWorkingRecord` checkpoint remains unauthorised until the staged four-file checkpoint is committed and pushed. The Lab lane must remain paused with its current classified state intact.
+
+## 2026-07-19 current integration state
+
+- **VERIFIED:** Program is connected to `C:\ControlStack_Worktrees\program-integrate`, branch `lane/program-integrate`, through the `program-integrate` gate; the starting tree for this session was clean at `7cff9e8428e98c611a9d97d242502bebc9e157a3`.
+- **REPORTED CURRENT UPDATE:** shared-tooling repair `2e4d880` is committed and pushed, and Lab subsequently pushed `bda7d61`, `a2142952`, `8749bbe1`, and `d0577a9d`.
+- **VERIFIED CAPABILITY LIMIT:** this Program connection cannot resolve the Lab branch, inspect target `main`, create or merge a pull request, operate a dedicated integration worktree, or push `main`.
+- **CONSEQUENCE:** the first Lab promotion is blocked by Program connection capability, not by the reported Lab gate or parcel state. The promotion path defined in `CONTROLSTACK_MAIN_PROMOTION_PATH.md` is not executable from the present app.
+- **VERIFIED LOCAL RESOLUTION:** the stale executable-looking Program MCP copy has been separated into `controlstack_mcp_program_contract_snapshot.py`; the old `controlstack_mcp.py` path is now a fail-closed tombstone and the snapshot refuses direct server startup.
+- **CURRENT MILESTONE:** checkpoint and push this bounded Program-local stale-copy resolution, then await a promotion-capable Program surface before assessing or merging the reported Lab commits.

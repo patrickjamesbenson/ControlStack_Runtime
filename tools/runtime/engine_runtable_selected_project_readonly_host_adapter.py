@@ -22,7 +22,11 @@ BRIDGE_FIELD_ORDER = [
     "bytecodeWritingDisabled",
 ]
 MAX_STDIN_BYTES = 256 * 1024
-MCP_SOURCE_PATH = Path(__file__).resolve().parents[1] / "controlstack-mcp" / "controlstack_mcp.py"
+MCP_SOURCE_PATH = (
+    Path(__file__).resolve().parents[1]
+    / "controlstack-mcp"
+    / "controlstack_mcp_program_contract_snapshot.py"
+)
 FORBIDDEN_KEY_PATTERN = re.compile(
     r"^(?:db|database|databasePath|dbPath|filePath|sourcePath|privatePath|runtimeData|projectEnvelope|engineOptions|options)$",
     re.IGNORECASE,

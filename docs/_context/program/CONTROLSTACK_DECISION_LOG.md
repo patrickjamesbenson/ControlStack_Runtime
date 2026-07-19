@@ -351,3 +351,26 @@ The Lab P2 Checkpoint 1 parcel proved that live commit behaviour can block a val
 - The tooling parcel must preserve exact staged-path, gate, branch, deletion, and same-path unstaged-change guards while allowing unrelated modified/untracked paths to remain unstaged.
 - The affected MCP service must be restarted and identity-verified before a blocked lane retries.
 - Lab remains paused with its valid staged P2 Checkpoint 1 parcel intact until the live tooling repair is activated.
+
+---
+
+## 2026-07-19 — Program-local MCP canonical filename is a fail-closed tombstone
+
+**Status:** ACCEPTED.
+
+**Evidence:** The deployed MCP source remains `C:\ControlStack_Worktrees\controlstack-tooling-v2\tools\controlstack-mcp\controlstack_mcp.py` on `lane/controlstack-tooling-v2`. Program tests previously inspected and executed a stale-looking file at the same relative canonical filename inside `lane/program-integrate`.
+
+### Decision
+
+Preserve the Program-only MCP seam fixture as `tools/controlstack-mcp/controlstack_mcp_program_contract_snapshot.py`. Replace `tools/controlstack-mcp/controlstack_mcp.py` in the Program worktree with a fail-closed tombstone, and make the snapshot itself refuse direct server startup.
+
+### Rationale
+
+A full server implementation at the canonical filename could be mistaken for the deployed shared-tooling authority, patched incorrectly, or started by a legacy local launcher. An explicit snapshot name preserves Program contract tests while the tombstone makes the wrong maintenance and startup path fail visibly.
+
+### Consequences
+
+- Shared MCP behaviour is changed only in `lane/controlstack-tooling-v2`.
+- Program tests and evidence probes may inspect or import the named contract snapshot, but may not deploy it.
+- Legacy Program launchers that still target `controlstack_mcp.py` stop at the tombstone instead of starting stale code.
+- Any future snapshot refresh requires a source-hash-evidenced sync parcel and the full `program-integrate` gate.
