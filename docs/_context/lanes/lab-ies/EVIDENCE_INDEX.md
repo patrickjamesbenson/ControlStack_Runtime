@@ -6,6 +6,54 @@
 - Historical handoff content is retained as reported context unless freshly reverified.
 - Test output proves only the behaviour exercised by the named tests; low-level merge tests do not by themselves prove completion of the final governed merge.
 
+## LAB-018 NVB resolution contract — 2026-07-20
+
+### Identity and scope
+
+- starting HEAD: `7e7e2cfc6bf92794843cd39932551d88851aebc0`;
+- queue item: `LAB-018-nvb-resolution-contract`;
+- approved consolidated seam envelope: version 1, unchanged;
+- authorised implementation paths only:
+  - `packages/lab-kernel/ies-toolkit/nvbResolve.js`;
+  - `tests/lab-kernel/nvbResolve.test.js`.
+
+### Behaviour evidence
+
+The completed contract:
+
+- exports only the approved version-1 API, schema constants and frozen test-path list;
+- normalises bounded NVB families and classifies the three approved test paths deterministically;
+- resolves governing thermals only from exactly one selected-family row nominated as worst case;
+- matches optics by exact BOM ID first, otherwise exact family plus variant, and fails closed on missing, duplicate or cross-family results;
+- projects hot-test provenance only as an opaque evidence reference and never parses it for thermal facts or emergency verification;
+- splits Lab-form rows only by exact `ies` and `check` kinds while preserving source order;
+- returns deeply immutable plain-data output without mutating source rows;
+- contains no live source loader, direct RuntimeData/database access, copied Program reader, filesystem, network, DOM, browser storage, clock, random or Selector option seam.
+
+The committed offline `lab_form.json` fixture has no approved `kind` discriminator. Equivalent fixture and injected rows therefore produce the same deterministic unresolved result with `unknown_lab_form_kind`; no fixture was changed or silently reinterpreted.
+
+### Test and gate evidence
+
+- focused changed-file `lab-ies` execution: 181/181 passed;
+- independent full `lab-ies` gate: 181/181 passed;
+- gated feature commit execution: 181/181 passed;
+- failed, cancelled, skipped and todo counts were zero in every execution.
+
+### Commit and push evidence
+
+- feature commit: `952b2ba40c5a5ea1c7e217c9c1dcd9a19170e648`;
+- subject: `lab: checkpoint NVB resolution contract`;
+- files: exactly the two authorised implementation paths;
+- push: origin `lane/code-pilot-lab`, confirmed successful;
+- no fixture, HTML, adapter, Program, Runtime, Engine or Selector path changed;
+- protected dirty paths and the unstaged branch-HEAD marker were preserved.
+
+### Resulting queue boundary
+
+- LAB-018 is `done`.
+- LAB-019 is approved and becomes the single next `ready` item.
+- LAB-020, LAB-021, LAB-022, LAB-023 and LAB-027 remain approved but sequence-blocked.
+
 ## Branch-HEAD lane-memory guard — 2026-07-19
 
 ### Trigger and reconciliation

@@ -13,11 +13,11 @@ Current repository evidence overrides stale historical statements.
 - Root: `C:\ControlStack_Worktrees\code-pilot-lab`
 - Branch: `lane/code-pilot-lab`
 - Gate: `lab-ies`
-- Recorded branch HEAD: `615140cbbb1b653b2a042a5072e11914dabbbdf5`
+- Recorded branch HEAD: `952b2ba40c5a5ea1c7e217c9c1dcd9a19170e648`
 - Branch-HEAD guard checkpoint: `6d34e500d407d5335e5eebb317636a67a5e98618`
-- Starting HEAD for LAB-017: `09ac99cb35b6af45696b4c83e0051a1651bb2f14`
-- Completed feature HEAD: `2333c1197abf898e7a680455f99918823cb76e30`
-- Feature subject: `lab: checkpoint reference resolver contract`
+- Starting HEAD for LAB-018: `7e7e2cfc6bf92794843cd39932551d88851aebc0`
+- Completed feature HEAD: `952b2ba40c5a5ea1c7e217c9c1dcd9a19170e648`
+- Feature subject: `lab: checkpoint NVB resolution contract`
 - Feature push: confirmed on origin `lane/code-pilot-lab`
 
 ## Branch-HEAD synchronisation invariant
@@ -42,7 +42,29 @@ Before any queue item is selected, a worker must compare `Recorded branch HEAD` 
 - Arbitrary shell execution: no
 - Allowed gate: `lab-ies`
 
-## Latest completed parcel — LAB-017
+## Latest completed parcel — LAB-018
+
+Queue item `LAB-018-nvb-resolution-contract` is complete.
+
+Exactly these two authorised files were changed and committed:
+
+```text
+packages/lab-kernel/ies-toolkit/nvbResolve.js
+tests/lab-kernel/nvbResolve.test.js
+```
+
+Verified outcome:
+
+- the module exposes only the approved version-1 NVB resolution API and frozen constants;
+- family and test-path classification are deterministic and fail closed;
+- governing thermals resolve only from one nominated worst-case row in the selected family;
+- optic matching uses exact BOM ID first, otherwise exact family plus variant, and duplicate or missing matches block resolution;
+- hot-test provenance remains an opaque evidence reference and never becomes emergency verification or a thermal source;
+- Lab-form rows split only by exact `ies` and `check` kinds, with unknown kinds remaining blockers;
+- outputs are deeply immutable, source inputs remain unchanged, and no live loader, database, filesystem, network, DOM, clock, random, storage or Selector seam exists;
+- the committed offline Lab form currently lacks the approved `kind` discriminator, so those fixture rows correctly remain fail-closed until a separately authorised fixture parcel addresses them.
+
+## Previous completed parcel — LAB-017
 
 Queue item `LAB-017-reference-resolver-contract` is complete.
 
@@ -95,9 +117,9 @@ Verified outcome:
 
 The connected app exposes the fixed `lab-ies` gate as the available changed-file and full validation path.
 
-- Focused changed-file execution for the two LAB-017 files: 169 tests, 169 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
-- Full `lab-ies` gate: 169 tests, 169 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
-- Gated feature commit execution: 169 tests, 169 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
+- Focused changed-file execution for the two LAB-018 files: 181 tests, 181 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
+- Full `lab-ies` gate: 181 tests, 181 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
+- Gated feature commit execution: 181 tests, 181 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
 
 ## Protected final Git state
 
@@ -105,7 +127,7 @@ The protected working-tree state after documentation closeout is:
 
 - staged: 0;
 - modified: 1 — only the unstaged `Recorded branch HEAD` synchronisation marker in this file;
-- untracked: 32;
+- untracked: 31;
 - deleted: 0.
 
 Protected untracked paths:
@@ -132,7 +154,6 @@ packages/lab-kernel/ies-toolkit/labbench.html
 packages/lab-kernel/ies-toolkit/luminaire_provenance.html
 packages/lab-kernel/ies-toolkit/nvbComponents.js
 packages/lab-kernel/ies-toolkit/nvbLabAdapter.js
-packages/lab-kernel/ies-toolkit/nvbResolve.js
 packages/lab-kernel/ies-toolkit/onemm_contract.html
 packages/lab-kernel/ies-toolkit/provenance.html
 packages/lab-kernel/ies-toolkit/provenance_explorer.html
@@ -175,10 +196,11 @@ tests/selectorCascadeCorrectness.test.js
 - Program reported gate 45/45 passed, the decision committed and pushed, and its tree clean.
 - The six ordinary seams are approved unchanged.
 - LAB-022 is approved with exactly two unique non-MERGED parents, immutable order-significant provenance, exactly matching grids without interpolation/resampling, and allocation/authority/approval/sealing outside the kernel; violations fail closed.
-- Only LAB-018 is active and ready.
-- LAB-019, LAB-020, LAB-021, LAB-022, LAB-023 and LAB-027 are approved but sequence-blocked until the active parcel is completed and closed out.
+- LAB-018 is complete and confirmed on origin.
+- Only LAB-019 is active and ready.
+- LAB-020, LAB-021, LAB-022, LAB-023 and LAB-027 are approved but sequence-blocked until the active parcel is completed and closed out.
 - No parallel or combined implementation is authorised.
-- The earlier LAB-018 approval hold is superseded.
+- The earlier LAB-018 approval hold remains superseded.
 
 ## Queue state
 
@@ -190,9 +212,10 @@ tests/selectorCascadeCorrectness.test.js
 - `LAB-015-ugr-surface`: done.
 - `LAB-016-nvb-offline-fixtures`: done.
 - `LAB-017-reference-resolver-contract`: done.
-- Next ordered item: `LAB-018-nvb-resolution-contract`.
-- Resulting status: `ready`; its batch seam approval is recorded and the earlier hold is superseded.
-- Ready items: exactly one — LAB-018.
-- Approved sequence-blocked items: LAB-019, LAB-020, LAB-021, LAB-022, LAB-023 and LAB-027.
+- `LAB-018-nvb-resolution-contract`: done.
+- Next ordered item: `LAB-019-component-projection-contract`.
+- Resulting status: `ready`; its batch seam approval is already recorded.
+- Ready items: exactly one — LAB-019.
+- Approved sequence-blocked items: LAB-020, LAB-021, LAB-022, LAB-023 and LAB-027.
 
-No implementation item was executed during this approval-recording parcel.
+LAB-018 was implemented, validated, committed and pushed as the single active parcel.

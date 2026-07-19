@@ -2,7 +2,7 @@
 
 ## Session purpose
 
-This handoff preserves final LAB-017 acceptance, records Program & Integrate approval of all seven seams in consolidated envelope version 1, and authorises only LAB-018 as the single next runnable parcel.
+This handoff records completed LAB-018 NVB resolution, preserves the approved consolidated seam sequence, and authorises only LAB-019 as the single next runnable parcel.
 
 ## Identity
 
@@ -12,13 +12,11 @@ This handoff preserves final LAB-017 acceptance, records Program & Integrate app
 - Branch: `lane/code-pilot-lab`
 - Gate: `lab-ies`
 - Reusable prompt checkpoint: `1df62fccd91ac66509b02960ad988f6ef90c0b52`
-- Starting HEAD for LAB-017: `09ac99cb35b6af45696b4c83e0051a1651bb2f14`
-- Completed feature checkpoint: `2333c1197abf898e7a680455f99918823cb76e30`
-- Feature subject: `lab: checkpoint reference resolver contract`
+- Starting HEAD for LAB-018: `7e7e2cfc6bf92794843cd39932551d88851aebc0`
+- Completed feature checkpoint: `952b2ba40c5a5ea1c7e217c9c1dcd9a19170e648`
+- Feature subject: `lab: checkpoint NVB resolution contract`
 - Feature checkpoint confirmed on origin `lane/code-pilot-lab`
-- LAB-017 seam-envelope checkpoint: `f927ced1ca77c8b11ef8b13b9d6bb3833618844c`
-- LAB-017 approval checkpoint: `09ac99cb35b6af45696b4c83e0051a1651bb2f14`
-- Seam envelope: `docs/_context/lanes/lab-ies/LAB-017_SEAM_ENVELOPE.md`, version 1, approved unchanged
+- Consolidated seam envelope: `docs/_context/lanes/lab-ies/LAB-018_023_027_BATCH_SEAM_ENVELOPE.md`, version 1, approved unchanged for LAB-018 and LAB-019
 - Branch-HEAD guard checkpoint: `6d34e500d407d5335e5eebb317636a67a5e98618`
 
 ## Branch-HEAD guard
@@ -29,24 +27,24 @@ After every documentation push, only the `Recorded branch HEAD` field is refresh
 
 ## Completed queue item
 
-`LAB-017-reference-resolver-contract` is complete.
+`LAB-018-nvb-resolution-contract` is complete.
 
 Exactly these two feature files were committed:
 
 ```text
-packages/lab-kernel/ies-toolkit/nvbReference.js
-tests/lab-kernel/nvbReference.test.js
+packages/lab-kernel/ies-toolkit/nvbResolve.js
+tests/lab-kernel/nvbResolve.test.js
 ```
 
-The module now exposes only the approved version-1 identity, resolver-path and evidence-readiness contract. Outputs are deterministic and deeply immutable; malformed identities, unsafe paths, unsupported route kinds and conflicting evidence fail closed. Emergency and EWIS assembly verification remain `null` and independent.
+The module now exposes only the approved version-1 NVB resolution contract. Family and test-path classification are deterministic; governing thermals require exactly one nominated worst-case row; optic selection uses exact BOM ID first and exact family plus variant only as fallback; unknown or conflicting source facts remain blockers. Hot-test provenance is retained only as an opaque evidence reference and never becomes emergency verification or a thermal source.
 
-No host, route, storage, allocation, persistence, authentication, deployment, endpoint, HTML, fixture, Program, Runtime, Engine or Selector implementation was changed. The named legacy Lab prototypes remain protected and may be temporarily incompatible until their later queue parcels.
+Outputs are deeply immutable, source rows remain unchanged, and no live loader, RuntimeData/database reader, copied Program reader, filesystem, network, DOM, browser storage, clock, random, HTML, fixture, adapter, Program, Runtime, Engine or Selector implementation was changed. The committed offline Lab form currently lacks the approved `kind` discriminator and therefore remains correctly fail-closed until a separately authorised fixture parcel.
 
 ## Validation evidence
 
-- Focused changed-file `lab-ies` execution: 169/169 passed.
-- Independent full `lab-ies` gate: 169/169 passed.
-- Gated feature commit execution: 169/169 passed.
+- Focused changed-file `lab-ies` execution: 181/181 passed.
+- Independent full `lab-ies` gate: 181/181 passed.
+- Gated feature commit execution: 181/181 passed.
 - Feature checkpoint push: confirmed on origin `lane/code-pilot-lab`.
 - Failed, cancelled, skipped and todo counts were zero.
 
@@ -58,10 +56,10 @@ The protected working-tree state after documentation closeout must remain:
 
 - staged: 0;
 - modified: 1 — only the unstaged `Recorded branch HEAD` synchronisation marker in `LANE_STATE.md`;
-- untracked: 32;
+- untracked: 31;
 - deleted: 0.
 
-The 32 protected untracked paths remain exactly those recorded in `LANE_STATE.md`. In particular, these explicitly non-queued paths remain untouched:
+The 31 protected untracked paths remain exactly those recorded in `LANE_STATE.md`. In particular, these explicitly non-queued paths remain untouched:
 
 ```text
 README.zip
@@ -82,10 +80,11 @@ tests/selectorCascadeCorrectness.test.js
 
 - `LAB-016-nvb-offline-fixtures`: `done`.
 - `LAB-017-reference-resolver-contract`: `done` and finally accepted by Program & Integrate.
+- `LAB-018-nvb-resolution-contract`: `done` and confirmed on origin.
 - Consolidated envelope: `LAB-018_023_027_BATCH_SEAM_ENVELOPE.md`, version 1, approved for all seven seams.
-- `LAB-018-nvb-resolution-contract`: `ready` and the only active parcel.
-- LAB-019, LAB-020, LAB-021, LAB-022, LAB-023 and LAB-027: approved but sequence-blocked.
-- Ready items: exactly one — LAB-018.
+- `LAB-019-component-projection-contract`: `ready` and the only active parcel.
+- LAB-020, LAB-021, LAB-022, LAB-023 and LAB-027: approved but sequence-blocked.
+- Ready items: exactly one — LAB-019.
 
 Program reported gate 45/45 passed, the approval decision committed and pushed, and its tree clean. No parallel or combined implementation is authorised.
 
@@ -93,7 +92,7 @@ LAB-022 is approved only under its ratified binary-composition policy: exactly t
 
 LAB-017 remains governed by its approved version-1 envelope. Program retains all production allocation, live source reading, hosting, routing, persistence, authentication, CRM integration, deployment and endpoint ownership.
 
-The next safe action is one bounded worker execution of LAB-018 only. Later approved parcels remain held until the active parcel is completed and closed out.
+The next safe action is one bounded worker execution of LAB-019 only. Later approved parcels remain held until the active parcel is completed and closed out.
 
 ## LAB-017 immutable completion receipt
 
@@ -201,7 +200,7 @@ The immutable receipt remains byte-for-byte unchanged. Promotion to main is a se
 - no LAB-017 change outside the recorded version-1 approval without a new seam decision;
 - no reverse-authority reconstruction, legacy alternative reference schema, diagnostic authority identity or unsafe governed path;
 - no public resolver route, server implementation, HTML, fixture, Selector or Program ownership absorbed into the Lab contract;
-- no implementation other than the single active LAB-018 parcel; LAB-019, LAB-020, LAB-021, LAB-022, LAB-023 and LAB-027 remain sequence-blocked until active-parcel closeout;
+- no implementation other than the single active LAB-019 parcel; LAB-020, LAB-021, LAB-022, LAB-023 and LAB-027 remain sequence-blocked until active-parcel closeout;
 - no reset, restore, clean, deletion or movement of protected dirty paths;
 - no execution of `scripts/clear_chaff.ps1`;
 - no donor write;

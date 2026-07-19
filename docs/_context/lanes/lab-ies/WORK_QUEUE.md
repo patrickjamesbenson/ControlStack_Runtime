@@ -217,7 +217,7 @@ Evidence: `2333c1197abf898e7a680455f99918823cb76e30`, confirmed on origin.
   - `packages/lab-kernel/ies-toolkit/nvbResolve.js`
   - `tests/lab-kernel/nvbResolve.test.js`
 - seam envelope: `docs/_context/lanes/lab-ies/LAB-018_023_027_BATCH_SEAM_ENVELOPE.md`, version 1; approved unchanged by Program & Integrate on 2026-07-20.
-- batch sequence: active parcel; the earlier approval hold is superseded.
+- batch sequence: completed parcel; the earlier approval hold remains superseded.
 - prohibitions:
   - no direct RuntimeData filesystem or database access;
   - no copied Runtime or Program reader implementation;
@@ -230,7 +230,9 @@ Evidence: `2333c1197abf898e7a680455f99918823cb76e30`, confirmed on origin.
 - depends on: LAB-016-nvb-offline-fixtures
 - on success next: LAB-019-component-projection-contract after recorded Integrate approval
 - seam change: yes
-- status: ready
+- status: done
+
+Evidence: `952b2ba40c5a5ea1c7e217c9c1dcd9a19170e648`, confirmed on origin.
 
 ### Q-9 Component projection contract
 - id: LAB-019-component-projection-contract
@@ -239,7 +241,7 @@ Evidence: `2333c1197abf898e7a680455f99918823cb76e30`, confirmed on origin.
   - `packages/lab-kernel/ies-toolkit/nvbComponents.js`
   - `tests/lab-kernel/nvbComponents.test.js`
 - seam envelope: `docs/_context/lanes/lab-ies/LAB-018_023_027_BATCH_SEAM_ENVELOPE.md`, version 1; approved unchanged by Program & Integrate on 2026-07-20.
-- batch sequence: approved but sequence-blocked until the active parcel is completed and closed out.
+- batch sequence: active parcel; LAB-018 is completed and closed out.
 - prohibitions:
   - no embedded duplicate source catalogue;
   - no direct RuntimeData database access or Program reader copy;
@@ -252,7 +254,7 @@ Evidence: `2333c1197abf898e7a680455f99918823cb76e30`, confirmed on origin.
 - depends on: LAB-016-nvb-offline-fixtures
 - on success next: LAB-020-document-register-contract after recorded Integrate approval
 - seam change: yes
-- status: blocked
+- status: ready
 
 ### Q-10 Document register contract
 - id: LAB-020-document-register-contract
