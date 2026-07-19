@@ -13,7 +13,8 @@ Current repository evidence overrides stale historical statements.
 - Root: `C:\ControlStack_Worktrees\code-pilot-lab`
 - Branch: `lane/code-pilot-lab`
 - Gate: `lab-ies`
-- Recorded branch HEAD: `f927ced1ca77c8b11ef8b13b9d6bb3833618844c`
+- Recorded branch HEAD: `6d34e500d407d5335e5eebb317636a67a5e98618`
+- Branch-HEAD guard checkpoint: `6d34e500d407d5335e5eebb317636a67a5e98618`
 - Starting HEAD for LAB-016: `1df62fccd91ac66509b02960ad988f6ef90c0b52`
 - Completed feature HEAD: `ae14232b5a4fbff6fca15004a0583047fc5a319d`
 - Feature subject: `lab: checkpoint offline NVB fixtures`

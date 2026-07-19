@@ -19,6 +19,8 @@ This handoff records the permanent branch-HEAD lane-memory guard, the committed 
 - LAB-017 seam-envelope checkpoint: `f927ced1ca77c8b11ef8b13b9d6bb3833618844c`
 - Seam envelope: `docs/_context/lanes/lab-ies/LAB-017_SEAM_ENVELOPE.md`, version 1
 - Branch-HEAD guard reconciliation starting HEAD: `f927ced1ca77c8b11ef8b13b9d6bb3833618844c`
+- Branch-HEAD guard checkpoint: `6d34e500d407d5335e5eebb317636a67a5e98618`
+- Guard subject: `docs(lab): add branch HEAD guard`
 
 ## Branch-HEAD guard
 
@@ -51,6 +53,8 @@ Repository search found no local authority path, file URL, UNC path, credential 
 - Focused changed-file `lab-ies` execution: 159/159 passed.
 - Full `lab-ies` gate: 159/159 passed.
 - Gated feature commit execution: 159/159 passed.
+- Branch-HEAD guard documentation gate and guarded commit execution: 159/159 passed.
+- Guard checkpoint push: confirmed on origin `lane/code-pilot-lab`.
 - Failed, cancelled, skipped and todo counts were zero.
 
 ## Git and protected worktree state

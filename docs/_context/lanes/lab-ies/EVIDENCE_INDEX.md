@@ -28,6 +28,15 @@ The reusable standing-worker prompt, lane state, queue operating model and decis
 
 The marker is excluded from feature staging and exists to detect a worker ending after a feature push but before documentation closeout.
 
+### Commit and gate evidence
+
+- guard commit: `6d34e500d407d5335e5eebb317636a67a5e98618`;
+- subject: `docs(lab): add branch HEAD guard`;
+- files: exactly `DECISION_LOG.md`, `EVIDENCE_INDEX.md`, `LANE_STATE.md`, `SESSION_HANDOFF.md` and `WORK_QUEUE.md` under the Lab lane-memory directory;
+- full `lab-ies` gate: 159/159 passed, with zero failed, cancelled, skipped or todo;
+- push: origin `lane/code-pilot-lab`, confirmed up to date;
+- no implementation file or queue item was executed.
+
 ## LAB-017 seam envelope — 2026-07-19
 
 ### Review outcome
