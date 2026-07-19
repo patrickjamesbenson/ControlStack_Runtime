@@ -2,7 +2,7 @@
 
 ## Session purpose
 
-This handoff records the reusable standing-worker prompt, completion of queue item `LAB-016-nvb-offline-fixtures`, and the current seam-approval boundary.
+This handoff records the reusable standing-worker prompt, the committed LAB-017 seam-envelope prerequisite, and the current approval boundary.
 
 ## Identity
 
@@ -16,6 +16,8 @@ This handoff records the reusable standing-worker prompt, completion of queue it
 - Completed feature checkpoint: `ae14232b5a4fbff6fca15004a0583047fc5a319d`
 - Feature subject: `lab: checkpoint offline NVB fixtures`
 - Feature checkpoint confirmed on origin `lane/code-pilot-lab`
+- Live starting HEAD for the LAB-017 seam-envelope parcel: `4eba5af77963aa7395748a83118abef54c58a715`
+- Seam envelope: `docs/_context/lanes/lab-ies/LAB-017_SEAM_ENVELOPE.md`, version 1
 
 ## Completed queue item
 
@@ -75,13 +77,20 @@ tests/selectorCascadeCorrectness.test.js
 ## Queue state and next action
 
 - `LAB-016-nvb-offline-fixtures`: `done`.
-- Declared `on success next`: `LAB-017-reference-resolver-contract` after recorded Program & Integrate approval.
-- `LAB-017-reference-resolver-contract`: `blocked`, because it is a seam change and no Program & Integrate approval is recorded.
+- `LAB-017-reference-resolver-contract`: `blocked`.
+- Required seam envelope: documented as version 1.
+- Proposed implementation scope after approval: one pure helper module and one dedicated focused test file.
 - Ready items: none.
 
-The next safe action is an orchestrator review and recorded Program & Integrate seam approval before any worker starts LAB-017. Do not commission a worker for LAB-017 until that approval appears in lane memory.
+Program & Integrate must review the committed version-1 envelope and either approve it unchanged or return specific requested amendments. No worker may start LAB-017 until the approval is recorded in lane memory and the queue status is deliberately changed to `ready`.
 
-No subsequent item was executed in this session.
+## Program & Integrate approval record requested
+
+```text
+Program & Integrate approves the committed LAB-017 reference-and-resolver seam envelope, version 1, unchanged. Approval covers exactly the proposed helper module and dedicated focused test file. Program retains production serial allocation, resolver host, route-to-storage mapping, persistence, authentication, deployment and endpoint ownership. The five protected legacy Lab prototypes may remain incompatible until their later queue parcels. Authorise LAB-017 to change from blocked to ready; no other seam or implementation is approved.
+```
+
+No implementation or other queue item was executed in this session.
 
 ## Prohibited actions retained
 

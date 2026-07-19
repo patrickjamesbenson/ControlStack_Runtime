@@ -216,3 +216,19 @@ The earlier reported HTTP 502 is not the current state. Reopen the infrastructur
 **Status:** Locked.
 
 Recovered handoffs remain valuable context, but current repository commands and current test execution override stale historical counts, app names, service failures and worktree claims.
+
+## DL-019 — LAB-017 seam envelope required before approval
+
+**Status:** Program & Integrate review outcome recorded on 2026-07-19; implementation remains blocked.
+
+Program & Integrate has not approved `LAB-017-reference-resolver-contract` for implementation. Approval requires a committed seam envelope that defines the exact contract, scope, compatibility impact, rollback and success/failure tests.
+
+The proposed envelope is:
+
+- `docs/_context/lanes/lab-ies/LAB-017_SEAM_ENVELOPE.md`;
+- seam version: `1`;
+- implementation scope after approval: exactly `packages/lab-kernel/ies-toolkit/nvbReference.js` and `tests/lab-kernel/nvbReference.test.js`;
+- Program retains serial allocation, resolver host, route-to-storage mapping, persistence, authentication, deployment and endpoint ownership;
+- LAB-017 remains `blocked` until Program & Integrate records approval of the committed envelope checkpoint.
+
+No LAB-017 implementation may start merely because the envelope exists. The queue may change to `ready` only after the approval record identifies the committed envelope and exact implementation scope.

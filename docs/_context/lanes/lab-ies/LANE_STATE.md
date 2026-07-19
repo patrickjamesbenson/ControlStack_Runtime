@@ -118,6 +118,18 @@ packages/workspace-kernel/selectorReferenceOptionsService.js
 tests/selectorCascadeCorrectness.test.js
 ```
 
+## LAB-017 seam pre-approval state
+
+- Program & Integrate reviewed LAB-017 and has not approved implementation.
+- Required seam envelope is documented at `docs/_context/lanes/lab-ies/LAB-017_SEAM_ENVELOPE.md`, version 1.
+- Proposed implementation scope after approval is exactly:
+  - `packages/lab-kernel/ies-toolkit/nvbReference.js`;
+  - `tests/lab-kernel/nvbReference.test.js`.
+- The envelope fixes the API, identity and resolver-path shapes, evidence-readiness semantics, compatibility impact, rollback order and success/failure tests.
+- Program retains serial allocation, resolver host, route-to-storage mapping, persistence, authentication, deployment and endpoint ownership.
+- LAB-017 remains blocked until Program & Integrate approves the committed envelope checkpoint.
+- Live starting HEAD for the envelope parcel: `4eba5af77963aa7395748a83118abef54c58a715`.
+
 ## Queue state
 
 - `LAB-010-reference-driven-generation`: done.

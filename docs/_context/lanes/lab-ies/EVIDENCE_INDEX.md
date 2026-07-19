@@ -6,6 +6,50 @@
 - Historical handoff content is retained as reported context unless freshly reverified.
 - Test output proves only the behaviour exercised by the named tests; low-level merge tests do not by themselves prove completion of the final governed merge.
 
+## LAB-017 seam envelope — 2026-07-19
+
+### Review outcome
+
+- Program & Integrate reviewed the proposed reference/resolver parcel and did not approve implementation.
+- The stated prerequisite was a precise committed seam envelope covering contract, scope, compatibility, rollback and tests.
+- Implementation remains blocked.
+
+### Repository evidence used
+
+The envelope was derived from:
+
+- the live legacy `nvbReference.js` helper;
+- the committed sealed DTO implementation and schema constants;
+- the committed safe-runtime handoff boundary;
+- all repository imports of `nvbReference.js`;
+- current queue dependencies and prohibitions;
+- the protected dirty inventory.
+
+Repository search found no committed Program, Runtime, Engine, Selector or test import of `nvbReference.js`. Direct imports are confined to five protected untracked Lab prototypes: the main bench, curator, luminaire provenance view, provenance explorer and reference builder.
+
+### Documented seam
+
+`LAB-017_SEAM_ENVELOPE.md`, version 1, now fixes:
+
+- the exact public exports and constant values;
+- GT, OPT and MERGED identity grammar;
+- the exact safe identity projection shape;
+- seven canonical resolver route descriptors and path grammars;
+- fail-closed path and identity rejection rules;
+- evidence-readiness input and output shapes;
+- explicit non-ownership of emergency/EWIS assembly verification;
+- Program ownership of allocation, host, storage, persistence, authentication, deployment and endpoints;
+- exact implementation scope of one source file plus one dedicated focused test file;
+- compatibility impact on the five untracked legacy Lab prototypes;
+- reverse-order rollback with no database or route recovery;
+- focused success, failure, immutability, leak and static-boundary tests.
+
+### Queue evidence
+
+- LAB-017 remains `blocked` pending Program & Integrate approval of the committed version-1 envelope.
+- No other queue item is `ready`.
+- No implementation or unrelated queue parcel was started.
+
 ## Reusable standing-worker prompt — 2026-07-19
 
 - `SESSION_HANDOFF.md` now contains exactly one generic `STANDING WORKER — Lab & IES` prompt.
