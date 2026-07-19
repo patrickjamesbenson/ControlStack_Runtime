@@ -2,7 +2,7 @@
 
 ## Session purpose
 
-This handoff records completion of standing-worker queue item `LAB-013-polar-renderer` and the exact next safe action.
+This handoff records completion of standing-worker queue item `LAB-014-summary-normalise-surface` and the exact next safe action.
 
 ## Identity
 
@@ -11,24 +11,24 @@ This handoff records completion of standing-worker queue item `LAB-013-polar-ren
 - Root: `C:\ControlStack_Worktrees\code-pilot-lab`
 - Branch: `lane/code-pilot-lab`
 - Gate: `lab-ies`
-- Starting HEAD: `f397cd5928f9a33288c5f465517d5e241124708e`
-- Completed feature checkpoint: `4339ecc9beb86fe5a1996b0715c809211cdcd920`
-- Feature subject: `lab: checkpoint canonical polar renderer`
+- Starting HEAD: `4132fe346739f9d367a9cdd32146789d6da0292d`
+- Completed feature checkpoint: `ba724e8130858c2ad5b298b3444a18eb90e5dd35`
+- Feature subject: `lab: checkpoint summary normalise surface`
 - Feature checkpoint confirmed on origin `lane/code-pilot-lab`
 
 ## Completed queue item
 
-`LAB-013-polar-renderer` is complete.
+`LAB-014-summary-normalise-surface` is complete.
 
 Exactly this feature file was committed:
 
 ```text
-packages/lab-kernel/ies-toolkit/iesPolar.js
+packages/lab-kernel/ies-toolkit/summary.html
 ```
 
-The module now provides the canonical deterministic `niceCeil` and `renderPolar` implementation. It fails safely to a stable empty projection for missing or malformed grids, preserves supported single-plane and symmetry-grid rendering, does not mutate input, and emits presentation-only SVG. Static search found no DOM lookup, storage, network, filesystem, authority, normalisation or photometric-mutation seam.
+The surface remains a Lab-only, non-authoritative summary and normalisation harness. It imports the committed polar renderer and canonical keyword contract, removes its inline duplicate polar kernel, previews the LM-63 header/keywords/G-values without replacing the writer, uses `_INTERNAL_AMBIENT_TA_C`, confines non-canonical Lab measurements to provenance, and preserves the existing normalisation order.
 
-Inline polar snippets remain in protected untracked `labbench.html` and `provenance.html`. They belong to later queue parcels and were not changed or absorbed. The committed `iesPolar.js` module is the canonical import target used by the protected `summary.html` and `bench.html` surfaces.
+No production authority approval/sealing, merge, project generation, persistence, resolver publication or imported production-module change was introduced.
 
 ## Validation evidence
 
@@ -44,15 +44,9 @@ The feature parcel was staged as exactly the sole authorised file, committed and
 The final protected working-tree state after documentation closeout must remain:
 
 - staged: 0;
-- modified: 1;
+- modified: 0;
 - untracked: 35;
 - deleted: 0.
-
-Protected modified path:
-
-```text
-packages/lab-kernel/ies-toolkit/summary.html
-```
 
 The 35 protected untracked paths remain exactly those recorded in `LANE_STATE.md`. In particular, these explicitly non-queued paths remain untouched:
 
@@ -73,14 +67,14 @@ tests/selectorCascadeCorrectness.test.js
 
 ## Queue state and next action
 
-- `LAB-013-polar-renderer`: `done`.
-- Declared `on success next`: `LAB-014-summary-normalise-surface`.
-- `LAB-014-summary-normalise-surface`: `ready`, because `LAB-012` and `LAB-013` are done and no owner or Program & Integrate seam approval is required.
+- `LAB-014-summary-normalise-surface`: `done`.
+- Declared `on success next`: `LAB-015-ugr-surface`.
+- `LAB-015-ugr-surface`: `ready`, because `LAB-012-lab-style-foundation` is done and no owner or Program & Integrate seam approval is required.
 
-The exact next safe action is to run a new standing worker against only `LAB-014-summary-normalise-surface` and its sole authorised file:
+The exact next safe action is to run a new standing worker against only `LAB-015-ugr-surface` and its sole authorised file:
 
 ```text
-packages/lab-kernel/ies-toolkit/summary.html
+packages/lab-kernel/ies-toolkit/ugr.html
 ```
 
 No subsequent item was executed in this session.
@@ -88,7 +82,7 @@ No subsequent item was executed in this session.
 ## Prohibited actions retained
 
 - no work outside the next queue item's authorised file;
-- no production authority approval/sealing, merge, project generation, persistence, resolver publication, inline duplicate polar kernel or non-canonical keyword emission during LAB-014;
+- no UGR formula or kernel duplication, no changes to `iesUgr.js` or `iesUgrCie190.js`, no authority/project-generation/cross-lane behaviour and no persistence/network route during LAB-015;
 - no reset, restore, clean, deletion or movement of protected dirty paths;
 - no execution of `scripts/clear_chaff.ps1`;
 - no donor write;

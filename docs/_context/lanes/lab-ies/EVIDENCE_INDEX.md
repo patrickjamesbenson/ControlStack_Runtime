@@ -6,6 +6,49 @@
 - Historical handoff content is retained as reported context unless freshly reverified.
 - Test output proves only the behaviour exercised by the named tests; low-level merge tests do not by themselves prove completion of the final governed merge.
 
+## LAB-014 summary normalise surface — 2026-07-19
+
+### Identity and scope
+
+Observed through `repo_info`, `repo_git_status`, `repo_git_recent`, `repo_scope_guard`, source inspection, repository grep and the connected gate:
+
+- app: `ControlStack Lab and IES Authority Lane`;
+- lane: `lab-ies`;
+- root: `C:\ControlStack_Worktrees\code-pilot-lab`;
+- branch: `lane/code-pilot-lab`;
+- starting HEAD: `4132fe346739f9d367a9cdd32146789d6da0292d`;
+- queue item: `LAB-014-summary-normalise-surface`;
+- authorised path only: `packages/lab-kernel/ies-toolkit/summary.html`;
+- seam change: no.
+
+### Behaviour evidence
+
+The completed Lab-only surface:
+
+- imports the committed `renderPolar` implementation and removes its inline duplicate polar kernel;
+- imports `CANONICAL_KEYWORDS`, filters non-empty rows and emits them in exact canonical order;
+- uses `_INTERNAL_AMBIENT_TA_C` and contains no stale `_AMBIENT_TA_C` emission;
+- confines mains voltage, watts annotation, board/driver temperatures, Lab ambient and intended use to Lab-only provenance instead of supplementary outgoing keywords;
+- previews the exact LM-63 header form, canonical keyword rows, `TILT=NONE`, G-values and angle blocks while explicitly omitting candela values for readability;
+- preserves the existing dimensions → metadata → level → symmetrise → interpolate → pad → one-millimetre → orientation sequence;
+- contains no authority approval/sealing, merge, project generation, persistence, resolver publication, network, browser-storage or filesystem seam.
+
+### Test and gate evidence
+
+- Focused changed-file `lab-ies` execution: 159/159 passed.
+- Full `lab-ies` gate: 159/159 passed.
+- Gated feature commit execution: 159/159 passed.
+- Failed, cancelled, skipped and todo counts were all zero in each execution.
+
+### Commit and push evidence
+
+- commit: `ba724e8130858c2ad5b298b3444a18eb90e5dd35`;
+- subject: `lab: checkpoint summary normalise surface`;
+- files: exactly `packages/lab-kernel/ies-toolkit/summary.html`;
+- push: origin `lane/code-pilot-lab`, confirmed successful;
+- post-feature state: staged 0, modified 0, untracked 35, deleted 0;
+- all unrelated dirty paths were preserved.
+
 ## LAB-013 canonical polar renderer — 2026-07-19
 
 ### Identity and scope

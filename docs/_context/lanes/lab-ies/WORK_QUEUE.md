@@ -135,7 +135,9 @@ Evidence: `4339ecc9beb86fe5a1996b0715c809211cdcd920`, confirmed on origin.
 - depends on: LAB-012-lab-style-foundation, LAB-013-polar-renderer
 - on success next: LAB-015-ugr-surface
 - seam change: no
-- status: ready
+- status: done
+
+Evidence: `ba724e8130858c2ad5b298b3444a18eb90e5dd35`, confirmed on origin.
 
 ### Q-5 UGR surface
 - id: LAB-015-ugr-surface
@@ -152,7 +154,7 @@ Evidence: `4339ecc9beb86fe5a1996b0715c809211cdcd920`, confirmed on origin.
 - depends on: LAB-012-lab-style-foundation
 - on success next: LAB-016-nvb-offline-fixtures
 - seam change: no
-- status: queued
+- status: ready
 
 ### Q-6 NVB offline fixture snapshot
 - id: LAB-016-nvb-offline-fixtures

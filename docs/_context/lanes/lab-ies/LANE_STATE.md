@@ -13,9 +13,9 @@ Current repository evidence overrides stale historical statements.
 - Root: `C:\ControlStack_Worktrees\code-pilot-lab`
 - Branch: `lane/code-pilot-lab`
 - Gate: `lab-ies`
-- Starting HEAD for LAB-013: `f397cd5928f9a33288c5f465517d5e241124708e`
-- Completed feature HEAD: `4339ecc9beb86fe5a1996b0715c809211cdcd920`
-- Feature subject: `lab: checkpoint canonical polar renderer`
+- Starting HEAD for LAB-014: `4132fe346739f9d367a9cdd32146789d6da0292d`
+- Completed feature HEAD: `ba724e8130858c2ad5b298b3444a18eb90e5dd35`
+- Feature subject: `lab: checkpoint summary normalise surface`
 - Feature push: confirmed on origin `lane/code-pilot-lab`
 
 ## Connected capability state
@@ -29,31 +29,32 @@ Current repository evidence overrides stale historical statements.
 - Arbitrary shell execution: no
 - Allowed gate: `lab-ies`
 
-## Latest completed parcel — LAB-013
+## Latest completed parcel — LAB-014
 
-Queue item `LAB-013-polar-renderer` is complete.
+Queue item `LAB-014-summary-normalise-surface` is complete.
 
 Exactly one authorised file was changed and committed:
 
 ```text
-packages/lab-kernel/ies-toolkit/iesPolar.js
+packages/lab-kernel/ies-toolkit/summary.html
 ```
 
 Verified outcome:
 
-- `niceCeil` is deterministic and returns a bounded fallback for non-finite or non-positive input;
-- `renderPolar` is a pure presentation renderer and does not mutate its input;
-- missing, malformed, non-finite, negative or dimensionally inconsistent angle/candela grids return the deterministic empty-polar projection rather than throwing;
-- single stored horizontal planes and supported quadrant, half-azimuth and full-azimuth grids remain supported;
-- output is presentation-only SVG with no DOM lookup, browser storage, network, filesystem, authority, normalisation or photometric mutation seam;
-- peak calculation no longer spreads the complete candela matrix;
-- the canonical module is the sole committed polar renderer. Duplicate snippets remain only in protected untracked future-queue prototypes and were not absorbed or changed.
+- the surface remains a Lab-only, non-authoritative summary and normalisation harness;
+- the inline polar implementation was removed and replaced by the committed `renderPolar` import;
+- the exact committed `CANONICAL_KEYWORDS` contract is imported and used to filter and order outgoing preview rows;
+- the preview shows the LM-63 header, canonical keywords, TILT line, G-values and angle blocks without replacing the committed writer;
+- `_INTERNAL_AMBIENT_TA_C` replaces the stale ambient keyword;
+- supplementary power, thermal and intended-use values remain in Lab-only provenance rather than outgoing IES keywords;
+- the existing order remains dimensions, metadata, level, symmetrise, interpolate, pad, one-millimetre reduction and orientation;
+- no authority approval/sealing, merge, project generation, persistence, resolver publication or imported production-module change was introduced.
 
 ## Validation evidence
 
 The connected app exposes the fixed `lab-ies` gate as the available changed-file and full validation path.
 
-- Focused changed-file execution for `iesPolar.js`: 159 tests, 159 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
+- Focused changed-file execution for `summary.html`: 159 tests, 159 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
 - Full `lab-ies` gate: 159 tests, 159 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
 - Gated feature commit execution: 159 tests, 159 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
 
@@ -62,15 +63,9 @@ The connected app exposes the fixed `lab-ies` gate as the available changed-file
 The protected working-tree state after the feature push, and the state to remain after documentation closeout, is:
 
 - staged: 0;
-- modified: 1;
+- modified: 0;
 - untracked: 35;
 - deleted: 0.
-
-Protected modified path:
-
-```text
-packages/lab-kernel/ies-toolkit/summary.html
-```
 
 Protected untracked paths:
 
@@ -125,7 +120,8 @@ tests/selectorCascadeCorrectness.test.js
 - `LAB-011-project-ies-generation`: done.
 - `LAB-012-lab-style-foundation`: done.
 - `LAB-013-polar-renderer`: done.
-- Next item: `LAB-014-summary-normalise-surface`.
-- Resulting status: `ready`, because both dependencies are done and no seam approval is required.
+- `LAB-014-summary-normalise-surface`: done.
+- Next item: `LAB-015-ugr-surface`.
+- Resulting status: `ready`, because its style dependency is done and no seam approval is required.
 
 No subsequent queue item was executed.
