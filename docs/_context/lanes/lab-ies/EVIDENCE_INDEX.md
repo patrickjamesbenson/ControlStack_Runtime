@@ -75,11 +75,14 @@ Repository search found no committed Program, Runtime, Engine, Selector or test 
 - reverse-order rollback with no database or route recovery;
 - focused success, failure, immutability, leak and static-boundary tests.
 
-### Queue evidence
+### Program approval and queue evidence
 
-- LAB-017 remains `blocked` pending Program & Integrate approval of the committed version-1 envelope.
-- No other queue item is `ready`.
-- No implementation or unrelated queue parcel was started.
+- Program & Integrate approved LAB-017 version 1 unchanged on 2026-07-19.
+- Approval covers only the fixed public interface and data shapes, exact two-file scope, named compatibility break, recorded rollback and specified success/failure tests.
+- Program retains production allocation, resolver hosting, routing, persistence, authentication, deployment and endpoint ownership.
+- Any envelope change requires a new seam decision.
+- LAB-017 is the single top `ready` queue item.
+- No implementation or unrelated queue parcel had started at the time of the approval checkpoint.
 
 ## Reusable standing-worker prompt — 2026-07-19
 

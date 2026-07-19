@@ -245,3 +245,21 @@ Before any queue item is selected, the worker must compare the `Recorded branch 
 - Reconciliation must classify the unmatched commit, restore queue and evidence truth, run the full `lab-ies` gate, and commit/push only lane-memory changes.
 
 A Git commit cannot contain its own final hash. Therefore `Recorded branch HEAD` is maintained as one deliberate post-push working-tree marker: after every successful documentation commit and push, the worker updates only that field to the new actual HEAD and leaves the single edit unstaged. This marker is expected, must not enter feature staging, and exists solely to detect a worker ending between feature and documentation closeout or any other unrecorded branch advance.
+
+## DL-021 — LAB-017 version-1 seam approval
+
+**Status:** Approved unchanged by Program & Integrate on 2026-07-19.
+
+Program & Integrate approves `LAB-017-reference-resolver-contract` under the committed version-1 envelope without amendment.
+
+Approval covers only:
+
+- the defined public interface and exact data shapes;
+- exactly `packages/lab-kernel/ies-toolkit/nvbReference.js` and `tests/lab-kernel/nvbReference.test.js`;
+- the named protected legacy Lab consumers and accepted compatibility break;
+- the recorded reverse-order rollback sequence;
+- the specified success, rejection, immutability, leak-prevention and static-boundary tests.
+
+Program retains production allocation, resolver hosting, routing, persistence, authentication, deployment and endpoint ownership. Any change to the approved envelope requires a new seam decision.
+
+LAB-017 is authorised to move from `blocked` to `ready`, and one bounded Lab worker may proceed.

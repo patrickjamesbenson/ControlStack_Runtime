@@ -13,7 +13,7 @@ Current repository evidence overrides stale historical statements.
 - Root: `C:\ControlStack_Worktrees\code-pilot-lab`
 - Branch: `lane/code-pilot-lab`
 - Gate: `lab-ies`
-- Recorded branch HEAD: `6d34e500d407d5335e5eebb317636a67a5e98618`
+- Recorded branch HEAD: `a01f3f386ae7e7f1917efa82a896b5a6c235532c`
 - Branch-HEAD guard checkpoint: `6d34e500d407d5335e5eebb317636a67a5e98618`
 - Starting HEAD for LAB-016: `1df62fccd91ac66509b02960ad988f6ef90c0b52`
 - Completed feature HEAD: `ae14232b5a4fbff6fca15004a0583047fc5a319d`
@@ -131,17 +131,17 @@ packages/workspace-kernel/selectorReferenceOptionsService.js
 tests/selectorCascadeCorrectness.test.js
 ```
 
-## LAB-017 seam pre-approval state
+## LAB-017 approved seam state
 
-- Program & Integrate reviewed LAB-017 and has not approved implementation.
-- Required seam envelope is documented at `docs/_context/lanes/lab-ies/LAB-017_SEAM_ENVELOPE.md`, version 1.
-- Proposed implementation scope after approval is exactly:
+- Program & Integrate approved LAB-017 version 1 unchanged on 2026-07-19.
+- Approved seam envelope: `docs/_context/lanes/lab-ies/LAB-017_SEAM_ENVELOPE.md`.
+- Approved implementation scope is exactly:
   - `packages/lab-kernel/ies-toolkit/nvbReference.js`;
   - `tests/lab-kernel/nvbReference.test.js`.
-- The envelope fixes the API, identity and resolver-path shapes, evidence-readiness semantics, compatibility impact, rollback order and success/failure tests.
-- Program retains serial allocation, resolver host, route-to-storage mapping, persistence, authentication, deployment and endpoint ownership.
-- LAB-017 remains blocked until Program & Integrate approves the committed envelope checkpoint.
-- Live starting HEAD for the envelope parcel: `4eba5af77963aa7395748a83118abef54c58a715`.
+- Approval covers the fixed API, identity and resolver-path shapes, evidence-readiness semantics, named compatibility break, rollback order and specified success/failure tests.
+- Program retains production allocation, resolver hosting, routing, persistence, authentication, deployment and endpoint ownership.
+- Any change to the approved envelope requires a new seam decision.
+- LAB-017 may proceed as the single top ready queue item.
 
 ## Queue state
 
@@ -153,7 +153,7 @@ tests/selectorCascadeCorrectness.test.js
 - `LAB-015-ugr-surface`: done.
 - `LAB-016-nvb-offline-fixtures`: done.
 - Next ordered item: `LAB-017-reference-resolver-contract`.
-- Resulting status: `blocked`, because it is a seam change and no Program & Integrate approval is recorded.
-- Ready items: none.
+- Resulting status: `ready`, because Program & Integrate approval of version 1 is recorded.
+- Ready items: exactly LAB-017.
 
-No subsequent queue item was executed.
+No LAB-017 implementation had started at the time of this approval checkpoint.

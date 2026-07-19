@@ -88,24 +88,18 @@ tests/selectorCascadeCorrectness.test.js
 ## Queue state and next action
 
 - `LAB-016-nvb-offline-fixtures`: `done`.
-- `LAB-017-reference-resolver-contract`: `blocked`.
-- Required seam envelope: documented as version 1.
-- Proposed implementation scope after approval: one pure helper module and one dedicated focused test file.
-- Ready items: none.
+- `LAB-017-reference-resolver-contract`: `ready`.
+- Program & Integrate approved the committed version-1 envelope unchanged on 2026-07-19.
+- Approved implementation scope: one pure helper module and one dedicated focused test file.
+- Ready items: exactly LAB-017.
 
-Program & Integrate must review the committed version-1 envelope and either approve it unchanged or return specific requested amendments. No worker may start LAB-017 until the approval is recorded in lane memory and the queue status is deliberately changed to `ready`.
+Approval covers only the fixed interface and data shapes, exact two-file boundary, named compatibility break, recorded rollback and specified tests. Program retains production allocation, resolver hosting, routing, persistence, authentication, deployment and endpoint ownership. Any change requires a new seam decision.
 
-## Program & Integrate approval record requested
-
-```text
-Program & Integrate approves the committed LAB-017 reference-and-resolver seam envelope, version 1, unchanged. Approval covers exactly the proposed helper module and dedicated focused test file. Program retains production serial allocation, resolver host, route-to-storage mapping, persistence, authentication, deployment and endpoint ownership. The five protected legacy Lab prototypes may remain incompatible until their later queue parcels. Authorise LAB-017 to change from blocked to ready; no other seam or implementation is approved.
-```
-
-No implementation or other queue item was executed in this session.
+One bounded Lab worker may proceed under the committed envelope. No other seam or implementation is approved.
 
 ## Prohibited actions retained
 
-- no LAB-017 implementation before recorded Program & Integrate seam approval;
+- no LAB-017 implementation outside the recorded version-1 approval or exact two-file boundary;
 - no reverse-authority reconstruction, legacy alternative reference schema, diagnostic authority identity or unsafe governed path;
 - no public resolver route, server implementation, HTML, fixture, Selector or Program change during LAB-017;
 - no reset, restore, clean, deletion or movement of protected dirty paths;

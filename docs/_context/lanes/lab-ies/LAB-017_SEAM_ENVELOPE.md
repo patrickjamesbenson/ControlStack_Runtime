@@ -4,11 +4,12 @@
 
 - Queue item: `LAB-017-reference-resolver-contract`
 - Seam version: `1`
-- Status: proposed; Program & Integrate approval required before implementation may become `ready`
-- Evidence basis: live repository HEAD `4eba5af77963aa7395748a83118abef54c58a715` on 2026-07-19
-- Implementation has not started.
+- Status: approved unchanged by Program & Integrate on 2026-07-19
+- Approved envelope checkpoint: `f927ced1ca77c8b11ef8b13b9d6bb3833618844c`
+- Approval scope: version 1 and the exact two-file implementation boundary only
+- Implementation may proceed only under this envelope.
 
-This document is the complete proposed seam envelope. Approval applies only to this version and exact scope. Any interface, data-shape, ownership or file-scope change requires renewed Program & Integrate review.
+This document is the complete approved seam envelope. Approval applies only to this version and exact scope. Any interface, data-shape, ownership or file-scope change requires a new Program & Integrate seam decision.
 
 ## 1. Contract
 
@@ -279,7 +280,7 @@ The module must not create blank GT/OPT record templates, assign serials, stamp 
 
 ## 2. Scope
 
-### 2.1 Proposed implementation files after approval
+### 2.1 Approved implementation files
 
 Exactly these files:
 
@@ -479,16 +480,8 @@ lab: checkpoint reference resolver contract
 
 After implementation, the four standard lane-memory files must be updated, the full gate rerun, and the documentation closeout committed through the gated path.
 
-### 5.3 Program approval record required
+### 5.3 Program approval record
 
-Program & Integrate approval must identify:
+Program & Integrate approved `LAB-017-reference-resolver-contract` version `1` unchanged on 2026-07-19. The approval identifies the committed envelope checkpoint, covers exactly the two implementation files, accepts the named legacy-prototype compatibility break, and retains Program ownership of production allocation, resolver hosting, routing, storage, persistence, authentication, deployment and endpoints.
 
-- `LAB-017-reference-resolver-contract`;
-- seam version `1`;
-- this envelope's committed checkpoint;
-- the exact two implementation files;
-- acceptance that Program retains resolver host, storage, persistence and serial-allocation ownership;
-- acceptance that legacy untracked Lab prototypes may remain incompatible until later queue parcels;
-- approval to change LAB-017 from `blocked` to `ready`.
-
-Until that record exists in lane memory, LAB-017 remains blocked and no implementation may start.
+LAB-017 may move from `blocked` to `ready`. Any change to this approved envelope requires a new seam decision.

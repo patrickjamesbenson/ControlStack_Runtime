@@ -189,10 +189,10 @@ Evidence: `ae14232b5a4fbff6fca15004a0583047fc5a319d`, confirmed on origin.
 ### Q-7 Reference and resolver contract
 - id: LAB-017-reference-resolver-contract
 - objective: Reconcile the legacy NVB reference/resolver helper with the committed sealed-reference DTO, immutable authority boundary and safe downstream reference identity.
-- proposed authorised files after seam approval:
+- authorised files:
   - `packages/lab-kernel/ies-toolkit/nvbReference.js`
   - `tests/lab-kernel/nvbReference.test.js`
-- seam envelope: `docs/_context/lanes/lab-ies/LAB-017_SEAM_ENVELOPE.md`, version 1; Program & Integrate approval pending.
+- seam envelope: `docs/_context/lanes/lab-ies/LAB-017_SEAM_ENVELOPE.md`, version 1; approved unchanged by Program & Integrate on 2026-07-19.
 - prohibitions:
   - no reverse-authority reconstruction;
   - no legacy alternative reference schema promoted beside `controlstack.lab.reference.1mm.v1`;
@@ -200,12 +200,12 @@ Evidence: `ae14232b5a4fbff6fca15004a0583047fc5a319d`, confirmed on origin.
   - no raw local path, file URL or UNC path in governed references;
   - no public resolver route, server implementation, HTML or fixture changes;
   - no change to Selector or Program code.
-- acceptance: The module exposes only bounded reference identity, safe resolver-path parsing/projection and evidence capability helpers compatible with the committed sealed DTO; it fails closed on unsupported kinds and unsafe paths; emergency/EWIS verification remains assembly-owned; no private rich-authority state leaks. Recorded Program & Integrate approval of seam-envelope version 1 is required before `ready`. Focused tests and the full `lab-ies` gate must pass, and exactly the two approved implementation files are committed as `lab: checkpoint reference resolver contract` and pushed only to the lane branch.
+- acceptance: The module exposes only bounded reference identity, safe resolver-path parsing/projection and evidence capability helpers compatible with the committed sealed DTO; it fails closed on unsupported kinds and unsafe paths; emergency/EWIS verification remains assembly-owned; no private rich-authority state leaks. Program & Integrate approval of seam-envelope version 1 is recorded. Focused tests and the full `lab-ies` gate must pass, and exactly the two approved implementation files are committed as `lab: checkpoint reference resolver contract` and pushed only to the lane branch.
 - gate: lab-ies
 - depends on: LAB-010-reference-driven-generation, LAB-011-project-ies-generation
 - on success next: LAB-018-nvb-resolution-contract after recorded Integrate approval
 - seam change: yes
-- status: blocked
+- status: ready
 
 ### Q-8 NVB resolution contract
 - id: LAB-018-nvb-resolution-contract
