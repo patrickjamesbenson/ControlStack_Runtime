@@ -278,3 +278,21 @@ Program reported:
 - the Program tree was clean.
 
 This closes LAB-017 acceptance only. Promotion to main remains a separate Program & Integrate action. LAB-018 remains blocked pending its own seam envelope and approval. No LAB-017 interface, implementation, ownership, compatibility, rollback or validation field is reopened by this acceptance record.
+
+## DL-023 — Consolidated batch seam envelope for LAB-018 to LAB-023 and LAB-027
+
+**Status:** Proposed on 2026-07-20; awaiting Program & Integrate batch decision.
+
+One consolidated version-1 seam envelope now covers:
+
+- LAB-018 NVB resolution;
+- LAB-019 component projection;
+- LAB-020 document register;
+- LAB-021 emergency selection;
+- LAB-022 governed reference composition;
+- LAB-023 NVB Lab adapter;
+- LAB-027 request/report workflow.
+
+The envelope fixes each item's exact public contract, implementation and focused-test files, ownership boundary, known compatibility break, rollback sequence, success tests and failure tests. All seven remain blocked until approval is recorded. A batch approval may authorise multiple items, but queue dependency order and the single-top-ready rule remain mandatory.
+
+LAB-022 requires individual policy treatment inside the same batch decision. Program & Integrate must expressly ratify version-1 binary composition: exactly two direct non-MERGED unique parents, order-significant provenance, exact coincident grids without interpolation, and allocation/authority/approval/sealing outside the kernel. If that sub-decision is not ratified, the other six may be approved while LAB-022 remains blocked.

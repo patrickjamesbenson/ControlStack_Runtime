@@ -14,6 +14,7 @@
 - Use `repo_green_commit_push` only after proving the staged set exactly equals the item's authorised files. Shared-tooling repair: `2e4d880`. Direct `repo_git_commit` remains guarded.
 - Push only `lane/code-pilot-lab`; never write to main, another lane, or the read-only donor `C:\ControlStack_Lab`.
 - A `seam change: yes` item must not be changed to `ready` until the queue records the relevant Program & Integrate approval.
+- One Program & Integrate batch approval may cover multiple seam items when it identifies the committed consolidated envelope and each approved item. Batch approval never creates multiple ready items: dependency order and the single-top-ready rule remain mandatory.
 - The Selector leak paths must remain absent:
   - `packages/workspace-kernel/selectorReferenceOptionsService.js`
   - `tests/selectorCascadeCorrectness.test.js`
@@ -214,6 +215,8 @@ Evidence: `2333c1197abf898e7a680455f99918823cb76e30`, confirmed on origin.
 - objective: Checkpoint deterministic, read-only NVB family/optic/Lab-form resolution against the approved data-source contract.
 - authorised files:
   - `packages/lab-kernel/ies-toolkit/nvbResolve.js`
+  - `tests/lab-kernel/nvbResolve.test.js`
+- seam envelope: `docs/_context/lanes/lab-ies/LAB-018_023_027_BATCH_SEAM_ENVELOPE.md`, version 1; awaiting Program & Integrate batch decision.
 - prohibitions:
   - no direct RuntimeData filesystem or database access;
   - no copied Runtime or Program reader implementation;
@@ -221,7 +224,7 @@ Evidence: `2333c1197abf898e7a680455f99918823cb76e30`, confirmed on origin.
   - no parsing of opaque provenance slugs for thermal facts;
   - no HTML, fixture or adapter changes;
   - no new Selector option semantics.
-- acceptance: Pure resolution helpers remain deterministic and fail closed; fixture loading is explicitly a Lab-only adapter seam; governing thermals, test path and optic matching follow the approved source fields without inventing data; the live source remains owned by Program/Integrate. Recorded Program & Integrate approval is required before `ready`. Full `lab-ies` passes and exactly the authorised file is committed as `lab: checkpoint NVB resolution contract` and pushed only to the lane branch.
+- acceptance: The exact version-1 resolver API and output shape in the consolidated envelope are implemented without a loader; governing thermals, test path, optic matching and Lab-form splitting fail closed and do not invent emergency verification. Recorded Program & Integrate approval of envelope version 1 is required before `ready`. Focused contract tests and the full `lab-ies` gate pass, and exactly the two authorised files are committed as `lab: checkpoint NVB resolution contract` and pushed only to the lane branch.
 - gate: lab-ies
 - depends on: LAB-016-nvb-offline-fixtures
 - on success next: LAB-019-component-projection-contract after recorded Integrate approval
@@ -233,6 +236,8 @@ Evidence: `2333c1197abf898e7a680455f99918823cb76e30`, confirmed on origin.
 - objective: Checkpoint the deterministic projection of NVB boards, drivers and optics into Lab component-library views.
 - authorised files:
   - `packages/lab-kernel/ies-toolkit/nvbComponents.js`
+  - `tests/lab-kernel/nvbComponents.test.js`
+- seam envelope: `docs/_context/lanes/lab-ies/LAB-018_023_027_BATCH_SEAM_ENVELOPE.md`, version 1; awaiting Program & Integrate batch decision.
 - prohibitions:
   - no embedded duplicate source catalogue;
   - no direct RuntimeData database access or Program reader copy;
@@ -240,7 +245,7 @@ Evidence: `2333c1197abf898e7a680455f99918823cb76e30`, confirmed on origin.
   - no Selector option generation;
   - no HTML, document-register or fixture changes;
   - no browser persistence.
-- acceptance: Grouping and deduplication are deterministic, source order rules are explicit, tunable/CCT projection is fail-safe, the loader remains a replaceable Lab-only boundary, and the output shape is recorded as a cross-lane contract rather than assumed. Recorded Program & Integrate approval is required before `ready`. Full `lab-ies` passes and exactly the authorised file is committed as `lab: checkpoint component projection contract` and pushed only to the lane branch.
+- acceptance: The exact version-1 component-catalogue API and projection shapes in the consolidated envelope are implemented without a loader or embedded catalogue; grouping, ordering, tunable/CCT rules and conflict handling are deterministic and fail closed. Recorded Program & Integrate approval of envelope version 1 is required before `ready`. Focused contract tests and the full `lab-ies` gate pass, and exactly the two authorised files are committed as `lab: checkpoint component projection contract` and pushed only to the lane branch.
 - gate: lab-ies
 - depends on: LAB-016-nvb-offline-fixtures
 - on success next: LAB-020-document-register-contract after recorded Integrate approval
@@ -252,13 +257,15 @@ Evidence: `2333c1197abf898e7a680455f99918823cb76e30`, confirmed on origin.
 - objective: Checkpoint the bounded many-to-many document-register model that Lab surfaces use before Program-owned persistence exists.
 - authorised files:
   - `packages/lab-kernel/ies-toolkit/docRegister.js`
+  - `tests/lab-kernel/docRegister.test.js`
+- seam envelope: `docs/_context/lanes/lab-ies/LAB-018_023_027_BATCH_SEAM_ENVELOPE.md`, version 1; awaiting Program & Integrate batch decision.
 - prohibitions:
   - no filesystem, browser-storage, network or database persistence;
   - no upload route or Program implementation;
   - no authority SHA substitution with diagnostic fingerprints;
   - no deletion of source evidence;
   - no HTML or fixture changes.
-- acceptance: The module has an explicit deterministic in-memory lifecycle, deduplicates only on defined safe keys, validates document/entity identifiers, returns cloned/read-only projections, and clearly reserves durable storage for Program/Integrate. Recorded Program & Integrate approval is required before `ready`. Full `lab-ies` passes and exactly the authorised file is committed as `lab: checkpoint document register contract` and pushed only to the lane branch.
+- acceptance: The exact version-1 immutable document-register API and state shape in the consolidated envelope are implemented; caller-supplied IDs, safe SHA/source dedupe, many-to-many links and no-delete semantics fail closed while durable storage remains Program-owned. Recorded Program & Integrate approval of envelope version 1 is required before `ready`. Focused contract tests and the full `lab-ies` gate pass, and exactly the two authorised files are committed as `lab: checkpoint document register contract` and pushed only to the lane branch.
 - gate: lab-ies
 - depends on: LAB-017-reference-resolver-contract
 - on success next: LAB-021-emergency-selection-contract after recorded Integrate approval
@@ -270,13 +277,15 @@ Evidence: `2333c1197abf898e7a680455f99918823cb76e30`, confirmed on origin.
 - objective: Checkpoint the fail-closed Zencontrol emergency converter and battery-selection contract for Lab evidence workflows.
 - authorised files:
   - `packages/lab-kernel/ies-toolkit/zencontrolEmergency.js`
+  - `tests/lab-kernel/zencontrolEmergency.test.js`
+- seam envelope: `docs/_context/lanes/lab-ies/LAB-018_023_027_BATCH_SEAM_ENVELOPE.md`, version 1; awaiting Program & Integrate batch decision.
 - prohibitions:
   - no unsupported electrical, battery or thermal value hardened as confirmed;
   - no inherited `_EMERGENCY_VERIFIED` authority outcome;
   - no product ordering, procurement or Runtime route;
   - no network, browser storage or filesystem access;
   - no HTML, provenance publication or source-fixture changes.
-- acceptance: Published, derived and unconfirmed values remain explicitly distinguished; voltage/model/power/duration/design-life selection fails closed; conflicts and procurement gates are preserved; outputs are deterministic and do not claim assembly verification. Recorded Program & Integrate approval is required before `ready`. Full `lab-ies` passes and exactly the authorised file is committed as `lab: checkpoint emergency selection contract` and pushed only to the lane branch.
+- acceptance: The exact version-1 emergency candidate API and output shape in the consolidated envelope are implemented; published, derived and unconfirmed values remain distinct, conflicts and procurement blockers fail closed, procurement release remains false and assembly verification remains null. Recorded Program & Integrate approval of envelope version 1 is required before `ready`. Focused contract tests and the full `lab-ies` gate pass, and exactly the two authorised files are committed as `lab: checkpoint emergency selection contract` and pushed only to the lane branch.
 - gate: lab-ies
 - depends on: none
 - on success next: LAB-022-reference-composition-kernel after recorded owner and Integrate approval
@@ -288,6 +297,8 @@ Evidence: `2333c1197abf898e7a680455f99918823cb76e30`, confirmed on origin.
 - objective: Replace the legacy merge prototype with a deterministic one-millimetre photometric-and-owned-power composition candidate over committed sealed reference DTOs.
 - authorised files:
   - `packages/lab-kernel/ies-toolkit/iesMerge.js`
+  - `tests/lab-kernel/iesReferenceComposition.test.js`
+- seam envelope: `docs/_context/lanes/lab-ies/LAB-018_023_027_BATCH_SEAM_ENVELOPE.md`, version 1; awaiting Program & Integrate batch decision and explicit LAB-022 owner sub-decision.
 - prohibitions:
   - no UI/HTML/CSS;
   - no approval, allocation or sealing inside the composition kernel;
@@ -295,7 +306,7 @@ Evidence: `2333c1197abf898e7a680455f99918823cb76e30`, confirmed on origin.
   - no diagnostic fingerprints or legacy `fingerprint` identity;
   - no inherited emergency/EWIS verification, LUMCAT or assembly identity;
   - no Selector or Program code changes.
-- acceptance: The kernel consumes only validated sealed DTOs, preserves ordered parent provenance using `referenceId` and `referenceSha256`, composes supported coincident grids deterministically, sums only explicitly owned per-parent wall power, emits a non-authoritative composition candidate requiring fresh authority/approval/sealing, does not mutate parents, and fails closed on unsupported policy. A new owner decision under DL-011 and recorded Program & Integrate approval are required before `ready`. Full `lab-ies` passes and exactly the authorised file is committed as `lab: checkpoint governed reference composition kernel` and pushed only to the lane branch.
+- acceptance: The exact version-1 binary composition API and candidate shape in the consolidated envelope are implemented; exactly two non-MERGED unique ordered parents, exact coincident grids, parent-owned wall power and fresh downstream authority/approval/sealing are enforced. Explicit owner ratification of the LAB-022 sub-decision and Program & Integrate approval of envelope version 1 are required before `ready`. Focused contract tests and the full `lab-ies` gate pass, and exactly the two authorised files are committed as `lab: checkpoint governed reference composition kernel` and pushed only to the lane branch.
 - gate: lab-ies
 - depends on: LAB-017-reference-resolver-contract
 - on success next: LAB-023-nvb-lab-adapter after recorded Integrate approval
@@ -307,13 +318,15 @@ Evidence: `2333c1197abf898e7a680455f99918823cb76e30`, confirmed on origin.
 - objective: Replace the legacy mutable rich-record adapter with an immutable, bounded NVB resolution projection for Lab working state.
 - authorised files:
   - `packages/lab-kernel/ies-toolkit/nvbLabAdapter.js`
+  - `tests/lab-kernel/nvbLabAdapter.test.js`
+- seam envelope: `docs/_context/lanes/lab-ies/LAB-018_023_027_BATCH_SEAM_ENVELOPE.md`, version 1; awaiting Program & Integrate batch decision.
 - prohibitions:
   - no mutation of sealed DTOs or approved authority records;
   - no diagnostic `fingerprint()` identity generation;
   - no direct source loading, persistence or resolver route;
   - no new outgoing keyword owner;
   - no HTML, fixture, resolver or Program code changes.
-- acceptance: The adapter consumes approved resolver outputs, returns a deterministic immutable Lab-internal projection, keeps unresolved values explicit, uses committed reference identities where applicable, and cannot alter authority or downstream contracts. Recorded Program & Integrate approval is required before `ready`. Full `lab-ies` passes and exactly the authorised file is committed as `lab: checkpoint NVB Lab adapter` and pushed only to the lane branch.
+- acceptance: The exact version-1 Lab projection API and shape in the consolidated envelope are implemented; only approved LAB-018 resolution and LAB-017 safe identity projections are consumed, unresolved values remain explicit, no ID/timestamp is generated and assembly verification remains null. Recorded Program & Integrate approval of envelope version 1 is required before `ready`. Focused contract tests and the full `lab-ies` gate pass, and exactly the two authorised files are committed as `lab: checkpoint NVB Lab adapter` and pushed only to the lane branch.
 - gate: lab-ies
 - depends on: LAB-017-reference-resolver-contract, LAB-018-nvb-resolution-contract
 - on success next: LAB-024-resolver-fixture-corpus
@@ -402,6 +415,8 @@ Evidence: `2333c1197abf898e7a680455f99918823cb76e30`, confirmed on origin.
   - `packages/lab-kernel/ies-toolkit/lab_request.html`
   - `packages/lab-kernel/ies-toolkit/extended_report.html`
   - `packages/lab-kernel/ies-toolkit/onemm_contract.html`
+  - `tests/lab-kernel/labRequestReportWorkflow.test.js`
+- seam envelope: `docs/_context/lanes/lab-ies/LAB-018_023_027_BATCH_SEAM_ENVELOPE.md`, version 1; awaiting Program & Integrate batch decision.
 - prohibitions:
   - no Program database, CRM, file upload or workflow implementation;
   - no duplicate authority schema or reverse reconstruction;
@@ -409,7 +424,7 @@ Evidence: `2333c1197abf898e7a680455f99918823cb76e30`, confirmed on origin.
   - no approval/sealing claim from browser form state;
   - no changes to production kernels, fixtures or shared CSS;
   - no Selector code or route.
-- acceptance: The four surfaces define a deterministic additive request/report handoff, keep incomplete fields explicit, preserve authority boundaries, emit only a documented safe payload for Program integration, and do not persist or release an approved reference. Recorded Program & Integrate approval is required before `ready`. Full `lab-ies` passes and exactly the authorised files are committed as `lab: checkpoint Lab request report workflow` and pushed only to the lane branch.
+- acceptance: The four surfaces implement the exact version-1 additive handoff schema family in the consolidated envelope; earlier fields are preserved without rekeying, unresolved fields remain explicit, only canonical artifact references cross stages, and no browser state persists or seals a reference. Recorded Program & Integrate approval of envelope version 1 is required before `ready`. Focused workflow tests and the full `lab-ies` gate pass, and exactly the five authorised files are committed as `lab: checkpoint Lab request report workflow` and pushed only to the lane branch.
 - gate: lab-ies
 - depends on: LAB-019-component-projection-contract, LAB-020-document-register-contract, LAB-024-resolver-fixture-corpus
 - on success next: LAB-028-reference-curation-surfaces

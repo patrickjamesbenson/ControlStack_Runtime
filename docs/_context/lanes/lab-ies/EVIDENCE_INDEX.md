@@ -142,6 +142,40 @@ Program & Integrate reported final acceptance of the exact immutable LAB-017 com
 
 This acceptance closes LAB-017 without changing its approved interface, two-file implementation boundary, ownership split, compatibility break, rollback sequence or Lab validation evidence.
 
+## Consolidated seam envelope — 2026-07-20
+
+### Covered items and repository evidence
+
+A single proposed version-1 envelope now covers LAB-018, LAB-019, LAB-020, LAB-021, LAB-022, LAB-023 and LAB-027.
+
+The envelope was derived from:
+
+- the current queue objectives, dependencies, prohibitions and acceptance text;
+- direct inspection of all seven legacy implementation areas;
+- repository import/consumer searches;
+- the committed LAB-017 identity/resolver contract;
+- the locked sealed-reference, MERGED, keyword, emergency/EWIS and cross-lane decisions.
+
+Known legacy consumers were recorded item by item. Repository search found no committed Program, Runtime, Engine or Selector import of the provisional contracts. The affected consumers are protected Lab prototypes or later Lab queue parcels.
+
+### Exact scope and proof model
+
+The envelope fixes exact implementation and focused-test files for each item. Six JavaScript contracts receive one dedicated test file each; LAB-027 receives one dedicated workflow test across its four HTML surfaces. All seven remain separate implementation commits and separate gate checkpoints.
+
+Program retains live data reading, durable IDs, persistence, uploads, routes, authentication, CRM integration, deployment and promotion. Approval cannot create multiple ready items; dependencies and the single-top-ready rule remain mandatory.
+
+### Individual-treatment finding
+
+LAB-022 is the only item needing an explicit owner sub-decision inside the batch. Version 1 proposes exactly two direct non-MERGED unique parents, provenance-significant order, exact coincident grids without interpolation, and downstream allocation/authority/approval/sealing. Program may approve the other six and hold LAB-022 if it does not ratify those policies.
+
+### Proposed document
+
+- `LAB-018_023_027_BATCH_SEAM_ENVELOPE.md`;
+- envelope version: 1;
+- status: awaiting Program & Integrate batch decision;
+- queue status: all seven remain blocked;
+- ready items: none.
+
 ## Reusable standing-worker prompt — 2026-07-19
 
 - `SESSION_HANDOFF.md` now contains exactly one generic `STANDING WORKER — Lab & IES` prompt.

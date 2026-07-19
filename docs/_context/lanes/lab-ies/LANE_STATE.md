@@ -2,7 +2,7 @@
 
 ## Evidence timestamp
 
-Latest standing-worker parcel verified on 2026-07-19 through the connected `ControlStack Lab and IES Authority Lane` app.
+Latest standing-worker parcel verified on 2026-07-20 through the connected `ControlStack Lab and IES Authority Lane` app.
 
 Current repository evidence overrides stale historical statements.
 
@@ -13,7 +13,7 @@ Current repository evidence overrides stale historical statements.
 - Root: `C:\ControlStack_Worktrees\code-pilot-lab`
 - Branch: `lane/code-pilot-lab`
 - Gate: `lab-ies`
-- Recorded branch HEAD: `24166235b78ec1844dd6fde3a7b482f74fef5e1c`
+- Recorded branch HEAD: `9c2c32c2f6ce81d987c5017877ae9b32e1246a13`
 - Branch-HEAD guard checkpoint: `6d34e500d407d5335e5eebb317636a67a5e98618`
 - Starting HEAD for LAB-017: `09ac99cb35b6af45696b4c83e0051a1651bb2f14`
 - Completed feature HEAD: `2333c1197abf898e7a680455f99918823cb76e30`
@@ -166,6 +166,16 @@ tests/selectorCascadeCorrectness.test.js
 - Program & Integrate accepted the exact immutable completion receipt on 2026-07-20 without amendment.
 - Program reported its final acceptance gate passed 45/45, the acceptance checkpoint was committed and pushed, and the Program tree was clean.
 - Promotion to main remains separate from this acceptance closeout.
+
+## Consolidated seam envelope state
+
+- Proposed envelope: `docs/_context/lanes/lab-ies/LAB-018_023_027_BATCH_SEAM_ENVELOPE.md`.
+- Envelope version: `1`.
+- Covered blocked items: LAB-018, LAB-019, LAB-020, LAB-021, LAB-022, LAB-023 and LAB-027.
+- Each item now has an exact implementation file set plus dedicated focused-test scope.
+- Program & Integrate may make one batch decision, but approved items still enter execution one at a time under dependency order and the single-top-ready rule.
+- LAB-022 requires express owner ratification of its binary merge policy inside the batch decision; if not ratified, the other six may be approved while LAB-022 remains blocked.
+- No covered item is approved or ready yet.
 
 ## Queue state
 

@@ -2,7 +2,7 @@
 
 ## Session purpose
 
-This handoff records final Program acceptance of LAB-017 under the approved version-1 seam envelope, preserves the exact immutable completion receipt, and retains the next blocked queue boundary.
+This handoff preserves final LAB-017 acceptance and records the proposed consolidated version-1 seam envelope for LAB-018 to LAB-023 and LAB-027, while keeping every covered item blocked pending one Program & Integrate batch decision.
 
 ## Identity
 
@@ -81,14 +81,16 @@ tests/selectorCascadeCorrectness.test.js
 ## Queue state and next action
 
 - `LAB-016-nvb-offline-fixtures`: `done`.
-- `LAB-017-reference-resolver-contract`: `done`.
-- Next ordered item: `LAB-018-nvb-resolution-contract`.
-- LAB-018 status: `blocked` pending its separate Program & Integrate seam approval.
+- `LAB-017-reference-resolver-contract`: `done` and finally accepted by Program & Integrate.
+- Consolidated proposed envelope: `LAB-018_023_027_BATCH_SEAM_ENVELOPE.md`, version 1.
+- Covered blocked items: LAB-018, LAB-019, LAB-020, LAB-021, LAB-022, LAB-023 and LAB-027.
 - Ready items: none.
 
-LAB-017 remains governed by the approved version-1 envelope. Program retains production allocation, resolver hosting, routing, persistence, authentication, deployment and endpoint ownership. Any change to that envelope requires a new seam decision.
+Program & Integrate may decide all seven in one review. Approval remains item-specific inside the batch, and execution remains one parcel at a time under dependency order. LAB-022 is the only exceptional item: its binary merge policy must be expressly ratified; otherwise the other six may be approved while LAB-022 stays blocked.
 
-The next safe action is Program & Integrate review of LAB-018's own seam envelope before any worker starts it.
+LAB-017 remains governed by its approved version-1 envelope. Program retains all production allocation, live source reading, hosting, routing, persistence, authentication, CRM integration, deployment and endpoint ownership.
+
+The next safe action is one Program & Integrate batch decision against the committed consolidated envelope. No covered implementation may start before that decision is recorded.
 
 ## LAB-017 immutable completion receipt
 
@@ -196,7 +198,7 @@ The immutable receipt remains byte-for-byte unchanged. Promotion to main is a se
 - no LAB-017 change outside the recorded version-1 approval without a new seam decision;
 - no reverse-authority reconstruction, legacy alternative reference schema, diagnostic authority identity or unsafe governed path;
 - no public resolver route, server implementation, HTML, fixture, Selector or Program ownership absorbed into the Lab contract;
-- no LAB-018 implementation before its separate seam approval is recorded;
+- no LAB-018, LAB-019, LAB-020, LAB-021, LAB-022, LAB-023 or LAB-027 implementation before the corresponding batch approval is recorded;
 - no reset, restore, clean, deletion or movement of protected dirty paths;
 - no execution of `scripts/clear_chaff.ps1`;
 - no donor write;
