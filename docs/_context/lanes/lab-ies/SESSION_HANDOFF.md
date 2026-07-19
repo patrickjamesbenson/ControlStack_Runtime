@@ -2,7 +2,7 @@
 
 ## Session purpose
 
-This handoff records completed LAB-024 offline resolver fixtures, preserves the permanent charter authority for both standing prompts, and identifies LAB-025 as the single next runnable parcel.
+This handoff records completed LAB-025 Component Library surface, preserves the permanent charter authority for both standing prompts, and identifies LAB-026 as the single next runnable parcel.
 
 ## Identity
 
@@ -12,9 +12,9 @@ This handoff records completed LAB-024 offline resolver fixtures, preserves the 
 - Branch: `lane/code-pilot-lab`
 - Gate: `lab-ies`
 - Standing prompt authority: `docs/_context/lanes/lab-ies/LANE_CHARTER.md` contains both worker and orchestrator prompts
-- Starting HEAD for LAB-024: `72073529fd9f1d2fd6717a990a81d304f36b984a`
-- Completed feature checkpoint: `deb74baac423f879d409c2b7fc98d6ca9a459787`
-- Feature subject: `lab: checkpoint offline resolver fixture corpus`
+- Starting HEAD for LAB-025: `f53ac346aa999e6a3f4fca45efd12c568d262a17`
+- Completed feature checkpoint: `78fe3ab23e4fd50b8c79af8f429687a91401a068`
+- Feature subject: `lab: checkpoint component library surface`
 - Feature checkpoint confirmed on origin `lane/code-pilot-lab`
 - Seam change: no
 - Branch-HEAD guard checkpoint: `6d34e500d407d5335e5eebb317636a67a5e98618`
@@ -27,33 +27,37 @@ After every documentation push, only the `Recorded branch HEAD` field is refresh
 
 ## Completed queue item
 
-`LAB-024-resolver-fixture-corpus` is complete.
+`LAB-025-component-library-surface` is complete.
 
-Exactly the 20 feature files listed in `WORK_QUEUE.md` were committed under `packages/lab-kernel/ies-toolkit/lab/`.
+Exactly this one feature file was committed:
 
-Every component, reference, provenance, evidence, report and source artifact is now explicitly offline, demo and unapproved. All relationships use host-free LAB-017 resolver paths; authority and reference SHA values remain null; no production sealed-reference schema, local path, hosted URL, credential, secret, diagnostic fingerprint, procurement release, certification or assembly-verification claim remains.
+```text
+packages/lab-kernel/ies-toolkit/component_library.html
+```
 
-The OPT-000123 set is coherent for offline presentation, OPT-000124 is deliberately incomplete for fail-closed behaviour, and the synthetic IES uses the canonical 16-keyword vocabulary. No JavaScript, HTML, database, route, Program, Runtime, Engine or Selector implementation was changed.
+The surface now uses only the immutable component-catalogue and document-register contracts. It projects committed offline board, driver and optic fixtures, marks them read-only/offline/unapproved, keeps missing values unresolved, and treats hot-test evidence as non-verifying.
+
+Document association and unlinking replace immutable in-memory state only and clear on refresh. No upload control, storage API, direct RuntimeData/database access, Program route, Selector contract, authority record, approval, seal or procurement decision was added. Patrick reported a 100% PASS against the prescribed browser checklist.
 
 ## Validation evidence
 
-- Focused changed-file `lab-ies` execution for the 20 LAB-024 fixture files: 245/245 passed.
+- Focused changed-file `lab-ies` execution for the one LAB-025 surface file: 245/245 passed.
 - Independent full `lab-ies` gate: 245/245 passed.
 - Gated feature commit execution: 245/245 passed.
 - Failed, cancelled, skipped and todo counts were zero.
 
 ## Git and protected worktree state
 
-The feature parcel was staged as exactly the 20 authorised fixture files, committed and pushed.
+The feature parcel was staged as exactly the one authorised surface file, committed and pushed.
 
 The protected working-tree state after documentation closeout must remain:
 
 - staged: 0;
 - modified: 1 — only the unstaged `Recorded branch HEAD` synchronisation marker in `LANE_STATE.md`;
-- untracked: 25;
+- untracked: 24;
 - deleted: 0.
 
-The 25 protected untracked paths remain exactly those recorded in `LANE_STATE.md`. In particular, these explicitly non-queued paths remain untouched:
+The 24 protected untracked paths remain exactly those recorded in `LANE_STATE.md`. In particular, these explicitly non-queued paths remain untouched:
 
 ```text
 README.zip
@@ -81,10 +85,11 @@ tests/selectorCascadeCorrectness.test.js
 - `LAB-022-reference-composition-kernel`: `done` and confirmed on origin.
 - `LAB-023-nvb-lab-adapter`: `done` and confirmed on origin.
 - `LAB-024-resolver-fixture-corpus`: `done` and confirmed on origin.
+- `LAB-025-component-library-surface`: `done` and confirmed on origin.
 - Consolidated envelope: `LAB-018_023_027_BATCH_SEAM_ENVELOPE.md`, version 1, approved for all seven seams.
-- `LAB-025-component-library-surface`: `ready` and the only active parcel.
+- `LAB-026-document-equipment-surfaces`: `ready` and the only active parcel.
 - LAB-027: approved but sequence-blocked.
-- Ready items: exactly one — LAB-025.
+- Ready items: exactly one — LAB-026.
 
 Program reported gate 45/45 passed, the approval decision committed and pushed, and its tree clean. No parallel or combined implementation is authorised.
 
@@ -94,11 +99,13 @@ LAB-023 remains governed by the exact version-1 immutable Lab projection contrac
 
 LAB-024 remains a bounded offline fixture corpus only. Every file is explicit demo/development evidence, contains no unsafe local path, secret or fabricated verified authority digest, and resolves only through committed safe development projections.
 
-LAB-025 is the next surface parcel. Before any edit, its display and in-memory browser behaviour must be classified under the charter's human-observation boundary; repository evidence must not substitute for observed behaviour.
+LAB-025 remains a Lab-only surface over committed immutable projections and in-memory document-register state. Patrick reported a 100% PASS against its browser checklist; no production authority or persistence claim was introduced.
+
+LAB-026 is the next surface parcel. Its document and equipment display, demo/verified distinction and non-persistence behaviour must be classified under the charter's human-observation boundary before any edit.
 
 LAB-017 remains governed by its approved version-1 envelope. Program retains all production allocation, live source reading, hosting, routing, persistence, authentication, CRM integration, deployment and endpoint ownership.
 
-The next safe action is the LAB-025 preflight in this same standing-worker batch. The worker stops before implementation if the acceptance requires browser observation.
+The next safe action is the LAB-026 preflight in this same standing-worker batch. The worker stops before implementation if the acceptance requires browser observation.
 
 ## LAB-017 immutable completion receipt
 

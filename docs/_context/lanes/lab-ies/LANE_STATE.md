@@ -13,11 +13,11 @@ Current repository evidence overrides stale historical statements.
 - Root: `C:\ControlStack_Worktrees\code-pilot-lab`
 - Branch: `lane/code-pilot-lab`
 - Gate: `lab-ies`
-- Recorded branch HEAD: `72073529fd9f1d2fd6717a990a81d304f36b984a`
+- Recorded branch HEAD: `f53ac346aa999e6a3f4fca45efd12c568d262a17`
 - Branch-HEAD guard checkpoint: `6d34e500d407d5335e5eebb317636a67a5e98618`
-- Starting HEAD for LAB-024: `72073529fd9f1d2fd6717a990a81d304f36b984a`
-- Completed feature HEAD: `deb74baac423f879d409c2b7fc98d6ca9a459787`
-- Feature subject: `lab: checkpoint offline resolver fixture corpus`
+- Starting HEAD for LAB-025: `f53ac346aa999e6a3f4fca45efd12c568d262a17`
+- Completed feature HEAD: `78fe3ab23e4fd50b8c79af8f429687a91401a068`
+- Feature subject: `lab: checkpoint component library surface`
 - Feature push: confirmed on origin `lane/code-pilot-lab`
 
 ## Branch-HEAD synchronisation invariant
@@ -59,7 +59,28 @@ Before any queue item is selected, a worker must compare `Recorded branch HEAD` 
 - Human-observation acceptance cannot be closed from repository evidence. The item remains incomplete and the worker supplies exact `NEEDS YOU` steps.
 - Orchestrator review occurs at seam, human-observation and five-parcel/stop boundaries rather than after each routine parcel.
 
-## Latest completed parcel — LAB-024
+## Latest completed parcel — LAB-025
+
+Queue item `LAB-025-component-library-surface` is complete.
+
+Exactly this one authorised file was changed and committed:
+
+```text
+packages/lab-kernel/ies-toolkit/component_library.html
+```
+
+Verified outcome:
+
+- the surface consumes only the committed immutable component-catalogue and document-register contracts;
+- board, driver and optic rows are projected from the committed offline fixture snapshot and labelled read-only, offline and unapproved;
+- missing values remain visibly unresolved rather than being inferred, and hot-test evidence is explicitly not emergency verification;
+- document records use caller-supplied safe IDs and canonical host-free source/evidence resolver paths;
+- association and unlink operations replace immutable in-memory state only and clear on page refresh;
+- no upload control, storage API, direct RuntimeData/database access, Program route, Selector contract, authority record, approval, seal or procurement decision exists;
+- Patrick reported a 100% PASS against the prescribed Component Library browser checklist at the canonical local URL on 2026-07-20;
+- the page fails closed with a visible error if fixture loading or projection validation fails.
+
+## Previous completed parcel — LAB-024
 
 Queue item `LAB-024-resolver-fixture-corpus` is complete.
 
@@ -283,7 +304,7 @@ Verified outcome:
 
 The connected app exposes the fixed `lab-ies` gate as the available changed-file and full validation path.
 
-- Focused changed-file execution for the 20 LAB-024 fixture files: 245 tests, 245 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
+- Focused changed-file execution for the one LAB-025 surface file: 245 tests, 245 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
 - Independent full `lab-ies` gate: 245 tests, 245 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
 - Gated feature commit execution: 245 tests, 245 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
 
@@ -293,7 +314,7 @@ The protected working-tree state after documentation closeout is:
 
 - staged: 0;
 - modified: 1 — only the unstaged `Recorded branch HEAD` synchronisation marker in this file;
-- untracked: 25;
+- untracked: 24;
 - deleted: 0.
 
 Protected untracked paths:
@@ -302,7 +323,6 @@ Protected untracked paths:
 README.zip
 docs/_context/ControlStack_summary_normalise_harness_spec.md
 packages/lab-kernel/ies-toolkit/bench.html
-packages/lab-kernel/ies-toolkit/component_library.html
 packages/lab-kernel/ies-toolkit/curator.html
 packages/lab-kernel/ies-toolkit/docs.html
 packages/lab-kernel/ies-toolkit/emergency.html
@@ -358,6 +378,7 @@ tests/selectorCascadeCorrectness.test.js
 - LAB-022 is approved with exactly two unique non-MERGED parents, immutable order-significant provenance, exactly matching grids without interpolation/resampling, and allocation/authority/approval/sealing outside the kernel; violations fail closed.
 - LAB-018, LAB-019, LAB-020, LAB-021, LAB-022 and LAB-023 are complete and confirmed in current branch history.
 - LAB-024 is complete and confirmed on origin as a bounded offline resolver fixture corpus.
+- LAB-025 is complete and confirmed on origin as the Lab-only component library surface.
 - LAB-027 remains approved but sequence-blocked until its dependencies are completed and it becomes the single top eligible parcel.
 - No parallel or combined implementation is authorised.
 - The earlier LAB-018 approval hold remains superseded.
@@ -379,9 +400,10 @@ tests/selectorCascadeCorrectness.test.js
 - `LAB-022-reference-composition-kernel`: done.
 - `LAB-023-nvb-lab-adapter`: done.
 - `LAB-024-resolver-fixture-corpus`: done.
-- Next ordered item: `LAB-025-component-library-surface`.
+- `LAB-025-component-library-surface`: done.
+- Next ordered item: `LAB-026-document-equipment-surfaces`.
 - Resulting status: `ready`; it is a non-seam parcel and all dependencies are done.
-- Ready items: exactly one — LAB-025.
+- Ready items: exactly one — LAB-026.
 - Approved sequence-blocked item: LAB-027.
 
-LAB-024 was implemented, validated, committed and pushed as the single active parcel.
+LAB-025 was implemented, validated, committed and pushed as the single active parcel.

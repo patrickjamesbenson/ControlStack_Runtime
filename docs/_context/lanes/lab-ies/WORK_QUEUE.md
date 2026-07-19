@@ -413,7 +413,9 @@ Evidence: `deb74baac423f879d409c2b7fc98d6ca9a459787`, confirmed on origin.
 - depends on: LAB-012-lab-style-foundation, LAB-019-component-projection-contract, LAB-020-document-register-contract, LAB-024-resolver-fixture-corpus
 - on success next: LAB-026-document-equipment-surfaces
 - seam change: no
-- status: ready
+- status: done
+
+Evidence: `78fe3ab23e4fd50b8c79af8f429687a91401a068`, confirmed on origin. Patrick reported a 100% PASS against the prescribed Component Library browser checklist on 2026-07-20.
 
 ### Q-16 Document and equipment surfaces
 - id: LAB-026-document-equipment-surfaces
@@ -432,7 +434,7 @@ Evidence: `deb74baac423f879d409c2b7fc98d6ca9a459787`, confirmed on origin.
 - depends on: LAB-012-lab-style-foundation, LAB-020-document-register-contract
 - on success next: LAB-027-request-report-workflow after recorded Integrate approval
 - seam change: no
-- status: queued
+- status: ready
 
 ### Q-17 Lab request and report workflow
 - id: LAB-027-request-report-workflow

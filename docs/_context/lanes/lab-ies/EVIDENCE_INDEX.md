@@ -64,6 +64,61 @@ For human-observation acceptance, the worker must stop before making a completio
 
 The operating model is recorded in `LANE_CHARTER.md`, `DECISION_LOG.md`, `LANE_STATE.md` and `WORK_QUEUE.md`. Both standing prompts live only in the stable charter; `SESSION_HANDOFF.md` carries launch pointers and current session evidence.
 
+## LAB-025 component library surface — 2026-07-20
+
+### Identity and scope
+
+- starting HEAD: `f53ac346aa999e6a3f4fca45efd12c568d262a17`;
+- queue item: `LAB-025-component-library-surface`;
+- authorised path only: `packages/lab-kernel/ies-toolkit/component_library.html`;
+- seam change: no.
+
+### Behaviour evidence
+
+The completed surface:
+
+- imports only the committed immutable component-catalogue and document-register contracts;
+- projects boards, drivers and optics from the committed offline fixture snapshot;
+- labels rows read-only, offline and unapproved and renders missing values as unresolved;
+- keeps hot-test evidence opaque and explicitly denies emergency verification;
+- uses caller-supplied safe document IDs plus canonical host-free source/evidence resolver paths;
+- performs association and unlink through immutable in-memory state replacement only;
+- clears associations on refresh and includes no upload control, storage API, direct RuntimeData/database access or Program route;
+- creates no Selector contract, authority record, approval, seal or procurement decision;
+- fails closed visibly if source loading or contract projection fails.
+
+### Human-observation evidence
+
+- canonical URL supplied: `http://127.0.0.1:8899/component_library.html`;
+- Patrick reported a 100% PASS against the prescribed board, driver, optic, unresolved-value, association and refresh checklist on 2026-07-20;
+- the observation boundary was therefore released for the parcel to continue.
+
+### Static audit evidence
+
+- retired mutable component/document API search: zero matches;
+- browser storage, upload, websocket, direct RuntimeData/database and persistent route search: zero matches;
+- exact staged set: the single authorised HTML file.
+
+### Test and gate evidence
+
+- focused changed-file `lab-ies` execution: 245/245 passed;
+- independent full `lab-ies` gate: 245/245 passed;
+- gated feature commit execution: 245/245 passed;
+- failed, cancelled, skipped and todo counts were zero in every execution.
+
+### Commit and push evidence
+
+- feature commit: `78fe3ab23e4fd50b8c79af8f429687a91401a068`;
+- subject: `lab: checkpoint component library surface`;
+- push: origin `lane/code-pilot-lab`, confirmed successful;
+- protected unrelated dirty paths and the unstaged branch-HEAD marker were preserved.
+
+### Resulting queue boundary
+
+- LAB-025 is `done`.
+- LAB-026 becomes the single next `ready` item.
+- LAB-027 remains approved but sequence-blocked.
+
 ## LAB-024 offline resolver fixture corpus — 2026-07-20
 
 ### Identity and scope
