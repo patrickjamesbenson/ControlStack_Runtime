@@ -126,6 +126,9 @@ Engine should consume sealed DTOs, safe handoff projections or generated project
 - Every implementation parcel must be path-confined and independently classified before staging.
 - Accepted work must not be committed together with prototypes, unexplained support files or other-lane changes.
 - The `lab-ies` gate must pass after each accepted parcel and before gated commit/push.
+- A standing worker may complete at most five consecutive parcels in one run, but every parcel remains a separate feature checkpoint and documentation closeout.
+- The worker must stop the batch at the first seam, stale-state, gate, scope, empty-queue or human-observation boundary.
+- Repository evidence must not substitute for acceptance that genuinely requires observation of the running application, browser interaction or real-world judgement. Such items remain incomplete until the required human observation is performed.
 - Existing dirty feature files must not be reset, restored, cleaned or silently absorbed into documentation commits.
 - Potentially destructive support scripts, including `scripts/clear_chaff.ps1`, must not be executed during audit or checkpoint work.
 

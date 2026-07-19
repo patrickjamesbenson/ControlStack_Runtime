@@ -314,3 +314,28 @@ For LAB-022, Program expressly ratified:
 - fail-closed rejection of duplicate or pre-composed parents, reordered or missing provenance, grid mismatch and any attempted governance-boundary crossing.
 
 Only LAB-018 may move to `ready`. LAB-019, LAB-020, LAB-021, LAB-022, LAB-023 and LAB-027 remain approved but sequence-blocked until the active parcel is completed and closed out. No parallel or combined implementation is authorised. The earlier LAB-018 approval hold is superseded.
+
+## DL-025 — Five-parcel standing-worker batches and human-observation boundary
+
+**Status:** Locked on 2026-07-20.
+
+A standing Lab worker no longer stops after every successful parcel. After each feature checkpoint and documentation closeout, it immediately takes the next single eligible `ready` item and repeats, up to a maximum of five consecutive parcels in one run.
+
+This changes review cadence, not parcel discipline:
+
+- every parcel remains separate and sequential;
+- every parcel retains its own authorised files, focused validation, full `lab-ies` gate, exact staged-file equality, feature commit, documentation closeout and lane-only pushes;
+- the branch-HEAD marker is refreshed after every documentation push and rechecked before the next parcel;
+- seam approval remains item-specific and mandatory;
+- the orchestrator reviews at seams, human-observation boundaries and worker-batch boundaries rather than after each routine parcel.
+
+The batch stops immediately at the first of these successful boundaries:
+
+- seam approval required;
+- lane state stale;
+- any focused, full or gated commit gate failure;
+- an authorised file contains behaviour outside the item's stated scope;
+- queue empty;
+- acceptance requires observation of the running application, a browser action or real-world judgement that repository evidence alone cannot prove.
+
+For the final boundary, repository evidence must never be treated as a substitute for human observation. The worker must not guess, must not mark the item `done`, and must reply `NEEDS YOU` with exact click-by-click steps before ending the batch.

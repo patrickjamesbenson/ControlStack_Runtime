@@ -3,10 +3,14 @@
 ## Operating model
 
 - This file controls worker parcel selection. Bespoke parcel prompts are retired.
-- The orchestrator writes and orders items, reviews `STOPPED` reports, obtains Integrate approval for seam changes, and decides when work is ready for main.
-- Before taking any queue item, a worker must compare `LANE_STATE.md`'s `Recorded branch HEAD` with the actual branch HEAD. A mismatch stops implementation and requires lane-memory reconciliation first; the same worker run must not then execute a queue item.
+- The orchestrator writes and orders items, obtains Integrate approval for seam changes, and reviews at seam, human-observation and worker-batch boundaries rather than after every routine parcel.
+- One worker run may complete up to five consecutive parcels. Parcels remain strictly sequential and retain separate feature gates, exact staged-file checks, feature commits, documentation closeouts and pushes.
+- Before the first parcel and before every later parcel in the same run, the worker must compare `LANE_STATE.md`'s `Recorded branch HEAD` with the actual branch HEAD. A mismatch stops parcel execution, requires lane-memory reconciliation only, and ends the batch; no queue item may run after that mismatch in the same worker run.
 - A worker takes only the top `ready` item whose dependencies are `done` after the HEAD comparison passes.
+- Before editing an item, the worker must determine whether its acceptance genuinely requires observation of the running application, a browser action or real-world judgement that repository evidence cannot prove. If so, it must make no completion claim, must not mark the item `done`, and must stop with `NEEDS YOU` plus exact click-by-click verification steps.
 - After every successful documentation push, the worker updates only the working-tree `Recorded branch HEAD` marker to the new actual HEAD and leaves that single marker edit unstaged.
+- After a successful closeout, the worker immediately selects the next eligible item and repeats until five parcels have completed or a stop boundary is reached. It does not wait for Patrick between successful parcels.
+- Seam approval required, lane state stale, any gate failure, out-of-scope behaviour in an authorised file, queue empty and human-observation acceptance are successful stop boundaries. They end the batch immediately.
 - Root: `C:\ControlStack_Worktrees\code-pilot-lab`
 - Branch: `lane/code-pilot-lab`
 - Gate: `lab-ies`
@@ -23,12 +27,12 @@
 
 Every orchestrator and worker reply begins with one of:
 
-- `AUTO - gate passed, parcel committed to lane/code-pilot-lab. Continuing. No action from Patrick.`
+- `AUTO - five-parcel batch completed on lane/code-pilot-lab. No action from Patrick.`
 - `SEND TO INTEGRATE - parcel ready for main. Patrick pastes this to Program & Integrate.`
-- `NEEDS YOU - <one-line action for Patrick>`
+- `NEEDS YOU` followed by the exact `What / Do / Why / Recommend` action block
 - `STOPPED - <boundary>. Orchestrator decision needed.`
 
-`AUTO` is lane-only, never main. A genuine `STOPPED` is a successful boundary result.
+`AUTO` is lane-only, never main. A genuine `STOPPED` is a successful boundary result. Workers do not issue a final reply after each successful parcel inside a batch; they report once at the five-parcel limit or the first stop boundary.
 
 ## Queue status
 

@@ -13,7 +13,7 @@ Current repository evidence overrides stale historical statements.
 - Root: `C:\ControlStack_Worktrees\code-pilot-lab`
 - Branch: `lane/code-pilot-lab`
 - Gate: `lab-ies`
-- Recorded branch HEAD: `636d3d7c2023bf16e49def1d75f9d46d66b26482`
+- Recorded branch HEAD: `2ba6162568f5e97d957837d74267b2bbad730e94`
 - Branch-HEAD guard checkpoint: `6d34e500d407d5335e5eebb317636a67a5e98618`
 - Starting HEAD for LAB-020: `02479150d55cf8f26b8da74d621f0671e428755d`
 - Completed feature HEAD: `636d3d7c2023bf16e49def1d75f9d46d66b26482`
@@ -41,6 +41,16 @@ Before any queue item is selected, a worker must compare `Recorded branch HEAD` 
 - Delete enabled: no
 - Arbitrary shell execution: no
 - Allowed gate: `lab-ies`
+
+## Standing-worker batch operating model
+
+- One worker run may complete up to five consecutive parcels.
+- Parcels remain strictly sequential, with one `ready` item at a time and separate feature/documentation checkpoints.
+- The worker rechecks the live branch HEAD against the working-tree marker before every parcel, including later parcels in the same batch.
+- After each successful documentation closeout, the worker refreshes the marker and immediately takes the next eligible item without waiting for Patrick.
+- The batch ends immediately on seam approval required, stale lane state, any gate failure, out-of-scope behaviour, queue empty or acceptance requiring live application/browser/real-world observation.
+- Human-observation acceptance cannot be closed from repository evidence. The item remains incomplete and the worker supplies exact `NEEDS YOU` steps.
+- Orchestrator review occurs at seam, human-observation and five-parcel/stop boundaries rather than after each routine parcel.
 
 ## Latest completed parcel — LAB-020
 

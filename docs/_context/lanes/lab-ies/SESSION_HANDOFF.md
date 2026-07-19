@@ -2,7 +2,7 @@
 
 ## Session purpose
 
-This handoff records completed LAB-020 document registration, preserves the approved consolidated seam sequence, and authorises only LAB-021 as the single next runnable parcel.
+This handoff records completed LAB-020 document registration, preserves the approved consolidated seam sequence, and adopts the permanent five-parcel standing-worker model beginning with LAB-021 as the single next runnable parcel.
 
 ## Identity
 
@@ -11,7 +11,7 @@ This handoff records completed LAB-020 document registration, preserves the appr
 - Root: `C:\ControlStack_Worktrees\code-pilot-lab`
 - Branch: `lane/code-pilot-lab`
 - Gate: `lab-ies`
-- Reusable prompt checkpoint: `1df62fccd91ac66509b02960ad988f6ef90c0b52`
+- Reusable prompt model: five-parcel standing worker with human-observation stop boundary, adopted 2026-07-20
 - Starting HEAD for LAB-020: `02479150d55cf8f26b8da74d621f0671e428755d`
 - Completed feature checkpoint: `636d3d7c2023bf16e49def1d75f9d46d66b26482`
 - Feature subject: `lab: checkpoint document register contract`
@@ -21,9 +21,9 @@ This handoff records completed LAB-020 document registration, preserves the appr
 
 ## Branch-HEAD guard
 
-Before queue selection, the worker compares `LANE_STATE.md`'s `Recorded branch HEAD` with the actual branch HEAD. A mismatch stops implementation, produces the exact stale-state reply, and requires memory-only reconciliation plus the full gate. The worker must not execute a queue item in the same run that discovered the mismatch.
+Before the first parcel and before every later parcel in the same worker run, the worker compares `LANE_STATE.md`'s `Recorded branch HEAD` with the actual branch HEAD. A mismatch stops parcel execution, produces the exact stale-state reply, and permits only memory reconciliation plus the full gate. The worker must not execute any queue item after discovering the mismatch in that run.
 
-After every documentation push, only the `Recorded branch HEAD` field is refreshed in the working tree to the new actual HEAD and left unstaged. This deliberate marker avoids the impossible requirement for a commit to contain its own final hash and detects a worker ending between feature and documentation commits.
+After every documentation push, only the `Recorded branch HEAD` field is refreshed in the working tree to the new actual HEAD and left unstaged. This deliberate marker avoids the impossible requirement for a commit to contain its own final hash and provides the next parcel boundary check inside the same batch.
 
 ## Completed queue item
 
@@ -94,7 +94,7 @@ LAB-022 is approved only under its ratified binary-composition policy: exactly t
 
 LAB-017 remains governed by its approved version-1 envelope. Program retains all production allocation, live source reading, hosting, routing, persistence, authentication, CRM integration, deployment and endpoint ownership.
 
-The next safe action is one bounded worker execution of LAB-021 only. Later approved parcels remain held until the active parcel is completed and closed out.
+The next safe action is a standing-worker batch beginning with LAB-021. After each successful documentation closeout, that same worker immediately advances the next single eligible item and may complete up to five parcels total. It stops at the first seam, stale-state, gate, scope, empty-queue or human-observation boundary.
 
 ## LAB-017 immutable completion receipt
 
@@ -202,7 +202,7 @@ The immutable receipt remains byte-for-byte unchanged. Promotion to main is a se
 - no LAB-017 change outside the recorded version-1 approval without a new seam decision;
 - no reverse-authority reconstruction, legacy alternative reference schema, diagnostic authority identity or unsafe governed path;
 - no public resolver route, server implementation, HTML, fixture, Selector or Program ownership absorbed into the Lab contract;
-- no implementation other than the single active LAB-021 parcel; LAB-022, LAB-023 and LAB-027 remain sequence-blocked until active-parcel closeout;
+- no parallel or combined implementation; only the current top `ready` parcel may run, but the same worker may advance sequentially through up to five successful closeouts;
 - no reset, restore, clean, deletion or movement of protected dirty paths;
 - no execution of `scripts/clear_chaff.ps1`;
 - no donor write;
@@ -218,6 +218,8 @@ STANDING WORKER — Lab & IES
 
 Use only the connected CS Lab & IES v2 app. You are a worker, not the orchestrator.
 
+You may complete up to FIVE consecutive parcels in one run. Parcels remain separate and sequential: one ready item, one feature checkpoint and one documentation closeout at a time. After a successful closeout, continue immediately to the next eligible parcel without waiting for Patrick.
+
 1. Verify identity before changing anything:
 
    - Root: `C:\ControlStack_Worktrees\code-pilot-lab`
@@ -232,30 +234,60 @@ Use only the connected CS Lab & IES v2 app. You are a worker, not the orchestrat
 
    Current repository evidence overrides stale historical statements.
 
-3. Before taking any queue item, compare the `Recorded branch HEAD` value in `LANE_STATE.md` with the actual current HEAD of `lane/code-pilot-lab`.
+3. Before the first queue item and again before every later item in the same run, compare the `Recorded branch HEAD` value in `LANE_STATE.md` with the actual current HEAD of `lane/code-pilot-lab`.
 
-   If they do not match, do not start implementation. Reply exactly:
+   If they do not match, stop parcel execution immediately. Reply exactly:
 
    `STOPPED - lane state is stale. Recorded HEAD <x>, actual HEAD <y>.`
 
-   Then reconcile lane memory to the actual repository state before anything else. Classify whether the unmatched commit is a completed feature checkpoint, a documentation checkpoint, or an unexplained change; update the lane-memory evidence and queue truth accordingly; run the full `lab-ies` gate; and commit/push only the reconciled lane-memory files through the gated path. Do not execute a queue item in the same worker run that discovered the mismatch.
+   Then reconcile lane memory to the actual repository state before anything else. Classify whether the unmatched commit is a completed feature checkpoint, a documentation checkpoint, or an unexplained change; update the lane-memory evidence and queue truth accordingly; run the full `lab-ies` gate; and commit/push only the reconciled lane-memory files through the gated path. End the batch after reconciliation. Do not execute any queue item in the same worker run that discovered the mismatch.
 
-   Because a Git commit cannot contain its own final hash, `LANE_STATE.md` uses one deliberate live synchronisation marker: immediately after every successful documentation commit and push, update `Recorded branch HEAD` in the working tree to that new actual HEAD and leave only that marker edit unstaged. This single unstaged lane-state marker is expected and must never be absorbed into a feature commit. A future mismatch therefore means the lane advanced without its marker being refreshed or the committed lane memory is otherwise stale.
+   Because a Git commit cannot contain its own final hash, `LANE_STATE.md` uses one deliberate live synchronisation marker: immediately after every successful documentation commit and push, update `Recorded branch HEAD` in the working tree to that new actual HEAD and leave only that marker edit unstaged. This single unstaged lane-state marker is expected and must never be absorbed into a feature commit. Recheck it before the next parcel in the same batch.
 
 4. Read `WORK_QUEUE.md` and take only the TOP item with:
 
    - `status: ready`; and
    - every listed dependency marked `done`.
 
-   If no item qualifies, reply:
+   If no item qualifies, stop the batch and reply:
 
    `STOPPED - queue empty. Orchestrator decision needed.`
 
-   If the selected item has `seam change: yes` and the required Program & Integrate approval is not recorded in the queue or decision log, reply:
+   If the selected item has `seam change: yes` and the required Program & Integrate approval is not recorded in the queue or decision log, stop the batch and reply:
 
    `STOPPED - seam approval required. Orchestrator decision needed.`
 
-5. Execute ONLY the selected item's authorised files and honour every prohibition and acceptance condition. Do not widen the parcel. If an authorised file contains unrelated or unexplained behaviour that cannot be safely confined within the stated parcel, stop and report it rather than rewriting or absorbing it.
+   Before changing any file, inspect the item's acceptance conditions and decide whether completion genuinely requires:
+
+   - observation of the running application;
+   - a browser action; or
+   - judgement about real-world correctness that repository evidence alone cannot prove.
+
+   If any of those is required, do not implement, stage, commit or mark the item `done`. Stop with exactly this shape and provide no more than three click-by-click steps:
+
+   `NEEDS YOU`
+
+   `What: <one plain sentence, no jargon.>`
+
+   `Do:`
+
+   `1. <exact click-by-click step>`
+
+   `2. <exact click-by-click step>`
+
+   `3. <exact click-by-click step, only if needed>`
+
+   `Why: <one short line on what this unblocks.>`
+
+   `Recommend: <what you would do if it were your call.>`
+
+   Do not guess and do not treat repository evidence as a substitute for observed behaviour.
+
+5. Execute ONLY the selected item's authorised files and honour every prohibition and acceptance condition. Do not widen the parcel. If an authorised file contains unrelated or unexplained behaviour that cannot be safely confined within the stated parcel, stop the batch immediately and report:
+
+   `STOPPED - authorised file contains out-of-scope behaviour. Orchestrator decision needed.`
+
+   Do not rewrite, absorb or stage the out-of-scope behaviour. This is a successful boundary outcome.
 
 6. Preserve the intentionally dirty worktree:
 
@@ -266,7 +298,11 @@ Use only the connected CS Lab & IES v2 app. You are a worker, not the orchestrat
    - do not write to main, another lane or Selector-owned paths;
    - preserve every protected path recorded in `LANE_STATE.md` and `SESSION_HANDOFF.md`.
 
-7. Run focused validation for the selected parcel where the connected app exposes it, then run the full `lab-ies` gate. The full gate must pass before any feature commit.
+7. Run focused validation for the selected parcel where the connected app exposes it, then run the full `lab-ies` gate. If any focused, full or gated commit gate fails, stop the batch immediately. Do not continue to another parcel and do not mark the current item `done`. Report:
+
+   `STOPPED - gate failed. Orchestrator decision needed.`
+
+   Include the failed validation stage and preserve the exact working-tree and staged state. Do not bypass, weaken or reinterpret the gate.
 
 8. Stage EXACTLY the selected item's authorised files. Confirm the staged set equals those files and nothing else.
 
@@ -281,25 +317,32 @@ Use only the connected CS Lab & IES v2 app. You are a worker, not the orchestrat
 
    Mark the completed item `done`, record its feature commit evidence, and set exactly one next eligible item to `ready`. Do not set a seam-change item to `ready` without its required recorded approval. Preserve this entire standing-worker prompt verbatim in `SESSION_HANDOFF.md`; never replace it with a bespoke parcel prompt.
 
-11. Run the full `lab-ies` gate again, stage exactly the changed lane-memory files, then use the gated commit-and-push path for the documentation closeout. Push only `lane/code-pilot-lab`. After the push succeeds, read the new actual HEAD, update only the `Recorded branch HEAD` marker in the working-tree copy of `LANE_STATE.md` to that exact value, and leave that one marker edit unstaged for the next worker's preflight comparison.
+11. Run the full `lab-ies` gate again, stage exactly the changed lane-memory files, then use the gated commit-and-push path for the documentation closeout. Push only `lane/code-pilot-lab`. If this gate or gated documentation commit fails, stop the batch under the gate-failure boundary and do not advance the queue. After a successful push, read the new actual HEAD, update only the `Recorded branch HEAD` marker in the working-tree copy of `LANE_STATE.md` to that exact value, and leave that one marker edit unstaged for the next parcel's preflight comparison.
 
-12. Every final reply begins with exactly one of:
+12. Count the parcel as completed only after both the feature checkpoint and documentation closeout are pushed successfully.
 
-   - `AUTO - gate passed, parcel committed to lane/code-pilot-lab. Continuing. No action from Patrick.`
+   - If five parcels have completed in this run, stop and give one batch summary.
+   - If fewer than five have completed, do not send a final reply and do not wait for Patrick. Return immediately to step 3, recheck the live HEAD marker, and take the next single eligible item.
+   - Stop immediately at the first seam, stale-state, gate, scope, queue-empty or human-observation boundary, even if fewer than five parcels have completed.
+
+13. Every final reply begins with exactly one of:
+
+   - `AUTO - five-parcel batch completed on lane/code-pilot-lab. No action from Patrick.`
    - `SEND TO INTEGRATE - parcel ready for main. Patrick pastes this to Program & Integrate.`
-   - `NEEDS YOU - <one-line action for Patrick>`
+   - `NEEDS YOU`
    - `STOPPED - <boundary>. Orchestrator decision needed.`
 
-   Use `NEEDS YOU` only when Patrick must physically do something. Progress notes must be one plain line without the `NEEDS YOU` label. `AUTO` is lane-only and never means main. A genuine `STOPPED` is a successful boundary result.
+   Use `AUTO` when the five-parcel limit is reached without a boundary requiring Patrick or Integrate. Use `NEEDS YOU` only for the human-observation boundary and follow the exact `What / Do / Why / Recommend` shape in step 4. Use `STOPPED` for seam approval, stale state, gate failure, out-of-scope behaviour or queue empty. These are successful boundary outcomes. `AUTO` is lane-only and never means main.
 
-13. The final report must state:
+14. The final batch report must state:
 
-   - the live starting HEAD;
-   - the selected queue item;
-   - the exact feature files committed;
-   - focused and full gate results;
-   - the feature and documentation checkpoint subjects;
-   - confirmation that both pushes went only to `lane/code-pilot-lab`;
+   - the live starting HEAD for the batch;
+   - every queue item attempted, completed or stopped;
+   - the exact feature files committed for each completed parcel;
+   - focused and full gate results for each completed parcel;
+   - every feature and documentation checkpoint subject;
+   - confirmation that all pushes went only to `lane/code-pilot-lab`;
+   - the exact stop reason or confirmation that the five-parcel limit was reached;
    - final staged, modified, untracked and deleted counts;
-   - the next queue item and whether any seam approval is required.
+   - the next queue item and whether seam approval or human observation is required.
 ````

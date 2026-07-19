@@ -6,6 +6,36 @@
 - Historical handoff content is retained as reported context unless freshly reverified.
 - Test output proves only the behaviour exercised by the named tests; low-level merge tests do not by themselves prove completion of the final governed merge.
 
+## Five-parcel standing-worker operating model — 2026-07-20
+
+### Owner direction
+
+The standing worker now continues immediately after each successful feature checkpoint and documentation closeout, up to five consecutive parcels in one run. Review moves to seam, human-observation and batch boundaries rather than routine per-parcel checkpoints.
+
+### Retained protections
+
+Each parcel remains independently bounded by:
+
+- top-ready dependency order;
+- recorded seam approval;
+- branch-HEAD marker comparison before every parcel;
+- exact authorised-file scope and staged-file equality;
+- focused validation where exposed;
+- the full `lab-ies` gate;
+- separate feature and documentation commits;
+- pushes only to `lane/code-pilot-lab`;
+- preservation of the intentionally dirty worktree.
+
+### Successful stop boundaries
+
+The worker ends the batch immediately on seam approval required, stale lane state, any gate failure, out-of-scope behaviour in an authorised file, queue empty, or acceptance that genuinely requires live application observation, browser interaction or real-world judgement.
+
+For human-observation acceptance, the worker must stop before making a completion claim, leave the item not done, and provide exact click-by-click steps under `NEEDS YOU`. Repository evidence alone cannot close that acceptance.
+
+### Durable records
+
+The operating model is recorded in `LANE_CHARTER.md`, `DECISION_LOG.md`, `LANE_STATE.md`, `WORK_QUEUE.md` and the single reusable prompt in `SESSION_HANDOFF.md`.
+
 ## LAB-020 document register contract — 2026-07-20
 
 ### Identity and scope
