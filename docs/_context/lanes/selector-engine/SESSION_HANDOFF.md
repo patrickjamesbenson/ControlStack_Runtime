@@ -1,11 +1,39 @@
 # Selector & Engine Session Handoff
 
+## Standing worker prompt
+
+```text
+STANDING WORKER - Selector & Engine
+Use only the connected CS Selector & Engine v2 app. You are a worker, not the orchestrator.
+
+1. Verify identity: root C:\ControlStack_Worktrees\selector-engine, branch lane/selector-engine,
+   current HEAD, gate selector-engine. Stop if anything mismatches.
+2. Read every file in docs/_context/lanes/selector-engine/ first.
+3. Take the TOP WORK_QUEUE.md item with status: ready and all depends-on satisfied.
+   None qualifying -> "STOPPED - queue empty". Seam change without recorded Integrate
+   approval -> "STOPPED - seam approval required".
+4. Execute ONLY that item's authorised files, honouring its prohibitions.
+5. Run focused tests, then the full selector-engine gate. It must pass before any commit.
+6. Stage EXACTLY the authorised files. Confirm nothing else is staged.
+7. Gated commit + push. Push only lane/selector-engine.
+8. Update LANE_STATE.md, EVIDENCE_INDEX.md, SESSION_HANDOFF.md; mark the item done in
+   WORK_QUEUE.md and set the next item ready.
+9. Begin your reply with the required status line.
+   Never touch another lane, the donor, or main. Never clean, reset, restore, merge, rebase,
+   delete or move anything outside your authorised files. File movement is disabled for this
+   app by design - if an item needs a move, STOP and report it. Tier is an Engine/Lex
+   consequence after run - never add or require a Tier selector. Do not fabricate project truth
+   or fixtures to manufacture a green result. A clean STOP at a genuine boundary is a SUCCESS.
+   Report: starting identity + Git state, item executed, files changed, focused tests, gate counts,
+   commit and push hashes, final Git state, doc updates, next queue item.
+```
+
 **For:** A fresh Selector & Engine orchestrator with no chat history.
-**State date:** 2026-07-18, Australia/Sydney.
+**State date:** 2026-07-19, Australia/Sydney.
 
 ## Start here
 
-Use only `CS Selector & Engine v2`. Read every file in `docs/selector/_context/`, then verify `repo_info`, Git status, and recent commits. Repository evidence is authoritative.
+Use only `CS Selector & Engine v2`. Read every file in `docs/_context/lanes/selector-engine/`, then verify `repo_info`, Git status, and recent commits. Repository evidence is authoritative.
 
 Expected identity:
 
@@ -36,7 +64,7 @@ The following guarded repair worker has now completed:
 
 **Worker prompt:**
 
-> Use only the connected CS Selector & Engine v2 app. Verify root `C:\ControlStack_Worktrees\selector-engine`, branch `lane/selector-engine`, current HEAD, and a clean starting tree, then read every file in `docs/selector/_context/`. Start from the accepted diagnosis that live direct `controlType` is blocked because `compatibleBoardDriverControlOptions()` produces no genuine BOARDS × DRIVERS protocol-authority pair. First establish the exact active-source mismatch using only approved read-only source access and safe summaries: determine whether a genuine authoritative DRIVERS protocol value exists under an unmapped column/value form, whether canonicalisation fails, or whether genuine DRIVERS authority is absent. Do not promote descriptive aliases into authority merely to make the endpoint green. If and only if a genuine active-source authority form is proven, patch the smallest exact descriptor/canonicalisation boundary in `packages/workspace-kernel/selectorReferenceOptionsService.js` with focused regression tests. Preserve the BOARDS × DRIVERS intersection, system/wildcard applicability, no-union rule, no default Control selection, fail-closed semantics, source ordering, and redaction. Tier remains an Engine/Lex consequence after run and must not be added or required. Do not change rendering, server routes, cache code, Selector default-preview data, optic-efficiency enrichment, length feasibility, Engine contracts, Lab/IES, Program, or main unless the proven first boundary directly requires it. If genuine DRIVERS authority is absent, make no code repair and stop with an exact upstream data-ownership recommendation. For a valid code repair, run focused tests and `selector-engine`, live-validate `/api/selector-reference/options` on runtime 8788 so direct Control has at least one genuine available option while no option is auto-selected, stage only the exact commissioned paths, gated-commit and push only `lane/selector-engine`, then update the durable context with exact source evidence, files, tests, live receipt, commit, push, clean Git state, server-revision state, and the next bounded worker.
+> Use only the connected CS Selector & Engine v2 app. Verify root `C:\ControlStack_Worktrees\selector-engine`, branch `lane/selector-engine`, current HEAD, and a clean starting tree, then read every file in `docs/_context/lanes/selector-engine/`. Start from the accepted diagnosis that live direct `controlType` is blocked because `compatibleBoardDriverControlOptions()` produces no genuine BOARDS × DRIVERS protocol-authority pair. First establish the exact active-source mismatch using only approved read-only source access and safe summaries: determine whether a genuine authoritative DRIVERS protocol value exists under an unmapped column/value form, whether canonicalisation fails, or whether genuine DRIVERS authority is absent. Do not promote descriptive aliases into authority merely to make the endpoint green. If and only if a genuine active-source authority form is proven, patch the smallest exact descriptor/canonicalisation boundary in `packages/workspace-kernel/selectorReferenceOptionsService.js` with focused regression tests. Preserve the BOARDS × DRIVERS intersection, system/wildcard applicability, no-union rule, no default Control selection, fail-closed semantics, source ordering, and redaction. Tier remains an Engine/Lex consequence after run and must not be added or required. Do not change rendering, server routes, cache code, Selector default-preview data, optic-efficiency enrichment, length feasibility, Engine contracts, Lab/IES, Program, or main unless the proven first boundary directly requires it. If genuine DRIVERS authority is absent, make no code repair and stop with an exact upstream data-ownership recommendation. For a valid code repair, run focused tests and `selector-engine`, live-validate `/api/selector-reference/options` on runtime 8788 so direct Control has at least one genuine available option while no option is auto-selected, stage only the exact commissioned paths, gated-commit and push only `lane/selector-engine`, then update the durable context with exact source evidence, files, tests, live receipt, commit, push, clean Git state, server-revision state, and the next bounded worker.
 
 ## Acceptance criteria
 
@@ -52,7 +80,7 @@ The following guarded repair worker has now completed:
 
 ## Files in scope
 
-Primary prospective ownership is `packages/workspace-kernel/selectorReferenceOptionsService.js` with the smallest focused Selector tests, likely `tests/selectorReferenceOptionsService.test.js` and only if required `tests/selectorLightControlSpine.test.js`. Durable closeout belongs under `docs/selector/_context/`. The worker must derive the exact set from the proven active-source mismatch and must not change unrelated files.
+Primary prospective ownership is `packages/workspace-kernel/selectorReferenceOptionsService.js` with the smallest focused Selector tests, likely `tests/selectorReferenceOptionsService.test.js` and only if required `tests/selectorLightControlSpine.test.js`. Durable closeout belongs under `docs/_context/lanes/selector-engine/`. The worker must derive the exact set from the proven active-source mismatch and must not change unrelated files.
 
 ## Files and actions out of scope
 
@@ -183,3 +211,23 @@ The changed feature paths are `packages/workspace-kernel/authorityReferenceMater
 The feature commit is pushed. Runtime 8788 could not be restarted or reloaded because the connected app exposes no approved lifecycle action. The post-commit dry-run still returned the old generic schema, proving the runtime is not activated from `8d27498`. The stale active snapshot remains unchanged at fingerprint `266de269e3e8f8b7191e4653d45580c251eb46025411574e0d1f2a27daca209d`, size 983727, modified `2026-07-14T10:07:13.715322+00:00`, with BOARDS 265 and DRIVERS 48, loaded read-only and redacted.
 
 **Outcome R — repair committed, runtime activation pending.** Do not claim the exact live provider substage or current Google-source DRIVERS/BOARDS intersection yet. The lifecycle owner must reload runtime 8788 from `8d27498`; an approved runner must execute `tests/authorityReferenceGoogleReader.test.js`, `tests/authorityReferenceMaterialiserService.test.js`, and `tests/runtimeAuthorityReferenceMaterialiserDiagnostics.test.js`; then repeat only the empty-body dry-run and classify A, C, or D. No materialisation, archive, promotion, Selector projection change, Engine invocation, or external Google change is authorised.
+
+## 2026-07-19 SEL-001 handoff — canonical queue established
+
+SEL-001 began at verified HEAD `92fd5b00595f77a61e31a53c26e2423df8a087ed` with exactly six staged context renames and no unrelated Git state. The folder move had already occurred; no move action was attempted. All six canonical files were read before editing.
+
+The canonical lane-memory path is `docs/_context/lanes/selector-engine/`. The standing worker prompt at the top of this file is the single reusable Selector worker prompt. Do not replace it with parcel-specific worker text.
+
+The four-status operating model is adopted: `AUTO`, `SEND TO INTEGRATE`, `NEEDS YOU`, and `STOPPED`. `AUTO` applies only to committed lane work and never main. A genuine clean `STOPPED` is a successful boundary report.
+
+Queue ownership is explicit: the orchestrator writes and orders items; workers execute only the top item with status `ready` and satisfied dependencies. SEL-001 is done. SEL-002 is ready. No SEL-002 or later runtime, feature, seam, or Engine action was executed in this worker.
+
+### Next queue item
+
+`SEL-002 — Register project-alpha active server-owned revision`.
+
+The governing blocker is unchanged: `project-alpha` has a browser-session envelope but no active server-owned revision; selected-project Engine invocation currently returns HTTP 422 `active-server-revision-invalid`. Server-side registration is the gate on running the Engine.
+
+SEL-002 must use the genuine existing browser-session save envelope. It must not invoke Engine, fabricate or reconstruct a save envelope, or change Tier, Control, RuntimeData, Lab, or Program seams. The exact queue boundary and acceptance criteria are in `WORK_QUEUE.md`.
+
+The repository-wide tracked search inspected 449 files and found zero stale references. This documentation-only migration has no separate focused test target. The complete `selector-engine` gate passed 103/103 with exit code 0. The SEL-001 completion response carries the final staged set, commit and push hashes, and clean ending Git state.

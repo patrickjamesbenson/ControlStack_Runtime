@@ -1,5 +1,125 @@
 # Selector & Engine Work Queue
 
+**State date:** 2026-07-19, Australia/Sydney.
+**Canonical path:** `docs/_context/lanes/selector-engine/`.
+**Queue authority:** The orchestrator writes and orders queue items. Workers execute only the top item whose status is `ready` and whose `depends-on` requirements are satisfied. Queue order does not independently authorise work outside the item boundary.
+**Status model:** `ready`, `blocked`, `held`, `done`.
+
+### Q-1 Finish context migration and establish canonical queue
+
+* id: SEL-001
+* status: done
+* depends-on: none
+* gate: selector-engine
+* authorised files: `docs/_context/lanes/selector-engine/LANE_CHARTER.md`, `docs/_context/lanes/selector-engine/LANE_STATE.md`, `docs/_context/lanes/selector-engine/WORK_QUEUE.md`, `docs/_context/lanes/selector-engine/DECISION_LOG.md`, `docs/_context/lanes/selector-engine/EVIDENCE_INDEX.md`, `docs/_context/lanes/selector-engine/SESSION_HANDOFF.md`
+* objective: finish the already-staged context migration, eliminate tracked references to the former path, establish this canonical SEL queue, and record the reusable standing worker prompt.
+* acceptance: all six canonical files are committed at the canonical path; no tracked stale-path reference remains; the complete `selector-engine` gate passes; exactly the six authorised paths are committed and pushed to `lane/selector-engine`; SEL-001 is done and SEL-002 is ready.
+* prohibitions: no move operation; no feature work; no SEL-002 execution; no writes outside the six authorised files; no clean, reset, restore, merge, rebase, deletion, donor, Lab, Program, or main operation.
+
+### Q-2 Register project-alpha active server-owned revision
+
+* id: SEL-002
+* status: ready
+* depends-on: SEL-001
+* gate: selector-engine
+* authorised files: read-only repository inspection; no repository file writes unless a later orchestrator commission supplies exact bounded paths
+* objective: use the genuine existing `project-alpha` browser-session save envelope to complete the supported server-side registration contract and establish an active server-owned revision.
+* acceptance: registration acknowledgement and an attributable active server-owned revision are proven without constructing project truth from fixtures or repository test data. Blocker carried forward: `project-alpha` has a browser-session envelope but no active server-owned revision; selected-project Engine invocation currently returns HTTP 422 `active-server-revision-invalid`. Server-side registration is the gate on running the Engine.
+* prohibitions: do not invoke Engine in this item; do not fabricate, reconstruct, or substitute a save envelope; do not change Tier, Control, RuntimeData, Lab, or Program seams.
+
+### Q-3 Execute selected-project Engine invocation
+
+* id: SEL-003
+* status: blocked
+* depends-on: SEL-002
+* gate: selector-engine
+* authorised files: read-only
+* objective: invoke the existing read-only selected-project Engine path using the registered server-owned revision and prove one attributable useful result/run-table response.
+* acceptance: one selected-project request reaches the existing Engine path from the attributable active server-owned revision and returns a useful result/run-table receipt with the established no-write flags preserved.
+* prohibitions: preserve no-write semantics; do not widen Selector dimensions or alter the output seam.
+
+### Q-4 Activate bounded Google reader diagnostics and execute focused tests
+
+* id: SEL-004
+* status: held
+* depends-on: none
+* gate: selector-engine
+* authorised files: read-only
+* objective: after supported runtime activation and an approved focused-test runner are available, execute the three documented authority materialiser test files and confirm runtime 8788 has loaded commit `8d274983aa08669a671e5f5e9ac03aa77bdda8ff`.
+* acceptance: the three focused test files execute through an approved runner, runtime 8788 demonstrates the bounded diagnostic schema from `8d274983aa08669a671e5f5e9ac03aa77bdda8ff`, and no prohibited write or promotion occurs.
+* prohibitions: no materialisation, archive, promotion, external Google configuration change, Selector projection repair, or Engine invocation.
+
+### Q-5 Repeat guarded authority dry-run
+
+* id: SEL-005
+* status: blocked
+* depends-on: SEL-004
+* gate: selector-engine
+* authorised files: read-only
+* objective: repeat only the empty-body guarded Google dry-run and classify its safe bounded source-shape result.
+* acceptance: the empty-body dry-run returns a bounded, redacted result that can be classified without source writes, promotion, or fabricated authority evidence.
+* prohibitions: no live write, archive, promotion, projection repair, or Engine invocation.
+
+### Q-6 Obtain bounded live controlType receipt
+
+* id: SEL-006
+* status: held
+* depends-on: none
+* gate: selector-engine
+* authorised files: read-only
+* objective: after connected tooling exposes safe bounded JSON-field extraction, repeat the existing canonical read-only Selector options request and prove the live `controlType` receipt.
+* acceptance: the bounded receipt proves the live `controlType` status, genuine option attribution, empty selected value, Boolean exclusion, and absence of fabricated or automatic selection without changing route semantics.
+* prohibitions: no route-semantic change merely for observability; do not reopen the accepted Control mapping without defect evidence.
+
+### Q-7 Declare Engine output contract candidate
+
+* id: SEL-007
+* status: blocked
+* depends-on: SEL-003
+* gate: selector-engine
+* authorised files: read-only until the orchestrator commissions exact contract-document paths
+* objective: produce a versioned candidate contract covering selected inputs, result identity, run-table rows, status/error semantics, provenance, and replay/readback.
+* acceptance: a bounded versioned candidate and producer evidence are ready for Program & Integrate review, with no downstream activation implied.
+* prohibitions: do not activate downstream consumers without Integrate approval.
+
+### Q-8 First contract-preserving widening pass
+
+* id: SEL-008
+* status: blocked
+* depends-on: SEL-007 and recorded Integrate approval
+* gate: selector-engine
+* authorised files: read-only until the orchestrator records approval and commissions exact bounded paths
+* objective: widen exactly one adjacent Selector dimension through the existing contracts.
+* acceptance: one adjacent dimension is added through the existing projection, applicability, intent, invocation, and output contracts with focused and full-gate evidence.
+* prohibitions: no bespoke second pipeline and no Tier selector.
+
+### Q-9 Lab/IES consumer compatibility
+
+* id: SEL-009
+* status: held
+* depends-on: SEL-007 and recorded Integrate seam approval
+* gate: selector-engine
+* authorised files: read-only
+* objective: coordinate the approved Engine contract with the Lab/IES consumer through Program & Integrate.
+* acceptance: Program & Integrate records the approved producer/consumer seam and lane responsibilities without cross-lane writes from this worktree.
+* prohibitions: never write the Lab lane from this worktree.
+
+### Q-10 Downstream artifacts
+
+* id: SEL-010
+* status: held
+* depends-on: Integrate declaration that the Engine output contract is stable
+* gate: selector-engine
+* authorised files: read-only
+* objective: later queue DXF, quotation, reporting, and other post-payload consumers.
+* acceptance: Integrate has declared the Engine output contract stable and has commissioned a separately bounded downstream item before implementation begins.
+* prohibitions: no implementation before the dependency is satisfied.
+
+<!--
+Historical pre-SEL queue retained as non-operative migration provenance. It is not an active queue and confers no implementation authority.
+
+# Selector & Engine Work Queue
+
 **State date:** 2026-07-18, Australia/Sydney.
 **Rule:** Queue order does not authorise implementation. The orchestrator commissions one bounded worker at a time.
 
@@ -7,7 +127,7 @@
 
 **Status:** COMPLETE.
 
-The six files under `docs/selector/_context/` were created, gated, committed, and pushed in commit `678cf83c9f97bfcdc397b574c4eab08b306656ee`. Later workers have continued to maintain the durable handoff.
+The six files under `docs/_context/lanes/selector-engine/` were created, gated, committed, and pushed in commit `678cf83c9f97bfcdc397b574c4eab08b306656ee`. Later workers have continued to maintain the durable handoff.
 
 ## Priority 1 — Single-slice E2E closeout
 
@@ -130,7 +250,7 @@ Control availability, option authority, empty selection, Boolean exclusion, defa
 
 The stale active snapshot and materialised target remain unchanged at the 14 July artifact. The explicit guarded Google dry-run attempted the network call only on the refresh route and preserved all credential, Sheet ID, row, full-JSON, user, and path redactions, but the reader returned `google-reader-failed`. Validation did not reach a safe required-table or DRIVERS shape receipt.
 
-No Phase 2 materialised write and no Phase 3 archive/promotion call was issued. The active fingerprint remains `266de269e3e8f8b7191e4653d45580c251eb46025411574e0d1f2a27daca209d`. BOARDS option/label order, the corrected unsuffixed DRIVERS authority, duplicate-column absence/non-authority, and post-activation projection behaviour remain unproven.
+No Phase 2 materialised live write and no Phase 3 archive/promotion call was issued. The active fingerprint remains `266de269e3e8f8b7191e4653d45580c251eb46025411574e0d1f2a27daca209d`. BOARDS option/label order, the corrected unsuffixed DRIVERS authority, duplicate-column absence/non-authority, and post-activation projection behaviour remain unproven.
 
 The complete gate passed 103/103. The exact next bounded action is to repair or safely diagnose the existing Google reader boundary and rerun the same authority refresh worker from dry-run Phase 1. Promotion by table counts is prohibited; Selector projection repair and shared-tooling commissioning remain held.
 
@@ -145,3 +265,5 @@ The connected app would not permit edits to the two legacy authority test files 
 Runtime 8788 has not loaded the repair: the post-commit empty-body dry-run still returned the old generic `google-reader-failed` response with no `failureCategory` or `currentSourceShape`. The active 14 July snapshot remains unchanged and read-only at fingerprint `266de269e3e8f8b7191e4653d45580c251eb46025411574e0d1f2a27daca209d`, size 983727 bytes, modified `2026-07-14T10:07:13.715322+00:00`.
 
 **Exact next action:** the lifecycle owner must restart or reload runtime 8788 from `8d27498`. Through an approved runner, execute `tests/authorityReferenceGoogleReader.test.js`, `tests/authorityReferenceMaterialiserService.test.js`, and `tests/runtimeAuthorityReferenceMaterialiserDiagnostics.test.js`; then repeat only `POST /api/authority-reference/materialiser/refresh?dryRun=true` with `{}`. Classify the safe live result as A, C, or D. Do not materialise, archive, promote, repair Selector projection, invoke Engine, or change external Google configuration.
+-->
+

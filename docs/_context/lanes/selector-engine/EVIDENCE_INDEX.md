@@ -1,6 +1,6 @@
 # Selector & Engine Evidence Index
 
-**State date:** 2026-07-18, Australia/Sydney.
+**State date:** 2026-07-19, Australia/Sydney.
 
 ## Identity and isolation
 
@@ -107,7 +107,7 @@ Every completed worker updates this index with:
 
 - Worker: `CS-SELECTOR-LIVE-CONTROL-AUTHORITY-INTERSECTION-REPAIR-01`.
 - Starting identity: root `C:\ControlStack_Worktrees\selector-engine`; branch `lane/selector-engine`; starting HEAD `f131346eca23f08661c9950094388dc8414ddca4`; MCP 8000; runtime 8788; gate `selector-engine`; starting tree clean — VERIFIED.
-- Context read: every file under `docs/selector/_context/` — VERIFIED.
+- Context read: every file under `docs/_context/lanes/selector-engine/` — VERIFIED.
 - Active source: BOARDS 265, DRIVERS 48, SYSTEM 8, no missing required tables; fingerprint `266de269e3e8f8b7191e4653d45580c251eb46025411574e0d1f2a27daca209d` — VERIFIED read-only.
 - Exact mismatch: `native_control_type` is a boolean marker in the current DRIVERS materialisation, while genuine protocol authority is in duplicate-normalised `native_control_type__2`; redacted field-level evidence included Fixed (On/Off) and DALI2 DT6 — VERIFIED mapping defect.
 - Classification: genuine authority exists under an unmapped source column; not a canonicalisation defect and not missing upstream authority — VERIFIED.
@@ -144,7 +144,7 @@ Every completed worker updates this index with:
 
 - Worker: `CS-SELECTOR-LIVE-CONTROL-POST-ACTIVATION-ACCEPTANCE-01`.
 - Starting identity: root `C:\ControlStack_Worktrees\selector-engine`; branch `lane/selector-engine`; starting HEAD `973741861cac63fa3a9671ed9a4e68b9cb2179f2`; required repair `5ae1cf8e9f4e488ec4921632ef730a35db44d1fc`; starting tree clean — VERIFIED.
-- Context read: all six files under `docs/selector/_context/` — VERIFIED.
+- Context read: all six files under `docs/_context/lanes/selector-engine/` — VERIFIED.
 - Current-code evidence: runtime 8788 returned HTTP 200 and `ready` from `/api/runtime-config/status`, including the HEAD-only Logo.dev status shape with configured true, secret true, browser-sensitive true, browser value redacted, and browser secrets not exposed — VERIFIED.
 - Required options request: exact constraints `80|Square`, `80|Opal`, `1200`, and `cct_cri:3000K|CRI80`; HTTP 200; owner `runtime-server`; all constraints echoed; source present/readable/parseable; System available — VERIFIED.
 - Observability limit: the successful response is too large for the connected app's bounded display and truncates inside `system.options` before `fieldKey: controlType`. The route handler exposes no field-projection parameter and always sends the complete options payload. Hidden response-resource search/read did not provide a safe extractable remainder — VERIFIED boundary.
@@ -161,11 +161,30 @@ Every completed worker updates this index with:
 - Evidence-commit ending tree: clean, with 0 staged, modified, untracked, or deleted paths — VERIFIED.
 - The commit containing this hash-index closeout is the final ending HEAD for the worker; its exact hash is reported in the completion response.
 
+## 2026-07-19 — SEL-001 canonical context migration
+
+- Worker: standing Selector & Engine worker, queue item `SEL-001`.
+- Starting identity: root `C:\ControlStack_Worktrees\selector-engine`; branch `lane/selector-engine`; starting HEAD `92fd5b00595f77a61e31a53c26e2423df8a087ed`; runtime 8788; MCP 8000; gate `selector-engine` — VERIFIED.
+- Starting Git inventory: exactly six staged renames to the canonical context directory; 0 unrelated modified, staged, deleted, or untracked paths — VERIFIED.
+- Context read: all six files under `docs/_context/lanes/selector-engine/` before editing — VERIFIED.
+- Movement boundary: no move or `git mv` action invoked; movement capability remains disabled — VERIFIED.
+- Stale-reference baseline: repository search inspected 449 files and found 12 references, confined to the five expected context files; `LANE_CHARTER.md` contained none — VERIFIED.
+- Canonical context: `docs/_context/lanes/selector-engine/` — ADOPTED.
+- Operating model: `AUTO`, `SEND TO INTEGRATE`, `NEEDS YOU`, `STOPPED`; `AUTO` is lane-only and a genuine `STOPPED` is success — ADOPTED.
+- Queue governance: the orchestrator writes and orders queue items; workers execute only the top `ready` item with satisfied dependencies — ADOPTED.
+- Queue result: SEL-001 marked `done`; SEL-002 marked `ready`; SEL-003 through SEL-010 remain blocked or held as recorded and were not executed — VERIFIED.
+- Registration blocker: `project-alpha` has a browser-session envelope but no active server-owned revision; selected-project Engine invocation currently returns HTTP 422 `active-server-revision-invalid`; server-side registration is the gate on running the Engine — CARRIED FORWARD, NOT EXECUTED.
+- Authorised paths: the six canonical context files only — VERIFIED by scope guard.
+- Focused test applicability: documentation-only migration has no separate focused test runner or feature test target; the full named lane gate is the executable acceptance — RECORDED.
+- Final stale-reference search: 449 files inspected; 0 stale tracked references — VERIFIED.
+- Complete gate before final staging: `selector-engine`, 103 passed, 0 failed, exit code 0 — VERIFIED.
+- Exact staged set, gated commit/push receipt, and ending Git state are completed by this worker and reported in its completion response.
+
 ## 2026-07-19 — Bounded Google reader diagnostics repair
 
 - Worker: `CS-SELECTOR-GOOGLE-READER-BOUNDED-DIAGNOSIS-REPAIR-01`.
 - Starting identity: root `C:\ControlStack_Worktrees\selector-engine`; branch `lane/selector-engine`; starting HEAD `bace456d5e7f136863901cf77682492955205867`; runtime 8788; MCP 8000; gate `selector-engine`; starting tree clean — VERIFIED.
-- Context read: all six files under `docs/selector/_context/` — VERIFIED.
+- Context read: all six files under `docs/_context/lanes/selector-engine/` — VERIFIED.
 - Pre-repair live reproduction: empty-body dry-run returned HTTP 200, `dry-run-reader-blocked`, allowed preflight, network attempted, blocker `google-reader-failed`, validation unavailable, no materialised/active write, promotion null — VERIFIED.
 - Exact code defect: `readFromGoogleReader()` collapsed every post-preflight provider exception into `google-reader-failed`; the old response contained no safe evidence capable of locating the live provider substage — VERIFIED.
 - Feature repair: allowlisted classifications cover API module validity, auth-client creation, metadata request, access denied, not found, missing expected tabs, values request, invalid values response, and unknown failures; validation failure remains separate — VERIFIED by code inspection.
@@ -187,7 +206,7 @@ Every completed worker updates this index with:
 
 - Worker: `CS-SELECTOR-AUTHORITY-SNAPSHOT-REFRESH-ACTIVATION-01`.
 - Starting identity: root `C:\ControlStack_Worktrees\selector-engine`; branch `lane/selector-engine`; starting HEAD `ae41a4ababd3c1394a8c1f3b68ddfddd4b97dd60`; runtime 8788; MCP 8000; gate `selector-engine`; starting tree clean — VERIFIED.
-- Context read: all six files under `docs/selector/_context/` — VERIFIED.
+- Context read: all six files under `docs/_context/lanes/selector-engine/` — VERIFIED.
 - Old active snapshot: present, readable, parseable, loaded read-only; fingerprint `266de269e3e8f8b7191e4653d45580c251eb46025411574e0d1f2a27daca209d`; modified `2026-07-14T10:07:13.715322+00:00`; size 983727 bytes; required 15 tables present; raw rows, headers, users, snapshot, and path redacted — VERIFIED.
 - Old materialised target: present and readable; modified `2026-07-14T10:07:13.715Z`; size 983727 bytes; path redacted — VERIFIED.
 - Materialiser status: HTTP 200; server-side Google preflight allowed; Sheet and credentials configured/readable; network policy explicit-refresh-only; normal boot dependency false; credential path/value/contents, Sheet ID, raw provider response, raw rows, full materialised JSON, and private target path not returned — VERIFIED.

@@ -1,7 +1,7 @@
 # Selector & Engine Lane Charter
 
 **Authority:** Canonical lane charter for Selector & Engine.
-**State date:** 2026-07-18, Australia/Sydney.
+**State date:** 2026-07-19, Australia/Sydney.
 
 ## Evidence language
 
@@ -79,3 +79,22 @@ Ownership does not mean every permitted path belongs in every parcel. Each worke
 - Never push to `main`.
 - Never clean or reset unexplained state.
 - Chat is coordination; these repository documents are the durable memory.
+
+## Canonical lane memory
+
+The canonical Selector & Engine context path is `docs/_context/lanes/selector-engine/`. Every worker reads all six canonical files before selecting work. File movement is disabled; workers must stop rather than attempting any move required by a queue item.
+
+## Four-status operating model
+
+Every worker response begins with exactly one status line:
+
+- `AUTO` — gate passed, parcel committed to `lane/selector-engine`, and lane work may continue without Patrick action;
+- `SEND TO INTEGRATE` — the parcel is ready for Program & Integrate consideration;
+- `NEEDS YOU` — one concrete Patrick action is required;
+- `STOPPED` — a genuine boundary requires an orchestrator decision.
+
+`AUTO` never means `main`. A clean `STOPPED` at a genuine boundary is a successful worker outcome.
+
+## Queue governance
+
+The orchestrator writes and orders SEL queue items. Workers execute only the top item with status `ready` whose dependencies are satisfied. No qualifying item produces `STOPPED - queue empty`. A seam change without recorded Integrate approval produces `STOPPED - seam approval required`. Workers never execute a later item opportunistically and never invent project truth or fixtures to manufacture a green result.

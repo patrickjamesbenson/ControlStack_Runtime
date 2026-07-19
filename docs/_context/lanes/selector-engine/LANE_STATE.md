@@ -1,6 +1,6 @@
 # Selector & Engine Lane State
 
-**Snapshot:** 2026-07-18, Australia/Sydney.
+**Snapshot:** 2026-07-19, Australia/Sydney.
 
 ## Current identity
 
@@ -46,7 +46,7 @@ These are **VERIFIED commit subjects**, not a claim that every live user journey
 - untracked: 0;
 - deleted: 0.
 
-**VERIFIED.** The only authorised changes in this parcel are the six files under `docs/selector/_context/`.
+**VERIFIED.** The only authorised changes in this parcel are the six files under `docs/_context/lanes/selector-engine/`.
 
 ## Recent evidence anchors
 
@@ -144,7 +144,7 @@ The active source fingerprint remained `266de269e3e8f8b7191e4653d45580c251eb4602
 
 ## 2026-07-18 post-activation live Control acceptance — outcome O
 
-Worker `CS-SELECTOR-LIVE-CONTROL-POST-ACTIVATION-ACCEPTANCE-01` started clean at `973741861cac63fa3a9671ed9a4e68b9cb2179f2` on `lane/selector-engine`; required Control repair commit `5ae1cf8e9f4e488ec4921632ef730a35db44d1fc` is present in history. Every file under `docs/selector/_context/` was read before live inspection.
+Worker `CS-SELECTOR-LIVE-CONTROL-POST-ACTIVATION-ACCEPTANCE-01` started clean at `973741861cac63fa3a9671ed9a4e68b9cb2179f2` on `lane/selector-engine`; required Control repair commit `5ae1cf8e9f4e488ec4921632ef730a35db44d1fc` is present in history. Every file under `docs/_context/lanes/selector-engine/` was read before live inspection.
 
 Runtime `127.0.0.1:8788` is reachable and demonstrably serves the current HEAD-only Logo.dev status boundary: `/api/runtime-config/status` returned HTTP 200, `status: ready`, `runtimeConfigBridge.companyIdentity.logoDevPublishableKey.configured: true`, `browserVisibleValue: redacted`, and `browserSecretsExposed: false`. This removes the prior activation-authority uncertainty without reopening the Logo.dev parcel.
 
@@ -164,7 +164,7 @@ No Engine route, registration route, POST, project mutation, selected-result per
 
 ## 2026-07-19 authority snapshot refresh activation — outcome O
 
-Worker `CS-SELECTOR-AUTHORITY-SNAPSHOT-REFRESH-ACTIVATION-01` started clean at `ae41a4ababd3c1394a8c1f3b68ddfddd4b97dd60` on `lane/selector-engine`. Root, branch, MCP 8000, runtime 8788, gate `selector-engine`, and all six files under `docs/selector/_context/` were verified before runtime inspection.
+Worker `CS-SELECTOR-AUTHORITY-SNAPSHOT-REFRESH-ACTIVATION-01` started clean at `ae41a4ababd3c1394a8c1f3b68ddfddd4b97dd60` on `lane/selector-engine`. Root, branch, MCP 8000, runtime 8788, gate `selector-engine`, and all six files under `docs/_context/lanes/selector-engine/` were verified before runtime inspection.
 
 The accepted stale active snapshot was present, readable, parseable, and loaded read-only with fingerprint `266de269e3e8f8b7191e4653d45580c251eb46025411574e0d1f2a27daca209d`, modified `2026-07-14T10:07:13.715322+00:00`, and size 983727 bytes. The separate materialised target remained present and readable at modified `2026-07-14T10:07:13.715Z` and size 983727 bytes.
 
@@ -191,3 +191,15 @@ The complete named `selector-engine` gate passed 103/103 and the gated feature c
 The connected app exposes no approved restart/reload operation. A post-commit dry-run on 8788 still returned the old generic `google-reader-failed` schema without `failureCategory` or `currentSourceShape`, proving the runtime has not loaded `8d27498`. The active snapshot remained fingerprint `266de269e3e8f8b7191e4653d45580c251eb46025411574e0d1f2a27daca209d`, size 983727, modified `2026-07-14T10:07:13.715322+00:00`, loaded read-only with no write or mutation.
 
 **Outcome R — repair committed, runtime activation pending.** The exact live provider failure stage and current Google-source DRIVERS/BOARDS summaries remain unavailable until the lifecycle owner reloads runtime 8788 from `8d27498`. After activation, run the three focused test files through an approved runner and repeat only the empty-body dry-run. Do not materialise, archive, promote, patch Selector projection, invoke Engine, or modify external Google configuration in this parcel.
+
+## 2026-07-19 SEL-001 canonical context migration closeout
+
+Worker SEL-001 started at verified HEAD `92fd5b00595f77a61e31a53c26e2423df8a087ed` on root `C:\ControlStack_Worktrees\selector-engine`, branch `lane/selector-engine`, gate `selector-engine`. The starting Git inventory contained exactly six staged renames into `docs/_context/lanes/selector-engine/` and zero unrelated modified, staged, deleted, or untracked paths. No move operation was invoked.
+
+The canonical context path is now `docs/_context/lanes/selector-engine/`. The lane adopts the four worker outcomes `AUTO`, `SEND TO INTEGRATE`, `NEEDS YOU`, and `STOPPED`; `AUTO` is lane-only and never main, and a clean `STOPPED` at a genuine boundary is success.
+
+The orchestrator writes and orders queue items. Workers execute only the top `ready` item whose dependencies are satisfied. The canonical queue is ordered SEL-001 through SEL-010. SEL-001 is done; SEL-002 is the only next ready item. SEL-003 and later work have not been executed by this worker.
+
+The explicit next blocker is preserved: `project-alpha` has a browser-session envelope but no active server-owned revision; selected-project Engine invocation currently returns HTTP 422 `active-server-revision-invalid`. Server-side registration is the gate on running the Engine. SEL-002 must use the genuine existing envelope and must not invoke Engine or manufacture project truth.
+
+Repository-wide tracked search after editing inspected 449 files and returned zero stale references. No separate focused test target exists for this documentation-only migration. The complete `selector-engine` gate passed 103/103 with exit code 0. Exact staged-set, gated commit, push, and clean-tree receipts are recorded in the SEL-001 completion response.

@@ -4,11 +4,11 @@ This log is append-oriented. Do not silently rewrite historical decisions.
 
 ## 2026-07-18 — Repository memory replaces chat memory
 
-**Decision:** `docs/selector/_context/` is the canonical lane-memory location because it is inside the enforced Selector documentation scope.
+**Decision:** Repository lane memory is authoritative; chat history is supporting context only.
 
-**Rationale:** The earlier proposed `docs/_context/lanes/selector-engine/` path was rejected by the lane guard. Using an already-authorised documentation namespace preserves isolation without broadening feature write access.
+**Rationale:** The initial implementation used a Selector-local documentation directory because the canonical lane path was not yet available through the lane guard.
 
-**Consequence:** Fresh orchestrators read these six files first. Chat history is supporting context only.
+**Consequence:** Fresh orchestrators read the six durable context files first. The original location decision is superseded by the canonical-path decision recorded on 2026-07-19.
 
 ## 2026-07-18 — Accepted base is 08df070
 
@@ -87,3 +87,35 @@ This log is append-oriented. Do not silently rewrite historical decisions.
 **Rationale:** Approved read-only active-source comparison proved that duplicate header normalisation preserved the genuine protocol values in `native_control_type__2`, while `native_control_type` now contains boolean markers. Treating the marker as protocol authority creates non-matching `true`/`false` descriptors and empties the truthful BOARDS × DRIVERS Control intersection.
 
 **Consequence:** The Selector may map only this proven duplicate-normalised authority boundary. Descriptive aliases remain non-authoritative; no source union, fallback Control, DALI default, automatic selection, RuntimeData mutation, or broader schema reinterpretation is authorised. Runtime activation remains a separate operational acceptance step.
+
+## 2026-07-19 — Canonical context path adopted
+
+**Decision:** `docs/_context/lanes/selector-engine/` is the canonical Selector & Engine lane-memory path.
+
+**Rationale:** One standing worker model must serve all lanes through a consistent context shape. The six-file migration was already staged as renames and required content correction only; movement was not reattempted.
+
+**Consequence:** All workers read the six canonical files first, all durable updates remain within that directory, and no tracked reference to the former path may remain.
+
+## 2026-07-19 — Four-status operating model adopted
+
+**Decision:** Worker responses use exactly one leading status: `AUTO`, `SEND TO INTEGRATE`, `NEEDS YOU`, or `STOPPED`.
+
+**Rationale:** The status line makes lane autonomy, integration readiness, human action, and genuine boundaries explicit.
+
+**Consequence:** `AUTO` is lane-branch work only and never means main; `SEND TO INTEGRATE` identifies a parcel ready for Program & Integrate; `NEEDS YOU` names one concrete Patrick action; `STOPPED` records a genuine boundary and is a successful outcome.
+
+## 2026-07-19 — Orchestrator owns queue order; workers execute only the top qualifying item
+
+**Decision:** The orchestrator writes and orders SEL queue items. A worker executes only the first item marked `ready` whose dependencies are satisfied.
+
+**Rationale:** Queue ownership and execution authority must remain separate to prevent workers widening scope or selecting convenient work.
+
+**Consequence:** No qualifying item means `STOPPED - queue empty`; a seam item without recorded Integrate approval means `STOPPED - seam approval required`.
+
+## 2026-07-19 — Server registration is the next Engine gate
+
+**Decision:** SEL-002 is the only next ready item after SEL-001. It must use the genuine existing `project-alpha` browser-session envelope to establish an active server-owned revision.
+
+**Rationale:** `project-alpha` has a browser-session envelope but no active server-owned revision; selected-project Engine invocation currently returns HTTP 422 `active-server-revision-invalid`.
+
+**Consequence:** Server-side registration is the gate on running the Engine. SEL-002 must not invoke Engine or fabricate, reconstruct, or substitute project truth. SEL-003 and later work remain unexecuted.
