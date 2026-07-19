@@ -182,6 +182,8 @@ Every completed worker updates this index with:
 - False readiness path: `fieldDisplayValue()` can treat hidden or blocked diagnostic `effectiveLabel` text as selected intent, marking indirect readiness true without a selected indirect value — ACCEPTED REPOSITORY TRACE.
 - Registration classification: the first-slice refusal of genuine indirect intent remains correct; the defect is the false readiness input, not the registration policy — ACCEPTED DIAGNOSIS.
 - Queue result: SEL-015 ready for exact-System capability gating; SEL-016 blocked behind it for readiness-intent correction; SEL-002 blocked behind both; SEL-003 remains blocked — RECORDED.
+- First SEL-015 worker guard: correctly stopped because the commission commit was actual HEAD while lane memory still recorded its parent — VERIFIED USER-PROVIDED WORKER EVIDENCE.
+- Orchestrator reconciliation: the commission commit is now the recorded work HEAD and the dedicated reconciliation wrapper must have it as its immediate parent; queue scope and order are unchanged — RECORDED.
 
 ## 2026-07-19 — SEL-012 source-backed Tier ownership repair
 

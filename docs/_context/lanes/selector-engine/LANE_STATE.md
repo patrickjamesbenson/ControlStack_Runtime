@@ -272,7 +272,7 @@ A fresh chat can start either role from one line: read `LANE_CHARTER.md` and act
 
 ## 2026-07-20 SEL-014 registration preflight repair closeout — latest controlling state
 
-**Recorded lane work HEAD:** `f75ef0478f61e987d2188639fbf9795d18441017` — `docs(selector): reconcile lane state after registration repair`.
+**Recorded lane work HEAD:** `c8e7768e3a3522bc53bfcba4a0bf9f6f73e9f4f0` — `docs(selector): commission indirect projection repairs`.
 
 SEL-014 resumed from the two explicitly preserved authorised edits with no other dirty path. The worker used `tests/engineRunTableDomain.test.js` only as the authorised temporary gate harness, visibly executed all eight registration transport tests, then removed the import and proved the harness file byte-identical to HEAD and absent from the final diff.
 
@@ -291,3 +291,5 @@ The capability auto-consequence is wrong because a broad indirect OPTICS relatio
 A second defect exists in `selectorLmTemperatureReadinessPreview`: hidden or blocked indirect fields can expose diagnostic `effectiveLabel` text such as `not required or supported`, and `fieldDisplayValue()` treats that diagnostic copy as selected intent. The preview then marks indirect target, CCT/CRI, or Control readiness true. Registration correctly rejects any genuine indirect intent from the first direct-only slice, so this false readiness can still stop registration even after the candidate-specific preflight repair.
 
 `SEL-015` is now the sole top ready item: gate the indirect-capability auto-consequence through the exact selected SYSTEM support flag while preserving legitimate broad OPTICS compatibility for the distinct direct-indirect product. `SEL-016` follows and must prevent hidden, blocked, unavailable, or diagnostic labels from counting as selected intent in the light-output readiness preview. Both are non-seam repairs. `SEL-002` is blocked until both are completed, pushed, activated, and then proven through a new genuine browser save. The current tree is clean and the complete lane gate passed 105/105 during diagnosis.
+
+The first worker correctly stopped because the commission commit advanced the branch while the recorded work pointer still named its parent. This reconciliation records the commission commit as the authoritative work HEAD. The dedicated reconciliation wrapper created from this update must have that commission commit as its immediate parent; the next worker then compares the recorded work HEAD to the wrapper parent and may begin `SEL-015`.
