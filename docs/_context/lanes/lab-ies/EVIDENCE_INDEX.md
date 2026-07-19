@@ -129,6 +129,19 @@ The completed contract:
 - LAB-018 is next but remains `blocked` pending its separate Program & Integrate seam approval.
 - Ready items: none.
 
+### Final Program acceptance — 2026-07-20
+
+Program & Integrate reported final acceptance of the exact immutable LAB-017 completion receipt recorded in `SESSION_HANDOFF.md`.
+
+- Program gate: 45/45 passed;
+- Program acceptance checkpoint: committed and pushed;
+- Program tree: clean;
+- receipt amendments: none;
+- promotion to main: separate and not performed by the Lab lane;
+- LAB-018: remains blocked pending its own seam envelope and approval.
+
+This acceptance closes LAB-017 without changing its approved interface, two-file implementation boundary, ownership split, compatibility break, rollback sequence or Lab validation evidence.
+
 ## Reusable standing-worker prompt — 2026-07-19
 
 - `SESSION_HANDOFF.md` now contains exactly one generic `STANDING WORKER — Lab & IES` prompt.

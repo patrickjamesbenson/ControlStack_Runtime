@@ -13,7 +13,7 @@ Current repository evidence overrides stale historical statements.
 - Root: `C:\ControlStack_Worktrees\code-pilot-lab`
 - Branch: `lane/code-pilot-lab`
 - Gate: `lab-ies`
-- Recorded branch HEAD: `2333c1197abf898e7a680455f99918823cb76e30`
+- Recorded branch HEAD: `24166235b78ec1844dd6fde3a7b482f74fef5e1c`
 - Branch-HEAD guard checkpoint: `6d34e500d407d5335e5eebb317636a67a5e98618`
 - Starting HEAD for LAB-017: `09ac99cb35b6af45696b4c83e0051a1651bb2f14`
 - Completed feature HEAD: `2333c1197abf898e7a680455f99918823cb76e30`
@@ -163,6 +163,9 @@ tests/selectorCascadeCorrectness.test.js
 - Program retains production allocation, resolver hosting, routing, persistence, authentication, deployment and endpoint ownership.
 - Any change to the approved envelope requires a new seam decision.
 - LAB-017 is complete and confirmed on origin.
+- Program & Integrate accepted the exact immutable completion receipt on 2026-07-20 without amendment.
+- Program reported its final acceptance gate passed 45/45, the acceptance checkpoint was committed and pushed, and the Program tree was clean.
+- Promotion to main remains separate from this acceptance closeout.
 
 ## Queue state
 

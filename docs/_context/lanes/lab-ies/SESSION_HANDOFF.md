@@ -2,7 +2,7 @@
 
 ## Session purpose
 
-This handoff records completion of LAB-017 under the approved version-1 seam envelope, the permanent branch-HEAD guard, and the next blocked queue boundary.
+This handoff records final Program acceptance of LAB-017 under the approved version-1 seam envelope, preserves the exact immutable completion receipt, and retains the next blocked queue boundary.
 
 ## Identity
 
@@ -177,6 +177,19 @@ next_boundary:
   status: blocked
   blocker: separate seam envelope and Program & Integrate approval
 ```
+
+## Final Program acceptance acknowledgement
+
+Program & Integrate accepted the immutable receipt above unchanged on 2026-07-20.
+
+Program reported:
+
+- final acceptance closed;
+- Program gate passed 45/45;
+- the acceptance checkpoint was committed and pushed;
+- the Program tree was clean.
+
+The immutable receipt remains byte-for-byte unchanged. Promotion to main is a separate Program & Integrate action and was not performed by the Lab lane. LAB-018 remains blocked pending its own seam envelope and approval.
 
 ## Prohibited actions retained
 

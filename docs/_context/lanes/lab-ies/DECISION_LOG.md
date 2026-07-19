@@ -263,3 +263,18 @@ Approval covers only:
 Program retains production allocation, resolver hosting, routing, persistence, authentication, deployment and endpoint ownership. Any change to the approved envelope requires a new seam decision.
 
 LAB-017 is authorised to move from `blocked` to `ready`, and one bounded Lab worker may proceed.
+
+## DL-022 — LAB-017 final Program acceptance
+
+**Status:** Accepted and closed by Program & Integrate on 2026-07-20.
+
+Program & Integrate accepted the exact immutable LAB-017 completion receipt recorded in `SESSION_HANDOFF.md` without amendment.
+
+Program reported:
+
+- final acceptance closed;
+- Program gate passed 45/45;
+- the Program acceptance checkpoint was committed and pushed;
+- the Program tree was clean.
+
+This closes LAB-017 acceptance only. Promotion to main remains a separate Program & Integrate action. LAB-018 remains blocked pending its own seam envelope and approval. No LAB-017 interface, implementation, ownership, compatibility, rollback or validation field is reopened by this acceptance record.
