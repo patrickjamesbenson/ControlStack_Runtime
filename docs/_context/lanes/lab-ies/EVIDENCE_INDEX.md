@@ -6,7 +6,55 @@
 - Historical handoff content is retained as reported context unless freshly reverified.
 - Test output proves only the behaviour exercised by the named tests; low-level merge tests do not by themselves prove completion of the final governed merge.
 
-## Current baseline evidence — 2026-07-17
+## LAB-011 project IES generation — 2026-07-19
+
+### Identity and scope
+
+Observed through `repo_info`, `repo_git_status`, `repo_git_recent`, `repo_scope_guard` and source reads:
+
+- app: `ControlStack Lab and IES Authority Lane`;
+- lane: `lab-ies`;
+- root: `C:\ControlStack_Worktrees\code-pilot-lab`;
+- branch: `lane/code-pilot-lab`;
+- starting HEAD: `4a5b10171ba19b1262d416f58d67caf11e2c9b45`;
+- queue item: `LAB-011-project-ies-generation`;
+- authorised implementation/test paths only:
+  - `packages/lab-kernel/ies-toolkit/iesProjectIes.js`;
+  - `tests/lab-kernel/iesProjectIes.test.js`;
+- no committed non-Lab caller was affected; the only additional caller found was the protected untracked `labbench.html` prototype.
+
+### Behaviour evidence
+
+The completed adapter:
+
+- consumes the committed sealed reference DTO through `buildIesFromReference`;
+- preserves the existing `buildProjectIes(reference, runLengthMm, project)` entry point;
+- validates a bounded plain project envelope and rejects unsupported fields;
+- requires a project identity and maps only supported selector values into the committed generator job;
+- preserves the exact canonical keyword order;
+- preserves generator text, filename, length, output multiplier, lumen and owned-watt results;
+- replaces only generator provenance with deterministic project provenance bound to project identity, reference identity, reference kind and `referenceSha256`;
+- does not mutate reference or project input;
+- exposes no filesystem, network, browser-storage, private rich-authority, merge or direct low-level generation seam.
+
+### Test and gate evidence
+
+- Initial changed-file execution: 159 tests, 158 passed, 1 failed. The failure was the existing canonical migration guard requiring the active project generator source to name `CANONICAL_KEYWORDS`.
+- Authorised correction: imported and fail-closed validated `CANONICAL_KEYWORDS` inside `iesProjectIes.js`; the prohibited migration test was not changed.
+- Focused project test file: 5 tests passed as part of the changed-file gate execution.
+- Changed-file execution after correction: 159/159 passed.
+- Full `lab-ies` gate: 159/159 passed.
+- Gated commit execution: 159/159 passed.
+
+### Commit and push evidence
+
+- commit: `a21429528fd6bf50ef4b7b8fcbf0abe54d682b46`;
+- subject: `lab: checkpoint project IES generation`;
+- files: exactly the two authorised paths;
+- push: origin `lane/code-pilot-lab`, confirmed successful;
+- feature-checkpoint post-push state: staged 0, modified 2, untracked 37, deleted 0.
+
+## Historical baseline evidence — 2026-07-17
 
 ### Repository identity
 

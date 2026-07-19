@@ -69,4 +69,6 @@ Evidence: `bda7d61aaa037ea6a828f40d94ead77949ae7439`, confirmed on origin.
 - depends on: LAB-010-reference-driven-generation
 - on success next: none
 - seam change: no
-- status: ready
+- status: done
+
+Evidence: `a21429528fd6bf50ef4b7b8fcbf0abe54d682b46`, confirmed on origin. No subsequent queue item is present.

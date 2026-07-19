@@ -2,7 +2,7 @@
 
 ## Evidence timestamp
 
-Current baseline verified on 2026-07-17 through the connected `ControlStack Lab and IES Authority Lane` app.
+Latest implementation baseline verified on 2026-07-19 through the connected `ControlStack Lab and IES Authority Lane` app.
 
 Evidence labels:
 
@@ -15,8 +15,9 @@ Evidence labels:
 
 - **VERIFIED** — Root: `C:\ControlStack_Worktrees\code-pilot-lab`
 - **VERIFIED** — Branch: `lane/code-pilot-lab`
-- **VERIFIED** — HEAD: `c4ab11e09e2469e43b84d507890fe802a9ebb85b`
-- **VERIFIED** — HEAD subject: `lab: reorg into metadata(1-2) + mutations(3-8), power/thermal/other, LM-63-2019 file-gen-type, luminous-dim tooltip, drop UGR+download`
+- **VERIFIED** — Feature checkpoint: `a21429528fd6bf50ef4b7b8fcbf0abe54d682b46`
+- **VERIFIED** — Feature checkpoint subject: `lab: checkpoint project IES generation`
+- **VERIFIED** — Feature checkpoint confirmed on origin `lane/code-pilot-lab`.
 - **UNKNOWN** — Upstream tracking branch and numerical ahead/behind state were not exposed by the current status response.
 
 ## Connected capability state
@@ -33,8 +34,8 @@ Evidence labels:
 ## Current gate baseline
 
 - **VERIFIED** — Gate: `lab-ies`
-- **VERIFIED** — Tests: 147
-- **VERIFIED** — Passed: 147
+- **VERIFIED** — Tests: 159
+- **VERIFIED** — Passed: 159
 - **VERIFIED** — Failed: 0
 - **VERIFIED** — Cancelled: 0
 - **VERIFIED** — Skipped: 0
@@ -42,6 +43,15 @@ Evidence labels:
 - **VERIFIED** — Exit code: 0
 
 The historical HTTP 502 condition did not recur. The bounded lane gate is operational through the connected app.
+
+## Latest completed parcel — LAB-011
+
+- **VERIFIED** — `packages/lab-kernel/ies-toolkit/iesProjectIes.js` is now a deterministic adapter over the committed `buildIesFromReference` generator.
+- **VERIFIED** — `tests/lab-kernel/iesProjectIes.test.js` contains five focused tests covering success, generator equivalence, rejection, determinism/immutability and persistence/private-authority exclusion.
+- **VERIFIED** — The first changed-file gate attempt identified one canonical-keyword migration guard failure; the authorised adapter was corrected without changing the prohibited migration test.
+- **VERIFIED** — Subsequent changed-file execution, full gate execution and gated commit execution each passed 159/159.
+- **VERIFIED** — Commit `a21429528fd6bf50ef4b7b8fcbf0abe54d682b46` was pushed to origin `lane/code-pilot-lab`.
+- **VERIFIED** — Feature-checkpoint post-push Git state was staged 0, modified 2 and untracked 37. The modified paths were the pre-existing `SESSION_HANDOFF.md` and `summary.html`; all protected paths remained untouched outside the authorised parcel and required lane-memory closeout.
 
 ## Accepted implementation state
 

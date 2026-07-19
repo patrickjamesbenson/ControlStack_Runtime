@@ -2,171 +2,100 @@
 
 ## Session purpose
 
-This handoff records the durable lane-memory establishment authorised after acceptance of the replacement read-only baseline.
+This handoff records completion of standing-worker queue item `LAB-011-project-ies-generation`.
 
-## Current identity
+## Identity
 
 - App: `ControlStack Lab and IES Authority Lane`
 - Lane: `lab-ies`
 - Root: `C:\ControlStack_Worktrees\code-pilot-lab`
 - Branch: `lane/code-pilot-lab`
-- Baseline HEAD before this documentation commit: `c4ab11e09e2469e43b84d507890fe802a9ebb85b`
 - Gate: `lab-ies`
+- Starting HEAD: `4a5b10171ba19b1262d416f58d67caf11e2c9b45`
+- Completed feature checkpoint: `a21429528fd6bf50ef4b7b8fcbf0abe54d682b46`
+- Feature subject: `lab: checkpoint project IES generation`
+- Feature checkpoint confirmed on origin `lane/code-pilot-lab`
 
-The historical app-name discrepancy is closed. The current app identity is correct.
+## Completed queue item
 
-## Durable memory set
+`LAB-011-project-ies-generation` is complete.
 
-The lane memory consists of exactly:
-
-1. `docs/_context/lanes/lab-ies/LANE_CHARTER.md`
-2. `docs/_context/lanes/lab-ies/LANE_STATE.md`
-3. `docs/_context/lanes/lab-ies/WORK_QUEUE.md`
-4. `docs/_context/lanes/lab-ies/DECISION_LOG.md`
-5. `docs/_context/lanes/lab-ies/EVIDENCE_INDEX.md`
-6. `docs/_context/lanes/lab-ies/SESSION_HANDOFF.md`
-
-Purpose of each file:
-
-- `LANE_CHARTER.md` — mission, authority boundaries, ownership and change discipline;
-- `LANE_STATE.md` — current verified repository, gate and dirty-inventory state;
-- `WORK_QUEUE.md` — ordered future work and dependencies;
-- `DECISION_LOG.md` — locked owner decisions and closed issues;
-- `EVIDENCE_INDEX.md` — current and historical evidence map;
-- `SESSION_HANDOFF.md` — replacement-worker starting point and protected state.
-
-## Current verified baseline
-
-Before lane-memory files were created:
-
-- staged: 0;
-- modified: 10;
-- untracked: 66;
-- deleted: 0.
-
-The bounded `lab-ies` gate passed:
-
-- tests: 147;
-- passed: 147;
-- failed: 0;
-- cancelled: 0;
-- skipped: 0;
-- todo: 0;
-- exit code: 0.
-
-The prior reported HTTP 502 did not recur.
-
-## Protected dirty state
-
-The original ten modified paths are protected and must remain unstaged unless a later path-confined implementation authorisation names them explicitly:
+Exactly these implementation/test files were committed:
 
 ```text
-packages/lab-kernel/ies-toolkit/iesApproval.js
-packages/lab-kernel/ies-toolkit/iesHandoff.js
-packages/lab-kernel/ies-toolkit/iesLabForm.js
-packages/lab-kernel/ies-toolkit/iesMetrics.js
-packages/lab-kernel/ies-toolkit/iesProvenance.js
-packages/lab-kernel/ies-toolkit/iesWrite.js
-packages/lab-kernel/ies-toolkit/summary.html
-tests/lab-kernel/iesGovernance.test.js
-tests/lab-kernel/iesHandoff.test.js
-tests/lab-kernel/iesLabForm.test.js
+packages/lab-kernel/ies-toolkit/iesProjectIes.js
+tests/lab-kernel/iesProjectIes.test.js
 ```
 
-The original sixty-six untracked paths are listed exactly in `LANE_STATE.md`. They are likewise protected and must remain unstaged unless explicitly authorised in a later parcel.
+The project builder now:
 
-The following Selector-owned paths remain permanently outside Lab scope:
+- preserves the existing `buildProjectIes(reference, runLengthMm, project)` entry point;
+- consumes only the committed sealed reference DTO through `buildIesFromReference`;
+- validates a bounded project envelope and rejects unsupported values;
+- requires a project identity;
+- delegates LM-63 materialisation, canonical keywords, length, candela, lumen and owned-watt scaling to the committed generator;
+- replaces only generator provenance with deterministic project provenance bound to project identity, reference identity, reference kind and `referenceSha256`;
+- does not mutate input;
+- exposes no persistence, private rich-authority, merge or cross-lane implementation seam.
+
+No committed non-Lab caller was affected. The only additional caller found was the protected untracked `labbench.html` prototype, which was not changed.
+
+## Test and gate evidence
+
+The connected app exposes the fixed `lab-ies` gate rather than a standalone arbitrary focused-test runner.
+
+- Initial changed-file execution: 159 tests, 158 passed, 1 failed.
+- The failure was the existing canonical migration guard requiring the active project generator source to use `CANONICAL_KEYWORDS`.
+- The authorised adapter was corrected; the prohibited migration test was not changed.
+- Focused `iesProjectIes.test.js` coverage: 5 tests, all passed within the changed-file execution.
+- Corrected changed-file execution: 159/159 passed.
+- Full `lab-ies` gate: 159/159 passed.
+- Gated commit execution: 159/159 passed.
+
+## Git and protected worktree state
+
+The feature parcel was staged as exactly the two authorised files, committed and pushed.
+
+Feature-checkpoint post-push state was:
+
+- staged: 0;
+- modified: 2;
+- untracked: 37;
+- deleted: 0.
+
+The two modified paths were the pre-existing lane handoff and `packages/lab-kernel/ies-toolkit/summary.html`. This handoff is intentionally replaced by the required lane-memory closeout. After that closeout is committed, the protected dirty state is expected to remain:
+
+```text
+ M packages/lab-kernel/ies-toolkit/summary.html
+```
+
+plus the same 37 protected untracked paths. No protected implementation, prototype or support path was cleaned, reset, restored, deleted, moved, staged or absorbed.
+
+The Selector-owned paths remained absent from the dirty inventory and were not touched:
 
 ```text
 packages/workspace-kernel/selectorReferenceOptionsService.js
 tests/selectorCascadeCorrectness.test.js
 ```
 
-They were absent from the current dirty status. Do not infer how they were resolved, and do not touch them.
+## Queue state and next action
 
-## Accepted authority foundation
+`WORK_QUEUE.md` marks both `LAB-010` and `LAB-011` done. No subsequent queue item is present, so no item can be set ready.
 
-The current evidence supports logical acceptance through Slice 4B:
-
-- canonical keyword and Lab-form foundation;
-- non-authoritative working records and normalisation controller;
-- rich authority lifecycle;
-- RFC 8785-style canonical JSON;
-- injected SHA-256 authority boundary;
-- approval and derivation binding;
-- deterministic immutable sealed DTO;
-- GT, OPT and MERGED sealing;
-- safe downstream handoff.
-
-MERGED acceptance currently covers the authority/approval/derivation/sealing envelope. It does not establish completion of the final governed N-parent candela-and-power merge.
-
-## Exact next safe worker task
-
-After this lane-memory commit is accepted, the next worker should perform a strictly read-only checkpoint-boundary audit for accepted Slices 1–4B.
-
-### Required scope
-
-Inspect exact diffs and dependencies for:
+The exact next safe action is:
 
 ```text
-packages/lab-kernel/ies-toolkit/iesKeywordContract.js
-packages/lab-kernel/ies-toolkit/iesWorkingRecord.js
-packages/lab-kernel/ies-toolkit/iesNormaliseController.js
-packages/lab-kernel/ies-toolkit/iesLabForm.js
-packages/lab-kernel/ies-toolkit/iesLabFormKeywords.js
-packages/lab-kernel/ies-toolkit/iesCanonicalJson.js
-packages/lab-kernel/ies-toolkit/iesAuthorityFingerprint.js
-packages/lab-kernel/ies-toolkit/iesAuthorityRecord.js
-packages/lab-kernel/ies-toolkit/iesApproval.js
-packages/lab-kernel/ies-toolkit/iesProvenance.js
-packages/lab-kernel/ies-toolkit/iesReferenceDto.js
-packages/lab-kernel/ies-toolkit/iesHandoff.js
+STOPPED - queue empty. Orchestrator decision needed.
 ```
 
-and corresponding tests under `tests/lab-kernel/`.
+The orchestrator must add and authorise a new queue item before another standing worker acts.
 
-### Required outputs
+## Prohibited actions retained
 
-- exact path grouping for Slice 1–2, Slice 3, Slice 4A and Slice 4B;
-- dependency order;
-- dirty-file collision risks;
-- test evidence per parcel;
-- independent checkpointability;
-- confirmation that prototypes and support files are excluded;
-- confirmation that Selector paths are excluded;
-- current full `lab-ies` gate result;
-- confirmation that no files changed.
-
-### Prohibited actions
-
-- no patching;
-- no staging or unstaging;
-- no commit or push;
-- no reset, restore or clean;
-- no deletion, movement or copying;
+- no work outside a future queue item's authorised files;
+- no merge, normalisation, generator, UI, provenance-publication or cross-lane widening without explicit queue authority;
+- no reset, restore, clean, deletion or movement of protected dirty paths;
 - no execution of `scripts/clear_chaff.ps1`;
-- no donor or staging promotion;
-- no new Slice 5 feature work;
-- no governed merge implementation;
+- no donor write;
+- no main or other-lane write;
 - no Selector changes.
-
-## Later implementation order
-
-After a read-only checkpoint audit and explicit authorisation:
-
-1. checkpoint accepted Slices 1–4B in path-confined dependency order;
-2. audit sealed-reference builder ownership;
-3. verify the isolated metrics correction;
-4. implement the governed reference merge as separate kernel, governance and UI parcels;
-5. implement provenance/resolver publication;
-6. integrate only safe downstream contracts.
-
-## Handoff rule
-
-A replacement worker must begin with current `repo_info`, `repo_git_status`, `repo_git_recent` and the bounded `lab-ies` gate. Do not assume this handoff remains current if repository evidence differs.
-
-End state expected for this documentation session:
-
-- exactly six memory files committed with `docs(lab): establish durable lane memory`;
-- pushed only from `lane/code-pilot-lab` through the gated path;
-- original ten modified and sixty-six untracked paths unchanged and unstaged.
