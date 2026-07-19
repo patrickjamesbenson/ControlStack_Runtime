@@ -226,3 +226,11 @@ P2 Checkpoint 1 is **IMPLEMENTATION COMPLETE / GATE GREEN / COMMIT BLOCKED BY SH
 - **CONSEQUENCE:** the first Lab promotion is blocked by Program connection capability, not by the reported Lab gate or parcel state. The promotion path defined in `CONTROLSTACK_MAIN_PROMOTION_PATH.md` is not executable from the present app.
 - **VERIFIED LOCAL RESOLUTION:** the stale executable-looking Program MCP copy has been separated into `controlstack_mcp_program_contract_snapshot.py`; the old `controlstack_mcp.py` path is now a fail-closed tombstone and the snapshot refuses direct server startup.
 - **CURRENT MILESTONE:** checkpoint and push this bounded Program-local stale-copy resolution, then await a promotion-capable Program surface before assessing or merging the reported Lab commits.
+
+## 2026-07-19 LAB-017 approval state
+
+- **REPORTED:** LAB-016 offline fixture snapshot is complete and pushed; all reported checks passed 159/159; final Lab state is zero staged, zero modified, 33 protected untracked, and zero deleted paths.
+- **REPORTED:** the reusable Lab worker prompt is committed in lane memory, no queue item is ready, and LAB-017 implementation has not started.
+- **VERIFIED PROGRAM FINDING:** LAB-017 is absent from Program memory and its exact seam contract, files, producer/consumer impact, compatibility, rollback, and acceptance envelope are unknown here.
+- **DECISION:** LAB-017 remains held and is not authorised for implementation.
+- **OWNER:** the Lab orchestrator records the exact seam envelope; Program & Integrate then decides approval. Patrick has no action.

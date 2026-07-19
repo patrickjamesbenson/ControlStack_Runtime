@@ -381,3 +381,11 @@ Provide source-lane and `main` read access, exact candidate diff/ancestry, pull-
 ### Program-local MCP resolution
 
 The Program-only MCP seam implementation now lives at `tools/controlstack-mcp/controlstack_mcp_program_contract_snapshot.py`. It remains importable for contract tests but refuses direct server startup. The old `tools/controlstack-mcp/controlstack_mcp.py` path is a fail-closed tombstone naming the canonical shared-tooling authority. Dependent Program tests, the host adapter, and evidence runner use only the explicit snapshot path.
+
+## 2026-07-19 LAB-017 seam decision
+
+Lab reports LAB-016 complete and pushed with all checks green at 159/159 and a final protected state of zero staged, zero modified, 33 untracked, and zero deleted paths. The reusable worker prompt is also reported committed in Lab lane memory. Program accepts those as current coordination evidence but cannot inspect the Lab lane through this connection.
+
+LAB-017 remains **HELD / NOT APPROVED** because Program memory contains no definition of the proposed seam change. Approval requires a Lab-generated immutable envelope naming the objective, producer and consumer, old/new contract, exact files in and out of scope, LAB-016 dependency, compatibility and rollback, focused tests, `lab-ies` gate, dirty-tree protections, and expected commit/handoff evidence.
+
+No LAB-017 implementation is authorised. The Lab orchestrator supplies the missing envelope; Program then records the approve/decline decision. Patrick has no manual action.

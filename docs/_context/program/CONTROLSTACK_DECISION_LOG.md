@@ -374,3 +374,27 @@ A full server implementation at the canonical filename could be mistaken for the
 - Program tests and evidence probes may inspect or import the named contract snapshot, but may not deploy it.
 - Legacy Program launchers that still target `controlstack_mcp.py` stop at the tombstone instead of starting stale code.
 - Any future snapshot refresh requires a source-hash-evidenced sync parcel and the full `program-integrate` gate.
+
+---
+
+## 2026-07-19 — LAB-017 seam approval withheld pending an exact contract envelope
+
+**Status:** HELD; NOT REJECTED.
+
+**Evidence:** Current Lab coordination reports that LAB-016 offline fixture snapshot is complete and pushed, all focused/full/feature/documentation checks passed 159/159, the final Lab tree has zero staged, zero modified, 33 protected untracked, and zero deleted paths, and no Lab queue item is ready. Program memory contains no definition of LAB-017, no old/new seam contract, no producer/consumer impact, and no exact files or acceptance envelope for that item.
+
+### Decision
+
+Do not authorise LAB-017 implementation from its identifier alone. LAB-017 remains held until the Lab lane records and supplies an immutable seam-approval envelope that names the business objective, producer and consumer, old and proposed contract, exact files in and out of scope, dependency on LAB-016, compatibility and rollback rules, focused tests, `lab-ies` gate, dirty-worktree protections, and expected commit/handoff evidence.
+
+### Rationale
+
+Program approval attaches to a defined contract change, not a queue number. Approving an undefined item would bypass the seam rules, make consumer impact unknowable, and prevent Program from distinguishing a backwards-compatible addition from a breaking change.
+
+### Consequences
+
+- LAB-016 is accepted as a completed lane-local checkpoint on the reported evidence; this is not main promotion or cross-lane acceptance.
+- The reusable Lab worker prompt is accepted as lane-local orchestration memory and does not itself require seam approval.
+- No LAB-017 implementation may begin while the item remains held.
+- The Lab orchestrator owns producing the exact approval envelope in lane memory; Program owns the subsequent approve/decline decision.
+- Patrick has no manual repository action in this boundary.

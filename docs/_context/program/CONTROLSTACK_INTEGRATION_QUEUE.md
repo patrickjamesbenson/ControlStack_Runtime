@@ -269,3 +269,24 @@ The verified CS Integrate app is confined to `C:\ControlStack_Worktrees\program-
 - **Blocker:** missing Program promotion capability, not a Lab parcel defect.
 - **Owner:** Program & Integrate tooling/connection authority.
 - **Required next action:** provide a promotion-capable Program surface with source-lane and `main` read access, candidate diff/ancestry, PR create/update/merge or dedicated integration-worktree operations, integrated-state gates, and guarded main push. Program must then assess the exact Lab commits before merging; no file-copy or `lane/program-integrate` substitute is authorised.
+
+## 2026-07-19 — LAB-017 seam approval intake
+
+**Status:** HELD PENDING EXACT LAB ENVELOPE.
+
+### Current evidence
+
+- LAB-016 offline fixture snapshot is reported complete and pushed.
+- Focused, full, feature-commit, and documentation checks are reported green at 159/159.
+- Final Lab state is reported as zero staged, zero modified, 33 protected untracked, and zero deleted paths.
+- No Lab queue item is currently ready, and no LAB-017 implementation has begun.
+
+### Program decision
+
+LAB-017 is not admitted for implementation because Program memory does not contain its exact seam contract or acceptance envelope. The Lab lane must record the item’s objective, producer/consumer boundary, old/new contract, exact in-scope and prohibited files, LAB-016 dependency, compatibility/rollback rule, tests, `lab-ies` gate, dirty-tree protections, and expected immutable handoff evidence.
+
+### Owner and next state
+
+- **Owner of missing evidence:** Lab orchestrator.
+- **Owner of approval decision:** Program & Integrate.
+- **Current action:** none for Patrick; LAB-017 remains stopped until the lane-generated envelope is available for Program review.
