@@ -102,7 +102,7 @@
         </div>
       </div>
       <div style="margin-top:12px"><button id="metaApply" disabled>Apply metadata &amp; keywords &rarr; continue</button> <span class="res" id="metaRes"></span></div>
-      <p class="muted" style="font-size:11.5px;margin:8px 0 0">Edited on the original file so no 1&nbsp;mm conversion is needed. <b>File generation type</b> is the LM-63-2019 rename of the old &lt;future use&gt; field - selecting one declares the file <b>LM-63-2019</b>; skip to keep the original standard and value. If you change input watts it is auto-tagged "entered manually".</p>
+      <p class="muted" style="font-size:11.5px;margin:8px 0 0">Edited on the original file so no 1&nbsp;mm conversion is needed. <b>File generation type</b> is the LM-63-2019 rename of the old &lt;future use&gt; field - selecting one declares the file <b>LM-63-2019</b>; skip to keep the original standard and value. Lab-only power, thermal and intended-use entries stay in provenance; only the canonical keyword profile appears in the outgoing preview.</p>
     </div>
   </div>
 
@@ -137,6 +137,11 @@
       </div>
     </div>
 
+    <div class="card full"><h2>Outgoing IES - text preview (header + keywords)</h2>
+      <pre id="iesPreview" style="font-family:var(--mono);font-size:11.5px;white-space:pre-wrap;background:#fbfbfb;border:1px solid #eee;border-radius:6px;padding:10px;max-height:340px;overflow:auto;margin:0"></pre>
+      <p class="muted" style="font-size:11.5px;margin:8px 0 0">Live preview of the header, keywords and G-values that would be written. Declares <b>LM-63-2019</b> when a file-generation type is set (else LM-63-2002); G11 at full 5-decimal precision (e.g. 1.11100). Candela block omitted for readability. This is the text we tune next.</p>
+    </div>
+
     <div class="card full"><h2>Mutation log (provenance) - only kept steps</h2><div class="log" id="log"></div></div>
   </div>
 </div>
@@ -144,7 +149,7 @@
 <script type="module">
 const _b = "?b=" + Date.now();
 let parseIes, computeMetrics, checkDimensions, fixDimensionTranspose, analyzeSymmetry, symmetrize, level, detectTilt,
-    standardize, maskHemisphere, setDimensions, toOneMm, tilt;
+    standardize, maskHemisphere, setDimensions, toOneMm, tilt, renderPolar, CANONICAL_KEYWORDS;
 let origin = null, working = null, log = [], normStep = 1, wTilt = 0, history = [];
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? "").replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
@@ -174,6 +179,8 @@ async function boot(){
   ({ standardize, maskHemisphere, setDimensions } = await import("./iesTransforms.js"+_b));
   ({ toOneMm } = await import("./iesOneMm.js"+_b));
   ({ tilt } = await import("./iesTilt.js"+_b));
+  ({ renderPolar } = await import("./iesPolar.js"+_b));
+  ({ CANONICAL_KEYWORDS } = await import("./iesKeywordContract.js"+_b));
   $("fileGen").innerHTML = `<option value="">— keep original / skip —</option>` + FGT.map(([v,t])=>`<option value="${v}">${esc(t)} · ${v}</option>`).join("");
 }
 
@@ -183,6 +190,9 @@ function fp(model){ let h = 2166136261 >>> 0; const I = model.photometry.candela
 function kw(model, key){ const r = (model.meta?.keywords_order||[]).find(x => String(x.key).toUpperCase() === key.toUpperCase()); return r ? r.value.trim() : ""; }
 function upsertKw(meta, key, value){ if(value===""||value==null) return; meta.keywords_order = meta.keywords_order || []; const b = key.replace(/^\[|\]$/g,"").toUpperCase();
   const e = meta.keywords_order.find(r => String(r.key).replace(/^\[|\]$/g,"").toUpperCase()===b); if(e) e.value=String(value); else meta.keywords_order.push({ key:b, value:String(value) }); }
+function canonicalKeywordRows(rows){ const values=new Map(); for(const r of (rows||[])){ const key=String(r?.key||"").replace(/^\[|\]$/g,"").toUpperCase(); const value=String(r?.value??"").trim(); if(CANONICAL_KEYWORDS.includes(key)&&value) values.set(key,value); }
+  return CANONICAL_KEYWORDS.filter(key=>values.has(key)).map(key=>({ key, value:values.get(key) })); }
+function keepCanonicalKeywords(meta){ meta.keywords_order=canonicalKeywordRows(meta.keywords_order); if(Object.prototype.hasOwnProperty.call(meta,"keywords")) delete meta.keywords; }
 
 function renderLog(){ $("log").innerHTML = [`<div class="row"><span class="op">origin</span> loaded · ${esc(fp(origin))}</div>`]
   .concat(log.map(e => `<div class="row"><span class="op">${esc(e.op)}</span> ${esc(e.params)} → ${esc(e.result)} · ${esc(e.fp)}</div>`)).join(""); }
@@ -234,21 +244,7 @@ function renderDims(){
     normStep = 2; addLog("dimensions", "G8 "+L+" · G7 "+W+" · G9 "+H+" · "+method, "accepted + locked"); renderAll();
   };
 }
-function polarSVG(m){
-  const P=m.photometry, V=P.v_angles.map(Number), H=P.h_angles.map(Number), I=P.candela;
-  const Hmax = H.length ? Math.max(...H) : 0;
-  const fold=(t)=>{ t=((t%360)+360)%360; if(Hmax<=1) return 0; if(Hmax<=91){ t=t>180?360-t:t; return t>90?180-t:t; } if(Hmax<=181) return t>180?360-t:t; return t; };
-  const idx=(t)=>{ let bi=0,bd=1e9; for(let h=0;h<H.length;h++){ let d=Math.abs(((H[h]-t)%360+360)%360); d=Math.min(d,360-d); if(d<bd){bd=d;bi=h;} } return bi; };
-  let peak=0; for(const row of I) for(const c of row) peak=Math.max(peak,Number(c)); if(peak<=0) peak=1;
-  const cx=170, cy=165, R=140;
-  const pts=(plane,sign)=>{ const row=I[idx(fold(plane))]; let d=""; for(let v=0;v<V.length;v++){ const g=V[v]*Math.PI/180, r=R*Number(row[v])/peak; const x=cx+sign*r*Math.sin(g), y=cy+r*Math.cos(g); d+=(v?"L":"M")+x.toFixed(1)+","+y.toFixed(1); } return d; };
-  const rings=[0.25,0.5,0.75,1].map(f=>`<circle cx="${cx}" cy="${cy}" r="${(R*f).toFixed(1)}" fill="none" stroke="#eee"/>`).join("");
-  const spokes=[0,30,60,90,120,150].map(a=>{const rad=a*Math.PI/180;const x1=cx-R*Math.sin(rad),y1=cy-R*Math.cos(rad),x2=cx+R*Math.sin(rad),y2=cy+R*Math.cos(rad);return `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="#f0f0f0"/>`;}).join("");
-  return `<svg viewBox="0 0 340 340" width="300" height="300" xmlns="http://www.w3.org/2000/svg"><rect width="340" height="340" fill="#fff"/>${rings}${spokes}
-    <path d="${pts(0,1)}" fill="none" stroke="var(--red)" stroke-width="1.6"/><path d="${pts(180,-1)}" fill="none" stroke="var(--red)" stroke-width="1.6"/>
-    <path d="${pts(90,1)}" fill="none" stroke="var(--blue)" stroke-width="1.6"/><path d="${pts(270,-1)}" fill="none" stroke="var(--blue)" stroke-width="1.6"/>
-    <text x="${cx}" y="${cy+R+16}" font-size="10" fill="#888" text-anchor="middle" font-family="Arial">nadir 0° · peak ${peak<10?peak.toFixed(2):Math.round(peak)} cd</text></svg>`;
-}
+// polar is now canonical - imported from iesPolar.js as renderPolar (single source shared with labbench).
 
 function renderOrient(){
   const a = ((wTilt%360)+360)%360; const up = a>90 && a<270;
@@ -268,6 +264,18 @@ function renderOrient(){
   $("orientDiag").innerHTML = svg;
 }
 
+function fmtNum(n){ const f=Number(n); return Number.isInteger(f)?String(f):String(parseFloat(f.toPrecision(6))); }
+function wrapNums(a,per=10){ const o=[]; for(let i=0;i<a.length;i+=per) o.push(a.slice(i,i+per).map(fmtNum).join(" ")); return o; }
+function previewVersion(meta){ return String(meta.iesVersion||"").toUpperCase().includes("2019") ? "IESNA:LM-63-2019" : "IESNA:LM-63-2002"; }
+function previewText(m){ const meta=m.meta||{}, phot=m.photometry||{}, geom=phot.geometry||{}; const ver=previewVersion(meta);
+  const V=(phot.v_angles||[]).map(Number), H=(phot.h_angles||[]).map(Number), I=phot.candela||[]; const G=(k,d)=>{ const v=Number(geom[k]); return Number.isFinite(v)?v:d; };
+  const lines=[ver]; for(const r of canonicalKeywordRows(meta.keywords_order)) lines.push("["+r.key+"] "+r.value);
+  lines.push("TILT=NONE"); const g11=geom.G11!=null?geom.G11:1; const g11s=String(g11).includes(".")?Number(g11).toFixed(5):fmtNum(g11);
+  lines.push([fmtNum(G("G0",1)),fmtNum(G("G1",-1)),fmtNum(G("G2",1)),String(V.length),String(H.length),fmtNum(G("G5",1)),fmtNum(G("G6",2)),fmtNum(G("G7",0)),fmtNum(G("G8",0)),fmtNum(G("G9",0))].join(" "));
+  lines.push([fmtNum(G("G10",1)),g11s,fmtNum(G("G12",0))].join(" "));
+  for(const l of wrapNums(V)) lines.push(l); for(const l of wrapNums(H)) lines.push(l);
+  const n=I.reduce((s,r)=>s+r.length,0); lines.push("... ["+n+" candela values: "+H.length+" planes x "+V.length+" angles - omitted from preview] ..."); return lines.join("\n"); }
+function renderPreview(){ const el=$("iesPreview"); if(el) el.textContent = previewText(working); }
 function refreshSteps(){
   $("dimBadge").classList.toggle("on", normStep===1); $("dimBadge").classList.toggle("done", normStep>1);
   $("metaBadge").classList.toggle("on", normStep===2); $("metaBadge").classList.toggle("done", normStep>2);
@@ -293,7 +301,7 @@ function refreshSteps(){
   if (normStep === 4){ const a = analyzeSymmetry(working);
     $("symRes").innerHTML = `recommend <b>${a.recommended}</b> · plane spread ${a.rotationalSpreadPct}% `+(a.rotationalSpreadPct > 5 ? `<span class="flag large">sizable - may be intended, Skip to keep</span>` : `<span class="flag noise">likely noise - fold</span>`); }
 }
-function renderAll(){ renderIdentity(origin); renderMetrics(origin); renderDims(); $("polar").innerHTML = polarSVG(working); renderOrient(); refreshSteps(); }
+function renderAll(){ renderIdentity(origin); renderMetrics(origin); renderDims(); $("polar").innerHTML = renderPolar(working).svg; renderOrient(); renderPreview(); refreshSteps(); }
 
 function loadModel(text){ origin = parseIes(text); working = JSON.parse(JSON.stringify(origin)); log = []; history = []; normStep = 1; wTilt = 0;
   ["symRes","interpRes","padRes","mmRes","tiltRes","metaRes","wattsTag"].forEach(id=>{ if($(id)) $(id).innerHTML=""; }); $("undoBtn").disabled = true;
@@ -315,16 +323,15 @@ function wire(){
     if(!isNaN(w)) g.G12 = w;
     const fg = $("fileGen").value; if(fg) g.G11 = Number(fg);
     const meta = working.meta = working.meta || {};
-    upsertKw(meta,"_MAINS_V",$("mainsV").value); upsertKw(meta,"INPUT_WATTS", (isNaN(w)?String(o):String(w))+(manual?" (entered manually)":""));
-    upsertKw(meta,"_BOARD_TC_C",$("boardTc").value); upsertKw(meta,"_DRIVER_TC_C",$("driverTc").value);
-    upsertKw(meta,"_AMBIENT_TA_C",$("sysTa").value); upsertKw(meta,"_LAB_AMBIENT_C",$("labTa").value);
-    const use=$("intendedUse").value; upsertKw(meta,"_INTENDED_USE",use);
-    if(fg){ const title=(FGT.find(x=>x[0]===fg)||[])[1]||""; upsertKw(meta,"FILEGENINFO",title); meta.iesVersion="LM-63-2019"; }
+    upsertKw(meta,"_INTERNAL_AMBIENT_TA_C",$("sysTa").value);
+    const use=$("intendedUse").value;
+    meta.iesVersion=fg?"IESNA:LM-63-2019":"IESNA:LM-63-2002";
+    keepCanonicalKeywords(meta);
     meta.provenance = { mainsV:$("mainsV").value, watts:g.G12, wattsManual:manual, boardTc:$("boardTc").value, driverTc:$("driverTc").value, sysTa:$("sysTa").value, labTa:$("labTa").value, fileGenType:fg||"(kept original)", intendedUse:use };
     const need = use.includes("gear tray")?"cold battery test":use.includes("optic")?"hot battery test":"no battery test";
     normStep = 3;
     $("metaRes").innerHTML = `<span class="flag ok">applied</span> G12 ${g.G12}W${manual?" (manual)":""}${fg?" · file-gen "+fg+" → LM-63-2019":" · standard kept"} <span class="muted">· needs ${need}</span>`;
-    addLog("metadata","power/thermal/other"+(fg?" · file-gen "+fg:""), "G-values + keywords written"); renderAll(); };
+    addLog("metadata","power/thermal/other"+(fg?" · file-gen "+fg:""), "G-values + canonical keywords written"); renderAll(); };
 
   $("levelBtn").onclick=()=>{ pushHistory(); const r=level(working); working=r.model; normStep=4; addLog("level","tilt "+r.tiltDeg+"° @ C"+Math.round(r.tiltAzimuthDeg),"re-nadir"); renderAll(); };
   $("levelSkip").onclick=()=>{ pushHistory(); normStep=4; addLog("level","skipped","peak left as measured"); renderAll(); };
