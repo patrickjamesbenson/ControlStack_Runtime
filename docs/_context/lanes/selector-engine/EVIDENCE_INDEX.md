@@ -1,6 +1,6 @@
 # Selector & Engine Evidence Index
 
-**State date:** 2026-07-19, Australia/Sydney.
+**State date:** 2026-07-20, Australia/Sydney.
 
 ## Identity and isolation
 
@@ -208,6 +208,10 @@ Every completed worker updates this index with:
 - Mandatory batch stops: seam approval, stale lane state, failed required test or gate, out-of-scope behaviour, queue empty, and acceptance requiring live/browser/human/real-world evidence unavailable from repository evidence — RECORDED AS SUCCESSFUL BOUNDARIES.
 - Human-observation rule: such items remain incomplete and return `NEEDS YOU` with exact click-by-click steps; repository evidence cannot be substituted for required observed behaviour — RECORDED.
 - Orchestrator role: review occurs at batch boundaries and seams, not automatically after every parcel — RECORDED.
+- Stable prompt authority: `LANE_CHARTER.md` now contains the complete canonical standing worker and standing orchestrator prompts — RECORDED.
+- Handoff resilience: `SESSION_HANDOFF.md` now carries only the two one-line role bootstrap pointers, the permanent Communication rule, and changing session evidence — RECORDED.
+- Fresh-role bootstrap: either role can start from one line directing it to read `LANE_CHARTER.md` and act per the standing role prompt recorded there — VERIFIED BY DOCUMENT STRUCTURE.
+- Preserved feature state: the two authorised SEL-014 feature/test edits remain modified and unstaged and are excluded from this documentation-only prompt relocation — VERIFIED CURRENT GIT STATE.
 
 ## 2026-07-19 — project-alpha registration refusal evidence and SEL-011 commission
 

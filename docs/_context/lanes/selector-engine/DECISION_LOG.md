@@ -175,3 +175,11 @@ This log is append-oriented. Do not silently rewrite historical decisions.
 **Rationale:** Per-parcel orchestrator pauses have not produced the genuine catches. Effective safeguards have come from worker self-stops at explicit boundaries and from Patrick's live observation. Batching removes unnecessary handoffs without weakening the controls that have proven useful.
 
 **Consequence:** Every parcel still receives its own scope enforcement, focused evidence, full gate, exact staged-file equality, gated feature/read-only result, durable closeout, second full gate, and HEAD reconciliation. A worker stops the batch immediately and successfully on seam approval required, stale lane state, failed required test or gate, out-of-scope behaviour inside an authorised file, queue empty, or acceptance that genuinely requires live application observation, a browser action, human eyes, or real-world judgement unavailable from repository evidence. Human-observation items remain incomplete and return `NEEDS YOU` with exact click-by-click steps; repository evidence must never be substituted for required observed behaviour.
+
+## 2026-07-20 — Stable charter owns both standing role prompts
+
+**Decision:** `LANE_CHARTER.md` is the sole canonical home for both the standing worker prompt and the standing orchestrator prompt. `SESSION_HANDOFF.md` retains only bootstrap pointers, the permanent Communication rule, and changing session evidence.
+
+**Rationale:** The handoff is intentionally rewritten after parcels and has previously lost the worker prompt. A fresh orchestrator also had no repository-owned standing prompt. The charter is stable lane policy and does not churn with parcel closeouts.
+
+**Consequence:** Either role can start from one line directing it to read `LANE_CHARTER.md` and act per the recorded standing role prompt. Both prompts then require reading all six canonical files before action. Parcel closeouts must not duplicate, rewrite, or remove the canonical prompts from the charter; historical handoff references must point to the charter instead of the top of the handoff.

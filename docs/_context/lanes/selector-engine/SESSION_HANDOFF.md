@@ -1,74 +1,17 @@
 # Selector & Engine Session Handoff
 
-## Standing worker prompt
+## Standing role prompts
+
+The canonical standing worker and standing orchestrator prompts live in `LANE_CHARTER.md`, the stable lane file. They are intentionally not duplicated here because this handoff changes after every parcel.
+
+Start either role with one line:
 
 ```text
-STANDING WORKER - Selector & Engine
-Use only the connected CS Selector & Engine v2 app. You are a worker, not the orchestrator.
+Read docs/_context/lanes/selector-engine/LANE_CHARTER.md and act as the standing worker per the prompt recorded there.
+```
 
-1. Verify identity: root C:\ControlStack_Worktrees\selector-engine, branch lane/selector-engine,
-   actual current HEAD, gate selector-engine. Stop if anything mismatches.
-2. Read every file in docs/_context/lanes/selector-engine/ first. Inspect the complete Git state.
-   Continue from a dirty tree only when every dirty path is explicitly recorded as preserved work
-   for the top ready item and is authorised by that item. Otherwise stop and report the unexplained
-   Git state without cleaning, resetting, restoring, staging, or deleting it.
-3. Run a batch of up to FIVE consecutive completed parcels. A parcel counts only after its feature
-   or read-only evidence result, full gate, exact staged-file commit/push where applicable, durable
-   documentation closeout, second full gate, exact documentation commit/push, and clean handoff
-   state are complete. Process parcels strictly one at a time.
-4. Before EACH parcel, read the latest `Recorded lane work HEAD` in LANE_STATE.md and inspect the
-   actual current HEAD plus its immediately previous commit. For this guard only, a dedicated commit
-   whose subject begins `docs(selector): reconcile lane state` is the memory wrapper; compare the
-   recorded work HEAD with that commit's immediate parent. Otherwise compare it directly with the
-   actual current HEAD. If they do not match, reply exactly:
-   `STOPPED - lane state is stale. Recorded HEAD <x>, actual HEAD <y>.`
-   Stop the batch. The orchestrator must reconcile lane memory to repository reality first.
-5. Take the TOP WORK_QUEUE.md item with status: ready and all depends-on satisfied. No qualifying
-   item -> `STOPPED - queue empty`. A seam change without recorded Integrate approval ->
-   `STOPPED - seam approval required`. Both are successful boundary outcomes.
-6. Before implementation, classify the item's acceptance evidence. If acceptance requires live
-   observation of the running application, a browser action, human eyes, or a judgement about
-   real-world correctness that repository evidence alone cannot prove, do not guess and do not mark
-   the item done. Reply `NEEDS YOU` using the permanent Communication rule below, give the exact
-   click-by-click steps, and stop the batch. Repository tests may support that item but may not
-   substitute for genuinely required observed behaviour.
-7. Execute ONLY the item's authorised files and honour every prohibition. If an authorised file
-   contains behaviour outside the item's stated scope, stop immediately and report the boundary;
-   do not widen, rewrite, or opportunistically fix it.
-8. Run every focused test required by the item through an approved runner, then run the full
-   selector-engine gate. If any required test or the gate fails, stop immediately. Do not stage,
-   commit, mark the item done, or continue to another parcel after a failed gate.
-9. Stage EXACTLY the authorised feature/test files and confirm exact staged-file equality. Commit
-   and push only lane/selector-engine through the gated tools. For a read-only item, do not create
-   a feature commit.
-10. Reconcile durable lane memory after the feature/evidence result: update the context files
-    authorised by the item, mark the item done only when every acceptance condition is proven, and
-    set the next eligible item ready. Record the just-pushed feature commit as `Recorded lane work
-    HEAD`; for a read-only item, record the actual current HEAD immediately before the documentation
-    reconciliation commit. Run the full gate again, stage exactly the authorised context files,
-    then gated commit and push with a subject beginning `docs(selector): reconcile lane state`.
-    If the worker dies before this reconciliation commit, the next worker must stop under step 4.
-11. After a successful documentation closeout, do NOT wait for Patrick. Increment the completed
-    parcel count, reread LANE_STATE.md and WORK_QUEUE.md, repeat the HEAD guard, and immediately take
-    the next top ready item. Stop after five completed parcels and report one batch summary.
-12. Stop immediately, mid-batch, on any of these successful boundaries: seam approval required;
-    lane state stale; a required test or gate fails; an authorised file contains out-of-scope
-    behaviour; queue empty; or acceptance needs live/browser/human/real-world evidence unavailable
-    from repository evidence alone.
-13. Begin the final response with exactly one status line: `AUTO`, `SEND TO INTEGRATE`, `NEEDS YOU`,
-    or `STOPPED`. Use `AUTO` when five parcels complete successfully; `SEND TO INTEGRATE` only when
-    the queue explicitly requires Program & Integrate review; `NEEDS YOU` only for a physical
-    Patrick action or required live observation; and `STOPPED` for the guarded boundaries above.
-    A clean stop is a SUCCESS.
-14. Never touch another lane, the donor, or main. Never clean, reset, restore, merge, rebase, delete,
-    or move anything outside authorised files. File movement is disabled; if an item requires it,
-    stop. Tier is an Engine/Lex consequence after run - never add or require a Tier selector. Never
-    fabricate project truth, browser state, fixtures, acknowledgements, revisions, source authority,
-    or real-world evidence to manufacture a green result.
-15. The batch summary must report: starting identity and Git state; each parcel completed in order;
-    files changed; focused-test and full-gate counts per parcel; feature and reconciliation
-    commit/push results; any live evidence actually observed; final Git state; durable-document
-    updates; the next queue item; and the exact successful stop boundary, if one ended the batch.
+```text
+Read docs/_context/lanes/selector-engine/LANE_CHARTER.md and act as the standing orchestrator per the prompt recorded there.
 ```
 
 ## Communication rule
@@ -100,7 +43,7 @@ NEEDS YOU means I must physically do something. Everything else is one plain lin
 ```
 
 **For:** A fresh Selector & Engine orchestrator with no chat history.
-**State date:** 2026-07-19, Australia/Sydney.
+**State date:** 2026-07-20, Australia/Sydney.
 
 ## Start here
 
@@ -287,7 +230,7 @@ The feature commit is pushed. Runtime 8788 could not be restarted or reloaded be
 
 SEL-001 began at verified HEAD `92fd5b00595f77a61e31a53c26e2423df8a087ed` with exactly six staged context renames and no unrelated Git state. The folder move had already occurred; no move action was attempted. All six canonical files were read before editing.
 
-The canonical lane-memory path is `docs/_context/lanes/selector-engine/`. The standing worker prompt at the top of this file is the single reusable Selector worker prompt. Do not replace it with parcel-specific worker text.
+The canonical lane-memory path is `docs/_context/lanes/selector-engine/`. The standing worker and standing orchestrator prompts are stored canonically in `LANE_CHARTER.md`; this handoff points to them and must not become their only home. Do not replace the standing worker prompt with parcel-specific worker text.
 
 The four-status operating model is adopted: `AUTO`, `SEND TO INTEGRATE`, `NEEDS YOU`, and `STOPPED`. `AUTO` applies only to committed lane work and never main. A genuine clean `STOPPED` is a successful boundary report.
 
@@ -311,7 +254,7 @@ Repository inspection proves the generic blocker is raised in `buildSourceProjec
 
 The new top ready item is `SEL-011 — Diagnose project-alpha pre-Engine registration eligibility refusal`. It is strictly read-only and must identify the complete predicate, every required condition, the exact current failed condition(s), whether the remedy is a UI-suppliable input or an incomplete/unavailable served registration path, and whether durable-persistence unavailability is causal or incidental. It must recommend but not implement the smallest repair or exact UI action. If current browser-only state cannot be inspected safely, it must return `NEEDS YOU` with exact bounded diagnostic clicks/fields rather than infer project truth.
 
-`SEL-002` is blocked behind SEL-011. SEL-003 and Engine invocation remain blocked. Use the standing worker prompt at the top of this file verbatim; do not create a parcel-specific prompt.
+`SEL-002` is blocked behind SEL-011. SEL-003 and Engine invocation remain blocked. Use the canonical standing worker prompt in `LANE_CHARTER.md`; do not create a parcel-specific prompt.
 
 ## 2026-07-19 latest commission — approved Tier ownership seam repair
 
@@ -321,7 +264,7 @@ Patrick also reports Program & Integrate approval is recorded and pushed. The ap
 
 The new top ready item is `SEL-012 — Repair Tier ownership at the server-owned Engine/Lex boundary`. Its exact paths and acceptance conditions are in `WORK_QUEUE.md`. The worker must cover missing Tier, injected stale Tier, successful unique derivation, ambiguous derivation, unavailable derivation, and all remaining required inputs. It must not run the live Engine, retry registration, fabricate project truth, write another lane, change the Tier output contract, or alter Lab/IES. Any Lab/IES incompatibility or Tier output-contract change is a clean `STOPPED` requiring separate Program approval.
 
-After SEL-012 is completed, gated, pushed, and activated, SEL-002 may be set ready for a genuine `project-alpha` registration retry. SEL-003 remains blocked behind SEL-002. Use the standing worker prompt at the top of this file verbatim; do not create a bespoke repair prompt.
+After SEL-012 is completed, gated, pushed, and activated, SEL-002 may be set ready for a genuine `project-alpha` registration retry. SEL-003 remains blocked behind SEL-002. Use the canonical standing worker prompt in `LANE_CHARTER.md`; do not create a bespoke repair prompt.
 
 ## 2026-07-19 SEL-012 handoff — Tier ownership repaired on lane
 
@@ -349,7 +292,7 @@ The top ready item is `SEL-014 — Repair full-spec readiness contamination at r
 
 The worker may change only the registration client transport, its focused registration transport test, and the five durable context files. It must make `buildSourceProjection()` rebuild and validate the safe dedicated candidate before rejecting a structurally valid declared projection for the broader Stage-2/spec-build state. Ambient, Mounting, Finishes, Tier summary, selected-result, proof, and disabled output rows remain irrelevant to this first readonly registration candidate. Every true candidate requirement, explicit Control source authority, malformed-state guard, unsafe flag, accessory boundary, unsupported emission rule, no-write guarantee, and no-fabrication rule must remain fail-closed and covered by tests.
 
-Do not save again, dispatch live registration, invoke Engine, refresh source authority, change the full spec/build gate, or widen the parcel. After SEL-014 is committed, pushed, and activated, SEL-002 may retry one new genuine browser save/registration. SEL-003 remains blocked behind registration. Use the standing worker prompt at the top of this file verbatim.
+Do not save again, dispatch live registration, invoke Engine, refresh source authority, change the full spec/build gate, or widen the parcel. After SEL-014 is committed, pushed, and activated, SEL-002 may retry one new genuine browser save/registration. SEL-003 remains blocked behind registration. Use the canonical standing worker prompt in `LANE_CHARTER.md`.
 
 The first SEL-014 worker correctly stopped under the standing HEAD guard because the branch had advanced to the commission commit while the recorded work HEAD still pointed to its parent. The orchestrator reconciled that guard, and the next worker passed it. That worker then made exactly the two authorised SEL-014 feature/test edits and ran the normal gate at 105/105, but correctly stopped before staging because the connected app exposes no focused runner and the fixed gate omits the registration transport suite. The two authorised edits remain modified and unstaged; no other path is dirty.
 

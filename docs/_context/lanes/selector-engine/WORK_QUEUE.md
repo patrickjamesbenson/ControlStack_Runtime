@@ -1,7 +1,8 @@
 # Selector & Engine Work Queue
 
-**State date:** 2026-07-19, Australia/Sydney.
+**State date:** 2026-07-20, Australia/Sydney.
 **Canonical path:** `docs/_context/lanes/selector-engine/`.
+**Standing role prompts:** canonical worker and orchestrator prompts are stored in `LANE_CHARTER.md`; `SESSION_HANDOFF.md` points to them and must not be their only home.
 **Queue authority:** The orchestrator writes and orders queue items. Workers execute only the top item whose status is `ready` and whose `depends-on` requirements are satisfied. After a parcel and its documentation closeout are complete, the worker immediately repeats from the new top ready item for up to five parcels per run unless a protected boundary stops the batch. Queue order does not independently authorise work outside each item boundary.
 **Status model:** `ready`, `blocked`, `held`, `done`.
 

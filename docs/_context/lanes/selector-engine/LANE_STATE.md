@@ -1,6 +1,6 @@
 # Selector & Engine Lane State
 
-**Snapshot:** 2026-07-19, Australia/Sydney.
+**Snapshot:** 2026-07-20, Australia/Sydney.
 
 ## Current identity
 
@@ -238,11 +238,11 @@ SEL-012 is done. SEL-002 was then attempted read-only against the genuine browse
 
 ## 2026-07-19 SEL-002 non-Tier readiness stop and SEL-013 diagnosis commission
 
-**Recorded lane work HEAD:** `808d2b99ebb113549e01bfc8d1bce46c902a257d` — `docs(selector): reconcile lane state for focused harness`.
+**Recorded lane work HEAD:** `3c95d9cff91c92e403ce64c88d0e297ea92e0526` — `docs(selector): reconcile lane state for batch workers`.
 
 The branch is synchronized at this documentation wrapper. The two SEL-014 feature/test edits remain intentionally modified and unstaged, are explicitly authorised by the top ready item, and must be preserved for the next worker. No other path is dirty. The focused harness method is permanently authorised in the queue and decision log.
 
-The dedicated reconciliation commit containing the batch-worker operating-model update must have `808d2b99ebb113549e01bfc8d1bce46c902a257d` as its immediate parent. After that wrapper, the standing guard compares its parent to this recorded work HEAD. SEL-014 remains ready and its implementation scope is unchanged.
+The dedicated reconciliation commit containing the standing-prompt relocation must have `3c95d9cff91c92e403ce64c88d0e297ea92e0526` as its immediate parent. After that wrapper, the standing guard compares its parent to this recorded work HEAD. SEL-014 remains ready and its implementation scope is unchanged.
 
 The SEL-002 worker proved runtime 8788 serves the Tier-neutral registration repair. A genuine browser save succeeded as `env-project-alpha-1784455602109`. The client then stopped with `selected-project-registration-client-pre-engine-eligibility-not-ready` because the saved declared projection had `ready: false` for a condition that was neither of the accepted historical Tier-only blockers. It stopped before Tier-neutral rebuilding and before the registration POST. No active server-owned revision was established or inferred, and Engine was not invoked. The full gate passed 105/105; no files changed and the tree remained clean.
 
@@ -263,3 +263,9 @@ The exact defect is in registration preflight ordering: `buildSourceProjection()
 Workers now continue automatically after each fully completed parcel and documentation closeout, taking the next top ready item for up to five consecutive parcels in one run. Per-parcel scope, focused evidence, the full gate, exact staged-file equality, gated commit/push, documentation reconciliation, and branch-HEAD guard remain mandatory for every parcel.
 
 The batch stops immediately and successfully for seam approval, stale lane state, a required test or gate failure, out-of-scope behaviour inside an authorised file, queue empty, or acceptance that requires live application observation, a browser action, human eyes, or real-world judgement that repository evidence alone cannot establish. Human-observation items return `NEEDS YOU` with exact click-by-click steps and remain incomplete. The orchestrator reviews at batch boundaries and seams rather than after every parcel.
+
+## 2026-07-20 stable standing-role prompt authority
+
+`LANE_CHARTER.md` is now the canonical and stable home for both the standing worker prompt and the standing orchestrator prompt. `SESSION_HANDOFF.md` contains only the two one-line bootstrap pointers plus the permanent Communication rule and changing session evidence. A parcel closeout may rewrite the handoff without risking loss of either standing role prompt.
+
+A fresh chat can start either role from one line: read `LANE_CHARTER.md` and act as the standing worker or standing orchestrator per the prompt recorded there. Both prompts independently require identity verification, reading all six canonical files, preserving recorded dirty work, and following the current queue and evidence.
