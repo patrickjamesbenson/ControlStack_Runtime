@@ -64,6 +64,58 @@ For human-observation acceptance, the worker must stop before making a completio
 
 The operating model is recorded in `LANE_CHARTER.md`, `DECISION_LOG.md`, `LANE_STATE.md` and `WORK_QUEUE.md`. Both standing prompts live only in the stable charter; `SESSION_HANDOFF.md` carries launch pointers and current session evidence.
 
+## LAB-024 offline resolver fixture corpus — 2026-07-20
+
+### Identity and scope
+
+- starting HEAD: `72073529fd9f1d2fd6717a990a81d304f36b984a`;
+- queue item: `LAB-024-resolver-fixture-corpus`;
+- authorised files: exactly the 20 component, reference, evidence, report and source fixtures listed in `WORK_QUEUE.md`;
+- seam change: no.
+
+### Behaviour evidence
+
+The completed corpus:
+
+- marks every artifact as offline, demo and unapproved and explicitly denies production authority;
+- uses only canonical host-free LAB-017 resolver paths for component, reference, provenance, evidence, report and source relationships;
+- contains no URL host, local path, file URL, UNC path, traversal, credential, secret, token or diagnostic fingerprint field;
+- leaves authority and reference SHA-256 values null rather than fabricating cryptographic evidence;
+- uses no production sealed-reference schema and makes no allocation, approval or seal claim;
+- keeps emergency and EWIS assembly verification null and leaves procurement, certification, life and measured-result claims unresolved;
+- provides one coherent OPT-000123 offline set and one deliberately incomplete OPT-000124 record for fail-closed presentation;
+- includes a synthetic LM-63 file with the canonical 16-keyword vocabulary and explicit demo/unapproved labels;
+- changes no JavaScript, HTML, database, route, Program, Runtime, Engine or Selector implementation.
+
+### Static audit evidence
+
+- unsafe/local/host/credential pattern search across all 20 files: zero matches;
+- diagnostic `fingerprint` search: zero matches;
+- production sealed-reference schema search: zero matches;
+- explicit offline/demo marker search: present throughout the corpus;
+- all JSON files remained parseable by the green lane gate.
+
+### Test and gate evidence
+
+- focused changed-file `lab-ies` execution: 245/245 passed;
+- independent full `lab-ies` gate: 245/245 passed;
+- gated feature commit execution: 245/245 passed;
+- failed, cancelled, skipped and todo counts were zero in every execution.
+
+### Commit and push evidence
+
+- feature commit: `deb74baac423f879d409c2b7fc98d6ca9a459787`;
+- subject: `lab: checkpoint offline resolver fixture corpus`;
+- files: exactly the 20 authorised fixture paths;
+- push: origin `lane/code-pilot-lab`, confirmed successful;
+- protected unrelated dirty paths and the unstaged branch-HEAD marker were preserved.
+
+### Resulting queue boundary
+
+- LAB-024 is `done`.
+- LAB-025 becomes the single next `ready` item.
+- LAB-027 remains approved but sequence-blocked.
+
 ## LAB-023 NVB Lab adapter — 2026-07-20
 
 ### Identity and scope

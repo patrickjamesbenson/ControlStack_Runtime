@@ -393,7 +393,9 @@ Evidence: `ca1c690da9c6d87e610129242146714555e19ec6`, confirmed on origin.
 - depends on: LAB-017-reference-resolver-contract, LAB-021-emergency-selection-contract
 - on success next: LAB-025-component-library-surface
 - seam change: no
-- status: ready
+- status: done
+
+Evidence: `deb74baac423f879d409c2b7fc98d6ca9a459787`, confirmed on origin.
 
 ### Q-15 Component library surface
 - id: LAB-025-component-library-surface
@@ -411,7 +413,7 @@ Evidence: `ca1c690da9c6d87e610129242146714555e19ec6`, confirmed on origin.
 - depends on: LAB-012-lab-style-foundation, LAB-019-component-projection-contract, LAB-020-document-register-contract, LAB-024-resolver-fixture-corpus
 - on success next: LAB-026-document-equipment-surfaces
 - seam change: no
-- status: queued
+- status: ready
 
 ### Q-16 Document and equipment surfaces
 - id: LAB-026-document-equipment-surfaces

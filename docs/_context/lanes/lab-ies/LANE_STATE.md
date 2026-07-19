@@ -13,11 +13,11 @@ Current repository evidence overrides stale historical statements.
 - Root: `C:\ControlStack_Worktrees\code-pilot-lab`
 - Branch: `lane/code-pilot-lab`
 - Gate: `lab-ies`
-- Recorded branch HEAD: `de56642bdf377ae7673cb09f29ac58fb9446fab3`
+- Recorded branch HEAD: `72073529fd9f1d2fd6717a990a81d304f36b984a`
 - Branch-HEAD guard checkpoint: `6d34e500d407d5335e5eebb317636a67a5e98618`
-- Starting HEAD for LAB-023: `de56642bdf377ae7673cb09f29ac58fb9446fab3`
-- Completed feature HEAD: `ca1c690da9c6d87e610129242146714555e19ec6`
-- Feature subject: `lab: checkpoint NVB Lab adapter`
+- Starting HEAD for LAB-024: `72073529fd9f1d2fd6717a990a81d304f36b984a`
+- Completed feature HEAD: `deb74baac423f879d409c2b7fc98d6ca9a459787`
+- Feature subject: `lab: checkpoint offline resolver fixture corpus`
 - Feature push: confirmed on origin `lane/code-pilot-lab`
 
 ## Branch-HEAD synchronisation invariant
@@ -59,7 +59,47 @@ Before any queue item is selected, a worker must compare `Recorded branch HEAD` 
 - Human-observation acceptance cannot be closed from repository evidence. The item remains incomplete and the worker supplies exact `NEEDS YOU` steps.
 - Orchestrator review occurs at seam, human-observation and five-parcel/stop boundaries rather than after each routine parcel.
 
-## Latest completed parcel — LAB-023
+## Latest completed parcel — LAB-024
+
+Queue item `LAB-024-resolver-fixture-corpus` is complete.
+
+Exactly these 20 authorised files were changed and committed:
+
+```text
+packages/lab-kernel/ies-toolkit/lab/components/board/BRD-DNX80.json
+packages/lab-kernel/ies-toolkit/lab/components/chip/CHIP-LM301H.json
+packages/lab-kernel/ies-toolkit/lab/components/converter/ZC-EM-SMART-50.json
+packages/lab-kernel/ies-toolkit/lab/components/driver/DRV-TRIDONIC-825.json
+packages/lab-kernel/ies-toolkit/lab/references/NVB-REF-GT-000045/record.1mm.json
+packages/lab-kernel/ies-toolkit/lab/references/NVB-REF-OPT-000123/evidence/LM-79__safe-9f2a11.txt
+packages/lab-kernel/ies-toolkit/lab/references/NVB-REF-OPT-000123/evidence/evidence.json
+packages/lab-kernel/ies-toolkit/lab/references/NVB-REF-OPT-000123/origin.ies
+packages/lab-kernel/ies-toolkit/lab/references/NVB-REF-OPT-000123/provenance.json
+packages/lab-kernel/ies-toolkit/lab/references/NVB-REF-OPT-000123/record.1mm.json
+packages/lab-kernel/ies-toolkit/lab/references/NVB-REF-OPT-000124/record.1mm.json
+packages/lab-kernel/ies-toolkit/lab/reports/LAB-20260715-142-EXT.json
+packages/lab-kernel/ies-toolkit/lab/sources/DNX-80_board_datasheet.txt
+packages/lab-kernel/ies-toolkit/lab/sources/Emergency_test_report.txt
+packages/lab-kernel/ies-toolkit/lab/sources/EWIS_cartridge_report.txt
+packages/lab-kernel/ies-toolkit/lab/sources/Samsung_LM301H_datasheet.txt
+packages/lab-kernel/ies-toolkit/lab/sources/Samsung_LM301H_LM-80.txt
+packages/lab-kernel/ies-toolkit/lab/sources/Samsung_LM301H_TM-21.txt
+packages/lab-kernel/ies-toolkit/lab/sources/Tridonic_LC55_datasheet.txt
+packages/lab-kernel/ies-toolkit/lab/sources/zc-em-smart-50_datasheet.txt
+```
+
+Verified outcome:
+
+- every artifact is explicitly marked offline, demo and unapproved and cannot be mistaken for production authority or live RuntimeData;
+- all component, reference, provenance, report, evidence and source links use canonical host-free LAB-017 resolver paths only;
+- the corpus contains no URL host, local path, file URL, UNC path, traversal, credential, secret, token or diagnostic fingerprint field;
+- authority and reference SHA values remain null rather than fabricated, and no fixture uses the production sealed-reference schema;
+- emergency and EWIS assembly verification remain null, while procurement, certification, lifetime and test-result claims remain unresolved;
+- the OPT-000123 set is internally coherent for offline resolver presentation, while OPT-000124 is deliberately incomplete to exercise fail-closed behaviour;
+- the synthetic IES fixture uses the canonical 16-keyword vocabulary and remains explicitly unapproved;
+- no JavaScript, HTML, database, route, Program, Runtime, Engine or Selector implementation was changed.
+
+## Previous completed parcel — LAB-023
 
 Queue item `LAB-023-nvb-lab-adapter` is complete.
 
@@ -243,7 +283,7 @@ Verified outcome:
 
 The connected app exposes the fixed `lab-ies` gate as the available changed-file and full validation path.
 
-- Focused changed-file execution for the two LAB-023 files: 245 tests, 245 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
+- Focused changed-file execution for the 20 LAB-024 fixture files: 245 tests, 245 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
 - Independent full `lab-ies` gate: 245 tests, 245 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
 - Gated feature commit execution: 245 tests, 245 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
 
@@ -253,7 +293,7 @@ The protected working-tree state after documentation closeout is:
 
 - staged: 0;
 - modified: 1 — only the unstaged `Recorded branch HEAD` synchronisation marker in this file;
-- untracked: 26;
+- untracked: 25;
 - deleted: 0.
 
 Protected untracked paths:
@@ -272,7 +312,6 @@ packages/lab-kernel/ies-toolkit/ies_builder.html
 packages/lab-kernel/ies-toolkit/ies_merge.html
 packages/lab-kernel/ies-toolkit/index.html
 packages/lab-kernel/ies-toolkit/lab.html
-packages/lab-kernel/ies-toolkit/lab/
 packages/lab-kernel/ies-toolkit/lab_request.html
 packages/lab-kernel/ies-toolkit/labbench.html
 packages/lab-kernel/ies-toolkit/luminaire_provenance.html
@@ -318,7 +357,7 @@ tests/selectorCascadeCorrectness.test.js
 - The six ordinary seams are approved unchanged.
 - LAB-022 is approved with exactly two unique non-MERGED parents, immutable order-significant provenance, exactly matching grids without interpolation/resampling, and allocation/authority/approval/sealing outside the kernel; violations fail closed.
 - LAB-018, LAB-019, LAB-020, LAB-021, LAB-022 and LAB-023 are complete and confirmed in current branch history.
-- The next active parcel is LAB-024, a non-seam offline fixture corpus.
+- LAB-024 is complete and confirmed on origin as a bounded offline resolver fixture corpus.
 - LAB-027 remains approved but sequence-blocked until its dependencies are completed and it becomes the single top eligible parcel.
 - No parallel or combined implementation is authorised.
 - The earlier LAB-018 approval hold remains superseded.
@@ -339,9 +378,10 @@ tests/selectorCascadeCorrectness.test.js
 - `LAB-021-emergency-selection-contract`: done.
 - `LAB-022-reference-composition-kernel`: done.
 - `LAB-023-nvb-lab-adapter`: done.
-- Next ordered item: `LAB-024-resolver-fixture-corpus`.
+- `LAB-024-resolver-fixture-corpus`: done.
+- Next ordered item: `LAB-025-component-library-surface`.
 - Resulting status: `ready`; it is a non-seam parcel and all dependencies are done.
-- Ready items: exactly one — LAB-024.
+- Ready items: exactly one — LAB-025.
 - Approved sequence-blocked item: LAB-027.
 
-LAB-023 was implemented, validated, committed and pushed as the single active parcel.
+LAB-024 was implemented, validated, committed and pushed as the single active parcel.
