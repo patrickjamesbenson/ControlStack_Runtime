@@ -90,6 +90,94 @@ LAB-017 remains governed by the approved version-1 envelope. Program retains pro
 
 The next safe action is Program & Integrate review of LAB-018's own seam envelope before any worker starts it.
 
+## LAB-017 immutable completion receipt
+
+The fenced block below is the canonical final receipt for Program & Integrate acceptance. It must be consumed verbatim. Any change to its seam, implementation, ownership, compatibility or validation fields invalidates the receipt and requires a new seam decision.
+
+```yaml
+receipt_schema: controlstack.lab.parcel-completion-receipt.v1
+receipt_status: final
+lane: lab-ies
+branch: lane/code-pilot-lab
+queue_item: LAB-017-reference-resolver-contract
+seam:
+  version: 1
+  envelope_checkpoint: f927ced1ca77c8b11ef8b13b9d6bb3833618844c
+  approval_checkpoint: 09ac99cb35b6af45696b4c83e0051a1651bb2f14
+  approved_unchanged: true
+  interface_authority: docs/_context/lanes/lab-ies/LAB-017_SEAM_ENVELOPE.md
+implementation:
+  starting_head: 09ac99cb35b6af45696b4c83e0051a1651bb2f14
+  feature_checkpoint: 2333c1197abf898e7a680455f99918823cb76e30
+  feature_subject: "lab: checkpoint reference resolver contract"
+  exact_files:
+    - packages/lab-kernel/ies-toolkit/nvbReference.js
+    - tests/lab-kernel/nvbReference.test.js
+  scope_widened: false
+validation:
+  focused_lab_gate:
+    tests: 169
+    passed: 169
+    failed: 0
+    cancelled: 0
+    skipped: 0
+    todo: 0
+  independent_full_lab_gate:
+    tests: 169
+    passed: 169
+    failed: 0
+    cancelled: 0
+    skipped: 0
+    todo: 0
+  gated_feature_commit:
+    tests: 169
+    passed: 169
+    failed: 0
+    cancelled: 0
+    skipped: 0
+    todo: 0
+  documentation_closeout_checkpoint: 8053e1b77332d07c4fef201e30400b6776505bed
+  documentation_subject: "docs(lab): close LAB-017 reference resolver contract"
+publication:
+  remote: origin
+  branch: lane/code-pilot-lab
+  feature_push_confirmed: true
+  documentation_push_confirmed: true
+contract_result:
+  exact_versioned_public_interface: true
+  exact_identity_and_data_shapes: true
+  canonical_host_free_resolver_paths: true
+  fail_closed_rejections: true
+  deterministic_deep_immutability: true
+  private_authority_leak: false
+  emergency_assembly_verification: null
+  ewis_assembly_verification: null
+ownership:
+  program_retains:
+    - production allocation
+    - resolver hosting
+    - routing
+    - persistence
+    - authentication
+    - deployment
+    - endpoint ownership
+compatibility:
+  accepted_break: five named protected legacy Lab prototypes may remain incompatible until their later queue parcels
+  protected_consumers_changed: false
+rollback:
+  data_migration_required: false
+  safe_order: revert dependent consumers in reverse order, revert the LAB-017 feature checkpoint, run the full lab-ies gate, then restore LAB-017 to blocked in lane memory
+program_reported_preacceptance:
+  completion_recorded: true
+  program_gate: "45/45"
+  program_tree_clean: true
+  final_acceptance_pending: this exact immutable receipt
+next_boundary:
+  queue_item: LAB-018-nvb-resolution-contract
+  status: blocked
+  blocker: separate seam envelope and Program & Integrate approval
+```
+
 ## Prohibited actions retained
 
 - no LAB-017 change outside the recorded version-1 approval without a new seam decision;
