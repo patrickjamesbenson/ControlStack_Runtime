@@ -72,9 +72,10 @@ Ownership does not mean every permitted path belongs in every parcel. Each worke
 ## Git and worker rules
 
 - One writer at a time in this worktree.
-- One bounded task per worker.
+- One worker run may complete up to five consecutive parcels, strictly one parcel at a time.
+- Every parcel keeps its own scope, focused evidence, full gate, exact staged-file equality, feature or read-only result, and durable documentation closeout before the next parcel begins.
 - Stage only commissioned paths.
-- Run the named gate before commit.
+- Run the named full gate for every parcel and again for its documentation closeout.
 - Commit and push only through the gated lane tools.
 - Never push to `main`.
 - Never clean or reset unexplained state.
@@ -88,13 +89,13 @@ The canonical Selector & Engine context path is `docs/_context/lanes/selector-en
 
 Every worker response begins with exactly one status line:
 
-- `AUTO` — gate passed, parcel committed to `lane/selector-engine`, and lane work may continue without Patrick action;
-- `SEND TO INTEGRATE` — the parcel is ready for Program & Integrate consideration;
-- `NEEDS YOU` — one concrete Patrick action is required;
-- `STOPPED` — a genuine boundary requires an orchestrator decision.
+- `AUTO` — five parcels completed successfully in one batch with every parcel committed and reconciled on `lane/selector-engine`;
+- `SEND TO INTEGRATE` — the queue explicitly requires Program & Integrate consideration;
+- `NEEDS YOU` — one concrete Patrick action or live observation is required;
+- `STOPPED` — a protected boundary ended the batch.
 
-`AUTO` never means `main`. A clean `STOPPED` at a genuine boundary is a successful worker outcome.
+`AUTO` never means `main`. `STOPPED` and `NEEDS YOU` at genuine boundaries are successful worker outcomes, not implementation failures.
 
 ## Queue governance
 
-The orchestrator writes and orders SEL queue items. Workers execute only the top item with status `ready` whose dependencies are satisfied. No qualifying item produces `STOPPED - queue empty`. A seam change without recorded Integrate approval produces `STOPPED - seam approval required`. Workers never execute a later item opportunistically and never invent project truth or fixtures to manufacture a green result.
+The orchestrator writes and orders SEL queue items. A worker executes only the top item with status `ready` whose dependencies are satisfied, completes its full documentation closeout, then immediately repeats from the new top ready item until five parcels are complete or a protected boundary stops the batch. No qualifying item produces `STOPPED - queue empty`. A seam change without recorded Integrate approval produces `STOPPED - seam approval required`. A parcel requiring live application observation, a browser action, human eyes, or real-world judgement that repository evidence cannot prove produces `NEEDS YOU` with exact click-by-click steps and remains incomplete. Workers never execute a later item opportunistically, never substitute tests for required observed behaviour, and never invent project truth or fixtures to manufacture a green result. The orchestrator reviews at batch boundaries and seams rather than after every parcel.

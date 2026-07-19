@@ -204,6 +204,10 @@ Every completed worker updates this index with:
 - Orchestrator reconciliation: the commission commit is now the recorded work HEAD; the reconciliation commit must wrap it directly; queue order and SEL-014 scope are unchanged — RECORDED.
 - SEL-014 implementation stop: exactly the authorised registration transport and registration transport test files are modified; normal gate 105/105; focused registration suite authored but not executed because the fixed connected-app gate omits it; nothing staged and no commit — VERIFIED USER-PROVIDED WORKER EVIDENCE AND CURRENT GIT STATUS.
 - Focused-runner decision: temporarily import the omitted registration suite through gate-included `tests/engineRunTableDomain.test.js`, visibly execute all eight registration tests, remove the import, prove the harness file identical to HEAD and absent from final diff, then rerun the normal 105-test gate — AUTHORISED ORCHESTRATOR RECOVERY.
+- Worker operating-model change: standing prompt now executes up to five fully closed parcels per run, preserving a full gate, exact staged-file equality, documentation closeout, and HEAD guard for each parcel — RECORDED.
+- Mandatory batch stops: seam approval, stale lane state, failed required test or gate, out-of-scope behaviour, queue empty, and acceptance requiring live/browser/human/real-world evidence unavailable from repository evidence — RECORDED AS SUCCESSFUL BOUNDARIES.
+- Human-observation rule: such items remain incomplete and return `NEEDS YOU` with exact click-by-click steps; repository evidence cannot be substituted for required observed behaviour — RECORDED.
+- Orchestrator role: review occurs at batch boundaries and seams, not automatically after every parcel — RECORDED.
 
 ## 2026-07-19 — project-alpha registration refusal evidence and SEL-011 commission
 

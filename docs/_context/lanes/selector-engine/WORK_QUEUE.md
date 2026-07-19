@@ -2,7 +2,7 @@
 
 **State date:** 2026-07-19, Australia/Sydney.
 **Canonical path:** `docs/_context/lanes/selector-engine/`.
-**Queue authority:** The orchestrator writes and orders queue items. Workers execute only the top item whose status is `ready` and whose `depends-on` requirements are satisfied. Queue order does not independently authorise work outside the item boundary.
+**Queue authority:** The orchestrator writes and orders queue items. Workers execute only the top item whose status is `ready` and whose `depends-on` requirements are satisfied. After a parcel and its documentation closeout are complete, the worker immediately repeats from the new top ready item for up to five parcels per run unless a protected boundary stops the batch. Queue order does not independently authorise work outside each item boundary.
 **Status model:** `ready`, `blocked`, `held`, `done`.
 
 ### Q-1 Finish context migration and establish canonical queue

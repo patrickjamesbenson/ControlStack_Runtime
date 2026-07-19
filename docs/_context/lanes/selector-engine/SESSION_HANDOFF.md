@@ -8,36 +8,67 @@ Use only the connected CS Selector & Engine v2 app. You are a worker, not the or
 
 1. Verify identity: root C:\ControlStack_Worktrees\selector-engine, branch lane/selector-engine,
    actual current HEAD, gate selector-engine. Stop if anything mismatches.
-2. Read every file in docs/_context/lanes/selector-engine/ first.
-3. Before taking any queue item, read the latest `Recorded lane work HEAD` in LANE_STATE.md
-   and inspect the actual current HEAD plus its immediately previous commit. For this guard only,
-   a dedicated commit whose subject begins `docs(selector): reconcile lane state` is the memory
-   wrapper; compare the recorded work HEAD with that commit's immediate parent. Otherwise compare
-   it directly with the actual current HEAD. If they do not match, do not start work. Reply exactly:
+2. Read every file in docs/_context/lanes/selector-engine/ first. Inspect the complete Git state.
+   Continue from a dirty tree only when every dirty path is explicitly recorded as preserved work
+   for the top ready item and is authorised by that item. Otherwise stop and report the unexplained
+   Git state without cleaning, resetting, restoring, staging, or deleting it.
+3. Run a batch of up to FIVE consecutive completed parcels. A parcel counts only after its feature
+   or read-only evidence result, full gate, exact staged-file commit/push where applicable, durable
+   documentation closeout, second full gate, exact documentation commit/push, and clean handoff
+   state are complete. Process parcels strictly one at a time.
+4. Before EACH parcel, read the latest `Recorded lane work HEAD` in LANE_STATE.md and inspect the
+   actual current HEAD plus its immediately previous commit. For this guard only, a dedicated commit
+   whose subject begins `docs(selector): reconcile lane state` is the memory wrapper; compare the
+   recorded work HEAD with that commit's immediate parent. Otherwise compare it directly with the
+   actual current HEAD. If they do not match, reply exactly:
    `STOPPED - lane state is stale. Recorded HEAD <x>, actual HEAD <y>.`
-   Stop there. The orchestrator must reconcile lane memory to repository reality first.
-4. Take the TOP WORK_QUEUE.md item with status: ready and all depends-on satisfied.
-   None qualifying -> "STOPPED - queue empty". Seam change without recorded Integrate
-   approval -> "STOPPED - seam approval required".
-5. Execute ONLY that item's authorised files, honouring its prohibitions.
-6. Run focused tests, then the full selector-engine gate. It must pass before any commit.
-7. Stage EXACTLY the authorised feature/test files. Confirm nothing else is staged. Gated commit
-   and push only lane/selector-engine. For a read-only item, there is no feature commit.
-8. Reconcile durable lane memory after the feature/evidence result: update LANE_STATE.md,
-   EVIDENCE_INDEX.md, SESSION_HANDOFF.md and WORK_QUEUE.md; record the just-pushed feature commit
-   as `Recorded lane work HEAD` (or retain the current recorded work HEAD for a read-only item);
-   mark the item done and set the next item ready. Run the full gate again, stage exactly the
-   authorised context files, then gated commit and push with subject beginning
-   `docs(selector): reconcile lane state`. If the worker dies before this reconciliation commit,
-   the next worker must stop under step 3 rather than trusting stale memory.
-9. Begin your reply with the required status line.
-   Never touch another lane, the donor, or main. Never clean, reset, restore, merge, rebase,
-   delete or move anything outside your authorised files. File movement is disabled for this
-   app by design - if an item needs a move, STOP and report it. Tier is an Engine/Lex
-   consequence after run - never add or require a Tier selector. Do not fabricate project truth
-   or fixtures to manufacture a green result. A clean STOP at a genuine boundary is a SUCCESS.
-   Report: starting identity + Git state, item executed, files changed, focused tests, gate counts,
-   feature and reconciliation commit/push hashes, final Git state, doc updates, next queue item.
+   Stop the batch. The orchestrator must reconcile lane memory to repository reality first.
+5. Take the TOP WORK_QUEUE.md item with status: ready and all depends-on satisfied. No qualifying
+   item -> `STOPPED - queue empty`. A seam change without recorded Integrate approval ->
+   `STOPPED - seam approval required`. Both are successful boundary outcomes.
+6. Before implementation, classify the item's acceptance evidence. If acceptance requires live
+   observation of the running application, a browser action, human eyes, or a judgement about
+   real-world correctness that repository evidence alone cannot prove, do not guess and do not mark
+   the item done. Reply `NEEDS YOU` using the permanent Communication rule below, give the exact
+   click-by-click steps, and stop the batch. Repository tests may support that item but may not
+   substitute for genuinely required observed behaviour.
+7. Execute ONLY the item's authorised files and honour every prohibition. If an authorised file
+   contains behaviour outside the item's stated scope, stop immediately and report the boundary;
+   do not widen, rewrite, or opportunistically fix it.
+8. Run every focused test required by the item through an approved runner, then run the full
+   selector-engine gate. If any required test or the gate fails, stop immediately. Do not stage,
+   commit, mark the item done, or continue to another parcel after a failed gate.
+9. Stage EXACTLY the authorised feature/test files and confirm exact staged-file equality. Commit
+   and push only lane/selector-engine through the gated tools. For a read-only item, do not create
+   a feature commit.
+10. Reconcile durable lane memory after the feature/evidence result: update the context files
+    authorised by the item, mark the item done only when every acceptance condition is proven, and
+    set the next eligible item ready. Record the just-pushed feature commit as `Recorded lane work
+    HEAD`; for a read-only item, record the actual current HEAD immediately before the documentation
+    reconciliation commit. Run the full gate again, stage exactly the authorised context files,
+    then gated commit and push with a subject beginning `docs(selector): reconcile lane state`.
+    If the worker dies before this reconciliation commit, the next worker must stop under step 4.
+11. After a successful documentation closeout, do NOT wait for Patrick. Increment the completed
+    parcel count, reread LANE_STATE.md and WORK_QUEUE.md, repeat the HEAD guard, and immediately take
+    the next top ready item. Stop after five completed parcels and report one batch summary.
+12. Stop immediately, mid-batch, on any of these successful boundaries: seam approval required;
+    lane state stale; a required test or gate fails; an authorised file contains out-of-scope
+    behaviour; queue empty; or acceptance needs live/browser/human/real-world evidence unavailable
+    from repository evidence alone.
+13. Begin the final response with exactly one status line: `AUTO`, `SEND TO INTEGRATE`, `NEEDS YOU`,
+    or `STOPPED`. Use `AUTO` when five parcels complete successfully; `SEND TO INTEGRATE` only when
+    the queue explicitly requires Program & Integrate review; `NEEDS YOU` only for a physical
+    Patrick action or required live observation; and `STOPPED` for the guarded boundaries above.
+    A clean stop is a SUCCESS.
+14. Never touch another lane, the donor, or main. Never clean, reset, restore, merge, rebase, delete,
+    or move anything outside authorised files. File movement is disabled; if an item requires it,
+    stop. Tier is an Engine/Lex consequence after run - never add or require a Tier selector. Never
+    fabricate project truth, browser state, fixtures, acknowledgements, revisions, source authority,
+    or real-world evidence to manufacture a green result.
+15. The batch summary must report: starting identity and Git state; each parcel completed in order;
+    files changed; focused-test and full-gate counts per parcel; feature and reconciliation
+    commit/push results; any live evidence actually observed; final Git state; durable-document
+    updates; the next queue item; and the exact successful stop boundary, if one ended the batch.
 ```
 
 ## Communication rule

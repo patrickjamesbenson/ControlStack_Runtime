@@ -167,3 +167,11 @@ This log is append-oriented. Do not silently rewrite historical decisions.
 **Rationale:** The connected app exposes no arbitrary or focused test command, while the normal fixed gate omits the exact authorised test file. The same temporary-import method was already used and accepted for SEL-012. It provides executable evidence without committing a harness change or weakening the lane gate.
 
 **Consequence:** The temporary import must run all eight registration transport tests, then be removed. The harness file must be byte-identical to HEAD, absent from the final diff, unstaged, and uncommitted. The final feature commit remains limited to the two original SEL-014 feature/test files, followed by the normal baseline gate and durable reconciliation.
+
+## 2026-07-20 — Workers run guarded batches of up to five parcels
+
+**Decision:** After completing a parcel and its durable documentation closeout, a worker immediately takes the next top ready item and repeats, up to five consecutive completed parcels in one run. The orchestrator reviews at batch boundaries and seams rather than after every parcel.
+
+**Rationale:** Per-parcel orchestrator pauses have not produced the genuine catches. Effective safeguards have come from worker self-stops at explicit boundaries and from Patrick's live observation. Batching removes unnecessary handoffs without weakening the controls that have proven useful.
+
+**Consequence:** Every parcel still receives its own scope enforcement, focused evidence, full gate, exact staged-file equality, gated feature/read-only result, durable closeout, second full gate, and HEAD reconciliation. A worker stops the batch immediately and successfully on seam approval required, stale lane state, failed required test or gate, out-of-scope behaviour inside an authorised file, queue empty, or acceptance that genuinely requires live application observation, a browser action, human eyes, or real-world judgement unavailable from repository evidence. Human-observation items remain incomplete and return `NEEDS YOU` with exact click-by-click steps; repository evidence must never be substituted for required observed behaviour.
