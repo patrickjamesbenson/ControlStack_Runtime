@@ -238,9 +238,9 @@ SEL-012 is done. SEL-002 was then attempted read-only against the genuine browse
 
 ## 2026-07-19 SEL-002 non-Tier readiness stop and SEL-013 diagnosis commission
 
-**Recorded lane work HEAD:** `aecca28c78c553089600bfcba54dfa2b8a8834e8` — `docs(selector): reconcile lane state with live readiness context`.
+**Recorded lane work HEAD:** `03a0c096a0e33964f9ffb60d4d6c7c30b34cda10` — `docs(selector): commission registration readiness repair`.
 
-This is the synchronized parent HEAD for the present documentation-reconciliation commit. The current actual HEAD before this update is exactly that commit and the tree is clean, so the standing guard passes.
+The standing guard correctly stopped the first SEL-014 worker because the commission commit had advanced the branch beyond the previously recorded work HEAD. Repository reality is now reconciled: the commission commit is the authoritative work HEAD, the tree is clean, and the dedicated reconciliation commit containing this update must have that work HEAD as its immediate parent.
 
 The SEL-002 worker proved runtime 8788 serves the Tier-neutral registration repair. A genuine browser save succeeded as `env-project-alpha-1784455602109`. The client then stopped with `selected-project-registration-client-pre-engine-eligibility-not-ready` because the saved declared projection had `ready: false` for a condition that was neither of the accepted historical Tier-only blockers. It stopped before Tier-neutral rebuilding and before the registration POST. No active server-owned revision was established or inferred, and Engine was not invoked. The full gate passed 105/105; no files changed and the tree remained clean.
 

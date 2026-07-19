@@ -200,6 +200,8 @@ Every completed worker updates this index with:
 - Source refresh classification: the live reference bridge reports all expected tables present and the candidate mapper ready. The separate legacy TIERS warning does not block server-owned Tier derivation and a source refresh is not a prerequisite for this registration slice — ACCEPTED DIAGNOSIS.
 - Exact code boundary: `buildSourceProjection()` returns on declared `ready: false` before `rebuildTierNeutralEligibilityProjection()` can revalidate the dedicated candidate. This allows full Stage-2/spec-build state to contaminate registration preflight — VERIFIED REPOSITORY TRACE.
 - Queue result: SEL-013 done; SEL-014 ready as a two-file non-seam repair; SEL-002 blocked behind activation of SEL-014; SEL-003 remains blocked — RECORDED.
+- First SEL-014 worker guard result: correctly stopped because the branch had advanced to the commission commit while `LANE_STATE.md` still recorded the prior work HEAD — VERIFIED USER-PROVIDED WORKER EVIDENCE.
+- Orchestrator reconciliation: the commission commit is now the recorded work HEAD; the reconciliation commit must wrap it directly; queue order and SEL-014 scope are unchanged — RECORDED.
 
 ## 2026-07-19 — project-alpha registration refusal evidence and SEL-011 commission
 
