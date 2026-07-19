@@ -234,4 +234,14 @@ The existing server-owned execution boundary now resolves Tier from the active s
 
 Focused bounded execution covered the normally omitted mapper and registration suites together with the affected lane set and passed 127/127. The normal complete `selector-engine` gate passed 105/105 with exit code 0. The donor Tier strategy was inspected read-only and confirmed compatible with the server-bound single-Tier shape. No Lab/IES consumer or output-contract change was required.
 
-SEL-012 is done. SEL-002 is now the top ready item. Its first acceptance step is to prove runtime 8788 has loaded this repair, then retry server-owned registration using only the genuine existing `project-alpha` browser-session envelope. SEL-003 remains blocked until an attributable active server-owned revision exists.
+SEL-012 is done. SEL-002 was then attempted read-only against the genuine browser-session envelope. Runtime activation of the Tier repair is now proven, but registration did not dispatch because the saved projection remained non-Tier not-ready. SEL-003 remains blocked until an attributable active server-owned revision exists.
+
+## 2026-07-19 SEL-002 non-Tier readiness stop and SEL-013 diagnosis commission
+
+**Recorded lane work HEAD:** `c4844b6cc66361fc8172020b007beac967b77d74` — `docs(selector): reconcile lane state and add HEAD guard`.
+
+This is the synchronized parent HEAD for the present documentation-reconciliation commit. The current actual HEAD before this commission is exactly that commit, the tree is clean, and its immediate parent is the previously recorded Tier repair work HEAD, so the standing guard passes.
+
+The SEL-002 worker proved runtime 8788 serves the Tier-neutral registration repair. A genuine browser save succeeded as `env-project-alpha-1784455602109`. The client then stopped with `selected-project-registration-client-pre-engine-eligibility-not-ready` because the saved declared projection had `ready: false` for a condition that was neither of the accepted historical Tier-only blockers. It stopped before Tier-neutral rebuilding and before the registration POST. No active server-owned revision was established or inferred, and Engine was not invoked. The full gate passed 105/105; no files changed and the tree remained clean.
+
+`SEL-013` is now the sole top ready item. It is a read-only diagnosis of the exact raw non-Tier readiness condition, including whether the browser projection lacks a safe blocker, whether run intake, remaining source-backed inputs, or the candidate mapper is incomplete, and whether the remedy is an exact UI action or a bounded code repair. `SEL-002` is blocked behind SEL-013. No further Save Project, registration POST, or Engine invocation is authorised until that condition is proven.

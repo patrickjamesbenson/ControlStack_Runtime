@@ -143,3 +143,11 @@ This log is append-oriented. Do not silently rewrite historical decisions.
 **Rationale:** The active execution contract requires a single Tier-shaped input, but truthful Selector state cannot provide Tier. The smallest contract-preserving repair is to derive the Tier from approved Engine policy authority at the server boundary and then present the donor-compatible single-Tier shape internally.
 
 **Consequence:** One valid source Tier is bound only for host execution. Zero valid Tiers fail as unavailable; multiple valid Tiers fail as ambiguous. No default, guess, cache, union, browser authority, automatic Control selection, project fabrication, or downstream Tier-result schema change is permitted. Registration repairs only the Tier-only readiness defect and continues to expose the actual safe blocker for every other failed input.
+
+## 2026-07-19 — Diagnose the new non-Tier readiness condition before registration retry
+
+**Decision:** `SEL-013` is the sole top ready item. `SEL-002` is blocked until the exact condition behind the current saved projection's `ready: false` state is proven from genuine evidence.
+
+**Rationale:** Runtime activation of the Tier repair is proven, and the genuine save `env-project-alpha-1784455602109` reached the repaired client. The client still stopped before rebuilding or dispatch because the declared projection was not ready for a non-Tier reason. The emitted `selected-project-registration-client-pre-engine-eligibility-not-ready` value is a fallback, not proof of the underlying failed condition.
+
+**Consequence:** The next worker is read-only and must distinguish run intake, remaining source-backed input, candidate-mapper, projection-blocker, and served-path defects. It may return an exact UI remedy or recommend the smallest repair, but it must not save again, dispatch registration, invoke Engine, patch code, or fabricate browser/project truth.

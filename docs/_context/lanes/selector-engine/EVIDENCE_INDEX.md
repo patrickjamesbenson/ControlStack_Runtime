@@ -179,6 +179,20 @@ Every completed worker updates this index with:
 - Commit/push: the commit containing this closeout is gated and pushed only to `lane/selector-engine`; its exact commit and push hashes are reported in the completion response.
 - Final Git inventory and final gated count are reported in the completion response after the guarded commit/push operation.
 
+## 2026-07-19 — SEL-002 non-Tier readiness stop and SEL-013 commission
+
+- Starting identity reported by the worker: correct Selector lane; actual HEAD was the dedicated lane-state reconciliation wrapper; recorded-work HEAD guard passed against its parent; starting tree clean — ACCEPTED WORKER EVIDENCE.
+- Runtime activation: runtime 8788 serves the Tier-neutral registration repair and the current candidate mapper no longer requires Tier — VERIFIED BY WORKER LIVE EVIDENCE.
+- Genuine current save: `project-alpha` browser save succeeded as `env-project-alpha-1784455602109` — USER/WORKER LIVE EVIDENCE.
+- Exact client stop: `selected-project-registration-client-pre-engine-eligibility-not-ready` — VERIFIED LIVE EVIDENCE.
+- Projection classification: the saved declared projection had `ready: false`; its condition was not an accepted Tier-only historical blocker; client stopped before Tier-neutral rebuilding and before registration dispatch — VERIFIED BY WORKER TRACE.
+- Registration result: no acknowledgement and no attributable active server-owned revision — NOT ESTABLISHED.
+- Engine result: Engine was not invoked — VERIFIED.
+- Repository result: no files changed, no feature or reconciliation commit, ending tree clean — VERIFIED WORKER EVIDENCE.
+- Gate: complete `selector-engine`, 105 passed, 0 failed — VERIFIED WORKER EVIDENCE.
+- Orchestrator action: `SEL-013` commissioned as the sole top ready read-only diagnosis; `SEL-002` blocked behind it; SEL-003 remains blocked — RECORDED.
+- Required next proof: exact raw safe blocker or reason it is absent/invalid; independent run-intake, factory-input, candidate-mapper, and remaining-input readiness; UI-remediable field versus served-path repair classification — COMMISSIONED.
+
 ## 2026-07-19 — project-alpha registration refusal evidence and SEL-011 commission
 
 - Runtime/UI evidence supplied by Patrick: two accepted browser-session saves for `project-alpha`, envelope IDs `env-project-alpha-1784437597308` and `env-project-alpha-1784437964705` — USER-PROVIDED LIVE EVIDENCE.

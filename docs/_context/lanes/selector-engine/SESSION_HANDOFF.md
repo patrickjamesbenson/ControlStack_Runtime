@@ -276,4 +276,12 @@ Focused bounded execution passed 127/127, including the normally omitted mapper 
 
 ### Next queue item
 
-`SEL-002 — Register project-alpha active server-owned revision` is ready. First prove runtime 8788 has loaded the accepted SEL-012 repair. Then use only the genuine existing `project-alpha` browser-session envelope to obtain a registration acknowledgement and attributable active server-owned revision. Do not invoke Engine, fabricate or reconstruct an envelope, or change Tier, Control, RuntimeData, Lab, Program, donor, or main. SEL-003 remains blocked behind SEL-002.
+`SEL-002 — Register project-alpha active server-owned revision` was attempted read-only. Runtime activation of SEL-012 is proven, but the genuine save `env-project-alpha-1784455602109` stopped before Tier-neutral rebuilding or registration dispatch because the declared saved projection remained `ready: false` for a non-Tier condition. No registration acknowledgement or active server-owned revision exists, and Engine was not invoked.
+
+## 2026-07-19 latest commission — diagnose non-Tier pre-Engine readiness
+
+The top ready item is now `SEL-013 — Diagnose the current non-Tier pre-Engine readiness boundary`. It is strictly read-only. It must expose the actual safe condition hidden behind the fallback `selected-project-registration-client-pre-engine-eligibility-not-ready`, or prove why the saved projection lacks a usable blocker. It must report run-intake readiness, remaining factory-approved input readiness, candidate-mapper readiness, subordinate blockers, committed run state, and every remaining required input separately.
+
+The diagnosis must say plainly whether Patrick can fix the project by filling or selecting exact fields on screen or whether the served projection/registration path requires a bounded code repair. It may recommend but must not implement a repair. If genuine browser state cannot be inspected through the connected app, it must return `NEEDS YOU` with no more than three exact clicks and the exact safe fields to copy. It must not save again, dispatch registration, invoke Engine, fabricate state, reopen Tier, or write repository documentation.
+
+`SEL-002` is blocked behind SEL-013. SEL-003 remains blocked behind SEL-002. Use the standing worker prompt at the top of this file verbatim; do not create a bespoke diagnosis prompt.
