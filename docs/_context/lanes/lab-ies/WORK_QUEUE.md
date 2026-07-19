@@ -3,6 +3,7 @@
 ## Operating model
 
 - This file controls worker parcel selection. Bespoke parcel prompts are retired.
+- `LANE_CHARTER.md` is the sole authoritative repository home for the standing worker and standing orchestrator prompts. `SESSION_HANDOFF.md` may point to them but must not be their only home.
 - The orchestrator writes and orders items, obtains Integrate approval for seam changes, and reviews at seam, human-observation and worker-batch boundaries rather than after every routine parcel.
 - One worker run may complete up to five consecutive parcels. Parcels remain strictly sequential and retain separate feature gates, exact staged-file checks, feature commits, documentation closeouts and pushes.
 - Before the first parcel and before every later parcel in the same run, the worker must compare `LANE_STATE.md`'s `Recorded branch HEAD` with the actual branch HEAD. A mismatch stops parcel execution, requires lane-memory reconciliation only, and ends the batch; no queue item may run after that mismatch in the same worker run.
@@ -25,10 +26,11 @@
 
 ## Reply status
 
-Every orchestrator and worker reply begins with one of:
+Every reply begins with one of the role-appropriate status lines:
 
-- `AUTO - five-parcel batch completed on lane/code-pilot-lab. No action from Patrick.`
-- `SEND TO INTEGRATE - parcel ready for main. Patrick pastes this to Program & Integrate.`
+- worker `AUTO - five-parcel batch completed on lane/code-pilot-lab. No action from Patrick.`
+- orchestrator `AUTO - lane ordered for the standing worker. No action from Patrick.`
+- `SEND TO INTEGRATE - <role-appropriate seam or promotion handoff>. Patrick pastes this to Program & Integrate.`
 - `NEEDS YOU` followed by the exact `What / Do / Why / Recommend` action block
 - `STOPPED - <boundary>. Orchestrator decision needed.`
 
@@ -292,7 +294,7 @@ Evidence: `636d3d7c2023bf16e49def1d75f9d46d66b26482`, confirmed on origin.
   - `packages/lab-kernel/ies-toolkit/zencontrolEmergency.js`
   - `tests/lab-kernel/zencontrolEmergency.test.js`
 - seam envelope: `docs/_context/lanes/lab-ies/LAB-018_023_027_BATCH_SEAM_ENVELOPE.md`, version 1; approved unchanged by Program & Integrate on 2026-07-20.
-- batch sequence: active parcel; LAB-020 is completed and closed out.
+- batch sequence: completed parcel; LAB-018 through LAB-021 are completed and closed out.
 - prohibitions:
   - no unsupported electrical, battery or thermal value hardened as confirmed;
   - no inherited `_EMERGENCY_VERIFIED` authority outcome;
@@ -304,7 +306,9 @@ Evidence: `636d3d7c2023bf16e49def1d75f9d46d66b26482`, confirmed on origin.
 - depends on: none
 - on success next: LAB-022-reference-composition-kernel after recorded owner and Integrate approval
 - seam change: yes
-- status: ready
+- status: done
+
+Evidence: `066fcc658491a65b85108b83e64f31341ba5e1bb`, confirmed by current repository history and independent 215/215 gate.
 
 ### Q-12 Governed reference composition kernel
 - id: LAB-022-reference-composition-kernel
@@ -313,7 +317,7 @@ Evidence: `636d3d7c2023bf16e49def1d75f9d46d66b26482`, confirmed on origin.
   - `packages/lab-kernel/ies-toolkit/iesMerge.js`
   - `tests/lab-kernel/iesReferenceComposition.test.js`
 - seam envelope: `docs/_context/lanes/lab-ies/LAB-018_023_027_BATCH_SEAM_ENVELOPE.md`, version 1; approved by Program & Integrate on 2026-07-20 with the exact ratified binary-composition policy.
-- batch sequence: approved but sequence-blocked until the active parcel is completed and closed out.
+- batch sequence: active parcel; LAB-021 is completed and closed out.
 - ratified policy: exactly two unique non-MERGED parents; immutable order-significant provenance; exactly matching grids with no interpolation/resampling; allocation, authority, approval and sealing remain outside the kernel; all violations fail closed.
 - prohibitions:
   - no UI/HTML/CSS;
@@ -327,7 +331,7 @@ Evidence: `636d3d7c2023bf16e49def1d75f9d46d66b26482`, confirmed on origin.
 - depends on: LAB-017-reference-resolver-contract
 - on success next: LAB-023-nvb-lab-adapter after recorded Integrate approval
 - seam change: yes
-- status: blocked
+- status: ready
 
 ### Q-13 NVB Lab adapter
 - id: LAB-023-nvb-lab-adapter

@@ -6,6 +6,34 @@
 - Historical handoff content is retained as reported context unless freshly reverified.
 - Test output proves only the behaviour exercised by the named tests; low-level merge tests do not by themselves prove completion of the final governed merge.
 
+## Stable standing-role prompt authority — 2026-07-20
+
+### Durability change
+
+`LANE_CHARTER.md` now contains the complete standing worker prompt and the complete standing orchestrator prompt. It is the sole authoritative repository home for both roles.
+
+`SESSION_HANDOFF.md` no longer carries the worker prompt body. It contains only current session evidence and the two exact one-line launch instructions that point to the charter.
+
+### Orchestrator definition
+
+The repository previously contained no `STANDING ORCHESTRATOR — Lab & IES` prompt in the runtime lane or donor reference. The owner direction on 2026-07-20 therefore authorised its first durable definition from the locked charter, queue operating model and recorded review boundaries.
+
+The orchestrator prompt requires identity and HEAD verification, full lane-context reading, batch/seam/human-observation review, queue and lane-memory ownership without feature execution, gated documentation-only writes, preservation of the dirty worktree and hard stop on unproven live behaviour.
+
+### Launch proof
+
+Either role can now start from one line:
+
+```text
+Read docs/_context/lanes/lab-ies/LANE_CHARTER.md and act as the standing worker per the prompt recorded there.
+```
+
+```text
+Read docs/_context/lanes/lab-ies/LANE_CHARTER.md and act as the standing orchestrator per the prompt recorded there.
+```
+
+Repository searches must find exactly one standing worker prompt and exactly one standing orchestrator prompt, both in `LANE_CHARTER.md`.
+
 ## Five-parcel standing-worker operating model — 2026-07-20
 
 ### Owner direction
@@ -34,7 +62,54 @@ For human-observation acceptance, the worker must stop before making a completio
 
 ### Durable records
 
-The operating model is recorded in `LANE_CHARTER.md`, `DECISION_LOG.md`, `LANE_STATE.md`, `WORK_QUEUE.md` and the single reusable prompt in `SESSION_HANDOFF.md`.
+The operating model is recorded in `LANE_CHARTER.md`, `DECISION_LOG.md`, `LANE_STATE.md` and `WORK_QUEUE.md`. Both standing prompts live only in the stable charter; `SESSION_HANDOFF.md` carries launch pointers and current session evidence.
+
+## LAB-021 emergency selection contract and stale-head reconciliation — 2026-07-20
+
+### Trigger and classification
+
+- The standing-prompt authority edit began with actual HEAD and recorded marker both at `5ac6b8bc80237de00ebe72f686aa740eeffa1522`.
+- During the documentation edit, the branch advanced to feature checkpoint `066fcc658491a65b85108b83e64f31341ba5e1bb`, subject `lab: checkpoint emergency selection contract`.
+- Current status showed the emergency source was no longer untracked, while queue and lane memory still recorded LAB-021 as `ready`.
+- The mismatch was therefore classified as a completed feature checkpoint awaiting documentation closeout, not unexplained drift.
+- Under the branch-HEAD guard, no later queue item was executed in this reconciliation run.
+
+### Identity and scope
+
+- starting HEAD for LAB-021: `5ac6b8bc80237de00ebe72f686aa740eeffa1522`;
+- queue item: `LAB-021-emergency-selection-contract`;
+- approved consolidated seam envelope: version 1, unchanged;
+- authorised implementation paths only:
+  - `packages/lab-kernel/ies-toolkit/zencontrolEmergency.js`;
+  - `tests/lab-kernel/zencontrolEmergency.test.js`.
+
+### Behaviour evidence
+
+The completed contract:
+
+- exports only the approved version-1 emergency-selection interface and frozen evidence constants;
+- selects candidates only from published voltage windows and blocks exactly 50 V for engineering review;
+- keeps published, derived and unconfirmed facts distinct;
+- derives nominal current only by exact arithmetic without tolerance, efficiency or derating claims;
+- accepts only published power, duration and design-life combinations;
+- fails closed on unsupported inputs and the known conflicting battery publication;
+- keeps procurement release false, retains procurement blockers and leaves emergency/EWIS assembly verification null;
+- returns deterministic deeply immutable output without mutating caller input or evidence tables;
+- contains no ordering, source URL, persistence, route, network, filesystem or browser-storage seam.
+
+### Test and gate evidence
+
+- independent changed-file/full `lab-ies` execution including the dedicated emergency test: 215/215 passed;
+- failed, cancelled, skipped and todo counts were zero;
+- documentation reconciliation gate: 215/215 passed with zero failed, cancelled, skipped or todo.
+
+### Commit and queue evidence
+
+- feature checkpoint: `066fcc658491a65b85108b83e64f31341ba5e1bb`;
+- subject: `lab: checkpoint emergency selection contract`;
+- LAB-021 is `done`;
+- LAB-022 is the sole next `ready` item under its already ratified owner policy and Program & Integrate approval;
+- LAB-023 and LAB-027 remain approved but sequence-blocked.
 
 ## LAB-020 document register contract — 2026-07-20
 
@@ -356,15 +431,16 @@ Program & Integrate approved all seven seams against `LAB-018_023_027_BATCH_SEAM
 - earlier LAB-018 approval hold: superseded;
 - ready items: exactly one, LAB-018.
 
-## Reusable standing-worker prompt — 2026-07-19
+## Historical reusable standing-worker prompt checkpoint — 2026-07-19
 
-- `SESSION_HANDOFF.md` now contains exactly one generic `STANDING WORKER — Lab & IES` prompt.
-- The prompt requires live repository HEAD discovery, top-ready queue selection, exact authorised-file staging, gated feature and documentation pushes, preservation of dirty work, and retention of the same prompt verbatim in future handoffs.
-- It explicitly limits `NEEDS YOU` to actions Patrick must physically perform and requires ordinary progress notes to use plain text without that label.
+- The 2026-07-19 checkpoint placed one generic worker prompt in `SESSION_HANDOFF.md`.
+- That prompt required live repository HEAD discovery, top-ready queue selection, exact authorised-file staging, gated feature and documentation pushes and preservation of dirty work.
+- It explicitly limited `NEEDS YOU` to actions Patrick must physically perform.
 - commit: `1df62fccd91ac66509b02960ad988f6ef90c0b52`;
 - subject: `docs(lab): record reusable standing worker prompt`;
 - gate: 159/159 passed;
 - push: origin `lane/code-pilot-lab`, confirmed successful.
+- Current authority: superseded only as to storage location by DL-026; the worker prompt now lives in `LANE_CHARTER.md`, together with the standing orchestrator prompt.
 
 ## LAB-016 offline NVB fixtures — 2026-07-19
 

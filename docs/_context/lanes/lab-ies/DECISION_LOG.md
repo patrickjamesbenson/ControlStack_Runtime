@@ -339,3 +339,34 @@ The batch stops immediately at the first of these successful boundaries:
 - acceptance requires observation of the running application, a browser action or real-world judgement that repository evidence alone cannot prove.
 
 For the final boundary, repository evidence must never be treated as a substitute for human observation. The worker must not guess, must not mark the item `done`, and must reply `NEEDS YOU` with exact click-by-click steps before ending the batch.
+
+## DL-026 — Stable charter authority for standing role prompts
+
+**Status:** Locked on 2026-07-20.
+
+`LANE_CHARTER.md` is the sole authoritative repository home for both the standing worker prompt and the standing orchestrator prompt.
+
+This closes the prior durability defect where `SESSION_HANDOFF.md` was the only prompt home and could lose the worker prompt during routine parcel closeout. `SESSION_HANDOFF.md` may retain the current session state and exact one-line launch instructions, but it must not contain the only copy of either role prompt.
+
+The standing worker prompt retains the five-parcel model, all existing guards and the human-observation boundary. The standing orchestrator prompt is now durably defined for the first time and requires the orchestrator to:
+
+- use only the connected Lab app;
+- verify lane identity and branch-HEAD synchronisation;
+- read all lane context;
+- review at batch, seam and human-observation boundaries;
+- own queue ordering and lane-memory truth without executing feature parcels;
+- preserve seam approval, exact scope, full-gate, staged-file and dirty-worktree protections;
+- treat human observation as a hard incomplete boundary;
+- checkpoint only bounded documentation changes through the gated lane path.
+
+A fresh role may now start from either exact one-line instruction recorded in the charter:
+
+```text
+Read docs/_context/lanes/lab-ies/LANE_CHARTER.md and act as the standing worker per the prompt recorded there.
+```
+
+```text
+Read docs/_context/lanes/lab-ies/LANE_CHARTER.md and act as the standing orchestrator per the prompt recorded there.
+```
+
+Neither role may invent or reconstruct a replacement prompt from chat history when the charter is available.

@@ -13,11 +13,11 @@ Current repository evidence overrides stale historical statements.
 - Root: `C:\ControlStack_Worktrees\code-pilot-lab`
 - Branch: `lane/code-pilot-lab`
 - Gate: `lab-ies`
-- Recorded branch HEAD: `2ba6162568f5e97d957837d74267b2bbad730e94`
+- Recorded branch HEAD: `066fcc658491a65b85108b83e64f31341ba5e1bb`
 - Branch-HEAD guard checkpoint: `6d34e500d407d5335e5eebb317636a67a5e98618`
-- Starting HEAD for LAB-020: `02479150d55cf8f26b8da74d621f0671e428755d`
-- Completed feature HEAD: `636d3d7c2023bf16e49def1d75f9d46d66b26482`
-- Feature subject: `lab: checkpoint document register contract`
+- Starting HEAD for LAB-021: `5ac6b8bc80237de00ebe72f686aa740eeffa1522`
+- Completed feature HEAD: `066fcc658491a65b85108b83e64f31341ba5e1bb`
+- Feature subject: `lab: checkpoint emergency selection contract`
 - Feature push: confirmed on origin `lane/code-pilot-lab`
 
 ## Branch-HEAD synchronisation invariant
@@ -42,6 +42,13 @@ Before any queue item is selected, a worker must compare `Recorded branch HEAD` 
 - Arbitrary shell execution: no
 - Allowed gate: `lab-ies`
 
+## Standing-role prompt authority
+
+- `LANE_CHARTER.md` is the sole authoritative repository home for both standing prompts.
+- Exactly one `STANDING WORKER — Lab & IES` prompt and one `STANDING ORCHESTRATOR — Lab & IES` prompt must exist there.
+- `SESSION_HANDOFF.md` contains only current session evidence and exact one-line launch pointers to the charter.
+- A fresh worker or orchestrator must read the charter and act from the recorded role prompt; neither role may invent a replacement from chat history.
+
 ## Standing-worker batch operating model
 
 - One worker run may complete up to five consecutive parcels.
@@ -52,7 +59,31 @@ Before any queue item is selected, a worker must compare `Recorded branch HEAD` 
 - Human-observation acceptance cannot be closed from repository evidence. The item remains incomplete and the worker supplies exact `NEEDS YOU` steps.
 - Orchestrator review occurs at seam, human-observation and five-parcel/stop boundaries rather than after each routine parcel.
 
-## Latest completed parcel — LAB-020
+## Latest completed parcel — LAB-021
+
+Queue item `LAB-021-emergency-selection-contract` is complete.
+
+Exactly these two authorised files were changed and committed:
+
+```text
+packages/lab-kernel/ies-toolkit/zencontrolEmergency.js
+tests/lab-kernel/zencontrolEmergency.test.js
+```
+
+Verified outcome:
+
+- the module exposes only the approved version-1 emergency-selection interface and frozen evidence constants;
+- candidate selection uses only published voltage windows and blocks the shared 50 V boundary for engineering review;
+- published, derived and unconfirmed values remain distinct;
+- nominal drive current is exact advisory arithmetic and is not represented as tolerance, efficiency or derating evidence;
+- only published power, duration and design-life combinations can produce a candidate;
+- unsupported combinations and the known conflicting battery publication fail closed;
+- every candidate keeps procurement release false, preserves procurement blockers and leaves emergency/EWIS assembly verification null;
+- outputs are deterministic and deeply immutable, inputs and exported evidence remain unchanged, and no ordering, source URL, persistence, route, network, filesystem or browser-storage seam exists.
+
+The feature checkpoint appeared while the standing-prompt documentation edit was in progress. The branch-HEAD guard therefore forced memory-only reconciliation; the independent full gate passed 215/215 and no later queue item was executed in this reconciliation run.
+
+## Previous completed parcel — LAB-020
 
 Queue item `LAB-020-document-register-contract` is complete.
 
@@ -170,9 +201,9 @@ Verified outcome:
 
 The connected app exposes the fixed `lab-ies` gate as the available changed-file and full validation path.
 
-- Focused changed-file execution for the two LAB-020 files: 203 tests, 203 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
-- Full `lab-ies` gate: 203 tests, 203 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
-- Gated feature commit execution: 203 tests, 203 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
+- Independent changed-file/full execution including the two LAB-021 files: 215 tests, 215 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
+- The feature checkpoint is present in current branch history with the exact queue subject and authorised file pair.
+- Documentation reconciliation gate: 215 tests, 215 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
 
 ## Protected final Git state
 
@@ -180,7 +211,7 @@ The protected working-tree state after documentation closeout is:
 
 - staged: 0;
 - modified: 1 — only the unstaged `Recorded branch HEAD` synchronisation marker in this file;
-- untracked: 29;
+- untracked: 28;
 - deleted: 0.
 
 Protected untracked paths:
@@ -211,7 +242,6 @@ packages/lab-kernel/ies-toolkit/provenance_explorer.html
 packages/lab-kernel/ies-toolkit/reference_builder.html
 packages/lab-kernel/ies-toolkit/selector_stub.html
 packages/lab-kernel/ies-toolkit/test_request.html
-packages/lab-kernel/ies-toolkit/zencontrolEmergency.js
 scripts/clear_chaff.ps1
 serve.mjs
 tests/lab-kernel/iesKeywordMigration.test.js
@@ -247,9 +277,9 @@ tests/selectorCascadeCorrectness.test.js
 - Program reported gate 45/45 passed, the decision committed and pushed, and its tree clean.
 - The six ordinary seams are approved unchanged.
 - LAB-022 is approved with exactly two unique non-MERGED parents, immutable order-significant provenance, exactly matching grids without interpolation/resampling, and allocation/authority/approval/sealing outside the kernel; violations fail closed.
-- LAB-018, LAB-019 and LAB-020 are complete and confirmed on origin.
-- Only LAB-021 is active and ready.
-- LAB-022, LAB-023 and LAB-027 are approved but sequence-blocked until the active parcel is completed and closed out.
+- LAB-018, LAB-019, LAB-020 and LAB-021 are complete and confirmed in current branch history.
+- Only LAB-022 is active and ready under its ratified binary-composition policy.
+- LAB-023 and LAB-027 are approved but sequence-blocked until the active parcel is completed and closed out.
 - No parallel or combined implementation is authorised.
 - The earlier LAB-018 approval hold remains superseded.
 
@@ -266,9 +296,10 @@ tests/selectorCascadeCorrectness.test.js
 - `LAB-018-nvb-resolution-contract`: done.
 - `LAB-019-component-projection-contract`: done.
 - `LAB-020-document-register-contract`: done.
-- Next ordered item: `LAB-021-emergency-selection-contract`.
-- Resulting status: `ready`; its batch seam approval is already recorded.
-- Ready items: exactly one — LAB-021.
-- Approved sequence-blocked items: LAB-022, LAB-023 and LAB-027.
+- `LAB-021-emergency-selection-contract`: done.
+- Next ordered item: `LAB-022-reference-composition-kernel`.
+- Resulting status: `ready`; its owner policy and Program & Integrate seam approval are already recorded.
+- Ready items: exactly one — LAB-022.
+- Approved sequence-blocked items: LAB-023 and LAB-027.
 
-LAB-020 was implemented, validated, committed and pushed as the single active parcel.
+LAB-021 was implemented and committed as the active feature parcel. This documentation reconciliation independently validated it, restored lane-memory truth and did not execute LAB-022.
