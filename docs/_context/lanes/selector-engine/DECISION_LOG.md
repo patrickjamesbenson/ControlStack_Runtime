@@ -159,3 +159,11 @@ This log is append-oriented. Do not silently rewrite historical decisions.
 **Rationale:** Genuine browser evidence proves run intake ready, the readonly candidate mapper ready, all first-slice lighting inputs and explicit source-backed Control committed, and no incompatible selections. The full spec/build gate remains incomplete only for Ambient plus Mounting/Finishes. Ambient is unavailable from current source, while Mounting/Finishes are broader product/build inputs. None belongs to the already-approved first readonly registration candidate. The live source bridge reports every expected table present, so authority refresh is not a registration prerequisite. Tier remains server-owned and non-authoritative in Selector.
 
 **Consequence:** The registration client may revalidate the first-slice candidate from safe committed constraints, run intake, and light/Control intent while preserving fail-closed handling for every actual required candidate input, malformed state, unsafe flags, accessories, unsupported emission, and blocked constraints. The full spec/build gate, output contracts, Tier ownership, Control authority, source data, and downstream consumers remain unchanged. SEL-002 stays blocked until this repair is activated and proven with a new genuine save.
+
+## 2026-07-20 — Use a temporary gate harness when the focused suite is omitted from the fixed runner
+
+**Decision:** SEL-014 may temporarily import its authorised registration transport suite from the already gate-included `tests/engineRunTableDomain.test.js`, solely to execute the omitted focused tests through the fixed approved lane runner.
+
+**Rationale:** The connected app exposes no arbitrary or focused test command, while the normal fixed gate omits the exact authorised test file. The same temporary-import method was already used and accepted for SEL-012. It provides executable evidence without committing a harness change or weakening the lane gate.
+
+**Consequence:** The temporary import must run all eight registration transport tests, then be removed. The harness file must be byte-identical to HEAD, absent from the final diff, unstaged, and uncommitted. The final feature commit remains limited to the two original SEL-014 feature/test files, followed by the normal baseline gate and durable reconciliation.

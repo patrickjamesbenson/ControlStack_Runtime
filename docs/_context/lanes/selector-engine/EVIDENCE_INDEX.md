@@ -202,6 +202,8 @@ Every completed worker updates this index with:
 - Queue result: SEL-013 done; SEL-014 ready as a two-file non-seam repair; SEL-002 blocked behind activation of SEL-014; SEL-003 remains blocked — RECORDED.
 - First SEL-014 worker guard result: correctly stopped because the branch had advanced to the commission commit while `LANE_STATE.md` still recorded the prior work HEAD — VERIFIED USER-PROVIDED WORKER EVIDENCE.
 - Orchestrator reconciliation: the commission commit is now the recorded work HEAD; the reconciliation commit must wrap it directly; queue order and SEL-014 scope are unchanged — RECORDED.
+- SEL-014 implementation stop: exactly the authorised registration transport and registration transport test files are modified; normal gate 105/105; focused registration suite authored but not executed because the fixed connected-app gate omits it; nothing staged and no commit — VERIFIED USER-PROVIDED WORKER EVIDENCE AND CURRENT GIT STATUS.
+- Focused-runner decision: temporarily import the omitted registration suite through gate-included `tests/engineRunTableDomain.test.js`, visibly execute all eight registration tests, remove the import, prove the harness file identical to HEAD and absent from final diff, then rerun the normal 105-test gate — AUTHORISED ORCHESTRATOR RECOVERY.
 
 ## 2026-07-19 — project-alpha registration refusal evidence and SEL-011 commission
 

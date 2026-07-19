@@ -238,9 +238,11 @@ SEL-012 is done. SEL-002 was then attempted read-only against the genuine browse
 
 ## 2026-07-19 SEL-002 non-Tier readiness stop and SEL-013 diagnosis commission
 
-**Recorded lane work HEAD:** `03a0c096a0e33964f9ffb60d4d6c7c30b34cda10` — `docs(selector): commission registration readiness repair`.
+**Recorded lane work HEAD:** `45da64d6710364598ad20d600396434b68c8580e` — `docs(selector): reconcile lane state after repair commission`.
 
-The standing guard correctly stopped the first SEL-014 worker because the commission commit had advanced the branch beyond the previously recorded work HEAD. Repository reality is now reconciled: the commission commit is the authoritative work HEAD, the tree is clean, and the dedicated reconciliation commit containing this update must have that work HEAD as its immediate parent.
+The standing guard passed for the SEL-014 worker against this reconciliation wrapper and its recorded parent. The worker made only the two authorised feature/test edits and the normal gate passed 105/105, but it correctly stopped before staging because the fixed connected-app gate does not directly include the registration transport suite. Those two edits remain intentionally modified and unstaged; no other path is dirty.
+
+The orchestrator now authorises the same temporary harness method already used successfully for SEL-012: add one temporary import of the registration transport test suite to the gate-included `tests/engineRunTableDomain.test.js`, run the fixed gate and visibly execute all eight registration tests, then remove the import and prove the harness file is byte-identical to HEAD before the normal 105-test gate, staging, commit, and push. The dedicated reconciliation commit containing this update must have `45da64d6710364598ad20d600396434b68c8580e` as its immediate parent. SEL-014 remains ready and its feature scope is otherwise unchanged.
 
 The SEL-002 worker proved runtime 8788 serves the Tier-neutral registration repair. A genuine browser save succeeded as `env-project-alpha-1784455602109`. The client then stopped with `selected-project-registration-client-pre-engine-eligibility-not-ready` because the saved declared projection had `ready: false` for a condition that was neither of the accepted historical Tier-only blockers. It stopped before Tier-neutral rebuilding and before the registration POST. No active server-owned revision was established or inferred, and Engine was not invoked. The full gate passed 105/105; no files changed and the tree remained clean.
 
