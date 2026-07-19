@@ -6,6 +6,44 @@
 - Historical handoff content is retained as reported context unless freshly reverified.
 - Test output proves only the behaviour exercised by the named tests; low-level merge tests do not by themselves prove completion of the final governed merge.
 
+## LAB-012 shared Lab style foundation — 2026-07-19
+
+### Identity and scope
+
+Observed through `repo_info`, `repo_git_status`, `repo_git_recent`, `repo_scope_guard`, source inspection and repository grep:
+
+- app: `ControlStack Lab and IES Authority Lane`;
+- lane: `lab-ies`;
+- root: `C:\ControlStack_Worktrees\code-pilot-lab`;
+- branch: `lane/code-pilot-lab`;
+- starting HEAD: `d0577a9d0157c53c56206ded32418a6746e0bdd8`;
+- queue item: `LAB-012-lab-style-foundation`;
+- authorised path only: `packages/lab-kernel/ies-toolkit/lab.css`;
+- seam change: no.
+
+### Behaviour evidence
+
+The original untracked stylesheet was presentation-only but contained a prohibited Google Fonts `@import`. The completed parcel removed that external dependency while preserving the existing local/system font fallbacks, Lab surface classes and legacy CSS-variable aliases.
+
+Repository grep confirmed no remaining `@import`, URL, HTTP, network, browser-storage or filesystem hook in the stylesheet. No HTML, JavaScript, authority vocabulary, business rule or cross-lane styling path was changed.
+
+### Test and gate evidence
+
+- Focused changed-file `lab-ies` execution: 159/159 passed.
+- Full `lab-ies` gate: 159/159 passed.
+- Gated commit execution: 159/159 passed.
+- Failed, cancelled, skipped and todo counts were all zero in each execution.
+
+### Commit and push evidence
+
+- commit: `e7a869e99c8b504e842d861bb5b6cbf9708e4d8c`;
+- subject: `lab: checkpoint shared Lab style foundation`;
+- files: exactly `packages/lab-kernel/ies-toolkit/lab.css`;
+- push: origin `lane/code-pilot-lab`, confirmed successful;
+- post-feature state: staged 0, modified 1, untracked 36, deleted 0;
+- protected modified path: `packages/lab-kernel/ies-toolkit/summary.html`;
+- all unrelated dirty paths were preserved.
+
 ## LAB-011 project IES generation — 2026-07-19
 
 ### Identity and scope

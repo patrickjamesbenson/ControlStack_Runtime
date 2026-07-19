@@ -96,7 +96,9 @@ Evidence: `a21429528fd6bf50ef4b7b8fcbf0abe54d682b46`, confirmed on origin.
 - depends on: none
 - on success next: LAB-013-polar-renderer
 - seam change: no
-- status: ready
+- status: done
+
+Evidence: `e7a869e99c8b504e842d861bb5b6cbf9708e4d8c`, confirmed on origin.
 
 ### Q-3 Canonical polar renderer
 - id: LAB-013-polar-renderer
@@ -113,7 +115,7 @@ Evidence: `a21429528fd6bf50ef4b7b8fcbf0abe54d682b46`, confirmed on origin.
 - depends on: none
 - on success next: LAB-014-summary-normalise-surface
 - seam change: no
-- status: queued
+- status: ready
 
 ### Q-4 Summary normalise surface
 - id: LAB-014-summary-normalise-surface

@@ -2,101 +2,76 @@
 
 ## Evidence timestamp
 
-Latest implementation baseline verified on 2026-07-19 through the connected `ControlStack Lab and IES Authority Lane` app.
+Latest standing-worker parcel verified on 2026-07-19 through the connected `ControlStack Lab and IES Authority Lane` app.
 
-Evidence labels:
+Current repository evidence overrides stale historical statements.
 
-- **VERIFIED** — directly observed through the current connected app execution.
-- **REPORTED** — preserved from the recovered historical handoff but not freshly re-read from source files.
-- **INFERRED** — conclusion drawn from verified or reported evidence.
-- **UNKNOWN** — not established by available evidence.
+## Identity
 
-## Repository identity
-
-- **VERIFIED** — Root: `C:\ControlStack_Worktrees\code-pilot-lab`
-- **VERIFIED** — Branch: `lane/code-pilot-lab`
-- **VERIFIED** — Feature checkpoint: `a21429528fd6bf50ef4b7b8fcbf0abe54d682b46`
-- **VERIFIED** — Feature checkpoint subject: `lab: checkpoint project IES generation`
-- **VERIFIED** — Feature checkpoint confirmed on origin `lane/code-pilot-lab`.
-- **UNKNOWN** — Upstream tracking branch and numerical ahead/behind state were not exposed by the current status response.
+- App: `ControlStack Lab and IES Authority Lane`
+- Lane: `lab-ies`
+- Root: `C:\ControlStack_Worktrees\code-pilot-lab`
+- Branch: `lane/code-pilot-lab`
+- Gate: `lab-ies`
+- Starting HEAD for LAB-012: `d0577a9d0157c53c56206ded32418a6746e0bdd8`
+- Completed feature HEAD: `e7a869e99c8b504e842d861bb5b6cbf9708e4d8c`
+- Feature subject: `lab: checkpoint shared Lab style foundation`
+- Feature push: confirmed on origin `lane/code-pilot-lab`
 
 ## Connected capability state
 
-- **VERIFIED** — Write enabled: yes
-- **VERIFIED** — Git stage enabled: yes
-- **VERIFIED** — Git commit enabled: yes
-- **VERIFIED** — Git push enabled: yes
-- **VERIFIED** — Commit/push gated: yes
-- **VERIFIED** — Delete enabled: no
-- **VERIFIED** — Arbitrary shell execution: no
-- **VERIFIED** — Allowed gate: `lab-ies`
+- Write enabled: yes
+- Git stage enabled: yes
+- Git commit enabled: yes
+- Git push enabled: yes
+- Commit/push gated: yes
+- Delete enabled: no
+- Arbitrary shell execution: no
+- Allowed gate: `lab-ies`
 
-## Current gate baseline
+## Latest completed parcel — LAB-012
 
-- **VERIFIED** — Gate: `lab-ies`
-- **VERIFIED** — Tests: 159
-- **VERIFIED** — Passed: 159
-- **VERIFIED** — Failed: 0
-- **VERIFIED** — Cancelled: 0
-- **VERIFIED** — Skipped: 0
-- **VERIFIED** — Todo: 0
-- **VERIFIED** — Exit code: 0
+Queue item `LAB-012-lab-style-foundation` is complete.
 
-The historical HTTP 502 condition did not recur. The bounded lane gate is operational through the connected app.
-
-## Latest completed parcel — LAB-011
-
-- **VERIFIED** — `packages/lab-kernel/ies-toolkit/iesProjectIes.js` is now a deterministic adapter over the committed `buildIesFromReference` generator.
-- **VERIFIED** — `tests/lab-kernel/iesProjectIes.test.js` contains five focused tests covering success, generator equivalence, rejection, determinism/immutability and persistence/private-authority exclusion.
-- **VERIFIED** — The first changed-file gate attempt identified one canonical-keyword migration guard failure; the authorised adapter was corrected without changing the prohibited migration test.
-- **VERIFIED** — Subsequent changed-file execution, full gate execution and gated commit execution each passed 159/159.
-- **VERIFIED** — Commit `a21429528fd6bf50ef4b7b8fcbf0abe54d682b46` was pushed to origin `lane/code-pilot-lab`.
-- **VERIFIED** — Feature-checkpoint post-push Git state was staged 0, modified 2 and untracked 37. The modified paths were the pre-existing `SESSION_HANDOFF.md` and `summary.html`; all protected paths remained untouched outside the authorised parcel and required lane-memory closeout.
-
-## Accepted implementation state
-
-- **VERIFIED by current gate** — canonical 16-keyword contract and internal-ambient semantics;
-- **VERIFIED by current gate** — RFC 8785-style canonical JSON behaviour;
-- **VERIFIED by current gate** — injected SHA-256 provider boundary and four fixed hash domains;
-- **VERIFIED by current gate** — authority, approval and derivation projections;
-- **VERIFIED by current gate** — complete canonical unresolved-field inventory and fail-closed classification;
-- **VERIFIED by current gate** — GT, OPT and MERGED approval/sealing paths;
-- **VERIFIED by current gate** — compatibility-only approvals remain non-sealable;
-- **VERIFIED by current gate** — sealed DTO is deterministic and deeply immutable;
-- **VERIFIED by current gate** — safe handoff strips rich authority, private, evidence-body and runtime-owned data;
-- **VERIFIED by current gate** — project IES construction, transforms, flux, UGR and low-level merge primitives are test-green.
-
-- **INFERRED** — Accepted authority foundation remains logically complete through Slice 4B.
-- **REPORTED** — No Slice 5 implementation had begun at the recovered handoff boundary.
-- **INFERRED** — Final governed sealed-reference photometric merge remains distinct from the tested MERGED authority envelope and low-level grid summation.
-
-## Current pre-memory-write Git inventory
-
-Baseline immediately before creation of the lane-memory documents:
-
-- Staged: 0
-- Modified: 10
-- Untracked: 66
-- Deleted: 0
-
-The two historical Selector-owned modifications are absent from the current dirty inventory.
-
-### Modified paths — 10
+Exactly one authorised file was changed and committed:
 
 ```text
-packages/lab-kernel/ies-toolkit/iesApproval.js
-packages/lab-kernel/ies-toolkit/iesHandoff.js
-packages/lab-kernel/ies-toolkit/iesLabForm.js
-packages/lab-kernel/ies-toolkit/iesMetrics.js
-packages/lab-kernel/ies-toolkit/iesProvenance.js
-packages/lab-kernel/ies-toolkit/iesWrite.js
-packages/lab-kernel/ies-toolkit/summary.html
-tests/lab-kernel/iesGovernance.test.js
-tests/lab-kernel/iesHandoff.test.js
-tests/lab-kernel/iesLabForm.test.js
+packages/lab-kernel/ies-toolkit/lab.css
 ```
 
-### Untracked paths — 66
+Verified outcome:
+
+- the stylesheet remains presentation-only;
+- the prohibited Google Fonts import was removed;
+- local/system font fallbacks remain deterministic and browser-safe;
+- no external font, URL, analytics, network, browser-storage or filesystem dependency remains;
+- existing Lab surface classes and legacy variable aliases remain available;
+- no HTML, JavaScript, authority vocabulary or cross-lane styling path was changed.
+
+## Validation evidence
+
+The connected app exposes the fixed `lab-ies` gate as the available changed-file and full validation path.
+
+- Focused changed-file execution for `lab.css`: 159 tests, 159 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
+- Full `lab-ies` gate: 159 tests, 159 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
+- Gated commit execution: 159 tests, 159 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
+
+## Protected final Git state
+
+The protected working-tree state after the feature push, and the state to remain after documentation closeout, is:
+
+- staged: 0;
+- modified: 1;
+- untracked: 36;
+- deleted: 0.
+
+Protected modified path:
+
+```text
+packages/lab-kernel/ies-toolkit/summary.html
+```
+
+Protected untracked paths:
 
 ```text
 README.zip
@@ -109,27 +84,11 @@ packages/lab-kernel/ies-toolkit/docs.html
 packages/lab-kernel/ies-toolkit/emergency.html
 packages/lab-kernel/ies-toolkit/equipment_register.html
 packages/lab-kernel/ies-toolkit/extended_report.html
-packages/lab-kernel/ies-toolkit/iesAuthorityFingerprint.js
-packages/lab-kernel/ies-toolkit/iesAuthorityRecord.js
-packages/lab-kernel/ies-toolkit/iesCanonicalJson.js
-packages/lab-kernel/ies-toolkit/iesFromReference.js
-packages/lab-kernel/ies-toolkit/iesGuards.js
-packages/lab-kernel/ies-toolkit/iesKeywordContract.js
-packages/lab-kernel/ies-toolkit/iesLabFormKeywords.js
 packages/lab-kernel/ies-toolkit/iesMerge.js
-packages/lab-kernel/ies-toolkit/iesNormaliseController.js
 packages/lab-kernel/ies-toolkit/iesPolar.js
-packages/lab-kernel/ies-toolkit/iesProjectIes.js
-packages/lab-kernel/ies-toolkit/iesReferenceDto.js
-packages/lab-kernel/ies-toolkit/iesSymmetrize.js
-packages/lab-kernel/ies-toolkit/iesTransforms.js
-packages/lab-kernel/ies-toolkit/iesUgr.js
-packages/lab-kernel/ies-toolkit/iesUgrCie190.js
-packages/lab-kernel/ies-toolkit/iesWorkingRecord.js
 packages/lab-kernel/ies-toolkit/ies_builder.html
 packages/lab-kernel/ies-toolkit/ies_merge.html
 packages/lab-kernel/ies-toolkit/index.html
-packages/lab-kernel/ies-toolkit/lab.css
 packages/lab-kernel/ies-toolkit/lab.html
 packages/lab-kernel/ies-toolkit/lab/
 packages/lab-kernel/ies-toolkit/lab_request.html
@@ -150,90 +109,22 @@ packages/lab-kernel/ies-toolkit/ugr.html
 packages/lab-kernel/ies-toolkit/zencontrolEmergency.js
 scripts/clear_chaff.ps1
 serve.mjs
-tests/lab-kernel/iesAuthorityFingerprint.test.js
-tests/lab-kernel/iesAuthorityRecord.test.js
-tests/lab-kernel/iesCanonicalJson.test.js
-tests/lab-kernel/iesFromReference.test.js
-tests/lab-kernel/iesGuards.test.js
-tests/lab-kernel/iesKeywordContract.test.js
 tests/lab-kernel/iesKeywordMigration.test.js
-tests/lab-kernel/iesLabFormKeywords.test.js
-tests/lab-kernel/iesNormaliseController.test.js
-tests/lab-kernel/iesProjectIes.test.js
-tests/lab-kernel/iesReferenceDto.test.js
-tests/lab-kernel/iesTransforms.test.js
-tests/lab-kernel/iesUgr.test.js
-tests/lab-kernel/iesUgrCie190.test.js
-tests/lab-kernel/iesWorkingRecord.test.js
 ```
 
-## Parcel classification
+The explicitly non-queued paths remain untouched. The Selector-owned leak paths remain absent from the dirty inventory and were not touched:
 
-### Accepted Slice 1–2 foundation
+```text
+packages/workspace-kernel/selectorReferenceOptionsService.js
+tests/selectorCascadeCorrectness.test.js
+```
 
-Implementation and tests associated with:
+## Queue state
 
-- `iesKeywordContract.js`
-- `iesLabFormKeywords.js`
-- `iesWorkingRecord.js`
-- `iesNormaliseController.js`
-- `iesLabForm.js`
-- corresponding keyword, form, working-record, normalisation and migration tests.
+- `LAB-010-reference-driven-generation`: done.
+- `LAB-011-project-ies-generation`: done.
+- `LAB-012-lab-style-foundation`: done.
+- Next item: `LAB-013-polar-renderer`.
+- Resulting status: `ready`, because it has no dependencies and no seam approval requirement.
 
-State: logically accepted, test-green, mixed modified/untracked, uncommitted.
-
-### Accepted Slice 3 authority lifecycle
-
-Implementation and tests associated with:
-
-- `iesAuthorityRecord.js`
-- `iesApproval.js`
-- `iesProvenance.js`
-- `iesHandoff.js`
-- authority, governance and handoff tests.
-
-State: logically accepted, test-green, mixed modified/untracked, uncommitted.
-
-### Accepted Slice 4A
-
-- `iesCanonicalJson.js`
-- `iesAuthorityFingerprint.js`
-- corresponding tests.
-
-State: logically accepted, test-green, untracked, uncommitted.
-
-### Accepted Slice 4B
-
-- `iesReferenceDto.js`
-- related authority, approval, provenance and handoff changes;
-- corresponding DTO and regression tests.
-
-State: logically accepted, test-green, mixed modified/untracked, uncommitted.
-
-### Mixed photometric, builder and export work
-
-Includes `iesMetrics.js`, `iesWrite.js`, `iesFromReference.js`, `iesGuards.js`, `iesMerge.js`, `iesPolar.js`, `iesProjectIes.js`, `iesSymmetrize.js`, `iesTransforms.js`, `iesUgr.js`, `iesUgrCie190.js` and associated tests.
-
-State: test coverage exists, but exact per-file maturity and checkpoint boundaries require a dedicated read-only diff audit.
-
-### UI and harness prototypes
-
-Includes the dirty HTML/CSS/harness material under `packages/lab-kernel/ies-toolkit/`, including the collapsed `lab/` directory.
-
-State: experimental, prototype or unexplained relative to accepted slices; not checkpoint-ready as one parcel.
-
-### Provenance and resolver prototypes
-
-Includes `luminaire_provenance.html`, the collapsed `nvb/` directory, `nvb*.js`, provenance pages and `zencontrolEmergency.js`.
-
-State: prototype/specification material; not an accepted rebuild slice.
-
-### Documentation and local support
-
-Includes `README.zip`, `docs/_context/ControlStack_summary_normalise_harness_spec.md`, `scripts/clear_chaff.ps1` and `serve.mjs`.
-
-State: individually unaudited. `clear_chaff.ps1` must not be executed during lane-memory or checkpoint work.
-
-## Immediate state rule
-
-The ten modified and sixty-six untracked feature/support paths above are protected dirty state. Documentation-only work must leave them unstaged and unchanged.
+No subsequent queue item was executed.
