@@ -127,3 +127,11 @@ This log is append-oriented. Do not silently rewrite historical decisions.
 **Rationale:** Both browser-session saves succeeded, but the client transport rejected the declared pre-Engine eligibility projection before producing a dispatchable source projection. The generic blocker does not reveal which internal readiness condition failed and does not by itself prove server-route unavailability.
 
 **Consequence:** The diagnosis must distinguish a UI-suppliable missing input from an incomplete or unavailable served registration path, and must classify durable-persistence unavailability separately. It may recommend but not implement a repair or UI action. No Engine invocation or registration POST is authorised in SEL-011.
+
+## 2026-07-19 — Tier authority moves to the server-owned Engine/Lex boundary
+
+**Decision:** Program & Integrate approval is reported as recorded and pushed. `SEL-012` may remove Tier from Selector registration eligibility and candidate authority, reject client Tier, and derive/bind Tier only at the existing server-owned Engine/Lex execution boundary.
+
+**Rationale:** SEL-011 proved the current registration and candidate contracts require a manually committed Tier that the Selector must never own. This makes successful registration impossible through truthful UI input. The donor Engine contract already treats Tier as an execution strategy/result concern, while the downstream selected Tier result field is established and must remain stable.
+
+**Consequence:** Tier is not a Selector control, committed constraint, default, cache, or client authority. The repair must preserve all other inputs, explicit Control selection, read-only/no-write behaviour, and the existing Tier result field meaning and shape. Unique source-backed derivation may bind Tier at the server execution boundary; zero or multiple valid derivations must stop with specific blockers. Any Lab/IES incompatibility or Tier output-contract change requires separate Program approval.

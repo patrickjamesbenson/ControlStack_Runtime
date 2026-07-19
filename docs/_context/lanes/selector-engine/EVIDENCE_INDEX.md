@@ -171,6 +171,20 @@ Every completed worker updates this index with:
 - Queue action: new top ready read-only item `SEL-011`; `SEL-002` blocked behind its diagnosis; SEL-003 remains blocked and Engine invocation remains prohibited — RECORDED.
 - Required diagnosis outcome: exact predicate and conditions, current failed condition(s), UI-input versus served-path classification, durable-persistence causality classification, and smallest unimplemented remedy — COMMISSIONED.
 
+## 2026-07-19 — SEL-011 diagnosis closeout and SEL-012 approved repair commission
+
+- Read-only diagnosis result reported by Patrick: both Selector registration eligibility and `buildSelectorReadonlyEngineCandidateForInternalSeam()` require manually committed Tier — USER-PROVIDED COMPLETION EVIDENCE.
+- Product/architecture classification: Tier is an Engine/Lex consequence after run and is not a valid Selector input; the failed requirement is therefore a served-contract defect, not a missing UI field Patrick can supply — ACCEPTED DIAGNOSIS.
+- Refusal observability: `selected-project-registration-client-pre-engine-eligibility-invalid` masked the specific missing-Tier condition — ACCEPTED DIAGNOSIS.
+- Persistence classification: `durable persistence unavailable` is the designed browser-session-only save boundary and is not the cause of registration refusal — ACCEPTED DIAGNOSIS.
+- Diagnosis execution: complete `selector-engine` gate 103/103; no writes; clean tree — USER-PROVIDED COMPLETION EVIDENCE.
+- Program seam approval: Patrick reports Program & Integrate approval is recorded and pushed. Approved ownership removes Tier from Selector eligibility/candidate authority and places unique source-backed derivation/binding at the existing server-owned Engine/Lex execution boundary — REPORTED PROGRAM AUTHORITY.
+- Required safety conditions: no default, guess, cache, union, fabrication, client Tier authority, automatic Control selection, RuntimeData mutation, project-truth fabrication, or downstream Tier field shape/meaning change — COMMISSIONED.
+- Required blockers: specific unavailable and ambiguous Tier-derivation failures; generic eligibility masking removed; every remaining required input remains explicit — COMMISSIONED.
+- Required tests: missing Tier, injected stale Tier, successful unique derivation, ambiguous derivation, unavailable derivation, and all remaining required inputs; focused evidence plus full gate — COMMISSIONED.
+- Queue result: SEL-011 done; SEL-012 ready; SEL-002 blocked behind SEL-012; SEL-003 remains blocked — RECORDED.
+- Lab/IES boundary: compatibility observation only; any incompatibility or Tier output-contract change requires separate Program approval — RECORDED.
+
 ## 2026-07-19 — SEL-001 canonical context migration
 
 - Worker: standing Selector & Engine worker, queue item `SEL-001`.

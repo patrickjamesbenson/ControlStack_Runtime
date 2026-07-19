@@ -19,23 +19,35 @@
 ### Q-2A Diagnose project-alpha pre-Engine registration eligibility refusal
 
 * id: SEL-011
-* status: ready
+* status: done
 * depends-on: SEL-001
 * gate: selector-engine
 * authorised files: read-only repository and runtime inspection only; no repository writes, staging, commit, push, project mutation, RuntimeData mutation, or server registration dispatch
 * objective: diagnose the two genuine `project-alpha` browser-save registration refusals reporting `selected-project-registration-client-pre-engine-eligibility-invalid` without fabricating or reconstructing browser-held project truth.
-* acceptance: identify the exact failing pre-Engine eligibility predicate and the precise file/function that raises the refusal; enumerate every required condition explicitly; determine which condition or conditions the current `project-alpha` selection fails using current evidence only; classify plainly whether the boundary is a user-suppliable UI input or an incomplete/unavailable registration path in the currently served build; determine whether `durable persistence unavailable` is causal or merely a separate consequence; return the smallest recommended repair or exact UI action, but do not implement it. If browser-only evidence prevents a truthful condition-level conclusion, return `NEEDS YOU` with the exact bounded UI diagnostic fields or clicks required rather than guessing.
+* acceptance: COMPLETE by read-only diagnosis reported by Patrick: registration and the candidate mapper both required manually committed Tier; Tier is an Engine/Lex consequence and cannot be supplied truthfully through Selector; the generic blocker masked the specific missing-Tier condition; durable persistence unavailability is expected browser-session behaviour and not causal. Full gate 103/103, no writes, clean tree.
 * prohibitions: read-only; do not invoke Engine; do not POST registration; do not fabricate an envelope, acknowledgement, revision, candidate, fixture, or project truth; do not patch code or documentation; do not alter Tier, Control, RuntimeData, Lab, Program, or main; do not treat a generic client blocker as proof of server unavailability without tracing the predicate and dispatch flags.
+
+### Q-2B Repair Tier ownership at the server-owned Engine/Lex boundary
+
+* id: SEL-012
+* status: ready
+* depends-on: SEL-011 and recorded Program & Integrate approval
+* seam change: yes — Program & Integrate approval reported by Patrick as recorded and pushed
+* gate: selector-engine
+* authorised files: `apps/workspace-shell/src/projectBrowserSelectedProjectServerOwnedRegistrationClientTransport.js`, `packages/workspace-kernel/selectorReadonlyEngineCandidateMapper.js`, new helper `packages/workspace-kernel/engineRunTableSelectedProjectSourceBackedTier.js`, `server.js`, `tests/engineRunTableDomain.test.js`, `tests/selectorReadonlyEngineCandidateMapper.test.js`, `tests/runtimeShellProjectBrowserSelectedProjectServerOwnedRegistrationClientTransport.test.js`, and closeout updates to `docs/_context/lanes/selector-engine/LANE_STATE.md`, `docs/_context/lanes/selector-engine/WORK_QUEUE.md`, `docs/_context/lanes/selector-engine/DECISION_LOG.md`, `docs/_context/lanes/selector-engine/EVIDENCE_INDEX.md`, `docs/_context/lanes/selector-engine/SESSION_HANDOFF.md`
+* objective: remove manually committed Tier from Selector-side registration eligibility and candidate construction, reject any client-supplied Tier as non-authoritative, and derive/bind Tier only at the existing server-owned Engine/Lex execution boundary while preserving the established downstream Tier result field meaning and shape.
+* acceptance: registration eligibility no longer requires a committed Selector Tier; the Selector candidate required-field contract excludes Tier and carries no authoritative top-level Tier, selected Tier, candidate Tier list, manual Tier strategy, cached Tier, or default Tier from browser state; stale or injected client Tier is ignored or refused and never becomes authority; every other required input and source-authority check remains unchanged; Control remains explicitly selected and is never auto-selected; the server-owned boundary derives Tier only from approved source-backed Engine/Lex authority and binds it immediately before the protected host execution seam; zero valid derivations returns a specific Tier-derivation-unavailable blocker; multiple valid derivations returns a specific Tier-derivation-ambiguous blocker; exactly one valid derivation binds that Tier without changing the downstream Tier field meaning or shape; registration returns the actual safe failing condition rather than `selected-project-registration-client-pre-engine-eligibility-invalid`; no project truth, envelope, acknowledgement, revision, RuntimeData, result, or output is fabricated; read-only and no-write flags remain preserved. Tests must visibly cover missing Tier, injected stale Tier, successful unique derivation, ambiguous derivation, unavailable derivation, and every remaining required input. Run the focused affected tests through an approved runner where available, the complete `selector-engine` gate, and bounded execution evidence that does not invoke the live Engine or manufacture project truth. If the existing Tier output contract or a Lab/IES consumer would need to change, STOP and request separate Program approval.
+* prohibitions: do not add a Tier Selector control; do not accept browser/client Tier authority; do not default, guess, cache, union, fabricate, or silently choose Tier; do not auto-select Control; do not change the downstream Tier field contract; do not write Lab, Program, donor, RuntimeData, or main; do not invoke the live Engine or execute SEL-002/SEL-003 in this parcel; do not widen to unrelated registration, output, rendering, authority-refresh, or downstream-consumer work.
 
 ### Q-2 Register project-alpha active server-owned revision
 
 * id: SEL-002
 * status: blocked
-* depends-on: SEL-001 and SEL-011
+* depends-on: SEL-001, SEL-011, and SEL-012
 * gate: selector-engine
 * authorised files: read-only repository inspection; no repository file writes unless a later orchestrator commission supplies exact bounded paths
 * objective: use the genuine existing `project-alpha` browser-session save envelope to complete the supported server-side registration contract and establish an active server-owned revision.
-* acceptance: registration acknowledgement and an attributable active server-owned revision are proven without constructing project truth from fixtures or repository test data. Blocker carried forward: two genuine UI attempts saved browser-session envelopes but registration refused before dispatch with `selected-project-registration-client-pre-engine-eligibility-invalid`. SEL-011 must first classify the exact failed predicate and whether the remedy is a UI input or a bounded code repair. Server-side registration remains the gate on running the Engine.
+* acceptance: registration acknowledgement and an attributable active server-owned revision are proven without constructing project truth from fixtures or repository test data. Blocker carried forward: the approved SEL-012 Tier-ownership repair must be completed, gated, committed, pushed, and activated before registration is retried. Server-side registration remains the gate on running the Engine.
 * prohibitions: do not invoke Engine in this item; do not fabricate, reconstruct, or substitute a save envelope; do not change Tier, Control, RuntimeData, Lab, or Program seams.
 
 ### Q-3 Execute selected-project Engine invocation
