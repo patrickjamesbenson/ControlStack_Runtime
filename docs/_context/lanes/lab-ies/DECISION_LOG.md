@@ -232,3 +232,16 @@ The proposed envelope is:
 - LAB-017 remains `blocked` until Program & Integrate records approval of the committed envelope checkpoint.
 
 No LAB-017 implementation may start merely because the envelope exists. The queue may change to `ready` only after the approval record identifies the committed envelope and exact implementation scope.
+
+## DL-020 — Branch-HEAD lane-memory synchronisation
+
+**Status:** Locked on 2026-07-19.
+
+Before any queue item is selected, the worker must compare the `Recorded branch HEAD` in `LANE_STATE.md` with the actual HEAD of `lane/code-pilot-lab`.
+
+- If they match, normal queue selection may continue.
+- If they differ, no implementation may start. The worker replies exactly `STOPPED - lane state is stale. Recorded HEAD <x>, actual HEAD <y>.` and reconciles lane memory before anything else.
+- The worker that discovers the mismatch must not execute a queue item in the same run.
+- Reconciliation must classify the unmatched commit, restore queue and evidence truth, run the full `lab-ies` gate, and commit/push only lane-memory changes.
+
+A Git commit cannot contain its own final hash. Therefore `Recorded branch HEAD` is maintained as one deliberate post-push working-tree marker: after every successful documentation commit and push, the worker updates only that field to the new actual HEAD and leaves the single edit unstaged. This marker is expected, must not enter feature staging, and exists solely to detect a worker ending between feature and documentation closeout or any other unrecorded branch advance.

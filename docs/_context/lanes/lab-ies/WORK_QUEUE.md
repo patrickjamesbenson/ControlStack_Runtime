@@ -4,7 +4,9 @@
 
 - This file controls worker parcel selection. Bespoke parcel prompts are retired.
 - The orchestrator writes and orders items, reviews `STOPPED` reports, obtains Integrate approval for seam changes, and decides when work is ready for main.
-- A worker takes only the top `ready` item whose dependencies are `done`.
+- Before taking any queue item, a worker must compare `LANE_STATE.md`'s `Recorded branch HEAD` with the actual branch HEAD. A mismatch stops implementation and requires lane-memory reconciliation first; the same worker run must not then execute a queue item.
+- A worker takes only the top `ready` item whose dependencies are `done` after the HEAD comparison passes.
+- After every successful documentation push, the worker updates only the working-tree `Recorded branch HEAD` marker to the new actual HEAD and leaves that single marker edit unstaged.
 - Root: `C:\ControlStack_Worktrees\code-pilot-lab`
 - Branch: `lane/code-pilot-lab`
 - Gate: `lab-ies`

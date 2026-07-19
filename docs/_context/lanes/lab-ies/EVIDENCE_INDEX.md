@@ -6,6 +6,28 @@
 - Historical handoff content is retained as reported context unless freshly reverified.
 - Test output proves only the behaviour exercised by the named tests; low-level merge tests do not by themselves prove completion of the final governed merge.
 
+## Branch-HEAD lane-memory guard — 2026-07-19
+
+### Trigger and reconciliation
+
+- Actual branch HEAD was `f927ced1ca77c8b11ef8b13b9d6bb3833618844c`.
+- `LANE_STATE.md` still recorded `4eba5af77963aa7395748a83118abef54c58a715` as its latest live branch checkpoint.
+- The mismatch was reported before any queue item was selected.
+- Repository history showed the unmatched commit was the completed, green and pushed LAB-017 seam-envelope documentation checkpoint, not unexplained implementation.
+- Lane memory was reconciled to that reality before any other work.
+
+### Permanent guard
+
+The reusable standing-worker prompt, lane state, queue operating model and decision log now require:
+
+- exact comparison of `Recorded branch HEAD` to actual branch HEAD before queue selection;
+- the exact stale-state `STOPPED` reply on mismatch;
+- memory-only reconciliation and a full `lab-ies` gate before further work;
+- no queue execution in the same worker run that discovers a mismatch;
+- one deliberate unstaged post-push `Recorded branch HEAD` marker because a commit cannot contain its own final hash.
+
+The marker is excluded from feature staging and exists to detect a worker ending after a feature push but before documentation closeout.
+
 ## LAB-017 seam envelope — 2026-07-19
 
 ### Review outcome

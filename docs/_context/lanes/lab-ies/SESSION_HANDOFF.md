@@ -2,7 +2,7 @@
 
 ## Session purpose
 
-This handoff records the reusable standing-worker prompt, the committed LAB-017 seam-envelope prerequisite, and the current approval boundary.
+This handoff records the permanent branch-HEAD lane-memory guard, the committed LAB-017 seam envelope, and the current approval boundary.
 
 ## Identity
 
@@ -16,8 +16,15 @@ This handoff records the reusable standing-worker prompt, the committed LAB-017 
 - Completed feature checkpoint: `ae14232b5a4fbff6fca15004a0583047fc5a319d`
 - Feature subject: `lab: checkpoint offline NVB fixtures`
 - Feature checkpoint confirmed on origin `lane/code-pilot-lab`
-- Live starting HEAD for the LAB-017 seam-envelope parcel: `4eba5af77963aa7395748a83118abef54c58a715`
+- LAB-017 seam-envelope checkpoint: `f927ced1ca77c8b11ef8b13b9d6bb3833618844c`
 - Seam envelope: `docs/_context/lanes/lab-ies/LAB-017_SEAM_ENVELOPE.md`, version 1
+- Branch-HEAD guard reconciliation starting HEAD: `f927ced1ca77c8b11ef8b13b9d6bb3833618844c`
+
+## Branch-HEAD guard
+
+Before queue selection, the worker compares `LANE_STATE.md`'s `Recorded branch HEAD` with the actual branch HEAD. A mismatch stops implementation, produces the exact stale-state reply, and requires memory-only reconciliation plus the full gate. The worker must not execute a queue item in the same run that discovered the mismatch.
+
+After every documentation push, only the `Recorded branch HEAD` field is refreshed in the working tree to the new actual HEAD and left unstaged. This deliberate marker avoids the impossible requirement for a commit to contain its own final hash and detects a worker ending between feature and documentation commits.
 
 ## Completed queue item
 
@@ -50,10 +57,10 @@ Repository search found no local authority path, file URL, UNC path, credential 
 
 The feature parcel was staged as exactly the seven authorised fixture files, committed and pushed.
 
-The final protected working-tree state after documentation closeout must remain:
+The protected working-tree state after documentation closeout must remain:
 
 - staged: 0;
-- modified: 0;
+- modified: 1 — only the unstaged `Recorded branch HEAD` synchronisation marker in `LANE_STATE.md`;
 - untracked: 33;
 - deleted: 0.
 
@@ -126,7 +133,17 @@ Use only the connected CS Lab & IES v2 app. You are a worker, not the orchestrat
 
    Current repository evidence overrides stale historical statements.
 
-3. Read `WORK_QUEUE.md` and take only the TOP item with:
+3. Before taking any queue item, compare the `Recorded branch HEAD` value in `LANE_STATE.md` with the actual current HEAD of `lane/code-pilot-lab`.
+
+   If they do not match, do not start implementation. Reply exactly:
+
+   `STOPPED - lane state is stale. Recorded HEAD <x>, actual HEAD <y>.`
+
+   Then reconcile lane memory to the actual repository state before anything else. Classify whether the unmatched commit is a completed feature checkpoint, a documentation checkpoint, or an unexplained change; update the lane-memory evidence and queue truth accordingly; run the full `lab-ies` gate; and commit/push only the reconciled lane-memory files through the gated path. Do not execute a queue item in the same worker run that discovered the mismatch.
+
+   Because a Git commit cannot contain its own final hash, `LANE_STATE.md` uses one deliberate live synchronisation marker: immediately after every successful documentation commit and push, update `Recorded branch HEAD` in the working tree to that new actual HEAD and leave only that marker edit unstaged. This single unstaged lane-state marker is expected and must never be absorbed into a feature commit. A future mismatch therefore means the lane advanced without its marker being refreshed or the committed lane memory is otherwise stale.
+
+4. Read `WORK_QUEUE.md` and take only the TOP item with:
 
    - `status: ready`; and
    - every listed dependency marked `done`.
@@ -139,9 +156,9 @@ Use only the connected CS Lab & IES v2 app. You are a worker, not the orchestrat
 
    `STOPPED - seam approval required. Orchestrator decision needed.`
 
-4. Execute ONLY the selected item's authorised files and honour every prohibition and acceptance condition. Do not widen the parcel. If an authorised file contains unrelated or unexplained behaviour that cannot be safely confined within the stated parcel, stop and report it rather than rewriting or absorbing it.
+5. Execute ONLY the selected item's authorised files and honour every prohibition and acceptance condition. Do not widen the parcel. If an authorised file contains unrelated or unexplained behaviour that cannot be safely confined within the stated parcel, stop and report it rather than rewriting or absorbing it.
 
-5. Preserve the intentionally dirty worktree:
+6. Preserve the intentionally dirty worktree:
 
    - do not clean, reset, restore, delete or move unrelated modified or untracked paths;
    - do not stage or commit anything outside the selected item's authorised files;
@@ -150,13 +167,13 @@ Use only the connected CS Lab & IES v2 app. You are a worker, not the orchestrat
    - do not write to main, another lane or Selector-owned paths;
    - preserve every protected path recorded in `LANE_STATE.md` and `SESSION_HANDOFF.md`.
 
-6. Run focused validation for the selected parcel where the connected app exposes it, then run the full `lab-ies` gate. The full gate must pass before any feature commit.
+7. Run focused validation for the selected parcel where the connected app exposes it, then run the full `lab-ies` gate. The full gate must pass before any feature commit.
 
-7. Stage EXACTLY the selected item's authorised files. Confirm the staged set equals those files and nothing else.
+8. Stage EXACTLY the selected item's authorised files. Confirm the staged set equals those files and nothing else.
 
-8. Use the gated commit-and-push path with the exact commit subject recorded in the selected queue item's acceptance text. Push only `lane/code-pilot-lab`.
+9. Use the gated commit-and-push path with the exact commit subject recorded in the selected queue item's acceptance text. Push only `lane/code-pilot-lab`.
 
-9. After the feature commit is pushed, update only these lane-memory files:
+10. After the feature commit is pushed, update only these lane-memory files:
 
    - `docs/_context/lanes/lab-ies/LANE_STATE.md`
    - `docs/_context/lanes/lab-ies/EVIDENCE_INDEX.md`
@@ -165,9 +182,9 @@ Use only the connected CS Lab & IES v2 app. You are a worker, not the orchestrat
 
    Mark the completed item `done`, record its feature commit evidence, and set exactly one next eligible item to `ready`. Do not set a seam-change item to `ready` without its required recorded approval. Preserve this entire standing-worker prompt verbatim in `SESSION_HANDOFF.md`; never replace it with a bespoke parcel prompt.
 
-10. Run the full `lab-ies` gate again, stage exactly the changed lane-memory files, then use the gated commit-and-push path for the documentation closeout. Push only `lane/code-pilot-lab`.
+11. Run the full `lab-ies` gate again, stage exactly the changed lane-memory files, then use the gated commit-and-push path for the documentation closeout. Push only `lane/code-pilot-lab`. After the push succeeds, read the new actual HEAD, update only the `Recorded branch HEAD` marker in the working-tree copy of `LANE_STATE.md` to that exact value, and leave that one marker edit unstaged for the next worker's preflight comparison.
 
-11. Every final reply begins with exactly one of:
+12. Every final reply begins with exactly one of:
 
    - `AUTO - gate passed, parcel committed to lane/code-pilot-lab. Continuing. No action from Patrick.`
    - `SEND TO INTEGRATE - parcel ready for main. Patrick pastes this to Program & Integrate.`
@@ -176,7 +193,7 @@ Use only the connected CS Lab & IES v2 app. You are a worker, not the orchestrat
 
    Use `NEEDS YOU` only when Patrick must physically do something. Progress notes must be one plain line without the `NEEDS YOU` label. `AUTO` is lane-only and never means main. A genuine `STOPPED` is a successful boundary result.
 
-12. The final report must state:
+13. The final report must state:
 
    - the live starting HEAD;
    - the selected queue item;

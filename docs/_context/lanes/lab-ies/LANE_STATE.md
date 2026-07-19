@@ -13,10 +13,22 @@ Current repository evidence overrides stale historical statements.
 - Root: `C:\ControlStack_Worktrees\code-pilot-lab`
 - Branch: `lane/code-pilot-lab`
 - Gate: `lab-ies`
+- Recorded branch HEAD: `f927ced1ca77c8b11ef8b13b9d6bb3833618844c`
 - Starting HEAD for LAB-016: `1df62fccd91ac66509b02960ad988f6ef90c0b52`
 - Completed feature HEAD: `ae14232b5a4fbff6fca15004a0583047fc5a319d`
 - Feature subject: `lab: checkpoint offline NVB fixtures`
 - Feature push: confirmed on origin `lane/code-pilot-lab`
+
+## Branch-HEAD synchronisation invariant
+
+Before any queue item is selected, a worker must compare `Recorded branch HEAD` above with the actual current HEAD of `lane/code-pilot-lab`.
+
+- Exact match: queue selection may continue.
+- Mismatch: no implementation may start; reply `STOPPED - lane state is stale. Recorded HEAD <x>, actual HEAD <y>.` and reconcile lane memory first.
+- Reconciliation must classify the unmatched commit, restore queue/evidence truth, run the full `lab-ies` gate, and commit/push only lane-memory changes.
+- The worker that discovers a mismatch must not execute a queue item in that same run.
+- Because a commit cannot contain its own final hash, this field is maintained as a deliberate post-push working-tree marker: after every documentation push, update only `Recorded branch HEAD` to the new actual HEAD and leave that single edit unstaged.
+- The one unstaged marker is expected. It must never be staged with a feature parcel or treated as unrelated implementation drift.
 
 ## Connected capability state
 
@@ -66,10 +78,10 @@ The connected app exposes the fixed `lab-ies` gate as the available changed-file
 
 ## Protected final Git state
 
-The protected working-tree state after the feature push, and the state to remain after documentation closeout, is:
+The protected working-tree state after documentation closeout is:
 
 - staged: 0;
-- modified: 0;
+- modified: 1 — only the unstaged `Recorded branch HEAD` synchronisation marker in this file;
 - untracked: 33;
 - deleted: 0.
 
