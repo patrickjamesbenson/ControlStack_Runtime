@@ -1,0 +1,259 @@
+<!doctype html>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Component library — Lab projections</title>
+<link rel="stylesheet" href="./lab.css" />
+<style>
+  .wrap{max-width:1120px;margin:0 auto;padding:24px}.top{display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap}
+  .top-main{min-width:280px;flex:1}.seg{display:inline-flex;border:1px solid var(--border,#ccc);border-radius:999px;overflow:hidden}
+  .seg button{border:0;background:#fff;padding:8px 14px;cursor:pointer}.seg button.on{background:#222;color:#fff}
+  .statusbar{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 18px}.pill{display:inline-flex;align-items:center;border-radius:999px;padding:3px 9px;font-size:11px;font-weight:700}
+  .pill.src{background:#e1f2fb;color:#016de1}.pill.safe{background:#e7f7ed;color:#167443}.pill.warn{background:#fff3d6;color:#865b00}.pill.blocked{background:#fde9e7;color:#a62f24}
+  .comp{background:#fff;border:1px solid var(--border,#ccc);border-radius:8px;margin-bottom:8px;overflow:hidden}.comp>summary{display:flex;gap:10px;align-items:center;flex-wrap:wrap;cursor:pointer;padding:12px 16px;list-style:none}
+  .comp>summary::-webkit-details-marker{display:none}.comp>summary:before{content:"▸";color:#777}.comp[open]>summary:before{content:"▾"}.comp[open]>summary{border-bottom:1px solid #eee}
+  .body{padding:14px 16px}.id{font-family:ui-monospace,monospace;font-weight:700}.nm{font-weight:600}.mk,.muted,.sub{color:#666}.source-tag{margin-left:auto;font-size:11px;font-weight:700;color:#167443}
+  .claims{display:flex;gap:7px;flex-wrap:wrap;margin:4px 0 10px}.claim{border:1px solid #e6e6e6;background:#fafafa;border-radius:6px;padding:5px 9px;font-size:12px}.claim b{display:block;color:#666;font-size:10px;text-transform:uppercase;letter-spacing:.04em}.claim.unresolved{border-style:dashed;color:#865b00;background:#fffaf0}
+  .shelf{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px;margin-top:12px}.doc{border:1px dashed #bbb;border-radius:7px;padding:9px;font-size:12px}.doc.set{border-style:solid;border-color:#30a65a;background:#f4fbf6}.doc-title{font-weight:700;display:block;margin-bottom:5px}.chips{min-height:20px;margin-bottom:5px}.chip{display:flex;gap:6px;align-items:flex-start;background:#eef4ff;border-radius:6px;padding:4px 6px;margin:4px 0}.chip-main{flex:1}.chip small{display:block;color:#666}.x{border:0;background:transparent;color:#8a3434;cursor:pointer;font-weight:700}.doc select{width:100%;font:inherit;padding:5px}.empty{padding:18px;border:1px dashed #bbb;border-radius:8px;color:#666}.error{padding:14px;border:1px solid #d66;background:#fff3f2;color:#8b241b;border-radius:8px}
+</style>
+
+<div class="wrap">
+  <div class="top">
+    <div class="top-main">
+      <h1>Component library</h1>
+      <p class="sub">Read-only Lab projections over the committed offline fixture snapshot. Missing values remain unresolved; this surface creates no authority, approval, seal or procurement decision.</p>
+    </div>
+    <div class="seg" id="tab" aria-label="Component category">
+      <button type="button" data-tab="boards" class="on">Board platforms</button>
+      <button type="button" data-tab="drivers">Drivers</button>
+      <button type="button" data-tab="optics">Optics</button>
+    </div>
+  </div>
+
+  <div class="statusbar">
+    <span class="pill src" id="source-status">loading projection…</span>
+    <span class="pill safe">offline fixture</span>
+    <span class="pill warn">unapproved evidence</span>
+    <span class="pill safe">in-memory associations only</span>
+  </div>
+
+  <div id="list" aria-live="polite">Loading committed projections…</div>
+  <p class="sub">Document links use the immutable document-register contract. They exist only in this page's memory and clear on refresh. No upload, storage, database or Program route is present.</p>
+</div>
+
+<script type="module">
+import {
+  COMPONENT_CATALOGUE_SCHEMA_ID,
+  COMPONENT_CATALOGUE_SCHEMA_VERSION,
+  projectComponentCatalogue,
+} from "./nvbComponents.js";
+import {
+  DOCUMENT_REGISTER_SCHEMA_ID,
+  DOCUMENT_REGISTER_SCHEMA_VERSION,
+  createDocumentRegisterState,
+  registerDocument,
+  linkDocument,
+  unlinkDocument,
+  listDocuments,
+  documentsForEntity,
+} from "./docRegister.js";
+
+const $ = (id) => document.getElementById(id);
+const esc = (value) => String(value ?? "").replace(/[&<>"']/g, (character) => ({
+  "&": "&amp;",
+  "<": "&lt;",
+  ">": "&gt;",
+  '"': "&quot;",
+  "'": "&#39;",
+}[character]));
+const isMissing = (value) => value === null || value === undefined || value === "";
+const display = (value) => isMissing(value) ? "unresolved" : String(value);
+const claim = (label, value) => ({ label, value: display(value), unresolved: isMissing(value) });
+
+const BOARD_DOCS = Object.freeze(["Datasheet", "LM-80", "TM-21", "Photometric", "Thermal derating"]);
+const DRIVER_DOCS = Object.freeze(["Datasheet", "Efficiency table", "Thermal derating", "Compliance"]);
+const OPTIC_DOCS = Object.freeze(["Datasheet", "Photometric", "Material cert", "Compliance"]);
+const SOURCE_REVISION = "lab-offline-fixtures-2026-07-19";
+
+const SEEDED_DOCUMENTS = Object.freeze([
+  Object.freeze({ documentId: "DOC-DNX80-DATASHEET", documentType: "Datasheet", title: "DNX-80 board demo datasheet", sourceRef: "/s/DNX-80_board_datasheet.txt", contentSha256: null, sourceStatus: "unresolved" }),
+  Object.freeze({ documentId: "DOC-LM301H-DATASHEET", documentType: "Datasheet", title: "LM301H demo datasheet", sourceRef: "/s/Samsung_LM301H_datasheet.txt", contentSha256: null, sourceStatus: "unresolved" }),
+  Object.freeze({ documentId: "DOC-LM301H-LM80", documentType: "LM-80", title: "LM301H demo LM-80 summary", sourceRef: "/s/Samsung_LM301H_LM-80.txt", contentSha256: null, sourceStatus: "unresolved" }),
+  Object.freeze({ documentId: "DOC-LM301H-TM21", documentType: "TM-21", title: "LM301H demo TM-21 summary", sourceRef: "/s/Samsung_LM301H_TM-21.txt", contentSha256: null, sourceStatus: "unresolved" }),
+  Object.freeze({ documentId: "DOC-TRIDONIC-DATASHEET", documentType: "Datasheet", title: "Driver demo datasheet", sourceRef: "/s/Tridonic_LC55_datasheet.txt", contentSha256: null, sourceStatus: "unresolved" }),
+  Object.freeze({ documentId: "DOC-OPTIC-PHOTOMETRIC", documentType: "Photometric", title: "Optic demo photometric evidence", sourceRef: "/r/NVB-REF-OPT-000123/evidence/LM-79__safe-9f2a11.txt", contentSha256: null, sourceStatus: "unresolved" }),
+  Object.freeze({ documentId: "DOC-EMERGENCY-REPORT", documentType: "Compliance", title: "Emergency demo report", sourceRef: "/s/Emergency_test_report.txt", contentSha256: null, sourceStatus: "unresolved" }),
+  Object.freeze({ documentId: "DOC-EWIS-REPORT", documentType: "Compliance", title: "EWIS demo report", sourceRef: "/s/EWIS_cartridge_report.txt", contentSha256: null, sourceStatus: "unresolved" }),
+]);
+
+let catalogue = null;
+let documentState = createDocumentRegisterState();
+let activeTab = "boards";
+
+for (const document of SEEDED_DOCUMENTS) {
+  documentState = registerDocument(documentState, document).state;
+}
+
+async function fetchJson(relativePath) {
+  const response = await fetch(relativePath, { cache: "no-store" });
+  if (!response.ok) throw new Error(`${relativePath} returned HTTP ${response.status}`);
+  return response.json();
+}
+
+function expandBoardProjectionRows(platforms) {
+  return platforms.flatMap((platform) => {
+    const ccts = Array.isArray(platform.ccts) && platform.ccts.length > 0 ? platform.ccts : [null];
+    const rowCount = Number.isInteger(platform.variants) && platform.variants > 0 ? platform.variants : ccts.length;
+    return Array.from({ length: rowCount }, (_, index) => ({
+      novon_family: platform.novon_family,
+      led_chip: platform.led_chip,
+      vendor: platform.vendor,
+      c1_cct: ccts[index % ccts.length],
+      c2_cct: platform.tunable && ccts.length > 1 ? ccts[(index + 1) % ccts.length] : null,
+      channels: platform.tunable ? 2 : 1,
+      c1_cri_min: platform.cri_min,
+      tc_c: platform.tc_c_max,
+      life_hours_at_tc: platform.life_hours_at_tc,
+      max_ambient_ta: platform.max_internal_ambient_ta,
+      warranty_10y_failpct: platform.warranty_10y_failpct,
+      datasheet_url: platform.datasheet_url,
+    }));
+  });
+}
+
+function boardClaims(platform) {
+  const cctText = platform.ccts.length > 0
+    ? `${platform.ccts.join(platform.tunable ? "–" : "/")}K${platform.tunable ? " tunable" : ""}`
+    : null;
+  return [
+    claim("CRI minimum", platform.criMin),
+    claim("Tc maximum °C", platform.tcMaxC),
+    claim("Life at Tc h", platform.lifeHoursAtTc),
+    claim("Internal ambient °C", platform.maxInternalAmbientTaC),
+    claim("10-year fail %", platform.warranty10yFailPct),
+    claim(platform.tunable ? "CCT range" : "CCTs", cctText),
+    claim("Variants", platform.variants),
+    claim("Datasheet source", platform.datasheetRef ? "supplied — unverified" : null),
+  ];
+}
+
+function driverClaims(driver) {
+  return [
+    claim("Series", driver.series),
+    claim("Iout max mA", driver.outputCurrentMaxmA),
+    claim("Pout max W", driver.outputPowerMaxW),
+    claim("Efficiency", driver.efficiency),
+    claim("Tc max °C", driver.tcMaxC),
+    claim("Ta max °C", driver.taMaxC),
+    claim("Life", driver.lifeHours),
+    claim("Power factor", driver.powerFactor),
+    claim("Ingress protection", driver.ingressProtection),
+    claim("Datasheet source", driver.datasheetRef ? "supplied — unverified" : null),
+  ];
+}
+
+function opticClaims(optic) {
+  return [
+    claim("Family", optic.family),
+    claim("Variant", optic.opticVariant),
+    claim("Spec code", optic.specCode),
+    claim("Emission", optic.emissionPermission),
+    claim("Optical efficiency", optic.opticalEfficiency),
+    claim("Internal delta Ta °C", optic.opticInternalDeltaTaC),
+    claim("Room Ta °C", optic.roomTaC),
+    claim("Uplift Ta °C", optic.opticUpliftTaC),
+    claim("Hot-test evidence", optic.hotTestEvidenceRef ? "supplied — not verification" : null),
+    claim("Emergency approval", null),
+  ];
+}
+
+function componentView(tab) {
+  if (tab === "boards") {
+    return catalogue.platforms.map((platform, index) => ({
+      entityId: `board-${String(index + 1).padStart(3, "0")}`,
+      displayId: platform.platformId,
+      title: `${platform.novonFamily} · ${platform.ledChip}`,
+      maker: platform.vendor,
+      claims: boardClaims(platform),
+      documentTypes: BOARD_DOCS,
+    }));
+  }
+  if (tab === "drivers") {
+    return catalogue.drivers.map((driver, index) => ({
+      entityId: `driver-${String(index + 1).padStart(3, "0")}`,
+      displayId: driver.model,
+      title: driver.series || "series unresolved",
+      maker: driver.vendor,
+      claims: driverClaims(driver),
+      documentTypes: DRIVER_DOCS,
+    }));
+  }
+  return catalogue.optics.map((optic, index) => ({
+    entityId: `optic-${String(index + 1).padStart(3, "0")}`,
+    displayId: optic.opticBomId,
+    title: `${display(optic.opticVariant)} · family ${display(optic.family)}`,
+    maker: "offline fixture projection",
+    claims: opticClaims(optic),
+    documentTypes: OPTIC_DOCS,
+  }));
+}
+
+function renderShelf(entityId, documentTypes) {
+  return `<div class="shelf">${documentTypes.map((documentType) => {
+    const associated = documentsForEntity(documentState, entityId).filter((document) => document.documentType === documentType);
+    const associatedIds = new Set(associated.map((document) => document.documentId));
+    const available = listDocuments(documentState, { documentType }).filter((document) => !associatedIds.has(document.documentId));
+    const chips = associated.map((document) => `<span class="chip"><span class="chip-main">${esc(document.title)}<small>${esc(document.sourceStatus)} · ${esc(document.sourceRef || "source unresolved")}</small></span><button type="button" class="x" data-unlink-document="${esc(document.documentId)}" data-entity="${esc(entityId)}" aria-label="Remove association">×</button></span>`).join("");
+    const options = available.map((document) => `<option value="${esc(document.documentId)}">${esc(document.title)} — ${esc(document.sourceStatus)}</option>`).join("");
+    return `<div class="doc ${associated.length > 0 ? "set" : ""}"><span class="doc-title">${esc(documentType)}</span><div class="chips">${chips || "<span class='muted'>none associated</span>"}</div><select data-link-entity="${esc(entityId)}"><option value="">associate existing unresolved document…</option>${options}</select></div>`;
+  }).join("")}</div>`;
+}
+
+function render(tab = activeTab) {
+  activeTab = tab;
+  const components = componentView(tab);
+  $("list").innerHTML = components.length > 0
+    ? components.map((component) => `<details class="comp"><summary><span class="id">${esc(component.displayId)}</span><span class="nm">${esc(component.title)}</span><span class="mk">by ${esc(component.maker || "unresolved")}</span><span class="source-tag">read-only · offline · unapproved</span></summary><div class="body"><div class="claims">${component.claims.map((entry) => `<span class="claim ${entry.unresolved ? "unresolved" : ""}"><b>${esc(entry.label)}</b>${esc(entry.value)}</span>`).join("")}</div>${renderShelf(component.entityId, component.documentTypes)}</div></details>`).join("")
+    : "<div class='empty'>No committed projection rows are available for this category.</div>";
+
+  $("list").querySelectorAll("[data-link-entity]").forEach((select) => {
+    select.addEventListener("change", () => {
+      if (!select.value) return;
+      documentState = linkDocument(documentState, { documentId: select.value, entityId: select.dataset.linkEntity });
+      render(activeTab);
+    });
+  });
+  $("list").querySelectorAll("[data-unlink-document]").forEach((button) => {
+    button.addEventListener("click", () => {
+      documentState = unlinkDocument(documentState, { documentId: button.dataset.unlinkDocument, entityId: button.dataset.entity });
+      render(activeTab);
+    });
+  });
+}
+
+$("tab").querySelectorAll("button").forEach((button) => {
+  button.addEventListener("click", () => {
+    $("tab").querySelectorAll("button").forEach((candidate) => candidate.classList.toggle("on", candidate === button));
+    render(button.dataset.tab);
+  });
+});
+
+try {
+  const [platformRows, driverRows, opticRows] = await Promise.all([
+    fetchJson("./nvb/board_platforms.json"),
+    fetchJson("./nvb/drivers_unique.json"),
+    fetchJson("./nvb/optics.json"),
+  ]);
+  catalogue = projectComponentCatalogue({
+    sourceRevision: SOURCE_REVISION,
+    boards: expandBoardProjectionRows(platformRows),
+    drivers: driverRows,
+    optics: opticRows,
+  });
+  $("source-status").textContent = `${catalogue.sourceRevision} · ${COMPONENT_CATALOGUE_SCHEMA_ID}@${COMPONENT_CATALOGUE_SCHEMA_VERSION} · ${DOCUMENT_REGISTER_SCHEMA_ID}@${DOCUMENT_REGISTER_SCHEMA_VERSION}`;
+  render("boards");
+} catch (error) {
+  $("source-status").textContent = "projection blocked";
+  $("source-status").className = "pill blocked";
+  $("list").innerHTML = `<div class="error"><strong>Fail-closed:</strong> ${esc(error?.message || error)}</div>`;
+}
+</script>
