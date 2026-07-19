@@ -2,7 +2,7 @@
 
 ## Session purpose
 
-This handoff records completed LAB-022 governed reference composition, preserves the permanent charter authority for both standing prompts, and identifies LAB-023 as the single next runnable parcel.
+This handoff records completed LAB-023 NVB Lab projection, preserves the permanent charter authority for both standing prompts, and identifies LAB-024 as the single next runnable parcel.
 
 ## Identity
 
@@ -12,11 +12,11 @@ This handoff records completed LAB-022 governed reference composition, preserves
 - Branch: `lane/code-pilot-lab`
 - Gate: `lab-ies`
 - Standing prompt authority: `docs/_context/lanes/lab-ies/LANE_CHARTER.md` contains both worker and orchestrator prompts
-- Starting HEAD for LAB-022: `340ab2130211567e0401e24a92c396b4319c63f4`
-- Completed feature checkpoint: `7fcb296c73ba52c7e70090b0b42323fcbe7a3feb`
-- Feature subject: `lab: checkpoint governed reference composition kernel`
+- Starting HEAD for LAB-023: `de56642bdf377ae7673cb09f29ac58fb9446fab3`
+- Completed feature checkpoint: `ca1c690da9c6d87e610129242146714555e19ec6`
+- Feature subject: `lab: checkpoint NVB Lab adapter`
 - Feature checkpoint confirmed on origin `lane/code-pilot-lab`
-- Consolidated seam envelope: `docs/_context/lanes/lab-ies/LAB-018_023_027_BATCH_SEAM_ENVELOPE.md`, version 1, expressly ratified for LAB-022 and approved unchanged for LAB-023
+- Consolidated seam envelope: `docs/_context/lanes/lab-ies/LAB-018_023_027_BATCH_SEAM_ENVELOPE.md`, version 1, approved unchanged for LAB-023
 - Branch-HEAD guard checkpoint: `6d34e500d407d5335e5eebb317636a67a5e98618`
 
 ## Branch-HEAD guard
@@ -27,24 +27,24 @@ After every documentation push, only the `Recorded branch HEAD` field is refresh
 
 ## Completed queue item
 
-`LAB-022-reference-composition-kernel` is complete.
+`LAB-023-nvb-lab-adapter` is complete.
 
 Exactly these two feature files were committed:
 
 ```text
-packages/lab-kernel/ies-toolkit/iesMerge.js
-tests/lab-kernel/iesReferenceComposition.test.js
+packages/lab-kernel/ies-toolkit/nvbLabAdapter.js
+tests/lab-kernel/nvbLabAdapter.test.js
 ```
 
-The module now exposes only the approved version-1 governed reference-composition candidate contract. It requires exactly two unique direct GT/OPT parents, preserves their order as provenance-significant, validates their sealed identities and exact one-millimetre photometric basis, and sums candela only cell-by-cell on exactly matching grids.
+The module now exposes only the approved version-1 immutable NVB Lab projection contract. It accepts exact LAB-018 resolution shapes and LAB-017 safe identity projections, preserves path, family, selection, thermals and blocker order, and enforces GT/OPT ownership for the two optional reference slots.
 
-Each parent-owned G12 wall-power value is counted once while shared overhead remains unresolved. The output is a deeply immutable non-authoritative `MERGED_CANDIDATE` with no allocated identity, approval, authority hash, seal or inherited assembly-owned values. No interpolation, resampling, N-parent handling, UI, persistence, route, Program, Runtime, Engine or Selector implementation was added.
+Unresolved values remain explicit, no ID or timestamp is generated, and emergency/EWIS assembly verification remains null. Outputs are deeply immutable while caller inputs stay unchanged. No loader, persistence, clock, browser storage, route, Program, Runtime, Engine or Selector implementation was added.
 
 ## Validation evidence
 
-- Focused changed-file `lab-ies` execution including the dedicated LAB-022 test: 232/232 passed.
-- Independent full `lab-ies` gate: 232/232 passed.
-- Gated feature commit execution: 232/232 passed.
+- Focused changed-file `lab-ies` execution including the dedicated LAB-023 test: 245/245 passed.
+- Independent full `lab-ies` gate: 245/245 passed.
+- Gated feature commit execution: 245/245 passed.
 - Failed, cancelled, skipped and todo counts were zero.
 
 ## Git and protected worktree state
@@ -55,10 +55,10 @@ The protected working-tree state after documentation closeout must remain:
 
 - staged: 0;
 - modified: 1 — only the unstaged `Recorded branch HEAD` synchronisation marker in `LANE_STATE.md`;
-- untracked: 27;
+- untracked: 26;
 - deleted: 0.
 
-The 27 protected untracked paths remain exactly those recorded in `LANE_STATE.md`. In particular, these explicitly non-queued paths remain untouched:
+The 26 protected untracked paths remain exactly those recorded in `LANE_STATE.md`. In particular, these explicitly non-queued paths remain untouched:
 
 ```text
 README.zip
@@ -84,20 +84,23 @@ tests/selectorCascadeCorrectness.test.js
 - `LAB-020-document-register-contract`: `done` and confirmed on origin.
 - `LAB-021-emergency-selection-contract`: `done` and confirmed on origin.
 - `LAB-022-reference-composition-kernel`: `done` and confirmed on origin.
+- `LAB-023-nvb-lab-adapter`: `done` and confirmed on origin.
 - Consolidated envelope: `LAB-018_023_027_BATCH_SEAM_ENVELOPE.md`, version 1, approved for all seven seams.
-- `LAB-023-nvb-lab-adapter`: `ready` and the only active parcel.
+- `LAB-024-resolver-fixture-corpus`: `ready` and the only active parcel.
 - LAB-027: approved but sequence-blocked.
-- Ready items: exactly one — LAB-023.
+- Ready items: exactly one — LAB-024.
 
 Program reported gate 45/45 passed, the approval decision committed and pushed, and its tree clean. No parallel or combined implementation is authorised.
 
 LAB-022 remains governed by its ratified binary-composition policy: exactly two unique non-MERGED parents, immutable order-significant provenance, exactly matching photometric grids with no interpolation/resampling, and allocation/authority/approval/sealing outside the kernel. Duplicate or pre-composed parents, reordered or missing provenance, grid mismatch and governance-boundary crossings fail closed.
 
-LAB-023 is approved under the exact version-1 immutable Lab projection contract. It may consume only the committed LAB-018 resolution and LAB-017 safe identity projections; unresolved values remain explicit, no ID or timestamp is generated, and assembly verification remains null.
+LAB-023 remains governed by the exact version-1 immutable Lab projection contract. It consumes only the committed LAB-018 resolution and LAB-017 safe identity projections; unresolved values remain explicit, no ID or timestamp is generated, and assembly verification remains null.
+
+LAB-024 is a bounded offline fixture corpus only. Every file must remain explicit demo/development evidence, contain no unsafe local path, secret or fabricated verified authority digest, and resolve only through committed safe development projections.
 
 LAB-017 remains governed by its approved version-1 envelope. Program retains all production allocation, live source reading, hosting, routing, persistence, authentication, CRM integration, deployment and endpoint ownership.
 
-The next safe action is LAB-023 in this same standing-worker batch. After its successful documentation closeout, the worker continues sequentially under the five-parcel charter until the first recorded boundary.
+The next safe action is LAB-024 in this same standing-worker batch. After its successful documentation closeout, the worker continues sequentially under the five-parcel charter until the first recorded boundary.
 
 ## LAB-017 immutable completion receipt
 

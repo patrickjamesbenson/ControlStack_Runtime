@@ -342,7 +342,7 @@ Evidence: `7fcb296c73ba52c7e70090b0b42323fcbe7a3feb`, confirmed on origin.
   - `packages/lab-kernel/ies-toolkit/nvbLabAdapter.js`
   - `tests/lab-kernel/nvbLabAdapter.test.js`
 - seam envelope: `docs/_context/lanes/lab-ies/LAB-018_023_027_BATCH_SEAM_ENVELOPE.md`, version 1; approved unchanged by Program & Integrate on 2026-07-20.
-- batch sequence: active parcel; LAB-022 is completed and closed out.
+- batch sequence: completed parcel; LAB-018 through LAB-023 are completed and closed out.
 - prohibitions:
   - no mutation of sealed DTOs or approved authority records;
   - no diagnostic `fingerprint()` identity generation;
@@ -354,7 +354,9 @@ Evidence: `7fcb296c73ba52c7e70090b0b42323fcbe7a3feb`, confirmed on origin.
 - depends on: LAB-017-reference-resolver-contract, LAB-018-nvb-resolution-contract
 - on success next: LAB-024-resolver-fixture-corpus
 - seam change: yes
-- status: ready
+- status: done
+
+Evidence: `ca1c690da9c6d87e610129242146714555e19ec6`, confirmed on origin.
 
 ### Q-14 Offline resolver fixture corpus
 - id: LAB-024-resolver-fixture-corpus
@@ -391,7 +393,7 @@ Evidence: `7fcb296c73ba52c7e70090b0b42323fcbe7a3feb`, confirmed on origin.
 - depends on: LAB-017-reference-resolver-contract, LAB-021-emergency-selection-contract
 - on success next: LAB-025-component-library-surface
 - seam change: no
-- status: queued
+- status: ready
 
 ### Q-15 Component library surface
 - id: LAB-025-component-library-surface

@@ -64,6 +64,52 @@ For human-observation acceptance, the worker must stop before making a completio
 
 The operating model is recorded in `LANE_CHARTER.md`, `DECISION_LOG.md`, `LANE_STATE.md` and `WORK_QUEUE.md`. Both standing prompts live only in the stable charter; `SESSION_HANDOFF.md` carries launch pointers and current session evidence.
 
+## LAB-023 NVB Lab adapter — 2026-07-20
+
+### Identity and scope
+
+- starting HEAD: `de56642bdf377ae7673cb09f29ac58fb9446fab3`;
+- queue item: `LAB-023-nvb-lab-adapter`;
+- approved consolidated seam envelope: version 1, unchanged;
+- authorised implementation paths only:
+  - `packages/lab-kernel/ies-toolkit/nvbLabAdapter.js`;
+  - `tests/lab-kernel/nvbLabAdapter.test.js`.
+
+### Behaviour evidence
+
+The completed adapter:
+
+- exports only the approved version-1 immutable Lab projection API and schema constants;
+- accepts only the exact LAB-018 resolution schema and the exact LAB-017 safe identity projection shape;
+- enforces GT and OPT kind ownership for gear-tray and optic slots while allowing either optional slot to remain null;
+- preserves path, family, selection, governing thermals and unresolved blocker order without mutation or rekeying;
+- emits no generated reference identity, timestamp, diagnostic value, authority state or private authority field;
+- keeps emergency and EWIS assembly verification exactly null;
+- returns deeply immutable plain-data output without mutating or freezing caller inputs;
+- contains no loader, persistence, clock, browser storage, route, Program, Runtime, Engine or Selector implementation seam.
+
+### Test and gate evidence
+
+- focused changed-file `lab-ies` execution: 245/245 passed;
+- independent full `lab-ies` gate: 245/245 passed;
+- gated feature commit execution: 245/245 passed;
+- failed, cancelled, skipped and todo counts were zero in every execution.
+
+### Commit and push evidence
+
+- feature commit: `ca1c690da9c6d87e610129242146714555e19ec6`;
+- subject: `lab: checkpoint NVB Lab adapter`;
+- files: exactly the two authorised implementation paths;
+- push: origin `lane/code-pilot-lab`, confirmed successful;
+- no HTML, fixture, resolver, authority, Program, Runtime, Engine or Selector path changed;
+- protected dirty paths and the unstaged branch-HEAD marker were preserved.
+
+### Resulting queue boundary
+
+- LAB-023 is `done`.
+- LAB-024 becomes the single next `ready` item.
+- LAB-027 remains approved but sequence-blocked.
+
 ## LAB-022 governed reference composition kernel — 2026-07-20
 
 ### Identity and scope
