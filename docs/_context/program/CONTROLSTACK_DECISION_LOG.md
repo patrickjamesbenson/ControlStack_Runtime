@@ -433,3 +433,43 @@ Selector-side registration eligibility and candidate construction must not requi
 ### Rollback
 
 Rollback restores the prior implementation only as a diagnostic baseline; it must not be reactivated as an accepted contract because manual pre-Engine Tier remains logically unsatisfiable. A failed implementation must instead remain blocked while preserving the approved authority model.
+
+---
+
+## 2026-07-19 — LAB-017 version-1 seam envelope approved unchanged
+
+**Status:** APPROVED; LAB-017 MAY MOVE FROM BLOCKED TO READY.
+
+**Supersedes:** The earlier LAB-017 hold remains historical evidence but is no longer the current decision.
+
+**Evidence classification:** The Lab lane reports that the immutable version-1 seam envelope is committed, no implementation has started, no other seam is included, and the full `lab-ies` gate passes 159/159. The present Program app cannot independently inspect the Lab branch, so the envelope contents and gate receipt remain `REPORTED` until the implementation parcel is submitted for acceptance.
+
+### Approved envelope
+
+Program approves the committed LAB-017 version-1 envelope unchanged, limited to:
+
+- the exact public interface and data shapes recorded in that envelope;
+- the exact two-file implementation boundary recorded in that envelope;
+- the complete current-consumer list and the compatibility break expressly accepted by that envelope;
+- the recorded safe rollback sequence; and
+- the recorded success, rejection, immutability, leak-prevention, and boundary tests.
+
+### Authority boundary preserved
+
+Program retains production serial allocation, resolver hosting, route-to-storage mapping, persistence, authentication, deployment, and endpoint ownership. LAB-017 may define and implement only the bounded Lab-side seam described by the approved envelope. It may not introduce production allocation, host a resolver, add or change routes, select storage, persist production state, authenticate callers, change deployment, or own an endpoint.
+
+### Execution constraints
+
+1. The Lab orchestrator may change LAB-017 from `blocked` to `ready` and commission exactly one worker under the committed envelope.
+2. Before implementation starts, Lab lane memory must cite both the exact immutable envelope commit and this Program approval commit.
+3. The worker may change only the two authorised implementation files and the required Lab context closeout files; all protected dirty paths remain excluded.
+4. The public interface, data shapes, consumer break, rollback, tests, and ownership split must not drift from version 1. Any drift or extra seam returns LAB-017 to blocked and requires a new Program decision.
+5. Completion evidence must include focused tests for every envelope test class, full `lab-ies` green, exact staged-set proof, immutable commit and push, final Git inventory, and updated Lab handoff.
+
+### Consumer and rollback treatment
+
+The compatibility break is accepted only for the current consumers explicitly named in the version-1 envelope. Unlisted or newly discovered consumers are not silently included. Rollback must follow the envelope sequence and restore the pre-LAB-017 Lab behaviour without altering Program-owned production services or data.
+
+### Decision
+
+No amendments are required. LAB-017 is authorised to move to `ready` unchanged.

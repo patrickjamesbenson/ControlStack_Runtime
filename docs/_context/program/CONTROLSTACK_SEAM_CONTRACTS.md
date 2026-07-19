@@ -254,3 +254,23 @@ The Selector parcel must provide old/new fixtures, explicit contract identity, t
 ### Consumer impact
 
 The approved change alters the Selector-to-Engine input contract but does not approve a change to the downstream Tier field name, meaning, or authority. Lab & IES is a potential downstream consumer and needs compatibility evidence only if it reads Tier; no Lab code change is authorised by this amendment. Any downstream output-shape change requires another Program decision.
+
+## 2026-07-19 approved Lab seam amendment — LAB-017 version 1
+
+**Status:** APPROVED UNCHANGED; IMPLEMENTATION MAY PROCEED.
+
+### Approved contract
+
+The immutable LAB-017 version-1 envelope is the complete authority for this parcel. Approval covers only its exact public interface and data shapes, exact two-file Lab implementation boundary, named current consumers and accepted compatibility break, safe rollback sequence, and success/rejection/immutability/leak-prevention/boundary tests.
+
+### Program-owned boundary
+
+The seam does not transfer production serial allocation, resolver hosting, route-to-storage mapping, persistence, authentication, deployment, or endpoint ownership to Lab. Those remain Program-owned. LAB-017 must remain a bounded Lab-side interface implementation and must not introduce production services or storage authority.
+
+### Compatibility rule
+
+The compatibility break is accepted only for consumers explicitly named by the version-1 envelope. Unlisted or newly discovered consumers are outside this approval. Any altered interface, data shape, consumer set, ownership split, rollback, test contract, implementation file list, or additional seam requires a new Program decision before work continues.
+
+### Evidence and completion
+
+The Lab lane must bind the exact envelope commit to this Program approval before commissioning work. Acceptance requires the exact implementation commit, the two-file scope proof, focused evidence for all envelope test classes, full `lab-ies` green, protected-dirt exclusion, final Git inventory, push receipt, and updated lane handoff.

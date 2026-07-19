@@ -397,3 +397,13 @@ Program has approved, with conditions, the Selector proposal to remove manually 
 The Selector parcel must preserve every other required field, read-only/no-write behaviour, explicit Control selection, and current downstream Tier result semantics. It must reject Tier as client authority, avoid defaults and fabrication, produce a specific blocker when derivation is unavailable or ambiguous, update the contract fixtures and tests, pass `selector-engine`, and supply live or sealed registration/invocation evidence plus the immutable commit receipt.
 
 No Lab code change is authorised. Lab & IES is treated as a potential compatibility consumer only if it reads the derived Tier result; any incompatibility or output-shape change requires a separate bounded decision and parcel. Selector may now proceed under the recorded Program decision. Patrick has no action.
+
+## 2026-07-19 LAB-017 version-1 seam approval
+
+Program has approved the committed LAB-017 version-1 envelope unchanged and authorised the Lab orchestrator to move the item from `blocked` to `ready`.
+
+The approval is confined to the exact public interface and data shapes, exact two implementation files, named current consumers and accepted compatibility break, safe rollback sequence, and success/rejection/immutability/leak-prevention/boundary tests recorded in that immutable envelope. No other seam is admitted.
+
+Program retains production serial allocation, resolver hosting, route-to-storage mapping, persistence, authentication, deployment, and endpoint ownership. The implementation must not cross those boundaries. Any change to the approved interface, data shape, consumers, ownership split, rollback, tests, file list, or seam count requires a new Program decision.
+
+Lab must cite its exact envelope commit and this approval before commissioning one bounded worker, then return the implementation commit, focused and full gate evidence, exact staged-set proof, final Git inventory, push receipt, and updated handoff. Patrick has no action.

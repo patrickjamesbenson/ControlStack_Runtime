@@ -243,3 +243,12 @@ P2 Checkpoint 1 is **IMPLEMENTATION COMPLETE / GATE GREEN / COMMIT BLOCKED BY SH
 - **FAIL-CLOSED RULE:** no default or client-supplied Tier authority; ambiguous or unavailable derivation must produce a specific blocker.
 - **DOWNSTREAM:** no Tier output-shape change is approved. Lab & IES is a potential compatibility consumer only; no Lab implementation is authorised unless a separate incompatibility parcel is evidenced.
 - **NEXT:** Selector may commission the bounded implementation and cite the Program decision and seam-contract amendment recorded in this commit. Patrick has no action.
+
+## 2026-07-19 LAB-017 version-1 approval state
+
+- **REPORTED:** Lab committed the complete version-1 seam envelope; no implementation has started; no other seam is included; full `lab-ies` passes 159/159.
+- **PROGRAM DECISION:** approve the envelope unchanged and authorise LAB-017 to move from `blocked` to `ready`.
+- **APPROVED BOUNDARY:** the exact public interface and data shapes, exact two-file implementation scope, named current-consumer break, rollback sequence, and success/rejection/immutability/leak-prevention/boundary tests recorded in version 1.
+- **PROGRAM OWNERSHIP PRESERVED:** production serial allocation, resolver hosting, route-to-storage mapping, persistence, authentication, deployment, and endpoint ownership.
+- **INVALIDATION RULE:** any drift in interface, shape, consumers, ownership, rollback, tests, file scope, or seam count requires a new Program decision.
+- **NEXT:** Lab may record this approval, change LAB-017 to `ready`, and commission one bounded worker. Patrick has no action.

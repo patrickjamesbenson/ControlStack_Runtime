@@ -317,3 +317,26 @@ The Selector lane must return exact base/head commits and changed paths, old/new
 ### Consumer treatment
 
 No Lab implementation is authorised. Lab & IES is a potential compatibility consumer only if it reads the derived Tier result; any discovered incompatibility becomes a separate bounded Lab parcel after the Selector producer parcel is accepted.
+
+## 2026-07-19 — LAB-017 version-1 implementation admission
+
+**Status:** APPROVED; READY FOR LAB IMPLEMENTATION.
+
+### Admission basis
+
+The committed version-1 Lab seam envelope is approved unchanged on the reported evidence: exact public interface and data shapes, exact two-file implementation scope, complete current-consumer compatibility break, safe rollback sequence, complete success/rejection/immutability/leak-prevention/boundary tests, no implementation started, no other seam included, and `lab-ies` 159/159.
+
+### Authorised work
+
+- Move LAB-017 from `blocked` to `ready`.
+- Commission one bounded Lab worker against the immutable version-1 envelope.
+- Change only the two implementation files named by that envelope, plus the required Lab context closeout files.
+- Preserve all protected dirty paths outside the staged and committed set.
+
+### Program-owned exclusions
+
+Production serial allocation, resolver hosting, route-to-storage mapping, persistence, authentication, deployment, and endpoint ownership remain outside LAB-017 and remain Program-owned.
+
+### Acceptance return
+
+Lab must return the exact envelope and implementation commits, complete changed-path inventory, focused test receipt for every envelope test class, full `lab-ies` receipt, exact staged-set proof, final Git inventory, push receipt, and updated lane handoff. Any interface, shape, consumer, ownership, rollback, test, file-scope, or seam expansion requires new Program approval.
