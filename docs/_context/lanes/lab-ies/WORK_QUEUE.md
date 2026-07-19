@@ -180,7 +180,9 @@ Evidence: `56c8921d92d324701605d03aa7368646e4d4e063`, confirmed on origin.
 - depends on: none
 - on success next: LAB-017-reference-resolver-contract after recorded Integrate approval
 - seam change: no
-- status: ready
+- status: done
+
+Evidence: `ae14232b5a4fbff6fca15004a0583047fc5a319d`, confirmed on origin.
 
 ### Q-7 Reference and resolver contract
 - id: LAB-017-reference-resolver-contract

@@ -2,7 +2,7 @@
 
 ## Session purpose
 
-This handoff records completion of standing-worker queue item `LAB-015-ugr-surface` and the exact next safe action.
+This handoff records the reusable standing-worker prompt, completion of queue item `LAB-016-nvb-offline-fixtures`, and the current seam-approval boundary.
 
 ## Identity
 
@@ -11,24 +11,31 @@ This handoff records completion of standing-worker queue item `LAB-015-ugr-surfa
 - Root: `C:\ControlStack_Worktrees\code-pilot-lab`
 - Branch: `lane/code-pilot-lab`
 - Gate: `lab-ies`
-- Starting HEAD: `8c4f7f94ce6eb642ee4a079247e737e914e82194`
-- Completed feature checkpoint: `56c8921d92d324701605d03aa7368646e4d4e063`
-- Feature subject: `lab: checkpoint UGR surface`
+- Reusable prompt checkpoint: `1df62fccd91ac66509b02960ad988f6ef90c0b52`
+- Starting HEAD for LAB-016: `1df62fccd91ac66509b02960ad988f6ef90c0b52`
+- Completed feature checkpoint: `ae14232b5a4fbff6fca15004a0583047fc5a319d`
+- Feature subject: `lab: checkpoint offline NVB fixtures`
 - Feature checkpoint confirmed on origin `lane/code-pilot-lab`
 
 ## Completed queue item
 
-`LAB-015-ugr-surface` is complete.
+`LAB-016-nvb-offline-fixtures` is complete.
 
-Exactly this feature file was committed:
+Exactly these seven feature files were committed:
 
 ```text
-packages/lab-kernel/ies-toolkit/ugr.html
+packages/lab-kernel/ies-toolkit/nvb/board_platforms.json
+packages/lab-kernel/ies-toolkit/nvb/derived_resolution.json
+packages/lab-kernel/ies-toolkit/nvb/drivers_unique.json
+packages/lab-kernel/ies-toolkit/nvb/lab_form.json
+packages/lab-kernel/ies-toolkit/nvb/optics.json
+packages/lab-kernel/ies-toolkit/nvb/spec_codes.json
+packages/lab-kernel/ies-toolkit/nvb/systems.json
 ```
 
-The surface now provides a deterministic Lab-only presentation over the committed UGR modules. It delegates parsing, CIE 190 table calculation and result rendering; contains no calculation implementation; reads uploaded IES content in memory only; reports invalid input visibly; and explicitly states that rendered output is not an approved or sealed reference.
+The files are a bounded offline/development fixture snapshot, not the live RuntimeData authority source. The locked 16-field Lab form remains exact, literal `today` values were replaced by the fixed snapshot timestamp, and three contradictory duplicated values were reconciled without changing the observed schemas.
 
-Verification wording is limited to the committed CIE 190 worked-example regression evidence. No production UGR module, authority contract, project-generation path, persistence route, network route or cross-lane implementation was changed.
+Repository search found no local authority path, file URL, UNC path, credential or secret. No JavaScript, HTML, resolver, database or cross-lane implementation was changed.
 
 ## Validation evidence
 
@@ -39,16 +46,16 @@ Verification wording is limited to the committed CIE 190 worked-example regressi
 
 ## Git and protected worktree state
 
-The feature parcel was staged as exactly the sole authorised file, committed and pushed.
+The feature parcel was staged as exactly the seven authorised fixture files, committed and pushed.
 
 The final protected working-tree state after documentation closeout must remain:
 
 - staged: 0;
 - modified: 0;
-- untracked: 34;
+- untracked: 33;
 - deleted: 0.
 
-The 34 protected untracked paths remain exactly those recorded in `LANE_STATE.md`. In particular, these explicitly non-queued paths remain untouched:
+The 33 protected untracked paths remain exactly those recorded in `LANE_STATE.md`. In particular, these explicitly non-queued paths remain untouched:
 
 ```text
 README.zip
@@ -67,30 +74,20 @@ tests/selectorCascadeCorrectness.test.js
 
 ## Queue state and next action
 
-- `LAB-015-ugr-surface`: `done`.
-- Declared `on success next`: `LAB-016-nvb-offline-fixtures`.
-- `LAB-016-nvb-offline-fixtures`: `ready`, because it has no dependencies and requires no owner or Program & Integrate seam approval.
+- `LAB-016-nvb-offline-fixtures`: `done`.
+- Declared `on success next`: `LAB-017-reference-resolver-contract` after recorded Program & Integrate approval.
+- `LAB-017-reference-resolver-contract`: `blocked`, because it is a seam change and no Program & Integrate approval is recorded.
+- Ready items: none.
 
-The exact next safe action is to run a new standing worker against only `LAB-016-nvb-offline-fixtures` and these authorised files:
-
-```text
-packages/lab-kernel/ies-toolkit/nvb/board_platforms.json
-packages/lab-kernel/ies-toolkit/nvb/derived_resolution.json
-packages/lab-kernel/ies-toolkit/nvb/drivers_unique.json
-packages/lab-kernel/ies-toolkit/nvb/lab_form.json
-packages/lab-kernel/ies-toolkit/nvb/optics.json
-packages/lab-kernel/ies-toolkit/nvb/spec_codes.json
-packages/lab-kernel/ies-toolkit/nvb/systems.json
-```
+The next safe action is an orchestrator review and recorded Program & Integrate seam approval before any worker starts LAB-017. Do not commission a worker for LAB-017 until that approval appears in lane memory.
 
 No subsequent item was executed in this session.
 
 ## Prohibited actions retained
 
-- no work outside the next queue item's authorised files;
-- no claim that offline fixtures are the live RuntimeData authority source;
-- no production database path, credential, JavaScript, HTML or resolver change during LAB-016;
-- no replacement of the locked 16-field Lab form;
+- no LAB-017 implementation before recorded Program & Integrate seam approval;
+- no reverse-authority reconstruction, legacy alternative reference schema, diagnostic authority identity or unsafe governed path;
+- no public resolver route, server implementation, HTML, fixture, Selector or Program change during LAB-017;
 - no reset, restore, clean, deletion or movement of protected dirty paths;
 - no execution of `scripts/clear_chaff.ps1`;
 - no donor write;

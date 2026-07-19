@@ -13,9 +13,9 @@ Current repository evidence overrides stale historical statements.
 - Root: `C:\ControlStack_Worktrees\code-pilot-lab`
 - Branch: `lane/code-pilot-lab`
 - Gate: `lab-ies`
-- Starting HEAD for LAB-015: `8c4f7f94ce6eb642ee4a079247e737e914e82194`
-- Completed feature HEAD: `56c8921d92d324701605d03aa7368646e4d4e063`
-- Feature subject: `lab: checkpoint UGR surface`
+- Starting HEAD for LAB-016: `1df62fccd91ac66509b02960ad988f6ef90c0b52`
+- Completed feature HEAD: `ae14232b5a4fbff6fca15004a0583047fc5a319d`
+- Feature subject: `lab: checkpoint offline NVB fixtures`
 - Feature push: confirmed on origin `lane/code-pilot-lab`
 
 ## Connected capability state
@@ -29,33 +29,38 @@ Current repository evidence overrides stale historical statements.
 - Arbitrary shell execution: no
 - Allowed gate: `lab-ies`
 
-## Latest completed parcel — LAB-015
+## Latest completed parcel — LAB-016
 
-Queue item `LAB-015-ugr-surface` is complete.
+Queue item `LAB-016-nvb-offline-fixtures` is complete.
 
-Exactly one authorised file was changed and committed:
+Exactly these seven authorised files were changed and committed:
 
 ```text
-packages/lab-kernel/ies-toolkit/ugr.html
+packages/lab-kernel/ies-toolkit/nvb/board_platforms.json
+packages/lab-kernel/ies-toolkit/nvb/derived_resolution.json
+packages/lab-kernel/ies-toolkit/nvb/drivers_unique.json
+packages/lab-kernel/ies-toolkit/nvb/lab_form.json
+packages/lab-kernel/ies-toolkit/nvb/optics.json
+packages/lab-kernel/ies-toolkit/nvb/spec_codes.json
+packages/lab-kernel/ies-toolkit/nvb/systems.json
 ```
 
 Verified outcome:
 
-- the surface is a standalone Lab-only presentation over the committed UGR modules;
-- parsing delegates to `parseIes`, CIE 190 calculation delegates to `computeUgr190Table`, and markup delegates to `renderUgrTableHTML` with `UGR_CSS`;
-- the page contains no UGR formula or calculation implementation;
-- static local imports replace the prior time-varying cache-busting imports;
-- uploaded IES content is read in memory only and the source model is not mutated by the surface;
-- malformed input fails visibly without creating a partial result;
-- verification wording is confined to the committed worked-example evidence: 2H × 4H at 70/50/20, crosswise 11.0, endwise 13.1 and background luminance approximately 8.71 cd/m²;
-- the result is explicitly labelled presentation-only and non-authoritative;
-- no approval, sealing, project generation, persistence, network route, cross-lane contract or production-kernel change was introduced.
+- the seven files are committed as a bounded offline development fixture snapshot and are not represented as the live RuntimeData authority source;
+- the locked 16-field Lab form remains exact and unchanged;
+- no schema was added or replaced;
+- literal `today` status values were replaced with the fixed snapshot timestamp `2026-07-19T00:00:00`;
+- the 60 mm opal direct baseline and two duplicated system-height descriptions were reconciled with their own structured records;
+- derived optic rows align with the observed system families, worst-case labels and optic/spec-code records;
+- repository search found no local path, file URL, UNC path, credential, secret, token or API key;
+- no JavaScript, HTML, resolver, production database or cross-lane path was changed.
 
 ## Validation evidence
 
 The connected app exposes the fixed `lab-ies` gate as the available changed-file and full validation path.
 
-- Focused changed-file execution for `ugr.html`: 159 tests, 159 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
+- Focused changed-file execution for the seven NVB fixture files: 159 tests, 159 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
 - Full `lab-ies` gate: 159 tests, 159 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
 - Gated feature commit execution: 159 tests, 159 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
 
@@ -65,7 +70,7 @@ The protected working-tree state after the feature push, and the state to remain
 
 - staged: 0;
 - modified: 0;
-- untracked: 34;
+- untracked: 33;
 - deleted: 0.
 
 Protected untracked paths:
@@ -90,7 +95,6 @@ packages/lab-kernel/ies-toolkit/lab/
 packages/lab-kernel/ies-toolkit/lab_request.html
 packages/lab-kernel/ies-toolkit/labbench.html
 packages/lab-kernel/ies-toolkit/luminaire_provenance.html
-packages/lab-kernel/ies-toolkit/nvb/
 packages/lab-kernel/ies-toolkit/nvbComponents.js
 packages/lab-kernel/ies-toolkit/nvbLabAdapter.js
 packages/lab-kernel/ies-toolkit/nvbReference.js
@@ -122,7 +126,9 @@ tests/selectorCascadeCorrectness.test.js
 - `LAB-013-polar-renderer`: done.
 - `LAB-014-summary-normalise-surface`: done.
 - `LAB-015-ugr-surface`: done.
-- Next item: `LAB-016-nvb-offline-fixtures`.
-- Resulting status: `ready`, because it has no dependencies and requires no seam approval.
+- `LAB-016-nvb-offline-fixtures`: done.
+- Next ordered item: `LAB-017-reference-resolver-contract`.
+- Resulting status: `blocked`, because it is a seam change and no Program & Integrate approval is recorded.
+- Ready items: none.
 
 No subsequent queue item was executed.

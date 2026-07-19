@@ -6,6 +6,60 @@
 - Historical handoff content is retained as reported context unless freshly reverified.
 - Test output proves only the behaviour exercised by the named tests; low-level merge tests do not by themselves prove completion of the final governed merge.
 
+## Reusable standing-worker prompt — 2026-07-19
+
+- `SESSION_HANDOFF.md` now contains exactly one generic `STANDING WORKER — Lab & IES` prompt.
+- The prompt requires live repository HEAD discovery, top-ready queue selection, exact authorised-file staging, gated feature and documentation pushes, preservation of dirty work, and retention of the same prompt verbatim in future handoffs.
+- It explicitly limits `NEEDS YOU` to actions Patrick must physically perform and requires ordinary progress notes to use plain text without that label.
+- commit: `1df62fccd91ac66509b02960ad988f6ef90c0b52`;
+- subject: `docs(lab): record reusable standing worker prompt`;
+- gate: 159/159 passed;
+- push: origin `lane/code-pilot-lab`, confirmed successful.
+
+## LAB-016 offline NVB fixtures — 2026-07-19
+
+### Identity and scope
+
+Observed through `repo_info`, `repo_git_status`, `repo_git_recent`, `repo_scope_guard`, source inspection, repository grep and the connected gate:
+
+- app: `ControlStack Lab and IES Authority Lane`;
+- lane: `lab-ies`;
+- root: `C:\ControlStack_Worktrees\code-pilot-lab`;
+- branch: `lane/code-pilot-lab`;
+- starting HEAD: `1df62fccd91ac66509b02960ad988f6ef90c0b52`;
+- queue item: `LAB-016-nvb-offline-fixtures`;
+- authorised paths: exactly the seven JSON files under `packages/lab-kernel/ies-toolkit/nvb/` listed in `WORK_QUEUE.md`;
+- seam change: no.
+
+### Behaviour evidence
+
+The completed snapshot:
+
+- is recorded as bounded offline/development fixture data, not the live RuntimeData authority source;
+- preserves the exact locked 16-field Lab form and introduces no schema replacement;
+- replaces all literal `today` status values with the fixed snapshot timestamp `2026-07-19T00:00:00`;
+- reconciles the 60 mm opal direct baseline slug with its own family and emission record;
+- reconciles two duplicated height descriptions with the corresponding structured `height_mm_d` fields;
+- retains observed board, driver, system, optic, spec-code and derived-resolution content without adding a production data-source contract;
+- contains no local path, file URL, UNC path, credential, secret, token or API key;
+- changes no JavaScript, HTML, resolver, database or cross-lane path.
+
+### Test and gate evidence
+
+- Focused changed-file `lab-ies` execution: 159/159 passed.
+- Full `lab-ies` gate: 159/159 passed.
+- Gated feature commit execution: 159/159 passed.
+- Failed, cancelled, skipped and todo counts were all zero in each execution.
+
+### Commit and push evidence
+
+- commit: `ae14232b5a4fbff6fca15004a0583047fc5a319d`;
+- subject: `lab: checkpoint offline NVB fixtures`;
+- files: exactly the seven authorised JSON fixture paths;
+- push: origin `lane/code-pilot-lab`, confirmed successful;
+- post-feature state: staged 0, modified 0, untracked 33, deleted 0;
+- all unrelated dirty paths were preserved.
+
 ## LAB-015 UGR surface — 2026-07-19
 
 ### Identity and scope
