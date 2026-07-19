@@ -6,6 +6,52 @@
 - Historical handoff content is retained as reported context unless freshly reverified.
 - Test output proves only the behaviour exercised by the named tests; low-level merge tests do not by themselves prove completion of the final governed merge.
 
+## LAB-015 UGR surface — 2026-07-19
+
+### Identity and scope
+
+Observed through `repo_info`, `repo_git_status`, `repo_git_recent`, `repo_scope_guard`, source inspection, repository grep and the connected gate:
+
+- app: `ControlStack Lab and IES Authority Lane`;
+- lane: `lab-ies`;
+- root: `C:\ControlStack_Worktrees\code-pilot-lab`;
+- branch: `lane/code-pilot-lab`;
+- starting HEAD: `8c4f7f94ce6eb642ee4a079247e737e914e82194`;
+- queue item: `LAB-015-ugr-surface`;
+- authorised path only: `packages/lab-kernel/ies-toolkit/ugr.html`;
+- seam change: no.
+
+### Behaviour evidence
+
+The completed standalone Lab surface:
+
+- imports the committed shared Lab stylesheet;
+- delegates IES parsing to `parseIes`;
+- delegates all CIE 190 calculation to `computeUgr190Table`;
+- delegates result rendering to `renderUgrTableHTML` and `UGR_CSS`;
+- contains no UGR formula or calculation implementation;
+- uses deterministic static local imports rather than time-varying cache-busting URLs;
+- reads uploaded IES content in memory only and surfaces parse/calculation errors without partial output;
+- accurately limits verification claims to the committed worked-example test at 2H × 4H and 70/50/20: crosswise 11.0, endwise 13.1 and background luminance approximately 8.71 cd/m²;
+- explicitly labels the output presentation-only and non-authoritative;
+- contains no approval, sealing, project generation, persistence, network, filesystem or cross-lane seam.
+
+### Test and gate evidence
+
+- Focused changed-file `lab-ies` execution: 159/159 passed.
+- Full `lab-ies` gate: 159/159 passed.
+- Gated feature commit execution: 159/159 passed.
+- Failed, cancelled, skipped and todo counts were all zero in each execution.
+
+### Commit and push evidence
+
+- commit: `56c8921d92d324701605d03aa7368646e4d4e063`;
+- subject: `lab: checkpoint UGR surface`;
+- files: exactly `packages/lab-kernel/ies-toolkit/ugr.html`;
+- push: origin `lane/code-pilot-lab`, confirmed successful;
+- post-feature state: staged 0, modified 0, untracked 34, deleted 0;
+- all unrelated dirty paths were preserved.
+
 ## LAB-014 summary normalise surface — 2026-07-19
 
 ### Identity and scope

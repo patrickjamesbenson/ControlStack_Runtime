@@ -2,7 +2,7 @@
 
 ## Session purpose
 
-This handoff records completion of standing-worker queue item `LAB-014-summary-normalise-surface` and the exact next safe action.
+This handoff records completion of standing-worker queue item `LAB-015-ugr-surface` and the exact next safe action.
 
 ## Identity
 
@@ -11,24 +11,24 @@ This handoff records completion of standing-worker queue item `LAB-014-summary-n
 - Root: `C:\ControlStack_Worktrees\code-pilot-lab`
 - Branch: `lane/code-pilot-lab`
 - Gate: `lab-ies`
-- Starting HEAD: `4132fe346739f9d367a9cdd32146789d6da0292d`
-- Completed feature checkpoint: `ba724e8130858c2ad5b298b3444a18eb90e5dd35`
-- Feature subject: `lab: checkpoint summary normalise surface`
+- Starting HEAD: `8c4f7f94ce6eb642ee4a079247e737e914e82194`
+- Completed feature checkpoint: `56c8921d92d324701605d03aa7368646e4d4e063`
+- Feature subject: `lab: checkpoint UGR surface`
 - Feature checkpoint confirmed on origin `lane/code-pilot-lab`
 
 ## Completed queue item
 
-`LAB-014-summary-normalise-surface` is complete.
+`LAB-015-ugr-surface` is complete.
 
 Exactly this feature file was committed:
 
 ```text
-packages/lab-kernel/ies-toolkit/summary.html
+packages/lab-kernel/ies-toolkit/ugr.html
 ```
 
-The surface remains a Lab-only, non-authoritative summary and normalisation harness. It imports the committed polar renderer and canonical keyword contract, removes its inline duplicate polar kernel, previews the LM-63 header/keywords/G-values without replacing the writer, uses `_INTERNAL_AMBIENT_TA_C`, confines non-canonical Lab measurements to provenance, and preserves the existing normalisation order.
+The surface now provides a deterministic Lab-only presentation over the committed UGR modules. It delegates parsing, CIE 190 table calculation and result rendering; contains no calculation implementation; reads uploaded IES content in memory only; reports invalid input visibly; and explicitly states that rendered output is not an approved or sealed reference.
 
-No production authority approval/sealing, merge, project generation, persistence, resolver publication or imported production-module change was introduced.
+Verification wording is limited to the committed CIE 190 worked-example regression evidence. No production UGR module, authority contract, project-generation path, persistence route, network route or cross-lane implementation was changed.
 
 ## Validation evidence
 
@@ -45,10 +45,10 @@ The final protected working-tree state after documentation closeout must remain:
 
 - staged: 0;
 - modified: 0;
-- untracked: 35;
+- untracked: 34;
 - deleted: 0.
 
-The 35 protected untracked paths remain exactly those recorded in `LANE_STATE.md`. In particular, these explicitly non-queued paths remain untouched:
+The 34 protected untracked paths remain exactly those recorded in `LANE_STATE.md`. In particular, these explicitly non-queued paths remain untouched:
 
 ```text
 README.zip
@@ -67,22 +67,30 @@ tests/selectorCascadeCorrectness.test.js
 
 ## Queue state and next action
 
-- `LAB-014-summary-normalise-surface`: `done`.
-- Declared `on success next`: `LAB-015-ugr-surface`.
-- `LAB-015-ugr-surface`: `ready`, because `LAB-012-lab-style-foundation` is done and no owner or Program & Integrate seam approval is required.
+- `LAB-015-ugr-surface`: `done`.
+- Declared `on success next`: `LAB-016-nvb-offline-fixtures`.
+- `LAB-016-nvb-offline-fixtures`: `ready`, because it has no dependencies and requires no owner or Program & Integrate seam approval.
 
-The exact next safe action is to run a new standing worker against only `LAB-015-ugr-surface` and its sole authorised file:
+The exact next safe action is to run a new standing worker against only `LAB-016-nvb-offline-fixtures` and these authorised files:
 
 ```text
-packages/lab-kernel/ies-toolkit/ugr.html
+packages/lab-kernel/ies-toolkit/nvb/board_platforms.json
+packages/lab-kernel/ies-toolkit/nvb/derived_resolution.json
+packages/lab-kernel/ies-toolkit/nvb/drivers_unique.json
+packages/lab-kernel/ies-toolkit/nvb/lab_form.json
+packages/lab-kernel/ies-toolkit/nvb/optics.json
+packages/lab-kernel/ies-toolkit/nvb/spec_codes.json
+packages/lab-kernel/ies-toolkit/nvb/systems.json
 ```
 
 No subsequent item was executed in this session.
 
 ## Prohibited actions retained
 
-- no work outside the next queue item's authorised file;
-- no UGR formula or kernel duplication, no changes to `iesUgr.js` or `iesUgrCie190.js`, no authority/project-generation/cross-lane behaviour and no persistence/network route during LAB-015;
+- no work outside the next queue item's authorised files;
+- no claim that offline fixtures are the live RuntimeData authority source;
+- no production database path, credential, JavaScript, HTML or resolver change during LAB-016;
+- no replacement of the locked 16-field Lab form;
 - no reset, restore, clean, deletion or movement of protected dirty paths;
 - no execution of `scripts/clear_chaff.ps1`;
 - no donor write;

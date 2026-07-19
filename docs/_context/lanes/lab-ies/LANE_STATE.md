@@ -13,9 +13,9 @@ Current repository evidence overrides stale historical statements.
 - Root: `C:\ControlStack_Worktrees\code-pilot-lab`
 - Branch: `lane/code-pilot-lab`
 - Gate: `lab-ies`
-- Starting HEAD for LAB-014: `4132fe346739f9d367a9cdd32146789d6da0292d`
-- Completed feature HEAD: `ba724e8130858c2ad5b298b3444a18eb90e5dd35`
-- Feature subject: `lab: checkpoint summary normalise surface`
+- Starting HEAD for LAB-015: `8c4f7f94ce6eb642ee4a079247e737e914e82194`
+- Completed feature HEAD: `56c8921d92d324701605d03aa7368646e4d4e063`
+- Feature subject: `lab: checkpoint UGR surface`
 - Feature push: confirmed on origin `lane/code-pilot-lab`
 
 ## Connected capability state
@@ -29,32 +29,33 @@ Current repository evidence overrides stale historical statements.
 - Arbitrary shell execution: no
 - Allowed gate: `lab-ies`
 
-## Latest completed parcel — LAB-014
+## Latest completed parcel — LAB-015
 
-Queue item `LAB-014-summary-normalise-surface` is complete.
+Queue item `LAB-015-ugr-surface` is complete.
 
 Exactly one authorised file was changed and committed:
 
 ```text
-packages/lab-kernel/ies-toolkit/summary.html
+packages/lab-kernel/ies-toolkit/ugr.html
 ```
 
 Verified outcome:
 
-- the surface remains a Lab-only, non-authoritative summary and normalisation harness;
-- the inline polar implementation was removed and replaced by the committed `renderPolar` import;
-- the exact committed `CANONICAL_KEYWORDS` contract is imported and used to filter and order outgoing preview rows;
-- the preview shows the LM-63 header, canonical keywords, TILT line, G-values and angle blocks without replacing the committed writer;
-- `_INTERNAL_AMBIENT_TA_C` replaces the stale ambient keyword;
-- supplementary power, thermal and intended-use values remain in Lab-only provenance rather than outgoing IES keywords;
-- the existing order remains dimensions, metadata, level, symmetrise, interpolate, pad, one-millimetre reduction and orientation;
-- no authority approval/sealing, merge, project generation, persistence, resolver publication or imported production-module change was introduced.
+- the surface is a standalone Lab-only presentation over the committed UGR modules;
+- parsing delegates to `parseIes`, CIE 190 calculation delegates to `computeUgr190Table`, and markup delegates to `renderUgrTableHTML` with `UGR_CSS`;
+- the page contains no UGR formula or calculation implementation;
+- static local imports replace the prior time-varying cache-busting imports;
+- uploaded IES content is read in memory only and the source model is not mutated by the surface;
+- malformed input fails visibly without creating a partial result;
+- verification wording is confined to the committed worked-example evidence: 2H × 4H at 70/50/20, crosswise 11.0, endwise 13.1 and background luminance approximately 8.71 cd/m²;
+- the result is explicitly labelled presentation-only and non-authoritative;
+- no approval, sealing, project generation, persistence, network route, cross-lane contract or production-kernel change was introduced.
 
 ## Validation evidence
 
 The connected app exposes the fixed `lab-ies` gate as the available changed-file and full validation path.
 
-- Focused changed-file execution for `summary.html`: 159 tests, 159 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
+- Focused changed-file execution for `ugr.html`: 159 tests, 159 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
 - Full `lab-ies` gate: 159 tests, 159 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
 - Gated feature commit execution: 159 tests, 159 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
 
@@ -64,7 +65,7 @@ The protected working-tree state after the feature push, and the state to remain
 
 - staged: 0;
 - modified: 0;
-- untracked: 35;
+- untracked: 34;
 - deleted: 0.
 
 Protected untracked paths:
@@ -100,7 +101,6 @@ packages/lab-kernel/ies-toolkit/provenance_explorer.html
 packages/lab-kernel/ies-toolkit/reference_builder.html
 packages/lab-kernel/ies-toolkit/selector_stub.html
 packages/lab-kernel/ies-toolkit/test_request.html
-packages/lab-kernel/ies-toolkit/ugr.html
 packages/lab-kernel/ies-toolkit/zencontrolEmergency.js
 scripts/clear_chaff.ps1
 serve.mjs
@@ -121,7 +121,8 @@ tests/selectorCascadeCorrectness.test.js
 - `LAB-012-lab-style-foundation`: done.
 - `LAB-013-polar-renderer`: done.
 - `LAB-014-summary-normalise-surface`: done.
-- Next item: `LAB-015-ugr-surface`.
-- Resulting status: `ready`, because its style dependency is done and no seam approval is required.
+- `LAB-015-ugr-surface`: done.
+- Next item: `LAB-016-nvb-offline-fixtures`.
+- Resulting status: `ready`, because it has no dependencies and requires no seam approval.
 
 No subsequent queue item was executed.

@@ -154,7 +154,9 @@ Evidence: `ba724e8130858c2ad5b298b3444a18eb90e5dd35`, confirmed on origin.
 - depends on: LAB-012-lab-style-foundation
 - on success next: LAB-016-nvb-offline-fixtures
 - seam change: no
-- status: ready
+- status: done
+
+Evidence: `56c8921d92d324701605d03aa7368646e4d4e063`, confirmed on origin.
 
 ### Q-6 NVB offline fixture snapshot
 - id: LAB-016-nvb-offline-fixtures
@@ -178,7 +180,7 @@ Evidence: `ba724e8130858c2ad5b298b3444a18eb90e5dd35`, confirmed on origin.
 - depends on: none
 - on success next: LAB-017-reference-resolver-contract after recorded Integrate approval
 - seam change: no
-- status: queued
+- status: ready
 
 ### Q-7 Reference and resolver contract
 - id: LAB-017-reference-resolver-contract
