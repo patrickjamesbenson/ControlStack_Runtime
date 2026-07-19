@@ -13,11 +13,11 @@ Current repository evidence overrides stale historical statements.
 - Root: `C:\ControlStack_Worktrees\code-pilot-lab`
 - Branch: `lane/code-pilot-lab`
 - Gate: `lab-ies`
-- Recorded branch HEAD: `a01f3f386ae7e7f1917efa82a896b5a6c235532c`
+- Recorded branch HEAD: `2333c1197abf898e7a680455f99918823cb76e30`
 - Branch-HEAD guard checkpoint: `6d34e500d407d5335e5eebb317636a67a5e98618`
-- Starting HEAD for LAB-016: `1df62fccd91ac66509b02960ad988f6ef90c0b52`
-- Completed feature HEAD: `ae14232b5a4fbff6fca15004a0583047fc5a319d`
-- Feature subject: `lab: checkpoint offline NVB fixtures`
+- Starting HEAD for LAB-017: `09ac99cb35b6af45696b4c83e0051a1651bb2f14`
+- Completed feature HEAD: `2333c1197abf898e7a680455f99918823cb76e30`
+- Feature subject: `lab: checkpoint reference resolver contract`
 - Feature push: confirmed on origin `lane/code-pilot-lab`
 
 ## Branch-HEAD synchronisation invariant
@@ -42,7 +42,29 @@ Before any queue item is selected, a worker must compare `Recorded branch HEAD` 
 - Arbitrary shell execution: no
 - Allowed gate: `lab-ies`
 
-## Latest completed parcel — LAB-016
+## Latest completed parcel — LAB-017
+
+Queue item `LAB-017-reference-resolver-contract` is complete.
+
+Exactly these two authorised files were changed and committed:
+
+```text
+packages/lab-kernel/ies-toolkit/nvbReference.js
+tests/lab-kernel/nvbReference.test.js
+```
+
+Verified outcome:
+
+- the module exports only the approved version-1 public interface and frozen constants;
+- GT, OPT and MERGED identities use exact six-digit canonical IDs and fail closed on unsupported values;
+- sealed DTO identity projection is exact, deeply immutable and excludes private authority, photometry, keywords, evidence bodies, diagnostics and assembly verification;
+- seven resolver path kinds build and parse canonical host-free paths only;
+- unsafe URLs, hosts, local paths, traversal, encoded separators, malformed IDs and unsupported component kinds fail closed;
+- evidence summaries are deterministic and deeply immutable, while emergency and EWIS assembly verification remain `null`;
+- production allocation, hosting, routing, persistence, authentication, deployment and endpoints remain Program-owned;
+- the five named protected legacy Lab prototypes were not changed and may remain incompatible until their later queue parcels.
+
+## Previous completed parcel — LAB-016
 
 Queue item `LAB-016-nvb-offline-fixtures` is complete.
 
@@ -73,9 +95,9 @@ Verified outcome:
 
 The connected app exposes the fixed `lab-ies` gate as the available changed-file and full validation path.
 
-- Focused changed-file execution for the seven NVB fixture files: 159 tests, 159 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
-- Full `lab-ies` gate: 159 tests, 159 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
-- Gated feature commit execution: 159 tests, 159 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
+- Focused changed-file execution for the two LAB-017 files: 169 tests, 169 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
+- Full `lab-ies` gate: 169 tests, 169 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
+- Gated feature commit execution: 169 tests, 169 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
 
 ## Protected final Git state
 
@@ -83,7 +105,7 @@ The protected working-tree state after documentation closeout is:
 
 - staged: 0;
 - modified: 1 — only the unstaged `Recorded branch HEAD` synchronisation marker in this file;
-- untracked: 33;
+- untracked: 32;
 - deleted: 0.
 
 Protected untracked paths:
@@ -110,7 +132,6 @@ packages/lab-kernel/ies-toolkit/labbench.html
 packages/lab-kernel/ies-toolkit/luminaire_provenance.html
 packages/lab-kernel/ies-toolkit/nvbComponents.js
 packages/lab-kernel/ies-toolkit/nvbLabAdapter.js
-packages/lab-kernel/ies-toolkit/nvbReference.js
 packages/lab-kernel/ies-toolkit/nvbResolve.js
 packages/lab-kernel/ies-toolkit/onemm_contract.html
 packages/lab-kernel/ies-toolkit/provenance.html
@@ -135,13 +156,13 @@ tests/selectorCascadeCorrectness.test.js
 
 - Program & Integrate approved LAB-017 version 1 unchanged on 2026-07-19.
 - Approved seam envelope: `docs/_context/lanes/lab-ies/LAB-017_SEAM_ENVELOPE.md`.
-- Approved implementation scope is exactly:
+- Implemented scope was exactly:
   - `packages/lab-kernel/ies-toolkit/nvbReference.js`;
   - `tests/lab-kernel/nvbReference.test.js`.
-- Approval covers the fixed API, identity and resolver-path shapes, evidence-readiness semantics, named compatibility break, rollback order and specified success/failure tests.
+- The implementation stayed within the fixed API, identity and resolver-path shapes, evidence-readiness semantics, named compatibility break, rollback order and specified tests.
 - Program retains production allocation, resolver hosting, routing, persistence, authentication, deployment and endpoint ownership.
 - Any change to the approved envelope requires a new seam decision.
-- LAB-017 may proceed as the single top ready queue item.
+- LAB-017 is complete and confirmed on origin.
 
 ## Queue state
 
@@ -152,8 +173,9 @@ tests/selectorCascadeCorrectness.test.js
 - `LAB-014-summary-normalise-surface`: done.
 - `LAB-015-ugr-surface`: done.
 - `LAB-016-nvb-offline-fixtures`: done.
-- Next ordered item: `LAB-017-reference-resolver-contract`.
-- Resulting status: `ready`, because Program & Integrate approval of version 1 is recorded.
-- Ready items: exactly LAB-017.
+- `LAB-017-reference-resolver-contract`: done.
+- Next ordered item: `LAB-018-nvb-resolution-contract`.
+- Resulting status: `blocked`, because its separate Program & Integrate seam approval is not recorded.
+- Ready items: none.
 
-No LAB-017 implementation had started at the time of this approval checkpoint.
+No subsequent queue item was executed.

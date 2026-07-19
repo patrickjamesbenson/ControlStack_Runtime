@@ -2,7 +2,7 @@
 
 ## Session purpose
 
-This handoff records the permanent branch-HEAD lane-memory guard, the committed LAB-017 seam envelope, and the current approval boundary.
+This handoff records completion of LAB-017 under the approved version-1 seam envelope, the permanent branch-HEAD guard, and the next blocked queue boundary.
 
 ## Identity
 
@@ -12,15 +12,14 @@ This handoff records the permanent branch-HEAD lane-memory guard, the committed 
 - Branch: `lane/code-pilot-lab`
 - Gate: `lab-ies`
 - Reusable prompt checkpoint: `1df62fccd91ac66509b02960ad988f6ef90c0b52`
-- Starting HEAD for LAB-016: `1df62fccd91ac66509b02960ad988f6ef90c0b52`
-- Completed feature checkpoint: `ae14232b5a4fbff6fca15004a0583047fc5a319d`
-- Feature subject: `lab: checkpoint offline NVB fixtures`
+- Starting HEAD for LAB-017: `09ac99cb35b6af45696b4c83e0051a1651bb2f14`
+- Completed feature checkpoint: `2333c1197abf898e7a680455f99918823cb76e30`
+- Feature subject: `lab: checkpoint reference resolver contract`
 - Feature checkpoint confirmed on origin `lane/code-pilot-lab`
 - LAB-017 seam-envelope checkpoint: `f927ced1ca77c8b11ef8b13b9d6bb3833618844c`
-- Seam envelope: `docs/_context/lanes/lab-ies/LAB-017_SEAM_ENVELOPE.md`, version 1
-- Branch-HEAD guard reconciliation starting HEAD: `f927ced1ca77c8b11ef8b13b9d6bb3833618844c`
+- LAB-017 approval checkpoint: `09ac99cb35b6af45696b4c83e0051a1651bb2f14`
+- Seam envelope: `docs/_context/lanes/lab-ies/LAB-017_SEAM_ENVELOPE.md`, version 1, approved unchanged
 - Branch-HEAD guard checkpoint: `6d34e500d407d5335e5eebb317636a67a5e98618`
-- Guard subject: `docs(lab): add branch HEAD guard`
 
 ## Branch-HEAD guard
 
@@ -30,45 +29,39 @@ After every documentation push, only the `Recorded branch HEAD` field is refresh
 
 ## Completed queue item
 
-`LAB-016-nvb-offline-fixtures` is complete.
+`LAB-017-reference-resolver-contract` is complete.
 
-Exactly these seven feature files were committed:
+Exactly these two feature files were committed:
 
 ```text
-packages/lab-kernel/ies-toolkit/nvb/board_platforms.json
-packages/lab-kernel/ies-toolkit/nvb/derived_resolution.json
-packages/lab-kernel/ies-toolkit/nvb/drivers_unique.json
-packages/lab-kernel/ies-toolkit/nvb/lab_form.json
-packages/lab-kernel/ies-toolkit/nvb/optics.json
-packages/lab-kernel/ies-toolkit/nvb/spec_codes.json
-packages/lab-kernel/ies-toolkit/nvb/systems.json
+packages/lab-kernel/ies-toolkit/nvbReference.js
+tests/lab-kernel/nvbReference.test.js
 ```
 
-The files are a bounded offline/development fixture snapshot, not the live RuntimeData authority source. The locked 16-field Lab form remains exact, literal `today` values were replaced by the fixed snapshot timestamp, and three contradictory duplicated values were reconciled without changing the observed schemas.
+The module now exposes only the approved version-1 identity, resolver-path and evidence-readiness contract. Outputs are deterministic and deeply immutable; malformed identities, unsafe paths, unsupported route kinds and conflicting evidence fail closed. Emergency and EWIS assembly verification remain `null` and independent.
 
-Repository search found no local authority path, file URL, UNC path, credential or secret. No JavaScript, HTML, resolver, database or cross-lane implementation was changed.
+No host, route, storage, allocation, persistence, authentication, deployment, endpoint, HTML, fixture, Program, Runtime, Engine or Selector implementation was changed. The named legacy Lab prototypes remain protected and may be temporarily incompatible until their later queue parcels.
 
 ## Validation evidence
 
-- Focused changed-file `lab-ies` execution: 159/159 passed.
-- Full `lab-ies` gate: 159/159 passed.
-- Gated feature commit execution: 159/159 passed.
-- Branch-HEAD guard documentation gate and guarded commit execution: 159/159 passed.
-- Guard checkpoint push: confirmed on origin `lane/code-pilot-lab`.
+- Focused changed-file `lab-ies` execution: 169/169 passed.
+- Independent full `lab-ies` gate: 169/169 passed.
+- Gated feature commit execution: 169/169 passed.
+- Feature checkpoint push: confirmed on origin `lane/code-pilot-lab`.
 - Failed, cancelled, skipped and todo counts were zero.
 
 ## Git and protected worktree state
 
-The feature parcel was staged as exactly the seven authorised fixture files, committed and pushed.
+The feature parcel was staged as exactly the two approved implementation files, committed and pushed.
 
 The protected working-tree state after documentation closeout must remain:
 
 - staged: 0;
 - modified: 1 — only the unstaged `Recorded branch HEAD` synchronisation marker in `LANE_STATE.md`;
-- untracked: 33;
+- untracked: 32;
 - deleted: 0.
 
-The 33 protected untracked paths remain exactly those recorded in `LANE_STATE.md`. In particular, these explicitly non-queued paths remain untouched:
+The 32 protected untracked paths remain exactly those recorded in `LANE_STATE.md`. In particular, these explicitly non-queued paths remain untouched:
 
 ```text
 README.zip
@@ -88,20 +81,21 @@ tests/selectorCascadeCorrectness.test.js
 ## Queue state and next action
 
 - `LAB-016-nvb-offline-fixtures`: `done`.
-- `LAB-017-reference-resolver-contract`: `ready`.
-- Program & Integrate approved the committed version-1 envelope unchanged on 2026-07-19.
-- Approved implementation scope: one pure helper module and one dedicated focused test file.
-- Ready items: exactly LAB-017.
+- `LAB-017-reference-resolver-contract`: `done`.
+- Next ordered item: `LAB-018-nvb-resolution-contract`.
+- LAB-018 status: `blocked` pending its separate Program & Integrate seam approval.
+- Ready items: none.
 
-Approval covers only the fixed interface and data shapes, exact two-file boundary, named compatibility break, recorded rollback and specified tests. Program retains production allocation, resolver hosting, routing, persistence, authentication, deployment and endpoint ownership. Any change requires a new seam decision.
+LAB-017 remains governed by the approved version-1 envelope. Program retains production allocation, resolver hosting, routing, persistence, authentication, deployment and endpoint ownership. Any change to that envelope requires a new seam decision.
 
-One bounded Lab worker may proceed under the committed envelope. No other seam or implementation is approved.
+The next safe action is Program & Integrate review of LAB-018's own seam envelope before any worker starts it.
 
 ## Prohibited actions retained
 
-- no LAB-017 implementation outside the recorded version-1 approval or exact two-file boundary;
+- no LAB-017 change outside the recorded version-1 approval without a new seam decision;
 - no reverse-authority reconstruction, legacy alternative reference schema, diagnostic authority identity or unsafe governed path;
-- no public resolver route, server implementation, HTML, fixture, Selector or Program change during LAB-017;
+- no public resolver route, server implementation, HTML, fixture, Selector or Program ownership absorbed into the Lab contract;
+- no LAB-018 implementation before its separate seam approval is recorded;
 - no reset, restore, clean, deletion or movement of protected dirty paths;
 - no execution of `scripts/clear_chaff.ps1`;
 - no donor write;

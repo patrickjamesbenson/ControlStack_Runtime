@@ -205,7 +205,9 @@ Evidence: `ae14232b5a4fbff6fca15004a0583047fc5a319d`, confirmed on origin.
 - depends on: LAB-010-reference-driven-generation, LAB-011-project-ies-generation
 - on success next: LAB-018-nvb-resolution-contract after recorded Integrate approval
 - seam change: yes
-- status: ready
+- status: done
+
+Evidence: `2333c1197abf898e7a680455f99918823cb76e30`, confirmed on origin.
 
 ### Q-8 NVB resolution contract
 - id: LAB-018-nvb-resolution-contract

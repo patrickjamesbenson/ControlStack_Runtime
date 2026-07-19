@@ -81,8 +81,53 @@ Repository search found no committed Program, Runtime, Engine, Selector or test 
 - Approval covers only the fixed public interface and data shapes, exact two-file scope, named compatibility break, recorded rollback and specified success/failure tests.
 - Program retains production allocation, resolver hosting, routing, persistence, authentication, deployment and endpoint ownership.
 - Any envelope change requires a new seam decision.
-- LAB-017 is the single top `ready` queue item.
-- No implementation or unrelated queue parcel had started at the time of the approval checkpoint.
+- Approval checkpoint: `09ac99cb35b6af45696b4c83e0051a1651bb2f14`, subject `docs(lab): record LAB-017 seam approval`, confirmed on origin.
+
+## LAB-017 reference and resolver contract — 2026-07-19
+
+### Identity and scope
+
+- starting HEAD: `09ac99cb35b6af45696b4c83e0051a1651bb2f14`;
+- queue item: `LAB-017-reference-resolver-contract`;
+- approved envelope: version 1, unchanged;
+- authorised implementation paths only:
+  - `packages/lab-kernel/ies-toolkit/nvbReference.js`;
+  - `tests/lab-kernel/nvbReference.test.js`.
+
+### Behaviour evidence
+
+The completed contract:
+
+- exports only the approved versioned public interface and frozen constants;
+- validates and formats exact six-digit GT, OPT and MERGED reference identities;
+- projects only the minimum safe immutable identity from `controlstack.lab.reference.1mm.v1`;
+- emits and parses seven canonical host-free resolver path forms without implementing hosting, routing or storage;
+- rejects schemes, hosts, local paths, traversal, encoded separators, malformed IDs, unsafe segments and unsupported component kinds;
+- summarises evidence readiness deterministically while leaving emergency and EWIS assembly verification exactly `null`;
+- exposes no filesystem, network, browser storage, DOM, clock, random, environment, reverse-authority or legacy-schema seam;
+- leaves the five named protected legacy Lab prototypes untouched and accepts their temporary incompatibility.
+
+### Test and gate evidence
+
+- focused changed-file `lab-ies` execution: 169/169 passed;
+- independent full `lab-ies` gate: 169/169 passed;
+- gated feature commit execution: 169/169 passed;
+- failed, cancelled, skipped and todo counts were zero in every execution.
+
+### Commit and push evidence
+
+- feature commit: `2333c1197abf898e7a680455f99918823cb76e30`;
+- subject: `lab: checkpoint reference resolver contract`;
+- files: exactly the two approved implementation paths;
+- push: origin `lane/code-pilot-lab`, confirmed successful;
+- no Program, Runtime, Engine, Selector, HTML, fixture, server or persistence file changed;
+- post-feature state preserved the single unstaged HEAD marker and all unrelated protected paths.
+
+### Resulting queue boundary
+
+- LAB-017 is `done`.
+- LAB-018 is next but remains `blocked` pending its separate Program & Integrate seam approval.
+- Ready items: none.
 
 ## Reusable standing-worker prompt — 2026-07-19
 
