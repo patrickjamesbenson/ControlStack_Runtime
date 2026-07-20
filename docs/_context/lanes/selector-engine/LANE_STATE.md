@@ -330,7 +330,7 @@ A separate live blocker is now recorded for Ambient temperature. The active sour
 
 ## 2026-07-20 SEL-017 live-shaped exact-System consequence closeout — latest controlling state
 
-**Recorded lane work HEAD:** `8c4ca13cdd3a50f83f2f885dff0fd2c2ea89b36d` — `fix(selector): enforce exact-system indirect consequence`.
+**Recorded lane work HEAD:** `960b9d074743afd4b91053b15494e2de6cf6ad58` — `docs(selector): approve Ambient engine seam`.
 
 SEL-017 resumed from the seven explicitly preserved authorised recovery paths. The only new edit corrected the remaining Beam D/I test expectation so the optional duplicate flat `indirectCapability` record may be absent; no duplicate record was manufactured for either System variant.
 
