@@ -431,3 +431,17 @@ Every completed worker updates this index with:
 - Worker recovery: the trial edit was restored; no dirty path, test, staging, commit, push, browser save, registration, or Engine invocation remains — USER-PROVIDED WORKER EVIDENCE AND VERIFIED CLEAN GIT STATE.
 - Scope decision: add only the exact required summary module to the secure lane write guard; no directory-wide modules permission — ORCHESTRATOR DECISION.
 - Queue result: SEL-018 blocked solely on tooling configuration; SEL-019 and the held registration/Engine checkpoints remain unchanged — RECORDED.
+
+## 2026-07-21 — Corrected thermal sequence admission evidence
+
+- Restarted connected app reports runtime root `C:\ControlStack_Worktrees\selector-engine`, lane `selector-engine`, required branch `lane/selector-engine`, gate `selector-engine`, write/stage/commit/push enabled and current tree clean — VERIFIED.
+- Restarted app reports both exact allowances required for this sequence: the narrow Selector summary exception and `docs/_context/lanes/selector-engine/**`; no broad `packages/modules/**` permission exists — VERIFIED.
+- Branch-memory guard: actual HEAD is the dedicated `docs(selector): reconcile lane state` wrapper and its immediate parent equals the recorded lane work HEAD — VERIFIED.
+- Program receipt: completed Lab thermal batch accepted with resolver, component and working projection version 2; corrected 25/35/10 semantics; `authorityState: null`; varied-uplift and contradiction guards; final Lab gate 262/262 — REPORTED PROGRAM-ACCEPTED CROSS-LANE EVIDENCE.
+- Current code audit: `selectorReadonlyEngineCandidateMapper.js` contains no `selectedRoomTaC`; no accepted SEL-018 implementation exists — VERIFIED.
+- Corrected SEL-018 scope: candidate mapper plus its focused mapper test only; `selectedRoomTaC` is the sole thermal semantic output; Selector performs no addition, clamp, interpolation or lookup — PROGRAM-APPROVED AND RECORDED.
+- THERM-P1 scope: one new Program thermal-evidence validation adapter and focused test; identity/evidence/triplet validation only; no thermal arithmetic — PROGRAM-APPROVED AND RECORDED.
+- THERM-E1 scope: one new Engine execution module and focused test; Engine applies the rise exactly once and delegates to the existing curve parser — PROGRAM-APPROVED AND RECORDED.
+- Mandatory varied-optic proof: with identical selected room, current and curve, a different optic-bound measured rise must move both lookup temperature and verified lm/m — PROGRAM-APPROVED AND RECORDED.
+- Main isolation: no main, donor, Lab, Program feature, unfinished runtime-port, source, route, persistence or existing curve-parser file is included — VERIFIED QUEUE BOUNDARY.
+- Queue result: SEL-018 is sole ready; THERM-P1 blocked behind its accepted closeout; THERM-E1 blocked behind THERM-P1; superseded direct-`temp_c` live acceptance is held — RECORDED.

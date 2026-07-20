@@ -283,3 +283,27 @@ This log is append-oriented. Do not silently rewrite historical decisions.
 **Rationale:** The approved Ambient implementation must change the factory-approved input summary from Ambient-optional to Ambient-required at registration readiness. The queue already authorises that exact module, but the connected secure app currently excludes its directory. The worker restored its trial edit and stopped cleanly, proving a tooling-scope mismatch rather than an implementation failure.
 
 **Consequence:** SEL-018 remains blocked until the connected app reports the exact file as writable. All Ambient authority, field, Celsius, registration, fail-closed, parcel-split, and live-proof decisions remain unchanged. Once the narrow guard is active, the orchestrator may mark SEL-018 ready and commission a fresh standing worker.
+
+## 2026-07-21 — Corrected thermal ownership supersedes the direct lookup Ambient seam
+
+**Decision:** Program & Integrate has accepted the completed Lab version-2 thermal producer receipt and superseded the earlier direct `lighting.ambient_temp_c` to `temp_c` implementation plan. SEL-018 now passes only the selected room temperature as `selectedRoomTaC` and calculates nothing.
+
+**Rationale:** Lab evidence distinguishes the absolute reference room temperature, absolute reference internal temperature and measured optic rise. Only Engine may combine the selected room with the optic rise. Passing room Ambient directly as lookup temperature would omit the optic effect; allowing Selector to derive the lookup would duplicate Engine ownership.
+
+**Consequence:** SEL-018 is reduced to exactly the candidate mapper and its focused test. It must accept one committed source-backed Ambient value, emit only `selectedRoomTaC`, preserve the existing non-thermal candidate, and reject missing, malformed, duplicate, uncommitted or non-source-backed Ambient. It must emit no rise, reference-internal, derived, lookup, board-temperature or verified-output field.
+
+## 2026-07-21 — Program validation and Engine execution remain separate parcels
+
+**Decision:** The corrected thermal chain is implemented in three ordered parcels: SEL-018 room-only handoff, THERM-P1 Program evidence validation, then THERM-E1 Engine thermal lumen execution.
+
+**Rationale:** Cross-lane identity and evidence acceptance is a Program responsibility, while temperature addition, curve clamp/interpolation and verified lm/m are Engine responsibilities. Keeping those parcels separate prevents unresolved Lab evidence from becoming Engine authority and prevents the Selector from performing thermal math.
+
+**Consequence:** THERM-P1 may bind the accepted Selector candidate, Program-validated source-backed optic identity and exact Lab v2 projection into an immutable accepted Program bundle, but performs no addition or lookup. THERM-E1 consumes only that accepted bundle, applies `opticThermalRiseTaC` exactly once, and delegates to the existing curve parser. Direct Lab input and caller-supplied derived or lookup temperatures fail closed.
+
+## 2026-07-21 — Varied-optic movement is mandatory acceptance evidence
+
+**Decision:** THERM-E1 acceptance must vary one optic-bound measured rise while keeping selected room, drive current and curve data fixed, and prove that both lookup temperature and verified lm/m change.
+
+**Rationale:** Current database thermal values are placeholders and identical across rows. Baseline examples alone cannot distinguish a genuine per-optic evidence lookup from a hardcoded constant.
+
+**Consequence:** A green implementation must fail if it hardcodes 35°C, hardcodes a 10°C rise, reads the absolute reference-internal value as the rise, or applies the rise twice. The existing curve parser remains unchanged.

@@ -381,3 +381,27 @@ SEL-002 and SEL-003 are held as acceptance checkpoints so they cannot trigger du
 The first SEL-018 worker stopped before implementation because the connected secure lane app excludes the exact Selector summary module already authorised by the queue. The trial edit was restored and the tree is clean. No test, stage, commit, push, browser save, registration, or Engine action occurred.
 
 SEL-018 is blocked only until the app write guard allows exactly `packages/modules/cs-selector/selectorFactoryApprovedInputsSummary.js`. Do not grant broader `packages/modules/**` access. After the app is reconnected and `repo_info` reports that exact allowance, the orchestrator must mark SEL-018 ready, reconcile the guard wrapper if necessary, and commission one fresh standing worker. Until then do not start another worker or perform any live Ambient action.
+
+## 2026-07-21 corrected thermal completion handoff
+
+The restarted connected app is now correctly bound to the isolated Selector worktree on `lane/selector-engine`. The tree is clean, gated Git is enabled, and both the exact Selector summary exception and canonical lane-memory path are writable. No main or runtime-port work is present in this lane.
+
+Program has accepted the completed Lab thermal producer receipt and approved three separate parcels in this order:
+
+1. SEL-018 — Selector passes only the selected room temperature.
+2. THERM-P1 — Program validates and binds the selected optic to Lab version-2 thermal evidence.
+3. THERM-E1 — Engine applies the measured rise exactly once and resolves the curve output.
+
+### Immediate standing-worker action
+
+SEL-018 is the sole ready item. Change exactly the candidate mapper and its focused test. Read one committed source-backed Ambient selection, canonicalise its finite Celsius value and emit exactly `selectedRoomTaC`. Preserve all existing non-thermal candidate fields. Missing, malformed, duplicate, uncommitted or non-source-backed Ambient must block.
+
+Selector must not emit or calculate reference room, absolute reference internal, optic rise, derived internal, lookup temperature, board temperature, clamp/interpolation state or verified lm/m. It must not change the option service, readiness producer, registration, server or curve parser.
+
+After the feature and five-file closeout are pushed, THERM-P1 becomes ready. It uses one new Program adapter module and one focused test, validates source-backed optic identity plus exact Lab v2 evidence, preserves Lab authority null and emits the accepted Program bundle without arithmetic.
+
+After THERM-P1 and its closeout are pushed, THERM-E1 becomes ready. It uses one new Engine module and one focused test, rejects direct Lab and caller-derived values, computes selected room plus measured optic rise once, and delegates to the existing curve parser.
+
+The mandatory Engine test uses two optic-bound accepted bundles with different rises and identical room, current and curve. Both lookup temperature and verified lm/m must change. This must fail for a hardcoded 35°C, hardcoded 10°C, the absolute reference-internal value used as rise, or double counting.
+
+The old direct `lighting.ambient_temp_c` to `temp_c` live-acceptance parcel is held and must not run. Final live/cross-lane acceptance requires a later Program commission after THERM-E1. No browser, registration or live Engine action is needed before then.

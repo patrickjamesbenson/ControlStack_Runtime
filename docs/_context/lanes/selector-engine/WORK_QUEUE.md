@@ -100,34 +100,59 @@
 * recovery state: the halted workers left exactly `packages/workspace-kernel/selectorReferenceOptionsService.js` and `tests/selectorCascadeCorrectness.test.js` modified and unstaged, alongside the five authorised recovery documents. Preserve all seven paths. Both direct-only and direct-indirect sides may legitimately omit the optional duplicate flat `indirectCapability` record. Correct both over-constrained presence assertions, rerun the live-shaped regression, and retain only implementation changes proven necessary by the remaining page-level assertions. Do not manufacture a duplicate record for either System variant to make the test green.
 * prohibitions: do not alter source data; do not merge or rename System variants; do not remove legitimate indirect OPTICS rows; do not change test-case recall, Emergency, EWIS, Sensor, Run persistence, registration transport, readiness-preview intent logic, Tier, Control, RuntimeData, Lab, Program, donor, or main; do not widen beyond the first proven automatic-consequence divergence.
 
-### Q-2H Implement Ambient authority and the temperature/lumen Engine seam
+### Q-2H Emit the selected room temperature without thermal calculation
 
 * id: SEL-018
-* status: blocked
-* tooling precondition: the secure lane app write guard must explicitly allow only `packages/modules/cs-selector/selectorFactoryApprovedInputsSummary.js`; no broader `packages/modules/**` scope is approved
-* depends-on: SEL-017
-* seam approval: Program & Integrate recorded on 2026-07-20
-* seam change: yes — approved authority, registration timing, field name, Celsius unit, and fail-closed ownership are unchanged
+* status: ready
+* depends-on: SEL-017 and recorded Program acceptance of the corrected Lab thermal receipt
+* seam approval: Program & Integrate corrected thermal ruling and exact SEL-018 amendment recorded on 2026-07-21
+* seam change: yes — Selector owns only the committed source-backed room selection and no thermal arithmetic
 * gate: selector-engine
-* authorised files: `packages/workspace-kernel/selectorReferenceOptionsService.js`, `packages/modules/cs-selector/selectorFactoryApprovedInputsSummary.js`, `packages/workspace-kernel/selectorLmTemperatureReadinessPreview.js`, `packages/workspace-kernel/selectorReadonlyEngineCandidateMapper.js`, `apps/workspace-shell/src/projectBrowserSelectedProjectServerOwnedRegistrationClientTransport.js`, `packages/workspace-kernel/projectBrowserSelectedProjectServerOwnedRegistrationBoundary.js`, `packages/workspace-kernel/engineRunTableSelectedProjectReadonlyInvokeCapability.js`, `server.js`, `tests/selectorReferenceOptionsService.test.js`, `tests/selectorLightControlSpine.test.js`, `tests/selectorReadonlyEngineCandidateMapper.test.js`, `tests/runtimeShellProjectBrowserSelectedProjectServerOwnedRegistrationClientTransport.test.js`, `tests/runtimeProjectBrowserSelectedProjectServerOwnedRegistrationBoundary.test.js`, `tests/runtimeEngineRunTableSelectedProjectReadonlyInvokeCapability.test.js`, `tests/runtimeLumenCurveParseInterpolationContract.test.js`, and closeout updates to the five mutable lane context files. Change only the minimum subset proven necessary.
-* objective: implement one source-backed Ambient temperature selector and carry its committed finite numeric Celsius value through registration as `lighting.ambient_temp_c` to the protected read-only Engine temperature/lumen boundary as `temp_c`, without performing live browser acceptance or invoking Engine.
-* acceptance: selectable values come only from explicit finite Celsius choices in the active read-only `SYSTEM_POLICY` authority. No valid source choice leaves Ambient unavailable and requires upstream source correction. Browser-session save semantics remain unchanged, while server-owned registration requires exactly one committed source-backed Ambient value and remains blocked when it is absent or invalid. The candidate carries `lighting.ambient_temp_c` as a finite JSON number in degrees Celsius; the protected bridge maps the identical number to `temp_c`. Missing, blank, ambiguous, non-numeric, non-finite, malformed, or non-source-backed values fail closed before donor Engine execution. Focused tests visibly prove source extraction, numeric parsing, presentation/readiness, candidate shape, registration refusal, final server guard, unchanged numeric mapping, and absence of every default or rescue path. The complete `selector-engine` gate passes. Exactly the authorised feature/test subset is staged, gated, committed, and pushed, followed by the separate durable closeout, second complete gate, exact context-only reconciliation commit/push, and clean handoff state. No live/browser evidence is required or claimed in this parcel.
-* evidence: the live UI has no Ambient selector; `selectorFactoryApprovedInputsSummary` currently reports `ambientRequired: false`; `selectorReadonlyEngineCandidateMapper` omits Ambient from the candidate; the active source contains `SYSTEM_POLICY`; the existing Selector option service declares Ambient source-backed from that table; and the runtime lumen-curve interpolation contract rejects requests without finite `temp_c`.
-* prohibitions: do not fabricate source values or defaults; do not edit active source data from this lane; do not infer temperature from application, IP, System, Tier, test fixtures, optics, product type, lab data, or donor fallbacks; do not perform a browser save, registration POST, live acceptance, active-revision claim, or Engine invocation; do not mark SEL-019, SEL-002, or SEL-003 done from repository tests.
+* authorised files: `packages/workspace-kernel/selectorReadonlyEngineCandidateMapper.js`, `tests/selectorReadonlyEngineCandidateMapper.test.js`, and closeout updates to the five mutable lane context files.
+* objective: read the single committed, source-backed Ambient selection, canonicalise only its finite Celsius number, and emit exactly one candidate field: `selectedRoomTaC`.
+* acceptance: `25°C` emits `selectedRoomTaC: 25`; `35°C` emits `selectedRoomTaC: 35`; missing, malformed, duplicate, uncommitted, blocked, or non-source-backed Ambient fails closed; existing run, target lm/m, CCT/CRI, optic, Control and Tier-neutral mapping remains unchanged; the candidate contains no `referenceRoomTaC`, `referenceInternalTaC`, `opticThermalRiseTaC`, `opticInternalDeltaTaC`, `derivedInternalTaC`, `curveLookupTaC`, board temperature, verified lm/m, clamp or interpolation result. Focused mapper tests and the complete `selector-engine` gate pass, followed by exact two-file feature commit/push and a separate five-file lane-memory closeout.
+* evidence: the current mapper omits `selectedRoomTaC`; the readiness preview already carries the committed Ambient intent; Program has accepted the completed Lab version-2 producer receipt and explicitly assigned all addition, lookup and output calculation to later Program and Engine parcels.
+* prohibitions: Selector must not add, subtract, clamp, interpolate, default, substitute or look up any temperature or light output; do not change the option service, readiness producer, registration transport, server, curve parser, Lab, Program, donor, RuntimeData or main; do not perform browser acceptance, registration or Engine execution in this parcel.
 
-### Q-2I Live-accept Ambient selection, registration, refusal, and bounded Engine proof
+### Q-2J Validate and bind Lab thermal evidence in Program
+
+* id: THERM-P1
+* status: blocked
+* depends-on: accepted SEL-018 feature and lane-memory closeout
+* seam approval: Program & Integrate parcel admitted on 2026-07-21
+* seam change: yes — Program owns cross-lane identity and evidence validation, not thermal arithmetic
+* gate: selector-engine
+* authorised files: new `packages/workspace-kernel/labThermalEvidenceProgramAdapter.js`, new `tests/labThermalEvidenceProgramAdapter.test.js`, and closeout updates to the five mutable lane context files.
+* objective: bind the accepted Selector candidate and one Program-validated source-backed optic identity to one exact `controlstack.lab.nvb-lab-projection.v2` object, then emit a deeply immutable accepted Program thermal-evidence bundle.
+* acceptance: Selector optic, validated optic key, canonical optic BOM identity, Lab selection identity and Lab thermal-evidence identity all agree; Lab projection is read-only, path `optic`, blockers empty, evidence reference bounded, and `authorityState` exactly `null`; the measured triplet is finite and exactly satisfies `referenceRoomTaC + opticThermalRiseTaC = referenceInternalTaC`; success emits only selected room, validated optic identity/source revision, measured triplet, opaque evidence reference, `labAuthorityState: null`, `programValidationState: accepted_for_engine_thermal_lookup`, and read-only/version metadata. Missing, malformed, contradictory, unsafe, unresolved or identity-unbound input fails closed.
+* prohibitions: no addition of selected room and rise, no curve lookup, clamp, interpolation, board temperature, verified lm/m, route, persistence, authority write, direct Lab mutation, existing photometry-adapter change, donor, RuntimeData or main change.
+
+### Q-2K Execute the thermal lumen lookup in Engine
+
+* id: THERM-E1
+* status: blocked
+* depends-on: accepted THERM-P1 feature and lane-memory closeout
+* seam approval: Program & Integrate parcel admitted on 2026-07-21
+* seam change: yes — Engine is the sole owner of applying the accepted optic rise and resolving verified lm/m
+* gate: selector-engine
+* authorised files: new `packages/workspace-kernel/runtimeThermalLumenExecution.js`, new `tests/runtimeThermalLumenExecution.test.js`, and closeout updates to the five mutable lane context files.
+* objective: consume only an accepted Program thermal-evidence bundle, apply the optic rise exactly once, and delegate the resulting lookup temperature to the existing runtime lumen-curve parse/interpolation contract.
+* acceptance: Engine computes `derivedInternalTaC = selectedRoomTaC + opticThermalRiseTaC` and uses that same value as `curveLookupTaC`; 25 + 10 produces lookup 35 and 35 + 10 produces lookup 45; a second optic-bound bundle with a different measured rise, but the same room, current and curve, changes both lookup temperature and verified lm/m; the test must fail for hardcoded 35°C, hardcoded 10°C, use of the absolute reference-internal value as rise, or double application; low/high clamping preserves the unclamped derived value and reports clamp/interpolation/current modes; missing, malformed, contradictory, unaccepted or identity-unbound evidence fails closed.
+* prohibitions: reject direct Lab projections and caller-supplied `derivedInternalTaC`, `curveLookupTaC`, board temperature or verified lm/m; do not change the existing curve parser, add routes or persistence, mutate RuntimeData, invoke donor execution, generate IES or outputs, or touch main.
+
+### Q-2I Live-accept the completed thermal chain
 
 * id: SEL-019
-* status: blocked
-* depends-on: SEL-018 and runtime 8788 serving the accepted SEL-018 implementation
-* seam approval: inherited unchanged from the recorded Program & Integrate Ambient approval of 2026-07-20
-* seam change: no — this parcel accepts the already-approved implementation and may not alter authority, field shape, unit, registration timing, or fail-closed rules
+* status: held
+* depends-on: accepted THERM-E1 and a later explicit Program acceptance commission
+* seam approval: not yet commissioned under the corrected thermal contract
+* seam change: no — future acceptance may observe the completed chain but may not replace the accepted ownership boundaries
 * gate: selector-engine
-* authorised files: read-only repository and runtime inspection; genuine browser actions performed by Patrick; closeout updates only to `docs/_context/lanes/selector-engine/LANE_STATE.md`, `docs/_context/lanes/selector-engine/WORK_QUEUE.md`, `docs/_context/lanes/selector-engine/DECISION_LOG.md`, `docs/_context/lanes/selector-engine/EVIDENCE_INDEX.md`, and `docs/_context/lanes/selector-engine/SESSION_HANDOFF.md`. No feature-code or test-file write is authorised.
-* objective: accept the implemented Ambient seam from genuine browser state through one attributable server-owned registration, prove the exact numeric Celsius value reaches the protected interpolation input, prove safe refusal without Ambient, and only then execute one bounded read-only Engine proof.
-* acceptance: perform and record the following sequence without reordering or inference. (1) Runtime 8788 visibly exposes Ambient choices sourced from active read-only `SYSTEM_POLICY`, with no fabricated/default option. (2) Patrick genuinely selects one available Ambient value and saves a new `project-alpha` browser-session envelope; the saved selection visibly persists. (3) That exact envelope registers successfully and produces an attributable active server-owned revision whose reconstructed candidate contains `lighting.ambient_temp_c` as the exact finite JSON number selected in Celsius. (4) Before donor execution, a bounded server receipt proves the protected temperature/lumen request receives the identical number as `temp_c`. (5) A separate genuine Ambient-absent browser envelope may save locally but registration or invocation preflight refuses safely before donor Engine execution, does not replace the accepted active revision, and exposes no default, 25°C, 35°C, non-source-backed, non-numeric, or non-finite rescue. (6) Only after steps 1-5 are proven may one bounded selected-project Engine invocation run against the accepted positive revision; it must return one attributable useful read-only result/run-table receipt with all established no-write, no-mutation, no-persistence, no-IES, and no-output-generation guarantees preserved. The complete lane gate passes before durable context closeout. The closeout marks SEL-019 done and may mark SEL-002 and SEL-003 done only when the same evidence fully satisfies their existing registration and bounded-invocation acceptance.
-* live-observation rule: this item requires genuine browser selection, save, visible persistence, and registration acknowledgement. A worker without that observation must return `NEEDS YOU` in the permanent handoff format, provide no more than three exact click-by-click steps, and leave SEL-019 incomplete.
-* prohibitions: no feature-code change; no source mutation; no fabricated envelope, revision, candidate, acknowledgement, receipt, or project truth; no default or inferred temperature; no Engine execution before the positive registration, exact numeric `temp_c` receipt, and separate safe negative refusal are all proven; no second Engine invocation; no widening to another Selector dimension, output contract, Lab/IES, downstream artifact, Program, donor, or main.
+* authorised files: read-only until Program & Integrate records the final cross-lane acceptance method and exact evidence scope.
+* objective: retain a future live/end-to-end acceptance checkpoint without executing the superseded `lighting.ambient_temp_c` workflow.
+* acceptance: to be rewritten only after THERM-E1 is complete. Any future proof must observe `selectedRoomTaC`, the accepted Program evidence bundle, Engine single-application derivation and the varied-optic movement of both lookup temperature and verified lm/m.
+* live-observation rule: no browser or runtime action is authorised by this held item.
+* prohibitions: do not use the superseded `lighting.ambient_temp_c` or direct-`temp_c` contract; do not save, register, invoke Engine, alter source, fabricate evidence or mark SEL-002/SEL-003 done before a later Program commission.
 
 ### Q-2 Register project-alpha active server-owned revision
 

@@ -350,7 +350,7 @@ SEL-018 is now the sole top ready item. It is approved as one bounded Selector/r
 
 ## 2026-07-20 Ambient parcel split — latest controlling state
 
-**Recorded lane work HEAD:** `bba4391dab3883953c138e8a1d9920b2dae66e40` — `docs(selector): reconcile lane state for Ambient parcel split`.
+**Recorded lane work HEAD:** `cc8f5e6eb0d48193647d5db1bf7ce0c05c67898f` — `docs(selector): reconcile lane state`.
 
 The approved Ambient authority and contract are unchanged: active read-only `SYSTEM_POLICY` is the only selectable authority; `lighting.ambient_temp_c` is the exact candidate field; the value is a finite JSON number in degrees Celsius; the protected interpolation input is `temp_c`; and missing, blank, ambiguous, non-numeric, non-finite, malformed, or non-source-backed Ambient fails closed before donor Engine execution with no 25°C, 35°C, fixture, product, System, Tier, application, IP, optic, lab, historical, cached, or donor fallback.
 
@@ -365,3 +365,19 @@ SEL-002 and SEL-003 are held as legacy acceptance checkpoints and must not cause
 The first repository-only Ambient worker verified the correct lane and began from a clean tree. Its trial edit required the already-approved Selector summary module, but the connected secure app write guard currently permits `apps/**`, `packages/workspace-kernel/**`, `packages/runtime-web/**`, `server.js`, the approved test globs, and lane documentation while excluding the exact required module. The worker restored the trial edit and stopped cleanly before tests, staging, commit, push, browser action, registration, or Engine execution.
 
 The approved Ambient authority, field name, Celsius unit, registration timing, fail-closed rules, parcel split, and implementation file scope are unchanged. SEL-018 is blocked only on secure-tooling configuration. The narrow correction is to add exactly `packages/modules/cs-selector/selectorFactoryApprovedInputsSummary.js` to the Selector lane app write guard. No broader `packages/modules/**` authority is approved. After the connected app reports that exact allowance, the orchestrator may return SEL-018 to ready and commission one fresh standing worker.
+
+## 2026-07-21 corrected thermal sequence — latest controlling state
+
+The restarted Selector service now reports the correct isolated worktree, branch and gate, a clean tree, gated commit/push enabled, the exact narrow Selector summary exception and the canonical lane-memory allowance. The former tooling blocker is closed.
+
+Program & Integrate has accepted the completed Lab version-2 thermal producer receipt and superseded the earlier direct room-to-lookup contract. Lab supplies measured reference room, absolute reference internal, measured optic rise, opaque evidence reference and unresolved Lab authority. Lab does not apply a user room value or calculate verified output.
+
+SEL-018 is the sole top ready item. Its exact feature scope is only `selectorReadonlyEngineCandidateMapper.js` and its focused test. Selector reads one committed source-backed Ambient selection, emits only `selectedRoomTaC`, preserves the existing Tier-neutral candidate fields and performs no addition, clamp, interpolation, lookup or verified-output calculation. Missing, malformed, duplicate, uncommitted or non-source-backed Ambient fails closed.
+
+THERM-P1 is approved and blocked behind SEL-018. It validates Selector room/optic intent, a Program source-backed optic binding and the exact Lab v2 measured evidence, then emits an immutable accepted Program bundle. It performs no thermal arithmetic and preserves Lab authority as null.
+
+THERM-E1 is approved and blocked behind THERM-P1. Engine alone applies `opticThermalRiseTaC` exactly once, uses the derived internal value as the curve lookup temperature and delegates unchanged to the committed lumen-curve parser. Direct Lab input and caller-supplied derived, lookup, board-temperature or verified-output values fail closed.
+
+Final Engine acceptance must vary one optic-bound measured rise while holding selected room, current and curve fixed, and prove both lookup temperature and verified lm/m move. This is the required defence against the current identical placeholder source values and any hardcoded constant.
+
+SEL-019 is held because its former direct `lighting.ambient_temp_c` acceptance workflow is superseded. Browser, registration and live Engine acceptance require a later explicit Program commission after THERM-E1. The unfinished runtime-port work in main remains excluded and untouched.
