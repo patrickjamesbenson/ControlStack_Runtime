@@ -1,0 +1,408 @@
+<!doctype html>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ControlStack Lab — Main Bench</title>
+<link rel="stylesheet" href="./lab.css" />
+<style>
+  .bench-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:14px}
+  .drop{border:1.5px dashed var(--border,#cfd4dc);border-radius:10px;padding:18px;text-align:center;background:var(--soft,#f7f8fa);cursor:pointer}
+  .drop.over{border-color:var(--green,#1a9e72)}
+  .banner{padding:10px 12px;border-radius:8px;background:var(--amber-lt,#fff5dd);border:1px solid var(--amber,#c9862a);font-weight:700}
+  .ok{color:var(--green,#1a9e72)} .bad{color:var(--red,#c23b3b)} .muted{color:var(--text3,#667085)}
+  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.row>*{max-width:100%}
+  .fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+  .fields label{display:flex;flex-direction:column;gap:4px;font-size:12px}.fields input{width:100%}
+  .kv{display:grid;grid-template-columns:minmax(120px,.7fr) 1fr;gap:6px 12px;padding:4px 0;border-bottom:1px solid var(--border-light,#eceff3);font-size:12px}
+  .kv b{overflow-wrap:anywhere}.polar{min-height:280px;text-align:center;overflow:auto}.polar svg{max-width:100%;height:auto}
+  table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:6px 8px;border-bottom:1px solid var(--border-light,#eceff3);text-align:left;vertical-align:top}
+  th{font-size:11px;text-transform:uppercase;letter-spacing:.04em}.mono{font-family:var(--mono,ui-monospace,monospace);overflow-wrap:anywhere}
+  pre{white-space:pre-wrap;max-height:360px;overflow:auto;background:var(--soft,#f7f8fa);padding:10px;border-radius:8px;border:1px solid var(--border-light,#eceff3);font-size:11px}
+  .hidden{display:none}.full{grid-column:1/-1}.status{font-size:12px;min-height:18px}
+</style>
+
+<div class="wrap">
+  <div class="brandhead">
+    <div class="mark">CS</div>
+    <div><div class="bn">CONTROLSTACK</div><div class="bs">Lab &amp; IES</div></div>
+    <div class="pg"><div class="pgt">Main Lab Bench</div><div class="pgs">non-authoritative working preview over committed modules</div></div>
+  </div>
+
+  <div class="banner">NON-AUTHORITATIVE WORKING SURFACE — this page does not allocate, approve, seal, publish or persist a reference.</div>
+
+  <div class="bench-grid" style="margin-top:14px">
+    <section class="card full">
+      <h2>1 — Load a working IES</h2>
+      <div class="drop" id="iesDrop">Drop an <b>.ies</b> or <b>.txt</b> file here, or click to choose.</div>
+      <input class="hidden" id="iesFile" type="file" accept=".ies,.txt,text/plain" />
+      <div class="status" id="iesStatus"></div>
+    </section>
+
+    <section class="card hidden" id="originCard">
+      <h2>Origin summary</h2>
+      <div id="originSummary"></div>
+      <h3>Header</h3>
+      <div id="originHeader"></div>
+    </section>
+
+    <section class="card hidden" id="originPolarCard">
+      <h2>Origin polar</h2>
+      <div class="polar" id="originPolar"></div>
+    </section>
+
+    <section class="card full hidden" id="keywordCard">
+      <h2>Canonical outgoing keyword profile</h2>
+      <p class="muted">All 16 governed fields are shown in fixed order. Missing values remain unresolved; supplementary and stale keywords are not emitted.</p>
+      <div id="keywordTable"></div>
+    </section>
+
+    <section class="card full hidden" id="normaliseCard">
+      <h2>2 — Run committed normalise recipe</h2>
+      <p class="muted">The controller records the required dimensions and metadata decisions, then delegates Level, Symmetrise, Interpolate, Pad and one-millimetre reduction to committed modules.</p>
+      <div class="row">
+        <button class="btn primary" id="normaliseBtn">Run normalise recipe</button>
+        <button class="btn ghost" id="downloadWorkingBtn" disabled>Download working preview .ies</button>
+        <span class="status" id="normaliseStatus"></span>
+      </div>
+      <div class="bench-grid hidden" id="normaliseOutput" style="margin-top:12px">
+        <div>
+          <h3>Recipe decisions</h3>
+          <div id="recipeTable"></div>
+        </div>
+        <div>
+          <h3>One-millimetre polar</h3>
+          <div class="polar" id="normalisedPolar"></div>
+        </div>
+        <div class="full">
+          <h3>Working LM-63 preview</h3>
+          <pre id="workingPreview"></pre>
+          <p class="muted">This is a browser-memory preview from the committed writer. It is not a sealed reference or authority artefact.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="card full">
+      <h2>3 — Load a separately sealed reference DTO</h2>
+      <div class="drop" id="referenceDrop">Drop a governed <b>controlstack.lab.reference.1mm.v1</b> JSON file here, or click to choose.</div>
+      <input class="hidden" id="referenceFile" type="file" accept=".json,application/json" />
+      <div class="status" id="referenceStatus"></div>
+      <div class="hidden" id="referenceIdentity" style="margin-top:10px"></div>
+    </section>
+
+    <section class="card full hidden" id="projectCard">
+      <h2>4 — Materialise a project IES</h2>
+      <p class="muted">Generation delegates exclusively to the committed project adapter. Internal ambient remains sealed-reference-owned.</p>
+      <div class="fields">
+        <label>Project ID<input id="projectId" value="LAB-PREVIEW" /></label>
+        <label>Run length (mm)<input id="runLengthMm" type="number" min="1" step="1" value="1000" /></label>
+        <label>Output multiplier<input id="outputMultiplier" type="number" min="0.000001" step="0.05" value="1" /></label>
+        <label>LUMCAT<input id="lumcat" /></label>
+        <label>LUMINAIRE<input id="luminaire" /></label>
+        <label>LAMP<input id="lamp" /></label>
+        <label>CRI<input id="cri" /></label>
+        <label>CCT<input id="cct" /></label>
+        <label>Driver<input id="driver" /></label>
+        <label>Driver setting<input id="driverSetting" /></label>
+      </div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn primary" id="buildProjectBtn">Build project IES</button>
+        <button class="btn ghost" id="downloadProjectBtn" disabled>Download project .ies</button>
+        <span class="status" id="projectStatus"></span>
+      </div>
+      <pre class="hidden" id="projectPreview"></pre>
+    </section>
+
+    <section class="card full">
+      <h2>Authority boundary</h2>
+      <div class="kv"><span>Working session</span><b>non-authoritative and browser-memory-only</b></div>
+      <div class="kv"><span>Reference identity</span><b>read only from a separately supplied sealed DTO</b></div>
+      <div class="kv"><span>Serial / approval / sealing</span><b>not available on this page</b></div>
+      <div class="kv"><span>Resolver hosting / persistence</span><b>not implemented</b></div>
+      <div class="kv"><span>Emergency / EWIS</span><b>not inferred from working or parent data</b></div>
+    </section>
+  </div>
+</div>
+
+<script type="module">
+import { parseIes } from "./iesParse.js";
+import { computeMetrics } from "./iesMetrics.js";
+import { describeIes } from "./iesInspect.js";
+import { renderPolar } from "./iesPolar.js";
+import { writeIes } from "./iesWrite.js";
+import { standardize } from "./iesTransforms.js";
+import {
+  createWorkingSession,
+  WORKING_SESSION_SCHEMA_ID,
+} from "./iesWorkingRecord.js";
+import {
+  decideDimensions,
+  decideMetadata,
+  runInterpolate,
+  runLevel,
+  runOneMm,
+  runPad,
+  runSymmetrise,
+} from "./iesNormaliseController.js";
+import {
+  CANONICAL_KEYWORDS,
+  CANONICAL_KEYWORD_DEFINITIONS,
+  KEYWORD_PROFILE_ID,
+  normalizeKeywordName,
+} from "./iesKeywordContract.js";
+import { projectReferenceIdentity } from "./nvbReference.js";
+import { buildProjectIes } from "./iesProjectIes.js";
+
+const byId = (id) => document.getElementById(id);
+const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({
+  "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+}[char]));
+
+let workingSession = null;
+let workingDownload = null;
+let sealedReference = null;
+let projectDownload = null;
+
+function setStatus(id, message, ok = true) {
+  byId(id).className = `status ${ok ? "ok" : "bad"}`;
+  byId(id).textContent = message;
+}
+
+function clonePlain(value) {
+  return JSON.parse(JSON.stringify(value));
+}
+
+function canonicalValueMap(model) {
+  const values = new Map();
+  for (const row of model?.meta?.keywords_order || []) {
+    const key = normalizeKeywordName(row?.key);
+    const value = String(row?.value ?? "").trim();
+    if (CANONICAL_KEYWORDS.includes(key) && value) values.set(key, value);
+  }
+  for (const [rawKey, rawValue] of Object.entries(model?.meta?.keywords || {})) {
+    const key = normalizeKeywordName(rawKey);
+    const value = String(rawValue ?? "").trim();
+    if (CANONICAL_KEYWORDS.includes(key) && !values.has(key) && value) values.set(key, value);
+  }
+  return values;
+}
+
+function canonicalKeywordRows(model) {
+  const values = canonicalValueMap(model);
+  return CANONICAL_KEYWORDS
+    .filter((key) => values.has(key))
+    .map((key) => ({ key, value: values.get(key) }));
+}
+
+function canonicalWorkingModel(model) {
+  const next = clonePlain(model);
+  next.meta = { ...(next.meta || {}), keywords_order: canonicalKeywordRows(model) };
+  delete next.meta.keywords;
+  return next;
+}
+
+function renderKeywordProfile(model) {
+  const values = canonicalValueMap(model);
+  const rows = CANONICAL_KEYWORD_DEFINITIONS.map((definition) => `
+    <tr>
+      <td>${definition.order}</td>
+      <td class="mono">[${escapeHtml(definition.key)}]</td>
+      <td>${escapeHtml(values.get(definition.key) ?? "unresolved")}</td>
+      <td>${escapeHtml(definition.owner)}</td>
+      <td>${escapeHtml(definition.semantic)}</td>
+    </tr>`).join("");
+  byId("keywordTable").innerHTML = `<table><thead><tr><th>#</th><th>Field</th><th>Value</th><th>Owner</th><th>Meaning</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+function renderOrigin(model) {
+  const metrics = computeMetrics(model);
+  const description = describeIes(model);
+  const geometry = model?.photometry?.geometry || {};
+  const summaryRows = [
+    ["Working schema", WORKING_SESSION_SCHEMA_ID],
+    ["Authority state", "non-authoritative"],
+    ["Grid", `${model?.photometry?.h_angles?.length ?? 0} × ${model?.photometry?.v_angles?.length ?? 0}`],
+    ["Length", geometry.G8 == null ? "unresolved" : `${geometry.G8} m`],
+    ["Computed lumens", metrics.lumens == null ? "unresolved" : Math.round(metrics.lumens)],
+    ["Input watts", geometry.G12 == null ? "unresolved" : geometry.G12],
+  ];
+  byId("originSummary").innerHTML = summaryRows.map(([key, value]) => `<div class="kv"><span>${escapeHtml(key)}</span><b>${escapeHtml(value)}</b></div>`).join("");
+  byId("originHeader").innerHTML = (description.headerValues || []).map((row) => `<div class="kv"><span>${escapeHtml(row.label)}</span><b>${escapeHtml(row.value)}</b></div>`).join("");
+  byId("originPolar").innerHTML = renderPolar(model).svg;
+  renderKeywordProfile(model);
+  for (const id of ["originCard", "originPolarCard", "keywordCard", "normaliseCard"]) byId(id).classList.remove("hidden");
+}
+
+function workingPreviewText(session) {
+  return writeIes(canonicalWorkingModel(session.workingModel));
+}
+
+function renderRecipe(session) {
+  const rows = (session.provenanceDraft.entries || []).map((entry) => `<tr><td>${entry.ordinal}</td><td>${escapeHtml(entry.operation)}</td><td>${escapeHtml(entry.outcome)}</td></tr>`).join("");
+  byId("recipeTable").innerHTML = `<table><thead><tr><th>#</th><th>Operation</th><th>Outcome</th></tr></thead><tbody>${rows}</tbody></table>`;
+  byId("normalisedPolar").innerHTML = renderPolar(session.workingModel).svg;
+  const text = workingPreviewText(session);
+  byId("workingPreview").textContent = text;
+  workingDownload = { name: "working-preview.ies", text };
+  byId("downloadWorkingBtn").disabled = false;
+  byId("normaliseOutput").classList.remove("hidden");
+}
+
+function runCommittedRecipe() {
+  if (!workingSession) return;
+  try {
+    let next = workingSession;
+    const geometry = next.workingModel?.photometry?.geometry || {};
+    next = decideDimensions(next, {
+      dimensions: { G7: geometry.G7 ?? null, G8: geometry.G8 ?? null, G9: geometry.G9 ?? null },
+      captureMethod: "accepted-as-imported-working-preview",
+      workingModel: next.workingModel,
+    });
+    next = decideMetadata(next, {
+      metadata: { keywordProfileId: KEYWORD_PROFILE_ID, canonicalFieldCount: CANONICAL_KEYWORD_DEFINITIONS.length },
+      workingModel: canonicalWorkingModel(next.workingModel),
+    });
+    next = runLevel(next, { decision: "apply" });
+    next = runSymmetrise(next, { decision: "apply", mode: "auto" });
+    next = runInterpolate(next, {
+      targetGridId: "controlstack.lab.standard-grid.181x25",
+      transform: (model) => {
+        const photometry = standardize(model.photometry);
+        photometry.geometry = {
+          ...(photometry.geometry || {}),
+          G3: photometry.v_angles.length,
+          G4: photometry.h_angles.length,
+        };
+        return { ...model, photometry };
+      },
+    });
+    next = runPad(next, { hemisphere: "auto" });
+    next = runOneMm(next);
+    workingSession = next;
+    renderRecipe(next);
+    setStatus("normaliseStatus", "Committed normalise recipe completed to the one-millimetre working stage.");
+  } catch (error) {
+    workingDownload = null;
+    byId("downloadWorkingBtn").disabled = true;
+    setStatus("normaliseStatus", `${error.code ? `${error.code}: ` : ""}${error.message}`, false);
+  }
+}
+
+function downloadText(file) {
+  if (!file) return;
+  const url = URL.createObjectURL(new Blob([file.text], { type: "text/plain" }));
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = file.name;
+  anchor.click();
+  URL.revokeObjectURL(url);
+}
+
+async function loadWorkingFile(file) {
+  try {
+    const text = await file.text();
+    const parsed = parseIes(text);
+    workingSession = createWorkingSession({
+      slotId: "A",
+      originBytes: text,
+      parsedModel: parsed,
+      displayName: file.name,
+      mediaType: file.type || "text/plain",
+    });
+    workingDownload = null;
+    byId("downloadWorkingBtn").disabled = true;
+    byId("normaliseOutput").classList.add("hidden");
+    renderOrigin(parsed);
+    setStatus("iesStatus", `${file.name} loaded into a non-authoritative working session.`);
+  } catch (error) {
+    workingSession = null;
+    setStatus("iesStatus", `${error.code ? `${error.code}: ` : ""}${error.message}`, false);
+  }
+}
+
+function renderReferenceIdentity(identity) {
+  const rows = [
+    ["Reference ID", identity.referenceId],
+    ["Kind", identity.kind],
+    ["Serial", identity.serial],
+    ["Sealed at", identity.sealedAtUtc],
+    ["Authority SHA-256", identity.authorityRecordSha256],
+    ["Reference SHA-256", identity.referenceSha256],
+    ["Resolver path", identity.resolverPath],
+    ["State", "read-only safe identity projection"],
+  ];
+  byId("referenceIdentity").innerHTML = rows.map(([key, value]) => `<div class="kv"><span>${escapeHtml(key)}</span><b class="mono">${escapeHtml(value)}</b></div>`).join("");
+  byId("referenceIdentity").classList.remove("hidden");
+  byId("projectCard").classList.remove("hidden");
+}
+
+async function loadReferenceFile(file) {
+  try {
+    const value = JSON.parse(await file.text());
+    const identity = projectReferenceIdentity(value);
+    sealedReference = value;
+    projectDownload = null;
+    byId("downloadProjectBtn").disabled = true;
+    byId("projectPreview").classList.add("hidden");
+    renderReferenceIdentity(identity);
+    setStatus("referenceStatus", `${file.name} accepted as a sealed-reference DTO for read-only use.`);
+  } catch (error) {
+    sealedReference = null;
+    byId("projectCard").classList.add("hidden");
+    byId("referenceIdentity").classList.add("hidden");
+    setStatus("referenceStatus", `${error.code ? `${error.code}: ` : ""}${error.message}`, false);
+  }
+}
+
+function optionalField(project, key, id) {
+  const value = byId(id).value.trim();
+  if (value) project[key] = value;
+}
+
+function buildProject() {
+  if (!sealedReference) return;
+  const project = {
+    projectId: byId("projectId").value.trim(),
+    outputMultiplier: Number(byId("outputMultiplier").value),
+  };
+  optionalField(project, "lumcat", "lumcat");
+  optionalField(project, "luminaire", "luminaire");
+  optionalField(project, "lamp", "lamp");
+  optionalField(project, "cri", "cri");
+  optionalField(project, "cct", "cct");
+  optionalField(project, "driver", "driver");
+  optionalField(project, "driverSetting", "driverSetting");
+  const result = buildProjectIes(sealedReference, Number(byId("runLengthMm").value), project);
+  if (!result.ok) {
+    projectDownload = null;
+    byId("downloadProjectBtn").disabled = true;
+    byId("projectPreview").classList.add("hidden");
+    setStatus("projectStatus", `${result.code}: ${result.reason}`, false);
+    return;
+  }
+  projectDownload = { name: result.filename, text: result.iesText };
+  byId("projectPreview").textContent = result.iesText;
+  byId("projectPreview").classList.remove("hidden");
+  byId("downloadProjectBtn").disabled = false;
+  setStatus("projectStatus", `${result.filename} built by the committed project adapter.`);
+}
+
+function wireDrop(dropId, inputId, handler) {
+  const drop = byId(dropId);
+  const input = byId(inputId);
+  drop.addEventListener("click", () => input.click());
+  input.addEventListener("change", () => { if (input.files?.[0]) handler(input.files[0]); });
+  drop.addEventListener("dragover", (event) => { event.preventDefault(); drop.classList.add("over"); });
+  drop.addEventListener("dragleave", () => drop.classList.remove("over"));
+  drop.addEventListener("drop", (event) => {
+    event.preventDefault();
+    drop.classList.remove("over");
+    if (event.dataTransfer?.files?.[0]) handler(event.dataTransfer.files[0]);
+  });
+}
+
+wireDrop("iesDrop", "iesFile", loadWorkingFile);
+wireDrop("referenceDrop", "referenceFile", loadReferenceFile);
+byId("normaliseBtn").addEventListener("click", runCommittedRecipe);
+byId("downloadWorkingBtn").addEventListener("click", () => downloadText(workingDownload));
+byId("buildProjectBtn").addEventListener("click", buildProject);
+byId("downloadProjectBtn").addEventListener("click", () => downloadText(projectDownload));
+</script>
