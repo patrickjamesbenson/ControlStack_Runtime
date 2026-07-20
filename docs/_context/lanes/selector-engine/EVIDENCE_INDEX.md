@@ -184,6 +184,12 @@ Every completed worker updates this index with:
 - Queue result: SEL-015 ready for exact-System capability gating; SEL-016 blocked behind it for readiness-intent correction; SEL-002 blocked behind both; SEL-003 remains blocked — RECORDED.
 - First SEL-015 worker guard: correctly stopped because the commission commit was actual HEAD while lane memory still recorded its parent — VERIFIED USER-PROVIDED WORKER EVIDENCE.
 - Orchestrator reconciliation: the commission commit is now the recorded work HEAD and the dedicated reconciliation wrapper must have it as its immediate parent; queue scope and order are unchanged — RECORDED.
+- SEL-015 feature and closeout: exact-System support gating and its documentation wrapper are present in current history; gate 105/105; feature tree clean — VERIFIED REPOSITORY HISTORY.
+- SEL-016 feature and closeout: diagnostic-intent exclusion and its documentation wrapper are present in current history; final gate 106/106; feature tree clean — VERIFIED REPOSITORY HISTORY.
+- New live contradiction: DNX 60 remains direct-only in the live source but the page still creates Indirect supported — USER-PROVIDED LIVE DEFECT EVIDENCE.
+- Fixture gap: the accepted SEL-015 regression used a simplified direct-only identity and did not cover the exact live 60|Square versus 60|Beam pair through the full rendered view-model path — VERIFIED REPOSITORY TEST INSPECTION.
+- Saved test-case recall: Emergency, EWIS, and Sensor were restored while the Run was not retained; this explains the other observed screen changes and is excluded from the new repair — USER-PROVIDED LIVE EVIDENCE.
+- Queue result: SEL-017 ready for the exact live automatic-consequence divergence; SEL-002 blocked behind it; no save or registration retry authorised — RECORDED.
 
 ## 2026-07-19 — SEL-012 source-backed Tier ownership repair
 

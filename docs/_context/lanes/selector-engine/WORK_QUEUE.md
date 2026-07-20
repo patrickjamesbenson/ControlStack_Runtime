@@ -87,11 +87,23 @@
 * acceptance: a direct-only selection whose indirect fields are hidden or blocked with diagnostic wording such as `not required or supported` reports each indirect readiness summary as not selected and `ready: false`; diagnostic `effectiveLabel`, unavailable reason, warning copy, or presentation fallback cannot become intent; only an actual selected source-valid option, explicit manual value, or valid inherited match-direct value on a supported lane may be captured; direct target, direct CCT/CRI, and explicit direct Control readiness remain unchanged; genuine indirect selections on a supported direct-indirect product still report ready; registration's existing rule that rejects genuine indirect intent remains unchanged but is no longer triggered by diagnostic text; focused regressions cover the direct-only false-positive and supported indirect case and the complete `selector-engine` gate passes.
 * prohibitions: do not weaken registration's indirect-emission refusal; do not make unsupported indirect fields ready; do not invent selected values; do not change candidate mapping, source authority, System/OPTICS capability logic, Tier, Control, RuntimeData, Lab, Program, donor, or main.
 
+### Q-2G Repair live exact-System indirect auto-consequence
+
+* id: SEL-017
+* status: ready
+* depends-on: SEL-015 and SEL-016
+* seam change: no — this corrects a remaining Selector presentation consequence without changing source ownership, registration policy, or downstream contracts
+* gate: selector-engine
+* authorised files: `packages/workspace-kernel/selectorReferenceOptionsService.js`, `packages/modules/cs-selector/selectorViewModel.js`, `tests/selectorCascadeCorrectness.test.js`, `tests/selectorLightControlSpine.test.js`, and closeout updates to `docs/_context/lanes/selector-engine/LANE_STATE.md`, `docs/_context/lanes/selector-engine/WORK_QUEUE.md`, `docs/_context/lanes/selector-engine/DECISION_LOG.md`, `docs/_context/lanes/selector-engine/EVIDENCE_INDEX.md`, `docs/_context/lanes/selector-engine/SESSION_HANDOFF.md`. Change only the minimum subset proven necessary.
+* objective: make the page-level automatic indirect-capability consequence follow the exact live selected System identity for DNX 60 rather than a broad shared OPTICS key.
+* acceptance: first reproduce the live-shaped case with exact SYSTEM options `60|Square` direct-only and `60|Beam` direct-indirect plus a broad indirect OPTICS relationship keyed to `60`; trace the full service-to-view-model path and identify the first point where direct-only `60|Square` becomes `Indirect supported`; patch only that first divergent boundary. The direct-only page must expose no effective value, label, auto-chip, selected truth, summary value, or payload value asserting indirect support, while direct capability and direct optics remain available. The distinct `60|Beam` product must still expose legitimate indirect capability and optics. The already-accepted diagnostic-intent repair, genuine indirect registration refusal, Control, Tier, source order, System variant separation, and all no-write boundaries remain unchanged. The saved-test recall behaviour that restores Emergency, EWIS, and Sensor but omits the Run is explanatory evidence only and must not be changed in this parcel. Focused regressions must execute through gate-included tests, then the complete selector-engine gate must pass. No browser save, registration, or Engine invocation occurs in this parcel.
+* prohibitions: do not alter source data; do not merge or rename System variants; do not remove legitimate indirect OPTICS rows; do not change test-case recall, Emergency, EWIS, Sensor, Run persistence, registration transport, readiness-preview intent logic, Tier, Control, RuntimeData, Lab, Program, donor, or main; do not widen beyond the first proven automatic-consequence divergence.
+
 ### Q-2 Register project-alpha active server-owned revision
 
 * id: SEL-002
-* status: ready
-* depends-on: SEL-001, SEL-011, SEL-012, SEL-013, SEL-014, SEL-015, and SEL-016
+* status: blocked
+* depends-on: SEL-001, SEL-011, SEL-012, SEL-013, SEL-014, SEL-015, SEL-016, and SEL-017
 * gate: selector-engine
 * authorised files: read-only repository inspection; no repository file writes unless a later orchestrator commission supplies exact bounded paths
 * objective: use a new genuine `project-alpha` browser-session save to complete the supported server-side registration contract and establish an active server-owned revision.

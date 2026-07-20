@@ -326,8 +326,14 @@ SEL-016 is complete. The readiness preview now uses the presentation-aware workf
 
 The real Selector regression proves direct-only indirect summaries remain not selected while direct intent is preserved. On a supported D/I product, explicit indirect target remains captured under the unchanged BOARDS-backing rule, and inherited indirect CCT/CRI and Control remain ready. The final affected run, repeated full gate, and guarded commit gate each passed 106/106. Exactly the two authorised feature/test files were committed and pushed. The feature tree is clean.
 
+## 2026-07-20 live page contradiction after SEL-015 and SEL-016
+
+The live test proves that exact direct-only DNX 60 still creates Indirect supported on the page. This current observed behaviour overrides the simplified green SEL-015 fixture. The saved test case also restored Emergency, EWIS, and Sensor but omitted the Run; those differences explain the other screen changes and are not new work.
+
+The remaining defect is confined to the automatic-consequence path. The next worker must reproduce exact System identities 60|Square and 60|Beam with broad size-keyed indirect OPTICS through the complete service-to-view-model flow, identify the first divergence, and patch only that boundary. The earlier diagnostic-intent repair remains accepted.
+
 ## Next worker batch
 
-`SEL-002` is now the sole top ready item. Its acceptance cannot be established from repository evidence: Patrick must use the running application to create one new genuine `project-alpha` browser-session save, perform the server registration action, and provide the visible registration acknowledgement or active server-owned revision. Do not fabricate or reconstruct the envelope, and do not invoke Engine yet.
+SEL-017 is the sole top ready item. Its exact files, acceptance, exclusions, and gate-included regressions are in WORK_QUEUE.md. Do not save, register, invoke Engine, or change Emergency, EWIS, Sensor, Run recall, Tier, Control, source data, or downstream seams.
 
-After that live acknowledgement is supplied, a fresh worker may verify registration and continue to SEL-003. Until then the correct worker outcome is `NEEDS YOU`.
+After SEL-017 closes, the worker must stop for live observation before registration resumes. Use the canonical standing worker prompt in LANE_CHARTER.md.

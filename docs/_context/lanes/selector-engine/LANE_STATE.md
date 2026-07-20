@@ -272,7 +272,7 @@ A fresh chat can start either role from one line: read `LANE_CHARTER.md` and act
 
 ## 2026-07-20 SEL-014 registration preflight repair closeout — latest controlling state
 
-**Recorded lane work HEAD:** `0343c30fcf14cd9a8e05db8355794e67a0a2a59e` — `fix(selector): exclude diagnostics from light intent`.
+**Recorded lane work HEAD:** `bfc5d3496360e0f9855b49ede905db224fdf8a7c` — `docs(selector): reconcile lane state after diagnostic intent repair`.
 
 SEL-014 resumed from the two explicitly preserved authorised edits with no other dirty path. The worker used `tests/engineRunTableDomain.test.js` only as the authorised temporary gate harness, visibly executed all eight registration transport tests, then removed the import and proved the harness file byte-identical to HEAD and absent from the final diff.
 
@@ -314,4 +314,12 @@ The real Selector view-model regression proves that a direct-only DNX selection 
 
 The first two affected runs intentionally exposed test-expectation boundaries without code widening: manual target readiness still preserves the existing BOARDS-backing requirement, and inherited CCT/CRI retains its canonical token label. The final affected run passed 106/106, the repeated complete gate passed 106/106, and the guarded commit/push gate passed 106/106. Exactly the two authorised feature/test files were committed and pushed in `0343c30fcf14cd9a8e05db8355794e67a0a2a59e`; the feature tree ended clean.
 
-No browser action, runtime acceptance, save, registration, Engine invocation, project or RuntimeData mutation, selected-result persistence, RunTable generation, IES generation, or output generation occurred. SEL-016 is done. SEL-002 is now the sole top ready item, but its acceptance requires Patrick to make a new genuine browser-session save and provide the visible server-registration acknowledgement. Repository evidence cannot substitute for that human-visible runtime truth.
+No browser action, runtime acceptance, save, registration, Engine invocation, project or RuntimeData mutation, selected-result persistence, RunTable generation, IES generation, or output generation occurred. SEL-016 is done. Live page-level acceptance then reopened the automatic indirect-capability consequence before registration could proceed.
+
+## 2026-07-20 live exact-System automatic-consequence defect
+
+The live test proves that the running Selector still creates Indirect supported for DNX 60 even though the live source classifies that exact product as direct-only. This current defect evidence overrides the earlier green fixture. The saved test case also restored Emergency, EWIS, and Sensor selections but did not retain the Run; those differences explain the other screen changes and are not new repair targets.
+
+The previous capability repair is incomplete at the page-level path. Its regression used a simplified direct-only identity rather than the exact live 60|Square versus 60|Beam pair already represented elsewhere in the repository. The next parcel must reproduce the full view-model path with those exact identities and a broad indirect OPTICS row keyed to 60, determine whether the false consequence survives service derivation or is recreated during view-model enrichment or presentation, and patch only the first divergent automatic-consequence boundary.
+
+SEL-017 is now the sole top ready item. It is a bounded non-seam repair limited to the Selector option service and view-model automatic-consequence path plus gate-included regressions. SEL-002 is blocked until SEL-017 is completed, pushed, activated, and the live direct-only page no longer creates Indirect supported. No save or registration retry is authorised before that proof. The branch is clean; this reconciliation records the current documentation wrapper as the authoritative work HEAD for the next worker guard.

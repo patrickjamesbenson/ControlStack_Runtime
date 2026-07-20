@@ -223,3 +223,11 @@ This log is append-oriented. Do not silently rewrite historical decisions.
 **Rationale:** Flat field copies can omit current inheritance metadata, while presentation labels can contain diagnostic or unavailable wording. Using the classified workflow field and requiring an underlying selected/manual/inherited value separates real intent from explanatory copy.
 
 **Consequence:** Direct-only hidden indirect fields remain not selected. Genuine direct intent and supported D/I inherited CCT/CRI and Control remain available. The existing manual target BOARDS-backing rule and registration's genuine indirect-emission refusal remain unchanged.
+
+## 2026-07-20 — Live page evidence overrides a simplified green fixture
+
+**Decision:** SEL-015 is reopened through a new bounded parcel because the live page still creates Indirect supported for exact direct-only DNX 60. The new repair must use the live-shaped 60|Square and 60|Beam System identities through the full service-to-view-model path.
+
+**Rationale:** The previous regression proved a simplified direct-only identity but did not cover the exact active-source variant pair. Repository tests cannot close a page-level acceptance when current live evidence contradicts them.
+
+**Consequence:** SEL-017 must locate the first divergence between exact SYSTEM support and the rendered automatic consequence, then patch only that boundary. Test-case recall differences for Emergency, EWIS, Sensor, and Run are explicitly excluded. Registration remains blocked and no further browser action occurs until the repair is complete.
