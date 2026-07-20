@@ -461,7 +461,9 @@ Evidence: `0f54173fb17bdf2b31d7f6f45625ffaa66066e89`, confirmed on origin. Patri
 - depends on: LAB-019-component-projection-contract, LAB-020-document-register-contract, LAB-024-resolver-fixture-corpus
 - on success next: LAB-028-reference-curation-surfaces
 - seam change: yes
-- status: ready
+- status: done
+
+Evidence: `c7537a1f98d04044672b9adccfb321a48f3dea68`, confirmed on origin. The approved version-1 request → order → extended-report → reference-intake schema family is implemented additively with canonical artefact references only and no browser persistence or authority claim.
 
 ### Q-18 Reference curation surfaces
 - id: LAB-028-reference-curation-surfaces
@@ -480,7 +482,7 @@ Evidence: `0f54173fb17bdf2b31d7f6f45625ffaa66066e89`, confirmed on origin. Patri
 - depends on: LAB-017-reference-resolver-contract, LAB-019-component-projection-contract, LAB-020-document-register-contract, LAB-024-resolver-fixture-corpus
 - on success next: LAB-029-provenance-publication-surfaces after recorded Integrate approval
 - seam change: no
-- status: queued
+- status: ready
 
 ### Q-19 Provenance publication surfaces
 - id: LAB-029-provenance-publication-surfaces

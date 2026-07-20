@@ -64,6 +64,74 @@ For human-observation acceptance, the worker must stop before making a completio
 
 The operating model is recorded in `LANE_CHARTER.md`, `DECISION_LOG.md`, `LANE_STATE.md` and `WORK_QUEUE.md`. Both standing prompts live only in the stable charter; `SESSION_HANDOFF.md` carries launch pointers and current session evidence.
 
+## LAB-027 request and report workflow — 2026-07-20
+
+### Identity and approved seam
+
+- starting HEAD: `1a2c83ba824fab31e48142dd20bb3ce6a1603abe`;
+- queue item: `LAB-027-request-report-workflow`;
+- seam envelope: `LAB-018_023_027_BATCH_SEAM_ENVELOPE.md`, version 1, approved unchanged by Program & Integrate;
+- authorised paths only:
+  - `packages/lab-kernel/ies-toolkit/test_request.html`;
+  - `packages/lab-kernel/ies-toolkit/lab_request.html`;
+  - `packages/lab-kernel/ies-toolkit/extended_report.html`;
+  - `packages/lab-kernel/ies-toolkit/onemm_contract.html`;
+  - `tests/lab-kernel/labRequestReportWorkflow.test.js`.
+
+### Schema and additive-flow evidence
+
+The completed workflow implements exactly:
+
+```text
+controlstack.lab.test-request-handoff.v1
+controlstack.lab.order-handoff.v1
+controlstack.lab.extended-report-handoff.v1
+controlstack.lab.reference-intake-handoff.v1
+```
+
+Verified behaviour:
+
+- request → order → extended report → reference intake remains additive;
+- customer, project, item, condition and requested-test paths are preserved without rekeying;
+- requested-test and result ordering remain exact and deterministic;
+- prior unresolved pointers survive every stage and new unresolved result/intake fields append explicitly;
+- only canonical LAB-017 reference, provenance, evidence, report, component and source paths cross stages;
+- builders preserve caller inputs, return deeply immutable payloads and generate identical output for identical entered state;
+- result states are restricted to `measured`, `not_applicable` and `unresolved`;
+- reference intake is not `controlstack.lab.reference.1mm.v1` and contains no serial, reference ID, authority hash, approval, seal or sealed timestamp.
+
+### Failure and boundary evidence
+
+Focused tests prove fail-closed rejection of:
+
+- malformed workflow keys, dates, IDs and result states;
+- measured result rows without a value;
+- local paths, file URLs and data/base64 URLs;
+- uploaded/raw file bodies, browser storage and wildcard `postMessage` integration;
+- clock/random durable ID allocation;
+- diagnostic fingerprints or browser state represented as authority;
+- Program database, CRM, upload, persistence or route implementation.
+
+### Test and gate evidence
+
+- focused changed-file `lab-ies` execution: 255/255 passed;
+- independent full `lab-ies` gate: 255/255 passed;
+- gated feature commit execution: 255/255 passed;
+- failed, cancelled, skipped and todo counts were zero in every execution.
+
+### Commit and push evidence
+
+- feature commit: `c7537a1f98d04044672b9adccfb321a48f3dea68`;
+- subject: `lab: checkpoint Lab request report workflow`;
+- push: origin `lane/code-pilot-lab`, confirmed successful;
+- protected unrelated dirty paths and the unstaged branch-HEAD marker were preserved.
+
+### Resulting queue boundary
+
+- LAB-027 is `done`.
+- LAB-028 becomes the single next `ready` item.
+- LAB-029 remains approval-blocked.
+
 ## LAB-026 document and equipment surfaces — 2026-07-20
 
 ### Identity and scope

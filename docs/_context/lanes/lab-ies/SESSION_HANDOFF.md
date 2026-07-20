@@ -2,7 +2,7 @@
 
 ## Session purpose
 
-This handoff records completed LAB-026 document and equipment surfaces, preserves the permanent charter authority for both standing prompts, and identifies LAB-027 as the single next runnable parcel.
+This handoff records completed LAB-027 request and report workflow, preserves the permanent charter authority for both standing prompts, and identifies LAB-028 as the single next runnable parcel.
 
 ## Identity
 
@@ -12,11 +12,11 @@ This handoff records completed LAB-026 document and equipment surfaces, preserve
 - Branch: `lane/code-pilot-lab`
 - Gate: `lab-ies`
 - Standing prompt authority: `docs/_context/lanes/lab-ies/LANE_CHARTER.md` contains both worker and orchestrator prompts
-- Starting HEAD for LAB-026: `b8c631ca0f4d79dfca7d4913f36b65829042bad7`
-- Completed feature checkpoint: `0f54173fb17bdf2b31d7f6f45625ffaa66066e89`
-- Feature subject: `lab: checkpoint document and equipment surfaces`
+- Starting HEAD for LAB-027: `1a2c83ba824fab31e48142dd20bb3ce6a1603abe`
+- Completed feature checkpoint: `c7537a1f98d04044672b9adccfb321a48f3dea68`
+- Feature subject: `lab: checkpoint Lab request report workflow`
 - Feature checkpoint confirmed on origin `lane/code-pilot-lab`
-- Seam change: no
+- Seam change: yes — approved version-1 envelope implemented unchanged
 - Branch-HEAD guard checkpoint: `6d34e500d407d5335e5eebb317636a67a5e98618`
 
 ## Branch-HEAD guard
@@ -27,38 +27,41 @@ After every documentation push, only the `Recorded branch HEAD` field is refresh
 
 ## Completed queue item
 
-`LAB-026-document-equipment-surfaces` is complete.
+`LAB-027-request-report-workflow` is complete.
 
-Exactly these two feature files were committed:
+Exactly these five feature files were committed:
 
 ```text
-packages/lab-kernel/ies-toolkit/docs.html
-packages/lab-kernel/ies-toolkit/equipment_register.html
+packages/lab-kernel/ies-toolkit/test_request.html
+packages/lab-kernel/ies-toolkit/lab_request.html
+packages/lab-kernel/ies-toolkit/extended_report.html
+packages/lab-kernel/ies-toolkit/onemm_contract.html
+tests/lab-kernel/labRequestReportWorkflow.test.js
 ```
 
-Both surfaces are explicit Lab-internal offline demo working state. The document surface uses only the immutable document-register contract, and only committed `lab/sources/` fixtures receive clickable artefact links.
+The four approved version-1 schema IDs now form one deterministic additive request → order → extended-report → reference-intake workflow. Earlier customer, project, item, condition and requested-test paths remain unchanged; unresolved pointers survive and later stages append rather than rekey.
 
-Patrick reported all prescribed interactions passed except one legacy `404` link that falsely implied an equipment artefact existed. That finding was treated as a real defect: unresolved document and equipment evidence is now non-clickable and labelled entered/demo, unresolved and not verified. No upload, persistence, database, Program route, ledger append, equipment booking, authority record, approval, seal, outgoing IES or cross-lane artifact was added.
+Only canonical LAB-017 artefact references cross stages. Reference intake remains explicitly non-authoritative and has no serial, reference ID, authority hash, approval or seal. No Program database, CRM route, upload, localStorage, wildcard postMessage, raw file body, clock/random durable ID or cross-lane implementation was added.
 
 ## Validation evidence
 
-- Focused changed-file `lab-ies` execution for the two LAB-026 surface files: 245/245 passed.
-- Independent full `lab-ies` gate: 245/245 passed.
-- Gated feature commit execution: 245/245 passed.
+- Focused changed-file `lab-ies` execution for the five LAB-027 workflow files: 255/255 passed.
+- Independent full `lab-ies` gate: 255/255 passed.
+- Gated feature commit execution: 255/255 passed.
 - Failed, cancelled, skipped and todo counts were zero.
 
 ## Git and protected worktree state
 
-The feature parcel was staged as exactly the two authorised surface files, committed and pushed.
+The feature parcel was staged as exactly the five authorised workflow files, committed and pushed.
 
 The protected working-tree state after documentation closeout must remain:
 
 - staged: 0;
 - modified: 1 — only the unstaged `Recorded branch HEAD` synchronisation marker in `LANE_STATE.md`;
-- untracked: 22;
+- untracked: 18;
 - deleted: 0.
 
-The 22 protected untracked paths remain exactly those recorded in `LANE_STATE.md`. In particular, these explicitly non-queued paths remain untouched:
+The 18 protected untracked paths remain exactly those recorded in `LANE_STATE.md`. In particular, these explicitly non-queued paths remain untouched:
 
 ```text
 README.zip
@@ -88,9 +91,11 @@ tests/selectorCascadeCorrectness.test.js
 - `LAB-024-resolver-fixture-corpus`: `done` and confirmed on origin.
 - `LAB-025-component-library-surface`: `done` and confirmed on origin.
 - `LAB-026-document-equipment-surfaces`: `done` and confirmed on origin.
-- Consolidated envelope: `LAB-018_023_027_BATCH_SEAM_ENVELOPE.md`, version 1, approved for all seven seams.
-- `LAB-027-request-report-workflow`: `ready` and the only active parcel.
-- Ready items: exactly one — LAB-027.
+- `LAB-027-request-report-workflow`: `done` and confirmed on origin.
+- Consolidated envelope: `LAB-018_023_027_BATCH_SEAM_ENVELOPE.md`, version 1, approved for all seven seams and implemented unchanged for LAB-027.
+- `LAB-028-reference-curation-surfaces`: `ready` and the only active parcel.
+- LAB-029 remains approval-blocked.
+- Ready items: exactly one — LAB-028.
 
 Program reported gate 45/45 passed, the approval decision committed and pushed, and its tree clean. No parallel or combined implementation is authorised.
 
@@ -104,11 +109,13 @@ LAB-025 remains a Lab-only surface over committed immutable projections and in-m
 
 LAB-026 remains a bounded Lab-only support workflow. Patrick's observed legacy `404` artefact link was removed; unresolved evidence is now non-clickable and all state remains entered/demo, unverified and non-persistent.
 
-LAB-027 is the next parcel under the already-approved version-1 additive handoff seam. It must preserve earlier fields without rekeying, keep unresolved values explicit, pass only canonical artifact references, and create no persistent or sealed browser authority.
+LAB-027 remains the approved additive handoff implementation. It preserves earlier fields without rekeying, keeps unresolved values explicit, passes only canonical artefact references and creates no persistent or sealed browser authority.
+
+LAB-028 is the next bounded surface parcel. Its reference-builder and curator behaviour must remain explicit working drafts and stop rather than fabricate identity, serial, resolver URL, evidence result, approval or seal.
 
 LAB-017 remains governed by its approved version-1 envelope. Program retains all production allocation, live source reading, hosting, routing, persistence, authentication, CRM integration, deployment and endpoint ownership.
 
-The next safe action is the LAB-027 preflight in this same standing-worker batch under the recorded approved seam envelope.
+The next safe action is the LAB-028 preflight in this same standing-worker batch. The worker stops before implementation if acceptance requires browser observation.
 
 ## LAB-017 immutable completion receipt
 
