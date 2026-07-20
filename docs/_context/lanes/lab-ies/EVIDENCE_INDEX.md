@@ -64,6 +64,72 @@ For human-observation acceptance, the worker must stop before making a completio
 
 The operating model is recorded in `LANE_CHARTER.md`, `DECISION_LOG.md`, `LANE_STATE.md` and `WORK_QUEUE.md`. Both standing prompts live only in the stable charter; `SESSION_HANDOFF.md` carries launch pointers and current session evidence.
 
+## LAB-028 reference curation surfaces — 2026-07-20
+
+### Identity and scope
+
+- starting HEAD: `326c95a01570970bfc0205dca2be3bd34442acc6`;
+- queue item: `LAB-028-reference-curation-surfaces`;
+- authorised paths only:
+  - `packages/lab-kernel/ies-toolkit/reference_builder.html`;
+  - `packages/lab-kernel/ies-toolkit/curator.html`;
+- seam change: no.
+
+### Human-observation evidence
+
+Patrick supplied browser console screenshots and generated-record output from the legacy Reference Builder:
+
+- `nvb/boards.json?...` returned HTTP 404;
+- `nvb/drivers.json?...` returned HTTP 404;
+- despite incomplete/missing catalogue resources, the browser generated `NVB-REF-GT-000001` with serial `1` and `sealedAt` `2026-07-20T01:24:35.170Z`;
+- the browser then generated `NVB-REF-OPT-000002` with serial `2` and `sealedAt` `2026-07-20T01:29:37.816Z`;
+- both records carried incomplete evidence and null authority fingerprint state while still using stamped/sealed reference presentation;
+- Patrick confirmed all entered data cleared on refresh, proving the state was browser-only but not curing the false authority claim.
+
+This evidence was classified as a real acceptance defect. The page was not permitted to treat ephemeral browser state as reference allocation, sealing or evidence authority.
+
+### Completed behaviour evidence
+
+- the Reference Builder consumes the committed immutable component projection through the correct `board_platforms.json`, `drivers_unique.json` and `optics.json` fixture paths;
+- it emits only a deeply immutable `reference_working_draft` preview with `referenceIdentity: null`, explicit unresolved fields and unresolved document review state;
+- the Curator emits only a deeply immutable `evidence_curation_working_plan`;
+- a caller-entered existing reference ID is checked through the committed reference parser for syntax only and never becomes an identity projection;
+- document registration, association and unlinking use only the committed immutable document-register contract;
+- only the eight committed demo-source artefacts are clickable;
+- refresh clears all selected components, associations, notes and previews without deleting source evidence;
+- no capability, emergency, EWIS, approval, evidence-verification or production-readiness conclusion is generated.
+
+### Static audit evidence
+
+Repository search across the two completed pages found zero executable matches for:
+
+- the retired `nvb/boards.json` or `nvb/drivers.json` requests;
+- file inputs, local/session storage, IndexedDB, wildcard messaging or network routes;
+- clocks, random values, serial/reference allocation or resolver creation;
+- Blob/object-URL downloads, fingerprints or sealed timestamps.
+
+The only remaining authority-related terms are explicit boundary statements such as “cannot create” and “not an approval”.
+
+### Test and gate evidence
+
+- focused changed-file `lab-ies` execution: 255/255 passed;
+- independent full `lab-ies` gate: 255/255 passed;
+- gated feature commit execution: 255/255 passed;
+- failed, cancelled, skipped and todo counts were zero in every execution.
+
+### Commit and push evidence
+
+- feature commit: `569c53f5a6b89850abb80a753f4296535e3b5db8`;
+- subject: `lab: checkpoint reference curation surfaces`;
+- push: origin `lane/code-pilot-lab`, confirmed successful;
+- protected unrelated dirty paths and the unstaged branch-HEAD marker were preserved.
+
+### Resulting queue boundary
+
+- LAB-028 is `done`.
+- LAB-029 remains `blocked` pending recorded Program & Integrate seam approval.
+- no item is `ready`.
+
 ## LAB-027 request and report workflow — 2026-07-20
 
 ### Identity and approved seam

@@ -482,7 +482,9 @@ Evidence: `c7537a1f98d04044672b9adccfb321a48f3dea68`, confirmed on origin. The a
 - depends on: LAB-017-reference-resolver-contract, LAB-019-component-projection-contract, LAB-020-document-register-contract, LAB-024-resolver-fixture-corpus
 - on success next: LAB-029-provenance-publication-surfaces after recorded Integrate approval
 - seam change: no
-- status: ready
+- status: done
+
+Evidence: `569c53f5a6b89850abb80a753f4296535e3b5db8`, confirmed on origin. Patrick's browser evidence captured the legacy 404 catalogue loads and browser-fabricated GT/OPT identities and timestamps; the completed surfaces now remain non-authoritative working drafts/plans with no upload, ID allocation, resolver creation, evidence result, approval or download.
 
 ### Q-19 Provenance publication surfaces
 - id: LAB-029-provenance-publication-surfaces
