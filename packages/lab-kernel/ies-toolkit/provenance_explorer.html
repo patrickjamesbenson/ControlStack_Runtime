@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ControlStack Lab — Provenance Explorer</title>
+<link rel="stylesheet" href="./lab.css" />
+<style>
+  .publication-banner{padding:12px 16px;border:2px solid var(--warn,#9a6700);background:#fff7d6;color:#6f4d00;border-radius:10px;font-weight:800;letter-spacing:.04em;margin-bottom:14px}
+  .controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:14px}.controls select{min-width:250px}
+  .route{display:grid;grid-template-columns:minmax(150px,220px) 1fr 110px;gap:8px 14px;padding:9px 0;border-bottom:1px solid var(--border-light,#ece8e2);align-items:start;font-size:12px}.route .path{font-family:var(--mono,monospace);overflow-wrap:anywhere}.route .state{font-weight:800;text-transform:uppercase;font-size:10px;letter-spacing:.04em}
+  .fixture_only{color:#765600}.unavailable{color:#666}.available{color:#116a48}
+  .error{border:1px solid var(--red,#d94040);background:#fff0f0;color:#8b1f1f;border-radius:8px;padding:12px}
+  .unresolved{color:#8a6010}.mono{font-family:var(--mono,monospace);overflow-wrap:anywhere}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brandhead">
+    <div class="mark">CS</div>
+    <div><div class="bn">CONTROLSTACK</div><div class="bs">Lab &amp; IES</div></div>
+    <div class="pg"><div class="pgt">Provenance Explorer</div><div class="pgs">canonical paths and supplied availability only</div></div>
+  </div>
+  <div class="publication-banner">OFFLINE DEMO — UNAPPROVED</div>
+  <div class="controls">
+    <label>Allowlisted fixture
+      <select id="fixtureChoice">
+        <option value="NVB-REF-OPT-000123">NVB-REF-OPT-000123 — complete demo projection</option>
+        <option value="NVB-REF-OPT-000124">NVB-REF-OPT-000124 — deliberately incomplete</option>
+      </select>
+    </label>
+    <button class="btn primary" id="loadButton">Load projection</button>
+  </div>
+  <div id="app"></div>
+</div>
+<script type="module">
+import {
+  parseReferenceId,
+  buildResolverPath,
+  parseResolverPath,
+  summariseEvidenceCapabilities,
+} from "./nvbReference.js";
+
+const VIEW_SCHEMA_ID = "controlstack.lab.provenance-publication-view.v1";
+const FIXTURE_SCHEMA_ID = "controlstack.lab.fixture.reference.v1";
+const FIXTURES = Object.freeze({
+  "NVB-REF-OPT-000123": Object.freeze({record:"./lab/references/NVB-REF-OPT-000123/record.1mm.json", evidence:"./lab/references/NVB-REF-OPT-000123/evidence/evidence.json"}),
+  "NVB-REF-OPT-000124": Object.freeze({record:"./lab/references/NVB-REF-OPT-000124/record.1mm.json", evidence:null}),
+});
+const app = document.getElementById("app");
+const choice = document.getElementById("fixtureChoice");
+const esc = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
+const isPlainObject = (value) => !!value && typeof value === "object" && !Array.isArray(value) && [Object.prototype, null].includes(Object.getPrototypeOf(value));
+const exactKeys = (value, keys) => isPlainObject(value) && Object.keys(value).sort().join("|") === [...keys].sort().join("|");
+const requireCondition = (condition, message) => { if (!condition) throw new Error(message); };
+const requireNullAssembly = (value) => {
+  requireCondition(exactKeys(value, ["emergency","ewisCartridge"]), "Assembly verification shape is unsupported.");
+  requireCondition(value.emergency === null && value.ewisCartridge === null, "Assembly verification must remain unresolved.");
+};
+function routeFor(path, state="fixture_only") {
+  const descriptor = parseResolverPath(path);
+  requireCondition(descriptor !== null && buildResolverPath(descriptor) === path, "A fixture path is not canonical.");
+  const labels = {reference:"Reference projection",provenance:"Provenance projection",originIes:"Origin IES reference",evidence:"Evidence reference",report:"Report reference",component:"Component reference",source:"Source reference"};
+  return {label:labels[descriptor.kind],descriptor,path,state};
+}
+function validateFixture(fixture) {
+  const keys = ["schemaId","schemaVersion","fixtureStatus","productionAuthority","referenceId","referenceKind","resolverPath","provenancePath","originIesRef","evidenceIndexRef","reportRefs","parentReferenceRefs","componentRefs","authorityRecordSha256","referenceSha256","approvalState","photometryStatus","assemblyVerification","unresolvedFields","note"];
+  requireCondition(exactKeys(fixture, keys), "Fixture projection is incomplete or has unsupported fields.");
+  requireCondition(fixture.schemaId === FIXTURE_SCHEMA_ID && fixture.schemaVersion === 1, "Fixture schema is unsupported.");
+  requireCondition(fixture.fixtureStatus === "offline_demo_unapproved" && fixture.productionAuthority === false && fixture.approvalState === "fixture_only", "Fixture authority flags conflict.");
+  const parsed = parseReferenceId(fixture.referenceId);
+  requireCondition(parsed && parsed.kind === fixture.referenceKind, "Fixture identity fields conflict.");
+  requireCondition(typeof fixture.provenancePath === "string" && typeof fixture.originIesRef === "string" && typeof fixture.evidenceIndexRef === "string", "Required fixture references are unresolved.");
+  requireCondition(fixture.authorityRecordSha256 === null && fixture.referenceSha256 === null, "Fixture SHA values must remain unresolved.");
+  requireNullAssembly(fixture.assemblyVerification);
+  return fixture;
+}
+function validateEntries(entries) {
+  const byPath = new Map();
+  return entries.map((entry) => {
+    requireCondition(exactKeys(entry,["label","descriptor","path","state"]), "Resolver entry shape is unsupported.");
+    requireCondition(entry.state === "fixture_only" || entry.state === "unavailable", "Offline fixture paths cannot be marked available.");
+    requireCondition(buildResolverPath(entry.descriptor) === entry.path, "Resolver descriptor conflicts with its path.");
+    const parsed = parseResolverPath(entry.path);
+    requireCondition(parsed !== null, "Resolver path is unsupported.");
+    const prior = byPath.get(entry.path);
+    requireCondition(prior === undefined || prior === entry.state, "Duplicate path states conflict.");
+    byPath.set(entry.path,entry.state);
+    return entry;
+  }).sort((a,b) => a.path.localeCompare(b.path) || a.label.localeCompare(b.label));
+}
+async function loadView(referenceId) {
+  const files = FIXTURES[referenceId];
+  requireCondition(files !== undefined, "Only the fixed committed fixture allowlist is supported.");
+  const response = await fetch(files.record);
+  requireCondition(response.ok, "The committed fixture projection could not be loaded.");
+  const fixture = validateFixture(await response.json());
+  requireCondition(fixture.referenceId === referenceId, "Fixture file and requested identity conflict.");
+  let evidenceCapabilities = null;
+  const unresolved = [...fixture.unresolvedFields];
+  if (files.evidence) {
+    const evidenceResponse = await fetch(files.evidence);
+    requireCondition(evidenceResponse.ok, "The committed evidence projection could not be loaded.");
+    const evidence = await evidenceResponse.json();
+    requireCondition(evidence.schemaId === "controlstack.lab.fixture.evidence-index.v1" && evidence.fixtureStatus === "offline_demo_unapproved" && evidence.productionAuthority === false && evidence.referenceId === referenceId && Array.isArray(evidence.entries), "Fixture evidence projection is unsupported.");
+    evidenceCapabilities = summariseEvidenceCapabilities({referenceId,entries:evidence.entries.map(({evidenceType,status}) => ({evidenceType,status}))});
+  } else {
+    unresolved.push("evidence_capabilities");
+  }
+  const paths = [fixture.resolverPath,fixture.provenancePath,fixture.originIesRef,fixture.evidenceIndexRef,...fixture.reportRefs,...fixture.parentReferenceRefs,...fixture.componentRefs];
+  const resolverEntries = validateEntries(paths.map((path) => routeFor(path)));
+  requireNullAssembly(fixture.assemblyVerification);
+  return Object.freeze({
+    schemaId:VIEW_SCHEMA_ID,
+    schemaVersion:1,
+    publicationMode:"offline_fixture",
+    referenceIdentity:null,
+    fixtureReference:fixture,
+    resolverEntries,
+    evidenceCapabilities,
+    unresolvedFields:Object.freeze([...new Set(unresolved)].sort()),
+    assemblyVerification:Object.freeze({emergency:null,ewisCartridge:null}),
+    readOnly:true,
+  });
+}
+function render(view) {
+  requireCondition(view.schemaId === VIEW_SCHEMA_ID && view.schemaVersion === 1 && view.publicationMode === "offline_fixture" && view.referenceIdentity === null && view.readOnly === true, "Publication view is unsupported.");
+  requireNullAssembly(view.assemblyVerification);
+  const fixture = view.fixtureReference;
+  app.innerHTML = `
+    <div class="card"><h2>Fixture projection</h2>
+      <p><b class="mono">${esc(fixture.referenceId)}</b> · ${esc(fixture.referenceKind)} · ${esc(fixture.photometryStatus)}</p>
+      <p class="muted">Authority SHA: <span class="mono unresolved">unresolved</span> · Reference SHA: <span class="mono unresolved">unresolved</span></p>
+    </div>
+    <div class="card"><h2>Canonical host-free routes</h2>
+      ${view.resolverEntries.map((entry) => `<div class="route"><div>${esc(entry.label)}</div><div class="path">${esc(entry.path)}</div><div class="state ${entry.state}">${esc(entry.state.replace("_"," "))}</div></div>`).join("")}
+      <p class="muted">Paths are displayed as bounded references only. This page does not probe a host, open a stored body, or publish a storage location.</p>
+    </div>
+    <div class="card"><h2>Evidence category coverage</h2>
+      ${view.evidenceCapabilities ? view.evidenceCapabilities.capabilities.map((row) => `<div class="route"><div class="mono">${esc(row.capabilityId)}</div><div>${esc(row.state)}</div><div class="mono unresolved">${esc(row.missingEvidenceTypes.join(", ") || "none")}</div></div>`).join("") : `<p class="unresolved">Evidence category coverage is unresolved.</p>`}
+      <p class="muted">Emergency and EWIS assembly verification remain unresolved.</p>
+    </div>
+    <div class="card"><h2>Unresolved fields</h2><div class="mono unresolved">${esc(view.unresolvedFields.join(" · ") || "none")}</div></div>`;
+}
+async function loadSelected() {
+  app.innerHTML = `<div class="muted">Loading the fixed committed projection…</div>`;
+  try { render(await loadView(choice.value)); }
+  catch (error) { app.innerHTML = `<div class="error"><b>Publication blocked.</b><div>${esc(error instanceof Error ? error.message : "Unsupported publication input.")}</div><div class="muted">No partial route, evidence or authority data is displayed.</div></div>`; }
+}
+document.getElementById("loadButton").addEventListener("click",loadSelected);
+loadSelected();
+</script>
+</body>
+</html>

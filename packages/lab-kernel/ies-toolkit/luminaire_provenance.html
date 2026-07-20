@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ControlStack Lab — Luminaire Provenance Tree</title>
+<link rel="stylesheet" href="./lab.css" />
+<style>
+  .publication-banner{padding:12px 16px;border:2px solid var(--warn,#9a6700);background:#fff7d6;color:#6f4d00;border-radius:10px;font-weight:800;letter-spacing:.04em;margin-bottom:14px}
+  .tree{margin-top:8px}.node{border:1px solid var(--border-light,#ece8e2);border-left:3px solid var(--orange,#e07048);border-radius:8px;background:#fff;padding:10px 13px;margin:8px 0}.node .head{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}.tag{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--orange-dark,#c85c30);background:var(--orange-wash,#fff5f0);border-radius:999px;padding:2px 8px}.path{font-family:var(--mono,monospace);font-size:11px;overflow-wrap:anywhere}.state{margin-left:auto;font-size:10px;font-weight:800;text-transform:uppercase;color:#765600}.kids{margin-left:22px;border-left:1px dashed var(--border,#ddd8d0);padding-left:12px}.unresolved{color:#8a6010}.error{border:1px solid var(--red,#d94040);background:#fff0f0;color:#8b1f1f;border-radius:8px;padding:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brandhead">
+    <div class="mark">CS</div>
+    <div><div class="bn">CONTROLSTACK</div><div class="bs">Lab &amp; IES</div></div>
+    <div class="pg"><div class="pgt">Luminaire Provenance Tree</div><div class="pgs">read-only relationship projection</div></div>
+  </div>
+  <div class="publication-banner">OFFLINE DEMO — UNAPPROVED</div>
+  <div id="app"></div>
+</div>
+<script type="module">
+import {
+  parseReferenceId,
+  buildResolverPath,
+  parseResolverPath,
+  summariseEvidenceCapabilities,
+} from "./nvbReference.js";
+
+const VIEW_SCHEMA_ID = "controlstack.lab.provenance-publication-view.v1";
+const RECORD_PATH = "./lab/references/NVB-REF-OPT-000123/record.1mm.json";
+const PROVENANCE_PATH = "./lab/references/NVB-REF-OPT-000123/provenance.json";
+const EVIDENCE_PATH = "./lab/references/NVB-REF-OPT-000123/evidence/evidence.json";
+const app = document.getElementById("app");
+const esc = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
+const isPlainObject = (value) => !!value && typeof value === "object" && !Array.isArray(value) && [Object.prototype, null].includes(Object.getPrototypeOf(value));
+const exactKeys = (value, keys) => isPlainObject(value) && Object.keys(value).sort().join("|") === [...keys].sort().join("|");
+const requireCondition = (condition, message) => { if (!condition) throw new Error(message); };
+const requireNullAssembly = (value) => {
+  requireCondition(exactKeys(value,["emergency","ewisCartridge"]), "Assembly verification shape is unsupported.");
+  requireCondition(value.emergency === null && value.ewisCartridge === null, "Assembly verification must remain unresolved.");
+};
+function route(path, label, state="fixture_only") {
+  const descriptor = parseResolverPath(path);
+  requireCondition(descriptor !== null && buildResolverPath(descriptor) === path, "A relationship path is not canonical.");
+  return Object.freeze({label,descriptor,path,state});
+}
+function validateFixture(fixture) {
+  const keys = ["schemaId","schemaVersion","fixtureStatus","productionAuthority","referenceId","referenceKind","resolverPath","provenancePath","originIesRef","evidenceIndexRef","reportRefs","parentReferenceRefs","componentRefs","authorityRecordSha256","referenceSha256","approvalState","photometryStatus","assemblyVerification","unresolvedFields","note"];
+  requireCondition(exactKeys(fixture,keys), "Fixture projection is incomplete or has unsupported fields.");
+  requireCondition(fixture.schemaId === "controlstack.lab.fixture.reference.v1" && fixture.schemaVersion === 1, "Fixture schema is unsupported.");
+  requireCondition(fixture.fixtureStatus === "offline_demo_unapproved" && fixture.productionAuthority === false && fixture.approvalState === "fixture_only", "Fixture authority flags conflict.");
+  const parsed = parseReferenceId(fixture.referenceId);
+  requireCondition(parsed && parsed.kind === fixture.referenceKind, "Fixture identity fields conflict.");
+  requireCondition(typeof fixture.provenancePath === "string" && typeof fixture.originIesRef === "string" && typeof fixture.evidenceIndexRef === "string", "Fixture relationship references are unresolved.");
+  requireCondition(fixture.authorityRecordSha256 === null && fixture.referenceSha256 === null, "Fixture SHA values must remain unresolved.");
+  requireNullAssembly(fixture.assemblyVerification);
+}
+function validateProvenance(provenance, referenceId) {
+  requireCondition(provenance.schemaId === "controlstack.lab.fixture.provenance.v1" && provenance.schemaVersion === 1, "Fixture provenance schema is unsupported.");
+  requireCondition(provenance.fixtureStatus === "offline_demo_unapproved" && provenance.productionAuthority === false && provenance.referenceId === referenceId && provenance.approvalState === "fixture_only", "Fixture provenance authority flags conflict.");
+  requireCondition(provenance.describesRef === buildResolverPath({kind:"reference",referenceId}), "Fixture provenance describes the wrong reference.");
+  requireNullAssembly(provenance.assemblyVerification);
+  requireCondition(provenance.authorityRecordSha256 === null && provenance.referenceSha256 === null, "Fixture provenance SHA values must remain unresolved.");
+  for (const path of [provenance.provenancePath,provenance.describesRef,provenance.originIesRef,...provenance.reportRefs,...provenance.evidenceRefs,...provenance.componentRefs,...provenance.parentReferenceRefs]) requireCondition(parseResolverPath(path) !== null, "Fixture provenance contains an unsupported path.");
+}
+function dedupeEntries(entries) {
+  const stateByPath = new Map();
+  const result = [];
+  for (const entry of entries) {
+    requireCondition(entry.state === "fixture_only" || entry.state === "unavailable", "Offline fixture paths cannot be marked available.");
+    const prior = stateByPath.get(entry.path);
+    requireCondition(prior === undefined || prior === entry.state, "Duplicate path states conflict.");
+    if (prior === undefined) result.push(entry);
+    stateByPath.set(entry.path,entry.state);
+  }
+  return Object.freeze(result.sort((a,b) => a.path.localeCompare(b.path) || a.label.localeCompare(b.label)));
+}
+async function loadView() {
+  const [recordResponse,provenanceResponse,evidenceResponse] = await Promise.all([fetch(RECORD_PATH),fetch(PROVENANCE_PATH),fetch(EVIDENCE_PATH)]);
+  requireCondition(recordResponse.ok && provenanceResponse.ok && evidenceResponse.ok, "The committed fixture projections could not be loaded.");
+  const fixture = await recordResponse.json();
+  const provenance = await provenanceResponse.json();
+  const evidence = await evidenceResponse.json();
+  validateFixture(fixture);
+  validateProvenance(provenance,fixture.referenceId);
+  requireCondition(evidence.schemaId === "controlstack.lab.fixture.evidence-index.v1" && evidence.fixtureStatus === "offline_demo_unapproved" && evidence.productionAuthority === false && evidence.referenceId === fixture.referenceId && Array.isArray(evidence.entries), "Fixture evidence projection is unsupported.");
+  const evidenceCapabilities = summariseEvidenceCapabilities({referenceId:fixture.referenceId,entries:evidence.entries.map(({evidenceType,status}) => ({evidenceType,status}))});
+  requireNullAssembly(evidenceCapabilities.assemblyVerification);
+  const entries = dedupeEntries([
+    route(fixture.resolverPath,"Reference projection"),
+    route(fixture.provenancePath,"Provenance projection"),
+    route(fixture.originIesRef,"Origin IES reference"),
+    route(fixture.evidenceIndexRef,"Evidence index reference"),
+    ...fixture.reportRefs.map((path) => route(path,"Report reference")),
+    ...fixture.parentReferenceRefs.map((path) => route(path,"Parent reference")),
+    ...fixture.componentRefs.map((path) => route(path,"Component reference")),
+    ...provenance.evidenceRefs.map((path) => route(path,"Evidence or source reference")),
+  ]);
+  return Object.freeze({
+    schemaId:VIEW_SCHEMA_ID,
+    schemaVersion:1,
+    publicationMode:"offline_fixture",
+    referenceIdentity:null,
+    fixtureReference:fixture,
+    resolverEntries:entries,
+    evidenceCapabilities,
+    unresolvedFields:Object.freeze([...new Set([...fixture.unresolvedFields,...provenance.unresolvedFields])].sort()),
+    assemblyVerification:Object.freeze({emergency:null,ewisCartridge:null}),
+    readOnly:true,
+  });
+}
+function node(tag,label,path,state,kids="") {
+  return `<div class="node"><div class="head"><span class="tag">${esc(tag)}</span><b>${esc(label)}</b><span class="path">${esc(path)}</span><span class="state">${esc(state.replace("_"," "))}</span></div>${kids?`<div class="kids">${kids}</div>`:""}</div>`;
+}
+function render(view) {
+  requireCondition(view.schemaId === VIEW_SCHEMA_ID && view.schemaVersion === 1 && view.publicationMode === "offline_fixture" && view.referenceIdentity === null && view.readOnly === true, "Publication view is unsupported.");
+  requireNullAssembly(view.assemblyVerification);
+  const fixture = view.fixtureReference;
+  const byKind = new Map();
+  for (const entry of view.resolverEntries) {
+    const kind = entry.descriptor.kind;
+    const rows = byKind.get(kind) || [];
+    rows.push(entry);
+    byKind.set(kind,rows);
+  }
+  const children = [
+    ...(byKind.get("provenance") || []).map((entry) => node("provenance",entry.label,entry.path,entry.state)),
+    ...(byKind.get("originIes") || []).map((entry) => node("origin IES",entry.label,entry.path,entry.state)),
+    ...(byKind.get("report") || []).map((entry) => node("report",entry.label,entry.path,entry.state)),
+    ...(byKind.get("reference") || []).filter((entry) => entry.path !== fixture.resolverPath).map((entry) => node("parent",entry.label,entry.path,entry.state)),
+    ...(byKind.get("component") || []).map((entry) => node("component",entry.label,entry.path,entry.state)),
+    ...(byKind.get("evidence") || []).map((entry) => node("evidence",entry.label,entry.path,entry.state)),
+    ...(byKind.get("source") || []).map((entry) => node("source",entry.label,entry.path,entry.state)),
+  ].join("");
+  app.innerHTML = `
+    <div class="card"><h2>Relationship tree</h2>
+      <p class="muted">This tree displays canonical references and supplied fixture state only. It does not traverse a network, open a stored body, or reconstruct private authority.</p>
+      <div class="tree">${node("optic fixture",fixture.referenceId,fixture.resolverPath,"fixture_only",children)}</div>
+    </div>
+    <div class="card"><h2>Boundary state</h2>
+      <p>Authority SHA: <span class="path unresolved">unresolved</span></p>
+      <p>Reference SHA: <span class="path unresolved">unresolved</span></p>
+      <p>Emergency assembly verification: <span class="unresolved">unresolved</span></p>
+      <p>EWIS assembly verification: <span class="unresolved">unresolved</span></p>
+      <p class="muted">Evidence category coverage remains separate from assembly verification.</p>
+    </div>
+    <div class="card"><h2>Unresolved fields</h2><div class="path unresolved">${esc(view.unresolvedFields.join(" · ") || "none")}</div></div>`;
+}
+try { render(await loadView()); }
+catch (error) { app.innerHTML = `<div class="error"><b>Publication blocked.</b><div>${esc(error instanceof Error ? error.message : "Unsupported publication input.")}</div><div class="muted">No partial relationship, route, evidence or authority data is displayed.</div></div>`; }
+</script>
+</body>
+</html>
