@@ -6,6 +6,26 @@
 - Historical handoff content is retained as reported context unless freshly reverified.
 - Test output proves only the behaviour exercised by the named tests; low-level merge tests do not by themselves prove completion of the final governed merge.
 
+## LAB-039 corrected component thermal projection — 2026-07-21
+
+### Scope and result
+
+Exactly the component projection module and its focused test were changed. The component catalogue schema advanced to version 2 and every optic projection now exposes only `referenceRoomTaC`, `referenceInternalTaC` and `opticThermalRiseTaC`.
+
+Verified evidence:
+
+- the baseline maps 25 reference room, 35 absolute reference internal and 10 rise;
+- a varied optic changes legacy `optic_uplift_ta_c` to 15 and matching absolute internal to 40;
+- changing only uplift into a contradictory triplet fails closed;
+- missing triplet values fail closed;
+- decimal-normalised 0.1 + 0.2 = 0.3 is accepted exactly;
+- hot-test evidence remains opaque and unverified;
+- legacy semantic output names and all Engine-owned values are absent;
+- source fixtures and source-model field names were unchanged;
+- full `lab-ies` passed 257/257;
+- the exact two-file feature checkpoint was pushed;
+- LAB-040 is the sole next ready item.
+
 ## LAB-038 corrected resolver and atomic adapter transition — 2026-07-21
 
 ### Scope and amendment

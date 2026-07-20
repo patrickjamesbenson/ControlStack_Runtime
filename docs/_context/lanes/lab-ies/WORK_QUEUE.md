@@ -732,7 +732,9 @@ Completion evidence: The corrected resolver version 2 and the mandatory transiti
 - depends on: LAB-019-component-projection-contract, LAB-038-nvb-resolution-thermal-semantics-v2
 - on success next: LAB-040-nvb-lab-thermal-projection-v2
 - seam change: yes
-- status: ready
+- status: done
+
+Completion evidence: The component catalogue schema version 2 was committed in the exact two-file scope as `lab: checkpoint component thermal semantics v2`, pushed to the lane branch, and passed 257/257. Optic projections expose only reference room, absolute reference internal and optic thermal rise; exact decimal triplet validation accepts the corrected baseline and varied uplift evidence and blocks missing or contradictory values. No source fixture, source-model name, legacy output alias or Engine calculation changed. LAB-040 is now the sole ready item.
 
 ### Q-30 Corrected NVB Lab thermal working projection version 2
 - id: LAB-040-nvb-lab-thermal-projection-v2
@@ -751,7 +753,7 @@ Completion evidence: The corrected resolver version 2 and the mandatory transiti
 - depends on: LAB-023-nvb-lab-adapter, LAB-038-nvb-resolution-thermal-semantics-v2
 - on success next: LAB-041-component-library-thermal-labels
 - seam change: yes
-- status: blocked
+- status: ready
 
 ### Q-31 Corrected component-library thermal labels
 - id: LAB-041-component-library-thermal-labels
