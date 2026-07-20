@@ -407,3 +407,18 @@ Every completed worker updates this index with:
 - Implementation decision: SEL-018 is ready after SEL-017 and is bounded to the queue-authorised Selector, candidate, registration, final server guard, and focused-test files; only the minimum proven subset may change — RECORDED.
 - Live-proof decision: no Engine execution during implementation; the first bounded execution is allowed only after source, candidate, registration, server guards, focused tests, and the complete gate are green and the registered revision contains the approved Ambient value — RECORDED.
 - RuntimeData probe during decision review: source remained read-only, no write or mutation attempted, raw rows and headers redacted, and no Engine, registration, save, persistence, RunTable, IES, or output action occurred — VERIFIED.
+
+## 2026-07-20 — Ambient parcel split by evidence class
+
+- Starting identity: root `C:\ControlStack_Worktrees\selector-engine`; branch `lane/selector-engine`; actual HEAD `dc6fca735bc65b610160664492b46fb0a599322f`; runtime 8788; MCP 8000; gate `selector-engine` — VERIFIED.
+- Starting Git state: clean, with no staged, modified, untracked, or deleted paths — VERIFIED.
+- Branch-memory guard: actual HEAD was a dedicated `docs(selector): reconcile lane state` commit whose immediate parent matched the previously recorded work HEAD — VERIFIED.
+- Orchestrator scope: five mutable durable context files only; no feature code or test file changed — VERIFIED by scope guard and final diff.
+- Queue result: SEL-018 remains the sole top ready item but is now repository-only; SEL-019 is the following blocked live-acceptance item; SEL-002 and SEL-003 are held as non-duplicating acceptance checkpoints — RECORDED.
+- Preserved Ambient authority: active read-only `SYSTEM_POLICY` only; no fixture, product, System, Tier, application, IP, optic, lab, history, cache, union, or default authority — UNCHANGED PROGRAM APPROVAL.
+- Preserved field and unit: `lighting.ambient_temp_c` as a finite JSON number in degrees Celsius; protected interpolation input `temp_c` receives the identical number — UNCHANGED PROGRAM APPROVAL.
+- Preserved fail-closed rules: absent, blank, ambiguous, non-numeric, non-finite, malformed, or non-source-backed Ambient blocks before donor Engine execution; no 25°C or 35°C rescue — UNCHANGED PROGRAM APPROVAL.
+- Repository parcel boundary: focused tests, complete gate, exact feature/test staged set, gated feature commit/push, durable context closeout, second complete gate, context-only reconciliation commit/push, and clean tree; no live acceptance or Engine invocation — RECORDED.
+- Live parcel boundary: genuine source-backed browser selection, save and visible persistence, registration and active revision attribution, exact numeric candidate and `temp_c` receipt, separate safe Ambient-absent refusal without replacing the positive revision, and only then one bounded read-only Engine proof — RECORDED.
+- Live actions during this split: none. No browser save, registration, Engine invocation, project or RuntimeData mutation, persistence, RunTable generation, IES generation, or output generation occurred — VERIFIED.
+- Complete `selector-engine` gate, exact staged context set, gated commit/push, and final clean Git receipt are recorded by the orchestrator completion response and the resulting reconciliation commit.

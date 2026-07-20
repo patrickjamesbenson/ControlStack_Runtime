@@ -100,41 +100,57 @@
 * recovery state: the halted workers left exactly `packages/workspace-kernel/selectorReferenceOptionsService.js` and `tests/selectorCascadeCorrectness.test.js` modified and unstaged, alongside the five authorised recovery documents. Preserve all seven paths. Both direct-only and direct-indirect sides may legitimately omit the optional duplicate flat `indirectCapability` record. Correct both over-constrained presence assertions, rerun the live-shaped regression, and retain only implementation changes proven necessary by the remaining page-level assertions. Do not manufacture a duplicate record for either System variant to make the test green.
 * prohibitions: do not alter source data; do not merge or rename System variants; do not remove legitimate indirect OPTICS rows; do not change test-case recall, Emergency, EWIS, Sensor, Run persistence, registration transport, readiness-preview intent logic, Tier, Control, RuntimeData, Lab, Program, donor, or main; do not widen beyond the first proven automatic-consequence divergence.
 
-### Q-2H Resolve Ambient authority and the temperature/lumen Engine seam
+### Q-2H Implement Ambient authority and the temperature/lumen Engine seam
 
 * id: SEL-018
 * status: ready
 * depends-on: SEL-017
 * seam approval: Program & Integrate recorded on 2026-07-20
-* seam change: yes — the current first-readonly candidate explicitly excludes Ambient while the actual temperature/lumen lookup requires a finite temperature input
+* seam change: yes — approved authority, registration timing, field name, Celsius unit, and fail-closed ownership are unchanged
 * gate: selector-engine
 * authorised files: `packages/workspace-kernel/selectorReferenceOptionsService.js`, `packages/modules/cs-selector/selectorFactoryApprovedInputsSummary.js`, `packages/workspace-kernel/selectorLmTemperatureReadinessPreview.js`, `packages/workspace-kernel/selectorReadonlyEngineCandidateMapper.js`, `apps/workspace-shell/src/projectBrowserSelectedProjectServerOwnedRegistrationClientTransport.js`, `packages/workspace-kernel/projectBrowserSelectedProjectServerOwnedRegistrationBoundary.js`, `packages/workspace-kernel/engineRunTableSelectedProjectReadonlyInvokeCapability.js`, `server.js`, `tests/selectorReferenceOptionsService.test.js`, `tests/selectorLightControlSpine.test.js`, `tests/selectorReadonlyEngineCandidateMapper.test.js`, `tests/runtimeShellProjectBrowserSelectedProjectServerOwnedRegistrationClientTransport.test.js`, `tests/runtimeProjectBrowserSelectedProjectServerOwnedRegistrationBoundary.test.js`, `tests/runtimeEngineRunTableSelectedProjectReadonlyInvokeCapability.test.js`, `tests/runtimeLumenCurveParseInterpolationContract.test.js`, and closeout updates to the five mutable lane context files. Change only the minimum subset proven necessary.
-* objective: expose one source-backed Ambient temperature selector and carry its committed finite numeric Celsius value through registration as `lighting.ambient_temp_c` to the read-only Engine temperature/lumen lookup as `temp_c`, without a guessed default.
-* acceptance: selectable values come only from explicit finite Celsius choices in the active read-only `SYSTEM_POLICY` authority. No valid source choice leaves Ambient unavailable and requires upstream source correction. A browser-session save may retain incomplete state, but server-owned registration requires exactly one committed source-backed Ambient value and must remain blocked when it is absent or invalid. The candidate carries `lighting.ambient_temp_c` as a JSON number in degrees Celsius; the protected bridge passes the identical number to the interpolation request as `temp_c`. Missing, blank, ambiguous, non-numeric, non-finite, malformed, or non-source-backed values fail closed before donor Engine execution. Focused tests and the complete gate prove source extraction, numeric parsing, candidate shape, registration refusal, final server guard, and no fallback. Live proof then shows active-source options, genuine selection persistence, successful registration with the numeric field, the lookup consuming the same value, and negative refusal with the value absent or invalid. The first bounded Engine execution proof is allowed only after every preceding guard is green and the registered revision contains the approved Ambient value.
+* objective: implement one source-backed Ambient temperature selector and carry its committed finite numeric Celsius value through registration as `lighting.ambient_temp_c` to the protected read-only Engine temperature/lumen boundary as `temp_c`, without performing live browser acceptance or invoking Engine.
+* acceptance: selectable values come only from explicit finite Celsius choices in the active read-only `SYSTEM_POLICY` authority. No valid source choice leaves Ambient unavailable and requires upstream source correction. Browser-session save semantics remain unchanged, while server-owned registration requires exactly one committed source-backed Ambient value and remains blocked when it is absent or invalid. The candidate carries `lighting.ambient_temp_c` as a finite JSON number in degrees Celsius; the protected bridge maps the identical number to `temp_c`. Missing, blank, ambiguous, non-numeric, non-finite, malformed, or non-source-backed values fail closed before donor Engine execution. Focused tests visibly prove source extraction, numeric parsing, presentation/readiness, candidate shape, registration refusal, final server guard, unchanged numeric mapping, and absence of every default or rescue path. The complete `selector-engine` gate passes. Exactly the authorised feature/test subset is staged, gated, committed, and pushed, followed by the separate durable closeout, second complete gate, exact context-only reconciliation commit/push, and clean handoff state. No live/browser evidence is required or claimed in this parcel.
 * evidence: the live UI has no Ambient selector; `selectorFactoryApprovedInputsSummary` currently reports `ambientRequired: false`; `selectorReadonlyEngineCandidateMapper` omits Ambient from the candidate; the active source contains `SYSTEM_POLICY`; the existing Selector option service declares Ambient source-backed from that table; and the runtime lumen-curve interpolation contract rejects requests without finite `temp_c`.
-* prohibitions: do not fabricate source values or defaults; do not edit active source data from this lane; do not infer temperature from application, IP, System, Tier, test fixtures, optics, product type, lab data, or donor fallbacks; do not establish registration from an Ambient-incomplete candidate; do not invoke Engine before the implementation, tests, registration guard, and live preconditions are proven.
+* prohibitions: do not fabricate source values or defaults; do not edit active source data from this lane; do not infer temperature from application, IP, System, Tier, test fixtures, optics, product type, lab data, or donor fallbacks; do not perform a browser save, registration POST, live acceptance, active-revision claim, or Engine invocation; do not mark SEL-019, SEL-002, or SEL-003 done from repository tests.
+
+### Q-2I Live-accept Ambient selection, registration, refusal, and bounded Engine proof
+
+* id: SEL-019
+* status: blocked
+* depends-on: SEL-018 and runtime 8788 serving the accepted SEL-018 implementation
+* seam approval: inherited unchanged from the recorded Program & Integrate Ambient approval of 2026-07-20
+* seam change: no — this parcel accepts the already-approved implementation and may not alter authority, field shape, unit, registration timing, or fail-closed rules
+* gate: selector-engine
+* authorised files: read-only repository and runtime inspection; genuine browser actions performed by Patrick; closeout updates only to `docs/_context/lanes/selector-engine/LANE_STATE.md`, `docs/_context/lanes/selector-engine/WORK_QUEUE.md`, `docs/_context/lanes/selector-engine/DECISION_LOG.md`, `docs/_context/lanes/selector-engine/EVIDENCE_INDEX.md`, and `docs/_context/lanes/selector-engine/SESSION_HANDOFF.md`. No feature-code or test-file write is authorised.
+* objective: accept the implemented Ambient seam from genuine browser state through one attributable server-owned registration, prove the exact numeric Celsius value reaches the protected interpolation input, prove safe refusal without Ambient, and only then execute one bounded read-only Engine proof.
+* acceptance: perform and record the following sequence without reordering or inference. (1) Runtime 8788 visibly exposes Ambient choices sourced from active read-only `SYSTEM_POLICY`, with no fabricated/default option. (2) Patrick genuinely selects one available Ambient value and saves a new `project-alpha` browser-session envelope; the saved selection visibly persists. (3) That exact envelope registers successfully and produces an attributable active server-owned revision whose reconstructed candidate contains `lighting.ambient_temp_c` as the exact finite JSON number selected in Celsius. (4) Before donor execution, a bounded server receipt proves the protected temperature/lumen request receives the identical number as `temp_c`. (5) A separate genuine Ambient-absent browser envelope may save locally but registration or invocation preflight refuses safely before donor Engine execution, does not replace the accepted active revision, and exposes no default, 25°C, 35°C, non-source-backed, non-numeric, or non-finite rescue. (6) Only after steps 1-5 are proven may one bounded selected-project Engine invocation run against the accepted positive revision; it must return one attributable useful read-only result/run-table receipt with all established no-write, no-mutation, no-persistence, no-IES, and no-output-generation guarantees preserved. The complete lane gate passes before durable context closeout. The closeout marks SEL-019 done and may mark SEL-002 and SEL-003 done only when the same evidence fully satisfies their existing registration and bounded-invocation acceptance.
+* live-observation rule: this item requires genuine browser selection, save, visible persistence, and registration acknowledgement. A worker without that observation must return `NEEDS YOU` in the permanent handoff format, provide no more than three exact click-by-click steps, and leave SEL-019 incomplete.
+* prohibitions: no feature-code change; no source mutation; no fabricated envelope, revision, candidate, acknowledgement, receipt, or project truth; no default or inferred temperature; no Engine execution before the positive registration, exact numeric `temp_c` receipt, and separate safe negative refusal are all proven; no second Engine invocation; no widening to another Selector dimension, output contract, Lab/IES, downstream artifact, Program, donor, or main.
 
 ### Q-2 Register project-alpha active server-owned revision
 
 * id: SEL-002
-* status: blocked
-* depends-on: SEL-001, SEL-011, SEL-012, SEL-013, SEL-014, SEL-015, SEL-016, SEL-017, and SEL-018
+* status: held
+* superseded-by: SEL-019 live acceptance; do not execute as a separate browser or registration parcel
+* depends-on: SEL-019
 * gate: selector-engine
-* authorised files: read-only repository inspection; no repository file writes unless a later orchestrator commission supplies exact bounded paths
-* objective: use a new genuine `project-alpha` browser-session save to complete the supported server-side registration contract and establish an active server-owned revision.
-* acceptance: registration acknowledgement and an attributable active server-owned revision are proven from one new genuine browser-session save without constructing project truth from fixtures or repository test data. SEL-014, SEL-015, and SEL-016 must be committed, pushed, and served by the running application before the save. Patrick must perform the browser save and registration action and provide the visible acknowledgement because repository evidence cannot prove browser-held envelope truth or human-visible runtime state. Server-side registration remains the gate on running the Engine.
-* prohibitions: do not invoke Engine in this item; do not fabricate, reconstruct, or substitute a save envelope; do not change Tier, Control, RuntimeData, Lab, or Program seams.
+* authorised files: read-only
+* objective: retain the original registration acceptance checkpoint without causing a second registration attempt.
+* acceptance: SEL-019 may mark SEL-002 done only when its genuine positive Ambient save and registration evidence proves an attributable active server-owned revision without fabricated project truth. Until then SEL-002 remains held.
+* prohibitions: no separate save, registration, feature change, Engine invocation, fabricated envelope, or duplicated acceptance run.
 
 ### Q-3 Execute selected-project Engine invocation
 
 * id: SEL-003
-* status: blocked
-* depends-on: SEL-002
+* status: held
+* superseded-by: SEL-019 live acceptance; do not execute as a separate Engine parcel
+* depends-on: SEL-002 and SEL-019
 * gate: selector-engine
 * authorised files: read-only
-* objective: invoke the existing read-only selected-project Engine path using the registered server-owned revision and prove one attributable useful result/run-table response.
-* acceptance: one selected-project request reaches the existing Engine path from the attributable active server-owned revision and returns a useful result/run-table receipt with the established no-write flags preserved.
-* prohibitions: preserve no-write semantics; do not widen Selector dimensions or alter the output seam.
+* objective: retain the original bounded Engine acceptance checkpoint without causing a second invocation.
+* acceptance: SEL-019 may mark SEL-003 done only when its single post-refusal bounded invocation returns one attributable useful result/run-table receipt with the established no-write flags preserved. Until then SEL-003 remains held.
+* prohibitions: no separate or second Engine invocation; preserve no-write semantics; do not widen Selector dimensions or alter the output seam.
 
 ### Q-4 Activate bounded Google reader diagnostics and execute focused tests
 
