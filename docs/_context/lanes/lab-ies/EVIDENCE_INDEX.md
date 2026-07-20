@@ -6,6 +6,38 @@
 - Historical handoff content is retained as reported context unless freshly reverified.
 - Test output proves only the behaviour exercised by the named tests; low-level merge tests do not by themselves prove completion of the final governed merge.
 
+## LAB-036 Lab shell and bounded local server — 2026-07-20
+
+### Identity and scope
+
+- starting HEAD: `7b381f52b3f81c7c8c7de028a20d0594e2bf1976`;
+- queue item: `LAB-036-lab-shell-server`;
+- authorised paths only: `packages/lab-kernel/ies-toolkit/index.html`, `packages/lab-kernel/ies-toolkit/lab.html` and `serve.mjs`;
+- seam change: no.
+
+### Behaviour evidence
+
+The completed parcel:
+
+- replaces the stale pipeline narrative with a static directory linking only to committed and classified Lab surfaces;
+- provides a presentation-only allowlisted console that embeds those surfaces without browser storage, cross-frame message handling, business logic or cross-lane implementation;
+- fixes the server root to the current worktree toolkit directory derived from the server module location rather than a donor or external root;
+- binds only `127.0.0.1`, permits only GET and HEAD, rejects malformed, encoded-traversal, backslash and outside-root paths, and applies bounded MIME handling with no-store and no-sniff response headers;
+- exposes no write, upload, API, webhook, persistence, authentication or production endpoint capability;
+- changes no linked surface, shared CSS, production module or donor file.
+
+### Gate and checkpoint evidence
+
+- static search found no `localStorage`, `postMessage`, `writeFile` or stale donor-root literal in the exact three-file parcel;
+- exact staged set: the two shell pages and local server only;
+- full `lab-ies` execution before checkpoint: 255/255 passed;
+- gated commit execution: 255/255 passed;
+- feature checkpoint: `17b012a5a8e8d0914c42deab8e1b5f86b260b2a7`;
+- subject: `lab: checkpoint Lab shell and local server`;
+- push: confirmed on origin `lane/code-pilot-lab`;
+- LAB-036 is `done`;
+- LAB-037 is the sole next `ready` item.
+
 ## LAB-035 Selector contract viewer — 2026-07-20
 
 ### Identity and scope

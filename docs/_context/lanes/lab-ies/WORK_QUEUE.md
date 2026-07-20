@@ -668,7 +668,9 @@ Approval and completion evidence: Program & Integrate approved version 1 unchang
 - depends on: LAB-025-component-library-surface, LAB-026-document-equipment-surfaces, LAB-027-request-report-workflow, LAB-028-reference-curation-surfaces, LAB-029-provenance-publication-surfaces, LAB-030-emergency-surface, LAB-031-project-builder-surface, LAB-032-merge-composition-surface, LAB-033-main-lab-bench-surface, LAB-034-legacy-labbench-classification, LAB-035-selector-contract-stub
 - on success next: LAB-037-keyword-migration-guard
 - seam change: no
-- status: ready
+- status: done
+
+Completion evidence: The two classified Lab navigation shells and the bounded read-only local static server were committed as `lab: checkpoint Lab shell and local server`, pushed to the lane branch, and passed the full 255/255 `lab-ies` gate. The directory links only to committed/classified Lab surfaces; the console is presentation-only with no browser-storage or message bridge; the server is fixed to the current worktree toolkit root, binds localhost, permits only GET/HEAD, enforces root containment and performs no write, API, webhook, upload or persistence action. LAB-037 is now the sole ready item.
 
 ### Q-27 Cross-cutting canonical keyword migration guard
 - id: LAB-037-keyword-migration-guard
@@ -685,7 +687,7 @@ Approval and completion evidence: Program & Integrate approved version 1 unchang
 - depends on: LAB-014-summary-normalise-surface, LAB-016-nvb-offline-fixtures, LAB-022-reference-composition-kernel, LAB-031-project-builder-surface, LAB-033-main-lab-bench-surface
 - on success next: none
 - seam change: no
-- status: queued
+- status: ready
 
 ## Explicitly not queued
 
