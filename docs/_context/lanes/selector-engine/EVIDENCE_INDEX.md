@@ -461,3 +461,17 @@ Every completed worker updates this index with:
 - Normal gate and guarded commit gate: 107 passed, 0 failed each — VERIFIED.
 - Feature pushed only to `lane/selector-engine`; ending feature tree clean — VERIFIED.
 - Queue result: SEL-018 done; THERM-P1 sole ready; THERM-E1 blocked — RECORDED.
+
+## 2026-07-21 — Program thermal-evidence adapter evidence
+
+- Final feature paths: new Program adapter module and runtime-prefixed focused test only — VERIFIED.
+- Test-path guard: the broad Lab-prefixed test path was refused by the secure lane; the equivalent runtime-prefixed test path was accepted without widening permissions — VERIFIED.
+- Producer shape: exact Lab version-2 optic projection, selection BOM identity, measured triplet, bounded evidence reference, empty unresolved blockers and null authority — VERIFIED AGAINST LAB SOURCE AND EXECUTED TESTS.
+- Program binding: Selector optic key, source-backed binding key/BOM/revision and both Lab BOM identities must agree — VERIFIED.
+- Fail-closed coverage: schema/path/read-only errors, unresolved blockers, missing evidence, claimed Lab authority, non-finite values, contradictory triplets, identity mismatch, unsafe flags and caller-supplied derived/output fields are rejected — VERIFIED.
+- Output: deeply immutable accepted Program bundle only; no selected-room derivation, curve lookup or verified output — VERIFIED.
+- Focused harness gate: 119 passed, 0 failed; adapter suite visibly executed — VERIFIED.
+- Harness removal: Engine domain test byte-identical to HEAD and absent from final diff/stage — VERIFIED.
+- Normal and guarded commit gates: 107 passed, 0 failed each — VERIFIED.
+- Feature pushed only to the Selector lane; ending tree clean — VERIFIED.
+- Queue result: THERM-P1 done; THERM-E1 sole ready — RECORDED.

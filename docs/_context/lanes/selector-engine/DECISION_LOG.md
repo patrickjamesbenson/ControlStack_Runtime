@@ -323,3 +323,11 @@ This log is append-oriented. Do not silently rewrite historical decisions.
 **Rationale:** Focused mapper coverage executed at 125/125 through the temporary harness, the normal and commit gates passed 107/107, the harness was removed, and the final feature commit contains exactly the mapper and its test. The candidate carries only `selectedRoomTaC` and all invalid Ambient forms fail closed.
 
 **Consequence:** THERM-P1 may now implement its exact new adapter and focused test. THERM-E1 remains blocked. Because both new thermal test files are omitted from the fixed gate, each may use the same one-import temporary harness discipline without changing its final exact two-file scope.
+
+## 2026-07-21 — THERM-P1 accepted; runtime-prefixed test path is the guarded equivalent
+
+**Decision:** Accept the Program thermal-evidence adapter and advance THERM-E1. Record `tests/runtimeLabThermalEvidenceProgramAdapter.test.js` as the exact guarded test path replacing the refused broad-Lab-prefixed filename.
+
+**Rationale:** The secure lane permits runtime tests but correctly refuses broad Lab test paths. The filename change is test-only and non-semantic; the adapter contract, assertions and two-file scope are unchanged. Focused coverage passed 119/119, the harness was removed, and normal/commit gates passed 107/107.
+
+**Consequence:** No write permission is broadened. THERM-E1 is the sole ready parcel and continues to use its already-approved runtime-prefixed test path.

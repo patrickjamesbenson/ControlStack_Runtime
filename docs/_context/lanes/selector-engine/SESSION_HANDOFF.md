@@ -415,3 +415,11 @@ SEL-018 is complete and pushed. The focused run passed 125/125, the normal and c
 THERM-P1 is now the sole ready parcel. Create only the new Program validation adapter and its focused test. Validate the Selector room and optic, the Program source-backed optic binding, the exact Lab version-2 identity and measured triplet, the evidence reference, read-only state, empty blockers and null Lab authority. Emit the accepted immutable Program bundle and perform no thermal arithmetic.
 
 Use the authorised temporary focused-test import, remove it before the final diff, then stage and commit only the new adapter and its test. THERM-E1 stays blocked until the Program adapter closeout is pushed.
+
+## 2026-07-21 Program adapter complete — Engine next
+
+THERM-P1 is complete and pushed. The secure lane retained narrow permissions by using the runtime-prefixed focused test name. Focused coverage passed 119/119, the normal and commit gates passed 107/107, and only the new adapter plus its test changed.
+
+THERM-E1 is now the sole ready parcel. Create only the new Engine thermal execution module and `tests/runtimeThermalLumenExecution.test.js`. Consume only an accepted Program bundle, reject direct Lab or caller-derived values, calculate selected room plus measured optic rise exactly once, and delegate to the unchanged curve parser.
+
+The binding proof is mandatory: with the same selected room, current and curve, change only the optic-bound measured rise and prove both lookup temperature and verified lm/m move. Use and remove the authorised temporary focused-test import before exact two-file staging.

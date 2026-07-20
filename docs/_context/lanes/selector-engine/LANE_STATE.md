@@ -350,7 +350,7 @@ SEL-018 is now the sole top ready item. It is approved as one bounded Selector/r
 
 ## 2026-07-20 Ambient parcel split — latest controlling state
 
-**Recorded lane work HEAD:** `b90edb4ac309928e674d28e9208b540303a4575f` — `fix(selector): emit selected room temperature`.
+**Recorded lane work HEAD:** `3652eaf50bfd700dcb1e1d752942ad68e1291353` — `feat(runtime): validate Lab thermal evidence bundle`.
 
 The approved Ambient authority and contract are unchanged: active read-only `SYSTEM_POLICY` is the only selectable authority; `lighting.ambient_temp_c` is the exact candidate field; the value is a finite JSON number in degrees Celsius; the protected interpolation input is `temp_c`; and missing, blank, ambiguous, non-numeric, non-finite, malformed, or non-source-backed Ambient fails closed before donor Engine execution with no 25°C, 35°C, fixture, product, System, Tier, application, IP, optic, lab, historical, cached, or donor fallback.
 
@@ -393,3 +393,13 @@ The mapper rejects missing, malformed, duplicate, uncommitted, blocked, non-sour
 The temporary focused harness executed the mapper suite inside a 125/125 passing gate, was removed and finished byte-identical to HEAD. The normal baseline and guarded feature-commit gates each passed 107/107. Exactly the mapper and focused test were committed and pushed; the feature tree ended clean.
 
 THERM-P1 is now the sole ready item. THERM-E1 remains blocked behind it. Each new focused thermal test may use the same one-import temporary harness method and must remove it before exact two-file staging.
+
+## 2026-07-21 Program thermal-evidence adapter closeout
+
+THERM-P1 is complete and pushed. The new adapter validates the selected room and optic, one exact source-backed Program optic binding, the exact Lab version-2 read-only optic projection, empty unresolved blockers, bounded evidence identity, null Lab authority and exact measured thermal triplet. It emits only the immutable accepted Program thermal bundle and performs no selected-room derivation or curve lookup.
+
+The secure lane rejected the originally named `tests/labThermalEvidenceProgramAdapter.test.js` because the Selector allowlist intentionally permits runtime-prefixed tests, not broad Lab tests. The non-semantic test filename is therefore `tests/runtimeLabThermalEvidenceProgramAdapter.test.js`; no permission was broadened and the approved adapter behaviour is unchanged.
+
+The focused harness executed 119/119, then was removed and proved byte-identical to HEAD. The normal and guarded commit gates passed 107/107. Exactly the new adapter and runtime-prefixed focused test were committed and pushed; the tree ended clean.
+
+THERM-E1 is now the sole ready item. It must consume only the accepted Program bundle, apply the rise once and delegate unchanged to the existing curve parser.
