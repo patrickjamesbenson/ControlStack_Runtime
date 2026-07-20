@@ -625,7 +625,9 @@ Evidence: `d22cff4ee631cd2bdf2412f5d934cab106f051a2`, confirmed on origin. The o
 - depends on: LAB-011-project-ies-generation, LAB-033-main-lab-bench-surface
 - on success next: LAB-035-selector-contract-stub after recorded Integrate approval
 - seam change: no
-- status: ready
+- status: done
+
+Evidence: `15c0f130650146374932c280c054f6293f3f03f9`, confirmed on origin. The legacy page is confined to a visibly compatibility/demo-only read-only IES inspector over committed parse, metrics, inspection and polar modules; all duplicate approval, provenance, reference-building, symmetrisation and project-generation behaviour was removed, with no persistence, resolver, authority or cross-lane implementation. The gated execution passed 255/255.
 
 ### Q-25 Selector contract stub
 - id: LAB-035-selector-contract-stub

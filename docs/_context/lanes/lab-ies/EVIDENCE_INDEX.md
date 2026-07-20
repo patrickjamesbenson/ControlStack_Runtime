@@ -6,6 +6,40 @@
 - Historical handoff content is retained as reported context unless freshly reverified.
 - Test output proves only the behaviour exercised by the named tests; low-level merge tests do not by themselves prove completion of the final governed merge.
 
+## LAB-034 Legacy labbench classification — 2026-07-20
+
+### Identity and scope
+
+- starting HEAD: `78c503a356d6fcf1600cf4ea3ef3a662f724d21d`;
+- queue item: `LAB-034-legacy-labbench-classification`;
+- authorised path only: `packages/lab-kernel/ies-toolkit/labbench.html`;
+- seam change: no.
+
+### Classification evidence
+
+The legacy page previously duplicated authority and presentation behaviour: an inline polar renderer, mutable Lab-form/reference construction, origin sealing, approval promotion, symmetrisation and project IES export. Those behaviours were confined entirely inside the authorised file and could be safely retired without changing a committed module or the primary Bench.
+
+The completed page:
+
+- is persistently labelled `LEGACY COMPATIBILITY / DEMO ONLY`;
+- directs all governed workflow to `bench.html`;
+- supports only read-only uploaded IES inspection through committed `parseIes`, `computeMetrics`, `describeIes` and `renderPolar` modules;
+- contains no inline polar or photometric mutation implementation;
+- contains no approval, provenance, reference construction, project generator, serial, seal or resolver behaviour;
+- contains no download, browser storage, network route, persistence, clock/random identity or cross-lane implementation;
+- fails closed on malformed input without creating an authority or project artefact.
+
+### Static, gate and checkpoint evidence
+
+- prohibited legacy API, duplicate-polar, persistence and identity-generation search: zero matches;
+- exact staged set: the single authorised legacy page;
+- gated `lab-ies` execution: 255/255 passed;
+- feature checkpoint: `15c0f130650146374932c280c054f6293f3f03f9`;
+- subject: `lab: checkpoint legacy labbench classification`;
+- push: confirmed on origin `lane/code-pilot-lab`;
+- LAB-034 is `done`;
+- LAB-035 remains blocked pending Program & Integrate approval, so no item becomes `ready`.
+
 ## LAB-033 Main Lab Bench surface — 2026-07-20
 
 ### Identity and scope

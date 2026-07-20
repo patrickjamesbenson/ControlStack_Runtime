@@ -2,7 +2,7 @@
 
 ## Session purpose
 
-This handoff records completed LAB-033 Main Lab Bench, preserves the permanent charter authority for both standing prompts, and orders LAB-034 as the single next ready parcel.
+This handoff records completed LAB-034 legacy labbench classification, preserves the permanent charter authority for both standing prompts, and stops at the LAB-035 seam-approval boundary.
 
 ## Identity
 
@@ -12,9 +12,9 @@ This handoff records completed LAB-033 Main Lab Bench, preserves the permanent c
 - Branch: `lane/code-pilot-lab`
 - Gate: `lab-ies`
 - Standing prompt authority: `docs/_context/lanes/lab-ies/LANE_CHARTER.md` contains both worker and orchestrator prompts
-- Starting HEAD for LAB-033: `6ad89b4025e62e7b9246f39cf0942dbaf47ec78c`
-- Completed feature checkpoint: `d22cff4ee631cd2bdf2412f5d934cab106f051a2`
-- Feature subject: `lab: checkpoint main Lab bench surface`
+- Starting HEAD for LAB-034: `78c503a356d6fcf1600cf4ea3ef3a662f724d21d`
+- Completed feature checkpoint: `15c0f130650146374932c280c054f6293f3f03f9`
+- Feature subject: `lab: checkpoint legacy labbench classification`
 - Feature checkpoint confirmed on origin `lane/code-pilot-lab`
 - Seam change: no
 - Branch-HEAD guard checkpoint: `6d34e500d407d5335e5eebb317636a67a5e98618`
@@ -27,36 +27,35 @@ After every documentation push, only the `Recorded branch HEAD` field is refresh
 
 ## Completed queue item
 
-`LAB-033-main-lab-bench-surface` is complete.
+`LAB-034-legacy-labbench-classification` is complete.
 
 Exactly this one feature file was committed:
 
 ```text
-packages/lab-kernel/ies-toolkit/bench.html
+packages/lab-kernel/ies-toolkit/labbench.html
 ```
 
-The Main Bench is an explicit non-authoritative browser-memory working surface. It delegates parsing, metrics, inspection, polar rendering, the fixed guarded normalise recipe, canonical keyword projection, safe sealed-reference identity projection and project materialisation to committed modules.
+The legacy page is now an explicit compatibility/demo-only read-only IES inspector. It delegates parsing, metrics, inspection and polar rendering to committed modules and directs governed work to the Main Lab Bench.
 
-Working preview/download remains separate from authority allocation, approval and sealing. Internal ambient remains sealed-reference-owned and non-editable. No diagnostic identity, alternative reference record, serial, seal, resolver, browser storage, network route, persistence or cross-lane implementation exists.
+All duplicate approval, provenance, reference-building, symmetrisation, project-generation and inline polar behaviour was removed. No authority, serial, seal, resolver, download, persistence, browser storage, clock/random identity or cross-lane implementation exists.
 
 ## Validation evidence
 
-- Independent full `lab-ies` execution for LAB-033: 255/255 passed.
-- Gated LAB-033 feature checkpoint execution: 255/255 passed.
+- Gated LAB-034 feature checkpoint execution: 255/255 passed.
 - Failed, cancelled, skipped and todo counts were zero.
 
 ## Git and protected worktree state
 
-The LAB-033 parcel was staged as exactly the one authorised Main Bench file, committed and pushed separately from lane documentation.
+The LAB-034 parcel was staged as exactly the one authorised legacy compatibility file, committed and pushed separately from lane documentation.
 
 The protected working-tree state after documentation closeout must remain:
 
 - staged: 0;
 - modified: 1 — only the unstaged `Recorded branch HEAD` synchronisation marker in `LANE_STATE.md`;
-- untracked: 8;
+- untracked: 7;
 - deleted: 0.
 
-The 8 protected untracked paths remain exactly those recorded in `LANE_STATE.md`. In particular, these explicitly non-queued paths remain untouched:
+The 7 protected untracked paths remain exactly those recorded in `LANE_STATE.md`. In particular, these explicitly non-queued paths remain untouched:
 
 ```text
 README.zip
@@ -97,9 +96,10 @@ tests/selectorCascadeCorrectness.test.js
 - `LAB-032-merge-composition-surface`: `done` and confirmed on origin.
 - `LAB-032A-canonical-keyword-migration-guard-correction`: `done` and confirmed on origin.
 - `LAB-033-main-lab-bench-surface`: `done` and confirmed on origin.
-- LAB-033 independent and gated executions: 255/255 passed.
-- `LAB-034-legacy-labbench-classification`: `ready`.
-- Ready items: exactly one — LAB-034.
+- `LAB-034-legacy-labbench-classification`: `done` and confirmed on origin.
+- LAB-034 gated execution: 255/255 passed.
+- `LAB-035-selector-contract-stub`: `blocked` pending Program & Integrate approval.
+- Ready items: none.
 
 Program reported gate 45/45 passed, the approval decision committed and pushed, and its tree clean. No parallel or combined implementation is authorised.
 
@@ -129,9 +129,11 @@ LAB-032A is complete as the approved test-only canonical-keyword migration guard
 
 LAB-033 is complete as the bounded Main Lab Bench. It keeps working state non-authoritative, delegates every governed operation to committed modules, exposes no editable internal ambient, and accepts only a separately supplied sealed reference for project generation.
 
+LAB-034 is complete as the read-only legacy compatibility classification. It removes the second authority/project-generation path and directs governed work to the Main Lab Bench.
+
 LAB-017 remains governed by its approved version-1 envelope. Program retains all production allocation, live source reading, hosting, routing, persistence, authentication, CRM integration, deployment and endpoint ownership.
 
-The next safe action is LAB-034 as the sole ready item. No seam approval or human observation is required before its exact one-file classification parcel. LAB-035 remains blocked pending recorded Program & Integrate approval.
+The next safe action is orchestrator review of the LAB-035 Selector contract seam. No LAB-035 implementation may begin until Program & Integrate approval is recorded; there is no ready item.
 
 ## LAB-017 immutable completion receipt
 
