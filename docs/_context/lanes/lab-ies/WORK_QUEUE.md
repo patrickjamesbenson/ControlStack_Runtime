@@ -493,7 +493,7 @@ Evidence: `569c53f5a6b89850abb80a753f4296535e3b5db8`, confirmed on origin. Patri
   - `packages/lab-kernel/ies-toolkit/provenance.html`
   - `packages/lab-kernel/ies-toolkit/provenance_explorer.html`
   - `packages/lab-kernel/ies-toolkit/luminaire_provenance.html`
-- seam envelope: `docs/_context/lanes/lab-ies/LAB-029_SEAM_ENVELOPE.md`, version 1; proposed by the Lab orchestrator and awaiting Program & Integrate approval.
+- seam envelope: `docs/_context/lanes/lab-ies/LAB-029_SEAM_ENVELOPE.md`, version 1; approved unchanged by Program & Integrate on 2026-07-20 after a 45/45 Program gate.
 - prohibitions:
   - no public resolver server or route implementation;
   - no reverse-authority reconstruction or private rich-authority display;
@@ -506,7 +506,7 @@ Evidence: `569c53f5a6b89850abb80a753f4296535e3b5db8`, confirmed on origin. Patri
 - depends on: LAB-017-reference-resolver-contract, LAB-021-emergency-selection-contract, LAB-024-resolver-fixture-corpus
 - on success next: LAB-030-emergency-surface
 - seam change: yes
-- status: blocked
+- status: ready
 
 ### Q-20 Emergency selection surface
 - id: LAB-030-emergency-surface

@@ -4,14 +4,14 @@
 
 - Queue item: `LAB-029-provenance-publication-surfaces`
 - Seam version: `1`
-- Status: proposed; Program & Integrate approval required before implementation
+- Status: approved unchanged by Program & Integrate on 2026-07-20
 - Authorised implementation files:
   - `packages/lab-kernel/ies-toolkit/provenance.html`
   - `packages/lab-kernel/ies-toolkit/provenance_explorer.html`
   - `packages/lab-kernel/ies-toolkit/luminaire_provenance.html`
 - Gate: `lab-ies`
 
-This document is the complete proposed seam envelope. Approval applies only to version 1 and the exact three-file implementation boundary. Any change to the input projection, ownership boundary, resolver semantics, publication state, file scope or acceptance rules requires a new Program & Integrate decision.
+This document is the complete approved seam envelope. Approval applies only to version 1 and the exact three-file implementation boundary. Any change to the input projection, ownership boundary, resolver semantics, publication state, file scope or acceptance rules requires a new Program & Integrate decision.
 
 ## 1. Purpose
 
@@ -331,16 +331,25 @@ Safe order:
 
 Program resolver, storage and authority data remain untouched.
 
-## 15. Approval requested
+## 15. Approval record
 
-Program & Integrate is asked to approve version 1 unchanged for implementation of LAB-029 only.
+Program & Integrate approved version 1 unchanged on 2026-07-20 for implementation of LAB-029 only.
+
+Program reported:
+
+- gate: 45 passed, 0 failed;
+- approval checkpoint: the latest Program commit titled `docs(program): approve LAB-029 provenance seam`;
+- Program state: clean and pushed;
+- feature implementation, main promotion and downstream activation: not performed.
 
 Approval confirms:
 
 - the exact publication view model;
 - reuse of the existing safe identity, resolver-path and evidence-capability contracts unchanged;
-- fixture mode remains explicitly unapproved and cannot claim authority;
+- fixture mode remains explicitly unapproved and visibly labelled `OFFLINE DEMO — UNAPPROVED`;
 - governed availability is caller-supplied by Program rather than probed by Lab;
-- no host, endpoint, persistence, raw-body publication or authority ownership moves into Lab;
+- emergency and EWIS assembly verification remain `null`;
+- no host, endpoint, resolver, storage, persistence, deployment, raw-evidence publication, sealing or authority ownership moves into Lab;
 - exactly the three authorised HTML files may be implemented;
+- LAB-029 may move from `blocked` to the single top `ready` item;
 - any later contract or ownership change requires a new seam decision.

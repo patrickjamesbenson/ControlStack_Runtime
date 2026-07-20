@@ -13,7 +13,7 @@ Current repository evidence overrides stale historical statements.
 - Root: `C:\ControlStack_Worktrees\code-pilot-lab`
 - Branch: `lane/code-pilot-lab`
 - Gate: `lab-ies`
-- Recorded branch HEAD: `50ae226d30747c46c55626b59b6652d0217152b5`
+- Recorded branch HEAD: `7b74ca49665007311f6dbb8cfdccc47be5472353`
 - Branch-HEAD guard checkpoint: `6d34e500d407d5335e5eebb317636a67a5e98618`
 - Starting HEAD for LAB-028: `326c95a01570970bfc0205dca2be3bd34442acc6`
 - Completed feature HEAD: `569c53f5a6b89850abb80a753f4296535e3b5db8`
@@ -444,9 +444,10 @@ tests/selectorCascadeCorrectness.test.js
 - LAB-026 is complete and confirmed on origin as the Lab-only document and equipment support surfaces.
 - LAB-027 is complete and confirmed on origin as the approved additive request/report/reference-intake workflow.
 - LAB-028 is complete and confirmed on origin as the bounded non-authoritative reference-draft and evidence-curation surfaces.
-- LAB-029 seam envelope version 1 is proposed in `LAB-029_SEAM_ENVELOPE.md`; it reuses the approved safe identity, host-free resolver and evidence-capability contracts without moving Program ownership.
-- LAB-029 remains blocked pending recorded Program & Integrate approval of that exact version.
-- Proposed LAB-029 seam-envelope full `lab-ies` gate: 255/255 passed.
+- LAB-029 seam envelope version 1 is approved unchanged by Program & Integrate; it reuses the approved safe identity, host-free resolver and evidence-capability contracts without moving Program ownership.
+- Program reported gate 45/45 passed, the approval decision committed and pushed, and its tree clean.
+- LAB-029 is the single active `ready` parcel under that exact approved version.
+- Pre-approval LAB-029 seam-envelope full `lab-ies` gate: 255/255 passed.
 - No parallel or combined implementation is authorised.
 - The earlier LAB-018 approval hold remains superseded.
 
@@ -472,8 +473,9 @@ tests/selectorCascadeCorrectness.test.js
 - `LAB-027-request-report-workflow`: done.
 - `LAB-028-reference-curation-surfaces`: done.
 - Next ordered item: `LAB-029-provenance-publication-surfaces`.
-- Resulting status: `blocked`; recorded Program & Integrate seam approval is required before it may become `ready`.
-- Ready items: none.
-- Approval-blocked item: LAB-029.
+- Resulting status: `ready`; Program & Integrate approved seam-envelope version 1 unchanged.
+- Ready items: exactly one — LAB-029.
+- Seam approval required: no further approval for the recorded version.
+- Human observation required before implementation: no.
 
-LAB-028 was implemented, validated, committed and pushed as the single active parcel. The batch stops at the LAB-029 seam-approval boundary.
+LAB-028 is complete. LAB-029 is ordered as the single active parcel for the next standing-worker batch.

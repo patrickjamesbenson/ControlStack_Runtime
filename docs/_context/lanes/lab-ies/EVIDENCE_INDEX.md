@@ -130,7 +130,7 @@ The only remaining authority-related terms are explicit boundary statements such
 - LAB-029 remains `blocked` pending recorded Program & Integrate seam approval.
 - no item is `ready`.
 
-## Proposed LAB-029 provenance publication seam — 2026-07-20
+## LAB-029 provenance publication seam — 2026-07-20
 
 ### Boundary trigger
 
@@ -170,9 +170,20 @@ It prohibits resolver hosting, route-to-storage mapping, persistence, raw-body p
 - authorised implementation files: exactly the three LAB-029 HTML files;
 - no production module, fixture, shared CSS, Program, Runtime, Engine or Selector file is authorised;
 - Program retains allocation, sealing, resolver origin/hosting, evidence acceptance, persistence, authentication, deployment and endpoints;
-- LAB-029 remains blocked until Program & Integrate approves envelope version 1 unchanged;
-- proposed seam-envelope full `lab-ies` gate: 255/255 passed with zero failed, cancelled, skipped or todo;
-- no item is ready.
+- proposed seam-envelope full `lab-ies` gate: 255/255 passed with zero failed, cancelled, skipped or todo.
+
+### Program approval and queue effect
+
+Program & Integrate approved envelope version 1 unchanged on 2026-07-20.
+
+- Program gate: 45 passed, 0 failed;
+- approval checkpoint: latest Program commit titled `docs(program): approve LAB-029 provenance seam`;
+- Program state: clean, committed, pushed;
+- amendments: none;
+- feature implementation, main promotion and downstream activation: not performed;
+- preserved boundaries: governed safe projections only, fixture mode visibly `OFFLINE DEMO — UNAPPROVED`, emergency/EWIS verification null, and no resolver/storage/authority/deployment/raw-evidence/sealing ownership moved to Lab;
+- LAB-029 becomes the sole `ready` parcel;
+- no other item is ready.
 
 ## LAB-027 request and report workflow — 2026-07-20
 
