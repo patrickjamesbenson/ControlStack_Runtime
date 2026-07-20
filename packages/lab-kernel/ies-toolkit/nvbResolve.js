@@ -10,8 +10,8 @@ export class NvbResolutionContractError extends Error {
   }
 }
 
-export const NVB_RESOLUTION_SCHEMA_ID = "controlstack.lab.nvb-resolution.v1";
-export const NVB_RESOLUTION_SCHEMA_VERSION = 1;
+export const NVB_RESOLUTION_SCHEMA_ID = "controlstack.lab.nvb-resolution.v2";
+export const NVB_RESOLUTION_SCHEMA_VERSION = 2;
 export const NVB_TEST_PATHS = Object.freeze(["gear_tray", "optic", "no_base"]);
 
 const TEST_TYPE_TO_PATH = Object.freeze({
@@ -113,6 +113,43 @@ function optionalFiniteNumber(value, name) {
   return value;
 }
 
+function requiredThermalNumber(value, name) {
+  if (value === undefined || value === null || value === "") {
+    fail(`${name} is required for a resolved optic thermal triplet.`, "thermal_triplet_missing", { name });
+  }
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    fail(`${name} must be a finite number.`, "thermal_triplet_invalid", { name });
+  }
+  return Object.is(value, -0) ? 0 : value;
+}
+
+function decimalInteger(value, name) {
+  const text = String(requiredThermalNumber(value, name));
+  const match = /^([+-]?)(\d+)(?:\.(\d*))?(?:e([+-]?\d+))?$/i.exec(text);
+  if (!match) fail(`${name} has unsupported decimal form.`, "thermal_triplet_invalid", { name });
+  const sign = match[1] === "-" ? -1n : 1n;
+  const fraction = match[3] || "";
+  const exponent = Number(match[4] || 0);
+  const digits = `${match[2]}${fraction}`.replace(/^0+(?=\d)/, "");
+  const shift = exponent - fraction.length;
+  if (!Number.isSafeInteger(shift) || Math.abs(shift) > 1000) {
+    fail(`${name} exceeds the supported decimal scale.`, "thermal_triplet_invalid", { name });
+  }
+  const magnitude = BigInt(digits || "0");
+  return shift >= 0
+    ? { integer: sign * magnitude * (10n ** BigInt(shift)), scale: 0 }
+    : { integer: sign * magnitude, scale: -shift };
+}
+
+function thermalTripletMatches(referenceRoomTaC, referenceInternalTaC, opticThermalRiseTaC) {
+  const room = decimalInteger(referenceRoomTaC, "optic reference room Ta");
+  const internal = decimalInteger(referenceInternalTaC, "optic reference internal Ta");
+  const rise = decimalInteger(opticThermalRiseTaC, "optic thermal rise Ta");
+  const scale = Math.max(room.scale, internal.scale, rise.scale);
+  const align = ({ integer, scale: valueScale }) => integer * (10n ** BigInt(scale - valueScale));
+  return align(room) + align(rise) === align(internal);
+}
+
 function sourceFamily(row, name) {
   const fromFamily = Object.prototype.hasOwnProperty.call(row, "family")
     ? normaliseNvbFamily(row.family)
@@ -148,6 +185,19 @@ function projectOptic(row) {
   if (hotTestValue !== false && hotTestValue !== null && hotTestValue !== undefined && hotTestValue !== "") {
     hotTestEvidenceRef = requiredText(hotTestValue, "optic hot-test evidence reference");
   }
+  const referenceRoomTaC = requiredThermalNumber(row.room_ta_c, "optic reference room Ta");
+  const referenceInternalTaC = requiredThermalNumber(
+    row.optic_internal_delta_ta_c,
+    "optic reference internal Ta",
+  );
+  const opticThermalRiseTaC = requiredThermalNumber(row.optic_uplift_ta_c, "optic thermal rise Ta");
+  if (!thermalTripletMatches(referenceRoomTaC, referenceInternalTaC, opticThermalRiseTaC)) {
+    fail(
+      "Optic thermal evidence must satisfy reference room plus rise equals absolute reference internal temperature.",
+      "thermal_triplet_mismatch",
+      { referenceRoomTaC, referenceInternalTaC, opticThermalRiseTaC },
+    );
+  }
   return {
     opticBomId: requiredText(row.optic_bom_id, "optic BOM ID"),
     opticVariant: requiredText(row.optic_var_1, "optic variant"),
@@ -155,9 +205,9 @@ function projectOptic(row) {
     emissionPermission: optionalText(row.emission_permission, "optic emission permission"),
     hotTestEvidenceRef,
     opticalEfficiency: optionalFiniteNumber(row.eff_optical, "optic optical efficiency"),
-    opticInternalDeltaTaC: optionalFiniteNumber(row.optic_internal_delta_ta_c, "optic internal delta Ta"),
-    roomTaC: optionalFiniteNumber(row.room_ta_c, "optic room Ta"),
-    opticUpliftTaC: optionalFiniteNumber(row.optic_uplift_ta_c, "optic uplift Ta"),
+    referenceRoomTaC,
+    referenceInternalTaC,
+    opticThermalRiseTaC,
   };
 }
 
@@ -317,7 +367,8 @@ export function resolveNvbSelection(input) {
         optic = projectOptic(candidates[0].row);
       } catch (error) {
         if (!(error instanceof NvbResolutionContractError)) throw error;
-        addBlocker(blockers, "invalid_optic_row");
+        if (error.code.startsWith("thermal_triplet_")) addBlocker(blockers, error.code);
+        else addBlocker(blockers, "invalid_optic_row");
       }
     }
   }

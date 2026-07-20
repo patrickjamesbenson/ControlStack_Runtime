@@ -45,9 +45,9 @@ const OPTIC_KEYS = Object.freeze([
   "emissionPermission",
   "hotTestEvidenceRef",
   "opticalEfficiency",
-  "opticInternalDeltaTaC",
-  "roomTaC",
-  "opticUpliftTaC",
+  "referenceRoomTaC",
+  "referenceInternalTaC",
+  "opticThermalRiseTaC",
 ]);
 const THERMAL_KEYS = Object.freeze([
   "systemLabel",
@@ -195,9 +195,9 @@ function projectOptic(value, name) {
     emissionPermission: requireNullableText(optic.emissionPermission, `${name}.emissionPermission`),
     hotTestEvidenceRef: requireNullableText(optic.hotTestEvidenceRef, `${name}.hotTestEvidenceRef`),
     opticalEfficiency: requireNullableFiniteNumber(optic.opticalEfficiency, `${name}.opticalEfficiency`),
-    opticInternalDeltaTaC: requireNullableFiniteNumber(optic.opticInternalDeltaTaC, `${name}.opticInternalDeltaTaC`),
-    roomTaC: requireNullableFiniteNumber(optic.roomTaC, `${name}.roomTaC`),
-    opticUpliftTaC: requireNullableFiniteNumber(optic.opticUpliftTaC, `${name}.opticUpliftTaC`),
+    referenceRoomTaC: requireNullableFiniteNumber(optic.referenceRoomTaC, `${name}.referenceRoomTaC`),
+    referenceInternalTaC: requireNullableFiniteNumber(optic.referenceInternalTaC, `${name}.referenceInternalTaC`),
+    opticThermalRiseTaC: requireNullableFiniteNumber(optic.opticThermalRiseTaC, `${name}.opticThermalRiseTaC`),
   };
 }
 

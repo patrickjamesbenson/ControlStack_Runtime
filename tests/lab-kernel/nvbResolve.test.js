@@ -120,10 +120,10 @@ const exactExports = [
   "splitNvbLabForm",
 ];
 
-test("exports only the approved version-1 resolver interface and frozen constants", () => {
+test("exports only the approved version-2 resolver interface and frozen constants", () => {
   assert.deepEqual(Object.keys(contract).sort(), exactExports.sort());
-  assert.equal(contract.NVB_RESOLUTION_SCHEMA_ID, "controlstack.lab.nvb-resolution.v1");
-  assert.equal(contract.NVB_RESOLUTION_SCHEMA_VERSION, 1);
+  assert.equal(contract.NVB_RESOLUTION_SCHEMA_ID, "controlstack.lab.nvb-resolution.v2");
+  assert.equal(contract.NVB_RESOLUTION_SCHEMA_VERSION, 2);
   assert.deepEqual(contract.NVB_TEST_PATHS, ["gear_tray", "optic", "no_base"]);
   assert.equal(Object.isFrozen(contract.NVB_TEST_PATHS), true);
 });
@@ -176,8 +176,8 @@ test("resolves the exact optic ID, governing thermals and Lab-form profile", () 
   const output = contract.resolveNvbSelection(input);
 
   assert.deepEqual(output, {
-    schemaId: "controlstack.lab.nvb-resolution.v1",
-    schemaVersion: 1,
+    schemaId: "controlstack.lab.nvb-resolution.v2",
+    schemaVersion: 2,
     path: "optic",
     family: 80,
     status: "resolved",
@@ -188,9 +188,9 @@ test("resolves the exact optic ID, governing thermals and Lab-form profile", () 
       emissionPermission: "Direct",
       hotTestEvidenceRef: "80_Square_Opal",
       opticalEfficiency: 0.7,
-      opticInternalDeltaTaC: 35,
-      roomTaC: 25,
-      opticUpliftTaC: 10,
+      referenceRoomTaC: 25,
+      referenceInternalTaC: 35,
+      opticThermalRiseTaC: 10,
     },
     governingThermals: {
       systemLabel: "DNX 80 DI",
@@ -212,6 +212,50 @@ test("resolves the exact optic ID, governing thermals and Lab-form profile", () 
   assertDeepFrozen(output);
   assert.equal("emergency_capable" in output.optic, false);
   assert.equal("emergency" in output.optic, false);
+  assert.equal("opticInternalDeltaTaC" in output.optic, false);
+  assert.equal("roomTaC" in output.optic, false);
+  assert.equal("opticUpliftTaC" in output.optic, false);
+});
+
+test("maps absolute internal and rise correctly and fails closed on inconsistent thermal evidence", () => {
+  const varied = opticsFixture();
+  varied[2].optic_internal_delta_ta_c = 40;
+  varied[2].optic_uplift_ta_c = 15;
+  const variedOutput = contract.resolveNvbSelection(selectionInput({
+    selection: { family: 80, opticBomId: "80_Comfort" },
+    optics: varied,
+  }));
+  assert.equal(variedOutput.status, "resolved");
+  assert.deepEqual(
+    {
+      referenceRoomTaC: variedOutput.optic.referenceRoomTaC,
+      referenceInternalTaC: variedOutput.optic.referenceInternalTaC,
+      opticThermalRiseTaC: variedOutput.optic.opticThermalRiseTaC,
+    },
+    { referenceRoomTaC: 25, referenceInternalTaC: 40, opticThermalRiseTaC: 15 },
+  );
+
+  const contradictory = opticsFixture();
+  contradictory[0].optic_uplift_ta_c = 15;
+  const contradictoryOutput = contract.resolveNvbSelection(selectionInput({ optics: contradictory }));
+  assert.equal(contradictoryOutput.status, "unresolved");
+  assert.equal(contradictoryOutput.optic, null);
+  assert.deepEqual(contradictoryOutput.blockers, ["thermal_triplet_mismatch"]);
+
+  const missing = opticsFixture();
+  delete missing[0].optic_uplift_ta_c;
+  const missingOutput = contract.resolveNvbSelection(selectionInput({ optics: missing }));
+  assert.equal(missingOutput.status, "unresolved");
+  assert.equal(missingOutput.optic, null);
+  assert.deepEqual(missingOutput.blockers, ["thermal_triplet_missing"]);
+
+  const decimals = opticsFixture();
+  decimals[0].room_ta_c = 0.1;
+  decimals[0].optic_uplift_ta_c = 0.2;
+  decimals[0].optic_internal_delta_ta_c = 0.3;
+  const decimalOutput = contract.resolveNvbSelection(selectionInput({ optics: decimals }));
+  assert.equal(decimalOutput.status, "resolved");
+  assert.equal(decimalOutput.optic.referenceInternalTaC, 0.3);
 });
 
 test("uses exact family-plus-variant fallback only when no optic ID is supplied", () => {
@@ -347,5 +391,13 @@ test("production module contains no loader, runtime, mutation, clock, or emergen
     assert.equal(new RegExp(`export\\s+(?:async\\s+)?(?:const|function|class)\\s+${retired}\\b`).test(source), false);
   }
   assert.equal(source.includes("hotTestEvidenceRef"), true);
+  for (const forbiddenSemantic of [
+    "opticInternalDeltaTaC", "roomTaC", "opticUpliftTaC", "derivedInternalTaC", "curveLookupTaC",
+    "verifiedLumensPerMetre", "verifiedLmPerM", "boardTaC",
+  ]) {
+    assert.equal(source.includes(forbiddenSemantic), false, `${forbiddenSemantic} must remain absent`);
+  }
+  assert.equal(source.includes("optic_internal_delta_ta_c"), true);
+  assert.equal(source.includes("optic_uplift_ta_c"), true);
   assert.equal(source.includes("parseInt"), false);
 });

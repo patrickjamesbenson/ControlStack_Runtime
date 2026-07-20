@@ -43,9 +43,9 @@ function optic(overrides = {}) {
     emissionPermission: "direct",
     hotTestEvidenceRef: "evidence-hot-test",
     opticalEfficiency: 0.82,
-    opticInternalDeltaTaC: 3.5,
-    roomTaC: 25,
-    opticUpliftTaC: 2,
+    referenceRoomTaC: 25,
+    referenceInternalTaC: 27,
+    opticThermalRiseTaC: 2,
     ...overrides,
   };
 }
@@ -63,8 +63,8 @@ function thermals(overrides = {}) {
 function resolution(path = "optic", overrides = {}) {
   const resolved = overrides.status !== "unresolved";
   return {
-    schemaId: "controlstack.lab.nvb-resolution.v1",
-    schemaVersion: 1,
+    schemaId: "controlstack.lab.nvb-resolution.v2",
+    schemaVersion: 2,
     path,
     family: 80,
     status: resolved ? "resolved" : "unresolved",
@@ -223,8 +223,8 @@ test("keeps assembly verification exactly null for every path and status", () =>
 
 test("rejects wrong or malformed LAB-018 resolution schemas and shapes", () => {
   const invalidResolutions = [
-    { ...resolution(), schemaId: "controlstack.lab.nvb-resolution.v2" },
-    { ...resolution(), schemaVersion: 2 },
+    { ...resolution(), schemaId: "controlstack.lab.nvb-resolution.v1" },
+    { ...resolution(), schemaVersion: 1 },
     { ...resolution(), extra: true },
     { ...resolution(), readOnly: false },
     { ...resolution(), path: "other" },
@@ -338,5 +338,14 @@ test("production module contains no loader, persistence, clock, ID generation, d
   ]) {
     assert.equal(source.includes(forbidden), false, `${forbidden} must remain absent`);
   }
+  for (const forbiddenSemantic of [
+    "opticInternalDeltaTaC", "roomTaC", "opticUpliftTaC", "derivedInternalTaC", "curveLookupTaC",
+    "thermalEvidence", "authorityState", "verifiedLumensPerMetre", "verifiedLmPerM", "boardTaC",
+  ]) {
+    assert.equal(source.includes(forbiddenSemantic), false, `${forbiddenSemantic} must remain absent`);
+  }
+  assert.equal(source.includes("referenceRoomTaC"), true);
+  assert.equal(source.includes("referenceInternalTaC"), true);
+  assert.equal(source.includes("opticThermalRiseTaC"), true);
   assert.doesNotMatch(source, /export\s+(?:const|function|class)\s+(?:gearTrayRefId|opticRefId|resolveRecordNvb)\b/);
 });
