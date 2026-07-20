@@ -137,46 +137,47 @@
 * gate: selector-engine
 * authorised files: new `packages/workspace-kernel/runtimeThermalLumenExecution.js`, new `tests/runtimeThermalLumenExecution.test.js`, temporary harness-only use of `tests/engineRunTableDomain.test.js`, and closeout updates to the five mutable lane context files. The harness may add exactly one side-effect import of `./runtimeThermalLumenExecution.test.js`; it must be removed, byte-identical to HEAD and absent from final staging/commit.
 * objective: consume only an accepted Program thermal-evidence bundle, apply the optic rise exactly once, and delegate the resulting lookup temperature to the existing runtime lumen-curve parse/interpolation contract.
-* acceptance: Engine computes `derivedInternalTaC = selectedRoomTaC + opticThermalRiseTaC` and uses that same value as `curveLookupTaC`; 25 + 10 produces lookup 35 and 35 + 10 produces lookup 45; a second optic-bound bundle with a different measured rise, but the same room, current and curve, changes both lookup temperature and verified lm/m; the test must fail for hardcoded 35°C, hardcoded 10°C, use of the absolute reference-internal value as rise, or double application; low/high clamping preserves the unclamped derived value and reports clamp/interpolation/current modes; missing, malformed, contradictory, unaccepted or identity-unbound evidence fails closed.
+* acceptance: Engine computes `derivedInternalTaC = selectedRoomTaC + opticThermalRiseTaC` and uses that same value as `curveLookupTaC`; 25 + 10 produces lookup 35 and 35 + 10 produces lookup 45; a second optic-bound bundle with a different measured rise, but the same room, current and curve, changes both lookup temperature and verified lm/m; the test must fail for hardcoded 35°C, hardcoded 10°C, use of the absolute reference-internal value as rise, or double application; low/high clamping preserves the unclamped derived value and reports clamp/interpolation/current modes; missing, malformed, contradictory, unaccepted or identity-unbound evidence fails closed. Boundary regression is mandatory: execute twice with identical engineering inputs and different user, project, owner, timeline and registration traceability envelopes, and require identical deterministic Engine output after excluding only declared request identifiers. The implementation and dependency receipt must prove the old project-registration, active-revision and selected-project eligibility path is bypassed rather than renamed.
 * prohibitions: reject direct Lab projections and caller-supplied `derivedInternalTaC`, `curveLookupTaC`, board temperature or verified lm/m; do not change the existing curve parser, add routes or persistence, mutate RuntimeData, invoke donor execution, generate IES or outputs, or touch main.
 
 ### Q-2I Live-accept the completed thermal chain
 
 * id: SEL-019
-* status: held
-* depends-on: accepted THERM-E1 and a later explicit Program acceptance commission
-* seam approval: not yet commissioned under the corrected thermal contract
-* seam change: no — future acceptance may observe the completed chain but may not replace the accepted ownership boundaries
-* gate: selector-engine
-* authorised files: read-only until Program & Integrate records the final cross-lane acceptance method and exact evidence scope.
-* objective: retain a future live/end-to-end acceptance checkpoint without executing the superseded `lighting.ambient_temp_c` workflow.
-* acceptance: to be rewritten only after THERM-E1 is complete. Any future proof must observe `selectedRoomTaC`, the accepted Program evidence bundle, Engine single-application derivation and the varied-optic movement of both lookup temperature and verified lm/m.
-* live-observation rule: no browser or runtime action is authorised by this held item.
-* prohibitions: do not use the superseded `lighting.ambient_temp_c` or direct-`temp_c` contract; do not save, register, invoke Engine, alter source, fabricate evidence or mark SEL-002/SEL-003 done before a later Program commission.
+* status: superseded-as-engine-prerequisite
+* superseded-by: the binding outside-governance / selections-only Engine boundary
+* depends-on: none for Engine calculation
+* seam approval: Program & Integrate boundary ruling accepted on 2026-07-21
+* seam change: no — optional live persistence or traceability acceptance belongs to the outside governance layer
+* gate: none for Engine eligibility
+* authorised files: read-only unless a later outside-governance parcel is separately commissioned.
+* objective: retain historical traceability of the former live registration workflow without blocking or influencing Engine calculation.
+* acceptance: no Engine acceptance depends on browser save, registration, active revision, owner, project or timeline evidence. Any later governance proof must remain observational and must not alter Engine inputs or output.
+* live-observation rule: no browser or runtime action is required for THERM-E1 or final computational acceptance.
+* prohibitions: do not rename or recreate the former registration/active-revision gate; do not route governance envelope fields into Engine warnings, defaults, scoring, candidate exclusion, validation or output.
 
 ### Q-2 Register project-alpha active server-owned revision
 
 * id: SEL-002
-* status: held
-* superseded-by: SEL-019 live acceptance; do not execute as a separate browser or registration parcel
-* depends-on: SEL-019
-* gate: selector-engine
+* status: historical-governance-only
+* superseded-by: the binding selections-only Engine boundary
+* depends-on: none for Engine calculation
+* gate: none for Engine eligibility
 * authorised files: read-only
-* objective: retain the original registration acceptance checkpoint without causing a second registration attempt.
-* acceptance: SEL-019 may mark SEL-002 done only when its genuine positive Ambient save and registration evidence proves an attributable active server-owned revision without fabricated project truth. Until then SEL-002 remains held.
-* prohibitions: no separate save, registration, feature change, Engine invocation, fabricated envelope, or duplicated acceptance run.
+* objective: retain the historical project-registration checkpoint only as outside-governance documentation.
+* acceptance: no registration or active revision is required before Engine calculation. A later governance parcel may test persistence separately without changing Engine eligibility or output.
+* prohibitions: do not rename, proxy or reintroduce this checkpoint as an Engine prerequisite; no duplicate save or registration run is authorised.
 
 ### Q-3 Execute selected-project Engine invocation
 
 * id: SEL-003
-* status: held
-* superseded-by: SEL-019 live acceptance; do not execute as a separate Engine parcel
-* depends-on: SEL-002 and SEL-019
-* gate: selector-engine
+* status: historical-governance-coupled-invocation
+* superseded-by: THERM-E1 plus the selections-only boundary regression
+* depends-on: none for Engine eligibility
+* gate: none as a selected-project prerequisite
 * authorised files: read-only
-* objective: retain the original bounded Engine acceptance checkpoint without causing a second invocation.
-* acceptance: SEL-019 may mark SEL-003 done only when its single post-refusal bounded invocation returns one attributable useful result/run-table receipt with the established no-write flags preserved. Until then SEL-003 remains held.
-* prohibitions: no separate or second Engine invocation; preserve no-write semantics; do not widen Selector dimensions or alter the output seam.
+* objective: retain the historical selected-project invocation checkpoint without coupling Engine calculation to project registration.
+* acceptance: THERM-E1 and final cross-lane acceptance prove the computational path directly from engineering selections, including envelope independence and no-write semantics.
+* prohibitions: do not rename or recreate selected-project, active-revision or registration eligibility as a condition for Engine execution.
 
 ### Q-4 Activate bounded Google reader diagnostics and execute focused tests
 

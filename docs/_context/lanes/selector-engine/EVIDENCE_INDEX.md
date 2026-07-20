@@ -475,3 +475,14 @@ Every completed worker updates this index with:
 - Normal and guarded commit gates: 107 passed, 0 failed each — VERIFIED.
 - Feature pushed only to the Selector lane; ending tree clean — VERIFIED.
 - Queue result: THERM-P1 done; THERM-E1 sole ready — RECORDED.
+
+## 2026-07-21 — Selections-only queue reconciliation evidence
+
+- Program boundary receipt: Engine caller requirements and eligibility are engineering selections only; outer user/project/owner/timeline/registration metadata is optional traceability and non-blocking — PROGRAM-APPROVED AND RECORDED.
+- Existing parcel state: SEL-018 and THERM-P1 feature and documentation receipts are already pushed; current tree began clean — VERIFIED.
+- Active queue: THERM-E1 remains sole ready — RECORDED.
+- Governance queue correction: SEL-019 is superseded as an Engine prerequisite; SEL-002 and SEL-003 are historical outside-governance records and no longer dependencies — RECORDED.
+- Bypass classification: selected-project registration, active-revision attribution and selected-project eligibility facilities remain separate governance services but are excluded from the THERM-E1 computational dependency path — RECORDED FOR IMPLEMENTATION PROOF.
+- Rename guard: final source/dependency audit must prove no renamed equivalent gate is imported or consulted — REQUIRED.
+- Boundary regression: two executions with identical engineering inputs and different user/project/owner/timeline/registration envelopes must have identical deterministic eligibility and result — REQUIRED.
+- No feature code, route, persistence, registration, browser action, Engine execution, RuntimeData mutation, donor invocation or main change occurred during reconciliation — VERIFIED BY SCOPE AND GIT DIFF.

@@ -331,3 +331,13 @@ This log is append-oriented. Do not silently rewrite historical decisions.
 **Rationale:** The secure lane permits runtime tests but correctly refuses broad Lab test paths. The filename change is test-only and non-semantic; the adapter contract, assertions and two-file scope are unchanged. Focused coverage passed 119/119, the harness was removed, and normal/commit gates passed 107/107.
 
 **Consequence:** No write permission is broadened. THERM-E1 is the sole ready parcel and continues to use its already-approved runtime-prefixed test path.
+
+## 2026-07-21 — Selections-only boundary reconciles the active Selector queue
+
+**Decision:** Accept the Program outside-governance / inside-Engine ruling and its envelope-independence regression as controlling. SEL-018 and THERM-P1 remain accepted. THERM-E1 remains the sole ready implementation parcel. SEL-019 is superseded as an Engine prerequisite, and SEL-002/SEL-003 remain historical governance records only.
+
+**Rationale:** The earlier registration, active-revision and selected-project sequence belongs to the outside governance layer. It may persist results and provide traceability, but it cannot make the computational kitchen eligible. The existing selected-project registration modules remain available for governance use; THERM-E1 bypasses them entirely and imports only the accepted Program bundle contract and the existing curve parser.
+
+**Regression rule:** Execute THERM-E1 twice with identical engineering selections and different user, project, owner, timeline and registration traceability envelopes. After excluding only declared nondeterministic request identifiers, eligibility and deterministic engineering output must be identical. The test must fail if envelope data affects a warning, default, candidate, score, validation state or output.
+
+**Rename guard:** The closeout must name the former gates—project registration, active revision and selected-project eligibility—and prove they are absent from the THERM-E1 dependency path. Replacing them with differently named equivalents is prohibited; behavioral envelope independence is the class-level proof.

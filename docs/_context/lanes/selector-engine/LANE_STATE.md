@@ -403,3 +403,15 @@ The secure lane rejected the originally named `tests/labThermalEvidenceProgramAd
 The focused harness executed 119/119, then was removed and proved byte-identical to HEAD. The normal and guarded commit gates passed 107/107. Exactly the new adapter and runtime-prefixed focused test were committed and pushed; the tree ended clean.
 
 THERM-E1 is now the sole ready item. It must consume only the accepted Program bundle, apply the rise once and delegate unchanged to the existing curve parser.
+
+## 2026-07-21 selections-only queue reconciliation
+
+The accepted Program boundary now controls the lane. SEL-018 and THERM-P1 are already complete and remain valid. THERM-E1 is the sole ready implementation parcel.
+
+The former live registration chain is removed from Engine eligibility. SEL-019 is superseded as an Engine prerequisite. SEL-002 project registration and SEL-003 selected-project invocation remain historical outside-governance checkpoints and do not block THERM-E1 or final computational acceptance.
+
+This is a bypass at the computational boundary, not a rename. THERM-E1 must not import or call the selected-project registration boundary, active-revision store, shell registration service or selected-project eligibility projection. Those governance facilities may remain for persistence and traceability outside the kitchen.
+
+The mandatory boundary regression runs identical accepted engineering inputs twice with different user, project, owner, timeline and registration envelopes. Both runs must return identical deterministic engineering output and eligibility. Envelope data may not alter warnings, defaults, exclusions, scores, validation or output.
+
+Final closeout must include a dependency receipt proving the THERM-E1 module reaches only the accepted Program bundle contract and existing curve parser, plus a negative search for renamed registration, revision or project-eligibility gates.

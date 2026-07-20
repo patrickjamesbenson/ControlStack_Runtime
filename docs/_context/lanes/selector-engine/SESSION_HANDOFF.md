@@ -423,3 +423,13 @@ THERM-P1 is complete and pushed. The secure lane retained narrow permissions by 
 THERM-E1 is now the sole ready parcel. Create only the new Engine thermal execution module and `tests/runtimeThermalLumenExecution.test.js`. Consume only an accepted Program bundle, reject direct Lab or caller-derived values, calculate selected room plus measured optic rise exactly once, and delegate to the unchanged curve parser.
 
 The binding proof is mandatory: with the same selected room, current and curve, change only the optic-bound measured rise and prove both lookup temperature and verified lm/m move. Use and remove the authorised temporary focused-test import before exact two-file staging.
+
+## 2026-07-21 queue reconciled to selections-only Engine boundary
+
+SEL-018 and THERM-P1 are already complete and accepted. THERM-E1 remains the sole ready parcel.
+
+Do not execute SEL-019, SEL-002 or SEL-003 as Engine prerequisites. Their former browser save, project registration, active revision and selected-project eligibility sequence is superseded and belongs outside the computational boundary. Existing governance modules may remain for optional persistence and traceability, but THERM-E1 must bypass them and must not import or call them.
+
+The new mandatory regression executes THERM-E1 twice with identical engineering selections and different traceability envelopes covering user, project, owner, timeline and registration state. The deterministic Engine results must be identical. This is the proof against renaming: any differently named governance field that influences warnings, defaults, scoring, validation or output will break the test.
+
+THERM-E1 closeout must report its dependency path and a negative source search proving no project-registration, active-revision or selected-project eligibility gate remains in the computational path.
