@@ -1042,3 +1042,21 @@ The existing governance services may remain for optional persistence, attributio
 ### Preserved exclusions
 
 No route, persistence path, RuntimeData mutation, donor invocation, IES generation, downstream output generation, existing curve-parser change or main/runtime-port change was included. Outside-governance persistence and main promotion remain separate decisions.
+
+---
+
+## 2026-07-21 — Engine selected-result stability review blocks downstream activation
+
+**Status:** ENGINE OUTPUT CONTRACT NOT YET STABLE; FIRST PRODUCER-CONTRACT PARCEL ADMITTED.
+
+Program reviewed Seam B against its five mandatory stability conditions after final thermal acceptance.
+
+1. **Schema/version declaration — partial only.** A versioned safe selected-result source object exists, but it is explicitly diagnostic-only and non-persistent. The broader projection remains summary-only, not accepted, and has no normalised per-run lookup.
+2. **Producer gate evidence — insufficient for the full contract.** The accepted thermal execution and existing domain gates prove thermal calculation and safe summaries, not one complete accepted selected-result/run-table envelope.
+3. **Consumer compatibility evidence — missing.** The source object explicitly reports selected-result projection and IES handoff as not ready.
+4. **Live or sealed-fixture receipt — missing.** No Program-accepted sealed fixture proves one complete accepted result and one deterministic blocked result through the intended consumer boundary.
+5. **Rollback/compatibility rule — missing for downstream use.** Existing diagnostic scaffolds are safely reversible, but no accepted compatibility rule exists for a downstream consumer.
+
+Therefore Program does not declare Seam B stable. Seam G remains reserved and inactive, and main promotion remains separately held.
+
+Program approves a first bounded Selector & Engine parcel, **ENG-STAB-P1**, to create a new immutable version-1 selected-result producer contract from the already accepted safe source summary and thermal execution result. It is schema/validation work only: no route, persistence, IES handoff, downstream activation, RuntimeData mutation, donor invocation or main change. Consumer compatibility and final stability acceptance remain separate later parcels.

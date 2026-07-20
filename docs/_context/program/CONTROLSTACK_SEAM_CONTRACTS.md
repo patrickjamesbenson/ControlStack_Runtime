@@ -608,3 +608,40 @@ The outside-governance / inside-Engine version-1 seam is accepted across lanes.
 - Project registration, active revision and selected-project eligibility are bypassed from computation rather than renamed.
 
 All nine acceptance-lock conditions are satisfied. Future governance influence over warnings, defaults, candidate exclusion, scoring, validation or output is a breaking version change.
+
+## 2026-07-21 — Engine selected-result version-1 pre-stability contract
+
+**Status:** PROGRAM-APPROVED PRODUCER CONTRACT; NOT YET IMPLEMENTED OR STABLE.
+
+The existing safe source object and selected-result projection remain diagnostic inputs. They are not themselves the stable downstream contract because they are summary-only, non-persistent, not accepted as a detailed selected result, and explicitly report projection/IES readiness as false.
+
+### Version-1 producer envelope
+
+The new producer contract uses schema identity `controlstack.engine.selected-result.v1`, schema version `1`, and an exact immutable top-level shape containing:
+
+- `schemaId`, `schemaVersion`, `state`, `readOnly`;
+- opaque `sourceInputFingerprint` and bounded `sourceVersionMarker`;
+- derived `selectedProfile` or null;
+- one accepted thermal verification summary or null;
+- deterministic `runCount`, safe per-run display rows, sanitised warnings and canonical blockers;
+- immutable safety flags proving no raw payload, source row, private path, governance envelope, write, generation or persistence capability is exposed.
+
+`state` is exactly `accepted` or `blocked`. An accepted envelope requires one accepted thermal result, one successful safe selected-result source object, identity agreement, at least one safe run row and no blockers. A blocked envelope requires at least one canonical blocker and returns no accepted runs or verified output.
+
+The thermal summary carries only the accepted result fields needed for audit and downstream display: selected room, selected optic identity, measured optic rise, derived/lookup temperature, requested current, verified lm/m, clamp/interpolation modes, evidence reference and source revision. It must not accept caller-supplied derived or verified values.
+
+Per-run rows use the existing safe selected-result display vocabulary. Raw RunTable rows, raw Engine payload, raw source data, exact private electrical internals, IES content, PDFs, artefacts and local paths remain prohibited.
+
+### Compatibility and rollback
+
+Version 1 is exact-shape and exact-version. Consumers fail closed on unknown schema identity, unknown version, additional authority fields, contradictory identities or unsafe data. Any breaking field, ownership or blocked-state change requires a new Program decision and schema version.
+
+The initial producer parcel is read-only and non-persistent. Rollback is removal or non-use of the new adapter while retaining the current diagnostic-only source and projection; no data migration, route reversal or stored-record repair is required.
+
+### Ordered acceptance
+
+1. **ENG-STAB-P1:** implement and seal the producer envelope with accepted and blocked fixtures.
+2. **ENG-STAB-C1:** separately prove one consumer compatibility adapter without activating IES generation or downstream writes.
+3. **ENG-STAB-A1:** Program reviews all five Seam B stability conditions and either declares version 1 stable or records the remaining blocker.
+
+Seam G remains reserved and inactive until ENG-STAB-A1 is accepted.

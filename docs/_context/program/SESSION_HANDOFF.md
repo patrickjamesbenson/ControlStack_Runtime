@@ -40,3 +40,11 @@ The boundary regression passed: identical engineering selections with different 
 Project registration, active revision and selected-project eligibility are bypassed from computation, not renamed. THERM-E1 depends only on the Program evidence adapter and curve parser.
 
 Focused Engine coverage passed 120/120; normal Selector closeout passed 107/107. No live registration proof is required. Optional persistence, downstream artifacts and main promotion remain separate.
+
+## Next authorised parcel
+
+Engine selected-result stability is not yet declared. The existing versioned source object remains diagnostic-only, summary-only and non-persistent, with detailed projection and IES handoff readiness disabled.
+
+ENG-STAB-P1 is the sole ready item: create the new immutable version-1 selected-result producer contract and its focused runtime test in the isolated Selector lane. The parcel combines only the accepted thermal result and safe source summary, emits accepted-or-blocked fixtures, and activates no route, persistence, IES/downstream readiness, RuntimeData, donor or main work.
+
+After its pushed receipt, Program must accept the producer before commissioning any consumer compatibility parcel.

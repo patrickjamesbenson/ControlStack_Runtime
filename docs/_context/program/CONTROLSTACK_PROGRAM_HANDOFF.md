@@ -677,3 +677,16 @@ This is a computational bypass, not deletion of optional persistence capability 
 Focused Engine coverage passed 120/120. The normal Selector closeout passed 107/107. Program final acceptance is recorded separately. No route, persistence, RuntimeData, donor, IES, output-generation, curve-parser or main change occurred.
 
 The thermal chain now requires no further Selector implementation or live registration proof. Optional persistence, downstream artifacts and main promotion remain separate future decisions.
+
+## 2026-07-21 selected-result stability handoff
+
+Program has reviewed the next seam and has **not** declared the Engine selected-result contract stable. The current versioned source object is diagnostic-only, summary-only and non-persistent; detailed acceptance, normalised per-run lookup, projection readiness and IES handoff readiness remain disabled. No complete accepted/blocked fixture pair or consumer compatibility receipt is accepted.
+
+ENG-STAB-P1 is the sole ready parcel. Commission the isolated Selector & Engine lane to create only:
+
+- `packages/workspace-kernel/runtimeEngineSelectedResultContractV1.js`
+- `tests/runtimeEngineSelectedResultContractV1.test.js`
+
+The module validates the already accepted thermal result and safe selected-result source object, then emits one exact immutable `controlstack.engine.selected-result.v1` accepted-or-blocked envelope. It does not invoke Engine, modify the curve parser or existing scaffolds, persist, add routes, expose raw data, activate IES/downstream readiness, mutate RuntimeData, use donor code or touch main.
+
+Run focused coverage plus `selector-engine`, commit as `feat(runtime): seal selected result contract v1`, push only the Selector lane and return a complete receipt. Consumer compatibility and final stability declaration remain separate Program parcels. Seam G and main promotion stay held.

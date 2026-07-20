@@ -422,3 +422,16 @@ P2 Checkpoint 1 is **IMPLEMENTATION COMPLETE / GATE GREEN / COMMIT BLOCKED BY SH
 - **CROSS-LANE STATUS:** accepted complete.
 - **HELD SEPARATELY:** optional outside-governance persistence, downstream artifacts and main promotion.
 - **NEXT:** preserve this seam and consider only separately approved work. Patrick has no action.
+
+## 2026-07-21 Engine selected-result stability review state
+
+- **STABILITY DECISION:** not declared.
+- **SCHEMA EVIDENCE:** a versioned safe source object exists, but it remains diagnostic-only, non-persistent and summary-only.
+- **PROJECTION EVIDENCE:** detailed selected-result acceptance and normalised per-run lookup remain disabled.
+- **CONSUMER EVIDENCE:** selected-result projection and IES handoff readiness remain false; no accepted consumer receipt exists.
+- **FIXTURE EVIDENCE:** no Program-accepted complete accepted/blocked fixture pair exists for the intended producer envelope.
+- **ROLLBACK EVIDENCE:** no downstream compatibility/rollback rule was previously accepted.
+- **DOWNSTREAM:** Seam G remains reserved and inactive.
+- **MAIN:** promotion remains separately held and cannot be executed by the current lane-confined Program connection.
+- **SOLE READY ITEM:** ENG-STAB-P1, a two-file Selector & Engine producer-contract parcel.
+- **NEXT:** commission ENG-STAB-P1 in the isolated Selector lane; do not modify existing scaffolds, activate a consumer, write main or touch unfinished runtime-port work. Patrick has no action.

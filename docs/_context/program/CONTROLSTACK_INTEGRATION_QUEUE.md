@@ -670,3 +670,34 @@ The Selector lane reconciled its queue to the binding boundary, preserved the al
 ### Remaining queue boundary
 
 There is no outstanding Selector or Engine implementation item in this thermal sequence. Optional persistence/traceability work remains outside governance and cannot become an Engine prerequisite. Main promotion, downstream artifacts and the unfinished main runtime-port work remain separately held.
+
+## 2026-07-21 — Engine selected-result stability sequence
+
+**Status:** STABILITY NOT DECLARED; ENG-STAB-P1 IS THE SOLE READY ITEM.
+
+### ENG-STAB-P1 — Seal the version-1 selected-result producer envelope
+
+- **Owner:** Selector & Engine.
+- **Status:** ready.
+- **Depends on:** accepted THERM-E1 and Program version-1 pre-stability contract.
+- **Exact feature files:** new `packages/workspace-kernel/runtimeEngineSelectedResultContractV1.js` and new `tests/runtimeEngineSelectedResultContractV1.test.js`.
+- **Gate:** `selector-engine`.
+- **Objective:** validate the accepted thermal execution result and the existing safe selected-result source object, then emit the exact deeply immutable `controlstack.engine.selected-result.v1` accepted-or-blocked envelope.
+- **Accepted proof:** exact schema/version and key set; source identity and revision agreement; deterministic accepted and blocked fixtures; at least one safe per-run row; thermal values preserved without recalculation; governance-envelope independence; no raw payload, source row, path, exact private electrical internal, IES, PDF or artefact exposure.
+- **Blocked proof:** malformed, unaccepted, contradictory, identity-unbound, unsafe or over-rich input fails closed with canonical blockers and no accepted runs or verified output.
+- **Prohibitions:** no Engine invocation, curve-parser change, route, persistence, RuntimeData mutation, donor use, IES handoff, downstream readiness activation, existing scaffold rewrite or main change.
+- **Commit message:** `feat(runtime): seal selected result contract v1`.
+
+### ENG-STAB-C1 — Prove one consumer compatibility adapter
+
+- **Status:** blocked behind Program acceptance of ENG-STAB-P1.
+- **Owner:** to be commissioned separately after the producer receipt.
+- **Boundary:** read-only compatibility only; no IES generation, downstream write, persistence or route activation.
+
+### ENG-STAB-A1 — Final Seam B stability decision
+
+- **Status:** blocked behind accepted producer and consumer receipts.
+- **Owner:** Program & Integrate.
+- **Acceptance:** all five Seam B conditions must be verified: schema/version, producer gate, consumer compatibility, live or sealed fixture, and rollback/compatibility rule.
+
+Seam G and main promotion remain held throughout this sequence.
