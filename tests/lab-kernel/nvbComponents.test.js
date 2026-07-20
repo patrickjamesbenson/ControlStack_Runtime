@@ -79,10 +79,10 @@ const exactExports = [
   "projectOptics",
 ];
 
-test("exports only the approved version-1 component projection interface", () => {
+test("exports only the approved version-2 component projection interface", () => {
   assert.deepEqual(Object.keys(contract).sort(), exactExports.sort());
-  assert.equal(contract.COMPONENT_CATALOGUE_SCHEMA_ID, "controlstack.lab.component-catalogue.v1");
-  assert.equal(contract.COMPONENT_CATALOGUE_SCHEMA_VERSION, 1);
+  assert.equal(contract.COMPONENT_CATALOGUE_SCHEMA_ID, "controlstack.lab.component-catalogue.v2");
+  assert.equal(contract.COMPONENT_CATALOGUE_SCHEMA_VERSION, 2);
 });
 
 test("groups board platforms deterministically with numeric-first CCT ordering and exact tunable rules", () => {
@@ -208,9 +208,9 @@ test("projects optics in stable exact BOM-ID order and keeps hot-test evidence o
     emissionPermission: "Direct",
     hotTestEvidenceRef: "80_Square_Opal",
     opticalEfficiency: 0.7,
-    opticInternalDeltaTaC: 35,
-    roomTaC: 25,
-    opticUpliftTaC: 10,
+    referenceRoomTaC: 25,
+    referenceInternalTaC: 35,
+    opticThermalRiseTaC: 10,
     readOnly: true,
   });
   assert.equal("emergencyCapable" in output[1], false);
@@ -225,6 +225,50 @@ test("projects optics in stable exact BOM-ID order and keeps hot-test evidence o
   );
 });
 
+test("maps corrected thermal triplets and fails closed on missing or contradictory optic evidence", () => {
+  const varied = contract.projectOptics([
+    optic({
+      optic_bom_id: "80_Comfort",
+      optic_var_1: "Comfort",
+      optic_internal_delta_ta_c: 40,
+      optic_uplift_ta_c: 15,
+    }),
+  ]);
+  assert.deepEqual(
+    {
+      referenceRoomTaC: varied[0].referenceRoomTaC,
+      referenceInternalTaC: varied[0].referenceInternalTaC,
+      opticThermalRiseTaC: varied[0].opticThermalRiseTaC,
+    },
+    { referenceRoomTaC: 25, referenceInternalTaC: 40, opticThermalRiseTaC: 15 },
+  );
+  for (const legacyName of ["opticInternalDeltaTaC", "roomTaC", "opticUpliftTaC"]) {
+    assert.equal(legacyName in varied[0], false);
+  }
+
+  assert.throws(
+    () => contract.projectOptics([optic({ optic_uplift_ta_c: 15 })]),
+    (error) => error instanceof contract.ComponentProjectionContractError
+      && error.code === "thermal_triplet_mismatch",
+  );
+
+  assert.throws(
+    () => contract.projectOptics([optic({ optic_uplift_ta_c: undefined })]),
+    (error) => error instanceof contract.ComponentProjectionContractError
+      && error.code === "thermal_triplet_missing",
+  );
+
+  const decimal = contract.projectOptics([optic({
+    room_ta_c: 0.1,
+    optic_uplift_ta_c: 0.2,
+    optic_internal_delta_ta_c: 0.3,
+  })]);
+  assert.deepEqual(
+    [decimal[0].referenceRoomTaC, decimal[0].opticThermalRiseTaC, decimal[0].referenceInternalTaC],
+    [0.1, 0.2, 0.3],
+  );
+});
+
 test("builds the exact immutable catalogue envelope from caller-supplied rows", () => {
   const input = {
     sourceRevision: "fixture-2026-07-19",
@@ -236,8 +280,8 @@ test("builds the exact immutable catalogue envelope from caller-supplied rows", 
   const output = contract.projectComponentCatalogue(input);
 
   assert.deepEqual(Object.keys(output), ["schemaId", "schemaVersion", "sourceRevision", "platforms", "drivers", "optics", "readOnly"]);
-  assert.equal(output.schemaId, "controlstack.lab.component-catalogue.v1");
-  assert.equal(output.schemaVersion, 1);
+  assert.equal(output.schemaId, "controlstack.lab.component-catalogue.v2");
+  assert.equal(output.schemaVersion, 2);
   assert.equal(output.sourceRevision, "fixture-2026-07-19");
   assert.equal(output.platforms.length, 1);
   assert.equal(output.drivers.length, 1);
@@ -304,4 +348,15 @@ test("production module contains no loader, persistence, clock, embedded catalog
   for (const retired of ["groupBoardPlatforms", "uniqueDrivers", "loadComponents"]) {
     assert.equal(new RegExp(`export\\s+(?:const|function|class)\\s+${retired}\\b`).test(source), false);
   }
+  for (const forbiddenSemantic of [
+    "opticInternalDeltaTaC", "roomTaC", "opticUpliftTaC", "derivedInternalTaC", "curveLookupTaC",
+    "verifiedLumensPerMetre", "verifiedLmPerM", "boardTaC",
+  ]) {
+    assert.equal(source.includes(forbiddenSemantic), false, `${forbiddenSemantic} must remain absent`);
+  }
+  for (const corrected of ["referenceRoomTaC", "referenceInternalTaC", "opticThermalRiseTaC"]) {
+    assert.equal(source.includes(corrected), true, `${corrected} must be projected`);
+  }
+  assert.equal(source.includes("optic_internal_delta_ta_c"), true);
+  assert.equal(source.includes("optic_uplift_ta_c"), true);
 });
