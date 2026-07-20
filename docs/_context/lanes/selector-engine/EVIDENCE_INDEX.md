@@ -394,3 +394,16 @@ Every completed worker updates this index with:
 - Feature ending Git state: only the five authorised durable context files remained modified and unstaged; no staged, untracked, or deleted paths — VERIFIED.
 - Live evidence: no browser observation was required or claimed for this repository parcel; no save, registration, Engine invocation, project or RuntimeData mutation, persistence, RunTable, IES, or output generation occurred — VERIFIED.
 - Queue result: SEL-017 done; SEL-018 remains blocked pending recorded Program & Integrate Ambient seam approval; SEL-002 and Engine execution remain blocked — RECORDED.
+
+## 2026-07-20 — Program & Integrate Ambient seam approval
+
+- Live truth: the running UI exposes no Ambient selector — USER-PROVIDED LIVE EVIDENCE.
+- Current candidate defect: the factory-approved summary declares Ambient not required and the readonly candidate mapper does not carry it — VERIFIED REPOSITORY TRACE.
+- Source authority: the active RuntimeData snapshot is present, readable, parseable, loaded read-only, and contains `SYSTEM_POLICY`; the Selector workflow declares Ambient as a manual constraint sourced from `SYSTEM_POLICY`, and the option service already recognises explicit Ambient/temperature policy rows — VERIFIED.
+- Selectable-value decision: only explicit finite Celsius choices from active `SYSTEM_POLICY` are authoritative; no fixture, product, System, Tier, application, IP, optic, lab, historical, cached, union, or default value may be used — PROGRAM & INTEGRATE APPROVED.
+- Registration decision: browser-session save may preserve incomplete state, but server-owned registration certifies an Engine-ready reconstructed candidate and therefore requires valid Ambient; missing or invalid Ambient blocks registration and Engine invocation — PROGRAM & INTEGRATE APPROVED.
+- Field contract: Selector candidate field `lighting.ambient_temp_c`, finite JSON number in degrees Celsius; protected interpolation input `temp_c` receives the identical number — PROGRAM & INTEGRATE APPROVED AND VERIFIED AGAINST CURRENT CONSUMER NAMES.
+- Fail-closed decision: missing, blank, ambiguous, non-numeric, non-finite, malformed, or non-source-backed values stop before donor Engine execution; existing 25°C or 35°C defaults are non-authoritative and may not rescue the request — PROGRAM & INTEGRATE APPROVED.
+- Implementation decision: SEL-018 is ready after SEL-017 and is bounded to the queue-authorised Selector, candidate, registration, final server guard, and focused-test files; only the minimum proven subset may change — RECORDED.
+- Live-proof decision: no Engine execution during implementation; the first bounded execution is allowed only after source, candidate, registration, server guards, focused tests, and the complete gate are green and the registered revision contains the approved Ambient value — RECORDED.
+- RuntimeData probe during decision review: source remained read-only, no write or mutation attempted, raw rows and headers redacted, and no Engine, registration, save, persistence, RunTable, IES, or output action occurred — VERIFIED.

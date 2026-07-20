@@ -248,6 +248,18 @@ This log is append-oriented. Do not silently rewrite historical decisions.
 
 **Consequence:** SEL-018 requires Program & Integrate approval before implementation. That decision must identify source authority, decide whether Ambient gates registration or Engine only, approve the candidate field and unit, and require fail-closed behaviour with no invented 25°C or 35°C default. SEL-002 and all Engine activity remain blocked until the seam is approved and implemented.
 
+## 2026-07-20 — Program & Integrate approves the Ambient temperature seam
+
+**Decision:** The authoritative selectable Ambient values are only the explicit finite Celsius choices exposed from the active read-only `SYSTEM_POLICY` authority through the existing source-backed Selector option service. Ambient rows may use the already-supported Ambient/temperature policy shapes, but fixtures, product type, System identity, Tier, application, IP rating, optics, lab data, or historical examples are never authority. When the active source provides no valid finite Celsius choice, the Ambient field remains unavailable and the upstream source owner must correct the authority; the Selector must not manufacture a list.
+
+**Registration policy:** A browser-session save may retain incomplete project state, but server-owned registration remains an Engine-readiness certification and therefore requires Ambient. Missing or invalid Ambient blocks registration and consequently blocks Engine invocation. Registration must not establish an active server-owned revision whose reconstructed readonly candidate cannot supply the required temperature input.
+
+**Field contract:** The exact Selector-to-Engine candidate field is `lighting.ambient_temp_c`. Its value is a JSON number representing degrees Celsius. The protected Engine bridge must pass that same finite numeric value to the temperature/lumen interpolation request as `temp_c`; no alternate field, display label, policy fallback, or donor default becomes authority.
+
+**Fail-closed contract:** Ambient is absent unless one committed source-backed Selector choice resolves to exactly one finite numeric Celsius value. Missing, blank, ambiguous, non-numeric, non-finite, malformed, or non-source-backed values must stop candidate readiness, registration, and invocation before donor Engine execution. Existing donor-side or fixture defaults such as 25°C or 35°C must be bypassed by the protected boundary and must not rescue an invalid request.
+
+**Implementation approval:** After SEL-017 closes, SEL-018 is approved as one bounded Selector/registration/readonly-Engine seam parcel. It may expose the source-backed Ambient selector, retain the committed selection in genuine project state, require and carry `lighting.ambient_temp_c`, and add a final server-side finite-number guard before the host adapter. Focused tests and the full lane gate must prove positive and negative cases. Live proof must show active-source options, a genuine selected value surviving save and registration, the exact numeric candidate value reaching the interpolation lookup, and absent/non-numeric values refusing safely. No Engine execution is authorised during implementation; the first bounded execution proof is authorised only after all source, candidate, registration, and server guards are green and the registered revision contains the approved Ambient value.
+
 ## 2026-07-20 — Page-level indirect consequence is governed at the exact SYSTEM boundary
 
 **Decision:** SEL-017 is accepted with the exact selected-SYSTEM support check in the option service as the first divergent boundary. No view-model implementation change is required.

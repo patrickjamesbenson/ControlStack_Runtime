@@ -355,3 +355,11 @@ The affected run and repeated complete gate each passed 107/107. Exactly the opt
 ## Next boundary
 
 SEL-018 is blocked because Ambient temperature changes the Selector-to-Engine contract and Program & Integrate approval is not recorded. The approval must establish the source of selectable Ambient values, whether Ambient gates registration or Engine invocation, the exact candidate field and numeric unit, and fail-closed behaviour without an invented default. Until then, no queue item is eligible and no save, registration, or Engine action is authorised.
+
+## 2026-07-20 Program & Integrate Ambient approval — latest handoff
+
+Program & Integrate approval is recorded. Selectable Ambient values come only from explicit finite Celsius choices in active read-only `SYSTEM_POLICY`. The live Selector must expose those source-backed choices or remain unavailable; it may not infer or default temperature from fixtures, product type, System, Tier, application, IP, optics, lab data, or historical examples.
+
+Browser-session saving may preserve incomplete state, but server-owned registration certifies an Engine-ready reconstructed candidate and therefore requires valid Ambient. The exact candidate field is `lighting.ambient_temp_c`, a finite JSON number in degrees Celsius. The protected bridge passes the same number to the temperature/lumen lookup as `temp_c`. Missing, blank, ambiguous, non-numeric, non-finite, malformed, or non-source-backed values block candidate readiness, registration, and invocation before donor Engine execution. No 25°C or 35°C fallback is approved.
+
+SEL-018 is the sole top ready item. Implement only the minimum queue-authorised Selector, candidate, registration, final server guard, and focused-test paths. Do not invoke Engine during implementation. After focused tests and the full gate are green, live proof must show active-source options, a genuine selection surviving save and registration, the exact numeric value reaching the interpolation lookup, and safe refusal when the value is absent or invalid. Only the final bounded proof may execute Engine, after the registered revision contains the approved Ambient value. SEL-002 remains blocked behind SEL-018.
