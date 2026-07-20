@@ -2,7 +2,7 @@
 
 ## Session purpose
 
-This handoff records completed LAB-031 project IES builder surface, preserves the permanent charter authority for both standing prompts, and orders LAB-032 as the single next ready parcel.
+This handoff records completed LAB-032 merge composition surface, preserves the permanent charter authority for both standing prompts, and orders LAB-033 as the single next ready parcel after stale-state reconciliation.
 
 ## Identity
 
@@ -12,9 +12,9 @@ This handoff records completed LAB-031 project IES builder surface, preserves th
 - Branch: `lane/code-pilot-lab`
 - Gate: `lab-ies`
 - Standing prompt authority: `docs/_context/lanes/lab-ies/LANE_CHARTER.md` contains both worker and orchestrator prompts
-- Starting HEAD for LAB-031: `7c7b5ffaf0bb9dfae750e09ae961e0cef71fc194`
-- Completed feature checkpoint: `8ece3f36622fe1e0817aff9ecef42f0755218d3c`
-- Feature subject: `lab: checkpoint project IES builder surface`
+- Starting HEAD for LAB-032: `e7fdd5a5506a293eb668dad4b3f79e12e05ad38c`
+- Completed feature checkpoint: `dec45ac63c12cfcf6f9aec256323ed02eee25b62`
+- Feature subject: `lab: checkpoint merge composition surface`
 - Feature checkpoint confirmed on origin `lane/code-pilot-lab`
 - Seam change: no
 - Branch-HEAD guard checkpoint: `6d34e500d407d5335e5eebb317636a67a5e98618`
@@ -27,37 +27,37 @@ After every documentation push, only the `Recorded branch HEAD` field is refresh
 
 ## Completed queue item
 
-`LAB-031-project-builder-surface` is complete.
+`LAB-032-merge-composition-surface` is complete.
 
 Exactly this one feature file was committed:
 
 ```text
-packages/lab-kernel/ies-toolkit/ies_builder.html
+packages/lab-kernel/ies-toolkit/ies_merge.html
 ```
 
-The replacement page accepts one browser-loaded sealed-reference DTO plus bounded project inputs and delegates materialisation exclusively to `buildProjectIes`. It exposes no internal-ambient input, fixture auto-load, rich-authority state, resolver route, selector integration, inline parsing, metrics, scaling or LM-63 writer.
+The replacement page delegates two-parent ordered composition to `composeReferencePair`, fixes the approved geometry and operating policy, and labels the returned candidate non-authoritative until fresh authority, approval and sealing occur. Assembly identity, ambient, emergency, EWIS and shared overhead remain unresolved.
 
-Generator failures display exact fail-closed code/reason output without partial text. Downloads are created only in browser memory from the exact returned `iesText` and filename.
+The candidate cannot be generated directly. Project materialisation requires a separately supplied freshly sealed MERGED DTO and delegates exclusively to `buildProjectIes`. The offline unapproved fixture corpus is not elevated to sealed authority.
 
 ## Validation evidence
 
-- Focused changed-file `lab-ies` execution for the LAB-031 project IES builder file: 255/255 passed.
+- Focused changed-file `lab-ies` execution for the LAB-032 merge composition file: 255/255 passed.
 - Independent full `lab-ies` gate: 255/255 passed.
-- Gated feature commit execution: 255/255 passed.
+- Documentation reconciliation full `lab-ies` gate: 255/255 passed.
 - Failed, cancelled, skipped and todo counts were zero.
 
 ## Git and protected worktree state
 
-The feature parcel was staged as exactly the one authorised project-builder file, committed and pushed.
+The feature parcel was staged as exactly the one authorised merge-composition file, committed and pushed.
 
 The protected working-tree state after documentation closeout must remain:
 
 - staged: 0;
 - modified: 1 — only the unstaged `Recorded branch HEAD` synchronisation marker in `LANE_STATE.md`;
-- untracked: 11;
+- untracked: 10;
 - deleted: 0.
 
-The 11 protected untracked paths remain exactly those recorded in `LANE_STATE.md`. In particular, these explicitly non-queued paths remain untouched:
+The 10 protected untracked paths remain exactly those recorded in `LANE_STATE.md`. In particular, these explicitly non-queued paths remain untouched:
 
 ```text
 README.zip
@@ -95,9 +95,10 @@ tests/selectorCascadeCorrectness.test.js
 - LAB-029 focused, independent and gated executions: 255/255 passed.
 - `LAB-030-emergency-surface`: `done` and confirmed on origin.
 - `LAB-031-project-builder-surface`: `done` and confirmed on origin.
-- LAB-031 focused, independent and gated executions: 255/255 passed.
-- `LAB-032-merge-composition-surface`: `ready`.
-- Ready items: exactly one — LAB-032.
+- `LAB-032-merge-composition-surface`: `done` and confirmed on origin.
+- LAB-032 focused, independent and documentation-reconciliation executions: 255/255 passed.
+- `LAB-033-main-lab-bench-surface`: `ready`.
+- Ready items: exactly one — LAB-033.
 
 Program reported gate 45/45 passed, the approval decision committed and pushed, and its tree clean. No parallel or combined implementation is authorised.
 
@@ -121,9 +122,11 @@ LAB-030 is complete as a thin advisory view over the committed emergency-selecti
 
 LAB-031 is complete as a thin browser consumer of the committed project generator. It accepts only sealed-reference DTO input plus bounded project fields, keeps ambient reference-owned, and creates no alternate generation or persistence path.
 
+LAB-032 is complete as an ordered, non-authoritative composition surface. It creates no allocation, approval, seal or assembly-verification outcome and requires a separate freshly sealed MERGED DTO before project materialisation.
+
 LAB-017 remains governed by its approved version-1 envelope. Program retains all production allocation, live source reading, hosting, routing, persistence, authentication, CRM integration, deployment and endpoint ownership.
 
-The next safe action is to continue the current standing-worker batch with LAB-032. No seam approval or human observation is required before implementation of its exact one-file parcel.
+The next safe action is a fresh standing-worker run beginning with LAB-033. This run stops after stale-state reconciliation; no seam approval or human observation is required before LAB-033's exact one-file parcel.
 
 ## LAB-017 immutable completion receipt
 

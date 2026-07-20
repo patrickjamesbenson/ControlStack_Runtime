@@ -64,6 +64,44 @@ For human-observation acceptance, the worker must stop before making a completio
 
 The operating model is recorded in `LANE_CHARTER.md`, `DECISION_LOG.md`, `LANE_STATE.md` and `WORK_QUEUE.md`. Both standing prompts live only in the stable charter; `SESSION_HANDOFF.md` carries launch pointers and current session evidence.
 
+## LAB-032 merge composition surface and stale-state reconciliation — 2026-07-20
+
+### Trigger and classification
+
+- LAB-032 started from documentation HEAD `e7fdd5a5506a293eb668dad4b3f79e12e05ad38c` with the recorded marker matching.
+- The authorised page was implemented, focused and independently full-gated at 255/255, then staged alone.
+- During the gated feature checkpoint call, the branch advanced and the staged set disappeared.
+- Current history showed exact feature checkpoint `dec45ac63c12cfcf6f9aec256323ed02eee25b62`, subject `lab: checkpoint merge composition surface`.
+- A non-force lane push reported everything up to date, so the advance was classified as the exact completed feature checkpoint, not unexplained drift.
+- Under the branch-HEAD guard, no LAB-033 implementation was started in this run.
+
+### Scope and behaviour evidence
+
+- authorised path only: `packages/lab-kernel/ies-toolkit/ies_merge.html`;
+- two ordered browser-loaded sealed GT/OPT DTOs delegate composition exclusively to `composeReferencePair`;
+- fixed policy: `coincident-aligned` and `all-contributing-channels-on`;
+- ordered parent ordinal, identity, kind, role and owned power remain visible and provenance-significant;
+- the result is prominently labelled non-authoritative and retains assembly identity, ambient, emergency, EWIS and shared overhead unresolved;
+- no allocation, approval, sealing, authority construction, inherited assembly identity, persistence or route exists;
+- the candidate cannot be project-materialised directly;
+- project generation requires a separately supplied freshly approved and sealed MERGED DTO and delegates exclusively to `buildProjectIes`;
+- no committed sealed DTO JSON fixture existed, so the offline unapproved corpus was not elevated or auto-loaded as authority.
+
+### Validation and checkpoint evidence
+
+- legacy API, clock, store fetch, diagnostic identity, persistence and duplicate merge/generation search: zero matches;
+- focused changed-file `lab-ies` execution: 255/255 passed;
+- independent full `lab-ies` gate: 255/255 passed;
+- exact feature checkpoint: `dec45ac63c12cfcf6f9aec256323ed02eee25b62`;
+- feature push: confirmed up to date on origin `lane/code-pilot-lab`;
+- documentation reconciliation full `lab-ies` gate: 255/255 passed with zero failed, cancelled, skipped or todo.
+
+### Resulting queue boundary
+
+- LAB-032 is `done`.
+- LAB-033 becomes the sole next `ready` item.
+- this run ends after stale-state reconciliation; LAB-033 is not executed in the same run.
+
 ## LAB-031 project IES builder surface — 2026-07-20
 
 ### Identity and scope

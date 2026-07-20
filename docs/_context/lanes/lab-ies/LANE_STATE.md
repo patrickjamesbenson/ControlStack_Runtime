@@ -13,11 +13,11 @@ Current repository evidence overrides stale historical statements.
 - Root: `C:\ControlStack_Worktrees\code-pilot-lab`
 - Branch: `lane/code-pilot-lab`
 - Gate: `lab-ies`
-- Recorded branch HEAD: `7c7b5ffaf0bb9dfae750e09ae961e0cef71fc194`
+- Recorded branch HEAD: `e7fdd5a5506a293eb668dad4b3f79e12e05ad38c`
 - Branch-HEAD guard checkpoint: `6d34e500d407d5335e5eebb317636a67a5e98618`
-- Starting HEAD for LAB-031: `7c7b5ffaf0bb9dfae750e09ae961e0cef71fc194`
-- Completed feature HEAD: `8ece3f36622fe1e0817aff9ecef42f0755218d3c`
-- Feature subject: `lab: checkpoint project IES builder surface`
+- Starting HEAD for LAB-032: `e7fdd5a5506a293eb668dad4b3f79e12e05ad38c`
+- Completed feature HEAD: `dec45ac63c12cfcf6f9aec256323ed02eee25b62`
+- Feature subject: `lab: checkpoint merge composition surface`
 - Feature push: confirmed on origin `lane/code-pilot-lab`
 
 ## Branch-HEAD synchronisation invariant
@@ -59,7 +59,29 @@ Before any queue item is selected, a worker must compare `Recorded branch HEAD` 
 - Human-observation acceptance cannot be closed from repository evidence. The item remains incomplete and the worker supplies exact `NEEDS YOU` steps.
 - Orchestrator review occurs at seam, human-observation and five-parcel/stop boundaries rather than after each routine parcel.
 
-## Latest completed parcel — LAB-031
+## Latest completed parcel — LAB-032
+
+Queue item `LAB-032-merge-composition-surface` is complete.
+
+Exactly this one authorised file was changed and committed:
+
+```text
+packages/lab-kernel/ies-toolkit/ies_merge.html
+```
+
+Verified outcome:
+
+- the page accepts two ordered browser-loaded sealed GT/OPT DTOs and delegates composition exclusively to `composeReferencePair`;
+- geometry registration and operating state are fixed to the approved version-1 policy;
+- the immutable candidate preserves parent ordinal, reference identity, kind, role and owned power order;
+- the candidate is prominently labelled non-authoritative and retains assembly identity, ambient, emergency, EWIS and shared overhead as unresolved;
+- no allocation, authority construction, approval, sealing, inherited assembly verification, persistence or resolver publication exists;
+- project materialisation cannot consume the candidate and instead requires a separately supplied freshly approved and sealed MERGED DTO;
+- sealed project materialisation delegates exclusively to `buildProjectIes` and browser-downloads only returned text;
+- the offline unapproved fixture corpus is not misrepresented as sealed parent authority;
+- focused and independent full executions passed 255/255 before the exact feature checkpoint was confirmed on origin.
+
+## Previous completed parcel — LAB-031
 
 Queue item `LAB-031-project-builder-surface` is complete.
 
@@ -441,9 +463,9 @@ Verified outcome:
 
 The connected app exposes the fixed `lab-ies` gate as the available changed-file and full validation path.
 
-- Focused changed-file execution for the LAB-031 project IES builder surface: 255 tests, 255 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
+- Focused changed-file execution for the LAB-032 merge composition surface: 255 tests, 255 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
 - Independent full `lab-ies` gate: 255 tests, 255 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
-- Gated feature commit execution: 255 tests, 255 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
+- Documentation reconciliation full `lab-ies` gate: 255 tests, 255 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
 
 ## Protected final Git state
 
@@ -451,7 +473,7 @@ The protected working-tree state after documentation closeout is:
 
 - staged: 0;
 - modified: 1 — only the unstaged `Recorded branch HEAD` synchronisation marker in this file;
-- untracked: 11;
+- untracked: 10;
 - deleted: 0.
 
 Protected untracked paths:
@@ -460,7 +482,6 @@ Protected untracked paths:
 README.zip
 docs/_context/ControlStack_summary_normalise_harness_spec.md
 packages/lab-kernel/ies-toolkit/bench.html
-packages/lab-kernel/ies-toolkit/ies_merge.html
 packages/lab-kernel/ies-toolkit/index.html
 packages/lab-kernel/ies-toolkit/lab.html
 packages/lab-kernel/ies-toolkit/labbench.html
@@ -511,8 +532,9 @@ tests/selectorCascadeCorrectness.test.js
 - LAB-029 is complete and confirmed on origin as the exact approved three-file provenance publication parcel.
 - LAB-030 is complete and confirmed on origin as the Lab-only emergency selection surface.
 - LAB-031 is complete and confirmed on origin as the Lab-only project IES builder surface.
-- Focused, independent and gated LAB-031 executions passed 255/255.
-- LAB-032 is the single active `ready` parcel.
+- LAB-032 is complete and confirmed on origin as the Lab-only ordered merge-composition surface.
+- Focused, independent and documentation-reconciliation LAB-032 executions passed 255/255.
+- LAB-033 is the single active `ready` parcel.
 - No parallel or combined implementation is authorised.
 - The earlier LAB-018 approval hold remains superseded.
 
@@ -540,10 +562,11 @@ tests/selectorCascadeCorrectness.test.js
 - `LAB-029-provenance-publication-surfaces`: done.
 - `LAB-030-emergency-surface`: done.
 - `LAB-031-project-builder-surface`: done.
-- Next ordered item: `LAB-032-merge-composition-surface`.
+- `LAB-032-merge-composition-surface`: done.
+- Next ordered item: `LAB-033-main-lab-bench-surface`.
 - Resulting status: `ready`.
-- Ready items: exactly one — LAB-032.
+- Ready items: exactly one — LAB-033.
 - Seam approval required: no.
 - Human observation required before implementation: no.
 
-LAB-031 is complete. LAB-032 is ordered as the single active parcel for the current standing-worker batch.
+LAB-032 is complete. LAB-033 is ordered as the single active parcel for the next standing-worker run because this run stops at stale-state reconciliation.

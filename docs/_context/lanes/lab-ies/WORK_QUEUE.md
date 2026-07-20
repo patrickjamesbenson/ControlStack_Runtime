@@ -565,7 +565,9 @@ Evidence: `8ece3f36622fe1e0817aff9ecef42f0755218d3c`, confirmed on origin. The s
 - depends on: LAB-012-lab-style-foundation, LAB-022-reference-composition-kernel, LAB-024-resolver-fixture-corpus
 - on success next: LAB-033-main-lab-bench-surface
 - seam change: no
-- status: ready
+- status: done
+
+Evidence: `dec45ac63c12cfcf6f9aec256323ed02eee25b62`, confirmed on origin. The surface delegates ordered two-parent composition to `composeReferencePair`, keeps the result explicitly non-authoritative with assembly values unresolved, and requires a separately supplied freshly sealed MERGED DTO before delegating project materialisation to `buildProjectIes`.
 
 ### Q-23 Main Lab bench surface
 - id: LAB-033-main-lab-bench-surface
@@ -584,7 +586,7 @@ Evidence: `8ece3f36622fe1e0817aff9ecef42f0755218d3c`, confirmed on origin. The s
 - depends on: LAB-013-polar-renderer, LAB-017-reference-resolver-contract, LAB-024-resolver-fixture-corpus
 - on success next: LAB-034-legacy-labbench-classification
 - seam change: no
-- status: queued
+- status: ready
 
 ### Q-24 Legacy labbench classification
 - id: LAB-034-legacy-labbench-classification
