@@ -718,7 +718,7 @@ Completion evidence: The corrected resolver version 2 and the mandatory transiti
 ### Q-29 Corrected component thermal semantics version 2
 - id: LAB-039-component-thermal-semantics-v2
 - objective: Advance the component catalogue optic projection to the corrected measured thermal vocabulary and exact triplet validation.
-- seam envelope: `docs/_context/lanes/lab-ies/LAB-038_042_THERMAL_SEMANTICS_SEAM_ENVELOPE.md`, version 1; approved unchanged by Program & Integrate and sequence-blocked behind the prior parcel.
+- seam envelope: `docs/_context/lanes/lab-ies/LAB-038_042_THERMAL_SEMANTICS_SEAM_ENVELOPE.md`, version 2; approved by Program & Integrate and implemented unchanged for LAB-039.
 - authorised files:
   - `packages/lab-kernel/ies-toolkit/nvbComponents.js`
   - `tests/lab-kernel/nvbComponents.test.js`
@@ -780,9 +780,9 @@ Completion evidence: The read-only component library labels were corrected in th
 ### Q-32 Cross-cutting corrected thermal semantics guard
 - id: LAB-042-thermal-semantics-guard
 - objective: Checkpoint the final test-only guard after all corrected active Lab thermal contracts and the component surface are committed.
-- seam envelope: `docs/_context/lanes/lab-ies/LAB-038_042_THERMAL_SEMANTICS_SEAM_ENVELOPE.md`, version 1; approved unchanged by Program & Integrate and sequence-blocked behind the prior parcel.
+- seam envelope: `docs/_context/lanes/lab-ies/LAB-038_042_THERMAL_SEMANTICS_SEAM_ENVELOPE.md`, version 3; Program approved the gate-included test-file amendment under `docs(program): amend LAB-042 gate-included test scope` after a 46/46 gate.
 - authorised files:
-  - `tests/lab-kernel/nvbThermalSemantics.test.js`
+  - `tests/lab-kernel/iesKeywordMigration.test.js`
 - prohibitions:
   - no production source or fixture changes;
   - no donor-code parity acceptance;
@@ -793,9 +793,9 @@ Completion evidence: The read-only component library labels were corrected in th
 - depends on: LAB-038-nvb-resolution-thermal-semantics-v2, LAB-039-component-thermal-semantics-v2, LAB-040-nvb-lab-thermal-projection-v2, LAB-041-component-library-thermal-labels
 - on success next: none
 - seam change: no after envelope approval
-- status: blocked
+- status: ready
 
-Approval state: Program & Integrate approved corrected thermal envelope version 2, including the atomic LAB-038 amendment. LAB-038 through LAB-041 are complete. LAB-042 is dependency-eligible but blocked pending a narrow Program amendment to use an existing gate-included test file; no feature implementation is authorised until that amendment is recorded.
+Approval state: Program & Integrate approved corrected thermal envelope version 3, including the atomic LAB-038 amendment and the gate-included LAB-042 test-file amendment. LAB-038 through LAB-041 are complete. LAB-042 is the sole ready item; the superseded new thermal test file must not be created.
 
 ## Explicitly not queued
 

@@ -10,7 +10,7 @@
 
 Exactly the read-only component-library surface changed. It now displays the corrected measured thermal names and keeps the hot-test source visibly unverified. Static search confirmed the deprecated delta/uplift labels, legacy semantic fields and Engine-owned derived fields are absent. The full `lab-ies` gate passed 259/259 and the one-file checkpoint was pushed.
 
-LAB-042 is dependency-eligible, but its approved new test path is absent from the fixed gate command. A test-only checkpoint at that path would therefore not execute its own assertions. The final guard remains blocked pending a narrow Program amendment to use the existing gate-included `tests/lab-kernel/iesKeywordMigration.test.js`.
+LAB-042 is dependency-eligible. Program approved the narrow gate-included test-file amendment under `docs(program): amend LAB-042 gate-included test scope` after a 46/46 gate. The final guard must use only the existing gate-included `tests/lab-kernel/iesKeywordMigration.test.js`; the superseded new test file must not be created. LAB-042 is the sole ready item.
 
 ## LAB-040 corrected Lab thermal working projection — 2026-07-21
 

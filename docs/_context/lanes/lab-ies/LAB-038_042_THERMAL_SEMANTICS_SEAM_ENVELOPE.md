@@ -2,8 +2,8 @@
 
 ## Status and controlling decision
 
-- Envelope version: `2`.
-- Status: approved by Program & Integrate on 2026-07-21; version 2 narrowly amends only the LAB-038 atomic file scope after mandatory gate evidence.
+- Envelope version: `3`.
+- Status: approved by Program & Integrate on 2026-07-21; version 2 amended the LAB-038 atomic file scope and version 3 amends only the LAB-042 gate-included test-file scope after mandatory gate evidence.
 - Controlling Program ruling: `docs(program): correct thermal source field semantics`.
 - Program approval: `docs(program): approve Lab corrected thermal semantics seam`.
 - Program evidence: both Program checkpoints passed 46/46 and were committed and pushed.
@@ -318,8 +318,10 @@ Checkpoint a final test-only guard after the corrected active Lab contracts and 
 ## Exact implementation file
 
 ```text
-tests/lab-kernel/nvbThermalSemantics.test.js
+tests/lab-kernel/iesKeywordMigration.test.js
 ```
+
+The previously approved new thermal test file is superseded and must not be created because it is absent from the fixed `lab-ies` gate command. Program approved this narrow version-3 amendment under `docs(program): amend LAB-042 gate-included test scope` after a 46/46 gate.
 
 ## Acceptance
 

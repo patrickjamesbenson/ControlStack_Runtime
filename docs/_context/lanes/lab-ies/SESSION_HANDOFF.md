@@ -2,7 +2,7 @@
 
 ## Session purpose
 
-This handoff records completion of LAB-041 corrected thermal labels, preserves the permanent charter authority for both standing prompts, and stops LAB-042 at the required gate-included test-scope amendment boundary.
+This handoff records Program approval of the LAB-042 gate-included test-file amendment, preserves the permanent charter authority for both standing prompts, and admits LAB-042 as the sole ready item.
 
 ## Identity
 
@@ -20,9 +20,9 @@ This handoff records completion of LAB-041 corrected thermal labels, preserves t
 - Branch-HEAD guard checkpoint: `6d34e500d407d5335e5eebb317636a67a5e98618`
 - LAB-041 feature gate: 259/259 passed
 - Program correction consumed: `docs(program): correct thermal source field semantics`; Program gate 46/46 passed and the correction was pushed
-- Approved Lab seam: `LAB-038_042_THERMAL_SEMANTICS_SEAM_ENVELOPE.md`, version 2
-- Program approvals: initial corrected seam plus `docs(program): amend LAB-038 atomic transition scope`; both Program gates passed 46/46 and were pushed
-- Parcel state: LAB-038 through LAB-041 are done; LAB-042 is blocked pending a gate-included test-file scope amendment
+- Approved Lab seam: `LAB-038_042_THERMAL_SEMANTICS_SEAM_ENVELOPE.md`, version 3
+- Program approvals: initial corrected seam, atomic LAB-038 transition, and `docs(program): amend LAB-042 gate-included test scope`; all Program gates passed 46/46 and were pushed
+- Parcel state: LAB-038 through LAB-041 are done; LAB-042 is the sole ready item
 
 ## Branch-HEAD guard
 
@@ -38,7 +38,7 @@ The corrected resolution, component catalogue and Lab working projection are now
 
 The corrected component-library labels are also complete. The remaining work is the final thermal semantics guard.
 
-LAB-038 through LAB-041 are complete. LAB-042 is blocked because its approved new test file is not executed by the fixed Lab gate; Program must approve use of the existing gate-included keyword migration test before implementation.
+LAB-038 through LAB-041 are complete. Program approved use of the existing gate-included keyword migration test for LAB-042; the superseded new thermal test file must not be created. LAB-042 is the sole ready parcel.
 
 ## Previous completed queue item
 
@@ -133,9 +133,9 @@ The feature passed the full 255/255 Lab gate and is confirmed on origin. Its clo
 - LAB-040 gated execution: 259/259 passed.
 - `LAB-041-component-library-thermal-labels`: `done` and confirmed on origin.
 - LAB-041 gated execution: 259/259 passed.
-- `LAB-042-thermal-semantics-guard`: blocked pending a narrow gate-included test-file scope amendment.
-- Ready items: none.
-- Queue state: seam amendment required.
+- `LAB-042-thermal-semantics-guard`: `ready` under approved envelope version 3.
+- Ready items: LAB-042 only.
+- Queue state: ready.
 
 Program reported gate 45/45 passed, the approval decision committed and pushed, and its tree clean. No parallel or combined implementation is authorised.
 
@@ -169,7 +169,7 @@ LAB-034 is complete as the read-only legacy compatibility classification. It rem
 
 LAB-017 remains governed by its approved version-1 envelope. Program retains all production allocation, live source reading, hosting, routing, persistence, authentication, CRM integration, deployment and endpoint ownership.
 
-No feature item is ready. Program & Integrate must approve the narrow LAB-042 test-file amendment before the final guard can be implemented.
+LAB-042 is the sole ready item. The standing worker may implement the final guard in the existing gate-included test file and then close the corrected thermal batch.
 
 ## LAB-017 immutable completion receipt
 

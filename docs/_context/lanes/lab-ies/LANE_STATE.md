@@ -13,7 +13,7 @@ Current repository evidence overrides stale historical statements.
 - Root: `C:\ControlStack_Worktrees\code-pilot-lab`
 - Branch: `lane/code-pilot-lab`
 - Gate: `lab-ies`
-- Recorded branch HEAD: `1a85beba662333561fd2338f67e5146b45935f94`
+- Recorded branch HEAD: `02a0ba8b3a9e1c9f53385699e439356352b1c2d2`
 - Branch-HEAD guard checkpoint: `6d34e500d407d5335e5eebb317636a67a5e98618`
 - Starting HEAD for LAB-041: `4dfaa2d3cc95211378d7141aed7b3140432d1267`
 - Completed feature HEAD: `1a85beba662333561fd2338f67e5146b45935f94`
@@ -803,11 +803,11 @@ tests/selectorCascadeCorrectness.test.js
 - `LAB-039-component-thermal-semantics-v2`: done.
 - `LAB-040-nvb-lab-thermal-projection-v2`: done.
 - `LAB-041-component-library-thermal-labels`: done.
-- `LAB-042-thermal-semantics-guard`: blocked pending a narrow gate-included test-file scope amendment.
-- Next ordered item: `LAB-042-thermal-semantics-guard` after recorded amendment.
-- Resulting status: blocked at seam amendment boundary.
-- Ready items: none.
-- Seam approval required: yes — replace the non-executed new test path with one existing gate-included test file.
+- `LAB-042-thermal-semantics-guard`: ready under approved envelope version 3.
+- Next ordered item: `LAB-042-thermal-semantics-guard`.
+- Resulting status: ready.
+- Ready items: exactly one — LAB-042.
+- Seam approval required: no — Program approved the gate-included test-file amendment.
 - Human observation required before implementation: no.
 
-LAB-041 is complete. LAB-042 remains blocked until Program approves a gate-included test-file scope.
+LAB-041 is complete. LAB-042 is the sole ready parcel under the approved gate-included test-file amendment.
