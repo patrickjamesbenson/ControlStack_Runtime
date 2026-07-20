@@ -64,6 +64,45 @@ For human-observation acceptance, the worker must stop before making a completio
 
 The operating model is recorded in `LANE_CHARTER.md`, `DECISION_LOG.md`, `LANE_STATE.md` and `WORK_QUEUE.md`. Both standing prompts live only in the stable charter; `SESSION_HANDOFF.md` carries launch pointers and current session evidence.
 
+## LAB-030 emergency selection surface — 2026-07-20
+
+### Identity and scope
+
+- starting HEAD: `4a545117f77b415aea6266e1c1627f52b678cca2`;
+- queue item: `LAB-030-emergency-surface`;
+- authorised path only: `packages/lab-kernel/ies-toolkit/emergency.html`;
+- seam change: no.
+
+### Behaviour evidence
+
+The completed surface:
+
+- imports and delegates every selection decision to `selectEmergencyCandidate` from the committed emergency contract;
+- renders published model, isolation, voltage-window, selected-power, duration, design-life and battery-pack fields only from the returned projection;
+- renders nominal drive current only with the returned `derived_exact` status and states that it is not tolerance, efficiency or derating evidence;
+- displays unsupported and conflicting combinations through exact contract blocker codes;
+- keeps procurement release false and displays all procurement blockers and engineering warnings;
+- keeps emergency and EWIS assembly verification exactly null/unresolved;
+- contains no duplicate model/battery matrix, inline electrical formula, order/procurement action, datasheet route, persistence, network, browser storage or clock.
+
+### Static, validation and checkpoint evidence
+
+- retired API, clock, model/matrix duplicate, network, storage, upload/download and legacy procurement-field search: zero matches;
+- focused changed-file `lab-ies` execution: 255/255 passed;
+- independent full `lab-ies` gate: 255/255 passed;
+- gated feature commit execution: 255/255 passed;
+- failed, cancelled, skipped and todo counts were zero in every execution;
+- feature checkpoint: `7c5bf3a9c9e343c94c95ceddae1e57686cb65ea5`;
+- subject: `lab: checkpoint emergency selection surface`;
+- push: origin `lane/code-pilot-lab`, confirmed successful;
+- exact staged set: the single authorised HTML file.
+
+### Resulting queue boundary
+
+- LAB-030 is `done`.
+- LAB-031 becomes the sole next `ready` item.
+- no seam approval or human observation is required before LAB-031 implementation.
+
 ## LAB-029 provenance publication surfaces — 2026-07-20
 
 ### Identity and approved seam

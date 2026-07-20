@@ -525,7 +525,9 @@ Evidence: `f41c22ca69ce24b5d2bc8bed20c334396d070a29`, confirmed on origin. The t
 - depends on: LAB-012-lab-style-foundation, LAB-021-emergency-selection-contract
 - on success next: LAB-031-project-builder-surface
 - seam change: no
-- status: ready
+- status: done
+
+Evidence: `7c5bf3a9c9e343c94c95ceddae1e57686cb65ea5`, confirmed on origin. The surface delegates every decision to `selectEmergencyCandidate`, displays published, derived and unconfirmed states separately, blocks unsupported or conflicting combinations, keeps procurement release false, and leaves emergency/EWIS assembly verification unresolved.
 
 ### Q-21 Project IES builder surface
 - id: LAB-031-project-builder-surface
@@ -543,7 +545,7 @@ Evidence: `f41c22ca69ce24b5d2bc8bed20c334396d070a29`, confirmed on origin. The t
 - depends on: LAB-011-project-ies-generation, LAB-012-lab-style-foundation
 - on success next: LAB-032-merge-composition-surface
 - seam change: no
-- status: queued
+- status: ready
 
 ### Q-22 Merge composition surface
 - id: LAB-032-merge-composition-surface

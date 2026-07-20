@@ -2,7 +2,7 @@
 
 ## Session purpose
 
-This handoff records completed LAB-029 provenance publication surfaces, preserves the permanent charter authority for both standing prompts, and orders LAB-030 as the single next ready parcel.
+This handoff records completed LAB-030 emergency selection surface, preserves the permanent charter authority for both standing prompts, and orders LAB-031 as the single next ready parcel.
 
 ## Identity
 
@@ -12,11 +12,11 @@ This handoff records completed LAB-029 provenance publication surfaces, preserve
 - Branch: `lane/code-pilot-lab`
 - Gate: `lab-ies`
 - Standing prompt authority: `docs/_context/lanes/lab-ies/LANE_CHARTER.md` contains both worker and orchestrator prompts
-- Starting HEAD for LAB-029: `79d9327d9c93a6d3558787c98bce30080296d4f2`
-- Completed feature checkpoint: `f41c22ca69ce24b5d2bc8bed20c334396d070a29`
-- Feature subject: `lab: checkpoint provenance publication surfaces`
+- Starting HEAD for LAB-030: `4a545117f77b415aea6266e1c1627f52b678cca2`
+- Completed feature checkpoint: `7c5bf3a9c9e343c94c95ceddae1e57686cb65ea5`
+- Feature subject: `lab: checkpoint emergency selection surface`
 - Feature checkpoint confirmed on origin `lane/code-pilot-lab`
-- Seam change: yes; Program & Integrate approved version 1 unchanged before implementation
+- Seam change: no
 - Branch-HEAD guard checkpoint: `6d34e500d407d5335e5eebb317636a67a5e98618`
 
 ## Branch-HEAD guard
@@ -27,39 +27,37 @@ After every documentation push, only the `Recorded branch HEAD` field is refresh
 
 ## Completed queue item
 
-`LAB-029-provenance-publication-surfaces` is complete.
+`LAB-030-emergency-surface` is complete.
 
-Exactly these three feature files were committed:
+Exactly this one feature file was committed:
 
 ```text
-packages/lab-kernel/ies-toolkit/provenance.html
-packages/lab-kernel/ies-toolkit/provenance_explorer.html
-packages/lab-kernel/ies-toolkit/luminaire_provenance.html
+packages/lab-kernel/ies-toolkit/emergency.html
 ```
 
-The replacement pages implement the approved version-1 read-only publication view over committed safe identity, canonical host-free resolver paths and evidence-category coverage. Governed mode accepts only the bounded safe projection; offline mode reads only fixed committed fixture projections and remains visibly `OFFLINE DEMO — UNAPPROVED`.
+The replacement page delegates every model, battery and blocker decision to the committed `selectEmergencyCandidate` contract. It displays published, derived and unconfirmed states separately, blocks unsupported or conflicting combinations, and keeps procurement release false.
 
-The pages display no raw origin, evidence, source or report body, probe no host, expose no storage location, generate no ID or timestamp, reconstruct no private authority, and make no emergency or EWIS assembly-verification claim. The deliberately incomplete fixture fails closed rather than being strengthened.
+Emergency and EWIS assembly verification remain unresolved. The page contains no duplicated matrix or electrical formula, ordering action, external datasheet route, persistence, network, browser storage or clock-generated state.
 
 ## Validation evidence
 
-- Focused changed-file `lab-ies` execution for the three LAB-029 publication files: 255/255 passed.
+- Focused changed-file `lab-ies` execution for the LAB-030 emergency selection file: 255/255 passed.
 - Independent full `lab-ies` gate: 255/255 passed.
 - Gated feature commit execution: 255/255 passed.
 - Failed, cancelled, skipped and todo counts were zero.
 
 ## Git and protected worktree state
 
-The feature parcel was staged as exactly the three authorised publication files, committed and pushed.
+The feature parcel was staged as exactly the one authorised emergency-selection file, committed and pushed.
 
 The protected working-tree state after documentation closeout must remain:
 
 - staged: 0;
 - modified: 1 — only the unstaged `Recorded branch HEAD` synchronisation marker in `LANE_STATE.md`;
-- untracked: 13;
+- untracked: 12;
 - deleted: 0.
 
-The 13 protected untracked paths remain exactly those recorded in `LANE_STATE.md`. In particular, these explicitly non-queued paths remain untouched:
+The 12 protected untracked paths remain exactly those recorded in `LANE_STATE.md`. In particular, these explicitly non-queued paths remain untouched:
 
 ```text
 README.zip
@@ -95,8 +93,10 @@ tests/selectorCascadeCorrectness.test.js
 - `LAB-029-provenance-publication-surfaces`: `done` and confirmed on origin under Program & Integrate approval of `LAB-029_SEAM_ENVELOPE.md`, version 1 unchanged.
 - Program approval gate: 45/45 passed; the decision was committed and pushed with no amendment.
 - LAB-029 focused, independent and gated executions: 255/255 passed.
-- `LAB-030-emergency-surface`: `ready`.
-- Ready items: exactly one — LAB-030.
+- `LAB-030-emergency-surface`: `done` and confirmed on origin.
+- LAB-030 focused, independent and gated executions: 255/255 passed.
+- `LAB-031-project-builder-surface`: `ready`.
+- Ready items: exactly one — LAB-031.
 
 Program reported gate 45/45 passed, the approval decision committed and pushed, and its tree clean. No parallel or combined implementation is authorised.
 
@@ -116,9 +116,11 @@ LAB-028 remains a bounded Lab-only reference-draft and evidence-curation workflo
 
 LAB-029 version 1 is complete under the unchanged approval. The three read-only publication pages consume only the committed safe identity, canonical host-free resolver and evidence-capability contracts. Offline fixture mode remains visibly `OFFLINE DEMO — UNAPPROVED`; governed mode relies on Program-supplied safe projections; emergency and EWIS verification remain null. Resolver hosting, route-to-storage mapping, persistence, evidence acceptance, sealing, allocation, authentication, deployment and endpoints remain Program-owned.
 
+LAB-030 is complete as a thin advisory view over the committed emergency-selection contract. It creates no model or battery authority, procurement release, order, persistence or assembly-verification outcome.
+
 LAB-017 remains governed by its approved version-1 envelope. Program retains all production allocation, live source reading, hosting, routing, persistence, authentication, CRM integration, deployment and endpoint ownership.
 
-The next safe action is to continue the current standing-worker batch with LAB-030. No seam approval or human observation is required before implementation of its exact one-file parcel.
+The next safe action is to continue the current standing-worker batch with LAB-031. No seam approval or human observation is required before implementation of its exact one-file parcel.
 
 ## LAB-017 immutable completion receipt
 

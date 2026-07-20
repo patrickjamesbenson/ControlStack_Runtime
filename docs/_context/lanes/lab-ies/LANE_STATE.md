@@ -13,11 +13,11 @@ Current repository evidence overrides stale historical statements.
 - Root: `C:\ControlStack_Worktrees\code-pilot-lab`
 - Branch: `lane/code-pilot-lab`
 - Gate: `lab-ies`
-- Recorded branch HEAD: `79d9327d9c93a6d3558787c98bce30080296d4f2`
+- Recorded branch HEAD: `4a545117f77b415aea6266e1c1627f52b678cca2`
 - Branch-HEAD guard checkpoint: `6d34e500d407d5335e5eebb317636a67a5e98618`
-- Starting HEAD for LAB-029: `79d9327d9c93a6d3558787c98bce30080296d4f2`
-- Completed feature HEAD: `f41c22ca69ce24b5d2bc8bed20c334396d070a29`
-- Feature subject: `lab: checkpoint provenance publication surfaces`
+- Starting HEAD for LAB-030: `4a545117f77b415aea6266e1c1627f52b678cca2`
+- Completed feature HEAD: `7c5bf3a9c9e343c94c95ceddae1e57686cb65ea5`
+- Feature subject: `lab: checkpoint emergency selection surface`
 - Feature push: confirmed on origin `lane/code-pilot-lab`
 
 ## Branch-HEAD synchronisation invariant
@@ -59,7 +59,28 @@ Before any queue item is selected, a worker must compare `Recorded branch HEAD` 
 - Human-observation acceptance cannot be closed from repository evidence. The item remains incomplete and the worker supplies exact `NEEDS YOU` steps.
 - Orchestrator review occurs at seam, human-observation and five-parcel/stop boundaries rather than after each routine parcel.
 
-## Latest completed parcel — LAB-029
+## Latest completed parcel — LAB-030
+
+Queue item `LAB-030-emergency-surface` is complete.
+
+Exactly this one authorised file was changed and committed:
+
+```text
+packages/lab-kernel/ies-toolkit/emergency.html
+```
+
+Verified outcome:
+
+- the page imports and delegates all selection decisions to `selectEmergencyCandidate` from the committed emergency-selection contract;
+- model, isolation, published voltage window, selected power, duration, design life and battery pack are rendered only from the returned contract projection;
+- nominal current is displayed only with the returned `derived_exact` status and is explicitly not represented as tolerance, efficiency or derating evidence;
+- unsupported voltage, power, duration, design-life and conflicting battery combinations remain blocked with the contract's exact blocker codes;
+- procurement release remains false/not released;
+- emergency and EWIS assembly verification remain unresolved/null and are displayed separately from evidence readiness;
+- no duplicated model or battery matrix, inline electrical formula, order/procurement action, external datasheet route, browser storage, network, clock or persistence seam exists;
+- focused, independent and gated feature executions all passed 255/255.
+
+## Previous completed parcel — LAB-029
 
 Queue item `LAB-029-provenance-publication-surfaces` is complete.
 
@@ -398,7 +419,7 @@ Verified outcome:
 
 The connected app exposes the fixed `lab-ies` gate as the available changed-file and full validation path.
 
-- Focused changed-file execution for the three LAB-029 publication surfaces: 255 tests, 255 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
+- Focused changed-file execution for the LAB-030 emergency selection surface: 255 tests, 255 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
 - Independent full `lab-ies` gate: 255 tests, 255 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
 - Gated feature commit execution: 255 tests, 255 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
 
@@ -408,7 +429,7 @@ The protected working-tree state after documentation closeout is:
 
 - staged: 0;
 - modified: 1 — only the unstaged `Recorded branch HEAD` synchronisation marker in this file;
-- untracked: 13;
+- untracked: 12;
 - deleted: 0.
 
 Protected untracked paths:
@@ -417,7 +438,6 @@ Protected untracked paths:
 README.zip
 docs/_context/ControlStack_summary_normalise_harness_spec.md
 packages/lab-kernel/ies-toolkit/bench.html
-packages/lab-kernel/ies-toolkit/emergency.html
 packages/lab-kernel/ies-toolkit/ies_builder.html
 packages/lab-kernel/ies-toolkit/ies_merge.html
 packages/lab-kernel/ies-toolkit/index.html
@@ -468,8 +488,9 @@ tests/selectorCascadeCorrectness.test.js
 - LAB-029 seam envelope version 1 is approved unchanged by Program & Integrate; it reuses the approved safe identity, host-free resolver and evidence-capability contracts without moving Program ownership.
 - Program reported gate 45/45 passed, the approval decision committed and pushed, and its tree clean.
 - LAB-029 is complete and confirmed on origin as the exact approved three-file provenance publication parcel.
-- Focused, independent and gated LAB-029 executions passed 255/255.
-- LAB-030 is the single active `ready` parcel.
+- LAB-030 is complete and confirmed on origin as the Lab-only emergency selection surface.
+- Focused, independent and gated LAB-030 executions passed 255/255.
+- LAB-031 is the single active `ready` parcel.
 - No parallel or combined implementation is authorised.
 - The earlier LAB-018 approval hold remains superseded.
 
@@ -495,10 +516,11 @@ tests/selectorCascadeCorrectness.test.js
 - `LAB-027-request-report-workflow`: done.
 - `LAB-028-reference-curation-surfaces`: done.
 - `LAB-029-provenance-publication-surfaces`: done.
-- Next ordered item: `LAB-030-emergency-surface`.
+- `LAB-030-emergency-surface`: done.
+- Next ordered item: `LAB-031-project-builder-surface`.
 - Resulting status: `ready`.
-- Ready items: exactly one — LAB-030.
+- Ready items: exactly one — LAB-031.
 - Seam approval required: no.
 - Human observation required before implementation: no.
 
-LAB-029 is complete. LAB-030 is ordered as the single active parcel for the current standing-worker batch.
+LAB-030 is complete. LAB-031 is ordered as the single active parcel for the current standing-worker batch.
