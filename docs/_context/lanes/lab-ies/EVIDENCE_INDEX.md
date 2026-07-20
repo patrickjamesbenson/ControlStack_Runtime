@@ -130,6 +130,50 @@ The only remaining authority-related terms are explicit boundary statements such
 - LAB-029 remains `blocked` pending recorded Program & Integrate seam approval.
 - no item is `ready`.
 
+## Proposed LAB-029 provenance publication seam — 2026-07-20
+
+### Boundary trigger
+
+The standing worker stopped correctly after LAB-028 because LAB-029 has `seam change: yes` and no recorded Program & Integrate approval.
+
+### Legacy-source evidence
+
+Current source inspection of the three protected legacy pages found behaviour outside the proposed safe publication boundary:
+
+- hard-coded `https://prov.novon.systems` host claims;
+- legacy `devHref` resolution and direct `fetch()` traversal;
+- raw origin/evidence/source/report body previews;
+- local static mapping fields;
+- hard-coded pseudo reference IDs, diagnostic fingerprints, seal dates, mutation chains, evidence claims and component stacks;
+- generated current dates;
+- positive authority wording including sealed, pure reference, resolved, verified and attested over fixture/pseudo data;
+- direct display of emergency/EWIS verification-like fields without an approved assembly outcome.
+
+### Proposed contract
+
+`LAB-029_SEAM_ENVELOPE.md`, version 1, fixes a read-only in-memory publication view over:
+
+- the approved `controlstack.lab.reference-identity.v1` projection;
+- the approved canonical host-free resolver-path contract;
+- the approved `controlstack.lab.evidence-capability-summary.v1` projection;
+- the exact committed offline fixture projections, which remain `offline_demo_unapproved` and `productionAuthority: false`.
+
+The proposal contains two explicit modes:
+
+- governed mode: Program supplies safe identity and availability projections;
+- offline fixture mode: only the fixed committed safe projection allowlist is read and every page remains visibly `OFFLINE DEMO — UNAPPROVED`.
+
+It prohibits resolver hosting, route-to-storage mapping, persistence, raw-body publication, private authority reconstruction, diagnostic verification, fabricated serial/seal/approval data, clock generation and inferred emergency/EWIS verification.
+
+### Scope and ownership
+
+- authorised implementation files: exactly the three LAB-029 HTML files;
+- no production module, fixture, shared CSS, Program, Runtime, Engine or Selector file is authorised;
+- Program retains allocation, sealing, resolver origin/hosting, evidence acceptance, persistence, authentication, deployment and endpoints;
+- LAB-029 remains blocked until Program & Integrate approves envelope version 1 unchanged;
+- proposed seam-envelope full `lab-ies` gate: 255/255 passed with zero failed, cancelled, skipped or todo;
+- no item is ready.
+
 ## LAB-027 request and report workflow — 2026-07-20
 
 ### Identity and approved seam

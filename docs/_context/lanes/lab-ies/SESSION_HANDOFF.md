@@ -2,7 +2,7 @@
 
 ## Session purpose
 
-This handoff records completed LAB-028 reference curation surfaces, preserves the permanent charter authority for both standing prompts, and records the LAB-029 seam-approval stop boundary.
+This handoff records completed LAB-028 reference curation surfaces, preserves the permanent charter authority for both standing prompts, and records the proposed version-1 LAB-029 seam awaiting Program & Integrate approval.
 
 ## Identity
 
@@ -91,7 +91,8 @@ tests/selectorCascadeCorrectness.test.js
 - `LAB-027-request-report-workflow`: `done` and confirmed on origin.
 - `LAB-028-reference-curation-surfaces`: `done` and confirmed on origin.
 - Consolidated envelope: `LAB-018_023_027_BATCH_SEAM_ENVELOPE.md`, version 1, approved for all seven seams and implemented unchanged for LAB-027.
-- `LAB-029-provenance-publication-surfaces`: `blocked` pending recorded Program & Integrate seam approval.
+- `LAB-029-provenance-publication-surfaces`: `blocked` pending Program & Integrate approval of `LAB-029_SEAM_ENVELOPE.md`, version 1.
+- Proposed seam-envelope full `lab-ies` gate: 255/255 passed.
 - Ready items: none.
 
 Program reported gate 45/45 passed, the approval decision committed and pushed, and its tree clean. No parallel or combined implementation is authorised.
@@ -110,9 +111,11 @@ LAB-027 remains the approved additive handoff implementation. It preserves earli
 
 LAB-028 remains a bounded Lab-only reference-draft and evidence-curation workflow. Patrick's observed 404 catalogue loads and browser-fabricated GT/OPT identities were retired; the completed surfaces now stop at explicit non-authoritative drafts with identity and evidence verification unresolved.
 
+LAB-029 version 1 is proposed as a read-only publication view over the committed safe identity, canonical host-free resolver and evidence-capability contracts. Offline fixture mode remains visibly unapproved; governed mode relies on Program-supplied safe projections. Resolver hosting, route-to-storage mapping, persistence, evidence acceptance, sealing, allocation, authentication, deployment and endpoints remain Program-owned.
+
 LAB-017 remains governed by its approved version-1 envelope. Program retains all production allocation, live source reading, hosting, routing, persistence, authentication, CRM integration, deployment and endpoint ownership.
 
-The next safe action is orchestrator review of the LAB-029 seam. No LAB-029 implementation may start until Program & Integrate approval is recorded and the item becomes the single `ready` parcel.
+The next safe action is to send the committed LAB-029 version-1 seam envelope to Program & Integrate for approval. No LAB-029 implementation may start until that exact approval is recorded and the item becomes the single `ready` parcel.
 
 ## LAB-017 immutable completion receipt
 

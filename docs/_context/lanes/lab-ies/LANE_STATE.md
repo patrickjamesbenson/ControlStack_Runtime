@@ -13,7 +13,7 @@ Current repository evidence overrides stale historical statements.
 - Root: `C:\ControlStack_Worktrees\code-pilot-lab`
 - Branch: `lane/code-pilot-lab`
 - Gate: `lab-ies`
-- Recorded branch HEAD: `326c95a01570970bfc0205dca2be3bd34442acc6`
+- Recorded branch HEAD: `50ae226d30747c46c55626b59b6652d0217152b5`
 - Branch-HEAD guard checkpoint: `6d34e500d407d5335e5eebb317636a67a5e98618`
 - Starting HEAD for LAB-028: `326c95a01570970bfc0205dca2be3bd34442acc6`
 - Completed feature HEAD: `569c53f5a6b89850abb80a753f4296535e3b5db8`
@@ -444,7 +444,9 @@ tests/selectorCascadeCorrectness.test.js
 - LAB-026 is complete and confirmed on origin as the Lab-only document and equipment support surfaces.
 - LAB-027 is complete and confirmed on origin as the approved additive request/report/reference-intake workflow.
 - LAB-028 is complete and confirmed on origin as the bounded non-authoritative reference-draft and evidence-curation surfaces.
-- LAB-029 remains blocked pending recorded Program & Integrate seam approval.
+- LAB-029 seam envelope version 1 is proposed in `LAB-029_SEAM_ENVELOPE.md`; it reuses the approved safe identity, host-free resolver and evidence-capability contracts without moving Program ownership.
+- LAB-029 remains blocked pending recorded Program & Integrate approval of that exact version.
+- Proposed LAB-029 seam-envelope full `lab-ies` gate: 255/255 passed.
 - No parallel or combined implementation is authorised.
 - The earlier LAB-018 approval hold remains superseded.
 

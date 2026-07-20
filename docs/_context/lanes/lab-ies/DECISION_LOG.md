@@ -370,3 +370,24 @@ Read docs/_context/lanes/lab-ies/LANE_CHARTER.md and act as the standing orchest
 ```
 
 Neither role may invent or reconstruct a replacement prompt from chat history when the charter is available.
+
+## DL-027 — Proposed LAB-029 provenance publication seam
+
+**Status:** Proposed on 2026-07-20; Program & Integrate approval required.
+
+The Lab orchestrator bounded LAB-029 as a presentation-only seam over the already approved safe reference identity, host-free resolver-path and evidence-capability contracts.
+
+The proposed version-1 envelope is `LAB-029_SEAM_ENVELOPE.md` and permits implementation only in:
+
+- `packages/lab-kernel/ies-toolkit/provenance.html`;
+- `packages/lab-kernel/ies-toolkit/provenance_explorer.html`;
+- `packages/lab-kernel/ies-toolkit/luminaire_provenance.html`.
+
+The proposal fixes one read-only publication view with two explicit modes:
+
+- governed mode consumes only Program-supplied safe identity and availability projections;
+- offline fixture mode consumes only committed safe fixture projections and must remain visibly `OFFLINE DEMO — UNAPPROVED`.
+
+The proposal does not move resolver hosting, route-to-storage mapping, persistence, evidence acceptance, sealing, allocation, authentication, deployment or endpoint ownership into Lab. It prohibits hard-coded hosts, raw-body traversal, local-path publication, diagnostic authority claims, fabricated seals, current-time generation and inferred emergency/EWIS verification.
+
+LAB-029 remains `blocked` and no item becomes `ready` until Program & Integrate approves version 1 unchanged. Any amendment requires a new seam decision.
