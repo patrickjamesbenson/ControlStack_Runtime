@@ -1004,3 +1004,9 @@ Tier is not a caller-required selection and not a registration gate. Any interna
 Every existing gate of the form `cannot run until governance X is present` is invalid under this ruling. Affected implementation must **delete or bypass the gate at the Engine boundary**, not repair it, rename it or replace it with another governance prerequisite. Optional outer-envelope persistence and audit remain separate and non-blocking.
 
 No feature code is changed by this ruling. The unfinished runtime-port work in main remains excluded.
+
+### Binding boundary regression test
+
+Final Engine acceptance must execute the Engine twice with identical engineering selections and different outer traceability envelopes. The envelopes must vary user, project, owner, timeline and registration state. Engine eligibility and the complete deterministic engineering result must be identical after excluding only explicitly nondeterministic transport fields such as request timestamps or request IDs.
+
+This is a class-level guard. It must fail if any governance field is renamed, moved or read for a warning, default, score, candidate exclusion, validation state or output field. The reconciliation receipt must identify each former governance gate and prove it was deleted or bypassed from Engine eligibility rather than renamed.

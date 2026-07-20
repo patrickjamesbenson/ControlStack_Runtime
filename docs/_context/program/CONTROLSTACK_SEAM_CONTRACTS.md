@@ -589,6 +589,8 @@ Cross-lane acceptance must prove:
 4. missing or invalid required engineering selections still fail closed;
 5. caller Tier is rejected or ignored as non-authoritative while internal result profiles remain derived;
 6. no governance field appears in the kernel's required-field or scoring list;
-7. the thermal varied-optic proof still moves both lookup temperature and verified lm/m.
+7. the thermal varied-optic proof still moves both lookup temperature and verified lm/m;
+8. two executions with identical engineering selections and different user/project/owner/timeline/registration envelopes have identical Engine eligibility and deterministic engineering output, excluding only declared nondeterministic transport identifiers;
+9. the gate-reconciliation receipt names every former governance prerequisite and proves deletion or bypass from Engine eligibility, with a negative search showing no renamed equivalent remains.
 
 Any future use of governance metadata to choose, alter, score or block an Engine result is a breaking seam change requiring an explicit new Program decision.

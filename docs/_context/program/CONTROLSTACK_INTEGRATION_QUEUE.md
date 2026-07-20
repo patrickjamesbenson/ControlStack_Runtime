@@ -636,7 +636,8 @@ Technical selection completeness, authoritative source availability, evidence co
 2. complete SEL-018 as selections-only room-temperature transport;
 3. complete THERM-P1 as internal technical evidence binding;
 4. complete THERM-E1 with the mandatory changed-rise / changed-lookup / changed-output proof;
-5. run a cross-lane audit proving no governance field is read by Engine eligibility;
-6. leave outside-system persistence and main promotion separate.
+5. run the boundary regression twice with identical engineering selections and different user/project/owner/timeline/registration envelopes, requiring identical deterministic Engine output;
+6. produce a reconciliation receipt proving each former governance gate was deleted or bypassed and that no renamed equivalent remains;
+7. leave outside-system persistence and main promotion separate.
 
 No feature implementation is included in this queue ruling.
