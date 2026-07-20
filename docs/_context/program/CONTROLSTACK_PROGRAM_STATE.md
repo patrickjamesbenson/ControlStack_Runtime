@@ -433,5 +433,15 @@ P2 Checkpoint 1 is **IMPLEMENTATION COMPLETE / GATE GREEN / COMMIT BLOCKED BY SH
 - **ROLLBACK EVIDENCE:** no downstream compatibility/rollback rule was previously accepted.
 - **DOWNSTREAM:** Seam G remains reserved and inactive.
 - **MAIN:** promotion remains separately held and cannot be executed by the current lane-confined Program connection.
-- **SOLE READY ITEM:** ENG-STAB-P1, a two-file Selector & Engine producer-contract parcel.
-- **NEXT:** commission ENG-STAB-P1 in the isolated Selector lane; do not modify existing scaffolds, activate a consumer, write main or touch unfinished runtime-port work. Patrick has no action.
+- **SUPERSEDED SNAPSHOT:** ENG-STAB-P1 was provisionally ready before the newer SEL-007 receipt was reviewed.
+- **SUPERSEDED NEXT:** do not commission ENG-STAB-P1; the later SEL-007 acceptance state controls.
+
+## 2026-07-21 SEL-007 candidate acceptance state
+
+- **CANDIDATE RECEIPT:** accepted from the clean, pushed Selector lane with 114/114 focused coverage.
+- **ACTIVE SCHEMAS:** `controlstack.engine.selection-set.v1`, `controlstack.engine.output.v1` and `controlstack.engine.runtable-row.v1`.
+- **CURRENT LIMITS:** thermal output is one bounded component; RunTable output remains diagnostic-only; persistence-coupled legacy rows are outside Engine eligibility; the legacy row schema collision remains unresolved.
+- **SUPERSEDED:** provisional `controlstack.engine.selected-result.v1` and ENG-STAB-P1 were withdrawn before implementation.
+- **SOLE READY ITEM:** ENG-OUT-P1, exactly one new runtime contract module and one focused runtime test.
+- **HELD:** consumer compatibility, stability declaration, Seam G, persistence and main promotion.
+- **NEXT:** commission ENG-OUT-P1 in the isolated Selector lane. Patrick has no action.

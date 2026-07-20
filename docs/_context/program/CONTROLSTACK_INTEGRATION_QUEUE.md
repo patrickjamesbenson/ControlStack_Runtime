@@ -673,13 +673,13 @@ There is no outstanding Selector or Engine implementation item in this thermal s
 
 ## 2026-07-21 — Engine selected-result stability sequence
 
-**Status:** STABILITY NOT DECLARED; ENG-STAB-P1 IS THE SOLE READY ITEM.
+**Status:** STABILITY NOT DECLARED; ENG-OUT-P1 IS THE SOLE READY ITEM.
 
 ### ENG-STAB-P1 — Seal the version-1 selected-result producer envelope
 
 - **Owner:** Selector & Engine.
-- **Status:** ready.
-- **Depends on:** accepted THERM-E1 and Program version-1 pre-stability contract.
+- **Status:** superseded-before-implementation.
+- **Superseded by:** accepted SEL-007 three-schema candidate and ENG-OUT-P1.
 - **Exact feature files:** new `packages/workspace-kernel/runtimeEngineSelectedResultContractV1.js` and new `tests/runtimeEngineSelectedResultContractV1.test.js`.
 - **Gate:** `selector-engine`.
 - **Objective:** validate the accepted thermal execution result and the existing safe selected-result source object, then emit the exact deeply immutable `controlstack.engine.selected-result.v1` accepted-or-blocked envelope.
@@ -688,9 +688,21 @@ There is no outstanding Selector or Engine implementation item in this thermal s
 - **Prohibitions:** no Engine invocation, curve-parser change, route, persistence, RuntimeData mutation, donor use, IES handoff, downstream readiness activation, existing scaffold rewrite or main change.
 - **Commit message:** `feat(runtime): seal selected result contract v1`.
 
+### ENG-OUT-P1 — Implement the accepted version-1 request, output and row contracts
+
+- **Owner:** Selector & Engine.
+- **Status:** ready.
+- **Depends on:** accepted SEL-007 candidate and Program review.
+- **Exact feature files:** new `packages/workspace-kernel/runtimeEngineOutputContractV1.js` and new `tests/runtimeEngineOutputContractV1.test.js`.
+- **Gate:** `selector-engine`.
+- **Objective:** implement exact non-persistent validators/builders for `controlstack.engine.selection-set.v1`, `controlstack.engine.output.v1` and `controlstack.engine.runtable-row.v1`.
+- **Acceptance:** deterministic complete, fail-closed blocked, valid zero-valued and replay-identical fixtures; one exact row field set; result identity from request/source/policy/evidence fingerprints; governance-envelope independence; unknown versions and unsafe or contradictory inputs fail closed.
+- **Prohibitions:** no actual Engine invocation, persistence, route, IES handoff, downstream activation, RuntimeData mutation, donor use, legacy row-schema reuse, existing scaffold rewrite or main change.
+- **Commit message:** `feat(runtime): implement Engine output contract v1`.
+
 ### ENG-STAB-C1 — Prove one consumer compatibility adapter
 
-- **Status:** blocked behind Program acceptance of ENG-STAB-P1.
+- **Status:** blocked behind Program acceptance of ENG-OUT-P1.
 - **Owner:** to be commissioned separately after the producer receipt.
 - **Boundary:** read-only compatibility only; no IES generation, downstream write, persistence or route activation.
 

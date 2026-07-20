@@ -680,13 +680,15 @@ The thermal chain now requires no further Selector implementation or live regist
 
 ## 2026-07-21 selected-result stability handoff
 
-Program has reviewed the next seam and has **not** declared the Engine selected-result contract stable. The current versioned source object is diagnostic-only, summary-only and non-persistent; detailed acceptance, normalised per-run lookup, projection readiness and IES handoff readiness remain disabled. No complete accepted/blocked fixture pair or consumer compatibility receipt is accepted.
+Program has accepted the newer SEL-007 contract candidate and has **not** declared Engine output stable. The active candidate separates the selections-only request, complete-or-blocked response and RunTable row into `controlstack.engine.selection-set.v1`, `controlstack.engine.output.v1` and `controlstack.engine.runtable-row.v1`.
 
-ENG-STAB-P1 is the sole ready parcel. Commission the isolated Selector & Engine lane to create only:
+The candidate records the current truth: thermal execution is one bounded component, RunTable output remains diagnostic-only, persistence-coupled legacy rows are outside Engine eligibility, and the legacy row identifiers collide across incompatible field sets.
 
-- `packages/workspace-kernel/runtimeEngineSelectedResultContractV1.js`
-- `tests/runtimeEngineSelectedResultContractV1.test.js`
+ENG-OUT-P1 is the sole ready parcel. Commission the isolated Selector & Engine lane to create only:
 
-The module validates the already accepted thermal result and safe selected-result source object, then emits one exact immutable `controlstack.engine.selected-result.v1` accepted-or-blocked envelope. It does not invoke Engine, modify the curve parser or existing scaffolds, persist, add routes, expose raw data, activate IES/downstream readiness, mutate RuntimeData, use donor code or touch main.
+- `packages/workspace-kernel/runtimeEngineOutputContractV1.js`
+- `tests/runtimeEngineOutputContractV1.test.js`
 
-Run focused coverage plus `selector-engine`, commit as `feat(runtime): seal selected result contract v1`, push only the Selector lane and return a complete receipt. Consumer compatibility and final stability declaration remain separate Program parcels. Seam G and main promotion stay held.
+Implement the three exact non-persistent contracts with deterministic complete, fail-closed blocked, zero-valued and replay-identical fixtures. Do not invoke Engine, reuse the colliding legacy row schema, modify existing scaffolds, persist, add routes, activate IES/downstream readiness, mutate RuntimeData, use donor code or touch main.
+
+Run focused coverage plus `selector-engine`, commit as `feat(runtime): implement Engine output contract v1`, push only the Selector lane and return a complete receipt. Consumer compatibility and final stability declaration remain separate Program parcels. Seam G and main promotion stay held.

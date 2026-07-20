@@ -1060,3 +1060,11 @@ Program reviewed Seam B against its five mandatory stability conditions after fi
 Therefore Program does not declare Seam B stable. Seam G remains reserved and inactive, and main promotion remains separately held.
 
 Program approves a first bounded Selector & Engine parcel, **ENG-STAB-P1**, to create a new immutable version-1 selected-result producer contract from the already accepted safe source summary and thermal execution result. It is schema/validation work only: no route, persistence, IES handoff, downstream activation, RuntimeData mutation, donor invocation or main change. Consumer compatibility and final stability acceptance remain separate later parcels.
+
+## 2026-07-21 — SEL-007 candidate accepted
+
+Program accepts the clean, pushed Selector contract candidate and its 114/114 focused receipt. Engine output is still not stable.
+
+The accepted candidate uses `controlstack.engine.selection-set.v1`, `controlstack.engine.output.v1` and `controlstack.engine.runtable-row.v1`. It preserves the thermal result as one bounded component, keeps the current RunTable scaffold diagnostic-only, excludes persistence-coupled rows from Engine eligibility and records the incompatible legacy row-schema collision.
+
+This supersedes the earlier provisional `controlstack.engine.selected-result.v1` design and ENG-STAB-P1 before implementation. Program admits ENG-OUT-P1 as the sole ready parcel: one new runtime contract module and one focused runtime test for the request validator, complete-or-blocked output envelope and one exact row schema.

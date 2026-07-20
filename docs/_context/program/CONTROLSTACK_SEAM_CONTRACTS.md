@@ -611,7 +611,7 @@ All nine acceptance-lock conditions are satisfied. Future governance influence o
 
 ## 2026-07-21 — Engine selected-result version-1 pre-stability contract
 
-**Status:** PROGRAM-APPROVED PRODUCER CONTRACT; NOT YET IMPLEMENTED OR STABLE.
+**Status:** SUPERSEDED BEFORE IMPLEMENTATION BY PROGRAM ACCEPTANCE OF SEL-007.
 
 The existing safe source object and selected-result projection remain diagnostic inputs. They are not themselves the stable downstream contract because they are summary-only, non-persistent, not accepted as a detailed selected result, and explicitly report projection/IES readiness as false.
 
@@ -645,3 +645,17 @@ The initial producer parcel is read-only and non-persistent. Rollback is removal
 3. **ENG-STAB-A1:** Program reviews all five Seam B stability conditions and either declares version 1 stable or records the remaining blocker.
 
 Seam G remains reserved and inactive until ENG-STAB-A1 is accepted.
+
+## 2026-07-21 — Accepted Engine output candidate boundary
+
+The active candidate uses three exact version-1 schemas:
+
+- `controlstack.engine.selection-set.v1` for the selections-only request;
+- `controlstack.engine.output.v1` for complete or fail-closed output;
+- `controlstack.engine.runtable-row.v1` for one unambiguous non-persistent row shape.
+
+The accepted thermal execution result is one bounded output component, not the whole Engine response. The current RunTable domain output remains diagnostic-only, and the persistence-coupled first-narrow row path is outside Engine eligibility. The incompatible legacy row identifiers are not eligible for stability.
+
+ENG-OUT-P1 implements the three contracts in one read-only runtime module with deterministic complete, blocked, zero-valued and replay-identical fixtures. It must not activate persistence, routes, IES handoff, downstream consumers, RuntimeData, donor code or main.
+
+Consumer compatibility and Program stability acceptance remain later parcels. Seam G remains inactive.
