@@ -315,3 +315,11 @@ This log is append-oriented. Do not silently rewrite historical decisions.
 **Rationale:** The approved lane exposes no arbitrary or focused test command. The same temporary-import method was previously accepted for omitted registration coverage and provides executable evidence without widening the committed parcel.
 
 **Consequence:** The harness import must visibly execute the mapper suite, then be removed. The harness file must be byte-identical to HEAD, absent from the final diff, unstaged and uncommitted. The feature commit remains exactly the mapper and focused mapper test, followed by the normal baseline gate and five-file durable closeout.
+
+## 2026-07-21 — SEL-018 accepted; THERM-P1 becomes ready
+
+**Decision:** Accept the pushed selected-room handoff and advance the Program thermal-evidence adapter as the sole ready parcel.
+
+**Rationale:** Focused mapper coverage executed at 125/125 through the temporary harness, the normal and commit gates passed 107/107, the harness was removed, and the final feature commit contains exactly the mapper and its test. The candidate carries only `selectedRoomTaC` and all invalid Ambient forms fail closed.
+
+**Consequence:** THERM-P1 may now implement its exact new adapter and focused test. THERM-E1 remains blocked. Because both new thermal test files are omitted from the fixed gate, each may use the same one-import temporary harness discipline without changing its final exact two-file scope.

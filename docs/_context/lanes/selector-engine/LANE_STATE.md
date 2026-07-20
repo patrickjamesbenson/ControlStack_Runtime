@@ -350,7 +350,7 @@ SEL-018 is now the sole top ready item. It is approved as one bounded Selector/r
 
 ## 2026-07-20 Ambient parcel split — latest controlling state
 
-**Recorded lane work HEAD:** `e978c0c79e847d3b60a96158a2bc3eba026420b4` — `docs(selector): reconcile lane state for thermal sequence`.
+**Recorded lane work HEAD:** `b90edb4ac309928e674d28e9208b540303a4575f` — `fix(selector): emit selected room temperature`.
 
 The approved Ambient authority and contract are unchanged: active read-only `SYSTEM_POLICY` is the only selectable authority; `lighting.ambient_temp_c` is the exact candidate field; the value is a finite JSON number in degrees Celsius; the protected interpolation input is `temp_c`; and missing, blank, ambiguous, non-numeric, non-finite, malformed, or non-source-backed Ambient fails closed before donor Engine execution with no 25°C, 35°C, fixture, product, System, Tier, application, IP, optic, lab, historical, cached, or donor fallback.
 
@@ -383,3 +383,13 @@ Final Engine acceptance must vary one optic-bound measured rise while holding se
 SEL-019 is held because its former direct `lighting.ambient_temp_c` acceptance workflow is superseded. Browser, registration and live Engine acceptance require a later explicit Program commission after THERM-E1. The unfinished runtime-port work in main remains excluded and untouched.
 
 The fixed lane gate does not execute the focused mapper suite. SEL-018 is therefore authorised to use the established temporary harness: exactly one side-effect import in the gate-included Engine domain test, removed after visible focused execution. The harness must finish byte-identical to HEAD and cannot appear in the final diff, stage or commit. The final feature scope remains exactly two files.
+
+## 2026-07-21 SEL-018 selected-room handoff closeout
+
+SEL-018 is complete and pushed. The candidate mapper now requires exactly one committed, non-blocked Ambient row that agrees with the source-backed readiness preview, parses its finite Celsius number and emits only top-level `selectedRoomTaC`. It preserves the existing Tier-neutral run, light, optic and Control fields.
+
+The mapper rejects missing, malformed, duplicate, uncommitted, blocked, non-source-backed and conflicting Ambient. It emits no reference-room, reference-internal, optic-rise, derived, lookup, board-temperature, clamp, interpolation or verified-output field.
+
+The temporary focused harness executed the mapper suite inside a 125/125 passing gate, was removed and finished byte-identical to HEAD. The normal baseline and guarded feature-commit gates each passed 107/107. Exactly the mapper and focused test were committed and pushed; the feature tree ended clean.
+
+THERM-P1 is now the sole ready item. THERM-E1 remains blocked behind it. Each new focused thermal test may use the same one-import temporary harness method and must remove it before exact two-file staging.

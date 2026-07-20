@@ -447,3 +447,17 @@ Every completed worker updates this index with:
 - Queue result: SEL-018 is sole ready; THERM-P1 blocked behind its accepted closeout; THERM-E1 blocked behind THERM-P1; superseded direct-`temp_c` live acceptance is held — RECORDED.
 - Fixed-gate coverage audit: the current `selector-engine` command omits `tests/selectorReadonlyEngineCandidateMapper.test.js` — VERIFIED from the 107-test command and visible suite list.
 - Focused-execution method: one temporary import from the gate-included Engine domain test is authorised; it must be removed, byte-identical to HEAD and absent from final staging/commit — RECORDED NON-PERSISTENT HARNESS.
+
+## 2026-07-21 — SEL-018 selected-room handoff evidence
+
+- Starting guard: actual HEAD was the dedicated focused-gate reconciliation wrapper and its immediate parent matched the recorded lane work HEAD; starting tree clean — VERIFIED.
+- Final feature paths: `packages/workspace-kernel/selectorReadonlyEngineCandidateMapper.js` and `tests/selectorReadonlyEngineCandidateMapper.test.js` only — VERIFIED.
+- Positive mapping: source-backed committed 25°C emits `selectedRoomTaC: 25`; 35°C emits `selectedRoomTaC: 35` — VERIFIED BY EXECUTED FOCUSED TESTS.
+- Negative mapping: missing, malformed, duplicate, uncommitted, blocked, non-source-backed and conflicting Ambient all fail closed — VERIFIED BY EXECUTED FOCUSED TESTS.
+- Forbidden outputs: no reference room, reference internal, optic rise, derived internal, lookup temperature, board temperature or verified lm/m is emitted — VERIFIED BY TEST AND STATIC SEARCH.
+- Preservation: existing Tier-neutral run, target, CCT/CRI, optic and Control candidate shape remains green — VERIFIED.
+- Focused harness gate: 125 passed, 0 failed; mapper suite visibly executed — VERIFIED.
+- Harness removal: Engine domain test finished byte-identical to HEAD and absent from final diff/stage — VERIFIED.
+- Normal gate and guarded commit gate: 107 passed, 0 failed each — VERIFIED.
+- Feature pushed only to `lane/selector-engine`; ending feature tree clean — VERIFIED.
+- Queue result: SEL-018 done; THERM-P1 sole ready; THERM-E1 blocked — RECORDED.

@@ -407,3 +407,11 @@ The mandatory Engine test uses two optic-bound accepted bundles with different r
 The old direct `lighting.ambient_temp_c` to `temp_c` live-acceptance parcel is held and must not run. Final live/cross-lane acceptance requires a later Program commission after THERM-E1. No browser, registration or live Engine action is needed before then.
 
 The fixed gate omits the focused mapper suite. For SEL-018 only, temporarily add one import of `./selectorReadonlyEngineCandidateMapper.test.js` to the gate-included Engine domain test, run the fixed gate and visibly execute the mapper assertions, then remove the import. Prove the harness file is byte-identical to HEAD and absent from the final diff before the normal 107-test gate and exact two-file feature staging.
+
+## 2026-07-21 selected-room handoff complete
+
+SEL-018 is complete and pushed. The focused run passed 125/125, the normal and commit gates passed 107/107, the temporary harness was removed, and only the mapper plus its test changed.
+
+THERM-P1 is now the sole ready parcel. Create only the new Program validation adapter and its focused test. Validate the Selector room and optic, the Program source-backed optic binding, the exact Lab version-2 identity and measured triplet, the evidence reference, read-only state, empty blockers and null Lab authority. Emit the accepted immutable Program bundle and perform no thermal arithmetic.
+
+Use the authorised temporary focused-test import, remove it before the final diff, then stage and commit only the new adapter and its test. THERM-E1 stays blocked until the Program adapter closeout is pushed.

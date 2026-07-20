@@ -103,7 +103,7 @@
 ### Q-2H Emit the selected room temperature without thermal calculation
 
 * id: SEL-018
-* status: ready
+* status: done
 * depends-on: SEL-017 and recorded Program acceptance of the corrected Lab thermal receipt
 * seam approval: Program & Integrate corrected thermal ruling and exact SEL-018 amendment recorded on 2026-07-21
 * seam change: yes — Selector owns only the committed source-backed room selection and no thermal arithmetic
@@ -117,12 +117,12 @@
 ### Q-2J Validate and bind Lab thermal evidence in Program
 
 * id: THERM-P1
-* status: blocked
+* status: ready
 * depends-on: accepted SEL-018 feature and lane-memory closeout
 * seam approval: Program & Integrate parcel admitted on 2026-07-21
 * seam change: yes — Program owns cross-lane identity and evidence validation, not thermal arithmetic
 * gate: selector-engine
-* authorised files: new `packages/workspace-kernel/labThermalEvidenceProgramAdapter.js`, new `tests/labThermalEvidenceProgramAdapter.test.js`, and closeout updates to the five mutable lane context files.
+* authorised files: new `packages/workspace-kernel/labThermalEvidenceProgramAdapter.js`, new `tests/labThermalEvidenceProgramAdapter.test.js`, temporary harness-only use of `tests/engineRunTableDomain.test.js`, and closeout updates to the five mutable lane context files. The harness may add exactly one side-effect import of `./labThermalEvidenceProgramAdapter.test.js`; it must be removed, byte-identical to HEAD and absent from final staging/commit.
 * objective: bind the accepted Selector candidate and one Program-validated source-backed optic identity to one exact `controlstack.lab.nvb-lab-projection.v2` object, then emit a deeply immutable accepted Program thermal-evidence bundle.
 * acceptance: Selector optic, validated optic key, canonical optic BOM identity, Lab selection identity and Lab thermal-evidence identity all agree; Lab projection is read-only, path `optic`, blockers empty, evidence reference bounded, and `authorityState` exactly `null`; the measured triplet is finite and exactly satisfies `referenceRoomTaC + opticThermalRiseTaC = referenceInternalTaC`; success emits only selected room, validated optic identity/source revision, measured triplet, opaque evidence reference, `labAuthorityState: null`, `programValidationState: accepted_for_engine_thermal_lookup`, and read-only/version metadata. Missing, malformed, contradictory, unsafe, unresolved or identity-unbound input fails closed.
 * prohibitions: no addition of selected room and rise, no curve lookup, clamp, interpolation, board temperature, verified lm/m, route, persistence, authority write, direct Lab mutation, existing photometry-adapter change, donor, RuntimeData or main change.
@@ -135,7 +135,7 @@
 * seam approval: Program & Integrate parcel admitted on 2026-07-21
 * seam change: yes — Engine is the sole owner of applying the accepted optic rise and resolving verified lm/m
 * gate: selector-engine
-* authorised files: new `packages/workspace-kernel/runtimeThermalLumenExecution.js`, new `tests/runtimeThermalLumenExecution.test.js`, and closeout updates to the five mutable lane context files.
+* authorised files: new `packages/workspace-kernel/runtimeThermalLumenExecution.js`, new `tests/runtimeThermalLumenExecution.test.js`, temporary harness-only use of `tests/engineRunTableDomain.test.js`, and closeout updates to the five mutable lane context files. The harness may add exactly one side-effect import of `./runtimeThermalLumenExecution.test.js`; it must be removed, byte-identical to HEAD and absent from final staging/commit.
 * objective: consume only an accepted Program thermal-evidence bundle, apply the optic rise exactly once, and delegate the resulting lookup temperature to the existing runtime lumen-curve parse/interpolation contract.
 * acceptance: Engine computes `derivedInternalTaC = selectedRoomTaC + opticThermalRiseTaC` and uses that same value as `curveLookupTaC`; 25 + 10 produces lookup 35 and 35 + 10 produces lookup 45; a second optic-bound bundle with a different measured rise, but the same room, current and curve, changes both lookup temperature and verified lm/m; the test must fail for hardcoded 35°C, hardcoded 10°C, use of the absolute reference-internal value as rise, or double application; low/high clamping preserves the unclamped derived value and reports clamp/interpolation/current modes; missing, malformed, contradictory, unaccepted or identity-unbound evidence fails closed.
 * prohibitions: reject direct Lab projections and caller-supplied `derivedInternalTaC`, `curveLookupTaC`, board temperature or verified lm/m; do not change the existing curve parser, add routes or persistence, mutate RuntimeData, invoke donor execution, generate IES or outputs, or touch main.
