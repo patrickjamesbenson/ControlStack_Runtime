@@ -442,3 +442,7 @@ LAB-038 resolution v2, LAB-039 component v2, LAB-040 Lab projection v2, LAB-041 
 Because the Lab adapter imports the resolver schema constants, the mandatory full gate cannot accept a resolver-only version bump. LAB-038 therefore atomically changes exactly the resolver module/test and adapter module/test.
 
 During LAB-038 the adapter remains `controlstack.lab.nvb-lab-projection.v1`. It accepts only corrected resolution version 2 and the corrected optic input names, but emits no thermal triplet or evidence authority. Its existing non-thermal public shape remains fixed. LAB-040 later performs the separately approved adapter projection version-2 change and adds explicit unresolved thermal evidence. This transition is not a compatibility alias and does not permit simultaneous version-1 and version-2 resolver inputs.
+
+### LAB-042 gate-included final guard amendment
+
+The final corrected thermal guard is confined to the already gate-included `tests/lab-kernel/iesKeywordMigration.test.js`. The previously named new test file is superseded and must not be created because the fixed Lab gate would not execute it. All semantic, schema, mapping, contradiction, bounded-source-name and sealed-keyword assertions remain required. No production source, fixture or gate configuration is included.

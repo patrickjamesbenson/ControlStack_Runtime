@@ -361,3 +361,14 @@ P2 Checkpoint 1 is **IMPLEMENTATION COMPLETE / GATE GREEN / COMMIT BLOCKED BY SH
 - **NO EARLY LAB-040:** no thermalEvidence output, evidence authority, adapter schema version 2 or Engine value is authorised in LAB-038.
 - **QUEUE:** LAB-038 remains sole ready; LAB-039 through LAB-042 remain sequence-blocked.
 - **NEXT:** Lab completes the atomic four-file checkpoint, then closes documentation and advances LAB-039. Patrick has no action.
+
+## 2026-07-21 LAB-042 gate-included guard amendment state
+
+- **COMPLETED:** LAB-038 through LAB-041 are green and pushed.
+- **GATE COVERAGE FINDING:** the approved new LAB-042 test file is absent from the fixed `lab-ies` command and would not execute.
+- **AMENDED EXACT FILE:** `tests/lab-kernel/iesKeywordMigration.test.js` only.
+- **SUPERSEDED FILE:** the new thermal test file must not be created.
+- **ACCEPTANCE:** unchanged corrected mappings, exact triplet, varied uplift, contradiction rejection, three version-2 schemas, legacy-name bounds and sealed-keyword meaning.
+- **NO PRODUCTION CHANGE:** no source, fixture, gate configuration, route, persistence or Engine behaviour.
+- **QUEUE:** LAB-042 is the sole ready Lab item.
+- **NEXT:** Lab implements the final guard in the existing gate-included test, runs the full gate and closes the batch. Patrick has no action.

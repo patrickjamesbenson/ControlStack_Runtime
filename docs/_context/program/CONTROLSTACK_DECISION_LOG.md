@@ -867,3 +867,36 @@ LAB-040 remains separately required to advance the adapter's public projection t
 ### Queue effect
 
 LAB-038 remains the sole ready Lab parcel under this amended four-file atomic scope. LAB-039 through LAB-042 remain sequence-blocked. The feature subject remains `lab: checkpoint NVB thermal semantics v2`. Any extra adapter output, schema-version change, thermal authority claim or file requires a new Program decision.
+
+---
+
+## 2026-07-21 — LAB-042 gate-included test-file amendment
+
+**Status:** APPROVED AS A TEST-ONLY FILE-SCOPE SUPERSESSION; LAB-042 IS READY.
+
+### Gate evidence
+
+LAB-038 through LAB-041 are complete and green. The approved LAB-042 path `tests/lab-kernel/nvbThermalSemantics.test.js` is not named by the fixed `lab-ies` gate command. A checkpoint confined to that new file would therefore pass the mandatory gate without executing its own assertions and cannot provide valid acceptance evidence.
+
+### Amended exact scope
+
+LAB-042 must use exactly the existing gate-included file:
+
+```text
+tests/lab-kernel/iesKeywordMigration.test.js
+```
+
+The previously approved new test file is removed from scope and must not be created.
+
+All LAB-042 acceptance criteria remain unchanged:
+
+- independently pin the corrected legacy-source mappings;
+- prove exact 25 + 10 = 35 measured consistency;
+- prove a varied optic through legacy `optic_uplift_ta_c` with matching absolute internal temperature;
+- reject a contradictory rise-only change;
+- pin all three version-2 schema identities;
+- prohibit deprecated semantic output names and Lab-owned Engine calculations;
+- permit legacy snake-case names only at bounded source-mapping and test-input locations;
+- preserve the sealed-reference `_INTERNAL_AMBIENT_TA_C` meaning.
+
+No production source, fixture, gate configuration, route, persistence or cross-lane implementation is authorised. The feature subject remains `lab: checkpoint thermal semantics guard`. LAB-042 is the sole ready Lab item and may close the corrected thermal batch after a full green gate and separate documentation checkpoint.

@@ -547,3 +547,9 @@ The batch does not establish accepted cross-lane thermal evidence. Program evide
 The mandatory full Lab gate proved that the resolver-only version bump cannot be checkpointed because the Lab adapter imports the resolver schema constants directly. LAB-038 is therefore amended to include the resolver module/test and the adapter module/test in one atomic four-file checkpoint.
 
 The adapter change is transition-only: accept corrected resolution version 2 and corrected optic input names, retain adapter projection version 1, preserve its current non-thermal output and publish no thermal evidence or authority. LAB-040 remains responsible for adapter projection version 2 and the unresolved thermal-evidence object. LAB-038 remains sole ready; later parcels remain blocked.
+
+### LAB-042 gate-included test-file amendment
+
+LAB-038 through LAB-041 are complete and green. The previously approved new LAB-042 test file is not executed by the fixed Lab gate, so it cannot provide valid self-testing acceptance evidence.
+
+LAB-042 is amended to exactly `tests/lab-kernel/iesKeywordMigration.test.js`, which is already included in every full Lab gate. The new test file must not be created. Acceptance, feature subject and test-only boundary remain unchanged. LAB-042 is the sole ready Lab item; no production source, fixture or gate configuration may change.

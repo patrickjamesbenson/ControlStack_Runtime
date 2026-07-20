@@ -1,19 +1,19 @@
 # Program & Integrate Session Handoff
 
-Status: LAB-038 ATOMIC TRANSITION AMENDMENT APPROVED  
+Status: LAB-042 GATE-INCLUDED TEST SCOPE APPROVED  
 Lane: `program-integrate`  
 Branch: `lane/program-integrate`
 
 ## Decision
 
-The mandatory Lab gate proved that a resolver-only version-2 checkpoint is impossible because the Lab adapter imports the resolver schema constants directly.
+LAB-038 through LAB-041 are complete and green. The originally approved new LAB-042 test file is not executed by the fixed Lab gate, so it cannot prove its own assertions.
 
-LAB-038 is amended to exactly four files: the resolver module and test plus the Lab adapter module and test.
+LAB-042 is amended to exactly the existing gate-included keyword migration regression test. The new thermal test file must not be created.
 
-The adapter change is transition-only. It accepts corrected resolution version 2 and corrected optic input names, keeps its own public projection at version 1, preserves its existing non-thermal output, and publishes no thermal evidence or authority.
+All final-guard acceptance remains unchanged: corrected source mappings, exact measured triplet, varied uplift proof, contradiction rejection, three version-2 schemas, absence of deprecated output names and Lab-owned Engine calculations, bounded legacy source names, and unchanged sealed internal-ambient meaning.
 
-LAB-040 remains separately responsible for adapter projection version 2 and the explicit unresolved thermal-evidence object. LAB-038 remains the sole ready Lab item; later parcels remain sequence-blocked.
+No production source, fixture or gate configuration change is authorised.
 
 ## Exact next action
 
-Lab completes the four-file LAB-038 checkpoint, runs the full Lab gate, closes its documentation separately, then advances LAB-039.
+Lab implements the one-file final guard, runs the full Lab gate, pushes it, and closes the corrected thermal batch.

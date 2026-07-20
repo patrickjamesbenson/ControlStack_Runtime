@@ -565,3 +565,11 @@ The first resolver-only attempt demonstrated that the adapter imports the resolv
 LAB-038 is amended to exactly four files: the resolver module/test and adapter module/test. The adapter must accept only corrected resolution version 2 and corrected optic keys while retaining its public projection version 1 and existing non-thermal output. It must not add thermal evidence, authority state, derived temperature, lookup temperature or Engine output. LAB-040 remains the later adapter-output upgrade.
 
 Lab may apply this amendment immediately, rerun the full gate and checkpoint the four files under the unchanged LAB-038 feature subject.
+
+### LAB-042 gate-included final guard amendment
+
+LAB-038 through LAB-041 are complete. The originally approved new LAB-042 test path is not executed by the fixed Lab gate, so it cannot provide valid self-testing evidence.
+
+LAB-042 is amended to exactly the existing gate-included keyword migration test file. The new thermal test file must not be created. All existing LAB-042 semantic and schema assertions remain required, the feature remains test-only, and no production, fixture or gate configuration change is authorised.
+
+Lab may implement this final one-file guard immediately, run the full Lab gate, push the feature and close the corrected thermal batch separately.
