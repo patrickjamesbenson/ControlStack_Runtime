@@ -694,10 +694,12 @@ Completion evidence: The final test-only guard was committed as `lab: checkpoint
 ### Q-28 Corrected NVB thermal semantics version 2
 - id: LAB-038-nvb-resolution-thermal-semantics-v2
 - objective: Replace the ambiguous NVB resolution thermal output names with the corrected measured reference-room, absolute-internal and optic-rise semantics.
-- seam envelope: `docs/_context/lanes/lab-ies/LAB-038_042_THERMAL_SEMANTICS_SEAM_ENVELOPE.md`, version 1; approved unchanged by Program & Integrate under `docs(program): approve Lab corrected thermal semantics seam` after a 46/46 Program gate.
+- seam envelope: `docs/_context/lanes/lab-ies/LAB-038_042_THERMAL_SEMANTICS_SEAM_ENVELOPE.md`, version 2; Program approved the initial envelope and the narrow atomic consumer-transition amendment after separate 46/46 gates.
 - authorised files:
   - `packages/lab-kernel/ies-toolkit/nvbResolve.js`
   - `tests/lab-kernel/nvbResolve.test.js`
+  - `packages/lab-kernel/ies-toolkit/nvbLabAdapter.js`
+  - `tests/lab-kernel/nvbLabAdapter.test.js`
 - prohibitions:
   - no source fixture or data-model rename;
   - no legacy output alias;
@@ -709,7 +711,9 @@ Completion evidence: The final test-only guard was committed as `lab: checkpoint
 - depends on: LAB-018-nvb-resolution-contract
 - on success next: LAB-039-component-thermal-semantics-v2
 - seam change: yes
-- status: ready
+- status: done
+
+Completion evidence: The corrected resolver version 2 and the mandatory transition-only adapter consumer update were committed in the exact amended four-file scope as `lab: checkpoint NVB thermal semantics v2`, pushed to the lane branch, and passed 256/256. The resolver maps absolute internal and rise correctly, validates exact decimal triplets, proves a varied uplift source, and blocks missing or contradictory evidence. The adapter accepts only resolution version 2 and corrected optic input names while retaining projection version 1 and its existing non-thermal output. LAB-039 is now the sole ready item.
 
 ### Q-29 Corrected component thermal semantics version 2
 - id: LAB-039-component-thermal-semantics-v2
@@ -728,7 +732,7 @@ Completion evidence: The final test-only guard was committed as `lab: checkpoint
 - depends on: LAB-019-component-projection-contract, LAB-038-nvb-resolution-thermal-semantics-v2
 - on success next: LAB-040-nvb-lab-thermal-projection-v2
 - seam change: yes
-- status: blocked
+- status: ready
 
 ### Q-30 Corrected NVB Lab thermal working projection version 2
 - id: LAB-040-nvb-lab-thermal-projection-v2

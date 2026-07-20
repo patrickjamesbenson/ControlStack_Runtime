@@ -13,11 +13,11 @@ Current repository evidence overrides stale historical statements.
 - Root: `C:\ControlStack_Worktrees\code-pilot-lab`
 - Branch: `lane/code-pilot-lab`
 - Gate: `lab-ies`
-- Recorded branch HEAD: `df83ed86e4a262f1b8d9cf15b055cdb5aa2e65cf`
+- Recorded branch HEAD: `33674eef08e56a8307fe6bd78cf75835b1c1d651`
 - Branch-HEAD guard checkpoint: `6d34e500d407d5335e5eebb317636a67a5e98618`
-- Starting HEAD for LAB-037: `e1d9e4b14837317880e650f56d41bc0f0c4fa4c2`
-- Completed feature HEAD: `c41fc5d39ceb262854f955873fd3f3534f0757fd`
-- Feature subject: `lab: checkpoint canonical keyword migration guard`
+- Starting HEAD for LAB-038: `b89f08cd5d96f9002d9bc36f95f249c99169d3a7`
+- Completed feature HEAD: `33674eef08e56a8307fe6bd78cf75835b1c1d651`
+- Feature subject: `lab: checkpoint NVB thermal semantics v2`
 - Feature push: confirmed on origin `lane/code-pilot-lab`
 
 ## Branch-HEAD synchronisation invariant
@@ -59,7 +59,30 @@ Before any queue item is selected, a worker must compare `Recorded branch HEAD` 
 - Human-observation acceptance cannot be closed from repository evidence. The item remains incomplete and the worker supplies exact `NEEDS YOU` steps.
 - Orchestrator review occurs at seam, human-observation and five-parcel/stop boundaries rather than after each routine parcel.
 
-## Latest coordination checkpoint — corrected thermal semantics proposal
+## Latest completed parcel — LAB-038
+
+Queue item `LAB-038-nvb-resolution-thermal-semantics-v2` is complete under corrected thermal envelope version 2 and the Program-approved atomic consumer-transition amendment.
+
+Exactly these four authorised files were committed:
+
+```text
+packages/lab-kernel/ies-toolkit/nvbResolve.js
+tests/lab-kernel/nvbResolve.test.js
+packages/lab-kernel/ies-toolkit/nvbLabAdapter.js
+tests/lab-kernel/nvbLabAdapter.test.js
+```
+
+Verified outcome:
+
+- resolution schema version 2 exposes only reference room, absolute reference internal and optic thermal rise;
+- exact decimal triplet validation accepts the corrected baseline and varied-optic evidence and blocks missing or contradictory values;
+- the deprecated semantic output names are absent;
+- the adapter transition accepts only corrected resolution version 2 and corrected optic input names;
+- the adapter remains projection version 1, preserves its non-thermal output and exposes no thermal evidence or Engine result;
+- the amended four-file checkpoint passed 256/256 and is confirmed on origin;
+- LAB-039 is the sole ready item.
+
+## Previous coordination checkpoint — corrected thermal semantics proposal
 
 Program & Integrate corrected and superseded the thermal source-field meaning under the pushed decision `docs(program): correct thermal source field semantics` after a 46/46 Program gate.
 
@@ -712,15 +735,15 @@ tests/selectorCascadeCorrectness.test.js
 - `LAB-035-selector-contract-stub`: done.
 - `LAB-036-lab-shell-server`: done.
 - `LAB-037-keyword-migration-guard`: done.
-- `LAB-038-nvb-resolution-thermal-semantics-v2`: ready under approved envelope version 1.
-- `LAB-039-component-thermal-semantics-v2`: approved and sequence-blocked pending LAB-038 completion.
-- `LAB-040-nvb-lab-thermal-projection-v2`: approved and sequence-blocked pending LAB-038 completion.
+- `LAB-038-nvb-resolution-thermal-semantics-v2`: done under approved envelope version 2.
+- `LAB-039-component-thermal-semantics-v2`: ready.
+- `LAB-040-nvb-lab-thermal-projection-v2`: approved and sequence-blocked pending LAB-039 completion.
 - `LAB-041-component-library-thermal-labels`: approved and sequence-blocked pending LAB-039 completion.
-- `LAB-042-thermal-semantics-guard`: approved and sequence-blocked pending LAB-038 through LAB-041 completion.
-- Next ordered item: `LAB-038-nvb-resolution-thermal-semantics-v2`.
+- `LAB-042-thermal-semantics-guard`: approved and sequence-blocked pending LAB-039 through LAB-041 completion.
+- Next ordered item: `LAB-039-component-thermal-semantics-v2`.
 - Resulting status: ready.
-- Ready items: exactly one — LAB-038.
-- Seam approval required: no — Program & Integrate approved version 1 unchanged.
+- Ready items: exactly one — LAB-039.
+- Seam approval required: no — Program & Integrate approved version 2.
 - Human observation required before implementation: no.
 
-The corrected thermal seam is approved. LAB-038 is the sole ready parcel for the standing worker.
+LAB-038 is complete. LAB-039 is the sole ready parcel for the standing worker.

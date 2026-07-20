@@ -6,6 +6,25 @@
 - Historical handoff content is retained as reported context unless freshly reverified.
 - Test output proves only the behaviour exercised by the named tests; low-level merge tests do not by themselves prove completion of the final governed merge.
 
+## LAB-038 corrected resolver and atomic adapter transition — 2026-07-21
+
+### Scope and amendment
+
+The initial two-file resolver scope was amended by Program after the mandatory full gate proved that the adapter imports the resolver schema constants and cannot remain on resolution version 1. Envelope version 2 authorised exactly the resolver module/test plus the adapter module/test in one atomic transition. The adapter public projection remained version 1 and emitted no thermal evidence.
+
+### Verified result
+
+- resolution schema advanced to version 2;
+- legacy room, misleading absolute-internal and uplift source values map only to `referenceRoomTaC`, `referenceInternalTaC` and `opticThermalRiseTaC`;
+- exact canonical-decimal triplet validation accepts 25 + 10 = 35 and decimal 0.1 + 0.2 = 0.3;
+- a varied optic changes legacy uplift to 15 and matching absolute internal to 40;
+- changing only uplift into a contradictory triplet fails with `thermal_triplet_mismatch`;
+- missing thermal evidence fails with `thermal_triplet_missing`;
+- the transition adapter accepts only resolution version 2 and corrected optic inputs, preserves projection version 1 and exposes no thermal triplet, authority or Engine output;
+- full `lab-ies` passed 256/256;
+- the exact four-file feature checkpoint was pushed;
+- LAB-039 is the sole next ready item.
+
 ## Corrected thermal semantics seam proposal — 2026-07-21
 
 ### Program ruling consumed

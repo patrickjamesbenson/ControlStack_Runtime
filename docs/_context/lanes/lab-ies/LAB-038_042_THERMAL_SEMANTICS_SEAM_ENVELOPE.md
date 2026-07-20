@@ -2,8 +2,8 @@
 
 ## Status and controlling decision
 
-- Envelope version: `1`.
-- Status: approved unchanged by Program & Integrate on 2026-07-21.
+- Envelope version: `2`.
+- Status: approved by Program & Integrate on 2026-07-21; version 2 narrowly amends only the LAB-038 atomic file scope after mandatory gate evidence.
 - Controlling Program ruling: `docs(program): correct thermal source field semantics`.
 - Program approval: `docs(program): approve Lab corrected thermal semantics seam`.
 - Program evidence: both Program checkpoints passed 46/46 and were committed and pushed.
@@ -129,7 +129,11 @@ Rules:
 ```text
 packages/lab-kernel/ies-toolkit/nvbResolve.js
 tests/lab-kernel/nvbResolve.test.js
+packages/lab-kernel/ies-toolkit/nvbLabAdapter.js
+tests/lab-kernel/nvbLabAdapter.test.js
 ```
+
+The adapter files are an atomic transition required by the full gate because the adapter imports the resolver schema constants. In LAB-038 the adapter remains public projection version 1, accepts only corrected resolution version 2 and corrected optic input names, preserves its existing non-thermal output, and publishes no thermal evidence or authority. LAB-040 remains the separately approved adapter projection version-2 parcel.
 
 ## Acceptance
 
