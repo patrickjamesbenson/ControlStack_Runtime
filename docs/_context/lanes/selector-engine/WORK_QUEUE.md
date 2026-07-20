@@ -239,6 +239,18 @@
 * prohibitions: no feature, route, persistence, selected-project, registration, active-revision, RuntimeData, Lab, donor, main or downstream implementation; do not declare the contract stable; do not treat diagnostic scaffolds or persistence-coupled row builders as production-ready merely because their schemas are versioned.
 * completion: the candidate document and focused regression were committed and pushed after 114/114 focused gate coverage. The document records `candidate_not_stable`, identifies the incompatible first-narrow row schema collision and persistence dependency, classifies the current RunTable scaffold as diagnostic-only, and defines the exact nine-part stability gate. Program review is now required; SEL-008, SEL-009 and SEL-010 remain blocked or held.
 
+### Q-7A Seal the version-1 selected-result producer envelope
+
+* id: ENG-STAB-P1
+* status: ready
+* depends-on: SEL-007 and recorded Program admission
+* seam approval: Program & Integrate admitted the exact producer parcel after reviewing the candidate; stability remains withheld
+* gate: selector-engine
+* authorised files: new `packages/workspace-kernel/runtimeEngineSelectedResultContractV1.js`, new `tests/runtimeEngineSelectedResultContractV1.test.js`, temporary harness-only use of `tests/engineRunTableDomain.test.js`, and closeout updates to the five mutable lane context files. The harness may add exactly one side-effect import of `./runtimeEngineSelectedResultContractV1.test.js`; it must be removed, byte-identical to HEAD and absent from final staging/commit.
+* objective: validate one accepted safe selected-result source object and one accepted thermal execution result, then emit a deeply immutable `controlstack.engine.selected-result.v1` accepted-or-blocked non-persistent envelope.
+* acceptance: exact schema/version/key sets; source identity and revision agreement; deterministic accepted and blocked fixtures; at least one safe per-run row; thermal values preserved without recalculation; outside traceability-envelope independence; malformed, unaccepted, contradictory, identity-unbound, unsafe or over-rich input fails closed with canonical blockers; no accepted runs or verified output on failure; no raw payload, source row, private path, exact private electrical internal, IES, PDF or artefact exposure. Focused coverage and the full gate pass, followed by exact two-file feature commit/push and a separate five-file lane-memory closeout.
+* prohibitions: no Engine or donor invocation, no thermal recalculation, no curve-parser or existing scaffold rewrite, no route, persistence, RuntimeData mutation, IES handoff, downstream readiness activation, Lab, main or runtime-port change; do not declare the output contract stable.
+
 ### Q-8 First contract-preserving widening pass
 
 * id: SEL-008

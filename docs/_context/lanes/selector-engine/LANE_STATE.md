@@ -455,3 +455,13 @@ The candidate defines proposed selections-only request, output and RunTable row 
 The audit found two binding blockers: `controlstack.runtime.runtable-first-narrow-row.v1` is associated with incompatible field sets, and the current first-narrow rows path requires a persisted selected-result summary. The runtime RunTable domain scaffold also remains diagnostic-only with production generation blocked.
 
 Program must review the candidate before any implementation. The output contract is not stable; SEL-008, SEL-009 and SEL-010 remain blocked or held, and no downstream artifact is active.
+
+## 2026-07-21 ENG-STAB-P1 admission
+
+Program reviewed the candidate, withheld stability and admitted one exact producer parcel. ENG-STAB-P1 is the sole ready item.
+
+The parcel creates one immutable selected-result contract module and one focused regression. It consumes only an already accepted safe selected-result source object and accepted thermal execution result, requires source identity/revision agreement, preserves thermal values without recalculation and emits deterministic safe per-run summaries inside `controlstack.engine.selected-result.v1`.
+
+Optional outside traceability is quarantined and cannot affect accepted/blocked state or output. Failure returns no accepted runs or verified output. No route, persistence, existing scaffold rewrite, Lab compatibility, IES handoff, downstream activation, RuntimeData, donor, main or runtime-port work is included.
+
+The contract remains not stable after ENG-STAB-P1. Consumer compatibility and final stability review remain separate Program decisions.

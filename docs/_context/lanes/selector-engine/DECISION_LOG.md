@@ -373,3 +373,13 @@ This log is append-oriented. Do not silently rewrite historical decisions.
 **Candidate result:** The proposed selections-only request, output and RunTable row schemas are documented with complete/blocked semantics, technical provenance, deterministic replay/readback, compatibility and rollback rules. Nine explicit stability conditions remain unsatisfied, including implementation of the non-persistent envelope and unambiguous row producer, complete producer tests, Lab consumer evidence, full-output sealed/live proof and rollback/readback evidence.
 
 **Consequence:** SEL-007 is done. The Engine output contract remains `candidate_not_stable`. No widening, Lab consumer change or downstream artifact is eligible until Program reviews the candidate and commissions a new exact parcel.
+
+## 2026-07-21 — Program admits ENG-STAB-P1 selected-result producer contract
+
+**Decision:** Record Program review of the candidate and admit ENG-STAB-P1 as the sole ready item in an exact two-file feature scope.
+
+**Rationale:** Program correctly withheld stability because the complete non-persistent output envelope, unambiguous row producer, consumer compatibility, full-output fixture and rollback evidence are not yet accepted. The first bounded repair is a new producer contract over already accepted safe source and thermal results; it does not rewrite the persistence-coupled legacy row path.
+
+**Contract:** The new module emits only `controlstack.engine.selected-result.v1` accepted or blocked envelopes. It validates exact accepted upstream schemas, source revision/identity agreement and safe run summaries, preserves thermal outputs without recalculation, creates deterministic non-persistent row summaries and quarantines optional traceability.
+
+**Consequence:** ENG-STAB-P1 is the sole ready parcel. No route, persistence, Lab consumer, IES handoff, downstream activation, existing scaffold rewrite, donor, RuntimeData or main change is authorised. Stability remains withheld after this producer parcel pending separate consumer and final acceptance work.

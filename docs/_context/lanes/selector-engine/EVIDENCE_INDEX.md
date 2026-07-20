@@ -529,3 +529,14 @@ Every completed worker updates this index with:
 - Harness removal: `tests/engineRunTableDomain.test.js` returned clean and unstaged — VERIFIED.
 - Candidate committed and pushed; no feature, route, persistence, registration, RuntimeData, Lab, donor, main or downstream implementation changed — VERIFIED.
 - Queue result: SEL-007 done; Program review required; SEL-008, SEL-009 and SEL-010 remain blocked or held — RECORDED.
+
+## 2026-07-21 — ENG-STAB-P1 admission evidence
+
+- Program review withheld stability and admitted the exact selected-result producer parcel as the sole ready item — RECORDED.
+- Scope is one new immutable contract module, one focused runtime test, temporary harness use and later lane-memory closeout — RECORDED.
+- Inputs are limited to the accepted safe selected-result source object and accepted thermal execution result — RECORDED.
+- Source version and technical identity must agree across both accepted inputs — RECORDED.
+- Optional governance traceability is quarantined and cannot alter output — RECORDED.
+- Blocked output contains no accepted runs or verified result, and no raw or generated content is exposed — RECORDED.
+- Consumer compatibility, complete-output fixture proof and rollback/readback acceptance remain pending — RECORDED.
+- Starting tree was clean and no implementation changed during admission — VERIFIED.
