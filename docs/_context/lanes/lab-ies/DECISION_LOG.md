@@ -422,7 +422,7 @@ LAB-035 may move to the sole top `ready` item. LAB-036 and later parcels remain 
 
 ## DL-030 — Corrected thermal source semantics and affected-parcel hold
 
-**Status:** Binding Program correction recorded; exact Lab implementation scope proposed and awaiting approval on 2026-07-21.
+**Status:** Corrected five-parcel Lab envelope approved unchanged by Program & Integrate on 2026-07-21.
 
 Program & Integrate corrected and superseded the thermal ruling under the pushed decision `docs(program): correct thermal source field semantics` after a 46/46 Program gate.
 
@@ -437,4 +437,4 @@ The sole active meaning is:
 - the semantic name `opticInternalDeltaTaC` is prohibited in new Lab output contracts;
 - the sealed `_INTERNAL_AMBIENT_TA_C` keyword remains the authority-test internal measurement.
 
-Program explicitly recorded that the ruling alone authorises no feature implementation. Therefore the Lab orchestrator created `LAB-038_042_THERMAL_SEMANTICS_SEAM_ENVELOPE.md`, version 1, with five separate sequential parcels covering resolution, component projection, Lab working projection, display labels and a final regression guard. All five remain blocked until Program & Integrate approves the exact envelope and scopes. No ready item exists while that approval is pending.
+Program explicitly recorded that the ruling alone authorised no feature implementation. The Lab orchestrator created `LAB-038_042_THERMAL_SEMANTICS_SEAM_ENVELOPE.md`, version 1, with five separate sequential parcels covering resolution, component projection, Lab working projection, display labels and a final regression guard. Program & Integrate then approved that envelope unchanged under the pushed decision `docs(program): approve Lab corrected thermal semantics seam` after a 46/46 gate. LAB-038 is authorised as the sole ready item; LAB-039 through LAB-042 remain approved but sequence-blocked.

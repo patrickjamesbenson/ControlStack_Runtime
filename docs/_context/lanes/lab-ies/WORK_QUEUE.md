@@ -694,7 +694,7 @@ Completion evidence: The final test-only guard was committed as `lab: checkpoint
 ### Q-28 Corrected NVB thermal semantics version 2
 - id: LAB-038-nvb-resolution-thermal-semantics-v2
 - objective: Replace the ambiguous NVB resolution thermal output names with the corrected measured reference-room, absolute-internal and optic-rise semantics.
-- seam envelope: `docs/_context/lanes/lab-ies/LAB-038_042_THERMAL_SEMANTICS_SEAM_ENVELOPE.md`, version 1; proposed under the binding Program correction `docs(program): correct thermal source field semantics` after a 46/46 Program gate.
+- seam envelope: `docs/_context/lanes/lab-ies/LAB-038_042_THERMAL_SEMANTICS_SEAM_ENVELOPE.md`, version 1; approved unchanged by Program & Integrate under `docs(program): approve Lab corrected thermal semantics seam` after a 46/46 Program gate.
 - authorised files:
   - `packages/lab-kernel/ies-toolkit/nvbResolve.js`
   - `tests/lab-kernel/nvbResolve.test.js`
@@ -709,12 +709,12 @@ Completion evidence: The final test-only guard was committed as `lab: checkpoint
 - depends on: LAB-018-nvb-resolution-contract
 - on success next: LAB-039-component-thermal-semantics-v2
 - seam change: yes
-- status: blocked
+- status: ready
 
 ### Q-29 Corrected component thermal semantics version 2
 - id: LAB-039-component-thermal-semantics-v2
 - objective: Advance the component catalogue optic projection to the corrected measured thermal vocabulary and exact triplet validation.
-- seam envelope: `docs/_context/lanes/lab-ies/LAB-038_042_THERMAL_SEMANTICS_SEAM_ENVELOPE.md`, version 1; awaiting exact-scope Program & Integrate approval.
+- seam envelope: `docs/_context/lanes/lab-ies/LAB-038_042_THERMAL_SEMANTICS_SEAM_ENVELOPE.md`, version 1; approved unchanged by Program & Integrate and sequence-blocked behind the prior parcel.
 - authorised files:
   - `packages/lab-kernel/ies-toolkit/nvbComponents.js`
   - `tests/lab-kernel/nvbComponents.test.js`
@@ -733,7 +733,7 @@ Completion evidence: The final test-only guard was committed as `lab: checkpoint
 ### Q-30 Corrected NVB Lab thermal working projection version 2
 - id: LAB-040-nvb-lab-thermal-projection-v2
 - objective: Migrate the Lab working adapter to the corrected resolution and expose raw measured thermal evidence without fabricating accepted authority or Engine output.
-- seam envelope: `docs/_context/lanes/lab-ies/LAB-038_042_THERMAL_SEMANTICS_SEAM_ENVELOPE.md`, version 1; awaiting exact-scope Program & Integrate approval.
+- seam envelope: `docs/_context/lanes/lab-ies/LAB-038_042_THERMAL_SEMANTICS_SEAM_ENVELOPE.md`, version 1; approved unchanged by Program & Integrate and sequence-blocked behind the prior parcel.
 - authorised files:
   - `packages/lab-kernel/ies-toolkit/nvbLabAdapter.js`
   - `tests/lab-kernel/nvbLabAdapter.test.js`
@@ -752,7 +752,7 @@ Completion evidence: The final test-only guard was committed as `lab: checkpoint
 ### Q-31 Corrected component-library thermal labels
 - id: LAB-041-component-library-thermal-labels
 - objective: Display the corrected measured thermal meanings in the read-only component library without implying Engine derivation or accepted evidence.
-- seam envelope: `docs/_context/lanes/lab-ies/LAB-038_042_THERMAL_SEMANTICS_SEAM_ENVELOPE.md`, version 1; awaiting exact-scope Program & Integrate approval.
+- seam envelope: `docs/_context/lanes/lab-ies/LAB-038_042_THERMAL_SEMANTICS_SEAM_ENVELOPE.md`, version 1; approved unchanged by Program & Integrate and sequence-blocked behind the prior parcel.
 - authorised files:
   - `packages/lab-kernel/ies-toolkit/component_library.html`
 - prohibitions:
@@ -770,7 +770,7 @@ Completion evidence: The final test-only guard was committed as `lab: checkpoint
 ### Q-32 Cross-cutting corrected thermal semantics guard
 - id: LAB-042-thermal-semantics-guard
 - objective: Checkpoint the final test-only guard after all corrected active Lab thermal contracts and the component surface are committed.
-- seam envelope: `docs/_context/lanes/lab-ies/LAB-038_042_THERMAL_SEMANTICS_SEAM_ENVELOPE.md`, version 1; awaiting exact-scope Program & Integrate approval.
+- seam envelope: `docs/_context/lanes/lab-ies/LAB-038_042_THERMAL_SEMANTICS_SEAM_ENVELOPE.md`, version 1; approved unchanged by Program & Integrate and sequence-blocked behind the prior parcel.
 - authorised files:
   - `tests/lab-kernel/nvbThermalSemantics.test.js`
 - prohibitions:
@@ -785,7 +785,7 @@ Completion evidence: The final test-only guard was committed as `lab: checkpoint
 - seam change: no after envelope approval
 - status: blocked
 
-Approval state: all five parcels are blocked. The binding Program correction supersedes the old field meaning but explicitly authorises no feature implementation. Program & Integrate must approve the exact version-1 envelope and scopes before LAB-038 can become the sole `ready` item.
+Approval state: Program & Integrate approved envelope version 1 unchanged under `docs(program): approve Lab corrected thermal semantics seam` after a 46/46 Program gate. LAB-038 is the sole `ready` item. LAB-039 through LAB-042 remain approved but sequence-blocked; no combined implementation is authorised.
 
 ## Explicitly not queued
 

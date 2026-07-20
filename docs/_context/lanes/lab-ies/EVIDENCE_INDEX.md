@@ -39,13 +39,14 @@ The orchestrator created `LAB-038_042_THERMAL_SEMANTICS_SEAM_ENVELOPE.md`, versi
 
 The proposal uses exact canonical-decimal triplet validation, prohibits compatibility aliases and Lab-owned Engine calculations, preserves legacy snake-case names only at the bounded source mapping, and keeps thermal evidence authority unresolved until Program validation.
 
-### Queue result
+### Approval and queue result
 
-- LAB-038 through LAB-042 are recorded as blocked;
-- no item is ready;
-- no feature file changed;
-- Program & Integrate approval of the exact version-1 envelope and five scopes is required before LAB-038 may become the sole ready item;
-- the full `lab-ies` gate passed 255/255 for the coordination documentation, with no feature implementation or fixture change.
+- Program & Integrate approved the exact version-1 envelope and five scopes unchanged under `docs(program): approve Lab corrected thermal semantics seam`;
+- the Program gate passed 46/46 and the approval was pushed;
+- LAB-038 is the sole ready item;
+- LAB-039 through LAB-042 remain approved but sequence-blocked;
+- no feature file changed during coordination;
+- the full `lab-ies` gate passed 255/255 for the proposal documentation, with no fixture change.
 
 ## LAB-037 final canonical keyword migration guard — 2026-07-20
 

@@ -13,7 +13,7 @@ Current repository evidence overrides stale historical statements.
 - Root: `C:\ControlStack_Worktrees\code-pilot-lab`
 - Branch: `lane/code-pilot-lab`
 - Gate: `lab-ies`
-- Recorded branch HEAD: `601ea141964dd7fd9370fad98a1486b469839083`
+- Recorded branch HEAD: `df83ed86e4a262f1b8d9cf15b055cdb5aa2e65cf`
 - Branch-HEAD guard checkpoint: `6d34e500d407d5335e5eebb317636a67a5e98618`
 - Starting HEAD for LAB-037: `e1d9e4b14837317880e650f56d41bc0f0c4fa4c2`
 - Completed feature HEAD: `c41fc5d39ceb262854f955873fd3f3534f0757fd`
@@ -75,7 +75,7 @@ Binding classification:
 - `opticInternalDeltaTaC` is prohibited in new Lab output contracts;
 - `_INTERNAL_AMBIENT_TA_C` remains the authority-test internal measurement.
 
-Program expressly recorded that this ruling authorises no feature implementation by itself. The queue-empty boundary has therefore been converted into a proposed five-parcel version-2 correction batch under `LAB-038_042_THERMAL_SEMANTICS_SEAM_ENVELOPE.md`, version 1. The proposal keeps resolution, component projection, Lab working projection, component display and the final regression guard as separate sequential parcels. All remain blocked pending exact-scope Program & Integrate approval; no item is ready.
+Program expressly recorded that the ruling alone authorised no feature implementation. The queue-empty boundary was converted into a five-parcel version-2 correction batch under `LAB-038_042_THERMAL_SEMANTICS_SEAM_ENVELOPE.md`, version 1. Program & Integrate approved that exact envelope unchanged after a 46/46 gate. Resolution, component projection, Lab working projection, component display and the final regression guard remain separate sequential parcels. LAB-038 is the sole ready item; LAB-039 through LAB-042 remain approved but sequence-blocked.
 
 ## Latest completed parcel — LAB-037
 
@@ -675,9 +675,10 @@ tests/selectorCascadeCorrectness.test.js
 - LAB-037 is complete and confirmed on origin as the final test-only canonical keyword migration guard.
 - Gated LAB-037 execution passed 255/255.
 - The corrected Program thermal ruling is binding and supersedes the earlier field interpretation.
-- `LAB-038_042_THERMAL_SEMANTICS_SEAM_ENVELOPE.md`, version 1, is proposed for five separate sequential correction parcels.
-- LAB-038 through LAB-042 are blocked pending exact-scope Program & Integrate approval.
-- No ready item exists and no parallel or combined implementation is authorised.
+- `LAB-038_042_THERMAL_SEMANTICS_SEAM_ENVELOPE.md`, version 1, is approved unchanged for five separate sequential correction parcels.
+- Program approval `docs(program): approve Lab corrected thermal semantics seam` passed 46/46 and was pushed.
+- LAB-038 is the sole ready item; LAB-039 through LAB-042 are approved but sequence-blocked.
+- No parallel or combined implementation is authorised.
 - The earlier LAB-018 approval hold remains superseded.
 
 ## Queue state
@@ -711,15 +712,15 @@ tests/selectorCascadeCorrectness.test.js
 - `LAB-035-selector-contract-stub`: done.
 - `LAB-036-lab-shell-server`: done.
 - `LAB-037-keyword-migration-guard`: done.
-- `LAB-038-nvb-resolution-thermal-semantics-v2`: blocked pending Program & Integrate approval.
-- `LAB-039-component-thermal-semantics-v2`: blocked pending Program & Integrate approval and LAB-038 completion.
-- `LAB-040-nvb-lab-thermal-projection-v2`: blocked pending Program & Integrate approval and LAB-038 completion.
-- `LAB-041-component-library-thermal-labels`: blocked pending envelope approval and LAB-039 completion.
-- `LAB-042-thermal-semantics-guard`: blocked pending envelope approval and LAB-038 through LAB-041 completion.
-- Next ordered item: `LAB-038-nvb-resolution-thermal-semantics-v2` after recorded approval.
-- Resulting status: blocked at seam approval boundary.
-- Ready items: none.
-- Seam approval required: yes — exact version-1 envelope and five parcel scopes.
+- `LAB-038-nvb-resolution-thermal-semantics-v2`: ready under approved envelope version 1.
+- `LAB-039-component-thermal-semantics-v2`: approved and sequence-blocked pending LAB-038 completion.
+- `LAB-040-nvb-lab-thermal-projection-v2`: approved and sequence-blocked pending LAB-038 completion.
+- `LAB-041-component-library-thermal-labels`: approved and sequence-blocked pending LAB-039 completion.
+- `LAB-042-thermal-semantics-guard`: approved and sequence-blocked pending LAB-038 through LAB-041 completion.
+- Next ordered item: `LAB-038-nvb-resolution-thermal-semantics-v2`.
+- Resulting status: ready.
+- Ready items: exactly one — LAB-038.
+- Seam approval required: no — Program & Integrate approved version 1 unchanged.
 - Human observation required before implementation: no.
 
-The corrected thermal seam is proposed and no feature implementation is authorised. Program & Integrate approval is the next boundary action.
+The corrected thermal seam is approved. LAB-038 is the sole ready parcel for the standing worker.

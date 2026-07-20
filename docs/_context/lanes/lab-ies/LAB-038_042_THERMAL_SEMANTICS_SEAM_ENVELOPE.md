@@ -3,12 +3,14 @@
 ## Status and controlling decision
 
 - Envelope version: `1`.
-- Status: proposed for exact-scope Program & Integrate approval.
+- Status: approved unchanged by Program & Integrate on 2026-07-21.
 - Controlling Program ruling: `docs(program): correct thermal source field semantics`.
-- Program ruling evidence: Program gate passed 46/46 and the correction was committed and pushed.
+- Program approval: `docs(program): approve Lab corrected thermal semantics seam`.
+- Program evidence: both Program checkpoints passed 46/46 and were committed and pushed.
 - Correction: legacy `optic_internal_delta_ta_c` is absolute internal reference temperature, not a rise; legacy `optic_uplift_ta_c` is the measured rise.
-- No feature implementation is authorised by the Program ruling alone. Each parcel below remains blocked until Program & Integrate approves this exact envelope and file scope.
-- The five parcels remain separate and sequential. Approval of the envelope does not authorise combined or parallel implementation.
+- Approval covers exactly the five separate sequential parcels and file scopes in this envelope.
+- Only LAB-038 may move to `ready`; LAB-039 through LAB-042 remain approved but sequence-blocked.
+- Combined or parallel implementation is not authorised.
 
 This envelope supersedes only the thermal field semantics and dependent shapes of the completed LAB-018, LAB-019 and LAB-023 version-1 contracts. All unrelated behaviour, ownership, rollback and safety boundaries remain unchanged.
 

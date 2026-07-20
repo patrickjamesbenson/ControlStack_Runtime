@@ -2,7 +2,7 @@
 
 ## Session purpose
 
-This handoff records the binding corrected thermal ruling, proposes the exact five-parcel Lab correction seam, preserves the permanent charter authority for both standing prompts, and stops at the required Program & Integrate approval boundary.
+This handoff records Program & Integrate approval of the exact five-parcel corrected thermal seam, preserves the permanent charter authority for both standing prompts, and admits LAB-038 as the sole ready item.
 
 ## Identity
 
@@ -20,8 +20,9 @@ This handoff records the binding corrected thermal ruling, proposes the exact fi
 - Branch-HEAD guard checkpoint: `6d34e500d407d5335e5eebb317636a67a5e98618`
 - LAB-037 feature gate: 255/255 passed
 - Program correction consumed: `docs(program): correct thermal source field semantics`; Program gate 46/46 passed and the correction was pushed
-- Proposed Lab seam: `LAB-038_042_THERMAL_SEMANTICS_SEAM_ENVELOPE.md`, version 1
-- Proposed parcel state: LAB-038 through LAB-042 blocked pending exact-scope approval; no ready item
+- Approved Lab seam: `LAB-038_042_THERMAL_SEMANTICS_SEAM_ENVELOPE.md`, version 1
+- Program approval: `docs(program): approve Lab corrected thermal semantics seam`; Program gate 46/46 passed and the decision was pushed
+- Parcel state: LAB-038 is ready; LAB-039 through LAB-042 are approved but sequence-blocked
 
 ## Branch-HEAD guard
 
@@ -41,7 +42,7 @@ The Lab repository still exposes the deprecated semantic name in the completed r
 4. corrected component labels;
 5. a final thermal semantics guard.
 
-The proposal preserves legacy snake-case names only at the bounded source mapping, enforces exact measured-triplet consistency, keeps thermal evidence authority unresolved until Program validation, and prohibits every Lab-owned runtime derivation or Engine result. All five parcels remain blocked pending exact-scope Program & Integrate approval.
+The approved envelope preserves legacy snake-case names only at the bounded source mapping, enforces exact measured-triplet consistency, keeps thermal evidence authority unresolved until Program validation, and prohibits every Lab-owned runtime derivation or Engine result. LAB-038 is the sole ready parcel; the other four remain sequence-blocked.
 
 ## Previous completed queue item
 
@@ -128,13 +129,13 @@ The feature passed the full 255/255 Lab gate and is confirmed on origin. Its clo
 - `LAB-036-lab-shell-server`: `done` and confirmed on origin.
 - `LAB-037-keyword-migration-guard`: `done` and confirmed on origin.
 - LAB-037 gated execution: 255/255 passed.
-- `LAB-038-nvb-resolution-thermal-semantics-v2`: blocked pending exact-scope Program & Integrate approval.
-- `LAB-039-component-thermal-semantics-v2`: blocked pending approval and LAB-038 completion.
-- `LAB-040-nvb-lab-thermal-projection-v2`: blocked pending approval and LAB-038 completion.
-- `LAB-041-component-library-thermal-labels`: blocked pending envelope approval and LAB-039 completion.
-- `LAB-042-thermal-semantics-guard`: blocked pending envelope approval and LAB-038 through LAB-041 completion.
-- Ready items: none.
-- Queue state: seam approval required.
+- `LAB-038-nvb-resolution-thermal-semantics-v2`: ready under approved envelope version 1.
+- `LAB-039-component-thermal-semantics-v2`: approved and sequence-blocked pending LAB-038 completion.
+- `LAB-040-nvb-lab-thermal-projection-v2`: approved and sequence-blocked pending LAB-038 completion.
+- `LAB-041-component-library-thermal-labels`: approved and sequence-blocked pending LAB-039 completion.
+- `LAB-042-thermal-semantics-guard`: approved and sequence-blocked pending LAB-038 through LAB-041 completion.
+- Ready items: LAB-038 only.
+- Queue state: ready.
 
 Program reported gate 45/45 passed, the approval decision committed and pushed, and its tree clean. No parallel or combined implementation is authorised.
 
@@ -168,7 +169,7 @@ LAB-034 is complete as the read-only legacy compatibility classification. It rem
 
 LAB-017 remains governed by its approved version-1 envelope. Program retains all production allocation, live source reading, hosting, routing, persistence, authentication, CRM integration, deployment and endpoint ownership.
 
-No feature item is ready. The next action is Program & Integrate review of the exact corrected thermal envelope. If approved unchanged, LAB-038 becomes the sole ready item and the standing worker may execute the five parcels sequentially under the charter.
+LAB-038 is the sole ready item. The standing worker may execute LAB-038 through LAB-042 sequentially under the approved envelope, with separate feature and documentation checkpoints and the full gate after every parcel.
 
 ## LAB-017 immutable completion receipt
 
