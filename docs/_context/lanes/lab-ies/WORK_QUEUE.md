@@ -545,7 +545,9 @@ Evidence: `7c5bf3a9c9e343c94c95ceddae1e57686cb65ea5`, confirmed on origin. The s
 - depends on: LAB-011-project-ies-generation, LAB-012-lab-style-foundation
 - on success next: LAB-032-merge-composition-surface
 - seam change: no
-- status: ready
+- status: done
+
+Evidence: `8ece3f36622fe1e0817aff9ecef42f0755218d3c`, confirmed on origin. The surface accepts one uploaded sealed reference DTO plus bounded project inputs, delegates exclusively to `buildProjectIes`, displays fail-closed contract errors, preserves sealed-reference ambient ownership, and downloads only the exact returned LM-63 text in browser memory.
 
 ### Q-22 Merge composition surface
 - id: LAB-032-merge-composition-surface
@@ -563,7 +565,7 @@ Evidence: `7c5bf3a9c9e343c94c95ceddae1e57686cb65ea5`, confirmed on origin. The s
 - depends on: LAB-012-lab-style-foundation, LAB-022-reference-composition-kernel, LAB-024-resolver-fixture-corpus
 - on success next: LAB-033-main-lab-bench-surface
 - seam change: no
-- status: queued
+- status: ready
 
 ### Q-23 Main Lab bench surface
 - id: LAB-033-main-lab-bench-surface

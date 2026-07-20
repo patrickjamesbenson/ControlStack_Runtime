@@ -64,6 +64,47 @@ For human-observation acceptance, the worker must stop before making a completio
 
 The operating model is recorded in `LANE_CHARTER.md`, `DECISION_LOG.md`, `LANE_STATE.md` and `WORK_QUEUE.md`. Both standing prompts live only in the stable charter; `SESSION_HANDOFF.md` carries launch pointers and current session evidence.
 
+## LAB-031 project IES builder surface — 2026-07-20
+
+### Identity and scope
+
+- starting HEAD: `7c7b5ffaf0bb9dfae750e09ae961e0cef71fc194`;
+- queue item: `LAB-031-project-builder-surface`;
+- authorised path only: `packages/lab-kernel/ies-toolkit/ies_builder.html`;
+- seam change: no.
+
+### Behaviour evidence
+
+The completed surface:
+
+- accepts one browser-loaded JSON object and relies on the committed generator to enforce the exact sealed-reference DTO contract;
+- delegates all project materialisation to `buildProjectIes`;
+- accepts only project ID, integer run length, positive output multiplier and the adapter's seven bounded canonical selection fields;
+- exposes no internal-ambient input and leaves that value sealed-reference-owned;
+- contains no auto-loaded fixture/store, legacy rich-authority field, resolver route or Selector integration;
+- contains no inline parsing, metrics, scaling, keyword writer or LM-63 generation logic;
+- renders fail-closed generator code/reason output without partial generated text;
+- creates browser downloads only from the exact returned `iesText` and filename;
+- contains no persistence, network, browser storage or clock-generated import.
+
+### Validation and checkpoint evidence
+
+- prohibited implementation and legacy-state search: zero executable matches; the sole ambient occurrence is an explicit non-editable ownership notice;
+- focused changed-file `lab-ies` execution: 255/255 passed;
+- independent full `lab-ies` gate: 255/255 passed;
+- gated feature commit execution: 255/255 passed;
+- failed, cancelled, skipped and todo counts were zero in every execution;
+- feature checkpoint: `8ece3f36622fe1e0817aff9ecef42f0755218d3c`;
+- subject: `lab: checkpoint project IES builder surface`;
+- push: origin `lane/code-pilot-lab`, confirmed successful;
+- exact staged set: the single authorised HTML file.
+
+### Resulting queue boundary
+
+- LAB-031 is `done`.
+- LAB-032 becomes the sole next `ready` item.
+- no seam approval or human observation is required before LAB-032 implementation.
+
 ## LAB-030 emergency selection surface — 2026-07-20
 
 ### Identity and scope

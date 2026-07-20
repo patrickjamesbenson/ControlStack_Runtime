@@ -2,7 +2,7 @@
 
 ## Session purpose
 
-This handoff records completed LAB-030 emergency selection surface, preserves the permanent charter authority for both standing prompts, and orders LAB-031 as the single next ready parcel.
+This handoff records completed LAB-031 project IES builder surface, preserves the permanent charter authority for both standing prompts, and orders LAB-032 as the single next ready parcel.
 
 ## Identity
 
@@ -12,9 +12,9 @@ This handoff records completed LAB-030 emergency selection surface, preserves th
 - Branch: `lane/code-pilot-lab`
 - Gate: `lab-ies`
 - Standing prompt authority: `docs/_context/lanes/lab-ies/LANE_CHARTER.md` contains both worker and orchestrator prompts
-- Starting HEAD for LAB-030: `4a545117f77b415aea6266e1c1627f52b678cca2`
-- Completed feature checkpoint: `7c5bf3a9c9e343c94c95ceddae1e57686cb65ea5`
-- Feature subject: `lab: checkpoint emergency selection surface`
+- Starting HEAD for LAB-031: `7c7b5ffaf0bb9dfae750e09ae961e0cef71fc194`
+- Completed feature checkpoint: `8ece3f36622fe1e0817aff9ecef42f0755218d3c`
+- Feature subject: `lab: checkpoint project IES builder surface`
 - Feature checkpoint confirmed on origin `lane/code-pilot-lab`
 - Seam change: no
 - Branch-HEAD guard checkpoint: `6d34e500d407d5335e5eebb317636a67a5e98618`
@@ -27,37 +27,37 @@ After every documentation push, only the `Recorded branch HEAD` field is refresh
 
 ## Completed queue item
 
-`LAB-030-emergency-surface` is complete.
+`LAB-031-project-builder-surface` is complete.
 
 Exactly this one feature file was committed:
 
 ```text
-packages/lab-kernel/ies-toolkit/emergency.html
+packages/lab-kernel/ies-toolkit/ies_builder.html
 ```
 
-The replacement page delegates every model, battery and blocker decision to the committed `selectEmergencyCandidate` contract. It displays published, derived and unconfirmed states separately, blocks unsupported or conflicting combinations, and keeps procurement release false.
+The replacement page accepts one browser-loaded sealed-reference DTO plus bounded project inputs and delegates materialisation exclusively to `buildProjectIes`. It exposes no internal-ambient input, fixture auto-load, rich-authority state, resolver route, selector integration, inline parsing, metrics, scaling or LM-63 writer.
 
-Emergency and EWIS assembly verification remain unresolved. The page contains no duplicated matrix or electrical formula, ordering action, external datasheet route, persistence, network, browser storage or clock-generated state.
+Generator failures display exact fail-closed code/reason output without partial text. Downloads are created only in browser memory from the exact returned `iesText` and filename.
 
 ## Validation evidence
 
-- Focused changed-file `lab-ies` execution for the LAB-030 emergency selection file: 255/255 passed.
+- Focused changed-file `lab-ies` execution for the LAB-031 project IES builder file: 255/255 passed.
 - Independent full `lab-ies` gate: 255/255 passed.
 - Gated feature commit execution: 255/255 passed.
 - Failed, cancelled, skipped and todo counts were zero.
 
 ## Git and protected worktree state
 
-The feature parcel was staged as exactly the one authorised emergency-selection file, committed and pushed.
+The feature parcel was staged as exactly the one authorised project-builder file, committed and pushed.
 
 The protected working-tree state after documentation closeout must remain:
 
 - staged: 0;
 - modified: 1 — only the unstaged `Recorded branch HEAD` synchronisation marker in `LANE_STATE.md`;
-- untracked: 12;
+- untracked: 11;
 - deleted: 0.
 
-The 12 protected untracked paths remain exactly those recorded in `LANE_STATE.md`. In particular, these explicitly non-queued paths remain untouched:
+The 11 protected untracked paths remain exactly those recorded in `LANE_STATE.md`. In particular, these explicitly non-queued paths remain untouched:
 
 ```text
 README.zip
@@ -94,9 +94,10 @@ tests/selectorCascadeCorrectness.test.js
 - Program approval gate: 45/45 passed; the decision was committed and pushed with no amendment.
 - LAB-029 focused, independent and gated executions: 255/255 passed.
 - `LAB-030-emergency-surface`: `done` and confirmed on origin.
-- LAB-030 focused, independent and gated executions: 255/255 passed.
-- `LAB-031-project-builder-surface`: `ready`.
-- Ready items: exactly one — LAB-031.
+- `LAB-031-project-builder-surface`: `done` and confirmed on origin.
+- LAB-031 focused, independent and gated executions: 255/255 passed.
+- `LAB-032-merge-composition-surface`: `ready`.
+- Ready items: exactly one — LAB-032.
 
 Program reported gate 45/45 passed, the approval decision committed and pushed, and its tree clean. No parallel or combined implementation is authorised.
 
@@ -118,9 +119,11 @@ LAB-029 version 1 is complete under the unchanged approval. The three read-only 
 
 LAB-030 is complete as a thin advisory view over the committed emergency-selection contract. It creates no model or battery authority, procurement release, order, persistence or assembly-verification outcome.
 
+LAB-031 is complete as a thin browser consumer of the committed project generator. It accepts only sealed-reference DTO input plus bounded project fields, keeps ambient reference-owned, and creates no alternate generation or persistence path.
+
 LAB-017 remains governed by its approved version-1 envelope. Program retains all production allocation, live source reading, hosting, routing, persistence, authentication, CRM integration, deployment and endpoint ownership.
 
-The next safe action is to continue the current standing-worker batch with LAB-031. No seam approval or human observation is required before implementation of its exact one-file parcel.
+The next safe action is to continue the current standing-worker batch with LAB-032. No seam approval or human observation is required before implementation of its exact one-file parcel.
 
 ## LAB-017 immutable completion receipt
 
