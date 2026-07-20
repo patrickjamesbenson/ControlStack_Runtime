@@ -354,6 +354,70 @@ test("direct and indirect Light & Control inputs follow emission lane capability
   assert.equal(workflowField(model, "targetLmPerMIndirect").displayMode, "manual-input");
 });
 
+test("readiness ignores direct-only diagnostic labels and preserves supported indirect intent", () => {
+  const snapshot = emissionLaneSnapshot();
+
+  const directState = createSelectorState();
+  let model = selectAndReload(directState, "system", "DNX|80", snapshot);
+  model = selectAndReload(directState, "targetLmPerM", "1200", snapshot);
+  model = selectAndReload(directState, "cctCri", "cct_cri:4000K|CRI90", snapshot);
+  model = selectAndReload(directState, "controlType", "DALI-2", snapshot);
+
+  const directPreview = model.selectorSurface.lmTemperatureReadinessPreview;
+  assert.equal(directPreview.targetIntent.direct.valueLabel, "1200");
+  assert.equal(directPreview.cctCriPairing.direct.valueLabel, "4000K / CRI90");
+  assert.equal(directPreview.controlIntent.direct.valueLabel, "DALI-2");
+  assert.equal(directPreview.targetIntent.indirect.valueLabel, "not selected");
+  assert.equal(directPreview.targetIntent.indirect.ready, false);
+  assert.equal(directPreview.targetIntent.indirect.blocker, "targetLmPerMIndirect-intent-not-selected");
+  assert.equal(directPreview.cctCriPairing.indirect.valueLabel, "not selected");
+  assert.equal(directPreview.cctCriPairing.indirect.ready, false);
+  assert.equal(directPreview.cctCriPairing.indirect.blocker, "cctCriIndirect-intent-not-selected");
+  assert.equal(directPreview.controlIntent.indirect.valueLabel, "not selected");
+  assert.equal(directPreview.controlIntent.indirect.ready, false);
+  assert.equal(directPreview.controlIntent.indirect.blocker, "controlTypeIndirect-intent-not-selected");
+
+  const bothState = createSelectorState();
+  model = selectAndReload(bothState, "system", "DNX|80_DI", snapshot);
+  model = selectAndReload(bothState, "targetLmPerM", "1200", snapshot);
+  model = selectAndReload(bothState, "targetLmPerMIndirect", "300", snapshot);
+  model = selectAndReload(bothState, "cctCri", "cct_cri:4000K|CRI90", snapshot);
+  model = selectAndReload(bothState, "controlType", "DALI-2", snapshot);
+  model = selectAndReload(bothState, "indirectMatchDirect", "match-direct", snapshot);
+
+  const inheritedCctCri = workflowField(model, "cctCriIndirect");
+  assert.deepEqual({
+    status: inheritedCctCri.status,
+    displayMode: inheritedCctCri.displayMode,
+    provenance: inheritedCctCri.provenance,
+    futureMapped: inheritedCctCri.futureMapped,
+    disabled: inheritedCctCri.disabled,
+    selectedOptionBlocked: inheritedCctCri.selectedOptionBlocked,
+    inheritedValue: inheritedCctCri.inheritedValue,
+    effectiveValue: inheritedCctCri.effectiveValue,
+  }, {
+    status: "available",
+    displayMode: "inherited-chip",
+    provenance: "inherited",
+    futureMapped: false,
+    disabled: false,
+    selectedOptionBlocked: false,
+    inheritedValue: "cct_cri:4000K|CRI90",
+    effectiveValue: "cct_cri:4000K|CRI90",
+  });
+
+  const bothPreview = model.selectorSurface.lmTemperatureReadinessPreview;
+  assert.equal(bothPreview.targetIntent.indirect.valueLabel, "300");
+  assert.equal(bothPreview.targetIntent.indirect.ready, false);
+  assert.equal(bothPreview.targetIntent.indirect.blocker, "targetLmPerMIndirect-not-board-backed");
+  assert.equal(bothPreview.cctCriPairing.indirect.valueLabel, "cct_cri:4000K|CRI90");
+  assert.equal(bothPreview.cctCriPairing.indirect.ready, true);
+  assert.equal(bothPreview.cctCriPairing.indirect.inheritedFromDirect, true);
+  assert.equal(bothPreview.controlIntent.indirect.valueLabel, "DALI-2");
+  assert.equal(bothPreview.controlIntent.indirect.ready, true);
+  assert.equal(bothPreview.controlIntent.indirect.inheritedFromDirect, true);
+});
+
 test("direct-only DNX 60 Opal exposes unscoped BOARDS and DRIVERS protocols without selecting one", () => {
   const snapshot = directOnlyDnx60UnscopedProtocolSnapshot();
   const selectorState = createSelectorState();

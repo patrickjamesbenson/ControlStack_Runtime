@@ -71,7 +71,7 @@ function collectFields(fields = [], workflowSections = []) {
   }
   for (const section of Array.isArray(workflowSections) ? workflowSections : []) {
     for (const field of Array.isArray(section?.fields) ? section.fields : []) {
-      if (field?.fieldKey && !lookup.has(field.fieldKey)) lookup.set(field.fieldKey, field);
+      if (field?.fieldKey) lookup.set(field.fieldKey, field);
     }
   }
   return lookup;
@@ -109,18 +109,46 @@ function selectedOption(field = {}) {
   return (Array.isArray(field.options) ? field.options : []).find((option) => option?.selected === true) || null;
 }
 
+function fieldRejectsIntent(field = {}) {
+  return !field
+    || field.selectedOptionBlocked === true
+    || field.futureMapped === true
+    || field.disabled === true
+    || ["blocked", "disabled", "future-mapped"].includes(safeString(field.status).toLowerCase())
+    || ["hidden-diagnostic", "warning-chip", "disabled-handoff", "metadata-chip"].includes(safeString(field.displayMode).toLowerCase())
+    || ["diagnostic", "disabled", "metadata"].includes(safeString(field.provenance).toLowerCase());
+}
+
+function optionCarriesSelectedIntent(option = null) {
+  return Boolean(option)
+    && option.blocked !== true
+    && !["blocked", "disabled"].includes(safeString(option.status).toLowerCase());
+}
+
 function fieldDisplayValue(field = {}) {
+  if (fieldRejectsIntent(field)) return "";
+
   const option = selectedOption(field);
-  return safeString(
-    field.selectedLabel
-      || option?.label
-      || field.effectiveLabel
-      || field.valueLabel
-      || field.selectedValue
-      || option?.value
-      || field.effectiveValue
-      || field.value,
-  );
+  if (optionCarriesSelectedIntent(option)) {
+    return safeString(field.selectedLabel || option.label || field.selectedValue || option.value);
+  }
+
+  const selectedValue = safeString(field.selectedValue);
+  const explicitManualValue = selectedValue
+    && field.selectedValueStatus !== "diagnostic_unmapped"
+    && (field.manualInput === true
+      || field.selectedByManualConstraint === true
+      || field.provenance === "manual"
+      || field.provenance === "accepted-default");
+  if (explicitManualValue) return safeString(field.selectedLabel || selectedValue);
+
+  const inheritedValue = safeString(field.inheritedValue || field.effectiveValue);
+  const validInheritedValue = inheritedValue
+    && field.provenance === "inherited"
+    && ["choice", "inherited-chip"].includes(safeString(field.displayMode).toLowerCase());
+  if (validInheritedValue) return safeString(field.inheritedLabel || field.effectiveLabel || inheritedValue);
+
+  return "";
 }
 
 function optionCount(field = {}) {
