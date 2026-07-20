@@ -2,7 +2,7 @@
 
 ## Session purpose
 
-This handoff records completion of LAB-040 corrected Lab thermal working projection, preserves the permanent charter authority for both standing prompts, and advances LAB-041 as the sole ready item.
+This handoff records completion of LAB-041 corrected thermal labels, preserves the permanent charter authority for both standing prompts, and stops LAB-042 at the required gate-included test-scope amendment boundary.
 
 ## Identity
 
@@ -12,17 +12,17 @@ This handoff records completion of LAB-040 corrected Lab thermal working project
 - Branch: `lane/code-pilot-lab`
 - Gate: `lab-ies`
 - Standing prompt authority: `docs/_context/lanes/lab-ies/LANE_CHARTER.md` contains both worker and orchestrator prompts
-- Starting HEAD for LAB-040: `2ee853b0bf17b171d16f8e2087850d7f116876d5`
-- Completed feature checkpoint: `73b06684f66a1a4f5bce3df5558bc7bad3d26327`
-- Feature subject: `lab: checkpoint NVB Lab thermal projection v2`
+- Starting HEAD for LAB-041: `4dfaa2d3cc95211378d7141aed7b3140432d1267`
+- Completed feature checkpoint: `1a85beba662333561fd2338f67e5146b45935f94`
+- Feature subject: `lab: checkpoint corrected thermal labels`
 - Feature checkpoint confirmed on origin `lane/code-pilot-lab`
-- Seam change: yes — approved Lab projection version-2 parcel implemented unchanged
+- Seam change: no after approved thermal envelope
 - Branch-HEAD guard checkpoint: `6d34e500d407d5335e5eebb317636a67a5e98618`
-- LAB-040 feature gate: 259/259 passed
+- LAB-041 feature gate: 259/259 passed
 - Program correction consumed: `docs(program): correct thermal source field semantics`; Program gate 46/46 passed and the correction was pushed
 - Approved Lab seam: `LAB-038_042_THERMAL_SEMANTICS_SEAM_ENVELOPE.md`, version 2
 - Program approvals: initial corrected seam plus `docs(program): amend LAB-038 atomic transition scope`; both Program gates passed 46/46 and were pushed
-- Parcel state: LAB-038 through LAB-040 are done; LAB-041 is ready; LAB-042 remains sequence-blocked
+- Parcel state: LAB-038 through LAB-041 are done; LAB-042 is blocked pending a gate-included test-file scope amendment
 
 ## Branch-HEAD guard
 
@@ -36,12 +36,9 @@ Program & Integrate corrected and superseded the old thermal interpretation. The
 
 The corrected resolution, component catalogue and Lab working projection are now committed as version-2 contracts. They preserve the measured reference room, absolute reference internal and optic thermal rise meanings, enforce exact triplet consistency, and keep legacy snake-case names confined to bounded source mapping. The Lab projection carries opaque evidence with authority explicitly null and no Engine-owned result.
 
-The remaining ordered work is:
+The corrected component-library labels are also complete. The remaining work is the final thermal semantics guard.
 
-1. corrected component-library labels;
-2. a final thermal semantics guard.
-
-LAB-038 through LAB-040 are complete. LAB-041 is the sole ready parcel.
+LAB-038 through LAB-041 are complete. LAB-042 is blocked because its approved new test file is not executed by the fixed Lab gate; Program must approve use of the existing gate-included keyword migration test before implementation.
 
 ## Previous completed queue item
 
@@ -134,10 +131,11 @@ The feature passed the full 255/255 Lab gate and is confirmed on origin. Its clo
 - LAB-039 gated execution: 257/257 passed.
 - `LAB-040-nvb-lab-thermal-projection-v2`: `done` and confirmed on origin.
 - LAB-040 gated execution: 259/259 passed.
-- `LAB-041-component-library-thermal-labels`: `ready`.
-- `LAB-042-thermal-semantics-guard`: approved and sequence-blocked pending LAB-041 completion.
-- Ready items: LAB-041 only.
-- Queue state: ready.
+- `LAB-041-component-library-thermal-labels`: `done` and confirmed on origin.
+- LAB-041 gated execution: 259/259 passed.
+- `LAB-042-thermal-semantics-guard`: blocked pending a narrow gate-included test-file scope amendment.
+- Ready items: none.
+- Queue state: seam amendment required.
 
 Program reported gate 45/45 passed, the approval decision committed and pushed, and its tree clean. No parallel or combined implementation is authorised.
 
@@ -171,7 +169,7 @@ LAB-034 is complete as the read-only legacy compatibility classification. It rem
 
 LAB-017 remains governed by its approved version-1 envelope. Program retains all production allocation, live source reading, hosting, routing, persistence, authentication, CRM integration, deployment and endpoint ownership.
 
-LAB-041 is the sole ready item. The standing worker may continue LAB-041 and LAB-042 sequentially under the approved envelope, with separate feature and documentation checkpoints and the full gate after every parcel.
+No feature item is ready. Program & Integrate must approve the narrow LAB-042 test-file amendment before the final guard can be implemented.
 
 ## LAB-017 immutable completion receipt
 

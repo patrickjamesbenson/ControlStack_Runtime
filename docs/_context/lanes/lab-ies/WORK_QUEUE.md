@@ -773,7 +773,9 @@ Completion evidence: The Lab working projection schema version 2 was committed i
 - depends on: LAB-025-component-library-surface, LAB-039-component-thermal-semantics-v2
 - on success next: LAB-042-thermal-semantics-guard
 - seam change: no after envelope approval
-- status: ready
+- status: done
+
+Completion evidence: The read-only component library labels were corrected in the exact one-file scope as `lab: checkpoint corrected thermal labels`, pushed to the lane branch, and passed 259/259. The surface displays reference room, absolute reference internal and optic thermal rise, keeps the source evidence visibly unverified, and contains no deprecated label or Engine-derived claim. LAB-042 is dependency-eligible but remains blocked pending a narrow test-file scope amendment because the fixed Lab gate does not execute newly added test files.
 
 ### Q-32 Cross-cutting corrected thermal semantics guard
 - id: LAB-042-thermal-semantics-guard
@@ -793,7 +795,7 @@ Completion evidence: The Lab working projection schema version 2 was committed i
 - seam change: no after envelope approval
 - status: blocked
 
-Approval state: Program & Integrate approved envelope version 1 unchanged under `docs(program): approve Lab corrected thermal semantics seam` after a 46/46 Program gate. LAB-038 is the sole `ready` item. LAB-039 through LAB-042 remain approved but sequence-blocked; no combined implementation is authorised.
+Approval state: Program & Integrate approved corrected thermal envelope version 2, including the atomic LAB-038 amendment. LAB-038 through LAB-041 are complete. LAB-042 is dependency-eligible but blocked pending a narrow Program amendment to use an existing gate-included test file; no feature implementation is authorised until that amendment is recorded.
 
 ## Explicitly not queued
 

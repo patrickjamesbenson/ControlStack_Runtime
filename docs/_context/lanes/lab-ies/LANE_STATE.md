@@ -13,11 +13,11 @@ Current repository evidence overrides stale historical statements.
 - Root: `C:\ControlStack_Worktrees\code-pilot-lab`
 - Branch: `lane/code-pilot-lab`
 - Gate: `lab-ies`
-- Recorded branch HEAD: `73b06684f66a1a4f5bce3df5558bc7bad3d26327`
+- Recorded branch HEAD: `1a85beba662333561fd2338f67e5146b45935f94`
 - Branch-HEAD guard checkpoint: `6d34e500d407d5335e5eebb317636a67a5e98618`
-- Starting HEAD for LAB-040: `2ee853b0bf17b171d16f8e2087850d7f116876d5`
-- Completed feature HEAD: `73b06684f66a1a4f5bce3df5558bc7bad3d26327`
-- Feature subject: `lab: checkpoint NVB Lab thermal projection v2`
+- Starting HEAD for LAB-041: `4dfaa2d3cc95211378d7141aed7b3140432d1267`
+- Completed feature HEAD: `1a85beba662333561fd2338f67e5146b45935f94`
+- Feature subject: `lab: checkpoint corrected thermal labels`
 - Feature push: confirmed on origin `lane/code-pilot-lab`
 
 ## Branch-HEAD synchronisation invariant
@@ -59,7 +59,27 @@ Before any queue item is selected, a worker must compare `Recorded branch HEAD` 
 - Human-observation acceptance cannot be closed from repository evidence. The item remains incomplete and the worker supplies exact `NEEDS YOU` steps.
 - Orchestrator review occurs at seam, human-observation and five-parcel/stop boundaries rather than after each routine parcel.
 
-## Latest completed parcel — LAB-040
+## Latest completed parcel — LAB-041
+
+Queue item `LAB-041-component-library-thermal-labels` is complete.
+
+Exactly this one authorised file was committed:
+
+```text
+packages/lab-kernel/ies-toolkit/component_library.html
+```
+
+Verified outcome:
+
+- the optic surface displays `Reference room Ta °C`, `Reference internal Ta °C` and `Optic thermal rise °C`;
+- the source evidence reference remains visibly unverified;
+- deprecated delta/uplift labels and semantic fields are absent;
+- no user-specific derived temperature, curve lookup, clamp, board temperature, verified lm/m or authority claim was added;
+- no shared CSS, fixture, source, adapter, persistence, route or cross-lane implementation changed;
+- the exact one-file checkpoint passed 259/259 and is confirmed on origin;
+- LAB-042 is dependency-eligible but blocked pending a narrow gate-included test-file amendment.
+
+## Previous completed parcel — LAB-040
 
 Queue item `LAB-040-nvb-lab-thermal-projection-v2` is complete.
 
@@ -782,12 +802,12 @@ tests/selectorCascadeCorrectness.test.js
 - `LAB-038-nvb-resolution-thermal-semantics-v2`: done under approved envelope version 2.
 - `LAB-039-component-thermal-semantics-v2`: done.
 - `LAB-040-nvb-lab-thermal-projection-v2`: done.
-- `LAB-041-component-library-thermal-labels`: ready.
-- `LAB-042-thermal-semantics-guard`: approved and sequence-blocked pending LAB-041 completion.
-- Next ordered item: `LAB-041-component-library-thermal-labels`.
-- Resulting status: ready.
-- Ready items: exactly one — LAB-041.
-- Seam approval required: no — Program & Integrate approved version 2.
+- `LAB-041-component-library-thermal-labels`: done.
+- `LAB-042-thermal-semantics-guard`: blocked pending a narrow gate-included test-file scope amendment.
+- Next ordered item: `LAB-042-thermal-semantics-guard` after recorded amendment.
+- Resulting status: blocked at seam amendment boundary.
+- Ready items: none.
+- Seam approval required: yes — replace the non-executed new test path with one existing gate-included test file.
 - Human observation required before implementation: no.
 
-LAB-040 is complete. LAB-041 is the sole ready parcel for the standing worker.
+LAB-041 is complete. LAB-042 remains blocked until Program approves a gate-included test-file scope.

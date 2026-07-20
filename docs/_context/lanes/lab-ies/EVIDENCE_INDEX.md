@@ -6,6 +6,12 @@
 - Historical handoff content is retained as reported context unless freshly reverified.
 - Test output proves only the behaviour exercised by the named tests; low-level merge tests do not by themselves prove completion of the final governed merge.
 
+## LAB-041 corrected component-library thermal labels — 2026-07-21
+
+Exactly the read-only component-library surface changed. It now displays the corrected measured thermal names and keeps the hot-test source visibly unverified. Static search confirmed the deprecated delta/uplift labels, legacy semantic fields and Engine-owned derived fields are absent. The full `lab-ies` gate passed 259/259 and the one-file checkpoint was pushed.
+
+LAB-042 is dependency-eligible, but its approved new test path is absent from the fixed gate command. A test-only checkpoint at that path would therefore not execute its own assertions. The final guard remains blocked pending a narrow Program amendment to use the existing gate-included `tests/lab-kernel/iesKeywordMigration.test.js`.
+
 ## LAB-040 corrected Lab thermal working projection — 2026-07-21
 
 ### Scope and result
