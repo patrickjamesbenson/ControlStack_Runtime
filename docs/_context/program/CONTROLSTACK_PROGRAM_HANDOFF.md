@@ -536,3 +536,24 @@ Forbidden outputs include `referenceRoomTaC`, `referenceInternalTaC`, `opticTher
 Focused tests must cover 25°C and 35°C selections, missing and malformed Ambient, forbidden-field absence and preservation of the existing candidate shape. The old regression asserting that direct-only mapping does not require Ambient is superseded and must be rewritten, not retained.
 
 The returned feature receipt must include the exact two-file diff, full `selector-engine` gate result, final clean status and confirmation that no broad Selector module file changed. A separate lane-context closeout may follow under the approved Selector lane context path.
+
+## 2026-07-21 corrected Lab thermal semantics implementation handoff
+
+Program approves the pushed Lab envelope `LAB-038_042_THERMAL_SEMANTICS_SEAM_ENVELOPE.md`, version 1, unchanged.
+
+Lab may now execute five separate parcels in order. Only LAB-038 is initially ready; each later parcel becomes eligible only after its dependency and documentation closeout are pushed.
+
+Required semantic result:
+
+- reference room comes from legacy `room_ta_c`;
+- absolute reference internal comes from misleading legacy `optic_internal_delta_ta_c`;
+- optic thermal rise comes from legacy `optic_uplift_ta_c`;
+- the measured triplet is exact after canonical decimal normalisation;
+- varied-optic coverage changes the legacy uplift field and keeps the absolute internal value consistent;
+- changing only the rise into a contradictory triplet fails closed;
+- no output contract retains `opticInternalDeltaTaC`, `roomTaC` or `opticUpliftTaC`;
+- Lab emits no derived internal temperature, lookup temperature, clamp, board temperature or verified lm/m.
+
+LAB-040 must preserve the raw measured triplet and opaque evidence reference with `authorityState: null`; missing identity/evidence binding remains explicit. It must not treat a sealed optic identity as accepted thermal evidence.
+
+Each parcel returns the exact approved files, its exact feature subject, a separate Lab documentation closeout, full `lab-ies` green and preserved protected inventory. The five-parcel Lab batch may run automatically under the standing worker. Final Engine admission remains a separate Program decision after accepted Selector and Program-bound evidence receipts.

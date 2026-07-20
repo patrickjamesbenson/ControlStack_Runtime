@@ -336,3 +336,17 @@ P2 Checkpoint 1 is **IMPLEMENTATION COMPLETE / GATE GREEN / COMMIT BLOCKED BY SH
 - **LANE ISOLATION:** no broad Selector module change; no Engine, Lab, route, persistence, generation or RuntimeData change.
 - **QUEUE:** SEL-018 is ready in Selector; LAB-035 remains ready in Lab; Engine thermal work remains blocked pending accepted Selector and Lab receipts.
 - **NEXT:** Selector may implement the exact two-file parcel and return the full `selector-engine` gate receipt. Patrick has no action.
+
+## 2026-07-21 corrected Lab thermal semantics approval state
+
+- **LAB PROPOSAL:** version-1 five-parcel envelope reviewed after a 255/255 Lab gate.
+- **PROGRAM DECISION:** approve unchanged.
+- **SOLE READY LAB PARCEL:** LAB-038 resolution thermal semantics version 2.
+- **SEQUENCE-BLOCKED:** LAB-039 component projection v2, LAB-040 Lab projection v2, LAB-041 corrected labels and LAB-042 final guard.
+- **MAPPING:** `room_ta_c` -> `referenceRoomTaC`; misleading `optic_internal_delta_ta_c` -> absolute `referenceInternalTaC`; `optic_uplift_ta_c` -> `opticThermalRiseTaC`.
+- **VALIDATION:** exact canonical-decimal measured triplet; varied-optic proof changes legacy uplift; contradictory triplets fail closed.
+- **NO LAB ENGINE WORK:** no selected-room combination, derived internal, lookup, clamp, board temperature or verified lm/m.
+- **AUTHORITY:** LAB-040 keeps evidence authority null/unresolved; a sealed optic identity does not prove accepted thermal evidence.
+- **OUT OF SCOPE:** source fixture/model rename, Program adapter, Selector, Engine, routes, persistence and compatibility aliases.
+- **ENGINE HOLD:** Engine thermal derivation remains blocked pending accepted Selector and later accepted Program-bound thermal evidence receipts.
+- **NEXT:** Lab records the approval and may run the five parcels sequentially under its standing worker. Patrick has no action.

@@ -799,3 +799,40 @@ The varied-optic `optic_uplift_ta_c` proof belongs to the later Lab/Engine accep
 ### Queue effect
 
 SEL-018 is amended from blocked to ready as the sole active Selector parcel. LAB-035 remains the sole active Lab parcel independently. No Engine thermal parcel is ready until SEL-018 and the corrected Lab evidence publication both return accepted receipts.
+
+---
+
+## 2026-07-21 — LAB-038 to LAB-042 corrected thermal semantics envelope approved unchanged
+
+**Status:** APPROVED UNCHANGED; LAB-038 IS THE SOLE READY LAB PARCEL AND LAB-039 THROUGH LAB-042 REMAIN SEQUENCE-BLOCKED.
+
+### Verified proposal
+
+Program reviewed the pushed Lab coordination checkpoint `docs(lab): propose corrected thermal semantics seam`, including `LAB-038_042_THERMAL_SEMANTICS_SEAM_ENVELOPE.md`, version 1, and the full 255/255 Lab gate receipt.
+
+The proposal correctly applies the binding thermal ruling:
+
+- legacy `room_ta_c` maps only to `referenceRoomTaC`;
+- misleading legacy `optic_internal_delta_ta_c` maps only to absolute `referenceInternalTaC`;
+- legacy `optic_uplift_ta_c` maps only to `opticThermalRiseTaC`;
+- exact canonical-decimal triplet consistency is mandatory;
+- varied-optic proof changes legacy `optic_uplift_ta_c`;
+- Lab emits no user-specific derived temperature, lookup temperature, clamp, board temperature or verified lm/m;
+- `_INTERNAL_AMBIENT_TA_C` remains the authority-test internal measurement;
+- no version-1 semantic output alias is approved.
+
+### Exact approved parcels
+
+1. LAB-038: resolution schema version 2 in exactly the resolution module and its focused test.
+2. LAB-039: component catalogue schema version 2 in exactly the component projection module and its focused test.
+3. LAB-040: Lab working projection schema version 2 in exactly the Lab adapter and its focused test.
+4. LAB-041: corrected read-only component-library labels in exactly the component-library surface.
+5. LAB-042: final test-only thermal semantics guard in exactly the new focused guard file.
+
+The five parcels remain separate and sequential. Only LAB-038 may move to `ready`. No combined implementation, source-fixture rename, Program adapter, Selector change, Engine calculation, route, persistence or authority promotion is authorised.
+
+LAB-040 must keep thermal authority state unresolved and must not misrepresent a sealed optic identity as accepted thermal evidence. Final Program evidence validation and Engine readiness remain blocked after these Lab corrections until a separately approved cross-lane evidence-publication/adapter parcel supplies accepted provenance.
+
+### Acceptance return
+
+Each parcel must return its exact feature scope, separate Lab documentation closeout, full `lab-ies` green, preserved protected inventory and lane-only push. Any schema, semantic, field, authority-state, source-model or file-scope drift requires a new Program decision.

@@ -1,18 +1,19 @@
 # Program & Integrate Session Handoff
 
-Status: HUBSPOT RECONNAISSANCE REPORT COMMITTED AND PUSHED  
+Status: CORRECTED LAB THERMAL SEMANTICS ENVELOPE APPROVED  
 Lane: `program-integrate`  
 Branch: `lane/program-integrate`
 
-## Durable report
+## Decision
 
-Document: `REPORT_HUBSPOT_RECON.md`  
-Location: `docs/_context/program/REPORT_HUBSPOT_RECON.md`
+Program approved the pushed Lab version-1 corrected thermal semantics envelope unchanged after verifying the binding 25°C reference room, 35°C absolute internal and 10°C rise interpretation.
 
-The report verifies current repository truth for the HubSpot runtime surface, contact and company read-only lookups, the absence of deal lookup, the hard-blocked deal-writeback preflight, disabled write policies, server-side credential environment variables, the unavailable donor-reference scope, current project fixtures and volatile saved-project persistence, Deployment-v2 service registration requirements, existing Program contracts, and this lane's connected-app capabilities.
+The five Lab parcels remain separate and sequential. LAB-038 is the sole ready Lab parcel. LAB-039 through LAB-042 are approved but dependency-blocked.
 
-The report and this handoff are committed and pushed as one bounded documentation-only parcel. No feature work is included.
+Lab must use the measured triplet fields `referenceRoomTaC`, `referenceInternalTaC` and `opticThermalRiseTaC`, validate them exactly, vary legacy `optic_uplift_ta_c` for the per-optic proof, and emit no Lab-owned derived/lookup temperature or verified lm/m.
 
-## Exact next-orchestrator instruction
+The Lab working projection keeps thermal authority unresolved. Engine work remains blocked pending accepted Selector and later Program-bound thermal evidence receipts.
 
-Read `docs/_context/program/REPORT_HUBSPOT_RECON.md` on branch `lane/program-integrate` before planning or authorising any HubSpot connectivity work.
+## Exact next action
+
+Lab records this approval and runs LAB-038 through LAB-042 sequentially under the standing worker, with separate feature and documentation checkpoints and the full Lab gate after every parcel.

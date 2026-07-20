@@ -404,3 +404,35 @@ The chain is accepted only when tests prove:
 - parity is assessed against the approved data model, not donor code.
 
 Any board-temperature transform beyond `curveLookupTaC === derivedInternalTaC`, any alternative owner, or any combined Lab/runtime field requires a new Program decision.
+
+## 2026-07-21 approved Lab seam — corrected thermal semantics batch version 1
+
+**Status:** APPROVED UNCHANGED; FIVE SEPARATE PARCELS; LAB-038 SOLE READY ITEM.
+
+The approved Lab envelope advances three affected contracts to version 2 and then updates one presentation surface plus one final guard.
+
+### Corrected Lab publication shapes
+
+Resolution and component projections expose only:
+
+```text
+referenceRoomTaC
+referenceInternalTaC
+opticThermalRiseTaC
+```
+
+The Lab working projection may additionally expose the selected optic identity, opaque evidence reference and `authorityState: null`. It must preserve unresolved evidence/identity binding rather than claiming accepted thermal authority.
+
+The triplet is exact after canonical decimal normalisation. Legacy `optic_internal_delta_ta_c` maps to absolute internal temperature; legacy `optic_uplift_ta_c` maps to rise. New output contracts must not expose `opticInternalDeltaTaC`, `roomTaC` or `opticUpliftTaC`.
+
+### Ownership exclusions
+
+- no user-selected room value enters the Lab measurements;
+- no Lab module derives, clamps, looks up or verifies a user-specific operating result;
+- no source fixture or source-model rename is included;
+- no Program adapter, Selector, Engine, route, persistence or authority promotion is included;
+- no version-1 compatibility alias is approved.
+
+### Parcel sequence
+
+LAB-038 resolution v2, LAB-039 component v2, LAB-040 Lab projection v2, LAB-041 corrected labels and LAB-042 final guard remain separate. Only the first is ready. Exact files, tests, subjects, rollback and failure proofs are those recorded in the approved Lab envelope. Any deviation requires renewed Program approval.

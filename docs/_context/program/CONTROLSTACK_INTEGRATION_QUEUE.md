@@ -519,3 +519,25 @@ Missing, malformed, duplicate, non-committed or non-source-backed Ambient blocks
 5. Final cross-lane acceptance must use a varied legacy `optic_uplift_ta_c` fixture and prove the rise is applied once.
 
 No broad Selector module permission, route, persistence path, Engine invocation change or Lab lookup is authorised.
+
+## 2026-07-21 — Corrected Lab thermal semantics batch admitted
+
+**Status:** LAB-038 READY AS THE SOLE LAB ITEM; LAB-039 THROUGH LAB-042 APPROVED BUT SEQUENCE-BLOCKED.
+
+Program approved `LAB-038_042_THERMAL_SEMANTICS_SEAM_ENVELOPE.md`, version 1, unchanged after reviewing the pushed Lab proposal and its 255/255 gate.
+
+### Ordered parcels
+
+1. LAB-038 corrects NVB resolution thermal semantics and advances that schema to version 2.
+2. LAB-039 corrects component optic projection semantics and advances that schema to version 2.
+3. LAB-040 corrects the Lab working projection, advances that schema to version 2 and keeps thermal authority explicitly unresolved.
+4. LAB-041 corrects the read-only component-library labels.
+5. LAB-042 adds the final test-only thermal semantics guard.
+
+Only LAB-038 is ready. Each later parcel remains blocked until the prior dependency is complete and closed out.
+
+### Binding boundary
+
+The Lab batch maps legacy 25/35/10 source evidence to measured reference room 25, absolute reference internal 35 and rise 10. It validates the measured triplet exactly, varies legacy `optic_uplift_ta_c` for the per-optic proof, emits no legacy semantic aliases and performs no Engine calculation. Source fixtures, source-model names, Program adapters, Selector files and Engine files are outside this batch.
+
+The batch does not establish accepted cross-lane thermal evidence. Program evidence validation and Engine thermal derivation remain blocked pending a later separately approved provenance/adapter parcel and accepted Selector receipt.
