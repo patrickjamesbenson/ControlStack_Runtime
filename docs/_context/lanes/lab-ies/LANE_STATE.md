@@ -13,11 +13,11 @@ Current repository evidence overrides stale historical statements.
 - Root: `C:\ControlStack_Worktrees\code-pilot-lab`
 - Branch: `lane/code-pilot-lab`
 - Gate: `lab-ies`
-- Recorded branch HEAD: `9633f1cd6634844f55f13a8d2d46908182187447`
+- Recorded branch HEAD: `6ad89b4025e62e7b9246f39cf0942dbaf47ec78c`
 - Branch-HEAD guard checkpoint: `6d34e500d407d5335e5eebb317636a67a5e98618`
-- Starting HEAD for the canonical-keyword guard correction: `e466b1a78bf6bd228e154da6c743a0597bbec07b`
-- Completed feature HEAD: `9633f1cd6634844f55f13a8d2d46908182187447`
-- Feature subject: `test(lab): correct canonical keyword migration guard`
+- Starting HEAD for LAB-033: `6ad89b4025e62e7b9246f39cf0942dbaf47ec78c`
+- Completed feature HEAD: `d22cff4ee631cd2bdf2412f5d934cab106f051a2`
+- Feature subject: `lab: checkpoint main Lab bench surface`
 - Feature push: confirmed on origin `lane/code-pilot-lab`
 
 ## Branch-HEAD synchronisation invariant
@@ -59,7 +59,29 @@ Before any queue item is selected, a worker must compare `Recorded branch HEAD` 
 - Human-observation acceptance cannot be closed from repository evidence. The item remains incomplete and the worker supplies exact `NEEDS YOU` steps.
 - Orchestrator review occurs at seam, human-observation and five-parcel/stop boundaries rather than after each routine parcel.
 
-## Latest completed corrective parcel — LAB-032A
+## Latest completed parcel — LAB-033
+
+Queue item `LAB-033-main-lab-bench-surface` is complete.
+
+Exactly this one authorised file was changed and committed:
+
+```text
+packages/lab-kernel/ies-toolkit/bench.html
+```
+
+Verified outcome:
+
+- the primary bench is an explicit non-authoritative browser-memory working surface;
+- uploaded IES input is parsed through `parseIes`, summarised through committed metrics/inspection helpers and rendered with the canonical `renderPolar` module;
+- working state is created through `createWorkingSession` and the fixed recipe delegates dimensions, metadata, Level, Symmetrise, Interpolate, Pad and one-millimetre reduction to committed controller and transform modules;
+- the standard-grid adapter updates G3/G4 to the exact returned angle counts before the committed writer previews the result;
+- the exact ordered 16-field profile is consumed from the committed keyword contract, stale and supplementary keywords are not emitted, and internal ambient remains sealed-reference-owned and non-editable;
+- working preview/download is visibly separate from authority allocation, approval and sealing;
+- project materialisation accepts only a separately supplied sealed reference DTO, validates its safe identity through the committed reference contract and delegates exclusively to `buildProjectIes`;
+- no inline fingerprint, reference record, serial, seal, resolver, persistence, browser storage, clock/random identity or cross-lane implementation remains;
+- independent and gated executions passed 255/255 and the exact one-file checkpoint is confirmed on origin.
+
+## Previous completed corrective parcel — LAB-032A
 
 Queue item `LAB-032A-canonical-keyword-migration-guard-correction` is complete.
 
@@ -485,9 +507,8 @@ Verified outcome:
 
 The connected app exposes the fixed `lab-ies` gate as the available changed-file and full validation path.
 
-- Full `lab-ies` execution for the canonical-keyword migration guard correction: 255 tests, 255 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
-- Gated corrective checkpoint execution: 255 tests, 255 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
-- LAB-033 post-correction full gate: 255 tests, 255 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
+- Independent full `lab-ies` execution for LAB-033: 255 tests, 255 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
+- Gated LAB-033 feature checkpoint execution: 255 tests, 255 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
 
 ## Protected final Git state
 
@@ -495,7 +516,7 @@ The protected working-tree state after documentation closeout is:
 
 - staged: 0;
 - modified: 1 — only the unstaged `Recorded branch HEAD` synchronisation marker in this file;
-- untracked: 9;
+- untracked: 8;
 - deleted: 0.
 
 Protected untracked paths:
@@ -503,7 +524,6 @@ Protected untracked paths:
 ```text
 README.zip
 docs/_context/ControlStack_summary_normalise_harness_spec.md
-packages/lab-kernel/ies-toolkit/bench.html
 packages/lab-kernel/ies-toolkit/index.html
 packages/lab-kernel/ies-toolkit/lab.html
 packages/lab-kernel/ies-toolkit/labbench.html
@@ -555,8 +575,9 @@ tests/selectorCascadeCorrectness.test.js
 - LAB-031 is complete and confirmed on origin as the Lab-only project IES builder surface.
 - LAB-032 is complete and confirmed on origin as the Lab-only ordered merge-composition surface.
 - LAB-032A is complete and confirmed on origin as the approved one-file canonical-keyword migration guard correction.
-- The correction and gated checkpoint executions passed 255/255, and the unchanged LAB-033 bench now passes the full gate 255/255.
-- LAB-033 is the single active `ready` parcel.
+- LAB-033 is complete and confirmed on origin as the bounded non-authoritative Main Lab Bench surface.
+- Independent and gated LAB-033 executions passed 255/255.
+- LAB-034 is the single active `ready` parcel.
 - No parallel or combined implementation is authorised.
 - The earlier LAB-018 approval hold remains superseded.
 
@@ -586,10 +607,11 @@ tests/selectorCascadeCorrectness.test.js
 - `LAB-031-project-builder-surface`: done.
 - `LAB-032-merge-composition-surface`: done.
 - `LAB-032A-canonical-keyword-migration-guard-correction`: done.
-- Next ordered item: `LAB-033-main-lab-bench-surface`.
+- `LAB-033-main-lab-bench-surface`: done.
+- Next ordered item: `LAB-034-legacy-labbench-classification`.
 - Resulting status: `ready`.
-- Ready items: exactly one — LAB-033.
+- Ready items: exactly one — LAB-034.
 - Seam approval required: no.
 - Human observation required before implementation: no.
 
-LAB-032A is complete. LAB-033 is restored as the single active ready parcel after the approved one-file test correction; its bench remains incomplete, unstaged and unpushed.
+LAB-033 is complete. LAB-034 is the single active ready parcel for the next sequential worker step.

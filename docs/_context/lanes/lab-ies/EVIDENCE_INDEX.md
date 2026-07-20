@@ -6,6 +6,43 @@
 - Historical handoff content is retained as reported context unless freshly reverified.
 - Test output proves only the behaviour exercised by the named tests; low-level merge tests do not by themselves prove completion of the final governed merge.
 
+## LAB-033 Main Lab Bench surface — 2026-07-20
+
+### Identity and scope
+
+- starting HEAD: `6ad89b4025e62e7b9246f39cf0942dbaf47ec78c`;
+- queue item: `LAB-033-main-lab-bench-surface`;
+- authorised path only: `packages/lab-kernel/ies-toolkit/bench.html`;
+- seam change: no.
+
+### Behaviour evidence
+
+The completed Main Bench:
+
+- is visibly non-authoritative and browser-memory-only;
+- parses uploaded IES through `parseIes`, renders metrics and inspection through committed helpers and uses the canonical `renderPolar` module;
+- creates working state through `createWorkingSession` and delegates the fixed dimensions, metadata, Level, Symmetrise, Interpolate, Pad and one-millimetre sequence to committed controller and transform modules;
+- updates G3/G4 from the exact standardised angle arrays before the committed writer produces the working preview;
+- consumes the exact ordered 16-field keyword contract, emits no stale or supplementary keyword and exposes no editable internal ambient;
+- keeps working preview/download separate from authority allocation, approval and sealing;
+- accepts a separately supplied sealed reference DTO only, projects its safe identity through `projectReferenceIdentity` and delegates project materialisation exclusively to `buildProjectIes`;
+- contains no diagnostic fingerprint, alternative reference record, serial generation, seal timestamp, resolver implementation, browser storage, network route, persistence or cross-lane behaviour.
+
+### Static boundary evidence
+
+Source search found zero executable matches for legacy sealing/allocation APIs, diagnostic fingerprints, clocks/random identity, browser storage, persistence, retired ambient aliases and stale supplementary keyword writes. The exact feature scope remained the single authorised Bench file.
+
+### Gate, checkpoint and queue evidence
+
+- independent full `lab-ies` gate: 255/255 passed;
+- gated feature checkpoint execution: 255/255 passed;
+- feature checkpoint: `d22cff4ee631cd2bdf2412f5d934cab106f051a2`;
+- subject: `lab: checkpoint main Lab bench surface`;
+- push: confirmed on origin `lane/code-pilot-lab`;
+- LAB-033 is `done`;
+- LAB-034 becomes the sole next `ready` item;
+- no seam approval or human observation is required before LAB-034.
+
 ## Canonical-keyword migration guard correction before LAB-033 — 2026-07-20
 
 ### Approval and exact scope

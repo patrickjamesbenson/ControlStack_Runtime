@@ -606,7 +606,9 @@ Evidence: `9633f1cd6634844f55f13a8d2d46908182187447`, confirmed on origin. The o
 - depends on: LAB-013-polar-renderer, LAB-017-reference-resolver-contract, LAB-024-resolver-fixture-corpus, LAB-032A-canonical-keyword-migration-guard-correction
 - on success next: LAB-034-legacy-labbench-classification
 - seam change: no
-- status: ready
+- status: done
+
+Evidence: `d22cff4ee631cd2bdf2412f5d934cab106f051a2`, confirmed on origin. The one-file Main Bench is explicitly non-authoritative, delegates parsing, metrics, inspection, polar rendering, the guarded normalise recipe, canonical keyword projection, sealed-reference identity validation and project generation to committed modules, keeps internal ambient sealed-reference-owned, separates preview/download from sealing, and contains no persistence, fabricated authority or cross-lane implementation. Independent and gated executions passed 255/255.
 
 ### Q-24 Legacy labbench classification
 - id: LAB-034-legacy-labbench-classification
@@ -623,7 +625,7 @@ Evidence: `9633f1cd6634844f55f13a8d2d46908182187447`, confirmed on origin. The o
 - depends on: LAB-011-project-ies-generation, LAB-033-main-lab-bench-surface
 - on success next: LAB-035-selector-contract-stub after recorded Integrate approval
 - seam change: no
-- status: queued
+- status: ready
 
 ### Q-25 Selector contract stub
 - id: LAB-035-selector-contract-stub

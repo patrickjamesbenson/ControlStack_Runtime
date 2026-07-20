@@ -2,7 +2,7 @@
 
 ## Session purpose
 
-This handoff records the completed approved canonical-keyword migration guard correction, preserves the permanent charter authority for both standing prompts, and restores LAB-033 as the single next ready parcel.
+This handoff records completed LAB-033 Main Lab Bench, preserves the permanent charter authority for both standing prompts, and orders LAB-034 as the single next ready parcel.
 
 ## Identity
 
@@ -12,11 +12,11 @@ This handoff records the completed approved canonical-keyword migration guard co
 - Branch: `lane/code-pilot-lab`
 - Gate: `lab-ies`
 - Standing prompt authority: `docs/_context/lanes/lab-ies/LANE_CHARTER.md` contains both worker and orchestrator prompts
-- Starting HEAD for the canonical-keyword guard correction: `e466b1a78bf6bd228e154da6c743a0597bbec07b`
-- Completed feature checkpoint: `9633f1cd6634844f55f13a8d2d46908182187447`
-- Feature subject: `test(lab): correct canonical keyword migration guard`
+- Starting HEAD for LAB-033: `6ad89b4025e62e7b9246f39cf0942dbaf47ec78c`
+- Completed feature checkpoint: `d22cff4ee631cd2bdf2412f5d934cab106f051a2`
+- Feature subject: `lab: checkpoint main Lab bench surface`
 - Feature checkpoint confirmed on origin `lane/code-pilot-lab`
-- Seam change: approved bounded test correction
+- Seam change: no
 - Branch-HEAD guard checkpoint: `6d34e500d407d5335e5eebb317636a67a5e98618`
 
 ## Branch-HEAD guard
@@ -27,37 +27,36 @@ After every documentation push, only the `Recorded branch HEAD` field is refresh
 
 ## Completed queue item
 
-`LAB-032A-canonical-keyword-migration-guard-correction` is complete.
+`LAB-033-main-lab-bench-surface` is complete.
 
-Exactly this one test file was committed:
+Exactly this one feature file was committed:
 
 ```text
-tests/lab-kernel/iesKeywordMigration.test.js
+packages/lab-kernel/ies-toolkit/bench.html
 ```
 
-The correction removes only the stale Main Bench assertion for an editable `sysTa` ambient write and literal dependence on the retired `canonicalKeywordRows(...)` helper call shape. It retains the exact ordered 16-keyword profile, stale/alias/supplementary rejection, committed-contract consumption, sealed-reference ownership and non-editability of `_INTERNAL_AMBIENT_TA_C`, and all generator, merge, summary, project-adapter and project-builder vocabulary guards.
+The Main Bench is an explicit non-authoritative browser-memory working surface. It delegates parsing, metrics, inspection, polar rendering, the fixed guarded normalise recipe, canonical keyword projection, safe sealed-reference identity projection and project materialisation to committed modules.
 
-No production module or bench implementation changed. LAB-033 remained incomplete, unstaged and unpushed throughout the correction.
+Working preview/download remains separate from authority allocation, approval and sealing. Internal ambient remains sealed-reference-owned and non-editable. No diagnostic identity, alternative reference record, serial, seal, resolver, browser storage, network route, persistence or cross-lane implementation exists.
 
 ## Validation evidence
 
-- Full `lab-ies` execution before the corrective checkpoint: 255/255 passed.
-- Gated corrective checkpoint execution: 255/255 passed.
-- Post-correction LAB-033 full `lab-ies` gate: 255/255 passed.
+- Independent full `lab-ies` execution for LAB-033: 255/255 passed.
+- Gated LAB-033 feature checkpoint execution: 255/255 passed.
 - Failed, cancelled, skipped and todo counts were zero.
 
 ## Git and protected worktree state
 
-The corrective parcel was staged as exactly the one authorised migration-test file, committed and pushed separately from lane documentation.
+The LAB-033 parcel was staged as exactly the one authorised Main Bench file, committed and pushed separately from lane documentation.
 
 The protected working-tree state after documentation closeout must remain:
 
 - staged: 0;
 - modified: 1 — only the unstaged `Recorded branch HEAD` synchronisation marker in `LANE_STATE.md`;
-- untracked: 9;
+- untracked: 8;
 - deleted: 0.
 
-The 9 protected untracked paths remain exactly those recorded in `LANE_STATE.md`. In particular, these explicitly non-queued paths remain untouched:
+The 8 protected untracked paths remain exactly those recorded in `LANE_STATE.md`. In particular, these explicitly non-queued paths remain untouched:
 
 ```text
 README.zip
@@ -97,9 +96,10 @@ tests/selectorCascadeCorrectness.test.js
 - `LAB-031-project-builder-surface`: `done` and confirmed on origin.
 - `LAB-032-merge-composition-surface`: `done` and confirmed on origin.
 - `LAB-032A-canonical-keyword-migration-guard-correction`: `done` and confirmed on origin.
-- Correction and gated checkpoint executions: 255/255 passed; post-correction LAB-033 full gate: 255/255 passed.
-- `LAB-033-main-lab-bench-surface`: `ready`, incomplete, unstaged and unpushed.
-- Ready items: exactly one — LAB-033.
+- `LAB-033-main-lab-bench-surface`: `done` and confirmed on origin.
+- LAB-033 independent and gated executions: 255/255 passed.
+- `LAB-034-legacy-labbench-classification`: `ready`.
+- Ready items: exactly one — LAB-034.
 
 Program reported gate 45/45 passed, the approval decision committed and pushed, and its tree clean. No parallel or combined implementation is authorised.
 
@@ -125,11 +125,13 @@ LAB-031 is complete as a thin browser consumer of the committed project generato
 
 LAB-032 is complete as an ordered, non-authoritative composition surface. It creates no allocation, approval, seal or assembly-verification outcome and requires a separate freshly sealed MERGED DTO before project materialisation.
 
-LAB-032A is complete as the approved test-only canonical-keyword migration guard correction. It changed no production behaviour, preserved sealed-reference ownership of internal ambient, and leaves the final cross-cutting keyword-guard parcel queued until LAB-033 is committed.
+LAB-032A is complete as the approved test-only canonical-keyword migration guard correction. It changed no production behaviour and preserved sealed-reference ownership of internal ambient.
+
+LAB-033 is complete as the bounded Main Lab Bench. It keeps working state non-authoritative, delegates every governed operation to committed modules, exposes no editable internal ambient, and accepts only a separately supplied sealed reference for project generation.
 
 LAB-017 remains governed by its approved version-1 envelope. Program retains all production allocation, live source reading, hosting, routing, persistence, authentication, CRM integration, deployment and endpoint ownership.
 
-The next safe action is LAB-033 as the sole ready item. No seam approval or human observation is required before its exact one-file parcel, and the final cross-cutting keyword-guard parcel must remain queued until LAB-033 is committed.
+The next safe action is LAB-034 as the sole ready item. No seam approval or human observation is required before its exact one-file classification parcel. LAB-035 remains blocked pending recorded Program & Integrate approval.
 
 ## LAB-017 immutable completion receipt
 
