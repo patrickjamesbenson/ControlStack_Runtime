@@ -420,3 +420,25 @@ The parcel is confined to presentation of safe identity, host-free resolver avai
 ### Acceptance return
 
 Lab must return the immutable feature and documentation receipts, exact three-file implementation scope, focused governed/offline/null/leak-prevention evidence, full `lab-ies` green, exact staged-set proof, protected-dirt exclusion, final Git inventory, push evidence, and updated handoff. Any view-model, ownership, resolver, publication-state, capability, or scope drift returns LAB-029 to blocked for a new decision.
+
+## 2026-07-20 — Canonical-keyword migration guard corrective admission
+
+**Status:** APPROVED AS THE SOLE READY LAB PARCEL; LAB-033 TEMPORARILY PAUSED.
+
+### Exact scope
+
+- `tests/lab-kernel/iesKeywordMigration.test.js`
+
+### Required queue order
+
+1. The one-file migration-guard correction is the sole ready item.
+2. After full `lab-ies` green, commit that test-only parcel separately.
+3. Commit its Lab documentation closeout separately.
+4. Restore LAB-033 as the sole ready item and rerun its full gate without weakening the bench.
+5. Preserve the later final keyword-guard parcel for post-LAB-033 cross-cutting coverage.
+
+### Contract retained
+
+The correction removes stale requirements for editable `sysTa` ambient and literal `canonicalKeywordRows(...)` implementation text, while retaining the exact ordered 16-keyword profile, rejection of `_AMBIENT_TA_C`, supplementary keywords and aliases, committed-contract consumption by Main Bench, sealed/non-editable `_INTERNAL_AMBIENT_TA_C`, and all generator/merge/summary/project-builder vocabulary checks.
+
+LAB-033 remains incomplete, unstaged, and unpushed until this corrective parcel and its documentation closeout are durable. No production file is authorised.

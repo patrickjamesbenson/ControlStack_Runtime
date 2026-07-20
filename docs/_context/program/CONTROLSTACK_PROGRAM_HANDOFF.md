@@ -448,3 +448,25 @@ The view remains presentation-only. Governed mode consumes Program-supplied safe
 Lab does not gain allocation, sealing, resolver origin/hosting/endpoints, route-to-storage, persistence, authentication, deployment, evidence acceptance, raw evidence/origin IES/source-body publication, private authority reconstruction, or emergency/EWIS verification ownership. Hard-coded hosts, raw-body traversal, local paths, fingerprint authority claims, fabricated seal chains, generated dates, and positive authority wording over fixtures remain prohibited.
 
 LAB-029 may move from `blocked` to `ready` when it is next eligible under the existing sequential queue rule. Any change to the view model, ownership boundary, resolver semantics, publication states, null treatment, or three-file scope requires a new Program decision. The Lab completion return must include focused evidence, `lab-ies` green, exact staged-set proof, immutable feature and documentation receipts, final Git inventory, push evidence, and updated handoff.
+
+## 2026-07-20 Lab canonical-keyword migration guard correction
+
+Program approves one bounded test-only corrective parcel before LAB-033 resumes.
+
+Exact authorised path:
+
+- `tests/lab-kernel/iesKeywordMigration.test.js`
+
+The correction may remove stale requirements for the retired editable `sysTa` ambient workflow and literal `canonicalKeywordRows(...)` helper shape. It must retain the exact ordered 16-keyword profile, rejection of `_AMBIENT_TA_C`, supplementary keywords and aliases, Main Bench consumption of the committed canonical contract, sealed-reference ownership and non-editability of `_INTERNAL_AMBIENT_TA_C`, and all generator, merge, summary, and project-builder vocabulary checks.
+
+No production module, bench implementation, authority contract, sealed-reference schema, Selector, Runtime, Engine, or Program implementation change is authorised. The safe non-authoritative LAB-033 bench must not be weakened.
+
+Exact next Lab action:
+
+1. Make the one-file correction the sole ready item.
+2. Run the full `lab-ies` gate and commit the test correction separately.
+3. Commit the lane-documentation closeout separately.
+4. Restore LAB-033 as the sole ready item and rerun its full gate.
+5. Leave the final cross-cutting keyword guard until after LAB-033 is committed.
+
+LAB-033 remains incomplete, unstaged, unpushed, and paused during this corrective parcel. Return the exact test commit, documentation commit, gate receipt, final Git inventory, and confirmation that LAB-033 was restored as the sole ready item without production changes.

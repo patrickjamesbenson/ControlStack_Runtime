@@ -284,3 +284,14 @@ P2 Checkpoint 1 is **IMPLEMENTATION COMPLETE / GATE GREEN / COMMIT BLOCKED BY SH
 - **OWNERSHIP PRESERVED:** no allocation, sealing, resolver hosting/origin/endpoints, route-to-storage, persistence, authentication, deployment, evidence acceptance, raw/source publication, or private authority reconstruction moves to Lab.
 - **SEQUENCING:** LAB-029 may become `ready` only when next eligible under the existing one-parcel-at-a-time rule.
 - **NEXT:** Lab may implement the exact three-file parcel when sequentially eligible and must return an immutable receipt. Patrick has no action.
+
+## 2026-07-20 Lab keyword-migration corrective approval state
+
+- **REPORTED FAILURE:** full `lab-ies` is 253/255; two failures are stale migration-guard expectations for editable `sysTa` ambient and literal `canonicalKeywordRows(...)` helper text.
+- **PROGRAM DECISION:** approve one test-only corrective parcel before LAB-033 resumes.
+- **SOLE AUTHORISED FILE:** `tests/lab-kernel/iesKeywordMigration.test.js`.
+- **PRESERVED CONTRACT:** exact ordered 16 keywords; rejection of `_AMBIENT_TA_C`, supplementary keywords and aliases; Main Bench consumption of the committed contract; sealed/non-editable `_INTERNAL_AMBIENT_TA_C`; generator, merge, summary, and project-builder checks.
+- **NO PRODUCTION CHANGE:** no bench, module, authority, sealed-reference, Selector, Runtime, Engine, or Program implementation file is authorised.
+- **SEQUENCE:** corrective test commit, corrective documentation closeout, LAB-033 restored as sole ready item and full gate rerun, final keyword guard retained for after LAB-033.
+- **LAB-033 STATE:** incomplete, unstaged, unpushed, and paused until the corrective parcel closes.
+- **NEXT:** Lab may execute the one-file correction and return its immutable receipt. Patrick has no repository action.

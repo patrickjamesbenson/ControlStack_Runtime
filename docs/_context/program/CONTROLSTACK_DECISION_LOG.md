@@ -587,3 +587,41 @@ The implementation must not restore a hard-coded host, direct raw-body fetch tra
 ### Execution and acceptance
 
 No amendment is required. The Lab orchestrator may move LAB-029 to `ready` only when it is the next eligible parcel and no other Lab parcel is active. Implementation must remain within the exact three-file boundary, with required lane-context closeout recorded separately. Completion must return focused publication-state, leak-prevention, null-capability, and boundary evidence; full `lab-ies` green; exact staged-set proof; immutable feature and documentation receipts; final classified Git state; and updated Lab handoff. Any view-model, ownership, resolver-semantic, publication-state, or file-scope drift requires a new Program decision.
+
+---
+
+## 2026-07-20 — Lab canonical-keyword migration guard correction approved before LAB-033
+
+**Status:** APPROVED; THE TEST-ONLY CORRECTIVE PARCEL BECOMES THE SOLE READY LAB ITEM BEFORE LAB-033 RESUMES.
+
+**Evidence classification:** The Lab lane reports that the full gate passes 253/255 and that the two failures come from stale migration-guard assertions requiring retired Main Bench presentation details: an editable internal-ambient write and literal `canonicalKeywordRows(...)` helper text. The current Program app cannot inspect the Lab branch, so the failure diagnosis remains `REPORTED` until the corrective parcel returns.
+
+### Exact authorised scope
+
+- `tests/lab-kernel/iesKeywordMigration.test.js`
+
+No production module, bench implementation, authority contract, sealed-reference schema, Selector, Runtime, Engine, or Program implementation file is authorised.
+
+### Approved correction
+
+The test may remove requirements for the retired editable `sysTa` ambient write and literal dependence on the retired `canonicalKeywordRows(...)` helper shape. It must continue to:
+
+- enforce the exact ordered 16-keyword profile;
+- reject `_AMBIENT_TA_C`, supplementary keywords, and aliases;
+- require the Main Bench to consume the committed canonical keyword contract;
+- require `_INTERNAL_AMBIENT_TA_C` to remain sealed-reference-owned and non-editable; and
+- retain generator, merge, summary, and project-builder canonical-vocabulary checks.
+
+### Preserved authority rule
+
+This approval corrects stale test coupling only. It does not permit Main Bench creation or editing of authority-owned ambient, does not weaken the safe non-authoritative LAB-033 bench, and does not replace contract-behaviour assertions with presentation-text assertions.
+
+### Mandatory sequence
+
+1. Make this one-file corrective parcel the sole ready item.
+2. Run the full `lab-ies` gate and commit the test correction separately.
+3. Close the corrective parcel's lane documentation in a separate commit.
+4. Return LAB-033 as the sole ready item and rerun its full gate.
+5. Keep the later final keyword-guard parcel reserved for final cross-cutting coverage after LAB-033 is committed.
+
+LAB-033 remains incomplete, unstaged, unpushed, and paused during the correction. Any production-file change, wider test scope, ambient-authority change, canonical-profile change, or sequencing drift requires a new Program decision.
