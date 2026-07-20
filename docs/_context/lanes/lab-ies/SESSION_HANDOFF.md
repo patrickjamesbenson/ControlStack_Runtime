@@ -2,7 +2,7 @@
 
 ## Session purpose
 
-This handoff records completion of LAB-036, preserves the permanent charter authority for both standing prompts, and orders LAB-037 as the sole final ready parcel.
+This handoff records completion of LAB-037, preserves the permanent charter authority for both standing prompts, and closes the ordered Lab / IES queue.
 
 ## Identity
 
@@ -12,13 +12,13 @@ This handoff records completion of LAB-036, preserves the permanent charter auth
 - Branch: `lane/code-pilot-lab`
 - Gate: `lab-ies`
 - Standing prompt authority: `docs/_context/lanes/lab-ies/LANE_CHARTER.md` contains both worker and orchestrator prompts
-- Starting HEAD for LAB-036: `7b381f52b3f81c7c8c7de028a20d0594e2bf1976`
-- Completed feature checkpoint: `17b012a5a8e8d0914c42deab8e1b5f86b260b2a7`
-- Feature subject: `lab: checkpoint Lab shell and local server`
+- Starting HEAD for LAB-037: `e1d9e4b14837317880e650f56d41bc0f0c4fa4c2`
+- Completed feature checkpoint: `c41fc5d39ceb262854f955873fd3f3534f0757fd`
+- Feature subject: `lab: checkpoint canonical keyword migration guard`
 - Feature checkpoint confirmed on origin `lane/code-pilot-lab`
 - Seam change: no
 - Branch-HEAD guard checkpoint: `6d34e500d407d5335e5eebb317636a67a5e98618`
-- LAB-036 feature gate: 255/255 passed
+- LAB-037 feature gate: 255/255 passed
 
 ## Branch-HEAD guard
 
@@ -28,29 +28,27 @@ After every documentation push, only the `Recorded branch HEAD` field is refresh
 
 ## Completed queue item
 
-`LAB-036-lab-shell-server` is complete.
+`LAB-037-keyword-migration-guard` is complete.
 
-Exactly these three feature files were committed:
+Exactly this one test file was committed:
 
 ```text
-packages/lab-kernel/ies-toolkit/index.html
-packages/lab-kernel/ies-toolkit/lab.html
-serve.mjs
+tests/lab-kernel/iesKeywordMigration.test.js
 ```
 
-The stale authority-oriented shell was replaced with a classified surface directory and a presentation-only allowlisted console. The local server now serves only the current worktree toolkit root on localhost, permits only GET and HEAD, rejects traversal and outside-root paths, supplies bounded MIME handling and performs no write action.
+The final regression guard independently pins the exact versioned 16-keyword order and owner map, the sealed-reference internal-ambient policy, the active Lab-form order and bracketed fields, and rejection of stale aliases or supplementary keywords. It checks every active formatter, generator, merge, project adapter, builder and working preview for retired output vocabulary without testing unrelated presentation layout.
 
-No linked surface, shared CSS, browser storage, message bridge, upload, persistence, API, webhook, production endpoint, donor-root default or cross-lane implementation exists in the parcel.
+No production source or fixture changed.
 
 ## Validation evidence
 
-- Full LAB-036 feature execution before checkpoint: 255/255 passed.
-- Gated LAB-036 feature checkpoint execution: 255/255 passed.
+- Full LAB-037 feature execution before checkpoint: 255/255 passed.
+- Gated LAB-037 feature checkpoint execution: 255/255 passed.
 - Failed, cancelled, skipped and todo counts were zero.
 
 ## Git and protected worktree state
 
-The LAB-036 parcel was staged as exactly the two authorised shell files and bounded local server, committed and pushed separately from lane documentation.
+The LAB-037 parcel was staged as exactly the one authorised test file, committed and pushed separately from lane documentation.
 
 The protected working-tree state after documentation closeout must remain:
 
@@ -76,11 +74,11 @@ packages/workspace-kernel/selectorReferenceOptionsService.js
 tests/selectorCascadeCorrectness.test.js
 ```
 
-## Completed LAB-036 shell and server
+## Completed LAB-037 final regression guard
 
-The live branch contains the exact authorised three-file feature checkpoint. The shell is presentation-only over classified Lab surfaces, and the local server is bounded to the current worktree toolkit root with read-only localhost delivery.
+The live branch contains the exact authorised one-file test checkpoint. It fixes the canonical outgoing keyword contract independently from production implementation and guards every active generation, merge and preview path against retired vocabulary.
 
-The feature passed the full 255/255 Lab gate and is confirmed on origin. LAB-037 is now the sole final ready item.
+The feature passed the full 255/255 Lab gate and is confirmed on origin. The ordered queue is empty.
 
 ## Queue state and next action
 
@@ -110,9 +108,10 @@ The feature passed the full 255/255 Lab gate and is confirmed on origin. LAB-037
 - `LAB-035-selector-contract-stub`: `done` and confirmed on origin under Program & Integrate approval of version 1 unchanged.
 - Program approval decision: `docs(program): approve LAB-035 Selector contract seam`; Program gate 46/46 passed and the decision was pushed.
 - `LAB-036-lab-shell-server`: `done` and confirmed on origin.
-- LAB-036 gated execution: 255/255 passed.
-- `LAB-037-keyword-migration-guard`: `ready`.
-- Ready items: LAB-037 only.
+- `LAB-037-keyword-migration-guard`: `done` and confirmed on origin.
+- LAB-037 gated execution: 255/255 passed.
+- Ready items: none.
+- Queue state: empty.
 
 Program reported gate 45/45 passed, the approval decision committed and pushed, and its tree clean. No parallel or combined implementation is authorised.
 
@@ -146,7 +145,7 @@ LAB-034 is complete as the read-only legacy compatibility classification. It rem
 
 LAB-017 remains governed by its approved version-1 envelope. Program retains all production allocation, live source reading, hosting, routing, persistence, authentication, CRM integration, deployment and endpoint ownership.
 
-The next safe action is LAB-037. Implementation is confined to the one canonical-keyword migration test file; production source, fixtures, broad presentation snapshots, aliases, supplementary fields and stale ambient vocabulary remain prohibited.
+No queue item remains. The standing-worker batch ends at the queue-empty boundary; any further Lab / IES implementation requires a newly admitted parcel under the lane charter.
 
 ## LAB-017 immutable completion receipt
 

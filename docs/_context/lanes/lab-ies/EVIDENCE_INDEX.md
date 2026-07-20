@@ -6,6 +6,38 @@
 - Historical handoff content is retained as reported context unless freshly reverified.
 - Test output proves only the behaviour exercised by the named tests; low-level merge tests do not by themselves prove completion of the final governed merge.
 
+## LAB-037 final canonical keyword migration guard — 2026-07-20
+
+### Identity and scope
+
+- starting HEAD: `e1d9e4b14837317880e650f56d41bc0f0c4fa4c2`;
+- queue item: `LAB-037-keyword-migration-guard`;
+- authorised path only: `tests/lab-kernel/iesKeywordMigration.test.js`;
+- seam change: no;
+- production and fixture changes: none.
+
+### Regression evidence
+
+The completed test-only guard:
+
+- pins the exact profile ID, 16 keyword names, order and owner map independently from the production contract;
+- pins `_INTERNAL_AMBIENT_TA_C` to sealed-reference ownership and its measured-internal-assembly, not-rated-operating-ambient meaning;
+- pins the active Lab form to exact numeric order and exact bracketed fields;
+- proves stale `_AMBIENT_TA_C`, retired `_EMERGENCY_CAPABLE`, supplementary fields and aliases fail validation;
+- checks the active formatter, sealed-reference generator, composition kernel, project adapter, project builder and both working previews for absence of retired output vocabulary;
+- retains the focused canonical emission and Main Bench non-editable-ambient checks without coupling to unrelated presentation layout.
+
+### Gate and checkpoint evidence
+
+- exact staged set: the single authorised test file;
+- full `lab-ies` execution before checkpoint: 255/255 passed;
+- gated commit execution: 255/255 passed;
+- feature checkpoint: `c41fc5d39ceb262854f955873fd3f3534f0757fd`;
+- subject: `lab: checkpoint canonical keyword migration guard`;
+- push: confirmed on origin `lane/code-pilot-lab`;
+- LAB-037 is `done`;
+- the ordered queue is empty.
+
 ## LAB-036 Lab shell and bounded local server — 2026-07-20
 
 ### Identity and scope

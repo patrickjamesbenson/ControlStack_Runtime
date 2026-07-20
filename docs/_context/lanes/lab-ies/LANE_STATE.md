@@ -13,11 +13,11 @@ Current repository evidence overrides stale historical statements.
 - Root: `C:\ControlStack_Worktrees\code-pilot-lab`
 - Branch: `lane/code-pilot-lab`
 - Gate: `lab-ies`
-- Recorded branch HEAD: `17b012a5a8e8d0914c42deab8e1b5f86b260b2a7`
+- Recorded branch HEAD: `c41fc5d39ceb262854f955873fd3f3534f0757fd`
 - Branch-HEAD guard checkpoint: `6d34e500d407d5335e5eebb317636a67a5e98618`
-- Starting HEAD for LAB-036: `7b381f52b3f81c7c8c7de028a20d0594e2bf1976`
-- Completed feature HEAD: `17b012a5a8e8d0914c42deab8e1b5f86b260b2a7`
-- Feature subject: `lab: checkpoint Lab shell and local server`
+- Starting HEAD for LAB-037: `e1d9e4b14837317880e650f56d41bc0f0c4fa4c2`
+- Completed feature HEAD: `c41fc5d39ceb262854f955873fd3f3534f0757fd`
+- Feature subject: `lab: checkpoint canonical keyword migration guard`
 - Feature push: confirmed on origin `lane/code-pilot-lab`
 
 ## Branch-HEAD synchronisation invariant
@@ -59,7 +59,28 @@ Before any queue item is selected, a worker must compare `Recorded branch HEAD` 
 - Human-observation acceptance cannot be closed from repository evidence. The item remains incomplete and the worker supplies exact `NEEDS YOU` steps.
 - Orchestrator review occurs at seam, human-observation and five-parcel/stop boundaries rather than after each routine parcel.
 
-## Latest completed parcel — LAB-036
+## Latest completed parcel — LAB-037
+
+Queue item `LAB-037-keyword-migration-guard` is complete.
+
+Exactly this one authorised test file was changed and committed:
+
+```text
+tests/lab-kernel/iesKeywordMigration.test.js
+```
+
+Verified outcome:
+
+- the test pins the exact versioned 16-keyword names, order and owner map independently from the production contract;
+- the sealed-reference internal ambient key and its measured-internal-assembly semantic are fixed explicitly;
+- the active Lab form is pinned to exact numeric order and exact bracketed fields;
+- stale ambient, retired emergency alias, supplementary field and alias rejection remain mandatory;
+- every active formatter, generator, merge, project adapter, builder and working preview is checked for retired output vocabulary without coupling the test to unrelated presentation layout;
+- no production source or fixture changed;
+- the exact one-file gated checkpoint passed 255/255 and is confirmed on origin;
+- the ordered queue is now empty.
+
+## Previous completed parcel — LAB-036
 
 Queue item `LAB-036-lab-shell-server` is complete.
 
@@ -78,8 +99,7 @@ Verified outcome:
 - the local server fixes its served root to the current worktree toolkit directory, binds only localhost, permits only GET and HEAD, enforces decoded and encoded traversal rejection plus root containment, applies bounded MIME handling and exposes no write capability;
 - stale donor-root defaults, upload/persistence messaging and false workflow authority language were removed;
 - no linked surface, shared CSS, API, webhook, persistence route, production endpoint or donor file changed;
-- the exact three-file gated checkpoint passed 255/255 and is confirmed on origin;
-- LAB-037 is now the sole top `ready` item.
+- the exact three-file gated checkpoint passed 255/255 and is confirmed on origin.
 
 ## Previous completed parcel — LAB-035
 
@@ -567,7 +587,7 @@ Verified outcome:
 
 The connected app exposes the fixed `lab-ies` gate as the available changed-file and full validation path.
 
-- Gated LAB-036 feature checkpoint execution: 255 tests, 255 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
+- Gated LAB-037 feature checkpoint execution: 255 tests, 255 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
 
 ## Protected final Git state
 
@@ -633,8 +653,9 @@ tests/selectorCascadeCorrectness.test.js
 - LAB-034 is complete and confirmed on origin as the read-only legacy compatibility classification.
 - LAB-035 is complete and confirmed on origin as the approved read-only Selector contract viewer.
 - LAB-036 is complete and confirmed on origin as the classified presentation shell and bounded read-only local server.
-- Gated LAB-036 execution passed 255/255.
-- LAB-037 is the sole top `ready` item.
+- LAB-037 is complete and confirmed on origin as the final test-only canonical keyword migration guard.
+- Gated LAB-037 execution passed 255/255.
+- The ordered queue is empty.
 - No parallel or combined implementation is authorised.
 - The earlier LAB-018 approval hold remains superseded.
 
@@ -668,10 +689,11 @@ tests/selectorCascadeCorrectness.test.js
 - `LAB-034-legacy-labbench-classification`: done.
 - `LAB-035-selector-contract-stub`: done.
 - `LAB-036-lab-shell-server`: done.
-- Next ordered item: `LAB-037-keyword-migration-guard`.
-- Resulting status: `ready`.
-- Ready items: exactly one — LAB-037.
+- `LAB-037-keyword-migration-guard`: done.
+- Next ordered item: none.
+- Resulting status: queue empty.
+- Ready items: none.
 - Seam approval required: no.
 - Human observation required before implementation: no.
 
-LAB-036 is complete. LAB-037 is the sole top ready parcel for the next standing-worker continuation.
+LAB-037 is complete. The ordered Lab / IES queue is empty and this standing-worker batch is closed.

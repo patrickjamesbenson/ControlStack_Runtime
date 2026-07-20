@@ -670,7 +670,7 @@ Approval and completion evidence: Program & Integrate approved version 1 unchang
 - seam change: no
 - status: done
 
-Completion evidence: The two classified Lab navigation shells and the bounded read-only local static server were committed as `lab: checkpoint Lab shell and local server`, pushed to the lane branch, and passed the full 255/255 `lab-ies` gate. The directory links only to committed/classified Lab surfaces; the console is presentation-only with no browser-storage or message bridge; the server is fixed to the current worktree toolkit root, binds localhost, permits only GET/HEAD, enforces root containment and performs no write, API, webhook, upload or persistence action. LAB-037 is now the sole ready item.
+Completion evidence: The two classified Lab navigation shells and the bounded read-only local static server were committed as `lab: checkpoint Lab shell and local server`, pushed to the lane branch, and passed the full 255/255 `lab-ies` gate. The directory links only to committed/classified Lab surfaces; the console is presentation-only with no browser-storage or message bridge; the server is fixed to the current worktree toolkit root, binds localhost, permits only GET/HEAD, enforces root containment and performs no write, API, webhook, upload or persistence action. LAB-037 then became the sole ready item.
 
 ### Q-27 Cross-cutting canonical keyword migration guard
 - id: LAB-037-keyword-migration-guard
@@ -687,7 +687,9 @@ Completion evidence: The two classified Lab navigation shells and the bounded re
 - depends on: LAB-014-summary-normalise-surface, LAB-016-nvb-offline-fixtures, LAB-022-reference-composition-kernel, LAB-031-project-builder-surface, LAB-033-main-lab-bench-surface
 - on success next: none
 - seam change: no
-- status: ready
+- status: done
+
+Completion evidence: The final test-only guard was committed as `lab: checkpoint canonical keyword migration guard`, pushed to the lane branch, and passed the full 255/255 `lab-ies` gate. It independently pins the exact versioned 16-keyword order and owner map, the sealed-reference internal-ambient policy, the active Lab-form order and bracketed fields, rejection of aliases and supplementary keywords, and absence of retired ambient/emergency aliases across every active generator, merge, builder and preview path. No production source or fixture changed. The ordered queue is now empty.
 
 ## Explicitly not queued
 
