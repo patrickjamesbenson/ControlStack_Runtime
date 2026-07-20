@@ -64,6 +64,61 @@ For human-observation acceptance, the worker must stop before making a completio
 
 The operating model is recorded in `LANE_CHARTER.md`, `DECISION_LOG.md`, `LANE_STATE.md` and `WORK_QUEUE.md`. Both standing prompts live only in the stable charter; `SESSION_HANDOFF.md` carries launch pointers and current session evidence.
 
+## LAB-026 document and equipment surfaces — 2026-07-20
+
+### Identity and scope
+
+- starting HEAD: `b8c631ca0f4d79dfca7d4913f36b65829042bad7`;
+- queue item: `LAB-026-document-equipment-surfaces`;
+- authorised paths only:
+  - `packages/lab-kernel/ies-toolkit/docs.html`;
+  - `packages/lab-kernel/ies-toolkit/equipment_register.html`;
+- seam change: no.
+
+### Human-observation evidence
+
+- Patrick reported every prescribed Documents and Equipment Register interaction passed except one `404` from a legacy clickable artefact label;
+- Patrick correctly identified that the empty endpoint created a false impression that evidence existed;
+- the finding was classified as a real acceptance defect rather than accepted test behaviour;
+- the completed surfaces remove that false availability signal: unresolved evidence is non-clickable, while clickable links are emitted only for the eight committed `lab/sources/` fixtures.
+
+### Behaviour evidence
+
+- both surfaces are explicit Lab-internal offline demo working state;
+- the document page uses the committed immutable document-register contract for registration, association, unlinking and queries;
+- caller-supplied safe document IDs are required for entered records;
+- accepted source status is explained as demo-register acceptance only, not verification or approval;
+- equipment dates, calibration/NATA notes, capabilities and events remain entered claims with unresolved evidence;
+- refresh clears records, links, capability edits and draft events;
+- no upload input, storage API, database, Program route, ledger append, equipment booking, reference sealing, outgoing IES or cross-lane artifact exists.
+
+### Static audit evidence
+
+- upload, browser-storage, websocket, direct fetch, form-data and false window-open seam search: zero matches;
+- equipment surface contains no artefact link;
+- document artefact links resolve only to committed files under `./lab/sources/`;
+- exact staged set: the two authorised HTML files.
+
+### Test and gate evidence
+
+- focused changed-file `lab-ies` execution: 245/245 passed;
+- independent full `lab-ies` gate: 245/245 passed;
+- gated feature commit execution: 245/245 passed;
+- failed, cancelled, skipped and todo counts were zero in every execution.
+
+### Commit and push evidence
+
+- feature commit: `0f54173fb17bdf2b31d7f6f45625ffaa66066e89`;
+- subject: `lab: checkpoint document and equipment surfaces`;
+- push: origin `lane/code-pilot-lab`, confirmed successful;
+- protected unrelated dirty paths and the unstaged branch-HEAD marker were preserved.
+
+### Resulting queue boundary
+
+- LAB-026 is `done`.
+- LAB-027 becomes the single next `ready` item under its already-approved version-1 seam envelope.
+- no other parcel is ready.
+
 ## LAB-025 component library surface — 2026-07-20
 
 ### Identity and scope

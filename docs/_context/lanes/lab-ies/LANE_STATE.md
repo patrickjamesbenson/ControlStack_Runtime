@@ -13,11 +13,11 @@ Current repository evidence overrides stale historical statements.
 - Root: `C:\ControlStack_Worktrees\code-pilot-lab`
 - Branch: `lane/code-pilot-lab`
 - Gate: `lab-ies`
-- Recorded branch HEAD: `f53ac346aa999e6a3f4fca45efd12c568d262a17`
+- Recorded branch HEAD: `b8c631ca0f4d79dfca7d4913f36b65829042bad7`
 - Branch-HEAD guard checkpoint: `6d34e500d407d5335e5eebb317636a67a5e98618`
-- Starting HEAD for LAB-025: `f53ac346aa999e6a3f4fca45efd12c568d262a17`
-- Completed feature HEAD: `78fe3ab23e4fd50b8c79af8f429687a91401a068`
-- Feature subject: `lab: checkpoint component library surface`
+- Starting HEAD for LAB-026: `b8c631ca0f4d79dfca7d4913f36b65829042bad7`
+- Completed feature HEAD: `0f54173fb17bdf2b31d7f6f45625ffaa66066e89`
+- Feature subject: `lab: checkpoint document and equipment surfaces`
 - Feature push: confirmed on origin `lane/code-pilot-lab`
 
 ## Branch-HEAD synchronisation invariant
@@ -59,7 +59,29 @@ Before any queue item is selected, a worker must compare `Recorded branch HEAD` 
 - Human-observation acceptance cannot be closed from repository evidence. The item remains incomplete and the worker supplies exact `NEEDS YOU` steps.
 - Orchestrator review occurs at seam, human-observation and five-parcel/stop boundaries rather than after each routine parcel.
 
-## Latest completed parcel — LAB-025
+## Latest completed parcel — LAB-026
+
+Queue item `LAB-026-document-equipment-surfaces` is complete.
+
+Exactly these two authorised files were changed and committed:
+
+```text
+packages/lab-kernel/ies-toolkit/docs.html
+packages/lab-kernel/ies-toolkit/equipment_register.html
+```
+
+Verified outcome:
+
+- both surfaces are Lab-internal, offline, unapproved and browser-memory-only;
+- the document surface uses only the committed immutable document-register contract for registration, many-to-many association and unlinking;
+- only the eight committed `lab/sources/` fixtures receive clickable artefact links;
+- unresolved documents and equipment evidence display explicit non-clickable text rather than implying a file exists;
+- Patrick reported all prescribed browser behaviour passed except one legacy 404 artefact link, which was classified as a real acceptance defect and removed by this parcel;
+- calibration dates, NATA notes, capabilities and events are labelled entered/demo and not verified unless evidence exists;
+- no upload control, storage API, database, Program route, ledger append, equipment booking, authority record, approval, seal, outgoing IES or cross-lane artifact exists;
+- refresh clears all entered records, associations, capability changes and draft events.
+
+## Previous completed parcel — LAB-025
 
 Queue item `LAB-025-component-library-surface` is complete.
 
@@ -80,7 +102,7 @@ Verified outcome:
 - Patrick reported a 100% PASS against the prescribed Component Library browser checklist at the canonical local URL on 2026-07-20;
 - the page fails closed with a visible error if fixture loading or projection validation fails.
 
-## Previous completed parcel — LAB-024
+## Earlier completed parcel — LAB-024
 
 Queue item `LAB-024-resolver-fixture-corpus` is complete.
 
@@ -304,7 +326,7 @@ Verified outcome:
 
 The connected app exposes the fixed `lab-ies` gate as the available changed-file and full validation path.
 
-- Focused changed-file execution for the one LAB-025 surface file: 245 tests, 245 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
+- Focused changed-file execution for the two LAB-026 surface files: 245 tests, 245 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
 - Independent full `lab-ies` gate: 245 tests, 245 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
 - Gated feature commit execution: 245 tests, 245 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
 
@@ -314,7 +336,7 @@ The protected working-tree state after documentation closeout is:
 
 - staged: 0;
 - modified: 1 — only the unstaged `Recorded branch HEAD` synchronisation marker in this file;
-- untracked: 24;
+- untracked: 22;
 - deleted: 0.
 
 Protected untracked paths:
@@ -324,9 +346,7 @@ README.zip
 docs/_context/ControlStack_summary_normalise_harness_spec.md
 packages/lab-kernel/ies-toolkit/bench.html
 packages/lab-kernel/ies-toolkit/curator.html
-packages/lab-kernel/ies-toolkit/docs.html
 packages/lab-kernel/ies-toolkit/emergency.html
-packages/lab-kernel/ies-toolkit/equipment_register.html
 packages/lab-kernel/ies-toolkit/extended_report.html
 packages/lab-kernel/ies-toolkit/ies_builder.html
 packages/lab-kernel/ies-toolkit/ies_merge.html
@@ -379,7 +399,8 @@ tests/selectorCascadeCorrectness.test.js
 - LAB-018, LAB-019, LAB-020, LAB-021, LAB-022 and LAB-023 are complete and confirmed in current branch history.
 - LAB-024 is complete and confirmed on origin as a bounded offline resolver fixture corpus.
 - LAB-025 is complete and confirmed on origin as the Lab-only component library surface.
-- LAB-027 remains approved but sequence-blocked until its dependencies are completed and it becomes the single top eligible parcel.
+- LAB-026 is complete and confirmed on origin as the Lab-only document and equipment support surfaces.
+- LAB-027 is approved and becomes the single next eligible parcel after LAB-026 closeout.
 - No parallel or combined implementation is authorised.
 - The earlier LAB-018 approval hold remains superseded.
 
@@ -401,9 +422,10 @@ tests/selectorCascadeCorrectness.test.js
 - `LAB-023-nvb-lab-adapter`: done.
 - `LAB-024-resolver-fixture-corpus`: done.
 - `LAB-025-component-library-surface`: done.
-- Next ordered item: `LAB-026-document-equipment-surfaces`.
-- Resulting status: `ready`; it is a non-seam parcel and all dependencies are done.
-- Ready items: exactly one — LAB-026.
-- Approved sequence-blocked item: LAB-027.
+- `LAB-026-document-equipment-surfaces`: done.
+- Next ordered item: `LAB-027-request-report-workflow`.
+- Resulting status: `ready`; its version-1 seam envelope is approved and all dependencies are done.
+- Ready items: exactly one — LAB-027.
+- Approved sequence-blocked items: none.
 
-LAB-025 was implemented, validated, committed and pushed as the single active parcel.
+LAB-026 was implemented, validated, committed and pushed as the single active parcel.

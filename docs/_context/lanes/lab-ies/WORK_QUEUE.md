@@ -434,7 +434,9 @@ Evidence: `78fe3ab23e4fd50b8c79af8f429687a91401a068`, confirmed on origin. Patri
 - depends on: LAB-012-lab-style-foundation, LAB-020-document-register-contract
 - on success next: LAB-027-request-report-workflow after recorded Integrate approval
 - seam change: no
-- status: ready
+- status: done
+
+Evidence: `0f54173fb17bdf2b31d7f6f45625ffaa66066e89`, confirmed on origin. Patrick reported all prescribed browser behaviour passed except one legacy 404 artefact link; the parcel removed that false availability signal and now renders unresolved evidence as non-clickable.
 
 ### Q-17 Lab request and report workflow
 - id: LAB-027-request-report-workflow
@@ -446,7 +448,7 @@ Evidence: `78fe3ab23e4fd50b8c79af8f429687a91401a068`, confirmed on origin. Patri
   - `packages/lab-kernel/ies-toolkit/onemm_contract.html`
   - `tests/lab-kernel/labRequestReportWorkflow.test.js`
 - seam envelope: `docs/_context/lanes/lab-ies/LAB-018_023_027_BATCH_SEAM_ENVELOPE.md`, version 1; approved unchanged by Program & Integrate on 2026-07-20.
-- batch sequence: approved but sequence-blocked until the active parcel is completed and closed out.
+- batch sequence: approved and now active after LAB-026 completion and closeout.
 - prohibitions:
   - no Program database, CRM, file upload or workflow implementation;
   - no duplicate authority schema or reverse reconstruction;
@@ -459,7 +461,7 @@ Evidence: `78fe3ab23e4fd50b8c79af8f429687a91401a068`, confirmed on origin. Patri
 - depends on: LAB-019-component-projection-contract, LAB-020-document-register-contract, LAB-024-resolver-fixture-corpus
 - on success next: LAB-028-reference-curation-surfaces
 - seam change: yes
-- status: blocked
+- status: ready
 
 ### Q-18 Reference curation surfaces
 - id: LAB-028-reference-curation-surfaces
