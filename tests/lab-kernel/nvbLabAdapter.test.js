@@ -99,10 +99,10 @@ const exactExports = [
   "adaptNvbResolution",
 ];
 
-test("exports only the approved version-1 NVB Lab adapter interface", () => {
+test("exports only the approved version-2 NVB Lab adapter interface", () => {
   assert.deepEqual(Object.keys(contract).sort(), exactExports.sort());
-  assert.equal(contract.NVB_LAB_ADAPTER_SCHEMA_ID, "controlstack.lab.nvb-lab-projection.v1");
-  assert.equal(contract.NVB_LAB_ADAPTER_SCHEMA_VERSION, 1);
+  assert.equal(contract.NVB_LAB_ADAPTER_SCHEMA_ID, "controlstack.lab.nvb-lab-projection.v2");
+  assert.equal(contract.NVB_LAB_ADAPTER_SCHEMA_VERSION, 2);
 });
 
 test("projects the exact immutable optic-path working-state shape", () => {
@@ -111,8 +111,8 @@ test("projects the exact immutable optic-path working-state shape", () => {
   const result = contract.adaptNvbResolution(value);
 
   assert.deepEqual(result, {
-    schemaId: "controlstack.lab.nvb-lab-projection.v1",
-    schemaVersion: 1,
+    schemaId: "controlstack.lab.nvb-lab-projection.v2",
+    schemaVersion: 2,
     path: "optic",
     family: 80,
     selection: {
@@ -130,6 +130,14 @@ test("projects the exact immutable optic-path working-state shape", () => {
     references: {
       gearTray: identity("GT", 1, "a"),
       optic: identity("OPT", 2, "b"),
+    },
+    thermalEvidence: {
+      opticBomId: "OPT-DNX80-OPAL",
+      referenceRoomTaC: 25,
+      referenceInternalTaC: 27,
+      opticThermalRiseTaC: 2,
+      evidenceRef: "evidence-hot-test",
+      authorityState: null,
     },
     unresolved: [],
     assemblyVerification: {
@@ -154,6 +162,7 @@ test("projects gear-tray and no-base paths without inventing optic values", () =
       emissionPermission: null,
     });
     assert.equal(result.references.optic, null);
+    assert.equal(result.thermalEvidence, null);
     assert.equal(result.references.gearTray.kind, "GT");
   }
 });
@@ -163,8 +172,68 @@ test("accepts optional null reference slots without generating identity", () => 
     references: { gearTray: null, optic: null },
   }));
   assert.deepEqual(result.references, { gearTray: null, optic: null });
+  assert.equal(result.thermalEvidence.authorityState, null);
+  assert.deepEqual(result.unresolved, ["thermal_evidence_reference_unbound"]);
   assert.equal(Object.hasOwn(result, "id"), false);
   assert.equal(Object.hasOwn(result, "resolvedAtUtc"), false);
+});
+
+test("projects raw thermal evidence without promoting source evidence to authority", () => {
+  const result = contract.adaptNvbResolution(input("optic"));
+  assert.deepEqual(result.thermalEvidence, {
+    opticBomId: "OPT-DNX80-OPAL",
+    referenceRoomTaC: 25,
+    referenceInternalTaC: 27,
+    opticThermalRiseTaC: 2,
+    evidenceRef: "evidence-hot-test",
+    authorityState: null,
+  });
+  assert.deepEqual(result.unresolved, []);
+
+  const missingEvidence = contract.adaptNvbResolution(input("optic", {
+    resolution: { optic: optic({ hotTestEvidenceRef: null }) },
+  }));
+  assert.equal(missingEvidence.thermalEvidence.evidenceRef, null);
+  assert.equal(missingEvidence.thermalEvidence.authorityState, null);
+  assert.deepEqual(missingEvidence.unresolved, ["thermal_evidence_source_unresolved"]);
+
+  const missingBoth = contract.adaptNvbResolution(input("optic", {
+    resolution: { optic: optic({ hotTestEvidenceRef: null }) },
+    references: { optic: null },
+  }));
+  assert.deepEqual(missingBoth.unresolved, [
+    "thermal_evidence_reference_unbound",
+    "thermal_evidence_source_unresolved",
+  ]);
+  assert.equal(missingBoth.thermalEvidence.authorityState, null);
+});
+
+test("revalidates corrected thermal triplets at the adapter boundary", () => {
+  const decimal = contract.adaptNvbResolution(input("optic", {
+    resolution: {
+      optic: optic({ referenceRoomTaC: 0.1, opticThermalRiseTaC: 0.2, referenceInternalTaC: 0.3 }),
+    },
+  }));
+  assert.deepEqual(
+    [
+      decimal.thermalEvidence.referenceRoomTaC,
+      decimal.thermalEvidence.opticThermalRiseTaC,
+      decimal.thermalEvidence.referenceInternalTaC,
+    ],
+    [0.1, 0.2, 0.3],
+  );
+
+  for (const invalidOptic of [
+    optic({ referenceRoomTaC: null }),
+    optic({ referenceInternalTaC: null }),
+    optic({ opticThermalRiseTaC: null }),
+    optic({ opticThermalRiseTaC: 3 }),
+  ]) {
+    assert.throws(
+      () => contract.adaptNvbResolution(input("optic", { resolution: { optic: invalidOptic } })),
+      contract.NvbLabAdapterContractError,
+    );
+  }
 });
 
 test("preserves unresolved blocker codes exactly and in source order", () => {
@@ -340,10 +409,12 @@ test("production module contains no loader, persistence, clock, ID generation, d
   }
   for (const forbiddenSemantic of [
     "opticInternalDeltaTaC", "roomTaC", "opticUpliftTaC", "derivedInternalTaC", "curveLookupTaC",
-    "thermalEvidence", "authorityState", "verifiedLumensPerMetre", "verifiedLmPerM", "boardTaC",
+    "verifiedLumensPerMetre", "verifiedLmPerM", "boardTaC",
   ]) {
     assert.equal(source.includes(forbiddenSemantic), false, `${forbiddenSemantic} must remain absent`);
   }
+  assert.equal(source.includes("thermalEvidence"), true);
+  assert.equal(source.includes("authorityState: null"), true);
   assert.equal(source.includes("referenceRoomTaC"), true);
   assert.equal(source.includes("referenceInternalTaC"), true);
   assert.equal(source.includes("opticThermalRiseTaC"), true);

@@ -21,8 +21,8 @@ export class NvbLabAdapterContractError extends Error {
   }
 }
 
-export const NVB_LAB_ADAPTER_SCHEMA_ID = "controlstack.lab.nvb-lab-projection.v1";
-export const NVB_LAB_ADAPTER_SCHEMA_VERSION = 1;
+export const NVB_LAB_ADAPTER_SCHEMA_ID = "controlstack.lab.nvb-lab-projection.v2";
+export const NVB_LAB_ADAPTER_SCHEMA_VERSION = 2;
 
 const INPUT_KEYS = Object.freeze(["resolution", "references"]);
 const REFERENCES_KEYS = Object.freeze(["gearTray", "optic"]);
@@ -120,7 +120,46 @@ function requireNullableFiniteNumber(value, name) {
   if (typeof value !== "number" || !Number.isFinite(value)) {
     fail(`${name} must be null or a finite number.`, "invalid_numeric_value", { name });
   }
-  return value;
+  return Object.is(value, -0) ? 0 : value;
+}
+
+function requireThermalNumber(value, name) {
+  const numeric = requireNullableFiniteNumber(value, name);
+  if (numeric === null) fail(`${name} is required.`, "thermal_triplet_missing", { name });
+  return numeric;
+}
+
+function decimalInteger(value, name) {
+  const text = String(requireThermalNumber(value, name));
+  const match = /^([+-]?)(\d+)(?:\.(\d*))?(?:e([+-]?\d+))?$/i.exec(text);
+  if (!match) fail(`${name} has unsupported decimal form.`, "thermal_triplet_invalid", { name });
+  const sign = match[1] === "-" ? -1n : 1n;
+  const fraction = match[3] || "";
+  const exponent = Number(match[4] || 0);
+  const digits = `${match[2]}${fraction}`.replace(/^0+(?=\d)/, "");
+  const shift = exponent - fraction.length;
+  if (!Number.isSafeInteger(shift) || Math.abs(shift) > 1000) {
+    fail(`${name} exceeds the supported decimal scale.`, "thermal_triplet_invalid", { name });
+  }
+  const magnitude = BigInt(digits || "0");
+  return shift >= 0
+    ? { integer: sign * magnitude * (10n ** BigInt(shift)), scale: 0 }
+    : { integer: sign * magnitude, scale: -shift };
+}
+
+function requireThermalTriplet(referenceRoomTaC, referenceInternalTaC, opticThermalRiseTaC, name) {
+  const room = decimalInteger(referenceRoomTaC, `${name}.referenceRoomTaC`);
+  const internal = decimalInteger(referenceInternalTaC, `${name}.referenceInternalTaC`);
+  const rise = decimalInteger(opticThermalRiseTaC, `${name}.opticThermalRiseTaC`);
+  const scale = Math.max(room.scale, internal.scale, rise.scale);
+  const align = ({ integer, scale: valueScale }) => integer * (10n ** BigInt(scale - valueScale));
+  if (align(room) + align(rise) !== align(internal)) {
+    fail(
+      `${name} must satisfy reference room plus rise equals absolute reference internal temperature.`,
+      "thermal_triplet_mismatch",
+      { referenceRoomTaC, referenceInternalTaC, opticThermalRiseTaC },
+    );
+  }
 }
 
 function clonePlainData(value, name = "value", seen = new Set()) {
@@ -188,16 +227,22 @@ function projectOptic(value, name) {
   if (value === null) return null;
   const optic = requirePlainObject(value, name);
   requireExactKeys(optic, OPTIC_KEYS, name);
+  const opticBomId = requireNullableText(optic.opticBomId, `${name}.opticBomId`);
+  if (opticBomId === null) fail(`${name}.opticBomId is required.`, "missing_optic_bom_id");
+  const referenceRoomTaC = requireThermalNumber(optic.referenceRoomTaC, `${name}.referenceRoomTaC`);
+  const referenceInternalTaC = requireThermalNumber(optic.referenceInternalTaC, `${name}.referenceInternalTaC`);
+  const opticThermalRiseTaC = requireThermalNumber(optic.opticThermalRiseTaC, `${name}.opticThermalRiseTaC`);
+  requireThermalTriplet(referenceRoomTaC, referenceInternalTaC, opticThermalRiseTaC, name);
   return {
-    opticBomId: requireNullableText(optic.opticBomId, `${name}.opticBomId`),
+    opticBomId,
     opticVariant: requireNullableText(optic.opticVariant, `${name}.opticVariant`),
     specCode: requireNullableText(optic.specCode, `${name}.specCode`),
     emissionPermission: requireNullableText(optic.emissionPermission, `${name}.emissionPermission`),
     hotTestEvidenceRef: requireNullableText(optic.hotTestEvidenceRef, `${name}.hotTestEvidenceRef`),
     opticalEfficiency: requireNullableFiniteNumber(optic.opticalEfficiency, `${name}.opticalEfficiency`),
-    referenceRoomTaC: requireNullableFiniteNumber(optic.referenceRoomTaC, `${name}.referenceRoomTaC`),
-    referenceInternalTaC: requireNullableFiniteNumber(optic.referenceInternalTaC, `${name}.referenceInternalTaC`),
-    opticThermalRiseTaC: requireNullableFiniteNumber(optic.opticThermalRiseTaC, `${name}.opticThermalRiseTaC`),
+    referenceRoomTaC,
+    referenceInternalTaC,
+    opticThermalRiseTaC,
   };
 }
 
@@ -323,6 +368,25 @@ function projectReference(value, expectedKind, name) {
   };
 }
 
+function appendUnresolved(unresolved, code) {
+  if (!unresolved.includes(code)) unresolved.push(code);
+}
+
+function projectThermalEvidence(resolution, opticReference, unresolved) {
+  if (resolution.path !== "optic" || resolution.optic === null) return null;
+  const optic = resolution.optic;
+  if (opticReference === null) appendUnresolved(unresolved, "thermal_evidence_reference_unbound");
+  if (optic.hotTestEvidenceRef === null) appendUnresolved(unresolved, "thermal_evidence_source_unresolved");
+  return {
+    opticBomId: optic.opticBomId,
+    referenceRoomTaC: optic.referenceRoomTaC,
+    referenceInternalTaC: optic.referenceInternalTaC,
+    opticThermalRiseTaC: optic.opticThermalRiseTaC,
+    evidenceRef: optic.hotTestEvidenceRef,
+    authorityState: null,
+  };
+}
+
 export function adaptNvbResolution(inputValue) {
   const input = requirePlainObject(inputValue, "input");
   requireExactKeys(input, INPUT_KEYS, "input");
@@ -331,6 +395,8 @@ export function adaptNvbResolution(inputValue) {
   requireExactKeys(references, REFERENCES_KEYS, "input.references");
   const gearTray = projectReference(references.gearTray, "GT", "input.references.gearTray");
   const optic = projectReference(references.optic, "OPT", "input.references.optic");
+  const unresolved = [...resolution.blockers];
+  const thermalEvidence = projectThermalEvidence(resolution, optic, unresolved);
 
   return deepFreeze({
     schemaId: NVB_LAB_ADAPTER_SCHEMA_ID,
@@ -345,7 +411,8 @@ export function adaptNvbResolution(inputValue) {
     },
     governingThermals: resolution.governingThermals,
     references: { gearTray, optic },
-    unresolved: [...resolution.blockers],
+    thermalEvidence,
+    unresolved,
     assemblyVerification: {
       emergency: null,
       ewisCartridge: null,
