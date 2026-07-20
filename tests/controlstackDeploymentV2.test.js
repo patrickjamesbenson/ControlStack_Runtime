@@ -97,10 +97,11 @@ test("deployment manifest defines the accepted eight-service topology and canoni
   assert.equal(manifest.controlUi.port, 8790);
 });
 
-test("Selector MCP write guard appends only the approved exact Selector summary file", () => {
+test("Selector MCP write guard appends only the approved exact Selector summary file and lane context", () => {
   const manifest = loadAndValidateManifest(manifestPath);
   const selectorMcp = manifest.services.find((item) => item.id === "selector-mcp");
   const exactFile = "packages/modules/cs-selector/selectorFactoryApprovedInputsSummary.js";
+  const laneContext = ["docs", "_context", "lanes", "selector-engine", "**"].join("/");
   const moduleWildcard = ["packages", "modules", "**"].join("/");
   const selectorModuleWildcard = ["packages", "modules", "cs-selector", "**"].join("/");
   const configuredGlobs = selectorMcp.env.CONTROLSTACK_ALLOWED_WRITE_GLOBS.split(";");
@@ -118,10 +119,12 @@ test("Selector MCP write guard appends only the approved exact Selector summary 
     "package.json",
     "package-lock.json",
     exactFile,
+    laneContext,
   ];
 
   assert.deepEqual(configuredGlobs, expectedGlobs);
   assert.equal(configuredGlobs.filter((item) => item === exactFile).length, 1);
+  assert.equal(configuredGlobs.filter((item) => item === laneContext).length, 1);
   assert.equal(configuredGlobs.includes(moduleWildcard), false);
   assert.equal(configuredGlobs.includes(selectorModuleWildcard), false);
   assert.deepEqual(configuredGlobs.filter((item) => item.startsWith("packages/modules/")), [exactFile]);
