@@ -652,3 +652,28 @@ Do not repair these gates. Optional persistence and result association remain ou
 5. Audit that governance metadata is neither required nor scored by the computational kernel.
 
 SEL-019's former project-save/register/active-revision prerequisite is superseded. SEL-002 and SEL-003 cannot block Engine computation. Main and its unfinished runtime-port work remain untouched.
+
+## 2026-07-21 selections-only thermal chain completion handoff
+
+The Selector lane has completed and pushed queue reconciliation, SEL-018, THERM-P1 and THERM-E1 in the required order. The lane ended clean.
+
+### Accepted results
+
+- Selector emits `selectedRoomTaC` only.
+- Program binds selected optic identity to exact Lab version-2 evidence without thermal arithmetic.
+- Engine applies the measured optic rise once and uses the result as curve lookup temperature.
+- The existing lumen-curve parser remains unchanged.
+- Different optic rises change both lookup temperature and verified lm/m.
+- Different traceability envelopes over identical engineering selections produce an identical complete Engine response.
+
+### Governance receipt
+
+Project registration, active revision and selected-project eligibility are outside-governance facilities. THERM-E1 does not import or call them. The module imports only the Program thermal-evidence adapter and the curve parser, and negative checks found no renamed equivalent gate.
+
+This is a computational bypass, not deletion of optional persistence capability and not a relabelled block. Governance may associate or store results after calculation but cannot influence warnings, defaults, candidates, scores, validation or output.
+
+### Evidence
+
+Focused Engine coverage passed 120/120. The normal Selector closeout passed 107/107. Program final acceptance is recorded separately. No route, persistence, RuntimeData, donor, IES, output-generation, curve-parser or main change occurred.
+
+The thermal chain now requires no further Selector implementation or live registration proof. Optional persistence, downstream artifacts and main promotion remain separate future decisions.

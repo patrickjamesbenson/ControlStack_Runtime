@@ -594,3 +594,17 @@ Cross-lane acceptance must prove:
 9. the gate-reconciliation receipt names every former governance prerequisite and proves deletion or bypass from Engine eligibility, with a negative search showing no renamed equivalent remains.
 
 Any future use of governance metadata to choose, alter, score or block an Engine result is a breaking seam change requiring an explicit new Program decision.
+
+### Version-1 acceptance receipt
+
+The outside-governance / inside-Engine version-1 seam is accepted across lanes.
+
+- `selectionSet` remains the sole caller-required computational request.
+- `outsideGovernanceEnvelope` may vary or be absent without changing Engine eligibility or deterministic output.
+- THERM-E1 quarantines the optional traceability envelope and passes only engineering data to the computational path.
+- The changed-optic proof changes both lookup temperature and verified lm/m.
+- The envelope-independence proof changes user, project, owner, timeline, registration, active revision and a renamed eligibility field while preserving an identical complete Engine response.
+- The computational dependency path contains only the accepted Program evidence adapter and existing curve parser.
+- Project registration, active revision and selected-project eligibility are bypassed from computation rather than renamed.
+
+All nine acceptance-lock conditions are satisfied. Future governance influence over warnings, defaults, candidate exclusion, scoring, validation or output is a breaking version change.

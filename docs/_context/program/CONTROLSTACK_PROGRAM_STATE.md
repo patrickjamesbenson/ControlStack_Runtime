@@ -405,3 +405,20 @@ P2 Checkpoint 1 is **IMPLEMENTATION COMPLETE / GATE GREEN / COMMIT BLOCKED BY SH
 - **BRIEF RECONCILIATION:** original outer payload metadata is retained only as traceability; the briefs state it makes no engineering decisions and the donor kernel does not read it.
 - **MAIN:** unfinished runtime-port work remains outside this sequence.
 - **NEXT:** reconcile the Selector lane queue and execute SEL-018 without any project-registration dependency. Patrick has no action.
+
+## 2026-07-21 selections-only thermal chain accepted state
+
+- **QUEUE RECONCILIATION:** complete and pushed in the isolated Selector lane.
+- **SEL-018:** complete; selected source-backed room value only, no registration/project/Tier/thermal calculation.
+- **THERM-P1:** complete; internal optic/evidence validation only, no thermal arithmetic.
+- **THERM-E1:** complete; measured rise applied exactly once and existing curve parser used unchanged.
+- **CHANGED-OPTIC TEST:** passed; changed rise changed both lookup temperature and verified lm/m.
+- **BOUNDARY REGRESSION:** passed; different user, company, project, quote, owner, timeline, registration, active revision and renamed eligibility envelope values produced an identical complete Engine response.
+- **ENVELOPE QUARANTINE:** traceability values are neither interpreted nor returned; a derived-looking envelope value cannot affect computation.
+- **GATE RECEIPT:** project registration, active revision and selected-project eligibility are bypassed from the computational path, not renamed.
+- **DEPENDENCIES:** THERM-E1 reaches only the accepted Program evidence adapter and existing lumen-curve parser.
+- **SELECTOR EVIDENCE:** focused 120/120; normal closeout 107/107; final Selector tree clean.
+- **NO-WRITE BOUNDARY:** no route, persistence, RuntimeData mutation, donor invocation, IES generation, output generation, curve-parser change or main/runtime-port change.
+- **CROSS-LANE STATUS:** accepted complete.
+- **HELD SEPARATELY:** optional outside-governance persistence, downstream artifacts and main promotion.
+- **NEXT:** preserve this seam and consider only separately approved work. Patrick has no action.

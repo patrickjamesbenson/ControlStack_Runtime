@@ -1010,3 +1010,35 @@ No feature code is changed by this ruling. The unfinished runtime-port work in m
 Final Engine acceptance must execute the Engine twice with identical engineering selections and different outer traceability envelopes. The envelopes must vary user, project, owner, timeline and registration state. Engine eligibility and the complete deterministic engineering result must be identical after excluding only explicitly nondeterministic transport fields such as request timestamps or request IDs.
 
 This is a class-level guard. It must fail if any governance field is renamed, moved or read for a warning, default, score, candidate exclusion, validation state or output field. The reconciliation receipt must identify each former governance gate and prove it was deleted or bypassed from Engine eligibility rather than renamed.
+
+---
+
+## 2026-07-21 — Selections-only thermal chain accepted across lanes
+
+**Status:** FINAL CROSS-LANE ACCEPTANCE COMPLETE.
+
+### Accepted sequence
+
+Program accepts the completed Selector queue reconciliation and the three ordered parcels:
+
+1. **SEL-018** — the Selector emits the committed source-backed `selectedRoomTaC` only and performs no registration, project, Tier or thermal calculation work;
+2. **THERM-P1** — the internal Program adapter binds selected optic identity to exact Lab version-2 evidence and performs no thermal arithmetic;
+3. **THERM-E1** — Engine applies the measured optic rise exactly once and delegates unchanged to the existing lumen-curve parser.
+
+### Accepted execution evidence
+
+The focused THERM-E1 suite passed 120/120 and the normal Selector closeout gate passed 107/107. The required examples passed: 25 + 10 produces lookup 35, 35 + 10 produces lookup 45, and changing only the optic-bound measured rise while holding room, current and curve fixed changes both lookup temperature and verified lm/m.
+
+### Boundary regression accepted
+
+Two executions used identical engineering selections with different outer envelopes covering user, company, project, quote, owner, timeline, registration state, active revision and a differently named eligibility field. The complete deterministic Engine responses were identical. Traceability values did not appear in output, and a derived-looking value placed inside the outer envelope did not affect eligibility, warnings, validation or calculation.
+
+### Governance-gate receipt
+
+The former project-registration, active-revision and selected-project eligibility chain is **bypassed from the computational path, not renamed**. The THERM-E1 dependency map contains only the accepted Program thermal-evidence adapter and the existing curve parser. Negative source checks found no project-browser registration, selected-project, active-revision, registration-boundary, registration-eligibility or pre-Engine eligibility reference in THERM-E1.
+
+The existing governance services may remain for optional persistence, attribution and traceability outside the kitchen. They do not gate, alter or score Engine execution.
+
+### Preserved exclusions
+
+No route, persistence path, RuntimeData mutation, donor invocation, IES generation, downstream output generation, existing curve-parser change or main/runtime-port change was included. Outside-governance persistence and main promotion remain separate decisions.

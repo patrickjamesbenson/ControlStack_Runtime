@@ -49,3 +49,15 @@ The original flow's customer/job/project/metadata fields remain optional outer t
 SEL-019's registration-before-Engine sequence is superseded. SEL-002 and SEL-003 do not block Engine calculation. SEL-018 remains room-selection transport only. THERM-P1 remains internal technical evidence binding, and THERM-E1 retains the one-time thermal rise and varied-optic output proof.
 
 Existing governance gates at the Engine boundary are deleted or bypassed when commissioned; they are not repaired. Main runtime-port work remains excluded.
+
+## Final accepted state
+
+Selector queue reconciliation, SEL-018, THERM-P1 and THERM-E1 are complete and pushed. The Selector lane is clean.
+
+Engine applies the selected room plus measured optic rise exactly once and delegates to the unchanged curve parser. The changed-optic test moves both lookup temperature and verified lm/m.
+
+The boundary regression passed: identical engineering selections with different user, project, owner, timeline, registration, active-revision and renamed eligibility envelopes returned an identical complete Engine response. Traceability is quarantined and absent from output.
+
+Project registration, active revision and selected-project eligibility are bypassed from computation, not renamed. THERM-E1 depends only on the Program evidence adapter and curve parser.
+
+Focused Engine coverage passed 120/120; normal Selector closeout passed 107/107. No live registration proof is required. Optional persistence, downstream artifacts and main promotion remain separate.

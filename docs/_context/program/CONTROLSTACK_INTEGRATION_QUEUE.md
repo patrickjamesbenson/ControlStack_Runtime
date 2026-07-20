@@ -641,3 +641,32 @@ Technical selection completeness, authoritative source availability, evidence co
 7. leave outside-system persistence and main promotion separate.
 
 No feature implementation is included in this queue ruling.
+
+## 2026-07-21 — Selections-only thermal chain final acceptance
+
+**Status:** COMPLETE / ACCEPTED.
+
+The Selector lane reconciled its queue to the binding boundary, preserved the already accepted SEL-018 and THERM-P1 receipts, completed THERM-E1, pushed separate feature and lane-memory closeouts, and ended clean.
+
+### Completed order
+
+1. Selector queue reconciliation — complete;
+2. SEL-018 selected-room transport — complete;
+3. THERM-P1 internal evidence binding — complete;
+4. THERM-E1 one-time rise and curve execution — complete;
+5. changed-optic regression — complete;
+6. different-envelope / identical-output regression — complete;
+7. governance-gate deletion-or-bypass receipt — complete.
+
+### Acceptance evidence
+
+- focused Engine execution coverage: 120/120;
+- normal Selector closeout gate: 107/107;
+- identical engineering inputs with different user/project/owner/timeline/registration/active-revision envelopes produced identical complete Engine output;
+- changed optic rise changed both lookup temperature and verified lm/m;
+- THERM-E1 imports only the Program evidence adapter and existing curve parser;
+- no renamed project-registration, active-revision or selected-project eligibility gate exists in the computational module.
+
+### Remaining queue boundary
+
+There is no outstanding Selector or Engine implementation item in this thermal sequence. Optional persistence/traceability work remains outside governance and cannot become an Engine prerequisite. Main promotion, downstream artifacts and the unfinished main runtime-port work remain separately held.
