@@ -363,3 +363,13 @@ This log is append-oriented. Do not silently rewrite historical decisions.
 **Scope:** Create only `docs/engine/ENGINE_OUTPUT_CONTRACT_CANDIDATE_V1.md` and `tests/engineOutputContractCandidate.test.js`; use the established temporary gate harness and remove it before final staging. The candidate must define selected engineering inputs, deterministic complete/blocked semantics, technical identity/provenance, non-persistent run-table rows, replay/readback and compatibility rules while recording all evidence still missing before stability.
 
 **Consequence:** Downstream artifacts remain held. SEL-008 and SEL-009 remain blocked pending Program review of the candidate, and SEL-010 remains held pending a separate stability declaration.
+
+## 2026-07-21 — SEL-007 candidate accepted in the lane
+
+**Decision:** Accept the pushed Engine output contract candidate and return it to Program & Integrate for review without declaring stability.
+
+**Rationale:** The focused static regression executed through the temporary harness and the full gate passed 114/114. The candidate pins the accepted thermal result schema, proves the current RunTable domain scaffold is diagnostic-only, detects the incompatible field sets sharing `controlstack.runtime.runtable-first-narrow-row.v1`, and proves the first-narrow path is persistence-coupled.
+
+**Candidate result:** The proposed selections-only request, output and RunTable row schemas are documented with complete/blocked semantics, technical provenance, deterministic replay/readback, compatibility and rollback rules. Nine explicit stability conditions remain unsatisfied, including implementation of the non-persistent envelope and unambiguous row producer, complete producer tests, Lab consumer evidence, full-output sealed/live proof and rollback/readback evidence.
+
+**Consequence:** SEL-007 is done. The Engine output contract remains `candidate_not_stable`. No widening, Lab consumer change or downstream artifact is eligible until Program reviews the candidate and commissions a new exact parcel.

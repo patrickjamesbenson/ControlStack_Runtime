@@ -460,3 +460,13 @@ The contract candidate must not pretend current diagnostic or persistence-couple
 Define a non-persistent selections-only candidate covering input shape, complete/blocked status, technical result identity, source/evidence/policy fingerprints, run-table row semantics, deterministic replay/readback, compatibility and rollback. List the exact producer, consumer and sealed/live evidence still required before Program may declare stability.
 
 Do not change feature code or activate SEL-008, Lab compatibility or downstream artifacts. Return the pushed candidate to Program for review.
+
+## 2026-07-21 SEL-007 candidate complete — Program review required
+
+The Engine output contract candidate and focused regression are committed and pushed. Focused coverage passed 114/114 and the temporary gate harness was removed cleanly.
+
+The candidate is deliberately not stable. It proposes `controlstack.engine.selection-set.v1`, `controlstack.engine.output.v1` and `controlstack.engine.runtable-row.v1`, with selections-only eligibility, complete/blocked fail-closed states, technical fingerprints, deterministic replay/readback and compatibility/rollback rules.
+
+The current repository cannot support a stability declaration yet. The same `controlstack.runtime.runtable-first-narrow-row.v1` identifier has incompatible field sets, the existing first-narrow rows path depends on a persisted selected-result summary, and the runtime RunTable domain scaffold remains diagnostic-only with production generation disabled.
+
+Program must decide the next exact implementation parcel. No Selector widening, Lab consumer adaptation, downstream artifact, persistence, registration, route or main work is authorised from this handoff.

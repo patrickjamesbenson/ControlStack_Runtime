@@ -445,3 +445,13 @@ SEL-007 is the sole ready item. Its exact scope is one versioned contract-candid
 The candidate must specify a non-persistent selections-only Engine envelope, complete and blocked-fail-closed status shapes, technical identity and source/evidence fingerprints, deterministic replay/readback keys, run-table row semantics, compatibility and rollback rules, and the remaining producer/consumer/live-fixture evidence required before Program may declare stability.
 
 No feature, route, persistence, registration, active-revision, selected-project, RuntimeData, Lab, donor, main or downstream implementation is authorised in SEL-007. SEL-008, SEL-009 and SEL-010 remain blocked or held pending Program review and a separate stability declaration.
+
+## 2026-07-21 SEL-007 Engine output contract candidate closeout
+
+SEL-007 is complete and pushed. The new contract document is explicitly `candidate_not_stable` and the focused static regression passed inside a 114/114 gate. The temporary harness was removed and the gate-included Engine domain test returned unchanged.
+
+The candidate defines proposed selections-only request, output and RunTable row schemas, complete and blocked-fail-closed semantics, technical result identity/provenance, deterministic replay/readback, compatibility and rollback. It preserves the outside-governance boundary and permits derived result profiles only as Engine-produced metadata.
+
+The audit found two binding blockers: `controlstack.runtime.runtable-first-narrow-row.v1` is associated with incompatible field sets, and the current first-narrow rows path requires a persisted selected-result summary. The runtime RunTable domain scaffold also remains diagnostic-only with production generation blocked.
+
+Program must review the candidate before any implementation. The output contract is not stable; SEL-008, SEL-009 and SEL-010 remain blocked or held, and no downstream artifact is active.

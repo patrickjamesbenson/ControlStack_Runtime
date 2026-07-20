@@ -230,13 +230,14 @@
 ### Q-7 Declare Engine output contract candidate
 
 * id: SEL-007
-* status: ready
+* status: done
 * depends-on: accepted THERM-A1 final Program acceptance; the historical SEL-003 project-coupled gate is superseded
 * gate: selector-engine
 * authorised files: new `docs/engine/ENGINE_OUTPUT_CONTRACT_CANDIDATE_V1.md`, new `tests/engineOutputContractCandidate.test.js`, temporary harness-only use of `tests/engineRunTableDomain.test.js`, and closeout updates to the five mutable lane context files. The harness may add exactly one side-effect import of `./engineOutputContractCandidate.test.js`; it must be removed, byte-identical to HEAD and absent from final staging/commit.
 * objective: produce a versioned candidate contract covering selected engineering inputs, result identity, thermal result composition, run-table rows, status/error semantics, technical provenance, replay/readback and compatibility without restoring any governance prerequisite.
 * acceptance: the candidate is documentation-only and pins existing versioned producer artifacts where they comply; it explicitly classifies the persistence-coupled first-narrow row path as an outer consumer rather than an Engine prerequisite; it defines a non-persistent selections-only computational envelope, fail-closed status semantics, technical fingerprints, compatibility/rollback rules and the evidence still required before Program may declare stability. The focused static regression and complete gate pass; exactly the contract document and its focused test are committed and pushed. No downstream activation is implied.
 * prohibitions: no feature, route, persistence, selected-project, registration, active-revision, RuntimeData, Lab, donor, main or downstream implementation; do not declare the contract stable; do not treat diagnostic scaffolds or persistence-coupled row builders as production-ready merely because their schemas are versioned.
+* completion: the candidate document and focused regression were committed and pushed after 114/114 focused gate coverage. The document records `candidate_not_stable`, identifies the incompatible first-narrow row schema collision and persistence dependency, classifies the current RunTable scaffold as diagnostic-only, and defines the exact nine-part stability gate. Program review is now required; SEL-008, SEL-009 and SEL-010 remain blocked or held.
 
 ### Q-8 First contract-preserving widening pass
 

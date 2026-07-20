@@ -513,3 +513,19 @@ Every completed worker updates this index with:
 - Exact SEL-007 scope: one candidate document, one focused static regression and temporary harness-only use of the gate-included Engine domain test — RECORDED.
 - Stability hold: no consumer compatibility, complete production RunTable, live/sealed full-output receipt or rollback acceptance is yet recorded — DOWNSTREAM REMAINS HELD.
 - No feature, source, route, persistence, registration, RuntimeData, Lab, donor, main or downstream file changed during admission — VERIFIED BY SCOPE AND GIT STATUS.
+
+## 2026-07-21 — SEL-007 Engine output contract candidate evidence
+
+- Final feature paths: `docs/engine/ENGINE_OUTPUT_CONTRACT_CANDIDATE_V1.md` and `tests/engineOutputContractCandidate.test.js` only — VERIFIED.
+- Candidate identity/state: `controlstack.engine.output-contract-candidate.v1`, `candidate_not_stable` — VERIFIED.
+- Thermal producer pin: accepted `controlstack.runtime.thermal-lumen-execution.v1` version 1 recorded as a bounded component, not the complete output contract — VERIFIED.
+- Diagnostic scaffold classification: runtime RunTable domain scaffold schema/state and disabled production/persistence flags are pinned — VERIFIED BY IMPORTED CONSTANTS AND SOURCE CHECKS.
+- Schema-collision proof: the same `controlstack.runtime.runtable-first-narrow-row.v1` ID/version is associated with two unequal field sets — VERIFIED BY EXECUTED TEST.
+- Persistence-coupling proof: first-narrow rows require a persisted output summary and the row-shape path carries a persisted-summary fingerprint/prerequisite — VERIFIED BY EXECUTED SOURCE CHECKS.
+- Boundary contract: proposed selection-set, output and row schemas exclude governance eligibility and preserve envelope independence — VERIFIED BY DOCUMENT REGRESSION.
+- Status/replay/compatibility contract: complete, blocked-fail-closed, technical fingerprint, readback, rollback and unknown-version refusal rules are pinned — VERIFIED.
+- Stability hold: nine remaining Program acceptance conditions are explicitly listed; downstream activation is prohibited — VERIFIED.
+- Focused harness gate: 114 passed, 0 failed — VERIFIED.
+- Harness removal: `tests/engineRunTableDomain.test.js` returned clean and unstaged — VERIFIED.
+- Candidate committed and pushed; no feature, route, persistence, registration, RuntimeData, Lab, donor, main or downstream implementation changed — VERIFIED.
+- Queue result: SEL-007 done; Program review required; SEL-008, SEL-009 and SEL-010 remain blocked or held — RECORDED.
