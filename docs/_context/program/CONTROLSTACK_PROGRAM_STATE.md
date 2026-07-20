@@ -313,12 +313,13 @@ P2 Checkpoint 1 is **IMPLEMENTATION COMPLETE / GATE GREEN / COMMIT BLOCKED BY SH
 ## 2026-07-20 binding thermal-chain state
 
 - **SELECTOR:** owns user room ambient only and passes it unchanged.
-- **LAB:** owns the optic-bound measured triplet: reference room, reference internal and measured rise, with evidence provenance. Current repeated rise values of 35 are placeholders and remain unverified.
-- **ENGINE:** owns the single addition `selectedRoomTaC + opticInternalDeltaTaC`, uses the result as curve lookup temperature, applies curve clamping/interpolation and returns verified lm/m.
+- **LAB:** owns the optic-bound measured triplet with evidence provenance: `referenceRoomTaC` from legacy `room_ta_c`, absolute `referenceInternalTaC` from misleading legacy `optic_internal_delta_ta_c`, and actual `opticThermalRiseTaC` from legacy `optic_uplift_ta_c`.
+- **ENGINE:** owns the single addition `selectedRoomTaC + opticThermalRiseTaC`, uses the result as curve lookup temperature, applies curve clamping/interpolation and returns verified lm/m.
 - **PROGRAM:** owns the adapter, provenance checks and acceptance gate.
 - **VERSION-1 LOOKUP RULE:** `curveLookupTaC === derivedInternalTaC`; a later board-temperature transform requires a new decision.
 - **SEALED KEYWORD:** `_INTERNAL_AMBIENT_TA_C` remains the Lab authority-test internal measurement, not the runtime-derived operating temperature.
 - **SEL-018:** blocked as worded; it must be amended before implementation because room ambient may not be used directly as lookup temperature.
-- **TEST:** mandatory varied-optic fixture, exact 25+10=35 and 35+10=45 cases, no hardcoded placeholder, no double count, identity-bound evidence and fail-closed contradictions.
+- **TEST:** mandatory varied-optic `optic_uplift_ta_c` fixture, exact 25+10=35 and 35+10=45 cases, explicit proof that legacy `optic_internal_delta_ta_c = 35` is absolute internal temperature rather than rise, no hardcoded 35 or 10, no double count, identity-bound evidence and fail-closed contradictions.
+- **NAMING:** new contracts prohibit `opticInternalDeltaTaC`; adapters expose `referenceInternalTaC` and `opticThermalRiseTaC`, with a later source-model rename recommended.
 - **AUDIT:** Runtime is checked against the approved data model, not donor-code parity.
 - **NEXT:** affected lane parcels must cite this ruling; no thermal-chain implementation is authorised by the ruling alone. Patrick has no action.

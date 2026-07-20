@@ -677,23 +677,27 @@ LAB-035 may move from `blocked` to `ready` as the sole active Lab parcel. Exactl
 
 **Status:** APPROVED AS THE SINGLE CROSS-LANE THERMAL CONTRACT; SEL-018 MUST BE AMENDED BEFORE IMPLEMENTATION.
 
+**Correction and supersession:** Any earlier Program text or receipt that treated legacy `optic_internal_delta_ta_c` or semantic `opticInternalDeltaTaC` as the rise is void. The legacy field is absolute internal temperature; legacy `optic_uplift_ta_c` is the rise. This corrected section is the sole active thermal ruling.
+
 ### Authoritative chain
 
 For one selected optic:
 
 1. Selector supplies only the user-selected room ambient, `selectedRoomTaC`.
-2. Lab supplies the measured optic thermal evidence:
-   - `referenceRoomTaC` — ambient measured during the Lab thermal test;
-   - `referenceInternalTaC` — internal assembly temperature measured during that same test;
-   - `opticInternalDeltaTaC` — the measured rise, exactly `referenceInternalTaC - referenceRoomTaC`.
-3. Engine alone calculates `derivedInternalTaC = selectedRoomTaC + opticInternalDeltaTaC`.
+2. Lab supplies the measured optic thermal evidence through unambiguous semantic fields:
+   - `referenceRoomTaC` — ambient measured during the Lab thermal test, sourced from legacy `room_ta_c`;
+   - `referenceInternalTaC` — absolute internal assembly temperature measured during that same test, sourced from the misleadingly named legacy `optic_internal_delta_ta_c`;
+   - `opticThermalRiseTaC` — the actual measured rise, sourced from legacy `optic_uplift_ta_c` and exactly equal to `referenceInternalTaC - referenceRoomTaC`.
+3. Engine alone calculates `derivedInternalTaC = selectedRoomTaC + opticThermalRiseTaC`.
 4. Engine uses `derivedInternalTaC` as the temperature input to the board lumen/temperature curve lookup.
 5. Engine returns the verified temperature-adjusted lm/m result and the safe derivation summary.
 
 Example binding behaviour:
 
 - Lab evidence: room 25°C, internal 35°C, rise 10°C.
-- The repeated source value `optic_internal_delta_ta_c = 35` is a placeholder, not accepted measured rise evidence. It remains unresolved for verification until an evidence-bound Lab triplet proves the actual per-optic rise.
+- Legacy `optic_internal_delta_ta_c = 35` means the absolute internal temperature at the 25°C reference room condition; it is not a delta and must never be added to room ambient.
+- Legacy `optic_uplift_ta_c = 10` is the actual rise used by Engine after evidence and optic identity are validated.
+- Because the current thermal values are identical across optic rows, they do not prove a per-optic lookup path; acceptance must vary one fixture row's `optic_uplift_ta_c`.
 - User room selection 25°C -> Engine derives 35°C -> curve lookup at 35°C.
 - User room selection 35°C -> Engine derives 45°C -> curve lookup at 45°C.
 
@@ -713,10 +717,12 @@ Lab publishes the measured triplet and provenance, not only an already-combined 
 - optic identity/reference binding;
 - `referenceRoomTaC`;
 - `referenceInternalTaC`;
-- `opticInternalDeltaTaC`;
+- `opticThermalRiseTaC`;
 - measurement/evidence reference and authority state.
 
-The triplet must satisfy `referenceInternalTaC - referenceRoomTaC === opticInternalDeltaTaC` exactly after canonical decimal normalisation. Otherwise it fails closed. Lab may display all three values but must not publish a user-specific `derivedInternalTaC`.
+The triplet must satisfy `referenceRoomTaC + opticThermalRiseTaC === referenceInternalTaC` exactly after canonical decimal normalisation. Otherwise it fails closed. Lab may display all three values but must not publish a user-specific `derivedInternalTaC`.
+
+The ambiguous semantic name `opticInternalDeltaTaC` is prohibited in new cross-lane contracts. Until the source model is migrated, Program adapters must map legacy `optic_internal_delta_ta_c` to `referenceInternalTaC` and legacy `optic_uplift_ta_c` to `opticThermalRiseTaC`. The recommended source-model rename is `optic_reference_internal_ta_c` and `optic_thermal_rise_ta_c`.
 
 The sealed-reference `_INTERNAL_AMBIENT_TA_C` keyword remains the Lab authority-test internal measurement, not the runtime-derived operating temperature. Runtime derivation must use a separate Engine-owned field and must never overwrite or reinterpret the sealed test value.
 
@@ -738,12 +744,13 @@ Acceptance must prove all of the following:
 
 1. Baseline: Lab 25°C room plus 10°C rise produces a 35°C Engine lookup.
 2. User variation: selected room 35°C with the same optic produces a 45°C Engine lookup.
-3. Per-optic lookup: one fixture optic must use a deliberately different rise value; with identical room ambient and curve data, the derived lookup temperature and lm/m output must change.
-4. No constant: the test must fail if the implementation hardcodes the current placeholder value 35 or a fixed rise.
-5. No double count: the rise is applied exactly once.
-6. Provenance: the rise must be bound to the selected optic identity and the accepted Lab evidence/reference.
-7. Fail closed: missing, malformed, contradictory or unbound thermal evidence blocks verification.
-8. Clamping: only Engine may clamp the final derived lookup temperature to the supported 25–65°C curve range, while preserving both the unclamped derived value and clamp state in the safe summary.
+3. Per-optic lookup: one fixture optic must use a deliberately different legacy `optic_uplift_ta_c` value; with identical room ambient and curve data, the derived lookup temperature and lm/m output must change.
+4. Legacy-name guard: a fixture containing `room_ta_c = 25`, `optic_internal_delta_ta_c = 35` and `optic_uplift_ta_c = 10` must resolve to a 10°C rise, never a 35°C rise.
+5. No constant: the test must fail if the implementation hardcodes 35, hardcodes 10, or reads the legacy internal-temperature field as the rise.
+6. No double count: the rise is applied exactly once.
+7. Provenance: the rise must be bound to the selected optic identity and the accepted Lab evidence/reference.
+8. Fail closed: missing, malformed, contradictory or unbound thermal evidence blocks verification.
+9. Clamping: only Engine may clamp the final derived lookup temperature to the supported 25–65°C curve range, while preserving both the unclamped derived value and clamp state in the safe summary.
 
 ### Parity audit rule
 

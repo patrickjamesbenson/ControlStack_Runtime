@@ -353,16 +353,21 @@ Selector retains all source, state, vocabulary, defaults, option generation, rea
 
 **Status:** BINDING; EXISTING CONFLICTING PARCELS MUST BE AMENDED.
 
+**Correction and supersession:** Any earlier seam text that interpreted legacy `optic_internal_delta_ta_c` as a delta is void. It is the absolute internal reference temperature. Legacy `optic_uplift_ta_c` is the actual thermal rise.
+
 ### Contract
 
 ```text
 selectedRoomTaC                 — Selector-owned user choice
 referenceRoomTaC                — Lab-measured reference test condition
-referenceInternalTaC            — Lab-measured internal test condition
-opticInternalDeltaTaC           — Lab-owned measured rise
+                                  sourced from legacy room_ta_c
+referenceInternalTaC            — Lab-measured absolute internal test condition
+                                  sourced from misleading legacy optic_internal_delta_ta_c
+opticThermalRiseTaC             — Lab-owned measured rise
+                                  sourced from legacy optic_uplift_ta_c
                                   = referenceInternalTaC - referenceRoomTaC
 derivedInternalTaC              — Engine-owned runtime derivation
-                                  = selectedRoomTaC + opticInternalDeltaTaC
+                                  = selectedRoomTaC + opticThermalRiseTaC
 curveLookupTaC                  — Engine-owned lookup input
                                   = derivedInternalTaC in version 1
 verifiedLmPerM                  — Engine-owned curve result
@@ -372,10 +377,17 @@ verifiedLmPerM                  — Engine-owned curve result
 
 - Selector does not derive, clamp, look up or verify temperature-adjusted output.
 - Lab does not combine a user's room choice with the measured rise.
-- Engine does not invent or hardcode the optic rise and does not reinterpret the sealed Lab test internal temperature. Current repeated rise-field values of 35 are placeholder data and cannot unlock verification.
+- Engine does not invent or hardcode the optic rise and does not reinterpret the sealed Lab test internal temperature. Legacy `optic_internal_delta_ta_c = 35` is absolute internal temperature at the reference room condition; legacy `optic_uplift_ta_c = 10` is the rise.
 - Program validates the cross-lane bundle but does not own the scientific measurement or curve result.
 
 `_INTERNAL_AMBIENT_TA_C` remains the Lab authority-test internal measurement. Runtime-derived operating temperature uses separate Engine-owned fields.
+
+The name `opticInternalDeltaTaC` is prohibited in new seam DTOs because the source field it resembles is not a delta. Until source migration, Program adapters must map:
+
+- legacy `optic_internal_delta_ta_c` -> `referenceInternalTaC`;
+- legacy `optic_uplift_ta_c` -> `opticThermalRiseTaC`.
+
+The recommended source-model rename is `optic_reference_internal_ta_c` and `optic_thermal_rise_ta_c`.
 
 ### Acceptance
 
@@ -383,8 +395,9 @@ The chain is accepted only when tests prove:
 
 - 25 + 10 produces lookup 35;
 - 35 + 10 produces lookup 45;
-- a second optic fixture with a different rise changes lookup temperature and lm/m;
-- a fixed 35 placeholder or fixed rise cannot satisfy the tests;
+- a second optic fixture with a different legacy `optic_uplift_ta_c` changes lookup temperature and lm/m;
+- `room_ta_c = 25`, `optic_internal_delta_ta_c = 35`, and `optic_uplift_ta_c = 10` resolve to a 10°C rise and a 35°C lookup, never a 35°C rise and a 60°C lookup;
+- a fixed 35, fixed 10, or literal reading of the misleading legacy field cannot satisfy the tests;
 - the rise is applied exactly once;
 - identity/evidence mismatch, missing fields or contradictory measured triplets fail closed;
 - Engine alone applies the supported 25–65°C clamp and reports unclamped, lookup and clamp state safely;

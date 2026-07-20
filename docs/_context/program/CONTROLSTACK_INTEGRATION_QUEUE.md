@@ -477,8 +477,8 @@ Lab must return the exact one-file feature commit, separate documentation closeo
 ### Ownership
 
 - Selector passes only user-selected room ambient, unchanged.
-- Lab publishes the selected optic's measured thermal triplet and evidence binding: test-room temperature, test-internal temperature and measured rise. Repeated source values of 35 in the rise field are placeholders and cannot unlock verification.
-- Engine alone calculates `derivedInternalTaC = selectedRoomTaC + opticInternalDeltaTaC`, uses that value as `curveLookupTaC`, applies the supported curve clamp/interpolation and returns verified lm/m.
+- Lab publishes the selected optic's measured thermal triplet and evidence binding: `referenceRoomTaC` from legacy `room_ta_c`, `referenceInternalTaC` from misleading legacy `optic_internal_delta_ta_c`, and actual `opticThermalRiseTaC` from legacy `optic_uplift_ta_c`.
+- Engine alone calculates `derivedInternalTaC = selectedRoomTaC + opticThermalRiseTaC`, uses that value as `curveLookupTaC`, applies the supported curve clamp/interpolation and returns verified lm/m.
 - Program owns adapter validation and cross-lane acceptance.
 
 The sealed `_INTERNAL_AMBIENT_TA_C` remains the Lab authority-test internal measurement. It is not overwritten by the Engine's runtime-derived operating temperature.
@@ -491,4 +491,6 @@ The sealed `_INTERNAL_AMBIENT_TA_C` remains the Lab authority-test internal meas
 
 ### Binding acceptance
 
-Tests must prove 25 + 10 = 35 and 35 + 10 = 45; vary one optic fixture's rise so both lookup temperature and lm/m change; prove the rise is applied once; reject missing, contradictory or identity-unbound evidence; and audit Runtime against the approved data model rather than donor code.
+Tests must prove 25 + 10 = 35 and 35 + 10 = 45; map legacy `optic_internal_delta_ta_c = 35` to absolute reference internal temperature and legacy `optic_uplift_ta_c = 10` to rise; vary one optic fixture's `optic_uplift_ta_c` so both lookup temperature and lm/m change; prove the rise is applied once; reject missing, contradictory or identity-unbound evidence; and audit Runtime against the approved data model rather than donor code.
+
+The ambiguous cross-lane field name `opticInternalDeltaTaC` is prohibited. Program adapters must expose `referenceInternalTaC` and `opticThermalRiseTaC`. A separate data-model correction should rename the legacy source fields to `optic_reference_internal_ta_c` and `optic_thermal_rise_ta_c`.

@@ -496,15 +496,19 @@ LAB-035 is now the sole ready Lab item. LAB-036 and later work remain sequence-b
 The thermal chain has one owner per step:
 
 1. Selector captures and passes `selectedRoomTaC` only.
-2. Lab publishes the selected optic's evidence-bound `referenceRoomTaC`, `referenceInternalTaC` and `opticInternalDeltaTaC`.
-3. Engine alone derives `derivedInternalTaC = selectedRoomTaC + opticInternalDeltaTaC`.
+2. Lab publishes the selected optic's evidence-bound `referenceRoomTaC`, absolute `referenceInternalTaC` and actual `opticThermalRiseTaC`. Legacy `optic_internal_delta_ta_c` maps to absolute internal temperature; legacy `optic_uplift_ta_c` maps to rise.
+3. Engine alone derives `derivedInternalTaC = selectedRoomTaC + opticThermalRiseTaC`.
 4. Under version 1, Engine uses that same value as `curveLookupTaC`, then performs the 25–65°C curve clamp/interpolation and returns verified lm/m.
 5. Program validates identity, evidence binding and shape at the cross-lane adapter.
 
-Binding examples are 25°C room + 10°C rise = 35°C lookup, and 35°C room + 10°C rise = 45°C lookup. The current repeated source value 35 in the rise field is placeholder data and must remain unverified until Lab evidence proves the actual per-optic rise.
+Binding examples are 25°C room + 10°C rise = 35°C lookup, and 35°C room + 10°C rise = 45°C lookup. The legacy value `optic_internal_delta_ta_c = 35` is the absolute internal temperature at the 25°C reference condition, not a rise. The actual rise is legacy `optic_uplift_ta_c = 10`.
+
+Because current thermal values are identical across optic rows, acceptance must vary one fixture row's `optic_uplift_ta_c` and prove that both lookup temperature and lm/m move. Varying only the misleading absolute-internal field does not prove correct rise selection.
 
 Lab's `_INTERNAL_AMBIENT_TA_C` remains the measured internal temperature during the authority test. It is not a user-specific operating value and is never overwritten by Runtime.
 
 SEL-018 must be amended before implementation. It may not carry room ambient as lookup temperature and may not supply rise, derived internal, board temperature, curve lookup temperature or verified lm/m.
 
-Acceptance requires a fixture in which one optic's rise differs from the current placeholder rows and proves a changed lookup temperature and changed lm/m. Tests must also prove no double count, reject contradictory/unbound evidence and compare Runtime with the approved data model rather than the donor implementation.
+Acceptance also requires the legacy-name guard: `room_ta_c = 25`, `optic_internal_delta_ta_c = 35`, and `optic_uplift_ta_c = 10` must produce a 10°C rise and a 35°C lookup, never a 35°C rise and a 60°C lookup. Tests must prove no double count, reject contradictory/unbound evidence and compare Runtime with the approved data model rather than the donor implementation.
+
+New cross-lane contracts must not expose `opticInternalDeltaTaC`. Program adapters use `referenceInternalTaC` and `opticThermalRiseTaC`. A separate data-model migration should rename the legacy source fields to `optic_reference_internal_ta_c` and `optic_thermal_rise_ta_c`.
