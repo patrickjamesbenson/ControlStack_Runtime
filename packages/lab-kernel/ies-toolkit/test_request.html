@@ -1,0 +1,101 @@
+<!doctype html>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ControlStack Lab — Test Request Handoff</title>
+<link rel="stylesheet" href="./lab.css" />
+<style>
+  .notice{background:#fff;border:1px solid var(--border);border-radius:var(--r-md);padding:10px 12px;font-size:12px;line-height:1.5;margin-bottom:12px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px}
+  .checks{display:flex;gap:8px 14px;flex-wrap:wrap}.checks label{font-size:12px}
+  textarea{min-height:150px;font-family:var(--mono);font-size:11px}
+  pre{white-space:pre-wrap;max-height:480px;overflow:auto}
+</style>
+<div class="wrap">
+  <div class="brandhead"><div class="mark">CS</div><div><div class="bn">CONTROLSTACK</div><div class="bs">Lab / IES</div></div><div class="pg"><div class="pgt">Test request handoff</div><div class="pgs">entered draft · non-persistent · no work release</div></div></div>
+  <div class="notice"><strong>Boundary:</strong> this page produces <code>controlstack.lab.test-request-handoff.v1</code> only. It does not allocate a work order, upload evidence, persist data, approve work or seal a reference.</div>
+  <div class="card"><h2>Entered request</h2>
+    <div class="grid">
+      <div><label>Workflow key</label><input id="workflowKey" placeholder="WF-NOVON-001" /></div>
+      <div><label>Company</label><input id="company" /></div>
+      <div><label>Contact</label><input id="contact" /></div>
+      <div><label>Project name</label><input id="projectName" /></div>
+      <div><label>Priority</label><select id="priority"><option value="">unresolved</option><option>standard</option><option>high</option><option>urgent</option></select></div>
+      <div><label>Due date</label><input id="dueDate" type="date" /></div>
+      <div><label>Item description</label><input id="description" /></div>
+      <div><label>Ambient °C</label><input id="ambient" type="number" step="0.1" /></div>
+      <div><label>Mains V</label><input id="mains" type="number" step="0.1" /></div>
+      <div><label>Request reason</label><input id="reason" /></div>
+    </div>
+    <label style="margin-top:12px">Requested tests in entered order</label>
+    <div class="checks"><label><input type="checkbox" data-test="photometric" /> photometric</label><label><input type="checkbox" data-test="colour" /> colour</label><label><input type="checkbox" data-test="thermal" /> thermal</label><label><input type="checkbox" data-test="electrical" /> electrical</label></div>
+    <div style="margin-top:12px"><button class="btn primary" id="build">Build immutable handoff</button> <span id="msg" class="muted"></span></div>
+  </div>
+  <div class="card"><h2>Test-request handoff preview</h2><pre id="out">— enter a workflow key —</pre></div>
+</div>
+<script type="module">
+// BEGIN LAB-027 CONTRACT
+const TEST_REQUEST_SCHEMA_ID = "controlstack.lab.test-request-handoff.v1";
+const SCHEMA_VERSION = 1;
+const SAFE_KEY = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/;
+const SAFE_ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/;
+const DATE = /^\d{4}-\d{2}-\d{2}$/;
+const JSON_POINTER = /^(?:\/(?:[^~/]|~0|~1)*)*$/;
+const ARTIFACT_REF = /^(?:\/r\/NVB-REF-(?:GT|OPT|MRG)-\d{6}(?:\/origin\.ies|\/evidence\/[A-Za-z0-9][A-Za-z0-9._-]{0,127})?|\/p\/NVB-REF-(?:GT|OPT|MRG)-\d{6}|\/reports\/[A-Za-z0-9][A-Za-z0-9._-]{0,127}|\/c\/(?:board|chip|driver|converter)\/[A-Za-z0-9][A-Za-z0-9._-]{0,127}|\/s\/[A-Za-z0-9][A-Za-z0-9._-]{0,127})$/;
+function fail(message){ throw new Error(message); }
+function isObject(value){ return value && typeof value === "object" && !Array.isArray(value); }
+function clone(value){ if(Array.isArray(value)) return value.map(clone); if(isObject(value)) return Object.fromEntries(Object.entries(value).map(([k,v])=>[k,clone(v)])); return value; }
+function deepFreeze(value){ if(value && typeof value === "object" && !Object.isFrozen(value)){ Object.values(value).forEach(deepFreeze); Object.freeze(value); } return value; }
+function text(value, name){ if(value === null || value === undefined || value === "") return null; if(typeof value !== "string" || value !== value.trim() || value.length > 256 || /[\u0000-\u001f\u007f]/.test(value)) fail(`${name} is invalid.`); return value; }
+function safeKey(value){ if(typeof value !== "string" || !SAFE_KEY.test(value)) fail("workflowKey is invalid."); return value; }
+function safeIdOrNull(value, name){ const next=text(value,name); if(next !== null && !SAFE_ID.test(next)) fail(`${name} is invalid.`); return next; }
+function dateOrNull(value, name){ const next=text(value,name); if(next !== null && !DATE.test(next)) fail(`${name} is invalid.`); return next; }
+function finiteOrNull(value, name){ if(value === null || value === undefined || value === "") return null; const n=Number(value); if(!Number.isFinite(n)) fail(`${name} must be finite.`); return n; }
+function strings(value, name){ if(!Array.isArray(value)) fail(`${name} must be an array.`); return value.map((item,index)=>{ const next=text(item,`${name}[${index}]`); if(next === null) fail(`${name}[${index}] is required.`); return next; }); }
+function unresolved(value){ if(!Array.isArray(value)) fail("unresolvedFields must be an array."); return value.map((item,index)=>{ if(typeof item !== "string" || !JSON_POINTER.test(item)) fail(`unresolvedFields[${index}] is invalid.`); return item; }); }
+function artifactRef(value){ if(typeof value !== "string" || !ARTIFACT_REF.test(value)) fail("artifactRef is not canonical."); return value; }
+function shaOrNull(value){ if(value === null) return null; if(typeof value !== "string" || !/^[0-9a-f]{64}$/.test(value)) fail("sha256 is invalid."); return value; }
+function identityOrNull(value){ if(value === null || value === undefined) return null; if(!isObject(value) || value.schemaId !== "controlstack.lab.reference-identity.v1" || value.schemaVersion !== 1 || value.kind !== "GT" || value.readOnly !== true || !SAFE_ID.test(value.referenceId) || !Number.isInteger(value.serial) || typeof value.resolverPath !== "string" || !ARTIFACT_REF.test(value.resolverPath) || !/^[0-9a-f]{64}$/.test(value.authorityRecordSha256) || !/^[0-9a-f]{64}$/.test(value.referenceSha256)) fail("pureReferenceGearTray is invalid."); return clone(value); }
+function requestTest(row,index){ if(!isObject(row) || typeof row.testId !== "string" || !SAFE_ID.test(row.testId) || !["lab","ies","external"].includes(row.source)) fail(`requestedTests[${index}] is invalid.`); return { testId:row.testId, points:strings(row.points,`requestedTests[${index}].points`), driveLevels:strings(row.driveLevels,`requestedTests[${index}].driveLevels`), source:row.source } }
+function priorRef(row,index){ if(!isObject(row) || typeof row.schemaId !== "string") fail(`priorStageRefs[${index}] is invalid.`); return {schemaId:row.schemaId,artifactRef:artifactRef(row.artifactRef),sha256:shaOrNull(row.sha256)}; }
+function buildTestRequestHandoff(input){
+  if(!isObject(input)) fail("input must be an object.");
+  const priority = input.project?.priority ?? null;
+  if(priority !== null && !["standard","high","urgent"].includes(priority)) fail("project.priority is invalid.");
+  const itemType = input.item?.type ?? null;
+  if(itemType !== null && !["component","luminaire","external"].includes(itemType)) fail("item.type is invalid.");
+  const acknowledgement = input.customerAcknowledgement ?? {};
+  const result = {
+    schemaId:TEST_REQUEST_SCHEMA_ID,
+    schemaVersion:SCHEMA_VERSION,
+    stage:"test_request",
+    workflowKey:safeKey(input.workflowKey),
+    priorStageRefs:(input.priorStageRefs ?? []).map(priorRef),
+    customer:{customerId:safeIdOrNull(input.customer?.customerId,"customer.customerId"),company:text(input.customer?.company,"customer.company"),contact:text(input.customer?.contact,"customer.contact"),internal:input.customer?.internal ?? null},
+    project:{projectId:safeIdOrNull(input.project?.projectId,"project.projectId"),name:text(input.project?.name,"project.name"),pipeline:text(input.project?.pipeline,"project.pipeline"),ownerId:safeIdOrNull(input.project?.ownerId,"project.ownerId"),priority,dueDate:dateOrNull(input.project?.dueDate,"project.dueDate"),customerReference:text(input.project?.customerReference,"project.customerReference")},
+    item:{type:itemType,description:text(input.item?.description,"item.description"),componentRefs:strings(input.item?.componentRefs ?? [],"item.componentRefs")},
+    conditions:{ambientC:finiteOrNull(input.conditions?.ambientC,"conditions.ambientC"),mainsV:finiteOrNull(input.conditions?.mainsV,"conditions.mainsV"),driveLevels:strings(input.conditions?.driveLevels ?? [],"conditions.driveLevels")},
+    requestedTests:(input.requestedTests ?? []).map(requestTest),
+    unresolvedFields:unresolved(input.unresolvedFields ?? []),
+    readOnly:true,
+    requestReason:text(input.requestReason,"requestReason"),
+    pureReferenceGearTray:identityOrNull(input.pureReferenceGearTray),
+    customerAcknowledgement:{acknowledged:acknowledgement.acknowledged ?? null,enteredBy:text(acknowledgement.enteredBy,"customerAcknowledgement.enteredBy"),note:text(acknowledgement.note,"customerAcknowledgement.note"),evidenceOnly:true}
+  };
+  if(result.customer.internal !== null && typeof result.customer.internal !== "boolean") fail("customer.internal is invalid.");
+  if(result.customerAcknowledgement.acknowledged !== null && typeof result.customerAcknowledgement.acknowledged !== "boolean") fail("customerAcknowledgement.acknowledged is invalid.");
+  return deepFreeze(result);
+}
+// END LAB-027 CONTRACT
+const $=(id)=>document.getElementById(id);
+const value=(id)=>$(id).value.trim();
+$("build").onclick=()=>{ try{
+  const checked=[...document.querySelectorAll("[data-test]:checked")].map((box)=>box.dataset.test);
+  const unresolvedFields=[];
+  if(!value("company")) unresolvedFields.push("/customer/company");
+  if(!value("projectName")) unresolvedFields.push("/project/name");
+  if(!value("description")) unresolvedFields.push("/item/description");
+  if(checked.length===0) unresolvedFields.push("/requestedTests");
+  const payload=buildTestRequestHandoff({workflowKey:value("workflowKey"),priorStageRefs:[],customer:{customerId:null,company:value("company")||null,contact:value("contact")||null,internal:null},project:{projectId:null,name:value("projectName")||null,pipeline:null,ownerId:null,priority:value("priority")||null,dueDate:value("dueDate")||null,customerReference:null},item:{type:null,description:value("description")||null,componentRefs:[]},conditions:{ambientC:value("ambient")||null,mainsV:value("mains")||null,driveLevels:[]},requestedTests:checked.map((testId)=>({testId,points:[],driveLevels:[],source:testId==="photometric"?"ies":"lab"})),unresolvedFields,requestReason:value("reason")||null,pureReferenceGearTray:null,customerAcknowledgement:{acknowledged:null,enteredBy:null,note:null}});
+  $("out").textContent=JSON.stringify(payload,null,2); $("msg").textContent="Built in browser memory only.";
+}catch(error){$("msg").textContent=error.message;}}
+</script>

@@ -1,0 +1,40 @@
+<!doctype html>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ControlStack Lab — Reference Intake Handoff</title>
+<link rel="stylesheet" href="./lab.css" />
+<style>.notice{background:#fff;border:1px solid var(--border);border-radius:var(--r-md);padding:10px 12px;font-size:12px;line-height:1.5;margin-bottom:12px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px}textarea{min-height:220px;font-family:var(--mono);font-size:11px}pre{white-space:pre-wrap;max-height:520px;overflow:auto}</style>
+<div class="wrap">
+  <div class="brandhead"><div class="mark">CS</div><div><div class="bn">CONTROLSTACK</div><div class="bs">Lab / IES</div></div><div class="pg"><div class="pgt">Reference-intake handoff</div><div class="pgs">safe artefact references only · not a sealed reference</div></div></div>
+  <div class="notice"><strong>Boundary:</strong> this stage emits <code>controlstack.lab.reference-intake-handoff.v1</code>. It does not allocate a serial, reconstruct authority, approve, seal or emit <code>controlstack.lab.reference.1mm.v1</code>.</div>
+  <div class="card"><h2>Prior extended-report payload</h2><textarea id="prior" placeholder="Paste controlstack.lab.extended-report-handoff.v1 JSON"></textarea></div>
+  <div class="card"><h2>Safe intake artefacts</h2><div class="grid"><div><label>Prior report artifact reference</label><input id="priorRef" placeholder="/reports/LAB-REPORT-001" /></div><div><label>Normalised photometry reference</label><input id="photometryRef" placeholder="/r/NVB-REF-OPT-000123/origin.ies" /></div><div><label>Report references <span class="muted">one per line</span></label><textarea id="reportRefs" style="min-height:110px" placeholder="/reports/LAB-REPORT-001"></textarea></div></div><div style="margin-top:12px"><button class="btn primary" id="build">Build non-authoritative intake</button> <span id="msg" class="muted"></span></div></div>
+  <div class="card"><h2>Reference-intake handoff preview</h2><pre id="out">— paste a prior report —</pre></div>
+</div>
+<script type="module">
+// BEGIN LAB-027 CONTRACT
+const REPORT_SCHEMA_ID="controlstack.lab.extended-report-handoff.v1";
+const INTAKE_SCHEMA_ID="controlstack.lab.reference-intake-handoff.v1";
+const ARTIFACT_REF=/^(?:\/r\/NVB-REF-(?:GT|OPT|MRG)-\d{6}(?:\/origin\.ies|\/evidence\/[A-Za-z0-9][A-Za-z0-9._-]{0,127})?|\/p\/NVB-REF-(?:GT|OPT|MRG)-\d{6}|\/reports\/[A-Za-z0-9][A-Za-z0-9._-]{0,127}|\/c\/(?:board|chip|driver|converter)\/[A-Za-z0-9][A-Za-z0-9._-]{0,127}|\/s\/[A-Za-z0-9][A-Za-z0-9._-]{0,127})$/;
+function fail(message){throw new Error(message)}
+function isObject(value){return value&&typeof value==="object"&&!Array.isArray(value)}
+function clone(value){if(Array.isArray(value))return value.map(clone);if(isObject(value))return Object.fromEntries(Object.entries(value).map(([k,v])=>[k,clone(v)]));return value}
+function deepFreeze(value){if(value&&typeof value==="object"&&!Object.isFrozen(value)){Object.values(value).forEach(deepFreeze);Object.freeze(value)}return value}
+function artifactRef(value,name){if(typeof value!=="string"||!ARTIFACT_REF.test(value))fail(`${name} is not canonical.`);return value}
+function optionalArtifactRef(value,name){if(value===null||value===undefined||value==="")return null;return artifactRef(value,name)}
+function shaOrNull(value){if(value===null||value===undefined||value==="")return null;if(typeof value!=="string"||!/^[0-9a-f]{64}$/.test(value))fail("priorSha256 is invalid.");return value}
+function validateReport(value){if(!isObject(value)||value.schemaId!==REPORT_SCHEMA_ID||value.schemaVersion!==1||value.stage!=="extended_report"||value.readOnly!==true)fail("prior payload is not a version-1 extended-report handoff.");if(!Array.isArray(value.priorStageRefs)||!Array.isArray(value.unresolvedFields)||!Array.isArray(value.requestedTests)||!Array.isArray(value.results)||!isObject(value.customer)||!isObject(value.project)||!isObject(value.item)||!isObject(value.conditions))fail("prior payload is incomplete.");return value}
+function buildReferenceIntakeHandoff(priorValue,additions){
+  const prior=validateReport(priorValue);if(!isObject(additions))fail("additions must be an object.");
+  const priorStageRefs=[...clone(prior.priorStageRefs)];if(additions.priorArtifactRef)priorStageRefs.push({schemaId:prior.schemaId,artifactRef:artifactRef(additions.priorArtifactRef,"priorArtifactRef"),sha256:shaOrNull(additions.priorSha256)});
+  const unresolvedFields=[...clone(prior.unresolvedFields)];if(!additions.priorArtifactRef&&!unresolvedFields.includes("/priorStageRefs"))unresolvedFields.push("/priorStageRefs");
+  const normalisedPhotometryRef=optionalArtifactRef(additions.normalisedPhotometryRef,"normalisedPhotometryRef");if(normalisedPhotometryRef===null&&!unresolvedFields.includes("/normalisedPhotometryRef"))unresolvedFields.push("/normalisedPhotometryRef");
+  if(!Array.isArray(additions.reportRefs))fail("reportRefs must be an array.");const reportRefs=additions.reportRefs.map((value,index)=>artifactRef(value,`reportRefs[${index}]`));
+  const payload={...clone(prior),schemaId:INTAKE_SCHEMA_ID,stage:"reference_intake",priorStageRefs,unresolvedFields,normalisedPhotometryRef,reportRefs,readOnly:true};
+  for(const forbidden of ["serial","authorityRecordSha256","referenceSha256","approval","seal","sealedAtUtc","referenceId"]){if(Object.prototype.hasOwnProperty.call(payload,forbidden))fail(`forbidden authority field ${forbidden}.`)}
+  return deepFreeze(payload);
+}
+// END LAB-027 CONTRACT
+const $=(id)=>document.getElementById(id);
+$("build").onclick=()=>{try{const prior=JSON.parse($("prior").value);const refs=$("reportRefs").value.split(/\r?\n/).map((value)=>value.trim()).filter(Boolean);const payload=buildReferenceIntakeHandoff(prior,{priorArtifactRef:$("priorRef").value.trim()||null,priorSha256:null,normalisedPhotometryRef:$("photometryRef").value.trim()||null,reportRefs:refs});$("out").textContent=JSON.stringify(payload,null,2);$("msg").textContent="Built in browser memory only; no seal or serial exists."}catch(error){$("msg").textContent=error.message}}
+</script>

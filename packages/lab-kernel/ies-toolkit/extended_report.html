@@ -1,0 +1,39 @@
+<!doctype html>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ControlStack Lab — Extended Report Handoff</title>
+<link rel="stylesheet" href="./lab.css" />
+<style>.notice{background:#fff;border:1px solid var(--border);border-radius:var(--r-md);padding:10px 12px;font-size:12px;line-height:1.5;margin-bottom:12px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}textarea{min-height:220px;font-family:var(--mono);font-size:11px}pre{white-space:pre-wrap;max-height:500px;overflow:auto}</style>
+<div class="wrap">
+  <div class="brandhead"><div class="mark">CS</div><div><div class="bn">CONTROLSTACK</div><div class="bs">Lab / IES</div></div><div class="pg"><div class="pgt">Extended-report handoff</div><div class="pgs">measured / not applicable / unresolved only</div></div></div>
+  <div class="notice"><strong>Boundary:</strong> result rows remain entered Lab evidence. Equipment IDs do not prove calibration, and no EWIS or emergency checkbox becomes verification. This page does not persist or publish a report.</div>
+  <div class="card"><h2>Prior order payload</h2><textarea id="prior" placeholder="Paste controlstack.lab.order-handoff.v1 JSON"></textarea></div>
+  <div class="card"><h2>Result addition</h2><div class="grid"><div><label>Prior artifact reference</label><input id="priorRef" placeholder="/reports/ORDER-001" /></div><div><label>Test ID</label><input id="testId" placeholder="thermal" /></div><div><label>Point</label><input id="point" placeholder="tc" /></div><div><label>State</label><select id="state"><option>unresolved</option><option>measured</option><option>not_applicable</option></select></div><div><label>Value</label><input id="value" /></div><div><label>Unit</label><input id="unit" /></div><div><label>Equipment reference</label><input id="equipmentRef" placeholder="tl-01" /></div></div><div style="margin-top:12px"><button class="btn primary" id="build">Build extended-report handoff</button> <span id="msg" class="muted"></span></div></div>
+  <div class="card"><h2>Extended-report handoff preview</h2><pre id="out">— paste a prior order —</pre></div>
+</div>
+<script type="module">
+// BEGIN LAB-027 CONTRACT
+const ORDER_SCHEMA_ID="controlstack.lab.order-handoff.v1";
+const REPORT_SCHEMA_ID="controlstack.lab.extended-report-handoff.v1";
+const ARTIFACT_REF=/^(?:\/r\/NVB-REF-(?:GT|OPT|MRG)-\d{6}(?:\/origin\.ies|\/evidence\/[A-Za-z0-9][A-Za-z0-9._-]{0,127})?|\/p\/NVB-REF-(?:GT|OPT|MRG)-\d{6}|\/reports\/[A-Za-z0-9][A-Za-z0-9._-]{0,127}|\/c\/(?:board|chip|driver|converter)\/[A-Za-z0-9][A-Za-z0-9._-]{0,127}|\/s\/[A-Za-z0-9][A-Za-z0-9._-]{0,127})$/;
+const SAFE_ID=/^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/;
+function fail(message){throw new Error(message)}
+function isObject(value){return value&&typeof value==="object"&&!Array.isArray(value)}
+function clone(value){if(Array.isArray(value))return value.map(clone);if(isObject(value))return Object.fromEntries(Object.entries(value).map(([k,v])=>[k,clone(v)]));return value}
+function deepFreeze(value){if(value&&typeof value==="object"&&!Object.isFrozen(value)){Object.values(value).forEach(deepFreeze);Object.freeze(value)}return value}
+function text(value,name){if(value===null||value===undefined||value==="")return null;if(typeof value!=="string"||value!==value.trim()||value.length>512||/[\u0000-\u001f\u007f]/.test(value))fail(`${name} is invalid.`);return value}
+function artifactRef(value){if(typeof value!=="string"||!ARTIFACT_REF.test(value))fail("priorArtifactRef is not canonical.");return value}
+function shaOrNull(value){if(value===null||value===undefined||value==="")return null;if(typeof value!=="string"||!/^[0-9a-f]{64}$/.test(value))fail("priorSha256 is invalid.");return value}
+function validateOrder(value){if(!isObject(value)||value.schemaId!==ORDER_SCHEMA_ID||value.schemaVersion!==1||value.stage!=="order"||value.readOnly!==true)fail("prior payload is not a version-1 order handoff.");if(!Array.isArray(value.priorStageRefs)||!Array.isArray(value.unresolvedFields)||!Array.isArray(value.requestedTests)||!isObject(value.customer)||!isObject(value.project)||!isObject(value.item)||!isObject(value.conditions))fail("prior payload is incomplete.");return value}
+function resultRow(row,index){if(!isObject(row)||typeof row.testId!=="string"||!SAFE_ID.test(row.testId)||typeof row.point!=="string"||!SAFE_ID.test(row.point)||!["measured","not_applicable","unresolved"].includes(row.state))fail(`results[${index}] is invalid.`);const equipment=text(row.equipmentRef,`results[${index}].equipmentRef`);if(equipment!==null&&!SAFE_ID.test(equipment))fail(`results[${index}].equipmentRef is invalid.`);if(row.state==="measured"&&row.value===null)fail(`results[${index}].value is required for measured state.`);if(row.value!==null&&typeof row.value!=="string"&&typeof row.value!=="number")fail(`results[${index}].value is invalid.`);if(typeof row.value==="number"&&!Number.isFinite(row.value))fail(`results[${index}].value must be finite.`);return {testId:row.testId,point:row.point,state:row.state,value:row.value??null,unit:text(row.unit,`results[${index}].unit`),equipmentRef:equipment}}
+function buildExtendedReportHandoff(priorValue,additions){
+  const prior=validateOrder(priorValue);if(!isObject(additions))fail("additions must be an object.");
+  const priorStageRefs=[...clone(prior.priorStageRefs)];if(additions.priorArtifactRef)priorStageRefs.push({schemaId:prior.schemaId,artifactRef:artifactRef(additions.priorArtifactRef),sha256:shaOrNull(additions.priorSha256)});
+  const unresolvedFields=[...clone(prior.unresolvedFields)];if(!additions.priorArtifactRef&&!unresolvedFields.includes("/priorStageRefs"))unresolvedFields.push("/priorStageRefs");
+  const results=(additions.results??[]).map(resultRow);results.forEach((row,index)=>{if(row.state==="unresolved"){const pointer=`/results/${index}/value`;if(!unresolvedFields.includes(pointer))unresolvedFields.push(pointer)}});
+  return deepFreeze({...clone(prior),schemaId:REPORT_SCHEMA_ID,stage:"extended_report",priorStageRefs,unresolvedFields,results,readOnly:true});
+}
+// END LAB-027 CONTRACT
+const $=(id)=>document.getElementById(id);
+$("build").onclick=()=>{try{const prior=JSON.parse($("prior").value);const raw=$("value").value.trim();const value=raw===""?null:(Number.isFinite(Number(raw))?Number(raw):raw);const payload=buildExtendedReportHandoff(prior,{priorArtifactRef:$("priorRef").value.trim()||null,priorSha256:null,results:[{testId:$("testId").value.trim(),point:$("point").value.trim(),state:$("state").value,value,unit:$("unit").value.trim()||null,equipmentRef:$("equipmentRef").value.trim()||null}]});$("out").textContent=JSON.stringify(payload,null,2);$("msg").textContent="Built in browser memory only."}catch(error){$("msg").textContent=error.message}}
+</script>

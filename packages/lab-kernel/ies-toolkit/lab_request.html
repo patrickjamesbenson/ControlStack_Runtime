@@ -1,0 +1,39 @@
+<!doctype html>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ControlStack Lab — Order Handoff</title>
+<link rel="stylesheet" href="./lab.css" />
+<style>.notice{background:#fff;border:1px solid var(--border);border-radius:var(--r-md);padding:10px 12px;font-size:12px;line-height:1.5;margin-bottom:12px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}textarea{min-height:220px;font-family:var(--mono);font-size:11px}pre{white-space:pre-wrap;max-height:500px;overflow:auto}</style>
+<div class="wrap">
+  <div class="brandhead"><div class="mark">CS</div><div><div class="bn">CONTROLSTACK</div><div class="bs">Lab / IES</div></div><div class="pg"><div class="pgt">Order handoff</div><div class="pgs">additive browser draft · not Program persistence</div></div></div>
+  <div class="notice"><strong>Boundary:</strong> paste a valid test-request handoff and add order fields. Browser confirmation does not create a Program work order, CRM record, booking or durable status.</div>
+  <div class="card"><h2>Prior test-request payload</h2><textarea id="prior" placeholder="Paste controlstack.lab.test-request-handoff.v1 JSON"></textarea></div>
+  <div class="card"><h2>Order additions</h2><div class="grid"><div><label>Order status</label><select id="status"><option>draft</option><option>confirmed</option></select></div><div><label>Prior artifact reference</label><input id="priorRef" placeholder="/reports/REQ-001" /></div><div><label>Program work-order ID <span class="muted">optional, supplied only</span></label><input id="workOrderId" /></div><div><label>Program CRM ID <span class="muted">optional, supplied only</span></label><input id="crmId" /></div></div><label style="margin-top:10px">Instructions</label><input id="instructions" /><div style="margin-top:12px"><button class="btn primary" id="build">Build order handoff</button> <span id="msg" class="muted"></span></div></div>
+  <div class="card"><h2>Order handoff preview</h2><pre id="out">— paste a prior request —</pre></div>
+</div>
+<script type="module">
+// BEGIN LAB-027 CONTRACT
+const REQUEST_SCHEMA_ID="controlstack.lab.test-request-handoff.v1";
+const ORDER_SCHEMA_ID="controlstack.lab.order-handoff.v1";
+const ARTIFACT_REF=/^(?:\/r\/NVB-REF-(?:GT|OPT|MRG)-\d{6}(?:\/origin\.ies|\/evidence\/[A-Za-z0-9][A-Za-z0-9._-]{0,127})?|\/p\/NVB-REF-(?:GT|OPT|MRG)-\d{6}|\/reports\/[A-Za-z0-9][A-Za-z0-9._-]{0,127}|\/c\/(?:board|chip|driver|converter)\/[A-Za-z0-9][A-Za-z0-9._-]{0,127}|\/s\/[A-Za-z0-9][A-Za-z0-9._-]{0,127})$/;
+const SAFE_ID=/^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/;
+function fail(message){throw new Error(message)}
+function isObject(value){return value&&typeof value==="object"&&!Array.isArray(value)}
+function clone(value){if(Array.isArray(value))return value.map(clone);if(isObject(value))return Object.fromEntries(Object.entries(value).map(([k,v])=>[k,clone(v)]));return value}
+function deepFreeze(value){if(value&&typeof value==="object"&&!Object.isFrozen(value)){Object.values(value).forEach(deepFreeze);Object.freeze(value)}return value}
+function text(value,name){if(value===null||value===undefined||value==="")return null;if(typeof value!=="string"||value!==value.trim()||value.length>512||/[\u0000-\u001f\u007f]/.test(value))fail(`${name} is invalid.`);return value}
+function artifactRef(value){if(typeof value!=="string"||!ARTIFACT_REF.test(value))fail("priorArtifactRef is not canonical.");return value}
+function shaOrNull(value){if(value===null||value===undefined||value==="")return null;if(typeof value!=="string"||!/^[0-9a-f]{64}$/.test(value))fail("priorSha256 is invalid.");return value}
+function safeIdOrNull(value,name){const next=text(value,name);if(next!==null&&!SAFE_ID.test(next))fail(`${name} is invalid.`);return next}
+function validateRequest(value){if(!isObject(value)||value.schemaId!==REQUEST_SCHEMA_ID||value.schemaVersion!==1||value.stage!=="test_request"||value.readOnly!==true)fail("prior payload is not a version-1 test-request handoff.");if(typeof value.workflowKey!=="string"||!isObject(value.customer)||!isObject(value.project)||!isObject(value.item)||!isObject(value.conditions)||!Array.isArray(value.requestedTests)||!Array.isArray(value.unresolvedFields)||!Array.isArray(value.priorStageRefs))fail("prior payload is incomplete.");return value}
+function buildOrderHandoff(priorValue,additions){
+  const prior=validateRequest(priorValue);if(!isObject(additions))fail("additions must be an object.");if(!["draft","confirmed"].includes(additions.orderStatus))fail("orderStatus is invalid.");
+  const priorStageRefs=[...clone(prior.priorStageRefs)];
+  if(additions.priorArtifactRef)priorStageRefs.push({schemaId:prior.schemaId,artifactRef:artifactRef(additions.priorArtifactRef),sha256:shaOrNull(additions.priorSha256)});
+  const unresolvedFields=[...clone(prior.unresolvedFields)];if(!additions.priorArtifactRef&&!unresolvedFields.includes("/priorStageRefs"))unresolvedFields.push("/priorStageRefs");
+  return deepFreeze({...clone(prior),schemaId:ORDER_SCHEMA_ID,stage:"order",priorStageRefs,unresolvedFields,orderStatus:additions.orderStatus,instructions:text(additions.instructions,"instructions"),programIds:{workOrderId:safeIdOrNull(additions.programIds?.workOrderId,"programIds.workOrderId"),crmId:safeIdOrNull(additions.programIds?.crmId,"programIds.crmId")},readOnly:true});
+}
+// END LAB-027 CONTRACT
+const $=(id)=>document.getElementById(id);
+$("build").onclick=()=>{try{const prior=JSON.parse($("prior").value);const payload=buildOrderHandoff(prior,{orderStatus:$("status").value,instructions:$("instructions").value.trim()||null,priorArtifactRef:$("priorRef").value.trim()||null,priorSha256:null,programIds:{workOrderId:$("workOrderId").value.trim()||null,crmId:$("crmId").value.trim()||null}});$("out").textContent=JSON.stringify(payload,null,2);$("msg").textContent="Built in browser memory only."}catch(error){$("msg").textContent=error.message}}
+</script>
