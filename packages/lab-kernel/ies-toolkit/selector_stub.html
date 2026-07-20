@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ControlStack Lab — Selector Contract Viewer</title>
+<link rel="stylesheet" href="./lab.css" />
+<style>
+  .banner{padding:12px 16px;border:2px solid #2b6cb0;background:#eef6ff;color:#174f86;border-radius:10px;font-weight:800;letter-spacing:.04em;margin-bottom:12px}
+  .banner.fixture{border-color:#9a6700;background:#fff7d6;color:#6f4d00}
+  .disclaimer{padding:11px 14px;border:1px solid var(--border-light,#ece8e2);background:#fff;border-radius:9px;margin-bottom:14px;color:var(--text2,#4a5f6e)}
+  .disclaimer strong{color:var(--text,#142030)}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px}
+  .toolbar button{font:inherit;border:1px solid var(--border,#ddd8d0);background:#fff;border-radius:7px;padding:7px 11px;cursor:pointer}
+  .toolbar button.on{border-color:#9a6700;background:#fff7d6;color:#6f4d00;font-weight:700}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+  .kv{display:grid;grid-template-columns:minmax(145px,190px) 1fr;gap:6px 12px;font-size:12.5px}
+  .kv .k{color:var(--text2,#4a5f6e)}
+  .mono{font-family:var(--mono,monospace);overflow-wrap:anywhere}
+  .state{display:inline-block;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.04em}
+  .state.ready{background:#e7f6ef;color:#116a48}.state.blocked{background:#fff0f0;color:#8b1f1f}.state.unresolved{background:#fff7d6;color:#6f4d00}.state.false{background:#f3f4f6;color:#4b5563}
+  table{width:100%;border-collapse:collapse}th,td{padding:7px 8px;border-bottom:1px solid var(--border-light,#ece8e2);text-align:left;vertical-align:top;font-size:12px}th{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--text3,#8a9aa5)}
+  .blocked-box{border:2px solid var(--red,#d94040);background:#fff0f0;color:#8b1f1f;border-radius:9px;padding:14px}
+  .blocked-title{font-weight:900;letter-spacing:.03em;margin-bottom:5px}
+  .muted{color:var(--text2,#4a5f6e)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brandhead">
+    <div class="mark">CS</div>
+    <div><div class="bn">CONTROLSTACK</div><div class="bs">Lab &amp; IES</div></div>
+    <div class="pg"><div class="pgt">Selector Contract Viewer</div><div class="pgs">read-only downstream input projection</div></div>
+  </div>
+  <div id="app"></div>
+</div>
+<script type="module">
+import { parseReferenceId, buildResolverPath } from "./nvbReference.js";
+
+const VIEW_SCHEMA_ID = "controlstack.lab.selector-contract-view.v1";
+const VIEW_SCHEMA_VERSION = 1;
+const IDENTITY_SCHEMA_ID = "controlstack.lab.reference-identity.v1";
+const HANDOFF_SCHEMA_ID = "controlstack.lab.safe-runtime-handoff.v1";
+const READINESS_SCHEMA_ID = "controlstack.runtime.selector.factory-approved-inputs.presentation.v1";
+const EXACT_UTC = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
+const SHA256 = /^[0-9a-f]{64}$/;
+const STAGE3_MODES = Object.freeze(["simple-run-stage3a-zero-accessory", "accessory-reservation-required"]);
+const SAFETY_KEYS = Object.freeze([
+  "engineOutcomeProven","engineExecuted","donorEngineInvoked","runTableGenerated","iesGenerated",
+  "selectedResultPersisted","runtimeDataMutated","boardDataMutated","rawRowsExposed",
+  "rawAccessoryRowsExposed","rawEnginePayloadExposed","rawSelectedResultPayloadExposed",
+  "routesAdded","postEndpointsAdded","writes","generation","proof",
+]);
+const TOP_KEYS = Object.freeze(["schemaId","schemaVersion","publicationMode","referenceIdentity","safeRuntimeHandoff","selectorReadiness","binding","unresolvedFields","readOnly"]);
+const IDENTITY_KEYS = Object.freeze(["schemaId","schemaVersion","referenceId","kind","serial","sealedAtUtc","authorityRecordSha256","referenceSha256","resolverPath","readOnly"]);
+const HANDOFF_KEYS = Object.freeze([
+  "schemaId","schemaVersion","handoffState","approvalState","sourcePhotometryStatus","oneMmNormalised","baseLengthM","oneMmPolicyLabel",
+  "sourcePhotometryRef","iesPhotometryReferenceToken","photometryReferenceFingerprint","sourceInputFingerprint","recordFingerprint",
+  "derivedFromFingerprint","recordKind","recordType","referenceEngineToken","lumenCurveReferenceToken","driverUtilCurveReferenceToken",
+  "boardDataSourceVersion","selectedFamilySubsetLock","unresolvedCount","safeSummaryOnly","readOnly",
+]);
+const READINESS_KEYS = Object.freeze([
+  "schemaId","schemaVersion","stage","key","readOnly","diagnosticOnly","safeSummaryOnly","factoryApprovedInputsReady",
+  "readonlyEngineCandidateInputsReady","readonlyEngineCandidateInputsBlocker","stage3Mode","blocker",
+  "committedSelectorConstraintCount","accessoryIntentCount","safety",
+]);
+const BINDING_KEYS = Object.freeze(["referenceId","authorityRecordSha256"]);
+
+const app = document.getElementById("app");
+const esc = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
+const isPlainObject = (value) => !!value && typeof value === "object" && !Array.isArray(value) && [Object.prototype, null].includes(Object.getPrototypeOf(value));
+const exactKeys = (value, keys) => isPlainObject(value) && Object.keys(value).sort().join("|") === [...keys].sort().join("|");
+const requireCondition = (condition, message, stale = false) => { if (!condition) { const error = new Error(message); error.stale = stale; throw error; } };
+const nonEmptyString = (value) => typeof value === "string" && value === value.trim() && value.length > 0;
+const nullableOpaqueString = (value) => value === null || nonEmptyString(value);
+const nullableBlocker = (value) => value === null || nonEmptyString(value);
+const boolState = (value) => value ? '<span class="state ready">reported ready</span>' : '<span class="state blocked">reported blocked</span>';
+
+function validExactUtc(value) {
+  if (typeof value !== "string" || !EXACT_UTC.test(value)) return false;
+  const parsed = new Date(value);
+  return Number.isFinite(parsed.getTime()) && parsed.toISOString() === value;
+}
+
+function validateIdentity(identity) {
+  requireCondition(exactKeys(identity, IDENTITY_KEYS), "Reference identity has unsupported or missing fields.");
+  requireCondition(identity.schemaId === IDENTITY_SCHEMA_ID && identity.schemaVersion === 1, "Reference identity schema is unsupported.");
+  const parsed = parseReferenceId(identity.referenceId);
+  requireCondition(parsed && parsed.kind === identity.kind && parsed.serial === identity.serial, "Reference identity fields conflict.", true);
+  requireCondition(identity.resolverPath === buildResolverPath({kind:"reference", referenceId:identity.referenceId}), "Reference resolver path conflicts with the identity.", true);
+  requireCondition(validExactUtc(identity.sealedAtUtc), "Reference seal time is not an exact UTC timestamp.");
+  requireCondition(SHA256.test(identity.authorityRecordSha256) && SHA256.test(identity.referenceSha256), "Reference SHA values are malformed.");
+  requireCondition(identity.readOnly === true, "Reference identity must be read-only.");
+  return identity;
+}
+
+function validateSafeRuntimeHandoff(handoff, identity) {
+  requireCondition(exactKeys(handoff, HANDOFF_KEYS), "Safe runtime handoff has unsupported or missing fields.");
+  requireCondition(handoff.schemaId === HANDOFF_SCHEMA_ID && handoff.schemaVersion === 1, "Safe runtime handoff schema is unsupported.");
+  requireCondition(handoff.handoffState === "ready" && handoff.approvalState === "reference" && handoff.sourcePhotometryStatus === "available", "Safe runtime handoff is not authority-ready.");
+  requireCondition(handoff.oneMmNormalised === true && handoff.baseLengthM === 0.001, "Safe runtime handoff is not one-millimetre normalised.");
+  requireCondition(nonEmptyString(handoff.oneMmPolicyLabel), "Safe runtime handoff policy label is missing.");
+  requireCondition(nullableOpaqueString(handoff.sourcePhotometryRef) && nullableOpaqueString(handoff.referenceEngineToken), "Safe runtime handoff contains a malformed opaque reference.");
+  requireCondition(SHA256.test(handoff.iesPhotometryReferenceToken) && SHA256.test(handoff.photometryReferenceFingerprint) && SHA256.test(handoff.sourceInputFingerprint) && SHA256.test(handoff.recordFingerprint), "Safe runtime handoff fingerprint fields are malformed.");
+  requireCondition(handoff.derivedFromFingerprint === null || SHA256.test(handoff.derivedFromFingerprint), "Safe runtime handoff derivation fingerprint is malformed.");
+  requireCondition(handoff.recordKind === identity.kind && handoff.recordType === identity.kind, "Reference kind and safe runtime handoff type conflict.", true);
+  requireCondition(handoff.unresolvedCount === 0 && handoff.safeSummaryOnly === true && handoff.readOnly === true, "Safe runtime handoff is unresolved or over-rich.");
+  requireCondition(handoff.lumenCurveReferenceToken === null && handoff.driverUtilCurveReferenceToken === null && handoff.boardDataSourceVersion === null && handoff.selectedFamilySubsetLock === null, "Runtime-owned slots must remain unresolved.");
+  requireCondition(handoff.iesPhotometryReferenceToken === identity.authorityRecordSha256 && handoff.photometryReferenceFingerprint === identity.authorityRecordSha256 && handoff.recordFingerprint === identity.authorityRecordSha256, "Safe runtime handoff authority binding conflicts with the reference.", true);
+  requireCondition(identity.kind === "MERGED" ? handoff.sourcePhotometryRef === null && SHA256.test(handoff.derivedFromFingerprint) : handoff.derivedFromFingerprint === null, "Safe runtime handoff source binding conflicts with the reference kind.", true);
+  return handoff;
+}
+
+function validateSelectorReadiness(readiness) {
+  requireCondition(exactKeys(readiness, READINESS_KEYS), "Selector readiness has unsupported or missing fields.");
+  requireCondition(readiness.schemaId === READINESS_SCHEMA_ID && readiness.schemaVersion === 1, "Selector readiness schema is unsupported.");
+  requireCondition(readiness.stage === 3 && readiness.key === "factoryApprovedInputs", "Selector readiness stage or key is unsupported.");
+  requireCondition(readiness.readOnly === true && readiness.diagnosticOnly === true && readiness.safeSummaryOnly === true, "Selector readiness must remain a read-only safe diagnostic summary.");
+  requireCondition(typeof readiness.factoryApprovedInputsReady === "boolean" && typeof readiness.readonlyEngineCandidateInputsReady === "boolean", "Selector readiness flags must be boolean.");
+  requireCondition(nullableBlocker(readiness.blocker) && nullableBlocker(readiness.readonlyEngineCandidateInputsBlocker), "Selector blocker fields are malformed.");
+  requireCondition(STAGE3_MODES.includes(readiness.stage3Mode), "Selector stage-3 mode is unsupported.");
+  requireCondition(Number.isInteger(readiness.committedSelectorConstraintCount) && readiness.committedSelectorConstraintCount >= 0, "Selector constraint count is invalid.");
+  requireCondition(Number.isInteger(readiness.accessoryIntentCount) && readiness.accessoryIntentCount >= 0, "Accessory intent count is invalid.");
+  requireCondition(exactKeys(readiness.safety, SAFETY_KEYS) && SAFETY_KEYS.every((key) => readiness.safety[key] === false), "Every Selector safety flag must be exactly false.");
+  requireCondition(readiness.factoryApprovedInputsReady ? readiness.blocker === null : nonEmptyString(readiness.blocker), "Factory-approved-input readiness conflicts with its blocker.");
+  requireCondition(readiness.readonlyEngineCandidateInputsReady ? readiness.readonlyEngineCandidateInputsBlocker === null : nonEmptyString(readiness.readonlyEngineCandidateInputsBlocker), "Read-only Engine candidate readiness conflicts with its blocker.");
+  requireCondition(!readiness.readonlyEngineCandidateInputsReady || readiness.factoryApprovedInputsReady, "Read-only Engine candidate readiness cannot exceed factory-approved-input readiness.");
+  requireCondition(readiness.stage3Mode === "simple-run-stage3a-zero-accessory" ? readiness.accessoryIntentCount === 0 : readiness.accessoryIntentCount > 0, "Selector stage-3 mode conflicts with accessory intent count.");
+  return readiness;
+}
+
+function validateBinding(binding, identity, handoff) {
+  requireCondition(exactKeys(binding, BINDING_KEYS), "Binding has unsupported or missing fields.");
+  requireCondition(binding.referenceId === identity.referenceId, "Binding reference ID conflicts with the identity.", true);
+  requireCondition(SHA256.test(binding.authorityRecordSha256), "Binding authority SHA is malformed.");
+  requireCondition(binding.authorityRecordSha256 === identity.authorityRecordSha256 && binding.authorityRecordSha256 === handoff.iesPhotometryReferenceToken && binding.authorityRecordSha256 === handoff.photometryReferenceFingerprint && binding.authorityRecordSha256 === handoff.recordFingerprint, "Binding authority SHA conflicts with the supplied projections.", true);
+  return binding;
+}
+
+function validateView(view) {
+  requireCondition(exactKeys(view, TOP_KEYS), "Selector contract view has unsupported or missing fields.");
+  requireCondition(view.schemaId === VIEW_SCHEMA_ID && view.schemaVersion === VIEW_SCHEMA_VERSION && view.readOnly === true, "Selector contract view schema is unsupported.");
+  requireCondition(["governed","offline_fixture"].includes(view.publicationMode), "Selector contract publication mode is unsupported.");
+  requireCondition(Array.isArray(view.unresolvedFields) && view.unresolvedFields.every((value) => nonEmptyString(value)) && new Set(view.unresolvedFields).size === view.unresolvedFields.length, "Unresolved fields must be unique non-empty strings.");
+  const identity = validateIdentity(view.referenceIdentity);
+  const handoff = validateSafeRuntimeHandoff(view.safeRuntimeHandoff, identity);
+  validateSelectorReadiness(view.selectorReadiness);
+  validateBinding(view.binding, identity, handoff);
+  return view;
+}
+
+const AUTHORITY_SHA = "1a".repeat(32);
+const REFERENCE_SHA = "2b".repeat(32);
+const SOURCE_SHA = "3c".repeat(32);
+const SAFETY_FALSE = Object.freeze(Object.fromEntries(SAFETY_KEYS.map((key) => [key,false])));
+const FIXTURE_IDENTITY = Object.freeze({
+  schemaId:IDENTITY_SCHEMA_ID, schemaVersion:1, referenceId:"NVB-REF-OPT-000123", kind:"OPT", serial:123,
+  sealedAtUtc:"2026-01-15T04:05:06.000Z", authorityRecordSha256:AUTHORITY_SHA, referenceSha256:REFERENCE_SHA,
+  resolverPath:"/r/NVB-REF-OPT-000123", readOnly:true,
+});
+const FIXTURE_HANDOFF = Object.freeze({
+  schemaId:HANDOFF_SCHEMA_ID, schemaVersion:1, handoffState:"ready", approvalState:"reference", sourcePhotometryStatus:"available",
+  oneMmNormalised:true, baseLengthM:0.001, oneMmPolicyLabel:"normalise_1mm_candidate",
+  sourcePhotometryRef:"fixture-source-photometry-ref", iesPhotometryReferenceToken:AUTHORITY_SHA,
+  photometryReferenceFingerprint:AUTHORITY_SHA, sourceInputFingerprint:SOURCE_SHA, recordFingerprint:AUTHORITY_SHA,
+  derivedFromFingerprint:null, recordKind:"OPT", recordType:"OPT", referenceEngineToken:null,
+  lumenCurveReferenceToken:null, driverUtilCurveReferenceToken:null, boardDataSourceVersion:null, selectedFamilySubsetLock:null,
+  unresolvedCount:0, safeSummaryOnly:true, readOnly:true,
+});
+const READY_READINESS = Object.freeze({
+  schemaId:READINESS_SCHEMA_ID, schemaVersion:1, stage:3, key:"factoryApprovedInputs", readOnly:true, diagnosticOnly:true, safeSummaryOnly:true,
+  factoryApprovedInputsReady:true, readonlyEngineCandidateInputsReady:true, readonlyEngineCandidateInputsBlocker:null,
+  stage3Mode:"simple-run-stage3a-zero-accessory", blocker:null, committedSelectorConstraintCount:7, accessoryIntentCount:0,
+  safety:SAFETY_FALSE,
+});
+const BLOCKED_READINESS = Object.freeze({
+  schemaId:READINESS_SCHEMA_ID, schemaVersion:1, stage:3, key:"factoryApprovedInputs", readOnly:true, diagnosticOnly:true, safeSummaryOnly:true,
+  factoryApprovedInputsReady:false, readonlyEngineCandidateInputsReady:false,
+  readonlyEngineCandidateInputsBlocker:"fixture_engine_candidate_inputs_not_ready",
+  stage3Mode:"accessory-reservation-required", blocker:"fixture_accessory_reservation_unresolved",
+  committedSelectorConstraintCount:7, accessoryIntentCount:1, safety:SAFETY_FALSE,
+});
+const OFFLINE_FIXTURES = Object.freeze({
+  ready:Object.freeze({schemaId:VIEW_SCHEMA_ID,schemaVersion:1,publicationMode:"offline_fixture",referenceIdentity:FIXTURE_IDENTITY,safeRuntimeHandoff:FIXTURE_HANDOFF,selectorReadiness:READY_READINESS,binding:Object.freeze({referenceId:FIXTURE_IDENTITY.referenceId,authorityRecordSha256:AUTHORITY_SHA}),unresolvedFields:Object.freeze([]),readOnly:true}),
+  blocked:Object.freeze({schemaId:VIEW_SCHEMA_ID,schemaVersion:1,publicationMode:"offline_fixture",referenceIdentity:FIXTURE_IDENTITY,safeRuntimeHandoff:FIXTURE_HANDOFF,selectorReadiness:BLOCKED_READINESS,binding:Object.freeze({referenceId:FIXTURE_IDENTITY.referenceId,authorityRecordSha256:AUTHORITY_SHA}),unresolvedFields:Object.freeze(["/selectorReadiness/accessoryReservation"]),readOnly:true}),
+});
+let fixtureName = "ready";
+
+function kvRows(rows) {
+  return `<div class="kv">${rows.map(([key,value,klass=""]) => `<div class="k">${esc(key)}</div><div class="${klass}">${value}</div>`).join("")}</div>`;
+}
+function stateForBlocker(blocker) {
+  return blocker === null ? '<span class="state false">none supplied</span>' : `<span class="state blocked">${esc(blocker)}</span>`;
+}
+function render(view) {
+  const fixture = view.publicationMode === "offline_fixture";
+  const identity = view.referenceIdentity;
+  const handoff = view.safeRuntimeHandoff;
+  const readiness = view.selectorReadiness;
+  const banner = fixture ? "OFFLINE CONTRACT DEMO — NOT SELECTOR ACCEPTANCE" : "GOVERNED CONTRACT STATE — SUPPLIED READ-ONLY VIEW";
+  const unresolved = view.unresolvedFields.length ? view.unresolvedFields.map(esc).join(" · ") : "none supplied";
+  const safetyRows = SAFETY_KEYS.map((key) => `<tr><td class="mono">${esc(key)}</td><td><span class="state false">false</span></td></tr>`).join("");
+  app.innerHTML = `
+    <div class="banner ${fixture?"fixture":""}">${banner}</div>
+    <div class="disclaimer"><strong>Presentation only.</strong> This page does not select, execute, generate, persist, prove or approve anything. Reported readiness is supplied contract state, not Selector acceptance, Engine proof or production approval.</div>
+    ${fixture ? `<div class="toolbar" aria-label="Offline fixture examples"><button data-fixture="ready" class="${fixtureName==="ready"?"on":""}">Reported-ready fixture</button><button data-fixture="blocked" class="${fixtureName==="blocked"?"on":""}">Reported-blocked fixture</button></div>` : ""}
+    <div class="grid">
+      <div class="card"><h2>Safe reference identity</h2>${kvRows([
+        ["Reference ID",esc(identity.referenceId),"mono"],["Kind",esc(identity.kind)],["Serial",esc(identity.serial)],
+        ["Seal time",esc(identity.sealedAtUtc),"mono"],["Resolver path",esc(identity.resolverPath),"mono"],
+        ["Authority SHA",esc(identity.authorityRecordSha256),"mono"],["Reference SHA",esc(identity.referenceSha256),"mono"],["Read-only",esc(identity.readOnly)]
+      ])}</div>
+      <div class="card"><h2>Safe runtime handoff</h2>${kvRows([
+        ["Handoff",'<span class="state ready">ready</span>'],["Approval state",esc(handoff.approvalState)],
+        ["Source photometry",esc(handoff.sourcePhotometryStatus)],["1 mm normalised",esc(handoff.oneMmNormalised)],
+        ["Base length",esc(handoff.baseLengthM)+" m"],["Record kind / type",esc(handoff.recordKind)+" / "+esc(handoff.recordType)],
+        ["Unresolved count",esc(handoff.unresolvedCount)],["Runtime-owned slots",'<span class="state unresolved">unresolved</span>']
+      ])}</div>
+    </div>
+    <div class="card"><h2>Selector factory-approved-input readiness — supplied state</h2>
+      ${kvRows([
+        ["Factory-approved inputs",boolState(readiness.factoryApprovedInputsReady)],
+        ["Factory blocker",stateForBlocker(readiness.blocker)],
+        ["Read-only Engine candidate inputs",boolState(readiness.readonlyEngineCandidateInputsReady)],
+        ["Candidate blocker",stateForBlocker(readiness.readonlyEngineCandidateInputsBlocker)],
+        ["Stage-3 mode",esc(readiness.stage3Mode),"mono"],
+        ["Committed constraint count",esc(readiness.committedSelectorConstraintCount)],
+        ["Accessory intent count",esc(readiness.accessoryIntentCount)],
+        ["Diagnostic summary only",esc(readiness.diagnosticOnly)]
+      ])}
+    </div>
+    <div class="grid">
+      <div class="card"><h2>Binding validation</h2>${kvRows([
+        ["Result",'<span class="state ready">matched</span>'],["Reference ID",esc(view.binding.referenceId),"mono"],
+        ["Authority SHA",esc(view.binding.authorityRecordSha256),"mono"]
+      ])}</div>
+      <div class="card"><h2>Unresolved fields</h2><div class="mono ${view.unresolvedFields.length?"muted":""}">${unresolved}</div></div>
+    </div>
+    <div class="card"><h2>Safety flags — no action occurred</h2><table><thead><tr><th>Flag</th><th>Supplied value</th></tr></thead><tbody>${safetyRows}</tbody></table></div>`;
+  if (fixture) app.querySelectorAll("button[data-fixture]").forEach((button) => button.addEventListener("click", () => { fixtureName = button.dataset.fixture; show(OFFLINE_FIXTURES[fixtureName]); }));
+}
+function renderBlocked(error) {
+  const title = error?.stale ? "CONTRACT BLOCKED — STALE OR CONFLICTING INPUT" : "CONTRACT BLOCKED — UNSUPPORTED INPUT";
+  app.innerHTML = `<div class="blocked-box"><div class="blocked-title">${title}</div><div>${esc(error instanceof Error ? error.message : "The supplied contract view is invalid.")}</div><div class="muted">No partial identity, readiness, binding or authority data is displayed.</div></div>`;
+}
+function show(candidate) {
+  try { render(validateView(candidate)); } catch (error) { renderBlocked(error); }
+}
+
+const supplied = globalThis.CONTROLSTACK_SELECTOR_CONTRACT_VIEW;
+show(supplied === undefined ? OFFLINE_FIXTURES[fixtureName] : supplied);
+</script>
+</body>
+</html>
