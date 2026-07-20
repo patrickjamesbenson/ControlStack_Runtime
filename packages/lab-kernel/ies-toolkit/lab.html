@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ControlStack Lab &amp; IES — Local Console</title>
+<link rel="stylesheet" href="./lab.css" />
+<style>
+  html,body{height:100%}body{padding:0;background:var(--cream,#f4f2ed);overflow:hidden}
+  .shell{height:100%;display:grid;grid-template-rows:auto auto 1fr}
+  .shellbar{display:flex;align-items:center;gap:13px;background:var(--navy,#142030);color:#fff;padding:9px 14px;box-shadow:0 1px 6px rgba(20,32,48,.18);z-index:3}
+  .shellbar .mark{width:30px;height:30px;border-radius:7px;background:var(--orange,#e07048);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px}
+  .shellbar .bn{font-size:13px;font-weight:750;letter-spacing:.14em;line-height:1.05}.shellbar .bs{font-size:8px;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.58)}
+  .home{margin-left:auto;color:#fff;text-decoration:none;border:1px solid rgba(255,255,255,.25);border-radius:7px;padding:6px 9px;font-size:11px}.home:hover,.home:focus{border-color:#fff;outline:none}
+  .notice{background:#fff7d6;color:#6f4d00;border-bottom:1px solid #e7cf79;padding:7px 14px;font-size:11px;font-weight:800;letter-spacing:.035em}
+  .workspace{display:grid;grid-template-columns:230px 1fr;min-height:0}
+  nav{overflow:auto;background:#fff;border-right:1px solid var(--border-light,#ece8e2);padding:12px}
+  nav h2{font-size:9px;text-transform:uppercase;letter-spacing:.09em;color:var(--text3,#8a9aa5);margin:12px 8px 6px}
+  nav h2:first-child{margin-top:2px}
+  nav button{display:block;width:100%;text-align:left;font:inherit;font-size:12px;color:var(--text2,#4a5f6e);background:transparent;border:1px solid transparent;border-radius:7px;padding:7px 9px;cursor:pointer;margin-bottom:3px}
+  nav button:hover,nav button:focus{background:#f7f7f5;outline:none}nav button.on{background:#eef6ff;border-color:#b9d7f5;color:#174f86;font-weight:700}
+  .viewer{min-width:0;min-height:0;display:grid;grid-template-rows:auto 1fr}
+  .viewbar{display:flex;align-items:center;gap:10px;background:#fff;border-bottom:1px solid var(--border-light,#ece8e2);padding:8px 12px;min-height:42px}
+  .viewbar strong{font-size:12px}.viewbar span{font-size:10.5px;color:var(--text2,#4a5f6e)}
+  .open{margin-left:auto;font-size:11px;text-decoration:none;color:#174f86;border:1px solid #b9d7f5;border-radius:7px;padding:5px 8px}.open:hover,.open:focus{background:#eef6ff;outline:none}
+  iframe{width:100%;height:100%;border:0;background:var(--cream,#f4f2ed)}
+  @media(max-width:760px){.workspace{grid-template-columns:1fr;grid-template-rows:auto 1fr}nav{display:flex;gap:5px;overflow:auto;border-right:0;border-bottom:1px solid var(--border-light,#ece8e2);padding:7px}nav h2{display:none}nav button{width:auto;white-space:nowrap;margin:0}.viewbar span{display:none}}
+</style>
+</head>
+<body>
+<div class="shell">
+  <header class="shellbar">
+    <div class="mark">CS</div>
+    <div><div class="bn">CONTROLSTACK</div><div class="bs">Lab &amp; IES · local console</div></div>
+    <a class="home" href="./index.html">Surface directory</a>
+  </header>
+  <div class="notice">PRESENTATION SHELL ONLY — EACH EMBEDDED SURFACE RETAINS ITS OWN AUTHORITY BOUNDARY</div>
+  <div class="workspace">
+    <nav aria-label="Classified Lab surfaces">
+      <h2>Working</h2>
+      <button data-view="bench" class="on">Main Lab Bench</button>
+      <button data-view="summary">IES summary</button>
+      <button data-view="ugr">UGR view</button>
+      <h2>Contracts</h2>
+      <button data-view="builder">Project IES builder</button>
+      <button data-view="merge">Merge composition</button>
+      <button data-view="selector">Selector contract</button>
+      <button data-view="emergency">Emergency candidate</button>
+      <h2>Support</h2>
+      <button data-view="components">Component library</button>
+      <button data-view="documents">Document register</button>
+      <button data-view="equipment">Equipment register</button>
+      <button data-view="requests">Lab request</button>
+      <h2>Publication</h2>
+      <button data-view="provenance">Provenance publication</button>
+      <button data-view="explorer">Provenance explorer</button>
+      <h2>Compatibility</h2>
+      <button data-view="legacy">Legacy inspector</button>
+    </nav>
+    <main class="viewer">
+      <div class="viewbar"><strong id="view-title">Main Lab Bench</strong><span id="view-note">Non-authoritative browser working surface.</span><a id="open-view" class="open" href="./bench.html" target="_blank" rel="noopener">Open separately</a></div>
+      <iframe id="view-frame" title="Main Lab Bench" src="./bench.html"></iframe>
+    </main>
+  </div>
+</div>
+<script>
+const VIEWS = Object.freeze({
+  bench:{title:"Main Lab Bench",src:"./bench.html",note:"Non-authoritative browser working surface."},
+  summary:{title:"IES summary and normalise",src:"./summary.html",note:"Inspection and bounded working normalisation."},
+  ugr:{title:"UGR view",src:"./ugr.html",note:"Committed CIE-190 presentation surface."},
+  builder:{title:"Project IES builder",src:"./ies_builder.html",note:"Consumes only the committed sealed-reference project contract."},
+  merge:{title:"Merge composition",src:"./ies_merge.html",note:"Ordered non-authoritative two-parent composition."},
+  selector:{title:"Selector contract viewer",src:"./selector_stub.html",note:"Read-only supplied readiness projection; not Selector acceptance."},
+  emergency:{title:"Emergency candidate",src:"./emergency.html",note:"Advisory contract view; procurement remains unreleased."},
+  components:{title:"Component library",src:"./component_library.html",note:"View over committed immutable component projections."},
+  documents:{title:"Document register",src:"./docs.html",note:"In-memory document association support surface."},
+  equipment:{title:"Equipment register",src:"./equipment_register.html",note:"Entered Lab equipment and calibration support information."},
+  requests:{title:"Lab request",src:"./lab_request.html",note:"Additive non-persistent Lab request intake."},
+  provenance:{title:"Provenance publication",src:"./provenance.html",note:"Read-only bounded publication projection."},
+  explorer:{title:"Provenance explorer",src:"./provenance_explorer.html",note:"Read-only safe identity and resolver exploration."},
+  legacy:{title:"Legacy Lab Bench",src:"./labbench.html",note:"Compatibility/demo-only read-only inspector."},
+});
+const frame=document.getElementById("view-frame");
+const title=document.getElementById("view-title");
+const note=document.getElementById("view-note");
+const openView=document.getElementById("open-view");
+function activate(key){
+  const view=VIEWS[key];
+  if(!view)return;
+  frame.src=view.src;
+  frame.title=view.title;
+  title.textContent=view.title;
+  note.textContent=view.note;
+  openView.href=view.src;
+  document.querySelectorAll("nav button[data-view]").forEach((button)=>button.classList.toggle("on",button.dataset.view===key));
+}
+document.querySelectorAll("nav button[data-view]").forEach((button)=>button.addEventListener("click",()=>activate(button.dataset.view)));
+</script>
+</body>
+</html>

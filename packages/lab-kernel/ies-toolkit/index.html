@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ControlStack Lab &amp; IES — Surface Directory</title>
+<link rel="stylesheet" href="./lab.css" />
+<style>
+  .notice{padding:12px 15px;border:2px solid #9a6700;background:#fff7d6;color:#6f4d00;border-radius:10px;font-weight:800;letter-spacing:.035em;margin-bottom:14px}
+  .intro{background:#fff;border:1px solid var(--border-light,#ece8e2);border-radius:10px;padding:14px 16px;margin-bottom:18px;color:var(--text2,#4a5f6e)}
+  .section-title{font-size:11px;text-transform:uppercase;letter-spacing:.09em;color:var(--text3,#8a9aa5);margin:22px 0 9px}
+  .directory{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:11px}
+  .surface{display:block;text-decoration:none;color:inherit;background:#fff;border:1px solid var(--border-light,#ece8e2);border-radius:10px;padding:13px 14px;min-height:116px}
+  .surface:hover,.surface:focus{border-color:var(--orange,#e07048);box-shadow:0 5px 18px rgba(20,32,48,.08);outline:none}
+  .surface h2{font-size:14px;margin:0 0 5px}.surface p{font-size:12px;line-height:1.5;color:var(--text2,#4a5f6e);margin:0}
+  .tag{display:inline-block;margin-top:10px;padding:2px 7px;border-radius:999px;background:#f3f4f6;color:#4b5563;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.04em}
+  .tag.compat{background:#fff7d6;color:#6f4d00}.tag.contract{background:#eef6ff;color:#174f86}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brandhead">
+    <div class="mark">CS</div>
+    <div><div class="bn">CONTROLSTACK</div><div class="bs">Lab &amp; IES</div></div>
+    <div class="pg"><div class="pgt">Surface Directory</div><div class="pgs">classified local presentation entry points</div></div>
+  </div>
+
+  <div class="notice">LOCAL LAB PRESENTATION ONLY — NOT PRODUCTION AUTHORITY</div>
+  <div class="intro">
+    This page links only to committed and classified Lab surfaces. Each surface retains its own stated authority boundary. This directory performs no selection, generation, approval, sealing, persistence, routing or server-side action.
+  </div>
+
+  <div class="section-title">Primary working and inspection surfaces</div>
+  <div class="directory">
+    <a class="surface" href="./lab.html"><h2>Lab console</h2><p>Presentation-only navigation shell for the main classified Lab views.</p><span class="tag">shell</span></a>
+    <a class="surface" href="./bench.html"><h2>Main Lab Bench</h2><p>Non-authoritative working surface that delegates governed operations to committed modules.</p><span class="tag">working view</span></a>
+    <a class="surface" href="./summary.html"><h2>IES summary and normalise</h2><p>Inspection and bounded normalisation surface for uploaded IES working material.</p><span class="tag">working view</span></a>
+    <a class="surface" href="./ugr.html"><h2>UGR view</h2><p>Committed CIE-190-based UGR presentation surface.</p><span class="tag">inspection</span></a>
+    <a class="surface" href="./labbench.html"><h2>Legacy Lab Bench</h2><p>Compatibility/demo-only read-only IES inspector. Governed work belongs in the Main Lab Bench.</p><span class="tag compat">compatibility</span></a>
+  </div>
+
+  <div class="section-title">Reference, project and downstream contract surfaces</div>
+  <div class="directory">
+    <a class="surface" href="./reference_builder.html"><h2>Reference draft builder</h2><p>Creates only non-authoritative in-memory working drafts and plans.</p><span class="tag">draft only</span></a>
+    <a class="surface" href="./curator.html"><h2>Evidence curator</h2><p>Non-authoritative evidence association and curation plan.</p><span class="tag">draft only</span></a>
+    <a class="surface" href="./ies_builder.html"><h2>Project IES builder</h2><p>Thin browser consumer of the committed sealed-reference project generator.</p><span class="tag contract">sealed input contract</span></a>
+    <a class="surface" href="./ies_merge.html"><h2>Merge composition</h2><p>Ordered non-authoritative two-parent composition surface.</p><span class="tag contract">composition contract</span></a>
+    <a class="surface" href="./selector_stub.html"><h2>Selector contract viewer</h2><p>Read-only display of supplied downstream readiness with strict fail-closed validation.</p><span class="tag contract">display only</span></a>
+    <a class="surface" href="./onemm_contract.html"><h2>One-millimetre handoff</h2><p>Classified request/report workflow surface for the one-millimetre contract handoff.</p><span class="tag contract">handoff</span></a>
+  </div>
+
+  <div class="section-title">Components, documents, requests and reports</div>
+  <div class="directory">
+    <a class="surface" href="./component_library.html"><h2>Component library</h2><p>Lab-only view over committed immutable component projections.</p><span class="tag">projection</span></a>
+    <a class="surface" href="./docs.html"><h2>Document register</h2><p>In-memory document association surface with canonical safe references.</p><span class="tag">support</span></a>
+    <a class="surface" href="./equipment_register.html"><h2>Equipment register</h2><p>Lab support surface for entered equipment and calibration information.</p><span class="tag">support</span></a>
+    <a class="surface" href="./test_request.html"><h2>Test request</h2><p>Additive request handoff with unresolved values preserved explicitly.</p><span class="tag">workflow</span></a>
+    <a class="surface" href="./lab_request.html"><h2>Lab request</h2><p>Lab-side request intake without persistence or authority creation.</p><span class="tag">workflow</span></a>
+    <a class="surface" href="./extended_report.html"><h2>Extended report</h2><p>Bounded report handoff surface using canonical artefact references only.</p><span class="tag">workflow</span></a>
+  </div>
+
+  <div class="section-title">Publication and advisory surfaces</div>
+  <div class="directory">
+    <a class="surface" href="./provenance.html"><h2>Provenance publication</h2><p>Read-only bounded publication projection with explicit governed and offline modes.</p><span class="tag">publication</span></a>
+    <a class="surface" href="./provenance_explorer.html"><h2>Provenance explorer</h2><p>Read-only exploration of safe identity and host-free resolver projections.</p><span class="tag">publication</span></a>
+    <a class="surface" href="./luminaire_provenance.html"><h2>Luminaire provenance</h2><p>Read-only luminaire-oriented view of the approved publication boundary.</p><span class="tag">publication</span></a>
+    <a class="surface" href="./emergency.html"><h2>Emergency candidate</h2><p>Advisory view over the committed emergency-selection contract; procurement remains unreleased.</p><span class="tag">advisory</span></a>
+  </div>
+</div>
+</body>
+</html>
