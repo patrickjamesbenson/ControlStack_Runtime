@@ -98,8 +98,9 @@ tests/selectorCascadeCorrectness.test.js
 - `LAB-033-main-lab-bench-surface`: `done` and confirmed on origin.
 - `LAB-034-legacy-labbench-classification`: `done` and confirmed on origin.
 - LAB-034 gated execution: 255/255 passed.
-- `LAB-035-selector-contract-stub`: `blocked` pending Program & Integrate approval.
-- Ready items: none.
+- `LAB-035-selector-contract-stub`: `ready` under Program & Integrate approval of version 1 unchanged.
+- Program approval decision: `docs(program): approve LAB-035 Selector contract seam`; Program gate 46/46 passed and the decision was pushed.
+- Ready items: LAB-035 only.
 
 Program reported gate 45/45 passed, the approval decision committed and pushed, and its tree clean. No parallel or combined implementation is authorised.
 
@@ -133,7 +134,7 @@ LAB-034 is complete as the read-only legacy compatibility classification. It rem
 
 LAB-017 remains governed by its approved version-1 envelope. Program retains all production allocation, live source reading, hosting, routing, persistence, authentication, CRM integration, deployment and endpoint ownership.
 
-The next safe action is orchestrator review of the LAB-035 Selector contract seam. No LAB-035 implementation may begin until Program & Integrate approval is recorded; there is no ready item.
+The next safe action is one bounded LAB-035 worker commission under the approved version-1 envelope. Implementation is confined to `packages/lab-kernel/ies-toolkit/selector_stub.html`; LAB-036 and later parcels remain blocked until LAB-035 is committed, pushed and closed out.
 
 ## LAB-017 immutable completion receipt
 

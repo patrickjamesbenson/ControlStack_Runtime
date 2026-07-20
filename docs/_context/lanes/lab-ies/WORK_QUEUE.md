@@ -645,7 +645,9 @@ Evidence: `15c0f130650146374932c280c054f6293f3f03f9`, confirmed on origin. The l
 - depends on: LAB-017-reference-resolver-contract, LAB-022-reference-composition-kernel, LAB-031-project-builder-surface
 - on success next: LAB-036-lab-shell-server
 - seam change: yes
-- status: blocked
+- status: ready
+
+Approval evidence: Program & Integrate approved version 1 unchanged in the pushed decision titled `docs(program): approve LAB-035 Selector contract seam`; Program gate 46/46 passed. LAB-035 is the sole ready item and no later parcel may start.
 
 ### Q-26 Final Lab shell and local server
 - id: LAB-036-lab-shell-server

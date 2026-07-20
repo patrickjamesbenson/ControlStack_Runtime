@@ -6,6 +6,27 @@
 - Historical handoff content is retained as reported context unless freshly reverified.
 - Test output proves only the behaviour exercised by the named tests; low-level merge tests do not by themselves prove completion of the final governed merge.
 
+## LAB-035 seam-definition checkpoint reconciliation — 2026-07-20
+
+### Trigger and classification
+
+- the live branch advanced beyond the recorded post-LAB-034 marker;
+- repository history identifies the unmatched change as the documentation-only checkpoint `docs(lab): define LAB-035 Selector contract seam`;
+- the checkpoint introduced `LAB-035_SEAM_ENVELOPE.md`, version 1, as a proposal only;
+- no LAB-035 feature file was committed, staged or authorised;
+- queue truth remains `blocked` with no ready item because Program & Integrate approval is not recorded.
+
+### Proposed boundary
+
+The envelope confines the future parcel to one Lab-only read-only Selector contract viewer. It permits only bounded presentation of approved safe reference identity, safe runtime handoff and Selector factory-approved-input readiness projections. Selector computation, vocabulary, defaults, option generation, Engine execution, IES generation, authority creation, routes, persistence and production acceptance claims remain outside Lab ownership.
+
+### Reconciliation outcome
+
+- the proposed envelope checkpoint is classified as valid lane coordination documentation;
+- the decision log, evidence, queue metadata and handoff now identify the committed proposal and its approval hold;
+- LAB-035 remains blocked pending Program & Integrate approval of version 1 unchanged;
+- no implementation, queue authorisation or human-observation claim occurs in this reconciliation run.
+
 ## LAB-034 Legacy labbench classification — 2026-07-20
 
 ### Identity and scope
@@ -38,7 +59,10 @@ The completed page:
 - subject: `lab: checkpoint legacy labbench classification`;
 - push: confirmed on origin `lane/code-pilot-lab`;
 - LAB-034 is `done`;
-- LAB-035 remains blocked pending Program & Integrate approval, so no item becomes `ready`.
+- immutable LAB-035 seam envelope: `1c422dec0cb4efb0777d61bebcf6cf4ee9a33a5f`;
+- Program & Integrate approval: `docs(program): approve LAB-035 Selector contract seam`;
+- Program gate: 46/46 passed and the decision was pushed;
+- LAB-035 is the sole `ready` item; LAB-036 and later work remain sequence-blocked.
 
 ## LAB-033 Main Lab Bench surface — 2026-07-20
 
