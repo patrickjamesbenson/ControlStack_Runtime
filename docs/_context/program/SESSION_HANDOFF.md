@@ -10,7 +10,7 @@ LAB-038 through LAB-042 are complete and pushed. The final Lab gate passed 262/2
 
 The current readable Runtime mapper has no `selectedRoomTaC`, so SEL-018 is not yet accepted as implemented.
 
-The connected Selector app currently resolves to dirty main, not the isolated Selector worktree, and has commit/push disabled. Do not edit main or mix the unfinished runtime-port work into this sequence.
+The restarted Selector app now resolves to the isolated Selector worktree on `lane/selector-engine`, with commit/push enabled and a clean tree. Its feature paths are available, but the live allowlist still omits the lane-document scope already present in the current Program manifest. Refresh the installed service configuration and reconcile the Selector queue before implementation. Do not edit main or mix the unfinished runtime-port work into this sequence.
 
 ## Exact order
 

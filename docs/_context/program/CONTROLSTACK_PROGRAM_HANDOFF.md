@@ -589,7 +589,7 @@ Use exactly:
 
 Selector passes the single committed source-backed room temperature only and calculates nothing. It must reject missing, malformed, duplicate, uncommitted or non-source-backed Ambient and must not emit rise, derived temperature, lookup temperature, board temperature or verified lm/m.
 
-Do not use the currently connected dirty-main Runtime root for this parcel. The worker must be bound to the isolated Selector worktree and branch before any edit.
+The restarted Selector app is now bound to the isolated Selector worktree and branch, with a clean tree and the exact feature/test paths available. The live service still lacks the lane-document permission already present in the current Program manifest, so refresh the installed configuration and reconcile the queue before any SEL-018 feature edit. Main and its unfinished runtime-port work remain excluded.
 
 ### Next action after accepted SEL-018 — THERM-P1
 

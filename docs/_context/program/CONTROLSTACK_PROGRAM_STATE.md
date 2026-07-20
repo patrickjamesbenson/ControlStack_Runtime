@@ -378,7 +378,7 @@ P2 Checkpoint 1 is **IMPLEMENTATION COMPLETE / GATE GREEN / COMMIT BLOCKED BY SH
 - **LAB RECEIPT:** accepted. LAB-038 through LAB-042 are pushed, the corrected producer contracts are version 2 and the final `lab-ies` gate passed 262/262.
 - **LAB AUTHORITY:** thermal evidence remains measured and unresolved at Lab with `authorityState: null`; Program acceptance does not rewrite that field.
 - **SEL-018 AUDIT:** the current readable Runtime mapper contains no `selectedRoomTaC`; no accepted SEL-018 implementation receipt exists.
-- **SELECTOR TOOLING:** the connected Selector app currently resolves `runtime` to dirty main with commit/push disabled instead of the isolated Selector worktree. The unfinished runtime-port state in main is excluded and untouched.
+- **SELECTOR TOOLING:** the restarted app resolves to the isolated Selector worktree on `lane/selector-engine`, commit/push are enabled, and the tree is clean. The exact SEL-018 feature/test paths are writable. The live allowlist still omits the lane-document scope already present in the current Program manifest, so queue reconciliation and feature start remain held until the installed service configuration is refreshed. The unfinished runtime-port state in main is excluded and untouched.
 - **SOLE READY SELECTOR ITEM:** SEL-018, exactly the mapper and focused test already approved.
 - **ADMITTED NEXT PARCEL:** THERM-P1 Program thermal-evidence validation adapter, exactly one new module and one focused test; blocked until SEL-018 acceptance.
 - **ADMITTED ENGINE PARCEL:** THERM-E1 thermal lumen execution, exactly one new module and one focused test; blocked until THERM-P1 acceptance.

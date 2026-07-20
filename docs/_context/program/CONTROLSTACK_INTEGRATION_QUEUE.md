@@ -573,7 +573,7 @@ Exact files remain:
 
 Acceptance requires `selectedRoomTaC` only, no thermal calculation, fail-closed Ambient authority and preservation of existing non-thermal candidate fields.
 
-The readable Runtime base has no `selectedRoomTaC`, so no implementation receipt is accepted yet. The Selector connector currently targets dirty main rather than the isolated worktree; no main file may be changed.
+The isolated Selector worktree is now correctly connected on `lane/selector-engine` and is clean. The mapper still has no `selectedRoomTaC`, so no SEL-018 implementation receipt is accepted. The live service allowlist permits the exact two feature/test paths but still omits the lane-document scope already present in the current Program manifest; SEL-018 remains ready in Program but must not start until that installed configuration is refreshed and the Selector queue is reconciled. No main file may be changed.
 
 ### THERM-P1 — Program thermal-evidence validation adapter
 

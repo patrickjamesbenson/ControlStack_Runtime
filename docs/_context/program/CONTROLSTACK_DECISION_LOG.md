@@ -917,7 +917,7 @@ The accepted Lab shape is the exact `controlstack.lab.nvb-lab-projection.v2` pro
 
 The current readable Runtime base still contains no `selectedRoomTaC` in the read-only candidate mapper or its tests. Therefore SEL-018 is not accepted as implemented and remains the sole ready Selector parcel under its previously approved exact two-file scope.
 
-The connected Selector tool currently resolves to the dirty main repository rather than the isolated Selector worktree, with commit and push disabled. No Selector file is changed by this Program decision and the unfinished main runtime-port work remains untouched.
+The restarted Selector tool now resolves to the isolated Selector worktree on `lane/selector-engine`, with commit and push enabled and a clean repository. The feature paths approved for SEL-018 are writable. The live allowlist still omits `docs/_context/lanes/selector-engine/**` even though the current Program Deployment v2 manifest contains that exact lane-document permission; therefore feature implementation must not begin until the installed service configuration is refreshed and the lane queue can be reconciled. The unfinished main runtime-port work remains excluded and untouched.
 
 ### THERM-P1 admission
 
