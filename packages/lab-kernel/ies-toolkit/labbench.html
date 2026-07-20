@@ -1,0 +1,123 @@
+<!doctype html>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ControlStack Lab — Legacy Bench Compatibility</title>
+<link rel="stylesheet" href="./lab.css" />
+<style>
+  .notice{padding:12px 14px;border:1px solid var(--amber,#c9862a);border-radius:8px;background:var(--amber-lt,#fff5dd);font-weight:700}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin-top:14px}
+  .drop{border:1.5px dashed var(--border,#cfd4dc);border-radius:10px;padding:18px;text-align:center;cursor:pointer;background:var(--soft,#f7f8fa)}
+  .drop.over{border-color:var(--green,#1a9e72)}
+  .hidden{display:none}.muted{color:var(--text3,#667085)}.bad{color:var(--red,#c23b3b)}.ok{color:var(--green,#1a9e72)}
+  .kv{display:grid;grid-template-columns:minmax(120px,.7fr) 1fr;gap:6px 12px;padding:4px 0;border-bottom:1px solid var(--border-light,#eceff3);font-size:12px}
+  .polar{text-align:center;overflow:auto;min-height:280px}.polar svg{max-width:100%;height:auto}
+  table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:6px 8px;border-bottom:1px solid var(--border-light,#eceff3);text-align:left;vertical-align:top}
+</style>
+
+<div class="wrap">
+  <div class="brandhead">
+    <div class="mark">CS</div>
+    <div><div class="bn">CONTROLSTACK</div><div class="bs">Lab &amp; IES</div></div>
+    <div class="pg"><div class="pgt">Legacy Bench Compatibility</div><div class="pgs">read-only demo inspector</div></div>
+  </div>
+
+  <div class="notice">LEGACY COMPATIBILITY / DEMO ONLY — use <a href="./bench.html">Main Lab Bench</a> for the governed non-authoritative workflow.</div>
+
+  <div class="grid">
+    <section class="card">
+      <h2>Read-only IES inspection</h2>
+      <p class="muted">This page only parses and displays an uploaded IES through committed modules. It cannot normalise, approve, seal, allocate, publish or generate a project IES.</p>
+      <div class="drop" id="drop">Drop an <b>.ies</b> or <b>.txt</b> file here, or click to choose.</div>
+      <input class="hidden" id="file" type="file" accept=".ies,.txt,text/plain" />
+      <div id="status" class="muted"></div>
+    </section>
+
+    <section class="card hidden" id="summaryCard">
+      <h2>Summary</h2>
+      <div id="summary"></div>
+      <h3>Header</h3>
+      <div id="header"></div>
+    </section>
+
+    <section class="card hidden" id="polarCard">
+      <h2>Polar</h2>
+      <div class="polar" id="polar"></div>
+    </section>
+
+    <section class="card">
+      <h2>Compatibility boundary</h2>
+      <div class="kv"><span>Authority state</span><b>none</b></div>
+      <div class="kv"><span>Reference allocation / sealing</span><b>not implemented</b></div>
+      <div class="kv"><span>Project generation</span><b>not implemented</b></div>
+      <div class="kv"><span>Persistence / resolver</span><b>not implemented</b></div>
+      <div class="kv"><span>Governed workflow</span><b><a href="./bench.html">Main Lab Bench</a></b></div>
+    </section>
+  </div>
+</div>
+
+<script type="module">
+import { parseIes } from "./iesParse.js";
+import { computeMetrics } from "./iesMetrics.js";
+import { describeIes } from "./iesInspect.js";
+import { renderPolar } from "./iesPolar.js";
+
+const byId = (id) => document.getElementById(id);
+const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({
+  "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+}[char]));
+
+function renderModel(model, displayName) {
+  const metrics = computeMetrics(model);
+  const summaryRows = [
+    ["File", displayName || "uploaded IES"],
+    ["Computed lumens", metrics.lumens == null ? "unresolved" : `${Math.round(metrics.lumens)} lm`],
+    ["Input power", metrics.watts == null ? "unresolved" : `${metrics.watts} W`],
+    ["Efficacy", metrics.lmPerW == null ? "unresolved" : `${metrics.lmPerW.toFixed(1)} lm/W`],
+    ["Peak", metrics.peak?.maxCandela == null ? "unresolved" : `${metrics.peak.maxCandela.toFixed(1)} cd`],
+  ];
+  byId("summary").innerHTML = summaryRows.map(([label, value]) =>
+    `<div class="kv"><span>${escapeHtml(label)}</span><b>${escapeHtml(value)}</b></div>`).join("");
+
+  const description = describeIes(model);
+  byId("header").innerHTML = `<table><tbody>${description.headerValues.map((row) =>
+    `<tr><td>${escapeHtml(row.label)}</td><td>${escapeHtml(row.value)}${row.note ? ` <span class="muted">(${escapeHtml(row.note)})</span>` : ""}</td></tr>`).join("")}</tbody></table>`;
+
+  byId("polar").innerHTML = renderPolar(model).svg;
+  byId("summaryCard").classList.remove("hidden");
+  byId("polarCard").classList.remove("hidden");
+}
+
+async function handleFile(file) {
+  try {
+    const text = await file.text();
+    const model = parseIes(text);
+    renderModel(model, file.name);
+    byId("status").className = "ok";
+    byId("status").textContent = "Loaded for read-only inspection. No authority or project artefact was created.";
+  } catch (error) {
+    byId("summaryCard").classList.add("hidden");
+    byId("polarCard").classList.add("hidden");
+    byId("status").className = "bad";
+    byId("status").textContent = error?.message || "The IES could not be inspected.";
+  }
+}
+
+const drop = byId("drop");
+const fileInput = byId("file");
+drop.addEventListener("click", () => fileInput.click());
+fileInput.addEventListener("change", () => {
+  const file = fileInput.files?.[0];
+  if (file) handleFile(file);
+});
+drop.addEventListener("dragover", (event) => {
+  event.preventDefault();
+  drop.classList.add("over");
+});
+drop.addEventListener("dragleave", () => drop.classList.remove("over"));
+drop.addEventListener("drop", (event) => {
+  event.preventDefault();
+  drop.classList.remove("over");
+  const file = event.dataTransfer?.files?.[0];
+  if (file) handleFile(file);
+});
+</script>
