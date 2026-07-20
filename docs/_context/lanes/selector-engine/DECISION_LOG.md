@@ -207,3 +207,11 @@ This log is append-oriented. Do not silently rewrite historical decisions.
 **Rationale:** `fieldDisplayValue()` currently falls through to diagnostic `effectiveLabel` text. For hidden indirect fields, wording such as `not required or supported` can therefore become a non-empty value and incorrectly set readiness true. Registration then correctly rejects what appears to be indirect intent, even though no user intent exists.
 
 **Consequence:** `SEL-016` must remove diagnostic fallback text from intent capture while preserving truthful direct intent, valid supported indirect intent, and registration's existing refusal of genuine indirect emission. It must not manufacture values or weaken any first-slice safety rule.
+
+## 2026-07-20 — Indirect capability follows exact selected SYSTEM support
+
+**Decision:** `indirectCapability` is subject to the same exact selected-SYSTEM indirect-support state as indirect optic and Light/Control lanes.
+
+**Rationale:** Broad OPTICS relationships describe size-level optic compatibility and may span distinct product variants. They cannot override the exact selected SYSTEM row's product capability.
+
+**Consequence:** Direct-only DNX 60 blocks the `Indirect supported` auto-consequence while DNX 60 Beam D/I retains it. Direct capability, legitimate OPTICS rows, System variant separation, Control, Tier, registration, and downstream contracts remain unchanged.

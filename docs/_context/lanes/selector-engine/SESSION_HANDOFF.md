@@ -314,10 +314,14 @@ The existing indirect-lane suppression is correct because it follows the exact s
 
 The light-output readiness preview has a separate defect. Hidden or blocked indirect fields can carry diagnostic `effectiveLabel` text such as `not required or supported`. `fieldDisplayValue()` treats that non-empty diagnostic copy as selected intent, so the indirect readiness summaries can become `ready: true`. Registration then correctly rejects the apparent indirect intent from the direct-only first slice. The registration rule must remain unchanged; the false projection must be corrected upstream.
 
+## 2026-07-20 SEL-015 closeout — exact System capability restored
+
+SEL-015 is complete. The `indirectCapability` auto-consequence now follows the exact selected SYSTEM option's indirect-support flag, matching the already-correct indirect optic and Light/Control suppression boundary. Direct-only DNX 60 keeps direct capability but no longer receives a false `Indirect supported` consequence from broad size-keyed OPTICS relationships. DNX 60 Beam D/I remains distinct and keeps legitimate indirect capability and optics.
+
+The focused variant regression executed visibly in the approved gate. The affected run, repeated full gate, and guarded commit gate each passed 105/105. Exactly the authorised option service and cascade regression files were committed and pushed. The feature tree is clean. No live browser, registration, Engine, RuntimeData, persistence, RunTable, IES, or output action occurred.
+
 ## Next worker batch
 
-`SEL-015` is the sole top ready item and must gate indirect capability through the exact selected SYSTEM support flag without changing source data or legitimate Beam DI optics. After its full closeout, the same worker continues immediately to `SEL-016`, which must ensure diagnostic, hidden, blocked, and unavailable labels never count as selected readiness intent. Both parcels have exact authorised files and regressions in `WORK_QUEUE.md`.
+`SEL-016` is now the sole top ready item. It must change only `packages/workspace-kernel/selectorLmTemperatureReadinessPreview.js` and `tests/selectorLightControlSpine.test.js`, then close the five authorised context files separately. Hidden, blocked, unavailable, warning, and diagnostic presentation text must not become selected target, CCT/CRI, or Control intent. Actual source-valid selection, explicit manual value, and valid supported-lane match-direct inheritance must remain truthful.
 
-After both repairs close, the worker reaches SEL-002 and must stop with `NEEDS YOU` because the final registration acceptance requires a new genuine browser save and visible acknowledgement. SEL-003 remains blocked until an attributable active server-owned revision is proven. Use the canonical standing worker prompt in `LANE_CHARTER.md`.
-
-The first worker started before lane memory had been reconciled to the repair-commission commit and correctly stopped under the branch-HEAD guard. The commission commit is now the recorded work HEAD, and this reconciliation wrapper must sit directly above it. A fresh worker may then take SEL-015 without changing the queue or parcel scopes.
+After SEL-016 closes, SEL-002 becomes the next eligible item but its acceptance requires a new genuine browser save and visible server-registration acknowledgement. The worker must then return `NEEDS YOU` with no repository substitution for that live evidence. SEL-003 remains blocked until an attributable active server-owned revision is proven.

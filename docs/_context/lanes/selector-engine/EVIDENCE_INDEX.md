@@ -325,3 +325,20 @@ Every completed worker updates this index with:
 - Documentation evidence commit: `ef29bc846ed9832b84b64d95936b79b4eab8bcd8` — `docs(selector): record authority refresh observability boundary`; gated at 103/103; push `ae41a4a..ef29bc8` to `origin/lane/selector-engine` succeeded — VERIFIED.
 - Evidence-commit ending tree: clean, with 0 staged, modified, untracked, or deleted paths — VERIFIED.
 - The commit containing this hash-index closeout is the final ending HEAD for the worker; its exact hash is reported in the completion response.
+
+## 2026-07-20 — SEL-015 exact-System indirect capability repair
+
+- Starting identity: root `C:\ControlStack_Worktrees\selector-engine`; branch `lane/selector-engine`; actual HEAD `3b55dbe53c60f80738955393516f43fd3fa25a4e`; gate `selector-engine`; current HEAD was a dedicated reconciliation wrapper whose parent matched the recorded lane work HEAD — VERIFIED.
+- Starting Git state: clean, with no staged, modified, untracked, or deleted paths — VERIFIED.
+- Feature paths: `packages/workspace-kernel/selectorReferenceOptionsService.js` and `tests/selectorCascadeCorrectness.test.js` — VERIFIED.
+- Repair: `indirectCapability` now uses the exact selected SYSTEM indirect-support state already applied to indirect optic and Light/Control lanes — VERIFIED.
+- Direct-only variant: DNX 60 Direct keeps direct capability and direct optic available while the OPTICS-derived `Indirect supported` consequence is blocked — VERIFIED by executed regression.
+- Direct-indirect variant: DNX 60 Beam D/I keeps direct and indirect capability plus its legitimate indirect optic available — VERIFIED by executed regression.
+- Preservation: source data, source order, System variant separation, legitimate OPTICS relationships, Control, Tier, registration contracts, and downstream seams were unchanged — VERIFIED by bounded diff and gate coverage.
+- Focused/affected execution: `selector-engine`, 105 passed, 0 failed, exit code 0; the named DNX 60 direct-only versus Beam D/I regression executed visibly — VERIFIED.
+- Repeated complete gate before staging: `selector-engine`, 105 passed, 0 failed, exit code 0 — VERIFIED.
+- Exact staged set: only the two authorised feature/test paths — VERIFIED.
+- Gated feature commit/push: `6f18c025becb3ec96c9ee125f02d2e6b8f096987` — `fix(selector): gate indirect capability by exact system`; push from `3b55dbe` to `6f18c02` on `origin/lane/selector-engine` succeeded after another 105/105 gate — VERIFIED.
+- Feature ending Git state: clean, with no staged, modified, untracked, or deleted paths — VERIFIED.
+- Live evidence: none required or claimed; no browser action, registration, Engine invocation, project or RuntimeData mutation, persistence, RunTable, IES, or output generation occurred — VERIFIED for this parcel.
+- Queue result: SEL-015 done; SEL-016 is the sole top ready item; SEL-002 remains blocked behind SEL-016 and live browser acceptance — RECORDED.

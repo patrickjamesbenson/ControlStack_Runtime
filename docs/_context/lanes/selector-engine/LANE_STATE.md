@@ -272,7 +272,7 @@ A fresh chat can start either role from one line: read `LANE_CHARTER.md` and act
 
 ## 2026-07-20 SEL-014 registration preflight repair closeout — latest controlling state
 
-**Recorded lane work HEAD:** `c8e7768e3a3522bc53bfcba4a0bf9f6f73e9f4f0` — `docs(selector): commission indirect projection repairs`.
+**Recorded lane work HEAD:** `6f18c025becb3ec96c9ee125f02d2e6b8f096987` — `fix(selector): gate indirect capability by exact system`.
 
 SEL-014 resumed from the two explicitly preserved authorised edits with no other dirty path. The worker used `tests/engineRunTableDomain.test.js` only as the authorised temporary gate harness, visibly executed all eight registration transport tests, then removed the import and proved the harness file byte-identical to HEAD and absent from the final diff.
 
@@ -293,3 +293,13 @@ A second defect exists in `selectorLmTemperatureReadinessPreview`: hidden or blo
 `SEL-015` is now the sole top ready item: gate the indirect-capability auto-consequence through the exact selected SYSTEM support flag while preserving legitimate broad OPTICS compatibility for the distinct direct-indirect product. `SEL-016` follows and must prevent hidden, blocked, unavailable, or diagnostic labels from counting as selected intent in the light-output readiness preview. Both are non-seam repairs. `SEL-002` is blocked until both are completed, pushed, activated, and then proven through a new genuine browser save. The current tree is clean and the complete lane gate passed 105/105 during diagnosis.
 
 The first worker correctly stopped because the commission commit advanced the branch while the recorded work pointer still named its parent. This reconciliation records the commission commit as the authoritative work HEAD. The dedicated reconciliation wrapper created from this update must have that commission commit as its immediate parent; the next worker then compares the recorded work HEAD to the wrapper parent and may begin `SEL-015`.
+
+## 2026-07-20 SEL-015 exact-System indirect capability repair closeout — latest controlling state
+
+SEL-015 started clean from the dedicated lane-state reconciliation wrapper whose immediate parent matched the recorded work HEAD. The repair remained inside `packages/workspace-kernel/selectorReferenceOptionsService.js` and `tests/selectorCascadeCorrectness.test.js`.
+
+The exact selected SYSTEM option now governs the `indirectCapability` auto-consequence through the same existing support state already used by indirect optic and Light/Control suppression. Direct-only DNX 60 keeps direct capability and direct optics available but blocks the broad OPTICS-derived `Indirect supported` consequence. The distinct DNX 60 Beam D/I option continues to expose legitimate indirect capability and optics. Source data, System variant identity, OPTICS relationships, Control, Tier, registration, and downstream seams are unchanged.
+
+The focused DNX 60 direct-only versus Beam D/I regression executed visibly in the approved gate. The affected run passed 105/105, the repeated complete lane gate passed 105/105, and the guarded commit/push gate also passed 105/105. Exactly the two authorised feature/test files were committed and pushed in `6f18c025becb3ec96c9ee125f02d2e6b8f096987`; the feature tree ended clean.
+
+No browser action, runtime acceptance, registration, Engine invocation, project or RuntimeData mutation, selected-result persistence, RunTable generation, IES generation, or output generation occurred. SEL-015 is done. SEL-016 is the sole top ready item and must remove diagnostic presentation fallback from indirect readiness intent without changing genuine supported-lane selection or registration policy.

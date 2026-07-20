@@ -66,7 +66,7 @@
 ### Q-2E Correct indirect capability to follow the exact selected System
 
 * id: SEL-015
-* status: ready
+* status: done
 * depends-on: SEL-014
 * seam change: no — this aligns one presentation consequence with the existing exact SYSTEM authority already used by indirect-lane suppression
 * gate: selector-engine
@@ -78,7 +78,7 @@
 ### Q-2F Prevent diagnostic labels from becoming indirect intent
 
 * id: SEL-016
-* status: blocked
+* status: ready
 * depends-on: SEL-015
 * seam change: no — this restores truthful readiness classification without changing the registration first-slice policy
 * gate: selector-engine
