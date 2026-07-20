@@ -469,3 +469,26 @@ The page may validate and display only the approved reference identity, safe run
 ### Acceptance return
 
 Lab must return the exact one-file feature commit, separate documentation closeout, full `lab-ies` green, proof that upload/scaling/selection/defaulting/generation/execution/persistence/routes are absent, final protected inventory and push evidence. Any additional file or contract drift returns LAB-035 to blocked.
+
+## 2026-07-20 — Cross-lane thermal-chain ruling
+
+**Status:** BINDING; SEL-018 BLOCKED PENDING AMENDMENT.
+
+### Ownership
+
+- Selector passes only user-selected room ambient, unchanged.
+- Lab publishes the selected optic's measured thermal triplet and evidence binding: test-room temperature, test-internal temperature and measured rise.
+- Engine alone calculates `derivedInternalTaC = selectedRoomTaC + opticInternalDeltaTaC`, uses that value as `curveLookupTaC`, applies the supported curve clamp/interpolation and returns verified lm/m.
+- Program owns adapter validation and cross-lane acceptance.
+
+The sealed `_INTERNAL_AMBIENT_TA_C` remains the Lab authority-test internal measurement. It is not overwritten by the Engine's runtime-derived operating temperature.
+
+### Required queue changes
+
+- Amend SEL-018 before it becomes ready: room ambient must not be passed as lookup temperature.
+- Any Lab parcel touching ambient/internal/rise must publish raw measured evidence and must not derive a user-specific internal temperature.
+- Any Engine parcel touching curve lookup must consume the Program-validated room value plus the optic-bound Lab rise and must reject caller-supplied derived/lookup temperature.
+
+### Binding acceptance
+
+Tests must prove 25 + 10 = 35 and 35 + 10 = 45; vary one optic fixture's rise so both lookup temperature and lm/m change; prove the rise is applied once; reject missing, contradictory or identity-unbound evidence; and audit Runtime against the approved data model rather than donor code.

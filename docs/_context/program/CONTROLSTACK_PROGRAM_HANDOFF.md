@@ -490,3 +490,21 @@ Governed mode consumes a supplied safe bundle and performs no lookup. Offline mo
 The page must remove file upload, arbitrary JSON intake, run-length and orientation controls, lumen/power scaling, recipe construction, option/default logic, generation, Engine invocation, persistence, routes and claims that readiness is acceptance or proof.
 
 LAB-035 is now the sole ready Lab item. LAB-036 and later work remain sequence-blocked. Completion must return the exact one-file feature commit, a separate documentation closeout, full `lab-ies` green, final protected inventory and confirmation that no cross-lane authority moved.
+
+## 2026-07-20 cross-lane thermal-chain handoff
+
+The thermal chain has one owner per step:
+
+1. Selector captures and passes `selectedRoomTaC` only.
+2. Lab publishes the selected optic's evidence-bound `referenceRoomTaC`, `referenceInternalTaC` and `opticInternalDeltaTaC`.
+3. Engine alone derives `derivedInternalTaC = selectedRoomTaC + opticInternalDeltaTaC`.
+4. Under version 1, Engine uses that same value as `curveLookupTaC`, then performs the 25–65°C curve clamp/interpolation and returns verified lm/m.
+5. Program validates identity, evidence binding and shape at the cross-lane adapter.
+
+Binding examples are 25°C room + 10°C rise = 35°C lookup, and 35°C room + 10°C rise = 45°C lookup.
+
+Lab's `_INTERNAL_AMBIENT_TA_C` remains the measured internal temperature during the authority test. It is not a user-specific operating value and is never overwritten by Runtime.
+
+SEL-018 must be amended before implementation. It may not carry room ambient as lookup temperature and may not supply rise, derived internal, board temperature, curve lookup temperature or verified lm/m.
+
+Acceptance requires a fixture in which one optic's rise differs from the current placeholder rows and proves a changed lookup temperature and changed lm/m. Tests must also prove no double count, reject contradictory/unbound evidence and compare Runtime with the approved data model rather than the donor implementation.

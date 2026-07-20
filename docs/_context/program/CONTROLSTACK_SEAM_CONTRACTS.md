@@ -348,3 +348,46 @@ Governed mode uses a supplied safe bundle and performs no lookup. Offline mode u
 Lab must remove upload, arbitrary JSON intake, run-length or orientation controls, scaling, recipe construction, option/default logic, generation, Engine invocation, persistence, routes and acceptance claims.
 
 Selector retains all source, state, vocabulary, defaults, option generation, readiness and Engine-applicability authority. Program retains integration, routing, deployment and adapter ownership. Any added file, live integration, computation or contract drift requires a new Program decision.
+
+## 2026-07-20 approved cross-lane seam — room-to-internal thermal chain version 1
+
+**Status:** BINDING; EXISTING CONFLICTING PARCELS MUST BE AMENDED.
+
+### Contract
+
+```text
+selectedRoomTaC                 — Selector-owned user choice
+referenceRoomTaC                — Lab-measured reference test condition
+referenceInternalTaC            — Lab-measured internal test condition
+opticInternalDeltaTaC           — Lab-owned measured rise
+                                  = referenceInternalTaC - referenceRoomTaC
+derivedInternalTaC              — Engine-owned runtime derivation
+                                  = selectedRoomTaC + opticInternalDeltaTaC
+curveLookupTaC                  — Engine-owned lookup input
+                                  = derivedInternalTaC in version 1
+verifiedLmPerM                  — Engine-owned curve result
+```
+
+### Ownership exclusions
+
+- Selector does not derive, clamp, look up or verify temperature-adjusted output.
+- Lab does not combine a user's room choice with the measured rise.
+- Engine does not invent or hardcode the optic rise and does not reinterpret the sealed Lab test internal temperature.
+- Program validates the cross-lane bundle but does not own the scientific measurement or curve result.
+
+`_INTERNAL_AMBIENT_TA_C` remains the Lab authority-test internal measurement. Runtime-derived operating temperature uses separate Engine-owned fields.
+
+### Acceptance
+
+The chain is accepted only when tests prove:
+
+- 25 + 10 produces lookup 35;
+- 35 + 10 produces lookup 45;
+- a second optic fixture with a different rise changes lookup temperature and lm/m;
+- a fixed 35 placeholder or fixed rise cannot satisfy the tests;
+- the rise is applied exactly once;
+- identity/evidence mismatch, missing fields or contradictory measured triplets fail closed;
+- Engine alone applies the supported 25–65°C clamp and reports unclamped, lookup and clamp state safely;
+- parity is assessed against the approved data model, not donor code.
+
+Any board-temperature transform beyond `curveLookupTaC === derivedInternalTaC`, any alternative owner, or any combined Lab/runtime field requires a new Program decision.

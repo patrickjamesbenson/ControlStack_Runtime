@@ -309,3 +309,16 @@ P2 Checkpoint 1 is **IMPLEMENTATION COMPLETE / GATE GREEN / COMMIT BLOCKED BY SH
 - **SAFE INPUTS:** approved reference identity, safe runtime handoff and bounded Selector readiness display projection only.
 - **QUEUE:** LAB-035 becomes the sole ready item; LAB-036 and later remain blocked by sequence.
 - **NEXT:** Lab records approval, implements the exact one-file parcel and returns separate feature and documentation receipts. Patrick has no action.
+
+## 2026-07-20 binding thermal-chain state
+
+- **SELECTOR:** owns user room ambient only and passes it unchanged.
+- **LAB:** owns the optic-bound measured triplet: reference room, reference internal and measured rise, with evidence provenance.
+- **ENGINE:** owns the single addition `selectedRoomTaC + opticInternalDeltaTaC`, uses the result as curve lookup temperature, applies curve clamping/interpolation and returns verified lm/m.
+- **PROGRAM:** owns the adapter, provenance checks and acceptance gate.
+- **VERSION-1 LOOKUP RULE:** `curveLookupTaC === derivedInternalTaC`; a later board-temperature transform requires a new decision.
+- **SEALED KEYWORD:** `_INTERNAL_AMBIENT_TA_C` remains the Lab authority-test internal measurement, not the runtime-derived operating temperature.
+- **SEL-018:** blocked as worded; it must be amended before implementation because room ambient may not be used directly as lookup temperature.
+- **TEST:** mandatory varied-optic fixture, exact 25+10=35 and 35+10=45 cases, no hardcoded placeholder, no double count, identity-bound evidence and fail-closed contradictions.
+- **AUDIT:** Runtime is checked against the approved data model, not donor-code parity.
+- **NEXT:** affected lane parcels must cite this ruling; no thermal-chain implementation is authorised by the ruling alone. Patrick has no action.

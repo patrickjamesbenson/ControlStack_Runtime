@@ -670,3 +670,82 @@ Malformed schemas, unsupported fields, stale identity/hash binding, contradictor
 ### Execution and acceptance
 
 LAB-035 may move from `blocked` to `ready` as the sole active Lab parcel. Exactly the authorised HTML file may be committed as `lab: checkpoint Selector contract stub`, followed by a separate lane-documentation closeout. Full `lab-ies` must remain green and the protected inventory must be preserved. Any extra file, live integration, computation, Selector logic, acceptance claim or contract-shape drift requires a new Program decision.
+
+---
+
+## 2026-07-20 — Binding thermal-chain ownership ruling
+
+**Status:** APPROVED AS THE SINGLE CROSS-LANE THERMAL CONTRACT; SEL-018 MUST BE AMENDED BEFORE IMPLEMENTATION.
+
+### Authoritative chain
+
+For one selected optic:
+
+1. Selector supplies only the user-selected room ambient, `selectedRoomTaC`.
+2. Lab supplies the measured optic thermal evidence:
+   - `referenceRoomTaC` — ambient measured during the Lab thermal test;
+   - `referenceInternalTaC` — internal assembly temperature measured during that same test;
+   - `opticInternalDeltaTaC` — the measured rise, exactly `referenceInternalTaC - referenceRoomTaC`.
+3. Engine alone calculates `derivedInternalTaC = selectedRoomTaC + opticInternalDeltaTaC`.
+4. Engine uses `derivedInternalTaC` as the temperature input to the board lumen/temperature curve lookup.
+5. Engine returns the verified temperature-adjusted lm/m result and the safe derivation summary.
+
+Example binding behaviour:
+
+- Lab evidence: room 25°C, internal 35°C, rise 10°C.
+- User room selection 25°C -> Engine derives 35°C -> curve lookup at 35°C.
+- User room selection 35°C -> Engine derives 45°C -> curve lookup at 45°C.
+
+### Single owner per step
+
+- **Selector owns:** capture, validation and unchanged transmission of room ambient only.
+- **Lab owns:** measured thermal evidence and the per-optic rise datum. Lab does not calculate a user-specific operating internal temperature.
+- **Engine owns:** the one-time addition, the resulting lookup temperature, curve lookup, clamping/interpolation and verified lm/m output. Under this version-1 ruling, `curveLookupTaC` equals `derivedInternalTaC`; any later board-to-internal temperature transform requires a new seam decision.
+- **Program owns:** the cross-lane adapter contract, provenance checks and acceptance gate.
+
+No other lane may apply the rise or substitute a combined temperature.
+
+### Lab publication rule
+
+Lab publishes the measured triplet and provenance, not only an already-combined number:
+
+- optic identity/reference binding;
+- `referenceRoomTaC`;
+- `referenceInternalTaC`;
+- `opticInternalDeltaTaC`;
+- measurement/evidence reference and authority state.
+
+The triplet must satisfy `referenceInternalTaC - referenceRoomTaC === opticInternalDeltaTaC` exactly after canonical decimal normalisation. Otherwise it fails closed. Lab may display all three values but must not publish a user-specific `derivedInternalTaC`.
+
+The sealed-reference `_INTERNAL_AMBIENT_TA_C` keyword remains the Lab authority-test internal measurement, not the runtime-derived operating temperature. Runtime derivation must use a separate Engine-owned field and must never overwrite or reinterpret the sealed test value.
+
+### Selector contract amendment
+
+SEL-018 as currently described is blocked. It must not send room ambient as the curve lookup temperature. The amended Selector output contains room ambient only and must not contain:
+
+- `derivedInternalTaC`;
+- `curveLookupTaC`;
+- a client-supplied optic rise;
+- board temperature;
+- verified lm/m.
+
+Any supplied derived or lookup temperature fails closed at the Program/Engine boundary.
+
+### Binding tests
+
+Acceptance must prove all of the following:
+
+1. Baseline: Lab 25°C room plus 10°C rise produces a 35°C Engine lookup.
+2. User variation: selected room 35°C with the same optic produces a 45°C Engine lookup.
+3. Per-optic lookup: one fixture optic must use a deliberately different rise value; with identical room ambient and curve data, the derived lookup temperature and lm/m output must change.
+4. No constant: the test must fail if the implementation hardcodes the current placeholder value 35 or a fixed rise.
+5. No double count: the rise is applied exactly once.
+6. Provenance: the rise must be bound to the selected optic identity and the accepted Lab evidence/reference.
+7. Fail closed: missing, malformed, contradictory or unbound thermal evidence blocks verification.
+8. Clamping: only Engine may clamp the final derived lookup temperature to the supported 25–65°C curve range, while preserving both the unclamped derived value and clamp state in the safe summary.
+
+### Parity audit rule
+
+The planned lm/m parity audit must compare Runtime behaviour against the approved data model and these equations. Donor code is not an acceptance oracle because it contains the same inherited omission. Donor comparison may be recorded only as historical evidence, never as proof of correctness.
+
+No Selector, Lab or Engine feature implementation is authorised by this ruling. Each affected parcel must cite this decision and return for scope approval if its existing seam conflicts with it.
