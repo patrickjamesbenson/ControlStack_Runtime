@@ -471,12 +471,12 @@ The current repository cannot support a stability declaration yet. The same `con
 
 Program must decide the next exact implementation parcel. No Selector widening, Lab consumer adaptation, downstream artifact, persistence, registration, route or main work is authorised from this handoff.
 
-## 2026-07-21 Program admitted ENG-STAB-P1
+## 2026-07-21 Program accepted SEL-007 — ENG-OUT-P1 ready
 
-Program has reviewed the candidate, withheld stability and admitted ENG-STAB-P1 as the sole ready item.
+Program accepted the newer three-schema candidate, superseded ENG-STAB-P1 before implementation and admitted ENG-OUT-P1 as the sole ready item.
 
-Create exactly `packages/workspace-kernel/runtimeEngineSelectedResultContractV1.js` and `tests/runtimeEngineSelectedResultContractV1.test.js`. Use the authorised temporary gate import, remove it before final staging and commit only those two feature paths.
+Create exactly `packages/workspace-kernel/runtimeEngineOutputContractV1.js` and `tests/runtimeEngineOutputContractV1.test.js`. Use the authorised temporary gate import, remove it before final staging and commit only those two feature paths.
 
-The module validates one accepted safe selected-result source object plus one accepted thermal execution result. It must require source identity/revision agreement, preserve thermal fields without recalculation, emit at least one deterministic safe run row, deeply freeze the complete `controlstack.engine.selected-result.v1` envelope and return a canonical blocked envelope on any malformed, unsafe, over-rich, contradictory or identity-unbound input.
+The module implements exact non-persistent validators/builders for `controlstack.engine.selection-set.v1`, `controlstack.engine.output.v1` and `controlstack.engine.runtable-row.v1`. Required fixtures are deterministic complete, fail-closed blocked, valid zero-valued and replay-identical results with one unambiguous row field set and result identity derived only from request, source, policy and evidence fingerprints.
 
-Traceability is optional and ignored. Different traceability envelopes over identical technical inputs must return identical complete output. No route, persistence, legacy scaffold rewrite, IES handoff, Lab, downstream, RuntimeData, donor, main or runtime-port work is authorised. Do not declare stability after the parcel.
+Optional traceability must not affect output. Unknown versions, unsafe data, contradictory identity and caller-supplied derived or verified output fail closed. Do not reuse the colliding legacy row schema, invoke Engine or donor code, recalculate thermal values, modify existing scaffolds, persist, add routes, activate IES/downstream readiness, mutate RuntimeData, write Lab or touch main. Do not declare stability after the parcel.

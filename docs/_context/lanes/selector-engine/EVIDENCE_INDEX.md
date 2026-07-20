@@ -532,11 +532,16 @@ Every completed worker updates this index with:
 
 ## 2026-07-21 — ENG-STAB-P1 admission evidence
 
-- Program review withheld stability and admitted the exact selected-result producer parcel as the sole ready item — RECORDED.
-- Scope is one new immutable contract module, one focused runtime test, temporary harness use and later lane-memory closeout — RECORDED.
-- Inputs are limited to the accepted safe selected-result source object and accepted thermal execution result — RECORDED.
-- Source version and technical identity must agree across both accepted inputs — RECORDED.
-- Optional governance traceability is quarantined and cannot alter output — RECORDED.
-- Blocked output contains no accepted runs or verified result, and no raw or generated content is exposed — RECORDED.
-- Consumer compatibility, complete-output fixture proof and rollback/readback acceptance remain pending — RECORDED.
+- Program review initially withheld stability and provisionally admitted a single-envelope producer parcel — RECORDED HISTORICAL COORDINATION.
+- The provisional parcel was not implemented — VERIFIED.
+
+## 2026-07-21 — ENG-OUT-P1 admission evidence
+
+- Newer Program review accepted the clean, pushed SEL-007 candidate and its 114/114 focused receipt — PROGRAM-ACCEPTED.
+- Active candidate schemas: `controlstack.engine.selection-set.v1`, `controlstack.engine.output.v1`, `controlstack.engine.runtable-row.v1` — RECORDED.
+- Provisional `controlstack.engine.selected-result.v1` and ENG-STAB-P1 were superseded before implementation — RECORDED.
+- Current blockers remain: diagnostic-only RunTable scaffold, persistence-coupled legacy row path and incompatible legacy row field sets — VERIFIED FROM SEL-007.
+- Exact next scope is one new runtime contract module, one focused runtime test, temporary harness use and later lane-memory closeout — RECORDED.
+- Complete, blocked, zero-valued and replay-identical fixtures are required; governance traceability cannot alter output — RECORDED.
+- Consumer compatibility, stability declaration, downstream activation and main promotion remain held — RECORDED.
 - Starting tree was clean and no implementation changed during admission — VERIFIED.

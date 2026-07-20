@@ -465,3 +465,13 @@ The parcel creates one immutable selected-result contract module and one focused
 Optional outside traceability is quarantined and cannot affect accepted/blocked state or output. Failure returns no accepted runs or verified output. No route, persistence, existing scaffold rewrite, Lab compatibility, IES handoff, downstream activation, RuntimeData, donor, main or runtime-port work is included.
 
 The contract remains not stable after ENG-STAB-P1. Consumer compatibility and final stability review remain separate Program decisions.
+
+## 2026-07-21 ENG-OUT-P1 admission
+
+Program accepted the newer three-schema SEL-007 candidate and superseded ENG-STAB-P1 before implementation. ENG-OUT-P1 is the sole ready item.
+
+The active contract boundary is `controlstack.engine.selection-set.v1`, `controlstack.engine.output.v1` and `controlstack.engine.runtable-row.v1`. The accepted thermal result remains one bounded component; the current RunTable domain scaffold remains diagnostic-only; persistence-coupled legacy rows remain outside Engine eligibility; and the colliding legacy row schema is not reused.
+
+The exact feature scope is one new runtime contract module and one focused runtime test. It implements deterministic complete, fail-closed blocked, zero-valued and replay-identical fixtures without invoking Engine, recalculating thermal values, modifying existing scaffolds, persisting, adding routes, activating IES/downstream readiness, mutating RuntimeData, using donor code or touching main.
+
+Stability remains withheld after ENG-OUT-P1 pending separate consumer compatibility and Program acceptance.

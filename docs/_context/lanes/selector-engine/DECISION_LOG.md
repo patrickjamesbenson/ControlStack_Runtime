@@ -383,3 +383,11 @@ This log is append-oriented. Do not silently rewrite historical decisions.
 **Contract:** The new module emits only `controlstack.engine.selected-result.v1` accepted or blocked envelopes. It validates exact accepted upstream schemas, source revision/identity agreement and safe run summaries, preserves thermal outputs without recalculation, creates deterministic non-persistent row summaries and quarantines optional traceability.
 
 **Consequence:** ENG-STAB-P1 is the sole ready parcel. No route, persistence, Lab consumer, IES handoff, downstream activation, existing scaffold rewrite, donor, RuntimeData or main change is authorised. Stability remains withheld after this producer parcel pending separate consumer and final acceptance work.
+
+## 2026-07-21 — Program accepts SEL-007 three-schema candidate
+
+**Decision:** Supersede ENG-STAB-P1 before implementation and admit ENG-OUT-P1 as the sole ready parcel.
+
+**Rationale:** The newer Program review accepts the candidate's separate selections-only request, complete-or-blocked output and unambiguous RunTable-row schemas. This is more complete than the provisional single selected-result envelope and preserves the candidate's recorded legacy row-schema collision and persistence exclusion.
+
+**Consequence:** ENG-OUT-P1 may create only the new runtime contract module and focused runtime test. Consumer compatibility, stability declaration, downstream activation and main promotion remain held.
