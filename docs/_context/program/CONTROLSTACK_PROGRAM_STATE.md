@@ -295,3 +295,17 @@ P2 Checkpoint 1 is **IMPLEMENTATION COMPLETE / GATE GREEN / COMMIT BLOCKED BY SH
 - **SEQUENCE:** corrective test commit, corrective documentation closeout, LAB-033 restored as sole ready item and full gate rerun, final keyword guard retained for after LAB-033.
 - **LAB-033 STATE:** incomplete, unstaged, unpushed, and paused until the corrective parcel closes.
 - **NEXT:** Lab may execute the one-file correction and return its immutable receipt. Patrick has no repository action.
+
+## 2026-07-20 LAB-033/LAB-034 acceptance and LAB-035 approval state
+
+- **VERIFIED COMPLETE:** the keyword correction, LAB-033 Main Lab Bench and LAB-034 legacy compatibility classification are pushed and full `lab-ies` is 255/255.
+- **PROTECTED STATE:** zero staged, one expected HEAD-marker edit, seven protected untracked items, zero deleted.
+- **LAB-033 ACCEPTED:** non-authoritative, module-driven Main Lab Bench.
+- **LAB-034 ACCEPTED:** read-only compatibility inspector with duplicate authority and generation paths removed.
+- **LAB-035 ENVELOPE:** immutable version 1 at `1c422dec0cb4efb0777d61bebcf6cf4ee9a33a5f`.
+- **PROGRAM DECISION:** approve unchanged.
+- **SOLE AUTHORISED FILE:** `packages/lab-kernel/ies-toolkit/selector_stub.html`.
+- **BOUNDARY:** contract viewer only; no selection, defaults, scaling, rotation, generation, Engine invocation, persistence, route or acceptance proof.
+- **SAFE INPUTS:** approved reference identity, safe runtime handoff and bounded Selector readiness display projection only.
+- **QUEUE:** LAB-035 becomes the sole ready item; LAB-036 and later remain blocked by sequence.
+- **NEXT:** Lab records approval, implements the exact one-file parcel and returns separate feature and documentation receipts. Patrick has no action.

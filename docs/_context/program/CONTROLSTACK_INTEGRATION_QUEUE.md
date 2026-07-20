@@ -442,3 +442,30 @@ Lab must return the immutable feature and documentation receipts, exact three-fi
 The correction removes stale requirements for editable `sysTa` ambient and literal `canonicalKeywordRows(...)` implementation text, while retaining the exact ordered 16-keyword profile, rejection of `_AMBIENT_TA_C`, supplementary keywords and aliases, committed-contract consumption by Main Bench, sealed/non-editable `_INTERNAL_AMBIENT_TA_C`, and all generator/merge/summary/project-builder vocabulary checks.
 
 LAB-033 remains incomplete, unstaged, and unpushed until this corrective parcel and its documentation closeout are durable. No production file is authorised.
+
+## 2026-07-20 — LAB-033/LAB-034 completion and LAB-035 admission
+
+**Status:** LAB-033 DONE; LAB-034 DONE; LAB-035 APPROVED AS SOLE READY ITEM.
+
+### Accepted completion
+
+- LAB-033 Main Lab Bench is accepted as non-authoritative and module-driven.
+- LAB-034 legacy Lab Bench is accepted as a read-only compatibility inspector.
+- Verified full `lab-ies`: 255/255.
+- Verified final protected inventory: zero staged, one expected HEAD-marker edit, seven protected untracked items, zero deleted.
+
+### LAB-035 immutable envelope
+
+- Checkpoint: `1c422dec0cb4efb0777d61bebcf6cf4ee9a33a5f`.
+- Queue item: `LAB-035-selector-contract-stub`.
+- Exact feature scope: `packages/lab-kernel/ies-toolkit/selector_stub.html` only.
+
+### Queue operation
+
+LAB-035 may move from `blocked` to `ready` as the sole active Lab parcel. LAB-036 and later work remain sequence-blocked.
+
+The page may validate and display only the approved reference identity, safe runtime handoff and bounded Selector readiness presentation projection. Governed mode performs no lookup. Offline mode must display `OFFLINE CONTRACT DEMO — NOT SELECTOR ACCEPTANCE`.
+
+### Acceptance return
+
+Lab must return the exact one-file feature commit, separate documentation closeout, full `lab-ies` green, proof that upload/scaling/selection/defaulting/generation/execution/persistence/routes are absent, final protected inventory and push evidence. Any additional file or contract drift returns LAB-035 to blocked.

@@ -470,3 +470,23 @@ Exact next Lab action:
 5. Leave the final cross-cutting keyword guard until after LAB-033 is committed.
 
 LAB-033 remains incomplete, unstaged, unpushed, and paused during this corrective parcel. Return the exact test commit, documentation commit, gate receipt, final Git inventory, and confirmation that LAB-033 was restored as the sole ready item without production changes.
+
+## 2026-07-20 LAB-033/LAB-034 acceptance and LAB-035 Selector-contract approval
+
+Program accepts LAB-033 and LAB-034 complete on verified Lab evidence: both feature and documentation closeouts are pushed, full `lab-ies` passes 255/255, and the protected inventory remains zero staged, one expected HEAD-marker edit, seven protected untracked items and zero deleted.
+
+LAB-033 is the accepted non-authoritative, module-driven Main Lab Bench. LAB-034 is the accepted read-only compatibility inspector with duplicate approval, sealing, reference-building, symmetrisation and project-generation behaviour removed.
+
+Program approves the immutable LAB-035 version-1 envelope at `1c422dec0cb4efb0777d61bebcf6cf4ee9a33a5f` unchanged.
+
+Exact feature scope:
+
+- `packages/lab-kernel/ies-toolkit/selector_stub.html`
+
+The page is a contract viewer, not a Selector. It may validate and display only the approved reference identity projection, safe runtime handoff, bounded Selector factory-approved-input readiness projection, exact identity/hash binding, unresolved fields and false safety flags.
+
+Governed mode consumes a supplied safe bundle and performs no lookup. Offline mode uses the committed embedded fixture and must display `OFFLINE CONTRACT DEMO — NOT SELECTOR ACCEPTANCE` persistently.
+
+The page must remove file upload, arbitrary JSON intake, run-length and orientation controls, lumen/power scaling, recipe construction, option/default logic, generation, Engine invocation, persistence, routes and claims that readiness is acceptance or proof.
+
+LAB-035 is now the sole ready Lab item. LAB-036 and later work remain sequence-blocked. Completion must return the exact one-file feature commit, a separate documentation closeout, full `lab-ies` green, final protected inventory and confirmation that no cross-lane authority moved.

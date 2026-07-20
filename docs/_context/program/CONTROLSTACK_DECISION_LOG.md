@@ -625,3 +625,48 @@ This approval corrects stale test coupling only. It does not permit Main Bench c
 5. Keep the later final keyword-guard parcel reserved for final cross-cutting coverage after LAB-033 is committed.
 
 LAB-033 remains incomplete, unstaged, unpushed, and paused during the correction. Any production-file change, wider test scope, ambient-authority change, canonical-profile change, or sequencing drift requires a new Program decision.
+
+---
+
+## 2026-07-20 — LAB-033 and LAB-034 accepted; LAB-035 Selector-contract seam approved unchanged
+
+**Status:** LAB-033 AND LAB-034 ACCEPTED COMPLETE; LAB-035 VERSION 1 APPROVED AS THE NEXT SOLE READY LAB PARCEL.
+
+**Verified Lab evidence:**
+
+- canonical-keyword correction feature and closeout are pushed;
+- LAB-033 Main Lab Bench feature and closeout are pushed;
+- LAB-034 legacy Lab Bench classification feature and closeout are pushed;
+- full `lab-ies` passes 255/255;
+- final protected inventory remains zero staged, one expected HEAD-marker edit, seven protected untracked items, and zero deleted paths;
+- immutable LAB-035 seam envelope checkpoint: `1c422dec0cb4efb0777d61bebcf6cf4ee9a33a5f`.
+
+### Completion acceptance
+
+LAB-033 is accepted as a non-authoritative, module-driven Main Lab Bench. LAB-034 is accepted as a read-only compatibility inspector with duplicate approval, sealing, reference-building, symmetrisation and project-generation behaviour removed. Neither parcel moved production authority, persistence, routing, Selector, Runtime or Engine ownership into Lab.
+
+### LAB-035 exact authorised scope
+
+- `packages/lab-kernel/ies-toolkit/selector_stub.html`
+
+The page is a read-only contract viewer only. It may validate and display the exact version-1 `controlstack.lab.selector-contract-view.v1` projection defined by the immutable envelope. It must not compute, default, select, scale, rotate, generate, persist, resolve, invoke Engine or claim Selector acceptance.
+
+### Approved inputs and states
+
+The view may display only:
+
+- the approved `controlstack.lab.reference-identity.v1` safe identity projection;
+- the approved `controlstack.lab.safe-runtime-handoff.v1` safe summary;
+- the bounded `controlstack.runtime.selector.factory-approved-inputs.presentation.v1` display projection;
+- exact reference-id and authority-hash binding state;
+- unresolved fields and false safety flags.
+
+Governed mode consumes a caller-supplied safe bundle only and performs no lookup. Offline mode uses only the committed embedded fixture and must display `OFFLINE CONTRACT DEMO — NOT SELECTOR ACCEPTANCE` persistently.
+
+### Fail-closed and ownership rules
+
+Malformed schemas, unsupported fields, stale identity/hash binding, contradictory readiness/blocker states, non-false safety flags and over-rich inputs fail closed. Lab may not import or execute Selector source, copy Selector vocabulary/defaulting logic, accept raw authority/candela/IES/RuntimeData rows, add routes or persist state. Selector retains all state, option generation, readiness and Engine applicability authority; Program retains integration, routing, deployment and adapter ownership; Lab retains reference authority and safe-handoff construction.
+
+### Execution and acceptance
+
+LAB-035 may move from `blocked` to `ready` as the sole active Lab parcel. Exactly the authorised HTML file may be committed as `lab: checkpoint Selector contract stub`, followed by a separate lane-documentation closeout. Full `lab-ies` must remain green and the protected inventory must be preserved. Any extra file, live integration, computation, Selector logic, acceptance claim or contract-shape drift requires a new Program decision.

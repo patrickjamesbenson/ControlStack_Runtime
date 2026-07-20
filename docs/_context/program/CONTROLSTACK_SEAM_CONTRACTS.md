@@ -332,3 +332,19 @@ The approved implementation must not restore hard-coded hosts, direct raw-body f
 ### Change rule
 
 Any change to the view model, ownership boundary, resolver semantics, publication states, null-capability treatment, or exact file scope invalidates this approval and requires a new Program decision. Existing one-parcel-at-a-time Lab sequencing remains mandatory and is not an amendment to version 1.
+
+## 2026-07-20 approved Lab seam — LAB-035 Selector contract stub version 1
+
+**Status:** APPROVED UNCHANGED; SOLE READY LAB PARCEL.
+
+**Immutable envelope:** `1c422dec0cb4efb0777d61bebcf6cf4ee9a33a5f`.
+
+**Exact file:** `packages/lab-kernel/ies-toolkit/selector_stub.html`.
+
+LAB-035 is a read-only contract viewer, not a Selector. It may display only the approved safe reference identity, safe runtime handoff, bounded Selector readiness projection, binding state, unresolved fields and false safety flags.
+
+Governed mode uses a supplied safe bundle and performs no lookup. Offline mode uses the embedded fixture and must display `OFFLINE CONTRACT DEMO — NOT SELECTOR ACCEPTANCE`.
+
+Lab must remove upload, arbitrary JSON intake, run-length or orientation controls, scaling, recipe construction, option/default logic, generation, Engine invocation, persistence, routes and acceptance claims.
+
+Selector retains all source, state, vocabulary, defaults, option generation, readiness and Engine-applicability authority. Program retains integration, routing, deployment and adapter ownership. Any added file, live integration, computation or contract drift requires a new Program decision.
