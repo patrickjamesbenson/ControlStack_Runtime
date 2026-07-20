@@ -427,3 +427,21 @@ The boundary regression passed with identical engineering selections and differe
 Dependency mapping shows only the accepted Program evidence adapter and the existing lumen-curve parser. Negative source searches found no project registration, active revision, project browser, selected-project or registration eligibility reference. The old governance chain is bypassed from computation; it was not renamed.
 
 No route, persistence, RuntimeData mutation, donor invocation, IES generation, output generation, existing curve-parser change or main change occurred. The lane is ready for Program cross-lane acceptance.
+
+## 2026-07-21 THERM-E1 orchestrator acceptance and Program handoff — latest controlling state
+
+**Recorded lane work HEAD:** `463bfd8e6abbd53f07124d5a43544d22cac9401b` — `docs(selector): close thermal Engine parcel`.
+
+The connected app is correctly bound to the isolated Selector worktree and branch, the repository is clean, gated commit and push are enabled, and the exact narrow Selector-module and canonical lane-memory allowances are present without broad `packages/modules/**` access.
+
+Repository review accepts the completed thermal chain for Program consideration. Selector emits only the committed source-backed room temperature as `selectedRoomTaC`. Program binds that selection and the source-backed optic identity to the exact accepted Lab version-2 measured evidence. Engine alone adds `opticThermalRiseTaC` exactly once, retains the unclamped derived internal temperature, and sends that value to the unchanged lumen-curve parser.
+
+The Engine implementation and focused tests prove 25 + 10 = 35, 35 + 10 = 45, changed optic-bound rise changes both lookup temperature and verified lm/m, direct Lab and caller-derived values fail closed, and different governance envelopes cannot alter eligibility or deterministic output. The module imports only the Program evidence adapter and the existing curve parser; project registration, active revision and selected-project eligibility are absent from its dependency path.
+
+Program & Integrate has now accepted THERM-A1 and the complete selections-only thermal chain. No browser, registration or selected-project invocation is required for computational acceptance.
+
+SEL-007 is the sole ready item. Its exact scope is one versioned contract-candidate document and one focused static regression, with temporary gate harness use only. The parcel must classify current producer artifacts honestly: thermal execution is accepted for its bounded slice; the runtime RunTable domain scaffold is diagnostic-only; the first-narrow row path is persistence-coupled and therefore an outer consumer rather than an Engine eligibility contract.
+
+The candidate must specify a non-persistent selections-only Engine envelope, complete and blocked-fail-closed status shapes, technical identity and source/evidence fingerprints, deterministic replay/readback keys, run-table row semantics, compatibility and rollback rules, and the remaining producer/consumer/live-fixture evidence required before Program may declare stability.
+
+No feature, route, persistence, registration, active-revision, selected-project, RuntimeData, Lab, donor, main or downstream implementation is authorised in SEL-007. SEL-008, SEL-009 and SEL-010 remain blocked or held pending Program review and a separate stability declaration.

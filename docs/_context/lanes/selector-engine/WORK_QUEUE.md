@@ -141,6 +141,20 @@
 * prohibitions: reject direct Lab projections and caller-supplied `derivedInternalTaC`, `curveLookupTaC`, board temperature or verified lm/m; do not change the existing curve parser, add routes or persistence, mutate RuntimeData, invoke donor execution, generate IES or outputs, or touch main.
 * completion: feature and focused test pushed; focused harness gate passed 120/120; normal feature gate passed through guarded commit; traceability-envelope regression returned byte-for-byte equivalent deterministic results; dependency map contains only the Program evidence adapter and existing curve parser; project registration, active revision and selected-project eligibility are bypassed, not renamed.
 
+### Q-2L Final Program acceptance of the corrected thermal chain
+
+* id: THERM-A1
+* status: done
+* depends-on: THERM-E1
+* seam review: final Program & Integrate cross-lane acceptance required
+* seam change: no new implementation — this accepts the already-pushed Selector, Program-evidence and Engine parcels against the corrected data model
+* gate: selector-engine evidence already complete; Program may require its own acceptance gate
+* authorised files: read-only review only in the Selector lane; no feature, test, route, source, browser, registration, persistence, RuntimeData, donor, Lab, main or output write is authorised
+* objective: obtain Program & Integrate acceptance of the complete chain from source-backed selected room temperature, through the immutable Program-bound Lab thermal evidence, to the Engine-only derived internal lookup and verified lm/m result.
+* acceptance: Program confirms that `selectedRoomTaC` remains room temperature; the Program bundle binds one source-backed optic to exact Lab version-2 reference room, reference internal and measured optic rise evidence; Engine alone computes `derivedInternalTaC = selectedRoomTaC + opticThermalRiseTaC` exactly once and passes that value to the unchanged curve parser; varied optic-bound rise changes both lookup temperature and verified lm/m; missing, malformed, contradictory, unresolved or identity-unbound evidence fails closed; user, project, owner, timeline, registration and active-revision envelopes do not affect eligibility or deterministic output; and the planned lm/m parity audit compares runtime output with the approved data model and thermal calculation rather than donor-code parity.
+* evidence: SEL-018, THERM-P1 and THERM-E1 are pushed and closed; focused thermal gates passed 125/125, 119/119 and 120/120 respectively; normal lane gates remained 107/107; THERM-E1 imports only the Program evidence adapter and existing curve parser; no registration, active-revision or selected-project eligibility dependency exists.
+* prohibitions: no new Selector worker; no browser save, registration or live Engine proof; no donor-code parity accepted as data-model parity; no hardcoded room, rise, internal or lookup temperature; no main promotion or downstream activation before Program records acceptance.
+
 ### Q-2I Live-accept the completed thermal chain
 
 * id: SEL-019
@@ -216,13 +230,13 @@
 ### Q-7 Declare Engine output contract candidate
 
 * id: SEL-007
-* status: blocked
-* depends-on: SEL-003
+* status: ready
+* depends-on: accepted THERM-A1 final Program acceptance; the historical SEL-003 project-coupled gate is superseded
 * gate: selector-engine
-* authorised files: read-only until the orchestrator commissions exact contract-document paths
-* objective: produce a versioned candidate contract covering selected inputs, result identity, run-table rows, status/error semantics, provenance, and replay/readback.
-* acceptance: a bounded versioned candidate and producer evidence are ready for Program & Integrate review, with no downstream activation implied.
-* prohibitions: do not activate downstream consumers without Integrate approval.
+* authorised files: new `docs/engine/ENGINE_OUTPUT_CONTRACT_CANDIDATE_V1.md`, new `tests/engineOutputContractCandidate.test.js`, temporary harness-only use of `tests/engineRunTableDomain.test.js`, and closeout updates to the five mutable lane context files. The harness may add exactly one side-effect import of `./engineOutputContractCandidate.test.js`; it must be removed, byte-identical to HEAD and absent from final staging/commit.
+* objective: produce a versioned candidate contract covering selected engineering inputs, result identity, thermal result composition, run-table rows, status/error semantics, technical provenance, replay/readback and compatibility without restoring any governance prerequisite.
+* acceptance: the candidate is documentation-only and pins existing versioned producer artifacts where they comply; it explicitly classifies the persistence-coupled first-narrow row path as an outer consumer rather than an Engine prerequisite; it defines a non-persistent selections-only computational envelope, fail-closed status semantics, technical fingerprints, compatibility/rollback rules and the evidence still required before Program may declare stability. The focused static regression and complete gate pass; exactly the contract document and its focused test are committed and pushed. No downstream activation is implied.
+* prohibitions: no feature, route, persistence, selected-project, registration, active-revision, RuntimeData, Lab, donor, main or downstream implementation; do not declare the contract stable; do not treat diagnostic scaffolds or persistence-coupled row builders as production-ready merely because their schemas are versioned.
 
 ### Q-8 First contract-preserving widening pass
 

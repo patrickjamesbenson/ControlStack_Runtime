@@ -351,3 +351,15 @@ This log is append-oriented. Do not silently rewrite historical decisions.
 **Boundary evidence:** Two calls with identical engineering inputs and different user, project, owner, timeline, registration, active-revision and renamed eligibility fields returned identical complete results. The module dependency map contains only the Program evidence adapter and curve parser, and negative searches found no registration, active-revision, project-browser or selected-project eligibility reference.
 
 **Consequence:** The governance gates are bypassed at the computational boundary, not renamed. THERM-E1 is done. No live registration parcel is required for Engine acceptance; optional persistence remains outside governance. The lane now awaits Program acceptance only.
+
+## 2026-07-21 — SEL-007 admitted as a contract-candidate parcel
+
+**Decision:** Record final Program acceptance of the thermal chain, close THERM-A1, and admit SEL-007 as the sole ready item in an exact documentation-and-regression scope.
+
+**Rationale:** The prior SEL-007 dependency on a selected-project invocation is superseded by the selections-only boundary and the accepted THERM-E1 envelope-independence proof. A contract candidate can now be written without registration, project identity or persistence becoming Engine prerequisites.
+
+**Existing-contract classification:** `runtimeThermalLumenExecution` is an accepted versioned computational result for the thermal slice. `engineRunTableRuntimeRunTableDomainOutputScaffold` is versioned but explicitly diagnostic-only and blocks production RunTable generation. `runTableFirstNarrowRows` and its row-shape path require a persisted selected-result summary, so they are outside-consumer compatibility machinery and cannot define kernel eligibility under the selections-only ruling.
+
+**Scope:** Create only `docs/engine/ENGINE_OUTPUT_CONTRACT_CANDIDATE_V1.md` and `tests/engineOutputContractCandidate.test.js`; use the established temporary gate harness and remove it before final staging. The candidate must define selected engineering inputs, deterministic complete/blocked semantics, technical identity/provenance, non-persistent run-table rows, replay/readback and compatibility rules while recording all evidence still missing before stability.
+
+**Consequence:** Downstream artifacts remain held. SEL-008 and SEL-009 remain blocked pending Program review of the candidate, and SEL-010 remains held pending a separate stability declaration.

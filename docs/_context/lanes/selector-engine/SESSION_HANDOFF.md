@@ -448,3 +448,15 @@ Both binding regressions passed:
 The THERM-E1 dependency map contains only the Program thermal-evidence adapter and the lumen-curve parser. Negative searches found no project-browser registration, active revision, selected-project eligibility or registration boundary reference. Governance is bypassed, not renamed.
 
 No browser, save, registration, route, persistence, RuntimeData mutation, donor invocation, IES generation, output generation, curve-parser edit or main change occurred. Program & Integrate may now perform final cross-lane acceptance.
+
+## 2026-07-21 Program accepted thermal chain — SEL-007 next
+
+Program & Integrate has accepted the complete thermal sequence and the selections-only boundary. THERM-A1 is closed.
+
+SEL-007 is the sole ready parcel. Create exactly `docs/engine/ENGINE_OUTPUT_CONTRACT_CANDIDATE_V1.md` and `tests/engineOutputContractCandidate.test.js`. Use one temporary import from the gate-included Engine domain test, visibly execute the focused assertions, then remove the import and prove the harness file is unchanged before exact two-file staging.
+
+The contract candidate must not pretend current diagnostic or persistence-coupled contracts are production-ready. It must record that the accepted thermal execution schema is a bounded computational result, the runtime RunTable domain output scaffold is diagnostic-only with production output blocked, and the first-narrow rows path depends on persistence and therefore belongs outside Engine eligibility.
+
+Define a non-persistent selections-only candidate covering input shape, complete/blocked status, technical result identity, source/evidence/policy fingerprints, run-table row semantics, deterministic replay/readback, compatibility and rollback. List the exact producer, consumer and sealed/live evidence still required before Program may declare stability.
+
+Do not change feature code or activate SEL-008, Lab compatibility or downstream artifacts. Return the pushed candidate to Program for review.

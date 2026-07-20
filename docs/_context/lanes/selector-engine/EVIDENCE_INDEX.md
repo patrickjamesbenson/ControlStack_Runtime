@@ -502,3 +502,14 @@ Every completed worker updates this index with:
 - Temporary harness removed; `tests/engineRunTableDomain.test.js` returned clean and unstaged — VERIFIED.
 - Feature committed and pushed on the Selector lane; no route, persistence, RuntimeData, donor, IES, output-generation, curve-parser or main file changed — VERIFIED.
 - Queue result: SEL-018, THERM-P1 and THERM-E1 done; final Program cross-lane acceptance ready — RECORDED.
+
+## 2026-07-21 — SEL-007 contract-candidate admission evidence
+
+- Program final acceptance: the selections-only thermal chain and envelope-independence boundary are accepted; THERM-A1 may close — PROGRAM-APPROVED AND RECORDED.
+- Starting lane state: isolated Selector worktree, correct branch, clean tree and gated write/commit/push — VERIFIED.
+- Existing accepted producer: `controlstack.runtime.thermal-lumen-execution.v1` is versioned and proven for the bounded thermal result — VERIFIED REPOSITORY CONTRACT AND EXECUTED TESTS.
+- Diagnostic-only classification: `engineRunTableRuntimeRunTableDomainOutputScaffold` declares diagnostic-only state and explicitly blocks production RunTable generation, persistence, routes and donor execution — VERIFIED REPOSITORY TRACE.
+- Persistence-coupled classification: `runTableFirstNarrowRows` requires a persisted selected-result summary, and its row-shape contract fingerprints persistence artifacts — VERIFIED REPOSITORY TRACE; EXCLUDED FROM ENGINE ELIGIBILITY.
+- Exact SEL-007 scope: one candidate document, one focused static regression and temporary harness-only use of the gate-included Engine domain test — RECORDED.
+- Stability hold: no consumer compatibility, complete production RunTable, live/sealed full-output receipt or rollback acceptance is yet recorded — DOWNSTREAM REMAINS HELD.
+- No feature, source, route, persistence, registration, RuntimeData, Lab, donor, main or downstream file changed during admission — VERIFIED BY SCOPE AND GIT STATUS.
