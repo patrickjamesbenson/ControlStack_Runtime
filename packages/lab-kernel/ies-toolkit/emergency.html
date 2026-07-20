@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Emergency selection — ControlStack Lab</title>
+<link rel="stylesheet" href="./lab.css" />
+<style>
+  .status-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+  .status-card{border:1px solid var(--border-light);border-radius:var(--r-md);background:var(--soft);padding:11px 13px}
+  .status-card h3{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:0 0 7px}
+  .value{font-size:17px;font-weight:650;color:var(--navy);overflow-wrap:anywhere}
+  .kv{display:flex;justify-content:space-between;gap:12px;padding:5px 0;border-bottom:1px solid var(--border-light)}
+  .kv:last-child{border-bottom:0}.kv span:first-child{color:var(--muted)}.kv span:last-child{text-align:right;font-weight:600}
+  .list{margin:0;padding-left:20px}.list li{margin:4px 0;overflow-wrap:anywhere}
+  .blocked{border-color:var(--red-b);background:var(--red-lt)}
+  .candidate{border-color:var(--green-b);background:var(--green-lt)}
+  .unresolved{color:var(--amber-dark)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brandhead">
+    <div class="mark">NE</div>
+    <div><div class="bn">NOVON</div><div class="bs">Engineering</div></div>
+    <div class="pg"><div class="pgt">Emergency Selection</div><div class="pgs">Lab advisory evidence tool</div></div>
+  </div>
+
+  <div class="hint">
+    This surface delegates every model, battery and blocker decision to the committed emergency-selection contract. It does not order products, release procurement or verify an assembled luminaire.
+  </div>
+
+  <div class="card">
+    <h2>Candidate inputs</h2>
+    <div class="row">
+      <div>
+        <label for="voltage">LED string voltage (V)</label>
+        <input id="voltage" type="number" min="0.1" step="0.1" value="34" />
+      </div>
+      <div>
+        <label for="power">Emergency power (W)</label>
+        <input id="power" type="number" min="0.1" step="0.1" value="3.5" />
+      </div>
+      <div>
+        <label for="duration">Duration</label>
+        <select id="duration">
+          <option value="1">1 hour</option>
+          <option value="2">2 hours</option>
+          <option value="3" selected>3 hours</option>
+        </select>
+      </div>
+      <div>
+        <label for="life">Battery design life</label>
+        <select id="life">
+          <option value="5">5 years</option>
+          <option value="10" selected>10 years</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div id="result" aria-live="polite"></div>
+</div>
+
+<script type="module">
+import {
+  EMERGENCY_SELECTION_SCHEMA_ID,
+  EMERGENCY_SELECTION_SCHEMA_VERSION,
+  selectEmergencyCandidate,
+} from "./zencontrolEmergency.js";
+
+const byId = (id) => document.getElementById(id);
+const escapeHtml = (value) => String(value ?? "").replace(/[&<>]/g, (character) => ({
+  "&": "&amp;",
+  "<": "&lt;",
+  ">": "&gt;",
+}[character]));
+
+function pill(label, className) {
+  return `<span class="pill ${className}">${escapeHtml(label)}</span>`;
+}
+
+function list(values, emptyLabel) {
+  if (!Array.isArray(values) || values.length === 0) return `<p class="muted">${escapeHtml(emptyLabel)}</p>`;
+  return `<ul class="list">${values.map((value) => `<li><code>${escapeHtml(value)}</code></li>`).join("")}</ul>`;
+}
+
+function renderCandidate(candidate) {
+  const stateClass = candidate.state === "candidate" ? "candidate" : "blocked";
+  const statePill = candidate.state === "candidate" ? pill("advisory candidate", "ok") : pill("blocked", "red");
+  const range = candidate.outputVoltageRangeV
+    ? `${candidate.outputVoltageRangeV[0]}–${candidate.outputVoltageRangeV[1]} V`
+    : "unresolved";
+  const current = candidate.nominalDriveCurrentmA === null
+    ? "unresolved"
+    : `${candidate.nominalDriveCurrentmA.toFixed(2)} mA`;
+
+  byId("result").innerHTML = `
+    <div class="card ${stateClass}">
+      <h2>Contract result ${statePill}</h2>
+      <div class="status-grid">
+        <div class="status-card">
+          <h3>Published selection</h3>
+          <div class="value">${escapeHtml(candidate.modelId ?? "unresolved")}</div>
+          <div class="kv"><span>Isolation</span><span>${escapeHtml(candidate.isolation ?? "unresolved")}</span></div>
+          <div class="kv"><span>Published voltage window</span><span>${escapeHtml(range)}</span></div>
+          <div class="kv"><span>Selected power</span><span>${candidate.selectedPowerW === null ? "unresolved" : `${candidate.selectedPowerW} W`}</span></div>
+          <div class="kv"><span>Duration</span><span>${candidate.durationHours === null ? "unresolved" : `${candidate.durationHours} h`}</span></div>
+          <div class="kv"><span>Design life</span><span>${candidate.designLifeYears === null ? "unresolved" : `${candidate.designLifeYears} yr`}</span></div>
+          <div class="kv"><span>Battery pack</span><span class="mono">${escapeHtml(candidate.batteryPackCode ?? "unresolved")}</span></div>
+        </div>
+        <div class="status-card">
+          <h3>Derived advisory value</h3>
+          <div class="value">${escapeHtml(current)}</div>
+          <p>${candidate.nominalCurrentStatus === "derived_exact" ? pill("derived_exact", "info") : pill("unresolved", "amber")}</p>
+          <p class="muted">The value is returned by the committed contract as nominal arithmetic only. It is not an efficiency, tolerance or derating guarantee.</p>
+        </div>
+        <div class="status-card">
+          <h3>Authority boundary</h3>
+          <div class="kv"><span>Procurement release</span><span>${pill("not released", "amber")}</span></div>
+          <div class="kv"><span>Emergency verification</span><span class="unresolved">unresolved</span></div>
+          <div class="kv"><span>EWIS verification</span><span class="unresolved">unresolved</span></div>
+          <p class="muted">Assembly verification remains independent of converter and battery candidate selection.</p>
+        </div>
+      </div>
+    </div>
+    <div class="grid2">
+      <div class="card">
+        <h2>Unconfirmed procurement evidence</h2>
+        ${list(candidate.procurementBlockers, "No blockers returned.")}
+      </div>
+      <div class="card">
+        <h2>Engineering warnings</h2>
+        ${list(candidate.engineeringWarnings, "No warnings returned.")}
+      </div>
+    </div>
+    <div class="card">
+      <h2>Contract identity</h2>
+      <div class="kv"><span>Schema</span><span class="mono">${escapeHtml(candidate.schemaId)}</span></div>
+      <div class="kv"><span>Version</span><span>${candidate.schemaVersion}</span></div>
+      <div class="kv"><span>Read-only</span><span>${candidate.readOnly === true ? "yes" : "no"}</span></div>
+    </div>`;
+}
+
+function renderError(error) {
+  byId("result").innerHTML = `<div class="card blocked"><h2>Input rejected ${pill("blocked", "red")}</h2><p>${escapeHtml(error?.message || "The emergency-selection contract rejected the input.")}</p></div>`;
+}
+
+function evaluate() {
+  try {
+    const candidate = selectEmergencyCandidate({
+      stringVoltageV: Number(byId("voltage").value),
+      powerW: Number(byId("power").value),
+      durationHours: Number(byId("duration").value),
+      designLifeYears: Number(byId("life").value),
+    });
+    if (candidate.schemaId !== EMERGENCY_SELECTION_SCHEMA_ID || candidate.schemaVersion !== EMERGENCY_SELECTION_SCHEMA_VERSION) {
+      throw new Error("Unsupported emergency-selection contract response.");
+    }
+    renderCandidate(candidate);
+  } catch (error) {
+    renderError(error);
+  }
+}
+
+["voltage", "power", "duration", "life"].forEach((id) => byId(id).addEventListener("input", evaluate));
+evaluate();
+</script>
+</body>
+</html>
