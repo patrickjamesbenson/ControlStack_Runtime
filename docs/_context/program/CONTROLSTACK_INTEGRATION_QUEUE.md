@@ -393,3 +393,30 @@ Only the next eligible Lab parcel may move to `ready`. Every later approved parc
 ### Acceptance return
 
 Each parcel must cite the immutable consolidated-envelope commit and this Program approval, preserve its exact approved file and consumer boundary, pass its focused checks and full `lab-ies` gate, commit and push only the Lab lane, and return an exact immutable receipt. Any drift requires a new Program decision. No action from Patrick.
+
+## 2026-07-20 — LAB-029 provenance publication admission
+
+**Status:** SEAM APPROVED UNCHANGED; READY WHEN NEXT ELIGIBLE.
+
+### Admission basis
+
+- Immutable Lab envelope checkpoint: `7b74ca49665007311f6dbb8cfdccc47be5472353`.
+- Queue item: `LAB-029-provenance-publication-surfaces`.
+- Reported validation: `lab-ies` 255/255 with no failures, cancellations, skips, or todo tests.
+- Reported state: documentation-only checkpoint, LAB-029 still blocked, and no implementation started.
+
+### Exact authorised implementation scope
+
+- `packages/lab-kernel/ies-toolkit/provenance.html`
+- `packages/lab-kernel/ies-toolkit/provenance_explorer.html`
+- `packages/lab-kernel/ies-toolkit/luminaire_provenance.html`
+
+### Queue operation
+
+LAB-029 may move from `blocked` to `ready` unchanged when the Lab lane confirms it is the next eligible parcel and no other parcel is active. No parallel or combined implementation is authorised.
+
+The parcel is confined to presentation of safe identity, host-free resolver availability, and evidence-capability projections. Governed mode uses Program-supplied projections; offline mode uses committed safe fixtures and must display `OFFLINE DEMO — UNAPPROVED`. Emergency and EWIS verification remain `null`.
+
+### Acceptance return
+
+Lab must return the immutable feature and documentation receipts, exact three-file implementation scope, focused governed/offline/null/leak-prevention evidence, full `lab-ies` green, exact staged-set proof, protected-dirt exclusion, final Git inventory, push evidence, and updated handoff. Any view-model, ownership, resolver, publication-state, capability, or scope drift returns LAB-029 to blocked for a new decision.

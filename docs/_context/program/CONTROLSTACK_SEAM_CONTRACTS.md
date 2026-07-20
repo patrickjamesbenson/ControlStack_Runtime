@@ -299,3 +299,36 @@ The kernel is a pure, fail-closed validation and composition boundary. It must r
 ### Sequencing rule
 
 This consolidated approval does not combine implementation parcels. Only one Lab parcel may be active. The next eligible parcel may move to `ready`; all later approved parcels remain sequence-blocked until the active parcel is completed and closed out. Every parcel requires an independent immutable receipt and Program acceptance. Any contract drift or additional seam requires a new decision.
+
+## 2026-07-20 approved Lab seam — LAB-029 provenance publication version 1
+
+**Status:** APPROVED UNCHANGED; IMPLEMENTATION MAY PROCEED WHEN SEQUENTIALLY ELIGIBLE.
+
+**Immutable envelope:** `7b74ca49665007311f6dbb8cfdccc47be5472353` (`LAB-029-provenance-publication-surfaces`).
+
+### Approved presentation contract
+
+LAB-029 is presentation-only. Its exact implementation boundary is:
+
+- `packages/lab-kernel/ies-toolkit/provenance.html`
+- `packages/lab-kernel/ies-toolkit/provenance_explorer.html`
+- `packages/lab-kernel/ies-toolkit/luminaire_provenance.html`
+
+The view may reuse only the approved safe sealed-reference identity projection, canonical host-free resolver paths, and evidence-capability summary. Emergency and EWIS assembly verification remain `null`.
+
+### Publication-state contract
+
+- Governed mode consumes only Program-supplied safe identity and resolver-availability projections.
+- Offline fixture mode consumes only committed safe fixture projections and is visibly labelled `OFFLINE DEMO — UNAPPROVED`.
+
+### Ownership exclusions
+
+Lab does not gain serial allocation, sealing, resolver origin/hosting/endpoint ownership, route-to-storage mapping, persistence, authentication, deployment, evidence acceptance, raw evidence publication, origin IES/source-body publication, private authority reconstruction, or emergency/EWIS assembly verification authority.
+
+### Retired behaviour
+
+The approved implementation must not restore hard-coded hosts, direct raw-body fetch traversal, local-path exposure, diagnostic fingerprint authority claims, fabricated seal chains, generated dates, or positive authority wording for fixture data.
+
+### Change rule
+
+Any change to the view model, ownership boundary, resolver semantics, publication states, null-capability treatment, or exact file scope invalidates this approval and requires a new Program decision. Existing one-parcel-at-a-time Lab sequencing remains mandatory and is not an amendment to version 1.

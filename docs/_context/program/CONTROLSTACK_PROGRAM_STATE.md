@@ -271,3 +271,16 @@ P2 Checkpoint 1 is **IMPLEMENTATION COMPLETE / GATE GREEN / COMMIT BLOCKED BY SH
 - **FAIL-CLOSED:** duplicate or pre-composed parents, provenance loss/reordering, grid mismatch, or governance expansion must be rejected specifically.
 - **SEQUENCING:** only the next eligible parcel may become `ready`; all later approved parcels remain sequence-blocked. No parallel implementation is authorised.
 - **NEXT:** Lab records this approval, advances one parcel at a time, and returns a separate immutable receipt for each. Patrick has no action.
+
+## 2026-07-20 LAB-029 provenance publication approval state
+
+- **REPORTED ENVELOPE:** checkpoint `7b74ca49665007311f6dbb8cfdccc47be5472353`, queue item `LAB-029-provenance-publication-surfaces`.
+- **REPORTED VALIDATION:** documentation-only checkpoint; no implementation started; `lab-ies` 255/255 with no failed, cancelled, skipped, or todo tests.
+- **PROGRAM DECISION:** approve `LAB-029_SEAM_ENVELOPE` version 1 unchanged.
+- **AUTHORISED FILES:** only `provenance.html`, `provenance_explorer.html`, and `luminaire_provenance.html` under `packages/lab-kernel/ies-toolkit/`.
+- **SAFE INPUTS:** existing sealed-reference identity, canonical host-free resolver availability, and evidence-capability projections only.
+- **PUBLICATION STATES:** governed mode uses Program-supplied safe projections; fixture mode remains visibly labelled `OFFLINE DEMO — UNAPPROVED`.
+- **NULL RULE:** emergency and EWIS assembly verification remain `null`.
+- **OWNERSHIP PRESERVED:** no allocation, sealing, resolver hosting/origin/endpoints, route-to-storage, persistence, authentication, deployment, evidence acceptance, raw/source publication, or private authority reconstruction moves to Lab.
+- **SEQUENCING:** LAB-029 may become `ready` only when next eligible under the existing one-parcel-at-a-time rule.
+- **NEXT:** Lab may implement the exact three-file parcel when sequentially eligible and must return an immutable receipt. Patrick has no action.

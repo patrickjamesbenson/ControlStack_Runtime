@@ -550,3 +550,40 @@ The kernel must fail closed with specific rejection outcomes for duplicate paren
 ### Decision
 
 No amendments are required. The six ordinary seams are approved unchanged, and the governed reference-composition kernel is approved with the four conditions above. The prior LAB-018 hold is superseded by this consolidated approval, but one-parcel-at-a-time sequencing remains mandatory. Patrick has no manual action.
+
+---
+
+## 2026-07-20 — LAB-029 provenance publication seam envelope approved unchanged
+
+**Status:** APPROVED; LAB-029 MAY MOVE FROM BLOCKED TO READY UNDER THE EXISTING SEQUENTIAL QUEUE RULE.
+
+**Envelope checkpoint:** `7b74ca49665007311f6dbb8cfdccc47be5472353`.
+
+**Queue item:** `LAB-029-provenance-publication-surfaces`.
+
+**Evidence classification:** The Lab lane reports that the immutable version-1 seam envelope is committed, only Lab documentation was checkpointed, no implementation has started, and `lab-ies` passes 255/255 with no failed, cancelled, skipped, or todo tests. The present Program app cannot independently resolve the Lab branch, so the checkpoint and gate receipt remain `REPORTED` evidence until the implementation parcel returns.
+
+### Approved implementation boundary
+
+Program approves version 1 unchanged for exactly these presentation files:
+
+- `packages/lab-kernel/ies-toolkit/provenance.html`
+- `packages/lab-kernel/ies-toolkit/provenance_explorer.html`
+- `packages/lab-kernel/ies-toolkit/luminaire_provenance.html`
+
+The implementation may consume only the existing approved safe sealed-reference identity projection, canonical host-free resolver paths, and the evidence-capability summary. Emergency and EWIS assembly verification must remain `null` unless a future separately approved evidence seam changes that contract.
+
+### Publication states
+
+1. Governed mode consumes only Program-supplied safe identity and resolver-availability projections.
+2. Offline fixture mode consumes only committed safe fixture projections and remains visibly labelled `OFFLINE DEMO — UNAPPROVED`.
+
+### Preserved ownership and publication boundaries
+
+LAB-029 does not own or implement serial allocation or sealing; resolver origin, hosting, endpoints, or route-to-storage mapping; persistence, authentication, or deployment; evidence acceptance; raw evidence, origin IES, or source-body publication; private authority reconstruction; or emergency/EWIS assembly verification.
+
+The implementation must not restore a hard-coded host, direct raw-body fetch traversal, local-path exposure, diagnostic fingerprint authority claims, fabricated seal chains, generated dates, or positive authority wording over fixture data.
+
+### Execution and acceptance
+
+No amendment is required. The Lab orchestrator may move LAB-029 to `ready` only when it is the next eligible parcel and no other Lab parcel is active. Implementation must remain within the exact three-file boundary, with required lane-context closeout recorded separately. Completion must return focused publication-state, leak-prevention, null-capability, and boundary evidence; full `lab-ies` green; exact staged-set proof; immutable feature and documentation receipts; final classified Git state; and updated Lab handoff. Any view-model, ownership, resolver-semantic, publication-state, or file-scope drift requires a new Program decision.

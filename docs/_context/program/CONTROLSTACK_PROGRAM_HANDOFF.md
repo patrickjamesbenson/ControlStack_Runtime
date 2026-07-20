@@ -425,3 +425,26 @@ Program has approved the immutable consolidated Lab envelope covering seven bloc
 The kernel must fail closed on duplicate or pre-composed parents, provenance loss or reordering, grid mismatch, or any attempt to cross the external governance boundary. It may validate and compose only; it does not gain production identity, authority, persistence, approval, sealing, resolver, route, endpoint, authentication, or deployment ownership.
 
 This approval is consolidated only at the seam-decision level. Lab implementation remains one parcel at a time: only the next eligible parcel may move to `ready`, and every subsequent parcel remains sequence-blocked until the current parcel is committed, pushed, closed out, and safe. Each parcel returns its own immutable acceptance receipt. Patrick has no action.
+
+## 2026-07-20 LAB-029 provenance publication seam approval
+
+Program approves the committed `LAB-029_SEAM_ENVELOPE` version 1 unchanged.
+
+Approval anchor:
+
+- Lab checkpoint: `7b74ca49665007311f6dbb8cfdccc47be5472353`;
+- queue item: `LAB-029-provenance-publication-surfaces`;
+- reported `lab-ies`: 255/255;
+- implementation state at approval: not started.
+
+The exact authorised implementation files are:
+
+- `packages/lab-kernel/ies-toolkit/provenance.html`;
+- `packages/lab-kernel/ies-toolkit/provenance_explorer.html`;
+- `packages/lab-kernel/ies-toolkit/luminaire_provenance.html`.
+
+The view remains presentation-only. Governed mode consumes Program-supplied safe sealed-reference identity and host-free resolver-availability projections. Offline mode consumes committed safe fixture projections and must remain visibly labelled `OFFLINE DEMO — UNAPPROVED`. Emergency and EWIS assembly verification remain `null`.
+
+Lab does not gain allocation, sealing, resolver origin/hosting/endpoints, route-to-storage, persistence, authentication, deployment, evidence acceptance, raw evidence/origin IES/source-body publication, private authority reconstruction, or emergency/EWIS verification ownership. Hard-coded hosts, raw-body traversal, local paths, fingerprint authority claims, fabricated seal chains, generated dates, and positive authority wording over fixtures remain prohibited.
+
+LAB-029 may move from `blocked` to `ready` when it is next eligible under the existing sequential queue rule. Any change to the view model, ownership boundary, resolver semantics, publication states, null treatment, or three-file scope requires a new Program decision. The Lab completion return must include focused evidence, `lab-ies` green, exact staged-set proof, immutable feature and documentation receipts, final Git inventory, push evidence, and updated handoff.
