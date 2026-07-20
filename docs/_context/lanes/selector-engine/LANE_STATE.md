@@ -272,7 +272,7 @@ A fresh chat can start either role from one line: read `LANE_CHARTER.md` and act
 
 ## 2026-07-20 SEL-014 registration preflight repair closeout — latest controlling state
 
-**Recorded lane work HEAD:** `bfc5d3496360e0f9855b49ede905db224fdf8a7c` — `docs(selector): reconcile lane state after diagnostic intent repair`.
+**Recorded lane work HEAD:** `846cb6afbe22b44fddb1592e74b6f8b4240a4df0` — `docs(selector): reopen live indirect consequence`.
 
 SEL-014 resumed from the two explicitly preserved authorised edits with no other dirty path. The worker used `tests/engineRunTableDomain.test.js` only as the authorised temporary gate harness, visibly executed all eight registration transport tests, then removed the import and proved the harness file byte-identical to HEAD and absent from the final diff.
 
