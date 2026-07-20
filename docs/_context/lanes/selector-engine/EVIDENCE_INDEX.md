@@ -445,3 +445,5 @@ Every completed worker updates this index with:
 - Mandatory varied-optic proof: with identical selected room, current and curve, a different optic-bound measured rise must move both lookup temperature and verified lm/m — PROGRAM-APPROVED AND RECORDED.
 - Main isolation: no main, donor, Lab, Program feature, unfinished runtime-port, source, route, persistence or existing curve-parser file is included — VERIFIED QUEUE BOUNDARY.
 - Queue result: SEL-018 is sole ready; THERM-P1 blocked behind its accepted closeout; THERM-E1 blocked behind THERM-P1; superseded direct-`temp_c` live acceptance is held — RECORDED.
+- Fixed-gate coverage audit: the current `selector-engine` command omits `tests/selectorReadonlyEngineCandidateMapper.test.js` — VERIFIED from the 107-test command and visible suite list.
+- Focused-execution method: one temporary import from the gate-included Engine domain test is authorised; it must be removed, byte-identical to HEAD and absent from final staging/commit — RECORDED NON-PERSISTENT HARNESS.

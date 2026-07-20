@@ -350,7 +350,7 @@ SEL-018 is now the sole top ready item. It is approved as one bounded Selector/r
 
 ## 2026-07-20 Ambient parcel split — latest controlling state
 
-**Recorded lane work HEAD:** `cc8f5e6eb0d48193647d5db1bf7ce0c05c67898f` — `docs(selector): reconcile lane state`.
+**Recorded lane work HEAD:** `e978c0c79e847d3b60a96158a2bc3eba026420b4` — `docs(selector): reconcile lane state for thermal sequence`.
 
 The approved Ambient authority and contract are unchanged: active read-only `SYSTEM_POLICY` is the only selectable authority; `lighting.ambient_temp_c` is the exact candidate field; the value is a finite JSON number in degrees Celsius; the protected interpolation input is `temp_c`; and missing, blank, ambiguous, non-numeric, non-finite, malformed, or non-source-backed Ambient fails closed before donor Engine execution with no 25°C, 35°C, fixture, product, System, Tier, application, IP, optic, lab, historical, cached, or donor fallback.
 
@@ -381,3 +381,5 @@ THERM-E1 is approved and blocked behind THERM-P1. Engine alone applies `opticThe
 Final Engine acceptance must vary one optic-bound measured rise while holding selected room, current and curve fixed, and prove both lookup temperature and verified lm/m move. This is the required defence against the current identical placeholder source values and any hardcoded constant.
 
 SEL-019 is held because its former direct `lighting.ambient_temp_c` acceptance workflow is superseded. Browser, registration and live Engine acceptance require a later explicit Program commission after THERM-E1. The unfinished runtime-port work in main remains excluded and untouched.
+
+The fixed lane gate does not execute the focused mapper suite. SEL-018 is therefore authorised to use the established temporary harness: exactly one side-effect import in the gate-included Engine domain test, removed after visible focused execution. The harness must finish byte-identical to HEAD and cannot appear in the final diff, stage or commit. The final feature scope remains exactly two files.

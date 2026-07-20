@@ -405,3 +405,5 @@ After THERM-P1 and its closeout are pushed, THERM-E1 becomes ready. It uses one 
 The mandatory Engine test uses two optic-bound accepted bundles with different rises and identical room, current and curve. Both lookup temperature and verified lm/m must change. This must fail for a hardcoded 35°C, hardcoded 10°C, the absolute reference-internal value used as rise, or double counting.
 
 The old direct `lighting.ambient_temp_c` to `temp_c` live-acceptance parcel is held and must not run. Final live/cross-lane acceptance requires a later Program commission after THERM-E1. No browser, registration or live Engine action is needed before then.
+
+The fixed gate omits the focused mapper suite. For SEL-018 only, temporarily add one import of `./selectorReadonlyEngineCandidateMapper.test.js` to the gate-included Engine domain test, run the fixed gate and visibly execute the mapper assertions, then remove the import. Prove the harness file is byte-identical to HEAD and absent from the final diff before the normal 107-test gate and exact two-file feature staging.

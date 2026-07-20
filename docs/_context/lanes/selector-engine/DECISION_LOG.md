@@ -307,3 +307,11 @@ This log is append-oriented. Do not silently rewrite historical decisions.
 **Rationale:** Current database thermal values are placeholders and identical across rows. Baseline examples alone cannot distinguish a genuine per-optic evidence lookup from a hardcoded constant.
 
 **Consequence:** A green implementation must fail if it hardcodes 35°C, hardcodes a 10°C rise, reads the absolute reference-internal value as the rise, or applies the rise twice. The existing curve parser remains unchanged.
+
+## 2026-07-21 — SEL-018 focused mapper suite uses the established temporary harness
+
+**Decision:** Because the fixed `selector-engine` gate omits `tests/selectorReadonlyEngineCandidateMapper.test.js`, SEL-018 may temporarily add exactly one side-effect import of that suite to the already gate-included `tests/engineRunTableDomain.test.js`.
+
+**Rationale:** The approved lane exposes no arbitrary or focused test command. The same temporary-import method was previously accepted for omitted registration coverage and provides executable evidence without widening the committed parcel.
+
+**Consequence:** The harness import must visibly execute the mapper suite, then be removed. The harness file must be byte-identical to HEAD, absent from the final diff, unstaged and uncommitted. The feature commit remains exactly the mapper and focused mapper test, followed by the normal baseline gate and five-file durable closeout.
