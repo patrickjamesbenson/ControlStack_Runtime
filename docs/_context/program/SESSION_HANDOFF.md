@@ -1,19 +1,41 @@
 # Program & Integrate Session Handoff
 
-Status: LAB-042 GATE-INCLUDED TEST SCOPE APPROVED  
+Status: LAB THERMAL RECEIPT ACCEPTED; SEL-018 READY; THERM-P1 AND THERM-E1 ADMITTED  
 Lane: `program-integrate`  
 Branch: `lane/program-integrate`
 
-## Decision
+## Current truth
 
-LAB-038 through LAB-041 are complete and green. The originally approved new LAB-042 test file is not executed by the fixed Lab gate, so it cannot prove its own assertions.
+LAB-038 through LAB-042 are complete and pushed. The final Lab gate passed 262/262. Program accepts the corrected version-2 Lab producer shape while preserving `authorityState: null`.
 
-LAB-042 is amended to exactly the existing gate-included keyword migration regression test. The new thermal test file must not be created.
+The current readable Runtime mapper has no `selectedRoomTaC`, so SEL-018 is not yet accepted as implemented.
 
-All final-guard acceptance remains unchanged: corrected source mappings, exact measured triplet, varied uplift proof, contradiction rejection, three version-2 schemas, absence of deprecated output names and Lab-owned Engine calculations, bounded legacy source names, and unchanged sealed internal-ambient meaning.
+The connected Selector app currently resolves to dirty main, not the isolated Selector worktree, and has commit/push disabled. Do not edit main or mix the unfinished runtime-port work into this sequence.
 
-No production source, fixture or gate configuration change is authorised.
+## Exact order
 
-## Exact next action
+1. Complete SEL-018 in the isolated Selector worktree using only the approved mapper and focused test. Selector passes the source-backed selected room temperature only and performs no thermal calculation.
+2. Complete THERM-P1 using only the new Program thermal-evidence adapter module and focused test. It validates optic/evidence binding and emits the accepted Program bundle without thermal arithmetic.
+3. Complete THERM-E1 using only the new Engine thermal execution module and focused test. Engine applies the rise exactly once and delegates to the existing curve interpolation contract.
+4. Run final Program cross-lane acceptance before any stability, downstream-artifact or main-promotion decision.
 
-Lab implements the one-file final guard, runs the full Lab gate, pushes it, and closes the corrected thermal batch.
+## Mandatory proof
+
+Use two optic-bound accepted bundles with different measured rises but the same selected room, current and curve. Both lookup temperature and verified lm/m must change. Reject caller-supplied derived or lookup temperatures, missing or unbound evidence and contradictory measured triplets.
+
+## Parcel files
+
+SEL-018:
+
+- `packages/workspace-kernel/selectorReadonlyEngineCandidateMapper.js`
+- `tests/selectorReadonlyEngineCandidateMapper.test.js`
+
+THERM-P1:
+
+- `packages/workspace-kernel/labThermalEvidenceProgramAdapter.js`
+- `tests/labThermalEvidenceProgramAdapter.test.js`
+
+THERM-E1:
+
+- `packages/workspace-kernel/runtimeThermalLumenExecution.js`
+- `tests/runtimeThermalLumenExecution.test.js`

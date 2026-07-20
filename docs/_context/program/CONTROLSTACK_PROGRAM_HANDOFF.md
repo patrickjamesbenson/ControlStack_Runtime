@@ -573,3 +573,42 @@ LAB-038 through LAB-041 are complete. The originally approved new LAB-042 test p
 LAB-042 is amended to exactly the existing gate-included keyword migration test file. The new thermal test file must not be created. All existing LAB-042 semantic and schema assertions remain required, the feature remains test-only, and no production, fixture or gate configuration change is authorised.
 
 Lab may implement this final one-file guard immediately, run the full Lab gate, push the feature and close the corrected thermal batch separately.
+
+## 2026-07-21 thermal completion handoff
+
+The corrected Lab producer receipt is now accepted. LAB-038 through LAB-042 are complete, pushed and green at 262/262. The active Lab working projection is version 2 and exposes only the selected optic identity, measured reference room, absolute reference internal, measured rise, opaque evidence reference and `authorityState: null`.
+
+### Immediate Selector action — SEL-018
+
+SEL-018 remains the sole ready Selector parcel because the readable Runtime mapper still contains no `selectedRoomTaC`.
+
+Use exactly:
+
+- `packages/workspace-kernel/selectorReadonlyEngineCandidateMapper.js`
+- `tests/selectorReadonlyEngineCandidateMapper.test.js`
+
+Selector passes the single committed source-backed room temperature only and calculates nothing. It must reject missing, malformed, duplicate, uncommitted or non-source-backed Ambient and must not emit rise, derived temperature, lookup temperature, board temperature or verified lm/m.
+
+Do not use the currently connected dirty-main Runtime root for this parcel. The worker must be bound to the isolated Selector worktree and branch before any edit.
+
+### Next action after accepted SEL-018 — THERM-P1
+
+Implement the separately approved Program thermal-evidence adapter in exactly:
+
+- `packages/workspace-kernel/labThermalEvidenceProgramAdapter.js`
+- `tests/labThermalEvidenceProgramAdapter.test.js`
+
+The adapter binds the accepted Selector room/optic intent and Program source-backed optic identity to the exact Lab v2 measured evidence. It preserves `labAuthorityState: null`, emits `programValidationState: "accepted_for_engine_thermal_lookup"`, performs no thermal arithmetic and rejects all caller-supplied derived/output values.
+
+### Next action after accepted THERM-P1 — THERM-E1
+
+Implement Engine execution in exactly:
+
+- `packages/workspace-kernel/runtimeThermalLumenExecution.js`
+- `tests/runtimeThermalLumenExecution.test.js`
+
+Engine applies the accepted optic rise exactly once, sets lookup temperature to the derived internal temperature and delegates to the existing runtime lumen-curve parse/interpolation contract. It rejects direct Lab input and caller-supplied derived or lookup temperatures.
+
+The mandatory final test uses two optic-bound bundles with different rises but the same selected room, current and curve. Both lookup temperature and verified lm/m must move. This test must fail for any hardcoded 35°C or 10°C behaviour.
+
+The unfinished runtime-port work in main, source-model renames, routes, persistence, donor changes, existing curve-parser changes, downstream artifacts and main promotion remain outside these parcels.

@@ -372,3 +372,18 @@ P2 Checkpoint 1 is **IMPLEMENTATION COMPLETE / GATE GREEN / COMMIT BLOCKED BY SH
 - **NO PRODUCTION CHANGE:** no source, fixture, gate configuration, route, persistence or Engine behaviour.
 - **QUEUE:** LAB-042 is the sole ready Lab item.
 - **NEXT:** Lab implements the final guard in the existing gate-included test, runs the full gate and closes the batch. Patrick has no action.
+
+## 2026-07-21 thermal completion state after Lab closeout
+
+- **LAB RECEIPT:** accepted. LAB-038 through LAB-042 are pushed, the corrected producer contracts are version 2 and the final `lab-ies` gate passed 262/262.
+- **LAB AUTHORITY:** thermal evidence remains measured and unresolved at Lab with `authorityState: null`; Program acceptance does not rewrite that field.
+- **SEL-018 AUDIT:** the current readable Runtime mapper contains no `selectedRoomTaC`; no accepted SEL-018 implementation receipt exists.
+- **SELECTOR TOOLING:** the connected Selector app currently resolves `runtime` to dirty main with commit/push disabled instead of the isolated Selector worktree. The unfinished runtime-port state in main is excluded and untouched.
+- **SOLE READY SELECTOR ITEM:** SEL-018, exactly the mapper and focused test already approved.
+- **ADMITTED NEXT PARCEL:** THERM-P1 Program thermal-evidence validation adapter, exactly one new module and one focused test; blocked until SEL-018 acceptance.
+- **ADMITTED ENGINE PARCEL:** THERM-E1 thermal lumen execution, exactly one new module and one focused test; blocked until THERM-P1 acceptance.
+- **ENGINE RULE:** derive `selectedRoomTaC + opticThermalRiseTaC` once, use the result as lookup temperature and delegate unchanged to the existing curve interpolation contract.
+- **REJECTION RULE:** direct Lab projection input and caller-supplied derived, lookup, board-temperature or verified-output values fail closed.
+- **MANDATORY DIFFERENTIATOR:** a second optic-bound bundle must change the measured rise and thereby change both lookup temperature and verified lm/m against the same room, current and curve.
+- **HELD:** final cross-lane acceptance, Engine-contract stability declaration, downstream artifacts and main promotion remain held until SEL-018, THERM-P1 and THERM-E1 are accepted in order.
+- **NEXT:** restore the Selector connector to the isolated worktree or use a correctly bound Selector worker; do not write main.

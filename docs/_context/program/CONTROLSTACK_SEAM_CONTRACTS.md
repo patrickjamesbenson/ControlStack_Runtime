@@ -446,3 +446,87 @@ During LAB-038 the adapter remains `controlstack.lab.nvb-lab-projection.v1`. It 
 ### LAB-042 gate-included final guard amendment
 
 The final corrected thermal guard is confined to the already gate-included `tests/lab-kernel/iesKeywordMigration.test.js`. The previously named new test file is superseded and must not be created because the fixed Lab gate would not execute it. All semantic, schema, mapping, contradiction, bounded-source-name and sealed-keyword assertions remain required. No production source, fixture or gate configuration is included.
+
+## 2026-07-21 accepted Lab receipt and admitted thermal completion parcels
+
+### Lab producer receipt accepted
+
+Program accepts the completed corrected Lab thermal batch as the producer-side evidence contract for the next cross-lane work.
+
+Accepted evidence:
+
+- LAB-038 through LAB-042 are committed and pushed on the Lab lane;
+- the resolver, component catalogue and Lab working projection are all version 2;
+- the Lab projection publishes the selected optic identity, measured `referenceRoomTaC`, absolute `referenceInternalTaC`, measured `opticThermalRiseTaC`, opaque `evidenceRef` and `authorityState: null`;
+- exact measured-triplet consistency is enforced;
+- varied-optic coverage changes the legacy uplift source value;
+- contradictory triplets fail closed;
+- no Lab module calculates a user-specific derived temperature, lookup temperature, clamp or verified lm/m;
+- the final Lab gate passed 262/262;
+- the final Lab state preserves only its expected live marker and three protected untracked paths.
+
+This acceptance confirms producer shape and semantics only. It does not convert `authorityState: null` into thermal authority and does not authorise Engine use without the Program validation adapter below.
+
+### Parcel THERM-P1 — Program thermal-evidence validation adapter
+
+**Status:** ADMITTED BUT SEQUENCE-BLOCKED UNTIL SEL-018 IS ACCEPTED.
+
+**Producing lane:** Selector & Engine lane under the Program-owned seam contract.  
+**Exact files:**
+
+- `packages/workspace-kernel/labThermalEvidenceProgramAdapter.js`
+- `tests/labThermalEvidenceProgramAdapter.test.js`
+
+The adapter accepts exactly:
+
+1. an accepted Selector candidate containing the unchanged `selectedRoomTaC` and its source-backed selected optic key;
+2. one Program-validated optic binding containing the selected optic key, canonical optic BOM identity, source revision and `sourceBacked: true`;
+3. one exact `controlstack.lab.nvb-lab-projection.v2` object.
+
+It must fail closed unless:
+
+- Selector and validated binding optic keys agree;
+- the validated optic BOM identity equals both Lab `selection.opticBomId` and `thermalEvidence.opticBomId`;
+- Lab path is `optic`, the projection is read-only and unresolved identity/evidence blockers are absent;
+- `evidenceRef` is bounded non-empty opaque text;
+- Lab `authorityState` remains exactly `null`;
+- the measured triplet is finite and satisfies exact decimal `referenceRoomTaC + opticThermalRiseTaC = referenceInternalTaC`;
+- the input contains no caller-supplied `derivedInternalTaC`, `curveLookupTaC`, board temperature or verified lm/m.
+
+On success it emits a deeply immutable `controlstack.program.thermal-evidence-bundle.v1` containing only the selected room value, validated optic identity/source revision, measured triplet, opaque evidence reference, `labAuthorityState: null`, `programValidationState: "accepted_for_engine_thermal_lookup"`, no derived result, and `readOnly: true`.
+
+The adapter performs no curve lookup, no temperature addition, no clamp, no persistence, no route and no authority write. It must not alter the existing photometry handoff adapter.
+
+### Parcel THERM-E1 — Engine thermal lumen execution
+
+**Status:** ADMITTED BUT BLOCKED UNTIL THERM-P1 IS ACCEPTED.
+
+**Producing lane:** Selector & Engine lane, Engine boundary.  
+**Exact files:**
+
+- `packages/workspace-kernel/runtimeThermalLumenExecution.js`
+- `tests/runtimeThermalLumenExecution.test.js`
+
+The Engine parcel consumes only an accepted `controlstack.program.thermal-evidence-bundle.v1`, verified safe curve metadata and the requested drive current. It must reject direct Lab projections and any caller-supplied `derivedInternalTaC`, `curveLookupTaC`, board temperature or verified lm/m.
+
+Engine alone calculates exactly once:
+
+```text
+derivedInternalTaC = selectedRoomTaC + opticThermalRiseTaC
+curveLookupTaC = derivedInternalTaC
+```
+
+It must then delegate unchanged to the committed runtime lumen-curve parse/interpolation contract using `curveLookupTaC` as `temp_c`. It returns the unclamped derived value, actual lookup value, temperature clamp/interpolation mode, current mode, verified lm/m, selected optic identity, evidence reference and Program validation state in a deeply immutable version-1 result.
+
+Mandatory acceptance includes:
+
+- 25 + 10 -> lookup 35;
+- 35 + 10 -> lookup 45;
+- a second optic bundle with a different rise changes both lookup temperature and verified lm/m against the same current and curve;
+- the varied-optic test must fail for a hardcoded rise or lookup constant;
+- the rise is applied exactly once;
+- low/high curve clamps preserve the unclamped derived value and report clamp state;
+- missing, malformed, contradictory, unaccepted or identity-unbound evidence fails closed;
+- no route, persistence, RuntimeData mutation, donor invocation, IES generation or raw curve rows are added.
+
+Any file-scope expansion, board-temperature transform, alternate lookup owner, direct Lab consumption or change to the existing curve parser requires a new Program decision.

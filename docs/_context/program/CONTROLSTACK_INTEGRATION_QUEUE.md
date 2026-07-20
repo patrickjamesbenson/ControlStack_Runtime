@@ -553,3 +553,56 @@ The adapter change is transition-only: accept corrected resolution version 2 and
 LAB-038 through LAB-041 are complete and green. The previously approved new LAB-042 test file is not executed by the fixed Lab gate, so it cannot provide valid self-testing acceptance evidence.
 
 LAB-042 is amended to exactly `tests/lab-kernel/iesKeywordMigration.test.js`, which is already included in every full Lab gate. The new test file must not be created. Acceptance, feature subject and test-only boundary remain unchanged. LAB-042 is the sole ready Lab item; no production source, fixture or gate configuration may change.
+
+## 2026-07-21 — Thermal chain completion queue
+
+### Lab receipt
+
+**Status:** COMPLETE / ACCEPTED.
+
+LAB-038 through LAB-042 are complete and pushed. The final Lab gate passed 262/262. The accepted producer contract is `controlstack.lab.nvb-lab-projection.v2` with corrected measured thermal semantics and unresolved Lab authority.
+
+### SEL-018
+
+**Status:** READY — sole active Selector parcel.
+
+Exact files remain:
+
+- `packages/workspace-kernel/selectorReadonlyEngineCandidateMapper.js`
+- `tests/selectorReadonlyEngineCandidateMapper.test.js`
+
+Acceptance requires `selectedRoomTaC` only, no thermal calculation, fail-closed Ambient authority and preservation of existing non-thermal candidate fields.
+
+The readable Runtime base has no `selectedRoomTaC`, so no implementation receipt is accepted yet. The Selector connector currently targets dirty main rather than the isolated worktree; no main file may be changed.
+
+### THERM-P1 — Program thermal-evidence validation adapter
+
+**Status:** APPROVED / BLOCKED BY SEL-018 ACCEPTANCE.
+
+Exact files:
+
+- `packages/workspace-kernel/labThermalEvidenceProgramAdapter.js`
+- `tests/labThermalEvidenceProgramAdapter.test.js`
+
+The parcel validates Selector room/optic intent, Program source binding and the exact Lab v2 measured evidence. It emits only the accepted Program thermal bundle and performs no Engine calculation.
+
+### THERM-E1 — Engine thermal lumen execution
+
+**Status:** APPROVED / BLOCKED BY THERM-P1 ACCEPTANCE.
+
+Exact files:
+
+- `packages/workspace-kernel/runtimeThermalLumenExecution.js`
+- `tests/runtimeThermalLumenExecution.test.js`
+
+The parcel applies the accepted optic rise exactly once, delegates to the committed curve parse/interpolation contract and returns the safe thermal/output result. Direct Lab input and caller-supplied derived or lookup temperatures are rejected.
+
+### Required order
+
+1. complete and accept SEL-018;
+2. complete and accept THERM-P1;
+3. complete and accept THERM-E1 with the mandatory varied-optic rise/output proof;
+4. run final Program cross-lane acceptance;
+5. only then reconsider Engine-contract stability, downstream artifacts and main promotion.
+
+The unfinished runtime-port work in main is outside this queue and must remain untouched.

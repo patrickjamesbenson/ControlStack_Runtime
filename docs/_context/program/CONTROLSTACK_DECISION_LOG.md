@@ -900,3 +900,45 @@ All LAB-042 acceptance criteria remain unchanged:
 - preserve the sealed-reference `_INTERNAL_AMBIENT_TA_C` meaning.
 
 No production source, fixture, gate configuration, route, persistence or cross-lane implementation is authorised. The feature subject remains `lab: checkpoint thermal semantics guard`. LAB-042 is the sole ready Lab item and may close the corrected thermal batch after a full green gate and separate documentation checkpoint.
+
+---
+
+## 2026-07-21 — Corrected Lab thermal receipt accepted; Program adapter and Engine execution admitted
+
+**Status:** LAB PRODUCER RECEIPT ACCEPTED; SEL-018 REMAINS READY; THERM-P1 AND THERM-E1 ARE APPROVED BUT SEQUENCE-BLOCKED.
+
+### Accepted Lab receipt
+
+Program accepts the completed LAB-038 through LAB-042 batch from the Lab lane. The accepted receipt records version-2 resolver, component and Lab working projections, corrected labels, the gate-included final guard, final 262/262 `lab-ies`, no Lab-owned Engine calculation, explicit `authorityState: null`, and preservation of the three protected local paths.
+
+The accepted Lab shape is the exact `controlstack.lab.nvb-lab-projection.v2` projection containing selected optic identity plus measured `referenceRoomTaC`, absolute `referenceInternalTaC`, measured `opticThermalRiseTaC`, opaque `evidenceRef` and unresolved Lab authority.
+
+### SEL-018 verification
+
+The current readable Runtime base still contains no `selectedRoomTaC` in the read-only candidate mapper or its tests. Therefore SEL-018 is not accepted as implemented and remains the sole ready Selector parcel under its previously approved exact two-file scope.
+
+The connected Selector tool currently resolves to the dirty main repository rather than the isolated Selector worktree, with commit and push disabled. No Selector file is changed by this Program decision and the unfinished main runtime-port work remains untouched.
+
+### THERM-P1 admission
+
+Program approves the separate Program-owned validation adapter parcel defined in `CONTROLSTACK_SEAM_CONTRACTS.md`:
+
+- `packages/workspace-kernel/labThermalEvidenceProgramAdapter.js`
+- `tests/labThermalEvidenceProgramAdapter.test.js`
+
+THERM-P1 remains blocked until an accepted SEL-018 receipt exists. It may validate and bind Selector room/optic intent to Lab v2 evidence, but it performs no addition, lookup, clamp or verified-output calculation.
+
+### THERM-E1 admission
+
+Program approves the separate Engine execution parcel defined in `CONTROLSTACK_SEAM_CONTRACTS.md`:
+
+- `packages/workspace-kernel/runtimeThermalLumenExecution.js`
+- `tests/runtimeThermalLumenExecution.test.js`
+
+THERM-E1 remains blocked until THERM-P1 is accepted. It alone applies the optic rise exactly once and delegates to the existing runtime lumen-curve parse/interpolation contract. It must reject caller-supplied derived or lookup temperature.
+
+### Mandatory varied-optic proof
+
+Final acceptance must use two optic-bound Program bundles with different measured rises against the same selected room, drive current and curve. Both `curveLookupTaC` and verified lm/m must change. This proof is mandatory because the current source rows carry identical placeholder thermal values and ordinary baseline tests cannot distinguish per-optic evidence from a hardcoded constant.
+
+No main runtime-port file, route, persistence path, source fixture, donor implementation or existing curve parser is included in either parcel.
