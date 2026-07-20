@@ -393,3 +393,19 @@ The proposal does not move resolver hosting, route-to-storage mapping, persisten
 Program & Integrate approved version 1 unchanged after a 45/45 Program gate. The approval is recorded in the latest Program commit titled `docs(program): approve LAB-029 provenance seam`; Program reported a clean pushed state and no feature implementation, main promotion or downstream activation.
 
 LAB-029 is authorised to move from `blocked` to the single top `ready` item. The exact three-file presentation-only scope and every recorded ownership boundary remain unchanged. Any amendment requires a new seam decision.
+
+## DL-028 — Canonical-keyword migration guard correction before LAB-033
+
+**Status:** Approved and completed on 2026-07-20.
+
+Program & Integrate approved one bounded test-only correction under the committed and pushed decision `docs(program): approve Lab keyword migration correction`; Program reported gate 45/45 passed.
+
+The sole authorised implementation file was:
+
+```text
+tests/lab-kernel/iesKeywordMigration.test.js
+```
+
+The correction removed only the stale Main Bench requirement for the retired editable `sysTa` ambient write and literal dependence on the retired `canonicalKeywordRows(...)` helper shape. It retained the exact ordered 16-keyword profile, rejection of `_AMBIENT_TA_C`, aliases and supplementary keywords, Main Bench consumption of the committed canonical keyword contract, sealed-reference ownership and non-editability of `_INTERNAL_AMBIENT_TA_C`, and all generator, merge, summary, project-adapter and project-builder vocabulary guards.
+
+No production module, bench implementation, authority contract, sealed-reference schema, Selector, Runtime, Engine or Program implementation was authorised or changed. The corrective checkpoint is confirmed on origin after a 255/255 gate. LAB-033 is restored as the sole ready item; the final cross-cutting keyword-guard parcel remains queued until after LAB-033 is committed.

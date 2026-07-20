@@ -2,7 +2,7 @@
 
 ## Session purpose
 
-This handoff records completed LAB-032 merge composition surface, preserves the permanent charter authority for both standing prompts, and orders LAB-033 as the single next ready parcel after stale-state reconciliation.
+This handoff records the completed approved canonical-keyword migration guard correction, preserves the permanent charter authority for both standing prompts, and restores LAB-033 as the single next ready parcel.
 
 ## Identity
 
@@ -12,11 +12,11 @@ This handoff records completed LAB-032 merge composition surface, preserves the 
 - Branch: `lane/code-pilot-lab`
 - Gate: `lab-ies`
 - Standing prompt authority: `docs/_context/lanes/lab-ies/LANE_CHARTER.md` contains both worker and orchestrator prompts
-- Starting HEAD for LAB-032: `e7fdd5a5506a293eb668dad4b3f79e12e05ad38c`
-- Completed feature checkpoint: `dec45ac63c12cfcf6f9aec256323ed02eee25b62`
-- Feature subject: `lab: checkpoint merge composition surface`
+- Starting HEAD for the canonical-keyword guard correction: `e466b1a78bf6bd228e154da6c743a0597bbec07b`
+- Completed feature checkpoint: `9633f1cd6634844f55f13a8d2d46908182187447`
+- Feature subject: `test(lab): correct canonical keyword migration guard`
 - Feature checkpoint confirmed on origin `lane/code-pilot-lab`
-- Seam change: no
+- Seam change: approved bounded test correction
 - Branch-HEAD guard checkpoint: `6d34e500d407d5335e5eebb317636a67a5e98618`
 
 ## Branch-HEAD guard
@@ -27,37 +27,37 @@ After every documentation push, only the `Recorded branch HEAD` field is refresh
 
 ## Completed queue item
 
-`LAB-032-merge-composition-surface` is complete.
+`LAB-032A-canonical-keyword-migration-guard-correction` is complete.
 
-Exactly this one feature file was committed:
+Exactly this one test file was committed:
 
 ```text
-packages/lab-kernel/ies-toolkit/ies_merge.html
+tests/lab-kernel/iesKeywordMigration.test.js
 ```
 
-The replacement page delegates two-parent ordered composition to `composeReferencePair`, fixes the approved geometry and operating policy, and labels the returned candidate non-authoritative until fresh authority, approval and sealing occur. Assembly identity, ambient, emergency, EWIS and shared overhead remain unresolved.
+The correction removes only the stale Main Bench assertion for an editable `sysTa` ambient write and literal dependence on the retired `canonicalKeywordRows(...)` helper call shape. It retains the exact ordered 16-keyword profile, stale/alias/supplementary rejection, committed-contract consumption, sealed-reference ownership and non-editability of `_INTERNAL_AMBIENT_TA_C`, and all generator, merge, summary, project-adapter and project-builder vocabulary guards.
 
-The candidate cannot be generated directly. Project materialisation requires a separately supplied freshly sealed MERGED DTO and delegates exclusively to `buildProjectIes`. The offline unapproved fixture corpus is not elevated to sealed authority.
+No production module or bench implementation changed. LAB-033 remained incomplete, unstaged and unpushed throughout the correction.
 
 ## Validation evidence
 
-- Focused changed-file `lab-ies` execution for the LAB-032 merge composition file: 255/255 passed.
-- Independent full `lab-ies` gate: 255/255 passed.
-- Documentation reconciliation full `lab-ies` gate: 255/255 passed.
+- Full `lab-ies` execution before the corrective checkpoint: 255/255 passed.
+- Gated corrective checkpoint execution: 255/255 passed.
+- Post-correction LAB-033 full `lab-ies` gate: 255/255 passed.
 - Failed, cancelled, skipped and todo counts were zero.
 
 ## Git and protected worktree state
 
-The feature parcel was staged as exactly the one authorised merge-composition file, committed and pushed.
+The corrective parcel was staged as exactly the one authorised migration-test file, committed and pushed separately from lane documentation.
 
 The protected working-tree state after documentation closeout must remain:
 
 - staged: 0;
 - modified: 1 — only the unstaged `Recorded branch HEAD` synchronisation marker in `LANE_STATE.md`;
-- untracked: 10;
+- untracked: 9;
 - deleted: 0.
 
-The 10 protected untracked paths remain exactly those recorded in `LANE_STATE.md`. In particular, these explicitly non-queued paths remain untouched:
+The 9 protected untracked paths remain exactly those recorded in `LANE_STATE.md`. In particular, these explicitly non-queued paths remain untouched:
 
 ```text
 README.zip
@@ -96,8 +96,9 @@ tests/selectorCascadeCorrectness.test.js
 - `LAB-030-emergency-surface`: `done` and confirmed on origin.
 - `LAB-031-project-builder-surface`: `done` and confirmed on origin.
 - `LAB-032-merge-composition-surface`: `done` and confirmed on origin.
-- LAB-032 focused, independent and documentation-reconciliation executions: 255/255 passed.
-- `LAB-033-main-lab-bench-surface`: `ready`.
+- `LAB-032A-canonical-keyword-migration-guard-correction`: `done` and confirmed on origin.
+- Correction and gated checkpoint executions: 255/255 passed; post-correction LAB-033 full gate: 255/255 passed.
+- `LAB-033-main-lab-bench-surface`: `ready`, incomplete, unstaged and unpushed.
 - Ready items: exactly one — LAB-033.
 
 Program reported gate 45/45 passed, the approval decision committed and pushed, and its tree clean. No parallel or combined implementation is authorised.
@@ -124,9 +125,11 @@ LAB-031 is complete as a thin browser consumer of the committed project generato
 
 LAB-032 is complete as an ordered, non-authoritative composition surface. It creates no allocation, approval, seal or assembly-verification outcome and requires a separate freshly sealed MERGED DTO before project materialisation.
 
+LAB-032A is complete as the approved test-only canonical-keyword migration guard correction. It changed no production behaviour, preserved sealed-reference ownership of internal ambient, and leaves the final cross-cutting keyword-guard parcel queued until LAB-033 is committed.
+
 LAB-017 remains governed by its approved version-1 envelope. Program retains all production allocation, live source reading, hosting, routing, persistence, authentication, CRM integration, deployment and endpoint ownership.
 
-The next safe action is a fresh standing-worker run beginning with LAB-033. This run stops after stale-state reconciliation; no seam approval or human observation is required before LAB-033's exact one-file parcel.
+The next safe action is LAB-033 as the sole ready item. No seam approval or human observation is required before its exact one-file parcel, and the final cross-cutting keyword-guard parcel must remain queued until LAB-033 is committed.
 
 ## LAB-017 immutable completion receipt
 

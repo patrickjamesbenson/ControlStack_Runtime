@@ -569,6 +569,26 @@ Evidence: `8ece3f36622fe1e0817aff9ecef42f0755218d3c`, confirmed on origin. The s
 
 Evidence: `dec45ac63c12cfcf6f9aec256323ed02eee25b62`, confirmed on origin. The surface delegates ordered two-parent composition to `composeReferencePair`, keeps the result explicitly non-authoritative with assembly values unresolved, and requires a separately supplied freshly sealed MERGED DTO before delegating project materialisation to `buildProjectIes`.
 
+### Q-22A Canonical keyword migration guard correction
+- id: LAB-032A-canonical-keyword-migration-guard-correction
+- objective: Correct the stale test-only Main Bench keyword assertions before LAB-033 without changing production behaviour.
+- authorised files:
+  - `tests/lab-kernel/iesKeywordMigration.test.js`
+- approval: Program & Integrate approved the bounded correction under `docs(program): approve Lab keyword migration correction`; Program gate passed 45/45 and the decision was committed and pushed.
+- prohibitions:
+  - no production module, bench, authority, sealed-reference, Selector, Runtime, Engine or Program implementation changes;
+  - no weakening of the exact ordered 16-keyword contract;
+  - no acceptance of `_AMBIENT_TA_C`, aliases or supplementary keywords;
+  - no removal of generator, merge, summary, project-adapter or project-builder vocabulary guards.
+- acceptance: The test removes only the retired editable Main Bench ambient and helper-shape assumptions, requires the Main Bench to consume the committed canonical keyword contract, keeps `_INTERNAL_AMBIENT_TA_C` sealed-reference-owned and non-editable, and preserves every other canonical-vocabulary boundary. Full `lab-ies` passes and exactly the one authorised test file is committed and pushed separately.
+- gate: lab-ies
+- depends on: LAB-032-merge-composition-surface
+- on success next: LAB-033-main-lab-bench-surface
+- seam change: approved bounded test correction
+- status: done
+
+Evidence: `9633f1cd6634844f55f13a8d2d46908182187447`, confirmed on origin. The one-file correction removed only the retired editable Main Bench ambient and helper-shape assertions while retaining the exact ordered 16-keyword contract, stale/alias/supplementary rejection, sealed-reference ambient ownership and all generator, merge, summary, project-adapter and builder guards. Full and gated executions passed 255/255.
+
 ### Q-23 Main Lab bench surface
 - id: LAB-033-main-lab-bench-surface
 - objective: Checkpoint the primary Lab bench as a non-authoritative workflow surface over committed parse, normalise, polar, reference and generation modules.
@@ -583,7 +603,7 @@ Evidence: `dec45ac63c12cfcf6f9aec256323ed02eee25b62`, confirmed on origin. The s
   - no changes to imported modules, fixtures or shared CSS.
 - acceptance: The surface delegates each operation to committed modules, keeps working state non-authoritative, uses the canonical polar and 16-keyword profile, separates preview/download from authority sealing, and stops on any behaviour that cannot be reconciled within this single surface. Full `lab-ies` passes and exactly the authorised file is committed as `lab: checkpoint main Lab bench surface` and pushed only to the lane branch.
 - gate: lab-ies
-- depends on: LAB-013-polar-renderer, LAB-017-reference-resolver-contract, LAB-024-resolver-fixture-corpus
+- depends on: LAB-013-polar-renderer, LAB-017-reference-resolver-contract, LAB-024-resolver-fixture-corpus, LAB-032A-canonical-keyword-migration-guard-correction
 - on success next: LAB-034-legacy-labbench-classification
 - seam change: no
 - status: ready

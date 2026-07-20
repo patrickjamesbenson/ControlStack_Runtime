@@ -13,11 +13,11 @@ Current repository evidence overrides stale historical statements.
 - Root: `C:\ControlStack_Worktrees\code-pilot-lab`
 - Branch: `lane/code-pilot-lab`
 - Gate: `lab-ies`
-- Recorded branch HEAD: `e7fdd5a5506a293eb668dad4b3f79e12e05ad38c`
+- Recorded branch HEAD: `9633f1cd6634844f55f13a8d2d46908182187447`
 - Branch-HEAD guard checkpoint: `6d34e500d407d5335e5eebb317636a67a5e98618`
-- Starting HEAD for LAB-032: `e7fdd5a5506a293eb668dad4b3f79e12e05ad38c`
-- Completed feature HEAD: `dec45ac63c12cfcf6f9aec256323ed02eee25b62`
-- Feature subject: `lab: checkpoint merge composition surface`
+- Starting HEAD for the canonical-keyword guard correction: `e466b1a78bf6bd228e154da6c743a0597bbec07b`
+- Completed feature HEAD: `9633f1cd6634844f55f13a8d2d46908182187447`
+- Feature subject: `test(lab): correct canonical keyword migration guard`
 - Feature push: confirmed on origin `lane/code-pilot-lab`
 
 ## Branch-HEAD synchronisation invariant
@@ -59,7 +59,29 @@ Before any queue item is selected, a worker must compare `Recorded branch HEAD` 
 - Human-observation acceptance cannot be closed from repository evidence. The item remains incomplete and the worker supplies exact `NEEDS YOU` steps.
 - Orchestrator review occurs at seam, human-observation and five-parcel/stop boundaries rather than after each routine parcel.
 
-## Latest completed parcel — LAB-032
+## Latest completed corrective parcel — LAB-032A
+
+Queue item `LAB-032A-canonical-keyword-migration-guard-correction` is complete.
+
+Exactly this one authorised file was changed and committed:
+
+```text
+tests/lab-kernel/iesKeywordMigration.test.js
+```
+
+Verified outcome:
+
+- the stale Main Bench requirement for an editable `sysTa` ambient write was removed;
+- literal dependence on the retired `canonicalKeywordRows(...)` helper call shape was removed;
+- the exact ordered 16-keyword profile remains enforced;
+- stale `_AMBIENT_TA_C`, `_EMERGENCY_CAPABLE` alias and supplementary keyword rejection remain explicit;
+- the Main Bench must consume the committed canonical keyword contract;
+- `_INTERNAL_AMBIENT_TA_C` remains sealed-reference-owned and no editable Main Bench ambient input or project field is accepted;
+- generator, merge, summary, project-adapter and project-builder canonical-vocabulary guards remain active;
+- no production module, bench implementation, authority contract, sealed-reference schema, Selector, Runtime, Engine or Program implementation changed;
+- full and gated executions passed 255/255 and the exact one-file checkpoint is confirmed on origin.
+
+## Previous completed parcel — LAB-032
 
 Queue item `LAB-032-merge-composition-surface` is complete.
 
@@ -463,9 +485,9 @@ Verified outcome:
 
 The connected app exposes the fixed `lab-ies` gate as the available changed-file and full validation path.
 
-- Focused changed-file execution for the LAB-032 merge composition surface: 255 tests, 255 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
-- Independent full `lab-ies` gate: 255 tests, 255 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
-- Documentation reconciliation full `lab-ies` gate: 255 tests, 255 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
+- Full `lab-ies` execution for the canonical-keyword migration guard correction: 255 tests, 255 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
+- Gated corrective checkpoint execution: 255 tests, 255 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
+- LAB-033 post-correction full gate: 255 tests, 255 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
 
 ## Protected final Git state
 
@@ -473,7 +495,7 @@ The protected working-tree state after documentation closeout is:
 
 - staged: 0;
 - modified: 1 — only the unstaged `Recorded branch HEAD` synchronisation marker in this file;
-- untracked: 10;
+- untracked: 9;
 - deleted: 0.
 
 Protected untracked paths:
@@ -488,7 +510,6 @@ packages/lab-kernel/ies-toolkit/labbench.html
 packages/lab-kernel/ies-toolkit/selector_stub.html
 scripts/clear_chaff.ps1
 serve.mjs
-tests/lab-kernel/iesKeywordMigration.test.js
 ```
 
 The explicitly non-queued paths remain untouched. The Selector-owned leak paths remain absent from the dirty inventory and were not touched:
@@ -533,7 +554,8 @@ tests/selectorCascadeCorrectness.test.js
 - LAB-030 is complete and confirmed on origin as the Lab-only emergency selection surface.
 - LAB-031 is complete and confirmed on origin as the Lab-only project IES builder surface.
 - LAB-032 is complete and confirmed on origin as the Lab-only ordered merge-composition surface.
-- Focused, independent and documentation-reconciliation LAB-032 executions passed 255/255.
+- LAB-032A is complete and confirmed on origin as the approved one-file canonical-keyword migration guard correction.
+- The correction and gated checkpoint executions passed 255/255, and the unchanged LAB-033 bench now passes the full gate 255/255.
 - LAB-033 is the single active `ready` parcel.
 - No parallel or combined implementation is authorised.
 - The earlier LAB-018 approval hold remains superseded.
@@ -563,10 +585,11 @@ tests/selectorCascadeCorrectness.test.js
 - `LAB-030-emergency-surface`: done.
 - `LAB-031-project-builder-surface`: done.
 - `LAB-032-merge-composition-surface`: done.
+- `LAB-032A-canonical-keyword-migration-guard-correction`: done.
 - Next ordered item: `LAB-033-main-lab-bench-surface`.
 - Resulting status: `ready`.
 - Ready items: exactly one — LAB-033.
 - Seam approval required: no.
 - Human observation required before implementation: no.
 
-LAB-032 is complete. LAB-033 is ordered as the single active parcel for the next standing-worker run because this run stops at stale-state reconciliation.
+LAB-032A is complete. LAB-033 is restored as the single active ready parcel after the approved one-file test correction; its bench remains incomplete, unstaged and unpushed.

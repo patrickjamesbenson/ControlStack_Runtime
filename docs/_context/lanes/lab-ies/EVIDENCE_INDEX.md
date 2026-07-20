@@ -6,6 +6,45 @@
 - Historical handoff content is retained as reported context unless freshly reverified.
 - Test output proves only the behaviour exercised by the named tests; low-level merge tests do not by themselves prove completion of the final governed merge.
 
+## Canonical-keyword migration guard correction before LAB-033 — 2026-07-20
+
+### Approval and exact scope
+
+Program & Integrate approved one test-only correction under `docs(program): approve Lab keyword migration correction`; Program gate passed 45/45 and the decision was committed and pushed.
+
+Exactly one implementation file was authorised and committed:
+
+```text
+tests/lab-kernel/iesKeywordMigration.test.js
+```
+
+The Main Bench implementation remained incomplete, unstaged and unpushed throughout the correction.
+
+### Corrected proof boundary
+
+The corrected guard:
+
+- removes the stale requirement for the retired editable Main Bench `sysTa` ambient write;
+- removes literal dependence on the retired `canonicalKeywordRows(...)` helper call shape;
+- still proves the exact ordered 16-keyword profile;
+- explicitly rejects `_AMBIENT_TA_C`, `_EMERGENCY_CAPABLE` and supplementary keywords;
+- requires the Main Bench to consume the committed canonical keyword contract;
+- proves `_INTERNAL_AMBIENT_TA_C` remains sealed-reference-owned and that the Main Bench exposes no editable ambient input or project field;
+- retains generator, merge, summary, project-adapter and project-builder canonical-vocabulary checks.
+
+No production module, bench implementation, authority contract, sealed-reference schema, Selector, Runtime, Engine or Program implementation changed.
+
+### Gate and checkpoint evidence
+
+- pre-checkpoint full `lab-ies` gate: 255/255 passed;
+- gated corrective checkpoint execution: 255/255 passed;
+- corrective checkpoint: `9633f1cd6634844f55f13a8d2d46908182187447`;
+- subject: `test(lab): correct canonical keyword migration guard`;
+- push: confirmed on origin `lane/code-pilot-lab`;
+- post-correction LAB-033 full gate: 255/255 passed;
+- LAB-033 is restored as the sole ready item;
+- the final cross-cutting keyword-guard parcel remains queued until after LAB-033 is committed.
+
 ## Stable standing-role prompt authority — 2026-07-20
 
 ### Durability change
