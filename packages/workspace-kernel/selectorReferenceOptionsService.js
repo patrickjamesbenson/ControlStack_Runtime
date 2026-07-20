@@ -3705,7 +3705,7 @@ function directFieldRequiresSupport(fieldKey) {
 }
 
 function indirectFieldRequiresSupport(fieldKey) {
-  return ["opticIndirect", "indirectOpticVar1", "indirectOpticVar2", "indirectMatchDirect", "targetLmPerMIndirect", "cctCriIndirect", "controlTypeIndirect"].includes(fieldKey);
+  return ["indirectCapability", "opticIndirect", "indirectOpticVar1", "indirectOpticVar2", "indirectMatchDirect", "targetLmPerMIndirect", "cctCriIndirect", "controlTypeIndirect"].includes(fieldKey);
 }
 
 function upstreamDirectSupportState(records = [], constraints = {}) {

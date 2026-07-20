@@ -424,6 +424,9 @@ test("DNX60 direct-only suppresses indirect optics while DNX60 Beam D/I keeps bo
   const directOnlyConstraints = { system: "DNX 60 Direct" };
   const directOnly = deriveSelectorReferenceOptionsFromSnapshot(snapshot, { source: sourceReady(), constraints: directOnlyConstraints });
 
+  assert.equal(option(directOnly, "directCapability", "direct-supported").status, "auto-consequence");
+  assert.equal(option(directOnly, "indirectCapability", "indirect-supported").status, "blocked");
+  assert.deepEqual(compatibleLabels(workflowField(directOnly, "indirectCapability")), []);
   assert.equal(option(directOnly, "directOpticVar1", "60|Opal").status, "available");
   assert.equal(option(directOnly, "indirectOpticVar1", "60|Rope").status, "blocked");
   const directOnlyIndirect = viewModelField(directOnly, "indirectOpticVar1", directOnlyConstraints);
@@ -433,6 +436,9 @@ test("DNX60 direct-only suppresses indirect optics while DNX60 Beam D/I keeps bo
 
   const beamDiConstraints = { system: "DNX 60 Beam D/I" };
   const beamDi = deriveSelectorReferenceOptionsFromSnapshot(snapshot, { source: sourceReady(), constraints: beamDiConstraints });
+  assert.equal(option(beamDi, "directCapability", "direct-supported").status, "auto-consequence");
+  assert.equal(option(beamDi, "indirectCapability", "indirect-supported").status, "auto-consequence");
+  assert.deepEqual(compatibleLabels(workflowField(beamDi, "indirectCapability")), ["Indirect supported"]);
   assert.equal(option(beamDi, "directOpticVar1", "60|Opal").status, "available");
   assert.equal(option(beamDi, "indirectOpticVar1", "60|Rope").status, "available");
   assert.deepEqual(primaryOpticVar1Controls(beamDi, beamDiConstraints), ["directOpticVar1", "indirectOpticVar1"]);
