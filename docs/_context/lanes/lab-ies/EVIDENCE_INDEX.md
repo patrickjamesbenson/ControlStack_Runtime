@@ -6,6 +6,24 @@
 - Historical handoff content is retained as reported context unless freshly reverified.
 - Test output proves only the behaviour exercised by the named tests; low-level merge tests do not by themselves prove completion of the final governed merge.
 
+## LAB-040 corrected Lab thermal working projection — 2026-07-21
+
+### Scope and result
+
+Exactly the Lab adapter module and its focused test were changed. The Lab projection advanced to version 2 and now exposes a bounded `thermalEvidence` object containing the selected optic BOM identity, measured reference room, absolute reference internal, measured rise, opaque evidence reference and `authorityState: null`.
+
+Verified evidence:
+
+- exact triplet consistency is revalidated at the adapter boundary;
+- missing optic reference identity adds `thermal_evidence_reference_unbound`;
+- missing source evidence adds `thermal_evidence_source_unresolved`;
+- a supplied sealed optic identity never promotes source evidence to accepted authority;
+- gear-tray and no-base paths expose no optic thermal evidence;
+- no user-specific derived temperature, curve lookup, clamp, board temperature or verified lm/m exists;
+- full `lab-ies` passed 259/259;
+- the exact two-file feature checkpoint was pushed;
+- LAB-041 is the sole next ready item.
+
 ## LAB-039 corrected component thermal projection — 2026-07-21
 
 ### Scope and result

@@ -753,7 +753,9 @@ Completion evidence: The component catalogue schema version 2 was committed in t
 - depends on: LAB-023-nvb-lab-adapter, LAB-038-nvb-resolution-thermal-semantics-v2
 - on success next: LAB-041-component-library-thermal-labels
 - seam change: yes
-- status: ready
+- status: done
+
+Completion evidence: The Lab working projection schema version 2 was committed in the exact adapter module/test scope as `lab: checkpoint NVB Lab thermal projection v2`, pushed to the lane branch, and passed 259/259. The projection carries the exact measured triplet and opaque evidence reference, keeps `authorityState` null, adds explicit unresolved blockers for missing optic identity or evidence, revalidates triplet consistency, and emits no derived temperature, lookup, clamp, board temperature or verified lm/m. LAB-041 is now the sole ready item.
 
 ### Q-31 Corrected component-library thermal labels
 - id: LAB-041-component-library-thermal-labels
@@ -771,7 +773,7 @@ Completion evidence: The component catalogue schema version 2 was committed in t
 - depends on: LAB-025-component-library-surface, LAB-039-component-thermal-semantics-v2
 - on success next: LAB-042-thermal-semantics-guard
 - seam change: no after envelope approval
-- status: blocked
+- status: ready
 
 ### Q-32 Cross-cutting corrected thermal semantics guard
 - id: LAB-042-thermal-semantics-guard

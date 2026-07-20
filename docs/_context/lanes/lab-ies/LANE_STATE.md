@@ -13,11 +13,11 @@ Current repository evidence overrides stale historical statements.
 - Root: `C:\ControlStack_Worktrees\code-pilot-lab`
 - Branch: `lane/code-pilot-lab`
 - Gate: `lab-ies`
-- Recorded branch HEAD: `a35f4e3ff5cec302785ecdc9d30fef241b494161`
+- Recorded branch HEAD: `73b06684f66a1a4f5bce3df5558bc7bad3d26327`
 - Branch-HEAD guard checkpoint: `6d34e500d407d5335e5eebb317636a67a5e98618`
-- Starting HEAD for LAB-039: `48f24c9774ff3fe3fe2343b32be6cc762101336a`
-- Completed feature HEAD: `a35f4e3ff5cec302785ecdc9d30fef241b494161`
-- Feature subject: `lab: checkpoint component thermal semantics v2`
+- Starting HEAD for LAB-040: `2ee853b0bf17b171d16f8e2087850d7f116876d5`
+- Completed feature HEAD: `73b06684f66a1a4f5bce3df5558bc7bad3d26327`
+- Feature subject: `lab: checkpoint NVB Lab thermal projection v2`
 - Feature push: confirmed on origin `lane/code-pilot-lab`
 
 ## Branch-HEAD synchronisation invariant
@@ -59,7 +59,29 @@ Before any queue item is selected, a worker must compare `Recorded branch HEAD` 
 - Human-observation acceptance cannot be closed from repository evidence. The item remains incomplete and the worker supplies exact `NEEDS YOU` steps.
 - Orchestrator review occurs at seam, human-observation and five-parcel/stop boundaries rather than after each routine parcel.
 
-## Latest completed parcel — LAB-039
+## Latest completed parcel — LAB-040
+
+Queue item `LAB-040-nvb-lab-thermal-projection-v2` is complete.
+
+Exactly these two authorised files were committed:
+
+```text
+packages/lab-kernel/ies-toolkit/nvbLabAdapter.js
+tests/lab-kernel/nvbLabAdapter.test.js
+```
+
+Verified outcome:
+
+- Lab projection schema version 2 carries the corrected measured triplet and opaque evidence reference;
+- `authorityState` remains exactly null;
+- missing optic identity or evidence remains explicit in `unresolved`;
+- exact triplet consistency is revalidated;
+- a sealed optic identity does not promote source evidence;
+- no runtime-derived, lookup, clamp, board-temperature or verified lm/m value exists;
+- the exact two-file checkpoint passed 259/259 and is confirmed on origin;
+- LAB-041 is the sole ready item.
+
+## Previous completed parcel — LAB-039
 
 Queue item `LAB-039-component-thermal-semantics-v2` is complete.
 
@@ -759,13 +781,13 @@ tests/selectorCascadeCorrectness.test.js
 - `LAB-037-keyword-migration-guard`: done.
 - `LAB-038-nvb-resolution-thermal-semantics-v2`: done under approved envelope version 2.
 - `LAB-039-component-thermal-semantics-v2`: done.
-- `LAB-040-nvb-lab-thermal-projection-v2`: ready.
-- `LAB-041-component-library-thermal-labels`: approved and sequence-blocked pending LAB-040 completion.
-- `LAB-042-thermal-semantics-guard`: approved and sequence-blocked pending LAB-040 and LAB-041 completion.
-- Next ordered item: `LAB-040-nvb-lab-thermal-projection-v2`.
+- `LAB-040-nvb-lab-thermal-projection-v2`: done.
+- `LAB-041-component-library-thermal-labels`: ready.
+- `LAB-042-thermal-semantics-guard`: approved and sequence-blocked pending LAB-041 completion.
+- Next ordered item: `LAB-041-component-library-thermal-labels`.
 - Resulting status: ready.
-- Ready items: exactly one — LAB-040.
+- Ready items: exactly one — LAB-041.
 - Seam approval required: no — Program & Integrate approved version 2.
 - Human observation required before implementation: no.
 
-LAB-039 is complete. LAB-040 is the sole ready parcel for the standing worker.
+LAB-040 is complete. LAB-041 is the sole ready parcel for the standing worker.
