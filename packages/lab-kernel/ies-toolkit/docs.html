@@ -1,0 +1,194 @@
+<!doctype html>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ControlStack Lab — Document Register</title>
+<link rel="stylesheet" href="./lab.css" />
+<style>
+  .statusbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 12px}
+  .notice{border:1px solid var(--border);border-radius:var(--r-md);background:#fff;padding:10px 12px;font-size:12px;line-height:1.5;margin-bottom:12px}
+  .notice strong{color:var(--orange)}
+  table.reg{width:100%;border-collapse:collapse;font-size:12px}
+  table.reg th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);padding:7px 8px;border-bottom:1px solid var(--border)}
+  table.reg td{padding:8px;border-bottom:1px solid var(--border-light);vertical-align:top}
+  tr.docrow{cursor:pointer} tr.docrow.on{background:var(--orange-wash)}
+  .mono{font-family:var(--mono);font-size:10.5px}
+  .chip{display:inline-block;font-size:10.5px;background:var(--soft);border:1px solid var(--border-light);border-radius:10px;padding:1px 8px;margin:2px 4px 0 0}
+  .source-ok{color:#127a41;font-weight:700}.source-unresolved{color:#8a6010;font-weight:700}
+  .targets{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:7px 12px;margin-top:8px}
+  .targets label{display:flex;align-items:flex-start;gap:7px;background:#fff;border:1px solid var(--border-light);border-radius:var(--r-md);padding:8px 10px;font-size:12px}
+  .artifact{display:inline-block;margin-top:4px;font-size:11px}
+  .unavailable{display:inline-block;margin-top:4px;color:var(--muted);font-size:11px}
+  .rowline{display:flex;gap:10px;align-items:end;flex-wrap:wrap}.rowline>div{min-width:180px;flex:1}
+  .empty{padding:14px;border:1px dashed var(--border);border-radius:var(--r-md);color:var(--muted);font-size:12px}
+</style>
+<div class="wrap">
+  <div class="brandhead">
+    <div class="mark">CS</div>
+    <div><div class="bn">CONTROLSTACK</div><div class="bs">Lab / IES</div></div>
+    <div class="pg"><div class="pgt">Document register</div><div class="pgs">Lab-internal · immutable in-memory working state</div></div>
+  </div>
+
+  <div class="statusbar">
+    <span class="pill grey">offline demo</span>
+    <span class="pill grey">unapproved</span>
+    <span class="pill grey">not persistent</span>
+    <span class="pill grey">no upload route</span>
+  </div>
+
+  <div class="notice"><strong>Boundary:</strong> “accepted” below means accepted into this offline demo register only. It does not mean technically verified, approved, sealed, certified or production-ready. Refreshing this page clears every document and association.</div>
+
+  <div class="card">
+    <h2>1 — Working document register</h2>
+    <div style="margin-bottom:10px"><button class="btn primary" id="loadSamples">Load committed demo sources</button> <button class="btn ghost" id="clearAll">Clear working state</button> <span id="actionMsg" class="muted" style="font-size:12px"></span></div>
+    <table class="reg">
+      <thead><tr><th></th><th>Document</th><th>Type</th><th>Source status</th><th>Resolver</th><th>Associations</th></tr></thead>
+      <tbody id="regBody"></tbody>
+    </table>
+    <div id="regEmpty" class="empty">No working documents. Load the committed demo sources or add one unresolved entered record below.</div>
+  </div>
+
+  <div class="card">
+    <h2>2 — Add an unresolved entered record</h2>
+    <p class="sub" style="margin:-4px 0 10px">This creates metadata only in browser memory. It does not upload, hash, seal or store a file.</p>
+    <div class="rowline">
+      <div><label>Caller-supplied document ID</label><input id="newId" placeholder="DOC-MANUAL-001" /></div>
+      <div><label>Title</label><input id="newTitle" placeholder="Unresolved supplier note" /></div>
+      <div><label>Document type</label><input id="newType" placeholder="datasheet" /></div>
+      <div><button class="btn primary" id="addEntered">Add unresolved record</button></div>
+    </div>
+    <div id="entryMsg" class="muted" style="font-size:12px;margin-top:8px"></div>
+  </div>
+
+  <div class="card" id="attachCard" style="display:none">
+    <h2>3 — Associate <span id="selectedTitle" class="mono"></span></h2>
+    <p class="sub" style="margin:-4px 0 8px">Association is a many-to-many in-memory link. Unlinking never deletes the document record or source evidence.</p>
+    <div class="targets" id="targets"></div>
+    <div style="margin-top:10px"><button class="btn primary" id="saveLinks">Apply working associations</button> <span id="linkMsg" class="muted" style="font-size:12px"></span></div>
+  </div>
+</div>
+
+<script type="module">
+const $ = (id) => document.getElementById(id);
+const esc = (value) => String(value ?? "").replace(/[&<>\"]/g, (char) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[char]));
+const DR = await import("./docRegister.js");
+
+const TARGETS = Object.freeze([
+  Object.freeze({ entityId:"CHIP-LM301H", label:"LED chip · Samsung LM301H" }),
+  Object.freeze({ entityId:"BRD-DNX80", label:"Board · DNX-80" }),
+  Object.freeze({ entityId:"DRV-TRIDONIC-825", label:"Driver · Tridonic LC55 family" }),
+  Object.freeze({ entityId:"ZC-EM-SMART-50", label:"Emergency converter · ZC-EM-SMART-50" }),
+  Object.freeze({ entityId:"NVB-REF-OPT-000123", label:"Offline optic reference fixture" }),
+  Object.freeze({ entityId:"NVB-REF-GT-000045", label:"Offline gear-tray reference fixture" }),
+]);
+
+const SAMPLE_DOCUMENTS = Object.freeze([
+  Object.freeze({ documentId:"DOC-SRC-DNX80", documentType:"datasheet", title:"DNX-80 board datasheet — offline demo source", sourceRef:"/s/DNX-80_board_datasheet.txt", contentSha256:null, sourceStatus:"accepted", artifact:"./lab/sources/DNX-80_board_datasheet.txt" }),
+  Object.freeze({ documentId:"DOC-SRC-LM301H-DS", documentType:"datasheet", title:"Samsung LM301H datasheet — offline demo source", sourceRef:"/s/Samsung_LM301H_datasheet.txt", contentSha256:null, sourceStatus:"accepted", artifact:"./lab/sources/Samsung_LM301H_datasheet.txt" }),
+  Object.freeze({ documentId:"DOC-SRC-LM301H-LM80", documentType:"LM-80", title:"Samsung LM301H LM-80 — offline demo source", sourceRef:"/s/Samsung_LM301H_LM-80.txt", contentSha256:null, sourceStatus:"accepted", artifact:"./lab/sources/Samsung_LM301H_LM-80.txt" }),
+  Object.freeze({ documentId:"DOC-SRC-LM301H-TM21", documentType:"TM-21", title:"Samsung LM301H TM-21 — offline demo source", sourceRef:"/s/Samsung_LM301H_TM-21.txt", contentSha256:null, sourceStatus:"accepted", artifact:"./lab/sources/Samsung_LM301H_TM-21.txt" }),
+  Object.freeze({ documentId:"DOC-SRC-TRIDONIC", documentType:"datasheet", title:"Tridonic LC55 datasheet — offline demo source", sourceRef:"/s/Tridonic_LC55_datasheet.txt", contentSha256:null, sourceStatus:"accepted", artifact:"./lab/sources/Tridonic_LC55_datasheet.txt" }),
+  Object.freeze({ documentId:"DOC-SRC-ZCEM", documentType:"datasheet", title:"ZC-EM-SMART-50 datasheet — offline demo source", sourceRef:"/s/zc-em-smart-50_datasheet.txt", contentSha256:null, sourceStatus:"accepted", artifact:"./lab/sources/zc-em-smart-50_datasheet.txt" }),
+  Object.freeze({ documentId:"DOC-SRC-EM-REPORT", documentType:"test report", title:"Emergency test report — offline demo source", sourceRef:"/s/Emergency_test_report.txt", contentSha256:null, sourceStatus:"accepted", artifact:"./lab/sources/Emergency_test_report.txt" }),
+  Object.freeze({ documentId:"DOC-SRC-EWIS-REPORT", documentType:"test report", title:"EWIS cartridge report — offline demo source", sourceRef:"/s/EWIS_cartridge_report.txt", contentSha256:null, sourceStatus:"accepted", artifact:"./lab/sources/EWIS_cartridge_report.txt" }),
+]);
+
+const ARTIFACT_BY_ID = new Map(SAMPLE_DOCUMENTS.map((document) => [document.documentId, document.artifact]));
+let state = DR.createDocumentRegisterState();
+let selectedId = null;
+
+function selectedDocument() {
+  return state.documents.find((document) => document.documentId === selectedId) || null;
+}
+
+function render() {
+  const documents = DR.listDocuments(state);
+  $("regEmpty").style.display = documents.length ? "none" : "";
+  $("regBody").innerHTML = documents.map((document) => {
+    const associations = DR.entitiesForDocument(state, document.documentId);
+    const artifact = ARTIFACT_BY_ID.get(document.documentId) || null;
+    const sourceClass = document.sourceStatus === "accepted" ? "source-ok" : "source-unresolved";
+    const sourceText = document.sourceStatus === "accepted" ? "accepted demo source · not verified" : "unresolved · no artefact supplied";
+    const artifactMarkup = artifact
+      ? `<a class="artifact" href="${esc(artifact)}" target="_blank" rel="noopener">open committed demo artefact ↗</a>`
+      : `<span class="unavailable">no clickable artefact</span>`;
+    return `<tr class="docrow ${selectedId === document.documentId ? "on" : ""}" data-id="${esc(document.documentId)}">
+      <td><input type="radio" name="docsel" ${selectedId === document.documentId ? "checked" : ""}/></td>
+      <td><strong>${esc(document.title)}</strong><br><span class="mono">${esc(document.documentId)}</span><br>${artifactMarkup}</td>
+      <td>${esc(document.documentType)}</td>
+      <td><span class="${sourceClass}">${esc(sourceText)}</span></td>
+      <td class="mono">${esc(document.sourceRef ?? "unresolved")}</td>
+      <td>${associations.map((entityId) => `<span class="chip">${esc(entityId)}</span>`).join("") || "<span class='muted'>none</span>"}</td>
+    </tr>`;
+  }).join("");
+  $("regBody").querySelectorAll("tr.docrow").forEach((row) => row.onclick = () => selectDocument(row.dataset.id));
+
+  const selected = selectedDocument();
+  $("attachCard").style.display = selected ? "" : "none";
+  if (!selected) return;
+  $("selectedTitle").textContent = selected.title;
+  const linked = new Set(DR.entitiesForDocument(state, selected.documentId));
+  $("targets").innerHTML = TARGETS.map((target) => `<label><input type="checkbox" data-entity="${esc(target.entityId)}" ${linked.has(target.entityId) ? "checked" : ""}/> <span><strong>${esc(target.label)}</strong><br><span class="mono">${esc(target.entityId)}</span></span></label>`).join("");
+}
+
+function selectDocument(documentId) {
+  selectedId = documentId;
+  $("linkMsg").textContent = "";
+  render();
+}
+
+function loadSamples() {
+  for (const sample of SAMPLE_DOCUMENTS) {
+    const { artifact, ...record } = sample;
+    const result = DR.registerDocument(state, record);
+    state = result.state;
+  }
+  $("actionMsg").textContent = "Committed offline demo sources loaded into browser memory.";
+  if (!selectedId && state.documents.length) selectedId = state.documents[0].documentId;
+  render();
+}
+
+$("loadSamples").onclick = loadSamples;
+$("clearAll").onclick = () => {
+  state = DR.createDocumentRegisterState();
+  selectedId = null;
+  $("actionMsg").textContent = "Working state cleared. Source files were not deleted.";
+  render();
+};
+
+$("addEntered").onclick = () => {
+  try {
+    const record = {
+      documentId: $("newId").value.trim(),
+      documentType: $("newType").value.trim(),
+      title: $("newTitle").value.trim(),
+      sourceRef: null,
+      contentSha256: null,
+      sourceStatus: "unresolved",
+    };
+    const result = DR.registerDocument(state, record);
+    state = result.state;
+    selectedId = result.document.documentId;
+    $("entryMsg").textContent = "Unresolved metadata record added in memory. No file was uploaded or stored.";
+    render();
+  } catch (error) {
+    $("entryMsg").textContent = `${error.name || "Error"}: ${error.message}`;
+  }
+};
+
+$("saveLinks").onclick = () => {
+  const document = selectedDocument();
+  if (!document) return;
+  const wanted = new Set([...$("targets").querySelectorAll("input[data-entity]:checked")].map((input) => input.dataset.entity));
+  const current = new Set(DR.entitiesForDocument(state, document.documentId));
+  for (const entityId of current) {
+    if (!wanted.has(entityId)) state = DR.unlinkDocument(state, { documentId: document.documentId, entityId });
+  }
+  for (const entityId of wanted) {
+    if (!current.has(entityId)) state = DR.linkDocument(state, { documentId: document.documentId, entityId });
+  }
+  $("linkMsg").textContent = "Working associations updated in memory only.";
+  render();
+};
+
+render();
+</script>

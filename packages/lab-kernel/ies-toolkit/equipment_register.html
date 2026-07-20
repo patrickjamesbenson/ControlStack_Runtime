@@ -1,0 +1,175 @@
+<!doctype html>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ControlStack Lab — Equipment Register</title>
+<link rel="stylesheet" href="./lab.css" />
+<style>
+  .statusbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 12px}
+  .notice{border:1px solid var(--border);border-radius:var(--r-md);background:#fff;padding:10px 12px;font-size:12px;line-height:1.5;margin-bottom:12px}
+  .notice strong{color:var(--orange)}
+  .sublbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#556;margin-bottom:6px}
+  .prodsum{font-size:12px;color:var(--muted);margin-left:6px}
+  .subtests{display:flex;gap:7px 12px;flex-wrap:wrap}.subtests label{font-size:12px;background:#fff;border:1px solid var(--border-light);border-radius:var(--r-md);padding:6px 8px}
+  .evidence{border:1px dashed var(--border);border-radius:var(--r-md);padding:8px 10px;margin:8px 0;font-size:12px;background:#fff}
+  .event{display:grid;grid-template-columns:100px 120px 1fr;gap:8px;padding:7px 0;border-bottom:1px solid var(--border-light);font-size:12px}
+  .event:last-child{border-bottom:0}.mono{font-family:var(--mono);font-size:10.5px}
+  .rowline{display:flex;gap:10px;align-items:end;flex-wrap:wrap}.rowline>div{min-width:170px;flex:1}
+  .entered{color:#8a6010;font-weight:700}.verified{color:#127a41;font-weight:700}.unresolved{color:#8a6010;font-weight:700}
+  .draft{white-space:pre-wrap;min-height:90px}
+</style>
+<div class="wrap">
+  <div class="brandhead">
+    <div class="mark">CS</div>
+    <div><div class="bn">CONTROLSTACK</div><div class="bs">Lab / IES</div></div>
+    <div class="pg"><div class="pgt">Equipment register</div><div class="pgs">Lab-internal · entered working state only</div></div>
+  </div>
+
+  <div class="statusbar">
+    <span class="pill grey">offline demo</span>
+    <span class="pill grey">unapproved</span>
+    <span class="pill grey">not persistent</span>
+    <span class="pill grey">no upload route</span>
+  </div>
+
+  <div class="notice"><strong>Evidence boundary:</strong> dates, NATA notes and capabilities shown here are entered demonstration claims unless a real evidence artefact is explicitly present. This surface does not verify calibration, approve equipment, book equipment, append a ledger or create a file. Refreshing clears every change.</div>
+
+  <div class="card">
+    <h2>Equipment working register</h2>
+    <p class="sub" style="margin:-4px 0 12px">Report capabilities are advisory working selections. They do not make a report available to Program or prove equipment is in calibration.</p>
+    <div id="equip"></div>
+  </div>
+
+  <div class="card">
+    <h2>Add entered equipment</h2>
+    <div class="rowline">
+      <div><label>Equipment ID <span class="muted">(xx-nn)</span></label><input id="newId" placeholder="ip-01" /></div>
+      <div><label>Name</label><input id="newName" placeholder="IP ingress test rig" /></div>
+      <div><label>Manufacturer</label><input id="newMaker" placeholder="Demo only" /></div>
+      <div><label>Entered next-due date</label><input id="newDue" type="date" /></div>
+      <div><button class="btn primary" id="addEquipment">Add to working register</button></div>
+    </div>
+    <div id="addMsg" class="muted" style="font-size:12px;margin-top:8px"></div>
+  </div>
+
+  <div class="card">
+    <h2>Log a working event</h2>
+    <p class="sub" style="margin:-4px 0 12px">This drafts text in browser memory only. It does not attach a document, create an artefact, update calibration authority or append <code>LEDGER.md</code>.</p>
+    <div class="rowline">
+      <div><label>Equipment</label><select id="eventEquipment"></select></div>
+      <div><label>Event type</label><select id="eventType"><option value="calibration">calibration claim</option><option value="reference-state">reference-state observation</option><option value="field-test">field-test observation</option><option value="anomaly">anomaly</option><option value="factsheet-update">factsheet update</option></select></div>
+      <div><label>Entered date</label><input id="eventDate" type="date" /></div>
+      <div><label>Entered next-due date</label><input id="eventDue" type="date" /></div>
+    </div>
+    <div style="margin-top:10px"><label>Note / observation</label><input id="eventNote" placeholder="what was observed or entered" /></div>
+    <div style="margin-top:10px"><button class="btn primary" id="draftEvent">Add event + draft ledger text</button></div>
+    <h2 style="margin:14px 0 8px">Unapproved draft</h2>
+    <pre id="draftOut" class="draft">— no draft —</pre>
+  </div>
+</div>
+
+<script type="module">
+const $ = (id) => document.getElementById(id);
+const esc = (value) => String(value ?? "").replace(/[&<>\"]/g, (char) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[char]));
+
+const REPORTS = Object.freeze({
+  photometric:"Photometry from IES",
+  colour:"Extended colour performance",
+  thermal:"Thermal",
+  electrical:"Extended electrical power",
+  battery_cold:"Extended emergency — cold",
+  battery_hot:"Extended emergency — hot",
+});
+
+const SEED_EQUIPMENT = Object.freeze([
+  Object.freeze({ id:"gp-01", name:"Goniophotometer", manufacturer:"unresolved", produces:["photometric"], nextDue:null, evidenceStatus:"unresolved", evidenceNote:"No calibration evidence artefact is committed for this equipment.", events:[Object.freeze({ date:"2026-04-12", type:"field-test observation", note:"Entered demo note: entrance aperture cleaning; no verified baseline comparison is attached." })] }),
+  Object.freeze({ id:"pm-01", name:"DC power meter", manufacturer:"unresolved", produces:["electrical"], nextDue:"2027-02-23", evidenceStatus:"unresolved", evidenceNote:"Entered NATA calibration claim only; certificate artefact is absent and therefore not clickable or verified.", events:[Object.freeze({ date:"2026-02-23", type:"calibration claim", note:"Entered demo claim: V ±0.02%, I ±0.05%. Evidence unresolved." })] }),
+  Object.freeze({ id:"sa-01", name:"Spectral analyser", manufacturer:"unresolved", produces:["colour"], nextDue:"2027-03-08", evidenceStatus:"unresolved", evidenceNote:"Entered NATA calibration claim only; certificate evidence is unresolved.", events:[Object.freeze({ date:"2026-03-08", type:"calibration claim", note:"Entered demo claim: wavelength ±0.5 nm. Evidence unresolved." })] }),
+  Object.freeze({ id:"tl-01", name:"Thermocouple logger", manufacturer:"unresolved", produces:["thermal","battery_cold","battery_hot"], nextDue:"2026-11-22", evidenceStatus:"unresolved", evidenceNote:"Entered calibration claim only; no certificate artefact is available.", events:[Object.freeze({ date:"2025-11-22", type:"calibration claim", note:"Entered demo claim: bath calibration −20 °C to +150 °C. Evidence unresolved." })] }),
+  Object.freeze({ id:"wm-01", name:"AC wattmeter", manufacturer:"unresolved", produces:["electrical"], nextDue:"2027-01-15", evidenceStatus:"unresolved", evidenceNote:"Entered calibration claim only; no certificate artefact is available.", events:[Object.freeze({ date:"2026-01-15", type:"calibration claim", note:"Entered demo claim: power ±0.1%. Evidence unresolved." })] }),
+]);
+
+let equipment = SEED_EQUIPMENT.map((item) => ({ ...item, produces:[...item.produces], events:item.events.map((event) => ({...event})) }));
+
+function enteredStatus(item) {
+  if (!item.nextDue) return "entered date unresolved";
+  return `entered next due ${item.nextDue} · not verified`;
+}
+
+function reportSummary(item) {
+  return item.produces.map((id) => REPORTS[id] || id).join(", ") || "none selected";
+}
+
+function render() {
+  $("equip").innerHTML = equipment.map((item) => {
+    const capabilities = Object.entries(REPORTS).map(([id, label]) => `<label><input type="checkbox" data-capability="${esc(item.id)}||${esc(id)}" ${item.produces.includes(id) ? "checked" : ""}/> ${esc(label)}</label>`).join("");
+    const events = item.events.length
+      ? item.events.map((event) => `<div class="event"><span class="mono">${esc(event.date || "date unresolved")}</span><span class="entered">${esc(event.type)}</span><span>${esc(event.note || "note unresolved")}</span></div>`).join("")
+      : `<div class="muted" style="font-size:12px">No working events.</div>`;
+    return `<details class="comp">
+      <summary><span class="id">${esc(item.id)}</span><span class="nm">${esc(item.name)}</span><span class="mk">by ${esc(item.manufacturer || "unresolved")}</span><span class="prodsum" data-summary="${esc(item.id)}">▸ ${esc(reportSummary(item))}</span><span class="pill amber" style="margin-left:auto">entered/demo · not verified</span></summary>
+      <div class="body">
+        <div class="sublbl">Advisory report capabilities</div>
+        <div class="subtests">${capabilities}</div>
+        <div class="evidence"><span class="unresolved">Evidence unresolved</span><br>${esc(item.evidenceNote)}<br><span class="mono">${esc(enteredStatus(item))}</span><br><span class="muted">No artefact link is shown because no committed evidence file exists.</span></div>
+        <div class="sublbl">Entered working events</div>
+        ${events}
+      </div>
+    </details>`;
+  }).join("");
+
+  $("equip").querySelectorAll("[data-capability]").forEach((checkbox) => checkbox.onchange = () => {
+    const [equipmentId, reportId] = checkbox.dataset.capability.split("||");
+    const item = equipment.find((entry) => entry.id === equipmentId);
+    if (!item) return;
+    if (checkbox.checked && !item.produces.includes(reportId)) item.produces.push(reportId);
+    if (!checkbox.checked) item.produces = item.produces.filter((id) => id !== reportId);
+    const summary = $("equip").querySelector(`[data-summary="${equipmentId}"]`);
+    if (summary) summary.textContent = `▸ ${reportSummary(item)}`;
+  });
+
+  $("eventEquipment").innerHTML = equipment.map((item) => `<option value="${esc(item.id)}">${esc(item.id)} · ${esc(item.name)}</option>`).join("");
+}
+
+$("addEquipment").onclick = () => {
+  const id = $("newId").value.trim().toLowerCase();
+  const name = $("newName").value.trim();
+  if (!/^[a-z]{2}-\d{2}$/.test(id)) {
+    $("addMsg").textContent = "ID must use xx-nn format, for example zz-99.";
+    return;
+  }
+  if (!name) {
+    $("addMsg").textContent = "Name is required.";
+    return;
+  }
+  if (equipment.some((item) => item.id === id)) {
+    $("addMsg").textContent = "That working equipment ID already exists.";
+    return;
+  }
+  equipment.push({
+    id,
+    name,
+    manufacturer:$("newMaker").value.trim() || "unresolved",
+    produces:[],
+    nextDue:$("newDue").value || null,
+    evidenceStatus:"unresolved",
+    evidenceNote:"User-entered browser-only record; no evidence artefact supplied.",
+    events:[],
+  });
+  $("addMsg").textContent = `${id} added to browser memory only.`;
+  render();
+};
+
+$("draftEvent").onclick = () => {
+  const item = equipment.find((entry) => entry.id === $("eventEquipment").value);
+  if (!item) return;
+  const date = $("eventDate").value || "date-unresolved";
+  const type = $("eventType").value;
+  const note = $("eventNote").value.trim() || "observation unresolved";
+  item.events.unshift({ date, type, note:`Entered browser-only event: ${note}` });
+  if (type === "calibration" && $("eventDue").value) item.nextDue = $("eventDue").value;
+  $("draftOut").textContent = `UNAPPROVED BROWSER DRAFT\n\n## ${date} — ${item.id} · ${type}\nStatus: entered/demo; evidence unresolved; not appended\n${note}${$("eventDue").value ? `\nEntered next due: ${$("eventDue").value}` : ""}\nArtefact: none supplied`;
+  render();
+};
+
+render();
+</script>
