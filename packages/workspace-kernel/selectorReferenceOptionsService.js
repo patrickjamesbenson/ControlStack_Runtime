@@ -3539,6 +3539,9 @@ function createFields({ bucket, records, constraints, cascadeConstraints = const
     if (!sourceReady) return createUnavailableField(field, "Selector Reference source is unavailable or not parseable.");
     if (!baseOptions.length) return createUnavailableField(field, `${field.label} is unavailable from current source and remains future mapped; no fake values emitted.`);
 
+    const exactIndirectCapabilitySupport = field.fieldKey === "indirectCapability"
+      ? upstreamIndirectSupportState(records, cascadeConstraints)
+      : { supported: true, checked: false, blockedBy: [] };
     const options = baseOptions.map((option) => {
       const selected = optionSelectedByValue(field.fieldKey, option, selectedValue);
       const visibility = optionStatusVisibility(option, selected);
@@ -3546,20 +3549,24 @@ function createFields({ bucket, records, constraints, cascadeConstraints = const
       const cascade = optionCascadeResult(field.fieldKey, option, records, cascadeConstraints);
       const policyBlock = mountCodePolicyBlock(field.fieldKey, option, records, cascadeConstraints);
       const orientationBlock = mountOrientationPolicyBlock(field.fieldKey, option, cascadeConstraints);
-      const compatible = visibility.blocked !== true && cascade.compatible && policyBlock.blocked !== true && orientationBlock.blocked !== true;
-      const blockedReason = visibility.blocked ? visibility.policy.blockedReason : policyBlock.reason || orientationBlock.reason || "Blocked by current manual constraints; shown rather than silently hidden.";
+      const compatible = visibility.blocked !== true && cascade.compatible && exactIndirectCapabilitySupport.supported && policyBlock.blocked !== true && orientationBlock.blocked !== true;
+      const blockedReason = visibility.blocked
+        ? visibility.policy.blockedReason
+        : policyBlock.reason || orientationBlock.reason || (!exactIndirectCapabilitySupport.supported
+          ? "Indirect capability is blocked because the exact selected System does not support indirect emission."
+          : "Blocked by current manual constraints; shown rather than silently hidden.");
       return {
         ...option,
         selected: Boolean(selected),
         status: compatible ? "available" : "blocked",
         blocked: !compatible,
         blockedReason: compatible ? "" : blockedReason,
-        blockedBy: compatible ? [] : [...visibility.blockedBy, ...(cascade.blockedBy || []), ...(policyBlock.blockedBy || []), ...(orientationBlock.blockedBy || [])],
+        blockedBy: compatible ? [] : [...visibility.blockedBy, ...(cascade.blockedBy || []), ...(exactIndirectCapabilitySupport.supported ? [] : exactIndirectCapabilitySupport.blockedBy), ...(policyBlock.blockedBy || []), ...(orientationBlock.blockedBy || [])],
         codePolicyIds: uniqueStrings([...optionCodePolicyIds(option), ...(policyBlock.codePolicyIds || []), ...(orientationBlock.codePolicyIds || [])]),
         codePolicyReason: option.codePolicyReason || policyBlock.codePolicyReason || orientationBlock.codePolicyReason || "",
         cascadeSource: cascade.cascadeSource || option.sourceTables || [],
-        relationshipStatus: visibility.blocked ? "blocked-by-status-policy" : policyBlock.blocked ? "blocked-by-code-policy" : orientationBlock.blocked ? "blocked-by-mount-orientation" : cascade.relationshipStatus,
-        relationshipMissingReason: visibility.blocked ? visibility.policy.blockedReason : policyBlock.blocked ? policyBlock.reason : orientationBlock.blocked ? orientationBlock.reason : cascade.relationshipMissingReason,
+        relationshipStatus: visibility.blocked ? "blocked-by-status-policy" : policyBlock.blocked ? "blocked-by-code-policy" : orientationBlock.blocked ? "blocked-by-mount-orientation" : !exactIndirectCapabilitySupport.supported ? "blocked-by-indirect-capability" : cascade.relationshipStatus,
+        relationshipMissingReason: visibility.blocked ? visibility.policy.blockedReason : policyBlock.blocked ? policyBlock.reason : orientationBlock.blocked ? orientationBlock.reason : !exactIndirectCapabilitySupport.supported ? "The exact selected System does not expose indirect capability." : cascade.relationshipMissingReason,
         compatibleWithCurrentConstraints: compatible,
         preservesManualConstraint: Boolean(selected),
         writes: false,

@@ -419,6 +419,19 @@ function identityCascadeSnapshot() {
   };
 }
 
+function liveDnx60ExactSystemSnapshot() {
+  return {
+    SYSTEM: [
+      { system: "60", system_variant_1: "Square", label: "DNX 60", emission: "Direct", approved: "yes" },
+      { system: "60", system_variant_1: "Beam", label: "DNX 60 Beam D/I", emission: "Both", approved: "yes" },
+    ],
+    OPTICS: [
+      { system: "60", optic_var_1: "Opal", emission_permission: "Direct", approved: "yes" },
+      { system: "60", optic_var_1: "Rope", emission_permission: "Indirect", approved: "yes" },
+    ],
+  };
+}
+
 test("DNX60 direct-only suppresses indirect optics while DNX60 Beam D/I keeps both paths", () => {
   const snapshot = identityCascadeSnapshot();
   const directOnlyConstraints = { system: "DNX 60 Direct" };
@@ -442,6 +455,42 @@ test("DNX60 direct-only suppresses indirect optics while DNX60 Beam D/I keeps bo
   assert.equal(option(beamDi, "directOpticVar1", "60|Opal").status, "available");
   assert.equal(option(beamDi, "indirectOpticVar1", "60|Rope").status, "available");
   assert.deepEqual(primaryOpticVar1Controls(beamDi, beamDiConstraints), ["directOpticVar1", "indirectOpticVar1"]);
+});
+
+test("live exact DNX 60 System identity does not recreate indirect support on the page", () => {
+  const snapshot = liveDnx60ExactSystemSnapshot();
+  const directOnlyConstraints = { system: "60|Square" };
+  const directOnly = deriveSelectorReferenceOptionsFromSnapshot(snapshot, { source: sourceReady(), constraints: directOnlyConstraints });
+  const directOnlyModel = selectorViewModelFor(directOnly, directOnlyConstraints);
+  const directOnlyCapability = viewModelField(directOnly, "indirectCapability", directOnlyConstraints);
+  const directOnlyFlatCapability = directOnly.fields.find((field) => field.fieldKey === "indirectCapability");
+  const directOnlyFlatOption = directOnlyFlatCapability?.options?.find((item) => item.value === "indirect-supported");
+
+  assert.equal(option(directOnly, "indirectCapability", "indirect-supported").status, "blocked");
+  assert.equal(directOnlyFlatCapability == null || directOnlyFlatCapability.status === "blocked", true);
+  assert.equal(directOnlyFlatOption == null || directOnlyFlatOption.status === "blocked", true);
+  assert.equal(directOnlyCapability.displayMode, "hidden-diagnostic");
+  assert.equal(directOnlyCapability.effectiveValue, "");
+  assert.notEqual(directOnlyCapability.effectiveLabel, "Indirect supported");
+  assert.equal(directOnlyModel.selectorSurface.autoConsequences.some((item) => item.fieldKey === "indirectCapability"), false);
+  assert.doesNotMatch(JSON.stringify(directOnlyModel.selectorSurface.payloadPreview), /Indirect supported|indirect-supported/);
+  assert.equal(option(directOnly, "directCapability", "direct-supported").status, "auto-consequence");
+  assert.equal(option(directOnly, "directOpticVar1", "60|Opal").status, "available");
+
+  const beamConstraints = { system: "60|Beam" };
+  const beam = deriveSelectorReferenceOptionsFromSnapshot(snapshot, { source: sourceReady(), constraints: beamConstraints });
+  const beamModel = selectorViewModelFor(beam, beamConstraints);
+  const beamCapability = viewModelField(beam, "indirectCapability", beamConstraints);
+  const beamFlatCapability = beam.fields.find((field) => field.fieldKey === "indirectCapability");
+  const beamFlatOption = beamFlatCapability?.options?.find((item) => item.value === "indirect-supported");
+
+  assert.equal(option(beam, "indirectCapability", "indirect-supported").status, "auto-consequence");
+  assert.equal(beamFlatCapability == null || beamFlatCapability.status === "available", true);
+  assert.equal(beamFlatOption == null || beamFlatOption.status === "available", true);
+  assert.equal(beamCapability.displayMode, "auto-chip");
+  assert.equal(beamCapability.effectiveValue, "indirect-supported");
+  assert.equal(beamModel.selectorSurface.autoConsequences.some((item) => item.fieldKey === "indirectCapability" && item.value === "indirect-supported"), true);
+  assert.equal(option(beam, "indirectOpticVar1", "60|Rope").status, "available");
 });
 
 test("DNX80 direct-only and DNX80 DI remain distinct while DI exposes source-backed direct Var1/Var2 and single indirect Rope", () => {
