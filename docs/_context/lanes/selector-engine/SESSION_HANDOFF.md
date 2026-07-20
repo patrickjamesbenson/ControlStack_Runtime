@@ -320,8 +320,14 @@ SEL-015 is complete. The `indirectCapability` auto-consequence now follows the e
 
 The focused variant regression executed visibly in the approved gate. The affected run, repeated full gate, and guarded commit gate each passed 105/105. Exactly the authorised option service and cascade regression files were committed and pushed. The feature tree is clean. No live browser, registration, Engine, RuntimeData, persistence, RunTable, IES, or output action occurred.
 
+## 2026-07-20 SEL-016 closeout — diagnostic text no longer becomes intent
+
+SEL-016 is complete. The readiness preview now uses the presentation-aware workflow field when duplicate keys exist and accepts only a real non-blocked selected option, explicit supported manual value, or supported inherited match-direct value. Hidden diagnostics, blocked or unavailable fields, warning copy, metadata, and fallback labels no longer become selected target, CCT/CRI, or Control intent.
+
+The real Selector regression proves direct-only indirect summaries remain not selected while direct intent is preserved. On a supported D/I product, explicit indirect target remains captured under the unchanged BOARDS-backing rule, and inherited indirect CCT/CRI and Control remain ready. The final affected run, repeated full gate, and guarded commit gate each passed 106/106. Exactly the two authorised feature/test files were committed and pushed. The feature tree is clean.
+
 ## Next worker batch
 
-`SEL-016` is now the sole top ready item. It must change only `packages/workspace-kernel/selectorLmTemperatureReadinessPreview.js` and `tests/selectorLightControlSpine.test.js`, then close the five authorised context files separately. Hidden, blocked, unavailable, warning, and diagnostic presentation text must not become selected target, CCT/CRI, or Control intent. Actual source-valid selection, explicit manual value, and valid supported-lane match-direct inheritance must remain truthful.
+`SEL-002` is now the sole top ready item. Its acceptance cannot be established from repository evidence: Patrick must use the running application to create one new genuine `project-alpha` browser-session save, perform the server registration action, and provide the visible registration acknowledgement or active server-owned revision. Do not fabricate or reconstruct the envelope, and do not invoke Engine yet.
 
-After SEL-016 closes, SEL-002 becomes the next eligible item but its acceptance requires a new genuine browser save and visible server-registration acknowledgement. The worker must then return `NEEDS YOU` with no repository substitution for that live evidence. SEL-003 remains blocked until an attributable active server-owned revision is proven.
+After that live acknowledgement is supplied, a fresh worker may verify registration and continue to SEL-003. Until then the correct worker outcome is `NEEDS YOU`.

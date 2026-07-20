@@ -342,3 +342,22 @@ Every completed worker updates this index with:
 - Feature ending Git state: clean, with no staged, modified, untracked, or deleted paths — VERIFIED.
 - Live evidence: none required or claimed; no browser action, registration, Engine invocation, project or RuntimeData mutation, persistence, RunTable, IES, or output generation occurred — VERIFIED for this parcel.
 - Queue result: SEL-015 done; SEL-016 is the sole top ready item; SEL-002 remains blocked behind SEL-016 and live browser acceptance — RECORDED.
+
+## 2026-07-20 — SEL-016 diagnostic-intent exclusion repair
+
+- Starting identity: root `C:\ControlStack_Worktrees\selector-engine`; branch `lane/selector-engine`; actual HEAD `c9a9cb5dbc953e570c11ad20d17e8ae5eb0fd890`; its immediate parent matched the recorded lane work HEAD; gate `selector-engine` — VERIFIED.
+- Starting Git state: clean, with no staged, modified, untracked, or deleted paths — VERIFIED.
+- Feature paths: `packages/workspace-kernel/selectorLmTemperatureReadinessPreview.js` and `tests/selectorLightControlSpine.test.js` — VERIFIED.
+- Repair: presentation-aware workflow fields now override flatter duplicates in the readiness lookup; intent capture refuses blocked, disabled, future-mapped, hidden-diagnostic, warning, metadata, and diagnostic-provenance fields — VERIFIED.
+- Accepted intent forms: a non-blocked selected option, explicit supported manual value, or supported inherited match-direct value only; label/value presentation fallback alone is insufficient — VERIFIED.
+- Direct-only regression: direct target, paired CCT/CRI, and explicit Control remain captured; indirect target, CCT/CRI, and Control each report `not selected`, `ready: false`, and the exact intent-not-selected blocker — VERIFIED by executed real view-model test.
+- Supported D/I regression: explicit indirect target remains captured under the unchanged BOARDS-backing rule; inherited indirect CCT/CRI and Control remain ready and attributable to match-direct — VERIFIED.
+- Preservation: registration's genuine indirect-emission refusal, candidate mapping, source authority, System/OPTICS capability, Tier, Control authority, RuntimeData, and downstream seams were unchanged — VERIFIED by bounded diff and gate coverage.
+- Diagnostic test iterations: two expected assertion failures identified existing independent rules (manual target BOARDS backing and canonical inherited CCT/CRI token presentation); neither caused code widening — VERIFIED.
+- Final affected execution: `selector-engine`, 106 passed, 0 failed, exit code 0; the named readiness regression executed visibly — VERIFIED.
+- Repeated complete gate before staging: `selector-engine`, 106 passed, 0 failed, exit code 0 — VERIFIED.
+- Exact staged set: only the two authorised feature/test paths — VERIFIED.
+- Gated feature commit/push: `0343c30fcf14cd9a8e05db8355794e67a0a2a59e` — `fix(selector): exclude diagnostics from light intent`; push from `c9a9cb5` to `0343c30` on `origin/lane/selector-engine` succeeded after another 106/106 gate — VERIFIED.
+- Feature ending Git state: clean, with no staged, modified, untracked, or deleted paths — VERIFIED.
+- Live evidence: none required or claimed for the repair; no browser action, save, registration, Engine invocation, project or RuntimeData mutation, persistence, RunTable, IES, or output generation occurred — VERIFIED.
+- Queue result: SEL-016 done; SEL-002 is the sole top ready item and requires Patrick's new genuine browser save plus visible registration acknowledgement — RECORDED.

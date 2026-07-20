@@ -78,7 +78,7 @@
 ### Q-2F Prevent diagnostic labels from becoming indirect intent
 
 * id: SEL-016
-* status: ready
+* status: done
 * depends-on: SEL-015
 * seam change: no — this restores truthful readiness classification without changing the registration first-slice policy
 * gate: selector-engine
@@ -90,7 +90,7 @@
 ### Q-2 Register project-alpha active server-owned revision
 
 * id: SEL-002
-* status: blocked
+* status: ready
 * depends-on: SEL-001, SEL-011, SEL-012, SEL-013, SEL-014, SEL-015, and SEL-016
 * gate: selector-engine
 * authorised files: read-only repository inspection; no repository file writes unless a later orchestrator commission supplies exact bounded paths

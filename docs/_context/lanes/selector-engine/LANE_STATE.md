@@ -272,7 +272,7 @@ A fresh chat can start either role from one line: read `LANE_CHARTER.md` and act
 
 ## 2026-07-20 SEL-014 registration preflight repair closeout — latest controlling state
 
-**Recorded lane work HEAD:** `6f18c025becb3ec96c9ee125f02d2e6b8f096987` — `fix(selector): gate indirect capability by exact system`.
+**Recorded lane work HEAD:** `0343c30fcf14cd9a8e05db8355794e67a0a2a59e` — `fix(selector): exclude diagnostics from light intent`.
 
 SEL-014 resumed from the two explicitly preserved authorised edits with no other dirty path. The worker used `tests/engineRunTableDomain.test.js` only as the authorised temporary gate harness, visibly executed all eight registration transport tests, then removed the import and proved the harness file byte-identical to HEAD and absent from the final diff.
 
@@ -303,3 +303,15 @@ The exact selected SYSTEM option now governs the `indirectCapability` auto-conse
 The focused DNX 60 direct-only versus Beam D/I regression executed visibly in the approved gate. The affected run passed 105/105, the repeated complete lane gate passed 105/105, and the guarded commit/push gate also passed 105/105. Exactly the two authorised feature/test files were committed and pushed in `6f18c025becb3ec96c9ee125f02d2e6b8f096987`; the feature tree ended clean.
 
 No browser action, runtime acceptance, registration, Engine invocation, project or RuntimeData mutation, selected-result persistence, RunTable generation, IES generation, or output generation occurred. SEL-015 is done. SEL-016 is the sole top ready item and must remove diagnostic presentation fallback from indirect readiness intent without changing genuine supported-lane selection or registration policy.
+
+## 2026-07-20 SEL-016 diagnostic-intent exclusion closeout — latest controlling state
+
+SEL-016 started clean from the dedicated SEL-015 documentation reconciliation wrapper, whose immediate parent matched the recorded work HEAD. The repair remained inside `packages/workspace-kernel/selectorLmTemperatureReadinessPreview.js` and `tests/selectorLightControlSpine.test.js`.
+
+The light-output readiness preview now gives presentation-aware workflow fields precedence over flatter duplicates and captures intent only from a non-blocked selected option, an explicit supported manual value, or a supported inherited match-direct value. Hidden diagnostics, blocked selections, unavailable/future fields, warning copy, metadata, and fallback labels no longer become target, CCT/CRI, or Control intent.
+
+The real Selector view-model regression proves that a direct-only DNX selection keeps direct target, CCT/CRI, and Control intent while all indirect summaries remain `not selected` with intent-not-selected blockers. On a supported D/I product, explicit indirect target intent remains captured under the existing separate BOARDS-backing rule, and inherited indirect CCT/CRI and Control remain ready. Registration's genuine indirect-emission refusal was not changed.
+
+The first two affected runs intentionally exposed test-expectation boundaries without code widening: manual target readiness still preserves the existing BOARDS-backing requirement, and inherited CCT/CRI retains its canonical token label. The final affected run passed 106/106, the repeated complete gate passed 106/106, and the guarded commit/push gate passed 106/106. Exactly the two authorised feature/test files were committed and pushed in `0343c30fcf14cd9a8e05db8355794e67a0a2a59e`; the feature tree ended clean.
+
+No browser action, runtime acceptance, save, registration, Engine invocation, project or RuntimeData mutation, selected-result persistence, RunTable generation, IES generation, or output generation occurred. SEL-016 is done. SEL-002 is now the sole top ready item, but its acceptance requires Patrick to make a new genuine browser-session save and provide the visible server-registration acknowledgement. Repository evidence cannot substitute for that human-visible runtime truth.

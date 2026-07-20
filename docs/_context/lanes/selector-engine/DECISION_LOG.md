@@ -215,3 +215,11 @@ This log is append-oriented. Do not silently rewrite historical decisions.
 **Rationale:** Broad OPTICS relationships describe size-level optic compatibility and may span distinct product variants. They cannot override the exact selected SYSTEM row's product capability.
 
 **Consequence:** Direct-only DNX 60 blocks the `Indirect supported` auto-consequence while DNX 60 Beam D/I retains it. Direct capability, legitimate OPTICS rows, System variant separation, Control, Tier, registration, and downstream contracts remain unchanged.
+
+## 2026-07-20 — Readiness intent uses presentation-aware field truth
+
+**Decision:** When duplicate field keys exist, the light-output readiness preview uses the runtime workflow field carrying display mode, provenance, and inheritance classification. Intent is accepted only from a non-blocked selected option, an explicit supported manual value, or a supported inherited match-direct value.
+
+**Rationale:** Flat field copies can omit current inheritance metadata, while presentation labels can contain diagnostic or unavailable wording. Using the classified workflow field and requiring an underlying selected/manual/inherited value separates real intent from explanatory copy.
+
+**Consequence:** Direct-only hidden indirect fields remain not selected. Genuine direct intent and supported D/I inherited CCT/CRI and Control remain available. The existing manual target BOARDS-backing rule and registration's genuine indirect-emission refusal remain unchanged.
