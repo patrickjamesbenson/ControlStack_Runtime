@@ -530,3 +530,65 @@ Mandatory acceptance includes:
 - no route, persistence, RuntimeData mutation, donor invocation, IES generation or raw curve rows are added.
 
 Any file-scope expansion, board-temperature transform, alternate lookup owner, direct Lab consumption or change to the existing curve parser requires a new Program decision.
+
+## 2026-07-21 approved cross-lane seam — outside governance / inside Engine version 1
+
+**Status:** BINDING AND SUPERSEDING FOR ENGINE ELIGIBILITY.
+
+### Contract split
+
+```text
+outsideGovernanceEnvelope   optional traceability and menu-shaping context
+selectionSet                sole caller-required Engine request
+internalTechnicalSources    server-side product, policy, Lab evidence and curve data
+engineResult                candidates, scoring, validation and verified output
+```
+
+### Outside governance envelope
+
+The outside layer owns human identity, company/customer, project/deal/quote, ownership, timeline, entitlement, handoff, save/persistence and result association. It may shape which menu options are visible and may wrap or store a selection set and result.
+
+The envelope is not an Engine prerequisite. It may be absent, incomplete or unavailable without preventing a technically valid selection set from being calculated.
+
+### Selection-set interface
+
+The only caller-required interface into the Engine is the selected/requested engineering set. It may include product/system/optic, lighting target, room/environment, control/compliance, Runs/lengths/quantities, accessory requests and build preferences.
+
+The interface must not contain or require:
+
+- human/customer/company/owner identity;
+- project/deal/quote/envelope/revision/timeline identity;
+- handoff, entitlement or assignment history;
+- save, registration, active-revision or persistence state;
+- caller-authoritative Tier;
+- caller-supplied candidate, score, derived temperature, lookup temperature or verified output.
+
+A product, component or optic key is part of the engineering selection set and is not governance identity.
+
+### Inside-kitchen resolution
+
+Authoritative RuntimeData rows, policy, measured Lab evidence, curve data, candidate generation, scoring, derivation and verification are resolved server-side from the selection set. Their technical availability and consistency may block a result. A governance approval state cannot substitute for missing technical evidence and cannot be required merely to permit calculation.
+
+The internal THERM-P1 adapter is classified as technical source/evidence resolution inside the kitchen boundary. It may bind the selected optic to the measured triplet, but no outside caller supplies user/project/registration identity or a permission flag to Engine. THERM-E1 then performs the one-time thermal addition and curve lookup.
+
+### Outer metadata compatibility
+
+The original canonical Run Payload permitted `customer`, `job`, `project` and `metadata` for traceability. Compatibility wrappers may continue to carry those fields, but they must strip or quarantine them before the computational kernel and prove that changing or omitting them leaves Engine eligibility and output unchanged for an identical selection set.
+
+### Tier compatibility
+
+Caller Tier is prohibited. Internal candidate policy and surfaced result profiles are derived. Any legacy adapter or donor path that defaults, requires or scores a client Tier must be removed from the accepted boundary or confined behind an internal derivation that does not alter the selection contract.
+
+### Acceptance lock
+
+Cross-lane acceptance must prove:
+
+1. identical selection sets produce identical Engine eligibility and calculation regardless of absent or varied user/project/owner/timeline/registration metadata;
+2. a valid selection set runs without saved-project, registration or active-revision state;
+3. missing governance metadata never becomes an Engine blocker;
+4. missing or invalid required engineering selections still fail closed;
+5. caller Tier is rejected or ignored as non-authoritative while internal result profiles remain derived;
+6. no governance field appears in the kernel's required-field or scoring list;
+7. the thermal varied-optic proof still moves both lookup temperature and verified lm/m.
+
+Any future use of governance metadata to choose, alter, score or block an Engine result is a breaking seam change requiring an explicit new Program decision.

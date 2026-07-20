@@ -612,3 +612,43 @@ Engine applies the accepted optic rise exactly once, sets lookup temperature to 
 The mandatory final test uses two optic-bound bundles with different rises but the same selected room, current and curve. Both lookup temperature and verified lm/m must move. This test must fail for any hardcoded 35°C or 10°C behaviour.
 
 The unfinished runtime-port work in main, source-model renames, routes, persistence, donor changes, existing curve-parser changes, downstream artifacts and main promotion remain outside these parcels.
+
+## 2026-07-21 outside-governance / inside-Engine boundary handoff
+
+### Binding sentence
+
+The Engine's caller-required and eligibility contract is the engineering selection set only. Human identity, customer/company, project/deal/quote, ownership, timeline, entitlement, handoff, save, registration, active revision, persistence and client-supplied Tier remain outside and may not block calculation.
+
+### Original-brief reconciliation
+
+The original canonical flow did place `customer`, `job`, `project` and `metadata` in the broad Run Payload, so the literal statement that no transport wrapper may contain anything else is too strong. The same brief says those fields exist for traceability and make no engineering decisions. The Platform Spine keeps live identity/project context in Workspace, the candidate API uses engineering choices, and donor `run_engine` reads no customer, project, owner or registration field.
+
+Treat the outer envelope as optional traceability. Strip or quarantine it before the computational kernel. An identical selection set must have identical Engine eligibility and result regardless of whether governance metadata is absent or changed.
+
+### Selection set
+
+The caller may provide selected/requested product/system/optic, lighting, room/environment, control/compliance, Runs/lengths/quantities, accessories and build preferences. The kitchen resolves authoritative product rows, policy, Lab evidence, curves, candidates, scoring and verified output internally.
+
+A selected optic/component key is an engineering selection, not human/project identity.
+
+### Superseded gates
+
+Delete or bypass from Engine eligibility any requirement for:
+
+- signed-in user or customer/company identity;
+- selected project/deal/quote or owner;
+- timeline, handoff or entitlement state;
+- saved envelope, registration eligibility or active revision;
+- client/manual Tier.
+
+Do not repair these gates. Optional persistence and result association remain outside-system functions.
+
+### Active sequence
+
+1. Reconcile the Selector lane to this boundary.
+2. Implement SEL-018 as selected room temperature only; no registration or Engine proof is part of the parcel.
+3. Implement THERM-P1 as internal technical optic/evidence binding, with no human/project/registration input.
+4. Implement THERM-E1 with one-time rise application and the mandatory varied-optic change in lookup temperature and verified lm/m.
+5. Audit that governance metadata is neither required nor scored by the computational kernel.
+
+SEL-019's former project-save/register/active-revision prerequisite is superseded. SEL-002 and SEL-003 cannot block Engine computation. Main and its unfinished runtime-port work remain untouched.

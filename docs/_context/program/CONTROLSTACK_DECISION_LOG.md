@@ -942,3 +942,65 @@ THERM-E1 remains blocked until THERM-P1 is accepted. It alone applies the optic 
 Final acceptance must use two optic-bound Program bundles with different measured rises against the same selected room, drive current and curve. Both `curveLookupTaC` and verified lm/m must change. This proof is mandatory because the current source rows carry identical placeholder thermal values and ordinary baseline tests cannot distinguish per-optic evidence from a hardcoded constant.
 
 No main runtime-port file, route, persistence path, source fixture, donor implementation or existing curve parser is included in either parcel.
+
+---
+
+## 2026-07-21 — Binding outside-governance / inside-Engine boundary ruling
+
+**Status:** APPROVED; THIS RULING SUPERSEDES EVERY PROGRAM OR LANE ACCEPTANCE RULE THAT MAKES HUMAN/PROJECT GOVERNANCE A PREREQUISITE FOR ENGINE COMPUTATION.
+
+### One-sentence ruling
+
+**The Engine's caller-required and execution-eligibility contract is a set of selected product/build/engineering values only; human identity, project identity, ownership, timeline, registration and client-supplied Tier may exist only in an optional outer governance/traceability envelope and must never be required, interpreted, scored or used to block Engine execution.**
+
+### Original-brief check
+
+The original briefs support the computational ruling but contradict the literal claim that the entire transport object can contain nothing else:
+
+- the Platform Spine assigns live identity, active project context and handoff to Workspace, while assigning product/configuration/manufacturing work to Selector/Engine;
+- the canonical Selector-to-Engine flow includes `customer`, `job`, `project` and `metadata` in the outer Run Payload for traceability, but states explicitly that this context does not make engineering decisions;
+- the same flow defines the calculative input groups as product, lighting, environment/control/compliance, Runs, accessory requests and build preferences;
+- the canonical candidate/scoring flow states that Budget/Balanced/Long-life outcomes are derived and are not a user-selected Tier;
+- the original bridge calls `run_engine(selector_payload)` and defines no registration-eligibility step;
+- the donor Engine entrypoint reads no customer, project, owner or registration field.
+
+Therefore the binding distinction is **outer envelope versus computational kernel**. Traceability metadata may accompany, store or receive an Engine result, but it is not an Engine input and cannot affect whether the kitchen runs.
+
+### Selection-set definition
+
+The outside-to-inside selection set may contain only the selected or requested engineering values needed to describe the desired build, including product/system/optic choices, lighting targets, room/environment and control/compliance choices, Runs/lengths/quantities, accessory requests and build preferences.
+
+A selected component key or selected optic key is engineering selection identity, not human/project governance identity. Authoritative source data, measured Lab evidence, policy, candidate generation, derivation, scoring and verification are resolved inside the technical system from those selections; callers do not supply governance approval as a substitute for technical evidence.
+
+### Prohibited Engine prerequisites
+
+The Engine and its invocation boundary must not require or inspect:
+
+- user, company, customer or owner identity;
+- project, deal, quote, envelope, revision or timeline identity;
+- handoff, assignment or entitlement history;
+- save state, registration eligibility, active-revision state or persistence acknowledgement;
+- a manually selected or client-authoritative Tier;
+- any governance approval flag presented as permission to calculate.
+
+These fields may shape the menu before the selection set is created and may associate the result after calculation. They do not enter the kitchen.
+
+### Valid Engine blockers
+
+Engine execution may still fail closed for technical reasons inside the selection contract: a missing or malformed required selection, unavailable authoritative product/source data, contradictory technical evidence, an unsupported combination, or a physical/electrical/thermal/compliance impossibility. These are kitchen constraints, not governance gates.
+
+### Tier ruling
+
+Tier is not a caller-required selection and not a registration gate. Any internal policy family, candidate weighting or surfaced Budget/Balanced/Long-life result is derived server-side. Legacy donor code that defaults or requires a caller Tier is implementation drift against the canonical Engine Flow and is not acceptance authority.
+
+### Immediate parcel consequences
+
+- **SEL-018:** remains the sole ready Selector parcel, but only to carry the selected room temperature as a selection. It performs no registration, project, identity, Tier or thermal calculation work.
+- **SEL-019:** the former requirement to save/register an attributable project revision before one Engine proof is superseded. Persistence and traceability may be tested later as an outside-system parcel, but they cannot gate Engine acceptance.
+- **SEL-002 / SEL-003:** may not remain blocking prerequisites for Engine execution. Their project-registration and selected-project invocation wording becomes historical governance acceptance only.
+- **THERM-P1:** remains a technical, server-side evidence-integrity adapter. It may resolve the selected optic to authoritative measured evidence, but it must not require user/project/registration identity or expose a caller-supplied governance approval as an Engine input.
+- **THERM-E1:** remains the inside-kitchen thermal execution parcel and applies the authoritative rise exactly once.
+
+Every existing gate of the form `cannot run until governance X is present` is invalid under this ruling. Affected implementation must **delete or bypass the gate at the Engine boundary**, not repair it, rename it or replace it with another governance prerequisite. Optional outer-envelope persistence and audit remain separate and non-blocking.
+
+No feature code is changed by this ruling. The unfinished runtime-port work in main remains excluded.

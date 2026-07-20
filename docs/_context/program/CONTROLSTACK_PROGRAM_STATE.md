@@ -387,3 +387,21 @@ P2 Checkpoint 1 is **IMPLEMENTATION COMPLETE / GATE GREEN / COMMIT BLOCKED BY SH
 - **MANDATORY DIFFERENTIATOR:** a second optic-bound bundle must change the measured rise and thereby change both lookup temperature and verified lm/m against the same room, current and curve.
 - **HELD:** final cross-lane acceptance, Engine-contract stability declaration, downstream artifacts and main promotion remain held until SEL-018, THERM-P1 and THERM-E1 are accepted in order.
 - **NEXT:** restore the Selector connector to the isolated worktree or use a correctly bound Selector worker; do not write main.
+
+## 2026-07-21 selections-only Engine boundary state
+
+- **BINDING SENTENCE:** Engine caller requirements and execution eligibility are the engineering selection set only.
+- **OUTSIDE OWNER:** Workspace/governance owns human identity, project/deal/quote, owner, timeline, entitlement, handoff, save and result association.
+- **OUTER ENVELOPE:** traceability metadata may wrap or store selections/results but is optional for calculation and cannot affect Engine eligibility or output.
+- **INSIDE OWNER:** Engine resolves authoritative product/policy/Lab/curve data, creates candidates, derives/scales/scores and returns verified output.
+- **TIER:** no client/manual Tier input or Tier registration gate; internal result profiles and policy consequences are derived.
+- **VALID BLOCKERS:** required engineering selection, source/evidence integrity and physical/electrical/thermal/compliance constraints only.
+- **INVALID BLOCKERS:** user, company, owner, project, deal, quote, timeline, handoff, save, registration, active revision or persistence acknowledgement.
+- **SEL-018:** ready as selected-room transport only; no registration or Engine proof requirement.
+- **SEL-019:** superseded as an Engine prerequisite; persistence testing moves outside the kitchen sequence.
+- **THERM-P1:** internal technical evidence binding only, keyed by selected optic and free of human/project/registration authority.
+- **THERM-E1:** unchanged one-time rise application and varied-optic output proof.
+- **DELETION POLICY:** existing governance gates at the Engine boundary are deleted/bypassed, not repaired or replaced.
+- **BRIEF RECONCILIATION:** original outer payload metadata is retained only as traceability; the briefs state it makes no engineering decisions and the donor kernel does not read it.
+- **MAIN:** unfinished runtime-port work remains outside this sequence.
+- **NEXT:** reconcile the Selector lane queue and execute SEL-018 without any project-registration dependency. Patrick has no action.

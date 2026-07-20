@@ -1,6 +1,6 @@
 # Program & Integrate Session Handoff
 
-Status: LAB THERMAL RECEIPT ACCEPTED; SEL-018 READY; THERM-P1 AND THERM-E1 ADMITTED  
+Status: SELECTIONS-ONLY ENGINE BOUNDARY BINDING; SEL-018 READY; THERM-P1 AND THERM-E1 ADMITTED  
 Lane: `program-integrate`  
 Branch: `lane/program-integrate`
 
@@ -39,3 +39,13 @@ THERM-E1:
 
 - `packages/workspace-kernel/runtimeThermalLumenExecution.js`
 - `tests/runtimeThermalLumenExecution.test.js`
+
+## Binding boundary supersession
+
+Engine caller requirements and execution eligibility are the selection set only. Human/customer/company identity, project/deal/quote, ownership, timeline, handoff, save, registration, active revision, persistence and client Tier are outside governance and cannot block computation.
+
+The original flow's customer/job/project/metadata fields remain optional outer traceability only. They are stripped or quarantined before the computational kernel and must not affect eligibility or output.
+
+SEL-019's registration-before-Engine sequence is superseded. SEL-002 and SEL-003 do not block Engine calculation. SEL-018 remains room-selection transport only. THERM-P1 remains internal technical evidence binding, and THERM-E1 retains the one-time thermal rise and varied-optic output proof.
+
+Existing governance gates at the Engine boundary are deleted or bypassed when commissioned; they are not repaired. Main runtime-port work remains excluded.

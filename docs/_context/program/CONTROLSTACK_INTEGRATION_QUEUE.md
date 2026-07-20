@@ -606,3 +606,37 @@ The parcel applies the accepted optic rise exactly once, delegates to the commit
 5. only then reconsider Engine-contract stability, downstream artifacts and main promotion.
 
 The unfinished runtime-port work in main is outside this queue and must remain untouched.
+
+## 2026-07-21 — Selections-only Engine boundary queue supersession
+
+**Status:** BINDING; GOVERNANCE PREREQUISITES ARE REMOVED FROM ENGINE ELIGIBILITY.
+
+### Active boundary
+
+The outside governance layer may shape which options are offered and may attach identity/project/timeline/ownership metadata to an outer envelope. The Engine boundary receives the selected engineering values only. Outer metadata is optional traceability and cannot block calculation.
+
+### Queue effects
+
+- **SEL-018:** remains ready in its exact two-file scope. It carries `selectedRoomTaC` only and does not add registration, project, owner, active-revision, Tier or Engine eligibility logic.
+- **SEL-019:** superseded as an Engine prerequisite. Its save/register/active-revision sequence is removed from the thermal and Engine acceptance path. Any later persistence proof is a separate outside-governance parcel.
+- **SEL-002:** no longer blocks Engine execution; retain only as historical project-persistence acceptance.
+- **SEL-003:** no longer depends on project registration; any bounded Engine proof must invoke from a valid selection set rather than a selected-project eligibility state.
+- **THERM-P1:** remains approved after SEL-018, but is strictly an internal technical evidence resolver/validator keyed by selected optic. It must not require human/project identity, registration or a caller-supplied governance approval.
+- **THERM-E1:** remains approved after THERM-P1 and unchanged in thermal arithmetic and varied-optic proof.
+
+### Deletion rule
+
+Known user/project/owner/timeline/registration/active-revision/client-Tier checks at or before the Engine computational boundary are invalid. When their implementation paths are commissioned, the gate is deleted or bypassed from Engine eligibility; it is not repaired, renamed or replaced.
+
+Technical selection completeness, authoritative source availability, evidence consistency and physical/electrical/thermal/compliance validation remain valid blockers.
+
+### Order
+
+1. reconcile the Selector lane queue to this ruling;
+2. complete SEL-018 as selections-only room-temperature transport;
+3. complete THERM-P1 as internal technical evidence binding;
+4. complete THERM-E1 with the mandatory changed-rise / changed-lookup / changed-output proof;
+5. run a cross-lane audit proving no governance field is read by Engine eligibility;
+6. leave outside-system persistence and main promotion separate.
+
+No feature implementation is included in this queue ruling.
