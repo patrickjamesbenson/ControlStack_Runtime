@@ -433,3 +433,18 @@ Do not execute SEL-019, SEL-002 or SEL-003 as Engine prerequisites. Their former
 The new mandatory regression executes THERM-E1 twice with identical engineering selections and different traceability envelopes covering user, project, owner, timeline and registration state. The deterministic Engine results must be identical. This is the proof against renaming: any differently named governance field that influences warnings, defaults, scoring, validation or output will break the test.
 
 THERM-E1 closeout must report its dependency path and a negative source search proving no project-registration, active-revision or selected-project eligibility gate remains in the computational path.
+
+## 2026-07-21 THERM-E1 complete — return to Program
+
+THERM-E1 is complete and pushed. Focused coverage passed 120/120 with the temporary harness, and the harness was removed cleanly.
+
+The Engine now applies `selectedRoomTaC + opticThermalRiseTaC` exactly once, preserves the unclamped derived temperature, delegates to the unchanged curve parser and returns verified lm/m with clamp/interpolation/current modes and no-write safety flags.
+
+Both binding regressions passed:
+
+- changing the optic-bound rise while holding room, current and curve fixed changed both lookup temperature and verified lm/m;
+- changing user, project, owner, timeline, registration, active revision and renamed governance-clearance values while holding engineering selections fixed produced an identical complete Engine response.
+
+The THERM-E1 dependency map contains only the Program thermal-evidence adapter and the lumen-curve parser. Negative searches found no project-browser registration, active revision, selected-project eligibility or registration boundary reference. Governance is bypassed, not renamed.
+
+No browser, save, registration, route, persistence, RuntimeData mutation, donor invocation, IES generation, output generation, curve-parser edit or main change occurred. Program & Integrate may now perform final cross-lane acceptance.

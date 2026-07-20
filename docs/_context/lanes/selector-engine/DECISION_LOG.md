@@ -341,3 +341,13 @@ This log is append-oriented. Do not silently rewrite historical decisions.
 **Regression rule:** Execute THERM-E1 twice with identical engineering selections and different user, project, owner, timeline and registration traceability envelopes. After excluding only declared nondeterministic request identifiers, eligibility and deterministic engineering output must be identical. The test must fail if envelope data affects a warning, default, candidate, score, validation state or output.
 
 **Rename guard:** The closeout must name the former gates—project registration, active revision and selected-project eligibility—and prove they are absent from the THERM-E1 dependency path. Replacing them with differently named equivalents is prohibited; behavioral envelope independence is the class-level proof.
+
+## 2026-07-21 — THERM-E1 accepted in the lane
+
+**Decision:** Accept the pushed Engine thermal execution parcel and return it to Program for final cross-lane acceptance.
+
+**Rationale:** Focused coverage passed 120/120. Engine applies the optic rise exactly once, changed optic evidence changes both lookup temperature and verified lm/m, and low/high curve behavior remains delegated to the unchanged parser. Invalid, direct-Lab, contradictory and caller-derived inputs fail closed.
+
+**Boundary evidence:** Two calls with identical engineering inputs and different user, project, owner, timeline, registration, active-revision and renamed eligibility fields returned identical complete results. The module dependency map contains only the Program evidence adapter and curve parser, and negative searches found no registration, active-revision, project-browser or selected-project eligibility reference.
+
+**Consequence:** The governance gates are bypassed at the computational boundary, not renamed. THERM-E1 is done. No live registration parcel is required for Engine acceptance; optional persistence remains outside governance. The lane now awaits Program acceptance only.

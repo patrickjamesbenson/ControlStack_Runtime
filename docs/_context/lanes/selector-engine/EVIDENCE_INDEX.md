@@ -486,3 +486,19 @@ Every completed worker updates this index with:
 - Rename guard: final source/dependency audit must prove no renamed equivalent gate is imported or consulted — REQUIRED.
 - Boundary regression: two executions with identical engineering inputs and different user/project/owner/timeline/registration envelopes must have identical deterministic eligibility and result — REQUIRED.
 - No feature code, route, persistence, registration, browser action, Engine execution, RuntimeData mutation, donor invocation or main change occurred during reconciliation — VERIFIED BY SCOPE AND GIT DIFF.
+
+## 2026-07-21 — THERM-E1 Engine execution evidence
+
+- Final feature paths: `packages/workspace-kernel/runtimeThermalLumenExecution.js` and `tests/runtimeThermalLumenExecution.test.js` only — VERIFIED.
+- Thermal arithmetic: 25 + 10 -> 35 and 35 + 10 -> 45; optic rise applied count exactly one — VERIFIED BY EXECUTED TESTS.
+- Varied-optic proof: same room/current/curve with a different measured rise changed both lookup temperature and verified lm/m — VERIFIED BY EXECUTED TEST.
+- Clamp/interpolation proof: low/high temperature clamps preserve the unclamped derived value; current modes remain delegated to the existing parser — VERIFIED.
+- Fail-closed proof: direct Lab projection, invalid or contradictory Program bundle, invalid current/curve and caller-supplied derived/output fields are rejected before unsafe output — VERIFIED.
+- Boundary regression: different user, project, owner, timeline, registration, active revision and renamed eligibility envelope values produced an identical complete Engine response for identical engineering inputs — VERIFIED.
+- Envelope quarantine: traceability values do not appear in output and a derived-looking field inside the outer envelope cannot influence or block computation — VERIFIED.
+- Dependency receipt: module imports only `labThermalEvidenceProgramAdapter.js` and `runtimeLumenCurveParseInterpolationContract.js` — VERIFIED BY DEPENDENCY MAP AND EXECUTED STATIC TEST.
+- Rename guard: no registration, active-revision, project-browser, selected-project or pre-Engine eligibility reference occurs in the THERM-E1 module — VERIFIED BY NEGATIVE SOURCE SEARCH AND EXECUTED TEST.
+- Focused harness gate: 120 passed, 0 failed — VERIFIED.
+- Temporary harness removed; `tests/engineRunTableDomain.test.js` returned clean and unstaged — VERIFIED.
+- Feature committed and pushed on the Selector lane; no route, persistence, RuntimeData, donor, IES, output-generation, curve-parser or main file changed — VERIFIED.
+- Queue result: SEL-018, THERM-P1 and THERM-E1 done; final Program cross-lane acceptance ready — RECORDED.

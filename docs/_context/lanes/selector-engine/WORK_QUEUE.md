@@ -130,7 +130,7 @@
 ### Q-2K Execute the thermal lumen lookup in Engine
 
 * id: THERM-E1
-* status: ready
+* status: done
 * depends-on: accepted THERM-P1 feature and lane-memory closeout
 * seam approval: Program & Integrate parcel admitted on 2026-07-21
 * seam change: yes — Engine is the sole owner of applying the accepted optic rise and resolving verified lm/m
@@ -139,6 +139,7 @@
 * objective: consume only an accepted Program thermal-evidence bundle, apply the optic rise exactly once, and delegate the resulting lookup temperature to the existing runtime lumen-curve parse/interpolation contract.
 * acceptance: Engine computes `derivedInternalTaC = selectedRoomTaC + opticThermalRiseTaC` and uses that same value as `curveLookupTaC`; 25 + 10 produces lookup 35 and 35 + 10 produces lookup 45; a second optic-bound bundle with a different measured rise, but the same room, current and curve, changes both lookup temperature and verified lm/m; the test must fail for hardcoded 35°C, hardcoded 10°C, use of the absolute reference-internal value as rise, or double application; low/high clamping preserves the unclamped derived value and reports clamp/interpolation/current modes; missing, malformed, contradictory, unaccepted or identity-unbound evidence fails closed. Boundary regression is mandatory: execute twice with identical engineering inputs and different user, project, owner, timeline and registration traceability envelopes, and require identical deterministic Engine output after excluding only declared request identifiers. The implementation and dependency receipt must prove the old project-registration, active-revision and selected-project eligibility path is bypassed rather than renamed.
 * prohibitions: reject direct Lab projections and caller-supplied `derivedInternalTaC`, `curveLookupTaC`, board temperature or verified lm/m; do not change the existing curve parser, add routes or persistence, mutate RuntimeData, invoke donor execution, generate IES or outputs, or touch main.
+* completion: feature and focused test pushed; focused harness gate passed 120/120; normal feature gate passed through guarded commit; traceability-envelope regression returned byte-for-byte equivalent deterministic results; dependency map contains only the Program evidence adapter and existing curve parser; project registration, active revision and selected-project eligibility are bypassed, not renamed.
 
 ### Q-2I Live-accept the completed thermal chain
 

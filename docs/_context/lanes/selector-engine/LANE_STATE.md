@@ -415,3 +415,15 @@ This is a bypass at the computational boundary, not a rename. THERM-E1 must not 
 The mandatory boundary regression runs identical accepted engineering inputs twice with different user, project, owner, timeline and registration envelopes. Both runs must return identical deterministic engineering output and eligibility. Envelope data may not alter warnings, defaults, exclusions, scores, validation or output.
 
 Final closeout must include a dependency receipt proving the THERM-E1 module reaches only the accepted Program bundle contract and existing curve parser, plus a negative search for renamed registration, revision or project-eligibility gates.
+
+## 2026-07-21 THERM-E1 closeout
+
+THERM-E1 is complete and pushed. Engine consumes only the accepted Program thermal bundle, applies the measured optic rise exactly once, uses the derived internal temperature as the curve lookup temperature and delegates unchanged to the existing curve parser.
+
+The focused harness executed 120/120 and included the required 25+10=35, 35+10=45, changed-optic / changed-output, no-double-count, clamp, invalid-evidence, caller-derived rejection, envelope-independence and dependency-path assertions. The harness was removed and the gate-included Engine domain test returned byte-identical to HEAD.
+
+The boundary regression passed with identical engineering selections and different user, project, owner, timeline, registration, active-revision and renamed-eligibility envelope values. The complete Engine response was identical and no traceability value appeared in output.
+
+Dependency mapping shows only the accepted Program evidence adapter and the existing lumen-curve parser. Negative source searches found no project registration, active revision, project browser, selected-project or registration eligibility reference. The old governance chain is bypassed from computation; it was not renamed.
+
+No route, persistence, RuntimeData mutation, donor invocation, IES generation, output generation, existing curve-parser change or main change occurred. The lane is ready for Program cross-lane acceptance.
