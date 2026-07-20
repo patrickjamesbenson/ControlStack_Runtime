@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Reference Composition — ControlStack Lab</title>
+<link rel="stylesheet" href="./lab.css" />
+<style>
+  .slots{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+  .slot{border:1px solid var(--border-light);border-radius:var(--r-md);background:#fff;padding:12px 14px}
+  .slot h3{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:0 0 8px}
+  .drop.ready{border-color:var(--green);background:var(--green-lt)}
+  .candidate-banner{border:2px solid var(--amber);background:var(--amber-lt);color:var(--amber-dark);border-radius:var(--r-md);padding:10px 12px;font-weight:800;letter-spacing:.03em}
+  .parent-row{display:grid;grid-template-columns:55px minmax(180px,1fr) 90px minmax(120px,.8fr);gap:8px 12px;padding:8px 0;border-bottom:1px solid var(--border-light);align-items:baseline}
+  .parent-row:last-child{border-bottom:0}
+  .mono{font-family:var(--mono);overflow-wrap:anywhere}
+  .summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+  .summary-item{border:1px solid var(--border-light);border-radius:var(--r-md);background:var(--soft);padding:10px 12px}
+  .summary-item .label{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+  .summary-item .value{font-size:16px;font-weight:650;color:var(--navy);overflow-wrap:anywhere}
+  .error{border:1px solid var(--red-b);background:var(--red-lt);color:var(--red);border-radius:var(--r-md);padding:10px 12px}
+  .unresolved{color:var(--amber-dark)}
+  pre.ies{max-height:420px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brandhead">
+    <div class="mark">NE</div>
+    <div><div class="bn">NOVON</div><div class="bs">Engineering</div></div>
+    <div class="pg"><div class="pgt">Reference Composition</div><div class="pgs">ordered sealed parents to governed candidate</div></div>
+  </div>
+
+  <div class="hint">
+    Composition produces a read-only candidate only. It does not allocate an identity, construct authority, approve, seal, inherit assembly verification, or publish a resolver record.
+  </div>
+
+  <div class="card">
+    <h2>1 — Ordered sealed parent fixtures</h2>
+    <div class="slots">
+      <div class="slot">
+        <h3>Parent 1 — primary order</h3>
+        <label for="parentAFile" class="drop" id="dropA">Select or drop sealed GT/OPT DTO A</label>
+        <input id="parentAFile" type="file" accept="application/json,.json" class="hidden" />
+        <label for="roleA" style="margin-top:10px">Role</label>
+        <input id="roleA" value="direct" />
+        <div id="stateA" class="muted" style="margin-top:8px">No parent loaded.</div>
+      </div>
+      <div class="slot">
+        <h3>Parent 2 — secondary order</h3>
+        <label for="parentBFile" class="drop" id="dropB">Select or drop sealed GT/OPT DTO B</label>
+        <input id="parentBFile" type="file" accept="application/json,.json" class="hidden" />
+        <label for="roleB" style="margin-top:10px">Role</label>
+        <input id="roleB" value="indirect" />
+        <div id="stateB" class="muted" style="margin-top:8px">No parent loaded.</div>
+      </div>
+    </div>
+    <div class="bar" style="margin-top:14px">
+      <button class="btn primary" id="compose" disabled>Compose ordered candidate</button>
+      <span class="muted mono">coincident-aligned · all-contributing-channels-on</span>
+    </div>
+  </div>
+
+  <div id="compositionMessage"></div>
+
+  <div class="card hidden" id="candidateCard">
+    <div class="candidate-banner">NON-AUTHORITATIVE CANDIDATE — FRESH AUTHORITY, APPROVAL AND SEALING REQUIRED</div>
+    <h2 style="margin-top:14px">Ordered parent projection</h2>
+    <div id="parentRows"></div>
+    <div class="summary" id="candidateSummary" style="margin-top:12px"></div>
+    <h2 style="margin-top:16px">Unresolved assembly fields</h2>
+    <div id="unresolved" class="mono unresolved"></div>
+    <p class="muted">Parent order is provenance-significant. Emergency, EWIS, assembly identity, internal ambient and shared overhead are not inherited.</p>
+  </div>
+
+  <div class="card">
+    <h2>2 — Materialise only after separate authority workflow</h2>
+    <p class="muted">The composition candidate cannot be passed directly to the project generator. Supply a separately approved and sealed <code>MERGED</code> reference DTO produced by the authority workflow.</p>
+    <label for="mergedFile" class="drop" id="dropMerged">Select or drop freshly sealed MERGED DTO</label>
+    <input id="mergedFile" type="file" accept="application/json,.json" class="hidden" />
+    <div id="mergedState" class="muted" style="margin-top:8px">No sealed MERGED DTO loaded.</div>
+    <div class="row" style="margin-top:12px">
+      <div>
+        <label for="projectId">Project ID</label>
+        <input id="projectId" value="PROJECT-MERGED-001" />
+      </div>
+      <div>
+        <label for="runLengthMm">Run length (mm)</label>
+        <input id="runLengthMm" type="number" min="1" step="1" value="1000" />
+      </div>
+      <div>
+        <label for="outputMultiplier">Output multiplier</label>
+        <input id="outputMultiplier" type="number" min="0.0001" step="0.05" value="1" />
+      </div>
+      <div>
+        <label for="lumcat">LUMCAT</label>
+        <input id="lumcat" placeholder="Required when unresolved in sealed DTO" />
+      </div>
+      <div>
+        <label for="luminaire">LUMINAIRE</label>
+        <input id="luminaire" placeholder="Required when unresolved in sealed DTO" />
+      </div>
+    </div>
+    <div class="bar" style="margin-top:14px">
+      <button class="btn primary" id="materialise" disabled>Build project IES from sealed MERGED DTO</button>
+      <button class="btn ghost" id="download" disabled>Download returned .ies</button>
+      <span id="filename" class="mono muted"></span>
+    </div>
+  </div>
+
+  <div id="materialiseMessage"></div>
+
+  <div class="card hidden" id="outputCard">
+    <h2>3 — Returned project result</h2>
+    <div class="summary" id="outputSummary"></div>
+    <details class="comp" style="margin-top:12px">
+      <summary><span class="nm">Returned LM-63 text</span></summary>
+      <div class="body"><pre class="ies" id="iesText"></pre></div>
+    </details>
+  </div>
+</div>
+
+<script type="module">
+import {
+  REFERENCE_COMPOSITION_SCHEMA_ID,
+  REFERENCE_COMPOSITION_SCHEMA_VERSION,
+  ReferenceCompositionContractError,
+  composeReferencePair,
+} from "./iesMerge.js";
+import { buildProjectIes } from "./iesProjectIes.js";
+
+const byId = (id) => document.getElementById(id);
+const escapeHtml = (value) => String(value ?? "").replace(/[&<>]/g, (character) => ({
+  "&": "&amp;",
+  "<": "&lt;",
+  ">": "&gt;",
+}[character]));
+
+let parentA = null;
+let parentB = null;
+let candidate = null;
+let sealedMerged = null;
+let generatedText = null;
+let generatedFilename = null;
+
+function message(target, text) {
+  byId(target).innerHTML = text ? `<div class="error" style="margin-bottom:14px">${escapeHtml(text)}</div>` : "";
+}
+
+function resetCandidate() {
+  candidate = null;
+  byId("candidateCard").classList.add("hidden");
+  message("compositionMessage", "");
+}
+
+function resetOutput() {
+  generatedText = null;
+  generatedFilename = null;
+  byId("outputCard").classList.add("hidden");
+  byId("download").disabled = true;
+  byId("filename").textContent = "";
+  message("materialiseMessage", "");
+}
+
+function describeLoaded(reference, filename) {
+  return `<span class="pill info">loaded for contract validation</span> <b class="mono">${escapeHtml(filename)}</b> · ${escapeHtml(reference.id ?? "identity unresolved")}`;
+}
+
+async function loadJsonFile(file, onSuccess, onFailure) {
+  if (!file) return;
+  try {
+    const value = JSON.parse(await file.text());
+    if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("JSON must contain one object.");
+    onSuccess(value, file.name);
+  } catch (error) {
+    onFailure(error?.message || "JSON could not be read.");
+  }
+}
+
+function updateComposeState() {
+  byId("compose").disabled = !(parentA && parentB);
+}
+
+function setParent(which, reference, filename) {
+  resetCandidate();
+  if (which === "A") {
+    parentA = reference;
+    byId("stateA").innerHTML = describeLoaded(reference, filename);
+    byId("dropA").classList.add("ready");
+  } else {
+    parentB = reference;
+    byId("stateB").innerHTML = describeLoaded(reference, filename);
+    byId("dropB").classList.add("ready");
+  }
+  updateComposeState();
+}
+
+function parentLoadFailure(which, text) {
+  if (which === "A") {
+    parentA = null;
+    byId("stateA").textContent = text;
+    byId("dropA").classList.remove("ready");
+  } else {
+    parentB = null;
+    byId("stateB").textContent = text;
+    byId("dropB").classList.remove("ready");
+  }
+  resetCandidate();
+  updateComposeState();
+}
+
+function wireDrop(fileId, dropId, success, failure) {
+  byId(fileId).addEventListener("change", (event) => loadJsonFile(event.target.files?.[0], success, failure));
+  const drop = byId(dropId);
+  drop.addEventListener("dragover", (event) => { event.preventDefault(); drop.classList.add("ready"); });
+  drop.addEventListener("dragleave", () => {});
+  drop.addEventListener("drop", (event) => {
+    event.preventDefault();
+    loadJsonFile(event.dataTransfer?.files?.[0], success, failure);
+  });
+}
+
+function candidateSummaryItem(label, value) {
+  return `<div class="summary-item"><div class="label">${escapeHtml(label)}</div><div class="value">${escapeHtml(value)}</div></div>`;
+}
+
+function renderCandidate(value) {
+  byId("parentRows").innerHTML = value.parents.map((parent) => `
+    <div class="parent-row">
+      <b>#${parent.ordinal}</b>
+      <span class="mono">${escapeHtml(parent.referenceId)}</span>
+      <span>${escapeHtml(parent.kind)}</span>
+      <span>${escapeHtml(parent.role)}</span>
+    </div>`).join("");
+  byId("candidateSummary").innerHTML = [
+    candidateSummaryItem("State", value.authorityState),
+    candidateSummaryItem("Parent order", value.parents.map((parent) => parent.referenceId).join(" → ")),
+    candidateSummaryItem("Total owned wall power", `${value.ownedPower.totalWallPowerW} W`),
+    candidateSummaryItem("Shared overhead", "unresolved"),
+    candidateSummaryItem("Vertical angles", value.photometry.vAngles.length),
+    candidateSummaryItem("Horizontal angles", value.photometry.hAngles.length),
+  ].join("");
+  byId("unresolved").textContent = value.unresolvedAssemblyFields.join(" · ");
+  byId("candidateCard").classList.remove("hidden");
+}
+
+function compose() {
+  resetCandidate();
+  try {
+    const value = composeReferencePair({
+      parents: [
+        { reference: parentA, role: byId("roleA").value, ownedWallPowerW: parentA?.metadata?.G12 },
+        { reference: parentB, role: byId("roleB").value, ownedWallPowerW: parentB?.metadata?.G12 },
+      ],
+      geometryRegistration: "coincident-aligned",
+      operatingState: "all-contributing-channels-on",
+    });
+    if (value.schemaId !== REFERENCE_COMPOSITION_SCHEMA_ID || value.schemaVersion !== REFERENCE_COMPOSITION_SCHEMA_VERSION) {
+      throw new Error("Unsupported composition candidate response.");
+    }
+    candidate = value;
+    renderCandidate(value);
+  } catch (error) {
+    const detail = error instanceof ReferenceCompositionContractError
+      ? `${error.code}: ${error.message}`
+      : (error?.message || "Composition failed closed.");
+    message("compositionMessage", detail);
+  }
+}
+
+function setMergedReference(reference, filename) {
+  resetOutput();
+  sealedMerged = reference;
+  byId("mergedState").innerHTML = describeLoaded(reference, filename);
+  byId("dropMerged").classList.add("ready");
+  byId("materialise").disabled = false;
+}
+
+function mergedLoadFailure(text) {
+  sealedMerged = null;
+  byId("mergedState").textContent = text;
+  byId("dropMerged").classList.remove("ready");
+  byId("materialise").disabled = true;
+  resetOutput();
+}
+
+function materialise() {
+  resetOutput();
+  if (!sealedMerged || sealedMerged.kind !== "MERGED") {
+    message("materialiseMessage", "A freshly approved and sealed MERGED reference DTO is required.");
+    return;
+  }
+  const project = {
+    projectId: byId("projectId").value,
+    outputMultiplier: Number(byId("outputMultiplier").value),
+  };
+  const lumcat = byId("lumcat").value.trim();
+  const luminaire = byId("luminaire").value.trim();
+  if (lumcat) project.lumcat = lumcat;
+  if (luminaire) project.luminaire = luminaire;
+  const result = buildProjectIes(sealedMerged, Number(byId("runLengthMm").value), project);
+  if (!result.ok) {
+    message("materialiseMessage", `${result.code}: ${result.reason}`);
+    return;
+  }
+  generatedText = result.iesText;
+  generatedFilename = result.filename;
+  byId("filename").textContent = result.filename;
+  byId("download").disabled = false;
+  byId("outputSummary").innerHTML = [
+    candidateSummaryItem("Sealed reference", result.provenance.referenceId),
+    candidateSummaryItem("Project", result.provenance.projectId),
+    candidateSummaryItem("Run length", `${result.runLengthMm} mm`),
+    candidateSummaryItem("Output multiplier", result.outputMultiplier),
+    candidateSummaryItem("Exit lumens", result.exitLumens ?? "unresolved"),
+    candidateSummaryItem("Input watts", result.inputWatts),
+  ].join("");
+  byId("iesText").textContent = result.iesText;
+  byId("outputCard").classList.remove("hidden");
+}
+
+wireDrop("parentAFile", "dropA", (value, name) => setParent("A", value, name), (text) => parentLoadFailure("A", text));
+wireDrop("parentBFile", "dropB", (value, name) => setParent("B", value, name), (text) => parentLoadFailure("B", text));
+wireDrop("mergedFile", "dropMerged", setMergedReference, mergedLoadFailure);
+byId("compose").addEventListener("click", compose);
+byId("materialise").addEventListener("click", materialise);
+byId("download").addEventListener("click", () => {
+  if (!generatedText || !generatedFilename) return;
+  const blob = new Blob([generatedText], { type: "text/plain;charset=utf-8" });
+  const objectUrl = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = objectUrl;
+  anchor.download = generatedFilename;
+  anchor.click();
+  URL.revokeObjectURL(objectUrl);
+});
+</script>
+</body>
+</html>
