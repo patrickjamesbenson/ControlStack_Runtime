@@ -90,20 +90,34 @@
 ### Q-2G Repair live exact-System indirect auto-consequence
 
 * id: SEL-017
-* status: ready
+* status: done
 * depends-on: SEL-015 and SEL-016
 * seam change: no — this corrects a remaining Selector presentation consequence without changing source ownership, registration policy, or downstream contracts
 * gate: selector-engine
 * authorised files: `packages/workspace-kernel/selectorReferenceOptionsService.js`, `packages/modules/cs-selector/selectorViewModel.js`, `tests/selectorCascadeCorrectness.test.js`, `tests/selectorLightControlSpine.test.js`, and closeout updates to `docs/_context/lanes/selector-engine/LANE_STATE.md`, `docs/_context/lanes/selector-engine/WORK_QUEUE.md`, `docs/_context/lanes/selector-engine/DECISION_LOG.md`, `docs/_context/lanes/selector-engine/EVIDENCE_INDEX.md`, `docs/_context/lanes/selector-engine/SESSION_HANDOFF.md`. Change only the minimum subset proven necessary.
 * objective: make the page-level automatic indirect-capability consequence follow the exact live selected System identity for DNX 60 rather than a broad shared OPTICS key.
-* acceptance: first reproduce the live-shaped case with exact SYSTEM options `60|Square` direct-only and `60|Beam` direct-indirect plus a broad indirect OPTICS relationship keyed to `60`; trace the full service-to-view-model path and identify the first point where direct-only `60|Square` becomes `Indirect supported`; patch only that first divergent boundary. The direct-only page must expose no effective value, label, auto-chip, selected truth, summary value, or payload value asserting indirect support, while direct capability and direct optics remain available. The distinct `60|Beam` product must still expose legitimate indirect capability and optics. The already-accepted diagnostic-intent repair, genuine indirect registration refusal, Control, Tier, source order, System variant separation, and all no-write boundaries remain unchanged. The saved-test recall behaviour that restores Emergency, EWIS, and Sensor but omits the Run is explanatory evidence only and must not be changed in this parcel. Focused regressions must execute through gate-included tests, then the complete selector-engine gate must pass. No browser save, registration, or Engine invocation occurs in this parcel.
+* acceptance: first reproduce the live-shaped case with exact SYSTEM options `60|Square` direct-only and `60|Beam` direct-indirect plus a broad indirect OPTICS relationship keyed to `60`; trace the full service-to-view-model path and identify the first point where direct-only `60|Square` becomes `Indirect supported`; patch only that first divergent boundary. The direct-only page must expose no effective value, label, auto-chip, selected truth, summary value, or payload value asserting indirect support, while direct capability and direct optics remain available. A duplicate flat `indirectCapability` record is not required: absence is compliant and must not be replaced or fabricated merely so a test can assert that it is blocked; when such a record is genuinely emitted, it must be blocked. The distinct `60|Beam` product must still expose legitimate indirect capability and optics. The already-accepted diagnostic-intent repair, genuine indirect registration refusal, Control, Tier, source order, System variant separation, and all no-write boundaries remain unchanged. The saved-test recall behaviour that restores Emergency, EWIS, and Sensor but omits the Run is explanatory evidence only and must not be changed in this parcel. Focused regressions must execute through gate-included tests, then the complete selector-engine gate must pass. No browser save, registration, or Engine invocation occurs in this parcel.
+* recovery state: the halted workers left exactly `packages/workspace-kernel/selectorReferenceOptionsService.js` and `tests/selectorCascadeCorrectness.test.js` modified and unstaged, alongside the five authorised recovery documents. Preserve all seven paths. Both direct-only and direct-indirect sides may legitimately omit the optional duplicate flat `indirectCapability` record. Correct both over-constrained presence assertions, rerun the live-shaped regression, and retain only implementation changes proven necessary by the remaining page-level assertions. Do not manufacture a duplicate record for either System variant to make the test green.
 * prohibitions: do not alter source data; do not merge or rename System variants; do not remove legitimate indirect OPTICS rows; do not change test-case recall, Emergency, EWIS, Sensor, Run persistence, registration transport, readiness-preview intent logic, Tier, Control, RuntimeData, Lab, Program, donor, or main; do not widen beyond the first proven automatic-consequence divergence.
+
+### Q-2H Resolve Ambient authority and the temperature/lumen Engine seam
+
+* id: SEL-018
+* status: blocked
+* depends-on: SEL-017 and recorded Program & Integrate seam approval
+* seam change: yes — the current first-readonly candidate explicitly excludes Ambient while the actual temperature/lumen lookup requires a finite temperature input
+* gate: selector-engine
+* authorised files: read-only diagnosis only until Program & Integrate records the source authority, registration policy, candidate field, and Engine input contract; no implementation file is authorised yet
+* objective: establish one source-backed Ambient temperature selector and carry its selected numeric temperature to the read-only Engine temperature/lumen lookup without a guessed default.
+* acceptance: Program & Integrate records whether Ambient is required before registration or only before Engine invocation; identifies the authoritative source for selectable Ambient values when the active SYSTEM_POLICY produces no live UI choices; approves the exact Selector-to-Engine field and numeric unit; requires fail-closed behaviour when Ambient is absent or non-numeric; and preserves the rule that no default such as 25°C or 35°C may be invented from fixtures. The eventual implementation must expose Ambient in the live UI, retain the selected value in genuine project state, include it in the protected candidate/Engine request, and prove that the temperature/lumen lookup consumes that value. No Engine invocation is accepted before this seam is resolved.
+* evidence: the live UI has no Ambient selector; `selectorFactoryApprovedInputsSummary` currently reports `ambientRequired: false`; `selectorReadonlyEngineCandidateMapper` omits Ambient from the candidate; and the runtime lumen-curve interpolation contract rejects requests without finite `temp_c`.
+* prohibitions: do not fabricate source values or defaults; do not edit active source data from this lane; do not infer temperature from application, IP, System, Tier, test fixtures, or lab data; do not invoke Engine, save, or register while this known blocker is unresolved.
 
 ### Q-2 Register project-alpha active server-owned revision
 
 * id: SEL-002
 * status: blocked
-* depends-on: SEL-001, SEL-011, SEL-012, SEL-013, SEL-014, SEL-015, SEL-016, and SEL-017
+* depends-on: SEL-001, SEL-011, SEL-012, SEL-013, SEL-014, SEL-015, SEL-016, SEL-017, and SEL-018
 * gate: selector-engine
 * authorised files: read-only repository inspection; no repository file writes unless a later orchestrator commission supplies exact bounded paths
 * objective: use a new genuine `project-alpha` browser-session save to complete the supported server-side registration contract and establish an active server-owned revision.

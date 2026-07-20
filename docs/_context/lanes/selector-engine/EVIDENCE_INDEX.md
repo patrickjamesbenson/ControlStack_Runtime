@@ -190,6 +190,16 @@ Every completed worker updates this index with:
 - Fixture gap: the accepted SEL-015 regression used a simplified direct-only identity and did not cover the exact live 60|Square versus 60|Beam pair through the full rendered view-model path — VERIFIED REPOSITORY TEST INSPECTION.
 - Saved test-case recall: Emergency, EWIS, and Sensor were restored while the Run was not retained; this explains the other observed screen changes and is excluded from the new repair — USER-PROVIDED LIVE EVIDENCE.
 - Queue result: SEL-017 ready for the exact live automatic-consequence divergence; SEL-002 blocked behind it; no save or registration retry authorised — RECORDED.
+- First SEL-017 execution: exact live-shaped `60|Square` and `60|Beam` regression added; option-service change and cascade regression are the only modified unstaged paths; no browser, save, registration, Engine, staging, commit, or push occurred — VERIFIED USER-PROVIDED WORKER EVIDENCE AND CURRENT GIT STATUS.
+- Gate stop: all existing 106 checks passed; the new regression halted because it required a duplicate flat capability record to exist and be blocked, while the service emitted no such duplicate record — VERIFIED WORKER EVIDENCE.
+- Acceptance classification: absence of a duplicate flat `indirectCapability` record is compliant with the no-false-capability contract and must not be reversed or fabricated merely to satisfy the test; only genuinely emitted records must be blocked — ORCHESTRATOR DECISION.
+- Recovery: preserve the two authorised edits, correct the over-constrained expectation, rerun the remaining page-level assertions, and retain only implementation changes proven necessary — RECORDED.
+- Second SEL-017 execution: the direct-only optional-record expectation was corrected; the required gate then ran 107 tests with 106 passing and stopped because the direct-indirect side still required the same optional duplicate record to exist — VERIFIED USER-PROVIDED WORKER EVIDENCE.
+- Second acceptance classification: absence of the optional duplicate flat capability record is equally compliant for the direct-indirect variant; the test must not invent or require that record — ORCHESTRATOR DECISION.
+- Ambient live evidence: the running UI exposes no Ambient temperature selector — USER-PROVIDED LIVE EVIDENCE.
+- Ambient repository contract: the workflow defines Ambient from SYSTEM_POLICY, but the first-readonly candidate summary sets `ambientRequired: false` and the candidate mapper does not emit Ambient — VERIFIED REPOSITORY TRACE.
+- Engine dependency: the runtime lumen-curve interpolation contract requires finite `temp_c` and fails closed without it — VERIFIED REPOSITORY TRACE.
+- Queue result: SEL-017 remains ready with seven authorised unstaged recovery paths; SEL-018 is blocked pending Program & Integrate seam approval; SEL-002, registration, and Engine remain blocked — RECORDED.
 
 ## 2026-07-19 — SEL-012 source-backed Tier ownership repair
 
@@ -367,3 +377,20 @@ Every completed worker updates this index with:
 - Feature ending Git state: clean, with no staged, modified, untracked, or deleted paths — VERIFIED.
 - Live evidence: none required or claimed for the repair; no browser action, save, registration, Engine invocation, project or RuntimeData mutation, persistence, RunTable, IES, or output generation occurred — VERIFIED.
 - Queue result: SEL-016 done; SEL-002 is the sole top ready item and requires Patrick's new genuine browser save plus visible registration acknowledgement — RECORDED.
+
+## 2026-07-20 — SEL-017 live-shaped exact-System indirect consequence repair
+
+- Starting identity: root `C:\ControlStack_Worktrees\selector-engine`; branch `lane/selector-engine`; actual HEAD `ae6381f116da6def3bfbfd69b3f0f728c12207b8`; gate `selector-engine`; the current reconciliation wrapper's immediate parent matched the recorded lane work HEAD — VERIFIED.
+- Starting Git state: exactly seven modified and unstaged paths, all explicitly preserved and authorised for SEL-017 recovery; no staged, untracked, deleted, or unexplained path — VERIFIED.
+- Feature paths: `packages/workspace-kernel/selectorReferenceOptionsService.js` and `tests/selectorCascadeCorrectness.test.js` — VERIFIED.
+- Recovery correction: the Beam D/I assertion now permits the optional duplicate flat `indirectCapability` record to be absent, matching the accepted direct-only rule; no duplicate record was fabricated — VERIFIED.
+- Direct-only live-shaped result: exact `60|Square` blocks the broad OPTICS-derived indirect capability; no effective value, label, auto-chip, selected truth, summary value, or payload value asserts indirect support; direct capability and direct optic remain available — VERIFIED by executed service-to-view-model regression.
+- Direct-indirect live-shaped result: exact `60|Beam` retains legitimate indirect capability, auto-consequence presentation, and indirect optic availability — VERIFIED by executed regression.
+- First divergent boundary: exact selected-SYSTEM indirect support in `selectorReferenceOptionsService.js`; no `selectorViewModel.js` or readiness implementation change was required — VERIFIED by final bounded diff.
+- Affected execution: `selector-engine`, 107 passed, 0 failed, exit code 0; the live exact DNX 60 regression executed visibly — VERIFIED.
+- Repeated complete gate before staging: 107 passed, 0 failed — VERIFIED.
+- Exact staged set: only the two authorised feature/test paths — VERIFIED.
+- Gated feature commit/push: `8c4ca13cdd3a50f83f2f885dff0fd2c2ea89b36d` — `fix(selector): enforce exact-system indirect consequence`; push from `ae6381f` to `8c4ca13` on `origin/lane/selector-engine` succeeded after another 107/107 gate — VERIFIED.
+- Feature ending Git state: only the five authorised durable context files remained modified and unstaged; no staged, untracked, or deleted paths — VERIFIED.
+- Live evidence: no browser observation was required or claimed for this repository parcel; no save, registration, Engine invocation, project or RuntimeData mutation, persistence, RunTable, IES, or output generation occurred — VERIFIED.
+- Queue result: SEL-017 done; SEL-018 remains blocked pending recorded Program & Integrate Ambient seam approval; SEL-002 and Engine execution remain blocked — RECORDED.

@@ -231,3 +231,27 @@ This log is append-oriented. Do not silently rewrite historical decisions.
 **Rationale:** The previous regression proved a simplified direct-only identity but did not cover the exact active-source variant pair. Repository tests cannot close a page-level acceptance when current live evidence contradicts them.
 
 **Consequence:** SEL-017 must locate the first divergence between exact SYSTEM support and the rendered automatic consequence, then patch only that boundary. Test-case recall differences for Emergency, EWIS, Sensor, and Run are explicitly excluded. Registration remains blocked and no further browser action occurs until the repair is complete.
+
+## 2026-07-20 — Absence is valid for a non-authoritative duplicate capability record
+
+**Decision:** A duplicate flat `indirectCapability` record is not required for acceptance. When no such duplicate is emitted, the no-false-capability contract is satisfied; tests must not create or require one merely to assert a blocked status.
+
+**Rationale:** The first live-shaped SEL-017 run passed every existing check and stopped only because the new regression expected a duplicate record that the service did not produce. Manufacturing that record would add surface area without improving page truth.
+
+**Consequence:** The preserved regression must accept absence on both the direct-only and direct-indirect variants, continue through the page-level assertions, and retain only the minimum implementation change proven necessary. Any genuinely emitted capability option must still follow exact selected-SYSTEM support; no duplicate record may be manufactured for either variant.
+
+## 2026-07-20 — Ambient is a required real Engine input, not an optional preview field
+
+**Decision:** Ambient temperature is now a blocking Selector-to-Engine seam issue. The lane must not register or invoke Engine under a contract that omits Ambient while the intended temperature/lumen lookup requires a finite temperature.
+
+**Rationale:** The live UI provides no Ambient selector. Repository truth shows Ambient is defined as a SYSTEM_POLICY-backed workflow field, but the current first-readonly candidate explicitly declares Ambient not required and omits it. The runtime lumen interpolation contract requires finite `temp_c`; a guessed fixture value would be fabricated project truth.
+
+**Consequence:** SEL-018 requires Program & Integrate approval before implementation. That decision must identify source authority, decide whether Ambient gates registration or Engine only, approve the candidate field and unit, and require fail-closed behaviour with no invented 25°C or 35°C default. SEL-002 and all Engine activity remain blocked until the seam is approved and implemented.
+
+## 2026-07-20 — Page-level indirect consequence is governed at the exact SYSTEM boundary
+
+**Decision:** SEL-017 is accepted with the exact selected-SYSTEM support check in the option service as the first divergent boundary. No view-model implementation change is required.
+
+**Rationale:** The live-shaped `60|Square` and `60|Beam` service-to-view-model regression now passes end to end. Direct-only output contains no indirect-support page truth, while Beam D/I retains legitimate indirect capability. Optional duplicate flat capability records may be absent on either variant.
+
+**Consequence:** SEL-017 is done. The option service and its cascade regression are the complete feature scope. Registration and Engine work remain blocked at SEL-018 until Program & Integrate approves the Ambient seam.

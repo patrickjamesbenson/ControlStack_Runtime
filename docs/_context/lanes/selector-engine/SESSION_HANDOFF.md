@@ -336,4 +336,22 @@ The remaining defect is confined to the automatic-consequence path. The next wor
 
 SEL-017 is the sole top ready item. Its exact files, acceptance, exclusions, and gate-included regressions are in WORK_QUEUE.md. Do not save, register, invoke Engine, or change Emergency, EWIS, Sensor, Run recall, Tier, Control, source data, or downstream seams.
 
-After SEL-017 closes, the worker must stop for live observation before registration resumes. Use the canonical standing worker prompt in LANE_CHARTER.md.
+The first SEL-017 worker stopped on the new regression after all 106 existing checks passed. The failed expectation required a duplicate flat capability record to exist and be blocked, but the service emitted no such duplicate. The second worker corrected the direct-only expectation; the 107-test gate then stopped with 106 passing because the direct-indirect side made the same optional-record presence assumption. Absence is acceptable for both variants and must not be reversed or fabricated.
+
+Exactly the authorised option-service and cascade-test files remain modified and unstaged with the five authorised recovery documents. Preserve all seven paths, adjust only the remaining direct-indirect presence expectation, continue through the page-level assertions, and keep only implementation changes those assertions prove necessary. A fresh worker may continue under the standing dirty-tree rule and must not clean, reset, restore, or discard the preserved work.
+
+Ambient is now a separate blocking seam. The live UI has no Ambient selector, the current readonly candidate omits Ambient and declares it unnecessary, but the real temperature/lumen interpolation requires finite `temp_c`. SEL-018 is blocked pending Program & Integrate approval for source authority, registration timing, candidate field, units, and fail-closed behaviour. Do not guess a fixture temperature.
+
+After SEL-017 closes, the worker must stop at the blocked Ambient seam. No save, registration, or Engine invocation resumes until SEL-018 is approved and implemented. Use the canonical standing worker prompt in LANE_CHARTER.md.
+
+## 2026-07-20 SEL-017 closeout — exact live-shaped consequence repaired
+
+SEL-017 is complete on the lane. The exact live-shaped `60|Square` direct-only and `60|Beam` direct-indirect pair now passes through the complete service-to-view-model regression without recreating false indirect support.
+
+For direct-only DNX 60, the broad size-keyed OPTICS relationship is blocked by the exact selected SYSTEM support state before it can become a page effective value, label, auto-chip, selected truth, summary, or payload value. Direct capability and the direct optic remain available. Beam D/I retains legitimate indirect capability and its indirect optic. Optional duplicate flat capability records may be absent on either variant and were not manufactured.
+
+The affected run and repeated complete gate each passed 107/107. Exactly the option service and cascade regression were committed and pushed. No view-model implementation file was needed. No browser action, save, registration, Engine invocation, RuntimeData or project mutation, persistence, RunTable, IES, or output generation occurred.
+
+## Next boundary
+
+SEL-018 is blocked because Ambient temperature changes the Selector-to-Engine contract and Program & Integrate approval is not recorded. The approval must establish the source of selectable Ambient values, whether Ambient gates registration or Engine invocation, the exact candidate field and numeric unit, and fail-closed behaviour without an invented default. Until then, no queue item is eligible and no save, registration, or Engine action is authorised.
