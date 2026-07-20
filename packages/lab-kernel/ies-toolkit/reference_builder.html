@@ -1,0 +1,230 @@
+<!doctype html>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ControlStack Lab — Reference working draft</title>
+<link rel="stylesheet" href="./lab.css" />
+<style>
+  .statusbar{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px}.notice{border:1px solid var(--border);border-radius:var(--r-md);background:#fff;padding:11px 13px;font-size:12px;line-height:1.5;margin-bottom:14px}.notice strong{color:var(--orange)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}.field label{display:block;font-size:12px;margin-bottom:4px}.field select,.field input{width:100%}
+  .component-summary{margin-top:7px;padding:8px 10px;border:1px dashed var(--border);border-radius:var(--r-md);font-size:11.5px;color:var(--muted);min-height:38px}
+  .evidence{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px}.evidence label{display:flex;align-items:flex-start;gap:8px;border:1px solid var(--border-light);border-radius:var(--r-md);background:#fff;padding:9px;font-size:12px}.evidence small{display:block;color:var(--muted);margin-top:2px;word-break:break-all}
+  .actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.blocked{color:#9a2b22}.ok{color:#127a41}.mono{font-family:var(--mono);font-size:11px}.hidden{display:none!important}
+</style>
+
+<div class="wrap">
+  <div class="brandhead">
+    <div class="mark">CS</div>
+    <div><div class="bn">CONTROLSTACK</div><div class="bs">Lab / IES</div></div>
+    <div class="pg"><div class="pgt">Reference working draft</div><div class="pgs">Component and document projections only</div></div>
+  </div>
+
+  <div class="statusbar">
+    <span class="pill grey">offline fixture</span>
+    <span class="pill grey">working draft</span>
+    <span class="pill grey">non-authoritative</span>
+    <span class="pill grey">in-memory only</span>
+  </div>
+
+  <div class="notice"><strong>Boundary:</strong> this page can assemble a working draft from committed component projections and unresolved document associations. It cannot create a reference identity, serial, timestamp, evidence result, approval, resolver location or downloadable authority record. Refresh clears the draft.</div>
+
+  <div class="card">
+    <h2>1 — Draft type and projected components</h2>
+    <div class="grid">
+      <div class="field"><label>Draft type</label><select id="draftType"><option value="gear_tray">Gear tray working draft</option><option value="optic">Optic working draft</option></select></div>
+      <div class="field"><label>Board platform</label><select id="board"><option value="">loading…</option></select><div class="component-summary" id="boardSummary">Projection not loaded.</div></div>
+      <div class="field"><label>Driver</label><select id="driver"><option value="">loading…</option></select><div class="component-summary" id="driverSummary">Projection not loaded.</div></div>
+      <div class="field" id="opticField"><label>Optic</label><select id="optic"><option value="">loading…</option></select><div class="component-summary" id="opticSummary">Projection not loaded.</div></div>
+    </div>
+    <p class="sub" id="projectionStatus" style="margin:10px 0 0">Loading the committed offline component projection…</p>
+  </div>
+
+  <div class="card">
+    <h2>2 — Entered working measurements</h2>
+    <div class="grid">
+      <div class="field"><label>Wall power W</label><input id="wallW" type="number" min="0" step="0.1" placeholder="unresolved" /></div>
+      <div class="field"><label>Flux lm</label><input id="fluxLm" type="number" min="0" step="1" placeholder="unresolved" /></div>
+      <div class="field"><label>Lab ambient °C</label><input id="ambientC" type="number" step="0.1" placeholder="unresolved" /></div>
+      <div class="field"><label>Working note</label><input id="note" placeholder="optional entered note" /></div>
+    </div>
+    <p class="sub" style="margin:10px 0 0">Entered values remain unverified working observations. No capability, compliance or emergency conclusion is derived here.</p>
+  </div>
+
+  <div class="card">
+    <h2>3 — Associate existing unresolved documents</h2>
+    <div class="evidence" id="evidenceList"></div>
+    <p class="sub" style="margin:10px 0 0">Associations use the committed immutable document-register contract. They do not alter or delete source evidence and clear on refresh.</p>
+  </div>
+
+  <div class="card">
+    <div class="actions"><button class="btn primary" id="preview">Preview working draft</button><button class="btn ghost" id="clear">Clear working state</button><span id="message" class="muted"></span></div>
+    <h2 style="margin-top:14px">Working-draft preview</h2>
+    <pre id="output">— preview not generated —</pre>
+  </div>
+</div>
+
+<script type="module">
+import { projectComponentCatalogue } from "./nvbComponents.js";
+import {
+  createDocumentRegisterState,
+  registerDocument,
+  linkDocument,
+  unlinkDocument,
+  documentsForEntity,
+} from "./docRegister.js";
+
+const $ = (id) => document.getElementById(id);
+const esc = (value) => String(value ?? "").replace(/[&<>"']/g, (character) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[character]));
+const numberOrNull = (value) => value === "" ? null : Number(value);
+const deepFreeze = (value) => {
+  if (!value || typeof value !== "object" || Object.isFrozen(value)) return value;
+  for (const child of Object.values(value)) deepFreeze(child);
+  return Object.freeze(value);
+};
+
+const SOURCE_REVISION = "lab-offline-fixtures-2026-07-19";
+const ENTITY_BY_MODE = Object.freeze({ gear_tray:"draft-gear-tray", optic:"draft-optic" });
+const DOCUMENTS = Object.freeze([
+  Object.freeze({documentId:"DOC-SRC-DNX80",documentType:"datasheet",title:"DNX-80 board datasheet — offline demo source",sourceRef:"/s/DNX-80_board_datasheet.txt",contentSha256:null,sourceStatus:"accepted"}),
+  Object.freeze({documentId:"DOC-SRC-LM301H-DS",documentType:"datasheet",title:"Samsung LM301H datasheet — offline demo source",sourceRef:"/s/Samsung_LM301H_datasheet.txt",contentSha256:null,sourceStatus:"accepted"}),
+  Object.freeze({documentId:"DOC-SRC-LM301H-LM80",documentType:"LM-80",title:"Samsung LM301H LM-80 — offline demo source",sourceRef:"/s/Samsung_LM301H_LM-80.txt",contentSha256:null,sourceStatus:"accepted"}),
+  Object.freeze({documentId:"DOC-SRC-LM301H-TM21",documentType:"TM-21",title:"Samsung LM301H TM-21 — offline demo source",sourceRef:"/s/Samsung_LM301H_TM-21.txt",contentSha256:null,sourceStatus:"accepted"}),
+  Object.freeze({documentId:"DOC-SRC-TRIDONIC",documentType:"datasheet",title:"Tridonic LC55 datasheet — offline demo source",sourceRef:"/s/Tridonic_LC55_datasheet.txt",contentSha256:null,sourceStatus:"accepted"}),
+  Object.freeze({documentId:"DOC-SRC-ZCEM",documentType:"datasheet",title:"ZC-EM-SMART-50 datasheet — offline demo source",sourceRef:"/s/zc-em-smart-50_datasheet.txt",contentSha256:null,sourceStatus:"accepted"}),
+  Object.freeze({documentId:"DOC-SRC-EM-REPORT",documentType:"test report",title:"Emergency test report — offline demo source",sourceRef:"/s/Emergency_test_report.txt",contentSha256:null,sourceStatus:"accepted"}),
+  Object.freeze({documentId:"DOC-SRC-EWIS-REPORT",documentType:"test report",title:"EWIS cartridge report — offline demo source",sourceRef:"/s/EWIS_cartridge_report.txt",contentSha256:null,sourceStatus:"accepted"}),
+]);
+
+let catalogue = null;
+let documentState = createDocumentRegisterState();
+for (const document of DOCUMENTS) documentState = registerDocument(documentState, document).state;
+
+async function fetchJson(path) {
+  const response = await fetch(path, {cache:"no-store"});
+  if (!response.ok) throw new Error(`${path} returned HTTP ${response.status}`);
+  return response.json();
+}
+
+function expandBoardProjectionRows(platforms) {
+  return platforms.flatMap((platform) => {
+    const ccts = Array.isArray(platform.ccts) && platform.ccts.length ? platform.ccts : [null];
+    const rowCount = Number.isInteger(platform.variants) && platform.variants > 0 ? platform.variants : ccts.length;
+    return Array.from({length:rowCount}, (_, index) => ({
+      novon_family:platform.novon_family,led_chip:platform.led_chip,vendor:platform.vendor,
+      c1_cct:ccts[index % ccts.length],c2_cct:platform.tunable && ccts.length > 1 ? ccts[(index + 1) % ccts.length] : null,
+      channels:platform.tunable ? 2 : 1,c1_cri_min:platform.cri_min,tc_c:platform.tc_c_max,
+      life_hours_at_tc:platform.life_hours_at_tc,max_ambient_ta:platform.max_internal_ambient_ta,
+      warranty_10y_failpct:platform.warranty_10y_failpct,datasheet_url:platform.datasheet_url,
+    }));
+  });
+}
+
+function selected(array, selectId) {
+  const index = Number($(selectId).value);
+  return Number.isInteger(index) && index >= 0 ? array[index] ?? null : null;
+}
+
+function renderSummary(id, value, rows) {
+  $(id).innerHTML = value ? rows(value).map(([label, item]) => `<strong>${esc(label)}:</strong> ${esc(item ?? "unresolved")}`).join(" · ") : "Selection unresolved.";
+}
+
+function renderSelections() {
+  if (!catalogue) return;
+  const board = selected(catalogue.platforms, "board");
+  const driver = selected(catalogue.drivers, "driver");
+  const optic = selected(catalogue.optics, "optic");
+  renderSummary("boardSummary", board, (value) => [["platform",value.platformId],["family",value.novonFamily],["chip",value.ledChip],["source","offline projection"]]);
+  renderSummary("driverSummary", driver, (value) => [["model",value.model],["series",value.series],["vendor",value.vendor],["source","offline projection"]]);
+  renderSummary("opticSummary", optic, (value) => [["BOM",value.opticBomId],["variant",value.opticVariant],["family",value.family],["source","offline projection"]]);
+}
+
+function renderEvidence() {
+  const mode = $("draftType").value;
+  const entityId = ENTITY_BY_MODE[mode];
+  const linked = new Set(documentsForEntity(documentState, entityId).map((document) => document.documentId));
+  $("evidenceList").innerHTML = DOCUMENTS.map((document) => `<label><input type="checkbox" data-document="${esc(document.documentId)}" ${linked.has(document.documentId) ? "checked" : ""}/><span><strong>${esc(document.title)}</strong><small>${esc(document.documentType)} · accepted into demo register only · not verified</small><small class="mono">${esc(document.sourceRef)}</small></span></label>`).join("");
+  $("evidenceList").querySelectorAll("input[data-document]").forEach((input) => input.onchange = () => {
+    const command = {documentId:input.dataset.document,entityId};
+    documentState = input.checked ? linkDocument(documentState, command) : unlinkDocument(documentState, command);
+  });
+}
+
+function modeChanged() {
+  const optic = $("draftType").value === "optic";
+  $("opticField").classList.toggle("hidden", !optic);
+  renderEvidence();
+}
+
+function workingDraft() {
+  const mode = $("draftType").value;
+  const board = catalogue ? selected(catalogue.platforms, "board") : null;
+  const driver = catalogue ? selected(catalogue.drivers, "driver") : null;
+  const optic = catalogue && mode === "optic" ? selected(catalogue.optics, "optic") : null;
+  const associated = documentsForEntity(documentState, ENTITY_BY_MODE[mode]);
+  const unresolvedFields = ["/referenceIdentity", "/evidenceVerification"];
+  if (!board) unresolvedFields.push("/selectedComponents/board");
+  if (!driver) unresolvedFields.push("/selectedComponents/driver");
+  if (mode === "optic" && !optic) unresolvedFields.push("/selectedComponents/optic");
+  if ($("wallW").value === "") unresolvedFields.push("/measurements/wallW");
+  if ($("fluxLm").value === "") unresolvedFields.push("/measurements/fluxLm");
+  return deepFreeze({
+    draftType:"reference_working_draft",
+    draftMode:mode,
+    status:"non_authoritative_in_memory",
+    referenceIdentity:null,
+    selectedComponents:{
+      board:board ? {platformId:board.platformId,novonFamily:board.novonFamily,ledChip:board.ledChip,vendor:board.vendor} : null,
+      driver:driver ? {model:driver.model,series:driver.series,vendor:driver.vendor} : null,
+      optic:optic ? {opticBomId:optic.opticBomId,opticVariant:optic.opticVariant,family:optic.family} : null,
+    },
+    measurements:{wallW:numberOrNull($("wallW").value),fluxLm:numberOrNull($("fluxLm").value),labAmbientC:numberOrNull($("ambientC").value)},
+    workingNote:$("note").value.trim() || null,
+    documentAssociations:associated.map((document) => ({documentId:document.documentId,documentType:document.documentType,sourceRef:document.sourceRef,registerSourceStatus:document.sourceStatus,reviewState:"unresolved"})),
+    evidenceVerification:null,
+    unresolvedFields,
+    readOnly:true,
+  });
+}
+
+$("draftType").onchange = modeChanged;
+for (const id of ["board","driver","optic"]) $(id).onchange = renderSelections;
+$("preview").onclick = () => {
+  try {
+    const draft = workingDraft();
+    $("output").textContent = JSON.stringify(draft, null, 2);
+    $("message").className = draft.unresolvedFields.length ? "blocked" : "ok";
+    $("message").textContent = `${draft.unresolvedFields.length} unresolved field(s); no reference authority was created.`;
+  } catch (error) {
+    $("message").className = "blocked";
+    $("message").textContent = `${error.name || "Error"}: ${error.message}`;
+  }
+};
+$("clear").onclick = () => {
+  documentState = createDocumentRegisterState();
+  for (const document of DOCUMENTS) documentState = registerDocument(documentState, document).state;
+  for (const id of ["board","driver","optic","wallW","fluxLm","ambientC","note"]) $(id).value = "";
+  $("draftType").value = "gear_tray";
+  $("output").textContent = "— preview not generated —";
+  $("message").textContent = "Working state cleared. No source evidence was deleted.";
+  renderSelections();
+  modeChanged();
+};
+
+try {
+  const [platformRows, driverRows, opticRows] = await Promise.all([
+    fetchJson("./nvb/board_platforms.json"),
+    fetchJson("./nvb/drivers_unique.json"),
+    fetchJson("./nvb/optics.json"),
+  ]);
+  catalogue = projectComponentCatalogue({sourceRevision:SOURCE_REVISION,boards:expandBoardProjectionRows(platformRows),drivers:driverRows,optics:opticRows});
+  $("board").innerHTML = `<option value="">— unresolved —</option>${catalogue.platforms.map((item,index) => `<option value="${index}">${esc(item.platformId)} · ${esc(item.novonFamily)}</option>`).join("")}`;
+  $("driver").innerHTML = `<option value="">— unresolved —</option>${catalogue.drivers.map((item,index) => `<option value="${index}">${esc(item.model)}</option>`).join("")}`;
+  $("optic").innerHTML = `<option value="">— unresolved —</option>${catalogue.optics.map((item,index) => `<option value="${index}">${esc(item.opticBomId)} · ${esc(item.opticVariant ?? "unresolved")}</option>`).join("")}`;
+  $("projectionStatus").textContent = `${catalogue.sourceRevision}: ${catalogue.platforms.length} board platform(s), ${catalogue.drivers.length} driver(s), ${catalogue.optics.length} optic(s). Read-only and unapproved.`;
+  renderSelections();
+} catch (error) {
+  $("projectionStatus").className = "blocked";
+  $("projectionStatus").textContent = `Fail-closed component projection: ${error.message}`;
+  $("preview").disabled = true;
+}
+modeChanged();
+</script>

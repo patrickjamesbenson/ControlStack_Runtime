@@ -1,0 +1,180 @@
+<!doctype html>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ControlStack Lab — Evidence curation plan</title>
+<link rel="stylesheet" href="./lab.css" />
+<style>
+  .statusbar{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px}.notice{border:1px solid var(--border);border-radius:var(--r-md);background:#fff;padding:11px 13px;font-size:12px;line-height:1.5;margin-bottom:14px}.notice strong{color:var(--orange)}
+  .identity{display:grid;grid-template-columns:minmax(240px,1fr) minmax(220px,1fr);gap:12px}.identity input{width:100%}.syntax{border:1px dashed var(--border);border-radius:var(--r-md);padding:9px 10px;font-size:12px;min-height:38px}.syntax.ok{border-color:#77ad85;background:#f4fbf6;color:#116c39}.syntax.bad{border-color:#d28b84;background:#fff4f3;color:#912c23}
+  table.docs{width:100%;border-collapse:collapse;font-size:12px}table.docs th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);padding:7px;border-bottom:1px solid var(--border)}table.docs td{padding:8px 7px;border-bottom:1px solid var(--border-light);vertical-align:top}.mono{font-family:var(--mono);font-size:10.5px;word-break:break-all}.artifact{font-size:11px}.muted{color:var(--muted)}
+  .actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.blocked{color:#9a2b22}.okmsg{color:#127a41}.review textarea{width:100%;min-height:90px}.empty{padding:12px;border:1px dashed var(--border);border-radius:var(--r-md);color:var(--muted)}
+  @media(max-width:700px){.identity{grid-template-columns:1fr}}
+</style>
+
+<div class="wrap">
+  <div class="brandhead">
+    <div class="mark">CS</div>
+    <div><div class="bn">CONTROLSTACK</div><div class="bs">Lab / IES</div></div>
+    <div class="pg"><div class="pgt">Evidence curation plan</div><div class="pgs">Existing source associations only</div></div>
+  </div>
+
+  <div class="statusbar">
+    <span class="pill grey">offline demo</span>
+    <span class="pill grey">working plan</span>
+    <span class="pill grey">no file intake</span>
+    <span class="pill grey">no identity allocation</span>
+  </div>
+
+  <div class="notice"><strong>Boundary:</strong> this page can associate committed demo-source metadata with a working curation plan. An entered reference ID is checked for syntax only and is not treated as existing authority. The page does not upload files, verify evidence, calculate capabilities, create a resolver location or produce a downloadable record. Refresh clears the plan.</div>
+
+  <div class="card">
+    <h2>1 — Optional existing reference identifier</h2>
+    <div class="identity">
+      <div><label>Caller-supplied existing reference ID</label><input id="existingId" placeholder="NVB-REF-GT-000045" autocomplete="off" /></div>
+      <div><label>Syntax check</label><div id="syntax" class="syntax">No identifier entered. Identity remains unresolved.</div></div>
+    </div>
+    <p class="sub" style="margin:9px 0 0">A valid-looking string is not an approval, seal, authority hash or proof that a resolver endpoint exists.</p>
+  </div>
+
+  <div class="card">
+    <h2>2 — Select committed demo-source records</h2>
+    <table class="docs">
+      <thead><tr><th></th><th>Source record</th><th>Type</th><th>Register state</th><th>Canonical source reference</th></tr></thead>
+      <tbody id="docBody"></tbody>
+    </table>
+    <div id="docEmpty" class="empty">No committed demo-source records are available.</div>
+    <p class="sub" style="margin:10px 0 0">Selection means “associate with this browser-memory plan”. It does not mean the document has been technically accepted, reviewed or verified.</p>
+  </div>
+
+  <div class="card review">
+    <h2>3 — Working review note</h2>
+    <textarea id="reviewNote" placeholder="Optional non-authoritative curation note"></textarea>
+  </div>
+
+  <div class="card">
+    <div class="actions"><button class="btn primary" id="preview">Preview curation plan</button><button class="btn ghost" id="clear">Clear working state</button><span id="message" class="muted"></span></div>
+    <h2 style="margin-top:14px">Curation-plan preview</h2>
+    <pre id="output">— preview not generated —</pre>
+  </div>
+</div>
+
+<script type="module">
+import { parseReferenceId, REFERENCE_IDENTITY_SCHEMA_ID, REFERENCE_IDENTITY_SCHEMA_VERSION } from "./nvbReference.js";
+import {
+  createDocumentRegisterState,
+  registerDocument,
+  linkDocument,
+  unlinkDocument,
+  documentsForEntity,
+} from "./docRegister.js";
+
+const $ = (id) => document.getElementById(id);
+const esc = (value) => String(value ?? "").replace(/[&<>"']/g, (character) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[character]));
+const deepFreeze = (value) => {
+  if (!value || typeof value !== "object" || Object.isFrozen(value)) return value;
+  for (const child of Object.values(value)) deepFreeze(child);
+  return Object.freeze(value);
+};
+
+const ENTITY_ID = "reference-curation-draft";
+const SOURCES = Object.freeze([
+  Object.freeze({documentId:"DOC-SRC-DNX80",documentType:"datasheet",title:"DNX-80 board datasheet — offline demo source",sourceRef:"/s/DNX-80_board_datasheet.txt",contentSha256:null,sourceStatus:"accepted",artifact:"./lab/sources/DNX-80_board_datasheet.txt"}),
+  Object.freeze({documentId:"DOC-SRC-LM301H-DS",documentType:"datasheet",title:"Samsung LM301H datasheet — offline demo source",sourceRef:"/s/Samsung_LM301H_datasheet.txt",contentSha256:null,sourceStatus:"accepted",artifact:"./lab/sources/Samsung_LM301H_datasheet.txt"}),
+  Object.freeze({documentId:"DOC-SRC-LM301H-LM80",documentType:"LM-80",title:"Samsung LM301H LM-80 — offline demo source",sourceRef:"/s/Samsung_LM301H_LM-80.txt",contentSha256:null,sourceStatus:"accepted",artifact:"./lab/sources/Samsung_LM301H_LM-80.txt"}),
+  Object.freeze({documentId:"DOC-SRC-LM301H-TM21",documentType:"TM-21",title:"Samsung LM301H TM-21 — offline demo source",sourceRef:"/s/Samsung_LM301H_TM-21.txt",contentSha256:null,sourceStatus:"accepted",artifact:"./lab/sources/Samsung_LM301H_TM-21.txt"}),
+  Object.freeze({documentId:"DOC-SRC-TRIDONIC",documentType:"datasheet",title:"Tridonic LC55 datasheet — offline demo source",sourceRef:"/s/Tridonic_LC55_datasheet.txt",contentSha256:null,sourceStatus:"accepted",artifact:"./lab/sources/Tridonic_LC55_datasheet.txt"}),
+  Object.freeze({documentId:"DOC-SRC-ZCEM",documentType:"datasheet",title:"ZC-EM-SMART-50 datasheet — offline demo source",sourceRef:"/s/zc-em-smart-50_datasheet.txt",contentSha256:null,sourceStatus:"accepted",artifact:"./lab/sources/zc-em-smart-50_datasheet.txt"}),
+  Object.freeze({documentId:"DOC-SRC-EM-REPORT",documentType:"test report",title:"Emergency test report — offline demo source",sourceRef:"/s/Emergency_test_report.txt",contentSha256:null,sourceStatus:"accepted",artifact:"./lab/sources/Emergency_test_report.txt"}),
+  Object.freeze({documentId:"DOC-SRC-EWIS-REPORT",documentType:"test report",title:"EWIS cartridge report — offline demo source",sourceRef:"/s/EWIS_cartridge_report.txt",contentSha256:null,sourceStatus:"accepted",artifact:"./lab/sources/EWIS_cartridge_report.txt"}),
+]);
+
+let state = createDocumentRegisterState();
+function resetRegister() {
+  state = createDocumentRegisterState();
+  for (const source of SOURCES) {
+    const {artifact, ...record} = source;
+    state = registerDocument(state, record).state;
+  }
+}
+resetRegister();
+
+function syntaxState() {
+  const entered = $("existingId").value.trim();
+  if (!entered) return {enteredReferenceId:null,parsed:null};
+  return {enteredReferenceId:entered,parsed:parseReferenceId(entered)};
+}
+
+function renderSyntax() {
+  const {enteredReferenceId, parsed} = syntaxState();
+  if (!enteredReferenceId) {
+    $("syntax").className = "syntax";
+    $("syntax").textContent = "No identifier entered. Identity remains unresolved.";
+    return;
+  }
+  if (!parsed) {
+    $("syntax").className = "syntax bad";
+    $("syntax").textContent = "Invalid syntax. Curation remains blocked.";
+    return;
+  }
+  $("syntax").className = "syntax ok";
+  $("syntax").textContent = `${parsed.referenceId} matches ${parsed.kind} syntax only. No authority projection was supplied.`;
+}
+
+function renderDocuments() {
+  const linked = new Set(documentsForEntity(state, ENTITY_ID).map((document) => document.documentId));
+  $("docEmpty").style.display = SOURCES.length ? "none" : "";
+  $("docBody").innerHTML = SOURCES.map((source) => `<tr>
+    <td><input type="checkbox" data-document="${esc(source.documentId)}" ${linked.has(source.documentId) ? "checked" : ""}/></td>
+    <td><strong>${esc(source.title)}</strong><br><a class="artifact" href="${esc(source.artifact)}" target="_blank" rel="noopener">open committed demo artefact ↗</a></td>
+    <td>${esc(source.documentType)}</td>
+    <td>accepted into demo register only<br><span class="muted">review state unresolved</span></td>
+    <td class="mono">${esc(source.sourceRef)}</td>
+  </tr>`).join("");
+  $("docBody").querySelectorAll("input[data-document]").forEach((input) => input.onchange = () => {
+    const command = {documentId:input.dataset.document,entityId:ENTITY_ID};
+    state = input.checked ? linkDocument(state, command) : unlinkDocument(state, command);
+  });
+}
+
+function curationPlan() {
+  const {enteredReferenceId, parsed} = syntaxState();
+  const associated = documentsForEntity(state, ENTITY_ID);
+  const blockers = ["identity_authority_not_supplied", "evidence_review_not_completed", "capability_evaluation_not_performed"];
+  if (enteredReferenceId && !parsed) blockers.push("entered_reference_id_invalid");
+  if (!associated.length) blockers.push("no_source_records_associated");
+  return deepFreeze({
+    planType:"evidence_curation_working_plan",
+    status:"non_authoritative_in_memory",
+    enteredReferenceId,
+    referenceSyntax:parsed ? {valid:true,kind:parsed.kind,contract:`${REFERENCE_IDENTITY_SCHEMA_ID}@${REFERENCE_IDENTITY_SCHEMA_VERSION}`} : {valid:false,kind:null,contract:`${REFERENCE_IDENTITY_SCHEMA_ID}@${REFERENCE_IDENTITY_SCHEMA_VERSION}`},
+    identityProjection:null,
+    sourceAssociations:associated.map((document) => ({documentId:document.documentId,documentType:document.documentType,sourceRef:document.sourceRef,registerSourceStatus:document.sourceStatus,reviewState:"unresolved",evidenceResult:null})),
+    reviewNote:$("reviewNote").value.trim() || null,
+    capabilityEvaluation:null,
+    assemblyVerification:{emergency:null,ewisCartridge:null},
+    blockers,
+    readOnly:true,
+  });
+}
+
+$("existingId").oninput = renderSyntax;
+$("preview").onclick = () => {
+  const plan = curationPlan();
+  $("output").textContent = JSON.stringify(plan, null, 2);
+  $("message").className = "blocked";
+  $("message").textContent = `${plan.blockers.length} blocker(s); no identity, evidence result or authority record was created.`;
+};
+$("clear").onclick = () => {
+  resetRegister();
+  $("existingId").value = "";
+  $("reviewNote").value = "";
+  $("output").textContent = "— preview not generated —";
+  $("message").className = "muted";
+  $("message").textContent = "Working state cleared. Committed source artefacts were not deleted.";
+  renderSyntax();
+  renderDocuments();
+};
+
+renderSyntax();
+renderDocuments();
+</script>
