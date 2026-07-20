@@ -13,11 +13,11 @@ Current repository evidence overrides stale historical statements.
 - Root: `C:\ControlStack_Worktrees\code-pilot-lab`
 - Branch: `lane/code-pilot-lab`
 - Gate: `lab-ies`
-- Recorded branch HEAD: `7b74ca49665007311f6dbb8cfdccc47be5472353`
+- Recorded branch HEAD: `79d9327d9c93a6d3558787c98bce30080296d4f2`
 - Branch-HEAD guard checkpoint: `6d34e500d407d5335e5eebb317636a67a5e98618`
-- Starting HEAD for LAB-028: `326c95a01570970bfc0205dca2be3bd34442acc6`
-- Completed feature HEAD: `569c53f5a6b89850abb80a753f4296535e3b5db8`
-- Feature subject: `lab: checkpoint reference curation surfaces`
+- Starting HEAD for LAB-029: `79d9327d9c93a6d3558787c98bce30080296d4f2`
+- Completed feature HEAD: `f41c22ca69ce24b5d2bc8bed20c334396d070a29`
+- Feature subject: `lab: checkpoint provenance publication surfaces`
 - Feature push: confirmed on origin `lane/code-pilot-lab`
 
 ## Branch-HEAD synchronisation invariant
@@ -59,7 +59,31 @@ Before any queue item is selected, a worker must compare `Recorded branch HEAD` 
 - Human-observation acceptance cannot be closed from repository evidence. The item remains incomplete and the worker supplies exact `NEEDS YOU` steps.
 - Orchestrator review occurs at seam, human-observation and five-parcel/stop boundaries rather than after each routine parcel.
 
-## Latest completed parcel — LAB-028
+## Latest completed parcel — LAB-029
+
+Queue item `LAB-029-provenance-publication-surfaces` is complete.
+
+Exactly these three authorised files were changed and committed:
+
+```text
+packages/lab-kernel/ies-toolkit/provenance.html
+packages/lab-kernel/ies-toolkit/provenance_explorer.html
+packages/lab-kernel/ies-toolkit/luminaire_provenance.html
+```
+
+Verified outcome:
+
+- all three pages implement the approved `controlstack.lab.provenance-publication-view.v1` presentation boundary;
+- governed mode accepts only the approved safe identity projection and caller-supplied resolver availability state;
+- offline mode reads only fixed committed safe fixture projections and remains prominently labelled `OFFLINE DEMO — UNAPPROVED`;
+- resolver entries are canonical host-free paths, round-trip through the committed resolver helpers and never expose a host, storage location or raw body;
+- evidence capability display delegates to the committed summary helper and remains category coverage only;
+- emergency and EWIS assembly verification remain exactly null/unresolved;
+- the deliberately incomplete fixture fails closed rather than being normalised into a stronger projection;
+- no upload, download, browser storage, current-time generation, ID allocation, diagnostic authority value, public resolver, Program persistence or cross-lane implementation exists;
+- focused, independent and gated feature executions all passed 255/255.
+
+## Previous completed parcel — LAB-028
 
 Queue item `LAB-028-reference-curation-surfaces` is complete.
 
@@ -374,7 +398,7 @@ Verified outcome:
 
 The connected app exposes the fixed `lab-ies` gate as the available changed-file and full validation path.
 
-- Focused changed-file execution for the two LAB-028 surface files: 255 tests, 255 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
+- Focused changed-file execution for the three LAB-029 publication surfaces: 255 tests, 255 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
 - Independent full `lab-ies` gate: 255 tests, 255 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
 - Gated feature commit execution: 255 tests, 255 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
 
@@ -384,7 +408,7 @@ The protected working-tree state after documentation closeout is:
 
 - staged: 0;
 - modified: 1 — only the unstaged `Recorded branch HEAD` synchronisation marker in this file;
-- untracked: 16;
+- untracked: 13;
 - deleted: 0.
 
 Protected untracked paths:
@@ -399,9 +423,6 @@ packages/lab-kernel/ies-toolkit/ies_merge.html
 packages/lab-kernel/ies-toolkit/index.html
 packages/lab-kernel/ies-toolkit/lab.html
 packages/lab-kernel/ies-toolkit/labbench.html
-packages/lab-kernel/ies-toolkit/luminaire_provenance.html
-packages/lab-kernel/ies-toolkit/provenance.html
-packages/lab-kernel/ies-toolkit/provenance_explorer.html
 packages/lab-kernel/ies-toolkit/selector_stub.html
 scripts/clear_chaff.ps1
 serve.mjs
@@ -446,8 +467,9 @@ tests/selectorCascadeCorrectness.test.js
 - LAB-028 is complete and confirmed on origin as the bounded non-authoritative reference-draft and evidence-curation surfaces.
 - LAB-029 seam envelope version 1 is approved unchanged by Program & Integrate; it reuses the approved safe identity, host-free resolver and evidence-capability contracts without moving Program ownership.
 - Program reported gate 45/45 passed, the approval decision committed and pushed, and its tree clean.
-- LAB-029 is the single active `ready` parcel under that exact approved version.
-- Pre-approval LAB-029 seam-envelope full `lab-ies` gate: 255/255 passed.
+- LAB-029 is complete and confirmed on origin as the exact approved three-file provenance publication parcel.
+- Focused, independent and gated LAB-029 executions passed 255/255.
+- LAB-030 is the single active `ready` parcel.
 - No parallel or combined implementation is authorised.
 - The earlier LAB-018 approval hold remains superseded.
 
@@ -472,10 +494,11 @@ tests/selectorCascadeCorrectness.test.js
 - `LAB-026-document-equipment-surfaces`: done.
 - `LAB-027-request-report-workflow`: done.
 - `LAB-028-reference-curation-surfaces`: done.
-- Next ordered item: `LAB-029-provenance-publication-surfaces`.
-- Resulting status: `ready`; Program & Integrate approved seam-envelope version 1 unchanged.
-- Ready items: exactly one — LAB-029.
-- Seam approval required: no further approval for the recorded version.
+- `LAB-029-provenance-publication-surfaces`: done.
+- Next ordered item: `LAB-030-emergency-surface`.
+- Resulting status: `ready`.
+- Ready items: exactly one — LAB-030.
+- Seam approval required: no.
 - Human observation required before implementation: no.
 
-LAB-028 is complete. LAB-029 is ordered as the single active parcel for the next standing-worker batch.
+LAB-029 is complete. LAB-030 is ordered as the single active parcel for the current standing-worker batch.

@@ -506,7 +506,9 @@ Evidence: `569c53f5a6b89850abb80a753f4296535e3b5db8`, confirmed on origin. Patri
 - depends on: LAB-017-reference-resolver-contract, LAB-021-emergency-selection-contract, LAB-024-resolver-fixture-corpus
 - on success next: LAB-030-emergency-surface
 - seam change: yes
-- status: ready
+- status: done
+
+Evidence: `f41c22ca69ce24b5d2bc8bed20c334396d070a29`, confirmed on origin. The three read-only publication pages implement the approved version-1 view over safe identity, canonical host-free resolver paths and evidence-category coverage; fixture mode is visibly `OFFLINE DEMO — UNAPPROVED`, raw bodies and host probing are absent, and emergency/EWIS assembly verification remains null.
 
 ### Q-20 Emergency selection surface
 - id: LAB-030-emergency-surface
@@ -523,7 +525,7 @@ Evidence: `569c53f5a6b89850abb80a753f4296535e3b5db8`, confirmed on origin. Patri
 - depends on: LAB-012-lab-style-foundation, LAB-021-emergency-selection-contract
 - on success next: LAB-031-project-builder-surface
 - seam change: no
-- status: queued
+- status: ready
 
 ### Q-21 Project IES builder surface
 - id: LAB-031-project-builder-surface

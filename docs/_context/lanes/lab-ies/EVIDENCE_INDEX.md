@@ -64,6 +64,57 @@ For human-observation acceptance, the worker must stop before making a completio
 
 The operating model is recorded in `LANE_CHARTER.md`, `DECISION_LOG.md`, `LANE_STATE.md` and `WORK_QUEUE.md`. Both standing prompts live only in the stable charter; `SESSION_HANDOFF.md` carries launch pointers and current session evidence.
 
+## LAB-029 provenance publication surfaces — 2026-07-20
+
+### Identity and approved seam
+
+- starting HEAD: `79d9327d9c93a6d3558787c98bce30080296d4f2`;
+- queue item: `LAB-029-provenance-publication-surfaces`;
+- seam envelope: `LAB-029_SEAM_ENVELOPE.md`, version 1, approved unchanged by Program & Integrate;
+- authorised paths only:
+  - `packages/lab-kernel/ies-toolkit/provenance.html`;
+  - `packages/lab-kernel/ies-toolkit/provenance_explorer.html`;
+  - `packages/lab-kernel/ies-toolkit/luminaire_provenance.html`.
+
+### Behaviour evidence
+
+The completed pages:
+
+- implement the approved `controlstack.lab.provenance-publication-view.v1` presentation boundary;
+- use the committed reference identity, canonical host-free resolver-path and evidence-capability helpers rather than legacy resolver shims or duplicated capability logic;
+- accept governed data only through the bounded safe projection and caller-supplied availability state;
+- load offline data only from fixed committed safe projection files and retain the prominent exact label `OFFLINE DEMO — UNAPPROVED`;
+- keep authority and reference SHA values unresolved in fixture mode;
+- keep emergency and EWIS assembly verification exactly null/unresolved;
+- display only canonical resolver references and supplied state, without opening or previewing origin IES, evidence, source or report bodies;
+- fail closed on malformed, incomplete or conflicting fixtures, including the deliberately incomplete OPT-000124 projection;
+- contain no public resolver host, route-to-storage mapping, upload, download, persistence, browser storage, clock/random ID generation, private authority reconstruction or cross-lane implementation.
+
+### Static boundary evidence
+
+- hard-coded HTTP host, legacy `devHref`/`resolveKind`, local-path mapping, clock, browser-storage, file-input, object-URL and download search: zero matches;
+- diagnostic `fingerprint` search: zero matches;
+- positive fixture authority wording search found only the exact unapproved fixture label and governed safe-identity fields;
+- the three files import and delegate to the committed `nvbReference.js` contract;
+- exact staged set: the three authorised HTML files.
+
+### Test, commit and push evidence
+
+- focused changed-file `lab-ies` execution: 255/255 passed;
+- independent full `lab-ies` gate: 255/255 passed;
+- gated feature commit execution: 255/255 passed;
+- failed, cancelled, skipped and todo counts were zero in every execution;
+- feature checkpoint: `f41c22ca69ce24b5d2bc8bed20c334396d070a29`;
+- subject: `lab: checkpoint provenance publication surfaces`;
+- push: origin `lane/code-pilot-lab`, confirmed successful;
+- protected unrelated dirty paths and the unstaged branch-HEAD marker were preserved.
+
+### Resulting queue boundary
+
+- LAB-029 is `done`.
+- LAB-030 becomes the sole next `ready` item.
+- no seam approval or human observation is required before LAB-030 implementation.
+
 ## LAB-028 reference curation surfaces — 2026-07-20
 
 ### Identity and scope
