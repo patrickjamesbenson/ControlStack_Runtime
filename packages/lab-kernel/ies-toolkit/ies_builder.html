@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Project IES Builder — ControlStack Lab</title>
+<link rel="stylesheet" href="./lab.css" />
+<style>
+  .drop{margin-top:10px}.drop.ready{border-color:var(--green);background:var(--green-lt)}
+  .summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+  .summary-item{border:1px solid var(--border-light);border-radius:var(--r-md);background:var(--soft);padding:10px 12px}
+  .summary-item .label{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+  .summary-item .value{font-size:16px;font-weight:650;color:var(--navy);overflow-wrap:anywhere}
+  .error{border:1px solid var(--red-b);background:var(--red-lt);color:var(--red);border-radius:var(--r-md);padding:10px 12px}
+  .mono{font-family:var(--mono);overflow-wrap:anywhere}
+  .keywords{display:grid;grid-template-columns:minmax(170px,.55fr) minmax(220px,1fr);gap:4px 14px}
+  .keywords div{padding:4px 0;border-bottom:1px solid var(--border-light)}
+  pre.ies{max-height:460px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brandhead">
+    <div class="mark">NE</div>
+    <div><div class="bn">NOVON</div><div class="bs">Engineering</div></div>
+    <div class="pg"><div class="pgt">Project IES Builder</div><div class="pgs">sealed reference to deterministic LM-63</div></div>
+  </div>
+
+  <div class="hint">
+    This page is a thin browser consumer of the committed project generator. It accepts a sealed reference DTO, supplies bounded project inputs, and downloads only the exact text returned by the generator.
+  </div>
+
+  <div class="card">
+    <h2>1 — Sealed reference DTO</h2>
+    <label class="drop" id="drop" for="referenceFile">
+      Select or drop one sealed <code>controlstack.lab.reference.1mm.v1</code> JSON file
+    </label>
+    <input id="referenceFile" type="file" accept="application/json,.json" class="hidden" />
+    <div id="referenceState" class="muted" style="margin-top:10px">No reference loaded.</div>
+  </div>
+
+  <div class="card">
+    <h2>2 — Bounded project inputs</h2>
+    <div class="row">
+      <div>
+        <label for="projectId">Project ID</label>
+        <input id="projectId" value="PROJECT-001" />
+      </div>
+      <div>
+        <label for="runLengthMm">Run length (mm)</label>
+        <input id="runLengthMm" type="number" min="1" step="1" value="1000" />
+      </div>
+      <div>
+        <label for="outputMultiplier">Output multiplier</label>
+        <input id="outputMultiplier" type="number" min="0.0001" step="0.05" value="1" />
+      </div>
+      <div>
+        <label for="lumcat">LUMCAT</label>
+        <input id="lumcat" placeholder="Use sealed value when blank" />
+      </div>
+      <div>
+        <label for="luminaire">LUMINAIRE</label>
+        <input id="luminaire" placeholder="Use sealed value when blank" />
+      </div>
+      <div>
+        <label for="lamp">LAMP</label>
+        <input id="lamp" placeholder="Use sealed value when blank" />
+      </div>
+      <div>
+        <label for="cri">_CRI</label>
+        <input id="cri" placeholder="Use sealed value when blank" />
+      </div>
+      <div>
+        <label for="cct">_COLORTEMP</label>
+        <input id="cct" placeholder="Use sealed value when blank" />
+      </div>
+      <div>
+        <label for="driver">_DRIVER</label>
+        <input id="driver" placeholder="Use sealed value when blank" />
+      </div>
+      <div>
+        <label for="driverSetting">_DRIVER_SETTING</label>
+        <input id="driverSetting" placeholder="Use sealed value when blank" />
+      </div>
+    </div>
+    <div class="bar" style="margin-top:14px">
+      <button class="btn primary" id="build" disabled>Build project IES</button>
+      <span class="muted">Internal ambient remains sealed-reference-owned and is not editable here.</span>
+    </div>
+  </div>
+
+  <div id="message"></div>
+
+  <div class="card hidden" id="outputCard">
+    <h2>3 — Generator result</h2>
+    <div class="summary" id="summary"></div>
+    <div class="bar" style="margin:14px 0">
+      <button class="btn ghost" id="download" disabled>Download returned .ies</button>
+      <span id="filename" class="mono muted"></span>
+    </div>
+    <details class="comp">
+      <summary><span class="nm">Canonical keyword output</span></summary>
+      <div class="body keywords" id="keywords"></div>
+    </details>
+    <details class="comp">
+      <summary><span class="nm">Returned LM-63 text</span></summary>
+      <div class="body"><pre class="ies" id="iesText"></pre></div>
+    </details>
+  </div>
+</div>
+
+<script type="module">
+import { buildProjectIes } from "./iesProjectIes.js";
+
+const byId = (id) => document.getElementById(id);
+const escapeHtml = (value) => String(value ?? "").replace(/[&<>]/g, (character) => ({
+  "&": "&amp;",
+  "<": "&lt;",
+  ">": "&gt;",
+}[character]));
+
+let sealedReference = null;
+let generatedText = null;
+let generatedFilename = null;
+
+function showMessage(message, kind = "error") {
+  byId("message").innerHTML = message
+    ? `<div class="${kind === "error" ? "error" : "hint"}" style="margin-bottom:14px">${escapeHtml(message)}</div>`
+    : "";
+}
+
+function resetOutput() {
+  generatedText = null;
+  generatedFilename = null;
+  byId("outputCard").classList.add("hidden");
+  byId("download").disabled = true;
+}
+
+function loadReferenceText(text, filename) {
+  resetOutput();
+  try {
+    const parsed = JSON.parse(text);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("Reference JSON must contain one object.");
+    sealedReference = parsed;
+    byId("build").disabled = false;
+    byId("drop").classList.add("ready");
+    byId("referenceState").innerHTML = `<span class="pill info">loaded for contract validation</span> <b class="mono">${escapeHtml(filename)}</b> · ${escapeHtml(parsed.id ?? "identity unresolved")}`;
+    showMessage("");
+  } catch (error) {
+    sealedReference = null;
+    byId("build").disabled = true;
+    byId("drop").classList.remove("ready");
+    byId("referenceState").textContent = "No valid JSON object loaded.";
+    showMessage(error?.message || "Reference JSON could not be read.");
+  }
+}
+
+async function loadFile(file) {
+  if (!file) return;
+  try {
+    loadReferenceText(await file.text(), file.name);
+  } catch (error) {
+    showMessage(error?.message || "Reference file could not be read.");
+  }
+}
+
+function optionalProjectValue(project, field) {
+  const value = byId(field).value.trim();
+  if (value) project[field] = value;
+}
+
+function projectInput() {
+  const project = {
+    projectId: byId("projectId").value,
+    outputMultiplier: Number(byId("outputMultiplier").value),
+  };
+  for (const field of ["lumcat", "luminaire", "lamp", "cri", "cct", "driver", "driverSetting"]) {
+    optionalProjectValue(project, field);
+  }
+  return project;
+}
+
+function renderSuccess(result) {
+  generatedText = result.iesText;
+  generatedFilename = result.filename;
+  const values = [
+    ["Reference", result.provenance.referenceId],
+    ["Project", result.provenance.projectId],
+    ["Run length", `${result.runLengthMm} mm`],
+    ["Output multiplier", result.outputMultiplier],
+    ["Exit lumens", result.exitLumens ?? "unresolved"],
+    ["Input watts", result.inputWatts],
+  ];
+  byId("summary").innerHTML = values.map(([label, value]) => `
+    <div class="summary-item"><div class="label">${escapeHtml(label)}</div><div class="value">${escapeHtml(value)}</div></div>`).join("");
+  byId("keywords").innerHTML = result.keywords.map((row) => `
+    <div class="mono">${escapeHtml(row.key)}</div><div>${escapeHtml(row.value)}</div>`).join("");
+  byId("iesText").textContent = result.iesText;
+  byId("filename").textContent = result.filename;
+  byId("download").disabled = false;
+  byId("outputCard").classList.remove("hidden");
+  showMessage("");
+}
+
+function build() {
+  resetOutput();
+  if (!sealedReference) {
+    showMessage("Load a sealed reference DTO before building.");
+    return;
+  }
+  const result = buildProjectIes(
+    sealedReference,
+    Number(byId("runLengthMm").value),
+    projectInput(),
+  );
+  if (!result.ok) {
+    showMessage(`${result.code}: ${result.reason}`);
+    return;
+  }
+  renderSuccess(result);
+}
+
+byId("referenceFile").addEventListener("change", (event) => loadFile(event.target.files?.[0]));
+const drop = byId("drop");
+drop.addEventListener("dragover", (event) => { event.preventDefault(); drop.classList.add("ready"); });
+drop.addEventListener("dragleave", () => { if (!sealedReference) drop.classList.remove("ready"); });
+drop.addEventListener("drop", (event) => {
+  event.preventDefault();
+  loadFile(event.dataTransfer?.files?.[0]);
+});
+byId("build").addEventListener("click", build);
+byId("download").addEventListener("click", () => {
+  if (!generatedText || !generatedFilename) return;
+  const blob = new Blob([generatedText], { type: "text/plain;charset=utf-8" });
+  const objectUrl = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = objectUrl;
+  anchor.download = generatedFilename;
+  anchor.click();
+  URL.revokeObjectURL(objectUrl);
+});
+</script>
+</body>
+</html>
