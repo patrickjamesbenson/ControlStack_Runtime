@@ -691,6 +691,102 @@ Completion evidence: The two classified Lab navigation shells and the bounded re
 
 Completion evidence: The final test-only guard was committed as `lab: checkpoint canonical keyword migration guard`, pushed to the lane branch, and passed the full 255/255 `lab-ies` gate. It independently pins the exact versioned 16-keyword order and owner map, the sealed-reference internal-ambient policy, the active Lab-form order and bracketed fields, rejection of aliases and supplementary keywords, and absence of retired ambient/emergency aliases across every active generator, merge, builder and preview path. No production source or fixture changed. The ordered queue is now empty.
 
+### Q-28 Corrected NVB thermal semantics version 2
+- id: LAB-038-nvb-resolution-thermal-semantics-v2
+- objective: Replace the ambiguous NVB resolution thermal output names with the corrected measured reference-room, absolute-internal and optic-rise semantics.
+- seam envelope: `docs/_context/lanes/lab-ies/LAB-038_042_THERMAL_SEMANTICS_SEAM_ENVELOPE.md`, version 1; proposed under the binding Program correction `docs(program): correct thermal source field semantics` after a 46/46 Program gate.
+- authorised files:
+  - `packages/lab-kernel/ies-toolkit/nvbResolve.js`
+  - `tests/lab-kernel/nvbResolve.test.js`
+- prohibitions:
+  - no source fixture or data-model rename;
+  - no legacy output alias;
+  - no user-specific derived temperature, curve lookup, clamping, board temperature or verified lm/m;
+  - no Program, Selector, Engine, Runtime, HTML or adapter changes;
+  - no approximate thermal equality.
+- acceptance: Advance the resolution schema to version 2, map the three legacy source fields only to `referenceRoomTaC`, `referenceInternalTaC` and `opticThermalRiseTaC`, enforce exact canonical-decimal triplet consistency, fail closed on missing or contradictory evidence, and prove a varied optic by changing legacy `optic_uplift_ta_c`. Recorded Program & Integrate approval of envelope version 1 is required before `ready`. Full `lab-ies` passes and exactly the authorised files are committed as `lab: checkpoint NVB thermal semantics v2` and pushed only to the lane branch.
+- gate: lab-ies
+- depends on: LAB-018-nvb-resolution-contract
+- on success next: LAB-039-component-thermal-semantics-v2
+- seam change: yes
+- status: blocked
+
+### Q-29 Corrected component thermal semantics version 2
+- id: LAB-039-component-thermal-semantics-v2
+- objective: Advance the component catalogue optic projection to the corrected measured thermal vocabulary and exact triplet validation.
+- seam envelope: `docs/_context/lanes/lab-ies/LAB-038_042_THERMAL_SEMANTICS_SEAM_ENVELOPE.md`, version 1; awaiting exact-scope Program & Integrate approval.
+- authorised files:
+  - `packages/lab-kernel/ies-toolkit/nvbComponents.js`
+  - `tests/lab-kernel/nvbComponents.test.js`
+- prohibitions:
+  - no source loading, fixture change or source-field rename;
+  - no legacy output alias or approximate equality;
+  - no Selector option, Engine calculation or authority claim;
+  - no HTML or adapter changes.
+- acceptance: Advance the component catalogue schema to version 2, expose only `referenceRoomTaC`, `referenceInternalTaC` and `opticThermalRiseTaC`, enforce exact canonical-decimal consistency, preserve opaque unverified evidence, and prove varied-optic mapping through legacy `optic_uplift_ta_c`. Recorded Program & Integrate approval is required before sequence eligibility. Full `lab-ies` passes and exactly the authorised files are committed as `lab: checkpoint component thermal semantics v2` and pushed only to the lane branch.
+- gate: lab-ies
+- depends on: LAB-019-component-projection-contract, LAB-038-nvb-resolution-thermal-semantics-v2
+- on success next: LAB-040-nvb-lab-thermal-projection-v2
+- seam change: yes
+- status: blocked
+
+### Q-30 Corrected NVB Lab thermal working projection version 2
+- id: LAB-040-nvb-lab-thermal-projection-v2
+- objective: Migrate the Lab working adapter to the corrected resolution and expose raw measured thermal evidence without fabricating accepted authority or Engine output.
+- seam envelope: `docs/_context/lanes/lab-ies/LAB-038_042_THERMAL_SEMANTICS_SEAM_ENVELOPE.md`, version 1; awaiting exact-scope Program & Integrate approval.
+- authorised files:
+  - `packages/lab-kernel/ies-toolkit/nvbLabAdapter.js`
+  - `tests/lab-kernel/nvbLabAdapter.test.js`
+- prohibitions:
+  - no accepted thermal authority, evidence digest, identity allocation or timestamp invention;
+  - no runtime-derived temperature, curve lookup, clamp, board temperature or verified lm/m;
+  - no source loading, HTML, fixture, Program, Selector or Engine changes;
+  - no version-1 compatibility alias.
+- acceptance: Advance the Lab projection schema to version 2, consume only the corrected resolution, preserve the exact raw triplet and opaque evidence reference, keep authority state explicitly unresolved, keep missing optic identity or evidence explicit in `unresolved`, and emit no prohibited semantic or Engine-owned field. Recorded Program & Integrate approval is required before sequence eligibility. Full `lab-ies` passes and exactly the authorised files are committed as `lab: checkpoint NVB Lab thermal projection v2` and pushed only to the lane branch.
+- gate: lab-ies
+- depends on: LAB-023-nvb-lab-adapter, LAB-038-nvb-resolution-thermal-semantics-v2
+- on success next: LAB-041-component-library-thermal-labels
+- seam change: yes
+- status: blocked
+
+### Q-31 Corrected component-library thermal labels
+- id: LAB-041-component-library-thermal-labels
+- objective: Display the corrected measured thermal meanings in the read-only component library without implying Engine derivation or accepted evidence.
+- seam envelope: `docs/_context/lanes/lab-ies/LAB-038_042_THERMAL_SEMANTICS_SEAM_ENVELOPE.md`, version 1; awaiting exact-scope Program & Integrate approval.
+- authorised files:
+  - `packages/lab-kernel/ies-toolkit/component_library.html`
+- prohibitions:
+  - no shared CSS, fixture, source, adapter or production-module changes;
+  - no `Internal delta` or `Uplift` label;
+  - no user-specific temperature, curve, clamp, lm/m or authority claim;
+  - no persistence, network or cross-lane implementation.
+- acceptance: Consume only the committed version-2 component projection and display `Reference room Ta °C`, `Reference internal Ta °C` and `Optic thermal rise °C`, while keeping the source evidence visibly unverified. Full `lab-ies` passes and exactly the authorised file is committed as `lab: checkpoint corrected thermal labels` and pushed only to the lane branch.
+- gate: lab-ies
+- depends on: LAB-025-component-library-surface, LAB-039-component-thermal-semantics-v2
+- on success next: LAB-042-thermal-semantics-guard
+- seam change: no after envelope approval
+- status: blocked
+
+### Q-32 Cross-cutting corrected thermal semantics guard
+- id: LAB-042-thermal-semantics-guard
+- objective: Checkpoint the final test-only guard after all corrected active Lab thermal contracts and the component surface are committed.
+- seam envelope: `docs/_context/lanes/lab-ies/LAB-038_042_THERMAL_SEMANTICS_SEAM_ENVELOPE.md`, version 1; awaiting exact-scope Program & Integrate approval.
+- authorised files:
+  - `tests/lab-kernel/nvbThermalSemantics.test.js`
+- prohibitions:
+  - no production source or fixture changes;
+  - no donor-code parity acceptance;
+  - no broad presentation snapshots;
+  - no allowance for legacy semantic output names or Lab-owned Engine calculations.
+- acceptance: Independently pin the corrected source mappings, exact triplet equation, valid varied-optic `optic_uplift_ta_c` case, contradictory-rise rejection, three version-2 schema identities, absence of legacy semantic output names and Engine-owned calculations, bounded permission for legacy snake-case names only at source mapping/test input, and unchanged sealed-keyword meaning. Full `lab-ies` passes and exactly the authorised file is committed as `lab: checkpoint thermal semantics guard` and pushed only to the lane branch.
+- gate: lab-ies
+- depends on: LAB-038-nvb-resolution-thermal-semantics-v2, LAB-039-component-thermal-semantics-v2, LAB-040-nvb-lab-thermal-projection-v2, LAB-041-component-library-thermal-labels
+- on success next: none
+- seam change: no after envelope approval
+- status: blocked
+
+Approval state: all five parcels are blocked. The binding Program correction supersedes the old field meaning but explicitly authorises no feature implementation. Program & Integrate must approve the exact version-1 envelope and scopes before LAB-038 can become the sole `ready` item.
+
 ## Explicitly not queued
 
 These protected paths remain outside implementation parcels unless the orchestrator makes a separate decision:

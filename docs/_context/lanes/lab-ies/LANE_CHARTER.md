@@ -69,6 +69,23 @@ The supplementary outgoing keyword profile is empty.
 
 Emergency and EWIS values are independent assembly verification outcomes. They are not inherited capability flags from GT or OPT parents.
 
+## Corrected optic thermal chain
+
+The sole active cross-lane thermal ruling is:
+
+- Selector owns the user-selected room ambient only.
+- Lab owns the selected optic's measured reference room temperature, measured absolute internal temperature and measured thermal rise.
+- Legacy `room_ta_c` maps to `referenceRoomTaC`.
+- Legacy `optic_internal_delta_ta_c` is misleadingly named and maps to absolute `referenceInternalTaC`; it is not a rise.
+- Legacy `optic_uplift_ta_c` maps to `opticThermalRiseTaC` and is the rise Engine may apply once after Program validation.
+- The measured triplet must satisfy `referenceRoomTaC + opticThermalRiseTaC === referenceInternalTaC` exactly after canonical decimal normalisation.
+- Engine alone derives a user-specific internal temperature, performs curve lookup and applies any clamp or interpolation.
+- Lab must not emit `derivedInternalTaC`, `curveLookupTaC`, board temperature or verified lm/m.
+- The semantic name `opticInternalDeltaTaC` is prohibited in new Lab contracts. Legacy snake-case source names may remain only at a bounded source-mapping boundary until a separately approved data-model migration.
+- `_INTERNAL_AMBIENT_TA_C` remains the measured internal assembly temperature during the authority test and is never overwritten by a runtime-derived value.
+
+Any Lab parcel touching reference room, reference internal or optic rise fields must cite the corrected thermal seam and obtain exact scope approval before implementation.
+
 ## Authority and cryptographic boundary
 
 - Canonical JSON follows the accepted RFC 8785-style profile.

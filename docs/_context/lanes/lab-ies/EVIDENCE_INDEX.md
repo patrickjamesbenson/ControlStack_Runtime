@@ -6,6 +6,47 @@
 - Historical handoff content is retained as reported context unless freshly reverified.
 - Test output proves only the behaviour exercised by the named tests; low-level merge tests do not by themselves prove completion of the final governed merge.
 
+## Corrected thermal semantics seam proposal — 2026-07-21
+
+### Program ruling consumed
+
+Program & Integrate corrected and superseded the thermal source-field semantics under the pushed decision `docs(program): correct thermal source field semantics` after a 46/46 Program gate.
+
+The corrected binding is:
+
+- `room_ta_c` -> measured `referenceRoomTaC`;
+- misleading legacy `optic_internal_delta_ta_c` -> absolute `referenceInternalTaC`;
+- `optic_uplift_ta_c` -> measured `opticThermalRiseTaC`;
+- exact measured equation: reference room plus optic rise equals reference internal;
+- Engine alone applies the rise once to the Selector-owned room selection;
+- varied-optic acceptance must change legacy `optic_uplift_ta_c`;
+- Lab does not derive user-specific operating temperature, lookup temperature, clamp state or verified lm/m;
+- `_INTERNAL_AMBIENT_TA_C` remains the authority-test internal measurement.
+
+Program also stated that the ruling alone authorises no feature implementation and that each affected parcel must return for exact scope approval.
+
+### Orchestrator classification
+
+Repository search confirmed the deprecated semantic output currently appears in the completed resolution contract, component projection, Lab working adapter, their focused tests and the component-library display. No other active Lab production surface consumes those semantic field names.
+
+The orchestrator created `LAB-038_042_THERMAL_SEMANTICS_SEAM_ENVELOPE.md`, version 1, covering five separate sequential parcels:
+
+1. corrected NVB resolution schema version 2;
+2. corrected component catalogue schema version 2;
+3. corrected NVB Lab working projection schema version 2;
+4. corrected component-library labels;
+5. a final test-only thermal semantics guard.
+
+The proposal uses exact canonical-decimal triplet validation, prohibits compatibility aliases and Lab-owned Engine calculations, preserves legacy snake-case names only at the bounded source mapping, and keeps thermal evidence authority unresolved until Program validation.
+
+### Queue result
+
+- LAB-038 through LAB-042 are recorded as blocked;
+- no item is ready;
+- no feature file changed;
+- Program & Integrate approval of the exact version-1 envelope and five scopes is required before LAB-038 may become the sole ready item;
+- the full `lab-ies` gate passed 255/255 for the coordination documentation, with no feature implementation or fixture change.
+
 ## LAB-037 final canonical keyword migration guard — 2026-07-20
 
 ### Identity and scope
@@ -36,7 +77,7 @@ The completed test-only guard:
 - subject: `lab: checkpoint canonical keyword migration guard`;
 - push: confirmed on origin `lane/code-pilot-lab`;
 - LAB-037 is `done`;
-- the ordered queue is empty.
+- the ordered queue was empty at the LAB-037 closeout before the corrected thermal proposal was admitted as blocked work.
 
 ## LAB-036 Lab shell and bounded local server — 2026-07-20
 

@@ -419,3 +419,22 @@ Program & Integrate approved `LAB-035_SEAM_ENVELOPE.md`, version 1, and the exac
 The approved parcel is confined to one Lab-only read-only presentation file and reuses only the approved safe reference identity, safe runtime handoff and Selector factory-approved-input readiness projections. It does not import or execute Selector source, derive readiness, compute options, invoke Engine, generate IES, create authority, add routes or persist state.
 
 LAB-035 may move to the sole top `ready` item. LAB-036 and later parcels remain sequence-blocked. Any contract, ownership, field-shape or scope amendment requires a new Program & Integrate decision.
+
+## DL-030 — Corrected thermal source semantics and affected-parcel hold
+
+**Status:** Binding Program correction recorded; exact Lab implementation scope proposed and awaiting approval on 2026-07-21.
+
+Program & Integrate corrected and superseded the thermal ruling under the pushed decision `docs(program): correct thermal source field semantics` after a 46/46 Program gate.
+
+The sole active meaning is:
+
+- legacy `room_ta_c` is the measured reference-room condition and maps to `referenceRoomTaC`;
+- legacy `optic_internal_delta_ta_c` is the measured absolute internal condition and maps to `referenceInternalTaC`;
+- legacy `optic_uplift_ta_c` is the measured rise and maps to `opticThermalRiseTaC`;
+- the measured triplet must satisfy `referenceRoomTaC + opticThermalRiseTaC === referenceInternalTaC` exactly after canonical decimal normalisation;
+- Engine alone applies the rise once to the Selector-owned user room ambient;
+- Lab does not derive or publish user-specific internal temperature, curve lookup temperature, clamping, board temperature or verified lm/m;
+- the semantic name `opticInternalDeltaTaC` is prohibited in new Lab output contracts;
+- the sealed `_INTERNAL_AMBIENT_TA_C` keyword remains the authority-test internal measurement.
+
+Program explicitly recorded that the ruling alone authorises no feature implementation. Therefore the Lab orchestrator created `LAB-038_042_THERMAL_SEMANTICS_SEAM_ENVELOPE.md`, version 1, with five separate sequential parcels covering resolution, component projection, Lab working projection, display labels and a final regression guard. All five remain blocked until Program & Integrate approves the exact envelope and scopes. No ready item exists while that approval is pending.

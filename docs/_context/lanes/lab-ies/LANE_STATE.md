@@ -2,7 +2,7 @@
 
 ## Evidence timestamp
 
-Latest standing-worker parcel verified on 2026-07-20 through the connected `ControlStack Lab and IES Authority Lane` app.
+Latest lane coordination verified on 2026-07-21 through the connected `ControlStack Lab and IES Authority Lane` app.
 
 Current repository evidence overrides stale historical statements.
 
@@ -13,7 +13,7 @@ Current repository evidence overrides stale historical statements.
 - Root: `C:\ControlStack_Worktrees\code-pilot-lab`
 - Branch: `lane/code-pilot-lab`
 - Gate: `lab-ies`
-- Recorded branch HEAD: `c41fc5d39ceb262854f955873fd3f3534f0757fd`
+- Recorded branch HEAD: `601ea141964dd7fd9370fad98a1486b469839083`
 - Branch-HEAD guard checkpoint: `6d34e500d407d5335e5eebb317636a67a5e98618`
 - Starting HEAD for LAB-037: `e1d9e4b14837317880e650f56d41bc0f0c4fa4c2`
 - Completed feature HEAD: `c41fc5d39ceb262854f955873fd3f3534f0757fd`
@@ -58,6 +58,24 @@ Before any queue item is selected, a worker must compare `Recorded branch HEAD` 
 - The batch ends immediately on seam approval required, stale lane state, any gate failure, out-of-scope behaviour, queue empty or acceptance requiring live application/browser/real-world observation.
 - Human-observation acceptance cannot be closed from repository evidence. The item remains incomplete and the worker supplies exact `NEEDS YOU` steps.
 - Orchestrator review occurs at seam, human-observation and five-parcel/stop boundaries rather than after each routine parcel.
+
+## Latest coordination checkpoint — corrected thermal semantics proposal
+
+Program & Integrate corrected and superseded the thermal source-field meaning under the pushed decision `docs(program): correct thermal source field semantics` after a 46/46 Program gate.
+
+Binding classification:
+
+- legacy `room_ta_c` is measured reference-room temperature;
+- legacy `optic_internal_delta_ta_c` is measured absolute internal temperature, not a delta;
+- legacy `optic_uplift_ta_c` is measured optic thermal rise;
+- Lab publishes measured evidence only and never a user-specific derived or lookup temperature;
+- Engine alone applies the selected optic rise once after Program validation;
+- the measured triplet must satisfy exact canonical-decimal equality;
+- the varied-optic acceptance case must change legacy `optic_uplift_ta_c`;
+- `opticInternalDeltaTaC` is prohibited in new Lab output contracts;
+- `_INTERNAL_AMBIENT_TA_C` remains the authority-test internal measurement.
+
+Program expressly recorded that this ruling authorises no feature implementation by itself. The queue-empty boundary has therefore been converted into a proposed five-parcel version-2 correction batch under `LAB-038_042_THERMAL_SEMANTICS_SEAM_ENVELOPE.md`, version 1. The proposal keeps resolution, component projection, Lab working projection, component display and the final regression guard as separate sequential parcels. All remain blocked pending exact-scope Program & Integrate approval; no item is ready.
 
 ## Latest completed parcel — LAB-037
 
@@ -588,6 +606,7 @@ Verified outcome:
 The connected app exposes the fixed `lab-ies` gate as the available changed-file and full validation path.
 
 - Gated LAB-037 feature checkpoint execution: 255 tests, 255 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
+- Corrected thermal seam coordination documentation: 255 tests, 255 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
 
 ## Protected final Git state
 
@@ -655,8 +674,10 @@ tests/selectorCascadeCorrectness.test.js
 - LAB-036 is complete and confirmed on origin as the classified presentation shell and bounded read-only local server.
 - LAB-037 is complete and confirmed on origin as the final test-only canonical keyword migration guard.
 - Gated LAB-037 execution passed 255/255.
-- The ordered queue is empty.
-- No parallel or combined implementation is authorised.
+- The corrected Program thermal ruling is binding and supersedes the earlier field interpretation.
+- `LAB-038_042_THERMAL_SEMANTICS_SEAM_ENVELOPE.md`, version 1, is proposed for five separate sequential correction parcels.
+- LAB-038 through LAB-042 are blocked pending exact-scope Program & Integrate approval.
+- No ready item exists and no parallel or combined implementation is authorised.
 - The earlier LAB-018 approval hold remains superseded.
 
 ## Queue state
@@ -690,10 +711,15 @@ tests/selectorCascadeCorrectness.test.js
 - `LAB-035-selector-contract-stub`: done.
 - `LAB-036-lab-shell-server`: done.
 - `LAB-037-keyword-migration-guard`: done.
-- Next ordered item: none.
-- Resulting status: queue empty.
+- `LAB-038-nvb-resolution-thermal-semantics-v2`: blocked pending Program & Integrate approval.
+- `LAB-039-component-thermal-semantics-v2`: blocked pending Program & Integrate approval and LAB-038 completion.
+- `LAB-040-nvb-lab-thermal-projection-v2`: blocked pending Program & Integrate approval and LAB-038 completion.
+- `LAB-041-component-library-thermal-labels`: blocked pending envelope approval and LAB-039 completion.
+- `LAB-042-thermal-semantics-guard`: blocked pending envelope approval and LAB-038 through LAB-041 completion.
+- Next ordered item: `LAB-038-nvb-resolution-thermal-semantics-v2` after recorded approval.
+- Resulting status: blocked at seam approval boundary.
 - Ready items: none.
-- Seam approval required: no.
+- Seam approval required: yes — exact version-1 envelope and five parcel scopes.
 - Human observation required before implementation: no.
 
-LAB-037 is complete. The ordered Lab / IES queue is empty and this standing-worker batch is closed.
+The corrected thermal seam is proposed and no feature implementation is authorised. Program & Integrate approval is the next boundary action.
