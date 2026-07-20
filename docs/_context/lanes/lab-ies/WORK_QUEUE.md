@@ -646,9 +646,9 @@ Evidence: `15c0f130650146374932c280c054f6293f3f03f9`, confirmed on origin. The l
 - depends on: LAB-017-reference-resolver-contract, LAB-022-reference-composition-kernel, LAB-031-project-builder-surface
 - on success next: LAB-036-lab-shell-server
 - seam change: yes
-- status: ready
+- status: done
 
-Approval evidence: Program & Integrate approved version 1 unchanged in the pushed decision titled `docs(program): approve LAB-035 Selector contract seam`; Program gate 46/46 passed. LAB-035 is the sole ready item and no later parcel may start.
+Approval and completion evidence: Program & Integrate approved version 1 unchanged in the pushed decision titled `docs(program): approve LAB-035 Selector contract seam`; Program gate 46/46 passed. The exact authorised read-only contract viewer was committed as `lab: checkpoint Selector contract stub`, pushed to the lane branch, and passed the full 255/255 `lab-ies` gate. It renders only safe identity, safe runtime handoff, supplied Selector readiness, safety flags and binding state; malformed, over-rich, contradictory or stale input fails closed. LAB-036 is now the sole ready item.
 
 ### Q-26 Final Lab shell and local server
 - id: LAB-036-lab-shell-server
@@ -668,7 +668,7 @@ Approval evidence: Program & Integrate approved version 1 unchanged in the pushe
 - depends on: LAB-025-component-library-surface, LAB-026-document-equipment-surfaces, LAB-027-request-report-workflow, LAB-028-reference-curation-surfaces, LAB-029-provenance-publication-surfaces, LAB-030-emergency-surface, LAB-031-project-builder-surface, LAB-032-merge-composition-surface, LAB-033-main-lab-bench-surface, LAB-034-legacy-labbench-classification, LAB-035-selector-contract-stub
 - on success next: LAB-037-keyword-migration-guard
 - seam change: no
-- status: queued
+- status: ready
 
 ### Q-27 Cross-cutting canonical keyword migration guard
 - id: LAB-037-keyword-migration-guard

@@ -2,7 +2,7 @@
 
 ## Session purpose
 
-This handoff records reconciliation of the committed LAB-035 seam definition and Program approval checkpoints, preserves the permanent charter authority for both standing prompts, and orders LAB-035 as the sole next ready parcel.
+This handoff records completion of LAB-035 under its approved version-1 seam, preserves the permanent charter authority for both standing prompts, and orders LAB-036 as the sole next ready parcel.
 
 ## Identity
 
@@ -12,14 +12,14 @@ This handoff records reconciliation of the committed LAB-035 seam definition and
 - Branch: `lane/code-pilot-lab`
 - Gate: `lab-ies`
 - Standing prompt authority: `docs/_context/lanes/lab-ies/LANE_CHARTER.md` contains both worker and orchestrator prompts
-- Starting HEAD for LAB-034: `78c503a356d6fcf1600cf4ea3ef3a662f724d21d`
-- Completed feature checkpoint: `15c0f130650146374932c280c054f6293f3f03f9`
-- Feature subject: `lab: checkpoint legacy labbench classification`
+- Starting HEAD for LAB-035: `285f14df8c1fc135b59c3ca87b467276866de3a4`
+- Completed feature checkpoint: `8dcbeb089bd87351716300d093acb70c72476cb7`
+- Feature subject: `lab: checkpoint Selector contract stub`
 - Feature checkpoint confirmed on origin `lane/code-pilot-lab`
-- Seam change: no
+- Seam change: yes — approved version 1 implemented unchanged
 - Branch-HEAD guard checkpoint: `6d34e500d407d5335e5eebb317636a67a5e98618`
-- Reconciled coordination checkpoints: `docs(lab): define LAB-035 Selector contract seam` and `docs(lab): admit LAB-035 Selector contract stub`
 - LAB-035 envelope: version 1 approved unchanged; Program gate 46/46 passed and the decision was pushed
+- LAB-035 feature gate: 255/255 passed
 
 ## Branch-HEAD guard
 
@@ -29,35 +29,36 @@ After every documentation push, only the `Recorded branch HEAD` field is refresh
 
 ## Completed queue item
 
-`LAB-034-legacy-labbench-classification` is complete.
+`LAB-035-selector-contract-stub` is complete.
 
 Exactly this one feature file was committed:
 
 ```text
-packages/lab-kernel/ies-toolkit/labbench.html
+packages/lab-kernel/ies-toolkit/selector_stub.html
 ```
 
-The legacy page is now an explicit compatibility/demo-only read-only IES inspector. It delegates parsing, metrics, inspection and polar rendering to committed modules and directs governed work to the Main Lab Bench.
+The legacy pseudo-Selector was replaced with a read-only contract viewer over the exact approved safe identity, safe runtime handoff and Selector readiness presentation projections. Governed mode accepts only a caller-supplied bounded view; offline mode uses visibly synthetic ready and blocked examples under the persistent non-acceptance label.
 
-All duplicate approval, provenance, reference-building, symmetrisation, project-generation and inline polar behaviour was removed. No authority, serial, seal, resolver, download, persistence, browser storage, clock/random identity or cross-lane implementation exists.
+All upload, run-length, orientation, scaling, power, efficacy, delivery and false Engine-consumption claims were removed. Exact-key and consistency validation fails closed on malformed, over-rich, contradictory or stale input. No Selector source, Engine execution, IES generation, authority creation, route, network, persistence or browser storage behaviour exists.
 
 ## Validation evidence
 
-- Gated LAB-034 feature checkpoint execution: 255/255 passed.
+- Full LAB-035 feature execution before checkpoint: 255/255 passed.
+- Gated LAB-035 feature checkpoint execution: 255/255 passed.
 - Failed, cancelled, skipped and todo counts were zero.
 
 ## Git and protected worktree state
 
-The LAB-034 parcel was staged as exactly the one authorised legacy compatibility file, committed and pushed separately from lane documentation.
+The LAB-035 parcel was staged as exactly the one authorised Selector contract viewer file, committed and pushed separately from lane documentation.
 
 The protected working-tree state after documentation closeout must remain:
 
 - staged: 0;
 - modified: 1 — only the unstaged `Recorded branch HEAD` synchronisation marker in `LANE_STATE.md`;
-- untracked: 7;
+- untracked: 6;
 - deleted: 0.
 
-The 7 protected untracked paths remain exactly those recorded in `LANE_STATE.md`. In particular, these explicitly non-queued paths remain untouched:
+The 6 protected untracked paths remain exactly those recorded in `LANE_STATE.md`. In particular, these explicitly non-queued paths remain untouched:
 
 ```text
 README.zip
@@ -74,11 +75,11 @@ packages/workspace-kernel/selectorReferenceOptionsService.js
 tests/selectorCascadeCorrectness.test.js
 ```
 
-## Reconciled LAB-035 seam approval
+## Completed LAB-035 seam implementation
 
-The live branch contains the committed documentation-only checkpoints `docs(lab): define LAB-035 Selector contract seam` and `docs(lab): admit LAB-035 Selector contract stub`, together with `LAB-035_SEAM_ENVELOPE.md`, version 1.
+The live branch contains the committed coordination checkpoints, the approved `LAB-035_SEAM_ENVELOPE.md` version 1, and the exact one-file feature checkpoint.
 
-Program & Integrate approved version 1 unchanged after a 46/46 Program gate and pushed the decision. The parcel remains confined to one read-only Lab presentation file and reuses safe downstream projections without importing or implementing Selector behaviour. No feature file changed in either coordination checkpoint. LAB-035 is the sole ready item; later parcels remain sequence-blocked.
+Program & Integrate approved version 1 unchanged after a 46/46 Program gate. Lab implemented that boundary without amendment: one read-only presentation file consumes only bounded safe downstream projections and does not import or implement Selector behaviour. The feature passed the full 255/255 Lab gate and is confirmed on origin. LAB-036 is now the sole ready item.
 
 ## Queue state and next action
 
@@ -105,10 +106,11 @@ Program & Integrate approved version 1 unchanged after a 46/46 Program gate and 
 - `LAB-032A-canonical-keyword-migration-guard-correction`: `done` and confirmed on origin.
 - `LAB-033-main-lab-bench-surface`: `done` and confirmed on origin.
 - `LAB-034-legacy-labbench-classification`: `done` and confirmed on origin.
-- LAB-034 gated execution: 255/255 passed.
-- `LAB-035-selector-contract-stub`: `ready` under Program & Integrate approval of version 1 unchanged.
+- `LAB-035-selector-contract-stub`: `done` and confirmed on origin under Program & Integrate approval of version 1 unchanged.
+- LAB-035 gated execution: 255/255 passed.
 - Program approval decision: `docs(program): approve LAB-035 Selector contract seam`; Program gate 46/46 passed and the decision was pushed.
-- Ready items: LAB-035 only.
+- `LAB-036-lab-shell-server`: `ready`.
+- Ready items: LAB-036 only.
 
 Program reported gate 45/45 passed, the approval decision committed and pushed, and its tree clean. No parallel or combined implementation is authorised.
 
@@ -142,7 +144,7 @@ LAB-034 is complete as the read-only legacy compatibility classification. It rem
 
 LAB-017 remains governed by its approved version-1 envelope. Program retains all production allocation, live source reading, hosting, routing, persistence, authentication, CRM integration, deployment and endpoint ownership.
 
-The next safe action is a fresh standing-worker run for LAB-035 under the approved version-1 envelope. Implementation remains confined to the one authorised Selector stub file; LAB-036 and later parcels stay sequence-blocked until LAB-035 is closed out.
+The next safe action is LAB-036. Implementation is confined to the two Lab navigation shell files and the bounded local static server; linked surfaces, shared CSS, APIs, webhooks, uploads, persistence, donor-root serving and cross-lane behaviour remain prohibited.
 
 ## LAB-017 immutable completion receipt
 

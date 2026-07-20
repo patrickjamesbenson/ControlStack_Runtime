@@ -13,11 +13,11 @@ Current repository evidence overrides stale historical statements.
 - Root: `C:\ControlStack_Worktrees\code-pilot-lab`
 - Branch: `lane/code-pilot-lab`
 - Gate: `lab-ies`
-- Recorded branch HEAD: `0c034e8d2bf9366e2036afe2ba70caf45e53f864`
+- Recorded branch HEAD: `8dcbeb089bd87351716300d093acb70c72476cb7`
 - Branch-HEAD guard checkpoint: `6d34e500d407d5335e5eebb317636a67a5e98618`
-- Starting HEAD for LAB-034: `78c503a356d6fcf1600cf4ea3ef3a662f724d21d`
-- Completed feature HEAD: `15c0f130650146374932c280c054f6293f3f03f9`
-- Feature subject: `lab: checkpoint legacy labbench classification`
+- Starting HEAD for LAB-035: `285f14df8c1fc135b59c3ca87b467276866de3a4`
+- Completed feature HEAD: `8dcbeb089bd87351716300d093acb70c72476cb7`
+- Feature subject: `lab: checkpoint Selector contract stub`
 - Feature push: confirmed on origin `lane/code-pilot-lab`
 
 ## Branch-HEAD synchronisation invariant
@@ -59,22 +59,27 @@ Before any queue item is selected, a worker must compare `Recorded branch HEAD` 
 - Human-observation acceptance cannot be closed from repository evidence. The item remains incomplete and the worker supplies exact `NEEDS YOU` steps.
 - Orchestrator review occurs at seam, human-observation and five-parcel/stop boundaries rather than after each routine parcel.
 
-## Latest coordination checkpoint — LAB-035 seam approval
+## Latest completed parcel — LAB-035
 
-The live branch contains the documentation-only checkpoints `docs(lab): define LAB-035 Selector contract seam` and `docs(lab): admit LAB-035 Selector contract stub`.
+Queue item `LAB-035-selector-contract-stub` is complete under the unchanged Program & Integrate approval of `LAB-035_SEAM_ENVELOPE.md`, version 1.
 
-Verified classification:
+Exactly this one authorised file was changed and committed:
 
-- `LAB-035_SEAM_ENVELOPE.md`, version 1, is committed;
-- Program & Integrate approved version 1 unchanged and reported a 46/46 Program gate with the decision pushed;
-- the approved parcel is confined to the one authorised read-only Lab presentation file;
-- it reuses only approved safe identity, safe runtime handoff and Selector readiness projections;
-- no Selector, Runtime, Engine, Program or authority feature implementation changed;
-- no LAB-035 feature file was staged or committed by the coordination checkpoints;
-- LAB-035 is the sole top `ready` item;
-- LAB-036 and later parcels remain sequence-blocked.
+```text
+packages/lab-kernel/ies-toolkit/selector_stub.html
+```
 
-## Latest completed parcel — LAB-034
+Verified outcome:
+
+- the legacy upload, run-length, orientation, scaling, power, efficacy and delivery behaviours were removed;
+- the page is now a read-only contract viewer over the exact approved safe identity, safe runtime handoff and Selector readiness presentation shapes;
+- governed mode consumes only a caller-supplied bounded view, while offline mode uses visibly synthetic committed ready and blocked examples labelled `OFFLINE CONTRACT DEMO — NOT SELECTOR ACCEPTANCE`;
+- exact-key validation rejects unsupported or over-rich fields, malformed schema/version values, invalid identity and resolver bindings, malformed fingerprints, contradictory readiness/blocker states, non-false safety flags and stale binding conflicts;
+- the page does not import or execute Selector source, derive Selector values, invoke Engine, generate IES, add routes, persist state or create authority;
+- the exact one-file gated checkpoint passed 255/255 and is confirmed on origin;
+- LAB-036 is now the sole top `ready` item.
+
+## Previous completed parcel — LAB-034
 
 Queue item `LAB-034-legacy-labbench-classification` is complete.
 
@@ -541,7 +546,7 @@ Verified outcome:
 
 The connected app exposes the fixed `lab-ies` gate as the available changed-file and full validation path.
 
-- Gated LAB-034 feature checkpoint execution: 255 tests, 255 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
+- Gated LAB-035 feature checkpoint execution: 255 tests, 255 passed, 0 failed, 0 cancelled, 0 skipped, 0 todo, exit code 0.
 
 ## Protected final Git state
 
@@ -549,7 +554,7 @@ The protected working-tree state after documentation closeout is:
 
 - staged: 0;
 - modified: 1 — only the unstaged `Recorded branch HEAD` synchronisation marker in this file;
-- untracked: 7;
+- untracked: 6;
 - deleted: 0.
 
 Protected untracked paths:
@@ -559,7 +564,6 @@ README.zip
 docs/_context/ControlStack_summary_normalise_harness_spec.md
 packages/lab-kernel/ies-toolkit/index.html
 packages/lab-kernel/ies-toolkit/lab.html
-packages/lab-kernel/ies-toolkit/selector_stub.html
 scripts/clear_chaff.ps1
 serve.mjs
 ```
@@ -609,8 +613,9 @@ tests/selectorCascadeCorrectness.test.js
 - LAB-032A is complete and confirmed on origin as the approved one-file canonical-keyword migration guard correction.
 - LAB-033 is complete and confirmed on origin as the bounded non-authoritative Main Lab Bench surface.
 - LAB-034 is complete and confirmed on origin as the read-only legacy compatibility classification.
-- Gated LAB-034 execution passed 255/255.
-- LAB-035 version 1 is approved unchanged by Program & Integrate and is the sole top `ready` item.
+- LAB-035 is complete and confirmed on origin as the approved read-only Selector contract viewer.
+- Gated LAB-035 execution passed 255/255.
+- LAB-036 is the sole top `ready` item.
 - No parallel or combined implementation is authorised.
 - The earlier LAB-018 approval hold remains superseded.
 
@@ -642,10 +647,11 @@ tests/selectorCascadeCorrectness.test.js
 - `LAB-032A-canonical-keyword-migration-guard-correction`: done.
 - `LAB-033-main-lab-bench-surface`: done.
 - `LAB-034-legacy-labbench-classification`: done.
-- Next ordered item: `LAB-035-selector-contract-stub`.
+- `LAB-035-selector-contract-stub`: done.
+- Next ordered item: `LAB-036-lab-shell-server`.
 - Resulting status: `ready`.
-- Ready items: exactly one — LAB-035.
-- Seam approval required: no — Program & Integrate approved version 1 unchanged.
+- Ready items: exactly one — LAB-036.
+- Seam approval required: no.
 - Human observation required before implementation: no.
 
-LAB-034 is complete. LAB-035 is the sole top ready parcel for the next fresh standing-worker run.
+LAB-035 is complete. LAB-036 is the sole top ready parcel for the next standing-worker continuation.

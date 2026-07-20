@@ -6,6 +6,38 @@
 - Historical handoff content is retained as reported context unless freshly reverified.
 - Test output proves only the behaviour exercised by the named tests; low-level merge tests do not by themselves prove completion of the final governed merge.
 
+## LAB-035 Selector contract viewer — 2026-07-20
+
+### Identity and scope
+
+- starting HEAD: `285f14df8c1fc135b59c3ca87b467276866de3a4`;
+- queue item: `LAB-035-selector-contract-stub`;
+- approved seam: `LAB-035_SEAM_ENVELOPE.md`, version 1, approved unchanged by Program & Integrate;
+- authorised path only: `packages/lab-kernel/ies-toolkit/selector_stub.html`.
+
+### Behaviour evidence
+
+The completed page replaces the legacy pseudo-Selector with a Lab-only read-only contract viewer. It:
+
+- consumes only the exact bounded `controlstack.lab.selector-contract-view.v1` shape;
+- validates the existing safe reference identity and safe runtime handoff projections without reconstructing authority;
+- displays Selector factory-approved-input readiness, blockers, counts and stage-3 mode exactly as supplied;
+- renders every safety field as false and makes clear that no Engine execution, generation, persistence, proof or write occurred;
+- provides only visibly synthetic offline ready and blocked examples under the persistent label `OFFLINE CONTRACT DEMO — NOT SELECTOR ACCEPTANCE`;
+- fails closed on malformed schema/version, unsupported fields, invalid reference identity, stale SHA or ID bindings, handoff conflicts, contradictory readiness/blocker combinations, negative counts, stage/accessory conflicts or any non-false safety flag;
+- contains no upload, network, filesystem, browser storage, scaling, orientation, selection, defaulting, route, persistence, authority creation, IES generation or Engine invocation behaviour.
+
+### Gate and checkpoint evidence
+
+- exact staged set: the single authorised Selector contract page;
+- full `lab-ies` execution before checkpoint: 255/255 passed;
+- gated commit execution: 255/255 passed;
+- feature checkpoint: `8dcbeb089bd87351716300d093acb70c72476cb7`;
+- subject: `lab: checkpoint Selector contract stub`;
+- push: confirmed on origin `lane/code-pilot-lab`;
+- LAB-035 is `done`;
+- LAB-036 is the sole next `ready` item.
+
 ## LAB-035 seam-definition and approval reconciliation — 2026-07-20
 
 ### Trigger and classification
