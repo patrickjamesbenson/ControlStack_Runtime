@@ -557,3 +557,11 @@ Required semantic result:
 LAB-040 must preserve the raw measured triplet and opaque evidence reference with `authorityState: null`; missing identity/evidence binding remains explicit. It must not treat a sealed optic identity as accepted thermal evidence.
 
 Each parcel returns the exact approved files, its exact feature subject, a separate Lab documentation closeout, full `lab-ies` green and preserved protected inventory. The five-parcel Lab batch may run automatically under the standing worker. Final Engine admission remains a separate Program decision after accepted Selector and Program-bound evidence receipts.
+
+### LAB-038 atomic transition amendment
+
+The first resolver-only attempt demonstrated that the adapter imports the resolver schema constants and therefore rejects its own version-1 test fixtures as soon as the resolver advances. The full gate failed eight adapter tests at that boundary.
+
+LAB-038 is amended to exactly four files: the resolver module/test and adapter module/test. The adapter must accept only corrected resolution version 2 and corrected optic keys while retaining its public projection version 1 and existing non-thermal output. It must not add thermal evidence, authority state, derived temperature, lookup temperature or Engine output. LAB-040 remains the later adapter-output upgrade.
+
+Lab may apply this amendment immediately, rerun the full gate and checkpoint the four files under the unchanged LAB-038 feature subject.

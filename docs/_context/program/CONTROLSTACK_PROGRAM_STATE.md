@@ -350,3 +350,14 @@ P2 Checkpoint 1 is **IMPLEMENTATION COMPLETE / GATE GREEN / COMMIT BLOCKED BY SH
 - **OUT OF SCOPE:** source fixture/model rename, Program adapter, Selector, Engine, routes, persistence and compatibility aliases.
 - **ENGINE HOLD:** Engine thermal derivation remains blocked pending accepted Selector and later accepted Program-bound thermal evidence receipts.
 - **NEXT:** Lab records the approval and may run the five parcels sequentially under its standing worker. Patrick has no action.
+
+## 2026-07-21 LAB-038 atomic transition amendment state
+
+- **GATE FINDING:** resolver version 2 causes eight mandatory adapter-test failures because the adapter imports the resolver schema constants.
+- **INFEASIBLE SCOPE:** a resolver-only two-file LAB-038 cannot produce the required full green checkpoint.
+- **AMENDED SCOPE:** resolver module/test plus Lab adapter module/test, exactly four files.
+- **TRANSITION ONLY:** adapter continues to publish projection version 1 and its existing non-thermal shape.
+- **INPUT MIGRATION:** adapter accepts only corrected resolution version 2 and corrected optic input names.
+- **NO EARLY LAB-040:** no thermalEvidence output, evidence authority, adapter schema version 2 or Engine value is authorised in LAB-038.
+- **QUEUE:** LAB-038 remains sole ready; LAB-039 through LAB-042 remain sequence-blocked.
+- **NEXT:** Lab completes the atomic four-file checkpoint, then closes documentation and advances LAB-039. Patrick has no action.

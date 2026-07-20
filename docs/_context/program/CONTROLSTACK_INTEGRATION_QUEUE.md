@@ -541,3 +541,9 @@ Only LAB-038 is ready. Each later parcel remains blocked until the prior depende
 The Lab batch maps legacy 25/35/10 source evidence to measured reference room 25, absolute reference internal 35 and rise 10. It validates the measured triplet exactly, varies legacy `optic_uplift_ta_c` for the per-optic proof, emits no legacy semantic aliases and performs no Engine calculation. Source fixtures, source-model names, Program adapters, Selector files and Engine files are outside this batch.
 
 The batch does not establish accepted cross-lane thermal evidence. Program evidence validation and Engine thermal derivation remain blocked pending a later separately approved provenance/adapter parcel and accepted Selector receipt.
+
+### LAB-038 atomic transition amendment
+
+The mandatory full Lab gate proved that the resolver-only version bump cannot be checkpointed because the Lab adapter imports the resolver schema constants directly. LAB-038 is therefore amended to include the resolver module/test and the adapter module/test in one atomic four-file checkpoint.
+
+The adapter change is transition-only: accept corrected resolution version 2 and corrected optic input names, retain adapter projection version 1, preserve its current non-thermal output and publish no thermal evidence or authority. LAB-040 remains responsible for adapter projection version 2 and the unresolved thermal-evidence object. LAB-038 remains sole ready; later parcels remain blocked.

@@ -836,3 +836,34 @@ LAB-040 must keep thermal authority state unresolved and must not misrepresent a
 ### Acceptance return
 
 Each parcel must return its exact feature scope, separate Lab documentation closeout, full `lab-ies` green, preserved protected inventory and lane-only push. Any schema, semantic, field, authority-state, source-model or file-scope drift requires a new Program decision.
+
+---
+
+## 2026-07-21 — LAB-038 atomic resolver-consumer transition amendment
+
+**Status:** APPROVED AS A NARROW SUPERSESSION OF THE LAB-038 FILE SCOPE ONLY.
+
+### Gate evidence
+
+The attempted resolver-only version-2 transition passed all focused resolver tests but failed the mandatory full Lab gate because the existing Lab adapter imports the resolver schema constants directly. Eight adapter tests failed with the exact unsupported-resolution-schema boundary. Therefore a resolver-only version bump cannot form a green checkpoint, and the previously approved two-file LAB-038 scope is infeasible.
+
+### Amended exact scope
+
+LAB-038 is amended to exactly four files:
+
+- the NVB resolver module and its focused test;
+- the NVB Lab adapter module and its focused test.
+
+The adapter change in LAB-038 is transition-only:
+
+- it consumes only the corrected resolution version 2 and corrected optic input names;
+- it keeps its own public projection schema at version 1;
+- it does not publish the measured thermal triplet, accepted evidence, authority state, runtime derivation or Engine result;
+- it removes acceptance of the deprecated resolver input names;
+- its existing non-thermal output shape remains unchanged.
+
+LAB-040 remains separately required to advance the adapter's public projection to version 2 and add the explicit unresolved `thermalEvidence` object. No LAB-040 behaviour is pulled into LAB-038.
+
+### Queue effect
+
+LAB-038 remains the sole ready Lab parcel under this amended four-file atomic scope. LAB-039 through LAB-042 remain sequence-blocked. The feature subject remains `lab: checkpoint NVB thermal semantics v2`. Any extra adapter output, schema-version change, thermal authority claim or file requires a new Program decision.

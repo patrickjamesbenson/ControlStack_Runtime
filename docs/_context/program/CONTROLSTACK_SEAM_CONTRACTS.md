@@ -436,3 +436,9 @@ The triplet is exact after canonical decimal normalisation. Legacy `optic_intern
 ### Parcel sequence
 
 LAB-038 resolution v2, LAB-039 component v2, LAB-040 Lab projection v2, LAB-041 corrected labels and LAB-042 final guard remain separate. Only the first is ready. Exact files, tests, subjects, rollback and failure proofs are those recorded in the approved Lab envelope. Any deviation requires renewed Program approval.
+
+### LAB-038 atomic consumer-transition amendment
+
+Because the Lab adapter imports the resolver schema constants, the mandatory full gate cannot accept a resolver-only version bump. LAB-038 therefore atomically changes exactly the resolver module/test and adapter module/test.
+
+During LAB-038 the adapter remains `controlstack.lab.nvb-lab-projection.v1`. It accepts only corrected resolution version 2 and the corrected optic input names, but emits no thermal triplet or evidence authority. Its existing non-thermal public shape remains fixed. LAB-040 later performs the separately approved adapter projection version-2 change and adds explicit unresolved thermal evidence. This transition is not a compatibility alias and does not permit simultaneous version-1 and version-2 resolver inputs.

@@ -1,19 +1,19 @@
 # Program & Integrate Session Handoff
 
-Status: CORRECTED LAB THERMAL SEMANTICS ENVELOPE APPROVED  
+Status: LAB-038 ATOMIC TRANSITION AMENDMENT APPROVED  
 Lane: `program-integrate`  
 Branch: `lane/program-integrate`
 
 ## Decision
 
-Program approved the pushed Lab version-1 corrected thermal semantics envelope unchanged after verifying the binding 25°C reference room, 35°C absolute internal and 10°C rise interpretation.
+The mandatory Lab gate proved that a resolver-only version-2 checkpoint is impossible because the Lab adapter imports the resolver schema constants directly.
 
-The five Lab parcels remain separate and sequential. LAB-038 is the sole ready Lab parcel. LAB-039 through LAB-042 are approved but dependency-blocked.
+LAB-038 is amended to exactly four files: the resolver module and test plus the Lab adapter module and test.
 
-Lab must use the measured triplet fields `referenceRoomTaC`, `referenceInternalTaC` and `opticThermalRiseTaC`, validate them exactly, vary legacy `optic_uplift_ta_c` for the per-optic proof, and emit no Lab-owned derived/lookup temperature or verified lm/m.
+The adapter change is transition-only. It accepts corrected resolution version 2 and corrected optic input names, keeps its own public projection at version 1, preserves its existing non-thermal output, and publishes no thermal evidence or authority.
 
-The Lab working projection keeps thermal authority unresolved. Engine work remains blocked pending accepted Selector and later Program-bound thermal evidence receipts.
+LAB-040 remains separately responsible for adapter projection version 2 and the explicit unresolved thermal-evidence object. LAB-038 remains the sole ready Lab item; later parcels remain sequence-blocked.
 
 ## Exact next action
 
-Lab records this approval and runs LAB-038 through LAB-042 sequentially under the standing worker, with separate feature and documentation checkpoints and the full Lab gate after every parcel.
+Lab completes the four-file LAB-038 checkpoint, runs the full Lab gate, closes its documentation separately, then advances LAB-039.
