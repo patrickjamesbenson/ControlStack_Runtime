@@ -477,7 +477,7 @@ Lab must return the exact one-file feature commit, separate documentation closeo
 ### Ownership
 
 - Selector passes only user-selected room ambient, unchanged.
-- Lab publishes the selected optic's measured thermal triplet and evidence binding: test-room temperature, test-internal temperature and measured rise.
+- Lab publishes the selected optic's measured thermal triplet and evidence binding: test-room temperature, test-internal temperature and measured rise. Repeated source values of 35 in the rise field are placeholders and cannot unlock verification.
 - Engine alone calculates `derivedInternalTaC = selectedRoomTaC + opticInternalDeltaTaC`, uses that value as `curveLookupTaC`, applies the supported curve clamp/interpolation and returns verified lm/m.
 - Program owns adapter validation and cross-lane acceptance.
 

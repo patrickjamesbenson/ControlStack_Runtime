@@ -693,6 +693,7 @@ For one selected optic:
 Example binding behaviour:
 
 - Lab evidence: room 25°C, internal 35°C, rise 10°C.
+- The repeated source value `optic_internal_delta_ta_c = 35` is a placeholder, not accepted measured rise evidence. It remains unresolved for verification until an evidence-bound Lab triplet proves the actual per-optic rise.
 - User room selection 25°C -> Engine derives 35°C -> curve lookup at 35°C.
 - User room selection 35°C -> Engine derives 45°C -> curve lookup at 45°C.
 

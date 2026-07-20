@@ -313,7 +313,7 @@ P2 Checkpoint 1 is **IMPLEMENTATION COMPLETE / GATE GREEN / COMMIT BLOCKED BY SH
 ## 2026-07-20 binding thermal-chain state
 
 - **SELECTOR:** owns user room ambient only and passes it unchanged.
-- **LAB:** owns the optic-bound measured triplet: reference room, reference internal and measured rise, with evidence provenance.
+- **LAB:** owns the optic-bound measured triplet: reference room, reference internal and measured rise, with evidence provenance. Current repeated rise values of 35 are placeholders and remain unverified.
 - **ENGINE:** owns the single addition `selectedRoomTaC + opticInternalDeltaTaC`, uses the result as curve lookup temperature, applies curve clamping/interpolation and returns verified lm/m.
 - **PROGRAM:** owns the adapter, provenance checks and acceptance gate.
 - **VERSION-1 LOOKUP RULE:** `curveLookupTaC === derivedInternalTaC`; a later board-temperature transform requires a new decision.

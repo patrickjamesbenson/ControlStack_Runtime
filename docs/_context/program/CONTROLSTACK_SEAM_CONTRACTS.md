@@ -372,7 +372,7 @@ verifiedLmPerM                  — Engine-owned curve result
 
 - Selector does not derive, clamp, look up or verify temperature-adjusted output.
 - Lab does not combine a user's room choice with the measured rise.
-- Engine does not invent or hardcode the optic rise and does not reinterpret the sealed Lab test internal temperature.
+- Engine does not invent or hardcode the optic rise and does not reinterpret the sealed Lab test internal temperature. Current repeated rise-field values of 35 are placeholder data and cannot unlock verification.
 - Program validates the cross-lane bundle but does not own the scientific measurement or curve result.
 
 `_INTERNAL_AMBIENT_TA_C` remains the Lab authority-test internal measurement. Runtime-derived operating temperature uses separate Engine-owned fields.

@@ -501,7 +501,7 @@ The thermal chain has one owner per step:
 4. Under version 1, Engine uses that same value as `curveLookupTaC`, then performs the 25–65°C curve clamp/interpolation and returns verified lm/m.
 5. Program validates identity, evidence binding and shape at the cross-lane adapter.
 
-Binding examples are 25°C room + 10°C rise = 35°C lookup, and 35°C room + 10°C rise = 45°C lookup.
+Binding examples are 25°C room + 10°C rise = 35°C lookup, and 35°C room + 10°C rise = 45°C lookup. The current repeated source value 35 in the rise field is placeholder data and must remain unverified until Lab evidence proves the actual per-optic rise.
 
 Lab's `_INTERNAL_AMBIENT_TA_C` remains the measured internal temperature during the authority test. It is not a user-specific operating value and is never overwritten by Runtime.
 
