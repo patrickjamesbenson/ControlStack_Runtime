@@ -375,3 +375,9 @@ SEL-018 is the sole top ready item and is repository-only. Use the canonical sta
 SEL-019 follows only after runtime 8788 serves the accepted SEL-018 implementation. It is the live-acceptance parcel and requires Patrick's genuine browser actions. The order is fixed: prove source-backed Ambient choices; select one real value; save a new `project-alpha` envelope and visibly confirm persistence; register that exact envelope; prove the active revision carries the exact numeric `lighting.ambient_temp_c`; obtain a bounded pre-execution receipt showing the same number as `temp_c`; create a separate Ambient-absent saved envelope and prove safe refusal before donor execution without displacing the positive revision; only then execute one bounded read-only Engine proof against the positive revision. No code change or second Engine invocation is authorised in SEL-019.
 
 SEL-002 and SEL-003 are held as acceptance checkpoints so they cannot trigger duplicate registration or invocation. SEL-019 may close them only when its own positive registration and single bounded Engine evidence fully satisfies them.
+
+## 2026-07-20 Ambient write-guard handoff
+
+The first SEL-018 worker stopped before implementation because the connected secure lane app excludes the exact Selector summary module already authorised by the queue. The trial edit was restored and the tree is clean. No test, stage, commit, push, browser save, registration, or Engine action occurred.
+
+SEL-018 is blocked only until the app write guard allows exactly `packages/modules/cs-selector/selectorFactoryApprovedInputsSummary.js`. Do not grant broader `packages/modules/**` access. After the app is reconnected and `repo_info` reports that exact allowance, the orchestrator must mark SEL-018 ready, reconcile the guard wrapper if necessary, and commission one fresh standing worker. Until then do not start another worker or perform any live Ambient action.

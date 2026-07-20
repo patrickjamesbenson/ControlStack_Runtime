@@ -422,3 +422,12 @@ Every completed worker updates this index with:
 - Live parcel boundary: genuine source-backed browser selection, save and visible persistence, registration and active revision attribution, exact numeric candidate and `temp_c` receipt, separate safe Ambient-absent refusal without replacing the positive revision, and only then one bounded read-only Engine proof — RECORDED.
 - Live actions during this split: none. No browser save, registration, Engine invocation, project or RuntimeData mutation, persistence, RunTable generation, IES generation, or output generation occurred — VERIFIED.
 - Complete `selector-engine` gate, exact staged context set, gated commit/push, and final clean Git receipt are recorded by the orchestrator completion response and the resulting reconciliation commit.
+
+## 2026-07-20 — Ambient implementation write-guard stop
+
+- Worker start: correct Selector lane and branch; clean tree; SEL-018 repository implementation selected — USER-PROVIDED WORKER EVIDENCE AND VERIFIED CURRENT GIT STATE.
+- Required module: the approved parcel includes `packages/modules/cs-selector/selectorFactoryApprovedInputsSummary.js`, which currently declares Ambient not required for the readonly candidate — VERIFIED QUEUE AND REPOSITORY CONTRACT.
+- Secure app guard: current allowed write globs omit `packages/modules/cs-selector/**`; the exact required module is therefore blocked despite queue authority — VERIFIED `repo_info`.
+- Worker recovery: the trial edit was restored; no dirty path, test, staging, commit, push, browser save, registration, or Engine invocation remains — USER-PROVIDED WORKER EVIDENCE AND VERIFIED CLEAN GIT STATE.
+- Scope decision: add only the exact required summary module to the secure lane write guard; no directory-wide modules permission — ORCHESTRATOR DECISION.
+- Queue result: SEL-018 blocked solely on tooling configuration; SEL-019 and the held registration/Engine checkpoints remain unchanged — RECORDED.

@@ -174,6 +174,7 @@ The lane app permits scoped work under:
 - `apps/**`;
 - `packages/workspace-kernel/**`;
 - `packages/runtime-web/**`;
+- exact approved exception `packages/modules/cs-selector/selectorFactoryApprovedInputsSummary.js`;
 - `server.js`;
 - Selector, Engine, runtime, and run-table test globs;
 - `docs/selector/**` and `docs/engine/**`;

@@ -103,7 +103,8 @@
 ### Q-2H Implement Ambient authority and the temperature/lumen Engine seam
 
 * id: SEL-018
-* status: ready
+* status: blocked
+* tooling precondition: the secure lane app write guard must explicitly allow only `packages/modules/cs-selector/selectorFactoryApprovedInputsSummary.js`; no broader `packages/modules/**` scope is approved
 * depends-on: SEL-017
 * seam approval: Program & Integrate recorded on 2026-07-20
 * seam change: yes — approved authority, registration timing, field name, Celsius unit, and fail-closed ownership are unchanged

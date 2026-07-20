@@ -350,7 +350,7 @@ SEL-018 is now the sole top ready item. It is approved as one bounded Selector/r
 
 ## 2026-07-20 Ambient parcel split — latest controlling state
 
-**Recorded lane work HEAD:** `dc6fca735bc65b610160664492b46fb0a599322f` — `docs(selector): reconcile lane state after Ambient approval`.
+**Recorded lane work HEAD:** `bba4391dab3883953c138e8a1d9920b2dae66e40` — `docs(selector): reconcile lane state for Ambient parcel split`.
 
 The approved Ambient authority and contract are unchanged: active read-only `SYSTEM_POLICY` is the only selectable authority; `lighting.ambient_temp_c` is the exact candidate field; the value is a finite JSON number in degrees Celsius; the protected interpolation input is `temp_c`; and missing, blank, ambiguous, non-numeric, non-finite, malformed, or non-source-backed Ambient fails closed before donor Engine execution with no 25°C, 35°C, fixture, product, System, Tier, application, IP, optic, lab, historical, cached, or donor fallback.
 
@@ -359,3 +359,9 @@ The former combined SEL-018 parcel is split at the evidence boundary. SEL-018 re
 SEL-019 follows as a blocked live-acceptance parcel. After runtime 8788 serves the accepted SEL-018 implementation, it requires genuine source-backed Ambient options, one Patrick-selected positive value, a new browser save with visible persistence, successful registration of that exact envelope, an attributable active revision carrying the exact numeric `lighting.ambient_temp_c`, and a bounded pre-execution receipt proving the identical number reaches `temp_c`. A separate Ambient-absent browser envelope must then refuse safely before donor execution without replacing the accepted positive revision. Only after all of that may one bounded read-only Engine proof execute against the positive revision.
 
 SEL-002 and SEL-003 are held as legacy acceptance checkpoints and must not cause duplicate registration or Engine execution. SEL-019 may mark them done only when its own evidence fully satisfies their existing acceptance. No feature code, browser action, registration, Engine invocation, project mutation, RuntimeData mutation, persistence, RunTable generation, IES generation, or output generation occurred in this orchestrator split.
+
+## 2026-07-20 Ambient implementation write-guard stop
+
+The first repository-only Ambient worker verified the correct lane and began from a clean tree. Its trial edit required the already-approved Selector summary module, but the connected secure app write guard currently permits `apps/**`, `packages/workspace-kernel/**`, `packages/runtime-web/**`, `server.js`, the approved test globs, and lane documentation while excluding the exact required module. The worker restored the trial edit and stopped cleanly before tests, staging, commit, push, browser action, registration, or Engine execution.
+
+The approved Ambient authority, field name, Celsius unit, registration timing, fail-closed rules, parcel split, and implementation file scope are unchanged. SEL-018 is blocked only on secure-tooling configuration. The narrow correction is to add exactly `packages/modules/cs-selector/selectorFactoryApprovedInputsSummary.js` to the Selector lane app write guard. No broader `packages/modules/**` authority is approved. After the connected app reports that exact allowance, the orchestrator may return SEL-018 to ready and commission one fresh standing worker.
