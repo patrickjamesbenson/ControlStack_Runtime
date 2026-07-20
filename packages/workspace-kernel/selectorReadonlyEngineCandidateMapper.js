@@ -24,6 +24,7 @@ const REQUIRED_CANDIDATE_FIELDS = Object.freeze([
   "cri",
   "optic",
   "control_type",
+  "selectedRoomTaC",
 ]);
 
 const SAFETY_FLAGS = Object.freeze({
@@ -183,6 +184,72 @@ function parseCctCri(value) {
   };
 }
 
+function parseFiniteCelsius(value) {
+  if (typeof value === "number") return Number.isFinite(value) ? value : null;
+  const text = safeString(value);
+  if (!text) return null;
+  const match = text.match(
+    /^(?:ambient(?:\s+temperature)?\s*[:=-]?\s*)?([+-]?(?:\d+(?:\.\d+)?|\.\d+))\s*(?:°\s*c|deg(?:ree)?s?\s*c|c)?(?:\s+ambient)?$/i,
+  );
+  if (!match) return null;
+  const parsed = Number(match[1]);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function selectedRoomIntent(committedSelectorConstraints = [], lmTemperatureReadinessPreview = {}) {
+  const ambientRows = (Array.isArray(committedSelectorConstraints) ? committedSelectorConstraints : [])
+    .filter((constraint) => isPlainObject(constraint) && safeToken(constraint.fieldKey) === "ambient");
+  if (ambientRows.length === 0) {
+    return { selectedRoomTaC: null, blocker: "ambient-selection-missing", source: "unavailable" };
+  }
+  if (ambientRows.length !== 1) {
+    return { selectedRoomTaC: null, blocker: "ambient-selection-duplicate", source: "unavailable" };
+  }
+
+  const constraint = ambientRows[0];
+  if (constraint.committedSelectorState !== true) {
+    return { selectedRoomTaC: null, blocker: "ambient-selection-not-committed", source: "unavailable" };
+  }
+  if (constraint.blocked === true) {
+    return { selectedRoomTaC: null, blocker: "ambient-selection-blocked", source: "unavailable" };
+  }
+
+  const preview = isPlainObject(lmTemperatureReadinessPreview?.ambientIntent)
+    ? lmTemperatureReadinessPreview.ambientIntent
+    : {};
+  if (preview.ready !== true) {
+    return { selectedRoomTaC: null, blocker: "ambient-selection-not-ready", source: "unavailable" };
+  }
+  if (preview.sourceBacked !== true) {
+    return { selectedRoomTaC: null, blocker: "ambient-selection-not-source-backed", source: "unavailable" };
+  }
+
+  const constraintValues = [constraint.value, constraint.valueLabel]
+    .map((entry) => safeString(entry))
+    .filter(Boolean)
+    .map(parseFiniteCelsius);
+  if (constraintValues.length === 0 || constraintValues.some((entry) => entry === null)) {
+    return { selectedRoomTaC: null, blocker: "ambient-selection-malformed", source: "unavailable" };
+  }
+  if (new Set(constraintValues).size !== 1) {
+    return { selectedRoomTaC: null, blocker: "ambient-selection-conflict", source: "unavailable" };
+  }
+
+  const previewValue = parseFiniteCelsius(preview.valueLabel);
+  if (previewValue === null) {
+    return { selectedRoomTaC: null, blocker: "ambient-selection-malformed", source: "unavailable" };
+  }
+  if (previewValue !== constraintValues[0]) {
+    return { selectedRoomTaC: null, blocker: "ambient-selection-conflict", source: "unavailable" };
+  }
+
+  return {
+    selectedRoomTaC: previewValue,
+    blocker: null,
+    source: safeString(constraint.authoritySource || constraint.provenance, "committed source-backed Ambient selection"),
+  };
+}
+
 function directLightIntent(lmTemperatureReadinessPreview = {}) {
   const directLm = lmTemperatureReadinessPreview?.targetIntent?.direct || {};
   const directCctCri = lmTemperatureReadinessPreview?.cctCriPairing?.direct || {};
@@ -287,6 +354,7 @@ function candidateSummary(candidate, fieldStatusRows, sourceFingerprintInput) {
       optic_key: lighting.optic_key,
       control_type: lighting.control_type,
     },
+    selectedRoomTaC: candidate.selectedRoomTaC,
     sourceFingerprintInput,
   });
 
@@ -315,6 +383,7 @@ function candidateSummary(candidate, fieldStatusRows, sourceFingerprintInput) {
       criPresent: Boolean(lighting.cri),
       opticPresent: Boolean(candidate.optic?.key || lighting.optic_key),
       controlTypePresent: Boolean(candidate.control_type || lighting.control_type),
+      selectedRoomTaCPresent: Number.isFinite(candidate.selectedRoomTaC),
       readonlyEngineCandidateFingerprint: fingerprint,
       rawCandidateReturned: false,
       rawSelectorPayloadReturned: false,
@@ -376,6 +445,7 @@ export function buildSelectorReadonlyEngineCandidateForInternalSeam({
   }
 
   const map = constraintMap(committedSelectorConstraints);
+  const room = selectedRoomIntent(committedSelectorConstraints, lmTemperatureReadinessPreview);
   const runSummary = factoryApprovedInputsSummary.committedRunIntakeSummary || {};
   const runQuantity = positiveInteger(runSummary.runQuantity);
   const runLengthMm = positiveInteger(runSummary.runLengthMm);
@@ -432,6 +502,7 @@ export function buildSelectorReadonlyEngineCandidateForInternalSeam({
       readonly_selector_stage3_candidate: true,
     }] : [],
     lighting,
+    ...(room.selectedRoomTaC !== null ? { selectedRoomTaC: room.selectedRoomTaC } : {}),
     optic: optic ? { key: optic } : {},
     control_type: controlType,
     electrical: {},
@@ -447,11 +518,18 @@ export function buildSelectorReadonlyEngineCandidateForInternalSeam({
     fieldStatus("cri", Boolean(lighting.cri), "selector-source-backed-light-intent-required", "selector cctCri committed intent"),
     fieldStatus("optic", Boolean(optic), "committed-selector-state-required", sourceLabelForConstraint(map, ["directOpticVar1", "optic", "opticVar1", "diffuserVar1"])),
     fieldStatus("control_type", Boolean(controlType), "selector-control-intent-required", "selector controlType committed intent"),
+    fieldStatus(
+      "selectedRoomTaC",
+      room.selectedRoomTaC !== null,
+      "selector-source-backed-room-intent-required",
+      room.source,
+      room.blocker || "",
+    ),
   ];
   const missing = fieldStatusRows.filter((row) => REQUIRED_CANDIDATE_FIELDS.includes(row.field) && row.present !== true);
   if (missing.length > 0) {
     const blocker = `missing-candidate-field-${missing[0].field}`;
-    const summary = failSummary(blocker, missing.map((row) => `missing ${row.field}`), { fieldStatus: fieldStatusRows });
+    const summary = failSummary(blocker, missing.map((row) => row.reason || `missing ${row.field}`), { fieldStatus: fieldStatusRows });
     return { ok: false, candidate: null, summary };
   }
 

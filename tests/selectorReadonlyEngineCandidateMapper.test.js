@@ -60,9 +60,36 @@ function stage3Summary(overrides = {}) {
   };
 }
 
-function constraints({ includeTier = false } = {}) {
+function constraints({
+  includeTier = false,
+  includeAmbient = true,
+  ambientValue = "25C",
+  ambientLabel = "25°C",
+  ambientCommitted = true,
+  ambientBlocked = false,
+  duplicateAmbient = false,
+} = {}) {
+  const ambientRows = includeAmbient ? [
+    {
+      fieldKey: "ambient",
+      value: ambientValue,
+      valueLabel: ambientLabel,
+      committedSelectorState: ambientCommitted,
+      blocked: ambientBlocked,
+      authoritySource: "manualConstraints",
+    },
+    duplicateAmbient ? {
+      fieldKey: "ambient",
+      value: ambientValue,
+      valueLabel: ambientLabel,
+      committedSelectorState: true,
+      blocked: false,
+      authoritySource: "manualConstraints",
+    } : null,
+  ].filter(Boolean) : [];
   return [
     includeTier ? { fieldKey: "tier", value: "Stale Browser Tier", valueLabel: "Stale Browser Tier", committedSelectorState: true, authoritySource: "acceptedDefaults" } : null,
+    ...ambientRows,
     { fieldKey: "directOpticVar1", value: "80|Inlay", valueLabel: "Inlay", committedSelectorState: true, authoritySource: "manualConstraints" },
     { fieldKey: "targetLmPerM", value: "1200", valueLabel: "1200", committedSelectorState: true, authoritySource: "manualConstraints" },
     { fieldKey: "cctCri", value: "4000K / CRI90", valueLabel: "4000K / CRI90", committedSelectorState: true, authoritySource: "manualConstraints" },
@@ -83,6 +110,12 @@ function lmTemperaturePreview(overrides = {}) {
     },
     controlIntent: {
       direct: { ready: true, valueLabel: "DALI-2", sourceBacked: true },
+    },
+    ambientIntent: {
+      ready: true,
+      valueLabel: "25°C",
+      sourceBacked: true,
+      optionCount: 3,
     },
     fingerprint: "safe-selector-lm-temp-readiness-preview:fixture",
     safetyFlags: {
@@ -129,6 +162,9 @@ test("maps Stage 3 supported selector state without carrying client Tier authori
   assert.equal(result.candidate.lighting.optic_key, "Inlay");
   assert.equal(result.candidate.optic.key, "Inlay");
   assert.equal(result.candidate.control_type, "DALI-2");
+  assert.equal(result.candidate.selectedRoomTaC, 25);
+  assert.equal(result.summary.requiredFields.includes("selectedRoomTaC"), true);
+  assert.equal(result.summary.candidateShapeSummary.selectedRoomTaCPresent, true);
   assert.equal(result.summary.readonlyEngineCandidateMapperReady, true);
   assert.equal(result.summary.candidateReadyForHostLocalReadonlySeam, true);
   assert.equal(result.summary.candidatePayloadReturned, false);
@@ -141,12 +177,38 @@ test("maps Stage 3 supported selector state without carrying client Tier authori
   assert.equal(result.summary.postEndpointsAdded, false);
 });
 
+test("maps 35°C as selected room temperature without deriving thermal output", () => {
+  const result = buildSelectorReadonlyEngineCandidateForInternalSeam({
+    factoryApprovedInputsSummary: stage3Summary(),
+    committedSelectorConstraints: constraints({ ambientValue: "35C", ambientLabel: "35°C" }),
+    lmTemperatureReadinessPreview: lmTemperaturePreview({
+      ambientIntent: { ready: true, valueLabel: "35°C", sourceBacked: true, optionCount: 3 },
+    }),
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.candidate.selectedRoomTaC, 35);
+  for (const forbidden of [
+    "referenceRoomTaC",
+    "referenceInternalTaC",
+    "opticThermalRiseTaC",
+    "opticInternalDeltaTaC",
+    "derivedInternalTaC",
+    "curveLookupTaC",
+    "boardTemperatureTaC",
+    "verifiedLmPerM",
+  ]) {
+    assert.equal(Object.prototype.hasOwnProperty.call(result.candidate, forbidden), false, forbidden);
+    assert.equal(Object.prototype.hasOwnProperty.call(result.candidate.lighting, forbidden), false, forbidden);
+  }
+});
+
 test("maps the direct-only readonly candidate when full Stage 2 and factory readiness remain blocked", () => {
   const result = buildSelectorReadonlyEngineCandidateForInternalSeam({
     factoryApprovedInputsSummary: stage3Summary({
       factoryApprovedInputsReady: false,
       stage2Ready: false,
-      blocker: "Ambient missing from full spec gate",
+      blocker: "Mounting and finishes missing from full spec gate",
       readonlyEngineCandidateInputsReady: true,
       readonlyEngineCandidateInputsBlocker: null,
     }),
@@ -194,12 +256,12 @@ test("fails closed when committed Control is not backed by the source-valid cont
   assert.ok(result.summary.fieldStatus.some((row) => row.field === "control_type" && row.present === false));
 });
 
-test("direct-only readonly mapping does not require Ambient or indirect light/control inputs", () => {
+test("direct-only readonly mapping requires room Ambient but no indirect light/control inputs", () => {
   const result = buildSelectorReadonlyEngineCandidateForInternalSeam({
     factoryApprovedInputsSummary: stage3Summary({
       stage2Ready: false,
       factoryApprovedInputsReady: false,
-      blocker: "Ambient missing from full spec gate",
+      blocker: "Mounting and finishes missing from full spec gate",
       readonlyEngineCandidateInputsReady: true,
     }),
     committedSelectorConstraints: constraints(),
@@ -212,8 +274,70 @@ test("direct-only readonly mapping does not require Ambient or indirect light/co
 
   assert.equal(result.ok, true);
   assert.equal(result.candidate.control_type, "DALI-2");
+  assert.equal(result.candidate.selectedRoomTaC, 25);
   assert.equal(Object.prototype.hasOwnProperty.call(result.candidate.lighting, "target_lm_per_m_indirect"), false);
   assert.equal(Object.prototype.hasOwnProperty.call(result.candidate.lighting, "control_type_indirect"), false);
+});
+
+test("fails closed for missing, malformed, duplicate, uncommitted, blocked, non-source-backed, or conflicting Ambient", () => {
+  const cases = [
+    {
+      reason: "ambient-selection-missing",
+      constraints: constraints({ includeAmbient: false }),
+      preview: lmTemperaturePreview(),
+    },
+    {
+      reason: "ambient-selection-malformed",
+      constraints: constraints({ ambientValue: "warm", ambientLabel: "warm" }),
+      preview: lmTemperaturePreview({
+        ambientIntent: { ready: true, valueLabel: "warm", sourceBacked: true, optionCount: 3 },
+      }),
+    },
+    {
+      reason: "ambient-selection-duplicate",
+      constraints: constraints({ duplicateAmbient: true }),
+      preview: lmTemperaturePreview(),
+    },
+    {
+      reason: "ambient-selection-not-committed",
+      constraints: constraints({ ambientCommitted: false }),
+      preview: lmTemperaturePreview(),
+    },
+    {
+      reason: "ambient-selection-blocked",
+      constraints: constraints({ ambientBlocked: true }),
+      preview: lmTemperaturePreview(),
+    },
+    {
+      reason: "ambient-selection-not-source-backed",
+      constraints: constraints(),
+      preview: lmTemperaturePreview({
+        ambientIntent: { ready: true, valueLabel: "25°C", sourceBacked: false, optionCount: 3 },
+      }),
+    },
+    {
+      reason: "ambient-selection-conflict",
+      constraints: constraints(),
+      preview: lmTemperaturePreview({
+        ambientIntent: { ready: true, valueLabel: "35°C", sourceBacked: true, optionCount: 3 },
+      }),
+    },
+  ];
+
+  for (const item of cases) {
+    const result = buildSelectorReadonlyEngineCandidateForInternalSeam({
+      factoryApprovedInputsSummary: stage3Summary(),
+      committedSelectorConstraints: item.constraints,
+      lmTemperatureReadinessPreview: item.preview,
+    });
+    assert.equal(result.ok, false, item.reason);
+    assert.equal(result.candidate, null, item.reason);
+    assert.equal(result.summary.blocker, "missing-candidate-field-selectedRoomTaC", item.reason);
+    assert.ok(
+      result.summary.fieldStatus.some((row) => row.field === "selectedRoomTaC" && row.reason === item.reason),
+      item.reason,
+    );
+  }
 });
 
 test("accepts the readonly candidate when Tier is absent from committed Selector state", () => {
