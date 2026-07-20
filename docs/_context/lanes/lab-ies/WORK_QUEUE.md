@@ -793,9 +793,11 @@ Completion evidence: The read-only component library labels were corrected in th
 - depends on: LAB-038-nvb-resolution-thermal-semantics-v2, LAB-039-component-thermal-semantics-v2, LAB-040-nvb-lab-thermal-projection-v2, LAB-041-component-library-thermal-labels
 - on success next: none
 - seam change: no after envelope approval
-- status: ready
+- status: done
 
-Approval state: Program & Integrate approved corrected thermal envelope version 3, including the atomic LAB-038 amendment and the gate-included LAB-042 test-file amendment. LAB-038 through LAB-041 are complete. LAB-042 is the sole ready item; the superseded new thermal test file must not be created.
+Completion evidence: The final guard was committed in the exact gate-included one-file scope as `lab: checkpoint thermal semantics guard`, pushed to the lane branch, and passed 262/262. It independently proves the corrected baseline, varied uplift, contradictory-rise rejection, all three version-2 schemas, bounded legacy source names, absence of deprecated and Engine-owned outputs, corrected presentation labels, unresolved thermal authority and unchanged sealed internal-ambient meaning. No production source, fixture, gate configuration or superseded new test file changed. The corrected thermal batch and ordered Lab queue are now empty.
+
+Approval state: Corrected thermal envelope version 3 is fully implemented. LAB-038 through LAB-042 are complete and the ordered queue is empty.
 
 ## Explicitly not queued
 

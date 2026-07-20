@@ -2,7 +2,7 @@
 
 ## Session purpose
 
-This handoff records Program approval of the LAB-042 gate-included test-file amendment, preserves the permanent charter authority for both standing prompts, and admits LAB-042 as the sole ready item.
+This handoff records completion of LAB-042 and the corrected thermal semantics batch, preserves the permanent charter authority for both standing prompts, and closes the ordered Lab / IES queue.
 
 ## Identity
 
@@ -12,17 +12,17 @@ This handoff records Program approval of the LAB-042 gate-included test-file ame
 - Branch: `lane/code-pilot-lab`
 - Gate: `lab-ies`
 - Standing prompt authority: `docs/_context/lanes/lab-ies/LANE_CHARTER.md` contains both worker and orchestrator prompts
-- Starting HEAD for LAB-041: `4dfaa2d3cc95211378d7141aed7b3140432d1267`
-- Completed feature checkpoint: `1a85beba662333561fd2338f67e5146b45935f94`
-- Feature subject: `lab: checkpoint corrected thermal labels`
+- Starting HEAD for LAB-042: `a91ec745180abe6e9c666212e2dd644df35311bd`
+- Completed feature checkpoint: `46792ddfe23cd4999aa244f9eb745a94028af3d6`
+- Feature subject: `lab: checkpoint thermal semantics guard`
 - Feature checkpoint confirmed on origin `lane/code-pilot-lab`
-- Seam change: no after approved thermal envelope
+- Seam change: no after approved thermal envelope version 3
 - Branch-HEAD guard checkpoint: `6d34e500d407d5335e5eebb317636a67a5e98618`
-- LAB-041 feature gate: 259/259 passed
+- LAB-042 feature gate: 262/262 passed
 - Program correction consumed: `docs(program): correct thermal source field semantics`; Program gate 46/46 passed and the correction was pushed
 - Approved Lab seam: `LAB-038_042_THERMAL_SEMANTICS_SEAM_ENVELOPE.md`, version 3
 - Program approvals: initial corrected seam, atomic LAB-038 transition, and `docs(program): amend LAB-042 gate-included test scope`; all Program gates passed 46/46 and were pushed
-- Parcel state: LAB-038 through LAB-041 are done; LAB-042 is the sole ready item
+- Parcel state: LAB-038 through LAB-042 are done; the ordered queue is empty
 
 ## Branch-HEAD guard
 
@@ -36,34 +36,33 @@ Program & Integrate corrected and superseded the old thermal interpretation. The
 
 The corrected resolution, component catalogue and Lab working projection are now committed as version-2 contracts. They preserve the measured reference room, absolute reference internal and optic thermal rise meanings, enforce exact triplet consistency, and keep legacy snake-case names confined to bounded source mapping. The Lab projection carries opaque evidence with authority explicitly null and no Engine-owned result.
 
-The corrected component-library labels are also complete. The remaining work is the final thermal semantics guard.
+The corrected component-library labels and the final gate-included thermal semantics guard are complete.
 
-LAB-038 through LAB-041 are complete. Program approved use of the existing gate-included keyword migration test for LAB-042; the superseded new thermal test file must not be created. LAB-042 is the sole ready parcel.
+LAB-038 through LAB-042 are complete. The final guard used the existing gate-included keyword migration test, the superseded new thermal test file was not created, and the ordered queue is empty.
 
-## Previous completed queue item
+## Completed queue item
 
-`LAB-037-keyword-migration-guard` is complete.
+`LAB-042-thermal-semantics-guard` is complete.
 
-Exactly this one test file was committed:
+Exactly this one gate-included test file was committed:
 
 ```text
 tests/lab-kernel/iesKeywordMigration.test.js
 ```
 
-The final regression guard independently pins the exact versioned 16-keyword order and owner map, the sealed-reference internal-ambient policy, the active Lab-form order and bracketed fields, and rejection of stale aliases or supplementary keywords. It checks every active formatter, generator, merge, project adapter, builder and working preview for retired output vocabulary without testing unrelated presentation layout.
+The final guard executes the corrected resolver, component catalogue and Lab working projection contracts directly. It pins all three version-2 schemas, proves the measured 25 + 10 = 35 baseline and the varied 15-degree rise case, rejects contradictory rise-only evidence, bounds legacy source names to mapping/test input, rejects deprecated and Engine-owned output vocabulary, confirms corrected presentation labels, and preserves unresolved thermal authority plus the sealed internal-ambient meaning.
 
-No production source or fixture changed.
+No production source, fixture, gate configuration or superseded new thermal test file changed.
 
 ## Validation evidence
 
-- Full LAB-037 feature execution before checkpoint: 255/255 passed.
-- Gated LAB-037 feature checkpoint execution: 255/255 passed.
-- Corrected thermal seam coordination documentation: 255/255 passed.
+- Full LAB-042 feature execution before checkpoint: 262/262 passed.
+- Gated LAB-042 feature checkpoint execution: 262/262 passed.
 - Failed, cancelled, skipped and todo counts were zero.
 
 ## Git and protected worktree state
 
-The LAB-037 parcel was staged as exactly the one authorised test file, committed and pushed separately from lane documentation.
+The LAB-042 parcel was staged as exactly the one authorised gate-included test file, committed and pushed separately from lane documentation.
 
 The protected working-tree state after documentation closeout must remain:
 
@@ -89,11 +88,11 @@ packages/workspace-kernel/selectorReferenceOptionsService.js
 tests/selectorCascadeCorrectness.test.js
 ```
 
-## Completed LAB-037 final regression guard
+## Completed LAB-042 final thermal semantics guard
 
-The live branch contains the exact authorised one-file test checkpoint. It fixes the canonical outgoing keyword contract independently from production implementation and guards every active generation, merge and preview path against retired vocabulary.
+The live branch contains the exact authorised gate-included one-file test checkpoint. It executes the corrected thermal contracts, pins their versioned shapes and rejects any regression to deprecated semantics or Lab-owned Engine calculations.
 
-The feature passed the full 255/255 Lab gate and is confirmed on origin. Its closeout left the queue empty before the corrected thermal ruling admitted the new blocked proposal.
+The feature passed the full 262/262 Lab gate and is confirmed on origin. The corrected thermal batch is complete and the ordered queue is empty.
 
 ## Queue state and next action
 
@@ -133,9 +132,10 @@ The feature passed the full 255/255 Lab gate and is confirmed on origin. Its clo
 - LAB-040 gated execution: 259/259 passed.
 - `LAB-041-component-library-thermal-labels`: `done` and confirmed on origin.
 - LAB-041 gated execution: 259/259 passed.
-- `LAB-042-thermal-semantics-guard`: `ready` under approved envelope version 3.
-- Ready items: LAB-042 only.
-- Queue state: ready.
+- `LAB-042-thermal-semantics-guard`: `done` under approved envelope version 3 and confirmed on origin.
+- LAB-042 gated execution: 262/262 passed.
+- Ready items: none.
+- Queue state: empty.
 
 Program reported gate 45/45 passed, the approval decision committed and pushed, and its tree clean. No parallel or combined implementation is authorised.
 
@@ -169,7 +169,7 @@ LAB-034 is complete as the read-only legacy compatibility classification. It rem
 
 LAB-017 remains governed by its approved version-1 envelope. Program retains all production allocation, live source reading, hosting, routing, persistence, authentication, CRM integration, deployment and endpoint ownership.
 
-LAB-042 is the sole ready item. The standing worker may implement the final guard in the existing gate-included test file and then close the corrected thermal batch.
+No queue item remains. The corrected thermal batch is complete; any further Lab / IES implementation requires a newly admitted parcel under the lane charter.
 
 ## LAB-017 immutable completion receipt
 

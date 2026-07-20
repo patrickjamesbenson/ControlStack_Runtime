@@ -6,6 +6,12 @@
 - Historical handoff content is retained as reported context unless freshly reverified.
 - Test output proves only the behaviour exercised by the named tests; low-level merge tests do not by themselves prove completion of the final governed merge.
 
+## LAB-042 final corrected thermal semantics guard — 2026-07-21
+
+Exactly the existing gate-included keyword migration test changed. It directly executes the resolution, component and Lab working projection contracts; pins all three version-2 schema identities; proves 25 + 10 = 35; proves a varied optic through legacy uplift 15 with absolute internal 40; rejects a contradictory rise-only change; bounds legacy snake-case names to source mapping and test input; rejects deprecated output semantics and Lab-owned Engine calculations across active modules and presentation; and preserves the sealed internal-ambient meaning plus unresolved thermal authority.
+
+The full `lab-ies` gate passed 262/262. The exact one-file checkpoint was pushed. No production source, fixture, gate configuration or superseded new thermal test file changed. LAB-038 through LAB-042 are complete and the ordered queue is empty.
+
 ## LAB-041 corrected component-library thermal labels — 2026-07-21
 
 Exactly the read-only component-library surface changed. It now displays the corrected measured thermal names and keeps the hot-test source visibly unverified. Static search confirmed the deprecated delta/uplift labels, legacy semantic fields and Engine-owned derived fields are absent. The full `lab-ies` gate passed 259/259 and the one-file checkpoint was pushed.
