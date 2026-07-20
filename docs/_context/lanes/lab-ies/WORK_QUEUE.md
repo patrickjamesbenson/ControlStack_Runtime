@@ -632,6 +632,7 @@ Evidence: `15c0f130650146374932c280c054f6293f3f03f9`, confirmed on origin. The l
 ### Q-25 Selector contract stub
 - id: LAB-035-selector-contract-stub
 - objective: Confine the Lab Selector stub to a read-only contract fixture that demonstrates approved downstream inputs without implementing Selector behaviour.
+- seam envelope: `docs/_context/lanes/lab-ies/LAB-035_SEAM_ENVELOPE.md`, version 1; approved unchanged by Program & Integrate under the pushed decision `docs(program): approve LAB-035 Selector contract seam` after a 46/46 Program gate.
 - authorised files:
   - `packages/lab-kernel/ies-toolkit/selector_stub.html`
 - prohibitions:

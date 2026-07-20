@@ -13,7 +13,7 @@ Current repository evidence overrides stale historical statements.
 - Root: `C:\ControlStack_Worktrees\code-pilot-lab`
 - Branch: `lane/code-pilot-lab`
 - Gate: `lab-ies`
-- Recorded branch HEAD: `78c503a356d6fcf1600cf4ea3ef3a662f724d21d`
+- Recorded branch HEAD: `0c034e8d2bf9366e2036afe2ba70caf45e53f864`
 - Branch-HEAD guard checkpoint: `6d34e500d407d5335e5eebb317636a67a5e98618`
 - Starting HEAD for LAB-034: `78c503a356d6fcf1600cf4ea3ef3a662f724d21d`
 - Completed feature HEAD: `15c0f130650146374932c280c054f6293f3f03f9`
@@ -58,6 +58,21 @@ Before any queue item is selected, a worker must compare `Recorded branch HEAD` 
 - The batch ends immediately on seam approval required, stale lane state, any gate failure, out-of-scope behaviour, queue empty or acceptance requiring live application/browser/real-world observation.
 - Human-observation acceptance cannot be closed from repository evidence. The item remains incomplete and the worker supplies exact `NEEDS YOU` steps.
 - Orchestrator review occurs at seam, human-observation and five-parcel/stop boundaries rather than after each routine parcel.
+
+## Latest coordination checkpoint — LAB-035 seam approval
+
+The live branch contains the documentation-only checkpoints `docs(lab): define LAB-035 Selector contract seam` and `docs(lab): admit LAB-035 Selector contract stub`.
+
+Verified classification:
+
+- `LAB-035_SEAM_ENVELOPE.md`, version 1, is committed;
+- Program & Integrate approved version 1 unchanged and reported a 46/46 Program gate with the decision pushed;
+- the approved parcel is confined to the one authorised read-only Lab presentation file;
+- it reuses only approved safe identity, safe runtime handoff and Selector readiness projections;
+- no Selector, Runtime, Engine, Program or authority feature implementation changed;
+- no LAB-035 feature file was staged or committed by the coordination checkpoints;
+- LAB-035 is the sole top `ready` item;
+- LAB-036 and later parcels remain sequence-blocked.
 
 ## Latest completed parcel — LAB-034
 
@@ -595,7 +610,7 @@ tests/selectorCascadeCorrectness.test.js
 - LAB-033 is complete and confirmed on origin as the bounded non-authoritative Main Lab Bench surface.
 - LAB-034 is complete and confirmed on origin as the read-only legacy compatibility classification.
 - Gated LAB-034 execution passed 255/255.
-- LAB-035 remains blocked pending recorded Program & Integrate approval; no item is `ready`.
+- LAB-035 version 1 is approved unchanged by Program & Integrate and is the sole top `ready` item.
 - No parallel or combined implementation is authorised.
 - The earlier LAB-018 approval hold remains superseded.
 
@@ -628,9 +643,9 @@ tests/selectorCascadeCorrectness.test.js
 - `LAB-033-main-lab-bench-surface`: done.
 - `LAB-034-legacy-labbench-classification`: done.
 - Next ordered item: `LAB-035-selector-contract-stub`.
-- Resulting status: `blocked`.
-- Ready items: none.
-- Seam approval required: yes — Program & Integrate approval is not yet recorded.
+- Resulting status: `ready`.
+- Ready items: exactly one — LAB-035.
+- Seam approval required: no — Program & Integrate approved version 1 unchanged.
 - Human observation required before implementation: no.
 
-LAB-034 is complete. LAB-035 is the next ordered parcel but remains blocked at the seam-approval boundary.
+LAB-034 is complete. LAB-035 is the sole top ready parcel for the next fresh standing-worker run.

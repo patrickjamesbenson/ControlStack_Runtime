@@ -2,7 +2,7 @@
 
 ## Session purpose
 
-This handoff records completed LAB-034 legacy labbench classification, preserves the permanent charter authority for both standing prompts, and stops at the LAB-035 seam-approval boundary.
+This handoff records reconciliation of the committed LAB-035 seam definition and Program approval checkpoints, preserves the permanent charter authority for both standing prompts, and orders LAB-035 as the sole next ready parcel.
 
 ## Identity
 
@@ -18,6 +18,8 @@ This handoff records completed LAB-034 legacy labbench classification, preserves
 - Feature checkpoint confirmed on origin `lane/code-pilot-lab`
 - Seam change: no
 - Branch-HEAD guard checkpoint: `6d34e500d407d5335e5eebb317636a67a5e98618`
+- Reconciled coordination checkpoints: `docs(lab): define LAB-035 Selector contract seam` and `docs(lab): admit LAB-035 Selector contract stub`
+- LAB-035 envelope: version 1 approved unchanged; Program gate 46/46 passed and the decision was pushed
 
 ## Branch-HEAD guard
 
@@ -71,6 +73,12 @@ The Selector-owned paths remained absent from the dirty inventory and were not t
 packages/workspace-kernel/selectorReferenceOptionsService.js
 tests/selectorCascadeCorrectness.test.js
 ```
+
+## Reconciled LAB-035 seam approval
+
+The live branch contains the committed documentation-only checkpoints `docs(lab): define LAB-035 Selector contract seam` and `docs(lab): admit LAB-035 Selector contract stub`, together with `LAB-035_SEAM_ENVELOPE.md`, version 1.
+
+Program & Integrate approved version 1 unchanged after a 46/46 Program gate and pushed the decision. The parcel remains confined to one read-only Lab presentation file and reuses safe downstream projections without importing or implementing Selector behaviour. No feature file changed in either coordination checkpoint. LAB-035 is the sole ready item; later parcels remain sequence-blocked.
 
 ## Queue state and next action
 
@@ -134,7 +142,7 @@ LAB-034 is complete as the read-only legacy compatibility classification. It rem
 
 LAB-017 remains governed by its approved version-1 envelope. Program retains all production allocation, live source reading, hosting, routing, persistence, authentication, CRM integration, deployment and endpoint ownership.
 
-The next safe action is one bounded LAB-035 worker commission under the approved version-1 envelope. Implementation is confined to `packages/lab-kernel/ies-toolkit/selector_stub.html`; LAB-036 and later parcels remain blocked until LAB-035 is committed, pushed and closed out.
+The next safe action is a fresh standing-worker run for LAB-035 under the approved version-1 envelope. Implementation remains confined to the one authorised Selector stub file; LAB-036 and later parcels stay sequence-blocked until LAB-035 is closed out.
 
 ## LAB-017 immutable completion receipt
 

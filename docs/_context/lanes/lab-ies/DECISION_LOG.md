@@ -409,3 +409,13 @@ tests/lab-kernel/iesKeywordMigration.test.js
 The correction removed only the stale Main Bench requirement for the retired editable `sysTa` ambient write and literal dependence on the retired `canonicalKeywordRows(...)` helper shape. It retained the exact ordered 16-keyword profile, rejection of `_AMBIENT_TA_C`, aliases and supplementary keywords, Main Bench consumption of the committed canonical keyword contract, sealed-reference ownership and non-editability of `_INTERNAL_AMBIENT_TA_C`, and all generator, merge, summary, project-adapter and project-builder vocabulary guards.
 
 No production module, bench implementation, authority contract, sealed-reference schema, Selector, Runtime, Engine or Program implementation was authorised or changed. The corrective checkpoint is confirmed on origin after a 255/255 gate. LAB-033 is restored as the sole ready item; the final cross-cutting keyword-guard parcel remains queued until after LAB-033 is committed.
+
+## DL-029 — LAB-035 Selector contract seam approval
+
+**Status:** Approved unchanged by Program & Integrate on 2026-07-20.
+
+Program & Integrate approved `LAB-035_SEAM_ENVELOPE.md`, version 1, and the exact one-file implementation boundary. Program reported gate 46/46 passed and the approval decision was committed and pushed.
+
+The approved parcel is confined to one Lab-only read-only presentation file and reuses only the approved safe reference identity, safe runtime handoff and Selector factory-approved-input readiness projections. It does not import or execute Selector source, derive readiness, compute options, invoke Engine, generate IES, create authority, add routes or persist state.
+
+LAB-035 may move to the sole top `ready` item. LAB-036 and later parcels remain sequence-blocked. Any contract, ownership, field-shape or scope amendment requires a new Program & Integrate decision.
