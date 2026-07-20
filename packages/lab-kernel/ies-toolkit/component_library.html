@@ -158,10 +158,10 @@ function opticClaims(optic) {
     claim("Spec code", optic.specCode),
     claim("Emission", optic.emissionPermission),
     claim("Optical efficiency", optic.opticalEfficiency),
-    claim("Internal delta Ta °C", optic.opticInternalDeltaTaC),
-    claim("Room Ta °C", optic.roomTaC),
-    claim("Uplift Ta °C", optic.opticUpliftTaC),
-    claim("Hot-test evidence", optic.hotTestEvidenceRef ? "supplied — not verification" : null),
+    claim("Reference room Ta °C", optic.referenceRoomTaC),
+    claim("Reference internal Ta °C", optic.referenceInternalTaC),
+    claim("Optic thermal rise °C", optic.opticThermalRiseTaC),
+    claim("Hot-test evidence", optic.hotTestEvidenceRef ? "source evidence reference — unverified" : null),
     claim("Emergency approval", null),
   ];
 }
