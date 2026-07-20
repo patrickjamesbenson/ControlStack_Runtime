@@ -323,3 +323,16 @@ P2 Checkpoint 1 is **IMPLEMENTATION COMPLETE / GATE GREEN / COMMIT BLOCKED BY SH
 - **NAMING:** new contracts prohibit `opticInternalDeltaTaC`; adapters expose `referenceInternalTaC` and `opticThermalRiseTaC`, with a later source-model rename recommended.
 - **AUDIT:** Runtime is checked against the approved data model, not donor-code parity.
 - **NEXT:** affected lane parcels must cite this ruling; no thermal-chain implementation is authorised by the ruling alone. Patrick has no action.
+
+## 2026-07-21 SEL-018 corrected admission state
+
+- **REPOSITORY FINDING:** the Selector preview captures Ambient intent, while the read-only Engine candidate mapper omits it and current coverage permits mapping without Ambient.
+- **PROGRAM DECISION:** amend SEL-018 to transmit the user room value only.
+- **SOLE READY SELECTOR PARCEL:** `packages/workspace-kernel/selectorReadonlyEngineCandidateMapper.js` plus `tests/selectorReadonlyEngineCandidateMapper.test.js`.
+- **OUTPUT:** exactly `selectedRoomTaC`, parsed from one committed, source-backed Celsius Ambient selection.
+- **NO THERMAL MATH:** no rise, reference-internal value, derived internal value, lookup temperature, board temperature, clamp, interpolation or verified lm/m.
+- **FAIL CLOSED:** missing, malformed, duplicate, uncommitted or non-source-backed Ambient blocks the amended handoff.
+- **PRESERVED:** existing tier, run, target lm/m, CCT/CRI, optic and control mapping.
+- **LANE ISOLATION:** no broad Selector module change; no Engine, Lab, route, persistence, generation or RuntimeData change.
+- **QUEUE:** SEL-018 is ready in Selector; LAB-035 remains ready in Lab; Engine thermal work remains blocked pending accepted Selector and Lab receipts.
+- **NEXT:** Selector may implement the exact two-file parcel and return the full `selector-engine` gate receipt. Patrick has no action.

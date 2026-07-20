@@ -494,3 +494,28 @@ The sealed `_INTERNAL_AMBIENT_TA_C` remains the Lab authority-test internal meas
 Tests must prove 25 + 10 = 35 and 35 + 10 = 45; map legacy `optic_internal_delta_ta_c = 35` to absolute reference internal temperature and legacy `optic_uplift_ta_c = 10` to rise; vary one optic fixture's `optic_uplift_ta_c` so both lookup temperature and lm/m change; prove the rise is applied once; reject missing, contradictory or identity-unbound evidence; and audit Runtime against the approved data model rather than donor code.
 
 The ambiguous cross-lane field name `opticInternalDeltaTaC` is prohibited. Program adapters must expose `referenceInternalTaC` and `opticThermalRiseTaC`. A separate data-model correction should rename the legacy source fields to `optic_reference_internal_ta_c` and `optic_thermal_rise_ta_c`.
+
+## 2026-07-21 — SEL-018 amended and admitted
+
+**Status:** SEL-018 READY AS THE SOLE SELECTOR ITEM; THERMAL ENGINE WORK REMAINS BLOCKED.
+
+### Exact Selector scope
+
+- `packages/workspace-kernel/selectorReadonlyEngineCandidateMapper.js`
+- `tests/selectorReadonlyEngineCandidateMapper.test.js`
+
+### Required result
+
+The mapper must require the committed, source-backed Ambient choice and emit only `selectedRoomTaC` as the user's unchanged Celsius room value. It must not emit or calculate Lab reference values, optic rise, derived internal temperature, lookup temperature, board temperature or verified lm/m.
+
+Missing, malformed, duplicate, non-committed or non-source-backed Ambient blocks the amended handoff. Selector does not clamp the room value. Existing non-thermal candidate fields remain unchanged.
+
+### Sequence
+
+1. SEL-018 is the sole ready Selector parcel.
+2. LAB-035 remains the sole ready Lab parcel independently.
+3. The corrected Lab thermal-publication parcel remains blocked until separately admitted.
+4. Engine thermal derivation remains blocked until accepted SEL-018 and Lab evidence receipts exist.
+5. Final cross-lane acceptance must use a varied legacy `optic_uplift_ta_c` fixture and prove the rise is applied once.
+
+No broad Selector module permission, route, persistence path, Engine invocation change or Lab lookup is authorised.

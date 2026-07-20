@@ -757,3 +757,45 @@ Acceptance must prove all of the following:
 The planned lm/m parity audit must compare Runtime behaviour against the approved data model and these equations. Donor code is not an acceptance oracle because it contains the same inherited omission. Donor comparison may be recorded only as historical evidence, never as proof of correctness.
 
 No Selector, Lab or Engine feature implementation is authorised by this ruling. Each affected parcel must cite this decision and return for scope approval if its existing seam conflicts with it.
+
+---
+
+## 2026-07-21 — SEL-018 corrected room-ambient amendment approved
+
+**Status:** APPROVED AS THE SOLE READY SELECTOR PARCEL; ENGINE THERMAL DERIVATION AND LAB THERMAL PUBLICATION REMAIN BLOCKED.
+
+### Repository finding
+
+The current Selector readiness preview already captures the selected ambient as intent, but the read-only Engine candidate mapper omits it and an existing regression explicitly permits mapping without Ambient. That is the exact stale seam corrected by this parcel.
+
+### Exact authorised scope
+
+- `packages/workspace-kernel/selectorReadonlyEngineCandidateMapper.js`
+- `tests/selectorReadonlyEngineCandidateMapper.test.js`
+
+No `packages/modules/cs-selector/**` wildcard or additional Selector module file is authorised. The existing narrow Selector write guard remains unchanged.
+
+### Corrected contract
+
+SEL-018 must read the committed, source-backed ambient choice, canonicalise only its Celsius numeric representation and emit exactly one semantic field: `selectedRoomTaC`.
+
+The value remains the user's room ambient. Selector must not add, subtract, clamp, interpolate, default or substitute any thermal value. The candidate must not contain `referenceRoomTaC`, `referenceInternalTaC`, `opticThermalRiseTaC`, `opticInternalDeltaTaC`, `derivedInternalTaC`, `curveLookupTaC`, board temperature or verified lm/m.
+
+A missing, malformed, duplicate, non-committed or non-source-backed ambient choice fails closed for the amended thermal handoff. A valid selected room value is preserved without applying the Engine's 25–65°C curve clamp.
+
+### Acceptance
+
+Focused Selector tests must prove:
+
+1. `25°C` emits `selectedRoomTaC: 25`.
+2. A second selected value such as `35°C` emits `selectedRoomTaC: 35` without any thermal calculation.
+3. Missing or malformed ambient blocks the candidate.
+4. No derived, lookup, rise, reference-internal, board-temperature or verified-output field is emitted.
+5. Existing tier, run, target lm/m, CCT/CRI, optic and control mapping remains unchanged.
+6. No route, write, persistence, Engine execution, Lab lookup or RuntimeData mutation is added.
+
+The varied-optic `optic_uplift_ta_c` proof belongs to the later Lab/Engine acceptance parcel and is not implemented or simulated here.
+
+### Queue effect
+
+SEL-018 is amended from blocked to ready as the sole active Selector parcel. LAB-035 remains the sole active Lab parcel independently. No Engine thermal parcel is ready until SEL-018 and the corrected Lab evidence publication both return accepted receipts.

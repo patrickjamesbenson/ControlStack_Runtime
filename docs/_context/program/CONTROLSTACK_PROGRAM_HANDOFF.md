@@ -512,3 +512,27 @@ SEL-018 must be amended before implementation. It may not carry room ambient as 
 Acceptance also requires the legacy-name guard: `room_ta_c = 25`, `optic_internal_delta_ta_c = 35`, and `optic_uplift_ta_c = 10` must produce a 10°C rise and a 35°C lookup, never a 35°C rise and a 60°C lookup. Tests must prove no double count, reject contradictory/unbound evidence and compare Runtime with the approved data model rather than the donor implementation.
 
 New cross-lane contracts must not expose `opticInternalDeltaTaC`. Program adapters use `referenceInternalTaC` and `opticThermalRiseTaC`. A separate data-model migration should rename the legacy source fields to `optic_reference_internal_ta_c` and `optic_thermal_rise_ta_c`.
+
+## 2026-07-21 SEL-018 corrected implementation handoff
+
+SEL-018 is now amended and ready for the Selector & Engine lane as a Selector-only parcel.
+
+Authorised files:
+
+- `packages/workspace-kernel/selectorReadonlyEngineCandidateMapper.js`
+- `tests/selectorReadonlyEngineCandidateMapper.test.js`
+
+Required behaviour:
+
+- read the single committed, source-backed Ambient selection;
+- parse its Celsius numeric value without clamping or combining it;
+- emit `selectedRoomTaC` only;
+- preserve all existing tier, run, target lm/m, CCT/CRI, optic and control mappings;
+- fail closed when Ambient is missing, malformed, duplicated, uncommitted or not source-backed;
+- keep Engine execution, Lab evidence lookup, persistence, generation, routes and writes absent.
+
+Forbidden outputs include `referenceRoomTaC`, `referenceInternalTaC`, `opticThermalRiseTaC`, `opticInternalDeltaTaC`, `derivedInternalTaC`, `curveLookupTaC`, board temperature and verified lm/m.
+
+Focused tests must cover 25°C and 35°C selections, missing and malformed Ambient, forbidden-field absence and preservation of the existing candidate shape. The old regression asserting that direct-only mapping does not require Ambient is superseded and must be rewritten, not retained.
+
+The returned feature receipt must include the exact two-file diff, full `selector-engine` gate result, final clean status and confirmation that no broad Selector module file changed. A separate lane-context closeout may follow under the approved Selector lane context path.
