@@ -881,6 +881,29 @@ A ready plan additionally requires exact generation/binding source identity, exa
 
 The plan returns no sealed DTO, metadata, angles, candela, keyword values or LM-63 text and cannot resolve storage or invoke materialisation. Rollback is removal or non-use only.
 
+## 2026-07-22 approved sealed-reference load preflight
+
+**Status:** SEAM-G-C5 COMMISSIONED; GENERATOR INACTIVE.
+
+```text
+materialisationJobPlanV1
++ generationReferenceBindingV1
++ referenceGenerationInspectionV1
++ injected Lab read-only resolver
+-> one exact sealed DTO load
+-> existing inspectIesReferenceForGeneration validation
+-> redacted sealedReferenceLoadReceiptV1
+-> loaded body discarded
+```
+
+The loader derives the reference ID and identity only from the three exact matched contracts. Public input cannot supply a path, URL, storage location, provider object or alternate reference authority. The injected resolver is called at most once and may return only one sealed reference DTO.
+
+The loaded DTO must pass the existing generation-inspection path. The resulting reference identity, keyword profile, baseline values, missing keyword overrides and no-override readiness must exactly equal the accepted inspection, binding and plan. Any version, field, identity, baseline, keyword, resolver or readiness mismatch fails closed.
+
+The public receipt contains only deterministic scalar identity, ready-or-blocked state, blocker, audit and safety fields. It contains no sealed DTO, metadata, keyword values, angles, candela, provenance paths, LM-63 text, local path or provider material. The loaded body is ephemeral and discarded after validation.
+
+C5 adds no generator or materialise invocation, route, persistence, artifact/file/network/email write, delivery, readiness activation or Governance call. Rollback is removal or non-use only. C6 remains blocked until Program accepts the C5 receipt.
+
 ## 2026-07-21 approved governance-shell and retrieval-gateway seam
 
 **Status:** BINDING.

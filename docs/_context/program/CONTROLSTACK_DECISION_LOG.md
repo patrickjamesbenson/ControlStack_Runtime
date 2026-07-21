@@ -1424,6 +1424,20 @@ The Selector worktree is clean and no queue item remains ready. Temporary module
 
 Program records all ten managed services healthy, including the Program secure tunnel.
 
-The Lab materialisation job-plan receipt remains accepted after 305/305. Lab has no queued parcel. Sealed-reference loading, generator or materialise invocation, LM-63 output, routes, persistence and delivery remain blocked until Program approves a separate seam. No new Lab work is authorised.
+The Lab materialisation job-plan receipt remains accepted after 305/305. At that checkpoint, sealed-reference loading, generator or materialise invocation, LM-63 output, routes, persistence and delivery remained blocked pending a separate Program seam.
 
 The report that Governance is only proceeding GOV-001 to GOV-002 is superseded by the canonical Governance branch. GOV-001 through GOV-005 are complete, the final fixed Governance gate passed 181/181, and the Governance queue is empty. GOV-004 was already expedited by an earlier explicit Program reorder and is complete, so no new reorder is issued. CRM remains held pending the portal-scope pre-check and a separate Program admission.
+
+## 2026-07-22 — Generation-chain opening and parked-lane ruling
+
+**Status:** SELECTOR COMPLETE; SEAM-G-C5 READY; PATRICK ACTION LIMITED TO CRM.
+
+Program verifies that Selector work-shape items PWS-001, PWS-002 and PWS-005 were already admitted, executed in strict order, gated, pushed and closed. The Selector queue is empty. No recommission or second writer is authorised.
+
+Program now opens the generation chain with one bounded Lab-only parcel: **SEAM-G-C5 sealed-reference load preflight**. It consumes exact ready materialisation-job-plan version 1, generation-reference-binding version 1 and reference-generation-inspection version 1 values plus one injected Lab-owned read-only resolver capability. It derives the reference identity only from those matched contracts, invokes the resolver at most once, rejects caller paths and URLs, validates the loaded sealed DTO through the existing generation-inspection path, and requires exact identity, keyword-profile, baseline and missing-override equality with the accepted inspection and plan.
+
+The loaded DTO is ephemeral and discarded after validation. The public result is one deterministic immutable ready-or-blocked redacted load receipt only. It contains no sealed body, metadata, keywords, angles, candela, provenance paths or LM-63 text. It adds no generator/materialise invocation, route, persistence, file/network/email write, delivery or readiness activation. Exact feature scope is one loader module and one focused test; the fixed Lab gate and protected-local-item rules remain binding.
+
+After C5 acceptance, the remaining chain is sequential: C6 one-shot in-memory generator invocation; C7 validated LM-63 generated-artifact handoff through Seam G using opaque identity and safe summary; then a Governance retrieval activation that stores/serves the body only through the single gateway after separate useful-output readiness and identity/project capture. No module-owned download path is permitted.
+
+Patrick is not required for Selector, Lab C5, generation, persistence or retrieval-contract work. The only Patrick-held prerequisites are the HubSpot private-app portal-scope pre-check and the business CRM scope/lifecycle decision. Those do not block C5.

@@ -905,3 +905,17 @@ Use existing `projectPersistenceLive` as the sole rollback flag. False retains t
 Acceptance: restart restore in a temporary directory; atomic failure preserves last good file; unsafe ids/path traversal rejected; malformed records skipped without blocking boot; fixtures absent; passive CRM ids round-trip with zero provider calls; migration idempotent with backups retained; server success precedes cache update; one Governance storage owner; Engine runs with no project and identical selections produce identical output regardless of project/traceability/persistence failure.
 
 Touch only Governance-owned project store/service, bounded server route, shell cache adapter if required, focused tests and lane memory. Do not add identity lookup, retrieval activation, delivery, CRM activity, handoff, email or unrelated schema changes. Run the fixed Governance gate, commit/push the exact approved set and return the gated receipt to Program.
+
+### Lab sealed-reference load preflight handoff — SEAM-G-C5
+
+Selector work-shape items PWS-001, PWS-002 and PWS-005 are already complete; do not queue or rerun them.
+
+Implement one Lab-only read-only sealed-reference load preflight. Consume exact ready materialisation-job-plan version 1, exact matching generation-reference-binding version 1 and exact matching reference-generation-inspection version 1 values. Accept the resolver only as an injected Lab-owned capability, never as public path, URL, storage or provider input.
+
+Derive the reference identity only from the matched contracts and call the resolver at most once. Validate the returned sealed DTO through the existing generation-inspection path. Require exact equality for reference identity, keyword profile, baseline, missing overrides and materialisation-without-overrides state. Discard the loaded body after validation.
+
+Return one deterministic immutable redacted ready-or-blocked load receipt. Do not return the sealed DTO, metadata, keyword values, angles, candela, provenance paths, LM-63 text or local location. Do not invoke the generator or materialiser, add routes, persist, write, deliver or activate readiness.
+
+Use exactly one loader feature and one focused test. Preserve the expected branch marker and three protected local items. Run the fixed Lab gate, commit and push only the feature, test and lane-memory closeout, then return the gated receipt to Program.
+
+After C5 acceptance, C6 in-memory generation, C7 opaque Seam G artifact handoff and Governance retrieval activation remain separately blocked. Patrick has no action for C5.

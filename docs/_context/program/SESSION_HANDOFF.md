@@ -89,4 +89,8 @@ Lab has no queued item. Sealed DTO loading, generator invocation, LM-63 generati
 - **Persistence rule:** server JSON is authoritative; browser storage is cache-only after server success; stable `projectId` owns one atomic file; fixtures are excluded.
 - **Standing tests:** no-envelope and changed-envelope Engine independence, changed-optic movement, varied placeholder row, and ownership-wide assertions remain mandatory.
 
-No direct module download path, provider push from Selector, Lab generator invocation, main work or runtime-port mixing is authorised. Lab and Governance queues are empty. Governance persistence and identity/permissions are closed; CRM remains held pending its portal-scope prerequisite and a separate Program admission. No Governance reorder is required.
+No direct module download path, provider push from Selector, main work or runtime-port mixing is authorised. Selector work-shape items PWS-001, PWS-002 and PWS-005 are complete and need no recommission.
+
+SEAM-G-C5 sealed-reference load preflight is the sole ready Lab parcel. It may load one exact sealed reference through an injected read-only Lab resolver, validate it against the accepted binding, inspection and job plan, emit one redacted load receipt, then discard the body. It may not invoke the generator, emit LM-63, add routes, persist, write or deliver.
+
+After C5 acceptance, Program must separately admit C6 in-memory generation, C7 opaque generated-artifact handoff through Seam G, and Governance retrieval activation. Governance persistence and identity/permissions are closed; CRM remains held. The only Patrick-held prerequisites are the HubSpot private-app portal-scope pre-check and the CRM business-scope/lifecycle decision. Nothing else needs him.

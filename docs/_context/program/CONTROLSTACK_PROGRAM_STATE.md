@@ -669,8 +669,18 @@ P2 Checkpoint 1 is **IMPLEMENTATION COMPLETE / GATE GREEN / COMMIT BLOCKED BY SH
 ## 2026-07-22 Three-update reconciliation
 
 - **DEPLOYMENT:** all ten managed services are healthy, including the Program secure tunnel.
-- **LAB RECEIPT:** SEAM-G-C4 remains accepted after 305/305; Lab queue remains empty.
-- **LAB AUTHORITY:** no new Lab parcel is authorised. Sealed-reference loading, generator/materialise invocation, LM-63 output, routes, persistence and delivery remain blocked pending a separate Program seam decision.
+- **LAB RECEIPT:** SEAM-G-C4 remains accepted after 305/305.
 - **GOVERNANCE REALITY:** the report that Governance is only proceeding GOV-001 to GOV-002 is stale. The canonical Governance queue records GOV-001 through GOV-005 complete; the final fixed gate passed 181/181.
 - **GOVERNANCE ORDER:** no expedited GOV-004 reorder is issued. GOV-004 is already complete under the earlier explicit Program reorder, project persistence and identity/permissions also closed, and CRM remains held.
-- **NEXT:** Lab and Governance both stay parked; only a new Program seam ruling may admit further work.
+
+## 2026-07-22 generation-chain admission state
+
+- **SELECTOR:** PWS-001, PWS-002 and PWS-005 were already admitted, executed in strict order, gated, pushed and closed. Queue empty; no recommission or second writer.
+- **LAB READY:** SEAM-G-C5 sealed-reference load preflight is the sole ready Lab parcel.
+- **C5 INPUT:** exact ready job plan, reference binding and generation inspection plus one injected Lab-owned read-only resolver.
+- **C5 ACTION:** derive identity only from matched contracts, call the resolver at most once, validate the loaded DTO through the existing generation-inspection path, then discard the DTO.
+- **C5 OUTPUT:** immutable redacted ready-or-blocked load receipt only.
+- **C5 BLOCKED:** generator/materialise invocation, LM-63 text, routes, persistence, files, delivery and readiness activation.
+- **CHAIN AFTER C5:** C6 in-memory generation; C7 validated opaque Seam G artifact handoff; Governance retrieval activation. Each requires its own accepted predecessor and Program admission.
+- **PATRICK:** only the HubSpot private-app portal-scope pre-check and business CRM scope/lifecycle decision await him. Nothing else needs Patrick and neither item blocks C5.
+- **NEXT:** Lab queues and executes C5 only; Selector and Governance remain parked.

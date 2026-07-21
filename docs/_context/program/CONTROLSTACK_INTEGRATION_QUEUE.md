@@ -922,8 +922,27 @@ No implementation item is ready. A new exact Program parcel is required before a
 2. **GOV-006 / CRM:** held; portal-scope pre-check and a separate Program admission are still required.
 3. **No Governance parcel is ready.** No reorder is required or authorised.
 
+### SEAM-G-C5 — Sealed-reference load preflight
+
+- **Owner:** Lab & IES.
+- **Status:** ready; sole Lab parcel.
+- **Input:** exact ready materialisation-job-plan version 1, exact matching generation-reference-binding version 1, exact matching reference-generation-inspection version 1, and one injected Lab-owned read-only resolver capability.
+- **Operation:** derive the reference identity only from the matched contracts; call the resolver at most once; reject caller paths, URLs and provider-shaped resolver input; validate the loaded DTO through the existing generation-inspection path; require exact reference identity, keyword profile, baseline, missing overrides and no-override readiness equality.
+- **Output:** deterministic immutable ready-or-blocked redacted load receipt. The loaded DTO is ephemeral and discarded after validation.
+- **Exact feature scope:** one sealed-reference loader module and one focused test.
+- **Blocked:** generator/materialise invocation, LM-63 text, raw reference body, metadata, keywords, angles, candela, provenance paths, routes, persistence, file/network/email write, delivery and readiness activation.
+- **Acceptance:** exact-shape/version checks; single resolver call; no caller location authority; identity and inspection equality; deterministic replay; changed reference identity moves receipt identity; missing, malformed, extra, private, raw, URL/path, resolver failure, wrong DTO and inspection mismatch fail closed; protected Lab items remain untouched; fixed Lab gate green.
+- **Next after acceptance:** SEAM-G-C6 one-shot in-memory generator invocation may be considered. C7 Seam G artifact handoff and Governance retrieval activation remain blocked.
+
+### Generation and delivery sequence
+
+1. **C5:** sealed-reference load preflight — ready now.
+2. **C6:** one-shot in-memory generator invocation — blocked until C5 accepted.
+3. **C7:** validate LM-63 and hand one opaque generated-artifact identity plus safe summary through Seam G — blocked until C6 accepted.
+4. **Governance retrieval activation:** store and serve the artifact body only through the single gateway after separate useful-output readiness and identity/project capture — blocked until C7 accepted.
+
 ### Standing test lock
 
 Every affected parcel and gate plan must retain: envelope independence including no-envelope Engine execution; changed-optic movement; varied-row proof for identical placeholder lookup values; and ownership-wide tests instead of named-instance assertions.
 
-SEAM-G-C4 is complete and Program-accepted; Lab is idle with generator invocation still blocked. PWS-001 remains the ready Selector item, and no second writer is permitted in the Selector worktree.
+PWS-001, PWS-002 and PWS-005 are complete; the Selector queue is empty. SEAM-G-C5 is the sole ready Lab parcel. No second writer is permitted in either worktree.
