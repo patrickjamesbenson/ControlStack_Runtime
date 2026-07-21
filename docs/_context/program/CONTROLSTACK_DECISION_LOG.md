@@ -1377,3 +1377,43 @@ Deployment v2 is expanded to ten managed services and four tunnel services. The 
 A fixed tunnel provisioner reads a newly copied tunnel reference from the Windows clipboard, decrypts the existing key only in process memory, initialises or validates the exact Governance profile and local MCP target, runs the managed deployment installer, clears the key and clipboard, and requires both Governance MCP and tunnel to report healthy and managed. No tunnel reference, runtime key or remote endpoint is stored in the repository.
 
 The remaining external step is to create the tunnel object and register/enable the corresponding custom ChatGPT app. GOV-001 remains the sole ready Governance feature parcel but cannot execute until that connector exposure is complete.
+
+## 2026-07-21 — Governance inert retrieval gateway accepted
+
+**Status:** COMPLETE; GOVERNANCE GATE 152/152; PROJECT PERSISTENCE NEXT.
+
+Program accepts the Governance receipt. The versioned immutable gateway exposes only safe scalar module/output descriptions, one approved readiness label, project-context presence, identity-capture presence and static discovery text. Readiness, project context and identity remain separate named conditions.
+
+The four deterministic states are no useful output, project required, identity required and ready for future retrieval. Ready for future retrieval is not permission to retrieve, download or deliver. Route, file body, URL, blob, filesystem write, persistence, email, CRM, Engine invocation, readiness mutation and live cross-module read remain disabled.
+
+The former shell-owned browser download path is inactive: the shell no longer resolves the module download source, prepares a module action, materialises IES, creates an object URL or retains a callable action. Existing manifest/detail previews remain read-only. Unknown, extra, nested, private, raw, path, URL, blob, traceability-envelope and provider-shaped inputs are rejected. The exact feature and documentation closeout were gated, committed and pushed. The unrelated local persistence-seam report was not touched.
+
+## 2026-07-21 — GOV-003 project persistence seam ruling
+
+**Status:** APPROVED FOR IMPLEMENTATION; RESTORATION ONLY.
+
+Program admits one bounded Governance parcel to restore project persistence. The ruling is:
+
+1. **Canonical schema:** persisted server and browser-cache records use `workspace_saved_project.v2`. The runtime-only `workspace_saved_project.v2-runtime` shape is an adapter input/output only and must never be silently treated as the persisted schema.
+2. **Authority:** server-owned JSON is the system of record. Browser `localStorage` is a cache/recovery mirror updated only after a successful server save/read; it is not an independent writer.
+3. **Storage:** one UTF-8 JSON file per stable `projectId` under `data/session_projects`, overridable by `CS_SESSION_PROJECT_DIR`. Temporary sibling write plus atomic replacement is mandatory. Resolved paths must stay inside the configured directory.
+4. **Project identity:** persisted `projectId` is required and must match the route/request identity and the stored record. Use a bounded lowercase safe token; do not invent fallback project truth. `envelopeId` may identify the current saved revision but cannot select a second project file. Missing, unsafe or conflicting identity fails closed. Alpha/Bravo/Charlie fixtures are excluded.
+5. **CRM fields:** the only passive linkage fields are `hubspotDealId`, `hubspotContactId` and `hubspotCompanyId`; each is nullable. No lookup, provider call, writeback, price or CRM readiness rule is authorised.
+6. **Routes:** add only bounded `POST /api/session/save` and `POST /api/session/read`. Read supports exact one-project mode or validated all-project boot/list mode. No share, handoff, email, token, cleanup, CRM or delivery route is included.
+7. **Migration:** accept safe canonical v2 server records, explicit browser v2 imports, donor v1 records through a versioned normaliser and one explicit live-memory flush. Migration is idempotent. Original browser keys/backups and legacy files remain untouched; fixtures are never migrated.
+8. **Rollback:** existing `projectPersistenceLive` is the sole rollback flag. `false` selects the current memory adapter; `true` selects server JSON authority. Rollback does not delete, rewrite or downgrade persisted files.
+9. **Failure isolation:** malformed records are reported and skipped; shell boot and Engine execution continue. Persistence failure cannot alter Engine eligibility or deterministic technical output.
+
+Acceptance must prove restart persistence in a temporary directory, atomic-write failure preservation, traversal rejection, malformed-record isolation, fixture removal, passive CRM round-trip with zero provider calls, idempotent migration with backup retention, server-before-cache ordering, exact route ownership, and Engine independence including no-project execution.
+
+No identity lookup, retrieval activation, delivery, CRM activity, handoff, email or unrelated schema change is authorised in GOV-003.
+
+## 2026-07-21 — Selector PWS sequence accepted and guard retracted
+
+**Status:** PWS-001, PWS-002 AND PWS-005 COMPLETE; SELECTOR QUEUE EMPTY.
+
+Program accepts the Selector lane receipts. The parcels executed in their approved order with one writer: readiness state-entry intent, fail-closed Factory Ready, then lifecycle-copy correction. The normal and guarded gates passed 107/107 for each parcel; focused coverage passed 114/114, 128/128 and 112/112.
+
+PWS-001 changed no readiness predicate or Engine eligibility and added no provider mutation. PWS-002 derived Factory Ready only from truthful Spec Ready, Build Ready and unchanged source-backed Factory Approved Inputs evidence. PWS-005 corrected copy and contract classification only; it added no save, restore, hydrate, project-store, route or persistence behaviour.
+
+The Selector worktree is clean and no queue item remains ready. Temporary module write permissions required by the completed parcels are retracted. The exact post-parcel Selector write guard is restored; no broad `packages/modules` permission remains. Governance continues to own identity, project persistence, retrieval and any later provider action.

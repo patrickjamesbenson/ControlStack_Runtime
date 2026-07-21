@@ -634,3 +634,34 @@ P2 Checkpoint 1 is **IMPLEMENTATION COMPLETE / GATE GREEN / COMMIT BLOCKED BY SH
 - **EXTERNAL STEP:** create/enable the Governance custom app in ChatGPT using the running secure tunnel.
 - **GOV-001:** remains the sole ready feature parcel and starts immediately after app registration.
 - **NEXT:** finish PWS-L1 with ChatGPT app registration; do not redirect GOV-001 through Program, Selector or Lab tools.
+
+## 2026-07-21 Governance retrieval acceptance and persistence admission
+
+- **CONNECTOR:** Governance custom app is active and the secure tool executed successfully.
+- **GOV-001:** complete and Program-accepted after 152/152.
+- **GATEWAY:** immutable, versioned, Governance-owned; readiness, project context and identity are separate; four deterministic states; no delivery permission.
+- **DIRECT PATH:** the former shell-owned IES browser action is inactive; previews remain read-only.
+- **PWS-L1:** complete.
+- **GOV-003:** sole ready Governance parcel.
+- **SCHEMA:** persisted/cache `workspace_saved_project.v2`; runtime-only shape through explicit adapters.
+- **AUTHORITY:** server JSON first; browser storage mirrors successful server state only.
+- **PROJECT KEY:** stable safe `projectId`; request, filename and record must agree; fixtures excluded.
+- **STORAGE:** one atomic JSON file per project under the confined session-project directory.
+- **ROUTES:** bounded POST save/read only; no list endpoint beyond read-all mode and no share/email/CRM/delivery route.
+- **CRM LINKS:** nullable `hubspotDealId`, `hubspotContactId`, `hubspotCompanyId`; passive only.
+- **MIGRATION:** explicit, idempotent, non-destructive; legacy backups retained.
+- **ROLLBACK:** existing `projectPersistenceLive` selects memory or server authority without deleting files.
+- **FAILURE ISOLATION:** malformed or failed persistence cannot block shell boot or alter Engine output.
+- **LOCAL NOTE:** Governance has one protected untracked persistence-seam report; Program reviewed it but did not modify or stage it.
+- **NEXT:** Governance implements GOV-003 exactly to the approved seam and returns a gated receipt.
+
+## 2026-07-21 Selector PWS closeout reconciliation
+
+- **PWS-001:** complete; deterministic readiness state-entry intent, provider-inert, normal/guarded gates 107/107.
+- **PWS-002:** complete; Factory Ready derived fail-closed from existing evidence, normal/guarded gates 107/107.
+- **PWS-005:** complete; lifecycle copy corrected only, normal/guarded gates 107/107.
+- **FOCUSED COVERAGE:** 114/114, 128/128 and 112/112 respectively.
+- **BOUNDARY:** no provider mutation, persistence, retrieval helper, Engine change or project-store implementation added.
+- **LANE:** queue empty and worktree clean.
+- **GUARD:** temporary module write permissions used for the three completed parcels are retracted; exact Selector guard restored.
+- **NEXT:** no Selector parcel is authorised.

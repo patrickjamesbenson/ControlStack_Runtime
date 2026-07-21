@@ -836,13 +836,13 @@ Program approves a separate Governance & Shell lane. It owns project, identity, 
 
 Program must provision the new lane with its own worktree, `lane/governance-shell`, MCP service identity, exact write globs, required branch and gate before items 3, 4, 6 or 9 begin.
 
-Selector has three admitted parcels in strict order:
+Selector completed all three admitted parcels in strict order:
 
-1. PWS-001 ready: remove named CRM gate semantics and emit deterministic false-to-true readiness transition intent only;
-2. PWS-002 blocked behind PWS-001: add derived Factory Ready from existing source-backed evidence;
-3. PWS-005 blocked behind PWS-002: correct stale save/restore/hydrate copy without behavior change.
+1. PWS-001 retired named CRM/business gate semantics and added deterministic provider-inert false-to-true readiness intent;
+2. PWS-002 added fail-closed Factory Ready from existing source-backed evidence only;
+3. PWS-005 corrected stale save/restore/hydrate copy without behavior change.
 
-Selector must not call HubSpot. Governance later consumes the state-entry intent and owns identity/project association, idempotency, retry and best-effort provider push.
+The normal and guarded Selector gates passed 107/107 for each parcel; focused coverage passed 114/114, 128/128 and 112/112 respectively. The Selector queue is empty, its worktree is clean and temporary module write permissions are retracted. Selector must not call HubSpot. Governance owns identity/project association, persistence, idempotency, retry and any later best-effort provider action.
 
 Item 10 is binding immediately: no module-owned download/export/artifact-delivery path. Every retrieval passes through one Governance gateway, with readiness and identity implemented as separate checks. Seam G may continue internal contracts but cannot expose a direct download or delivery seam.
 
@@ -885,3 +885,23 @@ The dedicated Governance secure tunnel is now validated, healthy and managed alo
 Create or enable the Governance & Shell custom app in ChatGPT while the managed tunnel is running. Do not reuse Selector, Lab or Program tunnel profiles; do not expose Governance through ngrok; do not widen the Governance MCP or implement GOV-001 through another lane.
 
 Once the Governance app appears as a secure tool, run the existing GOV-001 commission unchanged.
+
+### Governance persistence restoration handoff — GOV-003
+
+GOV-001 is complete and accepted after 152/152. Implement project persistence as restoration only.
+
+Use canonical persisted schema `workspace_saved_project.v2`. Treat `workspace_saved_project.v2-runtime` only through explicit read/write adapters. Server JSON is authoritative; localStorage is a cache/recovery mirror written only after a successful server save/read.
+
+Persist one UTF-8 JSON file per stable safe `projectId` under `data/session_projects` or `CS_SESSION_PROJECT_DIR`. Write a sibling temporary file and atomically replace the target. Request identity, filename identity and record identity must agree. Do not invent a fallback project id. `envelopeId` remains revision metadata and cannot create a second project file. Exclude Alpha/Bravo/Charlie fixtures.
+
+Restore only nullable passive fields `hubspotDealId`, `hubspotContactId` and `hubspotCompanyId`. Add no CRM lookup, provider call, writeback, price or readiness effect.
+
+Add only bounded `POST /api/session/save` and `POST /api/session/read`. Read supports one exact project or validated all-project boot/list mode. Do not add share, handoff, email, token, cleanup, CRM, retrieval or delivery routes.
+
+Migration may read canonical server v2, explicit browser v2, donor v1 through a versioned normaliser and one explicit live-memory flush. It must be idempotent and non-destructive; retain original browser keys/backups and legacy files; never migrate fixtures.
+
+Use existing `projectPersistenceLive` as the sole rollback flag. False retains the memory adapter; true selects server JSON. Persisted files remain untouched on rollback.
+
+Acceptance: restart restore in a temporary directory; atomic failure preserves last good file; unsafe ids/path traversal rejected; malformed records skipped without blocking boot; fixtures absent; passive CRM ids round-trip with zero provider calls; migration idempotent with backups retained; server success precedes cache update; one Governance storage owner; Engine runs with no project and identical selections produce identical output regardless of project/traceability/persistence failure.
+
+Touch only Governance-owned project store/service, bounded server route, shell cache adapter if required, focused tests and lane memory. Do not add identity lookup, retrieval activation, delivery, CRM activity, handoff, email or unrelated schema changes. Run the fixed Governance gate, commit/push the exact approved set and return the gated receipt to Program.

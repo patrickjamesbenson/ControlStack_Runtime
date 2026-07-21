@@ -856,23 +856,24 @@ No implementation item is ready. A new exact Program parcel is required before a
 ### PWS-001 — Retire CRM gate language and emit readiness state-entry intent
 
 - **Owner:** Selector & Engine.
-- **Status:** ready now.
-- **Acceptance boundary:** delete Gate 1/Gate 2 and CRM/HubSpot gate semantics; preserve truthful fail-closed readiness; emit one deterministic immutable false-to-true transition intent without duplicate render/hydrate emissions.
-- **Provider boundary:** no HubSpot or CRM mutation; Governance later consumes the intent.
-- **Next:** PWS-002 after feature and durable closeout.
+- **Status:** done; normal and guarded gates passed 107/107.
+- **Result:** truthful Spec Ready and Build Ready remain; named CRM/business gate language is retired; genuine false-to-true entry emits one deterministic immutable provider-inert intent without render/hydrate duplication.
+- **Provider boundary:** no HubSpot or CRM mutation; Governance owns any later outside-layer association or action.
 
 ### PWS-002 — Add Factory Ready
 
 - **Owner:** Selector & Engine.
-- **Status:** admitted, blocked behind PWS-001.
-- **Authority:** derived only from existing source-backed Factory Approved Inputs evidence plus Spec Ready and Build Ready.
-- **Boundary:** no default, inference, external push or Engine change.
+- **Status:** done; focused coverage passed 128/128 and normal/guarded gates passed 107/107.
+- **Authority:** derived only from truthful Spec Ready, Build Ready and unchanged source-backed Factory Approved Inputs evidence.
+- **Boundary:** no default, inference, external push, factory authority or Engine change.
 
 ### PWS-005 — Correct live save/restore copy
 
 - **Owner:** Selector & Engine.
-- **Status:** admitted, blocked behind PWS-002.
-- **Boundary:** copy and contract classification only; no lifecycle or persistence behavior change.
+- **Status:** done; focused coverage passed 112/112 and normal/guarded gates passed 107/107.
+- **Result:** Selector, Emergence, Scene Builder and the workspace contract now truthfully classify save, restore and hydrate as shell-owned and live through Project Browser.
+- **Boundary:** copy and contract classification only; no lifecycle, project-store or persistence behavior changed.
+- **Closeout:** Selector queue empty, worktree clean and temporary module write permissions retracted.
 
 ### PWS-010 — Single data-retrieval gateway
 
@@ -884,34 +885,41 @@ No implementation item is ready. A new exact Program parcel is required before a
 
 ### PWS-L1 — Expose Governance MCP through its dedicated secure tunnel
 
-- **Owner:** Program & Integrate infrastructure plus one external ChatGPT registration step.
-- **Status:** tunnel object, fixed profile and managed tunnel activation complete; ChatGPT custom-app registration remains.
-- **Evidence:** tunnel recovery passed; Governance MCP and its dedicated secure tunnel both report healthy and managed.
-- **Fixed topology:** tenth managed service `governance-tunnel`, dedicated health port, fixed profile `controlstack-governance-shell-noauth`, fixed local target `http://127.0.0.1:8023/mcp` and the existing protected runtime key.
-- **Provisioning:** the fixed script validated the existing profile, reused the protected key without displaying it, activated only the managed tunnel services and verified Governance MCP plus Governance tunnel readiness.
-- **Boundary:** no reuse of another lane tunnel, no public ngrok exposure, no secret display, no connector write-scope widening and no Governance feature change.
-- **Next:** create/enable the Governance & Shell custom app in ChatGPT, then start GOV-001 through that app.
+- **Owner:** Program & Integrate infrastructure plus ChatGPT registration.
+- **Status:** done.
+- **Evidence:** Governance MCP, dedicated secure tunnel and private ChatGPT app are active; the Governance tool executed and pushed GOV-001.
+- **Boundary:** no other lane tunnel was reused; no secret or remote endpoint entered Git.
 
 ### GOV-001 — Inert single data-retrieval gateway contract and shell state
 
 - **Owner:** Governance & Shell.
-- **Status:** sole ready feature parcel; execution blocked only by PWS-L1 connector exposure.
-- **Purpose:** establish one canonical retrieval entry point before any module grows its own outward path.
-- **Inputs:** safe scalar module/output descriptors, readiness state (`spec-ready`, `build-ready`, `factory-ready`), project-context presence and identity-capture presence. No Engine payload, traceability envelope, raw artifact body, path, blob or provider object.
-- **Separate conditions:** readiness answers whether a useful output exists; identity answers who is taking it and under which project. Neither may substitute for the other or enter Engine eligibility.
-- **Output:** one immutable versioned gateway view-state contract with fail-closed states for no useful output, project required, identity required and ready-for-future-retrieval.
-- **Discovery:** safe static descriptions of what the current module can provide and what other modules may provide; no live cross-module reads.
-- **Boundary:** inert only. No download, file response, URL, blob, email, filesystem write, persistence, route, CRM call, hard email verification, Engine invocation or readiness mutation.
-- **Acceptance:** exactly one gateway owner; no module-owned retrieval helper or action; deterministic output; unknown/extra/private/raw/path-bearing input rejected; different or absent traceability envelopes cannot alter Engine results.
-- **Next:** Program receipt review, then project persistence and user identity can be restored behind the established gateway without changing its outside contract.
+- **Status:** done; Program accepted after 152/152.
+- **Result:** one immutable versioned Governance gateway with separate readiness, project-context and identity checks; four deterministic states; static discovery descriptions; no live cross-module read.
+- **Delivery boundary:** ready-for-future-retrieval is not permission. Download, delivery, route, file body, URL, blob, persistence, email, CRM, Engine invocation and readiness mutation remain disabled.
+- **Ownership:** the former shell-owned IES browser action is inactive; read-only manifest/detail previews remain.
+- **Input boundary:** unknown, extra, nested, private, raw, path, URL, blob, traceability-envelope and provider-shaped input is rejected.
+
+### GOV-003 — Restore project persistence
+
+- **Owner:** Governance & Shell.
+- **Status:** sole ready Governance parcel; Program seam ruling approved.
+- **Purpose:** restore donor persistence rather than redesign it.
+- **Schema:** canonical persisted/cache schema `workspace_saved_project.v2`; runtime `workspace_saved_project.v2-runtime` only through explicit adapters.
+- **Authority:** server JSON is authoritative; browser localStorage is a post-success cache/recovery mirror only.
+- **Storage:** one atomic JSON file per stable safe `projectId` under `data/session_projects` or `CS_SESSION_PROJECT_DIR`.
+- **Identity:** route/request/file/record project IDs must agree; no fallback identity; fixtures excluded.
+- **Passive CRM fields:** `hubspotDealId`, `hubspotContactId`, `hubspotCompanyId`, nullable and provider-free.
+- **Routes:** only bounded `POST /api/session/save` and `POST /api/session/read`; read supports one-project and all-project boot/list modes.
+- **Migration:** explicit idempotent v2, donor-v1 and live-memory adapters; retain originals/backups; never migrate fixtures.
+- **Rollback:** existing `projectPersistenceLive`; false selects memory, true selects server JSON; persisted files remain untouched.
+- **Acceptance:** restart restore, atomic failure preservation, traversal rejection, malformed isolation, fixture removal, passive CRM round-trip, idempotent migration, server-before-cache ordering, single Governance ownership and Engine independence including no-project execution.
+- **Blocked:** identity lookup, retrieval activation, delivery, CRM calls, price, handoff, email and unrelated schema changes.
 
 ### Governance follow-on order
 
-1. **GOV-001:** inert gateway contract and shell state — ready now.
-2. **Work item 4:** restore project persistence — admitted after GOV-001 closes.
-3. **Work item 6:** restore user identity and permissions — admitted after project persistence.
-4. **Work item 9:** deferred-decisions panel — independent small parcel, may be scheduled between the larger restorations without overlapping their files.
-5. **Work item 7:** CRM remains blocked; no provider mutation is authorised.
+1. **GOV-003:** project persistence restoration — ready now.
+2. **Work item 6:** user identity and permissions — blocked until GOV-003 closes.
+3. **Work item 7:** CRM remains blocked; no provider mutation is authorised.
 
 ### Standing test lock
 
