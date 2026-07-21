@@ -461,3 +461,15 @@ This log is append-oriented. Do not silently rewrite historical decisions.
 **Lifecycle copy:** The final parcel corrects copy and contract diagnostics only. Save, restore and hydrate are already shell-owned and live through Project Browser; module-local mutation remains prohibited. Handoff/share and CRM/provider writes stay separately classified and cannot become live by implication.
 
 **Consequence:** No worker is commissioned. After Program admission, only the first queue item may be made ready; the second and third remain blocked until their predecessor and durable closeout complete. No feature, test, browser, CRM/provider, Engine, Lab/IES, route, persistence, RuntimeData, main or runtime-process action occurred in this decision parcel.
+
+## 2026-07-21 — Program admits PWS items and binds the retrieval gateway
+
+**Decision:** Accept Program's Governance & Shell lane ruling and make PWS-001 the sole ready Selector item. PWS-002 and PWS-005 remain admitted in strict order behind their predecessor closeouts.
+
+**Ownership:** Selector owns readiness derivation and immutable state-entry intent only. Governance & Shell owns human/project identity, persistence, retrieval policy, CRM/provider association, idempotency, retry and external mutation. PWS-001 must not call HubSpot or any CRM provider.
+
+**Retrieval constraint:** No Selector, Engine or Seam G module may add a module-owned download, export, file-delivery, artifact-retrieval route or browser helper. Internal technical contracts may continue, but outward retrieval terminates through the single Governance & Shell gateway. Readiness and identity are separate and neither can become an Engine prerequisite.
+
+**Standing tests:** The lane retains envelope-independence with different envelopes and no envelope, changed-optic thermal movement, varied-row proof for identical placeholder lookup values, and ownership-wide assertions across every governed system/row.
+
+**Consequence:** PWS-001 may start in its exact approved scope. PWS-002 and PWS-005 remain blocked. Lab SEAM-G-C4 may proceed in parallel in its separate worktree. No second Selector writer, direct provider mutation, direct delivery seam, main or runtime-port work is authorised.

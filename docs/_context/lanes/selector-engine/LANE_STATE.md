@@ -549,3 +549,15 @@ Patrick requested preparation only for Program work-shape items 1, 2 and 5. Repo
 Three ordered queue items are now written: retire named readiness gates in favour of deterministic push-on-state-entry intent; add fail-closed `factoryReady` from the existing Factory Approved Inputs evidence; then correct the stale save/restore lifecycle copy. All three remain blocked pending recorded Program & Integrate admission. After admission, only the first item may become ready; the other two advance strictly after the preceding feature and durable closeout.
 
 No feature file, test, browser state, CRM/provider state, project state, Engine path, Lab/IES path, RuntimeData source, route, persistence surface, main branch or runtime process was changed or executed during this preparation.
+
+## 2026-07-21 Program work-shape admission — latest controlling state
+
+Program approved a separate Governance & Shell lane and admitted PWS-001, PWS-002 and PWS-005. PWS-001 is now the sole ready Selector item. PWS-002 remains blocked until PWS-001 feature and closeout are complete; PWS-005 remains blocked until PWS-002 closes.
+
+Selector owns technical readiness and immutable state-entry intent only. No HubSpot, CRM, identity, persistence or provider mutation is authorised in these parcels. Governance & Shell owns those outside-layer concerns.
+
+The single data-retrieval gateway rule applies immediately. Selector, Engine and Seam G modules may not expose independent download/export/delivery paths. Internal technical contracts remain permitted, but outward retrieval belongs to the future Governance gateway with readiness and identity kept separate.
+
+Standing acceptance remains binding: different and absent traceability envelopes cannot alter Engine output; changed optic rise must move lookup and verified output; identical placeholder rows require a varied-row movement test; and ownership assertions must cover every governed system/row.
+
+Lab SEAM-G-C4 may run in parallel in its separate lane. No second Selector writer, direct provider push, direct artifact delivery, main or runtime-port work is authorised.

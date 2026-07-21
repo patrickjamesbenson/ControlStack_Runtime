@@ -551,3 +551,19 @@ Patrick requested three new bounded parcels to be prepared but not executed. The
 No queue item is ready and no worker has been commissioned. Program & Integrate must record admission before execution. After admission, the orchestrator makes only the first item ready and commissions the canonical standing worker; the second and third advance only after the prior parcel and durable closeout are complete.
 
 No feature code, tests, browser action, CRM/provider action, Engine invocation, Lab/IES action, route, persistence, RuntimeData, main or runtime-process change occurred during queue preparation.
+
+## 2026-07-21 PWS-001 ready — Program admission recorded
+
+Program approved the separate Governance & Shell lane and admitted all three prepared Selector parcels. Execute them in strict order with one writer only.
+
+PWS-001 is the sole ready item. Retire Gate 1 and Gate 2 as business/CRM gates and remove CRM/HubSpot gate terminology. Preserve truthful Spec Ready and Build Ready predicates. Emit one deterministic immutable false-to-true state-entry intent without duplicate emissions from rerender, repeated evaluation or save/restore hydration.
+
+Do not call HubSpot or any CRM provider. Selector owns the readiness fact and transition intent only. Governance & Shell later owns identity/project association, idempotency, retry and external push.
+
+After PWS-001 feature and durable closeout, PWS-002 may add derived `factoryReady` from existing source-backed Factory Approved Inputs evidence. After PWS-002 closes, PWS-005 may correct stale lifecycle copy only.
+
+Item 10 is binding now: do not add a module-owned download, export, file-delivery, artifact-retrieval route or browser helper. Seam G internal contracts may continue, but outward retrieval belongs to the single Governance gateway. Readiness and identity remain separate and neither enters Engine eligibility.
+
+Retain the standing regressions: different envelopes and no envelope produce the same Engine result for identical selections; changed optic rise moves lookup and verified output; identical placeholder rows require a varied-row movement test; and ownership is asserted across every governed system/row.
+
+Lab SEAM-G-C4 may proceed in parallel in its separate lane. No second Selector writer, direct provider mutation, direct delivery seam, main or runtime-port work is authorised.

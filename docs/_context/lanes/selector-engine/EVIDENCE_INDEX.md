@@ -634,3 +634,16 @@ Every completed worker updates this index with:
 - Stale-copy evidence: Selector and Emergence say Save and Restore are shell-owned and deferred; Scene Builder says save/restore/handoff remain deferred; the workspace contract still classifies saveRestore as a deferred real implementation, while Project Browser/project service reports live shell-owned save, restore and hydrate — VERIFIED.
 - Queue result: three bounded items written in strict order and all blocked pending Program admission; no worker commissioned — RECORDED.
 - Changed scope: five mutable Selector lane documents only after closeout; no feature/test/browser/provider/project/Engine/Lab/IES/RuntimeData/route/persistence/main/runtime action — VERIFIED BY DIFF AND OPERATIONS.
+
+## 2026-07-21 — Program work-shape admission and gateway evidence
+
+- Program ruling: separate Governance & Shell lane approved; CRM remains a blocked Governance substream; Program owns provisioning — RECORDED.
+- Thermal prerequisite: corrected thermal chain is closed and accepted; no thermal parcel blocks PWS work — VERIFIED PROGRAM STATE.
+- Parallelism: active Seam G continuation is Lab-owned, so PWS-001 may run concurrently in the isolated Selector worktree — VERIFIED LANE SEPARATION.
+- Selector queue: PWS-001 ready; PWS-002 and PWS-005 admitted and blocked in strict order — RECORDED.
+- Ownership boundary: Selector emits readiness facts and transition intent only; no HubSpot/provider mutation is authorised — RECORDED.
+- Retrieval constraint: no module-owned download/export/delivery path; one future Governance gateway owns outward retrieval — RECORDED.
+- Separate conditions: readiness and identity remain separate and neither enters Engine eligibility — RECORDED.
+- Standing tests: envelope variation and no-envelope execution, changed-optic movement, varied placeholder row and ownership-wide assertions remain mandatory — RECORDED.
+- Source evidence: `specReady` and `buildReady` exist; `factoryReady` is absent; stale lifecycle copy exists in the three named view models and workspace contract — VERIFIED REPOSITORY SEARCH.
+- Feature state: no PWS feature implementation began during admission; only lane-memory reconciliation is included — VERIFIED.

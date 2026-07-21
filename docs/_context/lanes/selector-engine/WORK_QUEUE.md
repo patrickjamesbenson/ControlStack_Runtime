@@ -330,8 +330,8 @@
 ### Q-11A Retire named readiness gates and emit state-entry push intent
 
 * id: PWS-001
-* status: blocked
-* depends-on: recorded Program & Integrate admission of PROGRAM_WORK_SHAPE item 1
+* status: ready
+* depends-on: Program & Integrate admission recorded and satisfied on 2026-07-21
 * seam change: yes — readiness transitions become state-entry push events and CRM-facing language must stop treating state as a gate
 * gate: selector-engine
 * execution order: first of three; PWS-002 and PWS-005 must not start before this item is fully closed
@@ -345,7 +345,7 @@
 
 * id: PWS-002
 * status: blocked
-* depends-on: PWS-001 done and recorded Program & Integrate admission of PROGRAM_WORK_SHAPE item 2
+* depends-on: PWS-001 done; Program & Integrate admission recorded and satisfied on 2026-07-21
 * seam change: no unless Program changes the existing Factory Approved Inputs authority; this parcel exposes a truthful derived state only
 * gate: selector-engine
 * execution order: second of three
@@ -358,7 +358,7 @@
 
 * id: PWS-005
 * status: blocked
-* depends-on: PWS-002 done and recorded Program & Integrate admission of PROGRAM_WORK_SHAPE item 5
+* depends-on: PWS-002 done; Program & Integrate admission recorded and satisfied on 2026-07-21
 * seam change: no — copy and diagnostics must describe the already-live shell-owned lifecycle truth without changing behaviour
 * gate: selector-engine
 * execution order: third of three
@@ -367,9 +367,23 @@
 * acceptance: Selector, Emergence and Scene Builder no longer claim save or restore is deferred; they state that save/restore/hydrate is shell-owned and live through Project Browser while module-local mutation remains prohibited. `contracts.js` no longer classifies save/restore as a deferred real implementation and exposes a current lifecycle classification consistent with `projectService` and Project Browser capabilities. Handoff/share and CRM/provider writes are described separately and are not accidentally promoted. Focused static and behaviour assertions prove the four files agree and no stale save/restore-deferred phrase remains in live view-model or contract output.
 * prohibitions: copy/contract truth only; no save, restore, hydrate, handoff/share, CRM, provider, project-store or route implementation change; no browser action, persistence migration, Engine, Lab/IES, RuntimeData, main or runtime-port work.
 
-### Program admission hold for PWS-001, PWS-002 and PWS-005
+### Program admission and active architectural constraints for PWS work
 
-All three items are written but intentionally blocked. No worker may execute them until Program & Integrate records admission. Once admitted, the orchestrator must make only PWS-001 ready; later items advance strictly after the preceding parcel and its durable closeout are complete.
+Program & Integrate admitted all three items on 2026-07-21. PWS-001 is the sole ready Selector parcel. PWS-002 and PWS-005 advance only after the preceding feature and durable closeout are complete; no second writer may use this worktree.
+
+Selector owns the derived readiness state and immutable state-entry intent only. It must not invoke HubSpot, CRM, project persistence or identity logic. Governance & Shell owns provider policy, project/identity association, idempotency, retry and best-effort external push.
+
+**PWS-010 applies immediately:** Selector and every downstream module must not create a module-owned download, export, file-delivery, artifact-retrieval route or browser helper. Internal Seam G request/generation contracts may continue, but outward retrieval must terminate through the single future Governance & Shell gateway. Readiness and identity are separate checks and neither may become an Engine prerequisite.
+
+**Standing tests are binding across all three parcels and later Seam G work:**
+
+1. identical engineering selections with different traceability envelopes produce identical output;
+2. the same engineering selections run deterministically with no envelope at all;
+3. changing one optic's measured rise changes both lookup temperature and verified output;
+4. wherever lookup values are identical placeholder rows, vary one row and prove the output moves;
+5. assert ownership across every governed system/row rather than one named product instance.
+
+No parcel may narrow, remove or omit these tests from effective acceptance without a new Program decision.
 
 <!--
 Historical pre-SEL queue retained as non-operative migration provenance. It is not an active queue and confers no implementation authority.
