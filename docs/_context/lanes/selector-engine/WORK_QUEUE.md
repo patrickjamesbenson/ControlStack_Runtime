@@ -677,3 +677,17 @@ WALK-001V is complete, gated and pushed. The successful-reader `currentSourceSha
 The gate-included regression proves approved finite tier-specific evidence separately from generic-only, non-numeric and unapproved non-proof; duplicate exact Ambient rows remain visible through counts; policy values, raw rows, unrestricted headers, users and private data remain redacted; and dry-run invokes no directory creation or write.
 
 Driver authority, existing validation outcomes, Google reading/data, Selector option behaviour, materialisation, archive, promotion, deployment and Engine were unchanged. Runtime activation and the exact current-source repair decision remain with Program. WALK-001 and WALK-001R remain incomplete; WALK-002 through WALK-007 remain blocked. No Selector parcel is ready.
+
+## 2026-07-22 canonical production-chain seed library
+
+### SEED-LIB-001 Canonical two-build production-chain seed library
+
+* status: sequence-blocked (depends-on: Program acceptance of WALK-001 through WALK-007 in order)
+* Selector authority: both configurations already exist as Selector test cases. Their exact saved selections are the sole future run-intake authority.
+* Build 1 — direct, loaded: DNX 60 Square; Opal 60; 3000K/CRI80 board; DALI-2 DT6 class; target 1000 lm/m; 9560 mm × 1; Spitfire D25 emergency; PIR 5 m sensor; Suspended; Top Side; White (Textured).
+* Build 2 — direct/indirect, loaded: DNX 80 DI (`Square_DI`); direct Inlay 80 plus Microprism; indirect Rope 80; direct target 1500 lm/m; indirect target 500 lm/m; 5000K/CRI90 board; Fixed (On/Off) on both lanes; Surface Mount; Back Wall side; Black (Textured); EM DC Mains emergency; Microwave sensor; run quantity and length exactly as stored in the saved Selector test case.
+* future acceptance: use the exact saved selections and accepted production contracts through the real production chain only.
+* prohibited shortcuts: no retyping, inference, normalisation or replacement of saved run intake; no hand-made sealed reference, hand-made inspection result, synthetic production artifact or substituted evidence.
+* current boundary: execute neither seed case, do not invoke Engine, do not alter either saved case and do not infer missing run intake.
+
+Queue reconciliation: WALK-001V is already done, gated and pushed, so it was not recommissioned. It remains at Program activation and source-repair review. WALK-001/WALK-001R are incomplete; WALK-002 through WALK-007 and SEED-LIB-001 remain blocked. No Selector parcel is ready.

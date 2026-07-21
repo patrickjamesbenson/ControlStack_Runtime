@@ -606,3 +606,13 @@ This log is append-oriented. Do not silently rewrite historical decisions.
 **Rationale:** The guarded source stop proved SYSTEM_POLICY presence but could not safely determine whether current Ambient data was finite and genuinely tier-specific without returning source values or rows.
 
 **Consequence:** Duplicate exact rows, recognised tier-column population, finite/non-finite tokens, multi-tier finite rows and generic-only rows remain visible through counts only. This summary does not change Driver authority, source validation, Google reading/data, Selector options or any materialisation/promotion decision; Program must activate it and use the safe counts to decide the exact source repair.
+
+## 2026-07-22 — Ingest SEED-LIB-001 without duplicating WALK-001V
+
+**Decision:** Record the two Patrick-nominated saved Selector test cases as the canonical production-chain seed library. Their exact saved selections are the sole future run-intake authority. Build 1 retains its stored 9560 mm × 1 intake; Build 2 quantity and length are read only from its saved case.
+
+**Sequence:** SEED-LIB-001 remains blocked until Program accepts WALK-001 through WALK-007 in order. No seed execution, Engine invocation, saved-case mutation, intake reconstruction or evidence substitution is authorised.
+
+**Reconciliation:** Program's handoff described WALK-001V as ready, but the live lane contains the newer complete, gated, pushed and clean closeout. Preserve that result and do not commission a duplicate worker. WALK-001V waits at Program activation/source-repair review; no Selector parcel is ready.
+
+**Consequence:** one writer and all current exclusions remain intact. Hand-made sealed references, hand-made inspection results, synthetic production artifacts and substituted evidence cannot satisfy future canonical acceptance.

@@ -808,3 +808,12 @@ Every completed worker updates this index with:
 - Focused regression and complete feature gate passed 108/108; exact two-file staged equality passed; gated feature commit and push succeeded; feature Git state returned clean — VERIFIED.
 - Driver authority, validation outcomes, Google read/data, Selector options, materialisation, archive, promotion, deployment, runtime activation, Engine and later WALK parcels were untouched — VERIFIED.
 - Queue result: WALK-001V done; WALK-001/WALK-001R incomplete; WALK-002 through WALK-007 blocked; no ready Selector item pending Program activation and exact source-repair review — RECORDED.
+
+## 2026-07-22 — SEED-LIB-001 queue-reconciliation evidence
+
+- Program's canonical seed-library handoff and queue record identify two Patrick-nominated Selector-saved test cases and make their exact saved selections the sole future run-intake authority — VERIFIED FROM PROGRAM REPOSITORY.
+- Build 1 preserves explicit 9560 mm × 1 intake; Build 2 quantity and length remain available only from its saved Selector case and were not retyped or inferred — RECORDED.
+- Program sequence blocks Selector seed execution behind acceptance of WALK-001 through WALK-007 and prohibits Engine invocation, saved-case mutation, hand-made production-chain references/results/artifacts and substituted evidence — VERIFIED FROM PROGRAM REPOSITORY.
+- Live Selector history is newer than the Program handoff's WALK-001V-ready wording: the feature and lane-memory closeout are pushed, the branch is clean and WALK-001V is done — VERIFIED FROM SELECTOR HISTORY AND GIT STATUS.
+- No WALK-001V worker was duplicated or interrupted; no seed case, Engine path, saved case, run intake, feature file, runtime, source or external system was touched — VERIFIED RECONCILIATION BOUNDARY.
+- Queue result: WALK-001V awaits Program activation and exact source-repair review; WALK-001/WALK-001R remain incomplete; WALK-002 through WALK-007 and SEED-LIB-001 remain blocked; no Selector parcel is ready — RECORDED.

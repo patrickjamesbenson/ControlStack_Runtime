@@ -738,3 +738,13 @@ WALK-001V is complete, gated and pushed. The existing successful Google-read `cu
 The gate-included test passed inside the complete 108/108 Selector gate. It proves duplicate exact rows remain count-visible; generic-only, non-numeric and unapproved values cannot establish approved finite tier-specific evidence; disclosure stays redacted; and dry-run performs no directory creation, materialised write or active-snapshot write. The exact two feature/test files were committed and pushed; Git returned clean.
 
 No runtime activation, live Google read, Google Sheet edit, Driver-rule change, validation-outcome change, materialisation, archive, promotion, deployment, Selector-option change, Engine action or later walkthrough work occurred. Program must activate/review the bounded visibility and decide the exact source repair. WALK-001 and WALK-001R remain incomplete; WALK-002 through WALK-007 remain blocked; no Selector parcel is ready.
+
+## 2026-07-22 SEED-LIB-001 queue reconciliation — latest controlling state
+
+**Reconciled lane HEAD before this documentation closeout:** `a90b70830a600ce0db87d41d55f35ecf15e6b270` — `docs(selector): reconcile lane state after WALK-001V`.
+
+Program's latest handoff is ingested. SEED-LIB-001 records two Patrick-nominated Selector-saved test cases as the canonical production-chain seed library. The saved selections are the sole future run-intake authority. Build 1 explicitly carries 9560 mm × 1. Build 2 quantity and length remain exactly those stored in its saved Selector test case and must never be retyped, inferred, normalised or replaced.
+
+SEED-LIB-001 is sequence-blocked behind Program acceptance of WALK-001 through WALK-007 in order. Neither seed case may be executed; Engine, saved cases and run intake remain untouched. Canonical acceptance must use the exact saved selections and accepted production contracts. Hand-made sealed references, hand-made inspection results, synthetic production artifacts and substituted evidence are prohibited.
+
+Program's handoff still described WALK-001V as the sole ready Selector parcel, but live lane evidence is newer: WALK-001V is already complete, gated, pushed and clean. Its worker is no longer active, and no duplicate commission is authorised. WALK-001V remains at the Program activation and exact source-repair review boundary. WALK-001 and WALK-001R remain incomplete; WALK-002 through WALK-007 and SEED-LIB-001 remain blocked. One Selector writer and all existing exclusions remain binding.

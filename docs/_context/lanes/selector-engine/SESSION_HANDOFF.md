@@ -710,3 +710,11 @@ WALK-001V is complete, gated and pushed. The guarded successful-reader response 
 The gate-included regression and complete Selector gate passed 108/108. It proves duplicate exact Ambient rows remain safely count-visible, generic-only and non-numeric values do not prove finite tier-gated Ambient, unapproved finite rows do not establish approved evidence, and dry-run performs no filesystem write. The exact two feature/test files were committed and pushed; the feature tree was clean.
 
 No runtime activation or live-source call was attempted. Driver rules, current validation outcomes, Google data, Selector options, materialisation, archive, promotion, deployment, Engine and later walkthrough work were not changed. WALK-001V is done; WALK-001 and WALK-001R remain incomplete; WALK-002 through WALK-007 remain blocked. Stop for Program activation and exact source-repair review; no Selector parcel is ready.
+
+## 2026-07-22 SEED-LIB-001 handoff ingested
+
+Program's standing routing handoff records two Selector-saved canonical cases. Build 1 is the saved DNX 60 Square loaded direct case with 9560 mm × 1. Build 2 is the saved DNX 80 DI loaded direct/indirect case; its quantity and length come only from the stored test case. Both exact saved selections are the sole future run-intake authority.
+
+SEED-LIB-001 is recorded as sequence-blocked behind acceptance of WALK-001 through WALK-007. Execute neither case, invoke no Engine path, change no saved case and infer no run intake. Future acceptance must traverse the accepted production contracts with genuine evidence; hand-made sealed references, hand-made inspection results, synthetic production artifacts and substituted evidence cannot satisfy it.
+
+The latest Program text called WALK-001V ready, but the live Selector lane has since completed, gated and pushed it. Do not duplicate or interrupt that closed worker. WALK-001V now waits for Program activation and exact source-repair review. No Selector item is ready; one writer and all existing exclusions remain binding.
