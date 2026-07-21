@@ -21,17 +21,17 @@ function runtimeContext() {
     contractVersion: CONTRACT_ID,
     project: {
       metadata: {
-        projectId: "project-alpha",
-        title: "Alpha Linear Workspace",
+        projectId: "project-hydration",
+        title: "Hydration Project",
       },
       currentProject: {
-        projectId: "project-alpha",
-        title: "Alpha Linear Workspace",
-        client: "Alpha Client",
+        projectId: "project-hydration",
+        title: "Hydration Project",
+        client: "Hydration Client",
         site: "Sydney",
       },
       selection: {
-        selectedProjectId: "project-alpha",
+        selectedProjectId: "project-hydration",
       },
     },
     identity: {

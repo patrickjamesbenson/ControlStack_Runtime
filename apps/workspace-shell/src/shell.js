@@ -2,6 +2,7 @@
 import { createPluginRegistry } from "/packages/workspace-kernel/pluginRegistry.js";
 import { resolveWorkspaceRoute } from "/packages/workspace-kernel/route.js";
 import { createShellContext, createShellServices } from "/packages/workspace-kernel/services.js";
+import { createProjectPersistenceClient } from "./projectPersistenceClient.js";
 import { csSelectorModule } from "/packages/modules/cs-selector/index.js";
 import { emergenceModule } from "/packages/modules/emergence/index.js";
 import { sceneBuilderModule } from "/packages/modules/scene-builder/index.js";
@@ -1978,44 +1979,48 @@ function renderProjectTopbarActionOutcome() {
   const outcome = projectTopbarActionOutcome || { action: "idle" };
   if (outcome.action === "save") {
     appendProjectTopbarOutcomeLine(
-      `Browser-session envelope saved: ${outcome.title || "Current project"} (${outcome.envelopeId || "envelope id unavailable"}).`,
+      outcome.persistenceMode === "server-json"
+        ? `Persisted project saved: ${outcome.title || "Current project"} (${outcome.envelopeId || "envelope id unavailable"}).`
+        : `Memory-only project envelope saved: ${outcome.title || "Current project"} (${outcome.envelopeId || "envelope id unavailable"}).`,
     );
     appendProjectTopbarOutcomeLine(
       outcome.serverRegistrationState === "acknowledged"
-        ? `Server in-process registration acknowledged: ${outcome.serverRevisionId || "active revision acknowledged"}.`
+        ? "Optional in-process registration acknowledged."
         : outcome.serverRegistrationState === "pending"
-          ? "Server in-process registration pending: awaiting acknowledgement for this runtime revision."
-          : `Server in-process registration blocked or unavailable: ${outcome.serverRegistrationReason || "acknowledgement not received"}.`,
+          ? "Optional in-process registration pending."
+          : `Optional in-process registration blocked or unavailable: ${outcome.serverRegistrationReason || "acknowledgement not received"}.`,
     );
     appendProjectTopbarOutcomeLine(
-      "Durable persistence unavailable: this envelope exists only in the current browser/runtime session.",
+      outcome.persistenceMode === "server-json"
+        ? "Server-owned JSON is authoritative; browser storage was updated after server success."
+        : "Persistence rollback mode is active; this envelope remains memory-only.",
     );
     return;
   }
   if (outcome.action === "save-blocked") {
     appendProjectTopbarOutcomeLine(
-      `Browser-session save blocked: ${outcome.reason || "save was not accepted"}.`,
+      `Project save blocked safely: ${outcome.reason || "save was not accepted"}.`,
     );
     appendProjectTopbarOutcomeLine(
-      "Durable persistence unavailable; no filesystem, database, RuntimeData, or server persistence was added.",
+      "The previous authoritative server file and in-memory project state were preserved.",
     );
     return;
   }
   if (outcome.action === "restore") {
     appendProjectTopbarOutcomeLine(
-      `Session envelope restored: ${outcome.title || "Selected project"} (${outcome.envelopeId || "envelope id unavailable"}).`,
+      `Persisted project restored: ${outcome.title || "Selected project"} (${outcome.envelopeId || "envelope id unavailable"}).`,
     );
     appendProjectTopbarOutcomeLine(
       `Hydration payloads prepared: ${outcome.hydratedModules || "none"}.`,
     );
     appendProjectTopbarOutcomeLine(
-      "Durable persistence remains unavailable; restore used the current runtime-session envelope.",
+      "Restore used the server-authoritative persisted envelope loaded into Project Browser.",
     );
     return;
   }
   if (outcome.action === "restore-blocked") {
     appendProjectTopbarOutcomeLine(
-      `Restore blocked: ${outcome.reason || "select a runtime-session saved envelope first"}.`,
+      `Restore blocked: ${outcome.reason || "select a persisted project first"}.`,
     );
     return;
   }
@@ -2033,8 +2038,8 @@ function createProjectTopbarEnvelopeButton(project, kind, selectedProjectId) {
   const envelopeId = project.envelopeId || project.projectId;
   const selected = envelopeId === selectedProjectId || project.projectId === selectedProjectId;
   const kindLabel = kind === "runtime"
-    ? "Runtime-session save"
-    : "Read-only reference fixture";
+    ? "Persisted project"
+    : "Read-only reference";
   const selectedLabel = selected ? " · Selected envelope" : "";
   const item = createShellButton(
     `${project.title || "Untitled project"} · ${kindLabel}${selectedLabel}`,
@@ -2045,8 +2050,8 @@ function createProjectTopbarEnvelopeButton(project, kind, selectedProjectId) {
   item.setAttribute("aria-pressed", selected ? "true" : "false");
   if (selected) item.classList.add("is-selected");
   item.title = kind === "runtime"
-    ? "Select this runtime-session envelope for restore/open."
-    : project.restoreDisabledReason || "Read-only reference fixtures cannot be restored.";
+    ? "Select this persisted project for restore/open."
+    : project.restoreDisabledReason || "Read-only references cannot be restored until persisted.";
   return item;
 }
 
@@ -2055,12 +2060,12 @@ function projectTopbarRestoreReason(browser, selected) {
     return "Restore disabled: Project Browser restore capability is unavailable.";
   }
   if (!selected) {
-    return "Restore disabled: select a runtime-session saved envelope first.";
+    return "Restore disabled: select a persisted project first.";
   }
   if (selected.restoreEligible !== true) {
-    return `Restore disabled: ${selected.restoreDisabledReason || "the selected envelope is a read-only reference fixture"}`;
+    return `Restore disabled: ${selected.restoreDisabledReason || "the selected record is read-only and not persisted"}`;
   }
-  return `Restore enabled for runtime-session envelope: ${selected.title}.`;
+  return `Restore enabled for persisted project: ${selected.title}.`;
 }
 
 function handleProjectTopbarInteraction(event) {
@@ -2099,24 +2104,26 @@ function renderProjectTopbarPopout(context) {
   const selectedEnvelope = selectedProjectSummary(browser);
   if (projectPopoutTitle) projectPopoutTitle.textContent = currentProjectTitle(context);
 
-  for (const option of Array.from(projectSelect?.options || [])) {
+  if (selectedCurrentProjectId) {
     const item = createShellButton(
-      `${option.textContent} · Current workspace fixture · Not a saved project`,
+      `${currentProjectTitle(context)} · Active restored project`,
       "cs-shell__popout-row",
     );
-    item.dataset.projectId = option.value;
-    if (option.value === selectedCurrentProjectId) item.classList.add("is-selected");
-    item.addEventListener("click", () => {
-      dispatchLegacyChange(projectSelect, option.value);
-      setPopout(projectChip, projectPopout, false);
-    });
+    item.dataset.projectId = selectedCurrentProjectId;
+    item.classList.add("is-selected");
+    item.disabled = true;
     projectPopoutList.appendChild(item);
+  } else {
+    appendProjectTopbarEmptyState(
+      projectPopoutList,
+      "No project context is active. Restore a persisted project to establish project truth.",
+    );
   }
 
   if (runtimeSessionProjects.length === 0) {
     appendProjectTopbarEmptyState(
       projectPopoutSavedList,
-      "No runtime-session saved projects yet. Save Project creates a browser-session envelope, not durable persistence.",
+      "No persisted projects are available yet. Save Project writes server-owned JSON when a real project context exists.",
     );
   } else {
     for (const project of runtimeSessionProjects) {
@@ -2129,7 +2136,7 @@ function renderProjectTopbarPopout(context) {
   if (referenceProjects.length === 0) {
     appendProjectTopbarEmptyState(
       projectPopoutReferenceList,
-      "No read-only Project Browser reference fixtures are available.",
+      "No read-only Project Browser references are available.",
     );
   } else {
     for (const project of referenceProjects) {
@@ -2141,8 +2148,8 @@ function renderProjectTopbarPopout(context) {
 
   if (projectPopoutSelectionSummary) {
     projectPopoutSelectionSummary.textContent = selectedEnvelope
-      ? `Selected saved envelope: ${selectedEnvelope.title} · ${selectedEnvelope.restoreEligible ? "runtime-session restore eligible" : "read-only reference; restore unavailable"}.`
-      : "No saved envelope selected. Current workspace fixture selection is separate from saved-envelope selection.";
+      ? `Selected project: ${selectedEnvelope.title} · ${selectedEnvelope.restoreEligible ? "persisted restore eligible" : "read-only reference; restore unavailable"}.`
+      : "No persisted project selected.";
   }
 
   const restoreReason = projectTopbarRestoreReason(browser, selectedEnvelope);
@@ -2154,12 +2161,18 @@ function renderProjectTopbarPopout(context) {
   );
   newProject.disabled = true;
   const save = createShellButton(
-    browser.save?.status === "saving" ? "Saving browser-session envelope..." : "Save browser-session envelope",
+    browser.save?.status === "saving"
+      ? "Saving persisted project..."
+      : projectPersistenceLive
+        ? "Save persisted project"
+        : "Save memory-only project",
   );
   save.dataset.projectBrowserAction = "save";
   save.disabled = browser.capabilities?.save !== true;
   const restore = createShellButton(
-    browser.restore?.status === "restoring" ? "Restoring session envelope..." : "Restore / open selected session envelope",
+    browser.restore?.status === "restoring"
+      ? "Restoring persisted project..."
+      : "Restore / open selected persisted project",
   );
   restore.dataset.projectBrowserAction = "restore";
   restore.disabled = browser.capabilities?.restore !== true || selectedEnvelope?.restoreEligible !== true;
@@ -2829,6 +2842,17 @@ function bootWorkspaceShell() {
     registerSelectedProjectServerOwnership:
       selectedProjectServerOwnedRegistrationClientTransport,
   });
+  const projectPersistenceLive =
+    globalThis.__CONTROLSTACK_RUNTIME_CONFIG__?.projectPersistenceLive === true;
+  services.flags.setFlag(
+    "projectPersistenceLive",
+    projectPersistenceLive,
+    "runtime-project-persistence-config",
+  );
+  const projectPersistenceClient = createProjectPersistenceClient({
+    enabled: projectPersistenceLive,
+    storage: globalThis.localStorage,
+  });
   projectBrowserSelectedProjectReadonlyEngineInvokeMountStatus =
     selectedProjectReadonlyEngineInvokeMount.getSnapshot();
   projectBrowserSelectedProjectEngineReadonlyInvokeActivationStatus =
@@ -2841,6 +2865,21 @@ function bootWorkspaceShell() {
   let mountedModuleApi = null;
   let diagnosticsPluginApi = null;
   let diagnosticsPluginRegistry = null;
+
+  async function hydratePersistedProjectsOnBoot() {
+    if (!projectPersistenceLive) return;
+    try {
+      const result = await projectPersistenceClient.readAllProjects();
+      const imported = services.savedProjects.replacePersistedProjectRecords(result.records);
+      refreshContext("project-persistence-boot-hydration");
+      setStatus(
+        `Restored ${imported.importedProjectIds.length} persisted project${imported.importedProjectIds.length === 1 ? "" : "s"}; malformed records were isolated.`,
+      );
+    } catch (error) {
+      console.error("[workspace-shell] project persistence boot hydration failed", error);
+      setStatus("Persisted projects could not be loaded; the shell and Engine remain available without project context.");
+    }
+  }
 
   function ensureRestoredCsSelectorEngineActionLaneSurface() {
     const isRestoredCsSelectorRoute = route.moduleId === "cs_selector";
@@ -3015,6 +3054,7 @@ function bootWorkspaceShell() {
       }
       moduleContributions.cs_selector = selectorContribution;
     }
+    const persistenceRollback = services.savedProjects.capturePersistenceRollback();
     const result = services.projectBrowser.saveProject(context, moduleContributions);
     if (!result.accepted) {
       setProjectTopbarActionOutcome({
@@ -3022,20 +3062,44 @@ function bootWorkspaceShell() {
         reason: result.reason || result.status || "save was not accepted",
       });
       refreshContext("project-save-envelope-rejected");
-      setStatus(`Browser-session save failed: ${result.reason || result.status}. Durable persistence remains unavailable.`);
+      setStatus(`Project save failed safely: ${result.reason || result.status}.`);
       return;
     }
 
     const savedTitle = result.envelope?.title || currentTitle;
     const savedEnvelopeId = result.envelopeId || result.envelope?.envelopeId || "envelope id unavailable";
+    if (projectPersistenceLive) {
+      try {
+        const record = services.savedProjects.getPersistenceRecord(savedEnvelopeId);
+        if (!record) throw new Error("project-persistence-record-missing");
+        await projectPersistenceClient.saveRecord(record);
+      } catch (error) {
+        services.savedProjects.restorePersistenceRollback(persistenceRollback);
+        setProjectTopbarActionOutcome({
+          action: "save-blocked",
+          reason: error?.message || "durable persistence failed",
+        });
+        refreshContext("project-save-durable-persistence-rolled-back");
+        setStatus("Durable project save failed safely; the previous in-memory and server state was preserved.");
+        return;
+      }
+    }
+
     setProjectTopbarActionOutcome({
       action: "save",
       title: savedTitle,
       envelopeId: savedEnvelopeId,
       serverRegistrationState: "pending",
+      persistenceMode: projectPersistenceLive ? "server-json" : "memory",
     });
-    let nextContext = refreshContext("project-save-envelope-browser-session");
-    setStatus(`Browser-session envelope saved for ${savedTitle}. Confirming optional server in-process registration; durable persistence is unavailable.`);
+    let nextContext = refreshContext(
+      projectPersistenceLive
+        ? "project-save-durable-persistence-complete"
+        : "project-save-memory-rollback-mode",
+    );
+    setStatus(projectPersistenceLive
+      ? `Durable project saved for ${savedTitle}. Confirming optional in-process registration.`
+      : `Memory-only project envelope saved for ${savedTitle}; persistence rollback mode is active.`);
 
     let registration;
     let registrationFailureReason = null;
@@ -3062,13 +3126,18 @@ function bootWorkspaceShell() {
           || registration?.reason
           || registration?.status
           || "acknowledgement not received",
+      persistenceMode: projectPersistenceLive ? "server-json" : "memory",
     });
     nextContext = refreshContext("project-save-envelope-server-in-process-registration");
     if (!registrationAcknowledged) {
-      setStatus(`Browser-session envelope saved for ${readProjectTitle(nextContext.project)}. Server in-process registration was blocked or unavailable, and durable persistence is unavailable.`);
+      setStatus(projectPersistenceLive
+        ? `Durable project saved for ${readProjectTitle(nextContext.project)}. Optional in-process registration was blocked or unavailable.`
+        : `Memory-only project envelope saved for ${readProjectTitle(nextContext.project)}. Optional in-process registration was blocked or unavailable.`);
       return;
     }
-    setStatus(`Browser-session envelope saved for ${readProjectTitle(nextContext.project)}. Server in-process registration ${registration.serverRevisionId} was acknowledged; durable persistence is unavailable.`);
+    setStatus(projectPersistenceLive
+      ? `Durable project saved for ${readProjectTitle(nextContext.project)}; optional in-process registration was acknowledged.`
+      : `Memory-only project envelope saved for ${readProjectTitle(nextContext.project)}; optional in-process registration was acknowledged.`);
   }
 
   async function handleProjectBrowserRestore() {
@@ -3236,7 +3305,7 @@ function bootWorkspaceShell() {
       return result;
     }
     const selected = selectedProjectSummary(nextContext.projectBrowser || {});
-    setStatus(`Selected saved envelope ${selected?.title || result.envelopeId}. Restore is ${result.restoreEligible ? "enabled for this runtime-session save" : "disabled because this is a read-only reference"}.`);
+    setStatus(`Selected project ${selected?.title || result.envelopeId}. Restore is ${result.restoreEligible ? "enabled for this persisted project" : "disabled because this is a read-only reference"}.`);
     return result;
   }
 
@@ -3341,6 +3410,7 @@ function bootWorkspaceShell() {
       .setDelegatedListenerMounted(true);
 
   refreshContextSafely("initial-render");
+  void hydratePersistedProjectsOnBoot();
   userMenuButton?.addEventListener("click", handleUserMenuToggle);
   signInButton?.addEventListener("click", handleAuthSignIn);
   signOutButton?.addEventListener("click", handleAuthSignOut);

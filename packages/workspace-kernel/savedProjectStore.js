@@ -1,4 +1,9 @@
 import { createHandoffSharePackage, summariseHandoffSharePackage } from "./handoffSharePackage.js";
+import {
+  buildWorkspaceSavedProjectRecord,
+  normaliseWorkspaceSavedProjectRecord,
+  validateWorkspaceProjectId,
+} from "./governance/projectPersistenceContract.js";
 import { createHydrationPayloadsFromEnvelope, createHydrationResultsFromEnvelope, createSavedProjectEnvelope, summariseProjectEnvelope, validateSavedProjectEnvelope } from "./projectEnvelope.js";
 import {
   buildSelectedResultPersistedSummarySlotContract,
@@ -3891,121 +3896,13 @@ function writeIesFirstNarrowProjectIesExportResultSummaryToEnvelope(envelope, su
   return envelope;
 }
 
-function createFixtureEnvelope({ projectId, title, client, site, savedByName, savedByEmail, lifecycleStatus = "draft" }) {
-  const now = new Date().toISOString();
-  return {
-    schema: "workspace_saved_project.v2-runtime",
-    owner: "shell",
-    source: "p1-project-browser-fixture",
-    browserOnly: true,
-    readOnly: true,
-    envelopeId: `fixture-${projectId}`,
-    projectId,
-    title,
-    client,
-    site,
-    createdAt: now,
-    updatedAt: now,
-    savedAt: now,
-    savedBy: {
-      identityState: "internal_identified",
-      classification: "internal",
-      actualRole: "internal_user",
-      derivedActualRole: "internal_user",
-      actualRoleSource: "p1-project-browser-fixture",
-      displayRole: "internal_user",
-      displayRoleClamped: false,
-      name: savedByName,
-      email: savedByEmail,
-    },
-    project: {
-      metadata: {
-        projectId,
-        title,
-        readiness: "browser-fixture",
-        source: "p1-project-browser-fixture",
-      },
-      currentProject: {
-        projectId,
-        title,
-        client,
-        site,
-        readiness: "browser-fixture",
-      },
-      selection: {},
-    },
-    shell: {
-      phase: "p1-project-browser-read-only-foundation",
-      contractVersion: "fixture",
-      visibility: {},
-      flags: {},
-      downstream: {},
-    },
-    modules: {
-      cs_selector: {
-        owner: "cs_selector",
-        moduleId: "cs_selector",
-        status: "empty",
-        state: {},
-        downstreamContext: null,
-      },
-      scene_builder: {
-        owner: "scene_builder",
-        moduleId: "scene_builder",
-        status: "empty",
-        state: {},
-        downstreamContext: null,
-      },
-    },
-    lifecycle: {
-      owner: "shell",
-      status: lifecycleStatus,
-      custody: {
-        ownerName: savedByName,
-        ownerEmail: savedByEmail,
-      },
-      handoff: {
-        status: "not-live",
-        available: false,
-        reason: "P2 save envelope does not enable handoff/share.",
-      },
-    },
-    restore: {
-      status: "not-live",
-      available: false,
-      reason: "Restore/hydrate deferred to P3.",
-    },
-  };
-}
-
-const FIXTURE_ENVELOPES = Object.freeze([
-  createFixtureEnvelope({
-    projectId: "saved-alpha",
-    title: "Saved Alpha project",
-    client: "Alpha Client",
-    site: "Sydney",
-    savedByName: "Workspace User",
-    savedByEmail: "internal@controlstack.local",
-    lifecycleStatus: "draft",
-  }),
-  createFixtureEnvelope({
-    projectId: "saved-bravo",
-    title: "Saved Bravo project",
-    client: "Bravo Client",
-    site: "Parramatta",
-    savedByName: "Internal Engineer",
-    savedByEmail: "engineer@controlstack.local",
-    lifecycleStatus: "draft",
-  }),
-]);
-
 export function createSavedProjectStore({ eventBus } = {}) {
   const state = {
     owner: "shell",
     status: "handoff-share-ready",
     source: "p4-shell-handoff-share",
-    fixtureEnvelopes: FIXTURE_ENVELOPES.map(clone),
     savedEnvelopes: [],
+    persistenceLinksByProjectId: {},
     save: {
       owner: "shell",
       status: "ready",
@@ -4058,7 +3955,97 @@ export function createSavedProjectStore({ eventBus } = {}) {
   };
 
   function allEnvelopes() {
-    return [...state.savedEnvelopes, ...state.fixtureEnvelopes];
+    return [...state.savedEnvelopes];
+  }
+
+  function persistenceLinksFor(projectId) {
+    return clone(state.persistenceLinksByProjectId[projectId] || {
+      hubspotDealId: null,
+      hubspotContactId: null,
+      hubspotCompanyId: null,
+    });
+  }
+
+  function capturePersistenceRollback() {
+    return clone({
+      savedEnvelopes: state.savedEnvelopes,
+      persistenceLinksByProjectId: state.persistenceLinksByProjectId,
+      save: state.save,
+      restore: state.restore,
+      hydrate: state.hydrate,
+    });
+  }
+
+  function restorePersistenceRollback(snapshot = {}) {
+    if (!Array.isArray(snapshot.savedEnvelopes)
+      || !isPlainObject(snapshot.persistenceLinksByProjectId)
+      || !isPlainObject(snapshot.save)
+      || !isPlainObject(snapshot.restore)
+      || !isPlainObject(snapshot.hydrate)) {
+      return { accepted: false, status: "rollback-rejected", reason: "Persistence rollback snapshot is invalid." };
+    }
+    state.savedEnvelopes = snapshot.savedEnvelopes.map(clone);
+    state.persistenceLinksByProjectId = clone(snapshot.persistenceLinksByProjectId);
+    state.save = clone(snapshot.save);
+    state.restore = clone(snapshot.restore);
+    state.hydrate = clone(snapshot.hydrate);
+    return { accepted: true, status: "rolled-back" };
+  }
+
+  function replacePersistedProjectRecords(records = []) {
+    if (!Array.isArray(records)) {
+      return { accepted: false, status: "import-rejected", reason: "Persisted project records must be an array." };
+    }
+    const nextEnvelopes = [];
+    const nextLinks = {};
+    const skipped = [];
+    for (const candidate of records) {
+      try {
+        const record = normaliseWorkspaceSavedProjectRecord(candidate, {
+          expectedProjectId: candidate?.projectId,
+        });
+        const validation = validateSavedProjectEnvelope(record.envelope);
+        if (!validation.valid) throw new TypeError(validation.reason);
+        nextEnvelopes.push(clone(record.envelope));
+        nextLinks[record.projectId] = {
+          hubspotDealId: record.hubspotDealId,
+          hubspotContactId: record.hubspotContactId,
+          hubspotCompanyId: record.hubspotCompanyId,
+        };
+      } catch (error) {
+        skipped.push({
+          projectId: candidate?.projectId || null,
+          blocker: error?.message || "persisted-project-record-invalid",
+        });
+      }
+    }
+    nextEnvelopes.sort((left, right) => String(left.projectId).localeCompare(String(right.projectId)));
+    state.savedEnvelopes = nextEnvelopes;
+    state.persistenceLinksByProjectId = nextLinks;
+    return {
+      accepted: true,
+      status: "persisted-records-imported",
+      importedProjectIds: nextEnvelopes.map((envelope) => envelope.projectId),
+      skipped,
+    };
+  }
+
+  function getPersistenceRecord(projectIdOrEnvelopeId) {
+    const envelope = getProjectEnvelope(projectIdOrEnvelopeId);
+    if (!envelope) return null;
+    return buildWorkspaceSavedProjectRecord({
+      envelope,
+      ...persistenceLinksFor(envelope.projectId),
+    });
+  }
+
+  function listPersistenceRecords() {
+    return state.savedEnvelopes
+      .map((envelope) => buildWorkspaceSavedProjectRecord({
+        envelope,
+        ...persistenceLinksFor(envelope.projectId),
+      }))
+      .sort((left, right) => left.projectId.localeCompare(right.projectId));
   }
 
   function listProjectSummaries() {
@@ -4174,7 +4161,7 @@ export function createSavedProjectStore({ eventBus } = {}) {
       projects: listProjectSummaries(),
       count: allEnvelopes().length,
       savedCount: state.savedEnvelopes.length,
-      fixtureCount: state.fixtureEnvelopes.length,
+      fixtureCount: 0,
       safeEmpty: allEnvelopes().length === 0,
       currentProjectPreview: summariseProjectEnvelope(currentProjectPreview),
       save: getSaveSnapshot(),
@@ -4268,7 +4255,10 @@ export function createSavedProjectStore({ eventBus } = {}) {
                 : selectedResultSummaryWrite.requested ? selectedResultSummaryWrite.moduleContributions : moduleContributions;
       browserContext = saveContext;
 
-      const projectId = saveContext.project?.metadata?.projectId || saveContext.project?.currentProject?.projectId || "runtime-project";
+      const projectId = validateWorkspaceProjectId(
+        saveContext.project?.metadata?.projectId
+          || saveContext.project?.currentProject?.projectId,
+      );
       const existingIndex = state.savedEnvelopes.findIndex((item) => item.projectId === projectId);
       const previousEnvelope = existingIndex >= 0 ? state.savedEnvelopes[existingIndex] : null;
       const previousProjectIesExportBoundaryReadbackStatus = iesFirstNarrowProjectIesExportResultSummaryWriteRequest.requested
@@ -4826,6 +4816,11 @@ export function createSavedProjectStore({ eventBus } = {}) {
     getSelectedResultPersistedSummaryReadbackStatus,
     getIesFirstNarrowProjectIesExportBoundaryReadbackStatus,
     getIesFirstNarrowProjectIesExportResultReadbackStatus,
+    capturePersistenceRollback,
+    restorePersistenceRollback,
+    replacePersistedProjectRecords,
+    getPersistenceRecord,
+    listPersistenceRecords,
     getStoreSnapshot,
     getSaveSnapshot,
     getRestoreSnapshot,

@@ -19,17 +19,17 @@ function sourceSlice(source, startToken, endToken) {
   return source.slice(start, end);
 }
 
-test("top Project surface truthfully separates current workspace fixtures, runtime-session saves, and read-only references", async () => {
+test("top Project surface shows real project context, persisted projects, and read-only references", async () => {
   const [htmlSource, shellSource] = await readSurfaceSources();
 
   for (const token of [
-    "Current workspace fixtures",
-    "Alpha, Bravo, and Charlie are current-project selection fixtures / reference workspaces. They are not saved projects.",
-    "Runtime-session saved projects",
-    "These envelopes exist only in the current browser/runtime session",
+    "Current project context",
+    "No fabricated project is selected by default.",
+    "Persisted projects",
+    "Server-owned JSON is authoritative.",
+    "Browser storage is a cache updated only after successful server save or read",
     "Read-only Project Browser references",
-    "These are reference fixtures from Project Browser data. They can be inspected but cannot be restored.",
-    "Durable project persistence is unavailable.",
+    "Reference records may be inspected but cannot be restored unless they are persisted.",
     "cs-shell-project-popout-list",
     "cs-shell-project-popout-saved-list",
     "cs-shell-project-popout-reference-list",
@@ -39,12 +39,15 @@ test("top Project surface truthfully separates current workspace fixtures, runti
   ]) {
     assert.equal(htmlSource.includes(token), true, token);
   }
+  for (const prohibited of ["Alpha, Bravo, and Charlie", "Current workspace fixtures", "Durable project persistence is unavailable"] ) {
+    assert.equal(htmlSource.includes(prohibited), false, prohibited);
+  }
 
   for (const token of [
     CONTRACT_ID,
-    "Current workspace fixture · Not a saved project",
-    "Runtime-session save",
-    "Read-only reference fixture",
+    "Active restored project",
+    "Persisted project",
+    "Read-only reference",
     "Selected envelope",
   ]) {
     assert.equal(shellSource.includes(token), true, token);
@@ -139,7 +142,7 @@ test("top and sidebar Save, Restore, Handoff, and saved-envelope selection share
   assert.doesNotMatch(rendererSource, /\.click\?\.\(|\.click\(\)/);
 });
 
-test("Restore remains disabled with an exact visible reason and Save/Restore outcomes remain explicit across rerenders", async () => {
+test("Restore remains fail-closed without a persisted selection and Save/Restore outcomes stay explicit", async () => {
   const [htmlSource, shellSource] = await readSurfaceSources();
 
   assert.match(
@@ -148,16 +151,17 @@ test("Restore remains disabled with an exact visible reason and Save/Restore out
   );
   for (const token of [
     "Restore disabled: Project Browser restore capability is unavailable.",
-    "Restore disabled: select a runtime-session saved envelope first.",
+    "Restore disabled: select a persisted project first.",
     "Restore disabled: ${selected.restoreDisabledReason",
-    "Browser-session envelope saved:",
-    "Server in-process registration acknowledged:",
-    "Server in-process registration pending:",
-    "Server in-process registration blocked or unavailable:",
-    "Durable persistence unavailable: this envelope exists only in the current browser/runtime session.",
-    "Session envelope restored:",
+    "Persisted project saved:",
+    "Memory-only project envelope saved:",
+    "Optional in-process registration acknowledged.",
+    "Optional in-process registration pending.",
+    "Optional in-process registration blocked or unavailable:",
+    "Server-owned JSON is authoritative; browser storage was updated after server success.",
+    "Persisted project restored:",
     "Hydration payloads prepared:",
-    "Durable persistence remains unavailable; restore used the current runtime-session envelope.",
+    "Restore used the server-authoritative persisted envelope loaded into Project Browser.",
   ]) {
     assert.equal(shellSource.includes(token), true, token);
   }
@@ -170,7 +174,9 @@ test("Restore remains disabled with an exact visible reason and Save/Restore out
     "function handleProjectBrowserRestore()",
   );
   assert.match(saveSource, /setProjectTopbarActionOutcome\(/);
-  assert.match(saveSource, /refreshContext\("project-save-envelope-browser-session"\)/);
+  assert.match(saveSource, /await projectPersistenceClient\.saveRecord\(record\)/);
+  assert.match(saveSource, /restorePersistenceRollback\(persistenceRollback\)/);
+  assert.match(saveSource, /project-save-durable-persistence-complete/);
   assert.match(saveSource, /refreshContext\("project-save-envelope-server-in-process-registration"\)/);
   assert.doesNotMatch(saveSource, /setPopout\(projectChip, projectPopout, false\)/);
 
@@ -186,7 +192,7 @@ test("Restore remains disabled with an exact visible reason and Save/Restore out
   assert.doesNotMatch(restoreSource, /setPopout\(projectChip, projectPopout, false\)/);
 });
 
-test("truthful Save/Open surface adds no persistence, server route, POST endpoint, or Engine execution widening", async () => {
+test("truthful Save/Open surface uses only the approved persistence client and adds no Engine or provider widening", async () => {
   const [, shellSource] = await readSurfaceSources();
   const truthfulSurfaceSource = sourceSlice(
     shellSource,
@@ -196,18 +202,14 @@ test("truthful Save/Open surface adds no persistence, server route, POST endpoin
 
   assert.doesNotMatch(
     truthfulSurfaceSource,
-    /\bfetch\s*\(|XMLHttpRequest|WebSocket|writeFile|appendFile|mkdir|unlink|method\s*:\s*["']POST["']|createServer|listen\s*\(/,
+    /XMLHttpRequest|WebSocket|writeFile|appendFile|mkdir|unlink|createServer|listen\s*\(/,
   );
   assert.doesNotMatch(
     truthfulSurfaceSource,
-    /invokeSelectedProjectReadonlyEngine|Run Engine|engineExecutionEnabled|engineExecutionAttempted/,
+    /invokeSelectedProjectReadonlyEngine|Run Engine|engineExecutionEnabled|engineExecutionAttempted|hubspot\.com|api\.hubapi\.com|priceAmount/,
   );
-  assert.match(
-    truthfulSurfaceSource,
-    /Durable persistence unavailable/,
-  );
-  assert.match(
-    truthfulSurfaceSource,
-    /no filesystem, database, RuntimeData, or server persistence was added/,
-  );
+  assert.match(shellSource, /projectPersistenceLive/);
+  assert.match(shellSource, /projectPersistenceClient\.saveRecord/);
+  assert.match(truthfulSurfaceSource, /Server-owned JSON is authoritative/);
+  assert.match(truthfulSurfaceSource, /Persistence rollback mode is active/);
 });

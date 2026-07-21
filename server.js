@@ -19,6 +19,7 @@ import { buildSelectorReferenceOptions, SELECTOR_REFERENCE_OPTIONS_PATH } from "
 import { buildBoardDataStatus, BOARD_DATA_STATUS_PATH } from "./packages/workspace-kernel/boardDataStatusService.js";
 import { buildIesBuilderStatus, IES_BUILDER_STATUS_PATH } from "./packages/workspace-kernel/iesBuilderStatusService.js";
 import { createSavedProjectStore } from "./packages/workspace-kernel/savedProjectStore.js";
+import { createServerProjectPersistenceStore } from "./packages/workspace-kernel/governance/serverProjectPersistenceStore.js";
 import {
   createRuntimeEngineRunTableSelectedProjectShellInvokeHostTransportMount,
   RUNTIME_ENGINE_RUNTABLE_SELECTED_PROJECT_SHELL_INVOKE_HOST_TRANSPORT_METHOD,
@@ -55,6 +56,8 @@ const AUTH_REF_DIFF_DETAIL_PATH = "/api/" + "authority-reference" + "/diff-detai
 const AUTH_REF_RESTORE_PREVIEW_PATH = "/api/" + "authority-reference" + "/restore/preview";
 const AUTH_REF_RESTORE_PATH = "/api/" + "authority-reference" + "/restore";
 const CONFIG_STATUS_PATH = "/api/runtime-config/status";
+const PROJECT_PERSISTENCE_SAVE_PATH = "/api/session/save";
+const PROJECT_PERSISTENCE_READ_PATH = "/api/session/read";
 const AUTH_REF_RESTORE_CONFIRMATION_TEXT = "RESTORE";
 const AUTH_REF_POST_PATHS = new Set([
   AUTH_REF_SYNC_PATH,
@@ -250,6 +253,7 @@ function buildRuntimeConfig() {
       headers: {},
     },
     companyIdentity: buildCompanyIdentityConfig(),
+    projectPersistenceLive: readBooleanEnv("CONTROLSTACK_PROJECT_PERSISTENCE_LIVE", true),
   };
 }
 
@@ -2550,6 +2554,7 @@ function invokeRuntimeEngineRunTableSelectedProjectHostLocalReadonlySeam(bridgeR
   });
 }
 
+const projectPersistenceStore = createServerProjectPersistenceStore({ rootDirectory: ROOT });
 const selectedProjectEngineRunHostSavedProjects = createSavedProjectStore();
 const selectedProjectServerOwnedRuntimeSavedRegistry =
   createProjectBrowserSelectedProjectServerOwnedRuntimeSavedRegistry({
@@ -2652,6 +2657,71 @@ async function sendSelectedProjectEngineRunHostTransport(res, req) {
   sendJson(res, status, response);
 }
 
+async function sendProjectPersistenceSave(res, req) {
+  if (!isLoopbackRemoteAddress(req)) {
+    sendJson(res, 403, { ok: false, blocker: "project-persistence-loopback-only" });
+    return;
+  }
+  let request;
+  try {
+    request = await requestJson(req, { maxBytes: 8 * 1024 * 1024 });
+  } catch {
+    sendJson(res, 400, { ok: false, blocker: "project-persistence-save-json-invalid" });
+    return;
+  }
+  const keys = request && typeof request === "object" && !Array.isArray(request)
+    ? Object.keys(request).sort()
+    : [];
+  if (keys.length !== 2 || keys[0] !== "projectId" || keys[1] !== "record") {
+    sendJson(res, 400, { ok: false, blocker: "project-persistence-save-fields-invalid" });
+    return;
+  }
+  try {
+    const result = await projectPersistenceStore.saveProject(request);
+    sendJson(res, 200, result);
+  } catch (error) {
+    sendJson(res, 400, {
+      ok: false,
+      blocker: error?.message || "project-persistence-save-failed",
+    });
+  }
+}
+
+async function sendProjectPersistenceRead(res, req) {
+  if (!isLoopbackRemoteAddress(req)) {
+    sendJson(res, 403, { ok: false, blocker: "project-persistence-loopback-only" });
+    return;
+  }
+  let request;
+  try {
+    request = await requestJson(req, { maxBytes: 4096 });
+  } catch {
+    sendJson(res, 400, { ok: false, blocker: "project-persistence-read-json-invalid" });
+    return;
+  }
+  const keys = request && typeof request === "object" && !Array.isArray(request)
+    ? Object.keys(request)
+    : [];
+  if (keys.length === 1 && keys[0] === "projectId") {
+    try {
+      const result = await projectPersistenceStore.readProject(request.projectId);
+      sendJson(res, result.ok ? 200 : result.found ? 422 : 404, result);
+    } catch (error) {
+      sendJson(res, 400, {
+        ok: false,
+        blocker: error?.message || "project-persistence-read-failed",
+      });
+    }
+    return;
+  }
+  if (keys.length === 1 && keys[0] === "all" && request.all === true) {
+    const result = await projectPersistenceStore.readAllProjects();
+    sendJson(res, result.ok ? 200 : 500, result);
+    return;
+  }
+  sendJson(res, 400, { ok: false, blocker: "project-persistence-read-fields-invalid" });
+}
+
 const server = createServer(async (req, res) => {
   const requestUrl = new URL(req.url || "/", `http://${req.headers.host || `${HOST}:${PORT}`}`);
 
@@ -2664,12 +2734,35 @@ const server = createServer(async (req, res) => {
     req.method === PROJECT_BROWSER_SELECTED_PROJECT_SERVER_OWNED_REGISTRATION_METHOD
     && requestUrl.pathname
       === PROJECT_BROWSER_SELECTED_PROJECT_SERVER_OWNED_REGISTRATION_PATH;
+  const isAllowedProjectPersistencePost =
+    req.method === "POST"
+    && (requestUrl.pathname === PROJECT_PERSISTENCE_SAVE_PATH
+      || requestUrl.pathname === PROJECT_PERSISTENCE_READ_PATH);
   if (req.method !== "GET"
     && req.method !== "HEAD"
     && !isAllowedAuthorityReferencePost
     && !isAllowedSelectedProjectEngineHostTransportPost
-    && !isAllowedSelectedProjectRegistrationPost) {
+    && !isAllowedSelectedProjectRegistrationPost
+    && !isAllowedProjectPersistencePost) {
     sendJson(res, 405, { ok: false, error: "method_not_allowed" });
+    return;
+  }
+
+  if (requestUrl.pathname === PROJECT_PERSISTENCE_SAVE_PATH) {
+    if (req.method !== "POST") {
+      sendJson(res, 405, { ok: false, error: "method_not_allowed", requiredMethod: "POST" });
+      return;
+    }
+    await sendProjectPersistenceSave(res, req);
+    return;
+  }
+
+  if (requestUrl.pathname === PROJECT_PERSISTENCE_READ_PATH) {
+    if (req.method !== "POST") {
+      sendJson(res, 405, { ok: false, error: "method_not_allowed", requiredMethod: "POST" });
+      return;
+    }
+    await sendProjectPersistenceRead(res, req);
     return;
   }
 

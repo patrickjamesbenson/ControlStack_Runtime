@@ -1,30 +1,3 @@
-const PROJECT_FIXTURES = Object.freeze([
-  Object.freeze({
-    projectId: "project-alpha",
-    title: "Alpha Linear Workspace",
-    client: "Alpha Client",
-    site: "Sydney",
-    readiness: "fixture-current-project",
-    source: "phase-7-shell-project-selection-fixture",
-  }),
-  Object.freeze({
-    projectId: "project-bravo",
-    title: "Bravo Emergency Review",
-    client: "Bravo Client",
-    site: "Parramatta",
-    readiness: "fixture-current-project",
-    source: "phase-7-shell-project-selection-fixture",
-  }),
-  Object.freeze({
-    projectId: "project-charlie",
-    title: "Charlie Scene Planning",
-    client: "Charlie Client",
-    site: "Newcastle",
-    readiness: "fixture-current-project",
-    source: "phase-7-shell-project-selection-fixture",
-  }),
-]);
-
 function createSubscriptionSet() {
   const listeners = new Set();
   return {
@@ -40,17 +13,6 @@ function createSubscriptionSet() {
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
-}
-
-function fixtureToCurrentProject(fixture) {
-  return {
-    projectId: fixture.projectId,
-    title: fixture.title,
-    client: fixture.client,
-    site: fixture.site,
-    readiness: fixture.readiness,
-    source: fixture.source,
-  };
 }
 
 function envelopeToRestoredProject(envelope) {
@@ -69,21 +31,24 @@ export function createProjectService({ eventBus } = {}) {
   const subscriptions = createSubscriptionSet();
   const state = {
     owner: "shell",
-    status: "selectable",
-    source: "phase-7-shell-owned-current-project-fixture",
-    selectedProjectId: PROJECT_FIXTURES[0].projectId,
-    selectedAt: new Date().toISOString(),
+    status: "project-required",
+    source: "shell-owned-project-context-empty",
+    selectedProjectId: null,
+    selectedAt: null,
     restoredProject: null,
     lastRestore: null,
     lastHandoffShare: null,
   };
 
-  function selectedFixture() {
-    return PROJECT_FIXTURES.find((project) => project.projectId === state.selectedProjectId) || PROJECT_FIXTURES[0];
-  }
-
   function currentProject() {
-    return state.restoredProject || fixtureToCurrentProject(selectedFixture());
+    return state.restoredProject || {
+      projectId: null,
+      title: "No project selected",
+      client: "",
+      site: "",
+      readiness: "project-required",
+      source: state.source,
+    };
   }
 
   function snapshot() {
@@ -109,7 +74,7 @@ export function createProjectService({ eventBus } = {}) {
         owner: "shell",
         selectedProjectId: activeProject.projectId,
         selectedAt: restored ? state.lastRestore?.restoredAt : state.selectedAt,
-        availableProjects: PROJECT_FIXTURES.map(clone),
+        availableProjects: [],
         source: restored ? "restored-from-envelope" : state.source,
         restoredEnvelopeId: state.lastRestore?.envelopeId || null,
       },
@@ -173,28 +138,15 @@ export function createProjectService({ eventBus } = {}) {
     status: state.status,
     getProjectSnapshot: snapshot,
     getAvailableProjects() {
-      return PROJECT_FIXTURES.map(clone);
+      return [];
     },
-    selectProject(projectId, reason = "shell-project-selected") {
-      const fixture = PROJECT_FIXTURES.find((project) => project.projectId === projectId);
-      if (!fixture) {
-        return {
-          accepted: false,
-          reason: `Unknown project id: ${projectId}`,
-          project: snapshot(),
-        };
-      }
-      state.restoredProject = null;
-      state.lastRestore = null;
-      state.lastHandoffShare = null;
-      state.selectedProjectId = fixture.projectId;
-      state.selectedAt = new Date().toISOString();
-      eventBus?.emit("project:switch", { projectId: fixture.projectId, reason });
-      const nextSnapshot = notify(reason);
-      eventBus?.emit("project:switch:complete", { projectId: fixture.projectId, project: nextSnapshot });
+    selectProject(projectId) {
       return {
-        accepted: true,
-        project: nextSnapshot,
+        accepted: false,
+        reason: projectId
+          ? "Project selection is restored through the shell-owned Project Browser."
+          : "A persisted project must be selected through Project Browser.",
+        project: snapshot(),
       };
     },
     saveCurrentProject() {

@@ -249,7 +249,7 @@ test("project browser aggregates selected-result persisted summary readback from
   assertNoUnsafeValues(summary);
 });
 
-test("project browser readback summary remains missing when only fixture projects exist", () => {
+test("project browser readback summary remains missing with no persisted projects or fabricated fixtures", () => {
   const store = createSavedProjectStore();
   const service = createProjectBrowserService({ savedProjectStore: store });
   const snapshot = service.getProjectBrowserSnapshot({});
@@ -260,11 +260,11 @@ test("project browser readback summary remains missing when only fixture project
   assert.equal(summary.readiness, "missing");
   assert.equal(summary.ready, false);
   assert.equal(summary.failClosed, true);
-  assert.ok(summary.projectCount > 0);
+  assert.equal(summary.projectCount, 0);
   assert.equal(summary.savedProjectCount, 0);
-  assert.equal(summary.fixtureProjectCount, summary.projectCount);
+  assert.equal(summary.fixtureProjectCount, 0);
   assert.equal(summary.readyProjectCount, 0);
-  assert.equal(summary.missingProjectCount, summary.projectCount);
+  assert.equal(summary.missingProjectCount, 0);
   assert.equal(summary.blockedFailClosedProjectCount, 0);
   assert.equal(summary.selectedProjectId, null);
   assert.equal(summary.selectedProjectReadiness, null);
