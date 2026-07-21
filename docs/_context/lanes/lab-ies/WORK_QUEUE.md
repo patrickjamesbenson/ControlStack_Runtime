@@ -799,6 +799,34 @@ Completion evidence: The final guard was committed in the exact gate-included on
 
 Approval state: Corrected thermal envelope version 3 is fully implemented. LAB-038 through LAB-042 are complete and the ordered queue is empty.
 
+### Q-33 Engine output version-1 consumer compatibility
+- id: LAB-043-engine-output-v1-compatibility
+- objective: Prove that Lab/IES can consume the public Engine output version-1 contract through a bounded, immutable, read-only compatibility projection without importing Selector/Workspace implementation modules or activating IES generation.
+- authorised files:
+  - `packages/lab-kernel/ies-toolkit/engineOutputV1CompatibilityAdapter.js`
+  - `tests/lab-kernel/engineOutputV1CompatibilityAdapter.test.js`
+- temporary harness:
+  - `tests/lab-kernel/iesKeywordMigration.test.js` may temporarily add exactly one side-effect import of `./engineOutputV1CompatibilityAdapter.test.js` because the fixed Lab gate omits newly created test files;
+  - the import must be removed after visible focused execution;
+  - the harness file must finish byte-identical to HEAD and remain unstaged and uncommitted.
+- public contracts:
+  - `controlstack.engine.output.v1`, schema version 1;
+  - `controlstack.engine.runtable-row.v1`, schema version 1.
+- prohibitions:
+  - no import from Selector, Workspace or Runtime implementation modules;
+  - no Selector UI scraping or private source-row access;
+  - no IES generation, authority approval, sealing, reference allocation or evidence acceptance;
+  - no route, persistence, browser storage, network write or downstream-readiness activation;
+  - no mutation of Engine output, Lab authority, RuntimeData, donor, main or runtime-port files;
+  - no acceptance of the legacy colliding first-narrow row schema.
+- acceptance: The adapter consumes plain public JSON only; validates exact complete and blocked output schema/version/key sets and the exact public row field set; emits a deeply immutable bounded Lab compatibility summary; preserves safe thermal/provenance values and valid zero values; rejects unknown, over-rich, unsafe, contradictory, governance-bearing, private-path or legacy-row input; exposes no raw payload, private path, authority claim, generation, write or readiness flag. Focused coverage executes through the temporary harness, the full `lab-ies` gate passes, and exactly the two authorised feature files are committed as `lab: checkpoint Engine output v1 compatibility` and pushed only to the Lab lane.
+- gate: lab-ies
+- depends on: LAB-042-thermal-semantics-guard and Program acceptance of ENG-OUT-P1
+- seam change: yes
+- seam approval: Program & Integrate admitted ENG-STAB-C1 after accepting ENG-OUT-P1; exact two-file scope and protected-state rule recorded on 2026-07-21.
+- on success next: Program consumer receipt review; no downstream activation
+- status: ready
+
 ## Explicitly not queued
 
 These protected paths remain outside implementation parcels unless the orchestrator makes a separate decision:

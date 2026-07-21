@@ -13,7 +13,7 @@ Current repository evidence overrides stale historical statements.
 - Root: `C:\ControlStack_Worktrees\code-pilot-lab`
 - Branch: `lane/code-pilot-lab`
 - Gate: `lab-ies`
-- Recorded branch HEAD: `46792ddfe23cd4999aa244f9eb745a94028af3d6`
+- Recorded branch HEAD: `543f53ff247f42976278c29bce0c70b31652b35c`
 - Branch-HEAD guard checkpoint: `6d34e500d407d5335e5eebb317636a67a5e98618`
 - Starting HEAD for LAB-042: `a91ec745180abe6e9c666212e2dd644df35311bd`
 - Completed feature HEAD: `46792ddfe23cd4999aa244f9eb745a94028af3d6`
@@ -834,4 +834,16 @@ tests/selectorCascadeCorrectness.test.js
 - Seam approval required: no.
 - Human observation required before implementation: no.
 
-LAB-042 is complete. The corrected thermal batch and ordered Lab queue are empty.
+LAB-042 is complete. The corrected thermal batch is closed.
+
+## 2026-07-21 LAB-043 Engine output compatibility admission
+
+Program & Integrate accepted the public Engine version-1 producer after focused 116/116 and normal 107/107 Selector evidence, then admitted one read-only Lab consumer parcel as ENG-STAB-C1.
+
+LAB-043 is now the sole ready Lab item. Its exact feature scope is `engineOutputV1CompatibilityAdapter.js` and its focused test only. The adapter consumes plain public JSON for `controlstack.engine.output.v1` and `controlstack.engine.runtable-row.v1`; it must not import Selector, Workspace or Runtime implementation modules.
+
+The parcel proves complete and blocked compatibility, exact row shape, thermal/provenance preservation, valid zero handling, governance independence and fail-closed rejection of unknown, unsafe, contradictory, private or legacy-row input. It creates no IES, authority, route, persistence, write or readiness capability.
+
+Because the fixed Lab gate omits newly created tests, one temporary import in the gate-included keyword migration test is authorised. The harness must be removed, byte-identical to HEAD and absent from final staging and commit.
+
+Protected local items and the branch-HEAD marker remain unchanged and outside the feature parcel. Consumer acceptance does not declare the Engine output stable and does not activate downstream work.

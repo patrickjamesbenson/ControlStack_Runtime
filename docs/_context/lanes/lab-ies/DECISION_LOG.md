@@ -438,3 +438,15 @@ The sole active meaning is:
 - the sealed `_INTERNAL_AMBIENT_TA_C` keyword remains the authority-test internal measurement.
 
 Program explicitly recorded that the ruling alone authorised no feature implementation. The Lab orchestrator created `LAB-038_042_THERMAL_SEMANTICS_SEAM_ENVELOPE.md`, version 1, with five separate sequential parcels covering resolution, component projection, Lab working projection, display labels and a final regression guard. Program & Integrate approved that envelope, then narrowly amended LAB-038 after the full Lab gate proved the resolver-only schema bump could not be checkpointed because the adapter imports the resolver schema constants. Envelope version 2 therefore authorises the exact four-file atomic transition while keeping LAB-040 separate. LAB-038 through LAB-042 are complete. Program approved the narrow LAB-042 gate-included test-file amendment under `docs(program): amend LAB-042 gate-included test scope` after a 46/46 gate. The final guard used only the existing gate-included keyword migration test, passed 262/262, and the superseded new thermal test file was not created. The corrected thermal batch and ordered queue are empty.
+
+## DL-031 — LAB-043 public Engine output compatibility seam
+
+**Status:** Approved by Program & Integrate and admitted on 2026-07-21.
+
+Program accepted ENG-OUT-P1 as the exact public version-1 request, output and RunTable-row producer after focused 116/116 and normal 107/107 Selector evidence. Program then admitted ENG-STAB-C1 to Lab/IES as a read-only compatibility proof.
+
+LAB-043 is confined to one new pure compatibility adapter and one focused test. It consumes plain public JSON only, uses literal public schema identities, and does not import Selector, Workspace or Runtime implementation modules. It validates complete and blocked output, exact public rows, bounded thermal/provenance values, valid zeros and governance independence.
+
+No IES generation, authority decision, sealing, evidence acceptance, route, persistence, browser storage, network write, RuntimeData mutation, donor use, downstream activation or main change is authorised. The legacy colliding first-narrow row schema is explicitly rejected.
+
+The fixed Lab gate does not execute newly created tests, so the established one-import temporary harness in `iesKeywordMigration.test.js` is authorised. The harness must be removed before final staging and cannot appear in the feature commit. Engine output stability remains withheld after this parcel pending Program review.
