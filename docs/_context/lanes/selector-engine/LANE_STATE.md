@@ -624,6 +624,8 @@ PWS-005 is done.
 
 ## 2026-07-22 consolidated walkthrough commission — latest controlling state
 
+**Recorded lane work HEAD:** `7e76e27b2c3638ba9c007830f416dd68b46afab6` — `docs(selector): commission walkthrough batch`.
+
 Program accepted Patrick's nine live Selector findings as one sequenced batch. PWS-001, PWS-002 and PWS-005 are already complete and are not reopened.
 
 WALK-001 authority refresh is the sole ready item. It must use the existing guarded dry-run first, prove the current Google source includes a finite tier-gated `SYSTEM_POLICY.ambient_temp` row and all required source-shape checks, then use the existing archive-before-promotion live workflow. Any failed validation or missing ambient row stops before write.
