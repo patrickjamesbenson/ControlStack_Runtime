@@ -871,3 +871,9 @@ Reject unknown, extra, private, raw, nested authority, path-bearing, URL, blob, 
 Do not add a route, download, email, filesystem write, persistence, localStorage, CRM call, hard email verification, Engine invocation, readiness mutation or live cross-module read. Do not modify Selector, Engine, Lab authority, main or runtime-port work.
 
 Add ownership tests proving exactly one Governance gateway owner and no module-owned retrieval helper or action. Retain the standing cross-lane regressions. Run the fixed Governance gate, commit only the approved feature/test/lane-memory files and return the gated receipt to Program.
+
+### Lab C4 receipt accepted
+
+Program accepts the deterministic no-generation materialisation job plan after 305/305. The exact two-file feature validates public generation, binding and inspection identities; derives the multiplier only from Engine verified lm/m divided by sealed baseline lm/m; preserves target lm/m as intent; and emits the exact empty-selection generator job only in the ready state.
+
+The two corrected fixture issues did not change production behaviour. Lab is now idle with an empty queue, one expected branch marker and three protected local items. Do not commission sealed DTO loading, generator/materialise invocation, LM-63 output, route, persistence or delivery without a new Program seam decision.

@@ -613,3 +613,13 @@ P2 Checkpoint 1 is **IMPLEMENTATION COMPLETE / GATE GREEN / COMMIT BLOCKED BY SH
 - **FOLLOW-ON:** project persistence, then user identity/permissions; deferred-decisions panel may be interleaved as a non-overlapping small parcel.
 - **CRM:** remains blocked.
 - **NEXT:** commission GOV-001 in the Governance & Shell lane and return its gated receipt to Program.
+
+## 2026-07-21 Lab C4 receipt state
+
+- **SEAM-G-C4:** complete and Program-accepted after 305/305.
+- **PARCEL:** exact two-file materialisation job-plan feature; fixture corrections changed tests only.
+- **AUTHORITY:** multiplier remains Engine verified lm/m divided by sealed baseline lm/m; Selector target is intent only.
+- **OUTPUT:** deterministic immutable ready-or-blocked plan with exact run length, finite positive multiplier and empty selections object.
+- **LAB:** queue empty; expected branch marker and three protected local items remain.
+- **BLOCKED:** sealed DTO loading, generator/materialise invocation, LM-63 output, route, persistence and delivery.
+- **NEXT:** no Lab parcel is authorised until Program makes a new generator-invocation seam decision.

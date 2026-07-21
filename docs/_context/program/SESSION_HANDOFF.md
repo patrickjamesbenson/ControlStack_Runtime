@@ -73,18 +73,16 @@ Selector producer coverage passed 115/115 with normal closeout at 107/107. The i
 
 No resolver, storage access, sealed DTO load, authority/evidence mutation, generator invocation, LM-63 text, route, persistence, file/download/email delivery or readiness is active.
 
-## Next authorised parcel
+## Lab receipt accepted
 
-SEAM-G-C4 is the sole ready Lab parcel: build a deterministic no-generation materialisation job plan from the accepted generation, binding and inspection contracts.
+SEAM-G-C4 is complete and Program-accepted after the exact two-file feature and focused fixture corrections passed 305/305. The no-generation plan derives its multiplier only from Engine verified lm/m divided by sealed baseline lm/m and emits the exact empty-selection generator job only when every identity and override condition is ready.
 
-It must derive the multiplier only from Engine verified lm/m divided by sealed baseline lm/m and emit an exact empty-selection generator job only when no keyword authority is missing.
-
-Sealed DTO loading, generator invocation, LM-63 generation, delivery, main and unfinished runtime-port work remain blocked. Patrick has no action.
+Lab has no queued item. Sealed DTO loading, generator invocation, LM-63 generation, delivery, main and unfinished runtime-port work remain blocked pending a separate Program seam decision. Patrick has no Lab action.
 
 ## Parallel Program work-shape streams
 
 - **Selector & Engine:** PWS-001 ready; PWS-002 and PWS-005 admitted in order and blocked behind the preceding closeout.
-- **Lab & IES:** SEAM-G-C4 remains ready and may proceed in parallel.
+- **Lab & IES:** SEAM-G-C4 complete and Program-accepted at 305/305; queue empty and generator invocation still blocked.
 - **Governance & Shell:** active and isolated; GOV-001 inert single-retrieval-gateway contract is the sole ready Governance feature parcel.
 - **CRM:** no separate lane yet; item 7 remains blocked inside Governance.
 - **Retrieval rule:** all module downloads/exports/artifact delivery must use one Governance gateway; readiness and identity are separate checks.

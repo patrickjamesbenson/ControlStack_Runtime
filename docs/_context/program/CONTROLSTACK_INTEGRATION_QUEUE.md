@@ -823,7 +823,7 @@ No implementation item is ready. A new exact Program parcel is required before a
 ### SEAM-G-C4 — Build deterministic no-generation materialisation job plan
 
 - **Owner:** Lab & IES.
-- **Status:** ready.
+- **Status:** complete and Program-accepted.
 - **Exact feature files:** new `packages/lab-kernel/ies-toolkit/iesMaterialisationJobPlanV1.js` and new `tests/lab-kernel/iesMaterialisationJobPlanV1.test.js`.
 - **Gate:** `lab-ies`.
 - **Inputs:** exact public generation-input v1, generation-reference-binding v1 and sealed-reference inspection v1 JSON.
@@ -833,11 +833,12 @@ No implementation item is ready. A new exact Program parcel is required before a
 - **Fail closed:** unknown/extra/private/raw/unsafe input, identity mismatch, missing overrides, non-positive verified/baseline/ratio, contradictory inspection or any caller keyword override.
 - **Boundary:** import-free; no sealed DTO, resolver/storage, generator/materialise call, LM-63 text, project/customer metadata, route, persistence, file/network/email write or readiness activation.
 - **Commit message:** `lab: checkpoint IES materialisation job plan v1`.
-- **Next:** Program plan receipt review; actual generator invocation remains blocked.
+- **Accepted receipt:** exact two-file feature plus bounded fixture corrections passed 305/305; deterministic identity/replay, exact positive multiplier basis, empty selections job, privacy and all fail-closed cases verified without production widening.
+- **Next:** Lab queue empty; actual generator invocation requires a separate Program seam decision and remains blocked.
 
 ## 2026-07-21 — Program work-shape admission
 
-**Status:** TWO PARALLEL STREAMS ACTIVE; GOVERNANCE LANE APPROVED BUT NOT YET PROVISIONED.
+**Status:** GOVERNANCE LANE ACTIVE; SELECTOR STREAM READY; LAB C4 ACCEPTED AND IDLE.
 
 ### PWS-L0 — Provision Governance & Shell lane
 
@@ -906,4 +907,4 @@ No implementation item is ready. A new exact Program parcel is required before a
 
 Every affected parcel and gate plan must retain: envelope independence including no-envelope Engine execution; changed-optic movement; varied-row proof for identical placeholder lookup values; and ownership-wide tests instead of named-instance assertions.
 
-SEAM-G-C4 remains ready in Lab and may proceed in parallel with PWS-001. No second writer is permitted in the Selector worktree.
+SEAM-G-C4 is complete and Program-accepted; Lab is idle with generator invocation still blocked. PWS-001 remains the ready Selector item, and no second writer is permitted in the Selector worktree.

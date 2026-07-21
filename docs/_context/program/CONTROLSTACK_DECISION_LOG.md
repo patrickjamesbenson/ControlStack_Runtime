@@ -1353,3 +1353,15 @@ GOV-001 may expose safe scalar discovery descriptions and fail-closed gateway st
 Project persistence restoration follows after the gateway contract closes. User identity and permissions follow project persistence. The deferred-decisions panel remains an independent small parcel that may be interleaved where file ownership does not overlap. CRM remains blocked and no provider mutation is authorised.
 
 The standing acceptance lock remains cross-lane and unchanged.
+
+## 2026-07-21 — SEAM-G-C4 materialisation job plan accepted
+
+**Status:** COMPLETE; LAB QUEUE EMPTY; GENERATOR INVOCATION BLOCKED.
+
+Program accepts the Lab & IES materialisation job-plan receipt after the final fixed gate passed 305/305. The exact feature remains the approved two-file parcel. Two test-fixture ordering issues were corrected without changing production behaviour or widening the seam.
+
+The import-free planner validates the exact generation, binding and sealed-reference inspection identities; derives `outputMultiplier` only from Engine verified lm/m divided by sealed baseline lm/m; preserves Selector target lm/m as intent only; and emits the exact generator job `{ runLengthMm, outputMultiplier, selections: {} }` only when all ready conditions hold.
+
+Deterministic replay, identity movement, immutability, missing and caller override rejection, private/raw rejection, unsafe-state rejection and non-positive/non-finite failure cases passed. No sealed DTO loading, resolver/storage access, generator or materialise invocation, LM-63 output, project/customer metadata, route, persistence, file/network/email write, delivery or readiness activation was added.
+
+Lab returns to idle with its expected branch marker and three protected local items untouched. Actual generator invocation requires a separate Program seam decision and remains blocked.
