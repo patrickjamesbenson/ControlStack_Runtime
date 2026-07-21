@@ -462,6 +462,7 @@ test("fails closed on unknown, extra, multi-run, mismatched and unsafe input", (
   ambientMismatch.selectedResult.thermal.selectedRoomTaC = 30;
   ambientMismatch.selectedResult.thermal.derivedInternalTaC = 40;
   ambientMismatch.selectedResult.thermal.curveLookupTaC = 40;
+  ambientMismatch.selectedResult.thermal.effectiveCurveTaC = 40;
   assertBlocked(contract.buildRuntimeIesGenerationInputContractV1({
     artifactRequest: ambientMismatch,
     selectionRequest: goodSelection,

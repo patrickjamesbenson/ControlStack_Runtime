@@ -3,6 +3,7 @@ import {
   ENGINE_SELECTION_SET_SCHEMA_VERSION,
   ENGINE_OUTPUT_SCHEMA_ID,
   ENGINE_OUTPUT_SCHEMA_VERSION,
+  ENGINE_OUTPUT_STATES,
   ENGINE_RUNTABLE_ROW_SCHEMA_ID,
   ENGINE_RUNTABLE_ROW_SCHEMA_VERSION,
 } from "./runtimeEngineOutputContractV1.js";
@@ -447,7 +448,7 @@ function validateEngineContract(value) {
   if (
     value.outputSchemaId !== ENGINE_OUTPUT_SCHEMA_ID
     || value.outputSchemaVersion !== ENGINE_OUTPUT_SCHEMA_VERSION
-    || value.outputState !== "complete"
+    || value.outputState !== ENGINE_OUTPUT_STATES.complete
   ) return { ok: false, blocker: "artifact-engine-contract-not-complete" };
   const resultId = fingerprint(value.resultId);
   const requestFingerprint = fingerprint(value.requestFingerprint);
@@ -541,8 +542,22 @@ function validateThermal(value, provenance, sourceVersionMarker) {
     || output.selectedRoomTaC + output.opticThermalRiseTaC !== output.derivedInternalTaC
     || output.curveLookupTaC !== output.derivedInternalTaC
   ) return { ok: false, blocker: "artifact-thermal-equation-mismatch" };
-  if (output.requestedCurrentMa < 0 || output.verifiedLmPerM < 0) {
+  if (
+    output.requestedCurrentMa < 0
+    || output.verifiedLmPerM < 0
+    || output.opticThermalRiseTaC < 0
+  ) {
     return { ok: false, blocker: "artifact-thermal-non-negative-required" };
+  }
+  if (/[/\\]/.test(output.curveFilename)) {
+    return { ok: false, blocker: "artifact-thermal-private-path-rejected" };
+  }
+  if (
+    (output.temperatureMode === "clamped-low" && output.effectiveCurveTaC !== 25)
+    || (output.temperatureMode === "clamped-high" && output.effectiveCurveTaC !== 65)
+    || (output.temperatureMode === "interpolated" && output.effectiveCurveTaC !== output.curveLookupTaC)
+  ) {
+    return { ok: false, blocker: "artifact-thermal-effective-temperature-mismatch" };
   }
   return {
     ok: true,
@@ -579,6 +594,9 @@ function validateSelectedResult(value, engine) {
   ) return { ok: false, blocker: "artifact-selected-result-identity-invalid" };
   const provenance = validateProvenance(value.technicalProvenance);
   if (!provenance.ok) return provenance;
+  if (provenance.value.selectedTierOrProfile !== selectedProfile) {
+    return { ok: false, blocker: "artifact-selected-result-profile-mismatch" };
+  }
   const thermal = validateThermal(value.thermal, provenance.value, sourceVersionMarker);
   if (!thermal.ok) return thermal;
   return {
@@ -605,8 +623,12 @@ function validateRow(value, engine, selectionFingerprint) {
   if (
     value.schemaId !== ENGINE_RUNTABLE_ROW_SCHEMA_ID
     || value.schemaVersion !== ENGINE_RUNTABLE_ROW_SCHEMA_VERSION
+    || !fingerprint(value.rowKey)
+    || !boundedText(value.runKey, 180)
     || value.runIndex !== 0
     || value.rowOrdinal !== 1
+    || value.rowKind !== "run_summary"
+    || value.state !== ENGINE_OUTPUT_STATES.complete
     || value.accepted !== true
     || value.engineVerified !== true
     || value.readOnly !== true
@@ -661,11 +683,12 @@ function validateRunTable(value, engine, selectionFingerprint) {
   };
 }
 
-function validateRequestAudit(value, requestId, replayKey) {
+function validateRequestAudit(value, requestId, replayKey, attemptFingerprint) {
   if (!exactKeys(value, REQUEST_AUDIT_KEYS)) return { ok: false, blocker: "artifact-audit-invalid-shape" };
   if (
     value.schemaId !== IES_ARTIFACT_REQUEST_AUDIT_SCHEMA_ID
     || value.schemaVersion !== IES_ARTIFACT_REQUEST_AUDIT_SCHEMA_VERSION
+    || value.attemptFingerprint !== attemptFingerprint
     || !fingerprint(value.attemptFingerprint)
     || value.state !== "accepted_read_only"
     || value.accepted !== true
@@ -696,6 +719,31 @@ function validateRequestSafety(value) {
     .every((key) => value[key] === false);
 }
 
+function expectedArtifactIdentity(intent, engine) {
+  const payload = {
+    schemaId: IES_ARTIFACT_REQUEST_SCHEMA_ID,
+    schemaVersion: IES_ARTIFACT_REQUEST_SCHEMA_VERSION,
+    artifactIntent: intent,
+    engineContract: engine,
+    blocker: null,
+  };
+  const attemptFingerprint = stableFingerprint("ies-artifact-request-attempt-v1", payload);
+  const requestId = stableFingerprint("ies-artifact-request-v1", payload);
+  const engineReplay = {
+    requestFingerprint: engine.requestFingerprint,
+    sourceVersionFingerprint: engine.sourceVersionFingerprint,
+    policyFingerprint: engine.policyFingerprint,
+    evidenceFingerprints: [...engine.evidenceFingerprints],
+    outputSchemaId: ENGINE_OUTPUT_SCHEMA_ID,
+    outputSchemaVersion: ENGINE_OUTPUT_SCHEMA_VERSION,
+  };
+  const replayKey = stableFingerprint("ies-artifact-replay-v1", {
+    requestId,
+    engineReplay,
+  });
+  return { attemptFingerprint, requestId, replayKey };
+}
+
 function validateArtifactRequest(value, selectionFingerprint) {
   if (!exactKeys(value, ARTIFACT_REQUEST_KEYS)) return { ok: false, blocker: "artifact-request-invalid-shape" };
   if (
@@ -715,6 +763,11 @@ function validateArtifactRequest(value, selectionFingerprint) {
   if (engine.value.requestFingerprint !== selectionFingerprint) {
     return { ok: false, blocker: "artifact-selection-fingerprint-mismatch" };
   }
+  const expectedIdentity = expectedArtifactIdentity(intent.value, engine.value);
+  if (
+    value.requestId !== expectedIdentity.requestId
+    || value.replayKey !== expectedIdentity.replayKey
+  ) return { ok: false, blocker: "artifact-request-deterministic-identity-mismatch" };
   const blockers = canonicalStrings(value.blockers, { maximum: 0, blockers: true });
   const warnings = canonicalStrings(value.warnings);
   if (!blockers || !warnings) return { ok: false, blocker: "artifact-diagnostics-invalid" };
@@ -722,7 +775,12 @@ function validateArtifactRequest(value, selectionFingerprint) {
   if (!selectedResult.ok) return selectedResult;
   const runTable = validateRunTable(value.runTable, engine.value, selectionFingerprint);
   if (!runTable.ok) return runTable;
-  const audit = validateRequestAudit(value.audit, value.requestId, value.replayKey);
+  const audit = validateRequestAudit(
+    value.audit,
+    value.requestId,
+    value.replayKey,
+    expectedIdentity.attemptFingerprint,
+  );
   if (!audit.ok) return audit;
   if (!validateRequestSafety(value.safetyFlags)) return { ok: false, blocker: "artifact-request-safety-invalid" };
   return {
