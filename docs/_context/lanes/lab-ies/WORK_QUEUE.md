@@ -875,7 +875,9 @@ Completion evidence: The import-free request compatibility adapter and focused t
 - depends on: Program acceptance of SEAM-G-P2
 - seam change: approved unchanged by Program & Integrate
 - on success next: Program SEAM-G-A2 review; no generation item becomes ready automatically
-- status: ready
+- status: done
+
+Completion evidence: The import-free binding adapter and focused test were committed in the exact two-file scope as `lab: checkpoint IES generation reference binding v1`, pushed only to the Lab lane, and passed 285/285 across the feature and identity-tightening checkpoints. It validates the real selection fingerprint and artifact request identity, exact generation-input identity/audit and safe state, requires optic path with no unresolved blockers, proves optic key/variant, BOM, evidence and exact-decimal measured thermal-triplet agreement, and binds one canonical read-only OPT reference identity without resolving or loading it. Ready, valid-zero, replay/governance, identity movement, unknown/extra/private/raw/unsafe, unresolved/non-optic, missing/wrong-kind reference and mismatch fixtures passed. No authority, resolver, storage, sealed DTO, generator, LM-63, route, persistence or write capability was added. Program SEAM-G-A2 review is next.
 
 ## Explicitly not queued
 

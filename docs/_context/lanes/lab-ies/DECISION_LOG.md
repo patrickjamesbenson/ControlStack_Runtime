@@ -474,3 +474,15 @@ SEAM-G-C2 consumes plain public generation-input version 1 JSON and public NVB L
 The adapter emits a deterministic ready-or-blocked binding projection only. It may preserve the public reference identity but must not execute the resolver, access storage, load the sealed DTO, inspect/mutate authority, accept evidence or invoke the generator.
 
 Unknown/extra/private/raw/unsafe input, unresolved or non-optic Lab state, missing/wrong-kind reference and identity/evidence/thermal mismatch fail closed. The expected marker and three protected untracked items remain outside the parcel. SEAM-G-A2 and actual LM-63 generation remain Program-owned and blocked.
+
+## DL-034 — SEAM-G-C2 reference binding accepted in Lab
+
+**Status:** Complete and returned to Program on 2026-07-21.
+
+The import-free binding adapter and focused test were pushed in the exact two-file scope after 284/284. It consumes plain public generation-input and NVB Lab projection JSON only, validates deterministic source identity and no-generation safety, and emits one deeply immutable ready-or-blocked reference-binding projection.
+
+Ready binding proves optic path, no unresolved blockers, optic key/variant, optic BOM, evidence reference, measured thermal triplet and canonical read-only OPT reference identity agreement. Valid zero and replay/governance cases pass; reference or generation identity movement moves binding identity.
+
+Unknown, extra, private/raw, unsafe, unresolved/non-optic, missing/wrong-kind reference and all binding contradictions fail closed. No resolver/storage access, sealed DTO load, authority/evidence mutation, generator invocation, LM-63 text, route, persistence or write capability exists.
+
+SEAM-G-C2 is done. Program owns the separate SEAM-G-A2 activation decision; actual generation remains blocked.

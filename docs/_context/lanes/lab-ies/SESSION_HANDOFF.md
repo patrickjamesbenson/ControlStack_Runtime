@@ -335,6 +335,18 @@ Emit a deeply immutable ready-or-blocked binding projection only. Do not execute
 
 The expected marker and three protected untracked items remain untouched and outside staging. Return the consumer receipt to Program; SEAM-G-A2 and actual generation remain blocked.
 
+## 2026-07-21 SEAM-G-C2 complete — Program binding review next
+
+The import-free generation/reference binding adapter is complete and pushed in the exact two-file scope. The final Lab gate passed 284/284.
+
+It independently revalidates generation identity/audit and no-generation safety, requires optic path with no unresolved blockers, and proves optic key/variant, BOM, evidence, measured thermal triplet and canonical read-only OPT reference identity agreement.
+
+Ready, valid-zero, replay/governance and identity-movement fixtures passed. Unknown, extra, private/raw, unsafe, unresolved/non-optic, missing/wrong-kind reference, resolver contradiction and all optic/evidence/thermal mismatches fail closed.
+
+It creates no resolver/storage access, sealed DTO load, authority/evidence mutation, generator invocation, LM-63 text, route, persistence or write capability. The expected marker and three protected untracked items remain untouched.
+
+The Lab queue is empty. Program must perform SEAM-G-A2 review; actual generation remains blocked.
+
 ## Prohibited actions retained
 
 - no LAB-017 change outside the recorded version-1 approval without a new seam decision;

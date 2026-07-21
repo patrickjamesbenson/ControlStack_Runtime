@@ -1976,6 +1976,21 @@ Current verification superseded the stale parts of that snapshot:
 - Protected state: expected marker and three protected untracked items remain outside the parcel — VERIFIED.
 - Queue result: SEAM-G-C2 sole ready item; binding activation and actual generation blocked — RECORDED.
 
+## SEAM-G-C2 generation reference binding completion — 2026-07-21
+
+- Exact feature files: import-free generation/reference binding adapter and focused test only — VERIFIED.
+- Final Lab gate: 284 passed, 0 failed, 0 skipped, 0 todo — VERIFIED.
+- Generation input: exact schema, deterministic identity/replay/audit and no-generation safety revalidated independently — VERIFIED.
+- Lab input: exact optic path, no unresolved blockers, public selection/evidence/reference shape and read-only state — VERIFIED.
+- Ready binding: optic key/variant, BOM, evidence ref, measured thermal triplet and canonical OPT identity agreement — VERIFIED.
+- Valid zero fixture: zero target, ambient and measured thermal values preserved — VERIFIED.
+- Replay/governance: identical public inputs replay identically; outer traceability is ignored and absent — VERIFIED.
+- Identity movement: changed generation or OPT reference identity moves binding identity/replay — VERIFIED.
+- Fail-closed: unknown/extra/private/raw/unsafe, unresolved/non-optic, missing/wrong-kind reference, resolver contradiction and optic/evidence/thermal mismatch rejected — VERIFIED.
+- Capability boundary: no imports, resolver/storage access, sealed DTO load, authority/evidence mutation, generator, LM-63, route, persistence or write seam — VERIFIED.
+- Protected inventory: expected marker and three protected untracked items remained untouched and outside feature staging — VERIFIED.
+- Queue result: SEAM-G-C2 done, Lab queue empty, Program SEAM-G-A2 review required — RECORDED.
+
 ## Evidence maintenance rule
 
 After each authorised lane parcel:

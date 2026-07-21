@@ -13,11 +13,11 @@ Current repository evidence overrides stale historical statements.
 - Root: `C:\ControlStack_Worktrees\code-pilot-lab`
 - Branch: `lane/code-pilot-lab`
 - Gate: `lab-ies`
-- Recorded branch HEAD: `19665e9452452503c501c45aa5fd16758fb45308`
+- Recorded branch HEAD: `5f34bcf13fd58cc152b87eff484407a8cba99fdd`
 - Branch-HEAD guard checkpoint: `6d34e500d407d5335e5eebb317636a67a5e98618`
-- Starting HEAD for SEAM-G-C1: `5e4b5be659dcc12e083bc399feacebe9f57a1aa3`
-- Completed feature HEAD: `30f2d2c83c05c0667301c947001a425714360343`
-- Feature subject: `lab: checkpoint IES artifact request v1 compatibility`
+- Starting HEAD for SEAM-G-C2: `37401db23a42108c7b408e05919b600777034cf7`
+- Completed feature HEAD: `5f34bcf13fd58cc152b87eff484407a8cba99fdd`
+- Feature subject: `fix(lab): tighten IES generation reference binding identities`
 - Feature push: confirmed on origin `lane/code-pilot-lab`
 
 ## Branch-HEAD synchronisation invariant
@@ -830,11 +830,11 @@ tests/selectorCascadeCorrectness.test.js
 - `LAB-042-thermal-semantics-guard`: done under approved envelope version 3.
 - `LAB-043-engine-output-v1-compatibility`: done under recorded Program approval.
 - `SEAM-G-C1-ies-artifact-request-v1-compatibility`: done under recorded Program approval.
-- `SEAM-G-C2-ies-generation-reference-binding`: ready under recorded Program approval.
-- Next ordered item: SEAM-G-C2.
-- Resulting status: one ready import-free reference-binding parcel.
-- Ready items: SEAM-G-C2 only.
-- Seam approval required: recorded and satisfied.
+- `SEAM-G-C2-ies-generation-reference-binding`: done under recorded Program approval.
+- Next ordered item: none.
+- Resulting status: queue empty; Program SEAM-G-A2 review required.
+- Ready items: none.
+- Seam approval required: no.
 - Human observation required before implementation: no.
 
 LAB-042 is complete. The corrected thermal batch is closed.
@@ -892,3 +892,13 @@ SEAM-G-C2 is the sole ready Lab item. Its exact feature scope is `iesGenerationI
 Ready binding requires optic path, no unresolved blockers, selected optic key/variant agreement, optic BOM and evidence agreement, exact measured reference thermal-triplet agreement and one exact read-only OPT reference identity with canonical resolver path.
 
 It creates no resolver/storage access, sealed DTO load, authority/evidence mutation, generator invocation, LM-63 text, route, persistence, network/file/email write or readiness capability. The expected marker and three protected untracked items remain outside the parcel. SEAM-G-A2 and actual generation remain blocked.
+
+## 2026-07-21 SEAM-G-C2 reference binding closeout
+
+SEAM-G-C2 is complete and pushed in the exact two-file scope. The import-free adapter consumes plain public generation-input and NVB Lab projection JSON and emits one deeply immutable ready-or-blocked OPT reference-binding projection.
+
+The final Lab gate passed 284/284. Exact source identity/audit, optic path, no-unresolved state, optic key/variant, BOM, evidence, measured thermal triplet and canonical reference identity passed. Valid zeros, replay/governance and identity movement passed; all mismatch and unsafe cases fail closed.
+
+No resolver/storage access, sealed DTO load, authority/evidence mutation, generator invocation, LM-63 text, route, persistence, network/file/email write or readiness capability was added. The expected marker and three protected untracked items remain untouched.
+
+The Lab queue is empty. Program SEAM-G-A2 review is next. Actual generation remains blocked.
