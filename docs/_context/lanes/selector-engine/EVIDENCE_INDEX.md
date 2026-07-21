@@ -794,3 +794,17 @@ Every completed worker updates this index with:
 - Required new evidence is value-free, allowlisted table/row/tier-column presence, population, finite/non-finite and row-classification counts; values, raw rows, unrestricted headers, users, credentials, Sheet identity, provider content, complete source JSON and private locations remain prohibited — RECORDED.
 - Required gate evidence covers finite tier-specific proof, generic-only and non-numeric non-proof, duplicate exact Ambient visibility through safe counts, disclosure redaction and dry-run no-write behaviour — RECORDED.
 - Driver authority, current validation outcomes, Google reading and data, Selector options, materialisation, archive, promotion, deployment, Engine, the Google Sheet and WALK-002 remain untouched — RECORDED.
+
+
+## 2026-07-22 — WALK-001V bounded Ambient visibility evidence
+
+- Starting identity, branch, reconciliation-wrapper memory guard and clean Git state matched the Selector lane charter — VERIFIED.
+- Only the materialiser service and the gate-included Selector reference-options test changed in the feature parcel — VERIFIED EXACT SCOPE.
+- Successful-reader `currentSourceShape` now includes only allowlisted SYSTEM_POLICY/Ambient presence, row, tier-column population, finite/non-finite token and row-classification counts before every possible materialised write — VERIFIED.
+- Exact and approved-exact Ambient rows, duplicate exact rows, approved finite tier-specific evidence, multi-tier finite evidence and generic-only non-proof remain distinguishable without returning policy values or rows — VERIFIED BY GATE-INCLUDED TEST.
+- Non-numeric recognised-tier tokens produce non-finite counts and cannot establish finite evidence; unapproved finite rows do not establish approved finite evidence — VERIFIED BY GATE-INCLUDED TEST.
+- Policy values, unrestricted headers, raw rows, user identity and private content are absent from the serialised result; explicit redaction flags remain false — VERIFIED BY GATE-INCLUDED TEST.
+- Injected guarded dry-run made zero directory-creation and file-write calls and reported no materialised or active-snapshot write attempt — VERIFIED BY GATE-INCLUDED TEST.
+- Focused regression and complete feature gate passed 108/108; exact two-file staged equality passed; gated feature commit and push succeeded; feature Git state returned clean — VERIFIED.
+- Driver authority, validation outcomes, Google read/data, Selector options, materialisation, archive, promotion, deployment, runtime activation, Engine and later WALK parcels were untouched — VERIFIED.
+- Queue result: WALK-001V done; WALK-001/WALK-001R incomplete; WALK-002 through WALK-007 blocked; no ready Selector item pending Program activation and exact source-repair review — RECORDED.

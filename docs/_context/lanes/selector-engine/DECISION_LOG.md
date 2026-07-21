@@ -597,3 +597,12 @@ This log is append-oriented. Do not silently rewrite historical decisions.
 **Unchanged boundary:** Driver authority and validation outcomes, Google reading and data, Selector options, materialisation, archive, promotion, deployment and Engine remain unchanged.
 
 **Consequence:** gate and push WALK-001V, reconcile lane memory, then stop for Program activation and exact source-owner repair review. Do not edit the Google Sheet or begin WALK-002.
+
+
+## 2026-07-22 — Ambient visibility is count-only evidence, not source authority
+
+**Decision:** The successful-reader `currentSourceShape` may expose only allowlisted SYSTEM_POLICY/Ambient counts. Approved exact `ambient_temp` rows with at least one finite recognised economy/business/first/charter value are distinguishable from generic-only, non-numeric and unapproved non-proof.
+
+**Rationale:** The guarded source stop proved SYSTEM_POLICY presence but could not safely determine whether current Ambient data was finite and genuinely tier-specific without returning source values or rows.
+
+**Consequence:** Duplicate exact rows, recognised tier-column population, finite/non-finite tokens, multi-tier finite rows and generic-only rows remain visible through counts only. This summary does not change Driver authority, source validation, Google reading/data, Selector options or any materialisation/promotion decision; Program must activate it and use the safe counts to decide the exact source repair.

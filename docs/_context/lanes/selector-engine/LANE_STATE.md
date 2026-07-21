@@ -727,3 +727,14 @@ The summary must remain value-free and report only: SYSTEM_POLICY table presence
 The gate-included test must prove finite tier-specific Ambient evidence, generic-only and non-numeric non-proof, safe visibility of duplicate exact Ambient rows through counts, disclosure redaction, and dry-run no-write behaviour. No policy value, raw row, unrestricted header, user, credential, Google Sheet identity, provider content, complete source JSON or private location may be returned.
 
 Driver authority rules, current source-validation outcomes, Google reading and data, Selector option behaviour, materialisation, archive, promotion, deployment and Engine remain unchanged. Gate and push the bounded feature, reconcile lane memory, then stop for Program activation and exact source-repair review. Do not begin WALK-002 or edit the Google Sheet.
+
+
+## 2026-07-22 WALK-001V closeout — latest controlling state
+
+**Recorded lane work HEAD:** `507d743f8cea697ba8a1503fc603b8690d2a76b7` — `feat(selector): expose bounded Ambient source counts`.
+
+WALK-001V is complete, gated and pushed. The existing successful Google-read `currentSourceShape` response now includes a value-free `systemPolicyAmbient` summary before every possible materialised write. It reports only allowlisted SYSTEM_POLICY table/Ambient row counts, recognised economy/business/first/charter column presence and population, finite/non-finite token counts, finite-tier and multi-tier row counts, approved finite evidence, and generic-only non-proof.
+
+The gate-included test passed inside the complete 108/108 Selector gate. It proves duplicate exact rows remain count-visible; generic-only, non-numeric and unapproved values cannot establish approved finite tier-specific evidence; disclosure stays redacted; and dry-run performs no directory creation, materialised write or active-snapshot write. The exact two feature/test files were committed and pushed; Git returned clean.
+
+No runtime activation, live Google read, Google Sheet edit, Driver-rule change, validation-outcome change, materialisation, archive, promotion, deployment, Selector-option change, Engine action or later walkthrough work occurred. Program must activate/review the bounded visibility and decide the exact source repair. WALK-001 and WALK-001R remain incomplete; WALK-002 through WALK-007 remain blocked; no Selector parcel is ready.

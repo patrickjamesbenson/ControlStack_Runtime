@@ -701,3 +701,12 @@ Change only the materialiser service, its gate-included Selector reference-optio
 Tests must prove finite tier-specific evidence, generic-only and non-numeric non-proof, duplicate exact Ambient visibility through safe counts, disclosure redaction and dry-run no-write behaviour. Do not return values, raw rows, unrestricted headers, users, credentials, Google Sheet identity, provider content, complete source JSON or private locations.
 
 Do not change Driver authority, source-validation outcomes, Google reading or data, Selector options, materialisation, archive, promotion, deployment or Engine. Gate and push the bounded parcel, reconcile lane memory, and stop for Program activation and source-repair review. Do not edit the Google Sheet or begin WALK-002.
+
+
+## 2026-07-22 WALK-001V complete — stop for Program activation and source review
+
+WALK-001V is complete, gated and pushed. The guarded successful-reader response now exposes only bounded value-free SYSTEM_POLICY/Ambient counts, including exact/approved rows, recognised tier-column population and finite/non-finite tokens, finite-tier/multi-tier row counts, and generic-only non-proof. It returns no policy values, raw rows, unrestricted headers, user identity or private source content.
+
+The gate-included regression and complete Selector gate passed 108/108. It proves duplicate exact Ambient rows remain safely count-visible, generic-only and non-numeric values do not prove finite tier-gated Ambient, unapproved finite rows do not establish approved evidence, and dry-run performs no filesystem write. The exact two feature/test files were committed and pushed; the feature tree was clean.
+
+No runtime activation or live-source call was attempted. Driver rules, current validation outcomes, Google data, Selector options, materialisation, archive, promotion, deployment, Engine and later walkthrough work were not changed. WALK-001V is done; WALK-001 and WALK-001R remain incomplete; WALK-002 through WALK-007 remain blocked. Stop for Program activation and exact source-repair review; no Selector parcel is ready.

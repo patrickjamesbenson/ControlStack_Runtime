@@ -655,7 +655,7 @@ WALK-001R and WALK-001 are blocked for Program source-authority review. WALK-002
 ## 2026-07-22 Program Ambient-visibility admission
 
 ### WALK-001V Bounded Ambient validation visibility
-* status: ready
+* status: done (bounded feature gated and pushed; runtime activation and exact source-repair review pending with Program)
 * depends-on: Program acceptance of the latest WALK-001R guarded source stop; accepted
 * objective: extend only the existing successful Google-read `currentSourceShape` response before every write with a value-free SYSTEM_POLICY Ambient summary that can distinguish genuine tier-gated finite evidence from generic-only or non-numeric non-proof.
 * authorised feature paths: `packages/workspace-kernel/authorityReferenceMaterialiserService.js`; `tests/selectorReferenceOptionsService.test.js`.
@@ -668,3 +668,12 @@ WALK-001R and WALK-001 are blocked for Program source-authority review. WALK-002
 * prohibitions: do not edit the Google Sheet; do not begin WALK-002; do not reopen or recommission the accepted source-stop receipt; no later walkthrough, Engine, provider, persistence, IES, cross-lane, main or donor work.
 
 WALK-001 and WALK-001R remain incomplete. WALK-002 through WALK-007 remain blocked; WALK-008 remains ruled and closed. WALK-001V is the sole ready item and only one Selector writer may run.
+
+
+## 2026-07-22 WALK-001V bounded Ambient visibility closeout
+
+WALK-001V is complete, gated and pushed. The successful-reader `currentSourceShape` now returns only allowlisted SYSTEM_POLICY/Ambient counts before every possible materialised write: table presence and row count; exact and approved-exact `ambient_temp` rows; recognised tier-column presence, population and finite/non-finite token counts; finite-tier row classifications; multi-tier finite rows; and generic-only non-proof rows.
+
+The gate-included regression proves approved finite tier-specific evidence separately from generic-only, non-numeric and unapproved non-proof; duplicate exact Ambient rows remain visible through counts; policy values, raw rows, unrestricted headers, users and private data remain redacted; and dry-run invokes no directory creation or write.
+
+Driver authority, existing validation outcomes, Google reading/data, Selector option behaviour, materialisation, archive, promotion, deployment and Engine were unchanged. Runtime activation and the exact current-source repair decision remain with Program. WALK-001 and WALK-001R remain incomplete; WALK-002 through WALK-007 remain blocked. No Selector parcel is ready.
