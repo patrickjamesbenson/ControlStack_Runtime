@@ -637,3 +637,12 @@ No live Engine run occurs before those parcels close. WALK-007 then removes serv
 WALK-008 is ruled and closed. Governance records Patrick's decision as RULED: inherited and auto-filled finishes require the one `Accept all defaults` acknowledgement before Build Ready; per-field acknowledgement is not required.
 
 Current queue: WALK-001 ready; WALK-002 through WALK-007 blocked in sequence with WALK-005A before WALK-006; WALK-008 ruled and closed. No second writer, CRM/provider mutation, persistence, IES generation, delivery, module-owned retrieval, main or unrelated runtime work is authorised.
+
+
+## 2026-07-22 WALK-001-only worker commission boundary
+
+The Program walkthrough handoff is ingested. WALK-001 is the sole commissioned parcel. Run the complete guarded dry-run and require every existing source-shape, validation, identity and disclosure check plus one finite, genuinely tier-gated `SYSTEM_POLICY.ambient_temp` row before any write. Only after that full pass, use the existing guarded workflow to materialise, archive the current promoted authority, and promote the new authority in order. Archive must succeed before promotion; any promotion failure or uncertainty stops without a success claim.
+
+Return the complete guarded dry-run, Ambient-row, archive, promotion, focused-test, full-gate, exact staged-set, commit/push and final-Git receipt. Do not change Selector feature behaviour, touch later walkthrough parcels, save/register a project, invoke Engine, perform CRM/provider mutation, persistence or IES work, or write any other lane, main or donor root.
+
+After WALK-001, stop. The orchestrator must review and close it in lane memory and obtain Program admission before WALK-002 can become ready. One Selector writer only.

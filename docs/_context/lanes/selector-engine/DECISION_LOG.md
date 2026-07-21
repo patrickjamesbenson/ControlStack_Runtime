@@ -533,3 +533,12 @@ This log is append-oriented. Do not silently rewrite historical decisions.
 **Finishes ruling:** Patrick ruled that inherited and auto-filled cover/end/flex finishes do not satisfy Build Ready until one explicit `Accept all defaults` action acknowledges every flagged default. Governance records the decision as RULED; WALK-005A implements it.
 
 **Consequence:** WALK-001 ready; WALK-002 through WALK-007 blocked in strict order with WALK-005A inserted before WALK-006; WALK-008 ruled and closed. No second writer, CRM/provider mutation, persistence, IES generation, delivery, module-owned retrieval, main or unrelated runtime work is authorised.
+
+
+## 2026-07-22 — Bind WALK-001 to review stop and Program admission
+
+**Decision:** Reconcile the lane to the actual documentation HEAD and accept the authoritative Program walkthrough handoff as the current commission. WALK-001 alone is ready. PWS-001, PWS-002 and PWS-005 remain closed and cannot be reopened.
+
+**Guard:** every existing dry-run source-shape, validation, identity and disclosure check and one finite, genuinely tier-gated `SYSTEM_POLICY.ambient_temp` row must pass before write. The guarded live order is materialise, archive current authority, promote new authority. Archive failure blocks promotion; promotion failure or uncertainty stops without success.
+
+**Review boundary:** the worker returns the complete dry-run, Ambient, archive, promotion, test, gate, exact staged-set, commit/push and final-Git receipt, then stops. The orchestrator closes WALK-001 in lane memory and stops for Program admission before WALK-002 is released. No later walkthrough work or live Engine run is implied.

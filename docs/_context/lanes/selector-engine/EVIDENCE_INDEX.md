@@ -718,3 +718,11 @@ Every completed worker updates this index with:
 - Patrick ruled finishes default acceptance: inherited and auto-filled finishes require one explicit `Accept all defaults` acknowledgement; Governance registry version 1.2.0 records the item as RULED — VERIFIED BY GOVERNANCE GATE 181/181.
 - Donor auto-fill restoration is admitted as WALK-005A: exact NVB source order, first real option, presentation-row exclusion, visible LOOKED UP defaults, one GIVEN acknowledgement, no per-field acceptance and no code-ranked default — RECORDED.
 - Queue result: WALK-001 ready; WALK-002 through WALK-007 blocked in strict order with WALK-005A before WALK-006; WALK-008 ruled and closed — RECORDED.
+
+
+## 2026-07-22 — Program walkthrough handoff reconciliation evidence
+
+- Actual Selector identity, isolated root, branch and clean Git state matched the lane charter — VERIFIED.
+- Actual HEAD was the lane documentation commit adding Patrick's default-acknowledgement ruling, while the latest recorded lane work HEAD still named the earlier walkthrough commission — VERIFIED MEMORY DIVERGENCE.
+- Program's authoritative handoff records PWS-001, PWS-002 and PWS-005 complete; WALK-001 sole ready; the guarded dry-run plus finite tier-gated Ambient requirement; archive-before-promotion order; later WALK sequence; one writer; and Patrick's single default-acknowledgement ruling — VERIFIED FROM PROGRAM REPOSITORY.
+- Lane queue now binds WALK-001 to a complete receipt and mandatory orchestrator review/Program-admission stop before WALK-002 — RECORDED.

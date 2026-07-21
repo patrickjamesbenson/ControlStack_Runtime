@@ -639,3 +639,16 @@ No live Engine run is allowed before those cleanup, auto-fill and counter parcel
 Patrick's finishes default-acceptance ruling is closed and Governance records it as RULED. Inherited and auto-filled finishes do not satisfy Build Ready until the one `Accept all defaults` action acknowledges every flagged default.
 
 Current queue: WALK-001 ready; WALK-002 through WALK-007 blocked in sequence with WALK-005A before WALK-006; WALK-008 ruled and closed. No second Selector writer, CRM/provider action, persistence, IES generation, delivery, module-owned retrieval, main or unrelated runtime work is authorised.
+
+
+## 2026-07-22 Program walkthrough handoff reconciliation — latest controlling state
+
+**Recorded lane work HEAD:** `9f5da55d1d5006c21d3a5084a44980133ecae04e` — `docs(selector): add default acknowledgement parcel`.
+
+The actual branch HEAD advanced beyond the prior recorded work boundary through lane-memory-only walkthrough and default-acknowledgement commits. Repository and Program evidence agree: PWS-001, PWS-002 and PWS-005 remain complete; WALK-001 is the sole ready and commissioned Selector parcel; WALK-002 through WALK-007 remain blocked in strict order; WALK-008 is ruled and closed.
+
+WALK-001 must complete the guarded dry-run and prove every existing source-shape, validation, identity and disclosure check plus one finite, genuinely tier-gated `SYSTEM_POLICY.ambient_temp` row before any write. The existing guarded workflow may then materialise the validated authority, archive the current promotion, and promote the new authority in that order. Archive failure blocks promotion; promotion failure or uncertainty stops without a success claim.
+
+WALK-001 changes no Selector feature behaviour and performs no Engine run, project save/registration, CRM/provider mutation, persistence, IES generation/retrieval/delivery, cross-lane write or later walkthrough work. The worker must return the complete dry-run, Ambient, archive, promotion, focused-test, gate, exact staged-set, commit/push and final-Git receipt.
+
+Completion of WALK-001 does not release WALK-002. The orchestrator reviews and closes WALK-001 in durable lane memory, then stops for Program admission before WALK-002 may become ready. One Selector writer only; one parcel at a time.

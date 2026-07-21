@@ -542,14 +542,15 @@ Runtime 8788 has not loaded the repair: the post-commit empty-body dry-run still
 
 ## 2026-07-22 Consolidated Selector walkthrough batch
 
-**Batch rule:** one Selector writer, one ready parcel at a time. Source refresh executes first. No live Engine run is authorised until WALK-002 through WALK-006 are complete. PWS-001, PWS-002 and PWS-005 are already done and must not be recommissioned.
+**Batch rule:** one Selector writer and one parcel at a time. WALK-001 is the only commissioned parcel. Completion does not release WALK-002: the worker must return the complete receipt, the orchestrator must review and close WALK-001 in lane memory, and the lane must stop for Program admission before WALK-002 can become ready. No live Engine run is authorised until WALK-002 through WALK-006 are complete. PWS-001, PWS-002 and PWS-005 are already done and must not be recommissioned.
 
 ### WALK-001 Refresh active authority snapshot
 * status: ready
 * objective: use the already-repaired guarded materialiser path to run the dry-run, prove the redacted source-shape summary includes the tier-gated `ambient_temp` row in `SYSTEM_POLICY`, then run the existing live materialisation/archive/promotion workflow.
-* acceptance: dry-run validation green; all required tables remain present; the ambient row is finite, source-backed and tier-gated; no credential, user, row, provider body or private path exposure; live sync archives the prior active snapshot before promotion; the promoted active fingerprint and timestamp move; post-promotion read-only status reports the new source; Selector Ambient becomes available without default or inference.
-* stop: any failed validation, missing ambient row, identity/shape contradiction, unsafe disclosure or archive/promotion blocker stops before write or promotion.
-* boundary: source operation only; no Selector feature edit, project save, registration, Engine invocation, RunTable, IES, delivery or CRM action.
+* acceptance: the complete guarded dry-run passes every existing source-shape, validation, identity and disclosure check; all required tables remain present; the current source contains one finite, genuinely tier-gated `SYSTEM_POLICY.ambient_temp` row; no credential, user, row, provider body or private path is exposed; only then the existing guarded workflow materialises the validated authority, archives the currently promoted authority, and promotes the new authority; archive succeeds before promotion; the promoted active fingerprint and timestamp move; post-promotion read-only status reports the new source; Selector Ambient becomes available without default or inference.
+* stop: stop before any write on validation failure, missing/non-finite/non-tier-gated Ambient policy, source identity contradiction or unsafe disclosure. Archive failure stops before promotion. Promotion failure or uncertainty stops immediately and must not be reported as success.
+* receipt: return the complete guarded dry-run, Ambient-row, archive, promotion, focused-test, full-gate, exact staged-set, commit/push and final-Git receipt. After the orchestrator reviews and closes WALK-001, stop for Program admission; do not release or begin WALK-002.
+* boundary: source operation only; no Selector feature behaviour change, Length Mode work, duplicate-scaffold work, legacy `TIERS` work, timeline/principal-test work, dropdown auto-fill, default acknowledgement, readiness-counter change, project save/registration, Engine/RunTable invocation, CRM/provider mutation, persistence, IES generation/retrieval/delivery, or Program/Lab/Governance/main/donor write.
 
 ### WALK-002 Remove Length Mode input
 * status: blocked (depends-on: WALK-001)
