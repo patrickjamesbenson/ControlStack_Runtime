@@ -533,3 +533,9 @@ The producer emits deterministic ready-or-blocked single-run generation input fr
 The tightening validates profile agreement, exact RunTable row identity and state, non-negative thermal rise, safe curve filename and accepted effective-temperature modes. Invalid or contradictory input fails closed before reference binding.
 
 No queue item is ready in Selector. Program producer review is next. Reference binding, sealed DTO loading, LM-63 generation, routes, persistence, files, delivery, main and runtime-port work remain blocked.
+
+## 2026-07-21 post-generation-input worker-guard reconciliation — latest controlling state
+
+**Recorded lane work HEAD:** `2f33af90c3fe4fc8b615cf1ef79e8a9214e56c7f` — `docs(selector): close IES generation input producer`.
+
+The clean branch contains the accepted read-only IES artifact-request producer and the accepted single-run generation-input producer, including the exact tightening checkpoint. No queue item is ready. Program & Integrate producer review is the sole next boundary and must either commission one exact reference-binding consumer parcel or keep generation blocked with the exact missing evidence. LM-63 generation, Lab writes, routes, persistence, files, delivery, downstream activation, main and runtime-port work remain inactive.
