@@ -503,3 +503,18 @@ P2 Checkpoint 1 is **IMPLEMENTATION COMPLETE / GATE GREEN / COMMIT BLOCKED BY SH
 - **PROTECTED LAB STATE:** expected branch marker and three protected untracked items remain outside the parcel.
 - **BLOCKED:** SEAM-G-A1, actual IES generation, authority, evidence acceptance, reference mutation, routes, persistence, network/file/email output, downstream readiness, main and runtime-port work.
 - **NEXT:** reconcile the Lab queue and implement SEAM-G-C1 in exactly two new files. Patrick has no action.
+
+## 2026-07-21 Seam G read-only tunnel active state
+
+- **SEAM-G-P1:** accepted; producer 115/115 focused and 107/107 normal closeout.
+- **SEAM-G-C1:** accepted; import-free Lab consumer 276/276 and queue closeout complete.
+- **SEAM-G-A1:** complete; version-1 read-only request tunnel active as a contract/validation boundary only.
+- **ACTIVE PATH:** stable Engine output -> deterministic IES artifact request -> import-free Lab compatibility projection.
+- **REPLAY:** identical technical input produces identical request/replay/audit and compatibility output; governance context is inert and absent.
+- **FAILURE ISOLATION:** blocked or invalid inputs fail closed with no ready request, partial consumer body or side effect.
+- **SECURITY:** no raw IES/photometry/candela/private path, caller authority or governance data crosses the seam.
+- **ROLLBACK:** removal or non-use only; no migration, record repair, artifact deletion, route reversal or authority repair.
+- **NOT ACTIVE:** live route, generator invocation, LM-63 body, authority allocation/approval/sealing, evidence acceptance, reference mutation, storage, file/download/email output, persistence or downstream readiness.
+- **QUEUE:** empty; a new exact Program parcel is required for generation or delivery.
+- **MAIN:** held; unfinished runtime-port work excluded.
+- **NEXT:** no authorised implementation item. Patrick has no action.

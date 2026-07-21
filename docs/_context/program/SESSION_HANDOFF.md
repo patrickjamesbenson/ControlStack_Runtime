@@ -1,6 +1,6 @@
 # Program & Integrate Session Handoff
 
-Status: SEAM B ENGINE OUTPUT VERSION 1 STABLE — NO DOWNSTREAM ACTIVATION  
+Status: SEAM G VERSION 1 READ-ONLY CONTRACT TUNNEL ACTIVE — GENERATION BLOCKED  
 Lane: `program-integrate`  
 Branch: `lane/program-integrate`
 
@@ -51,12 +51,18 @@ Deterministic sealed fixtures prove complete, blocked, valid-zero, replay/govern
 
 Rollback is removal or non-use only. No data migration, record repair, route reversal or authority rollback is required because both boundaries are read-only and non-persistent.
 
-The old RunTable scaffold remains diagnostic-only, and persistence-coupled legacy rows remain excluded. Seam G, IES generation, downstream artifacts, writes/readiness, routes, persistence and main promotion remain held.
+The old RunTable scaffold remains diagnostic-only, and persistence-coupled legacy rows remain excluded.
+
+## Current Seam G state
+
+Program has activated **Seam G version 1 as a read-only contract/validation tunnel only**.
+
+The accepted path is stable Engine output to deterministic IES artifact request to the independent import-free Lab compatibility projection. Producer coverage passed 115/115 with normal Selector closeout at 107/107. Consumer coverage passed 276/276.
+
+Exact versioning, replay/idempotency, governance quarantine, deterministic audit, failure isolation, no-write security and no-migration rollback are accepted. Invalid or blocked input cannot create a ready request or partial consumer body.
+
+No live route or generator is active. No raw IES, photometry, candela, private path, authority, evidence acceptance, sealing, reference mutation, storage, file/download/email output, persistence or downstream readiness crosses the seam.
 
 ## Next authorised parcel
 
-SEAM-G-C1 is the sole ready parcel in Lab & IES: one import-free compatibility adapter and one focused test over plain public request JSON.
-
-It must preserve ready or blocked state, valid zeros, deterministic request/replay/audit identity, safe technical values and exact public rows while exposing no authority, generation or write capability.
-
-SEAM-G-A1, actual IES generation, routes, persistence, downstream output, main and unfinished runtime-port work remain blocked. Patrick has no action.
+None. The Program queue is empty. Actual IES generation, delivery, routes, persistence, main and unfinished runtime-port work require a new exact Program decision. Patrick has no action.

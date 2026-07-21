@@ -741,19 +741,20 @@ Seam G and main promotion remain held. No implementation item is ready; a new ex
 ### SEAM-G-C1 — Prove Lab read-only request compatibility
 
 - **Owner:** Lab & IES.
-- **Status:** ready.
+- **Status:** done and Program-accepted.
 - **Exact feature files:** new `packages/lab-kernel/ies-toolkit/iesArtifactRequestV1CompatibilityAdapter.js` and new `tests/lab-kernel/iesArtifactRequestV1CompatibilityAdapter.test.js`.
 - **Gate:** `lab-ies`.
 - **Boundary:** plain public request JSON only; import-free; no IES generation, authority, evidence acceptance, reference mutation, route, persistence, network/file/email write or readiness activation.
 - **Acceptance:** exact ready and blocked request schema/version/key sets; immutable compatibility projection; valid zeros; deterministic request/replay/audit identity; stable Engine identities, safe thermal/provenance and exact public rows only; traceability values neither influence nor appear; unknown/extra/private/raw/unsafe/contradictory/legacy input fails closed; blocked request cannot become compatible-ready.
-- **Protected-state rule:** preserve the expected Lab branch marker and the three protected untracked items; do not clean, stage, absorb or rewrite them.
-- **Next:** Program consumer receipt review; SEAM-G-A1 remains blocked.
+- **Accepted receipt:** exact import-free two-file Lab parcel passed 276/276 and lane closeout ended with only the expected marker plus three protected untracked items.
+- **Protected-state result:** the expected Lab branch marker and three protected untracked items remained untouched and outside feature staging.
+- **Next:** SEAM-G-A1 is complete under the activation decision below; no generation item becomes ready automatically.
 
 ### SEAM-G-A1 — Activate read-only tunnel
 
 - **Owner:** Program & Integrate.
-- **Status:** blocked behind accepted producer and consumer receipts.
-- **Acceptance:** exact schema/version, producer and consumer gates, security/write boundary, deterministic replay/idempotency, failure isolation/audit and rollback.
-- **Boundary:** may activate only the read-only request tunnel. IES generation and downstream writes remain separately held.
+- **Status:** done; Seam G version-1 read-only contract tunnel active.
+- **Acceptance:** all six conditions verified: exact schema/version, green producer and consumer gates, security/write boundary, deterministic replay/idempotency, failure isolation/audit and no-migration rollback.
+- **Boundary:** activation is contract/validation only. No live network route, generator invocation, IES body, authority, persistence, file/email delivery or downstream readiness is active.
 
-Main, routes, persistence, email/export, actual IES generation and unfinished runtime-port work remain excluded.
+The Program queue is empty. Main, routes, persistence, email/export, actual IES generation and unfinished runtime-port work remain excluded. A new exact Program parcel is required before any generation or delivery work.

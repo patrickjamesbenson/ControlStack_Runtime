@@ -1158,3 +1158,22 @@ The adapter must be import-free and consume plain public `controlstack.downstrea
 It must preserve valid zeros, prove different traceability envelopes cannot influence or appear, and fail closed on unknown version, extra fields/authority, private/raw content, contradictory request/audit/Engine/row/thermal identity, unsafe flags, blocked-to-ready promotion or legacy rows. It adds no IES generation, Lab authority, evidence acceptance, reference mutation, route, persistence, network write, file, download, email or readiness activation.
 
 The Lab orchestrator must preserve the existing expected branch marker and three protected untracked local items. Program does not touch Lab files in this decision. SEAM-G-A1 and actual generation remain blocked pending the consumer receipt.
+
+## 2026-07-21 — Seam G read-only IES request tunnel version 1 activated
+
+**Status:** READ-ONLY CONTRACT TUNNEL ACTIVE; ACTUAL IES GENERATION REMAINS BLOCKED.
+
+Program accepts the completed Lab consumer receipt. The exact import-free adapter and focused test were pushed after 276/276, followed by a clean lane closeout. The protected Lab marker and three untracked local items remained untouched.
+
+Program verifies the six mandatory Seam G conditions:
+
+1. **Schema/version — satisfied.** The tunnel uses exact `controlstack.downstream.ies-artifact-intent.v1`, `controlstack.downstream.ies-artifact-request.v1` and `controlstack.downstream.ies-artifact-request-audit.v1` version-1 identities with unknown versions failing closed.
+2. **Producer gate — satisfied.** Selector producer coverage passed 115/115 and normal closeout 107/107 with a clean ending tree.
+3. **Consumer compatibility — satisfied.** The independent import-free Lab adapter passed 276/276 and consumes plain public JSON only.
+4. **Security/write boundary — satisfied.** No route, endpoint, persistence, file, email/export/download, network write, IES body, photometry/candela, generator, authority, evidence acceptance, sealing, reference mutation or readiness side effect exists.
+5. **Replay and failure isolation — satisfied.** Identical technical input is replay-identical; outer traceability is inert and absent; technical identity changes move request identity; invalid or blocked input fails closed with deterministic audit state and no partial ready body.
+6. **Rollback — satisfied.** Producer and consumer are read-only and non-persistent. Rollback is removal or non-use with no data migration, artifact deletion, route reversal, authority repair or record repair.
+
+Program therefore activates **Seam G version 1 only as a read-only contract tunnel** between the stable Engine output and the Lab compatibility boundary. This is a contract/validation activation, not a live network route and not an IES generator invocation.
+
+Actual LM-63 generation, Lab authority allocation/approval/sealing, evidence acceptance, reference mutation, artifact storage, file/download/email delivery, routes, persistence, downstream readiness and main promotion remain separately blocked. No implementation parcel is admitted by this activation decision.

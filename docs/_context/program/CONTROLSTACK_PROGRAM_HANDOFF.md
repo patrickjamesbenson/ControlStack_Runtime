@@ -757,3 +757,15 @@ Prove ready, blocked, valid-zero, replay-identical and governance-absent cases. 
 Preserve the Lab lane's expected branch marker and three protected untracked local items. Do not import Selector/Workspace/Runtime implementation, generate IES, allocate/approve/seal authority, accept evidence, mutate references, add routes, persist, write files/network/email or activate readiness.
 
 Return the consumer receipt to Program. SEAM-G-A1 and actual generation remain blocked.
+
+## 2026-07-21 Seam G read-only tunnel active handoff
+
+Program accepts the completed Lab consumer receipt at 276/276 and activates Seam G version 1 as a read-only contract/validation tunnel only.
+
+The active path is stable Engine output to deterministic IES artifact request to import-free Lab compatibility projection. Producer and consumer are exact-version, replay-identical, governance-inert, fail-closed, read-only and non-persistent.
+
+This activation adds no live route and invokes no generator. It carries no raw IES, photometry, candela, private path, caller authority or governance metadata. Invalid or blocked input cannot produce a ready request or partial compatible body.
+
+Actual LM-63 generation, Lab authority allocation/approval/sealing, evidence acceptance, reference mutation, storage, persistence, file/download/email delivery, routes, downstream readiness and main promotion remain blocked.
+
+The Program queue is empty. Any generation or delivery capability requires a new exact Program parcel. Patrick has no action.

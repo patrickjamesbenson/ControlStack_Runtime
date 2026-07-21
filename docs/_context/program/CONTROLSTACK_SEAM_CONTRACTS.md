@@ -764,3 +764,21 @@ The Lab adapter may retain only public request/intent/Engine schema and identiti
 Acceptance must prove ready and blocked compatibility, valid zeros, deterministic replay identity and governance absence. Unknown versions, extra authority, private/raw content, contradictory request/audit/Engine/thermal/row identity, unsafe flags, blocked promotion and legacy rows fail closed.
 
 The consumer adds no IES generation, authority allocation/approval/sealing, evidence acceptance, reference mutation, route, persistence, network/file/email write or readiness activation. SEAM-G-A1 remains blocked until Program accepts the consumer receipt.
+
+### Seam G version-1 read-only tunnel activation
+
+Program accepts the consumer proof and activates the version-1 request tunnel as a contract/validation boundary only.
+
+The active tunnel is:
+
+```text
+stable public Engine output
+-> deterministic IES artifact request v1
+-> import-free Lab compatibility projection
+```
+
+All six activation conditions are satisfied: exact versioned schemas, green producer gate, green consumer gate, no-write security boundary, replay/idempotency with deterministic audit/failure isolation, and removal/non-use rollback with no migration.
+
+The tunnel carries no raw IES, photometry, candela, private path, caller authority or governance metadata. Traceability remains outside and inert. Blocked or invalid input cannot create a ready request or partial consumer body.
+
+Activation does not create a network route or invoke Lab at runtime. It does not generate LM-63, allocate/approve/seal authority, accept evidence, mutate references, persist, store, write, download, email or mark downstream readiness. Those capabilities require a new separately approved contract and implementation parcel.
