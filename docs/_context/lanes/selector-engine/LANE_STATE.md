@@ -712,3 +712,18 @@ The complete original guarded dry-run returned HTTP 200 and `dry-run-ready` with
 No materialisation, archive or promotion was invoked. The active authority remained readable, parseable and unchanged; no Selector feature, project, provider, persistence, IES, Engine or later walkthrough action occurred. Git remained clean.
 
 WALK-001R and WALK-001 remain incomplete and blocked. WALK-002 through WALK-007 remain blocked. Program must review the redacted current-source identity contradiction and missing Ambient proof before any further Selector source-refresh attempt.
+
+
+## 2026-07-22 Program WALK-001V Ambient-visibility admission — latest controlling state
+
+**Recorded lane work HEAD:** `6e7d13a874d9c79e4f42348fb9f4b411afb5112d` — `docs(selector): reconcile lane state after guarded source stop`.
+
+Program has already accepted the latest guarded source stop; that receipt is not reopened or recommissioned. WALK-001 and WALK-001R remain incomplete, and WALK-002 through WALK-007 remain blocked. WALK-001V is the sole ready Selector parcel, with one Selector writer and one parcel only.
+
+WALK-001V may change only `packages/workspace-kernel/authorityReferenceMaterialiserService.js`, `tests/selectorReferenceOptionsService.test.js`, and the canonical Selector lane-memory files for commissioning and closeout. It extends only the existing successful Google-read `currentSourceShape` summary before every write.
+
+The summary must remain value-free and report only: SYSTEM_POLICY table presence and row count; exact and approved-exact `ambient_temp` row counts; presence and population counts for recognised `economy`, `business`, `first` and `charter` tier columns; finite and non-finite numeric-token counts by recognised tier column; rows with at least one finite tier value; rows with finite values across multiple recognised tier columns; and generic-only rows that do not prove tier gating.
+
+The gate-included test must prove finite tier-specific Ambient evidence, generic-only and non-numeric non-proof, safe visibility of duplicate exact Ambient rows through counts, disclosure redaction, and dry-run no-write behaviour. No policy value, raw row, unrestricted header, user, credential, Google Sheet identity, provider content, complete source JSON or private location may be returned.
+
+Driver authority rules, current source-validation outcomes, Google reading and data, Selector option behaviour, materialisation, archive, promotion, deployment and Engine remain unchanged. Gate and push the bounded feature, reconcile lane memory, then stop for Program activation and exact source-repair review. Do not begin WALK-002 or edit the Google Sheet.

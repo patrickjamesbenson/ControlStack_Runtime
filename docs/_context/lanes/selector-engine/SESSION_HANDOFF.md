@@ -690,3 +690,14 @@ The installed Google reader now loads and the original guarded dry-run reached v
 The dry-run failed closed before every write because the primary Driver identity contains Boolean-like markers rather than protocol authority, while the duplicate Driver field carries the protocol values. Board protocol authority therefore has no valid intersection with the required primary Driver authority. The response also did not prove a finite, genuinely tier-gated Ambient row.
 
 WALK-001R and WALK-001 remain incomplete. No materialisation, archive, promotion, Engine action or later walkthrough work occurred. Git is clean. Stop for Program source-authority review; do not release WALK-002.
+
+
+## 2026-07-22 WALK-001V sole worker commission
+
+Program has accepted the prior clean guarded source stop; do not record or recommission that receipt again. WALK-001V is the sole ready Selector parcel. WALK-001 and WALK-001R remain incomplete, WALK-002 and every later walkthrough parcel remain blocked, and only one Selector writer may run.
+
+Change only the materialiser service, its gate-included Selector reference-options test, and canonical lane memory for closeout. Extend only the successful Google-read `currentSourceShape` summary before every write with value-free SYSTEM_POLICY and Ambient counts: table presence and row count; exact and approved-exact `ambient_temp` row counts; recognised economy/business/first/charter column presence and population; finite and non-finite numeric-token counts per recognised tier column; rows with any finite tier value; rows with finite values in multiple recognised tiers; and generic-only rows that do not prove tier gating.
+
+Tests must prove finite tier-specific evidence, generic-only and non-numeric non-proof, duplicate exact Ambient visibility through safe counts, disclosure redaction and dry-run no-write behaviour. Do not return values, raw rows, unrestricted headers, users, credentials, Google Sheet identity, provider content, complete source JSON or private locations.
+
+Do not change Driver authority, source-validation outcomes, Google reading or data, Selector options, materialisation, archive, promotion, deployment or Engine. Gate and push the bounded parcel, reconcile lane memory, and stop for Program activation and source-repair review. Do not edit the Google Sheet or begin WALK-002.

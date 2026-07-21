@@ -784,3 +784,13 @@ Every completed worker updates this index with:
 - Existing active authority remained the unchanged prior artifact, readable and parseable with the same size, timestamp and all 15 expected tables — VERIFIED READ-ONLY PROBE.
 - No focused/full gate, staging, commit/push, Selector feature, project, provider, persistence, IES, Engine or later walkthrough action occurred; final Git was clean — VERIFIED WORKER RECEIPT.
 - Queue result: WALK-001R and WALK-001 blocked for Program review; WALK-002 and later parcels not released — RECORDED.
+
+
+## 2026-07-22 — WALK-001V admission evidence
+
+- Program's authoritative state and handoff accept the latest guarded source stop and name WALK-001V bounded Ambient validation visibility as the sole ready Selector parcel — VERIFIED FROM PROGRAM REPOSITORY.
+- Exact feature scope is the materialiser service plus the gate-included Selector reference-options test; canonical lane-memory files are authorised only for commissioning and closeout — RECORDED.
+- The existing response already proves successful Google reading and all required table presence, but SYSTEM_POLICY Ambient remains unproven because no bounded Ambient summary is returned — VERIFIED FROM ACCEPTED SOURCE-SHAPE RECEIPT AND PROGRAM HANDOFF.
+- Required new evidence is value-free, allowlisted table/row/tier-column presence, population, finite/non-finite and row-classification counts; values, raw rows, unrestricted headers, users, credentials, Sheet identity, provider content, complete source JSON and private locations remain prohibited — RECORDED.
+- Required gate evidence covers finite tier-specific proof, generic-only and non-numeric non-proof, duplicate exact Ambient visibility through safe counts, disclosure redaction and dry-run no-write behaviour — RECORDED.
+- Driver authority, current validation outcomes, Google reading and data, Selector options, materialisation, archive, promotion, deployment, Engine, the Google Sheet and WALK-002 remain untouched — RECORDED.

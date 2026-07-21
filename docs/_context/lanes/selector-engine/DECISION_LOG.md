@@ -584,3 +584,16 @@ This log is append-oriented. Do not silently rewrite historical decisions.
 **Decision:** Accept the standing worker's fail-closed source-validation stop. The reader dependency now loads and the dry-run reaches the current Google source, but the required primary Driver identity supplies only Boolean-like markers while the duplicate field supplies protocol values. The populated Board protocol authority therefore has no intersection with required primary Driver protocol authority. A finite, genuinely tier-gated `SYSTEM_POLICY.ambient_temp` row is also unproven.
 
 **Consequence:** no materialisation, archive or promotion was authorised or attempted. The active authority remains unchanged. WALK-001R and WALK-001 stay incomplete, WALK-002 and later work stay blocked, and Program must decide the exact source-authority repair or retry path.
+
+
+## 2026-07-22 — Admit WALK-001V bounded Ambient validation visibility
+
+**Decision:** Accept Program's latest handoff without reopening or recommissioning the already accepted guarded source-stop receipt. WALK-001V alone is ready; WALK-001 and WALK-001R remain incomplete and WALK-002 through WALK-007 remain blocked.
+
+**Scope:** only the materialiser service, its gate-included Selector reference-options test, and canonical Selector lane-memory closeout. Extend only the successful Google-read `currentSourceShape` before every write with allowlisted, value-free SYSTEM_POLICY/Ambient counts.
+
+**Proof:** the summary must distinguish tier-specific finite evidence from generic-only and non-numeric non-proof, keep duplicate exact Ambient rows visible through safe counts, preserve redaction and prove dry-run no-write behaviour. No values, raw rows, unrestricted headers, users, credentials, Sheet identity, provider content, complete source JSON or private locations may be returned.
+
+**Unchanged boundary:** Driver authority and validation outcomes, Google reading and data, Selector options, materialisation, archive, promotion, deployment and Engine remain unchanged.
+
+**Consequence:** gate and push WALK-001V, reconcile lane memory, then stop for Program activation and exact source-owner repair review. Do not edit the Google Sheet or begin WALK-002.
