@@ -50,14 +50,13 @@ function Assert-FileEqual {
 function Resolve-BootstrapFile {
   param(
     [Parameter(Mandatory = $true)][string]$CanonicalName,
-    [Parameter(Mandatory = $true)][string[]]$Aliases,
-    [Parameter(Mandatory = $true)][AllowEmptyCollection()][System.Collections.Generic.HashSet[string]]$UsedPaths
+    [Parameter(Mandatory = $true)][string[]]$Aliases
   )
 
   $aliasMatches = @()
   foreach ($alias in $Aliases) {
     $candidate = Join-Path $BootstrapRoot $alias
-    if ((Test-Path -LiteralPath $candidate -PathType Leaf) -and -not $UsedPaths.Contains($candidate)) {
+    if ((Test-Path -LiteralPath $candidate -PathType Leaf) -and -not $script:UsedBootstrapPaths.Contains($candidate)) {
       $aliasMatches += $candidate
     }
   }
@@ -78,7 +77,7 @@ function Resolve-BootstrapFile {
   $semanticMatches = @(
     Get-ChildItem -LiteralPath $BootstrapRoot -File -Filter '*.md' |
       Where-Object {
-        -not $UsedPaths.Contains($_.FullName) -and
+        -not $script:UsedBootstrapPaths.Contains($_.FullName) -and
         (Get-Content -LiteralPath $_.FullName -Raw) -match $headingPattern
       } |
       Select-Object -ExpandProperty FullName
@@ -102,9 +101,9 @@ $sourceDirty = (Invoke-Git -Root $SourceRoot -Arguments @('status', '--porcelain
 if ($sourceDirty) { throw 'The Program worktree must be clean before lane provisioning.' }
 
 $ResolvedFoundingFiles = [ordered]@{}
-$UsedBootstrapPaths = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+$script:UsedBootstrapPaths = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
 foreach ($canonicalName in $FoundingFiles.Keys) {
-  $source = Resolve-BootstrapFile -CanonicalName $canonicalName -Aliases $FoundingFiles[$canonicalName] -UsedPaths $UsedBootstrapPaths
+  $source = Resolve-BootstrapFile -CanonicalName $canonicalName -Aliases $FoundingFiles[$canonicalName]
   [void]$UsedBootstrapPaths.Add($source)
   $ResolvedFoundingFiles[$canonicalName] = $source
   Write-Host ("Governance & Shell provisioning: {0} <= {1}" -f $canonicalName, [IO.Path]::GetFileName($source))

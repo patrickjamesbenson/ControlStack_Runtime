@@ -641,13 +641,21 @@ test("Governance lane provisioner is fixed, idempotent and cannot overwrite dive
   assert.match(provisioner, /Get-FileHash/);
   assert.match(provisioner, /DECISIONS\.md/);
   assert.match(provisioner, /Resolve-BootstrapFile/);
-  assert.match(provisioner, /AllowEmptyCollection/);
+  assert.match(provisioner, /\$script:UsedBootstrapPaths/);
+  assert.doesNotMatch(provisioner, /-UsedPaths/);
   assert.match(provisioner, /could not uniquely identify/);
   assert.match(provisioner, /\$FoundingFiles\.Keys/);
   assert.match(provisioner, /governance_shell_lane_gate\.py/);
   assert.match(provisioner, /CONTROLSTACK_DEPLOYMENT_V2_INSTALL\.mjs/);
   assert.match(provisioner, /governance-mcp/);
   assert.doesNotMatch(provisioner, /Remove-Item|git\.exe[^\n]*(?:reset|clean)|--force-with-lease/i);
+  const escapedProvisionerPath = governanceProvisionerPath.replaceAll("'", "''");
+  const syntax = spawnSync(
+    "powershell.exe",
+    ["-NoProfile", "-NonInteractive", "-Command", `[void][scriptblock]::Create([IO.File]::ReadAllText('${escapedProvisionerPath}'))`],
+    { encoding: "utf8" },
+  );
+  assert.equal(syntax.status, 0, syntax.stderr);
 
   assert.match(gate, /GATE_NAME = "governance-shell"/);
   assert.match(gate, /REQUIRED_BRANCH = "lane\/governance-shell"/);
