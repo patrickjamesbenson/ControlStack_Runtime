@@ -688,7 +688,8 @@ P2 Checkpoint 1 is **IMPLEMENTATION COMPLETE / GATE GREEN / COMMIT BLOCKED BY SH
 ## 2026-07-22 consolidated Selector walkthrough state
 
 - **COMPLETED:** PWS-001, PWS-002 and PWS-005 remain closed; no duplicate commission.
-- **SELECTOR READY:** WALK-001 authority refresh only. Dry-run must prove current required source shape and a finite tier-gated Ambient policy row before archive-before-promotion live sync.
+- **SELECTOR WALK-001:** open and incomplete. Selector reports a clean, correctly fail-closed stop before all writes because the running service could not load the server-side Google Sheets reader. No Ambient/source validation, materialisation, archive or promotion is accepted.
+- **SELECTOR READY:** WALK-001R reader recovery and WALK-001 resume only. Recovery is confined to the running Selector service's dependency/runtime/configuration boundary and existing managed-service controls; Program/deployment changes, new secret bindings and cross-lane work require another stop and admission.
 - **SELECTOR ORDER:** Length Mode deletion → duplicate scaffold unmount → legacy TIERS readiness deletion → internal timeline/principal test-mode deletion → donor auto-fill defaults → truthful readiness counters → selections-only action-lane and thermal acceptance.
 - **AUTO-FILL:** each dropdown selects the first real NVB option in exact source order; `No manual constraint…` presentation rows are skipped. Auto-filled values are visibly LOOKED UP and distinct from manual constraints.
 - **ACKNOWLEDGEMENT:** one `Accept all defaults` action creates the GIVEN acknowledgement for every flagged default, including inherited finishes. Unacknowledged defaults do not satisfy readiness; per-field acknowledgement is prohibited.
@@ -697,7 +698,7 @@ P2 Checkpoint 1 is **IMPLEMENTATION COMPLETE / GATE GREEN / COMMIT BLOCKED BY SH
 - **THERMAL ACCEPTANCE:** one bounded run must prove selected room plus one measured optic rise exactly once and varied-rise movement of lookup and verified lm/m.
 - **FINISHES:** Patrick's ruling is closed and recorded in Governance. Inheritance or auto-fill alone does not satisfy Build Ready; WALK-005A restores the one-action donor acknowledgement.
 - **PARALLELISM:** Lab C5 remains independently ready. One writer per worktree; no cross-lane writes.
-- **NEXT:** Selector executes WALK-001 only; WALK-002 through WALK-007 remain sequence-blocked, with WALK-005A inserted before WALK-006. WALK-008 is ruled and closed.
+- **NEXT:** Selector executes WALK-001R and resumes WALK-001 only. WALK-002 through WALK-007 remain sequence-blocked, with WALK-005A inserted before WALK-006. WALK-008 is ruled and closed.
 
 ## 2026-07-22 HubSpot and CRM ruling state
 
