@@ -758,3 +758,34 @@ Seam G and main promotion remain held. No implementation item is ready; a new ex
 - **Boundary:** activation is contract/validation only. No live network route, generator invocation, IES body, authority, persistence, file/email delivery or downstream readiness is active.
 
 The Program queue is empty. Main, routes, persistence, email/export, actual IES generation and unfinished runtime-port work remain excluded. A new exact Program parcel is required before any generation or delivery work.
+
+## 2026-07-21 — Seam G generation binding sequence
+
+**Status:** SEAM-G-P2 SOLE READY ITEM; LM-63 GENERATION BLOCKED.
+
+### SEAM-G-P2 — Produce deterministic single-run generation input
+
+- **Owner:** Selector & Engine.
+- **Status:** ready.
+- **Depends on:** active Seam G version-1 read-only artifact-request tunnel.
+- **Exact feature files:** new `packages/workspace-kernel/runtimeIesGenerationInputContractV1.js` and new `tests/runtimeIesGenerationInputContractV1.test.js`.
+- **Gate:** `selector-engine`.
+- **Input:** exact ready public artifact request version 1, exact matching Engine selection-set request version 1 and optional quarantined traceability.
+- **Output:** immutable `controlstack.downstream.ies-generation-input.v1` ready-or-blocked envelope with deterministic identity/audit, exact request and Engine identities, one normalised single run, one bounded product/light/control selection and safe technical provenance/thermal values.
+- **Acceptance:** recompute and match selection request fingerprint; exact one-run shape; positive integer quantity and length; valid zero target/ambient values; request/replay/result/source/policy/evidence identities agree; identical technical input replays identically; traceability is inert and absent; changed selection, request or technical identity moves generation-input identity; unknown, blocked, extra, multi-run, governance, unsafe/private/raw, fingerprint-mismatched or contradictory input fails closed.
+- **Boundary:** no reference identity, sealed DTO, authority body, generator invocation, LM-63 text, route, persistence, file/network/email write or readiness activation.
+- **Commit message:** `feat(runtime): add IES generation input contract v1`.
+- **Next:** Program producer review; SEAM-G-C2 remains blocked.
+
+### SEAM-G-C2 — Bind generation input to sealed optic reference identity
+
+- **Owner:** Lab & IES.
+- **Status:** blocked behind Program acceptance of SEAM-G-P2.
+- **Scope:** exact new adapter and focused test to be named after producer review.
+- **Boundary:** plain public JSON only; bind optic BOM/variant, evidence and thermal triplet to one read-only OPT reference identity; no storage resolution, sealed DTO load or generation.
+
+### SEAM-G-A2 — Activate generation-binding tunnel
+
+- **Owner:** Program & Integrate.
+- **Status:** blocked behind accepted producer and consumer receipts.
+- **Boundary:** activation may cover only the read-only generation-input/reference-binding contract. LM-63 generation and delivery remain separately held.

@@ -769,3 +769,15 @@ This activation adds no live route and invokes no generator. It carries no raw I
 Actual LM-63 generation, Lab authority allocation/approval/sealing, evidence acceptance, reference mutation, storage, persistence, file/download/email delivery, routes, downstream readiness and main promotion remain blocked.
 
 The Program queue is empty. Any generation or delivery capability requires a new exact Program parcel. Patrick has no action.
+
+## 2026-07-21 generation-input producer commission
+
+Commission Selector & Engine for SEAM-G-P2 with exactly two new files: one generation-input contract and one focused test.
+
+The producer consumes exact ready artifact-request version 1 JSON plus the exact matching Engine selection-set request. It recomputes the selection fingerprint and emits one immutable single-run generation-input envelope containing only system, optic, target lm/m, room ambient, protocol, quantity, length, safe technical provenance/thermal values and deterministic request/replay/audit identities.
+
+Different outer traceability values must produce identical output and remain absent. Changed selection, request or technical identity must move output identity. Unknown, blocked, over-rich, multi-run, governance-bearing, private/raw, unsafe, fingerprint-mismatched or contradictory input fails closed.
+
+Do not change the stable artifact-request contract, import Lab, bind a reference, load a sealed DTO, invoke Engine or generator, produce LM-63 text, add routes, persist or write.
+
+Return the producer receipt to Program. SEAM-G-C2, binding activation and actual generation remain blocked.

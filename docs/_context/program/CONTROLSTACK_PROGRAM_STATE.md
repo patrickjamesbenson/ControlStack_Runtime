@@ -518,3 +518,15 @@ P2 Checkpoint 1 is **IMPLEMENTATION COMPLETE / GATE GREEN / COMMIT BLOCKED BY SH
 - **QUEUE:** empty; a new exact Program parcel is required for generation or delivery.
 - **MAIN:** held; unfinished runtime-port work excluded.
 - **NEXT:** no authorised implementation item. Patrick has no action.
+
+## 2026-07-21 Seam G generation-input commission state
+
+- **READ-ONLY REQUEST TUNNEL:** active and unchanged.
+- **SOLE READY ITEM:** SEAM-G-P2 in Selector & Engine.
+- **PRODUCER INPUT:** exact ready artifact request v1 plus exact matching Engine selection-set request v1.
+- **FIRST SLICE:** one run only; exact system, optic, target lm/m, room ambient, protocol, quantity and length.
+- **IDENTITY:** selection fingerprint is recomputed and matched; generation-input identity is deterministic and traceability-inert.
+- **OUTPUT:** read-only `controlstack.downstream.ies-generation-input.v1`; no reference authority or generated body.
+- **SEQUENCE BLOCKS:** Lab reference binding waits for Program producer acceptance; binding activation waits for producer and consumer acceptance.
+- **BLOCKED:** sealed DTO load, LM-63 generation, authority, evidence acceptance, reference mutation, storage, routes, persistence, file/network/email delivery, main and runtime-port work.
+- **NEXT:** reconcile Selector queue and implement SEAM-G-P2 in exactly two new files. Patrick has no action.

@@ -65,4 +65,8 @@ No live route or generator is active. No raw IES, photometry, candela, private p
 
 ## Next authorised parcel
 
-None. The Program queue is empty. Actual IES generation, delivery, routes, persistence, main and unfinished runtime-port work require a new exact Program decision. Patrick has no action.
+SEAM-G-P2 is the sole ready Selector parcel: one deterministic single-run generation-input contract and one focused test.
+
+It must bind the exact artifact request to its matching selection request by recomputing the selection fingerprint, preserve safe technical identity, quarantine traceability and expose no reference authority or generation capability.
+
+Lab reference binding, LM-63 generation, delivery, routes, persistence, main and unfinished runtime-port work remain blocked. Patrick has no action.

@@ -782,3 +782,22 @@ All six activation conditions are satisfied: exact versioned schemas, green prod
 The tunnel carries no raw IES, photometry, candela, private path, caller authority or governance metadata. Traceability remains outside and inert. Blocked or invalid input cannot create a ready request or partial consumer body.
 
 Activation does not create a network route or invoke Lab at runtime. It does not generate LM-63, allocate/approve/seal authority, accept evidence, mutate references, persist, store, write, download, email or mark downstream readiness. Those capabilities require a new separately approved contract and implementation parcel.
+
+## 2026-07-21 approved Seam G generation-binding candidate
+
+**Status:** PRODUCER COMMISSIONED; GENERATOR INACTIVE.
+
+```text
+artifactRequestV1 + matching engineSelectionSetV1
+-> generationInputV1
+-> future Lab OPT reference binding
+-> future Program binding activation
+```
+
+The producer must recompute the public selection-set fingerprint and match it to the artifact request's Engine contract. Version 1 is deliberately one-run only: exact system, optic, target lm/m, room ambient, protocol, quantity and length are normalised into a deterministic read-only envelope. Outer traceability remains inert and absent.
+
+The future Lab consumer may bind only when its version-2 NVB projection proves the same optic BOM, optic variant, hot-test evidence and measured thermal triplet and contains one exact read-only OPT reference identity. It may not resolve storage or load the sealed reference DTO.
+
+Unknown versions, blocked requests, extra fields, multi-run input, fingerprint mismatch, governance, private/raw data, technical contradiction or unsafe flags fail closed. Rollback is removal or non-use only.
+
+No LM-63 text, sealed DTO body, authority mutation, generator invocation, route, persistence, file/network/email write or readiness activation is part of this candidate.

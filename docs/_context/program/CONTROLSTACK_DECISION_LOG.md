@@ -1177,3 +1177,19 @@ Program verifies the six mandatory Seam G conditions:
 Program therefore activates **Seam G version 1 only as a read-only contract tunnel** between the stable Engine output and the Lab compatibility boundary. This is a contract/validation activation, not a live network route and not an IES generator invocation.
 
 Actual LM-63 generation, Lab authority allocation/approval/sealing, evidence acceptance, reference mutation, artifact storage, file/download/email delivery, routes, persistence, downstream readiness and main promotion remain separately blocked. No implementation parcel is admitted by this activation decision.
+
+## 2026-07-21 — Seam G generation-input and sealed-reference binding sequence commissioned
+
+**Status:** P2 PRODUCER APPROVED; GENERATION REMAINS BLOCKED.
+
+Repository review proves that the active version-1 artifact request carries safe Engine identities and thermal provenance but deliberately omits the exact selection-set body and sealed-reference binding required by the existing deterministic LM-63 generator. Program therefore commissions a second read-only sequence before any generator invocation.
+
+1. **SEAM-G-P2 — Selector generation input.** Produce one immutable `controlstack.downstream.ies-generation-input.v1` envelope from an exact ready artifact request version 1 and its exact matching Engine selection-set request version 1. The first slice is single-run only and normalises exactly one system, optic, target lm/m, room ambient, control protocol, quantity and run length. It must recompute and match the selection fingerprint, preserve request/replay and technical identity, quarantine outer traceability and expose no reference authority or generation capability.
+2. **SEAM-G-C2 — Lab sealed-reference binding.** After Program accepts P2, consume plain public generation-input JSON plus exact `controlstack.lab.nvb-lab-projection.v2` JSON. Bind the selected optic BOM, optic variant, evidence reference and measured thermal triplet to one exact read-only OPT reference identity. Emit a deterministic ready-or-blocked binding projection only; do not resolve storage or load the sealed DTO.
+3. **SEAM-G-A2 — Program binding activation review.** Verify exact schemas, producer and consumer gates, request/selection/reference identity agreement, replay/idempotency, failure isolation, no-write security and removal/non-use rollback. Program may activate only the read-only generation-binding tunnel.
+
+SEAM-G-P2 exact files are new `packages/workspace-kernel/runtimeIesGenerationInputContractV1.js` and new `tests/runtimeIesGenerationInputContractV1.test.js`. It may import only public Engine/artifact-request constants and stable fingerprint support. It must not alter the stable version-1 request contract, invoke Engine or Lab, generate IES, inspect authority bodies, add routes, persist or write.
+
+Unknown, over-rich, multi-run, unsafe, governance-bearing, fingerprint-mismatched, blocked-request or technically contradictory input fails closed. Identical technical inputs must return identical generation-input identity and audit state; changed selection, artifact request or technical identity must move identity.
+
+This decision admits SEAM-G-P2 only. SEAM-G-C2 and SEAM-G-A2 remain sequence-blocked. Actual generator invocation, LM-63 text, files, delivery, persistence, authority and main remain blocked.
