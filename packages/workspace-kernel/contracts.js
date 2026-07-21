@@ -30,8 +30,15 @@ export const MODULE_LIFECYCLE_CONTRACT = Object.freeze({
   diagnostics: "diagnostics?()",
 });
 
+export const SHELL_PROJECT_LIFECYCLE_IMPLEMENTATIONS = Object.freeze({
+  save: "live-through-project-browser",
+  restore: "live-through-project-browser",
+  hydrate: "live-through-project-browser",
+  ownership: "shell",
+  moduleLocalProjectMutation: "prohibited",
+});
+
 export const PHASE_4_DEFERRED_IMPLEMENTATIONS = Object.freeze({
-  saveRestore: "deferred-real-implementation",
   handoff: "deferred-real-implementation",
   hubspotWrites: "deferred-real-implementation",
   hubspotAuth: "deferred-real-implementation",
@@ -48,6 +55,7 @@ export function createContractDiagnostics() {
     shellOwnership: SHELL_OWNERSHIP,
     moduleOwnership: MODULE_OWNERSHIP,
     lifecycle: MODULE_LIFECYCLE_CONTRACT,
+    projectLifecycle: SHELL_PROJECT_LIFECYCLE_IMPLEMENTATIONS,
     deferred: PHASE_4_DEFERRED_IMPLEMENTATIONS,
   };
 }
