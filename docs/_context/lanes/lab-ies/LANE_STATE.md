@@ -13,7 +13,7 @@ Current repository evidence overrides stale historical statements.
 - Root: `C:\ControlStack_Worktrees\code-pilot-lab`
 - Branch: `lane/code-pilot-lab`
 - Gate: `lab-ies`
-- Recorded branch HEAD: `573863a8e430a253928fc2add613862b70afd59e`
+- Recorded branch HEAD: `341202f9caae0c7637d7c06b95f441b08c636808`
 - Branch-HEAD guard checkpoint: `6d34e500d407d5335e5eebb317636a67a5e98618`
 - Starting HEAD for SEAM-G-C3: `c5d4fc07fbdc0fbb168c60ed2f7e2111559b2397`
 - Completed feature HEAD: `573863a8e430a253928fc2add613862b70afd59e`
@@ -923,3 +923,15 @@ The final Lab gate passed 295/295. Complete inspection, exact seven-field overri
 Ready output contains only public reference identity, keyword profile ID, safe one-millimetre and per-metre baseline values, missing override names, deterministic audit and no-generation/no-raw/no-write state. Metadata, angles, candela, keyword values, provenance paths and the sealed DTO body remain absent.
 
 No multiplier, generation job, project/customer metadata, resolver/storage, generator invocation, LM-63 text, route, persistence or write capability was added. The Lab queue is empty. Program inspection review is next.
+
+## 2026-07-21 SEAM-G-C4 materialisation job-plan admission
+
+Program accepted the redacted sealed-reference inspection after 295/295 and commissioned one exact import-free no-generation job-plan parcel.
+
+SEAM-G-C4 is the sole ready Lab item. Its exact feature scope is `iesMaterialisationJobPlanV1.js` and its focused test only. It consumes exact public generation-input, generation-reference-binding and reference-generation-inspection version-1 JSON.
+
+The only multiplier authority is Engine verified lm/m divided by sealed reference baseline lm/m. Selector target lm/m remains intent only. Ready output requires exact generation, selection, run and reference identity agreement, a ready reference-validated inspection, zero missing overrides and materialisation without overrides.
+
+The generator job is exactly run length, the positive finite derived multiplier and an empty selections object. No caller keyword override, project/customer metadata, sealed DTO, resolver/storage, generator/materialise call, LM-63 text, route, persistence, write or readiness activation is authorised.
+
+No human observation is required. The expected marker and three protected untracked items remain outside the parcel. Program plan receipt review is next; actual generation remains blocked.

@@ -510,3 +510,17 @@ Ready output contains only the public reference identity, keyword profile ID, sa
 The existing validator still rejects invalid schema, approval, one-millimetre basis, keyword profile, candela shape, baseline binding and private provenance. The existing generator remained deterministic after the inspection export.
 
 No multiplier, generation job, project/customer metadata, resolver/storage, generator invocation, LM-63 text, route, persistence or write capability was added. SEAM-G-C3 is done; Program inspection review is next.
+
+## DL-037 — SEAM-G-C4 materialisation job plan
+
+**Status:** Approved by Program & Integrate and admitted on 2026-07-21.
+
+Program accepted the redacted sealed-reference inspection after 295/295 and commissioned one import-free no-generation job-plan parcel.
+
+SEAM-G-C4 consumes only exact public generation-input version 1, generation-reference-binding version 1 and reference-generation-inspection version 1 JSON. It emits one deterministic ready-or-blocked materialisation job-plan projection.
+
+The only scaling authority is Engine verified lm/m divided by sealed reference baseline lm/m. Selector target lm/m remains intent only. Ready output requires exact source generation, selection, run and reference identity agreement, a ready reference-validated inspection, zero missing overrides and materialisation without overrides.
+
+The exact generator job is limited to run length, the derived positive finite multiplier and an empty selections object. Caller keyword overrides, project/customer metadata, sealed DTO content, resolver/storage access, generator/materialise calls, LM-63 text, routes, persistence, writes and readiness activation remain blocked.
+
+The expected branch marker and three protected untracked items stay outside the feature parcel. Program plan receipt review is the next boundary; actual generator invocation is not authorised.

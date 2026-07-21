@@ -902,6 +902,41 @@ Completion evidence: The import-free binding adapter and focused test were commi
 
 Completion evidence: The existing sealed-reference generator validator was exposed through one redacted inspection export and one focused test, committed in the exact two-file scope as `lab: checkpoint sealed reference generation inspection v1`, pushed only to the Lab lane, and passed 295/295. The inspector reuses the exact generator reference validation path, returns only public reference identity, keyword profile ID, safe one-millimetre baseline and per-metre values, exact missing override names and no-generation safety, and rejects malformed/unapproved/non-one-mm/keyword/candela/baseline/private-provenance input. Complete, seven-override, baseline-fallback, valid-zero, repeatability, generator-regression and no-materialisation fixtures passed. No multiplier, project/customer job, resolver/storage, LM-63 text, route, persistence or write capability was added. Program inspection receipt review is next.
 
+### Q-37 Deterministic no-generation materialisation job plan
+- id: SEAM-G-C4
+- objective: Build one deterministic generator job plan from exact accepted generation-input, generation-reference-binding and sealed-reference inspection public JSON without loading a sealed DTO or invoking materialisation.
+- authorised files:
+  - `packages/lab-kernel/ies-toolkit/iesMaterialisationJobPlanV1.js`
+  - `tests/lab-kernel/iesMaterialisationJobPlanV1.test.js`
+- public contracts:
+  - `controlstack.downstream.ies-generation-input.v1`, schema version 1;
+  - `controlstack.lab.ies-generation-reference-binding.v1`, schema version 1;
+  - `controlstack.lab.ies-reference-generation-inspection.v1`, schema version 1;
+  - output `controlstack.lab.ies-materialisation-job-plan.v1`, schema version 1.
+- multiplier authority:
+  - derive only `verifiedLmPerM / baselineLmPerM`;
+  - Selector target lm/m is intent only and cannot drive scaling;
+  - verified lm/m, baseline lm/m and the resulting ratio must be finite and strictly positive.
+- ready conditions:
+  - exact generation ID/replay and selection/run agreement with the binding;
+  - exact binding reference identity agreement with inspection;
+  - inspection ready, reference-validated, zero missing overrides and `materialisationWithoutOverrides: true`;
+  - exact generator job shape `{ runLengthMm, outputMultiplier, selections: {} }`.
+- prohibitions:
+  - import-free; no Selector, Workspace, Runtime or producer implementation import;
+  - no caller keyword override, project/customer metadata or target-lm/m scaling authority;
+  - no sealed DTO body, resolver/storage access, generator or `materialise` call, LM-63 text;
+  - no route, persistence, browser storage, network/file/email write or readiness activation;
+  - preserve the expected branch marker and three protected untracked items.
+- acceptance: Emit one deeply immutable ready-or-blocked job-plan projection with deterministic plan/replay/audit identity, exact multiplier basis, exact empty-selection job and explicit no-generation/no-write state. Preserve valid finite technical values and deterministic replay. Fail closed on unknown/extra/private/raw/unsafe input, source identity or selection/run/reference mismatch, missing overrides, contradictory inspection, non-positive or non-finite verified/baseline/ratio values, or any caller-supplied keyword selection.
+- gate: lab-ies
+- depends on: SEAM-G-C3 done and Program approval recorded in the active generation job-plan contract
+- seam change: approved unchanged by Program & Integrate
+- human observation: none; repository contract and gate evidence are sufficient
+- commit message: `lab: checkpoint IES materialisation job plan v1`
+- on success next: Program plan receipt review; sealed DTO loading and actual generator invocation remain blocked
+- status: ready
+
 ## Explicitly not queued
 
 These protected paths remain outside implementation parcels unless the orchestrator makes a separate decision:

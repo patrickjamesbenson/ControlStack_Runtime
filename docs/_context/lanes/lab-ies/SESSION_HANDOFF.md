@@ -367,6 +367,25 @@ Complete, all-seven-overrides, baseline-fallback, valid-zero, required-keyword, 
 
 No multiplier, job, project/customer metadata, resolver/storage, generator invocation, LM-63 text, route, persistence or write capability was added. The expected marker and protected local items remain untouched. The Lab queue is empty; Program inspection review is next.
 
+## 2026-07-21 SEAM-G-C4 ready — no-generation materialisation job plan
+
+Program accepted the sealed-reference inspection after 295/295 and commissioned one exact import-free job-plan parcel.
+
+Create exactly:
+
+```text
+packages/lab-kernel/ies-toolkit/iesMaterialisationJobPlanV1.js
+tests/lab-kernel/iesMaterialisationJobPlanV1.test.js
+```
+
+Consume only exact public generation-input version 1, generation-reference-binding version 1 and reference-generation-inspection version 1 JSON. Derive output multiplier only as Engine verified lm/m divided by sealed baseline lm/m. Selector target lm/m is intent only.
+
+A ready plan requires exact generation ID/replay and selection/run agreement with the binding, exact binding/inspection reference identity, a ready reference-validated inspection, no missing keyword overrides and materialisation without overrides. Emit the exact job `{ runLengthMm, outputMultiplier, selections: {} }` with deterministic plan/replay/audit identity and explicit no-generation/no-write state.
+
+Reject unknown, extra, private/raw, unsafe, mismatched, contradictory, non-positive/non-finite or caller-override input. Do not load a sealed DTO, resolve storage, invoke the generator or materialise, emit LM-63, accept project/customer metadata, add routes, persist or write.
+
+No human observation is required. Preserve the expected marker and three protected local items. After the feature and five-record closeout, return the plan receipt to Program; actual generator invocation remains blocked.
+
 ## Prohibited actions retained
 
 - no LAB-017 change outside the recorded version-1 approval without a new seam decision;

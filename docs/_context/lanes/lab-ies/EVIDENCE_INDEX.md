@@ -2017,6 +2017,19 @@ Current verification superseded the stale parts of that snapshot:
 - Protected inventory: expected marker and three protected untracked items remained untouched — VERIFIED.
 - Queue result: SEAM-G-C3 done, Lab queue empty, Program inspection review required — RECORDED.
 
+## SEAM-G-C4 materialisation job-plan admission — 2026-07-21
+
+- Program accepted the sealed-reference inspection after 295/295 and commissioned one import-free no-generation job plan — PROGRAM-APPROVED.
+- Exact feature scope: new materialisation job-plan module and one focused test only — RECORDED.
+- Inputs: exact public generation-input, generation-reference-binding and reference-generation-inspection version-1 JSON — RECORDED.
+- Multiplier authority: Engine verified lm/m divided by sealed reference baseline lm/m; Selector target remains intent only — RECORDED.
+- Ready conditions: exact source generation/selection/run/reference identity, ready validated inspection, zero missing overrides and materialisation without overrides — RECORDED.
+- Exact job: run length, positive finite multiplier and empty selections object only — RECORDED.
+- Prohibitions: no caller overrides, project/customer metadata, sealed DTO, resolver/storage, generator/materialise call, LM-63, route, persistence or write — RECORDED.
+- Human observation: none required; repository contract and gate evidence are sufficient — RECORDED.
+- Protected state: expected marker and three protected untracked items remain outside the parcel — VERIFIED.
+- Queue result: SEAM-G-C4 sole ready item; actual generator invocation remains blocked — RECORDED.
+
 ## Evidence maintenance rule
 
 After each authorised lane parcel:
