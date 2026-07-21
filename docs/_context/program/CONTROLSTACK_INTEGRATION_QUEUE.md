@@ -945,4 +945,18 @@ No implementation item is ready. A new exact Program parcel is required before a
 
 Every affected parcel and gate plan must retain: envelope independence including no-envelope Engine execution; changed-optic movement; varied-row proof for identical placeholder lookup values; and ownership-wide tests instead of named-instance assertions.
 
-PWS-001, PWS-002 and PWS-005 are complete; the Selector queue is empty. SEAM-G-C5 is the sole ready Lab parcel. No second writer is permitted in either worktree.
+PWS-001, PWS-002 and PWS-005 are complete. SEAM-G-C5 remains the sole ready Lab parcel. The Selector walkthrough batch below is independent and uses one Selector writer only.
+
+### Selector consolidated walkthrough batch
+
+- **WALK-001 — authority refresh:** ready; sole Selector parcel. Guarded dry-run must prove all required current-source checks and one finite tier-gated `SYSTEM_POLICY.ambient_temp` row before the existing archive-before-promotion live workflow may write.
+- **WALK-002 — Length Mode removal:** blocked behind WALK-001. Diagnose current downstream effect read-only, then delete the narrowing input, its readiness requirement, persisted constraint and UI authority without choosing a hidden default; NVB candidates remain available for downstream Lex scoring.
+- **WALK-003 — duplicate scaffold removal:** blocked behind WALK-002. Unmount the fabricated parallel Selector and remove its default current-selection ownership.
+- **WALK-004 — legacy TIERS readiness deletion:** blocked behind WALK-003. Delete the `TIERS`-expecting payload/readiness owner; the live source-status bridge is the sole source-readiness owner and Tier remains server/Engine-derived from `SYSTEM_POLICY`.
+- **WALK-005 — internal test-mode deletion:** blocked behind WALK-004. Governance owns identity, principal/role, timeline policy and visibility; Selector deletes internal timeline and special-parts principal test controls and consumes bounded shell outcomes only.
+- **WALK-006 — truthful counters:** blocked behind WALK-005. Missing and blocked totals include only visible actionable prerequisites; diagnostic, future, consequence and disabled rows contribute zero.
+- **WALK-007 — selections-only action and thermal acceptance:** blocked behind WALK-001 through WALK-006. Remove server revision acknowledgement and governance/project envelope as Engine authority while preserving source-backed selections and no-write transport safety; execute one bounded selected-room plus measured-rise proof with varied-rise movement.
+- **WALK-008 — finishes default acceptance:** held, Patrick-owned and non-blocking. Current Build Ready treatment stays unchanged until an explicit ruling; the question is visible in Governance's deferred panel.
+
+- **Order:** WALK-001 → WALK-002 → WALK-003 → WALK-004 → WALK-005 → WALK-006 → WALK-007. WALK-008 remains held.
+- **Prohibitions:** no second Selector writer, CRM/provider mutation, persistence, IES generation, delivery, module-owned retrieval, main or unrelated runtime work.

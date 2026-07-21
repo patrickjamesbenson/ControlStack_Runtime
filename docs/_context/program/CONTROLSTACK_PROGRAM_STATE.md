@@ -683,4 +683,16 @@ P2 Checkpoint 1 is **IMPLEMENTATION COMPLETE / GATE GREEN / COMMIT BLOCKED BY SH
 - **C5 BLOCKED:** generator/materialise invocation, LM-63 text, routes, persistence, files, delivery and readiness activation.
 - **CHAIN AFTER C5:** C6 in-memory generation; C7 validated opaque Seam G artifact handoff; Governance retrieval activation. Each requires its own accepted predecessor and Program admission.
 - **PATRICK:** only the HubSpot private-app portal-scope pre-check and business CRM scope/lifecycle decision await him. Nothing else needs Patrick and neither item blocks C5.
-- **NEXT:** Lab queues and executes C5 only; Selector and Governance remain parked.
+- **NEXT:** Lab may execute C5 in its isolated worktree.
+
+## 2026-07-22 consolidated Selector walkthrough state
+
+- **COMPLETED:** PWS-001, PWS-002 and PWS-005 remain closed; no duplicate commission.
+- **SELECTOR READY:** WALK-001 authority refresh only. Dry-run must prove current required source shape and a finite tier-gated Ambient policy row before archive-before-promotion live sync.
+- **SELECTOR ORDER:** Length Mode deletion → duplicate scaffold unmount → legacy TIERS readiness deletion → internal timeline/principal test-mode deletion → truthful readiness counters → selections-only action-lane and thermal acceptance.
+- **OWNERSHIP:** Governance owns identity, principal/role, timeline policy and visibility. Selector consumes bounded shell outcomes and deletes parallel test authority.
+- **ENGINE BOUNDARY:** technical source-backed selections are authority; server revision acknowledgement and governance/project envelopes are not Engine prerequisites. No run is authorised until cleanup closes.
+- **THERMAL ACCEPTANCE:** one bounded run must prove selected room plus one measured optic rise exactly once and varied-rise movement of lookup and verified lm/m.
+- **FINISHES:** default acceptance is OPEN, Patrick-owned and non-blocking; current Build Ready rule remains unchanged.
+- **PARALLELISM:** Lab C5 remains independently ready. One writer per worktree; no cross-lane writes.
+- **NEXT:** Selector executes WALK-001 only; WALK-002 through WALK-007 remain sequence-blocked and WALK-008 remains held.

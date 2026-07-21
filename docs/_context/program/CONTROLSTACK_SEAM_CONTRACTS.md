@@ -931,6 +931,28 @@ The gateway may accept useful outputs at Spec Ready, Build Ready and Factory Rea
 
 Seam G request, binding, inspection, planning and future pure generation may remain internal technical contracts. Any browser download, file response, email delivery or provider export must be downstream of the one gateway and requires a separate Program activation.
 
+## 2026-07-22 Selector ownership and action-lane ruling
+
+**Status:** BINDING FOR THE CONSOLIDATED WALKTHROUGH BATCH.
+
+Governance owns human identity, principal/role, timeline policy, visibility, project context and external lifecycle. Selector may consume only bounded read-only shell outcomes. Selector-owned timeline simulation, principal selection, role override or special-parts identity test authority is prohibited once the corresponding internal copies are deleted.
+
+Source readiness has one Selector-side owner: the live source-status bridge. A legacy payload-preview requirement for a separate `TIERS` table cannot create a second source-readiness owner. Tier remains absent from Selector input authority and is derived at the server/Engine boundary from `SYSTEM_POLICY`.
+
+Engine invocation authority is the exact valid source-backed technical selection set. A server registration/revision acknowledgement may remain a transport or stale-response safeguard but cannot be a semantic prerequisite, selection authority or substitute for validation. Governance/project envelopes, identity capture and traceability remain outside Engine eligibility; no envelope execution remains mandatory.
+
+The thermal acceptance equation is:
+
+```text
+lookup temperature = selected room temperature + one optic-bound measured rise
+```
+
+The rise is applied exactly once by Engine. The absolute reference-internal temperature cannot be substituted for rise; no hardcoded room, rise or lookup value is permitted. Holding room, current and curve fixed while changing the accepted optic rise must move lookup temperature and verified lm/m.
+
+Length Mode is deleted as Selector narrowing authority after read-only impact diagnosis. No hidden replacement mode, first candidate or default is permitted. NVB may expose all valid modes as candidates and Lex scores downstream.
+
+Readiness counts are user-facing truth. Only current visible actionable prerequisites may contribute. Diagnostic rows, redacted special-parts candidates, donor-parity/future rows, consequences and disabled outputs contribute zero.
+
 ### Cross-lane regression lock
 
 - identical selections plus changed traceability envelopes return identical output;

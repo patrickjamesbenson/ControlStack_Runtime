@@ -93,4 +93,16 @@ No direct module download path, provider push from Selector, main work or runtim
 
 SEAM-G-C5 sealed-reference load preflight is the sole ready Lab parcel. It may load one exact sealed reference through an injected read-only Lab resolver, validate it against the accepted binding, inspection and job plan, emit one redacted load receipt, then discard the body. It may not invoke the generator, emit LM-63, add routes, persist, write or deliver.
 
-After C5 acceptance, Program must separately admit C6 in-memory generation, C7 opaque generated-artifact handoff through Seam G, and Governance retrieval activation. Governance persistence and identity/permissions are closed; CRM remains held. The only Patrick-held prerequisites are the HubSpot private-app portal-scope pre-check and the CRM business-scope/lifecycle decision. Nothing else needs him.
+After C5 acceptance, Program must separately admit C6 in-memory generation, C7 opaque generated-artifact handoff through Seam G, and Governance retrieval activation. Governance persistence and identity/permissions are closed; CRM remains held.
+
+## Selector consolidated walkthrough
+
+PWS-001, PWS-002 and PWS-005 are complete and are not reopened. WALK-001 authority refresh is the sole ready Selector parcel: guarded dry-run must prove all required current-source checks and one finite tier-gated Ambient policy row before the existing archive-before-promotion live workflow may write.
+
+After refresh, one Selector writer deletes in order: Length Mode narrowing authority, the fabricated duplicate scaffold, the legacy `TIERS` readiness owner, and Selector-internal timeline/special-parts principal test authority. Then user-facing readiness counters are limited to genuine visible prerequisites. Governance owns identity, principal/role, timeline policy and visibility; Selector consumes bounded shell outcomes only.
+
+No live Engine run is allowed before cleanup closes. The final parcel reconciles the action lane to the selections-only boundary and performs one bounded thermal proof: selected room plus one measured optic rise exactly once, with varied-rise movement of lookup and verified lm/m. Server revision acknowledgement and governance/project envelopes are not Engine authority.
+
+Finishes default acceptance is OPEN, Patrick-owned and non-blocking in the Governance deferred panel. Current Build Ready treatment stays unchanged. Lab C5 remains independently ready in its separate worktree.
+
+The only Patrick-held prerequisites outside that parked finishes ruling are the HubSpot private-app portal-scope pre-check and the CRM business-scope/lifecycle decision. Nothing else needs him now.

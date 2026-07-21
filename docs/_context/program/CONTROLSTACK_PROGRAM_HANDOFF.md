@@ -919,3 +919,22 @@ Return one deterministic immutable redacted ready-or-blocked load receipt. Do no
 Use exactly one loader feature and one focused test. Preserve the expected branch marker and three protected local items. Run the fixed Lab gate, commit and push only the feature, test and lane-memory closeout, then return the gated receipt to Program.
 
 After C5 acceptance, C6 in-memory generation, C7 opaque Seam G artifact handoff and Governance retrieval activation remain separately blocked. Patrick has no action for C5.
+
+### Selector consolidated walkthrough handoff
+
+PWS-001, PWS-002 and PWS-005 are complete. Do not queue or rerun them.
+
+Execute the walkthrough batch with one Selector writer and one ready parcel at a time. WALK-001 is ready now: run the repaired guarded materialiser dry-run, require all current source-shape validations plus a finite tier-gated `SYSTEM_POLICY.ambient_temp` row, then use the existing live materialise/archive/promote workflow. Any validation, Ambient, identity, disclosure, archive or promotion failure stops before write. Do not modify Selector features, save/register a project or invoke Engine in WALK-001.
+
+After WALK-001 closes, execute in strict order:
+1. Read-only diagnose and delete Length Mode as Selector authority. Keep positive quantity and length; expose no hidden/default mode; downstream NVB candidates remain available to Lex.
+2. Unmount the old fabricated Selector scaffold so the source-backed live surface is the only current-selection owner.
+3. Delete the legacy `TIERS`-expecting payload/readiness owner. The live status bridge owns source readiness; Tier remains server/Engine-derived from `SYSTEM_POLICY`.
+4. Delete Selector's internal timeline and special-parts principal test modes. Governance owns identity, principal/role, timeline policy and visibility; preserve equivalent bounded shell-consumer diagnostics without raw authority.
+5. Correct missing/blocked counters to count visible actionable prerequisites only.
+
+Only after those close may WALK-007 reconcile Run Engine to the selections-only boundary and perform one bounded thermal acceptance. Server revision acknowledgement and governance/project envelopes are not Engine authority. Preserve exact source-backed selections and no-write transport safeguards. Prove selected room plus one measured optic rise exactly once, attributable lookup and verified lm/m, and varied-rise movement with room/current/curve fixed.
+
+Finishes default acceptance remains OPEN and Patrick-owned in Governance's read-only deferred panel. Do not alter Build Ready until he rules. This does not block WALK-001 through WALK-007.
+
+Lab C5 may proceed independently in its isolated worktree. Do not add a second Selector writer, CRM/provider mutation, persistence, IES generation, delivery, module-owned retrieval, main or unrelated runtime work.

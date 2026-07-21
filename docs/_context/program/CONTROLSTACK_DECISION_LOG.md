@@ -1441,3 +1441,21 @@ The loaded DTO is ephemeral and discarded after validation. The public result is
 After C5 acceptance, the remaining chain is sequential: C6 one-shot in-memory generator invocation; C7 validated LM-63 generated-artifact handoff through Seam G using opaque identity and safe summary; then a Governance retrieval activation that stores/serves the body only through the single gateway after separate useful-output readiness and identity/project capture. No module-owned download path is permitted.
 
 Patrick is not required for Selector, Lab C5, generation, persistence or retrieval-contract work. The only Patrick-held prerequisites are the HubSpot private-app portal-scope pre-check and the business CRM scope/lifecycle decision. Those do not block C5.
+
+## 2026-07-22 — Consolidated Selector walkthrough batch commissioned
+
+**Status:** SOURCE REFRESH READY; CLEANUP SEQUENCED; LIVE RUN HELD.
+
+Program accepts Patrick's nine live Selector walkthrough findings as one ordered batch. Work-shape items PWS-001, PWS-002 and PWS-005 are already complete, gated and pushed; they are not reopened or recommissioned.
+
+The sole ready Selector parcel is WALK-001 authority refresh. The lane must run the repaired guarded materialiser dry-run, prove the current Google source includes a finite tier-gated `SYSTEM_POLICY.ambient_temp` row and all required source-shape checks, then use the existing archive-before-promotion live workflow. Any validation failure, missing Ambient row, identity contradiction, unsafe disclosure or promotion blocker stops before a write.
+
+After refresh, one Selector writer proceeds in strict order: diagnose and delete Length Mode as a Selector narrowing authority; unmount the fabricated duplicate scaffold; delete the legacy `TIERS`-expecting payload/readiness owner; delete Selector's internal timeline and special-parts principal test modes; then correct readiness totals so only genuine actionable prerequisites count. These are deletions under the one-owner rule, not reassignment or hidden defaulting.
+
+Program rules that Governance owns human identity, principal/role, timeline policy and visibility. Selector may consume bounded shell outcomes but may not retain parallel test authority. The existing internal test-mode behaviour is the regression specification for the deletion.
+
+No live Engine run may occur before the cleanup sequence closes. The final batch parcel reconciles Run Engine with the selections-only boundary: server revision acknowledgement and governance/project envelopes are not Engine authority. Source-backed technical selections and no-write transport safeguards remain mandatory. One bounded thermal acceptance must prove selected room plus one optic-bound measured rise exactly once, attributable lookup temperature and verified lm/m, and varied-rise movement with room, current and curve held fixed.
+
+The finishes default-acceptance question is unresolved, Patrick-owned and non-blocking. Governance has recorded it in the read-only deferred-decision panel. Selector must not change Build Ready until Patrick rules whether inherited cover, end and flex finishes satisfy acceptance without an explicit confirmation.
+
+Lab C5 remains independently ready in its separate worktree. No second Selector writer, provider mutation, persistence, IES generation, delivery, module-owned retrieval, main or unrelated runtime work is authorised by this batch.
