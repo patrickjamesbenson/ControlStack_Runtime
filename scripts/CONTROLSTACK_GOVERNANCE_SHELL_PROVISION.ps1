@@ -60,17 +60,46 @@ $CanonicalFoundingNames = @(
 )
 $Utf8NoBom = New-Object System.Text.UTF8Encoding($false)
 
+function ConvertTo-NativeArgument {
+  param([AllowEmptyString()][string]$Value)
+  if ($null -eq $Value -or $Value.Length -eq 0) { return '""' }
+  if ($Value -notmatch '[\s"]') { return $Value }
+  $escaped = $Value -replace '(\\*)"', '$1$1\"'
+  $escaped = $escaped -replace '(\\+)$', '$1$1'
+  return '"' + $escaped + '"'
+}
+
 function Invoke-Git {
   param(
     [Parameter(Mandatory = $true)][string]$Root,
     [Parameter(Mandatory = $true)][string[]]$Arguments,
     [switch]$AllowFailure
   )
-  $output = & git.exe -C $Root @Arguments 2>&1
-  $code = $LASTEXITCODE
+
+  $processInfo = New-Object System.Diagnostics.ProcessStartInfo
+  $processInfo.FileName = 'git.exe'
+  $processInfo.UseShellExecute = $false
+  $processInfo.CreateNoWindow = $true
+  $processInfo.RedirectStandardOutput = $true
+  $processInfo.RedirectStandardError = $true
+  $nativeArguments = @('-C', $Root) + $Arguments
+  $processInfo.Arguments = (($nativeArguments | ForEach-Object { ConvertTo-NativeArgument ([string]$_) }) -join ' ')
+
+  $process = New-Object System.Diagnostics.Process
+  $process.StartInfo = $processInfo
+  if (-not $process.Start()) { throw 'A bounded Git process could not start.' }
+  $stdoutTask = $process.StandardOutput.ReadToEndAsync()
+  $stderrTask = $process.StandardError.ReadToEndAsync()
+  $process.WaitForExit()
+  $stdout = $stdoutTask.Result.TrimEnd()
+  $stderr = $stderrTask.Result.TrimEnd()
+  $code = $process.ExitCode
+  $process.Dispose()
+
   if (-not $AllowFailure -and $code -ne 0) {
     throw "A bounded Git operation failed: git $($Arguments -join ' ')"
   }
+  $output = @($stdout, $stderr) | Where-Object { $_ }
   [pscustomobject]@{ ExitCode = $code; Output = ($output -join "`n") }
 }
 

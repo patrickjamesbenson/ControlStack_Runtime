@@ -639,6 +639,10 @@ test("Governance lane provisioner is fixed, idempotent and cannot overwrite dive
   assert.match(provisioner, /lane\/governance-shell/);
   assert.match(provisioner, /worktree', 'add'/);
   assert.match(provisioner, /Get-FileHash/);
+  assert.match(provisioner, /System\.Diagnostics\.ProcessStartInfo/);
+  assert.match(provisioner, /RedirectStandardError = \$true/);
+  assert.match(provisioner, /ReadToEndAsync/);
+  assert.doesNotMatch(provisioner, /& git\.exe/);
   assert.match(provisioner, /GeneratedFoundingFiles/);
   assert.match(provisioner, /approved Program ruling/);
   assert.match(provisioner, /Resolve-BootstrapFile/);
