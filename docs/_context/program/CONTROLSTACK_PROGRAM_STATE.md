@@ -475,3 +475,19 @@ P2 Checkpoint 1 is **IMPLEMENTATION COMPLETE / GATE GREEN / COMMIT BLOCKED BY SH
 - **HELD:** IES generation, downstream artifacts, writes/readiness, routes, persistence and main promotion.
 - **QUEUE:** empty; no implementation parcel admitted by the stability decision.
 - **NEXT:** Program must create a separate exact parcel before any downstream work. Patrick has no action.
+
+## 2026-07-21 Seam G producer commission state
+
+- **SEAM B:** version 1 remains stable and unchanged.
+- **SEAM G:** candidate sequence opened but tunnel remains inactive.
+- **SOLE READY ITEM:** SEAM-G-P1 in the isolated Selector lane.
+- **PRODUCER SCHEMA:** `controlstack.downstream.ies-artifact-request.v1`.
+- **INTENT:** exact IES LM-63 reference-build request only; no generic artifact family and no Selector output button.
+- **INPUT:** stable public Engine output JSON, exact artifact intent and optional quarantined traceability envelope.
+- **OUTPUT:** deterministic complete-or-blocked read-only request with replay/audit identity and safe public technical content only.
+- **IDEMPOTENCY:** identical technical inputs produce identical output; traceability changes are inert; technical identity changes move request identity.
+- **FAILURE ISOLATION:** malformed/unsafe/contradictory/legacy input fails closed with no partial artifact-ready request.
+- **WRITES:** none; no route, persistence, file, download, email, generator, authority, reference mutation or downstream activation.
+- **SEQUENCE BLOCKS:** SEAM-G-C1 waits for Program producer acceptance; SEAM-G-A1 waits for producer and consumer acceptance.
+- **MAIN:** held; unfinished runtime-port work excluded.
+- **NEXT:** reconcile Selector queue and implement SEAM-G-P1 in exactly two new files. Patrick has no action.

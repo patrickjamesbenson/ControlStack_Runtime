@@ -694,3 +694,55 @@ The Lab adapter remains implementation-independent and consumes public JSON only
 Version 1 compatibility is exact-shape and exact-version. A breaking field, ownership, identity or blocked-state change requires a new schema and Program decision. Unknown versions fail closed. Rollback is removal or non-use of the producer or compatibility adapter; because neither persists or writes, no data migration, record repair, route reversal, reference rollback or authority repair is required.
 
 This stability declaration does not activate IES readiness or Seam G. The diagnostic RunTable domain output remains diagnostic-only, and the persistence-coupled first-narrow row path and colliding legacy schema remain outside the stable boundary. Downstream generation, writes, routes, persistence and main require a separately commissioned parcel.
+
+## 2026-07-21 approved Seam G candidate — read-only IES artifact request version 1
+
+**Status:** PRODUCER COMMISSIONED; SEAM G INACTIVE.
+
+### Contract split
+
+```text
+stableEngineOutputV1
++ exactIesArtifactIntentV1
++ optionalQuarantinedTraceability
+-> iesArtifactRequestV1
+-> futureImportFreeLabCompatibility
+-> futureProgramActivationReview
+```
+
+### Producer request boundary
+
+`controlstack.downstream.ies-artifact-request.v1` is a deterministic request/proof envelope, not an IES file, generator command, download, email or route payload.
+
+The exact caller input keys are `engineOutput`, `artifactIntent` and optional `traceabilityEnvelope`. `artifactIntent` has exact schema/version and the sole version-1 kind `ies_lm63_reference_build`. No filename, destination, recipient, user, project, owner, timeline, registration, authority approval, path or write instruction is accepted.
+
+A complete request may preserve only:
+
+- stable Engine output schema/version/state and result/request/source/policy/evidence identities;
+- safe selected-result technical provenance and thermal values already present in the stable public output;
+- exact stable public RunTable rows;
+- deterministic request ID, replay key and audit projection;
+- canonical blockers/warnings;
+- explicit safety state proving read-only, non-persistent, no route, no generator, no raw IES/photometry/candela/file content and no downstream activation.
+
+Blocked Engine output remains blocked. It cannot produce an artifact-ready request, selected result, rows or generated content.
+
+### Replay and audit
+
+The request ID and replay key derive only from exact stable technical inputs and artifact intent. Repeating identical inputs must return byte-equivalent plain JSON. Changing only an outer traceability envelope must not change or appear in the request. Changing a stable technical identity must change request identity.
+
+The audit projection is deterministic and contains no wall-clock time, random ID, user/project identity or persistence acknowledgement. It records request validation state and all prohibited side effects as false.
+
+### Failure isolation and rollback
+
+Malformed, unknown-version, over-rich, unsafe/private, contradictory, added-authority or legacy-row input fails closed with canonical blockers and no partial artifact-ready projection. Producer failure cannot invoke or mutate Engine, Lab, RuntimeData, routes, files or references.
+
+Rollback is removal or non-use of the new producer module. It writes and persists nothing, so no data migration, artifact deletion, authority repair or route reversal is required.
+
+### Ordered parcels
+
+1. SEAM-G-P1: Selector producer module and focused test only.
+2. SEAM-G-C1: separate Lab import-free compatibility adapter after Program producer acceptance.
+3. SEAM-G-A1: Program may activate only the read-only request tunnel after all Seam G conditions pass.
+
+Actual IES generation, reference allocation/approval/sealing, file/download/email output, routes, persistence and main remain outside this candidate.

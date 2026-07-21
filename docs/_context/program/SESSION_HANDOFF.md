@@ -55,4 +55,8 @@ The old RunTable scaffold remains diagnostic-only, and persistence-coupled legac
 
 ## Next authorised parcel
 
-None. The Program queue is empty. A new exact Program decision is required before any downstream implementation. Patrick has no action.
+SEAM-G-P1 is the sole ready parcel in Selector & Engine: one deterministic read-only IES artifact-request contract module and one focused test.
+
+It must consume only stable public Engine output JSON and exact IES intent, quarantine traceability, preserve safe technical identities and rows, prove replay/idempotency and fail closed without generation or writes.
+
+SEAM-G-C1, Seam G activation, IES generation, routes, persistence, email/export, main and unfinished runtime-port work remain blocked. Patrick has no action.

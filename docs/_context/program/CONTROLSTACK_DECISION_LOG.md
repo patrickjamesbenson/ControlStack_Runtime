@@ -1121,3 +1121,21 @@ Program verifies the five mandatory Seam B conditions:
 Program therefore declares **Seam B Engine output contract version 1 stable**. This declaration covers the contract and read-only compatibility boundary only. It does not declare the old diagnostic RunTable scaffold production-ready, does not rehabilitate the persistence-coupled legacy row path and does not permit the colliding legacy row schema.
 
 Seam G remains reserved and inactive. IES generation, downstream artifacts, writes/readiness, routes, persistence and main promotion require a new separately bounded Program parcel. No implementation parcel is admitted by this stability decision.
+
+## 2026-07-21 — Seam G version-1 read-only IES request sequence commissioned
+
+**Status:** PRODUCER PARCEL APPROVED; TUNNEL AND GENERATION REMAIN INACTIVE.
+
+The original Selector output-actions brief retired direct `generateIES()` ownership from Selector and retained navigation to the Photometry/Lab domain. Program therefore commissions no Selector button, route, export, email, download or file-writing work.
+
+The first Seam G sequence is a contract proof only:
+
+1. **SEAM-G-P1 — Selector & Engine producer.** Create one immutable `controlstack.downstream.ies-artifact-request.v1` envelope from an exact stable `controlstack.engine.output.v1` complete-or-blocked public JSON value. The request is deterministic, replay-identical and non-persistent. It may expose only stable Engine identities, safe selected-result technical provenance/thermal values, exact public RunTable rows, canonical blockers/warnings, deterministic replay/audit identity and explicit no-write/no-generation safety flags.
+2. **SEAM-G-C1 — Lab & IES consumer.** After Program accepts the producer receipt, prove one import-free read-only compatibility projection from plain public request JSON. It may confirm compatibility only; it may not generate IES, allocate/approve/seal authority, accept evidence, mutate references or write anything.
+3. **SEAM-G-A1 — Program activation review.** Verify schema/version, producer and consumer gates, deterministic replay/idempotency, security/write boundary, failure isolation/audit and rollback. Program may then activate only the read-only request tunnel. Actual generation remains a separate future parcel.
+
+SEAM-G-P1 exact files are new `packages/workspace-kernel/runtimeIesArtifactRequestContractV1.js` and new `tests/runtimeIesArtifactRequestContractV1.test.js`. It may import public Engine contract constants and stable fingerprint support only. It must not invoke Engine, donor, curve parser or Lab code; must not add or call routes; and must not persist, generate, return raw IES/photometry/candela/file content, expose private paths or inspect governance metadata.
+
+The request accepts an optional outer traceability envelope only to prove quarantine: changing user, project, owner, timeline or registration values must not change the request or appear in it. Identical stable Engine output and artifact intent must produce an identical request ID, replay key, audit projection and complete output. Blocked Engine output must remain blocked with no artifact-ready state or generated body.
+
+This decision admits SEAM-G-P1 only. SEAM-G-C1 and SEAM-G-A1 remain sequence-blocked. Main and unfinished runtime-port work remain excluded.

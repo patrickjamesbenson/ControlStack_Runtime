@@ -719,3 +719,36 @@ There is no outstanding Selector or Engine implementation item in this thermal s
 - **Boundary:** stability covers only the public contract and read-only compatibility projection. It does not activate the diagnostic RunTable scaffold, legacy persistence-coupled rows, IES generation, downstream writes/readiness, routes, persistence or main.
 
 Seam G and main promotion remain held. No implementation item is ready; a new exact Program parcel is required for any downstream work.
+
+## 2026-07-21 — Seam G read-only IES request sequence
+
+**Status:** SEAM-G-P1 SOLE READY ITEM; SEAM G STILL INACTIVE.
+
+### SEAM-G-P1 — Produce deterministic IES artifact request envelope
+
+- **Owner:** Selector & Engine.
+- **Status:** ready.
+- **Depends on:** stable Seam B version-1 Engine output contract.
+- **Exact feature files:** new `packages/workspace-kernel/runtimeIesArtifactRequestContractV1.js` and new `tests/runtimeIesArtifactRequestContractV1.test.js`.
+- **Gate:** `selector-engine`.
+- **Input:** exact public `controlstack.engine.output.v1` JSON, exact IES artifact intent, and optional quarantined traceability envelope.
+- **Output:** exact immutable `controlstack.downstream.ies-artifact-request.v1` complete-or-blocked request with deterministic request/replay/audit identity, stable Engine identities, safe technical provenance/thermal values, exact public rows, canonical blockers/warnings and explicit no-write/no-generation safety state.
+- **Acceptance:** exact schema/version/key sets; complete, blocked and valid-zero fixtures; identical inputs replay identically; different governance envelopes produce identical output and do not appear; changed Engine technical identity changes request identity; unknown, over-rich, unsafe/private, contradictory or legacy-row input fails closed; blocked Engine output cannot become artifact-ready; no raw IES, photometry, candela, file, path, route, write, persistence, email, Engine invocation or generator capability.
+- **Commit message:** `feat(runtime): add IES artifact request contract v1`.
+- **Next:** Program producer receipt review; SEAM-G-C1 remains blocked.
+
+### SEAM-G-C1 — Prove Lab read-only request compatibility
+
+- **Owner:** Lab & IES.
+- **Status:** blocked behind Program acceptance of SEAM-G-P1.
+- **Scope:** exact new adapter and focused test to be named by Program after producer review.
+- **Boundary:** plain public JSON only; import-free; no IES generation, authority, evidence acceptance, reference mutation, route, persistence, write or readiness activation.
+
+### SEAM-G-A1 — Activate read-only tunnel
+
+- **Owner:** Program & Integrate.
+- **Status:** blocked behind accepted producer and consumer receipts.
+- **Acceptance:** exact schema/version, producer and consumer gates, security/write boundary, deterministic replay/idempotency, failure isolation/audit and rollback.
+- **Boundary:** may activate only the read-only request tunnel. IES generation and downstream writes remain separately held.
+
+Main, routes, persistence, email/export, actual IES generation and unfinished runtime-port work remain excluded.

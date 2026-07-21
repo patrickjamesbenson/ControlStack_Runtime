@@ -721,3 +721,22 @@ All five mandatory conditions are satisfied: exact versioned schemas; green prod
 The stable boundary is limited to the selections-only request, complete-or-blocked output, exact non-persistent RunTable row and read-only Lab compatibility projection. The old diagnostic RunTable scaffold remains diagnostic-only. Persistence-coupled legacy rows and the colliding legacy row schema remain excluded.
 
 No route, persistence, IES generation, authority change, downstream write/readiness or main promotion is authorised. Seam G remains reserved and inactive. The Program queue is empty; any downstream implementation requires a new exact parcel and approval.
+
+## 2026-07-21 Seam G producer commission handoff
+
+Program has opened one narrow read-only Seam G candidate without activating the tunnel.
+
+Commission the isolated Selector & Engine lane for SEAM-G-P1 with exactly two new files:
+
+- `packages/workspace-kernel/runtimeIesArtifactRequestContractV1.js`
+- `tests/runtimeIesArtifactRequestContractV1.test.js`
+
+The module consumes exact stable public Engine output JSON plus an exact `ies_lm63_reference_build` intent. It may accept an optional traceability envelope only to prove that user/project/owner/timeline/registration differences are quarantined and output-inert.
+
+It emits one deeply immutable complete-or-blocked `controlstack.downstream.ies-artifact-request.v1` envelope with deterministic request, replay and audit identities; stable technical fingerprints; safe selected-result provenance/thermal values; exact public rows; canonical blockers/warnings; and explicit no-write/no-generation safety flags.
+
+Prove complete, blocked, valid-zero, replay-identical, governance-independent and technical-identity-moving fixtures. Unknown versions, extra authority, raw/private/unsafe content, contradictory identities and legacy rows fail closed. Blocked Engine output cannot become artifact-ready.
+
+Do not add a button, route, POST endpoint, file/export/email/download path, persistence, IES generation, authority state, reference mutation, Engine invocation, donor use, Lab import, main or runtime-port change.
+
+After a green Selector receipt, return to Program. SEAM-G-C1 and SEAM-G-A1 remain blocked.
