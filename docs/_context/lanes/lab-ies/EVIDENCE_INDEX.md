@@ -1906,6 +1906,19 @@ Current verification superseded the stale parts of that snapshot:
 - the two Selector paths are not currently dirty;
 - staged, untracked and deleted counts remained 0, 66 and 0 respectively.
 
+## LAB-043 Engine output version-1 compatibility admission — 2026-07-21
+
+- Program accepted the public Engine producer after focused 116/116 and normal 107/107 Selector evidence — PROGRAM-ACCEPTED.
+- Program parcel: ENG-STAB-C1, read-only Lab/IES compatibility proof only — ADMITTED.
+- Public schemas: `controlstack.engine.output.v1` and `controlstack.engine.runtable-row.v1`, both version 1 — RECORDED.
+- Exact feature scope: new compatibility adapter plus focused test only — RECORDED.
+- Cross-lane rule: consume plain public JSON fixtures; no import from Selector, Workspace or Runtime implementation modules — RECORDED.
+- Required fixtures: complete, blocked, zero-valued, governance-independent, unknown-version, over-rich, contradictory, unsafe/private and legacy-row rejection — RECORDED.
+- Output boundary: bounded deeply immutable compatibility summary only; no raw payload, private path, authority claim, IES generation, write, persistence, route or readiness activation — RECORDED.
+- Fixed-gate audit: newly created Lab tests are omitted; one temporary side-effect import in the gate-included keyword migration test is authorised and must be removed before final staging — RECORDED NON-PERSISTENT HARNESS.
+- Protected working state: one branch-HEAD marker plus the three protected untracked items remain outside the parcel — VERIFIED.
+- Stability and downstream status: withheld; Program review required after the consumer receipt — RECORDED.
+
 ## Evidence maintenance rule
 
 After each authorised lane parcel:

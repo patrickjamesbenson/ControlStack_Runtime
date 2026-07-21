@@ -169,7 +169,24 @@ LAB-034 is complete as the read-only legacy compatibility classification. It rem
 
 LAB-017 remains governed by its approved version-1 envelope. Program retains all production allocation, live source reading, hosting, routing, persistence, authentication, CRM integration, deployment and endpoint ownership.
 
-No queue item remains. The corrected thermal batch is complete; any further Lab / IES implementation requires a newly admitted parcel under the lane charter.
+The corrected thermal batch is complete. Program has now admitted LAB-043 as the sole ready Lab parcel.
+
+## 2026-07-21 LAB-043 Engine output compatibility handoff
+
+Create exactly:
+
+```text
+packages/lab-kernel/ies-toolkit/engineOutputV1CompatibilityAdapter.js
+tests/lab-kernel/engineOutputV1CompatibilityAdapter.test.js
+```
+
+Consume plain public JSON fixtures for `controlstack.engine.output.v1` and `controlstack.engine.runtable-row.v1`. Do not import Selector, Workspace or Runtime implementation modules. Emit only a deeply immutable bounded Lab compatibility summary and preserve complete, blocked and valid zero-valued technical semantics.
+
+Reject unknown versions, over-rich keys, contradictory identities, governance-bearing values, private paths, unsafe/raw data and the legacy colliding first-narrow row schema. Do not generate IES, make authority decisions, accept evidence, add routes, persist, write, activate downstream readiness, mutate RuntimeData, use donor code or touch main.
+
+The fixed gate omits the new test. Temporarily import it once from the gate-included keyword migration test, run the full Lab gate with visible focused assertions, then remove the import and prove the harness file is byte-identical to HEAD and absent from final staging. Commit only the two new feature files as `lab: checkpoint Engine output v1 compatibility`.
+
+Preserve the branch-HEAD marker and all three protected local items. After the pushed feature and five-record closeout, return the consumer receipt to Program; do not declare Engine output stable or activate any downstream consumer.
 
 ## LAB-017 immutable completion receipt
 
