@@ -1521,3 +1521,34 @@ SYSTEM_POLICY is present with 133 rows, but the current bounded dry-run does not
 Program admits **WALK-001V — bounded Ambient validation visibility** as the sole ready Selector parcel. Exact feature scope is `packages/workspace-kernel/authorityReferenceMaterialiserService.js` and gate-included `tests/selectorReferenceOptionsService.test.js`, plus Selector lane-memory files. Extend only the existing in-memory `currentSourceShape` result after a successful Google read and before every write. Add a redacted SYSTEM_POLICY/Ambient summary containing table and exact-item counts, approved exact-item counts, and allowlisted `economy`, `business`, `first` and `charter` tier-column presence/population plus finite and non-finite numeric-token counts. It may report counts of rows with finite tier values, rows with finite values across multiple tier columns and generic-only rows, but no policy values, raw rows, unrestricted headers, users, credentials, Sheet identity, provider body, full materialised JSON or private paths.
 
 WALK-001V must not alter Google reading, Driver authority rules, source validation outcome, materialisation, archive, promotion, Selector options, Engine, source data or deployment. The gate-included test must prove finite tier-specific evidence, generic-only and non-numeric rejection, duplicate exact-row visibility, redaction and dry-run no-write behaviour. After the exact two-file feature parcel is gated and pushed, stop for Program activation and source-repair review. No Google Sheet edit is admitted yet; Program will issue one exact source-owner correction only after the Ambient evidence is visible.
+
+## 2026-07-22 — Program response routing is mandatory
+
+**Status:** STANDING OPERATING RULE; BINDING ON EVERY FUTURE PROGRAM SESSION.
+
+Every Program response that changes a ruling, authorisation or queue state must end with a section titled `ROUTING`. That section must list every affected lane and use exactly one of these forms for each destination:
+
+- `<lane>: no action`
+- `<lane>: PASTE THE FOLLOWING —` followed by the complete ready-to-send message for that lane's chat
+- `PATRICK: <one plain-English action>`
+- `ADVISOR: <infrastructure action>`
+
+Patrick is the courier between chats. A Program authorisation that is not routed does not move and remains stalled in Program context. Summaries such as “tell the lane to proceed” are prohibited; the routed message must contain the finished words in full. If no destination moves, the response must state `ROUTING: nothing moves` so silence is never ambiguous.
+
+## 2026-07-22 — Canonical two-build production-chain seed library commissioned
+
+**Status:** SEED-LIB-001 RULED AND QUEUED; REAL EXECUTION SEQUENCE-BLOCKED.
+
+Patrick nominates two Selector-saved test cases as the initial canonical production-chain library for C5, C6, C7 and downstream acceptance. Their saved Selector selections are the sole run-intake authority; no test, lane or worker may retype, infer or replace run quantity or length. Build 1 explicitly carries 9560 mm × 1. Build 2 uses the quantity and length contained in its saved test case.
+
+**Build 1 — direct, loaded:** DNX 60 Square; Opal 60; 3000K/CRI80 board; DALI-2 DT6 class; target 1000 lm/m; run 9560 mm × 1; Spitfire D25 emergency; PIR 5 m sensor; Suspended; Top Side; White (Textured).
+
+**Build 2 — direct/indirect, loaded:** DNX 80 DI (`Square_DI`); direct Inlay 80 plus Microprism; indirect Rope 80; direct target 1500 lm/m; indirect target 500 lm/m; 5000K/CRI90 board; Fixed (On/Off) on both lanes; Surface Mount; Back Wall side; Black (Textured); EM DC Mains emergency; Microwave sensor; run quantity and length from the saved selection.
+
+These cases intentionally differ in profile, emission mode, optics, board family, CRI class, control class and thermal characteristics. They are the required canonical pair for changed-optic movement and the varied-row proof where placeholder source values are identical. Additional canonical cases may be appended later without changing any C5-C7 schema, ownership rule or contract version.
+
+The acceptance chain must be real and ordered: exact Selector-saved selections and run intake; accepted Engine/public contracts when the Selector action lane is released; Lab resolution of genuine measured evidence; the existing real authority approval and sealer; the existing real `inspectIesReferenceForGeneration` inspection; C5 resolver/load preflight; C6 one-shot in-memory generation; C7 validated opaque artifact handoff; then separately admitted Governance retrieval. Hand-made sealed DTOs, hand-made inspection outputs, substituted optics, substitute board evidence and synthetic production artifacts cannot satisfy canonical acceptance.
+
+If Lab lacks measured evidence, a sealable authority record or exact identity agreement for any selected element, the chain fails closed and reports the exact missing element. No nearest-match, inherited measurement, default evidence, alternate optic, alternate board, placeholder value or manually constructed artifact is permitted.
+
+Current repository evidence shows the C5 feature implementation is pushed and the fixed Lab gate passes 314/314, but the Lab lane still has an unfinished lane-memory closeout and protected local inventory. Program accepts the technical C5 evidence but does not release C6 until that closeout is cleanly committed and returned. Selector WALK-001V remains the sole ready Selector parcel; the seed chain cannot invoke Engine or consume the saved cases until WALK-001 through WALK-007 close in order. The immediate Lab action is C5 lane-memory closeout only. The seed batch is recorded in both affected lane queues as blocked, not executed.

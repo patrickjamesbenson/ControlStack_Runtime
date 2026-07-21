@@ -91,9 +91,9 @@ Lab has no queued item. Sealed DTO loading, generator invocation, LM-63 generati
 
 No direct module download path, provider push from Selector, main work or runtime-port mixing is authorised. Selector work-shape items PWS-001, PWS-002 and PWS-005 are complete and need no recommission.
 
-SEAM-G-C5 sealed-reference load preflight is the sole ready Lab parcel. It may load one exact sealed reference through an injected read-only Lab resolver, validate it against the accepted binding, inspection and job plan, emit one redacted load receipt, then discard the body. It may not invoke the generator, emit LM-63, add routes, persist, write or deliver.
+SEAM-G-C5 technical implementation is complete and the fixed Lab gate passes 314/314. The sole ready Lab action is its lane-memory closeout while preserving the expected protected local inventory. The implemented loader remains read-only: it may load one exact sealed reference through an injected resolver, validate it against the accepted binding, inspection and job plan, emit one redacted receipt, then discard the body. It may not invoke the generator, emit LM-63, add routes, persist, write or deliver.
 
-After C5 acceptance, Program must separately admit C6 in-memory generation, C7 opaque generated-artifact handoff through Seam G, and Governance retrieval activation. Governance persistence and identity/permissions are closed; CRM remains held.
+After Program accepts the clean C5 closeout, it may separately admit C6 in-memory generation, then C7 opaque generated-artifact handoff through Seam G, then Governance retrieval activation. Governance persistence and identity/permissions are closed; CRM remains held.
 
 ## Selector consolidated walkthrough
 
@@ -109,6 +109,16 @@ User-facing readiness counters then count only genuine visible prerequisites and
 
 No live Engine run is allowed before cleanup closes. The final parcel reconciles the action lane to the selections-only boundary and performs one bounded thermal proof: selected room plus one measured optic rise exactly once, with varied-rise movement of lookup and verified lm/m. Server revision acknowledgement and governance/project envelopes are not Engine authority.
 
-Patrick's finishes default-acceptance ruling is closed and recorded in Governance. Inheritance or auto-fill alone does not satisfy Build Ready; one `Accept all defaults` action acknowledges all flagged defaults. Lab C5 remains independently ready in its separate worktree.
+Patrick's finishes default-acceptance ruling is closed and recorded in Governance. Inheritance or auto-fill alone does not satisfy Build Ready; one `Accept all defaults` action acknowledges all flagged defaults. Lab C5 technical work is complete; its lane-memory closeout is the only current Lab action.
 
 Patrick has no remaining personal CRM prerequisite. He completed `ControlsStack (Read Only)` with exact contact, company and deal read scopes and stored its token outside repository/chat/log surfaces. The ruled CRM boundary is one deal per envelope through `controlstack_project_key` plus `controlstack_job_ref`, readiness-state-entry push intent, HubSpot ownership of contacts/companies/deals/price, ControlStack ownership of build detail, a separate leads deals pipeline and local-first cached operation. `writePolicy` remains disabled. Exact writer-scope definition is the sole substantive CRM precondition; separate Program admission remains the normal release control. Patrick reports the RULED CRM boundary and PARKED Service Keys migration are already in the project-shell decision registry. Service Keys migration remains deferred until cutover as a token swap, while the legacy OAuth public app remains in service.
+
+## Mandatory routing and seed-library changeover
+
+Every Program response that changes a ruling, authorisation or queue state ends with `ROUTING`, lists every affected lane and includes either the full paste-ready lane message, `<lane>: no action`, one plain-English Patrick action or one Advisor infrastructure action. Unrouted authorisations remain stalled. If nothing moves, state `ROUTING: nothing moves`.
+
+SEED-LIB-001 is ruled and queued as two Patrick-nominated Selector-saved cases: the DNX 60 Square / Opal 60 / 3000K CRI80 / DALI-2 DT6 / 1000 lm/m / 9560 mm × 1 loaded direct build, and the DNX 80 DI / Inlay 80 Microprism direct + Rope 80 indirect / 1500 + 500 lm/m / 5000K CRI90 / Fixed both lanes loaded build whose run intake comes from its saved case.
+
+The canonical library must use the real Selector selections and run intake, genuine Lab evidence, real approval/sealer, real inspection, C5 load, C6 generation and C7 opaque handoff. Hand-made artifacts or substituted evidence fail acceptance. Missing Lab evidence fails closed with the exact gap.
+
+C5 implementation is green at 314/314, but Lab lane-memory closeout is still pending and is the sole ready Lab action. WALK-001V remains the sole ready Selector parcel. Seed execution is blocked behind WALK-007 and later Program admissions; Governance retrieval remains blocked behind C7.

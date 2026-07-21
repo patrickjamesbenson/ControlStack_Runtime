@@ -928,7 +928,7 @@ No implementation item is ready. A new exact Program parcel is required before a
 ### SEAM-G-C5 — Sealed-reference load preflight
 
 - **Owner:** Lab & IES.
-- **Status:** ready; sole Lab parcel.
+- **Status:** technical implementation pushed and verified at 314/314; lane-memory closeout is the sole ready Lab action. C6 remains blocked until the closeout is committed and returned.
 - **Input:** exact ready materialisation-job-plan version 1, exact matching generation-reference-binding version 1, exact matching reference-generation-inspection version 1, and one injected Lab-owned read-only resolver capability.
 - **Operation:** derive the reference identity only from the matched contracts; call the resolver at most once; reject caller paths, URLs and provider-shaped resolver input; validate the loaded DTO through the existing generation-inspection path; require exact reference identity, keyword profile, baseline, missing overrides and no-override readiness equality.
 - **Output:** deterministic immutable ready-or-blocked redacted load receipt. The loaded DTO is ephemeral and discarded after validation.
@@ -939,8 +939,8 @@ No implementation item is ready. A new exact Program parcel is required before a
 
 ### Generation and delivery sequence
 
-1. **C5:** sealed-reference load preflight — ready now.
-2. **C6:** one-shot in-memory generator invocation — blocked until C5 accepted.
+1. **C5:** sealed-reference load-preflight feature — implemented and green; Lab lane-memory closeout ready now.
+2. **C6:** one-shot in-memory generator invocation — blocked until Program accepts the clean C5 closeout.
 3. **C7:** validate LM-63 and hand one opaque generated-artifact identity plus safe summary through Seam G — blocked until C6 accepted.
 4. **Governance retrieval activation:** store and serve the artifact body only through the single gateway after separate useful-output readiness and identity/project capture — blocked until C7 accepted.
 
@@ -948,7 +948,19 @@ No implementation item is ready. A new exact Program parcel is required before a
 
 Every affected parcel and gate plan must retain: envelope independence including no-envelope Engine execution; changed-optic movement; varied-row proof for identical placeholder lookup values; and ownership-wide tests instead of named-instance assertions.
 
-PWS-001, PWS-002 and PWS-005 are complete. SEAM-G-C5 remains the sole ready Lab parcel. The Selector walkthrough batch below is independent and uses one Selector writer only.
+### SEED-LIB-001 — canonical production-chain seed library
+
+- **Status:** ruled and queued; real execution blocked by current lane sequences.
+- **Selector authority:** Patrick reports both cases are saved as Selector test cases. Saved selections are the only run-intake authority. Build 1 is 9560 mm × 1; Build 2 quantity and length come from its saved case and must not be inferred or retyped.
+- **Build 1:** DNX 60 Square; Opal 60; 3000K/CRI80; DALI-2 DT6; 1000 lm/m; Spitfire D25 emergency; PIR 5 m; Suspended; Top Side; White (Textured).
+- **Build 2:** DNX 80 DI (`Square_DI`); direct Inlay 80 + Microprism; indirect Rope 80; direct 1500 lm/m; indirect 500 lm/m; 5000K/CRI90; Fixed (On/Off) both lanes; Surface Mount; Back Wall side; Black (Textured); EM DC Mains emergency; Microwave sensor.
+- **Required real chain:** saved Selector selections/run intake → accepted Engine/public envelopes → genuine Lab measured evidence → real authority approval and sealer → real inspection → C5 resolver/load → C6 in-memory generation → C7 opaque artifact handoff → separately admitted Governance retrieval.
+- **Prohibited acceptance shortcuts:** no hand-made sealed DTO, hand-made inspection, synthetic production artifact, substitute optic, substitute board, inherited measurement, nearest match, placeholder evidence or manually entered run intake.
+- **Fail closed:** report the exact selected element lacking measured evidence, sealable authority or identity agreement. Do not substitute.
+- **Canonical role:** both builds are mandatory for C5-C7 and downstream acceptance, including changed-optic movement and varied-row placeholder proof. Later library additions require no schema, ownership or contract-version change.
+- **Sequence:** Selector seed execution is blocked behind WALK-007 acceptance. Lab seed sealing/execution is blocked behind clean C5 closeout and later Program admissions for C6 and C7. Governance retrieval remains blocked behind C7.
+
+PWS-001, PWS-002 and PWS-005 are complete. C5 lane-memory closeout is the sole ready Lab action. WALK-001V remains the sole ready Selector parcel. Each lane keeps one writer; the two current actions may proceed independently in separate worktrees.
 
 ### Selector consolidated walkthrough batch
 

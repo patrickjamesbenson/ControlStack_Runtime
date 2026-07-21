@@ -962,3 +962,18 @@ Readiness counts are user-facing truth. Only current visible actionable prerequi
 - ownership rules are tested across all governed rows/systems, not one named instance.
 
 These are seam-level acceptance requirements and cannot be dropped by moving ownership to a new lane.
+
+## 2026-07-22 canonical production-chain seed-library policy
+
+**Status:** ACCEPTANCE LIBRARY BINDING; NO CONTRACT CHANGE.
+
+SEED-LIB-001 defines the initial two-case canonical acceptance library for C5, C6, C7 and downstream retrieval:
+
+1. DNX 60 Square; Opal 60; 3000K/CRI80; DALI-2 DT6; target 1000 lm/m; 9560 mm × 1; Spitfire D25 emergency; PIR 5 m; Suspended; Top Side; White (Textured).
+2. DNX 80 DI (`Square_DI`); direct Inlay 80 + Microprism; indirect Rope 80; direct 1500 lm/m; indirect 500 lm/m; 5000K/CRI90; Fixed (On/Off) both lanes; Surface Mount; Back Wall side; Black (Textured); EM DC Mains emergency; Microwave sensor; run intake from the saved Selector case.
+
+Saved Selector selections and run intake are authoritative. The canonical acceptance path is the existing production path only: accepted Engine/public contracts, genuine measured Lab evidence, the existing real approval and sealer, the existing real inspection, C5 resolver/load, C6 in-memory generation, C7 opaque artifact handoff and separately activated Governance retrieval.
+
+A hand-made sealed DTO, hand-made inspection result, synthetic production artifact, manually reconstructed run intake, substitute optic/board or inherited/placeholder measurement cannot satisfy this policy. Missing measured evidence, sealable authority or exact identity agreement fails closed with the exact missing selected element.
+
+The two cases intentionally vary profile, emission, optic, board/CRI, control and thermal characteristics and therefore satisfy the canonical changed-optic and varied-placeholder acceptance pair. Adding further cases later is a library extension only and does not alter schema versions, contract fields, authority ownership, resolver rules, generation semantics or retrieval routing.

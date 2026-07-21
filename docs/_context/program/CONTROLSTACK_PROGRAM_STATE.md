@@ -675,15 +675,18 @@ P2 Checkpoint 1 is **IMPLEMENTATION COMPLETE / GATE GREEN / COMMIT BLOCKED BY SH
 
 ## 2026-07-22 generation-chain admission state
 
-- **SELECTOR:** PWS-001, PWS-002 and PWS-005 were already admitted, executed in strict order, gated, pushed and closed. Queue empty; no recommission or second writer.
-- **LAB READY:** SEAM-G-C5 sealed-reference load preflight is the sole ready Lab parcel.
+- **SELECTOR:** PWS-001, PWS-002 and PWS-005 were already admitted, executed in strict order, gated, pushed and closed. That earlier batch is closed; the separate WALK-001V walkthrough parcel remains active under the later Selector state below. No recommission or second writer.
+- **C5 TECHNICAL RESULT:** sealed-reference load-preflight implementation is pushed and the fixed Lab gate is verified at 314/314.
+- **LAB READY:** C5 lane-memory closeout only. The Lab tree contains the expected protected local inventory and unfinished closeout documentation; C6 is not released until the closeout is committed and returned.
 - **C5 INPUT:** exact ready job plan, reference binding and generation inspection plus one injected Lab-owned read-only resolver.
 - **C5 ACTION:** derive identity only from matched contracts, call the resolver at most once, validate the loaded DTO through the existing generation-inspection path, then discard the DTO.
 - **C5 OUTPUT:** immutable redacted ready-or-blocked load receipt only.
 - **C5 BLOCKED:** generator/materialise invocation, LM-63 text, routes, persistence, files, delivery and readiness activation.
 - **CHAIN AFTER C5:** C6 in-memory generation; C7 validated opaque Seam G artifact handoff; Governance retrieval activation. Each requires its own accepted predecessor and Program admission.
+- **SEED LIBRARY:** SEED-LIB-001 is ruled and queued as two Patrick-nominated Selector-saved cases. Canonical acceptance must use the real approval/sealer, real inspection, C5, C6 and C7 chain; hand-made artifacts and evidence substitution are prohibited.
+- **SEED SEQUENCE:** saved-case execution waits for WALK-007; Lab seed execution waits for clean C5 closeout and separate C6/C7 admissions; Governance waits for C7.
 - **CRM:** Patrick's HubSpot portal-scope prerequisite and business scope/lifecycle ruling are complete. No Patrick-held CRM prerequisite remains. Exact writer-scope definition is the sole substantive CRM precondition; separate Program admission remains the normal release control before live provider writes.
-- **NEXT:** Lab may execute C5 in its isolated worktree.
+- **NEXT:** Lab closes C5 lane memory only; Selector continues WALK-001V independently. No seed artifact is generated yet.
 
 ## 2026-07-22 consolidated Selector walkthrough state
 
@@ -699,7 +702,7 @@ P2 Checkpoint 1 is **IMPLEMENTATION COMPLETE / GATE GREEN / COMMIT BLOCKED BY SH
 - **ENGINE BOUNDARY:** technical source-backed selections are authority; server revision acknowledgement and governance/project envelopes are not Engine prerequisites. No run is authorised until cleanup closes.
 - **THERMAL ACCEPTANCE:** one bounded run must prove selected room plus one measured optic rise exactly once and varied-rise movement of lookup and verified lm/m.
 - **FINISHES:** Patrick's ruling is closed and recorded in Governance. Inheritance or auto-fill alone does not satisfy Build Ready; WALK-005A restores the one-action donor acknowledgement.
-- **PARALLELISM:** Lab C5 remains independently ready. One writer per worktree; no cross-lane writes.
+- **PARALLELISM:** Lab C5 lane-memory closeout and Selector WALK-001V may proceed independently in separate worktrees. One writer per worktree; no cross-lane writes.
 - **NEXT:** Selector executes WALK-001V only, gates and pushes the bounded Ambient visibility change, then stops for Program activation and source-repair review. WALK-001 remains open; WALK-002 through WALK-007 remain sequence-blocked, with WALK-005A inserted before WALK-006. WALK-008 is ruled and closed.
 
 ## 2026-07-22 HubSpot and CRM ruling state
@@ -715,3 +718,7 @@ P2 Checkpoint 1 is **IMPLEMENTATION COMPLETE / GATE GREEN / COMMIT BLOCKED BY SH
 - **STORAGE:** ControlStack remains local-first for engineering state; CRM reads are cached and writes are best-effort, idempotent and replayable.
 - **REMAINING CRM PRECONDITION:** exact writer-scope definition only. A separate Program admission remains the normal release control before implementation.
 - **DEFERRED — REPORTED REGISTRY STATE:** migrate from the private app to HubSpot Service Keys at cutover as an expected token swap with no ControlStack code change. Patrick reports this PARKED decision and the RULED CRM boundary are already recorded in the project-shell decision registry.
+
+## Standing Program response rule
+
+Any Program response that changes a ruling, authorisation or queue state must end with `ROUTING`, list every affected lane, and either provide the full paste-ready message, state `<lane>: no action`, assign one plain-English Patrick action, or assign one Advisor infrastructure action. Unrouted authorisations remain stalled. When nothing moves, state `ROUTING: nothing moves`.
