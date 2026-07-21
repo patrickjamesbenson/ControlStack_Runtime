@@ -1193,3 +1193,24 @@ SEAM-G-P2 exact files are new `packages/workspace-kernel/runtimeIesGenerationInp
 Unknown, over-rich, multi-run, unsafe, governance-bearing, fingerprint-mismatched, blocked-request or technically contradictory input fails closed. Identical technical inputs must return identical generation-input identity and audit state; changed selection, artifact request or technical identity must move identity.
 
 This decision admits SEAM-G-P2 only. SEAM-G-C2 and SEAM-G-A2 remain sequence-blocked. Actual generator invocation, LM-63 text, files, delivery, persistence, authority and main remain blocked.
+
+## 2026-07-21 — SEAM-G-P2 accepted; Lab reference binding admitted
+
+**Status:** GENERATION INPUT ACCEPTED; READ-ONLY REFERENCE BINDING ADMITTED; GENERATOR INACTIVE.
+
+Program accepts the Selector producer receipt. The exact generation-input module and focused test plus one exact tightening checkpoint passed 115/115, followed by normal Selector closeout at 107/107 with a clean ending tree.
+
+The producer recomputes the Engine selection fingerprint, validates deterministic artifact request/replay/audit identity, supports exactly one bounded run, preserves valid zeros and safe technical/thermal identity, and keeps traceability inert. Its tightening verifies selected profile, row identity/state, non-negative thermal rise, safe curve filename and accepted effective-temperature modes. It contains no reference, authority, generator, route, persistence or write capability.
+
+Program admits **SEAM-G-C2** to Lab & IES with exact new files:
+
+- `packages/lab-kernel/ies-toolkit/iesGenerationInputV1ReferenceBindingAdapter.js`;
+- `tests/lab-kernel/iesGenerationInputV1ReferenceBindingAdapter.test.js`.
+
+The adapter must be import-free and consume plain public `controlstack.downstream.ies-generation-input.v1` JSON plus exact public `controlstack.lab.nvb-lab-projection.v2` JSON only. It emits one deeply immutable ready-or-blocked `controlstack.lab.ies-generation-reference-binding.v1` projection.
+
+Ready binding requires path `optic`, no unresolved blockers, exact selected optic key to optic variant agreement, exact optic BOM agreement across generation provenance, Lab selection and thermal evidence, exact evidence-ref agreement, exact measured reference-room/reference-internal/rise triplet agreement, and one exact read-only OPT reference identity. It may preserve the reference identity projection but may not resolve its path or load the sealed DTO.
+
+Unknown versions, extra fields/authority, non-optic path, unresolved state, missing/wrong-kind reference, reference identity contradiction, optic/evidence/thermal mismatch, private/raw content or unsafe generation flags fail closed. The adapter adds no generator invocation, LM-63 text, authority, evidence acceptance, sealing, reference mutation, route, persistence, storage, network/file/email write or readiness activation.
+
+The Lab expected marker and three protected untracked items remain outside the parcel. SEAM-G-A2 and actual generation remain blocked pending the consumer receipt.

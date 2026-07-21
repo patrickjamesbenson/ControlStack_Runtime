@@ -65,8 +65,8 @@ No live route or generator is active. No raw IES, photometry, candela, private p
 
 ## Next authorised parcel
 
-SEAM-G-P2 is the sole ready Selector parcel: one deterministic single-run generation-input contract and one focused test.
+SEAM-G-C2 is the sole ready Lab parcel: one import-free generation-input reference-binding adapter and one focused test.
 
-It must bind the exact artifact request to its matching selection request by recomputing the selection fingerprint, preserve safe technical identity, quarantine traceability and expose no reference authority or generation capability.
+It must prove exact optic key/variant, optic BOM, evidence, measured thermal triplet and read-only OPT reference identity agreement without resolving or loading the reference.
 
-Lab reference binding, LM-63 generation, delivery, routes, persistence, main and unfinished runtime-port work remain blocked. Patrick has no action.
+SEAM-G-A2, sealed DTO loading, LM-63 generation, delivery, routes, persistence, main and unfinished runtime-port work remain blocked. Patrick has no action.

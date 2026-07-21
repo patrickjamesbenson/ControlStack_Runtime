@@ -761,12 +761,12 @@ The Program queue is empty. Main, routes, persistence, email/export, actual IES 
 
 ## 2026-07-21 — Seam G generation binding sequence
 
-**Status:** SEAM-G-P2 SOLE READY ITEM; LM-63 GENERATION BLOCKED.
+**Status:** SEAM-G-C2 SOLE READY ITEM; LM-63 GENERATION BLOCKED.
 
 ### SEAM-G-P2 — Produce deterministic single-run generation input
 
 - **Owner:** Selector & Engine.
-- **Status:** ready.
+- **Status:** done and Program-accepted.
 - **Depends on:** active Seam G version-1 read-only artifact-request tunnel.
 - **Exact feature files:** new `packages/workspace-kernel/runtimeIesGenerationInputContractV1.js` and new `tests/runtimeIesGenerationInputContractV1.test.js`.
 - **Gate:** `selector-engine`.
@@ -775,14 +775,22 @@ The Program queue is empty. Main, routes, persistence, email/export, actual IES 
 - **Acceptance:** recompute and match selection request fingerprint; exact one-run shape; positive integer quantity and length; valid zero target/ambient values; request/replay/result/source/policy/evidence identities agree; identical technical input replays identically; traceability is inert and absent; changed selection, request or technical identity moves generation-input identity; unknown, blocked, extra, multi-run, governance, unsafe/private/raw, fingerprint-mismatched or contradictory input fails closed.
 - **Boundary:** no reference identity, sealed DTO, authority body, generator invocation, LM-63 text, route, persistence, file/network/email write or readiness activation.
 - **Commit message:** `feat(runtime): add IES generation input contract v1`.
-- **Next:** Program producer review; SEAM-G-C2 remains blocked.
+- **Accepted receipt:** feature and tightening checkpoints passed 115/115; normal Selector closeout passed 107/107; harness removed; tree clean. Selection, deterministic artifact identity/audit, row/profile and thermal-mode/private-path boundaries verified.
+- **Next:** SEAM-G-C2 is the sole ready Lab parcel.
 
 ### SEAM-G-C2 — Bind generation input to sealed optic reference identity
 
 - **Owner:** Lab & IES.
-- **Status:** blocked behind Program acceptance of SEAM-G-P2.
-- **Scope:** exact new adapter and focused test to be named after producer review.
-- **Boundary:** plain public JSON only; bind optic BOM/variant, evidence and thermal triplet to one read-only OPT reference identity; no storage resolution, sealed DTO load or generation.
+- **Status:** ready.
+- **Exact feature files:** new `packages/lab-kernel/ies-toolkit/iesGenerationInputV1ReferenceBindingAdapter.js` and new `tests/lab-kernel/iesGenerationInputV1ReferenceBindingAdapter.test.js`.
+- **Gate:** `lab-ies`.
+- **Input:** plain public generation-input version 1 JSON and exact public NVB Lab projection version 2 JSON.
+- **Output:** immutable `controlstack.lab.ies-generation-reference-binding.v1` ready-or-blocked projection with deterministic binding identity, source generation identity, exact optic/evidence/thermal binding and one read-only OPT reference identity.
+- **Acceptance:** exact schemas/key sets; path `optic`; no unresolved blockers; selected optic key equals optic variant; optic BOM agrees across generation provenance, Lab selection and thermal evidence; evidence ref and measured thermal triplet agree; exact OPT reference identity fields and canonical resolver path; valid zero thermal values; replay-identical and outer traceability absent; unknown/extra/private/raw/unsafe/unresolved/non-optic/missing/wrong-kind/contradictory input fails closed.
+- **Boundary:** import-free; no storage resolution, sealed DTO load, authority inspection/mutation, evidence acceptance, generator invocation, LM-63 text, route, persistence, network/file/email write or readiness activation.
+- **Protected-state rule:** preserve the expected Lab marker and three protected untracked items.
+- **Commit message:** `lab: checkpoint IES generation reference binding v1`.
+- **Next:** Program SEAM-G-A2 review; generation remains blocked.
 
 ### SEAM-G-A2 — Activate generation-binding tunnel
 

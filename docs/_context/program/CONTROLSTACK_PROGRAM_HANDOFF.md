@@ -781,3 +781,15 @@ Different outer traceability values must produce identical output and remain abs
 Do not change the stable artifact-request contract, import Lab, bind a reference, load a sealed DTO, invoke Engine or generator, produce LM-63 text, add routes, persist or write.
 
 Return the producer receipt to Program. SEAM-G-C2, binding activation and actual generation remain blocked.
+
+## 2026-07-21 SEAM-G-P2 accepted — Lab reference binding commission
+
+Program accepts the generation-input producer after focused 115/115 and normal 107/107 Selector closeout.
+
+Commission Lab & IES for SEAM-G-C2 with exactly one new import-free reference-binding adapter and one focused test.
+
+Consume only plain public generation-input version 1 JSON and exact public NVB Lab projection version 2 JSON. Ready binding requires optic path, no unresolved blockers, selected optic key equal to Lab optic variant, exact optic BOM and evidence-ref agreement, exact measured reference-room/reference-internal/rise triplet agreement and one exact read-only OPT reference identity with canonical resolver path.
+
+Emit one immutable ready-or-blocked binding projection containing only source generation identity, bounded selection/run, safe technical/thermal binding and public reference identity. Do not resolve the path, load the sealed DTO, inspect/mutate authority, accept evidence, invoke the generator, emit LM-63 text, add routes, persist or write.
+
+Preserve the Lab expected marker and three protected untracked items. Return the consumer receipt to Program; SEAM-G-A2 and actual generation remain blocked.

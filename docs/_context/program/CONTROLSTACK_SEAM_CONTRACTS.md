@@ -801,3 +801,21 @@ The future Lab consumer may bind only when its version-2 NVB projection proves t
 Unknown versions, blocked requests, extra fields, multi-run input, fingerprint mismatch, governance, private/raw data, technical contradiction or unsafe flags fail closed. Rollback is removal or non-use only.
 
 No LM-63 text, sealed DTO body, authority mutation, generator invocation, route, persistence, file/network/email write or readiness activation is part of this candidate.
+
+### SEAM-G-P2 producer acceptance and SEAM-G-C2 consumer commission
+
+Program accepts the generation-input producer after focused 115/115 and normal 107/107 Selector closeout. The accepted producer binds exact selection identity to the active artifact request and produces one deterministic single-run no-reference/no-generation envelope.
+
+The consumer contract is now exact:
+
+```text
+generationInputV1 + nvbLabProjectionV2
+-> import-free OPT reference identity binding
+-> no sealed DTO load and no LM-63 generation
+```
+
+A ready binding requires exact optic path with no unresolved blockers, selected optic key/variant agreement, optic BOM agreement across both inputs, exact evidence-ref agreement, exact measured reference thermal-triplet agreement and one exact read-only OPT reference identity with canonical resolver path.
+
+The binding projection may carry only source generation identity, bounded selection/run, safe technical/thermal binding and public reference identity. It does not resolve the reference, inspect or mutate authority, accept evidence, load the sealed DTO or invoke the generator.
+
+Unknown versions, extra authority, private/raw content, unresolved or non-optic state, missing/wrong-kind reference, identity/evidence/thermal mismatch or unsafe flags fail closed. SEAM-G-A2 remains blocked pending the consumer receipt.

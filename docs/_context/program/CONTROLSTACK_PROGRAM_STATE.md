@@ -530,3 +530,14 @@ P2 Checkpoint 1 is **IMPLEMENTATION COMPLETE / GATE GREEN / COMMIT BLOCKED BY SH
 - **SEQUENCE BLOCKS:** Lab reference binding waits for Program producer acceptance; binding activation waits for producer and consumer acceptance.
 - **BLOCKED:** sealed DTO load, LM-63 generation, authority, evidence acceptance, reference mutation, storage, routes, persistence, file/network/email delivery, main and runtime-port work.
 - **NEXT:** reconcile Selector queue and implement SEAM-G-P2 in exactly two new files. Patrick has no action.
+
+## 2026-07-21 Seam G reference-binding commission state
+
+- **SEAM-G-P2:** complete and Program-accepted; focused 115/115 and normal closeout 107/107, clean Selector tree.
+- **SOLE READY ITEM:** SEAM-G-C2 in Lab & IES.
+- **CONSUMER INPUT:** public generation-input v1 plus public NVB Lab projection v2 only.
+- **READY BINDING:** optic path, no unresolved blockers, exact optic key/variant, optic BOM, evidence ref, measured thermal triplet and read-only OPT reference identity agreement.
+- **OUTPUT:** immutable ready-or-blocked generation-reference binding projection; no sealed DTO body.
+- **PROTECTED LAB STATE:** expected marker and three protected untracked items remain outside the parcel.
+- **BLOCKED:** storage resolution, sealed DTO load, authority/evidence mutation, generator invocation, LM-63 text, routes, persistence, files/delivery, readiness, main and runtime-port work.
+- **NEXT:** reconcile Lab queue and implement SEAM-G-C2 in exactly two new files. Patrick has no action.
