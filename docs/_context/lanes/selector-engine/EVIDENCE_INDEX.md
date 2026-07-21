@@ -647,3 +647,12 @@ Every completed worker updates this index with:
 - Standing tests: envelope variation and no-envelope execution, changed-optic movement, varied placeholder row and ownership-wide assertions remain mandatory — RECORDED.
 - Source evidence: `specReady` and `buildReady` exist; `factoryReady` is absent; stale lifecycle copy exists in the three named view models and workspace contract — VERIFIED REPOSITORY SEARCH.
 - Feature state: no PWS feature implementation began during admission; only lane-memory reconciliation is included — VERIFIED.
+
+## 2026-07-21 — Preserved PWS-001 draft evidence
+
+- Worker result: guarded stop because two authorised drafts existed but were not durably recorded as preserved work — USER-REPORTED AND VERIFIED BY CURRENT GIT STATE.
+- Exact dirty set: new readiness state-entry intent contract and its focused runtime test only; no modified, staged, deleted or additional untracked path — VERIFIED.
+- Contract inspection: immutable Spec Ready / Build Ready transition intent, Build Ready clamped behind Spec Ready, bounded technical context, deterministic transition identity, explicit false flags for provider mutation, persistence, identity lookup, retry and writes — VERIFIED.
+- Test inspection: baseline and hydration suppress emission; false-to-true emits once; rerender/repeated true does not duplicate; genuine re-entry changes identity; traceability envelopes are inert; integration is constrained to the shell event bus; named gate language is rejected — VERIFIED DRAFT COVERAGE.
+- Scope result: both files are explicitly authorised by PWS-001 and are now recorded as preserved worker work; the orchestrator did not alter or stage them — RECORDED AND VERIFIED.
+- Queue result: PWS-001 remains sole ready; PWS-002 and PWS-005 remain blocked; no second writer, provider mutation or downstream activation authorised — RECORDED.

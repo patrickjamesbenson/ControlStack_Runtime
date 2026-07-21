@@ -567,3 +567,11 @@ Item 10 is binding now: do not add a module-owned download, export, file-deliver
 Retain the standing regressions: different envelopes and no envelope produce the same Engine result for identical selections; changed optic rise moves lookup and verified output; identical placeholder rows require a varied-row movement test; and ownership is asserted across every governed system/row.
 
 Lab SEAM-G-C4 may proceed in parallel in its separate lane. No second Selector writer, direct provider mutation, direct delivery seam, main or runtime-port work is authorised.
+
+## 2026-07-21 PWS-001 drafts preserved — resume standing worker
+
+The prior worker stopped correctly. Two authorised PWS-001 drafts exist and are now durably recorded as preserved work: the readiness state-entry intent contract and its focused runtime test.
+
+The orchestrator inspected but did not alter or stage them. They are the only authorised dirty paths. The draft remains provider-inert and read-only, and the test already covers transition ordering, duplicate suppression, re-entry identity, traceability-envelope independence, event-bus-only integration and readiness state language.
+
+Resume the canonical standing worker from this dirty tree. Complete only PWS-001 within its recorded scope, then perform its full feature and documentation closeout before advancing PWS-002. PWS-005 remains blocked behind PWS-002. Do not add provider mutation, persistence, routes, download/export helpers, Engine eligibility changes, Lab/IES work, RuntimeData mutation, main or runtime-port work.

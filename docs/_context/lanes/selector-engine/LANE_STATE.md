@@ -567,3 +567,13 @@ Lab SEAM-G-C4 may run in parallel in its separate lane. No second Selector write
 **Recorded lane work HEAD:** `2fd45ac3f8870bb2be91c95209536b72c4878b8f` — `docs(selector): admit Program work shape`.
 
 Program admission is now the recorded work boundary. PWS-001 remains the sole ready parcel; PWS-002 and PWS-005 remain blocked in strict sequence. The next commit is a dedicated lane-state reconciliation wrapper only. No feature, test, provider, browser, Engine, Lab/IES, route, persistence, RuntimeData, main or runtime-port work is included.
+
+## 2026-07-21 preserved PWS-001 worker drafts — latest controlling state
+
+**Recorded lane work HEAD:** `f8ff920418a06bcebe0a1610ad0aaa0f95b301f1` — `docs(selector): reconcile lane state after Program admission`.
+
+The worker stopped correctly because two authorised PWS-001 drafts existed without durable preservation authority. The exact preserved dirty paths are `packages/workspace-kernel/selectorReadinessStateEntryPush.js` and `tests/runtimeSelectorReadinessStateEntryPush.test.js`.
+
+Inspection confirms the draft contract is read-only, immutable and provider-inert; it emits state-entry intent only for Spec Ready and Build Ready, carries bounded technical context, and explicitly requests no provider mutation, persistence, identity lookup, retry or write. The focused draft test covers baseline/hydration suppression, ordered false-to-true entry, genuine re-entry identity, traceability-envelope independence, event-bus-only integration and state language.
+
+These two files are authorised preserved work for the sole ready PWS-001 parcel. They remain untracked and untouched by the orchestrator. No other dirty path is authorised. A resumed standing worker may continue from them, complete the remaining authorised integration and presentation changes, run focused and full gates, and close the parcel normally. PWS-002 and PWS-005 remain blocked.

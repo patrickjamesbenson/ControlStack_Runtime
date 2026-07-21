@@ -473,3 +473,11 @@ This log is append-oriented. Do not silently rewrite historical decisions.
 **Standing tests:** The lane retains envelope-independence with different envelopes and no envelope, changed-optic thermal movement, varied-row proof for identical placeholder lookup values, and ownership-wide assertions across every governed system/row.
 
 **Consequence:** PWS-001 may start in its exact approved scope. PWS-002 and PWS-005 remain blocked. Lab SEAM-G-C4 may proceed in parallel in its separate worktree. No second Selector writer, direct provider mutation, direct delivery seam, main or runtime-port work is authorised.
+
+## 2026-07-21 — Preserve authorised PWS-001 drafts after guarded stop
+
+**Decision:** Accept exactly two untracked files as preserved, authorised PWS-001 worker work: the readiness state-entry intent contract and its focused regression. No other dirty path is admitted.
+
+**Rationale:** Both files are explicitly inside the first parcel's authorised scope. The draft contract is immutable and provider-inert, and its test covers the approved transition, duplicate-suppression, envelope-independence and event-bus boundaries. The worker correctly stopped because durable memory had not yet named them.
+
+**Consequence:** The orchestrator does not alter or stage either draft. Lane memory now permits the standing worker to resume from those exact dirty paths and finish PWS-001. PWS-002 and PWS-005 remain blocked; no provider, persistence, browser, Engine, Lab/IES, route, RuntimeData, main or runtime-port action is authorised.
