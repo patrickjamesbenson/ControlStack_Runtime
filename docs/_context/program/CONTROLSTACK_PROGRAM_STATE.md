@@ -676,25 +676,26 @@ P2 Checkpoint 1 is **IMPLEMENTATION COMPLETE / GATE GREEN / COMMIT BLOCKED BY SH
 ## 2026-07-22 generation-chain admission state
 
 - **SELECTOR:** PWS-001, PWS-002 and PWS-005 were already admitted, executed in strict order, gated, pushed and closed. That earlier batch is closed; the separate WALK-001V walkthrough parcel remains active under the later Selector state below. No recommission or second writer.
-- **C5 TECHNICAL RESULT:** sealed-reference load-preflight implementation is pushed and the fixed Lab gate is verified at 314/314.
-- **LAB READY:** C5 lane-memory closeout only. The Lab tree contains the expected protected local inventory and unfinished closeout documentation; C6 is not released until the closeout is committed and returned.
+- **C5 ACCEPTED:** sealed-reference load-preflight implementation and lane-memory closeout are pushed; the fixed Lab gate is verified at 314/314.
+- **LAB READY:** docs-only SEED-LIB-001 lane-memory formatting correction. Preserve the protected local inventory; C6 remains blocked and is not released.
 - **C5 INPUT:** exact ready job plan, reference binding and generation inspection plus one injected Lab-owned read-only resolver.
 - **C5 ACTION:** derive identity only from matched contracts, call the resolver at most once, validate the loaded DTO through the existing generation-inspection path, then discard the DTO.
 - **C5 OUTPUT:** immutable redacted ready-or-blocked load receipt only.
 - **C5 BLOCKED:** generator/materialise invocation, LM-63 text, routes, persistence, files, delivery and readiness activation.
 - **CHAIN AFTER C5:** C6 in-memory generation; C7 validated opaque Seam G artifact handoff; Governance retrieval activation. Each requires its own accepted predecessor and Program admission.
 - **SEED LIBRARY:** SEED-LIB-001 is ruled and queued as two Patrick-nominated Selector-saved cases. Canonical acceptance must use the real approval/sealer, real inspection, C5, C6 and C7 chain; hand-made artifacts and evidence substitution are prohibited.
-- **SEED SEQUENCE:** saved-case execution waits for WALK-007; Lab seed execution waits for clean C5 closeout and separate C6/C7 admissions; Governance waits for C7.
+- **SEED SEQUENCE:** saved-case execution waits for WALK-007; Lab seed execution waits for separate C6/C7 admissions; Governance waits for C7.
 - **CRM:** Patrick's HubSpot portal-scope prerequisite and business scope/lifecycle ruling are complete. No Patrick-held CRM prerequisite remains. Exact writer-scope definition is the sole substantive CRM precondition; separate Program admission remains the normal release control before live provider writes.
-- **NEXT:** Lab closes C5 lane memory only; Selector continues WALK-001V independently. No seed artifact is generated yet.
+- **NEXT:** Lab corrects and closes the two-file seed-memory record. Advisor restarts only the Selector runtime; Selector then executes WALK-001VA. No seed artifact is generated yet.
 
 ## 2026-07-22 consolidated Selector walkthrough state
 
 - **COMPLETED:** PWS-001, PWS-002 and PWS-005 remain closed; no duplicate commission.
 - **SELECTOR WALK-001:** open and incomplete. Reader recovery succeeded and current-source validation stopped correctly before every write. The active authority is unchanged; no materialisation, archive or promotion is accepted.
 - **RECOVERY COMPLETE:** WALK-001I installed the existing locked dependency set and restarted only `selector-runtime`; WALK-001R now reaches current Google source validation with credentials and tracked code untouched.
-- **SOURCE BLOCK:** canonical `DRIVERS.native_control_type` is Boolean-like on all 48 rows and provides zero protocol authority, while duplicate-normalised identity carries 51 protocol values. BOARDS authority has no canonical Driver intersection. SYSTEM_POLICY is present with 133 rows; finite tier-gated Ambient is unproven because the bounded response has no Ambient summary.
-- **SELECTOR READY:** WALK-001V bounded Ambient validation visibility only. Exact feature scope is the materialiser service plus the gate-included Selector reference-options test. No Google source edit is admitted until Program reviews the safe Ambient evidence.
+- **SOURCE BLOCK:** canonical `DRIVERS.native_control_type` remains Boolean-like on all 48 rows and provides zero protocol authority, while duplicate-normalised identity carries 51 protocol values. BOARDS authority has no canonical Driver intersection. The live Ambient condition still requires a restarted-runtime guarded read.
+- **WALK-001V ACCEPTED:** bounded Ambient visibility is pushed and independently verified at 108/108 with count-only disclosure and dry-run no-write safety.
+- **SELECTOR READY:** WALK-001VA managed activation and current-source evidence only, after Advisor restarts only `selector-runtime`. No Google source edit is admitted.
 - **SELECTOR ORDER:** Length Mode deletion → duplicate scaffold unmount → legacy TIERS readiness deletion → internal timeline/principal test-mode deletion → donor auto-fill defaults → truthful readiness counters → selections-only action-lane and thermal acceptance.
 - **AUTO-FILL:** each dropdown selects the first real NVB option in exact source order; `No manual constraint…` presentation rows are skipped. Auto-filled values are visibly LOOKED UP and distinct from manual constraints.
 - **ACKNOWLEDGEMENT:** one `Accept all defaults` action creates the GIVEN acknowledgement for every flagged default, including inherited finishes. Unacknowledged defaults do not satisfy readiness; per-field acknowledgement is prohibited.
@@ -702,8 +703,8 @@ P2 Checkpoint 1 is **IMPLEMENTATION COMPLETE / GATE GREEN / COMMIT BLOCKED BY SH
 - **ENGINE BOUNDARY:** technical source-backed selections are authority; server revision acknowledgement and governance/project envelopes are not Engine prerequisites. No run is authorised until cleanup closes.
 - **THERMAL ACCEPTANCE:** one bounded run must prove selected room plus one measured optic rise exactly once and varied-rise movement of lookup and verified lm/m.
 - **FINISHES:** Patrick's ruling is closed and recorded in Governance. Inheritance or auto-fill alone does not satisfy Build Ready; WALK-005A restores the one-action donor acknowledgement.
-- **PARALLELISM:** Lab C5 lane-memory closeout and Selector WALK-001V may proceed independently in separate worktrees. One writer per worktree; no cross-lane writes.
-- **NEXT:** Selector executes WALK-001V only, gates and pushes the bounded Ambient visibility change, then stops for Program activation and source-repair review. WALK-001 remains open; WALK-002 through WALK-007 remain sequence-blocked, with WALK-005A inserted before WALK-006. WALK-008 is ruled and closed.
+- **PARALLELISM:** Lab seed-memory correction and Selector WALK-001VA may proceed independently after the single-service restart. One writer per worktree; no cross-lane writes.
+- **NEXT:** Advisor restarts only the Selector runtime. Selector runs the complete guarded current-source dry-run with the new Ambient counts, records SEED-LIB-001 as blocked, and stops. Lab fixes the malformed seed-memory list markers, gates and pushes only the two current tracked docs, and stops. WALK-001 remains open; WALK-002 through WALK-007 remain sequence-blocked, with WALK-005A inserted before WALK-006. WALK-008 is ruled and closed.
 
 ## 2026-07-22 HubSpot and CRM ruling state
 

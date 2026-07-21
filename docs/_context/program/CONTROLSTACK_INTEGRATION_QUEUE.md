@@ -928,7 +928,7 @@ No implementation item is ready. A new exact Program parcel is required before a
 ### SEAM-G-C5 — Sealed-reference load preflight
 
 - **Owner:** Lab & IES.
-- **Status:** technical implementation pushed and verified at 314/314; lane-memory closeout is the sole ready Lab action. C6 remains blocked until the closeout is committed and returned.
+- **Status:** accepted complete. The technical implementation and lane-memory closeout are pushed; the fixed Lab gate passes 314/314. A separate two-file seed-memory formatting correction is ready, but C6 remains blocked and is not released.
 - **Input:** exact ready materialisation-job-plan version 1, exact matching generation-reference-binding version 1, exact matching reference-generation-inspection version 1, and one injected Lab-owned read-only resolver capability.
 - **Operation:** derive the reference identity only from the matched contracts; call the resolver at most once; reject caller paths, URLs and provider-shaped resolver input; validate the loaded DTO through the existing generation-inspection path; require exact reference identity, keyword profile, baseline, missing overrides and no-override readiness equality.
 - **Output:** deterministic immutable ready-or-blocked redacted load receipt. The loaded DTO is ephemeral and discarded after validation.
@@ -939,8 +939,8 @@ No implementation item is ready. A new exact Program parcel is required before a
 
 ### Generation and delivery sequence
 
-1. **C5:** sealed-reference load-preflight feature — implemented and green; Lab lane-memory closeout ready now.
-2. **C6:** one-shot in-memory generator invocation — blocked until Program accepts the clean C5 closeout.
+1. **C5:** sealed-reference load preflight — accepted complete at 314/314.
+2. **C6:** one-shot in-memory generator invocation — blocked by SEED-LIB-001 sequencing and separate Program admission; not released.
 3. **C7:** validate LM-63 and hand one opaque generated-artifact identity plus safe summary through Seam G — blocked until C6 accepted.
 4. **Governance retrieval activation:** store and serve the artifact body only through the single gateway after separate useful-output readiness and identity/project capture — blocked until C7 accepted.
 
@@ -958,16 +958,17 @@ Every affected parcel and gate plan must retain: envelope independence including
 - **Prohibited acceptance shortcuts:** no hand-made sealed DTO, hand-made inspection, synthetic production artifact, substitute optic, substitute board, inherited measurement, nearest match, placeholder evidence or manually entered run intake.
 - **Fail closed:** report the exact selected element lacking measured evidence, sealable authority or identity agreement. Do not substitute.
 - **Canonical role:** both builds are mandatory for C5-C7 and downstream acceptance, including changed-optic movement and varied-row placeholder proof. Later library additions require no schema, ownership or contract-version change.
-- **Sequence:** Selector seed execution is blocked behind WALK-007 acceptance. Lab seed sealing/execution is blocked behind clean C5 closeout and later Program admissions for C6 and C7. Governance retrieval remains blocked behind C7.
+- **Sequence:** Selector seed execution is blocked behind WALK-007 acceptance. Lab seed sealing/execution is blocked behind later Program admissions for C6 and C7. Governance retrieval remains blocked behind C7.
 
-PWS-001, PWS-002 and PWS-005 are complete. C5 lane-memory closeout is the sole ready Lab action. WALK-001V remains the sole ready Selector parcel. Each lane keeps one writer; the two current actions may proceed independently in separate worktrees.
+PWS-001, PWS-002 and PWS-005 are complete. C5 is accepted complete. Lab has one docs-only seed-memory formatting correction ready. WALK-001V is accepted complete; WALK-001VA managed activation and current-source evidence is the sole ready Selector parcel. Each lane keeps one writer and may perform only its named action.
 
 ### Selector consolidated walkthrough batch
 
 - **WALK-001 — authority refresh:** open; not complete. Reader recovery succeeded and the guarded dry-run reached current-source validation, then stopped correctly before all writes. The active authority is unchanged; no materialisation, archive or promotion is accepted.
 - **WALK-001I — locked service dependency installation:** complete operationally. The declared locked dependency set was installed, only `selector-runtime` was restarted through the existing manager, and the reader now loads without a tracked repository or credential change.
 - **WALK-001R — Google reader recovery and WALK-001 resume:** recovery complete; source acceptance blocked. Current DRIVERS canonical identity is Boolean-like on all 48 rows and provides zero protocol authority, while duplicate-normalised identity carries 51 protocol values. BOARDS authority has no intersection with required canonical Driver authority. SYSTEM_POLICY is present with 133 rows, but the current response cannot prove Ambient; absence is not inferred.
-- **WALK-001V — bounded Ambient validation visibility:** ready; sole Selector parcel. In exact feature files `packages/workspace-kernel/authorityReferenceMaterialiserService.js` and gate-included `tests/selectorReferenceOptionsService.test.js`, add only a redacted current-source SYSTEM_POLICY/Ambient count summary after successful read and before write. Report exact/approved `ambient_temp` row counts and allowlisted economy/business/first/charter tier-column presence, population and finite/non-finite token counts without values or raw data. Do not change source validation, Driver authority, materialisation, promotion, Selector semantics, Engine, deployment or Google data. Gate, push and stop for Program activation/source-repair review.
+- **WALK-001V — bounded Ambient validation visibility:** accepted complete. Exact two-file feature scope is pushed; the fixed Selector gate passes 108/108; disclosure and dry-run no-write boundaries are verified.
+- **WALK-001VA — managed activation and current-source evidence:** ready; sole Selector parcel after Advisor restarts only `selector-runtime`. Verify Healthy/Managed state, require the new count-only Ambient summary in the live guarded dry-run, return safe Ambient and Driver identity counts, and stop before every write on any source contradiction or missing approved finite tier evidence. Record SEED-LIB-001 as blocked in Selector lane memory. No Google Sheet edit, materialisation, archive, promotion, Engine or later walkthrough work.
 - **WALK-002 — Length Mode removal:** blocked behind WALK-001. Diagnose current downstream effect read-only, then delete the narrowing input, its readiness requirement, persisted constraint and UI authority without choosing a hidden default; NVB candidates remain available for downstream Lex scoring.
 - **WALK-003 — duplicate scaffold removal:** blocked behind WALK-002. Unmount the fabricated parallel Selector and remove its default current-selection ownership.
 - **WALK-004 — legacy TIERS readiness deletion:** blocked behind WALK-003. Delete the `TIERS`-expecting payload/readiness owner; the live source-status bridge is the sole source-readiness owner and Tier remains server/Engine-derived from `SYSTEM_POLICY`.

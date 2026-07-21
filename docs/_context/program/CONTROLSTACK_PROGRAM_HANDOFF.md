@@ -1038,3 +1038,15 @@ Current sequencing remains binding:
 - Selector WALK-001V is the sole ready Selector parcel; no seed execution or Engine invocation occurs before WALK-001 through WALK-007 close in order.
 - Lab C5 implementation is technically complete and the fixed gate is verified at 314/314, but C5 lane-memory closeout is the sole ready Lab action. Preserve the protected local inventory and do not release C6 until Program accepts the clean closeout.
 - SEED-LIB-001 is recorded as blocked in both affected lane queues. No real sealing, generation, C7 handoff or Governance retrieval is authorised by this handoff alone.
+
+### WALK-001V/C5 acceptance and activation handoff
+
+Program has now directly reviewed both returned lane states.
+
+WALK-001V is accepted complete. The Selector feature and lane closeout are pushed, the lane is clean and the fixed gate passes 108/108. The new current-source summary is count-only, allowlisted, value-free and positioned before every possible write. It proves duplicate visibility, approved finite tier-specific classification, generic/non-numeric/unapproved non-proof, disclosure redaction and dry-run no-write behaviour without changing Driver rules, validation outcomes or any write path.
+
+C5 is accepted complete. The Lab feature and closeout are pushed and the fixed gate passes 314/314. The preflight remains one contract-derived read-only resolver call, validation through the real inspection path, one immutable redacted receipt and immediate loaded-body discard. C6 remains blocked by the canonical seed sequence and separate Program admission.
+
+WALK-001VA is the sole ready Selector operational action. An Advisor must restart only the managed Selector runtime and verify Healthy/Managed state. Selector then ingests current Program authority, verifies the live response contains the new Ambient summary and runs the complete guarded current-source dry-run. Return only safe Ambient counts and existing Driver source-shape counts. Any source contradiction, missing approved finite tier evidence, validation failure or stale runtime stops before every write. Do not edit the Google Sheet, materialise, archive, promote, invoke Engine or begin later walkthrough work.
+
+The seed-library lane-memory propagation needs correction. Selector has not yet recorded SEED-LIB-001 and must add it as blocked during WALK-001VA lane closeout. Lab has the intended blocked entry in two unstaged lane-memory files, but the queue text contains malformed literal `+-` markers. Lab corrects only those two tracked files, preserves all protected local items, runs the fixed gate, commits and pushes the docs-only correction, then stops. Neither correction releases C6 or seed execution.
