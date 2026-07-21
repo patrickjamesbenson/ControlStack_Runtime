@@ -718,3 +718,14 @@ Program's standing routing handoff records two Selector-saved canonical cases. B
 SEED-LIB-001 is recorded as sequence-blocked behind acceptance of WALK-001 through WALK-007. Execute neither case, invoke no Engine path, change no saved case and infer no run intake. Future acceptance must traverse the accepted production contracts with genuine evidence; hand-made sealed references, hand-made inspection results, synthetic production artifacts and substituted evidence cannot satisfy it.
 
 The latest Program text called WALK-001V ready, but the live Selector lane has since completed, gated and pushed it. Do not duplicate or interrupt that closed worker. WALK-001V now waits for Program activation and exact source-repair review. No Selector item is ready; one writer and all existing exclusions remain binding.
+
+
+## 2026-07-22 WALK-001VA complete — stop for Program source-repair review
+
+Program accepted WALK-001V and admitted one managed activation/current-source evidence run. The Selector service returned Healthy, and the Program/Advisor managed-service handoff plus the live restarted response established the authorised Managed activation. The response contains the new count-only Ambient summary, so the runtime is serving the accepted feature.
+
+The complete guarded dry-run passed Google reading, required-table shape, validation and disclosure checks and wrote nothing. SYSTEM_POLICY is present with 133 rows and one exact `ambient_temp` row, but there are zero approved exact rows. Economy, business, first and charter columns are all absent; every recognised-tier population, finite-token and non-finite-token count is zero. Finite-tier rows, multi-tier rows, generic-only rows and every approved finite/generic classification are zero. Approved finite tier-specific Ambient evidence is absent.
+
+DRIVERS has 48 rows. Canonical identity is populated and Boolean-like on all 48, with zero protocol-authoritative rows and values. Duplicate-normalised identity is populated and protocol-authoritative on all 48, carrying 51 protocol values. BOARDS has 265 rows; option authority is populated on 265, labels on 264, pair lengths agree on 264 and disagree on 1, and canonical Driver agreement remains zero.
+
+The known Driver contradiction and missing approved finite tier-specific Ambient evidence stopped the workflow before every write. No Sheet edit, materialisation, archive, promotion, Engine action or later walkthrough work occurred. SEED-LIB-001 remains recorded and sequence-blocked; do not execute, alter or reconstruct either saved case. WALK-001 stays open and WALK-002 through WALK-007 stay blocked. Stop for Program source-repair review; no Selector parcel is ready.

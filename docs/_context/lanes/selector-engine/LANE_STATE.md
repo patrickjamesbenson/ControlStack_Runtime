@@ -748,3 +748,20 @@ Program's latest handoff is ingested. SEED-LIB-001 records two Patrick-nominated
 SEED-LIB-001 is sequence-blocked behind Program acceptance of WALK-001 through WALK-007 in order. Neither seed case may be executed; Engine, saved cases and run intake remain untouched. Canonical acceptance must use the exact saved selections and accepted production contracts. Hand-made sealed references, hand-made inspection results, synthetic production artifacts and substituted evidence are prohibited.
 
 Program's handoff still described WALK-001V as the sole ready Selector parcel, but live lane evidence is newer: WALK-001V is already complete, gated, pushed and clean. Its worker is no longer active, and no duplicate commission is authorised. WALK-001V remains at the Program activation and exact source-repair review boundary. WALK-001 and WALK-001R remain incomplete; WALK-002 through WALK-007 and SEED-LIB-001 remain blocked. One Selector writer and all existing exclusions remain binding.
+
+
+## 2026-07-22 WALK-001VA managed activation and current-source evidence closeout — latest controlling state
+
+**Recorded lane work HEAD:** `f4f83fb112a10480518a0cf29b4d3bcc465adf75` — `docs(selector): queue canonical seed library`.
+
+Program accepts WALK-001V complete and admits WALK-001VA as the sole ready Selector operational action. The Program handoff's statement that Selector had not yet recorded SEED-LIB-001 is superseded by newer clean Selector history: the blocked seed batch is already durably recorded and is not duplicated.
+
+The Program-approved Advisor-managed activation is accepted as the only authorised service action. The live Selector runtime independently returned HTTP 200, `ok: true`, and the restarted process returned the new value-free `systemPolicyAmbient` summary. Healthy and activated state are therefore verified from the live service; Managed state is carried from the Program/Advisor managed-service handoff. No second restart or other service was touched by this lane.
+
+The complete original guarded current-source dry-run returned HTTP 200, `dry-run-ready`, all 15 required tables present, zero missing tables, validation green, disclosure flags false, no materialised write attempt and no active-snapshot write attempt.
+
+Safe Ambient evidence: SYSTEM_POLICY is present with 133 rows; exact `ambient_temp` rows 1; approved exact rows 0. Recognised `economy`, `business`, `first` and `charter` columns are each absent, with zero populated rows, zero finite numeric tokens and zero non-finite numeric tokens. Rows with at least one finite recognised-tier value: 0. Rows with finite values across multiple recognised tiers: 0. Generic-only rows: 0. Approved finite-tier rows: 0; approved multi-tier rows: 0; approved generic-only rows: 0. Finite tier-specific Ambient evidence is false.
+
+Safe identity evidence: DRIVERS is present with 48 rows. Canonical identity is populated on 48 rows, Boolean-like on 48, protocol-authoritative on 0 rows with 0 protocol values. Duplicate-normalised identity is populated on 48 rows, Boolean-like on 0, protocol-authoritative on 48 rows with 51 protocol values. BOARDS is present with 265 rows; option authority is populated on 265, labels on 264, pair lengths agree on 264 and disagree on 1. Canonical Driver-to-BOARDS authority intersection count is 0. Source order is retained and independent duplicate removal is not applied.
+
+The known Driver contradiction and the absence of approved finite tier-specific Ambient evidence stop WALK-001 before every write. No Google Sheet edit, materialisation, archive, promotion, Engine action, saved-case action or later walkthrough work occurred. WALK-001VA read-only evidence is complete; WALK-001 remains open for Program source repair, WALK-002 through WALK-007 remain blocked, and SEED-LIB-001 remains sequence-blocked. No Selector parcel is ready.

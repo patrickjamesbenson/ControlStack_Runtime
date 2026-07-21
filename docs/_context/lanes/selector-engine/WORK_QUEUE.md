@@ -691,3 +691,19 @@ Driver authority, existing validation outcomes, Google reading/data, Selector op
 * current boundary: execute neither seed case, do not invoke Engine, do not alter either saved case and do not infer missing run intake.
 
 Queue reconciliation: WALK-001V is already done, gated and pushed, so it was not recommissioned. It remains at Program activation and source-repair review. WALK-001/WALK-001R are incomplete; WALK-002 through WALK-007 and SEED-LIB-001 remain blocked. No Selector parcel is ready.
+
+
+## 2026-07-22 Program managed activation and current-source evidence
+
+### WALK-001VA Managed activation and current-source evidence
+
+* status: done (read-only evidence complete; source repair blocked before every write)
+* depends-on: Program acceptance of WALK-001V and Advisor-managed activation of only CS Selector Runtime / Workspace Shell (8788); accepted
+* activation evidence: live service Healthy; Managed status carried by the Program/Advisor handoff; restarted live response contains the accepted count-only Ambient summary.
+* guarded dry-run: HTTP 200 `dry-run-ready`; all 15 required tables present; zero missing; validation passed; disclosure stayed redacted; zero materialised and active-snapshot write attempts.
+* Ambient evidence: SYSTEM_POLICY present, 133 rows; exact `ambient_temp` 1; approved exact 0; economy/business/first/charter columns all absent and each has 0 populated rows, 0 finite tokens and 0 non-finite tokens; finite-tier rows 0; multi-tier rows 0; generic-only rows 0; approved finite-tier, approved multi-tier and approved generic-only rows all 0.
+* Driver evidence: 48 rows; canonical identity populated 48, Boolean-like 48, protocol rows 0, protocol values 0; duplicate-normalised identity populated 48, Boolean-like 0, protocol rows 48, protocol values 51.
+* BOARDS agreement: 265 rows; options populated 265; labels populated 264; pair-length match 264; mismatch 1; canonical Driver authority intersection 0; source order retained; independent duplicate removal not applied.
+* stop: known Driver contradiction and missing approved finite tier-specific Ambient evidence stop WALK-001 before every write.
+* exclusions preserved: no Google Sheet edit, Driver-rule change, validation change, materialisation, archive, promotion, Engine, saved-case action or later walkthrough work.
+* next: Program source-repair review. WALK-001 remains open; WALK-002 through WALK-007 and SEED-LIB-001 remain blocked. No Selector parcel is ready.

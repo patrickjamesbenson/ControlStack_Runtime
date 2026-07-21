@@ -817,3 +817,18 @@ Every completed worker updates this index with:
 - Live Selector history is newer than the Program handoff's WALK-001V-ready wording: the feature and lane-memory closeout are pushed, the branch is clean and WALK-001V is done — VERIFIED FROM SELECTOR HISTORY AND GIT STATUS.
 - No WALK-001V worker was duplicated or interrupted; no seed case, Engine path, saved case, run intake, feature file, runtime, source or external system was touched — VERIFIED RECONCILIATION BOUNDARY.
 - Queue result: WALK-001V awaits Program activation and exact source-repair review; WALK-001/WALK-001R remain incomplete; WALK-002 through WALK-007 and SEED-LIB-001 remain blocked; no Selector parcel is ready — RECORDED.
+
+
+## 2026-07-22 — WALK-001VA managed activation and current-source evidence
+
+- Program repository accepts WALK-001V at 108/108 and admits WALK-001VA as the sole Selector operational action after an Advisor-managed restart of only the Selector runtime — VERIFIED FROM PROGRAM REPOSITORY.
+- Selector identity and branch match the charter; starting Git state is clean; the current lane already records SEED-LIB-001 as blocked, superseding Program's older missing-record note — VERIFIED FROM SELECTOR HISTORY AND GIT.
+- Live health returned HTTP 200 and `ok: true`; the live guarded response contains `systemPolicyAmbient`, proving accepted WALK-001V code is active. Managed state is carried from the Program/Advisor managed-service handoff — VERIFIED LIVE / REPORTED MANAGEMENT CONTROL.
+- Complete guarded dry-run returned HTTP 200 `dry-run-ready`; all 15 required tables are present, zero are missing, validation is green and all disclosure flags remain false — VERIFIED LIVE.
+- SYSTEM_POLICY is present with 133 rows; exact `ambient_temp` rows 1; approved exact rows 0 — VERIFIED SAFE COUNT.
+- Economy, business, first and charter columns are each absent; each has zero populated rows, zero finite numeric tokens and zero non-finite numeric tokens — VERIFIED SAFE COUNTS.
+- Rows with any finite recognised-tier value 0; rows with finite values across multiple recognised tiers 0; generic-only rows 0; approved finite-tier rows 0; approved multi-tier rows 0; approved generic-only rows 0; finite tier-specific evidence false — VERIFIED SAFE COUNTS.
+- DRIVERS row count 48. Canonical identity: populated 48, Boolean-like 48, protocol rows 0, protocol values 0. Duplicate-normalised identity: populated 48, Boolean-like 0, protocol rows 48, protocol values 51 — VERIFIED SAFE COUNTS.
+- BOARDS row count 265; option authority populated 265; labels populated 264; pair-length match 264; mismatch 1; canonical Driver authority intersection 0; source order retained; independent duplicate removal not applied — VERIFIED SAFE COUNTS.
+- No materialised or active-snapshot write was attempted. No Sheet edit, archive, promotion, Engine, saved-case action or later walkthrough action occurred — VERIFIED LIVE NO-WRITE RECEIPT.
+- Stop result: known Driver contradiction and missing approved finite tier-specific Ambient evidence require Program source repair before every write. WALK-001 remains open; WALK-002 through WALK-007 and SEED-LIB-001 remain blocked; no Selector parcel is ready — RECORDED.

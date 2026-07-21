@@ -616,3 +616,16 @@ This log is append-oriented. Do not silently rewrite historical decisions.
 **Reconciliation:** Program's handoff described WALK-001V as ready, but the live lane contains the newer complete, gated, pushed and clean closeout. Preserve that result and do not commission a duplicate worker. WALK-001V waits at Program activation/source-repair review; no Selector parcel is ready.
 
 **Consequence:** one writer and all current exclusions remain intact. Hand-made sealed references, hand-made inspection results, synthetic production artifacts and substituted evidence cannot satisfy future canonical acceptance.
+
+
+## 2026-07-22 — Accept WALK-001VA activation evidence and preserve the source-repair stop
+
+**Decision:** Accept Program's WALK-001VA admission and the Program-approved Advisor-managed single-service activation. The live runtime is Healthy and returns the new value-free Ambient summary, proving the accepted WALK-001V code is active. The complete original guarded dry-run is accepted as the current-source evidence receipt.
+
+**Ambient result:** SYSTEM_POLICY is present with 133 rows and one exact `ambient_temp` row, but approved exact rows are zero. All four recognised tier columns are absent and all recognised-tier population, finite/non-finite token and finite-tier row counts are zero. Approved finite tier-specific evidence is absent.
+
+**Identity result:** canonical Driver identity remains Boolean-like on all 48 rows with zero protocol authority, while duplicate-normalised identity is protocol-authoritative on all 48 rows and carries 51 protocol values. BOARDS option authority is populated on 265 rows, but canonical Driver agreement is zero; one of 265 option/label pairs has a length mismatch.
+
+**Consequence:** the known Driver contradiction and missing approved finite tier-specific Ambient evidence stop before every write. WALK-001 remains open for Program source repair. WALK-001VA is complete as a read-only evidence action; WALK-002 through WALK-007 and SEED-LIB-001 remain blocked. No Sheet edit, materialisation, archive, promotion, Engine or saved-case action is authorised.
+
+**Reconciliation:** Program's note that Selector had not recorded SEED-LIB-001 is stale relative to current clean Selector history. The blocked batch already exists in lane memory and is preserved without duplication.
