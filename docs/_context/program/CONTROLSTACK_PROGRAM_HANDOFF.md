@@ -684,7 +684,9 @@ Program has accepted the newer SEL-007 contract candidate and has **not** declar
 
 The candidate records the current truth: thermal execution is one bounded component, RunTable output remains diagnostic-only, persistence-coupled legacy rows are outside Engine eligibility, and the legacy row identifiers collide across incompatible field sets.
 
-ENG-OUT-P1 is the sole ready parcel. Commission the isolated Selector & Engine lane to create only:
+The concurrently completed selected-result producer is accepted as an internal non-stable component. It may be imported by ENG-OUT-P1 but is not the public contract and activates no consumer.
+
+ENG-OUT-P1 remains the sole ready parcel. Commission the isolated Selector & Engine lane to create only:
 
 - `packages/workspace-kernel/runtimeEngineOutputContractV1.js`
 - `tests/runtimeEngineOutputContractV1.test.js`

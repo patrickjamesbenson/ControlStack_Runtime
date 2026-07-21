@@ -1067,4 +1067,14 @@ Program accepts the clean, pushed Selector contract candidate and its 114/114 fo
 
 The accepted candidate uses `controlstack.engine.selection-set.v1`, `controlstack.engine.output.v1` and `controlstack.engine.runtable-row.v1`. It preserves the thermal result as one bounded component, keeps the current RunTable scaffold diagnostic-only, excludes persistence-coupled rows from Engine eligibility and records the incompatible legacy row-schema collision.
 
-This supersedes the earlier provisional `controlstack.engine.selected-result.v1` design and ENG-STAB-P1 before implementation. Program admits ENG-OUT-P1 as the sole ready parcel: one new runtime contract module and one focused runtime test for the request validator, complete-or-blocked output envelope and one exact row schema.
+This superseded the earlier provisional `controlstack.engine.selected-result.v1` design as the public contract. A concurrent Selector worker completed that already-authorised bounded producer after this decision was recorded; Program reconciles that receipt below. ENG-OUT-P1 remains the sole ready parcel: one new runtime contract module and one focused runtime test for the request validator, complete-or-blocked output envelope and one exact row schema.
+
+## 2026-07-21 — Concurrent ENG-STAB-P1 receipt reconciled
+
+**Status:** ACCEPTED AS AN INTERNAL NON-STABLE COMPONENT; NOT THE PUBLIC OUTPUT CONTRACT.
+
+The isolated Selector lane completed the previously authorised selected-result producer during the Program candidate supersession. Its exact two-file parcel passed 114/114, is non-persistent, adds no route or consumer activation, preserves thermal values without recalculation, emits deterministic safe run summaries and proves governance-envelope independence.
+
+Program does not roll back this safe bounded artifact. `controlstack.engine.selected-result.v1` is classified as an internal selected-result component that ENG-OUT-P1 may validate and embed. It does not replace the accepted public schemas `controlstack.engine.selection-set.v1`, `controlstack.engine.output.v1` and `controlstack.engine.runtable-row.v1`, and it does not satisfy consumer compatibility or stability.
+
+ENG-OUT-P1 remains the sole ready item in its existing two-file scope. It may import the internal component but must expose only the accepted three-schema public boundary. Persistence, routes, Lab/IES compatibility, downstream activation and main remain held.

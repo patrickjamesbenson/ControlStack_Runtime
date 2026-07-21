@@ -678,8 +678,8 @@ There is no outstanding Selector or Engine implementation item in this thermal s
 ### ENG-STAB-P1 — Seal the version-1 selected-result producer envelope
 
 - **Owner:** Selector & Engine.
-- **Status:** superseded-before-implementation.
-- **Superseded by:** accepted SEL-007 three-schema candidate and ENG-OUT-P1.
+- **Status:** implemented and accepted as an internal non-stable component after concurrent supersession.
+- **Public-contract status:** superseded by the accepted SEL-007 three-schema candidate and ENG-OUT-P1; the pushed component may be consumed internally but is not a public boundary or stability receipt.
 - **Exact feature files:** new `packages/workspace-kernel/runtimeEngineSelectedResultContractV1.js` and new `tests/runtimeEngineSelectedResultContractV1.test.js`.
 - **Gate:** `selector-engine`.
 - **Objective:** validate the accepted thermal execution result and the existing safe selected-result source object, then emit the exact deeply immutable `controlstack.engine.selected-result.v1` accepted-or-blocked envelope.

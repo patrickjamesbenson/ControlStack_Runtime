@@ -441,7 +441,7 @@ P2 Checkpoint 1 is **IMPLEMENTATION COMPLETE / GATE GREEN / COMMIT BLOCKED BY SH
 - **CANDIDATE RECEIPT:** accepted from the clean, pushed Selector lane with 114/114 focused coverage.
 - **ACTIVE SCHEMAS:** `controlstack.engine.selection-set.v1`, `controlstack.engine.output.v1` and `controlstack.engine.runtable-row.v1`.
 - **CURRENT LIMITS:** thermal output is one bounded component; RunTable output remains diagnostic-only; persistence-coupled legacy rows are outside Engine eligibility; the legacy row schema collision remains unresolved.
-- **SUPERSEDED:** provisional `controlstack.engine.selected-result.v1` and ENG-STAB-P1 were withdrawn before implementation.
-- **SOLE READY ITEM:** ENG-OUT-P1, exactly one new runtime contract module and one focused runtime test.
+- **INTERNAL COMPONENT:** the concurrently completed `controlstack.engine.selected-result.v1` parcel passed 114/114 and is accepted as non-persistent internal producer evidence, not as the public output contract or stability receipt.
+- **SOLE READY ITEM:** ENG-OUT-P1, exactly one new runtime contract module and one focused runtime test; it may import the internal selected-result component while exposing only the accepted three-schema boundary.
 - **HELD:** consumer compatibility, stability declaration, Seam G, persistence and main promotion.
 - **NEXT:** commission ENG-OUT-P1 in the isolated Selector lane. Patrick has no action.

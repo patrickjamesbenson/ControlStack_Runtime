@@ -45,6 +45,8 @@ Focused Engine coverage passed 120/120; normal Selector closeout passed 107/107.
 
 Engine output stability is not yet declared. Program accepts the SEL-007 candidate with separate selection-set, output and RunTable-row version-1 schemas. Thermal execution is one bounded component; RunTable remains diagnostic-only, and persistence-coupled colliding legacy rows are excluded.
 
+The concurrently completed selected-result producer is accepted as an internal non-stable component and may be imported by ENG-OUT-P1; it does not replace the public three-schema contract.
+
 ENG-OUT-P1 is the sole ready item: create one new runtime module and one focused runtime test implementing deterministic complete, fail-closed blocked, zero-valued and replay-identical contract fixtures. It activates no Engine execution, route, persistence, IES/downstream readiness, RuntimeData, donor or main work.
 
 After its pushed receipt, Program must accept the producer before commissioning consumer compatibility.

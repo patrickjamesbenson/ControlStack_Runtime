@@ -656,6 +656,8 @@ The active candidate uses three exact version-1 schemas:
 
 The accepted thermal execution result is one bounded output component, not the whole Engine response. The current RunTable domain output remains diagnostic-only, and the persistence-coupled first-narrow row path is outside Engine eligibility. The incompatible legacy row identifiers are not eligible for stability.
 
-ENG-OUT-P1 implements the three contracts in one read-only runtime module with deterministic complete, blocked, zero-valued and replay-identical fixtures. It must not activate persistence, routes, IES handoff, downstream consumers, RuntimeData, donor code or main.
+The concurrently completed `controlstack.engine.selected-result.v1` producer is accepted only as an internal non-stable component. ENG-OUT-P1 may validate and embed it, but it must not expose that schema as the public boundary.
+
+ENG-OUT-P1 implements the three public contracts in one read-only runtime module with deterministic complete, blocked, zero-valued and replay-identical fixtures. It must not activate persistence, routes, IES handoff, downstream consumers, RuntimeData, donor code or main.
 
 Consumer compatibility and Program stability acceptance remain later parcels. Seam G remains inactive.
