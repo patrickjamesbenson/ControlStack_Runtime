@@ -606,3 +606,18 @@ Every completed worker updates this index with:
 - Failure rule: unknown, blocked, extra, multi-run, governance, private/raw, unsafe, fingerprint mismatch and contradiction fail closed — RECORDED.
 - Capability boundary: no reference, sealed DTO, authority, generator, LM-63 text, route, persistence, write or downstream activation — RECORDED.
 - Starting tree was clean — VERIFIED.
+
+## 2026-07-21 — SEAM-G-P2 producer completion evidence
+
+- Exact feature files: new generation-input contract and focused regression only — VERIFIED.
+- Final focused/gated coverage: 115 passed, 0 failed, 0 skipped, 0 todo — VERIFIED.
+- Selection binding: exact selection request shape, one run, recomputed fingerprint and artifact Engine/row request identity agreement — VERIFIED.
+- Ready projection: deterministic generation-input/replay/audit identities, bounded selection/run and safe provenance/thermal values — VERIFIED.
+- Zero fixture: zero target lm/m, room ambient, current, verified lm/m and run-table counts remain valid — VERIFIED.
+- Replay/governance: different outer traceability envelopes produce identical output and remain absent — VERIFIED.
+- Identity movement: run length, system, evidence and policy changes move generation-input identity — VERIFIED.
+- Fail-closed: blocked request, unknown schema, extra fields, multi-run, fingerprint tamper, row mismatch, optic/ambient contradiction, unsafe flags and private values rejected — VERIFIED.
+- Tightening: selected profile, exact row state/kind, deterministic artifact identity/audit, thermal rise, curve filename and effective-temperature modes validated — VERIFIED.
+- Dependency/static boundary: public Engine/request constants and stable fingerprint only; no Lab/reference/generator/route/network/filesystem seam — VERIFIED.
+- Harness removal: gate host returned byte-identical to HEAD and remained unstaged/uncommitted — VERIFIED.
+- Lane result: producer and tightening pushed; tree clean; Program producer review next; SEAM-G-C2 and LM-63 generation blocked — RECORDED.

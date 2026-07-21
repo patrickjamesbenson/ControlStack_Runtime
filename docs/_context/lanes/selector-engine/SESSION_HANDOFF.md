@@ -529,3 +529,13 @@ Recompute and match the selection fingerprint. Support exactly one product, ligh
 Different user, project, owner, timeline, registration and renamed eligibility envelopes must return identical output and remain absent. Reject unknown, blocked, extra, multi-run, governance, private/raw, unsafe, fingerprint-mismatched and contradictory input.
 
 Do not alter the stable request contract, import Lab, bind a reference, load a sealed DTO, invoke Engine or generator, generate LM-63 text, add routes, persist, write, touch RuntimeData, main or runtime-port work. Return the producer receipt to Program; SEAM-G-C2 remains blocked.
+
+## 2026-07-21 SEAM-G-P2 complete — Program producer review next
+
+The deterministic single-run generation-input producer is complete and pushed. The feature and tightening checkpoints passed 115/115, and the temporary gate harness was removed cleanly.
+
+It consumes exact ready artifact-request JSON plus the exact matching Engine selection request, recomputes the selection fingerprint and emits one immutable ready-or-blocked generation input with bounded system, optic, target lm/m, room ambient, protocol, quantity and length plus safe provenance/thermal identity.
+
+Valid zeros, replay/governance independence and technical identity movement passed. Blocked requests, unknown schemas, extra/multi-run data, fingerprint or row tamper, profile/optic/ambient/thermal contradiction, unsafe flags and private values fail closed.
+
+No Lab/reference import, sealed DTO, authority, generator invocation, LM-63 text, route, persistence, file/network/email write, RuntimeData, main or runtime-port file changed. The Selector queue is empty. Program must accept this producer before commissioning the separate Lab reference-binding adapter; actual generation remains blocked.

@@ -523,3 +523,13 @@ SEAM-G-P2 is the sole ready item. Its exact feature scope is `runtimeIesGenerati
 The output is one immutable ready-or-blocked `controlstack.downstream.ies-generation-input.v1` envelope for exactly one run. It normalises system, optic, target lm/m, room ambient, protocol, quantity and length; recomputes the selection fingerprint; preserves safe request/result/source/policy/evidence and thermal identity; and ignores optional traceability.
 
 No stable request-contract change, Lab import, reference identity, sealed DTO, authority, generator invocation, LM-63 text, route, persistence, write, RuntimeData, main or runtime-port work is authorised. SEAM-G-C2 and actual generation remain blocked.
+
+## 2026-07-21 SEAM-G-P2 producer closeout — latest controlling state
+
+SEAM-G-P2 is complete and pushed across the exact feature checkpoint and one exact tightening checkpoint. Final focused coverage passed 115/115, the temporary harness was removed, and the Selector tree returned clean.
+
+The producer emits deterministic ready-or-blocked single-run generation input from an exact ready artifact request and its matching Engine selection request. It recomputes selection identity, validates artifact request/replay/audit identity, preserves safe technical/thermal values, accepts valid zeros and quarantines traceability.
+
+The tightening validates profile agreement, exact RunTable row identity and state, non-negative thermal rise, safe curve filename and accepted effective-temperature modes. Invalid or contradictory input fails closed before reference binding.
+
+No queue item is ready in Selector. Program producer review is next. Reference binding, sealed DTO loading, LM-63 generation, routes, persistence, files, delivery, main and runtime-port work remain blocked.

@@ -316,7 +316,7 @@
 ### Q-10B Deterministic single-run IES generation input contract
 
 * id: SEAM-G-P2
-* status: ready
+* status: done
 * depends-on: active Seam G version-1 read-only request tunnel and Program commission `docs(program): commission IES generation binding sequence`
 * gate: selector-engine
 * authorised files: new `packages/workspace-kernel/runtimeIesGenerationInputContractV1.js`, new `tests/runtimeIesGenerationInputContractV1.test.js`, temporary harness-only use of `tests/engineRunTableDomain.test.js`, and closeout updates to the five mutable lane context files. The harness may add exactly one side-effect import of `./runtimeIesGenerationInputContractV1.test.js`; it must be removed, byte-identical to HEAD and absent from final staging/commit.
@@ -325,6 +325,7 @@
 * prohibitions: no stable request-contract edit, Lab import/write, reference identity, sealed DTO, authority body, Engine/donor invocation, LM-63 generation/text, route, persistence, file/network/email write, RuntimeData, main or runtime-port change.
 * commit message: `feat(runtime): add IES generation input contract v1`.
 * on success next: Program producer review; SEAM-G-C2 remains blocked.
+* completion: exact two-file producer plus one exact two-file tightening checkpoint pushed after 115/115. Selection fingerprint, artifact identity/audit, profile, row, thermal-mode/effective-temperature, private-path and no-generation boundaries passed. The temporary harness was removed and the tree returned clean. No reference binding or LM-63 generation occurred.
 
 <!--
 Historical pre-SEL queue retained as non-operative migration provenance. It is not an active queue and confers no implementation authority.

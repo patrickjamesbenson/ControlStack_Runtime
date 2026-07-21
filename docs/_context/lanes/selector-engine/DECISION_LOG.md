@@ -437,3 +437,15 @@ This log is append-oriented. Do not silently rewrite historical decisions.
 **Acceptance lock:** Exact product, lighting, runs and control shapes only; positive integer quantity/length; valid zero target and ambient values; deterministic replay and audit; technical changes move identity; unknown, blocked, extra, multi-run, governance, private/raw, unsafe, fingerprint-mismatched or contradictory input fails closed.
 
 **Consequence:** SEAM-G-P2 is the sole ready item. No Lab import, reference identity, sealed DTO, authority, generator invocation, LM-63 text, route, persistence, write, RuntimeData, main or runtime-port change is authorised. SEAM-G-C2 remains blocked.
+
+## 2026-07-21 — SEAM-G-P2 accepted in the Selector lane
+
+**Decision:** Accept the pushed generation-input producer and return its receipt to Program without binding a reference or invoking the LM-63 generator.
+
+**Evidence:** The feature and tightening checkpoints passed 115/115. The temporary gate harness was removed and the tree returned clean before closeout.
+
+**Contract result:** `controlstack.downstream.ies-generation-input.v1` recomputes and matches the Engine selection fingerprint, validates deterministic artifact request identity/audit, supports exactly one bounded run and preserves safe technical provenance/thermal values. Ready, zero, replay/governance, identity movement, blocked request and fail-closed cases passed.
+
+**Tightening result:** The producer validates exported Engine state, selected profile agreement, exact row kind/state and row identities, deterministic artifact request/replay/audit identity, non-negative thermal rise, safe curve filename and accepted effective-temperature modes.
+
+**Consequence:** SEAM-G-P2 is done. No stable request-contract edit, Lab import, reference binding, sealed DTO load, authority, generator invocation, LM-63 text, route, persistence, write, RuntimeData, main or runtime-port change occurred. Program producer review is next; SEAM-G-C2 remains blocked.
