@@ -978,7 +978,37 @@ Completion evidence: The import-free materialisation job-plan module and focused
 - on success next: Program C5 receipt review; C6 generator invocation remains blocked
 - status: done
 
-Completion evidence: The Lab-owned read-only sealed-reference load preflight and focused test were committed in the exact two-file scope as `lab: checkpoint sealed reference load preflight v1`, pushed only to the Lab lane, and passed 314/314 after three authorised test-fixture corrections with no production behavior change. The loader validates exact ready plan, binding and inspection identities, derives the reference only from those matched contracts, invokes the injected resolver at most once, validates the loaded DTO through the existing generation-inspection path, requires exact identity/keyword-profile/baseline/missing-override/no-override agreement, emits one immutable redacted receipt and discards the body. Caller paths/URLs/provider input, malformed/extra/private/raw input, resolver failure, wrong DTO and every mismatch fail closed. No generator/materialise invocation, LM-63, route, persistence, write, delivery or readiness activation was added. Program C5 receipt review is next; C6 remains blocked.
+Completion evidence: The Lab-owned read-only sealed-reference load preflight and focused test were committed in the exact two-file scope as `lab: checkpoint sealed reference load preflight v1`, pushed only to the Lab lane, and passed 314/314 after three authorised test-fixture corrections with no production behavior change. The loader validates exact ready plan, binding and inspection identities, derives the reference only from those matched contracts, invokes the injected resolver at most once, validates the loaded DTO through the existing generation-inspection path, requires exact identity/keyword-profile/baseline/missing-override/no-override agreement, emits one immutable redacted receipt and discards the body. Caller paths/URLs/provider input, malformed/extra/private/raw input, resolver failure, wrong DTO and every mismatch fail closed. No generator/materialise invocation, LM-63, route, persistence, write, delivery or readiness activation was added. Program technically accepted the C5 implementation and 314/314 evidence on 2026-07-22. This lane-memory closeout completes C5; C6 still requires a separate Program release.
+
+### Q-39 Canonical production-chain seed library
+- id: SEED-LIB-001
+- status: blocked future acceptance batch; not ready for execution.
+- authority: the exact saved Selector test cases are the sole selection and run-intake authority. Do not retype, infer, normalise or replace quantity or length.
+- BUILD 1 — direct, loaded:
+  - DNX 60 Square; Opal 60; 3000K/CRI80 board; DALI-2 DT6 class; target 1000 lm/m;
+  - saved run 9560 mm × 1; Spitfire D25 emergency; PIR 5 m sensor;
+  - Suspended; Top Side; White (Textured).
+- BUILD 2 — direct/indirect, loaded:
+  - DNX 80 DI (`Square_DI`); direct Inlay 80 plus Microprism; indirect Rope 80;
+  - direct target 1500 lm/m; indirect target 500 lm/m; 5000K/CRI90 board;
+  - Fixed (On/Off) on both lanes; Surface Mount; Back Wall side; Black (Textured);
+  - EM DC Mains emergency; Microwave sensor;
+  - run quantity and length exactly as stored in the saved Selector test case.
+- canonical future chain:
+  - exact saved Selector selections and run intake;
+  - genuine measured Lab evidence;
+  - existing real authority approval and sealer;
+  - existing real inspection path;
+  - C5 resolver/load, separately released C6 in-memory generation, and separately released C7 opaque artifact handoff.
+- fail-closed rules:
+  - hand-made sealed DTOs, hand-made inspection results, synthetic production artifacts, substitute optics, substitute boards, inherited measurements, nearest matches, placeholder evidence and reconstructed run intake cannot satisfy acceptance;
+  - if measured evidence, sealable authority or exact identity agreement is unavailable for any selected element, report that exact element and do not substitute.
+- blocked by:
+  - Selector walkthrough sequence through WALK-007;
+  - accepted C5 lane-memory closeout;
+  - separate Program admissions for C6, C7 and any downstream retrieval.
+- prohibited now: no sealing, inspection, resolver execution, generation, LM-63, artifact handoff, persistence, retrieval or delivery.
+- human observation: none for this blocked recording action.
 
 ## Explicitly not queued
 

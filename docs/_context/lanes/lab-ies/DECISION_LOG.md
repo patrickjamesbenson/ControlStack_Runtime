@@ -538,3 +538,15 @@ The loaded DTO must pass the existing `inspectIesReferenceForGeneration` validat
 Only one immutable redacted ready-or-blocked receipt may cross the boundary. Sealed DTO content, metadata, keyword values, angles, candela, provenance paths, LM-63 text, local locations and provider material remain private. Generator/materialise invocation, routes, persistence, writes, delivery and readiness activation remain blocked.
 
 The expected branch marker and three protected untracked items stay outside the feature parcel. Program C5 receipt review is next; C6 generation remains separately blocked.
+
+## DL-039 — C5 technically accepted; lane-memory closeout and seed-library block
+
+**Status:** C5 technically accepted by Program; lane-memory closeout authorised on 2026-07-22. SEED-LIB-001 recorded as blocked future acceptance.
+
+Program reviewed the current Lab repository evidence and accepted the C5 implementation and fixed 314/314 gate. The accepted receipt proves one exact ready plan/binding/inspection chain, contract-derived reference identity, at most one injected read-only resolver call, validation through the existing real inspection path, exact identity/keyword-profile/baseline/missing-override/no-override agreement, one immutable redacted receipt and immediate loaded-body discard.
+
+The receipt exposes no sealed body, metadata, keyword values, angles, candela, provenance paths, LM-63 text, local location or provider material. It adds no generator/materialise invocation, route, persistence, file/network/email write, delivery or readiness activation. C6 remains blocked until a separate Program release.
+
+SEED-LIB-001 is the initial two-case canonical future acceptance library. Build 1 is the saved DNX 60 Square direct case with Opal 60, 3000K/CRI80, DALI-2 DT6, target 1000 lm/m, 9560 mm × 1, Spitfire D25, PIR 5 m, Suspended, Top Side and White (Textured). Build 2 is the saved DNX 80 DI (`Square_DI`) case with direct Inlay 80 plus Microprism, indirect Rope 80, 1500/500 lm/m, 5000K/CRI90, Fixed both lanes, Surface Mount, Back Wall side, Black (Textured), EM DC Mains and Microwave sensor; quantity and length remain exactly whatever the saved Selector case contains.
+
+Future acceptance must use exact saved Selector intake, genuine measured Lab evidence, the existing real authority approval and sealer, the existing real inspection path, C5 load, separately released C6 generation and separately released C7 opaque handoff. Hand-made DTOs or inspections, synthetic production artifacts, substitutes, inherited measurements, nearest matches, placeholder evidence and reconstructed run intake are invalid. Missing evidence, sealable authority or exact identity agreement fails closed on the exact selected element. No seed execution is authorised now.

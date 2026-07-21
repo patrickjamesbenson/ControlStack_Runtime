@@ -13,7 +13,7 @@ Current repository evidence overrides stale historical statements.
 - Root: `C:\ControlStack_Worktrees\code-pilot-lab`
 - Branch: `lane/code-pilot-lab`
 - Gate: `lab-ies`
-- Recorded branch HEAD: `b517553ba011faedb7b20d7342358630ba7c0815`
+- Recorded branch HEAD: `902cc065fe06e82f9a7c47b921ad2631c8dab47a`
 - Branch-HEAD guard checkpoint: `6d34e500d407d5335e5eebb317636a67a5e98618`
 - Starting HEAD for SEAM-G-C5: `2ebbade483b601f6610e5f6cfc711354eb504d7c`
 - Completed feature HEAD: `b517553ba011faedb7b20d7342358630ba7c0815`
@@ -967,3 +967,15 @@ The final Lab gate passed 314/314. The resolver is called at most once, receives
 The first gate passed 311/314 with three test-fixture issues only. Orchestrator-authorised corrections narrowed the redaction assertion to actual candela content and cloned immutable contracts before deliberate mutation. Production behavior did not change.
 
 Caller paths, URLs, provider input, malformed/extra/private/raw values, resolver failure, wrong DTO and all identity/inspection mismatches fail closed. No generator/materialise invocation, LM-63 text, route, persistence, network/file/email write, delivery or readiness activation was added. The Lab queue is empty. Program C5 receipt review is next; C6 remains blocked.
+
+## 2026-07-22 Program-reviewed C5 memory closeout and blocked seed library
+
+Program technically accepted the current C5 implementation and its 314/314 fixed-gate evidence. The live branch position reconciled exactly to the expected unstaged recorded-position marker, and the protected local inventory remained exactly the expected three untouched, unstaged items.
+
+C5 is complete with the accepted technical receipt: exact ready plan, binding and inspection agreement; reference identity derived only from those contracts; one injected Lab read-only resolver call maximum; loaded DTO validation through the existing inspection path; exact identity, keyword profile, baseline, missing-override and no-override agreement; immutable redacted receipt; loaded body discarded.
+
+The safety receipt remains closed: no sealed body, metadata, keyword values, angles, candela, provenance paths, LM-63 text, local location or provider material returned; no generator/materialise invocation, route, persistence, file/network/email write, delivery or readiness activation.
+
+SEED-LIB-001 is recorded as a blocked future acceptance batch containing the two exact saved Selector cases. Future acceptance must use exact saved intake, genuine measured Lab evidence, the real approval/sealer, real inspection, C5, and separately admitted C6 and C7. Substitutions fail closed on the exact missing selected element.
+
+No C6 or seed execution was started. No Lab implementation parcel is ready. Stop for Program review.

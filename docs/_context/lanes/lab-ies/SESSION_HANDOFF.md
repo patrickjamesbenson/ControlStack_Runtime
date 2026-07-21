@@ -425,6 +425,16 @@ Replay, changed-reference movement, no-caller-location authority, private/raw re
 
 No generator/materialise invocation, route, persistence, file/network/email write, delivery or readiness activation was added. The expected marker and three protected local items remain untouched. The Lab queue is empty. Program C5 receipt review is the next seam; C6 remains blocked.
 
+## 2026-07-22 C5 lane-memory closeout complete — Program review only
+
+Program technically accepted C5 and its 314/314 fixed-gate evidence. This memory-only closeout reconciles the live branch position, preserves the exact protected local inventory and records the accepted technical and safety receipt.
+
+C5 remains limited to one exact contract-derived read-only resolver load, validation through the existing inspection path, an immutable redacted receipt and loaded-body discard. No sealed body or private photometric content crosses the boundary. No generator, materialiser, LM-63, route, persistence, write, delivery or readiness activation exists in this closeout.
+
+SEED-LIB-001 is recorded as a blocked future acceptance batch for the exact two saved Selector cases. It requires exact saved intake, genuine measured Lab evidence, the real approval/sealer and inspection path, then separately admitted C5/C6/C7 chain steps. Substitutions and reconstructed evidence fail closed.
+
+C6 was not started. No seed sealing, inspection, resolver execution, generation, artifact handoff, persistence, retrieval or delivery was started. No Lab implementation item is ready. Stop for Program review.
+
 ## Prohibited actions retained
 
 - no LAB-017 change outside the recorded version-1 approval without a new seam decision;
