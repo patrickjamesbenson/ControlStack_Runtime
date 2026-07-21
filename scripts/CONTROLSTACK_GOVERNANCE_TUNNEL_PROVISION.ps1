@@ -69,6 +69,38 @@ function Invoke-Git {
   Invoke-Native -FileName 'git.exe' -Arguments (@('-C', $Root) + $Arguments) -AllowFailure:$AllowFailure
 }
 
+function Wait-ForManagerServices {
+  param(
+    [Parameter(Mandatory = $true)][string[]]$RequiredIds,
+    [int]$TimeoutSeconds = 180
+  )
+
+  $deadline = [DateTime]::UtcNow.AddSeconds($TimeoutSeconds)
+  $lastResult = 'no completed manager status request'
+  while ([DateTime]::UtcNow -lt $deadline) {
+    try {
+      $status = Invoke-RestMethod -Method Get -Uri $ManagerStatusUrl -TimeoutSec 30
+      $lastResult = 'manager status received'
+      $ready = $true
+      foreach ($requiredId in $RequiredIds) {
+        $service = @($status.services | Where-Object { $_.id -eq $requiredId })
+        if ($service.Count -ne 1 -or $service[0].healthy -ne $true -or $service[0].managed -ne $true) {
+          $ready = $false
+          $lastResult = "service not ready: $requiredId"
+          break
+        }
+      }
+      if ($ready) { return $status }
+    } catch {
+      $lastResult = 'transient manager status timeout or transport failure'
+    }
+
+    if ([DateTime]::UtcNow -lt $deadline) { Start-Sleep -Seconds 1 }
+  }
+
+  throw "The required managed services did not become ready within the bounded retry window: $lastResult"
+}
+
 function Read-ProtectedRuntimeKey {
   if (-not (Test-Path -LiteralPath $CredentialFile -PathType Leaf)) {
     throw 'The protected tunnel runtime key is missing.'
@@ -107,11 +139,7 @@ if ((Invoke-Git -Root $GovernanceRoot -Arguments @('status', '--porcelain=v1')).
   throw 'The Governance worktree must be clean before tunnel provisioning.'
 }
 
-$currentStatus = Invoke-RestMethod -Method Get -Uri $ManagerStatusUrl -TimeoutSec 30
-$governanceMcp = @($currentStatus.services | Where-Object { $_.id -eq 'governance-mcp' })
-if ($governanceMcp.Count -ne 1 -or $governanceMcp[0].healthy -ne $true -or $governanceMcp[0].managed -ne $true) {
-  throw 'The local Governance MCP service is not ready and managed.'
-}
+$currentStatus = Wait-ForManagerServices -RequiredIds @('governance-mcp')
 
 if ($PreflightOnly) {
   Write-Host 'GOVERNANCE TUNNEL PREFLIGHT: READY FOR TUNNEL REFERENCE'
@@ -160,15 +188,7 @@ try {
   $installed = Invoke-Native -FileName $Node -Arguments @($Installer, '--install')
   if ($installed.Output) { Write-Host $installed.Output }
 
-  $finalStatus = Invoke-RestMethod -Method Get -Uri $ManagerStatusUrl -TimeoutSec 30
-  $governanceMcp = @($finalStatus.services | Where-Object { $_.id -eq 'governance-mcp' })
-  $governanceTunnel = @($finalStatus.services | Where-Object { $_.id -eq 'governance-tunnel' })
-  if (
-    $governanceMcp.Count -ne 1 -or $governanceMcp[0].healthy -ne $true -or $governanceMcp[0].managed -ne $true -or
-    $governanceTunnel.Count -ne 1 -or $governanceTunnel[0].healthy -ne $true -or $governanceTunnel[0].managed -ne $true
-  ) {
-    throw 'The Governance MCP and tunnel did not both report ready and managed.'
-  }
+  $finalStatus = Wait-ForManagerServices -RequiredIds @('governance-mcp', 'governance-tunnel')
 } finally {
   $env:CONTROL_PLANE_API_KEY = $null
   $key = $null

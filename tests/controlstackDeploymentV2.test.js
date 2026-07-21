@@ -729,6 +729,12 @@ test("Governance tunnel provisioner is fixed, clipboard-bound and reuses only th
   assert.match(provisioner, /CHECK\\s\+mcp_target\\s\+PASS/);
   assert.match(provisioner, /governance-mcp/);
   assert.match(provisioner, /governance-tunnel/);
+  assert.match(provisioner, /Wait-ForManagerServices/);
+  assert.match(provisioner, /TimeoutSeconds = 180/);
+  assert.match(provisioner, /transient manager status timeout or transport failure/);
+  assert.match(provisioner, /Start-Sleep -Seconds 1/);
+  assert.match(provisioner, /Wait-ForManagerServices -RequiredIds @\('governance-mcp', 'governance-tunnel'\)/);
+  assert.doesNotMatch(provisioner, /\$finalStatus = Invoke-RestMethod|\$currentStatus = Invoke-RestMethod/);
   assert.match(provisioner, /READY FOR CHATGPT APP REGISTRATION/);
   assert.doesNotMatch(provisioner, /Write-Host\s+\$key|Write-Output\s+\$key|Remove-Item|git\.exe[^\n]*(?:reset|clean)|--force-with-lease/i);
   const escapedPath = governanceTunnelProvisionerPath.replaceAll("'", "''");
