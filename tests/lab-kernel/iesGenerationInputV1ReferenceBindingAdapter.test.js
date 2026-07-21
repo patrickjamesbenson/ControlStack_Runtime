@@ -161,6 +161,7 @@ function generationInput(overrides = {}) {
     safetyFlags: generationSafety(),
   };
   merge(value, overrides);
+  deriveFixtureSourceIdentities(value);
   applyGenerationIdentity(value);
   return value;
 }
@@ -218,7 +219,76 @@ function isPlainObject(value) {
   return value !== null && typeof value === "object" && !Array.isArray(value);
 }
 
+function deriveFixtureSourceIdentities(value) {
+  value.engineContract.requestFingerprint = stableFingerprint("engine-selection-set-v1", {
+    product: {
+      system: value.selection.system,
+      optic: value.selection.optic,
+    },
+    lighting: {
+      targetLmPerM: value.selection.targetLmPerM,
+      roomAmbientTaC: value.selection.roomAmbientTaC,
+    },
+    runs: [{ qty: value.run.quantity, lengthMm: value.run.lengthMm }],
+    control: { protocol: value.selection.protocol },
+  });
+  const requestPayload = {
+    schemaId: value.sourceRequest.schemaId,
+    schemaVersion: value.sourceRequest.schemaVersion,
+    artifactIntent: value.artifactIntent,
+    engineContract: value.engineContract,
+    blocker: null,
+  };
+  value.sourceRequest.requestId = stableFingerprint("ies-artifact-request-v1", requestPayload);
+  value.sourceRequest.replayKey = stableFingerprint("ies-artifact-replay-v1", {
+    requestId: value.sourceRequest.requestId,
+    engineReplay: {
+      requestFingerprint: value.engineContract.requestFingerprint,
+      sourceVersionFingerprint: value.engineContract.sourceVersionFingerprint,
+      policyFingerprint: value.engineContract.policyFingerprint,
+      evidenceFingerprints: [...value.engineContract.evidenceFingerprints],
+      outputSchemaId: value.engineContract.outputSchemaId,
+      outputSchemaVersion: value.engineContract.outputSchemaVersion,
+    },
+  });
+}
+
 function applyGenerationIdentity(value) {
+  value.engineContract.requestFingerprint = stableFingerprint("engine-selection-set-v1", {
+    product: {
+      system: value.selection.system,
+      optic: value.selection.optic,
+    },
+    lighting: {
+      targetLmPerM: value.selection.targetLmPerM,
+      roomAmbientTaC: value.selection.roomAmbientTaC,
+    },
+    runs: [{ qty: value.run.quantity, lengthMm: value.run.lengthMm }],
+    control: { protocol: value.selection.protocol },
+  });
+  const artifactPayload = {
+    schemaId: value.sourceRequest.schemaId,
+    schemaVersion: value.sourceRequest.schemaVersion,
+    artifactIntent: value.artifactIntent,
+    engineContract: value.engineContract,
+    blocker: null,
+  };
+  value.sourceRequest.requestId = stableFingerprint("ies-artifact-request-v1", artifactPayload);
+  value.sourceRequest.replayKey = stableFingerprint("ies-artifact-replay-v1", {
+    requestId: value.sourceRequest.requestId,
+    engineReplay: {
+      requestFingerprint: value.engineContract.requestFingerprint,
+      sourceVersionFingerprint: value.engineContract.sourceVersionFingerprint,
+      policyFingerprint: value.engineContract.policyFingerprint,
+      evidenceFingerprints: [...value.engineContract.evidenceFingerprints],
+      outputSchemaId: value.engineContract.outputSchemaId,
+      outputSchemaVersion: value.engineContract.outputSchemaVersion,
+    },
+  });
+  applyGenerationOnlyIdentity(value);
+}
+
+function applyGenerationOnlyIdentity(value) {
   const payload = {
     schemaId: value.schemaId,
     schemaVersion: value.schemaVersion,
@@ -352,6 +422,33 @@ test("preserves valid zero measured thermal values", () => {
   assert.equal(result.technicalBinding.opticThermalRiseTaC, 0);
 });
 
+test("accepts exact decimal thermal triplets without binary rounding rejection", () => {
+  const generation = generationInput({
+    selection: { roomAmbientTaC: 0.1 },
+    thermal: {
+      selectedRoomTaC: 0.1,
+      referenceRoomTaC: 0.1,
+      referenceInternalTaC: 0.3,
+      opticThermalRiseTaC: 0.2,
+      derivedInternalTaC: 0.3,
+      curveLookupTaC: 0.3,
+      effectiveCurveTaC: 25,
+      temperatureMode: "clamped-low",
+    },
+  });
+  const lab = labProjection({
+    thermalEvidence: {
+      referenceRoomTaC: 0.1,
+      referenceInternalTaC: 0.3,
+      opticThermalRiseTaC: 0.2,
+    },
+  });
+  const result = contract.adaptIesGenerationInputV1ReferenceBinding(generation, lab);
+  assert.equal(result.state, contract.IES_GENERATION_REFERENCE_BINDING_STATES.readyReadOnly);
+  assert.equal(result.technicalBinding.referenceInternalTaC, 0.3);
+  assert.equal(result.technicalBinding.opticThermalRiseTaC, 0.2);
+});
+
 test("is replay-identical and ignores outer traceability", () => {
   const generation = generationInput();
   const lab = labProjection();
@@ -425,6 +522,21 @@ test("fails closed on schema, path, unresolved, reference and binding contradict
 
   assertBlocked(contract.adaptIesGenerationInputV1ReferenceBinding(
     validGeneration,
+    labProjection({ references: { optic: identity("OPT", 0, "b") } }),
+  ), "lab_optic_reference_invalid");
+
+  assertBlocked(contract.adaptIesGenerationInputV1ReferenceBinding(
+    validGeneration,
+    labProjection({ references: { optic: identity("OPT", 2, "b", { sealedAtUtc: "2026-02-30T00:00:00.000Z" }) } }),
+  ), "lab_optic_reference_invalid");
+
+  assertBlocked(contract.adaptIesGenerationInputV1ReferenceBinding(
+    validGeneration,
+    labProjection({ family: "80" }),
+  ), "lab_projection_family_invalid");
+
+  assertBlocked(contract.adaptIesGenerationInputV1ReferenceBinding(
+    validGeneration,
     labProjection({ selection: { opticVariant: "ROPE" } }),
   ), "optic_key_variant_mismatch");
 
@@ -452,6 +564,42 @@ test("fails closed on tampered generation identity, unsafe flags and private val
   tamperedIdentity.audit.generationInputId = tamperedIdentity.generationInputId;
   assertBlocked(contract.adaptIesGenerationInputV1ReferenceBinding(tamperedIdentity, lab),
     "generation_deterministic_identity_or_audit_mismatch");
+
+  const sourceRequestTamper = generationInput();
+  sourceRequestTamper.sourceRequest.requestId = `ies-artifact-request-v1:${"8".repeat(40)}`;
+  applyGenerationOnlyIdentity(sourceRequestTamper);
+  assertBlocked(contract.adaptIesGenerationInputV1ReferenceBinding(sourceRequestTamper, lab),
+    "generation_source_request_identity_mismatch");
+
+  const selectionFingerprintTamper = generationInput();
+  selectionFingerprintTamper.engineContract.requestFingerprint =
+    `engine-selection-set-v1:${"9".repeat(40)}`;
+  const artifactPayload = {
+    schemaId: selectionFingerprintTamper.sourceRequest.schemaId,
+    schemaVersion: selectionFingerprintTamper.sourceRequest.schemaVersion,
+    artifactIntent: selectionFingerprintTamper.artifactIntent,
+    engineContract: selectionFingerprintTamper.engineContract,
+    blocker: null,
+  };
+  selectionFingerprintTamper.sourceRequest.requestId =
+    stableFingerprint("ies-artifact-request-v1", artifactPayload);
+  selectionFingerprintTamper.sourceRequest.replayKey = stableFingerprint(
+    "ies-artifact-replay-v1",
+    {
+      requestId: selectionFingerprintTamper.sourceRequest.requestId,
+      engineReplay: {
+        requestFingerprint: selectionFingerprintTamper.engineContract.requestFingerprint,
+        sourceVersionFingerprint: selectionFingerprintTamper.engineContract.sourceVersionFingerprint,
+        policyFingerprint: selectionFingerprintTamper.engineContract.policyFingerprint,
+        evidenceFingerprints: [...selectionFingerprintTamper.engineContract.evidenceFingerprints],
+        outputSchemaId: selectionFingerprintTamper.engineContract.outputSchemaId,
+        outputSchemaVersion: selectionFingerprintTamper.engineContract.outputSchemaVersion,
+      },
+    },
+  );
+  applyGenerationOnlyIdentity(selectionFingerprintTamper);
+  assertBlocked(contract.adaptIesGenerationInputV1ReferenceBinding(selectionFingerprintTamper, lab),
+    "generation_selection_fingerprint_mismatch");
 
   const unsafe = generationInput();
   unsafe.safetyFlags.sealedReferenceLoaded = true;

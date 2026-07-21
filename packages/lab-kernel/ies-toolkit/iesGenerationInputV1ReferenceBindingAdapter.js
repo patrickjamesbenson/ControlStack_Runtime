@@ -372,6 +372,33 @@ function fingerprintArray(value) {
   return token ? [token] : null;
 }
 
+function decimalInteger(value) {
+  const numeric = finiteNumber(value);
+  if (numeric === undefined) return null;
+  const match = /^([+-]?)(\d+)(?:\.(\d*))?(?:e([+-]?\d+))?$/i.exec(String(numeric));
+  if (!match) return null;
+  const sign = match[1] === "-" ? -1n : 1n;
+  const fraction = match[3] || "";
+  const exponent = Number(match[4] || 0);
+  const digits = `${match[2]}${fraction}`.replace(/^0+(?=\d)/, "");
+  const shift = exponent - fraction.length;
+  if (!Number.isSafeInteger(shift) || Math.abs(shift) > 1000) return null;
+  const magnitude = BigInt(digits || "0");
+  return shift >= 0
+    ? { integer: sign * magnitude * (10n ** BigInt(shift)), scale: 0 }
+    : { integer: sign * magnitude, scale: -shift };
+}
+
+function exactDecimalSum(leftValue, rightValue, expectedValue) {
+  const left = decimalInteger(leftValue);
+  const right = decimalInteger(rightValue);
+  const expected = decimalInteger(expectedValue);
+  if (!left || !right || !expected) return false;
+  const scale = Math.max(left.scale, right.scale, expected.scale);
+  const align = ({ integer, scale: valueScale }) => integer * (10n ** BigInt(scale - valueScale));
+  return align(left) + align(right) === align(expected);
+}
+
 function validateThermalSafety(value) {
   return exactKeys(value, THERMAL_SAFETY_KEYS)
     && THERMAL_SAFETY_KEYS.every((key) => value[key] === false);
@@ -427,8 +454,16 @@ function validateThermal(value, provenance, selection) {
     || output.selectedRoomTaC !== selection.roomAmbientTaC
   ) return { ok: false, blocker: "generation_thermal_identity_mismatch" };
   if (
-    output.referenceRoomTaC + output.opticThermalRiseTaC !== output.referenceInternalTaC
-    || output.selectedRoomTaC + output.opticThermalRiseTaC !== output.derivedInternalTaC
+    !exactDecimalSum(
+      output.referenceRoomTaC,
+      output.opticThermalRiseTaC,
+      output.referenceInternalTaC,
+    )
+    || !exactDecimalSum(
+      output.selectedRoomTaC,
+      output.opticThermalRiseTaC,
+      output.derivedInternalTaC,
+    )
     || output.curveLookupTaC !== output.derivedInternalTaC
   ) return { ok: false, blocker: "generation_thermal_equation_mismatch" };
   if (output.opticThermalRiseTaC < 0 || output.requestedCurrentMa < 0 || output.verifiedLmPerM < 0) {
@@ -488,6 +523,44 @@ function expectedGenerationIdentity(value) {
     selectionRequestFingerprint: value.engineContract.requestFingerprint,
   });
   return { attemptFingerprint, generationInputId, replayKey };
+}
+
+function expectedSelectionFingerprint(selection, run) {
+  return stableFingerprint("engine-selection-set-v1", {
+    product: {
+      system: selection.system,
+      optic: selection.optic,
+    },
+    lighting: {
+      targetLmPerM: selection.targetLmPerM,
+      roomAmbientTaC: selection.roomAmbientTaC,
+    },
+    runs: [{ qty: run.quantity, lengthMm: run.lengthMm }],
+    control: { protocol: selection.protocol },
+  });
+}
+
+function expectedArtifactRequestIdentity(artifactIntent, engineContract) {
+  const payload = {
+    schemaId: ARTIFACT_REQUEST_SCHEMA_ID,
+    schemaVersion: ARTIFACT_REQUEST_SCHEMA_VERSION,
+    artifactIntent,
+    engineContract,
+    blocker: null,
+  };
+  const requestId = stableFingerprint("ies-artifact-request-v1", payload);
+  const replayKey = stableFingerprint("ies-artifact-replay-v1", {
+    requestId,
+    engineReplay: {
+      requestFingerprint: engineContract.requestFingerprint,
+      sourceVersionFingerprint: engineContract.sourceVersionFingerprint,
+      policyFingerprint: engineContract.policyFingerprint,
+      evidenceFingerprints: [...engineContract.evidenceFingerprints],
+      outputSchemaId: ENGINE_OUTPUT_SCHEMA_ID,
+      outputSchemaVersion: ENGINE_OUTPUT_SCHEMA_VERSION,
+    },
+  });
+  return { requestId, replayKey };
 }
 
 function validateGenerationInput(value) {
@@ -551,6 +624,19 @@ function validateGenerationInput(value) {
     || value.run.lengthMm < 1
   ) return { ok: false, blocker: "generation_run_invalid" };
   const run = clonePlain(value.run);
+
+  const selectionFingerprint = expectedSelectionFingerprint(selection, run);
+  if (value.engineContract.requestFingerprint !== selectionFingerprint) {
+    return { ok: false, blocker: "generation_selection_fingerprint_mismatch" };
+  }
+  const artifactIdentity = expectedArtifactRequestIdentity(
+    value.artifactIntent,
+    value.engineContract,
+  );
+  if (
+    value.sourceRequest.requestId !== artifactIdentity.requestId
+    || value.sourceRequest.replayKey !== artifactIdentity.replayKey
+  ) return { ok: false, blocker: "generation_source_request_identity_mismatch" };
 
   if (!exactKeys(value.technicalProvenance, PROVENANCE_KEYS)) {
     return { ok: false, blocker: "generation_provenance_invalid_shape" };
@@ -634,8 +720,10 @@ function validateReferenceIdentity(value, expectedKind, nullable = false) {
     || value.kind !== expectedKind
     || !Number.isSafeInteger(value.serial)
     || value.serial < 1
+    || value.serial > 999999
     || !EXACT_UTC_PATTERN.test(value.sealedAtUtc)
     || !Number.isFinite(Date.parse(value.sealedAtUtc))
+    || new Date(value.sealedAtUtc).toISOString() !== value.sealedAtUtc
     || !SHA256_PATTERN.test(value.authorityRecordSha256)
     || !SHA256_PATTERN.test(value.referenceSha256)
     || value.resolverPath !== `/r/${value.referenceId}`
@@ -651,7 +739,7 @@ function validateLabProjection(value) {
     || value.schemaVersion !== NVB_LAB_PROJECTION_SCHEMA_VERSION
   ) return { ok: false, blocker: "lab_projection_schema_unsupported" };
   if (value.path !== "optic") return { ok: false, blocker: "lab_projection_optic_path_required" };
-  if (!(typeof value.family === "string" || Number.isFinite(value.family))) {
+  if (!Number.isSafeInteger(value.family) || value.family < 1) {
     return { ok: false, blocker: "lab_projection_family_invalid" };
   }
   if (!exactKeys(value.selection, LAB_SELECTION_KEYS)) return { ok: false, blocker: "lab_selection_invalid_shape" };
@@ -701,8 +789,12 @@ function validateLabProjection(value) {
     || thermalEvidence.opticThermalRiseTaC === undefined
     || !thermalEvidence.evidenceRef
     || thermalEvidence.authorityState !== null
-    || thermalEvidence.referenceRoomTaC + thermalEvidence.opticThermalRiseTaC
-      !== thermalEvidence.referenceInternalTaC
+    || thermalEvidence.opticThermalRiseTaC < 0
+    || !exactDecimalSum(
+      thermalEvidence.referenceRoomTaC,
+      thermalEvidence.opticThermalRiseTaC,
+      thermalEvidence.referenceInternalTaC,
+    )
   ) return { ok: false, blocker: "lab_thermal_evidence_invalid" };
 
   const unresolved = canonicalStrings(value.unresolved, { maximum: 0, blockers: true });
