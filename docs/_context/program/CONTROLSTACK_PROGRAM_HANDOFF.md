@@ -805,3 +805,13 @@ The consumer reconstructs the real selection fingerprint, artifact request ident
 This activation does not execute the resolver, access storage, load the sealed reference DTO, inspect or mutate authority, accept evidence, invoke the generator, emit LM-63 text, write or deliver a file, add routes or persist state.
 
 The Program queue is empty. Sealed-reference loading and actual generation require a new exact Program parcel. Patrick has no action.
+
+## 2026-07-21 sealed-reference generation inspection commission
+
+Commission Lab & IES for SEAM-G-C3 in exactly two files: a narrow inspection export in the existing sealed-reference generator module and one focused test.
+
+The inspector must call the exact existing private reference validator and stop before job validation or materialisation. It emits only public reference identity, keyword profile ID, safe baseline values, derived baseline lm/m and watts/m, exact missing generator override names and explicit no-generation/no-raw/no-write flags.
+
+It must not expose metadata, angles, candela, keyword values, provenance paths or the sealed DTO body. It must not derive a multiplier, accept project/customer data, resolve storage, invoke the generator, emit LM-63 text, add routes, persist or write.
+
+Return the inspection receipt to Program. Multiplier policy, generation job construction and actual generation remain blocked.

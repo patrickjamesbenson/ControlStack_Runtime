@@ -556,3 +556,13 @@ P2 Checkpoint 1 is **IMPLEMENTATION COMPLETE / GATE GREEN / COMMIT BLOCKED BY SH
 - **QUEUE:** empty; no implementation item is authorised.
 - **MAIN:** held; unfinished runtime-port work excluded.
 - **NEXT:** a new exact Program parcel is required before any generator invocation. Patrick has no action.
+
+## 2026-07-21 sealed-reference inspection commission state
+
+- **SOLE READY ITEM:** SEAM-G-C3 in Lab & IES.
+- **INPUT:** one exact sealed one-millimetre reference DTO supplied in memory; no storage resolution.
+- **VALIDATOR:** the existing private generator `validateReference` path; no duplicated or weakened validator.
+- **OUTPUT:** redacted ready-or-blocked generation inspection with public identity, safe baseline values, baseline lm/m and watts/m, missing keyword override names and no-generation safety state.
+- **PRIVATE:** metadata, angles, candela, keyword values, provenance paths and sealed body never cross the inspection output.
+- **NOT AUTHORISED:** multiplier, generation job, project/customer metadata, generator/materialise call, LM-63 text, route, storage, persistence, files/delivery, main or runtime-port work.
+- **NEXT:** reconcile Lab queue and implement SEAM-G-C3 in the exact two-file scope. Patrick has no action.

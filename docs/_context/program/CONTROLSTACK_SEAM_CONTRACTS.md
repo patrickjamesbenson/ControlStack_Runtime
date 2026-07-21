@@ -840,3 +840,21 @@ Compatibility is exact-shape and exact-version. Unknown versions, extra authorit
 Rollback is removal or non-use of the producer or binder. Because neither writes or persists, no migration, stored-record repair, route reversal, authority repair, reference rollback or artifact deletion is required.
 
 This activation does not resolve storage, load a sealed DTO, inspect or mutate authority, accept evidence, invoke the generator, emit LM-63, write or deliver an artifact, add a route or activate persistence/readiness. Those actions require a new exact Program parcel.
+
+## 2026-07-21 approved sealed-reference generation inspection
+
+**Status:** LAB INSPECTION COMMISSIONED; MATERIALISATION INACTIVE.
+
+```text
+sealedReferenceDtoV1
+-> existing generator validateReference path
+-> redacted generationInspectionV1
+```
+
+The inspection contract reuses the exact validation boundary already executed by `buildIesFromReference`, but stops before job validation and materialisation. It may project only public reference identity, keyword profile ID, safe baseline values, derived baseline lm/m and watts/m, exact missing keyword override names and no-generation/no-raw/no-write safety state.
+
+The exact generator override vocabulary is `lumcat`, `luminaire`, `lamp`, `cri`, `cct`, `driver` and `driverSetting`. The inspection may report which of those are required after sealed keyword and baseline fallback, but may not supply values or absorb project/customer metadata.
+
+The sealed reference body, metadata, angles, candela, keyword values and provenance paths remain private. No output multiplier, generator job, LM-63 text, route, storage, persistence or write is authorised.
+
+Rollback is removal or non-use of the inspection export and test; no stored state or artifact changes exist.

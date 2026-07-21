@@ -1233,3 +1233,22 @@ Program verifies the six activation conditions:
 Program therefore activates **only the read-only Seam G generation-binding tunnel**. This permits the accepted generation-input envelope to be validated and bound to one public OPT reference identity projection. It does not resolve storage, load the sealed reference DTO, inspect or mutate authority, accept evidence, invoke the IES generator, emit LM-63 text, create a file/download/email, add a route, persist state or activate delivery.
 
 Actual generation, delivery, main promotion and unfinished runtime-port work remain blocked. No implementation parcel is admitted by this activation decision; a new exact Program parcel is required before any generator invocation.
+
+## 2026-07-21 — Sealed-reference generation inspection commissioned
+
+**Status:** READ-ONLY INSPECTION APPROVED; GENERATOR REMAINS INACTIVE.
+
+The existing LM-63 generator already performs the authoritative fixed-shape validation of a sealed one-millimetre reference DTO before materialisation. Program commissions a narrow inspection export over that exact validator so later work can prove baseline and keyword readiness without duplicating validation or invoking generation.
+
+**SEAM-G-C3** is a Lab-owned two-file parcel:
+
+- modify `packages/lab-kernel/ies-toolkit/iesFromReference.js` only to export one read-only inspection function;
+- add `tests/lab-kernel/iesFromReferenceInspection.test.js`.
+
+The inspector consumes one sealed reference DTO and returns a deeply immutable `controlstack.lab.ies-reference-generation-inspection.v1` ready-or-blocked projection. Ready output may include only public reference identity, keyword profile identity, baseline CCT/CRI/internal ambient, flux/wall-watts/circuit-watts per millimetre, derived baseline lm/m and watts/m, exact missing generator keyword override names, and explicit no-generation/no-raw/no-write safety state.
+
+It must reuse the existing private `validateReference` path that the generator uses, including schema, identity, timestamp, approval, canonical keywords, geometry, angles, candela shape/value, one-millimetre basis, baseline binding and hash-field validation. It must not expose metadata, angles, candela, keyword values, provenance paths or the sealed DTO body.
+
+The parcel may classify whether materialisation can proceed with no keyword overrides, but it must not derive an output multiplier, bind project/customer metadata, invoke `materialise`, call `buildIesFromReference`, emit LM-63 text, write, route, persist or load from storage.
+
+This inspection is the sole ready item. Multiplier policy, generation job construction, generator invocation, delivery and main remain separately blocked.

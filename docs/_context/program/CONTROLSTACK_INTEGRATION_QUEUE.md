@@ -801,3 +801,20 @@ The Program queue is empty. Main, routes, persistence, email/export, actual IES 
 - **Boundary:** activation covers only the read-only generation-input/reference-binding contract. Storage resolution, sealed DTO loading, authority/evidence mutation, LM-63 generation, delivery, routes, persistence and main remain separately held.
 
 No implementation item is ready. A new exact Program parcel is required before any generator invocation or delivery work.
+
+## 2026-07-21 — Sealed-reference generation inspection
+
+**Status:** SEAM-G-C3 SOLE READY ITEM; GENERATOR INACTIVE.
+
+### SEAM-G-C3 — Inspect sealed reference for generation readiness
+
+- **Owner:** Lab & IES.
+- **Status:** ready.
+- **Exact feature files:** modify `packages/lab-kernel/ies-toolkit/iesFromReference.js`; add `tests/lab-kernel/iesFromReferenceInspection.test.js`.
+- **Gate:** `lab-ies`.
+- **Input:** one exact sealed one-millimetre reference DTO.
+- **Output:** immutable `controlstack.lab.ies-reference-generation-inspection.v1` ready-or-blocked projection with public reference identity, keyword profile ID, safe baseline values, derived baseline lm/m and watts/m, exact missing generator keyword override names, deterministic inspection/audit identity and no-generation/no-raw/no-write safety state.
+- **Acceptance:** reuse the exact generator validator; full schema/identity/timestamp/approval/keyword/geometry/angle/candela/one-mm/baseline/hash-field checks; valid zero optional baseline values preserved; exact missing override list for lumcat/luminaire/lamp/cri/cct/driver/driverSetting; repeatable immutable output; malformed/unapproved/non-one-mm/baseline-mismatched/private-path or incomplete input fails closed; no metadata, angle, candela, keyword-value, provenance-path or sealed-body exposure.
+- **Boundary:** no multiplier derivation, project/customer metadata, resolver/storage access, generator/materialise call, LM-63 text, route, persistence, file/network/email write or readiness activation.
+- **Commit message:** `lab: checkpoint sealed reference generation inspection v1`.
+- **Next:** Program inspection receipt review; multiplier and generator work remain blocked.

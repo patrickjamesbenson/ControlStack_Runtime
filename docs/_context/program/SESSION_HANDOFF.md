@@ -75,4 +75,8 @@ No resolver, storage access, sealed DTO load, authority/evidence mutation, gener
 
 ## Next authorised parcel
 
-None. The Program queue is empty. Sealed-reference loading, LM-63 generation, delivery, main and unfinished runtime-port work require a new exact Program decision. Patrick has no action.
+SEAM-G-C3 is the sole ready Lab parcel: expose the existing sealed-reference generator validator as a redacted inspection contract with one focused test.
+
+It must report public reference identity, safe one-millimetre baseline values and exact missing keyword override names without exposing candela or invoking materialisation.
+
+Multiplier policy, generator job construction, LM-63 generation, delivery, main and unfinished runtime-port work remain blocked. Patrick has no action.
