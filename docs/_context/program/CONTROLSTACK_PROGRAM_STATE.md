@@ -665,3 +665,12 @@ P2 Checkpoint 1 is **IMPLEMENTATION COMPLETE / GATE GREEN / COMMIT BLOCKED BY SH
 - **LANE:** queue empty and worktree clean.
 - **GUARD:** temporary module write permissions used for the three completed parcels are retracted; exact Selector guard restored.
 - **NEXT:** no Selector parcel is authorised.
+
+## 2026-07-22 Three-update reconciliation
+
+- **DEPLOYMENT:** all ten managed services are healthy, including the Program secure tunnel.
+- **LAB RECEIPT:** SEAM-G-C4 remains accepted after 305/305; Lab queue remains empty.
+- **LAB AUTHORITY:** no new Lab parcel is authorised. Sealed-reference loading, generator/materialise invocation, LM-63 output, routes, persistence and delivery remain blocked pending a separate Program seam decision.
+- **GOVERNANCE REALITY:** the report that Governance is only proceeding GOV-001 to GOV-002 is stale. The canonical Governance queue records GOV-001 through GOV-005 complete; the final fixed gate passed 181/181.
+- **GOVERNANCE ORDER:** no expedited GOV-004 reorder is issued. GOV-004 is already complete under the earlier explicit Program reorder, project persistence and identity/permissions also closed, and CRM remains held.
+- **NEXT:** Lab and Governance both stay parked; only a new Program seam ruling may admit further work.

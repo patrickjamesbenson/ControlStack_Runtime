@@ -902,24 +902,25 @@ No implementation item is ready. A new exact Program parcel is required before a
 ### GOV-003 — Restore project persistence
 
 - **Owner:** Governance & Shell.
-- **Status:** sole ready Governance parcel; Program seam ruling approved.
-- **Purpose:** restore donor persistence rather than redesign it.
-- **Schema:** canonical persisted/cache schema `workspace_saved_project.v2`; runtime `workspace_saved_project.v2-runtime` only through explicit adapters.
-- **Authority:** server JSON is authoritative; browser localStorage is a post-success cache/recovery mirror only.
-- **Storage:** one atomic JSON file per stable safe `projectId` under `data/session_projects` or `CS_SESSION_PROJECT_DIR`.
-- **Identity:** route/request/file/record project IDs must agree; no fallback identity; fixtures excluded.
+- **Status:** done; fixed Governance gate passed 175/175.
+- **Result:** canonical `workspace_saved_project.v2`, server-authoritative one-file-per-project JSON, atomic replacement, bounded save/read routes, server-first browser cache, explicit migration and rollback.
+- **Identity:** route/request/file/record project IDs agree; fixtures excluded; malformed and unsafe records fail closed.
 - **Passive CRM fields:** `hubspotDealId`, `hubspotContactId`, `hubspotCompanyId`, nullable and provider-free.
-- **Routes:** only bounded `POST /api/session/save` and `POST /api/session/read`; read supports one-project and all-project boot/list modes.
-- **Migration:** explicit idempotent v2, donor-v1 and live-memory adapters; retain originals/backups; never migrate fixtures.
-- **Rollback:** existing `projectPersistenceLive`; false selects memory, true selects server JSON; persisted files remain untouched.
-- **Acceptance:** restart restore, atomic failure preservation, traversal rejection, malformed isolation, fixture removal, passive CRM round-trip, idempotent migration, server-before-cache ordering, single Governance ownership and Engine independence including no-project execution.
-- **Blocked:** identity lookup, retrieval activation, delivery, CRM calls, price, handoff, email and unrelated schema changes.
+- **Boundary:** no identity lookup, retrieval activation, delivery, CRM call, price, handoff, email or Engine coupling was added.
+
+### GOV-005 — Restore user identity and permissions
+
+- **Owner:** Governance & Shell.
+- **Status:** done; fixed Governance gate passed 181/181.
+- **Result:** one Governance-owned NVB-first identity resolver, optional HubSpot presence-only follow-up, canonical four-role authority and immutable permission lifecycle.
+- **Override:** internal override is restricted, reasoned, flagged and logged.
+- **Boundary:** no provider write, hard email verification, two-factor authentication, CRM mutation, Engine eligibility or technical-readiness change was added.
 
 ### Governance follow-on order
 
-1. **GOV-003:** project persistence restoration — ready now.
-2. **Work item 6:** user identity and permissions — blocked until GOV-003 closes.
-3. **Work item 7:** CRM remains blocked; no provider mutation is authorised.
+1. **GOV-001, GOV-002, GOV-003, GOV-004 and GOV-005:** complete in the Governance lane's canonical order and accepted evidence chain.
+2. **GOV-006 / CRM:** held; portal-scope pre-check and a separate Program admission are still required.
+3. **No Governance parcel is ready.** No reorder is required or authorised.
 
 ### Standing test lock
 

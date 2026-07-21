@@ -83,10 +83,10 @@ Lab has no queued item. Sealed DTO loading, generator invocation, LM-63 generati
 
 - **Selector & Engine:** PWS-001, PWS-002 and PWS-005 complete in order; queue empty, worktree clean, temporary module write permissions retracted.
 - **Lab & IES:** SEAM-G-C4 complete and Program-accepted at 305/305; queue empty and generator invocation still blocked.
-- **Governance & Shell:** connector complete; GOV-001 retrieval accepted at 152/152; GOV-003 project persistence is the sole ready Governance parcel under the approved seam.
+- **Governance & Shell:** GOV-001 through GOV-005 are complete; final fixed gate 181/181; queue empty and CRM held.
 - **CRM:** no separate lane yet; item 7 remains blocked inside Governance.
 - **Retrieval rule:** all module downloads/exports/artifact delivery must use one Governance gateway; readiness and identity are separate checks.
 - **Persistence rule:** server JSON is authoritative; browser storage is cache-only after server success; stable `projectId` owns one atomic file; fixtures are excluded.
 - **Standing tests:** no-envelope and changed-envelope Engine independence, changed-optic movement, varied placeholder row, and ownership-wide assertions remain mandatory.
 
-No direct module download path, provider push from Selector, Lab generator invocation, main work or runtime-port mixing is authorised. Governance may now execute GOV-003 only: canonical v2 schema via explicit runtime adapters, bounded save/read routes, passive nullable HubSpot ids, idempotent non-destructive migration and rollback through `projectPersistenceLive`. The protected local persistence report remains untouched; return the gated Governance receipt to Program.
+No direct module download path, provider push from Selector, Lab generator invocation, main work or runtime-port mixing is authorised. Lab and Governance queues are empty. Governance persistence and identity/permissions are closed; CRM remains held pending its portal-scope prerequisite and a separate Program admission. No Governance reorder is required.

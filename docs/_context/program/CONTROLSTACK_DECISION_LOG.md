@@ -1417,3 +1417,13 @@ Program accepts the Selector lane receipts. The parcels executed in their approv
 PWS-001 changed no readiness predicate or Engine eligibility and added no provider mutation. PWS-002 derived Factory Ready only from truthful Spec Ready, Build Ready and unchanged source-backed Factory Approved Inputs evidence. PWS-005 corrected copy and contract classification only; it added no save, restore, hydrate, project-store, route or persistence behaviour.
 
 The Selector worktree is clean and no queue item remains ready. Temporary module write permissions required by the completed parcels are retracted. The exact post-parcel Selector write guard is restored; no broad `packages/modules` permission remains. Governance continues to own identity, project persistence, retrieval and any later provider action.
+
+## 2026-07-22 — Lab and Governance queue reconciliation
+
+**Status:** LAB PARKED; GOVERNANCE PARKED; NO REORDER ISSUED.
+
+Program records all ten managed services healthy, including the Program secure tunnel.
+
+The Lab materialisation job-plan receipt remains accepted after 305/305. Lab has no queued parcel. Sealed-reference loading, generator or materialise invocation, LM-63 output, routes, persistence and delivery remain blocked until Program approves a separate seam. No new Lab work is authorised.
+
+The report that Governance is only proceeding GOV-001 to GOV-002 is superseded by the canonical Governance branch. GOV-001 through GOV-005 are complete, the final fixed Governance gate passed 181/181, and the Governance queue is empty. GOV-004 was already expedited by an earlier explicit Program reorder and is complete, so no new reorder is issued. CRM remains held pending the portal-scope pre-check and a separate Program admission.
