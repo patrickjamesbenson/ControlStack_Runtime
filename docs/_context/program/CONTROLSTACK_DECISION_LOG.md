@@ -1214,3 +1214,22 @@ Ready binding requires path `optic`, no unresolved blockers, exact selected opti
 Unknown versions, extra fields/authority, non-optic path, unresolved state, missing/wrong-kind reference, reference identity contradiction, optic/evidence/thermal mismatch, private/raw content or unsafe generation flags fail closed. The adapter adds no generator invocation, LM-63 text, authority, evidence acceptance, sealing, reference mutation, route, persistence, storage, network/file/email write or readiness activation.
 
 The Lab expected marker and three protected untracked items remain outside the parcel. SEAM-G-A2 and actual generation remain blocked pending the consumer receipt.
+
+## 2026-07-21 — SEAM-G-A2 read-only generation-binding tunnel activated
+
+**Status:** READ-ONLY BINDING TUNNEL ACTIVE; LM-63 GENERATOR INACTIVE.
+
+Program accepts the completed Lab consumer receipt. The exact import-free adapter and focused test plus one same-scope identity tightening passed the final Lab gate at 285/285. The Lab closeout is pushed; only the expected branch marker and three protected local items remain.
+
+Program verifies the six activation conditions:
+
+1. **Schemas and ownership:** exact version-1 generation-input and reference-binding contracts consume only public JSON; the Lab input remains exact NVB projection version 2 and exact read-only OPT identity version 1.
+2. **Producer gate:** Selector passed 115/115 focused and 107/107 normal closeout with a clean ending tree.
+3. **Consumer gate:** the import-free Lab binding and identity tightening passed 285/285; the protected local items remained outside the parcel.
+4. **Identity agreement:** the consumer independently reconstructs the Engine selection fingerprint, artifact request identity, generation identity/audit and reference binding, then requires optic key/variant, BOM, evidence, exact-decimal measured thermal-triplet and canonical OPT identity agreement.
+5. **Replay and failure isolation:** identical technical inputs replay identically; changed generation or reference identity moves binding identity; unknown, extra, unresolved, private/raw, unsafe or contradictory input fails closed.
+6. **No-write security and rollback:** both boundaries are read-only and non-persistent. Rollback is removal or non-use only; no data migration, stored-record repair, route reversal, authority repair or reference rollback is required.
+
+Program therefore activates **only the read-only Seam G generation-binding tunnel**. This permits the accepted generation-input envelope to be validated and bound to one public OPT reference identity projection. It does not resolve storage, load the sealed reference DTO, inspect or mutate authority, accept evidence, invoke the IES generator, emit LM-63 text, create a file/download/email, add a route, persist state or activate delivery.
+
+Actual generation, delivery, main promotion and unfinished runtime-port work remain blocked. No implementation parcel is admitted by this activation decision; a new exact Program parcel is required before any generator invocation.

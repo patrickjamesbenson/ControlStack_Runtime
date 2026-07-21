@@ -761,7 +761,7 @@ The Program queue is empty. Main, routes, persistence, email/export, actual IES 
 
 ## 2026-07-21 — Seam G generation binding sequence
 
-**Status:** SEAM-G-C2 SOLE READY ITEM; LM-63 GENERATION BLOCKED.
+**Status:** READ-ONLY GENERATION-BINDING TUNNEL ACTIVE; QUEUE EMPTY; LM-63 GENERATION BLOCKED.
 
 ### SEAM-G-P2 — Produce deterministic single-run generation input
 
@@ -781,7 +781,7 @@ The Program queue is empty. Main, routes, persistence, email/export, actual IES 
 ### SEAM-G-C2 — Bind generation input to sealed optic reference identity
 
 - **Owner:** Lab & IES.
-- **Status:** ready.
+- **Status:** done and Program-accepted.
 - **Exact feature files:** new `packages/lab-kernel/ies-toolkit/iesGenerationInputV1ReferenceBindingAdapter.js` and new `tests/lab-kernel/iesGenerationInputV1ReferenceBindingAdapter.test.js`.
 - **Gate:** `lab-ies`.
 - **Input:** plain public generation-input version 1 JSON and exact public NVB Lab projection version 2 JSON.
@@ -790,10 +790,14 @@ The Program queue is empty. Main, routes, persistence, email/export, actual IES 
 - **Boundary:** import-free; no storage resolution, sealed DTO load, authority inspection/mutation, evidence acceptance, generator invocation, LM-63 text, route, persistence, network/file/email write or readiness activation.
 - **Protected-state rule:** preserve the expected Lab marker and three protected untracked items.
 - **Commit message:** `lab: checkpoint IES generation reference binding v1`.
-- **Next:** Program SEAM-G-A2 review; generation remains blocked.
+- **Accepted receipt:** exact feature plus same-scope identity tightening; final Lab gate 285/285; exact selection/artifact/generation/reference identity, canonical decimal triplets, replay, valid-zero and fail-closed security verified; protected Lab inventory preserved.
+- **Next:** SEAM-G-A2 is complete; generation remains blocked.
 
 ### SEAM-G-A2 — Activate generation-binding tunnel
 
 - **Owner:** Program & Integrate.
-- **Status:** blocked behind accepted producer and consumer receipts.
-- **Boundary:** activation may cover only the read-only generation-input/reference-binding contract. LM-63 generation and delivery remain separately held.
+- **Status:** done; read-only generation-binding tunnel active.
+- **Acceptance:** exact schemas, green producer and consumer gates, independently reconstructed selection/artifact/generation/reference identity, deterministic replay, fail-closed isolation, no-write safety and removal/non-use rollback verified.
+- **Boundary:** activation covers only the read-only generation-input/reference-binding contract. Storage resolution, sealed DTO loading, authority/evidence mutation, LM-63 generation, delivery, routes, persistence and main remain separately held.
+
+No implementation item is ready. A new exact Program parcel is required before any generator invocation or delivery work.

@@ -1,6 +1,6 @@
 # Program & Integrate Session Handoff
 
-Status: SEAM G VERSION 1 READ-ONLY CONTRACT TUNNEL ACTIVE — GENERATION BLOCKED  
+Status: SEAM G READ-ONLY GENERATION-BINDING TUNNEL ACTIVE — GENERATOR BLOCKED  
 Lane: `program-integrate`  
 Branch: `lane/program-integrate`
 
@@ -63,10 +63,16 @@ Exact versioning, replay/idempotency, governance quarantine, deterministic audit
 
 No live route or generator is active. No raw IES, photometry, candela, private path, authority, evidence acceptance, sealing, reference mutation, storage, file/download/email output, persistence or downstream readiness crosses the seam.
 
+## Current generation-binding state
+
+Program has activated **SEAM-G-A2 as a read-only contract/validation tunnel only**.
+
+The accepted path binds an exact ready artifact request and matching Engine selection request into one deterministic single-run generation input, then independently binds that input to one exact public OPT reference identity through the NVB Lab projection.
+
+Selector producer coverage passed 115/115 with normal closeout at 107/107. The import-free Lab binding and identity tightening passed 285/285. The consumer reconstructs the real selection fingerprint, artifact request identity, generation identity/audit and binding identity, and requires optic key/variant, BOM, evidence, exact-decimal measured thermal triplet and canonical OPT identity agreement.
+
+No resolver, storage access, sealed DTO load, authority/evidence mutation, generator invocation, LM-63 text, route, persistence, file/download/email delivery or readiness is active.
+
 ## Next authorised parcel
 
-SEAM-G-C2 is the sole ready Lab parcel: one import-free generation-input reference-binding adapter and one focused test.
-
-It must prove exact optic key/variant, optic BOM, evidence, measured thermal triplet and read-only OPT reference identity agreement without resolving or loading the reference.
-
-SEAM-G-A2, sealed DTO loading, LM-63 generation, delivery, routes, persistence, main and unfinished runtime-port work remain blocked. Patrick has no action.
+None. The Program queue is empty. Sealed-reference loading, LM-63 generation, delivery, main and unfinished runtime-port work require a new exact Program decision. Patrick has no action.

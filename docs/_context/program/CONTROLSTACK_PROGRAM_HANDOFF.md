@@ -793,3 +793,15 @@ Consume only plain public generation-input version 1 JSON and exact public NVB L
 Emit one immutable ready-or-blocked binding projection containing only source generation identity, bounded selection/run, safe technical/thermal binding and public reference identity. Do not resolve the path, load the sealed DTO, inspect/mutate authority, accept evidence, invoke the generator, emit LM-63 text, add routes, persist or write.
 
 Preserve the Lab expected marker and three protected untracked items. Return the consumer receipt to Program; SEAM-G-A2 and actual generation remain blocked.
+
+## 2026-07-21 Seam G generation-binding tunnel active handoff
+
+Program accepts the completed Lab binding receipt at 285/285 and activates SEAM-G-A2 as a read-only contract/validation tunnel only.
+
+The active path binds an exact ready artifact request and matching selection request into one deterministic single-run generation input, then independently validates that input against one exact public OPT reference identity through the NVB Lab projection.
+
+The consumer reconstructs the real selection fingerprint, artifact request identity, generation identity/audit and binding identity. Ready binding additionally proves optic key/variant, BOM, evidence, exact-decimal measured thermal triplet and canonical OPT timestamp/identity agreement.
+
+This activation does not execute the resolver, access storage, load the sealed reference DTO, inspect or mutate authority, accept evidence, invoke the generator, emit LM-63 text, write or deliver a file, add routes or persist state.
+
+The Program queue is empty. Sealed-reference loading and actual generation require a new exact Program parcel. Patrick has no action.

@@ -541,3 +541,18 @@ P2 Checkpoint 1 is **IMPLEMENTATION COMPLETE / GATE GREEN / COMMIT BLOCKED BY SH
 - **PROTECTED LAB STATE:** expected marker and three protected untracked items remain outside the parcel.
 - **BLOCKED:** storage resolution, sealed DTO load, authority/evidence mutation, generator invocation, LM-63 text, routes, persistence, files/delivery, readiness, main and runtime-port work.
 - **NEXT:** reconcile Lab queue and implement SEAM-G-C2 in exactly two new files. Patrick has no action.
+
+## 2026-07-21 Seam G generation-binding tunnel active state
+
+- **SEAM-G-P2:** accepted; focused 115/115 and normal Selector closeout 107/107.
+- **SEAM-G-C2:** accepted; import-free Lab binder and identity tightening, final gate 285/285.
+- **SEAM-G-A2:** complete; read-only generation-binding tunnel active.
+- **ACTIVE PATH:** ready artifact request plus matching selection request -> deterministic single-run generation input -> independently validated OPT reference identity binding.
+- **IDENTITY:** selection fingerprint, artifact request, generation input/audit and binding/reference identities are reconstructed and matched; optic key/variant, BOM, evidence and measured thermal triplet agree exactly.
+- **REPLAY:** identical technical inputs replay identically; changed generation or reference identity moves the binding; outer traceability is inert and absent.
+- **FAILURE ISOLATION:** unknown, extra, unresolved, private/raw, unsafe or contradictory input fails closed with no partial ready binding or side effect.
+- **ROLLBACK:** removal or non-use only; no data migration, record repair, route reversal, authority repair or reference rollback.
+- **NOT ACTIVE:** storage resolution, sealed reference DTO loading, authority/evidence mutation, IES generator invocation, LM-63 text, files/download/email, routes, persistence or delivery readiness.
+- **QUEUE:** empty; no implementation item is authorised.
+- **MAIN:** held; unfinished runtime-port work excluded.
+- **NEXT:** a new exact Program parcel is required before any generator invocation. Patrick has no action.

@@ -819,3 +819,24 @@ A ready binding requires exact optic path with no unresolved blockers, selected 
 The binding projection may carry only source generation identity, bounded selection/run, safe technical/thermal binding and public reference identity. It does not resolve the reference, inspect or mutate authority, accept evidence, load the sealed DTO or invoke the generator.
 
 Unknown versions, extra authority, private/raw content, unresolved or non-optic state, missing/wrong-kind reference, identity/evidence/thermal mismatch or unsafe flags fail closed. SEAM-G-A2 remains blocked pending the consumer receipt.
+
+### SEAM-G-A2 read-only generation-binding activation
+
+Program accepts the consumer receipt and activates the generation-binding tunnel as a read-only, non-persistent contract boundary.
+
+The active path is exactly:
+
+```text
+artifactRequestV1 + matching engineSelectionSetV1
+-> generationInputV1
+-> nvbLabProjectionV2 + OPT referenceIdentityV1
+-> iesGenerationReferenceBindingV1
+```
+
+The consumer independently reconstructs and matches the Engine selection fingerprint, artifact request identity, generation input identity/audit and binding identity. Ready output additionally requires exact optic key/variant, BOM, evidence reference, canonical measured thermal triplet and read-only OPT reference identity agreement.
+
+Compatibility is exact-shape and exact-version. Unknown versions, extra authority, unresolved/non-optic input, private/raw content, unsafe flags or any identity/evidence/thermal/reference contradiction fail closed. Identical inputs replay identically; changed technical or reference identity changes the binding.
+
+Rollback is removal or non-use of the producer or binder. Because neither writes or persists, no migration, stored-record repair, route reversal, authority repair, reference rollback or artifact deletion is required.
+
+This activation does not resolve storage, load a sealed DTO, inspect or mutate authority, accept evidence, invoke the generator, emit LM-63, write or deliver an artifact, add a route or activate persistence/readiness. Those actions require a new exact Program parcel.
