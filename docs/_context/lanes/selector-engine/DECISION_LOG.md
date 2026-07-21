@@ -493,3 +493,13 @@ This log is append-oriented. Do not silently rewrite historical decisions.
 **Evidence:** The temporary focused harness passed 114/114 and was removed. The normal and guarded feature gates passed 107/107. The authorised feature/assertion set was committed and pushed, and the tree ended clean.
 
 **Consequence:** PWS-001 is done. PWS-002 may derive `factoryReady` only from existing Spec Ready, Build Ready and Factory Approved Inputs evidence. PWS-005 remains blocked. No readiness predicate, source authority, Engine eligibility, retrieval ownership or downstream seam changed.
+
+## 2026-07-21 — PWS-002 accepted; Factory Ready is derived, not authority
+
+**Decision:** Accept PWS-002 and advance PWS-005 as the sole ready parcel. `factoryReady` is a distinct Stage 3 state derived only after Spec Ready, Build Ready and the unchanged Factory Approved Inputs evidence are all truthful and complete.
+
+**Fail-closed rule:** Missing, malformed, duplicate, uncommitted, blocked, non-source-backed, contradictory or incompatible evidence keeps Factory Ready false. Display or diagnostic wording cannot create readiness. The existing Factory Approved Inputs summary, candidate mapper, locked pre-Engine projection, Engine/Lex ownership and no-write flags remain unchanged.
+
+**Evidence:** The temporary focused harness passed 128/128 and was removed. The normal and guarded feature gates passed 107/107. The exact four Selector surfaces and focused runtime regression were committed and pushed, and the feature tree ended clean.
+
+**Consequence:** PWS-002 is done. PWS-005 may correct stale lifecycle copy only. No provider push, factory approval, output generation, route, persistence, Engine, Lab/IES, RuntimeData, retrieval or runtime-process work is authorised.

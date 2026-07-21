@@ -593,3 +593,17 @@ The temporary focused harness visibly executed the new readiness suite and passe
 No HubSpot/CRM call, provider mutation, identity lookup, retry, persistence, storage, filesystem/network write, browser action, route, download/export helper, Engine invocation, Lab/IES change, RuntimeData mutation, main or runtime-port work occurred.
 
 PWS-001 is done. PWS-002 is now the sole ready parcel. PWS-005 remains blocked behind PWS-002.
+
+## 2026-07-21 PWS-002 Factory Ready closeout — latest controlling state
+
+**Recorded lane work HEAD:** `cad26831441db03099c27e830727dcf7f6febae4` — `feat(selector): add Factory Ready state`.
+
+PWS-002 adds `factoryReady` as a first-class Stage 3 state without replacing or weakening the existing Factory Approved Inputs summary. The local state contract defaults it false. The view model derives it only from truthful Spec Ready and Build Ready states, committed Selector evidence and the existing Factory Approved Inputs checks, blocker and diagnostics.
+
+Factory Ready remains false for missing, malformed, duplicate, uncommitted, blocked, non-source-backed, contradictory or incompatible evidence. Display labels and diagnostic fallback cannot make it true. The state is carried through the Selector state contract, view model, readiness preview, Stage 3 indicator, diagnostic rows and rendered dataset. The locked pre-Engine candidate projection and candidate mapping remain unchanged.
+
+The temporary focused harness executed the Factory Ready suite and passed 128/128, including positive, default-false, immutable and fail-closed evidence cases. The harness was removed and absent from the final diff. The normal lane gate passed 107/107 and the guarded feature commit/push gate passed 107/107. Exactly the four authorised Selector surfaces and focused runtime test were committed and pushed; the feature tree ended clean.
+
+No factory authority, default, inference, automatic approval, CRM/provider push, Engine invocation, Lab/IES change, route, persistence, RuntimeData mutation, retrieval helper, main or runtime-port work occurred.
+
+PWS-002 is done. PWS-005 is now the sole ready parcel.

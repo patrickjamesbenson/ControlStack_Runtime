@@ -591,3 +591,19 @@ The focused harness passed 114/114 and was removed with no final harness diff. T
 PWS-002 is the sole ready item. Add fail-closed `factoryReady` as a derived Stage 3 state only when Spec Ready, Build Ready and the existing Factory Approved Inputs evidence are all ready with no missing, malformed, duplicate, uncommitted, non-source-backed, contradictory or incompatible input.
 
 Do not create factory authority, infer or default values, auto-approve, weaken `factoryApprovedInputsReady`, emit a CRM/provider push, invoke Engine, alter Lab/IES, add a route or persistence, mutate RuntimeData, change retrieval ownership, touch main or perform runtime-port work. PWS-005 remains blocked behind PWS-002.
+
+## 2026-07-21 PWS-002 closeout — Factory Ready derived safely
+
+PWS-002 is complete and pushed. Factory Ready is now a distinct Stage 3 state carried through the Selector state contract, readiness preview, stage indicator, diagnostics and rendered view.
+
+It is false by default and becomes true only when Spec Ready, Build Ready and the existing Factory Approved Inputs evidence are all truthful and complete. Missing, malformed, duplicate, uncommitted, blocked, non-source-backed, contradictory or incompatible evidence remains fail closed. Display or diagnostic wording cannot make it true.
+
+The existing Factory Approved Inputs summary, Stage 3 mode, candidate mapping, locked pre-Engine projection, Engine/Lex ownership and no-write flags were not changed. No factory authority, approval, provider push, generation, route, persistence, Engine, Lab/IES, RuntimeData, retrieval or runtime-process action was introduced.
+
+The focused harness passed 128/128 and was removed with no final harness diff. The normal and guarded feature gates passed 107/107. The exact four Selector surfaces and focused runtime test were committed and pushed; the tree ended clean.
+
+## Next worker parcel
+
+PWS-005 is the sole ready item. Correct only stale lifecycle copy and contract diagnostics so Selector, Emergence, Scene Builder and the workspace contract describe shell-owned save, restore and hydrate as live through Project Browser while module-local mutation remains prohibited.
+
+Do not implement or change save, restore, hydrate, handoff/share, CRM/provider, project storage, routes or persistence. Handoff/share and provider writes remain separately deferred. Do not invoke Engine, alter Lab/IES, mutate RuntimeData, change retrieval ownership, touch main or perform runtime-port work.

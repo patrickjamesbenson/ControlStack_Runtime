@@ -345,7 +345,7 @@
 ### Q-11B Add factoryReady on the existing readiness pattern
 
 * id: PWS-002
-* status: ready
+* status: done
 * depends-on: PWS-001 done; Program & Integrate admission recorded and satisfied on 2026-07-21
 * seam change: no unless Program changes the existing Factory Approved Inputs authority; this parcel exposes a truthful derived state only
 * gate: selector-engine
@@ -354,11 +354,12 @@
 * objective: add `factoryReady` as the Stage 3 readiness state following the existing `specReady` and `buildReady` pattern without replacing or weakening `factoryApprovedInputsReady` evidence.
 * acceptance: `factoryReady` is false by default and becomes true only when Spec Ready and Build Ready are true, the existing Factory Approved Inputs summary is ready, every required committed source-backed input is present, and no blocker, ambiguity, invalid value or incompatible selection remains. It is carried consistently through state, view-model, payload/readiness preview, stage indicators and diagnostics; no diagnostic/display fallback can make it true. A false-to-true entry is observable for the later state-entry push sequence, but this parcel performs no CRM push itself. Missing, malformed, duplicate, uncommitted, non-source-backed or contradictory factory evidence fails closed. Existing `factoryApprovedInputsReady`, candidate mapping, Engine/Lex ownership, valid-zero handling and no-write flags remain unchanged.
 * prohibitions: no new factory authority, default, inference, automatic approval, output generation, provider write, Engine invocation, Lab/IES change, route, persistence, RuntimeData mutation, main or runtime-port work.
+* completion: `factoryReady` is now a separate fail-closed Stage 3 state derived only from Spec Ready, Build Ready, committed Selector evidence and the unchanged Factory Approved Inputs summary. Missing, malformed, duplicate, uncommitted, blocked, non-source-backed, contradictory or incompatible evidence remains false. Focused harness coverage passed 128/128, the harness was removed, and normal plus guarded feature gates passed 107/107. Exactly the four authorised Selector surfaces and one focused runtime test were committed and pushed; the feature tree ended clean.
 
 ### Q-11C Correct stale shell save/restore lifecycle copy
 
 * id: PWS-005
-* status: blocked
+* status: ready
 * depends-on: PWS-002 done; Program & Integrate admission recorded and satisfied on 2026-07-21
 * seam change: no — copy and diagnostics must describe the already-live shell-owned lifecycle truth without changing behaviour
 * gate: selector-engine
@@ -370,7 +371,7 @@
 
 ### Program admission and active architectural constraints for PWS work
 
-Program & Integrate admitted all three items on 2026-07-21. PWS-001 is done. PWS-002 is the sole ready Selector parcel. PWS-005 remains blocked until PWS-002 feature and durable closeout are complete; no second writer may use this worktree.
+Program & Integrate admitted all three items on 2026-07-21. PWS-001 and PWS-002 are done. PWS-005 is the sole ready Selector parcel; no second writer may use this worktree.
 
 Selector owns the derived readiness state and immutable state-entry intent only. It must not invoke HubSpot, CRM, project persistence or identity logic. Governance & Shell owns provider policy, project/identity association, idempotency, retry and best-effort external push.
 

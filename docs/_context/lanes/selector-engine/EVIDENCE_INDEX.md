@@ -672,3 +672,18 @@ Every completed worker updates this index with:
 - Guarded feature commit/push gate: 107 passed, 0 failed; exact authorised staged set committed and pushed; feature tree clean — VERIFIED.
 - No browser action, provider mutation, route, download/export helper, Engine invocation, Lab/IES change, RuntimeData mutation, main or runtime-port work occurred — VERIFIED.
 - Queue result: PWS-001 done; PWS-002 sole ready; PWS-005 blocked behind PWS-002 — RECORDED.
+
+## 2026-07-21 — PWS-002 Factory Ready evidence
+
+- Starting identity and guard: clean Selector lane; actual HEAD was the dedicated PWS-001 reconciliation wrapper and its parent matched the recorded lane work HEAD — VERIFIED.
+- Feature scope: existing Factory Approved Inputs summary, Selector state contract, view model/readiness preview, rendered view and one new focused runtime regression only — VERIFIED BY FINAL COMMIT.
+- Derived-state rule: Factory Ready requires Spec Ready, Build Ready, no missing spec/build requirement, no incompatible selection, the existing Factory Approved Inputs summary ready with every check ready, no blocker/diagnostic, and committed source-backed Selector constraints — VERIFIED.
+- Fail-closed evidence: default/display-only, missing, malformed, duplicate, uncommitted, blocked, non-source-backed, contradictory and empty-value inputs all remain false — VERIFIED BY EXECUTED TESTS.
+- Preservation: existing `factoryApprovedInputsReady`, Stage 3 summary/mode, candidate mapper, locked pre-Engine projection, Engine/Lex ownership and no-write safety flags remain unchanged — VERIFIED BY IMPLEMENTATION BOUNDARY AND NORMAL GATE.
+- Visibility: Factory Ready is present in state-contract defaults, view-model readiness preview, Stage 3 indicator, diagnostic rows and rendered dataset; diagnostic fallback is explicitly rejected — VERIFIED.
+- Provider boundary: no CRM/HubSpot call, provider push, identity lookup, persistence, network, storage, filesystem or generation operation exists — VERIFIED BY STATIC SEARCH AND FOCUSED TEST.
+- Temporary harness: exactly one import of the focused Factory Ready suite was added to the gate-included test, then removed; final harness diff was empty — VERIFIED.
+- Focused gate: 128 passed, 0 failed — VERIFIED.
+- Normal lane gate after harness removal: 107 passed, 0 failed — VERIFIED.
+- Guarded feature commit/push gate: 107 passed, 0 failed; exact five-file staged set committed and pushed; feature tree clean — VERIFIED.
+- Queue result: PWS-002 done; PWS-005 sole ready — RECORDED.
