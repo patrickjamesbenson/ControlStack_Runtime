@@ -450,3 +450,15 @@ LAB-043 is confined to one new pure compatibility adapter and one focused test. 
 No IES generation, authority decision, sealing, evidence acceptance, route, persistence, browser storage, network write, RuntimeData mutation, donor use, downstream activation or main change is authorised. The legacy colliding first-narrow row schema is explicitly rejected.
 
 The fixed Lab gate does not execute newly created tests, so the established one-import temporary harness in `iesKeywordMigration.test.js` is authorised. The harness must be removed before final staging and cannot appear in the feature commit. Engine output stability remains withheld after this parcel pending Program review.
+
+## DL-032 — SEAM-G-C1 public IES request compatibility seam
+
+**Status:** Approved by Program & Integrate and admitted on 2026-07-21.
+
+Program accepted the deterministic Selector request producer after focused 115/115 and normal 107/107 Selector evidence. Program then admitted SEAM-G-C1 to Lab/IES as a read-only request compatibility proof.
+
+The parcel is confined to one new import-free compatibility adapter and one focused test. It consumes plain public `controlstack.downstream.ies-artifact-request.v1` JSON only and emits a deeply immutable ready-or-blocked compatibility projection.
+
+Acceptance covers exact request, intent, Engine, audit and row identities; safe provenance/thermal values; valid zeros; replay/idempotency; governance absence; and fail-closed rejection of unknown, extra, private/raw, contradictory, unsafe, blocked-promotion and legacy-row input.
+
+No IES generation, Lab authority, evidence acceptance, sealing, reference mutation, route, persistence, network/file/email write, downstream readiness, RuntimeData, donor, main or runtime-port change is authorised. The expected branch marker and three protected untracked items must remain outside the parcel. Actual Seam G activation remains Program-owned and blocked.

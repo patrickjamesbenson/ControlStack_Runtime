@@ -13,7 +13,7 @@ Current repository evidence overrides stale historical statements.
 - Root: `C:\ControlStack_Worktrees\code-pilot-lab`
 - Branch: `lane/code-pilot-lab`
 - Gate: `lab-ies`
-- Recorded branch HEAD: `576aa62a891434a953292020ae28870fadf5d970`
+- Recorded branch HEAD: `eb1a1e57477d1ec5c0c390bace7d8f3198087cca`
 - Branch-HEAD guard checkpoint: `6d34e500d407d5335e5eebb317636a67a5e98618`
 - Starting HEAD for LAB-043: `576aa62a891434a953292020ae28870fadf5d970`
 - Completed feature HEAD: `ab3ef10a90eaaa406c2e4435bd9f78f116f513ce`
@@ -829,10 +829,11 @@ tests/selectorCascadeCorrectness.test.js
 - `LAB-041-component-library-thermal-labels`: done.
 - `LAB-042-thermal-semantics-guard`: done under approved envelope version 3.
 - `LAB-043-engine-output-v1-compatibility`: done under recorded Program approval.
-- Next ordered item: none.
-- Resulting status: queue empty; Program consumer receipt review required.
-- Ready items: none.
-- Seam approval required: no.
+- `SEAM-G-C1-ies-artifact-request-v1-compatibility`: ready under recorded Program approval.
+- Next ordered item: SEAM-G-C1.
+- Resulting status: one ready read-only request compatibility parcel.
+- Ready items: SEAM-G-C1 only.
+- Seam approval required: recorded and satisfied.
 - Human observation required before implementation: no.
 
 LAB-042 is complete. The corrected thermal batch is closed.
@@ -860,3 +861,13 @@ The fixed Lab gate directly included the new focused test after file creation, s
 No Selector, Workspace, Runtime, donor, RuntimeData, IES generation, authority decision, sealing, reference mutation, route, persistence, network write, downstream readiness, main or runtime-port file changed. The three protected untracked items remain untouched.
 
 The ordered Lab queue is empty. Engine output stability remains withheld pending Program review of this consumer receipt and the separate final Seam B decision.
+
+## 2026-07-21 SEAM-G-C1 IES request compatibility admission
+
+Program accepted the deterministic read-only request producer after 115/115 focused and 107/107 normal Selector evidence, then admitted one import-free Lab consumer parcel.
+
+SEAM-G-C1 is the sole ready Lab item. Its exact feature scope is `iesArtifactRequestV1CompatibilityAdapter.js` and its focused test only. The adapter consumes plain public `controlstack.downstream.ies-artifact-request.v1` JSON and imports no Selector, Workspace, Runtime or producer implementation.
+
+The parcel proves exact ready/blocked request, intent, Engine, audit and row identities; safe thermal/provenance and valid zeros; replay/idempotency; governance absence; and fail-closed rejection of unknown, extra, private/raw, contradictory, unsafe, blocked-promotion and legacy input.
+
+It creates no IES, Lab authority, evidence acceptance, sealing, reference mutation, route, persistence, network/file/email write or readiness capability. The expected branch marker and three protected untracked items remain outside the feature parcel. SEAM-G-A1 and actual generation remain blocked.

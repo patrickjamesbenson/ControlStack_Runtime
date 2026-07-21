@@ -829,6 +829,29 @@ Approval state: Corrected thermal envelope version 3 is fully implemented. LAB-0
 
 Completion evidence: The import-free compatibility adapter and focused test were committed in the exact two-file scope as `lab: checkpoint Engine output v1 compatibility`, then tightened in the same exact scope as `fix(lab): tighten Engine output thermal compatibility`; both checkpoints were pushed only to the Lab lane and passed 269/269. The final adapter accepts exact complete or blocked public version-1 JSON, preserves safe thermal/provenance values and valid zeros, verifies both thermal equations plus accepted clamp/mode combinations, rejects unknown, over-rich, governance-bearing, private, contradictory, unsafe, extra-evidence and legacy-row input, and emits no IES, authority, route, persistence, write or readiness capability. The temporary keyword-test harness was removed before final staging and the harness file returned byte-identical to HEAD. The ordered Lab queue is empty; Program consumer receipt review is next.
 
+### Q-34 IES artifact request version-1 compatibility
+- id: SEAM-G-C1
+- objective: Prove that Lab/IES can consume the public read-only IES artifact request version-1 contract without importing producer implementation or activating generation.
+- authorised files:
+  - `packages/lab-kernel/ies-toolkit/iesArtifactRequestV1CompatibilityAdapter.js`
+  - `tests/lab-kernel/iesArtifactRequestV1CompatibilityAdapter.test.js`
+- public contract:
+  - `controlstack.downstream.ies-artifact-request.v1`, schema version 1;
+  - exact intent `controlstack.downstream.ies-artifact-intent.v1` / `ies_lm63_reference_build`;
+  - exact audit `controlstack.downstream.ies-artifact-request-audit.v1`.
+- prohibitions:
+  - no import from Selector, Workspace, Runtime or producer implementation modules;
+  - no IES generation, Lab authority, evidence acceptance, sealing, reference allocation or mutation;
+  - no route, persistence, browser storage, network/file/email write or downstream-readiness activation;
+  - no raw IES, photometry, candela, private path, caller authority or legacy row acceptance;
+  - no edit, stage, cleanup or absorption of the expected branch marker or three protected untracked items.
+- acceptance: Consume plain public JSON only. Validate exact ready and blocked request schema/version/key sets, artifact intent, Engine identity, request/replay/audit identity, exact public rows and accepted no-write safety flags. Emit one deeply immutable bounded compatibility projection containing only public identities, safe selected-result provenance/thermal values, exact rows, blockers/warnings and no-generation/no-authority/no-write state. Preserve valid zeros and deterministic replay identity. Prove different traceability values neither influence nor appear. Fail closed on unknown, extra, private/raw, contradictory, unsafe, blocked-promotion or legacy input. Full `lab-ies` passes and exactly the two authorised feature files are committed as `lab: checkpoint IES artifact request v1 compatibility` and pushed only to the Lab lane.
+- gate: lab-ies
+- depends on: Program acceptance of SEAM-G-P1
+- seam change: approved unchanged by Program & Integrate
+- on success next: Program SEAM-G-A1 review; no generation item becomes ready automatically
+- status: ready
+
 ## Explicitly not queued
 
 These protected paths remain outside implementation parcels unless the orchestrator makes a separate decision:

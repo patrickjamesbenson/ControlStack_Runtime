@@ -1938,6 +1938,17 @@ Current verification superseded the stale parts of that snapshot:
 - Queue result: LAB-043 done, ordered Lab queue empty, Program consumer receipt review required — RECORDED.
 - Stability: not declared by Lab; final Seam B decision remains Program-owned — RECORDED.
 
+## SEAM-G-C1 IES request compatibility admission — 2026-07-21
+
+- Program accepted the deterministic read-only request producer after 115/115 focused and 107/107 normal Selector evidence — PROGRAM-ACCEPTED.
+- Public request schema: `controlstack.downstream.ies-artifact-request.v1`; intent and audit version 1 identities recorded — RECORDED.
+- Exact Lab scope: new import-free compatibility adapter plus focused test only — RECORDED.
+- Input boundary: plain public request JSON only; no producer implementation import — RECORDED.
+- Required fixtures: ready, blocked, valid-zero, replay-identical, governance-absent, unknown/extra/private/raw/contradictory/unsafe/blocked-promotion/legacy rejection — RECORDED.
+- Capability boundary: no IES generation, authority, evidence acceptance, sealing, reference mutation, route, persistence, network/file/email write or readiness activation — RECORDED.
+- Protected state: expected branch marker and three protected untracked items remain outside the parcel — VERIFIED.
+- Queue result: SEAM-G-C1 sole ready item; Program activation and actual generation blocked — RECORDED.
+
 ## Evidence maintenance rule
 
 After each authorised lane parcel:

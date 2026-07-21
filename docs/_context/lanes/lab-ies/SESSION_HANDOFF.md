@@ -299,6 +299,18 @@ It creates no IES, authority, evidence acceptance, sealing, reference mutation, 
 
 The three protected untracked items remain untouched and unstaged. The ordered Lab queue is empty. Program must review this consumer receipt and make the separate final Seam B stability decision; Lab must not activate downstream work.
 
+## 2026-07-21 SEAM-G-C1 ready — read-only request compatibility
+
+Program accepted the deterministic IES artifact request producer after 115/115 focused and 107/107 normal Selector evidence.
+
+SEAM-G-C1 is the sole ready Lab parcel. Create only the new import-free request compatibility adapter and its focused test. Consume plain public `controlstack.downstream.ies-artifact-request.v1` JSON; do not import Selector, Workspace, Runtime or producer implementation.
+
+The projection must preserve exact ready/blocked request, intent, Engine, replay and audit identities; safe technical provenance/thermal values; exact public rows; valid zeros; canonical blockers/warnings; and no-generation/no-authority/no-write safety state. Different traceability values must neither influence nor appear.
+
+Reject unknown versions, extra/nested authority, private/raw content, contradictory identities, unsafe flags, blocked-to-ready promotion and legacy rows. Add no IES generation, Lab authority, evidence acceptance, sealing, reference mutation, route, persistence, network/file/email write or readiness capability.
+
+The expected branch marker and three protected untracked items must remain untouched and outside staging. Return the consumer receipt to Program; SEAM-G-A1 and actual generation remain blocked.
+
 ## Prohibited actions retained
 
 - no LAB-017 change outside the recorded version-1 approval without a new seam decision;
