@@ -226,6 +226,17 @@ if (-not (Test-Path -LiteralPath $TargetRoot -PathType Container)) {
 
 $targetBranchActual = (Invoke-Git -Root $TargetRoot -Arguments @('branch', '--show-current')).Output.Trim()
 if ($targetBranchActual -ne $TargetBranch) { throw 'The Governance worktree branch guard failed.' }
+
+$targetTip = (Invoke-Git -Root $TargetRoot -Arguments @('rev-parse', 'HEAD')).Output.Trim()
+$programTip = (Invoke-Git -Root $TargetRoot -Arguments @('rev-parse', 'lane/program-integrate')).Output.Trim()
+$targetIsProgramAncestor = Invoke-Git -Root $TargetRoot -Arguments @('merge-base', '--is-ancestor', 'HEAD', 'lane/program-integrate') -AllowFailure
+if ($targetIsProgramAncestor.ExitCode -eq 0 -and $targetTip -ne $programTip) {
+  Write-Host 'Governance & Shell provisioning: fast-forwarding infrastructure baseline'
+  Invoke-Git -Root $TargetRoot -Arguments @('merge', '--ff-only', 'lane/program-integrate') | Out-Null
+} elseif ($targetIsProgramAncestor.ExitCode -notin @(0, 1)) {
+  throw 'The Governance lane baseline relationship could not be verified.'
+}
+
 $targetContextRoot = Join-Path $TargetRoot $LaneContext
 New-Item -ItemType Directory -Path $targetContextRoot -Force | Out-Null
 

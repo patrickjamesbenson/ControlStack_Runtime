@@ -643,6 +643,8 @@ test("Governance lane provisioner is fixed, idempotent and cannot overwrite dive
   assert.match(provisioner, /RedirectStandardError = \$true/);
   assert.match(provisioner, /ReadToEndAsync/);
   assert.doesNotMatch(provisioner, /& git\.exe/);
+  assert.match(provisioner, /merge-base', '--is-ancestor'/);
+  assert.match(provisioner, /merge', '--ff-only', 'lane\/program-integrate'/);
   assert.match(provisioner, /GeneratedFoundingFiles/);
   assert.match(provisioner, /approved Program ruling/);
   assert.match(provisioner, /Resolve-BootstrapFile/);
@@ -674,6 +676,14 @@ test("Governance lane provisioner is fixed, idempotent and cannot overwrite dive
   assert.match(gate, /REQUIRED_BRANCH = "lane\/governance-shell"/);
   assert.match(gate, /tests\/runtimeShell\*\.test\.js/);
   assert.match(gate, /tests\/runtimeProjectBrowser\*\.test\.js/);
+  assert.match(gate, /EXCLUDED_SELECTOR_ENGINE_TESTS/);
+  for (const name of [
+    "runtimeShellProjectBrowserSelectedProjectEngineReadonlyInvokeMount.test.js",
+    "runtimeShellProjectBrowserSelectedProjectEngineReadonlyInvokeMountContractLock.test.js",
+    "runtimeShellRestoredCsSelectorEngineActionLaneRerenderSurvival.test.js",
+  ]) assert.match(gate, new RegExp(name.replaceAll(".", "\\.")));
+  assert.equal((gate.match(/tests\/runtimeShellProjectBrowserSelectedProjectEngineReadonlyInvokeMount/g) || []).length, 2);
+  assert.equal((gate.match(/tests\/runtimeShellRestoredCsSelectorEngineActionLaneRerenderSurvival/g) || []).length, 1);
   assert.match(gate, /shell=False/);
   assert.doesNotMatch(gate, /shell=True|os\.system|eval\(|exec\(/);
 });

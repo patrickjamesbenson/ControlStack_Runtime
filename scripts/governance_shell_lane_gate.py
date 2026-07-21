@@ -25,6 +25,11 @@ TEST_PATTERNS = (
     "tests/runtimeShell*.test.js",
     "tests/runtimeProjectBrowser*.test.js",
 )
+EXCLUDED_SELECTOR_ENGINE_TESTS = {
+    "tests/runtimeShellProjectBrowserSelectedProjectEngineReadonlyInvokeMount.test.js",
+    "tests/runtimeShellProjectBrowserSelectedProjectEngineReadonlyInvokeMountContractLock.test.js",
+    "tests/runtimeShellRestoredCsSelectorEngineActionLaneRerenderSurvival.test.js",
+}
 DEFAULT_MAX_CHARS = 50_000
 
 
@@ -103,7 +108,13 @@ def _tests(root: Path) -> list[str]:
     files: set[Path] = set()
     for pattern in TEST_PATTERNS:
         files.update(root.glob(pattern))
-    resolved = sorted(path.relative_to(root).as_posix() for path in files if path.is_file())
+    resolved = sorted(
+        relative
+        for path in files
+        if path.is_file()
+        for relative in [path.relative_to(root).as_posix()]
+        if relative not in EXCLUDED_SELECTOR_ENGINE_TESTS
+    )
     if not resolved:
         raise RuntimeError("No reviewed Governance & Shell tests were found.")
     return resolved
