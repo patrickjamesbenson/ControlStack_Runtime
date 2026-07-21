@@ -14,6 +14,18 @@ import {
   REFERENCE_DTO_SCHEMA_ID,
   REFERENCE_DTO_SCHEMA_VERSION,
 } from "./iesReferenceDto.js";
+import { isOpaqueArtifactReference } from "./iesAuthorityFingerprint.js";
+
+export const IES_REFERENCE_GENERATION_INSPECTION_SCHEMA_ID =
+  "controlstack.lab.ies-reference-generation-inspection.v1";
+export const IES_REFERENCE_GENERATION_INSPECTION_SCHEMA_VERSION = 1;
+export const IES_REFERENCE_GENERATION_INSPECTION_AUDIT_SCHEMA_ID =
+  "controlstack.lab.ies-reference-generation-inspection-audit.v1";
+export const IES_REFERENCE_GENERATION_INSPECTION_AUDIT_SCHEMA_VERSION = 1;
+export const IES_REFERENCE_GENERATION_INSPECTION_STATES = Object.freeze({
+  readyReadOnly: "ready_read_only",
+  blockedFailClosed: "blocked_fail_closed",
+});
 
 const EXACT_UTC = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
 const SHA256_HEX = /^[0-9a-f]{64}$/;
@@ -28,6 +40,16 @@ const JOB_FIELDS = Object.freeze(["runLengthMm", "outputMultiplier", "selections
 const SELECTION_FIELDS = Object.freeze([
   "lumcat", "luminaire", "lamp", "cri", "cct", "driver", "driverSetting",
 ]);
+const KEYWORD_OVERRIDE_RULES = Object.freeze([
+  Object.freeze({ field: "lumcat", keyword: "LUMCAT", baseline: null }),
+  Object.freeze({ field: "luminaire", keyword: "LUMINAIRE", baseline: null }),
+  Object.freeze({ field: "lamp", keyword: "LAMP", baseline: null }),
+  Object.freeze({ field: "cri", keyword: "_CRI", baseline: "cri" }),
+  Object.freeze({ field: "cct", keyword: "_COLORTEMP", baseline: "cct" }),
+  Object.freeze({ field: "driver", keyword: "_DRIVER", baseline: null }),
+  Object.freeze({ field: "driverSetting", keyword: "_DRIVER_SETTING", baseline: null }),
+]);
+const PRIVATE_PATH = /(?:[A-Za-z]:[\\/]|\\\\|file:|[\\/]Users[\\/]|[\\/]home[\\/]|[\\/]mnt[\\/]|(?:^|[\\/])\.\.(?:[\\/]|$))/i;
 
 class IesFromReferenceError extends Error {
   constructor(message, code) {
@@ -54,6 +76,34 @@ function requirePlainObject(value, name) {
     fail(`${name} must be a plain object.`, "plain_object_required");
   }
   return value;
+}
+
+function deepFreeze(value) {
+  if (!value || typeof value !== "object" || Object.isFrozen(value)) return value;
+  for (const child of Object.values(value)) deepFreeze(child);
+  return Object.freeze(value);
+}
+
+function validatePrivateProvenance(value, path = "reference.provenanceRefs") {
+  if (value == null) return;
+  if (typeof value === "string") {
+    if (PRIVATE_PATH.test(value)) {
+      fail(`${path} contains a private or local path.`, "private_provenance_path_rejected");
+    }
+    if (path.endsWith("artifactRef") && !isOpaqueArtifactReference(value)) {
+      fail(`${path} must be an opaque artifact reference.`, "invalid_provenance_artifact_reference");
+    }
+    return;
+  }
+  if (typeof value !== "object") return;
+  if (Array.isArray(value)) {
+    value.forEach((entry, index) => validatePrivateProvenance(entry, `${path}[${index}]`));
+    return;
+  }
+  requirePlainObject(value, path);
+  for (const [key, child] of Object.entries(value)) {
+    validatePrivateProvenance(child, `${path}.${key}`);
+  }
 }
 
 function requireExactFields(value, expected, name) {
@@ -267,6 +317,7 @@ function validateReference(reference) {
   }
 
   requirePlainObject(rec.provenanceRefs, "reference.provenanceRefs");
+  validatePrivateProvenance(rec.provenanceRefs);
   return { rec, geometry, vAngles, hAngles, candela, keywordValues, baseline: normalizedBaseline };
 }
 
@@ -391,6 +442,161 @@ function materialise(referenceState, jobState) {
       outputMultiplier,
     },
   };
+}
+
+function inspectionKeywordValue(referenceState, key) {
+  const direct = referenceState.keywordValues.get(key);
+  if (direct != null && String(direct).trim() !== "") return direct;
+  if (key === "_CRI") return referenceState.baseline.cri;
+  if (key === "_COLORTEMP") return referenceState.baseline.cct;
+  if (key === "_INTERNAL_AMBIENT_TA_C") return referenceState.baseline.internalAmbientTaC;
+  return null;
+}
+
+function inspectKeywordReadiness(referenceState) {
+  const overrideByKeyword = new Map(
+    KEYWORD_OVERRIDE_RULES.map((rule) => [rule.keyword, rule.field]),
+  );
+  const missingKeywordOverrides = [];
+  for (const key of CANONICAL_KEYWORDS) {
+    if (inspectionKeywordValue(referenceState, key) != null) continue;
+    const overrideField = overrideByKeyword.get(key);
+    if (overrideField) {
+      missingKeywordOverrides.push(overrideField);
+      continue;
+    }
+    fail(`Resolved keyword ${key} is unavailable and has no approved job override.`, "required_generator_keyword_missing");
+  }
+  return missingKeywordOverrides;
+}
+
+function perMetre(value) {
+  const result = Number(value) * 1000;
+  if (!Number.isFinite(result)) fail("Reference baseline cannot be projected per metre.", "invalid_baseline_number");
+  return Object.is(result, -0) ? 0 : result;
+}
+
+function inspectionSafety(referenceValidated) {
+  return {
+    readOnly: true,
+    nonPersistent: true,
+    referenceValidated,
+    jobValidated: false,
+    materialiseInvoked: false,
+    generatorInvoked: false,
+    iesGenerated: false,
+    rawIesReturned: false,
+    metadataReturned: false,
+    anglesReturned: false,
+    candelaReturned: false,
+    keywordValuesReturned: false,
+    provenancePathsReturned: false,
+    sealedReferenceReturned: false,
+    multiplierDerived: false,
+    projectMetadataAccepted: false,
+    resolverInvoked: false,
+    storageAccessed: false,
+    routeAdded: false,
+    persistenceAttempted: false,
+    fileWritten: false,
+    networkWritten: false,
+    emailSent: false,
+    readinessActivated: false,
+  };
+}
+
+function inspectionAudit({ accepted, inspectionId = null, referenceId = null, blocker = null }) {
+  return {
+    schemaId: IES_REFERENCE_GENERATION_INSPECTION_AUDIT_SCHEMA_ID,
+    schemaVersion: IES_REFERENCE_GENERATION_INSPECTION_AUDIT_SCHEMA_VERSION,
+    attemptId: inspectionId || `ies-reference-generation-inspection-attempt-v1:${blocker || "blocked"}`,
+    state: accepted ? "accepted_read_only" : "blocked_fail_closed",
+    accepted,
+    inspectionId,
+    referenceId,
+    deterministic: true,
+    referenceValidated: accepted,
+    jobValidated: false,
+    materialiseInvoked: false,
+    generatorInvoked: false,
+    routeInvoked: false,
+    persistenceAttempted: false,
+    artifactWriteAttempted: false,
+    emailAttempted: false,
+  };
+}
+
+function blockedInspection(blocker) {
+  const code = typeof blocker === "string" && blocker ? blocker : "reference_inspection_blocked";
+  return deepFreeze({
+    schemaId: IES_REFERENCE_GENERATION_INSPECTION_SCHEMA_ID,
+    schemaVersion: IES_REFERENCE_GENERATION_INSPECTION_SCHEMA_VERSION,
+    state: IES_REFERENCE_GENERATION_INSPECTION_STATES.blockedFailClosed,
+    inspectionId: null,
+    referenceIdentity: null,
+    keywordProfileId: null,
+    baseline: null,
+    missingKeywordOverrides: [],
+    materialisationWithoutOverrides: false,
+    blockers: [code],
+    warnings: [],
+    audit: inspectionAudit({ accepted: false, blocker: code }),
+    safetyFlags: inspectionSafety(false),
+  });
+}
+
+export function inspectIesReferenceForGeneration(reference) {
+  try {
+    const referenceState = validateReference(reference);
+    const { rec, baseline } = referenceState;
+    const missingKeywordOverrides = inspectKeywordReadiness(referenceState);
+    const inspectionId = `ies-reference-generation-inspection-v1:${rec.referenceSha256}`;
+    const referenceIdentity = {
+      schemaId: "controlstack.lab.reference-identity.v1",
+      schemaVersion: 1,
+      referenceId: rec.id,
+      kind: rec.kind,
+      serial: rec.serial,
+      sealedAtUtc: rec.sealedAtUtc,
+      authorityRecordSha256: rec.authorityRecordSha256,
+      referenceSha256: rec.referenceSha256,
+      resolverPath: `/r/${rec.id}`,
+      readOnly: true,
+    };
+    const safeBaseline = {
+      cct: baseline.cct,
+      cri: baseline.cri,
+      internalAmbientTaC: baseline.internalAmbientTaC,
+      fluxPerMm: baseline.fluxPerMm,
+      wallWattsPerMm: baseline.wallWattsPerMm,
+      circuitWattsPerMm: baseline.circuitWattsPerMm,
+      baselineLmPerM: perMetre(baseline.fluxPerMm),
+      baselineWallWattsPerM: perMetre(baseline.wallWattsPerMm),
+      baselineCircuitWattsPerM: perMetre(baseline.circuitWattsPerMm),
+    };
+    return deepFreeze({
+      schemaId: IES_REFERENCE_GENERATION_INSPECTION_SCHEMA_ID,
+      schemaVersion: IES_REFERENCE_GENERATION_INSPECTION_SCHEMA_VERSION,
+      state: IES_REFERENCE_GENERATION_INSPECTION_STATES.readyReadOnly,
+      inspectionId,
+      referenceIdentity,
+      keywordProfileId: KEYWORD_PROFILE_ID,
+      baseline: safeBaseline,
+      missingKeywordOverrides,
+      materialisationWithoutOverrides: missingKeywordOverrides.length === 0,
+      blockers: [],
+      warnings: [],
+      audit: inspectionAudit({
+        accepted: true,
+        inspectionId,
+        referenceId: rec.id,
+      }),
+      safetyFlags: inspectionSafety(true),
+    });
+  } catch (error) {
+    if (error instanceof IesFromReferenceError) return blockedInspection(error.code);
+    return blockedInspection("reference_inspection_failed");
+  }
 }
 
 export function buildIesFromReference(reference, job = {}) {
