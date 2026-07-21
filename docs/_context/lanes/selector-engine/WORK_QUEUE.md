@@ -330,7 +330,7 @@
 ### Q-11A Retire named readiness gates and emit state-entry push intent
 
 * id: PWS-001
-* status: ready
+* status: done
 * depends-on: Program & Integrate admission recorded and satisfied on 2026-07-21
 * seam change: yes — readiness transitions become state-entry push events and CRM-facing language must stop treating state as a gate
 * gate: selector-engine
@@ -339,13 +339,13 @@
 * objective: retire Gate 1 and Gate 2 as named business/readiness gates, retain `specReady` and `buildReady` as truthful fail-closed states, and emit one deterministic safe push intent only when each state is entered.
 * acceptance: user-facing and CRM-facing live contracts no longer name Gate 1, Gate 2, spec gate, build gate, CRM gate or HubSpot gate; state names remain Spec Ready and Build Ready. A false-to-true transition emits exactly one immutable state-entry push intent; rerender, repeated snapshot evaluation, save/restore hydration and repeated true state do not duplicate it; leaving and genuinely re-entering a state may emit one new intent with a new deterministic transition identity. Build Ready cannot push before Spec Ready. Payload contains only bounded state, technical/project-safe identifiers and fingerprints approved by Program, never raw CRM/contact/company payloads, credentials, private paths or authority rows. Different traceability envelopes cannot alter the engineering state decision. Repository-wide focused search proves no CRM/HubSpot readiness construct remains named a gate.
 * provider boundary: this parcel creates the state-entry push contract/event only. It must not enable an external HubSpot/CRM mutation unless the recorded Program admission explicitly names the existing server-owned writer, exact target state, idempotency key, retry rule and rollback behaviour.
-* preserved worker drafts: `packages/workspace-kernel/selectorReadinessStateEntryPush.js` and `tests/runtimeSelectorReadinessStateEntryPush.test.js` are authorised, untracked PWS-001 work left untouched after the worker's guarded stop. A resumed standing worker may continue from these exact two dirty paths; no other dirty path is authorised.
+* completion: exact readiness intent, Selector integration, presentation and genuinely changed readiness assertion files were committed and pushed after 114/114 focused harness coverage and 107/107 normal and guarded commit gates. The harness was removed and absent from the final diff. Spec Ready and Build Ready predicates are unchanged; state-entry intent is deterministic, immutable, hydration-safe, provider-inert, traceability-independent and path/URL quarantined. The feature tree ended clean.
 * prohibitions: no change to readiness predicates, source authority, Selector choices, Tier, Engine eligibility, Lab/IES, persistence, routes, direct browser networking, hidden provider mutation, duplicate push on render/hydrate, main or runtime-port work.
 
 ### Q-11B Add factoryReady on the existing readiness pattern
 
 * id: PWS-002
-* status: blocked
+* status: ready
 * depends-on: PWS-001 done; Program & Integrate admission recorded and satisfied on 2026-07-21
 * seam change: no unless Program changes the existing Factory Approved Inputs authority; this parcel exposes a truthful derived state only
 * gate: selector-engine
@@ -370,7 +370,7 @@
 
 ### Program admission and active architectural constraints for PWS work
 
-Program & Integrate admitted all three items on 2026-07-21. PWS-001 is the sole ready Selector parcel. PWS-002 and PWS-005 advance only after the preceding feature and durable closeout are complete; no second writer may use this worktree.
+Program & Integrate admitted all three items on 2026-07-21. PWS-001 is done. PWS-002 is the sole ready Selector parcel. PWS-005 remains blocked until PWS-002 feature and durable closeout are complete; no second writer may use this worktree.
 
 Selector owns the derived readiness state and immutable state-entry intent only. It must not invoke HubSpot, CRM, project persistence or identity logic. Governance & Shell owns provider policy, project/identity association, idempotency, retry and best-effort external push.
 

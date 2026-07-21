@@ -656,3 +656,19 @@ Every completed worker updates this index with:
 - Test inspection: baseline and hydration suppress emission; false-to-true emits once; rerender/repeated true does not duplicate; genuine re-entry changes identity; traceability envelopes are inert; integration is constrained to the shell event bus; named gate language is rejected — VERIFIED DRAFT COVERAGE.
 - Scope result: both files are explicitly authorised by PWS-001 and are now recorded as preserved worker work; the orchestrator did not alter or stage them — RECORDED AND VERIFIED.
 - Queue result: PWS-001 remains sole ready; PWS-002 and PWS-005 remain blocked; no second writer, provider mutation or downstream activation authorised — RECORDED.
+
+## 2026-07-21 — PWS-001 readiness state-entry intent evidence
+
+- Starting identity: correct isolated Selector lane and branch; actual HEAD was a dedicated reconciliation wrapper whose parent matched the recorded lane work HEAD — VERIFIED.
+- Starting Git state: exactly the two durably preserved, authorised PWS-001 drafts; no other modified, staged, deleted or untracked path — VERIFIED.
+- Feature scope: Selector module integration, live presentation/view-model wording, immutable readiness intent helper, focused runtime regression, and existing readiness assertions whose displayed wording genuinely changed — VERIFIED BY FINAL COMMIT.
+- Readiness result: `specReady` and `buildReady` predicates remain unchanged and fail closed; initial evaluation establishes a baseline; false-to-true emits once; rerender, repeated true and hydration do not duplicate; genuine re-entry changes deterministic identity; Build Ready cannot precede Spec Ready — VERIFIED BY FOCUSED EXECUTION.
+- Intent safety: only bounded project/technical fingerprints and state metadata are emitted; URL/path-bearing context is quarantined; traceability envelopes do not alter identity; payload is deeply immutable — VERIFIED.
+- Provider boundary: integration emits only through the existing shell event bus; no HubSpot/CRM call, writer, identity lookup, retry, persistence, browser network, storage or filesystem operation exists — VERIFIED BY STATIC SEARCH AND EXECUTED TEST.
+- Naming result: live Selector view and view-model search returned zero Gate 1, Gate 2, spec gate, build gate, CRM gate, HubSpot gate or Gate S business-language occurrences; state labels remain Spec Ready and Build Ready — VERIFIED.
+- Temporary harness: exactly one import of the focused runtime suite was added to the gate-included Engine test, then removed; the harness file had an empty final diff — VERIFIED.
+- Focused gate: 114 passed, 0 failed, including seven readiness-transition tests — VERIFIED.
+- Normal lane gate after harness removal: 107 passed, 0 failed — VERIFIED.
+- Guarded feature commit/push gate: 107 passed, 0 failed; exact authorised staged set committed and pushed; feature tree clean — VERIFIED.
+- No browser action, provider mutation, route, download/export helper, Engine invocation, Lab/IES change, RuntimeData mutation, main or runtime-port work occurred — VERIFIED.
+- Queue result: PWS-001 done; PWS-002 sole ready; PWS-005 blocked behind PWS-002 — RECORDED.

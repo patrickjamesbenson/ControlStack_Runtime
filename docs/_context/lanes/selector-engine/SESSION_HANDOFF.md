@@ -575,3 +575,19 @@ The prior worker stopped correctly. Two authorised PWS-001 drafts exist and are 
 The orchestrator inspected but did not alter or stage them. They are the only authorised dirty paths. The draft remains provider-inert and read-only, and the test already covers transition ordering, duplicate suppression, re-entry identity, traceability-envelope independence, event-bus-only integration and readiness state language.
 
 Resume the canonical standing worker from this dirty tree. Complete only PWS-001 within its recorded scope, then perform its full feature and documentation closeout before advancing PWS-002. PWS-005 remains blocked behind PWS-002. Do not add provider mutation, persistence, routes, download/export helpers, Engine eligibility changes, Lab/IES work, RuntimeData mutation, main or runtime-port work.
+
+## 2026-07-21 PWS-001 closeout — readiness transitions emitted safely
+
+PWS-001 is complete and pushed. Spec Ready and Build Ready remain the existing truthful fail-closed states. Live Selector presentation no longer treats them, CRM or HubSpot readiness as named gates.
+
+The module now emits one immutable deterministic state-entry intent through the existing shell event bus on a genuine false-to-true transition. Initial render and hydration establish baseline state; rerender, repeated evaluation and repeated true state do not duplicate. Build Ready cannot emit before Spec Ready, and a real leave/re-entry receives a new deterministic transition identity.
+
+The intent contains only bounded technical/project-safe context. URL/path-bearing values are quarantined, traceability envelopes are inert, and there is no provider writer, identity lookup, retry, persistence, browser networking, storage, filesystem write or direct delivery/retrieval path.
+
+The focused harness passed 114/114 and was removed with no final harness diff. The normal and guarded feature gates passed 107/107. The exact authorised feature and changed readiness assertions were committed and pushed; the tree ended clean.
+
+## Next worker parcel
+
+PWS-002 is the sole ready item. Add fail-closed `factoryReady` as a derived Stage 3 state only when Spec Ready, Build Ready and the existing Factory Approved Inputs evidence are all ready with no missing, malformed, duplicate, uncommitted, non-source-backed, contradictory or incompatible input.
+
+Do not create factory authority, infer or default values, auto-approve, weaken `factoryApprovedInputsReady`, emit a CRM/provider push, invoke Engine, alter Lab/IES, add a route or persistence, mutate RuntimeData, change retrieval ownership, touch main or perform runtime-port work. PWS-005 remains blocked behind PWS-002.

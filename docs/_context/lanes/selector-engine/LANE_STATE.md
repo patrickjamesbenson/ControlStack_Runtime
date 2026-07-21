@@ -577,3 +577,19 @@ The worker stopped correctly because two authorised PWS-001 drafts existed witho
 Inspection confirms the draft contract is read-only, immutable and provider-inert; it emits state-entry intent only for Spec Ready and Build Ready, carries bounded technical context, and explicitly requests no provider mutation, persistence, identity lookup, retry or write. The focused draft test covers baseline/hydration suppression, ordered false-to-true entry, genuine re-entry identity, traceability-envelope independence, event-bus-only integration and state language.
 
 These two files are authorised preserved work for the sole ready PWS-001 parcel. They remain untracked and untouched by the orchestrator. No other dirty path is authorised. A resumed standing worker may continue from them, complete the remaining authorised integration and presentation changes, run focused and full gates, and close the parcel normally. PWS-002 and PWS-005 remain blocked.
+
+## 2026-07-21 PWS-001 readiness state-entry intent closeout — latest controlling state
+
+**Recorded lane work HEAD:** `8065d1e1cbb149aef4446703f8eb8777270991fe` — `feat(selector): emit readiness state-entry intent`.
+
+PWS-001 resumed from exactly the two recorded authorised drafts and finished inside the approved Selector integration, presentation and focused-test scope. Spec Ready and Build Ready remain the existing truthful fail-closed booleans; their predicates, source authority, Selector choices and Engine eligibility were not changed.
+
+The Selector now tracks readiness state entry in memory and emits one immutable deterministic intent through the existing shell event bus only when a state changes from false to true. Initial render establishes a baseline, repeated render/evaluation and repeated true state do not duplicate, save/restore hydration is baseline-only, genuine leave and re-entry receives a new deterministic transition identity, and Build Ready cannot emit before Spec Ready. The payload contains only bounded technical/project-safe identifiers and fingerprints; URL-bearing and path-bearing values are quarantined. Traceability envelopes are ignored.
+
+Live presentation and CRM-facing Selector contracts no longer name Gate 1, Gate 2, spec gate, build gate, CRM gate, HubSpot gate or Gate S. State labels remain Spec Ready and Build Ready. Internal compatibility property names and one internal routing token remain unchanged and non-user-facing.
+
+The temporary focused harness visibly executed the new readiness suite and passed 114/114, then was removed and proved absent from the final diff. The normal lane gate passed 107/107, and the guarded feature commit/push gate passed 107/107. The exact authorised feature and genuinely changed assertion files were committed and pushed; the feature tree ended clean.
+
+No HubSpot/CRM call, provider mutation, identity lookup, retry, persistence, storage, filesystem/network write, browser action, route, download/export helper, Engine invocation, Lab/IES change, RuntimeData mutation, main or runtime-port work occurred.
+
+PWS-001 is done. PWS-002 is now the sole ready parcel. PWS-005 remains blocked behind PWS-002.

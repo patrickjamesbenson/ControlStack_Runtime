@@ -481,3 +481,15 @@ This log is append-oriented. Do not silently rewrite historical decisions.
 **Rationale:** Both files are explicitly inside the first parcel's authorised scope. The draft contract is immutable and provider-inert, and its test covers the approved transition, duplicate-suppression, envelope-independence and event-bus boundaries. The worker correctly stopped because durable memory had not yet named them.
 
 **Consequence:** The orchestrator does not alter or stage either draft. Lane memory now permits the standing worker to resume from those exact dirty paths and finish PWS-001. PWS-002 and PWS-005 remain blocked; no provider, persistence, browser, Engine, Lab/IES, route, RuntimeData, main or runtime-port action is authorised.
+
+## 2026-07-21 — PWS-001 accepted; readiness transitions are intents, not gates
+
+**Decision:** Accept PWS-001 and advance PWS-002 as the sole ready parcel. Spec Ready and Build Ready remain truthful state booleans. Named business/readiness gates are retired from live Selector presentation, and false-to-true state entry emits only an immutable technical intent through the shell event bus.
+
+**Transition rule:** Initial render establishes the baseline. Re-render, repeated evaluation, repeated true state and save/restore hydration do not create a duplicate. A genuine leave and re-entry may create one new deterministic identity. Build Ready is clamped behind Spec Ready.
+
+**Safety and ownership:** Selector owns only the readiness state and technical transition intent. URL/path-bearing context is quarantined, traceability envelopes are ignored, and no CRM/provider writer, identity lookup, persistence, retry, network, storage or filesystem operation is introduced. Governance & Shell remains the sole owner of any later external association or mutation.
+
+**Evidence:** The temporary focused harness passed 114/114 and was removed. The normal and guarded feature gates passed 107/107. The authorised feature/assertion set was committed and pushed, and the tree ended clean.
+
+**Consequence:** PWS-001 is done. PWS-002 may derive `factoryReady` only from existing Spec Ready, Build Ready and Factory Approved Inputs evidence. PWS-005 remains blocked. No readiness predicate, source authority, Engine eligibility, retrieval ownership or downstream seam changed.
