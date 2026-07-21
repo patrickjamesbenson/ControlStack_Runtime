@@ -83,9 +83,9 @@ Lab has no queued item. Sealed DTO loading, generator invocation, LM-63 generati
 
 - **Selector & Engine:** PWS-001 ready; PWS-002 and PWS-005 admitted in order and blocked behind the preceding closeout.
 - **Lab & IES:** SEAM-G-C4 complete and Program-accepted at 305/305; queue empty and generator invocation still blocked.
-- **Governance & Shell:** active and isolated; GOV-001 inert single-retrieval-gateway contract is the sole ready Governance feature parcel.
+- **Governance & Shell:** local lane active and isolated; GOV-001 is sole ready feature, blocked only until its dedicated secure tunnel and ChatGPT app are registered.
 - **CRM:** no separate lane yet; item 7 remains blocked inside Governance.
 - **Retrieval rule:** all module downloads/exports/artifact delivery must use one Governance gateway; readiness and identity are separate checks.
 - **Standing tests:** no-envelope and changed-envelope Engine independence, changed-optic movement, varied placeholder row, and ownership-wide assertions remain mandatory.
 
-No direct module download path, provider push from Selector, main work or runtime-port mixing is authorised. GOV-001 must be executed only through the Governance & Shell lane and returned to Program as a gated receipt.
+No direct module download path, provider push from Selector, main work or runtime-port mixing is authorised. Complete PWS-L1 with the fixed Governance tunnel provisioner and ChatGPT app registration; then execute GOV-001 only through the Governance & Shell lane and return its gated receipt to Program.

@@ -882,10 +882,20 @@ No implementation item is ready. A new exact Program parcel is required before a
 - **Separate checks:** readiness and identity remain distinct.
 - **Seam G effect:** internal generation contracts may continue, but direct Selector/Lab delivery is prohibited.
 
+### PWS-L1 — Expose Governance MCP through its dedicated secure tunnel
+
+- **Owner:** Program & Integrate infrastructure plus one external ChatGPT registration step.
+- **Status:** repository implementation ready; tunnel object and ChatGPT app registration pending.
+- **Cause:** the local Governance MCP is healthy, but unlike Selector, Lab and Program it was provisioned without an OpenAI tunnel, so no Governance connector namespace can appear in ChatGPT.
+- **Fixed topology:** tenth managed service `governance-tunnel`, dedicated health port, fixed profile `controlstack-governance-shell-noauth`, fixed local target `http://127.0.0.1:8023/mcp` and the existing protected runtime key.
+- **Provisioning:** one fixed script reads a newly copied tunnel reference from the clipboard, stores no tunnel reference or key in the repository, initialises or validates the exact profile, activates Deployment v2 and requires both Governance MCP and tunnel to report healthy and managed.
+- **Boundary:** no reuse of another lane tunnel, no public ngrok exposure, no secret display, no connector write-scope widening and no Governance feature change.
+- **Next:** create the tunnel object, run the fixed provisioner, then create/enable the Governance & Shell custom app in ChatGPT.
+
 ### GOV-001 — Inert single data-retrieval gateway contract and shell state
 
 - **Owner:** Governance & Shell.
-- **Status:** ready now.
+- **Status:** sole ready feature parcel; execution blocked only by PWS-L1 connector exposure.
 - **Purpose:** establish one canonical retrieval entry point before any module grows its own outward path.
 - **Inputs:** safe scalar module/output descriptors, readiness state (`spec-ready`, `build-ready`, `factory-ready`), project-context presence and identity-capture presence. No Engine payload, traceability envelope, raw artifact body, path, blob or provider object.
 - **Separate conditions:** readiness answers whether a useful output exists; identity answers who is taking it and under which project. Neither may substitute for the other or enter Engine eligibility.

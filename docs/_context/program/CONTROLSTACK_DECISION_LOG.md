@@ -1365,3 +1365,15 @@ The import-free planner validates the exact generation, binding and sealed-refer
 Deterministic replay, identity movement, immutability, missing and caller override rejection, private/raw rejection, unsafe-state rejection and non-positive/non-finite failure cases passed. No sealed DTO loading, resolver/storage access, generator or materialise invocation, LM-63 output, project/customer metadata, route, persistence, file/network/email write, delivery or readiness activation was added.
 
 Lab returns to idle with its expected branch marker and three protected local items untouched. Actual generator invocation requires a separate Program seam decision and remains blocked.
+
+## 2026-07-21 — Governance connector exposure requires a dedicated secure tunnel
+
+**Status:** LOCAL LANE HEALTHY; CHATGPT EXPOSURE REPAIR APPROVED.
+
+Program corrects the infrastructure interpretation: a local MCP service is not sufficient to expose a lane in ChatGPT. Selector, Lab and Program each have a dedicated OpenAI tunnel as well as an MCP service; Governance was provisioned with the MCP only. The Governance worker therefore truthfully stopped because no Governance connector namespace was available.
+
+Deployment v2 is expanded to ten managed services and four tunnel services. The new service is fixed to the Governance MCP only, uses its own profile and health port, and reuses the existing encrypted runtime key. It may not share another lane's tunnel or widen the Governance MCP write scope.
+
+A fixed tunnel provisioner reads a newly copied tunnel reference from the Windows clipboard, decrypts the existing key only in process memory, initialises or validates the exact Governance profile and local MCP target, runs the managed deployment installer, clears the key and clipboard, and requires both Governance MCP and tunnel to report healthy and managed. No tunnel reference, runtime key or remote endpoint is stored in the repository.
+
+The remaining external step is to create the tunnel object and register/enable the corresponding custom ChatGPT app. GOV-001 remains the sole ready Governance feature parcel but cannot execute until that connector exposure is complete.

@@ -856,7 +856,7 @@ The repository-side infrastructure is implemented and green. Deployment v2 now k
 
 Run the provisioner once on Patrick's Windows host. It verifies the clean Program branch, creates or validates the Governance worktree and branch, copies exactly the six bootstrap records into the canonical context, refuses differing existing files, gates the lane, commits and pushes the founding checkpoint, reloads Deployment v2 and verifies the Governance MCP as healthy and managed.
 
-Do not manually copy individual files, create an alternate branch name, widen write globs, add a tunnel, or touch the staged Lab C4 files during activation. After successful activation, Governance may begin from its canonical queue; Lab fixture reconciliation resumes separately.
+Do not manually copy individual files, create an alternate branch name, widen write globs, add an ad hoc tunnel, or touch Lab protected files during activation. Governance connector exposure must use only the later fixed dedicated tunnel profile and provisioner recorded by Program.
 
 ### Governance first feature handoff — GOV-001
 
@@ -877,3 +877,11 @@ Add ownership tests proving exactly one Governance gateway owner and no module-o
 Program accepts the deterministic no-generation materialisation job plan after 305/305. The exact two-file feature validates public generation, binding and inspection identities; derives the multiplier only from Engine verified lm/m divided by sealed baseline lm/m; preserves target lm/m as intent; and emits the exact empty-selection generator job only in the ready state.
 
 The two corrected fixture issues did not change production behaviour. Lab is now idle with an empty queue, one expected branch marker and three protected local items. Do not commission sealed DTO loading, generator/materialise invocation, LM-63 output, route, persistence or delivery without a new Program seam decision.
+
+### Governance connector exposure handoff — PWS-L1
+
+The local Governance MCP is healthy, but ChatGPT cannot use a local MCP directly and no Governance tunnel/app was registered. Use the fixed tenth managed service and the fixed clipboard-based tunnel provisioner only.
+
+Create one Governance tunnel object and copy its tunnel reference. Run the fixed Program provisioner; it reads the reference from the clipboard, reuses the protected runtime key without displaying it, validates the exact Governance profile and local MCP target, activates Deployment v2 and requires both Governance MCP and Governance tunnel healthy and managed.
+
+Then create or enable the Governance & Shell custom app in ChatGPT while the managed tunnel is running. Do not reuse Selector, Lab or Program tunnel profiles; do not expose Governance through ngrok; do not widen the Governance MCP or implement GOV-001 through another lane. Once the Governance app appears as a secure tool, run the existing GOV-001 commission unchanged.

@@ -41,6 +41,7 @@ const hostPath = path.join(deploymentRoot, "controlstack_service_host.mjs");
 const secretPath = path.join(deploymentRoot, "controlstack_secret_store.mjs");
 const uiPath = path.join(deploymentRoot, "controlstack_manager_ui.html");
 const governanceProvisionerPath = path.join(repoRoot, "scripts", "CONTROLSTACK_GOVERNANCE_SHELL_PROVISION.ps1");
+const governanceTunnelProvisionerPath = path.join(repoRoot, "scripts", "CONTROLSTACK_GOVERNANCE_TUNNEL_PROVISION.ps1");
 const governanceGatePath = path.join(repoRoot, "scripts", "governance_shell_lane_gate.py");
 
 async function listen(server) {
@@ -81,12 +82,12 @@ function listenerSnapshot(manifest, selectorProcessId) {
   }));
 }
 
-test("deployment manifest defines the accepted nine-service topology and canonical 8788 shell", () => {
+test("deployment manifest defines the accepted ten-service topology and canonical 8788 shell", () => {
   const manifest = loadAndValidateManifest(manifestPath);
-  assert.equal(manifest.services.length, 9);
+  assert.equal(manifest.services.length, 10);
   assert.equal(manifest.worktrees.length, 5);
-  assert.deepEqual(manifest.services.map((item) => item.port).sort((a, b) => a - b), [8000, 8021, 8022, 8023, 8080, 8081, 8082, 8788, 8899]);
-  assert.equal(manifest.services.filter((item) => item.credential === "control-plane-api-key").length, 3);
+  assert.deepEqual(manifest.services.map((item) => item.port).sort((a, b) => a - b), [8000, 8021, 8022, 8023, 8080, 8081, 8082, 8083, 8788, 8899]);
+  assert.equal(manifest.services.filter((item) => item.credential === "control-plane-api-key").length, 4);
   assert.equal(manifest.services.some((item) => item.port === 8787), false);
   assert.equal(JSON.stringify(manifest).includes("8787"), false);
 
@@ -171,6 +172,22 @@ test("Governance MCP is isolated to shell, persistence, identity and lane-owned 
   assert.equal(configuredGlobs.some((item) => /cs-selector|lab-kernel|runtime-web/.test(item)), false);
   assert.equal(governance.env.CONTROLSTACK_ENABLE_DESTRUCTIVE, "0");
   assert.equal(governance.env.CONTROLSTACK_ENABLE_CROSS_ROOT_COPY, "0");
+
+  const tunnel = manifest.services.find((item) => item.id === "governance-tunnel");
+  assert.equal(tunnel.port, 8083);
+  assert.equal(tunnel.credential, "control-plane-api-key");
+  assert.equal(tunnel.executable, "C:\\ControlStack_Tunnel\\tunnel-client.exe");
+  assert.deepEqual(tunnel.args, [
+    "run", "--profile", "controlstack-governance-shell-noauth",
+    "--health.listen-addr", "127.0.0.1:8083",
+    "--log.level=warn", "--log.format=struct-text",
+  ]);
+  assert.deepEqual(tunnel.health, {
+    type: "http-body",
+    url: "http://127.0.0.1:8083/readyz",
+    acceptedStatus: [200],
+    body: "ready",
+  });
 });
 
 test("Logo.dev configuration is allowlisted, external and selector-runtime only", () => {
@@ -214,7 +231,7 @@ test("BAT parser rejects missing, duplicate, malformed and wrong-case Logo.dev a
 
 test("service host accepts the manifest and removes Logo.dev from non-selector child environments", () => {
   const manifest = loadManifest(manifestPath);
-  assert.equal(manifest.services.length, 9);
+  assert.equal(manifest.services.length, 10);
   const host = readFileSync(hostPath, "utf8");
   assert.match(host, /delete childEnv\[LOGODEV_VARIABLE\]/);
   assert.match(host, /protectedEnvironmentFor\(manifest, service\)/);
@@ -295,7 +312,7 @@ test("control UI liveness is available before managed-service readiness", async 
   }
 });
 
-test("readiness probing tolerates a slow final topology scan and preserves all nine services", async () => {
+test("readiness probing tolerates a slow final topology scan and preserves all ten services", async () => {
   const sourceManifest = loadAndValidateManifest(manifestPath);
   const readiness = createManagerReadinessState();
   readiness.state = "ready";
@@ -322,7 +339,7 @@ test("readiness probing tolerates a slow final topology scan and preserves all n
       statusTimeoutMs: 1000,
       statusRetryDelayMs: 10,
     });
-    assert.equal(payload.services.length, 9);
+    assert.equal(payload.services.length, 10);
     assert.deepEqual(payload.services.map((service) => service.id), sourceManifest.services.map((service) => service.id));
     assert.equal(validateServiceTopology(payload, manifest), payload);
   } finally {
@@ -533,7 +550,7 @@ test("live validation reuses the slow-tolerant control probe and validates Selec
       request,
       processIdentity: () => selectorProcessIdentity(selector, 4200),
     });
-    assert.equal(live.statusPayload.services.length, 9);
+    assert.equal(live.statusPayload.services.length, 10);
     assert.equal(live.runtime.response.statusCode, 200);
     assert.equal(live.workspace.statusCode, 200);
   } finally {
@@ -697,6 +714,32 @@ test("Governance lane provisioner is fixed, idempotent and cannot overwrite dive
   assert.doesNotMatch(gate, /shell=True|os\.system|eval\(|exec\(/);
 });
 
+test("Governance tunnel provisioner is fixed, clipboard-bound and reuses only the protected runtime key", () => {
+  const provisioner = readFileSync(governanceTunnelProvisionerPath, "utf8");
+  assert.match(provisioner, /controlstack-governance-shell-noauth/);
+  assert.match(provisioner, /http:\/\/127\.0\.0\.1:8023\/mcp/);
+  assert.match(provisioner, /Get-Clipboard -Raw/);
+  assert.match(provisioner, /tunnel_\[a-z0-9\]\{16,/i);
+  assert.match(provisioner, /tunnel-runtime-key\.dpapi/);
+  assert.match(provisioner, /ConvertTo-SecureString/);
+  assert.match(provisioner, /ZeroFreeBSTR/);
+  assert.match(provisioner, /CONTROL_PLANE_API_KEY/);
+  assert.match(provisioner, /doctor', '--profile'/);
+  assert.match(provisioner, /CHECK\\s\+tunnel_id\\s\+PASS/);
+  assert.match(provisioner, /CHECK\\s\+mcp_target\\s\+PASS/);
+  assert.match(provisioner, /governance-mcp/);
+  assert.match(provisioner, /governance-tunnel/);
+  assert.match(provisioner, /READY FOR CHATGPT APP REGISTRATION/);
+  assert.doesNotMatch(provisioner, /Write-Host\s+\$key|Write-Output\s+\$key|Remove-Item|git\.exe[^\n]*(?:reset|clean)|--force-with-lease/i);
+  const escapedPath = governanceTunnelProvisionerPath.replaceAll("'", "''");
+  const syntax = spawnSync(
+    "powershell.exe",
+    ["-NoProfile", "-NonInteractive", "-Command", `[void][scriptblock]::Create([IO.File]::ReadAllText('${escapedPath}'))`],
+    { encoding: "utf8" },
+  );
+  assert.equal(syntax.status, 0, syntax.stderr);
+});
+
 test("installer, manager and service host self-tests pass without starting Windows services", () => {
   const installer = spawnSync(process.execPath, [installerPath, "--self-test"], { encoding: "utf8" });
   assert.equal(installer.status, 0, installer.stderr);
@@ -708,7 +751,7 @@ test("installer, manager and service host self-tests pass without starting Windo
 
   const host = spawnSync(process.execPath, [hostPath, "--self-test"], { encoding: "utf8" });
   assert.equal(host.status, 0, host.stderr);
-  assert.match(host.stdout, /9 services/);
+  assert.match(host.stdout, /10 services/);
 });
 
 test("Windows consolidation launcher preserves the complete console result", () => {

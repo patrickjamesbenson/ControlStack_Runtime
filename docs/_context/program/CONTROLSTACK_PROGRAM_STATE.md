@@ -623,3 +623,14 @@ P2 Checkpoint 1 is **IMPLEMENTATION COMPLETE / GATE GREEN / COMMIT BLOCKED BY SH
 - **LAB:** queue empty; expected branch marker and three protected local items remain.
 - **BLOCKED:** sealed DTO loading, generator/materialise invocation, LM-63 output, route, persistence and delivery.
 - **NEXT:** no Lab parcel is authorised until Program makes a new generator-invocation seam decision.
+
+## 2026-07-21 Governance connector exposure state
+
+- **LOCAL LANE:** Governance worktree, branch, founding records, gate and MCP service are healthy.
+- **GAP:** no Governance OpenAI tunnel or ChatGPT app was registered, so the secure tool namespace is absent.
+- **REPOSITORY READY:** ten-service/four-tunnel Deployment v2 topology plus a fixed clipboard-bound tunnel provisioner.
+- **PROFILE:** fixed Governance-only profile and local MCP target; no shared lane tunnel.
+- **SECRETS:** existing encrypted runtime key reused in memory; no key, tunnel reference or remote endpoint stored in Git.
+- **EXTERNAL STEP:** create/copy one tunnel object, run the fixed provisioner, then create/enable the Governance custom app in ChatGPT.
+- **GOV-001:** remains the sole ready feature parcel and starts immediately after connector exposure.
+- **NEXT:** complete PWS-L1; do not redirect GOV-001 through Program, Selector or Lab tools.

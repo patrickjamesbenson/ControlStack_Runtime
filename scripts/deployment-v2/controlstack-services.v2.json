@@ -187,6 +187,18 @@
       }
     },
     {
+      "id": "governance-tunnel",
+      "name": "CS Governance OpenAI Tunnel",
+      "port": 8083,
+      "executable": "C:\\ControlStack_Tunnel\\tunnel-client.exe",
+      "args": ["run", "--profile", "controlstack-governance-shell-noauth", "--health.listen-addr", "127.0.0.1:8083", "--log.level=warn", "--log.format=struct-text"],
+      "cwd": "C:\\ControlStack_Tunnel",
+      "credential": "control-plane-api-key",
+      "protectedSecretIds": [],
+      "health": { "type": "http-body", "url": "http://127.0.0.1:8083/readyz", "acceptedStatus": [200], "body": "ready" },
+      "env": {}
+    },
+    {
       "id": "program-mcp",
       "name": "CS Program & Integrate MCP",
       "port": 8022,

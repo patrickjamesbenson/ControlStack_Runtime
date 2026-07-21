@@ -109,7 +109,7 @@ export function loadAndValidateManifest(file = sourceManifest) {
   const manifest = JSON.parse(readFileSync(file, "utf8"));
   if (manifest.schema !== "controlstack-deployment-v2/1") throw new Error("Unexpected deployment schema.");
   if (!Array.isArray(manifest.worktrees) || manifest.worktrees.length !== 5) throw new Error("Exactly five worktree identities are required.");
-  if (!Array.isArray(manifest.services) || manifest.services.length !== 9) throw new Error("Exactly nine services are required.");
+  if (!Array.isArray(manifest.services) || manifest.services.length !== 10) throw new Error("Exactly ten services are required.");
   if (!manifest.controlUi || manifest.controlUi.host !== "127.0.0.1" || !Number.isInteger(manifest.controlUi.port)) {
     throw new Error("A loopback Deployment v2 control UI is required.");
   }
@@ -164,6 +164,16 @@ export function loadAndValidateManifest(file = sourceManifest) {
     || governance.env?.CONTROLSTACK_GATE_RUNNER !== "C:\\ControlStack_Worktrees\\governance-shell\\scripts\\governance_shell_lane_gate.py"
   ) {
     throw new Error("The Governance & Shell MCP identity is invalid.");
+  }
+  const governanceTunnel = manifest.services.find((service) => service.id === "governance-tunnel");
+  if (
+    !governanceTunnel || governanceTunnel.port !== 8083
+    || governanceTunnel.credential !== "control-plane-api-key"
+    || governanceTunnel.executable !== "C:\\ControlStack_Tunnel\\tunnel-client.exe"
+    || governanceTunnel.args.join(" ") !== "run --profile controlstack-governance-shell-noauth --health.listen-addr 127.0.0.1:8083 --log.level=warn --log.format=struct-text"
+    || governanceTunnel.health?.url !== "http://127.0.0.1:8083/readyz"
+  ) {
+    throw new Error("The Governance OpenAI tunnel identity is invalid.");
   }
   if (JSON.stringify(manifest).includes("8787")) throw new Error("Port 8787 must not be required by Deployment v2.");
   return manifest;
@@ -298,8 +308,8 @@ function commonStartupPath() {
 function selfTest(manifest) {
   const required = [...sourceFiles, "CONTROLSTACK MANAGER.bat", startupFileName];
   for (const file of required) if (!existsSync(path.join(sourceRoot, file))) throw new Error("Missing deployment source: " + file);
-  if (manifest.services.filter((item) => item.credential === "control-plane-api-key").length !== 3) {
-    throw new Error("Exactly three tunnel services are required.");
+  if (manifest.services.filter((item) => item.credential === "control-plane-api-key").length !== 4) {
+    throw new Error("Exactly four tunnel services are required.");
   }
   const startup = readFileSync(path.join(sourceRoot, startupFileName), "utf8");
   if (!/controlstack_lane_manager\.mjs"" serve/i.test(startup)) throw new Error("The startup entry must launch the persistent Deployment v2 manager.");
@@ -1295,7 +1305,7 @@ async function consolidate(manifest) {
   selfTest(manifest);
   progress("Verifying all five ControlStack worktree identities");
   assertWorktrees(manifest);
-  progress("Checking the nine configured service executables and working directories");
+  progress("Checking the ten configured service executables and working directories");
   for (const service of manifest.services) {
     if (!existsSync(service.executable) || !existsSync(service.cwd)) throw new Error("Missing executable or working directory for " + service.name);
   }

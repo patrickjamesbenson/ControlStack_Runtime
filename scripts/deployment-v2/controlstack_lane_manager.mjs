@@ -398,8 +398,8 @@ async function serve() {
 }
 
 function selfTest() {
-  if (manifest.services.length !== 9 || !existsSync(hostPath) || !existsSync(uiPath)) {
-    throw new Error("Expected nine services, the service host and the control UI.");
+  if (manifest.services.length !== 10 || !existsSync(hostPath) || !existsSync(uiPath)) {
+    throw new Error("Expected ten services, the service host and the control UI.");
   }
   if (manifest.services.some((service) => service.port === 8787)) throw new Error("Port 8787 must not be managed.");
   const selector = serviceById("selector-runtime");
