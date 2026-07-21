@@ -984,16 +984,8 @@ Completion evidence: The Lab-owned read-only sealed-reference load preflight and
 - id: SEED-LIB-001
 - status: blocked future acceptance batch; not ready for execution.
 - authority: the exact saved Selector test cases are the sole selection and run-intake authority. Do not retype, infer, normalise or replace quantity or length.
-- BUILD 1 — direct, loaded:
-  - DNX 60 Square; Opal 60; 3000K/CRI80 board; DALI-2 DT6 class; target 1000 lm/m;
-  - saved run 9560 mm × 1; Spitfire D25 emergency; PIR 5 m sensor;
-  - Suspended; Top Side; White (Textured).
-- BUILD 2 — direct/indirect, loaded:
-  - DNX 80 DI (`Square_DI`); direct Inlay 80 plus Microprism; indirect Rope 80;
-  - direct target 1500 lm/m; indirect target 500 lm/m; 5000K/CRI90 board;
-  - Fixed (On/Off) on both lanes; Surface Mount; Back Wall side; Black (Textured);
-  - EM DC Mains emergency; Microwave sensor;
-  - run quantity and length exactly as stored in the saved Selector test case.
+- BUILD 1 — DNX 60 Square; Opal 60; 3000K/CRI80 board; DALI-2 DT6 class; target 1000 lm/m; saved run 9560 mm × 1; Spitfire D25 emergency; PIR 5 m sensor; Suspended; Top Side; White (Textured).
+- BUILD 2 — DNX 80 DI (`Square_DI`); direct Inlay 80 plus Microprism; indirect Rope 80; direct target 1500 lm/m; indirect target 500 lm/m; 5000K/CRI90 board; Fixed (On/Off) on both lanes; Surface Mount; Back Wall side; Black (Textured); EM DC Mains emergency; Microwave sensor; run quantity and length exactly as stored in the saved Selector test case.
 - canonical future chain:
   - exact saved Selector selections and run intake;
   - genuine measured Lab evidence;

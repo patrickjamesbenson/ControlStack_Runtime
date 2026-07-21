@@ -13,7 +13,7 @@ Current repository evidence overrides stale historical statements.
 - Root: `C:\ControlStack_Worktrees\code-pilot-lab`
 - Branch: `lane/code-pilot-lab`
 - Gate: `lab-ies`
-- Recorded branch HEAD: `902cc065fe06e82f9a7c47b921ad2631c8dab47a`
+- Recorded branch HEAD: `d6e3c5c4b973520b4d266ce3e712eae7b00774de`
 - Branch-HEAD guard checkpoint: `6d34e500d407d5335e5eebb317636a67a5e98618`
 - Starting HEAD for SEAM-G-C5: `2ebbade483b601f6610e5f6cfc711354eb504d7c`
 - Completed feature HEAD: `b517553ba011faedb7b20d7342358630ba7c0815`
