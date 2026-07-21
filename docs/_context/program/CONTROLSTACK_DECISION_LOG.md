@@ -1564,3 +1564,13 @@ Program also verifies the pushed Lab C5 technical and memory closeout. The real 
 Program admits **WALK-001VA — managed activation and current-source evidence run** as the sole ready Selector operational parcel. After an Advisor-managed restart of only the Selector runtime, Selector must verify Healthy/Managed state and run the complete guarded dry-run against the current Google source. The new count-only Ambient summary must be present. Return the exact safe Ambient counts and existing Driver identity counts. Any Driver contradiction, missing approved finite tier evidence, validation failure or missing activation stops before every write. No Google Sheet edit, materialisation, archive, promotion, Engine invocation or later walkthrough work is authorised.
 
 The newly routed seed-library recording is incomplete in both lanes. Selector remains clean but has not recorded SEED-LIB-001 in lane memory. Lab has two unstaged lane-memory files: the intended blocked seed entry is present but contains malformed literal `+-` list markers. Program admits docs-only reconciliation in each lane. Selector records the blocked seed batch while performing WALK-001VA closeout. Lab corrects only the two current lane-memory files, preserves all protected local inventory, gates, commits and pushes, and stops. These documentation corrections do not release C6 or seed execution.
+
+## 2026-07-22 — Lab seed-memory correction accepted
+
+**Status:** LAB CORRECTION COMPLETE; SEED-LIB-001 REMAINS BLOCKED.
+
+Program directly verified the Lab correction receipt. The blocked SEED-LIB-001 queue entry now uses normal Markdown list markers, both canonical builds and every real-chain/fail-closed rule remain unchanged, and the fixed Lab gate passes 314/314.
+
+The Lab tracked tree is clean with nothing staged or deleted. The three protected local items remain unchanged and unstaged. No C6, C7, sealing, inspection, resolver execution, LM-63 generation, persistence, retrieval or delivery occurred.
+
+The Lab seed-memory correction is accepted complete. No Lab implementation parcel is released by this acceptance. C6 and all seed execution remain blocked pending the existing Program sequence and separate admission.

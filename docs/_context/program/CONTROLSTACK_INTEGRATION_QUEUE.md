@@ -928,7 +928,7 @@ No implementation item is ready. A new exact Program parcel is required before a
 ### SEAM-G-C5 — Sealed-reference load preflight
 
 - **Owner:** Lab & IES.
-- **Status:** accepted complete. The technical implementation and lane-memory closeout are pushed; the fixed Lab gate passes 314/314. A separate two-file seed-memory formatting correction is ready, but C6 remains blocked and is not released.
+- **Status:** accepted complete. The technical implementation, lane-memory closeout and two-file seed-memory formatting correction are pushed; the fixed Lab gate passes 314/314. No Lab parcel is ready. C6 remains blocked and is not released.
 - **Input:** exact ready materialisation-job-plan version 1, exact matching generation-reference-binding version 1, exact matching reference-generation-inspection version 1, and one injected Lab-owned read-only resolver capability.
 - **Operation:** derive the reference identity only from the matched contracts; call the resolver at most once; reject caller paths, URLs and provider-shaped resolver input; validate the loaded DTO through the existing generation-inspection path; require exact reference identity, keyword profile, baseline, missing overrides and no-override readiness equality.
 - **Output:** deterministic immutable ready-or-blocked redacted load receipt. The loaded DTO is ephemeral and discarded after validation.
@@ -960,7 +960,7 @@ Every affected parcel and gate plan must retain: envelope independence including
 - **Canonical role:** both builds are mandatory for C5-C7 and downstream acceptance, including changed-optic movement and varied-row placeholder proof. Later library additions require no schema, ownership or contract-version change.
 - **Sequence:** Selector seed execution is blocked behind WALK-007 acceptance. Lab seed sealing/execution is blocked behind later Program admissions for C6 and C7. Governance retrieval remains blocked behind C7.
 
-PWS-001, PWS-002 and PWS-005 are complete. C5 is accepted complete. Lab has one docs-only seed-memory formatting correction ready. WALK-001V is accepted complete; WALK-001VA managed activation and current-source evidence is the sole ready Selector parcel. Each lane keeps one writer and may perform only its named action.
+PWS-001, PWS-002 and PWS-005 are complete. C5 and the Lab seed-memory correction are accepted complete; no Lab parcel is ready. WALK-001V is accepted complete; WALK-001VA managed activation and current-source evidence is the sole ready Selector parcel. One Selector writer only.
 
 ### Selector consolidated walkthrough batch
 
