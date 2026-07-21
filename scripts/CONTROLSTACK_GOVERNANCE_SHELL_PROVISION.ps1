@@ -259,11 +259,17 @@ foreach ($canonicalName in $GeneratedFoundingFiles.Keys) {
       $status = (Invoke-Git -Root $TargetRoot -Arguments @('status', '--porcelain=v1', '--', $relativeDestination)).Output.Trim()
       $existingHeader = (($existingNormalised -split "`n", 2)[0]).Trim()
       $generatedHeader = (($contentNormalised -split "`n", 2)[0]).Trim()
-      if ($status -match '^\?\?\s' -and $existingHeader -eq $generatedHeader) {
+      $tracked = (Invoke-Git -Root $TargetRoot -Arguments @('ls-files', '--error-unmatch', '--', $relativeDestination) -AllowFailure).ExitCode -eq 0
+      if ($existingHeader -ne $generatedHeader) {
+        throw "A generated Governance lane file already exists with the wrong identity: $canonicalName"
+      }
+      if ($status -match '^\?\?\s') {
         Write-Host ("Governance & Shell provisioning: refreshing interrupted generated record {0}" -f $canonicalName)
         [IO.File]::WriteAllText($destination, $content, $Utf8NoBom)
+      } elseif ($tracked -and -not $status) {
+        Write-Host ("Governance & Shell provisioning: preserving established generated record {0}" -f $canonicalName)
       } else {
-        throw "A generated Governance lane file already exists with different content: $canonicalName"
+        throw "A generated Governance lane file already exists with uncommitted different content: $canonicalName"
       }
     }
   } else {

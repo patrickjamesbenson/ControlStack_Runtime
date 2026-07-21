@@ -648,9 +648,13 @@ test("Governance lane provisioner is fixed, idempotent and cannot overwrite dive
   assert.match(provisioner, /GeneratedFoundingFiles/);
   assert.match(provisioner, /approved Program ruling/);
   assert.match(provisioner, /refreshing interrupted generated record/);
+  assert.match(provisioner, /preserving established generated record/);
   assert.match(provisioner, /status', '--porcelain=v1'/);
+  assert.match(provisioner, /ls-files', '--error-unmatch'/);
   assert.match(provisioner, /\^\\\?\\\?\\s/);
-  assert.match(provisioner, /existingHeader -eq \$generatedHeader/);
+  assert.match(provisioner, /existingHeader -ne \$generatedHeader/);
+  assert.match(provisioner, /\$tracked -and -not \$status/);
+  assert.match(provisioner, /uncommitted different content/);
   assert.match(provisioner, /TrimEnd\(\)/);
   assert.match(provisioner, /Resolve-BootstrapFile/);
   assert.match(provisioner, /\$script:UsedBootstrapPaths/);
