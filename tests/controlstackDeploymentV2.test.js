@@ -851,6 +851,8 @@ test("tunnel recovery still reuses the protected key and replaces only validated
   assert.match(installer, /--repair-tunnels/);
   assert.match(installer, /stopValidatedTemporaryTunnel/);
   assert.match(installer, /service\.credential === "control-plane-api-key"/);
+  assert.match(installer, /for \(const service of tunnelServices\) runManager\(installedManager, "start", service\.id\)/);
+  assert.doesNotMatch(installer, /runManager\(installedManager, "start"\);/);
   assert.match(host, /input: protectedValue/);
   assert.doesNotMatch(host, /encodedPowerShell\(script\), credentialFile/);
 });

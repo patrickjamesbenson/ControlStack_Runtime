@@ -1443,7 +1443,7 @@ async function repairTunnels(manifest) {
   const tunnelServices = manifest.services.filter((service) => service.credential === "control-plane-api-key");
   for (const service of tunnelServices) stopValidatedTemporaryTunnel(service);
   const installedManager = path.join(manifest.installRoot, "controlstack_lane_manager.mjs");
-  runManager(installedManager, "start");
+  for (const service of tunnelServices) runManager(installedManager, "start", service.id);
   runManager(installedManager, "verify");
 
   mkdirSync(manifest.receiptRoot, { recursive: true });
