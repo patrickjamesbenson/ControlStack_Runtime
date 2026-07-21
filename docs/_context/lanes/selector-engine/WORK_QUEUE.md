@@ -574,22 +574,30 @@ Runtime 8788 has not loaded the repair: the post-commit empty-body dry-run still
 * ruling: Governance owns identity, principal/role, timeline policy and visibility. Selector may consume bounded read-only outcomes only and may not expose a parallel test authority.
 * acceptance: no Selector-owned principal selector, role override, timeline as-of control or special-parts test toggle remains; existing shell snapshots preserve equivalent diagnostic behaviour; no raw USERS/CRM/provider data enters Selector.
 
+### WALK-005A Restore donor auto-fill defaults
+* status: blocked (depends-on: WALK-005; executes before WALK-006 and WALK-007)
+* objective: auto-fill every dropdown with the first real option from its NVB lookup while preserving exact source comma-separated order. Presentation-only `No manual constraint…` rows are skipped and can never become defaults.
+* provenance ruling: each auto-filled value is LOOKED UP and visibly flagged as a choice made on the user's behalf; it remains distinct from a manual constraint. One `Accept all defaults` action creates the GIVEN acknowledgement for every flagged default, including inherited cover/end/flex finishes. Auto-fill never masquerades as manual input.
+* readiness ruling: unacknowledged defaults do not satisfy readiness. Per-field acknowledgement is prohibited; one press acknowledges all currently flagged defaults.
+* data ruling: future default changes are source-data reorders only. Code must not name, rank or hardcode a preferred option.
+* acceptance: source order is preserved exactly; first real option is selected; presentation rows are never selected; manual selections remain distinguishable; flagged defaults survive truthful render/hydration without becoming GIVEN; one acknowledgement clears every current flag atomically; inherited finishes follow the same rule; no per-field accept control exists.
+
 ### WALK-006 Truthful readiness counters
-* status: blocked (depends-on: WALK-005)
+* status: blocked (depends-on: WALK-005A)
 * objective: count only genuine current prerequisites. Remove donor-parity/future rows, consequences, disabled outputs and diagnostic special-parts rows from user-facing missing/blocked totals.
-* acceptance: readiness totals equal the visible actionable prerequisite set; special-parts redacted placeholder candidates remain diagnostics only; zero diagnostic row can increase missing or blocked readiness counts.
+* acceptance: readiness totals equal the visible actionable prerequisite set; genuine unacknowledged defaults may count as pending acknowledgement but not missing source data; special-parts redacted placeholder candidates remain diagnostics only; zero diagnostic row can increase missing or blocked readiness counts.
 
 ### WALK-007 Selections-only action lane and thermal live acceptance
-* status: blocked (depends-on: WALK-001 through WALK-006)
+* status: blocked (depends-on: WALK-001 through WALK-006, including WALK-005A)
 * objective: reconcile Run Engine activation with the ruled selections-only boundary, then execute the held thermal live-acceptance proof once against the refreshed source.
 * ruling: server revision acknowledgement is not Engine authority. The action may require a valid source-backed selection set and the existing no-write transport safeguards, but not a governance/project envelope or separate server-revision gate.
 * acceptance: selected room Celsius is source-backed; one optic-bound measured rise is applied exactly once; lookup temperature equals selected room plus measured rise; verified lm/m is attributable; varied optic rise moves lookup and verified output with room/current/curve held fixed; no hardcoded constant, absolute internal temperature substitution or double count passes. One bounded run only.
 * boundary: no persistence, delivery, IES generation, CRM/provider action or module-owned retrieval path.
 
-### WALK-008 Finishes default acceptance
-* status: held (Patrick ruling; non-blocking)
-* objective: none until Patrick rules whether inherited cover/end/flex finishes satisfy Build Ready by inheritance alone or require explicit acceptance.
-* current rule: unchanged. The question is recorded in the Governance deferred-decisions panel and must not be inferred by Selector.
+### WALK-008 Finishes default acceptance ruling
+* status: done (Patrick ruled 2026-07-22)
+* ruling: inherited and auto-filled cover/end/flex finishes do not satisfy Build Ready until one explicit `Accept all defaults` action acknowledges every flagged default. Per-field acknowledgement is not required.
+* implementation owner: WALK-005A.
 
-**Ending order:** WALK-001 → WALK-002 → WALK-003 → WALK-004 → WALK-005 → WALK-006 → WALK-007. WALK-008 stays held and does not block the batch.
+**Ending order:** WALK-001 → WALK-002 → WALK-003 → WALK-004 → WALK-005 → WALK-005A → WALK-006 → WALK-007. WALK-008 is ruled and closed.
 

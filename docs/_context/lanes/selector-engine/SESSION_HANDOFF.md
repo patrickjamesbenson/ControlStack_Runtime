@@ -629,10 +629,11 @@ After refresh, execute one writer in strict order:
 2. Unmount the fabricated duplicate Selector scaffold so only the source-backed live surface owns current selection.
 3. Delete the legacy `TIERS`-expecting payload/readiness path; the live source-status bridge is the sole source-readiness owner and Tier remains server/Engine-derived from `SYSTEM_POLICY`.
 4. Delete Selector's internal timeline and special-parts principal test modes. Governance owns identity, principal/role, timeline policy and visibility; Selector consumes only bounded shell outcomes.
-5. Recalculate user-facing missing and blocked totals from genuine actionable prerequisites only; diagnostic and future rows cannot contribute.
+5. Restore donor auto-fill defaults through WALK-005A. Preserve exact NVB comma-separated order and auto-fill the first real option; skip `No manual constraint…`. Visibly flag auto-filled values as LOOKED UP and distinct from manual constraints. One `Accept all defaults` action creates the GIVEN acknowledgement for every flagged default, including inherited finishes. Unacknowledged defaults do not satisfy readiness; no per-field acknowledgement or code-ranked default is allowed.
+6. Recalculate user-facing missing and blocked totals from genuine actionable prerequisites and pending acknowledgements only; diagnostic and future rows cannot contribute, and pending defaults are not missing source data.
 
 No live Engine run occurs before those parcels close. WALK-007 then removes server-revision acknowledgement as Engine authority while preserving source-backed selections and no-write transport safety, and performs exactly one thermal live proof: selected room plus optic-bound measured rise once, attributable lookup temperature, verified lm/m, and varied-rise movement.
 
-WALK-008 is held and non-blocking. Governance has recorded finishes default acceptance as an OPEN Patrick-owned ruling. Do not change Build Ready until Patrick decides whether inherited cover/end/flex finishes count without explicit acceptance.
+WALK-008 is ruled and closed. Governance records Patrick's decision as RULED: inherited and auto-filled finishes require the one `Accept all defaults` acknowledgement before Build Ready; per-field acknowledgement is not required.
 
-Current queue: WALK-001 ready; WALK-002 through WALK-007 blocked in sequence; WALK-008 held. No second writer, CRM/provider mutation, persistence, IES generation, delivery, module-owned retrieval, main or unrelated runtime work is authorised.
+Current queue: WALK-001 ready; WALK-002 through WALK-007 blocked in sequence with WALK-005A before WALK-006; WALK-008 ruled and closed. No second writer, CRM/provider mutation, persistence, IES generation, delivery, module-owned retrieval, main or unrelated runtime work is authorised.

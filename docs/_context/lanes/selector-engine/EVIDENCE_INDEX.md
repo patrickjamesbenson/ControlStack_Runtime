@@ -715,5 +715,6 @@ Every completed worker updates this index with:
 - Existing evidence classifies the 13 missing and 18 blocked totals as containing donor-parity, future, consequence, disabled and diagnostic rows rather than genuine prerequisites — VERIFIED FROM PRIOR LIVE REVIEW AND REPOSITORY CONTRACTS.
 - Program ruling: Governance owns identity/principal/timeline policy; Selector deletes its internal copies and consumes bounded shell outcomes only — RECORDED.
 - Program ruling: the Engine action boundary is selections-only; server revision acknowledgement and governance/project envelopes are not Engine authority — RECORDED FOR WALK-007.
-- Governance deferred-decision registry records finishes default acceptance as OPEN and Patrick-owned; current Build Ready rule remains unchanged — VERIFIED BY GOVERNANCE GATE 181/181.
-- Queue result: WALK-001 ready; WALK-002 through WALK-007 blocked in strict order; WALK-008 held — RECORDED.
+- Patrick ruled finishes default acceptance: inherited and auto-filled finishes require one explicit `Accept all defaults` acknowledgement; Governance registry version 1.2.0 records the item as RULED — VERIFIED BY GOVERNANCE GATE 181/181.
+- Donor auto-fill restoration is admitted as WALK-005A: exact NVB source order, first real option, presentation-row exclusion, visible LOOKED UP defaults, one GIVEN acknowledgement, no per-field acceptance and no code-ranked default — RECORDED.
+- Queue result: WALK-001 ready; WALK-002 through WALK-007 blocked in strict order with WALK-005A before WALK-006; WALK-008 ruled and closed — RECORDED.
