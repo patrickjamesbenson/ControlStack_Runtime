@@ -6,6 +6,10 @@ import {
   deriveSelectorReferenceOptionsFromSnapshot,
   SELECTOR_REFERENCE_OPTIONS_PATH,
 } from "../packages/workspace-kernel/selectorReferenceOptionsService.js";
+import {
+  buildCurrentAuthoritySourceShapeSummary,
+  refreshAuthorityReferenceMaterialiser,
+} from "../packages/workspace-kernel/authorityReferenceMaterialiserService.js";
 
 function sourceReady() {
   return {
@@ -713,4 +717,158 @@ test("selector reference options bind source-version metadata onto emitted sourc
   assert.equal(pair.sourceInputFingerprint, "safe-selector-reference-source-fp-v1");
   assert.equal(pair.boardDataSourceVersion, "safe-selector-reference-board-version-v1");
   assert.equal(pair.sourceVersionBinding.optionSetsBound, true);
+});
+
+
+test("guarded materialiser dry-run reports only value-free finite tier-specific Ambient evidence", async () => {
+  const privateGenericPolicyValue = "private-generic-ambient-value";
+  const privateUserIdentity = "private-ambient-user@example.com";
+  const snapshot = {
+    SYSTEM: [],
+    OPTICS: [],
+    ACCESSORIES: [],
+    SPEC_CODES: [],
+    BOARDS: [],
+    DRIVERS: [],
+    PURE_REF_STATE: [],
+    SYSTEM_COMPONENTS: [],
+    SYSTEM_BOM_DEFAULTS: [],
+    SYSTEM_POLICY: [
+      {
+        field_key: "ambient_temp",
+        approved: "yes",
+        economy: "25",
+        business: "26°C",
+        first: "not-a-number",
+        charter: "",
+        unrestricted_private_header: "must-not-be-returned",
+      },
+      {
+        field_key: "ambient_temp",
+        approved: true,
+        economy: "27",
+        business: "28",
+        first: "",
+        charter: "",
+      },
+      {
+        field_key: "ambient_temp",
+        approved: "approved",
+        value: privateGenericPolicyValue,
+        economy: "",
+        business: "",
+        first: "",
+        charter: "",
+      },
+      {
+        field_key: "ambient_temp",
+        approved: "yes",
+        economy: "warm",
+        business: "",
+        first: "",
+        charter: "",
+      },
+      {
+        field_key: "ambient_temp",
+        approved: "no",
+        economy: "24",
+        business: "",
+        first: "",
+        charter: "",
+      },
+      {
+        field_key: "unrelated_policy",
+        approved: "yes",
+        economy: "99",
+        business: "99",
+        first: "99",
+        charter: "99",
+      },
+    ],
+    FIELD_EDITABILITY: [],
+    ROLES_AND_LANES: [],
+    CODE_POLICY: [],
+    MESSAGES: [],
+    USERS: [{ email: privateUserIdentity }],
+  };
+
+  const directSummary = buildCurrentAuthoritySourceShapeSummary(snapshot).systemPolicyAmbient;
+  assert.equal(directSummary.tablePresent, true);
+  assert.equal(directSummary.rowCount, 6);
+  assert.equal(directSummary.exactAmbientTempRowCount, 5);
+  assert.equal(directSummary.approvedExactAmbientTempRowCount, 4);
+
+  assert.deepEqual(Object.keys(directSummary.recognisedTierColumns), ["economy", "business", "first", "charter"]);
+  assert.deepEqual(directSummary.recognisedTierColumns.economy, {
+    present: true,
+    populatedRowCount: 4,
+    finiteNumericTokenCount: 3,
+    nonFiniteNumericTokenCount: 1,
+  });
+  assert.deepEqual(directSummary.recognisedTierColumns.business, {
+    present: true,
+    populatedRowCount: 2,
+    finiteNumericTokenCount: 2,
+    nonFiniteNumericTokenCount: 0,
+  });
+  assert.deepEqual(directSummary.recognisedTierColumns.first, {
+    present: true,
+    populatedRowCount: 1,
+    finiteNumericTokenCount: 0,
+    nonFiniteNumericTokenCount: 1,
+  });
+  assert.deepEqual(directSummary.recognisedTierColumns.charter, {
+    present: true,
+    populatedRowCount: 0,
+    finiteNumericTokenCount: 0,
+    nonFiniteNumericTokenCount: 0,
+  });
+
+  assert.equal(directSummary.rowsWithAtLeastOneFiniteTierValueCount, 3);
+  assert.equal(directSummary.rowsWithFiniteValuesAcrossMultipleRecognisedTierColumnsCount, 2);
+  assert.equal(directSummary.genericOnlyRowCount, 1);
+  assert.equal(directSummary.approvedRowsWithAtLeastOneFiniteTierValueCount, 2);
+  assert.equal(directSummary.approvedRowsWithFiniteValuesAcrossMultipleRecognisedTierColumnsCount, 2);
+  assert.equal(directSummary.approvedGenericOnlyRowCount, 1);
+  assert.equal(directSummary.finiteTierSpecificAmbientEvidence, true);
+
+  let mkdirCallCount = 0;
+  let writeCallCount = 0;
+  const result = await refreshAuthorityReferenceMaterialiser({
+    dryRun: true,
+    reader: {
+      fake: true,
+      read: async () => snapshot,
+    },
+    fsApi: {
+      stat: async () => {
+        const error = new Error("unavailable");
+        error.code = "ENOENT";
+        throw error;
+      },
+      mkdir: async () => {
+        mkdirCallCount += 1;
+      },
+      writeFile: async () => {
+        writeCallCount += 1;
+      },
+    },
+  });
+  const serialised = JSON.stringify(result);
+
+  assert.equal(result.httpStatus, 200);
+  assert.equal(result.dryRun, true);
+  assert.equal(result.materialisedWriteAttempted, false);
+  assert.equal(result.activeSnapshotWriteAttempted, false);
+  assert.equal(result.writePolicy.dryRunWritesNothing, true);
+  assert.equal(mkdirCallCount, 0);
+  assert.equal(writeCallCount, 0);
+  assert.deepEqual(result.currentSourceShape.systemPolicyAmbient, directSummary);
+  assert.equal(result.currentSourceShape.systemPolicyAmbient.policyValuesExposed, false);
+  assert.equal(result.currentSourceShape.systemPolicyAmbient.rawRowsExposed, false);
+  assert.equal(result.currentSourceShape.systemPolicyAmbient.unrestrictedHeadersExposed, false);
+  assert.equal(serialised.includes(privateGenericPolicyValue), false);
+  assert.equal(serialised.includes(privateUserIdentity), false);
+  assert.equal(serialised.includes("must-not-be-returned"), false);
+  assert.equal(serialised.includes("unrestricted_private_header"), false);
 });

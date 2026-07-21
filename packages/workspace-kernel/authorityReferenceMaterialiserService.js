@@ -387,6 +387,104 @@ function duplicateAuthorityAssessment(summary) {
   return "non-authoritative-or-mixed";
 }
 
+const AMBIENT_SUMMARY_TIER_FIELDS = Object.freeze(["economy", "business", "first", "charter"]);
+const AMBIENT_SUMMARY_IDENTITY_FIELDS = Object.freeze([
+  "category",
+  "item",
+  "eng_lever_fields",
+  "field",
+  "field_key",
+  "name",
+  "label",
+]);
+const AMBIENT_SUMMARY_GENERIC_VALUE_FIELDS = Object.freeze([
+  "value",
+  "values",
+  "options",
+  "allowed_values",
+  "display_choice",
+]);
+
+function normaliseAmbientSummaryIdentity(value) {
+  return String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/[\s-]+/g, "_");
+}
+
+function isExactAmbientTempSummaryRow(row) {
+  return AMBIENT_SUMMARY_IDENTITY_FIELDS.some((field) => (
+    rowHasOwnField(row, field)
+    && splitSummaryValues(row[field]).some((value) => normaliseAmbientSummaryIdentity(value) === "ambient_temp")
+  ));
+}
+
+function isApprovedAmbientSummaryRow(row) {
+  if (!rowHasOwnField(row, "approved")) return false;
+  if (row.approved === true || row.approved === 1) return true;
+  return ["yes", "true", "1", "approved"].includes(String(row.approved ?? "").trim().toLowerCase());
+}
+
+function isFiniteAmbientNumericToken(value) {
+  if (typeof value === "number") return Number.isFinite(value);
+  const text = String(value ?? "").trim();
+  const match = text.match(/^([+-]?(?:(?:\d+(?:\.\d*)?)|(?:\.\d+))(?:e[+-]?\d+)?)(?:\s*(?:(?:°\s*)|(?:deg(?:ree)?s?\s*))?c)?$/i);
+  return Boolean(match && Number.isFinite(Number(match[1])));
+}
+
+function buildSystemPolicyAmbientSummary(snapshot) {
+  const rows = tableRows(snapshot, "SYSTEM_POLICY");
+  const exactRows = rows.filter(isExactAmbientTempSummaryRow);
+  const approvedExactRows = exactRows.filter(isApprovedAmbientSummaryRow);
+  const recognisedTierColumns = {};
+
+  for (const field of AMBIENT_SUMMARY_TIER_FIELDS) {
+    const tokens = exactRows.flatMap((row) => (rowHasOwnField(row, field) ? splitSummaryValues(row[field]) : []));
+    recognisedTierColumns[field] = {
+      present: rows.some((row) => rowHasOwnField(row, field)),
+      populatedRowCount: exactRows.filter((row) => rowHasOwnField(row, field) && cellHasValue(row[field])).length,
+      finiteNumericTokenCount: tokens.filter(isFiniteAmbientNumericToken).length,
+      nonFiniteNumericTokenCount: tokens.filter((value) => !isFiniteAmbientNumericToken(value)).length,
+    };
+  }
+
+  const rowTierSummary = exactRows.map((row) => {
+    const populatedTierFields = AMBIENT_SUMMARY_TIER_FIELDS.filter((field) => (
+      rowHasOwnField(row, field) && cellHasValue(row[field])
+    ));
+    const finiteTierFields = populatedTierFields.filter((field) => (
+      splitSummaryValues(row[field]).some(isFiniteAmbientNumericToken)
+    ));
+    const hasGenericValue = AMBIENT_SUMMARY_GENERIC_VALUE_FIELDS.some((field) => (
+      rowHasOwnField(row, field) && cellHasValue(row[field])
+    ));
+    return {
+      approved: isApprovedAmbientSummaryRow(row),
+      populatedTierFieldCount: populatedTierFields.length,
+      finiteTierFieldCount: finiteTierFields.length,
+      genericOnly: populatedTierFields.length === 0 && hasGenericValue,
+    };
+  });
+
+  return {
+    tablePresent: Array.isArray(snapshot?.SYSTEM_POLICY),
+    rowCount: rows.length,
+    exactAmbientTempRowCount: exactRows.length,
+    approvedExactAmbientTempRowCount: approvedExactRows.length,
+    recognisedTierColumns,
+    rowsWithAtLeastOneFiniteTierValueCount: rowTierSummary.filter((row) => row.finiteTierFieldCount > 0).length,
+    rowsWithFiniteValuesAcrossMultipleRecognisedTierColumnsCount: rowTierSummary.filter((row) => row.finiteTierFieldCount > 1).length,
+    genericOnlyRowCount: rowTierSummary.filter((row) => row.genericOnly).length,
+    approvedRowsWithAtLeastOneFiniteTierValueCount: rowTierSummary.filter((row) => row.approved && row.finiteTierFieldCount > 0).length,
+    approvedRowsWithFiniteValuesAcrossMultipleRecognisedTierColumnsCount: rowTierSummary.filter((row) => row.approved && row.finiteTierFieldCount > 1).length,
+    approvedGenericOnlyRowCount: rowTierSummary.filter((row) => row.approved && row.genericOnly).length,
+    finiteTierSpecificAmbientEvidence: rowTierSummary.some((row) => row.approved && row.finiteTierFieldCount > 0),
+    policyValuesExposed: false,
+    rawRowsExposed: false,
+    unrestrictedHeadersExposed: false,
+  };
+}
+
 export function buildCurrentAuthoritySourceShapeSummary(snapshot) {
   const drivers = tableRows(snapshot, "DRIVERS");
   const boards = tableRows(snapshot, "BOARDS");
@@ -421,6 +519,7 @@ export function buildCurrentAuthoritySourceShapeSummary(snapshot) {
   const intersection = boardsAuthority.filter((family) => driverSet.has(family));
 
   return {
+    systemPolicyAmbient: buildSystemPolicyAmbientSummary(snapshot),
     drivers: {
       tablePresent: Array.isArray(snapshot?.DRIVERS),
       rowCount: drivers.length,
