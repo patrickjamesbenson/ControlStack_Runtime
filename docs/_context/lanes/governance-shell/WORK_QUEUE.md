@@ -49,14 +49,17 @@
   download path; all future retrieval terminates through Governance.
 
 ### GOV-005 User module (Work Shape item 6)
-* status: ready (sole ready parcel; GOV-003 complete)
+* status: done (2026-07-22)
 * objective: restore the donor identity/permissions shape (roles external_user /
   internal_user / internal_engineer / developer; permissions block). Lookup order is
   NVB FIRST, then HubSpot — never reversed. NVB decides view and access; HubSpot
   decides CRM presence (no match → leads pipeline, which is CRM lane scope).
-  Permission model as ruled: view read-only · propose co-edit · handoff on accept ·
-  locked enforced · signed-off permanent · internal override flagged and logged.
-  Two-factor explicitly deferred (entry in GOV-002's panel).
+* closeout: one versioned Governance identity/permissions contract and one existing
+  identity-service integration now enforce NVB-first lookup, HubSpot presence-only
+  follow-up, canonical four-role authority, immutable permission lifecycle, flagged and
+  logged internal override, and no-match leads deferral. No provider write, hard email
+  verification, two-factor, Engine eligibility or technical-readiness change was added.
+  Fixed lane gate passed 181/181.
 
 ### GOV-006 CRM & Integration scope
 * status: held

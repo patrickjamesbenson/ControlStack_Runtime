@@ -30,6 +30,18 @@
 - Engine execution and deterministic output remain independent of project persistence.
 - Fixed Governance gate: 175/175.
 
+## User identity and permissions evidence
+
+- One versioned Governance contract owns identity resolution and the immutable permission block.
+- Lookup order is strictly NVB first, then optional HubSpot presence; HubSpot cannot grant an internal role.
+- Canonical roles are external user, internal user, internal engineer and developer.
+- Permissions are fixed as read-only view, co-edit proposal, handoff on acceptance, enforced lock and permanent signed-off state.
+- Internal override is restricted to internal engineer or developer, requires a reason, and is flagged and logged.
+- No-match handling records leads-pipeline deferral without invoking CRM.
+- Provider-shaped, widened, mismatched, path-bearing and unsafe inputs fail closed.
+- Hard email verification, two-factor, provider writes, Engine eligibility changes and technical-readiness changes remain disabled.
+- Fixed Governance gate: 181/181.
+
 ## GOV-001 bootstrap closeout
 
 - Reconciled actual branch HEAD:

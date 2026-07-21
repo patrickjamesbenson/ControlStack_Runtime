@@ -11,7 +11,8 @@
   `docs/_context/lanes/governance-shell/`
 - Recorded retrieval feature checkpoint: `408eaeced381dfb5ab49b5420b41a4b957698375`
 - Recorded persistence feature checkpoint: `a8de2049cfda57f1413ec3bb193fe42e235e7be6`
-- Tree before persistence documentation closeout: one queue edit and one lane report
+- Recorded identity feature checkpoint: `87bf61db802bf6f31fc62eb0a75105b6efaabc48`
+- Tree after identity feature push: clean
 
 ## Boundary (fixed by Program's Boundary Ruling)
 This lane is the OUTSIDE layer: identity, project, permissions, retrieval, deferral
@@ -19,9 +20,9 @@ visibility. It shapes menus; it never blocks the kitchen. The Engine's contract 
 set of selections and nothing else — this lane never adds to it.
 
 ## Queue state
-See `WORK_QUEUE.md`. Bootstrap, deferred decisions, inert retrieval and project
-persistence are complete. GOV-005 user identity and permissions is the sole ready
-parcel. CRM mutation remains held and two-factor authentication remains deferred.
+See `WORK_QUEUE.md`. Bootstrap, deferred decisions, inert retrieval, project
+persistence and user identity/permissions are complete. No parcel is ready. CRM
+mutation remains held and two-factor authentication remains deferred.
 
 ## Evidence
 - Bootstrap and deferred-decisions closeouts remain intact.
@@ -35,3 +36,8 @@ parcel. CRM mutation remains held and two-factor authentication remains deferred
   atomic replacement, bounded routes, server-first browser caching and explicit
   migration/rollback without fixture truth, provider calls or Engine coupling.
 - The fixed `governance-shell` gate passed 175/175 after persistence implementation.
+- User identity now resolves through injected NVB-first lookup followed by optional
+  HubSpot presence-only lookup, with canonical four-role authority and immutable
+  permissions. Internal override is flagged and logged; no-match handling stays
+  deferred to CRM; no provider write, hard verification, two-factor or Engine seam was added.
+- The fixed `governance-shell` gate passed 181/181 after identity implementation.
