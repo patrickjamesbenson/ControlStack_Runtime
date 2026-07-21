@@ -473,7 +473,7 @@ Program must decide the next exact implementation parcel. No Selector widening, 
 
 ## 2026-07-21 Program accepted SEL-007 — ENG-OUT-P1 ready
 
-Program accepted the newer three-schema candidate, superseded ENG-STAB-P1 before implementation and admitted ENG-OUT-P1 as the sole ready item.
+Program accepted the newer three-schema candidate and superseded ENG-STAB-P1 as the public contract. ENG-STAB-P1 then completed concurrently and Program accepted it as an internal non-stable component. ENG-OUT-P1 remains the sole ready item.
 
 Create exactly `packages/workspace-kernel/runtimeEngineOutputContractV1.js` and `tests/runtimeEngineOutputContractV1.test.js`. Use the authorised temporary gate import, remove it before final staging and commit only those two feature paths.
 

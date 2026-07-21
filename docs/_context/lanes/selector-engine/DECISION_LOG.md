@@ -386,7 +386,7 @@ This log is append-oriented. Do not silently rewrite historical decisions.
 
 ## 2026-07-21 — Program accepts SEL-007 three-schema candidate
 
-**Decision:** Supersede ENG-STAB-P1 before implementation and admit ENG-OUT-P1 as the sole ready parcel.
+**Decision:** Supersede ENG-STAB-P1 as the public contract and admit ENG-OUT-P1 as the sole ready parcel. A concurrent worker completed ENG-STAB-P1 after this ruling; Program later accepted that bounded receipt as an internal non-stable component.
 
 **Rationale:** The newer Program review accepts the candidate's separate selections-only request, complete-or-blocked output and unambiguous RunTable-row schemas. This is more complete than the provisional single selected-result envelope and preserves the candidate's recorded legacy row-schema collision and persistence exclusion.
 

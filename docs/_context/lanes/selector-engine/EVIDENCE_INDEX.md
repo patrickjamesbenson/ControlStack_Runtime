@@ -539,7 +539,7 @@ Every completed worker updates this index with:
 
 - Newer Program review accepted the clean, pushed SEL-007 candidate and its 114/114 focused receipt — PROGRAM-ACCEPTED.
 - Active candidate schemas: `controlstack.engine.selection-set.v1`, `controlstack.engine.output.v1`, `controlstack.engine.runtable-row.v1` — RECORDED.
-- Provisional `controlstack.engine.selected-result.v1` and ENG-STAB-P1 were superseded before implementation — RECORDED.
+- `controlstack.engine.selected-result.v1` was superseded as the public boundary, then completed concurrently and accepted by Program as an internal non-stable component after 114/114 coverage — RECONCILED.
 - Current blockers remain: diagnostic-only RunTable scaffold, persistence-coupled legacy row path and incompatible legacy row field sets — VERIFIED FROM SEL-007.
 - Exact next scope is one new runtime contract module, one focused runtime test, temporary harness use and later lane-memory closeout — RECORDED.
 - Complete, blocked, zero-valued and replay-identical fixtures are required; governance traceability cannot alter output — RECORDED.

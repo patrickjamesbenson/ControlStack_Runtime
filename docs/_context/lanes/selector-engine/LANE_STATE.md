@@ -468,7 +468,7 @@ The contract remains not stable after ENG-STAB-P1. Consumer compatibility and fi
 
 ## 2026-07-21 ENG-OUT-P1 admission
 
-Program accepted the newer three-schema SEL-007 candidate and superseded ENG-STAB-P1 before implementation. ENG-OUT-P1 is the sole ready item.
+Program accepted the newer three-schema SEL-007 candidate and superseded ENG-STAB-P1 as the public contract. ENG-STAB-P1 then completed concurrently and Program accepted it as an internal non-stable component. ENG-OUT-P1 remains the sole ready item.
 
 The active contract boundary is `controlstack.engine.selection-set.v1`, `controlstack.engine.output.v1` and `controlstack.engine.runtable-row.v1`. The accepted thermal result remains one bounded component; the current RunTable domain scaffold remains diagnostic-only; persistence-coupled legacy rows remain outside Engine eligibility; and the colliding legacy row schema is not reused.
 

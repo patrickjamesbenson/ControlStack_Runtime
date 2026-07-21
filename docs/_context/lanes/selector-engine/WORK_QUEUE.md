@@ -242,14 +242,15 @@
 ### Q-7A Seal the version-1 selected-result producer envelope
 
 * id: ENG-STAB-P1
-* status: superseded-before-implementation
-* superseded-by: ENG-OUT-P1 after Program accepted the three-schema SEL-007 candidate
-* seam approval: superseded Program admission retained as historical coordination evidence
+* status: implemented-and-accepted-internal-component
+* public-contract status: superseded by ENG-OUT-P1 after Program accepted the three-schema SEL-007 candidate
+* seam approval: Program reconciled the concurrent pushed receipt; the component may be imported internally but is not the public output boundary or a stability receipt
 * gate: selector-engine
 * authorised files: new `packages/workspace-kernel/runtimeEngineSelectedResultContractV1.js`, new `tests/runtimeEngineSelectedResultContractV1.test.js`, temporary harness-only use of `tests/engineRunTableDomain.test.js`, and closeout updates to the five mutable lane context files. The harness may add exactly one side-effect import of `./runtimeEngineSelectedResultContractV1.test.js`; it must be removed, byte-identical to HEAD and absent from final staging/commit.
 * objective: validate one accepted safe selected-result source object and one accepted thermal execution result, then emit a deeply immutable `controlstack.engine.selected-result.v1` accepted-or-blocked non-persistent envelope.
 * acceptance: exact schema/version/key sets; source identity and revision agreement; deterministic accepted and blocked fixtures; at least one safe per-run row; thermal values preserved without recalculation; outside traceability-envelope independence; malformed, unaccepted, contradictory, identity-unbound, unsafe or over-rich input fails closed with canonical blockers; no accepted runs or verified output on failure; no raw payload, source row, private path, exact private electrical internal, IES, PDF or artefact exposure. Focused coverage and the full gate pass, followed by exact two-file feature commit/push and a separate five-file lane-memory closeout.
 * prohibitions: no Engine or donor invocation, no thermal recalculation, no curve-parser or existing scaffold rewrite, no route, persistence, RuntimeData mutation, IES handoff, downstream readiness activation, Lab, main or runtime-port change; do not declare the output contract stable.
+* completion: exact module and focused test pushed after 114/114 coverage; deterministic accepted/blocked output, safe rows, source-revision binding, thermal preservation and governance-envelope independence proved. Program accepts it only as an internal non-stable selected-result component.
 
 ### Q-7B Implement the accepted version-1 request, output and row contracts
 
