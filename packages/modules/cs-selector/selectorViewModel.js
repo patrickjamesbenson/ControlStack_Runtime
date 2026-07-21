@@ -298,7 +298,7 @@ const SELECTOR_EXPANDER_SECTIONS = Object.freeze([
     description: "Shell-owned project context is shown as preamble/default preview only. This scaffold does not save, restore, or mutate project data.",
     rows: [
       ["state", "preamble/default-preview"],
-      ["spec gate", "incomplete"],
+      ["Spec Ready", "incomplete"],
       ["writes", "none"],
     ],
   },
@@ -981,8 +981,8 @@ function createStateContractRows(contract = {}) {
     ["fresh load is preamble/default-preview only", boolString(contract.freshLoad === true && contract.previewDefaultState === true)],
     ["spec-ready", boolString(contract.specReady === true)],
     ["build-ready", boolString(contract.buildReady === true)],
-    ["spec gate complete", boolString(contract.specGateComplete === true)],
-    ["build gate complete", boolString(contract.buildGateComplete === true)],
+    ["Spec Ready", boolString(contract.specGateComplete === true)],
+    ["Build Ready", boolString(contract.buildGateComplete === true)],
     ["spec slug", contract.specSlug || ""],
     ["committed spec exists", boolString(contract.committedSpecExists === true)],
     ["default-preview buckets", objectFieldCount(contract.previewDefaults)],
@@ -1112,8 +1112,8 @@ function createSelectorFieldContractDiagnostics(contract = {}) {
       ["field count", fields.length],
       ["manual constraint eligible fields", rawFields.filter((field) => field.manualConstraintEligible === "true").length],
       ["auto consequence eligible fields", rawFields.filter((field) => field.autoConsequenceEligible === "true").length],
-      ["required for spec gate count", rawFields.filter((field) => field.requiredForSpecGate === "true").length],
-      ["required for build gate count", rawFields.filter((field) => field.requiredForBuildGate === "true").length],
+      ["required for Spec Ready count", rawFields.filter((field) => field.requiredForSpecGate === "true").length],
+      ["required for Build Ready count", rawFields.filter((field) => field.requiredForBuildGate === "true").length],
       ["product data bound", boolString(rawFields.some((field) => field.productDataBound === "true"))],
       ["resolver bound", boolString(rawFields.some((field) => field.resolverBound === "true"))],
       ["filtering bound", boolString(rawFields.some((field) => field.filteringBound === "true"))],
@@ -1185,7 +1185,7 @@ function createBehaviourContractRows(contract = {}) {
     ["auto selections are consequences", boolString(behaviourFlags.autoSelectionsAreConsequences === true)],
     ["preserve compatible selections on field change", boolString(behaviourFlags.preserveCompatibleSelectionsOnFieldChange === true)],
     ["auto-derived items remain changeable", boolString(behaviourFlags.autoDerivedItemsRemainChangeable === true)],
-    ["spec slug requires complete spec gate", boolString(behaviourFlags.specSlugRequiresCompleteSpecGate === true)],
+    ["spec slug requires Spec Ready", boolString(behaviourFlags.specSlugRequiresCompleteSpecGate === true)],
   ];
 }
 
@@ -1690,7 +1690,7 @@ function createDbBackedCandidateSummaryRows(surface = {}) {
     ["manual constraints", summary.manualConstraintCount ?? 0],
     ["auto consequences", summary.autoConsequenceCount ?? 0],
     ["blocked / missing items", summary.blockedCount ?? 0],
-    ["spec gate", "incomplete — preview-ready does not mean spec-ready"],
+    ["Spec Ready", "incomplete — preview-ready does not mean spec-ready"],
     ["Lab Proof", "not established — Selector preview is not proof authority"],
     ["writes", "disabled"],
   ];
@@ -1698,7 +1698,7 @@ function createDbBackedCandidateSummaryRows(surface = {}) {
 
 function createDbBackedPathRows(surface = {}) {
   const path = Array.isArray(surface.pathToSpecReady) ? surface.pathToSpecReady : [];
-  const rows = path.length ? path.map((item, index) => [`step ${index + 1}`, item]) : [["future spec-ready", "requires complete spec gate later"]];
+  const rows = path.length ? path.map((item, index) => [`step ${index + 1}`, item]) : [["future spec-ready", "requires Spec Ready later"]];
   rows.push(["Selector boundary", "Selector previews selection readiness. Lab Proof proves later."]);
   return rows;
 }
@@ -3312,7 +3312,7 @@ const SELECTION_TRUTH_FIELD_GROUPS = Object.freeze({
 });
 
 const SELECTION_TRUTH_DISABLED_HANDOFFS = Object.freeze([
-  Object.freeze({ fieldKey: "slugSpecGeneration", label: "Spec / slug generation", valueLabel: "disabled — future spec gate required" }),
+  Object.freeze({ fieldKey: "slugSpecGeneration", label: "Spec / slug generation", valueLabel: "disabled — future Spec Ready state required" }),
   Object.freeze({ fieldKey: "runTableGeneration", label: "RunTable generation", valueLabel: "disabled — RunTable execution later" }),
   Object.freeze({ fieldKey: "payloadGeneration", label: "Payload generation", valueLabel: "disabled — production payload handoff later" }),
   Object.freeze({ fieldKey: "iesGeneration", label: "IES generation", valueLabel: "disabled — IES Builder candidate handoff later" }),
@@ -3797,7 +3797,7 @@ const PRODUCT_SPINE_SECTION_DEFINITIONS = Object.freeze([
   }),
   Object.freeze({
     sectionKey: "specGateCandidateReadiness",
-    title: "SPEC GATE / CANDIDATE READINESS",
+    title: "SPEC READY / CANDIDATE READINESS",
     statusOnly: true,
     rows: Object.freeze([
       Object.freeze({ rowKey: "readinessState", label: "Readiness state", statusValue: "spec-gate-readiness-state" }),
@@ -4016,10 +4016,10 @@ function specGateRequirementStatus(definition = {}, lookup) {
     reason: blocked
       ? spineFieldReason(field)
       : (complete
-        ? "Accepted default or manual selection satisfies the donor Gate S requirement."
+        ? "Accepted default or manual selection satisfies the Spec Ready requirement."
         : provisionalDefault
           ? "Auto-default is visible but provisional; accept defaults or manually change it before readiness can count it."
-          : "Required by donor Gate S; no value is faked."),
+          : "Required for Spec Ready; no value is faked."),
     rawRowsExposed: false,
     writes: false,
   };
@@ -4050,18 +4050,18 @@ function createSpecGateCandidateReadiness({ lookup, sourceReady = false, summary
   const readinessState = specReady
     ? "spec-ready read-only state"
     : blockedCount > 0
-      ? "blocked/incompatible state — spec gate incomplete"
+      ? "blocked/incompatible state — Spec Ready incomplete"
       : defaultPreview
         ? "default preview — not spec-ready"
-        : "constrained candidate preview — spec gate incomplete";
+        : "constrained candidate preview — Spec Ready incomplete";
   const slugSpecPreviewState = specReady
     ? "read-only preview label state only — slug/spec generation disabled"
-    : "disabled — donor slug/spec preview appears only after the spec gate is complete";
+    : "disabled — donor slug/spec preview appears only after Spec Ready is reached";
   const disabledHandoffRows = SPEC_GATE_DISABLED_HANDOFFS.map((handoff) => [handoff.label, "disabled"]);
   const disabledHandoff = Object.fromEntries(SPEC_GATE_DISABLED_HANDOFFS.map((handoff) => [handoff.key, false]));
 
   return {
-    title: "Spec Gate / Candidate Readiness",
+    title: "Spec Ready / Candidate Readiness",
     readOnly: true,
     diagnosticOnly: true,
     previewOnly: true,
@@ -4084,14 +4084,14 @@ function createSpecGateCandidateReadiness({ lookup, sourceReady = false, summary
     manualConstraintsSummary: manualSummary.text,
     autoConsequences: autoSummary.rows,
     autoConsequencesSummary: autoSummary.text,
-    sourceReadinessSummary: sourceReady ? "source readable — safe Selector Reference/options surface only" : "source unavailable — spec gate fail-closed",
+    sourceReadinessSummary: sourceReady ? "source readable — safe Selector Reference/options surface only" : "source unavailable — Spec Ready fail-closed",
     slugSpecPreviewState,
     disabledHandoff,
     disabledHandoffRows,
     disabledHandoffSummary: disabledHandoffRows.map(([label, status]) => `${label} ${status}`).join("; "),
     boundaryCopy: [
-      "Spec Gate / Candidate Readiness is read-only in this slice.",
-      "Donor Gate S requires System + Environment + Light & Control before spec-ready.",
+      "Spec Ready / Candidate Readiness is read-only in this slice.",
+      "Spec Ready requires System + Environment + Light & Control before the state is reached.",
       "Default preview and candidate preview are not spec-ready.",
       "Manual selections are constraints, not proof.",
       "Auto selections are consequences, not authority.",
@@ -4117,7 +4117,7 @@ function createSpineStatusRow(definition = {}, { sourceReady = false, summary = 
       displayValue: readiness.readinessState || "default preview — not spec-ready",
       status: readiness.specReady ? "spec-ready-read-only" : (readiness.blockedIncompatibleState ? "blocked" : "candidate-preview"),
       indicator: readiness.specReady ? "spec-ready read-only" : "candidate readiness",
-      reason: "Derived from donor Gate S readiness requirements; no generation or proof is enabled.",
+      reason: "Derived from Spec Ready requirements; no generation or proof is enabled.",
       writes: false,
       rawRowsExposed: false,
     };
@@ -4129,7 +4129,7 @@ function createSpineStatusRow(definition = {}, { sourceReady = false, summary = 
       value: readiness.specReady === true,
       displayValue: readiness.specReady ? "read-only ready" : "disabled",
       status: readiness.specReady ? "spec-ready-read-only" : "disabled",
-      indicator: readiness.specReady ? "donor Gate S satisfied" : "not spec-ready",
+      indicator: readiness.specReady ? "Spec Ready requirements satisfied" : "not spec-ready",
       reason: readiness.specReady ? "System, Environment, and Light & Control are complete for a read-only readiness label." : "Default/candidate preview must not be treated as spec-ready.",
       writes: false,
       rawRowsExposed: false,
@@ -4143,7 +4143,7 @@ function createSpineStatusRow(definition = {}, { sourceReady = false, summary = 
       value: missing,
       displayValue: missing.length ? missing.join(", ") : PRODUCT_SPINE_EMPTY_VALUE,
       status: missing.length ? "missing" : "clear",
-      indicator: missing.length ? "missing donor Gate S requirement(s)" : "no missing spec-gate requirements",
+      indicator: missing.length ? "missing Spec Ready requirement(s)" : "no missing Spec Ready requirements",
       reason: "Missing requirements are shown explicitly rather than fabricated.",
       writes: false,
       rawRowsExposed: false,
@@ -4197,7 +4197,7 @@ function createSpineStatusRow(definition = {}, { sourceReady = false, summary = 
       displayValue: readiness.slugSpecPreviewState || "disabled",
       status: "disabled",
       indicator: "slug/spec generation disabled",
-      reason: "Donor supports slug display only after the spec gate; this runtime slice does not generate or authorise a slug.",
+      reason: "Donor supports slug display only after Spec Ready; this runtime slice does not generate or authorise a slug.",
       writes: false,
       rawRowsExposed: false,
     };
@@ -4941,7 +4941,7 @@ function createSourceSpecReadinessExplanation({
   const specReady = spec.specReady === true;
 
   return {
-    title: "Source readiness / spec gate explanation",
+    title: "Source readiness / Spec Ready explanation",
     readOnly: true,
     previewOnly: true,
     diagnosticOnly: false,
@@ -4969,7 +4969,7 @@ function createSourceSpecReadinessExplanation({
       ["source state", sourceState],
       ["complete enough for preview", safeSource.completeEnoughForPreview === true ? "true" : "false"],
       ["read-only product reference", (safeSource.readOnlyProductReference === true || safeSource.safeForPreview === true) ? "true" : "false"],
-      ["spec gate state", readinessState],
+      ["Spec Ready state", readinessState],
       ["spec-ready", specReady ? "read-only ready" : "disabled"],
       ["missing requirements", missingRequirements.length ? missingRequirements.join(", ") : PRODUCT_SPINE_EMPTY_VALUE],
       ["blocked selections", spec.blockedIncompatibleSummary || PRODUCT_SPINE_EMPTY_VALUE],
@@ -4980,7 +4980,7 @@ function createSourceSpecReadinessExplanation({
     ],
     boundaryCopy: [
       "Source readiness is reported from safe snapshot/status metadata only.",
-      "Spec Gate / Candidate Readiness is read-only and follows donor Gate S requirements.",
+      "Spec Ready / Candidate Readiness is read-only and follows the source-backed readiness requirements.",
       "Missing, blocked, future-mapped, and disabled values stay visible without fabricated values.",
       "Spec-ready does not activate generation, proof, records, approvals, or write-back.",
     ],
@@ -5465,7 +5465,7 @@ function createSpecBuildReadinessPreview({
       ? "future slug/spec input metadata appears ready; no slug or spec is generated here"
       : specReady
         ? "future spec input metadata appears ready; build/order context is still incomplete"
-        : "blocked until the spec gate is complete",
+        : "blocked until Spec Ready is reached",
     futureSlugSpecRows: [
       ["future slug/spec state", buildReady ? "metadata-ready only" : specReady ? "spec metadata-ready only" : "blocked"],
       ["slug generated", "false"],
@@ -5480,8 +5480,8 @@ function createSpecBuildReadinessPreview({
     downstreamBlockerRows: downstreamBlockers.map((blocker) => [blocker.label, blocker.status]),
     summaryRows: [
       ["candidate state", candidateState],
-      ["spec gate state", specReady ? "ready" : "incomplete"],
-      ["build gate state", buildReady ? "ready" : "incomplete"],
+      ["Spec Ready state", specReady ? "ready" : "incomplete"],
+      ["Build Ready state", buildReady ? "ready" : "incomplete"],
       ["factory-approved inputs", factoryApprovedInputsReady ? "ready" : "blocked/fail-closed"],
       ["factory-approved blocker", factoryApprovedInputsSummary.blocker || "none"],
       ["Stage 4 Step 1 readonly mapper", readonlyEngineCandidateMapperSummary?.readonlyEngineCandidateMapperReady === true ? "ready" : (readonlyEngineCandidateMapperSummary?.blocker || "blocked/fail-closed")],
@@ -5503,7 +5503,7 @@ function createSpecBuildReadinessPreview({
       "Fresh/default-preview values are not spec authority.",
       "Manual selections are durable constraints and incompatible manual selections stay visible as blocked.",
       "Auto consequences are shown for review and remain changeable; they do not create authority or proof.",
-      "Build-ready means donor build/order context appears complete for future metadata only: Mounting, Finishes, and Runs are present after the spec gate.",
+      "Build Ready means donor build/order context appears complete for future metadata only: Mounting, Finishes, and Runs are present after Spec Ready.",
       "Selected-result, Engine/RunTable, IES Builder, Compliance, Controlled Records, RREG, and Lab Proof remain separate downstream authorities and fail closed here.",
     ],
     generatedSlug: null,
@@ -6481,7 +6481,7 @@ function createDbBackedSelectorSurface(selectorReferenceStatus = {}, local = {},
     badges: [
       sourceReady ? "source ready" : "source unavailable",
       summary.state || (manualConstraints.length ? "manual constraints preview" : "default preview"),
-      "spec gate incomplete",
+      "Spec Ready incomplete",
       "not Lab Proof",
       "writes disabled",
     ],
@@ -6645,7 +6645,7 @@ const SPEC_GATE_STATES = Object.freeze([
   "manually constrained",
   "auto consequences visible",
   "candidate-ready",
-  "spec-gate incomplete",
+  "Spec Ready incomplete",
   "spec-ready",
   "blocked / requires review",
 ]);
@@ -6680,7 +6680,7 @@ const SELECTOR_READINESS_BOUNDARY_COPY = Object.freeze([
   "Selector readiness diagnostics are read-only in this slice.",
   "Compatibility is not proof.",
   "Spec-ready does not mean production-proven.",
-  "Slug generation remains disabled unless an approved future spec gate is complete.",
+  "Slug generation remains disabled unless an approved future Spec Ready state is reached.",
   "A candidate may be compatible without being Lab proven.",
   "Board Data defines metadata. Selector resolves. Lab proves.",
   "IES Builder may create candidate photometric artefacts later.",
@@ -6721,7 +6721,7 @@ const CANDIDATE_STATE_CATEGORIES = Object.freeze([
   "auto-consequence candidate",
   "compatibility-explained candidate",
   "candidate-ready",
-  "spec-gate incomplete",
+  "Spec Ready incomplete",
   "spec-ready candidate",
   "downstream artefacts disabled",
   "proof not established",
@@ -6809,7 +6809,7 @@ const SELECTOR_RESOLVER_PREVIEW_CATEGORIES = Object.freeze([
   "auto consequence preview",
   "compatibility explained preview",
   "preview candidate ready",
-  "spec gate incomplete",
+  "Spec Ready incomplete",
   "downstream outputs disabled",
   "proof not established",
   "review/provenance future-gated",
@@ -6929,7 +6929,7 @@ function createSelectorCandidateStateExplainer(contract = {}, counts = {}) {
       ["auto_consequences", autoConsequenceCount],
       ["effective_selection", effectiveSelectionCount],
       ["compatibility_summary", reviewNeeded ? `${warningCount} warning(s), ${blockedCount} blocked/incompatible diagnostic(s)` : "candidate compatibility has no current warnings; not proof"],
-      ["spec_gate_summary", specReady ? "spec-ready candidate; production proof still not established" : "spec-gate incomplete or future-gated; slug/spec generation disabled"],
+      ["spec_gate_summary", specReady ? "spec-ready candidate; production proof still not established" : "Spec Ready incomplete or future-gated; slug/spec generation disabled"],
       ["ies_candidate_readiness", "future-gated candidate artefact readiness; IES generation disabled here"],
       ["lab_proof_readiness", "not established by Selector; Lab Proof remains the proof boundary"],
       ["controlled_record_expectation", "future provenance/disposition trail only; no Controlled Records write"],
@@ -7036,7 +7036,7 @@ function deriveResolverPreviewState({
   if (manualConstraintCount > 0) return "manually constrained preview";
   if (autoConsequenceCount > 0) return "auto consequence preview";
   if (effectiveSelectionCount > 0) return "preview candidate ready";
-  return "spec gate incomplete";
+  return "Spec Ready incomplete";
 }
 
 function createResolverPreviewUnresolvedReasons({
@@ -7053,7 +7053,7 @@ function createResolverPreviewUnresolvedReasons({
   if (missingTables.length) reasons.push(`Missing Selector Reference table blocker(s): ${missingTables.join(", ")}.`);
   if (manualConstraintCount === 0) reasons.push("No manual constraints have been applied; current selections remain default-preview/consequence state.");
   if (warningCount > 0 || blockedCount > 0) reasons.push("Compatibility diagnostics require review; values are labelled and preserved, not cleared.");
-  reasons.push("Spec gate is incomplete in this preview slice.");
+  reasons.push("Spec Ready is incomplete in this preview slice.");
   reasons.push("Lab Proof is not established by Selector resolver preview.");
   reasons.push("Controlled Records provenance/disposition and RREG review/custody mapping are future-gated.");
   return reasons;
@@ -7116,7 +7116,7 @@ function createPreviewResultSummary({
       ["auto consequence count", autoConsequenceCount],
       ["effective selection count", effectiveSelectionCount],
       ["compatibility state", compatibilitySummary],
-      ["spec gate state", specGateState],
+      ["Spec Ready state", specGateState],
       ["proof state", proofState],
     ],
     whyRows: [
@@ -7134,7 +7134,7 @@ function createPreviewResultSummary({
       ["no manual constraints yet", manualConstraintCount === 0 ? "missing — no manual constraints have shaped this candidate" : "clear — manual constraints are present"],
       ["compatibility warnings", warningCount > 0 ? `${warningCount} warning(s) require review` : "none"],
       ["blocked/incompatible diagnostics", blockedCount > 0 ? `${blockedCount} blocked/incompatible diagnostic(s) require resolution` : "none"],
-      ["spec gate incomplete", specReady ? "noted — candidate label only; production spec still disabled here" : "blocked — spec gate incomplete"],
+      ["Spec Ready incomplete", specReady ? "noted — candidate label only; production spec still disabled here" : "blocked — Spec Ready incomplete"],
       ["proof not established", proofState],
       ["Controlled Records future-gated", "future-gated — no provenance, disposition, audit trail, or record write is created here"],
       ["RREG future-gated", "future-gated — no assignment, approval, review decision, or custody transfer is created here"],
@@ -7145,7 +7145,7 @@ function createPreviewResultSummary({
       ["manual constraints valid", constraintsReviewed],
       ["auto consequences reviewed", autoConsequencesReviewed],
       ["compatibility blockers resolved", compatibilityBlockersResolved],
-      ["spec gate completed later", specReady ? "candidate-labelled only; not production authority" : "required later — incomplete here"],
+      ["Spec Ready reached later", specReady ? "candidate-labelled only; not production authority" : "required later — incomplete here"],
       ["slug/spec generation approved later", "future approval required — disabled here"],
       ["Lab Proof still required later", "required later — not established here"],
     ],
@@ -7252,7 +7252,7 @@ function createSelectorReadonlyResolverPreview(contract = {}, selectorReferenceS
     categories: [...SELECTOR_RESOLVER_PREVIEW_CATEGORIES],
     categoryRows: SELECTOR_RESOLVER_PREVIEW_CATEGORIES.map((category) => [
       category,
-      category === previewState || (category === "source readable" && sourceStatus.sourceReadableStatus === true) || (category === "spec gate incomplete" && !specReady)
+      category === previewState || (category === "source readable" && sourceStatus.sourceReadableStatus === true) || (category === "Spec Ready incomplete" && !specReady)
         ? "current resolver-preview condition"
         : "available resolver-preview category",
     ]),
@@ -7289,7 +7289,7 @@ function createSelectorReadonlyResolverPreview(contract = {}, selectorReferenceS
     ],
     unresolvedReasonRows: unresolvedReasons.map((reason, index) => [`reason ${index + 1}`, reason]),
     downstreamRows: [
-      ["spec gate", fieldValues.spec_gate_status],
+      ["Spec Ready", fieldValues.spec_gate_status],
       ["slug preview", fieldValues.slug_preview_status],
       ["IES generation", fieldValues.ies_generation_status],
       ["Lab Proof", fieldValues.lab_proof_status],
@@ -7359,7 +7359,7 @@ function createSelectorReadinessDiagnostics(contract = {}) {
       blockedFieldRows: blockedFieldRows(diagnostics),
     },
     specGate: {
-      title: "Spec-gate readiness diagnostics",
+      title: "Spec Ready diagnostics",
       runtimeStatusFlags: { ...SPEC_GATE_RUNTIME_STATUS_FLAGS },
       runtimeStatusRows: statusFlagRows(SPEC_GATE_RUNTIME_STATUS_FLAGS),
       gateStates: [...SPEC_GATE_STATES],
@@ -7374,7 +7374,7 @@ function createSelectorReadinessDiagnostics(contract = {}) {
         ["manually constrained", boolString(manualConstraintCount > 0)],
         ["auto consequences visible", boolString(autoConsequenceCount > 0)],
         ["candidate-ready", boolString(effectiveSelectionCount > 0 && warningCount === 0)],
-        ["spec-gate incomplete", boolString(!specReady)],
+        ["Spec Ready incomplete", boolString(!specReady)],
         ["spec-ready", boolString(specReady)],
         ["blocked / requires review", boolString(warningCount > 0 || blockedCount > 0)],
         ["required review warnings", warningCount || "none"],

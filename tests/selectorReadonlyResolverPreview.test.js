@@ -102,7 +102,7 @@ test("Selector read-only resolver preview exposes required boundary copy, relati
     "auto consequence preview",
     "compatibility explained preview",
     "preview candidate ready",
-    "spec gate incomplete",
+    "Spec Ready incomplete",
     "downstream outputs disabled",
     "proof not established",
     "review/provenance future-gated",

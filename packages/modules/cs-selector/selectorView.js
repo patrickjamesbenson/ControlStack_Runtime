@@ -273,8 +273,8 @@ function appendSelectorFieldContractDiagnostic(parent, shell = {}) {
     ["field count", 0],
     ["manual constraint eligible fields", 0],
     ["auto consequence eligible fields", 0],
-    ["required for spec gate count", 0],
-    ["required for build gate count", 0],
+    ["required for Spec Ready count", 0],
+    ["required for Build Ready count", 0],
     ["product data bound", "false"],
     ["resolver bound", "false"],
     ["filtering bound", "false"],
@@ -724,8 +724,8 @@ function appendPreviewResultSummary(parent, summary = {}) {
   ]);
   appendSection(section, "Candidate summary", summary.candidateSummaryRows || [["candidate state", "default preview"]]);
   appendSection(section, "Why this candidate exists", summary.whyRows || [["manual constraints", "none yet"]]);
-  appendSection(section, "Blocked / missing reasons", summary.blockedMissingRows || [["spec gate incomplete", "blocked"]]);
-  appendSection(section, "Path to spec-ready later", summary.specReadyPathRows || [["spec gate completed later", "required later"]]);
+  appendSection(section, "Blocked / missing reasons", summary.blockedMissingRows || [["Spec Ready incomplete", "blocked"]]);
+  appendSection(section, "Path to spec-ready later", summary.specReadyPathRows || [["Spec Ready reached later", "required later"]]);
   appendSection(section, "Downstream disabled status", summary.downstreamDisabledRows || [["slug/spec generation", "disabled"]]);
   parent.appendChild(section);
 }
@@ -787,7 +787,7 @@ function appendSelectorReadonlyResolverPreview(parent, preview = {}) {
   appendSection(section, "Current auto consequences", preview.autoConsequenceRows || [["auto consequences", "none"]]);
   appendSection(section, "Current effective selection", preview.effectiveSelectionRows || [["effective selection", "none"]]);
   appendSection(section, "Compatibility summary", preview.compatibilityRows || [["compatibility_summary", "candidate readiness only"]]);
-  appendSection(section, "Unresolved / missing reasons", preview.unresolvedReasonRows || [["reason", "spec gate is incomplete"]]);
+  appendSection(section, "Unresolved / missing reasons", preview.unresolvedReasonRows || [["reason", "Spec Ready is incomplete"]]);
   appendSection(section, "Downstream disabled states", preview.downstreamRows || [["downstream outputs disabled", "true"]]);
   appendSection(section, "Resolver-preview relationship map", preview.relationshipRows || [
     ["Board Data / Selector Reference", "safe source-readiness metadata"],
@@ -814,7 +814,7 @@ function appendSelectorReadinessDiagnostics(parent, shell = {}) {
     "Selector readiness diagnostics are read-only in this slice.",
     "Compatibility is not proof.",
     "Spec-ready does not mean production-proven.",
-    "Slug generation remains disabled unless an approved future spec gate is complete.",
+    "Slug generation remains disabled unless an approved future Spec Ready state is reached.",
     "A candidate may be compatible without being Lab proven.",
     "Board Data defines metadata. Selector resolves. Lab proves.",
     "IES Builder may create candidate photometric artefacts later.",
@@ -859,15 +859,15 @@ function appendSelectorReadinessDiagnostics(parent, shell = {}) {
   appendSection(section, "Compatibility warnings", compatibility.warningRows || [["compatibility warnings", "none"]]);
   appendSection(section, "Blocked/incompatible compatibility reasons", compatibility.blockedFieldRows || [["blocked/incompatible fields", "none"]]);
 
-  appendSection(section, specGate.title || "Spec-gate readiness diagnostics", specGate.readinessRows || [
+  appendSection(section, specGate.title || "Spec Ready diagnostics", specGate.readinessRows || [
     ["current selector mode", "default-preview"],
-    ["spec-gate incomplete", "true"],
+    ["Spec Ready incomplete", "true"],
     ["spec-ready", "false"],
     ["slug generation", "disabled"],
     ["spec generation", "disabled"],
     ["Lab Proof status", "separated — not asserted by Selector"],
   ]);
-  appendSection(section, "Spec-gate runtime status flags", specGate.runtimeStatusRows || [
+  appendSection(section, "Spec Ready runtime status flags", specGate.runtimeStatusRows || [
     ["readOnly", "true"],
     ["diagnosticOnly", "true"],
     ["specGateExplanationOnly", "true"],
@@ -884,8 +884,8 @@ function appendSelectorReadinessDiagnostics(parent, shell = {}) {
     ["labProofAuthority", "false"],
     ["hiddenWriteBackEnabled", "false"],
   ]);
-  appendSection(section, "Spec-gate states", specGate.gateStateRows || [["preamble / default preview", "tracked as readiness explanation only"]]);
-  appendSection(section, "Spec-gate requirements", specGate.gateRequirementRows || [["product family selected", "diagnostic requirement; no slug/spec generation"]]);
+  appendSection(section, "Spec Ready states", specGate.gateStateRows || [["preamble / default preview", "tracked as readiness explanation only"]]);
+  appendSection(section, "Spec Ready requirements", specGate.gateRequirementRows || [["product family selected", "diagnostic requirement; no slug/spec generation"]]);
   appendSection(section, "Missing/blocked reason categories", specGate.missingBlockedReasonRows || [["missing manual constraint", "safe fail-closed reason category"]]);
 
   parent.appendChild(section);
@@ -1996,7 +1996,7 @@ function appendSelectorSourceSpecReadinessExplanation(parent, readiness = {}) {
   section.dataset.specReady = readiness.specReady === true ? "true" : "false";
   section.dataset.rawRowsExposed = readiness.rawRowsExposed === true ? "true" : "false";
 
-  appendText(section, "h4", readiness.title || "Source readiness / spec gate explanation");
+  appendText(section, "h4", readiness.title || "Source readiness / Spec Ready explanation");
   appendText(section, "p", "Source readiness, candidate readiness, missing requirements, blockers, and future-mapped state are repeated here so the summary, spine, and payload preview agree without exposing raw source data.");
   appendSection(section, "Source/spec readiness", readiness.rows || [["source readiness", "unavailable / fail closed"]]);
   appendPillList(section, readiness.boundaryCopy || ["Read-only source/spec readiness explanation."]);
@@ -2455,7 +2455,7 @@ function appendSelectorProductCompactStatus(parent, surface = {}) {
   appendSection(details, "Manual constraints", surface.manualConstraintRows || [["manual constraints", "none yet"]]);
   appendSection(details, "Auto consequences", surface.autoConsequenceRows || [["auto consequences", "none mapped"]]);
   appendSection(details, "Blocked / missing / incompatible items", surface.blockedRows || [["blocked / missing", "none"]]);
-  appendSection(details, "Path to spec-ready later", surface.pathRows || [["future spec-ready", "requires complete spec gate later"]]);
+  appendSection(details, "Path to spec-ready later", surface.pathRows || [["future spec-ready", "requires Spec Ready later"]]);
   const presentation = surface.presentationClassification || {};
   appendSection(details, "Runtime presentation classification", [
     ["classification", presentation.name || "runtime presentation classification"],
@@ -2716,7 +2716,7 @@ function appendSelectorProductSurface(parent, surface = {}) {
   header.className = "cs-selector-product__header";
   appendText(header, "h3", surface.title || "CS Selector Preview");
   appendText(header, "p", surface.subtitle || "Read-only DB-backed candidate preview. Manual selections are constraints; auto selections are consequences.");
-  appendBadgeList(header, surface.badges || ["source pending", "spec gate incomplete", "not Lab Proof", "writes disabled"]);
+  appendBadgeList(header, surface.badges || ["source pending", "Spec Ready incomplete", "not Lab Proof", "writes disabled"]);
   section.appendChild(header);
 
   appendText(section, "p", "Read-only preview. No spec, slug, IES, payload, RunTable, Lab Proof, Controlled Record, RREG approval, custody transfer, Board Data write, or hidden write-back is created here.", "cs-selector-product__safety");

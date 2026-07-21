@@ -128,7 +128,7 @@ test("Selector view model exposes a product-facing DB-backed surface before diag
 
   assert.equal(surface.title, "CS Selector Preview");
   assert.match(surface.subtitle, /DB-backed candidate preview/);
-  assert.ok(surface.badges.includes("spec gate incomplete"));
+  assert.ok(surface.badges.includes("Spec Ready incomplete"));
   assert.ok(surface.badges.includes("not Lab Proof"));
   assert.ok(surface.badges.includes("writes disabled"));
   assert.match(surface.requiredSafetyCopy, /No spec, slug, IES, payload, RunTable, Lab Proof/);

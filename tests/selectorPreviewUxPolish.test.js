@@ -34,7 +34,7 @@ test("Selector product surface includes required safety and proof copy", async (
   assert.match(source, /Spec-build readiness preview/);
   assert.match(source, /Product-facing readiness preview only/);
   assert.match(source, /No slug\/spec\/PDF\/payload\/RunTable\/IES\/proof\/approval\/record\/write is generated/);
-  assert.match(source, /spec gate incomplete/);
+  assert.match(source, /Spec Ready incomplete/);
   assert.match(source, /not Lab Proof/);
   assert.match(source, /writes disabled/);
 });

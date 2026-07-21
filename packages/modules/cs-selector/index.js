@@ -9,6 +9,10 @@ import {
 } from "./selectorState.js";
 import { renderSelectorView } from "./selectorView.js";
 import { createSelectorViewModel } from "./selectorViewModel.js";
+import {
+  SELECTOR_READINESS_STATE_ENTRY_PUSH_EVENT,
+  createSelectorReadinessStateEntryPushTracker,
+} from "../../workspace-kernel/selectorReadinessStateEntryPush.js";
 
 const SELECTOR_REFERENCE_STATUS_ENDPOINT = "/api/selector-reference/status";
 const SELECTOR_REFERENCE_OPTIONS_ENDPOINT = "/api/selector-reference/options";
@@ -170,6 +174,8 @@ let selectorReferenceOptionsStatus = initialSelectorReferenceOptionsStatus();
 let latestSelectorViewModel = null;
 let selectorReferenceRequestId = 0;
 let selectorReferenceOptionsRequestId = 0;
+let selectorReadinessStateEntryPushTracker = null;
+let selectorReadinessHydrationBaselineOnly = false;
 
 function selectorOptionsPayloadHasUsableStructure(payload = {}) {
   const fields = Array.isArray(payload?.fields) ? payload.fields : [];
@@ -289,6 +295,36 @@ function restoreSelectorViewportState(state = {}) {
   }
 }
 
+function selectorReadinessStateEntryPushContext(viewModel = {}) {
+  const projection = viewModel.preEngineReadonlyActionEligibilityProjection || {};
+  return {
+    projectId: String(
+      mountedContext?.project?.metadata?.projectId
+      || mountedContext?.project?.currentProject?.projectId
+      || mountedContext?.projectId
+      || "",
+    ).trim(),
+    sourceInputFingerprint: viewModel.sourceInputFingerprint || projection.sourceInputFingerprint || "",
+    selectorStateFingerprint: projection.selectorStateFingerprint || "",
+    referenceOptionsFingerprint: projection.referenceOptionsFingerprint || "",
+    boardDataSourceVersion: viewModel.boardDataSourceVersion || projection.boardDataSourceVersion || "",
+  };
+}
+
+function evaluateSelectorReadinessStateEntryPush(viewModel = {}) {
+  return selectorReadinessStateEntryPushTracker?.evaluate({
+    specReady: viewModel.specBuildReadinessPreview?.specReady === true,
+    buildReady: viewModel.specBuildReadinessPreview?.buildReady === true,
+    baselineOnly: selectorReadinessHydrationBaselineOnly,
+    context: selectorReadinessStateEntryPushContext(viewModel),
+  }) || null;
+}
+
+function finishSelectorReadinessHydration(result) {
+  selectorReadinessHydrationBaselineOnly = false;
+  return result;
+}
+
 function renderCurrentView({ preserveViewport = true } = {}) {
   if (!mountedContainer || !selectorState || !selectorAdapter) return;
   const viewportState = preserveViewport ? captureSelectorViewportState() : null;
@@ -307,6 +343,7 @@ function renderCurrentView({ preserveViewport = true } = {}) {
     },
   });
   latestSelectorViewModel = viewModel;
+  evaluateSelectorReadinessStateEntryPush(viewModel);
   renderSelectorView(mountedContainer, viewModel);
   if (viewportState) {
     restoreSelectorViewportState(viewportState);
@@ -882,6 +919,12 @@ export const csSelectorModule = {
     selectorAdapter = createSelectorContractAdapter({ services, context });
     selectorReferenceStatus = initialSelectorReferenceStatus();
     selectorReferenceOptionsStatus = initialSelectorReferenceOptionsStatus();
+    selectorReadinessHydrationBaselineOnly = false;
+    selectorReadinessStateEntryPushTracker = createSelectorReadinessStateEntryPushTracker({
+      onIntent(intent) {
+        mountedServices?.eventBus?.emit(SELECTOR_READINESS_STATE_ENTRY_PUSH_EVENT, intent);
+      },
+    });
     renderCurrentView();
     loadSelectorReferenceStatus();
     loadSelectorReferenceOptions();
@@ -912,12 +955,15 @@ export const csSelectorModule = {
       );
     }
     mountedContext = nextContext;
+    selectorReadinessHydrationBaselineOnly = true;
     const validation = validateSelectorHydrationPayload(hydrationPayload, nextContext);
-    if (!validation.valid) return failSelectorHydration(validation.status, validation.reason);
+    if (!validation.valid) {
+      return finishSelectorReadinessHydration(failSelectorHydration(validation.status, validation.reason));
+    }
 
     const applyResult = selectorState.hydrateSelectorProjectEnvelopeState(validation.state);
     if (!applyResult.accepted) {
-      return failSelectorHydration(applyResult.status, applyResult.reason);
+      return finishSelectorReadinessHydration(failSelectorHydration(applyResult.status, applyResult.reason));
     }
 
     ensureVisibleSelectorSurface("Selector Project-envelope state was applied before option validation.");
@@ -927,10 +973,10 @@ export const csSelectorModule = {
       validation.state,
     );
     if (!restoredConstraintsValidation.valid) {
-      return failSelectorHydration(
+      return finishSelectorReadinessHydration(failSelectorHydration(
         restoredConstraintsValidation.status,
         restoredConstraintsValidation.reason,
-      );
+      ));
     }
 
     ensureVisibleSelectorSurface("Selector Project-envelope restore completed.");
@@ -948,7 +994,7 @@ export const csSelectorModule = {
       ...result,
       report: "cs_selector:hydrated",
     });
-    return result;
+    return finishSelectorReadinessHydration(result);
   },
 
   update(nextContext) {
@@ -977,6 +1023,8 @@ export const csSelectorModule = {
     selectorState = null;
     selectorAdapter = null;
     latestSelectorViewModel = null;
+    selectorReadinessStateEntryPushTracker = null;
+    selectorReadinessHydrationBaselineOnly = false;
     selectorReferenceStatus = initialSelectorReferenceStatus();
     selectorReferenceOptionsStatus = initialSelectorReferenceOptionsStatus();
   },

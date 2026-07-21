@@ -64,7 +64,7 @@ test("Selector readiness diagnostics include required boundary copy and relation
     "Selector readiness diagnostics are read-only in this slice.",
     "Compatibility is not proof.",
     "Spec-ready does not mean production-proven.",
-    "Slug generation remains disabled unless an approved future spec gate is complete.",
+    "Slug generation remains disabled unless an approved future Spec Ready state is reached.",
     "A candidate may be compatible without being Lab proven.",
     "Board Data defines metadata. Selector resolves. Lab proves.",
     "IES Builder may create candidate photometric artefacts later.",

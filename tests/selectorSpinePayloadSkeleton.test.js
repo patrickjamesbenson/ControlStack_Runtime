@@ -369,7 +369,7 @@ test("Selector checklist sections appear in the target order", () => {
     "FINISHES",
     "EGRESS & ACCESSORIES",
     "RUNS & DISABLED OUTPUTS",
-    "SPEC GATE / CANDIDATE READINESS",
+    "SPEC READY / CANDIDATE READINESS",
     "FOOT / STATUS",
   ]);
   assert.deepEqual(spineSection(spine, "system").rows.map((row) => row.label), [

@@ -137,7 +137,7 @@ test("Selector preview result summary explains candidate, source readiness, cons
   assert.equal(candidateSummary["manual constraint count"], 1);
   assert.ok(Number(candidateSummary["auto consequence count"]) >= 1);
   assert.ok(Number(candidateSummary["effective selection count"]) >= 1);
-  assert.equal(candidateSummary["spec gate state"], "incomplete — preview-ready does not mean spec-ready");
+  assert.equal(candidateSummary["Spec Ready state"], "incomplete — preview-ready does not mean spec-ready");
   assert.equal(candidateSummary["proof state"], "not established — this is not Lab Proof");
   assert.match(why["manual constraints"], /CCT\/CRI: 3000K \/ CRI80/);
   assert.match(why["auto consequences"], /Driver:/);
@@ -171,7 +171,7 @@ test("Selector preview result summary explains blocked and missing reasons safel
   assert.equal(blocked["source not parseable"], "blocked — source is not parseable");
   assert.equal(blocked["missing required tables"], "blocked — OPTICS, DRIVERS");
   assert.equal(blocked["no manual constraints yet"], "missing — no manual constraints have shaped this candidate");
-  assert.equal(blocked["spec gate incomplete"], "blocked — spec gate incomplete");
+  assert.equal(blocked["Spec Ready incomplete"], "blocked — Spec Ready incomplete");
   assert.equal(blocked["proof not established"], "not established — this is not Lab Proof");
   assert.match(blocked["Controlled Records future-gated"], /no provenance/);
   assert.match(blocked["RREG future-gated"], /no assignment/);

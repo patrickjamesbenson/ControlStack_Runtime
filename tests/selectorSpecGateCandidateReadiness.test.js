@@ -207,7 +207,7 @@ test("candidate preview explains missing donor Gate S requirements safely", () =
   const payload = model.selectorSurface.payloadPreview.specGateCandidateReadiness;
   const missing = new Set(payload.missingRequirements);
 
-  assert.equal(specRow(model, "readinessState").displayValue, "constrained candidate preview — spec gate incomplete");
+  assert.equal(specRow(model, "readinessState").displayValue, "constrained candidate preview — Spec Ready incomplete");
   assert.equal(payload.specReady, false);
   assert.equal(payload.constrainedSelectionState, true);
   assert.equal(missing.has("IK rating"), true);
