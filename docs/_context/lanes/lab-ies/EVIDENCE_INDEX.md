@@ -2002,6 +2002,21 @@ Current verification superseded the stale parts of that snapshot:
 - Protected state: expected marker and three protected untracked items remain outside the parcel — VERIFIED.
 - Queue result: SEAM-G-C3 sole ready item; multiplier and actual generation blocked — RECORDED.
 
+## SEAM-G-C3 sealed-reference generation inspection completion — 2026-07-21
+
+- Exact feature scope: existing generator module inspection export plus one focused test only — VERIFIED.
+- Final Lab gate: 295 passed, 0 failed, 0 skipped, 0 todo — VERIFIED.
+- Validator reuse: inspection calls the exact existing private reference validator and stops before job validation/materialisation — VERIFIED.
+- Ready projection: public reference identity, keyword profile ID, safe per-mm/per-m baseline values, missing override names, deterministic audit and no-generation safety only — VERIFIED.
+- Missing overrides: exact seven-field vocabulary and sealed baseline fallback behavior — VERIFIED.
+- Valid zero fixture: zero CCT, CRI, ambient, flux and power rates preserved — VERIFIED.
+- Fail-closed: schema, approval, one-mm, keyword profile, candela, baseline binding, required keyword and private provenance cases rejected — VERIFIED.
+- Privacy: metadata, angles, candela, keyword values, provenance paths and sealed body absent — VERIFIED.
+- Generator regression: existing deterministic generator remains green and unchanged in behavior — VERIFIED.
+- Capability boundary: no multiplier, job, project/customer metadata, resolver/storage, materialisation, LM-63, route, persistence or write seam — VERIFIED.
+- Protected inventory: expected marker and three protected untracked items remained untouched — VERIFIED.
+- Queue result: SEAM-G-C3 done, Lab queue empty, Program inspection review required — RECORDED.
+
 ## Evidence maintenance rule
 
 After each authorised lane parcel:

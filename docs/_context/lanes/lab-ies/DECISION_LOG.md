@@ -498,3 +498,15 @@ SEAM-G-C3 may modify only `iesFromReference.js` to export one read-only inspecto
 Ready output is redacted to public reference identity, keyword profile ID, safe one-millimetre baseline values, derived baseline lm/m and watts/m, exact missing generator override names, deterministic audit identity and no-generation/no-raw/no-write safety state.
 
 Metadata, angles, candela, keyword values, provenance paths and the sealed DTO body remain private. Output multiplier, generation job, project/customer data, resolver/storage access, generator invocation, LM-63 text, routes, persistence and writes remain blocked. The expected marker and three protected untracked items stay outside the parcel.
+
+## DL-036 — SEAM-G-C3 inspection accepted in Lab
+
+**Status:** Complete and returned to Program on 2026-07-21.
+
+The exact two-file inspection parcel passed 295/295 and was pushed only to the Lab lane. The new inspector calls the existing private generator reference validator and stops before job validation or materialisation.
+
+Ready output contains only the public reference identity, keyword profile ID, safe one-millimetre and per-metre baseline values, exact missing override names, deterministic audit and explicit no-generation/no-raw/no-write state. Complete, seven-override, baseline-fallback and valid-zero fixtures passed.
+
+The existing validator still rejects invalid schema, approval, one-millimetre basis, keyword profile, candela shape, baseline binding and private provenance. The existing generator remained deterministic after the inspection export.
+
+No multiplier, generation job, project/customer metadata, resolver/storage, generator invocation, LM-63 text, route, persistence or write capability was added. SEAM-G-C3 is done; Program inspection review is next.

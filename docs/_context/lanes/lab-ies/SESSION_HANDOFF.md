@@ -357,6 +357,16 @@ Return only public reference identity, keyword profile ID, safe per-mm/per-m bas
 
 Do not derive a multiplier, accept project/customer metadata, resolve storage, invoke the generator, emit LM-63 text, add routes, persist or write. The expected marker and three protected untracked items remain untouched. Return the inspection receipt to Program; multiplier policy and actual generation remain blocked.
 
+## 2026-07-21 SEAM-G-C3 complete — Program inspection review next
+
+The sealed-reference generation inspector is complete and pushed in the exact two-file scope. The final Lab gate passed 295/295.
+
+It reuses the generator's exact private reference validator and returns only public reference identity, keyword profile ID, safe one-millimetre/per-metre baseline values, exact missing override names, deterministic audit and no-generation/no-raw/no-write state.
+
+Complete, all-seven-overrides, baseline-fallback, valid-zero, required-keyword, invalid-schema/approval/one-mm/keyword/candela/baseline/private-provenance, repeatability, privacy and generator-regression cases passed.
+
+No multiplier, job, project/customer metadata, resolver/storage, generator invocation, LM-63 text, route, persistence or write capability was added. The expected marker and protected local items remain untouched. The Lab queue is empty; Program inspection review is next.
+
 ## Prohibited actions retained
 
 - no LAB-017 change outside the recorded version-1 approval without a new seam decision;

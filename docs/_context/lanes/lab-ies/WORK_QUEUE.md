@@ -898,7 +898,9 @@ Completion evidence: The import-free binding adapter and focused test were commi
 - depends on: Program activation of SEAM-G-A2 and explicit inspection commission
 - seam change: approved unchanged by Program & Integrate
 - on success next: Program inspection receipt review; multiplier and generator remain blocked
-- status: ready
+- status: done
+
+Completion evidence: The existing sealed-reference generator validator was exposed through one redacted inspection export and one focused test, committed in the exact two-file scope as `lab: checkpoint sealed reference generation inspection v1`, pushed only to the Lab lane, and passed 295/295. The inspector reuses the exact generator reference validation path, returns only public reference identity, keyword profile ID, safe one-millimetre baseline and per-metre values, exact missing override names and no-generation safety, and rejects malformed/unapproved/non-one-mm/keyword/candela/baseline/private-provenance input. Complete, seven-override, baseline-fallback, valid-zero, repeatability, generator-regression and no-materialisation fixtures passed. No multiplier, project/customer job, resolver/storage, LM-63 text, route, persistence or write capability was added. Program inspection receipt review is next.
 
 ## Explicitly not queued
 
