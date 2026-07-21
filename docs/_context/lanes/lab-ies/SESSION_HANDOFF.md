@@ -347,6 +347,16 @@ It creates no resolver/storage access, sealed DTO load, authority/evidence mutat
 
 The Lab queue is empty. Program must perform SEAM-G-A2 review; actual generation remains blocked.
 
+## 2026-07-21 SEAM-G-C3 ready — sealed-reference inspection only
+
+Program activated the read-only generation-binding tunnel and commissioned one exact Lab inspection parcel.
+
+Modify only the existing sealed-reference generator module to export a redacted inspection function, and add one focused test. The inspector must call the exact existing private reference validator and stop before job validation or materialisation.
+
+Return only public reference identity, keyword profile ID, safe per-mm/per-m baseline values, exact missing generator override names and explicit no-generation/no-raw/no-write state. Never expose metadata, angles, candela, keyword values, provenance paths or the sealed DTO body.
+
+Do not derive a multiplier, accept project/customer metadata, resolve storage, invoke the generator, emit LM-63 text, add routes, persist or write. The expected marker and three protected untracked items remain untouched. Return the inspection receipt to Program; multiplier policy and actual generation remain blocked.
+
 ## Prohibited actions retained
 
 - no LAB-017 change outside the recorded version-1 approval without a new seam decision;

@@ -486,3 +486,15 @@ Ready binding proves optic path, no unresolved blockers, optic key/variant, opti
 Unknown, extra, private/raw, unsafe, unresolved/non-optic, missing/wrong-kind reference and all binding contradictions fail closed. No resolver/storage access, sealed DTO load, authority/evidence mutation, generator invocation, LM-63 text, route, persistence or write capability exists.
 
 SEAM-G-C2 is done. Program owns the separate SEAM-G-A2 activation decision; actual generation remains blocked.
+
+## DL-035 — SEAM-G-C3 sealed-reference generation inspection
+
+**Status:** Approved by Program & Integrate and admitted on 2026-07-21.
+
+Program activated the read-only generation-binding tunnel and then commissioned one narrow inspection export over the exact validator already used by the sealed-reference LM-63 generator.
+
+SEAM-G-C3 may modify only `iesFromReference.js` to export one read-only inspector and add one focused test. The inspector must call the existing private `validateReference` function and stop before job validation or materialisation.
+
+Ready output is redacted to public reference identity, keyword profile ID, safe one-millimetre baseline values, derived baseline lm/m and watts/m, exact missing generator override names, deterministic audit identity and no-generation/no-raw/no-write safety state.
+
+Metadata, angles, candela, keyword values, provenance paths and the sealed DTO body remain private. Output multiplier, generation job, project/customer data, resolver/storage access, generator invocation, LM-63 text, routes, persistence and writes remain blocked. The expected marker and three protected untracked items stay outside the parcel.

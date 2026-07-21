@@ -13,7 +13,7 @@ Current repository evidence overrides stale historical statements.
 - Root: `C:\ControlStack_Worktrees\code-pilot-lab`
 - Branch: `lane/code-pilot-lab`
 - Gate: `lab-ies`
-- Recorded branch HEAD: `8050d222dc917f6e40ce36fed2988f8c06bb5754`
+- Recorded branch HEAD: `8dbc5030bc6e4c2fbf2028c2cdaa2f5d07b940d3`
 - Branch-HEAD guard checkpoint: `6d34e500d407d5335e5eebb317636a67a5e98618`
 - Starting HEAD for SEAM-G-C2: `37401db23a42108c7b408e05919b600777034cf7`
 - Completed feature HEAD: `5f34bcf13fd58cc152b87eff484407a8cba99fdd`
@@ -831,10 +831,11 @@ tests/selectorCascadeCorrectness.test.js
 - `LAB-043-engine-output-v1-compatibility`: done under recorded Program approval.
 - `SEAM-G-C1-ies-artifact-request-v1-compatibility`: done under recorded Program approval.
 - `SEAM-G-C2-ies-generation-reference-binding`: done under recorded Program approval.
-- Next ordered item: none.
-- Resulting status: queue empty; Program SEAM-G-A2 review required.
-- Ready items: none.
-- Seam approval required: no.
+- `SEAM-G-C3-sealed-reference-generation-inspection`: ready under recorded Program approval.
+- Next ordered item: SEAM-G-C3.
+- Resulting status: one ready redacted inspection parcel.
+- Ready items: SEAM-G-C3 only.
+- Seam approval required: recorded and satisfied.
 - Human observation required before implementation: no.
 
 LAB-042 is complete. The corrected thermal batch is closed.
@@ -902,3 +903,13 @@ The final Lab gate passed 285/285 across the feature and identity-tightening che
 No resolver/storage access, sealed DTO load, authority/evidence mutation, generator invocation, LM-63 text, route, persistence, network/file/email write or readiness capability was added. The expected marker and three protected untracked items remain untouched.
 
 The Lab queue is empty. Program SEAM-G-A2 review is next. Actual generation remains blocked.
+
+## 2026-07-21 SEAM-G-C3 sealed-reference inspection admission
+
+Program activated the read-only generation-binding tunnel and commissioned one exact Lab inspection parcel before multiplier or generator work.
+
+SEAM-G-C3 is the sole ready Lab item. It modifies the existing sealed-reference generator module only to export one redacted inspector and adds one focused test. The inspector must reuse the exact private `validateReference` path and stop before job validation or materialisation.
+
+Ready output is limited to public reference identity, keyword profile ID, safe one-millimetre baseline values, derived baseline lm/m and watts/m, exact missing generator override names and no-generation/no-raw/no-write safety state.
+
+Metadata, angles, candela, keyword values, provenance paths and the sealed DTO body remain private. No multiplier, job, project/customer data, resolver/storage access, generator invocation, LM-63 text, route, persistence or write is authorised. The expected marker and three protected untracked items remain outside the parcel.

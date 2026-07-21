@@ -1991,6 +1991,17 @@ Current verification superseded the stale parts of that snapshot:
 - Protected inventory: expected marker and three protected untracked items remained untouched and outside feature staging — VERIFIED.
 - Queue result: SEAM-G-C2 done, Lab queue empty, Program SEAM-G-A2 review required — RECORDED.
 
+## SEAM-G-C3 sealed-reference generation inspection admission — 2026-07-21
+
+- Program activated the read-only generation-binding tunnel and separately commissioned one sealed-reference inspection parcel — PROGRAM-APPROVED.
+- Exact feature scope: modify the existing generator module only to export a redacted inspector plus one focused test — RECORDED.
+- Validator ownership: reuse the exact private `validateReference` path already used before LM-63 materialisation — RECORDED.
+- Ready output: public identity, keyword profile ID, safe baseline per-mm/per-m values, missing override names, deterministic audit and no-generation safety only — RECORDED.
+- Private boundary: no metadata, angles, candela, keyword values, provenance paths or sealed DTO body — RECORDED.
+- Prohibitions: no multiplier, job, project/customer metadata, resolver/storage, generator/materialise call, LM-63, route, persistence or write — RECORDED.
+- Protected state: expected marker and three protected untracked items remain outside the parcel — VERIFIED.
+- Queue result: SEAM-G-C3 sole ready item; multiplier and actual generation blocked — RECORDED.
+
 ## Evidence maintenance rule
 
 After each authorised lane parcel:

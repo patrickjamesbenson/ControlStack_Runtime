@@ -879,6 +879,27 @@ Completion evidence: The import-free request compatibility adapter and focused t
 
 Completion evidence: The import-free binding adapter and focused test were committed in the exact two-file scope as `lab: checkpoint IES generation reference binding v1`, pushed only to the Lab lane, and passed 285/285 across the feature and identity-tightening checkpoints. It validates the real selection fingerprint and artifact request identity, exact generation-input identity/audit and safe state, requires optic path with no unresolved blockers, proves optic key/variant, BOM, evidence and exact-decimal measured thermal-triplet agreement, and binds one canonical read-only OPT reference identity without resolving or loading it. Ready, valid-zero, replay/governance, identity movement, unknown/extra/private/raw/unsafe, unresolved/non-optic, missing/wrong-kind reference and mismatch fixtures passed. No authority, resolver, storage, sealed DTO, generator, LM-63, route, persistence or write capability was added. Program SEAM-G-A2 review is next.
 
+### Q-36 Sealed reference generation inspection
+- id: SEAM-G-C3
+- objective: Expose the existing sealed-reference generator validator as one redacted read-only inspection contract without invoking job validation or materialisation.
+- authorised files:
+  - modify `packages/lab-kernel/ies-toolkit/iesFromReference.js`;
+  - add `tests/lab-kernel/iesFromReferenceInspection.test.js`.
+- public contract:
+  - `controlstack.lab.ies-reference-generation-inspection.v1`, schema version 1.
+- prohibitions:
+  - reuse the exact private `validateReference` path; do not duplicate or weaken validation;
+  - no output multiplier, generation job, project/customer data, resolver/storage access, `materialise` or `buildIesFromReference` call;
+  - no LM-63 text, raw metadata, angles, candela, keyword values, provenance paths or sealed DTO body in output;
+  - no route, persistence, browser storage, network/file/email write or readiness activation;
+  - preserve the expected branch marker and three protected untracked items.
+- acceptance: A valid sealed one-millimetre reference produces one deeply immutable ready inspection containing only public reference identity, keyword profile ID, baseline CCT/CRI/internal ambient, flux/wall-watts/circuit-watts per mm, derived baseline lm/m and watts/m, exact missing generator override names and explicit no-generation/no-raw/no-write flags. The exact validator must still reject wrong schema/identity/timestamp/approval/hash state, incomplete/reordered keyword profile, invalid geometry/angles/candela, non-one-mm basis, baseline mismatch and malformed/private provenance. Exact missing override vocabulary is lumcat, luminaire, lamp, cri, cct, driver and driverSetting after sealed keyword/baseline fallback. Repeatable immutable output and no reference/input mutation are required.
+- gate: lab-ies
+- depends on: Program activation of SEAM-G-A2 and explicit inspection commission
+- seam change: approved unchanged by Program & Integrate
+- on success next: Program inspection receipt review; multiplier and generator remain blocked
+- status: ready
+
 ## Explicitly not queued
 
 These protected paths remain outside implementation parcels unless the orchestrator makes a separate decision:
