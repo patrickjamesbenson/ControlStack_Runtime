@@ -88,4 +88,4 @@ Lab has no queued item. Sealed DTO loading, generator invocation, LM-63 generati
 - **Retrieval rule:** all module downloads/exports/artifact delivery must use one Governance gateway; readiness and identity are separate checks.
 - **Standing tests:** no-envelope and changed-envelope Engine independence, changed-optic movement, varied placeholder row, and ownership-wide assertions remain mandatory.
 
-No direct module download path, provider push from Selector, main work or runtime-port mixing is authorised. Complete PWS-L1 with the fixed Governance tunnel provisioner and ChatGPT app registration; then execute GOV-001 only through the Governance & Shell lane and return its gated receipt to Program.
+No direct module download path, provider push from Selector, main work or runtime-port mixing is authorised. The Governance tunnel is healthy and managed; complete PWS-L1 by registering the Governance & Shell custom app in ChatGPT, then execute GOV-001 only through that lane and return its gated receipt to Program.

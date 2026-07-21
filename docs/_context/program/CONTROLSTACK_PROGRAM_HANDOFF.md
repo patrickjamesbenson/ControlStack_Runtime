@@ -880,8 +880,8 @@ The two corrected fixture issues did not change production behaviour. Lab is now
 
 ### Governance connector exposure handoff — PWS-L1
 
-The local Governance MCP is healthy, but ChatGPT cannot use a local MCP directly and no Governance tunnel/app was registered. Use the fixed tenth managed service and the fixed clipboard-based tunnel provisioner only.
+The dedicated Governance secure tunnel is now validated, healthy and managed alongside the local Governance MCP. Tunnel recovery passed using only the managed tunnel services; no other lane profile was reused and no secret was displayed.
 
-Create one Governance tunnel object and copy its tunnel reference. Run the fixed Program provisioner; it reads the reference from the clipboard, reuses the protected runtime key without displaying it, validates the exact Governance profile and local MCP target, activates Deployment v2 and requires both Governance MCP and Governance tunnel healthy and managed.
+Create or enable the Governance & Shell custom app in ChatGPT while the managed tunnel is running. Do not reuse Selector, Lab or Program tunnel profiles; do not expose Governance through ngrok; do not widen the Governance MCP or implement GOV-001 through another lane.
 
-Then create or enable the Governance & Shell custom app in ChatGPT while the managed tunnel is running. Do not reuse Selector, Lab or Program tunnel profiles; do not expose Governance through ngrok; do not widen the Governance MCP or implement GOV-001 through another lane. Once the Governance app appears as a secure tool, run the existing GOV-001 commission unchanged.
+Once the Governance app appears as a secure tool, run the existing GOV-001 commission unchanged.

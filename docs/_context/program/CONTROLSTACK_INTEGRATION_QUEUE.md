@@ -885,12 +885,12 @@ No implementation item is ready. A new exact Program parcel is required before a
 ### PWS-L1 — Expose Governance MCP through its dedicated secure tunnel
 
 - **Owner:** Program & Integrate infrastructure plus one external ChatGPT registration step.
-- **Status:** repository implementation ready; tunnel object and ChatGPT app registration pending.
-- **Cause:** the local Governance MCP is healthy, but unlike Selector, Lab and Program it was provisioned without an OpenAI tunnel, so no Governance connector namespace can appear in ChatGPT.
+- **Status:** tunnel object, fixed profile and managed tunnel activation complete; ChatGPT custom-app registration remains.
+- **Evidence:** tunnel recovery passed; Governance MCP and its dedicated secure tunnel both report healthy and managed.
 - **Fixed topology:** tenth managed service `governance-tunnel`, dedicated health port, fixed profile `controlstack-governance-shell-noauth`, fixed local target `http://127.0.0.1:8023/mcp` and the existing protected runtime key.
-- **Provisioning:** one fixed script reads a newly copied tunnel reference from the clipboard, stores no tunnel reference or key in the repository, initialises or validates the exact profile, activates Deployment v2 and requires both Governance MCP and tunnel to report healthy and managed.
+- **Provisioning:** the fixed script validated the existing profile, reused the protected key without displaying it, activated only the managed tunnel services and verified Governance MCP plus Governance tunnel readiness.
 - **Boundary:** no reuse of another lane tunnel, no public ngrok exposure, no secret display, no connector write-scope widening and no Governance feature change.
-- **Next:** create the tunnel object, run the fixed provisioner, then create/enable the Governance & Shell custom app in ChatGPT.
+- **Next:** create/enable the Governance & Shell custom app in ChatGPT, then start GOV-001 through that app.
 
 ### GOV-001 — Inert single data-retrieval gateway contract and shell state
 
