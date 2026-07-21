@@ -850,7 +850,9 @@ Completion evidence: The import-free compatibility adapter and focused test were
 - depends on: Program acceptance of SEAM-G-P1
 - seam change: approved unchanged by Program & Integrate
 - on success next: Program SEAM-G-A1 review; no generation item becomes ready automatically
-- status: ready
+- status: done
+
+Completion evidence: The import-free request compatibility adapter and focused test were committed in the exact two-file scope as `lab: checkpoint IES artifact request v1 compatibility`, pushed only to the Lab lane, and passed 276/276. It accepts exact ready or blocked public request version-1 JSON, preserves request/replay/audit and safe Engine/thermal/row identities plus valid zeros, proves outer traceability is inert and absent, rejects unknown, extra, private/raw, contradictory, unsafe, blocked-promotion/body and legacy input, and emits no generation, authority, route, persistence, network/file/email write or readiness capability. The ordered Lab queue is empty; Program SEAM-G-A1 review is next.
 
 ## Explicitly not queued
 

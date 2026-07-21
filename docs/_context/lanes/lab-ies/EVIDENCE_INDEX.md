@@ -1949,6 +1949,21 @@ Current verification superseded the stale parts of that snapshot:
 - Protected state: expected branch marker and three protected untracked items remain outside the parcel — VERIFIED.
 - Queue result: SEAM-G-C1 sole ready item; Program activation and actual generation blocked — RECORDED.
 
+## SEAM-G-C1 IES request compatibility completion — 2026-07-21
+
+- Exact feature files: import-free request compatibility adapter and focused test only — VERIFIED.
+- Final Lab gate: 276 passed, 0 failed, 0 skipped, 0 todo — VERIFIED.
+- Public input: exact ready or blocked `controlstack.downstream.ies-artifact-request.v1` JSON — VERIFIED.
+- Adapter isolation: no implementation imports and no Selector, Workspace, Runtime, producer, source, filesystem, browser storage or network dependency — VERIFIED.
+- Ready projection: exact request, intent, Engine, replay/audit and row identities plus safe provenance/thermal values preserved — VERIFIED.
+- Blocked projection: canonical blockers/warnings preserved with no selected result or RunTable — VERIFIED.
+- Zero fixture: zero temperatures, current, verified lm/m and row counts remain valid, including low-clamp temperature handling — VERIFIED.
+- Replay/governance: differing user/project/owner/timeline/registration contexts produce identical output and no context value appears — VERIFIED.
+- Fail-closed fixtures: unknown version, extra request/intent, private path, raw content, audit/Engine/row/thermal contradiction, extra evidence, unsafe source flags, blocked promotion/body and legacy rows rejected — VERIFIED.
+- Capability boundary: no IES generation, authority, evidence acceptance, sealing, reference mutation, route, persistence, network/file/email write or readiness activation — VERIFIED.
+- Protected inventory: expected branch marker plus the three protected untracked items remained untouched and outside feature staging — VERIFIED.
+- Queue result: SEAM-G-C1 done, Lab queue empty, Program SEAM-G-A1 review required — RECORDED.
+
 ## Evidence maintenance rule
 
 After each authorised lane parcel:

@@ -13,11 +13,11 @@ Current repository evidence overrides stale historical statements.
 - Root: `C:\ControlStack_Worktrees\code-pilot-lab`
 - Branch: `lane/code-pilot-lab`
 - Gate: `lab-ies`
-- Recorded branch HEAD: `eb1a1e57477d1ec5c0c390bace7d8f3198087cca`
+- Recorded branch HEAD: `5e4b5be659dcc12e083bc399feacebe9f57a1aa3`
 - Branch-HEAD guard checkpoint: `6d34e500d407d5335e5eebb317636a67a5e98618`
-- Starting HEAD for LAB-043: `576aa62a891434a953292020ae28870fadf5d970`
-- Completed feature HEAD: `ab3ef10a90eaaa406c2e4435bd9f78f116f513ce`
-- Feature subject: `fix(lab): tighten Engine output thermal compatibility`
+- Starting HEAD for SEAM-G-C1: `5e4b5be659dcc12e083bc399feacebe9f57a1aa3`
+- Completed feature HEAD: `30f2d2c83c05c0667301c947001a425714360343`
+- Feature subject: `lab: checkpoint IES artifact request v1 compatibility`
 - Feature push: confirmed on origin `lane/code-pilot-lab`
 
 ## Branch-HEAD synchronisation invariant
@@ -829,11 +829,11 @@ tests/selectorCascadeCorrectness.test.js
 - `LAB-041-component-library-thermal-labels`: done.
 - `LAB-042-thermal-semantics-guard`: done under approved envelope version 3.
 - `LAB-043-engine-output-v1-compatibility`: done under recorded Program approval.
-- `SEAM-G-C1-ies-artifact-request-v1-compatibility`: ready under recorded Program approval.
-- Next ordered item: SEAM-G-C1.
-- Resulting status: one ready read-only request compatibility parcel.
-- Ready items: SEAM-G-C1 only.
-- Seam approval required: recorded and satisfied.
+- `SEAM-G-C1-ies-artifact-request-v1-compatibility`: done under recorded Program approval.
+- Next ordered item: none.
+- Resulting status: queue empty; Program SEAM-G-A1 review required.
+- Ready items: none.
+- Seam approval required: no.
 - Human observation required before implementation: no.
 
 LAB-042 is complete. The corrected thermal batch is closed.
@@ -871,3 +871,13 @@ SEAM-G-C1 is the sole ready Lab item. Its exact feature scope is `iesArtifactReq
 The parcel proves exact ready/blocked request, intent, Engine, audit and row identities; safe thermal/provenance and valid zeros; replay/idempotency; governance absence; and fail-closed rejection of unknown, extra, private/raw, contradictory, unsafe, blocked-promotion and legacy input.
 
 It creates no IES, Lab authority, evidence acceptance, sealing, reference mutation, route, persistence, network/file/email write or readiness capability. The expected branch marker and three protected untracked items remain outside the feature parcel. SEAM-G-A1 and actual generation remain blocked.
+
+## 2026-07-21 SEAM-G-C1 request compatibility closeout
+
+SEAM-G-C1 is complete and pushed in the exact two-file scope. The import-free adapter consumes plain public request JSON only and emits one deeply immutable Lab compatibility projection for ready or blocked version-1 requests.
+
+The final Lab gate passed 276/276. Ready, blocked, valid-zero, replay-identical and governance-absent fixtures passed. Unknown versions, extra fields/intent, private paths, raw artifact content, request/audit/Engine/row/thermal contradictions, added evidence authority, unsafe source flags, blocked promotion/body and legacy rows fail closed.
+
+The adapter imports no producer implementation and exposes no IES generation, authority, evidence acceptance, sealing, reference mutation, route, persistence, network/file/email write or readiness capability. The expected branch marker and three protected untracked items remain untouched.
+
+The ordered Lab queue is empty. Program SEAM-G-A1 review is next. Actual IES generation remains blocked.

@@ -311,6 +311,18 @@ Reject unknown versions, extra/nested authority, private/raw content, contradict
 
 The expected branch marker and three protected untracked items must remain untouched and outside staging. Return the consumer receipt to Program; SEAM-G-A1 and actual generation remain blocked.
 
+## 2026-07-21 SEAM-G-C1 complete — Program activation review next
+
+The import-free request compatibility adapter is complete and pushed in the exact two-file scope. The final Lab gate passed 276/276.
+
+The adapter consumes exact ready or blocked public IES request JSON and preserves deterministic request/replay/audit identity, stable Engine identities, safe technical provenance/thermal values, exact public rows, valid zeros and canonical diagnostics. Different outer traceability contexts return identical output and remain absent.
+
+Unknown versions, extra request or intent fields, private paths, raw artifact text, request/audit/Engine/row/thermal contradictions, extra evidence authority, unsafe source flags, blocked promotion/body and legacy rows fail closed.
+
+It creates no IES, authority, evidence acceptance, sealing, reference mutation, route, persistence, network/file/email write or readiness capability. The expected branch marker and three protected untracked items remain untouched.
+
+The Lab queue is empty. Program must perform SEAM-G-A1 review; actual IES generation remains blocked.
+
 ## Prohibited actions retained
 
 - no LAB-017 change outside the recorded version-1 approval without a new seam decision;
