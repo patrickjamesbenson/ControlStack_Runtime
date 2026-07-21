@@ -212,13 +212,14 @@ thing — do not bend the design around a tooling limit.
 **Reads are cached**, with visible data age, so lookups survive an outage. Push must be idempotent
 and replayable.
 
-**Remaining CRM precondition:** define the exact writer scopes and obtain a separate Program
-admission. No live provider write is authorised before that parcel; `writePolicy` stays disabled.
+**Remaining CRM precondition:** define the exact writer scopes. A separate Program admission remains
+the normal release control before implementation. No live provider write is authorised before that
+parcel; `writePolicy` stays disabled.
 
 **Deferred cutover decision:** HubSpot now recommends Service Keys for single-account API access.
 Migration is parked until cutover and is expected to be a token swap with no ControlStack code
-change. The project-shell decision registry must retain this deferral alongside the legacy OAuth
-retirement decision.
+change. Patrick reports that the project-shell decision registry already records this PARKED deferral
+and the RULED CRM ownership/lifecycle boundary alongside the legacy OAuth retirement decision.
 
 **Existing runtime code:** contact and company lookups are real and working. Deal lookup remains the
 genuine new read work.
@@ -271,9 +272,10 @@ rendered in the running system do not.
 decision registry distinguishing donor-verified / ruled / planned / parked, with citations. Promote
 it from mockup to product.
 
-First entries: the HubSpot Service Keys token-swap deferral, the future retirement of the legacy
-OAuth public app, and two-factor authentication. The CRM ownership/lifecycle ruling is RULED rather
-than parked and must be mirrored into the project-shell registry.
+Recorded entries include the HubSpot Service Keys token-swap deferral, the future retirement of the
+legacy OAuth public app, two-factor authentication and the CRM ownership/lifecycle ruling. Patrick
+reports the CRM boundary is marked RULED and the Service Keys migration is marked PARKED in the
+project-shell registry.
 
 Size: small. High leverage.
 

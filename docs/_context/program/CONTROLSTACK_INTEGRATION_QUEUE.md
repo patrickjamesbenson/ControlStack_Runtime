@@ -919,10 +919,10 @@ No implementation item is ready. A new exact Program parcel is required before a
 ### Governance follow-on order
 
 1. **GOV-001, GOV-002, GOV-003, GOV-004 and GOV-005:** complete in the Governance lane's canonical order and accepted evidence chain.
-2. **GOV-006 / CRM:** held pending exact writer-scope definition and separate Program admission. Patrick's portal-scope prerequisite is satisfied and the CRM ownership/lifecycle rules are closed.
+2. **GOV-006 / CRM:** held on the sole substantive CRM precondition: exact writer-scope definition. Patrick's portal-scope prerequisite is satisfied and the CRM ownership/lifecycle rules are closed. A separate Program admission remains required before implementation.
 3. **Read-only credential state:** `ControlsStack (Read Only)` exists with contacts, companies and deals read scopes only; its token is held in the local secrets store and `writePolicy` remains disabled. The legacy OAuth public app remains in service.
 4. **Binding business scope:** HubSpot owns contacts, companies, deals and price; ControlStack owns build detail. One deal exists per envelope through `controlstack_project_key` plus `controlstack_job_ref`; provider intent is emitted on genuine readiness-state entry; leads use a separate deals pipeline; engineering storage is local-first and CRM reads are cached.
-5. **Deferred cutover:** Service Keys migration is parked until cutover as a token swap with no expected ControlStack code change. Governance must mirror this in the project-shell decision registry.
+5. **Decision-registry state — REPORTED:** Patrick reports that the project-shell decision registry already records the RULED CRM business boundary and the PARKED Service Keys migration. Service Keys remain deferred until cutover as a token swap with no expected ControlStack code change.
 6. **No Governance parcel is ready.** No live CRM write, writer token, OAuth retirement or Service Keys cutover is authorised.
 
 ### SEAM-G-C5 — Sealed-reference load preflight

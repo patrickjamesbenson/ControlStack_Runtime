@@ -682,7 +682,7 @@ P2 Checkpoint 1 is **IMPLEMENTATION COMPLETE / GATE GREEN / COMMIT BLOCKED BY SH
 - **C5 OUTPUT:** immutable redacted ready-or-blocked load receipt only.
 - **C5 BLOCKED:** generator/materialise invocation, LM-63 text, routes, persistence, files, delivery and readiness activation.
 - **CHAIN AFTER C5:** C6 in-memory generation; C7 validated opaque Seam G artifact handoff; Governance retrieval activation. Each requires its own accepted predecessor and Program admission.
-- **CRM:** Patrick's HubSpot portal-scope prerequisite and business scope/lifecycle ruling are complete. No Patrick-held CRM prerequisite remains; exact writer-scope definition and separate Program admission still block live provider writes.
+- **CRM:** Patrick's HubSpot portal-scope prerequisite and business scope/lifecycle ruling are complete. No Patrick-held CRM prerequisite remains. Exact writer-scope definition is the sole substantive CRM precondition; separate Program admission remains the normal release control before live provider writes.
 - **NEXT:** Lab may execute C5 in its isolated worktree.
 
 ## 2026-07-22 consolidated Selector walkthrough state
@@ -710,5 +710,5 @@ P2 Checkpoint 1 is **IMPLEMENTATION COMPLETE / GATE GREEN / COMMIT BLOCKED BY SH
 - **TRIGGER:** provider intent occurs on genuine readiness-state entry; it is not a module-open, render/hydrate or Engine-run side effect.
 - **LEADS:** leads are deals in a separate leads pipeline.
 - **STORAGE:** ControlStack remains local-first for engineering state; CRM reads are cached and writes are best-effort, idempotent and replayable.
-- **REMAINING PRECONDITION:** exact writer-scope definition plus a separate Program admission.
-- **DEFERRED:** migrate from the private app to HubSpot Service Keys at cutover as an expected token swap with no ControlStack code change. Governance must mirror this parked decision in the project-shell decision registry.
+- **REMAINING CRM PRECONDITION:** exact writer-scope definition only. A separate Program admission remains the normal release control before implementation.
+- **DEFERRED — REPORTED REGISTRY STATE:** migrate from the private app to HubSpot Service Keys at cutover as an expected token swap with no ControlStack code change. Patrick reports this PARKED decision and the RULED CRM boundary are already recorded in the project-shell decision registry.
