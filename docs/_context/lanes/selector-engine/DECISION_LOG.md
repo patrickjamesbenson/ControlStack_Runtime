@@ -401,3 +401,15 @@ This log is append-oriented. Do not silently rewrite historical decisions.
 **Contract result:** `controlstack.engine.selection-set.v1` validates one exact selections-only draft and rejects governance fields, caller Tier and caller-derived/verified output. `controlstack.engine.output.v1` produces deterministic complete or fail-closed blocked results, preserves valid zero values, ignores optional traceability and derives result identity only from technical request, source, policy and internally derived evidence fingerprints. `controlstack.engine.runtable-row.v1` has one exact field set and does not reuse the colliding legacy row schema.
 
 **Consequence:** ENG-OUT-P1 is done. The producer boundary remains non-persistent and contract-only. Program must review consumer compatibility before any Lab/IES adapter or stability declaration. SEL-008, SEL-009, SEL-010, routes, persistence, downstream activation and main remain held.
+
+## 2026-07-21 — Program commissions SEAM-G-P1 read-only IES request producer
+
+**Decision:** Record Program's stable Seam B declaration and admit SEAM-G-P1 as the sole ready Selector parcel in an exact two-file scope. Seam G itself remains inactive.
+
+**Rationale:** The original output-actions decision retired direct Selector-side IES generation and kept Photometry/Lab as the downstream owner. The first downstream step must therefore be a deterministic request contract, not a button, route, export, email, file write or generator.
+
+**Contract:** `controlstack.downstream.ies-artifact-request.v1` consumes exact stable public Engine output JSON and exact `ies_lm63_reference_build` intent. Optional traceability is quarantined. The output is complete or fail-closed blocked, deeply immutable, replay-identical and non-persistent, with deterministic request/replay/audit identity and safe technical content only.
+
+**Acceptance lock:** Different governance envelopes cannot alter or appear in output. Changed technical identity must move request identity. Blocked Engine output cannot become artifact-ready. Unknown, over-rich, unsafe/private, contradictory, added-authority or legacy-row input fails closed. No raw IES/photometry/candela/file/path, route, persistence, email, download, generation, authority, reference mutation, Engine/donor invocation or downstream activation is permitted.
+
+**Consequence:** SEAM-G-P1 is the sole ready item. SEAM-G-C1 and Program tunnel activation remain blocked. Existing IES handoff scaffolds are not rewritten, and generic downstream artifact work remains held.

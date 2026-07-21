@@ -291,13 +291,26 @@
 ### Q-10 Downstream artifacts
 
 * id: SEL-010
-* status: held
-* depends-on: Integrate declaration that the Engine output contract is stable
+* status: superseded by SEAM-G-P1 narrow IES request sequence
+* depends-on: stable Seam B version-1 Engine output contract
 * gate: selector-engine
-* authorised files: read-only
-* objective: later queue DXF, quotation, reporting, and other post-payload consumers.
-* acceptance: Integrate has declared the Engine output contract stable and has commissioned a separately bounded downstream item before implementation begins.
-* prohibitions: no implementation before the dependency is satisfied.
+* authorised files: read-only except the exact SEAM-G-P1 parcel below
+* objective: downstream work is commissioned one artifact family at a time; generic DXF, quotation, reporting and other consumers remain held.
+* acceptance: Program has declared Seam B stable and separately commissioned the exact read-only IES artifact request producer before any downstream work.
+* prohibitions: no generic artifact implementation and no generation/write activation.
+
+### Q-10A Deterministic IES artifact request contract
+
+* id: SEAM-G-P1
+* status: ready
+* depends-on: Program declaration that Seam B version 1 is stable and Program commission `docs(program): commission Seam G IES request producer`
+* gate: selector-engine
+* authorised files: new `packages/workspace-kernel/runtimeIesArtifactRequestContractV1.js`, new `tests/runtimeIesArtifactRequestContractV1.test.js`, temporary harness-only use of `tests/engineRunTableDomain.test.js`, and closeout updates to the five mutable lane context files. The harness may add exactly one side-effect import of `./runtimeIesArtifactRequestContractV1.test.js`; it must be removed, byte-identical to HEAD and absent from final staging/commit.
+* objective: transform exact stable public Engine output JSON plus exact `ies_lm63_reference_build` intent into one deeply immutable `controlstack.downstream.ies-artifact-request.v1` complete-or-blocked read-only request envelope.
+* acceptance: exact schema/version/key sets; deterministic complete, blocked and valid-zero fixtures; identical inputs produce identical request ID, replay key, audit projection and output; different user/project/owner/timeline/registration traceability envelopes produce identical output and do not appear; changed technical Engine identity changes request identity; unknown version, extra authority, raw/private/unsafe content, contradictory identity, blocked-to-ready promotion and legacy-row input fail closed; no raw IES, photometry, candela, file/path, route, persistence, email/export/download, Engine/donor invocation, generator, authority or reference mutation capability.
+* prohibitions: no Selector UI/button change, no route or endpoint, no existing IES-handoff scaffold rewrite, no Lab import/write, no RuntimeData, donor, main or runtime-port change; do not activate Seam G or actual IES generation.
+* commit message: `feat(runtime): add IES artifact request contract v1`.
+* on success next: Program producer receipt review; SEAM-G-C1 remains blocked.
 
 <!--
 Historical pre-SEL queue retained as non-operative migration provenance. It is not an active queue and confers no implementation authority.

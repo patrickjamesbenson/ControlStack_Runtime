@@ -563,3 +563,17 @@ Every completed worker updates this index with:
 - Harness removal: `tests/engineRunTableDomain.test.js` returned clean and unstaged — VERIFIED.
 - No route, persistence, actual Engine/donor invocation, thermal recalculation, existing scaffold rewrite, Lab/IES change, downstream activation, RuntimeData, main or runtime-port work occurred — VERIFIED.
 - Queue result: ENG-OUT-P1 done; Program consumer review required; stability remains withheld — RECORDED.
+
+## 2026-07-21 — SEAM-G-P1 admission evidence
+
+- Program declared the three public Seam B version-1 Engine schemas stable after accepted producer and import-free Lab consumer evidence — PROGRAM-APPROVED.
+- Original output-action authority: direct Selector `generateIES()` ownership was retired; Photometry/Lab remains the downstream domain — VERIFIED FROM DONOR BRIEF.
+- Exact producer schema: `controlstack.downstream.ies-artifact-request.v1` — RECORDED.
+- Exact intent: `ies_lm63_reference_build` only — RECORDED.
+- Exact feature scope: new runtime request module and focused test only, with temporary gate harness and later five-file lane closeout — RECORDED.
+- Replay/idempotency requirement: identical technical input produces identical request, replay and audit identity — RECORDED.
+- Boundary regression: different user/project/owner/timeline/registration traceability envelopes must produce identical output and remain absent — RECORDED.
+- Failure isolation: unknown, extra, unsafe/private, contradictory, added-authority, blocked-to-ready and legacy-row cases fail closed — RECORDED.
+- Write/security boundary: no raw IES, photometry, candela, file/path, route, persistence, email/export/download, generator, authority, reference mutation, Engine/donor invocation or downstream activation — RECORDED.
+- SEAM-G-C1 and tunnel activation remain blocked; main and runtime-port work remain excluded — RECORDED.
+- Starting Selector tree was clean — VERIFIED.

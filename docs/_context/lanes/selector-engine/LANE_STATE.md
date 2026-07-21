@@ -491,3 +491,15 @@ The producer contract is not yet stable. Program consumer review, Lab/IES compat
 **Recorded lane work HEAD:** `90f9a2bf4f68efec2b9dcaa37f29bab04f14541f` — `docs(selector): close Engine output producer`.
 
 The clean branch now contains the accepted public request, output and row producer plus its corrective evidence-identity parcel and durable closeout. No queue item is ready. Program & Integrate consumer review is the sole next boundary; it must either commission an exact compatibility parcel or keep stability withheld. Selector widening, Lab/IES changes, routes, persistence, downstream artifacts and main remain inactive until that decision is recorded.
+
+## 2026-07-21 Seam G IES request producer admission — latest controlling state
+
+Program has declared Seam B Engine output version 1 stable and commissioned one narrow downstream contract parcel without activating Seam G.
+
+SEAM-G-P1 is the sole ready item. Its exact feature scope is `runtimeIesArtifactRequestContractV1.js` and its focused test. It consumes exact stable public Engine output JSON plus exact `ies_lm63_reference_build` intent and may accept an optional traceability envelope only to prove quarantine.
+
+The output is one deeply immutable complete-or-blocked `controlstack.downstream.ies-artifact-request.v1` envelope. It contains deterministic request/replay/audit identity, stable technical fingerprints, safe selected-result provenance/thermal values, exact public RunTable rows, canonical blockers/warnings and explicit no-write/no-generation safety state.
+
+Acceptance must prove deterministic replay, valid zero preservation, governance-envelope independence, technical-identity movement, blocked Engine isolation, exact schema/version and fail-closed rejection of unknown, over-rich, unsafe/private, contradictory, added-authority and legacy-row input.
+
+No Selector UI/button, existing IES handoff scaffold, route, endpoint, persistence, file, email/export/download, raw IES/photometry/candela, generator, Lab import/write, authority, reference mutation, Engine/donor invocation, RuntimeData, main or runtime-port work is authorised. SEAM-G-C1 and Program activation remain blocked.

@@ -490,3 +490,20 @@ The request contract accepts engineering selections only, validates the exact ve
 No route, persistence, actual Engine invocation, thermal recalculation, existing scaffold rewrite, Lab/IES change, downstream activation, RuntimeData, donor, main or runtime-port work occurred.
 
 The contract remains not stable. Program must review the producer receipt and separately decide the exact consumer-compatibility parcel. No Selector widening or downstream implementation is ready from this handoff.
+
+## 2026-07-21 Seam B stable — SEAM-G-P1 ready
+
+Program has accepted the producer and Lab compatibility evidence and declared Seam B Engine output version 1 stable. It has now commissioned only the first read-only Seam G producer parcel; Seam G itself is not active.
+
+Create exactly:
+
+- `packages/workspace-kernel/runtimeIesArtifactRequestContractV1.js`
+- `tests/runtimeIesArtifactRequestContractV1.test.js`
+
+The module consumes exact stable public `controlstack.engine.output.v1` JSON and exact `ies_lm63_reference_build` intent. Optional traceability exists only to prove that different user, project, owner, timeline and registration values are ignored and absent.
+
+Emit one immutable complete-or-blocked `controlstack.downstream.ies-artifact-request.v1` request with deterministic request ID, replay key and audit projection; stable technical fingerprints; safe selected-result provenance/thermal values; exact public RunTable rows; blockers/warnings; and no-write/no-generation safety flags.
+
+Prove complete, blocked, valid-zero, replay-identical, envelope-independent and technical-identity-moving behavior. Reject unknown versions, extra authority, raw/private/unsafe content, contradictory identities, blocked-to-ready promotion and legacy rows.
+
+Do not add a Selector button, route, endpoint, file/export/email/download path, persistence, actual IES generation, authority state, reference mutation, Engine/donor invocation, Lab import/write, RuntimeData, main or runtime-port change. Do not rewrite the existing diagnostic IES-handoff scaffold. Return the green producer receipt to Program; SEAM-G-C1 remains blocked.
