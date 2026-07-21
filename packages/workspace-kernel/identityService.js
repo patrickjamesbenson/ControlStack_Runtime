@@ -1,3 +1,7 @@
+import {
+  resolveGovernanceUserIdentityNvbFirst,
+} from "./governance/userIdentityPermissionsContract.js";
+
 const ROLE_ORDER = Object.freeze(["external_user", "internal_user", "internal_engineer", "developer", "admin"]);
 const IDENTITY_STATES = Object.freeze(["external_anonymous", "external_identified", "internal_identified"]);
 const IDENTITY_MODES = Object.freeze(["auth-session", "developer-fixture", "anonymous-fallback"]);
@@ -180,7 +184,7 @@ function buildIdentity({ rawIdentity, overrideState, requestedDisplayRole, sourc
   };
 }
 
-export function createIdentityService({ authService, eventBus } = {}) {
+export function createIdentityService({ authService, eventBus, lookupNvb, lookupHubspot } = {}) {
   const subscriptions = createSubscriptionSet();
   const overrideState = { enabled: false, role: null };
   const initialAuth = authService?.getAuthSnapshot?.() || null;
@@ -196,6 +200,7 @@ export function createIdentityService({ authService, eventBus } = {}) {
     overrideState,
     requestedDisplayRole: initialMode === "auth-session" ? initialAuth.user.actualRole : "external_user",
     identity: null,
+    governanceResolution: null,
     availableIdentities: TEST_IDENTITIES.map(clone),
   };
 
@@ -343,6 +348,8 @@ export function createIdentityService({ authService, eventBus } = {}) {
       displayRoleRequested: state.identity.displayRoleRequested,
       displayRoleClamped: state.identity.displayRoleClamped,
       role: state.identity.displayRole,
+      governanceIdentity: state.governanceResolution,
+      permissions: state.governanceResolution?.permissions || null,
       capabilities: roleCapabilities(state.identity.displayRole),
       actualCapabilities: roleCapabilities(state.identity.actualRole),
       roleOrder: [...ROLE_ORDER],
@@ -439,6 +446,39 @@ export function createIdentityService({ authService, eventBus } = {}) {
     };
   }
 
+  async function identifyByEmail(email, options = {}, reason = "governance-nvb-first-identity-resolved") {
+    const resolution = await resolveGovernanceUserIdentityNvbFirst({
+      email,
+      lookupNvb,
+      lookupHubspot,
+      internalOverrideRole: options.internalOverrideRole || null,
+      internalOverrideReason: options.internalOverrideReason || null,
+    });
+    state.governanceResolution = resolution;
+    state.identityMode = "auth-session";
+    state.selectedIdentityId = null;
+    state.requestedDisplayRole = resolution.actualRole;
+    state.identity = buildIdentity({
+      rawIdentity: {
+        id: resolution.userId || resolution.email,
+        label: resolution.name || resolution.email,
+        name: resolution.name || resolution.email,
+        email: resolution.email,
+        company: resolution.company || "",
+        identityState: resolution.identityState,
+        classification: resolution.identityState === "internal_identified" ? "internal" : "external",
+        actualRole: resolution.actualRole,
+      },
+      overrideState: { enabled: false, role: null },
+      requestedDisplayRole: resolution.actualRole,
+      source: resolution.source,
+      identitySource: "governance-nvb-first",
+      lookupStatus: "resolved-nvb-then-hubspot",
+      identityMode: "auth-session",
+    });
+    return { accepted: true, identity: notify(reason), resolution };
+  }
+
   return {
     owner: state.owner,
     status: state.status,
@@ -470,6 +510,7 @@ export function createIdentityService({ authService, eventBus } = {}) {
       return setActualRoleOverride(actualRole, reason);
     },
     setDisplayRole,
+    identifyByEmail,
     setPlaceholderUser(nextUser = {}, reason = "compat-placeholder-update") {
       state.identity = {
         ...state.identity,
