@@ -10,14 +10,14 @@ $Installer = Join-Path $SourceRoot 'scripts\CONTROLSTACK_DEPLOYMENT_V2_INSTALL.m
 $Python = 'C:\Users\Patrick\AppData\Local\Programs\Python\Python311\python.exe'
 $Node = 'C:\Program Files\nodejs\node.exe'
 $GateRunnerRelative = 'scripts\governance_shell_lane_gate.py'
-$FoundingFiles = @(
-  'LANE_CHARTER.md',
-  'LANE_STATE.md',
-  'WORK_QUEUE.md',
-  'DECISION_LOG.md',
-  'EVIDENCE_INDEX.md',
-  'SESSION_HANDOFF.md'
-)
+$FoundingFiles = [ordered]@{
+  'LANE_CHARTER.md' = @('LANE_CHARTER.md', 'GOVERNANCE_SHELL_LANE_CHARTER.md', 'GOVERNANCE_LANE_CHARTER.md')
+  'LANE_STATE.md' = @('LANE_STATE.md', 'GOVERNANCE_SHELL_LANE_STATE.md', 'GOVERNANCE_LANE_STATE.md')
+  'WORK_QUEUE.md' = @('WORK_QUEUE.md', 'GOVERNANCE_SHELL_WORK_QUEUE.md', 'GOVERNANCE_WORK_QUEUE.md')
+  'DECISION_LOG.md' = @('DECISION_LOG.md', 'DECISIONS.md', 'LANE_DECISIONS.md', 'GOVERNANCE_DECISION_LOG.md', 'GOVERNANCE_SHELL_DECISIONS.md')
+  'EVIDENCE_INDEX.md' = @('EVIDENCE_INDEX.md', 'GOVERNANCE_SHELL_EVIDENCE_INDEX.md', 'GOVERNANCE_EVIDENCE_INDEX.md')
+  'SESSION_HANDOFF.md' = @('SESSION_HANDOFF.md', 'GOVERNANCE_SHELL_SESSION_HANDOFF.md', 'GOVERNANCE_SESSION_HANDOFF.md')
+}
 
 function Invoke-Git {
   param(
@@ -47,6 +47,48 @@ function Assert-FileEqual {
   return $true
 }
 
+function Resolve-BootstrapFile {
+  param(
+    [Parameter(Mandatory = $true)][string]$CanonicalName,
+    [Parameter(Mandatory = $true)][string[]]$Aliases,
+    [Parameter(Mandatory = $true)][System.Collections.Generic.HashSet[string]]$UsedPaths
+  )
+
+  $aliasMatches = @()
+  foreach ($alias in $Aliases) {
+    $candidate = Join-Path $BootstrapRoot $alias
+    if ((Test-Path -LiteralPath $candidate -PathType Leaf) -and -not $UsedPaths.Contains($candidate)) {
+      $aliasMatches += $candidate
+    }
+  }
+  if ($aliasMatches.Count -gt 1) {
+    throw "The Governance bootstrap has more than one recognised source for $CanonicalName."
+  }
+  if ($aliasMatches.Count -eq 1) { return $aliasMatches[0] }
+
+  $headingPattern = switch ($CanonicalName) {
+    'LANE_CHARTER.md' { '(?im)^\s*#{1,6}\s+.*\blane\s+charter\b' }
+    'LANE_STATE.md' { '(?im)^\s*#{1,6}\s+.*\blane\s+state\b' }
+    'WORK_QUEUE.md' { '(?im)^\s*#{1,6}\s+.*\bwork\s+queue\b' }
+    'DECISION_LOG.md' { '(?im)^\s*#{1,6}\s+.*\b(?:decision\s+log|decisions)\b' }
+    'EVIDENCE_INDEX.md' { '(?im)^\s*#{1,6}\s+.*\bevidence\s+index\b' }
+    'SESSION_HANDOFF.md' { '(?im)^\s*#{1,6}\s+.*\bsession\s+handoff\b' }
+    default { throw "Unknown canonical Governance founding file: $CanonicalName" }
+  }
+  $semanticMatches = @(
+    Get-ChildItem -LiteralPath $BootstrapRoot -File -Filter '*.md' |
+      Where-Object {
+        -not $UsedPaths.Contains($_.FullName) -and
+        (Get-Content -LiteralPath $_.FullName -Raw) -match $headingPattern
+      } |
+      Select-Object -ExpandProperty FullName
+  )
+  if ($semanticMatches.Count -ne 1) {
+    throw "The Governance bootstrap could not uniquely identify the drafted source for $CanonicalName."
+  }
+  return $semanticMatches[0]
+}
+
 Write-Host 'Governance & Shell provisioning: preflight'
 if (-not (Test-Path -LiteralPath $SourceRoot -PathType Container)) { throw 'The Program worktree is missing.' }
 if (-not (Test-Path -LiteralPath $BootstrapRoot -PathType Container)) { throw 'The Governance bootstrap folder is missing.' }
@@ -59,11 +101,13 @@ if ($sourceBranch -ne 'lane/program-integrate') { throw 'The Program worktree is
 $sourceDirty = (Invoke-Git -Root $SourceRoot -Arguments @('status', '--porcelain=v1')).Output.Trim()
 if ($sourceDirty) { throw 'The Program worktree must be clean before lane provisioning.' }
 
-foreach ($name in $FoundingFiles) {
-  $source = Join-Path $BootstrapRoot $name
-  if (-not (Test-Path -LiteralPath $source -PathType Leaf)) {
-    throw "The Governance bootstrap is missing $name."
-  }
+$ResolvedFoundingFiles = [ordered]@{}
+$UsedBootstrapPaths = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+foreach ($canonicalName in $FoundingFiles.Keys) {
+  $source = Resolve-BootstrapFile -CanonicalName $canonicalName -Aliases $FoundingFiles[$canonicalName] -UsedPaths $UsedBootstrapPaths
+  [void]$UsedBootstrapPaths.Add($source)
+  $ResolvedFoundingFiles[$canonicalName] = $source
+  Write-Host ("Governance & Shell provisioning: {0} <= {1}" -f $canonicalName, [IO.Path]::GetFileName($source))
 }
 
 if (-not (Test-Path -LiteralPath $TargetRoot -PathType Container)) {
@@ -80,9 +124,9 @@ if ($targetBranchActual -ne $TargetBranch) { throw 'The Governance worktree bran
 $targetContextRoot = Join-Path $TargetRoot $LaneContext
 New-Item -ItemType Directory -Path $targetContextRoot -Force | Out-Null
 
-foreach ($name in $FoundingFiles) {
-  $source = Join-Path $BootstrapRoot $name
-  $destination = Join-Path $targetContextRoot $name
+foreach ($canonicalName in $FoundingFiles.Keys) {
+  $source = $ResolvedFoundingFiles[$canonicalName]
+  $destination = Join-Path $targetContextRoot $canonicalName
   if (-not (Assert-FileEqual -Source $source -Destination $destination)) {
     Copy-Item -LiteralPath $source -Destination $destination
   }
@@ -95,7 +139,7 @@ Write-Host 'Governance & Shell provisioning: running fixed lane gate'
 & $Python $gateRunner 'governance-shell' '--root' $TargetRoot '--required-branch' $TargetBranch '--json'
 if ($LASTEXITCODE -ne 0) { throw 'The Governance & Shell lane gate failed.' }
 
-$relativeFoundingFiles = $FoundingFiles | ForEach-Object { "$LaneContext\$_" }
+$relativeFoundingFiles = $FoundingFiles.Keys | ForEach-Object { "$LaneContext\$_" }
 Invoke-Git -Root $TargetRoot -Arguments (@('add', '--') + $relativeFoundingFiles) | Out-Null
 $staged = (Invoke-Git -Root $TargetRoot -Arguments @('diff', '--cached', '--name-only')).Output.Trim()
 if ($staged) {
