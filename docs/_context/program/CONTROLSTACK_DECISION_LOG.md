@@ -1456,6 +1456,20 @@ Program rules that Governance owns human identity, principal/role, timeline poli
 
 No live Engine run may occur before the cleanup sequence closes. The final batch parcel reconciles Run Engine with the selections-only boundary: server revision acknowledgement and governance/project envelopes are not Engine authority. Source-backed technical selections and no-write transport safeguards remain mandatory. One bounded thermal acceptance must prove selected room plus one optic-bound measured rise exactly once, attributable lookup temperature and verified lm/m, and varied-rise movement with room, current and curve held fixed.
 
-The finishes default-acceptance question is unresolved, Patrick-owned and non-blocking. Governance has recorded it in the read-only deferred-decision panel. Selector must not change Build Ready until Patrick rules whether inherited cover, end and flex finishes satisfy acceptance without an explicit confirmation.
+At initial commission, the finishes default-acceptance question remained unresolved and non-blocking. The addendum below supersedes that temporary state with Patrick's explicit ruling and WALK-005A implementation sequence.
 
 Lab C5 remains independently ready in its separate worktree. No second Selector writer, provider mutation, persistence, IES generation, delivery, module-owned retrieval, main or unrelated runtime work is authorised by this batch.
+
+## 2026-07-22 — Selector walkthrough addendum: default acknowledgement ruled
+
+**Status:** FINISHES QUESTION CLOSED; WALK-005A ADMITTED IN SEQUENCE.
+
+Patrick rules that inherited or auto-filled cover, end and flex finishes do not satisfy Build Ready on their own. The donor behaviour is restored as one explicit action: `Accept all defaults` acknowledges every currently flagged default in one press. Per-field acknowledgement is not required and must not be introduced.
+
+Program inserts WALK-005A after the deletion/ownership steps and before truthful counter cleanup and WALK-007. Every Selector dropdown must preserve the exact NVB comma-separated option order and auto-fill the first real option. Presentation-only entries such as `No manual constraint…` remain visible where required but are never eligible as defaults. Changing a default later is a source-data reorder only; code must not rank or name a preferred option.
+
+Every auto-filled value is visibly marked as a looked-up choice made on the user's behalf and remains distinct from a manual constraint. In provenance terms, the selected default value is LOOKED UP; the single acknowledgement event is GIVEN. Auto-fill must never masquerade as manual input.
+
+Readiness ignores unacknowledged defaults. The one acknowledgement covers every flagged value, including inherited finishes. Truthful counters may count genuine pending acknowledgements but must not classify them as missing source data or combine them with diagnostic/future rows.
+
+Governance registry version 1.2.0 records the finishes item as RULED. The remaining OPEN Governance questions are identity-first and state-to-deal-floor only. WALK-001 remains the sole ready Selector parcel; this addendum changes later sequence and acceptance, not current parallelism or the live-run hold.

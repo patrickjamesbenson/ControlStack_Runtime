@@ -99,10 +99,12 @@ After C5 acceptance, Program must separately admit C6 in-memory generation, C7 o
 
 PWS-001, PWS-002 and PWS-005 are complete and are not reopened. WALK-001 authority refresh is the sole ready Selector parcel: guarded dry-run must prove all required current-source checks and one finite tier-gated Ambient policy row before the existing archive-before-promotion live workflow may write.
 
-After refresh, one Selector writer deletes in order: Length Mode narrowing authority, the fabricated duplicate scaffold, the legacy `TIERS` readiness owner, and Selector-internal timeline/special-parts principal test authority. Then user-facing readiness counters are limited to genuine visible prerequisites. Governance owns identity, principal/role, timeline policy and visibility; Selector consumes bounded shell outcomes only.
+After refresh, one Selector writer deletes in order: Length Mode narrowing authority, the fabricated duplicate scaffold, the legacy `TIERS` readiness owner, and Selector-internal timeline/special-parts principal test authority. It then restores donor auto-fill defaults before truthful counter cleanup: each dropdown uses the first real NVB option in exact source order, skips `No manual constraint…`, visibly marks auto-filled values as LOOKED UP, and keeps them distinct from manual constraints. One `Accept all defaults` action creates the GIVEN acknowledgement for every flagged default, including inherited finishes. Unacknowledged defaults do not satisfy readiness; per-field acknowledgement and code-ranked defaults are prohibited.
+
+User-facing readiness counters then count only genuine visible prerequisites and pending acknowledgements, not diagnostic, future, consequence or disabled rows.
 
 No live Engine run is allowed before cleanup closes. The final parcel reconciles the action lane to the selections-only boundary and performs one bounded thermal proof: selected room plus one measured optic rise exactly once, with varied-rise movement of lookup and verified lm/m. Server revision acknowledgement and governance/project envelopes are not Engine authority.
 
-Finishes default acceptance is OPEN, Patrick-owned and non-blocking in the Governance deferred panel. Current Build Ready treatment stays unchanged. Lab C5 remains independently ready in its separate worktree.
+Patrick's finishes default-acceptance ruling is closed and recorded in Governance. Inheritance or auto-fill alone does not satisfy Build Ready; one `Accept all defaults` action acknowledges all flagged defaults. Lab C5 remains independently ready in its separate worktree.
 
-The only Patrick-held prerequisites outside that parked finishes ruling are the HubSpot private-app portal-scope pre-check and the CRM business-scope/lifecycle decision. Nothing else needs him now.
+The only Patrick-held prerequisites are the HubSpot private-app portal-scope pre-check and the CRM business-scope/lifecycle decision. Nothing else needs him now.
