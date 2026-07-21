@@ -1,3 +1,7 @@
+param(
+  [switch]$PreflightOnly
+)
+
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
 
@@ -14,10 +18,47 @@ $FoundingFiles = [ordered]@{
   'LANE_CHARTER.md' = @('LANE_CHARTER.md', 'GOVERNANCE_SHELL_LANE_CHARTER.md', 'GOVERNANCE_LANE_CHARTER.md')
   'LANE_STATE.md' = @('LANE_STATE.md', 'GOVERNANCE_SHELL_LANE_STATE.md', 'GOVERNANCE_LANE_STATE.md')
   'WORK_QUEUE.md' = @('WORK_QUEUE.md', 'GOVERNANCE_SHELL_WORK_QUEUE.md', 'GOVERNANCE_WORK_QUEUE.md')
-  'DECISION_LOG.md' = @('DECISION_LOG.md', 'DECISIONS.md', 'LANE_DECISIONS.md', 'GOVERNANCE_DECISION_LOG.md', 'GOVERNANCE_SHELL_DECISIONS.md')
-  'EVIDENCE_INDEX.md' = @('EVIDENCE_INDEX.md', 'GOVERNANCE_SHELL_EVIDENCE_INDEX.md', 'GOVERNANCE_EVIDENCE_INDEX.md')
   'SESSION_HANDOFF.md' = @('SESSION_HANDOFF.md', 'GOVERNANCE_SHELL_SESSION_HANDOFF.md', 'GOVERNANCE_SESSION_HANDOFF.md')
 }
+$GeneratedFoundingFiles = [ordered]@{
+  'DECISION_LOG.md' = ((@(
+    '# Governance & Shell Decision Log',
+    '',
+    '## 2026-07-21 — Lane foundation',
+    '',
+    '**Status:** APPROVED AND ISOLATED.',
+    '',
+    'Governance & Shell is separate from Selector & Engine. It owns human and project identity, permissions, ownership, timeline, handoff, persistence, the single outward data-retrieval gateway and optional external CRM orchestration.',
+    '',
+    'Selector and Engine remain selections-only. Identity and traceability do not gate computation or alter output. Provider failure cannot reverse technical readiness or block Engine execution.',
+    '',
+    'Every download, export, artifact retrieval and delivery path must terminate through one Governance gateway. Readiness and identity are separate checks. Direct module-owned retrieval paths are prohibited.',
+    '',
+    'CRM item 7 remains blocked pending its portal-scope pre-check. No separate CRM lane exists yet.'
+  ) -join "`n") + "`n")
+  'EVIDENCE_INDEX.md' = ((@(
+    '# Governance & Shell Evidence Index',
+    '',
+    '## Foundation evidence',
+    '',
+    '- Program approved the separate Governance & Shell lane.',
+    '- The lane uses its own worktree, branch, MCP identity, exact write scope and fixed gate.',
+    '- The four drafted bootstrap records are copied verbatim into the canonical lane context.',
+    '- Decision and evidence records are generated from the approved Program ruling only.',
+    '- Selector, Engine, Lab authority and broad module writes remain outside the lane guard.',
+    '- The standing acceptance lock remains binding: envelope independence including no-envelope execution, changed-optic movement, varied-row movement for placeholder rows and ownership-wide assertions.',
+    '- No direct download, export, delivery or CRM mutation is activated by lane provisioning.'
+  ) -join "`n") + "`n")
+}
+$CanonicalFoundingNames = @(
+  'LANE_CHARTER.md',
+  'LANE_STATE.md',
+  'WORK_QUEUE.md',
+  'DECISION_LOG.md',
+  'EVIDENCE_INDEX.md',
+  'SESSION_HANDOFF.md'
+)
+$Utf8NoBom = New-Object System.Text.UTF8Encoding($false)
 
 function Invoke-Git {
   param(
@@ -65,27 +106,55 @@ function Resolve-BootstrapFile {
   }
   if ($aliasMatches.Count -eq 1) { return $aliasMatches[0] }
 
-  $headingPattern = switch ($CanonicalName) {
-    'LANE_CHARTER.md' { '(?im)^\s*#{1,6}\s+.*\blane\s+charter\b' }
-    'LANE_STATE.md' { '(?im)^\s*#{1,6}\s+.*\blane\s+state\b' }
-    'WORK_QUEUE.md' { '(?im)^\s*#{1,6}\s+.*\bwork\s+queue\b' }
-    'DECISION_LOG.md' { '(?im)^\s*#{1,6}\s+.*\b(?:decision\s+log|decisions)\b' }
-    'EVIDENCE_INDEX.md' { '(?im)^\s*#{1,6}\s+.*\bevidence\s+index\b' }
-    'SESSION_HANDOFF.md' { '(?im)^\s*#{1,6}\s+.*\bsession\s+handoff\b' }
-    default { throw "Unknown canonical Governance founding file: $CanonicalName" }
-  }
-  $semanticMatches = @(
+  $candidates = @(
     Get-ChildItem -LiteralPath $BootstrapRoot -File -Filter '*.md' |
-      Where-Object {
-        -not $script:UsedBootstrapPaths.Contains($_.FullName) -and
-        (Get-Content -LiteralPath $_.FullName -Raw) -match $headingPattern
-      } |
-      Select-Object -ExpandProperty FullName
+      Where-Object { -not $script:UsedBootstrapPaths.Contains($_.FullName) }
   )
-  if ($semanticMatches.Count -ne 1) {
-    throw "The Governance bootstrap could not uniquely identify the drafted source for $CanonicalName."
+  $scored = foreach ($file in $candidates) {
+    $name = $file.BaseName.ToLowerInvariant()
+    $content = Get-Content -LiteralPath $file.FullName -Raw
+    $score = 0
+    switch ($CanonicalName) {
+      'LANE_CHARTER.md' {
+        if ($name -match 'charter|scope|ownership') { $score += 100 }
+        if ($content -match '(?im)^\s*#{1,6}\s+.*\b(?:lane\s+charter|scope|ownership)\b') { $score += 50 }
+      }
+      'LANE_STATE.md' {
+        if ($name -match 'lane[_ -]?state|current[_ -]?state|status') { $score += 100 }
+        if ($content -match '(?im)^\s*#{1,6}\s+.*\b(?:lane\s+state|current\s+state|status)\b') { $score += 50 }
+      }
+      'WORK_QUEUE.md' {
+        if ($name -match 'queue|backlog|work[_ -]?items') { $score += 100 }
+        if ($content -match '(?im)^\s*#{1,6}\s+.*\b(?:work\s+queue|backlog|work\s+items)\b') { $score += 50 }
+      }
+      'DECISION_LOG.md' {
+        if ($name -match 'decision|ruling|adr|record|history') { $score += 100 }
+        if ($content -match '(?im)^\s*#{1,6}\s+.*\b(?:decision|ruling|architecture\s+record|approved\s+rules?)\b') { $score += 60 }
+        if ($content -match '(?im)^\s*(?:decision|ruling|status)\s*:') { $score += 20 }
+      }
+      'EVIDENCE_INDEX.md' {
+        if ($name -match 'evidence|proof|acceptance|verification|test') { $score += 100 }
+        if ($content -match '(?im)^\s*#{1,6}\s+.*\b(?:evidence|proof|acceptance|verification|test\s+index)\b') { $score += 60 }
+        if ($content -match '(?im)\b(?:verified|passed|acceptance)\b') { $score += 10 }
+      }
+      'SESSION_HANDOFF.md' {
+        if ($name -match 'handoff|session|start[_ -]?here|continue|brief') { $score += 100 }
+        if ($content -match '(?im)^\s*#{1,6}\s+.*\b(?:session\s+handoff|handoff|start\s+here|continue|next\s+session)\b') { $score += 60 }
+        if ($content -match '(?im)^\s*(?:next|resume|continue)\s*:') { $score += 20 }
+      }
+      default { throw "Unknown canonical Governance founding file: $CanonicalName" }
+    }
+    [pscustomobject]@{ Path = $file.FullName; Name = $file.Name; Score = $score }
   }
-  return $semanticMatches[0]
+  $ranked = @($scored | Sort-Object -Property @{ Expression = 'Score'; Descending = $true }, @{ Expression = 'Name'; Descending = $false })
+  $remainingNames = @($candidates | Select-Object -ExpandProperty Name) -join ', '
+  if ($ranked.Count -eq 0 -or $ranked[0].Score -le 0) {
+    throw "The Governance bootstrap could not identify the drafted source for $CanonicalName. Remaining drafts: $remainingNames"
+  }
+  if ($ranked.Count -gt 1 -and $ranked[1].Score -eq $ranked[0].Score) {
+    throw "The Governance bootstrap has an ambiguous drafted source for $CanonicalName. Remaining drafts: $remainingNames"
+  }
+  return $ranked[0].Path
 }
 
 Write-Host 'Governance & Shell provisioning: preflight'
@@ -95,19 +164,27 @@ if (-not (Test-Path -LiteralPath $Installer -PathType Leaf)) { throw 'The Deploy
 if (-not (Test-Path -LiteralPath $Python -PathType Leaf)) { throw 'The approved Python executable is missing.' }
 if (-not (Test-Path -LiteralPath $Node -PathType Leaf)) { throw 'The approved Node executable is missing.' }
 
-$sourceBranch = (Invoke-Git -Root $SourceRoot -Arguments @('branch', '--show-current')).Output.Trim()
-if ($sourceBranch -ne 'lane/program-integrate') { throw 'The Program worktree is on the wrong branch.' }
-$sourceDirty = (Invoke-Git -Root $SourceRoot -Arguments @('status', '--porcelain=v1')).Output.Trim()
-if ($sourceDirty) { throw 'The Program worktree must be clean before lane provisioning.' }
-
 $ResolvedFoundingFiles = [ordered]@{}
 $script:UsedBootstrapPaths = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
 foreach ($canonicalName in $FoundingFiles.Keys) {
   $source = Resolve-BootstrapFile -CanonicalName $canonicalName -Aliases $FoundingFiles[$canonicalName]
-  [void]$UsedBootstrapPaths.Add($source)
+  [void]$script:UsedBootstrapPaths.Add($source)
   $ResolvedFoundingFiles[$canonicalName] = $source
   Write-Host ("Governance & Shell provisioning: {0} <= {1}" -f $canonicalName, [IO.Path]::GetFileName($source))
 }
+foreach ($canonicalName in $GeneratedFoundingFiles.Keys) {
+  Write-Host ("Governance & Shell provisioning: {0} <= approved Program ruling" -f $canonicalName)
+}
+
+if ($PreflightOnly) {
+  Write-Host 'GOVERNANCE & SHELL PREFLIGHT: SIX FOUNDING RECORDS RESOLVED'
+  exit 0
+}
+
+$sourceBranch = (Invoke-Git -Root $SourceRoot -Arguments @('branch', '--show-current')).Output.Trim()
+if ($sourceBranch -ne 'lane/program-integrate') { throw 'The Program worktree is on the wrong branch.' }
+$sourceDirty = (Invoke-Git -Root $SourceRoot -Arguments @('status', '--porcelain=v1')).Output.Trim()
+if ($sourceDirty) { throw 'The Program worktree must be clean before lane provisioning.' }
 
 if (-not (Test-Path -LiteralPath $TargetRoot -PathType Container)) {
   $branchExists = (Invoke-Git -Root $SourceRoot -Arguments @('show-ref', '--verify', '--quiet', "refs/heads/$TargetBranch") -AllowFailure).ExitCode -eq 0
@@ -130,6 +207,18 @@ foreach ($canonicalName in $FoundingFiles.Keys) {
     Copy-Item -LiteralPath $source -Destination $destination
   }
 }
+foreach ($canonicalName in $GeneratedFoundingFiles.Keys) {
+  $destination = Join-Path $targetContextRoot $canonicalName
+  $content = $GeneratedFoundingFiles[$canonicalName]
+  if (Test-Path -LiteralPath $destination -PathType Leaf) {
+    $existing = Get-Content -LiteralPath $destination -Raw
+    if ($existing -ne $content) {
+      throw "A generated Governance lane file already exists with different content: $canonicalName"
+    }
+  } else {
+    [IO.File]::WriteAllText($destination, $content, $Utf8NoBom)
+  }
+}
 
 $gateRunner = Join-Path $TargetRoot $GateRunnerRelative
 if (-not (Test-Path -LiteralPath $gateRunner -PathType Leaf)) { throw 'The Governance lane gate is missing.' }
@@ -138,7 +227,7 @@ Write-Host 'Governance & Shell provisioning: running fixed lane gate'
 & $Python $gateRunner 'governance-shell' '--root' $TargetRoot '--required-branch' $TargetBranch '--json'
 if ($LASTEXITCODE -ne 0) { throw 'The Governance & Shell lane gate failed.' }
 
-$relativeFoundingFiles = $FoundingFiles.Keys | ForEach-Object { "$LaneContext\$_" }
+$relativeFoundingFiles = $CanonicalFoundingNames | ForEach-Object { "$LaneContext\$_" }
 Invoke-Git -Root $TargetRoot -Arguments (@('add', '--') + $relativeFoundingFiles) | Out-Null
 $staged = (Invoke-Git -Root $TargetRoot -Arguments @('diff', '--cached', '--name-only')).Output.Trim()
 if ($staged) {

@@ -639,11 +639,12 @@ test("Governance lane provisioner is fixed, idempotent and cannot overwrite dive
   assert.match(provisioner, /lane\/governance-shell/);
   assert.match(provisioner, /worktree', 'add'/);
   assert.match(provisioner, /Get-FileHash/);
-  assert.match(provisioner, /DECISIONS\.md/);
+  assert.match(provisioner, /GeneratedFoundingFiles/);
+  assert.match(provisioner, /approved Program ruling/);
   assert.match(provisioner, /Resolve-BootstrapFile/);
   assert.match(provisioner, /\$script:UsedBootstrapPaths/);
   assert.doesNotMatch(provisioner, /-UsedPaths/);
-  assert.match(provisioner, /could not uniquely identify/);
+  assert.match(provisioner, /ambiguous drafted source/);
   assert.match(provisioner, /\$FoundingFiles\.Keys/);
   assert.match(provisioner, /governance_shell_lane_gate\.py/);
   assert.match(provisioner, /CONTROLSTACK_DEPLOYMENT_V2_INSTALL\.mjs/);
@@ -656,6 +657,14 @@ test("Governance lane provisioner is fixed, idempotent and cannot overwrite dive
     { encoding: "utf8" },
   );
   assert.equal(syntax.status, 0, syntax.stderr);
+  const bootstrapPreflight = spawnSync(
+    "powershell.exe",
+    ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", governanceProvisionerPath, "-PreflightOnly"],
+    { encoding: "utf8" },
+  );
+  assert.equal(bootstrapPreflight.status, 0, `${bootstrapPreflight.stdout}\n${bootstrapPreflight.stderr}`);
+  assert.match(bootstrapPreflight.stdout, /PREFLIGHT: SIX FOUNDING RECORDS RESOLVED/);
+  assert.equal((bootstrapPreflight.stdout.match(/ <= /g) || []).length, 6);
 
   assert.match(gate, /GATE_NAME = "governance-shell"/);
   assert.match(gate, /REQUIRED_BRANCH = "lane\/governance-shell"/);
