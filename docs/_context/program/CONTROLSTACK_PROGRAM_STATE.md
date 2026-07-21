@@ -491,3 +491,15 @@ P2 Checkpoint 1 is **IMPLEMENTATION COMPLETE / GATE GREEN / COMMIT BLOCKED BY SH
 - **SEQUENCE BLOCKS:** SEAM-G-C1 waits for Program producer acceptance; SEAM-G-A1 waits for producer and consumer acceptance.
 - **MAIN:** held; unfinished runtime-port work excluded.
 - **NEXT:** reconcile Selector queue and implement SEAM-G-P1 in exactly two new files. Patrick has no action.
+
+## 2026-07-21 Seam G consumer commission state
+
+- **SEAM-G-P1:** complete and Program-accepted; focused 115/115, normal closeout 107/107, clean Selector tree.
+- **PRODUCER RESULT:** deterministic ready-or-blocked IES request JSON; replay/idempotency, valid zeros, governance quarantine, technical identity movement and failure isolation accepted.
+- **SOLE READY ITEM:** SEAM-G-C1 in Lab & IES.
+- **LAB FILES:** one new import-free request compatibility adapter and one focused test.
+- **CONSUMER INPUT:** plain public `controlstack.downstream.ies-artifact-request.v1` JSON only.
+- **CONSUMER OUTPUT:** immutable ready-or-blocked compatibility projection with public identities, safe technical values/rows and no-write safety state only.
+- **PROTECTED LAB STATE:** expected branch marker and three protected untracked items remain outside the parcel.
+- **BLOCKED:** SEAM-G-A1, actual IES generation, authority, evidence acceptance, reference mutation, routes, persistence, network/file/email output, downstream readiness, main and runtime-port work.
+- **NEXT:** reconcile the Lab queue and implement SEAM-G-C1 in exactly two new files. Patrick has no action.

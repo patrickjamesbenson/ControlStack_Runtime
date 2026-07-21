@@ -740,3 +740,20 @@ Prove complete, blocked, valid-zero, replay-identical, governance-independent an
 Do not add a button, route, POST endpoint, file/export/email/download path, persistence, IES generation, authority state, reference mutation, Engine invocation, donor use, Lab import, main or runtime-port change.
 
 After a green Selector receipt, return to Program. SEAM-G-C1 and SEAM-G-A1 remain blocked.
+
+## 2026-07-21 SEAM-G-P1 accepted — Lab compatibility commission
+
+Program accepts the Selector producer receipt. The exact two-file request contract passed 115/115, normal closeout passed 107/107 and the Selector tree is clean.
+
+Commission Lab & IES for SEAM-G-C1 with exactly two new files:
+
+- `packages/lab-kernel/ies-toolkit/iesArtifactRequestV1CompatibilityAdapter.js`
+- `tests/lab-kernel/iesArtifactRequestV1CompatibilityAdapter.test.js`
+
+The adapter must be import-free and consume plain public request JSON only. It emits one deeply immutable ready-or-blocked compatibility projection containing only public schema/version/state, artifact intent, request/replay/audit identity, stable Engine identities, safe selected-result provenance/thermal values, exact public rows, blockers/warnings and explicit no-write/no-generation flags.
+
+Prove ready, blocked, valid-zero, replay-identical and governance-absent cases. Reject unknown versions, extra/nested authority, private/raw content, contradictory request/audit/Engine/row/thermal identity, unsafe flags, blocked-to-ready promotion and legacy rows.
+
+Preserve the Lab lane's expected branch marker and three protected untracked local items. Do not import Selector/Workspace/Runtime implementation, generate IES, allocate/approve/seal authority, accept evidence, mutate references, add routes, persist, write files/network/email or activate readiness.
+
+Return the consumer receipt to Program. SEAM-G-A1 and actual generation remain blocked.

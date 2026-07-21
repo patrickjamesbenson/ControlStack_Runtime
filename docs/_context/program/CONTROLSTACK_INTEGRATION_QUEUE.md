@@ -727,7 +727,7 @@ Seam G and main promotion remain held. No implementation item is ready; a new ex
 ### SEAM-G-P1 — Produce deterministic IES artifact request envelope
 
 - **Owner:** Selector & Engine.
-- **Status:** ready.
+- **Status:** done and Program-accepted.
 - **Depends on:** stable Seam B version-1 Engine output contract.
 - **Exact feature files:** new `packages/workspace-kernel/runtimeIesArtifactRequestContractV1.js` and new `tests/runtimeIesArtifactRequestContractV1.test.js`.
 - **Gate:** `selector-engine`.
@@ -735,14 +735,19 @@ Seam G and main promotion remain held. No implementation item is ready; a new ex
 - **Output:** exact immutable `controlstack.downstream.ies-artifact-request.v1` complete-or-blocked request with deterministic request/replay/audit identity, stable Engine identities, safe technical provenance/thermal values, exact public rows, canonical blockers/warnings and explicit no-write/no-generation safety state.
 - **Acceptance:** exact schema/version/key sets; complete, blocked and valid-zero fixtures; identical inputs replay identically; different governance envelopes produce identical output and do not appear; changed Engine technical identity changes request identity; unknown, over-rich, unsafe/private, contradictory or legacy-row input fails closed; blocked Engine output cannot become artifact-ready; no raw IES, photometry, candela, file, path, route, write, persistence, email, Engine invocation or generator capability.
 - **Commit message:** `feat(runtime): add IES artifact request contract v1`.
-- **Next:** Program producer receipt review; SEAM-G-C1 remains blocked.
+- **Accepted receipt:** exact two-file producer passed 115/115; normal Selector closeout passed 107/107; harness removed; tree clean. Complete, blocked, zero, replay, governance-independence, technical identity and fail-closed security cases verified.
+- **Next:** SEAM-G-C1 is the sole ready Lab parcel.
 
 ### SEAM-G-C1 — Prove Lab read-only request compatibility
 
 - **Owner:** Lab & IES.
-- **Status:** blocked behind Program acceptance of SEAM-G-P1.
-- **Scope:** exact new adapter and focused test to be named by Program after producer review.
-- **Boundary:** plain public JSON only; import-free; no IES generation, authority, evidence acceptance, reference mutation, route, persistence, write or readiness activation.
+- **Status:** ready.
+- **Exact feature files:** new `packages/lab-kernel/ies-toolkit/iesArtifactRequestV1CompatibilityAdapter.js` and new `tests/lab-kernel/iesArtifactRequestV1CompatibilityAdapter.test.js`.
+- **Gate:** `lab-ies`.
+- **Boundary:** plain public request JSON only; import-free; no IES generation, authority, evidence acceptance, reference mutation, route, persistence, network/file/email write or readiness activation.
+- **Acceptance:** exact ready and blocked request schema/version/key sets; immutable compatibility projection; valid zeros; deterministic request/replay/audit identity; stable Engine identities, safe thermal/provenance and exact public rows only; traceability values neither influence nor appear; unknown/extra/private/raw/unsafe/contradictory/legacy input fails closed; blocked request cannot become compatible-ready.
+- **Protected-state rule:** preserve the expected Lab branch marker and the three protected untracked items; do not clean, stage, absorb or rewrite them.
+- **Next:** Program consumer receipt review; SEAM-G-A1 remains blocked.
 
 ### SEAM-G-A1 — Activate read-only tunnel
 

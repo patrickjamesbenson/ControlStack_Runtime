@@ -55,8 +55,8 @@ The old RunTable scaffold remains diagnostic-only, and persistence-coupled legac
 
 ## Next authorised parcel
 
-SEAM-G-P1 is the sole ready parcel in Selector & Engine: one deterministic read-only IES artifact-request contract module and one focused test.
+SEAM-G-C1 is the sole ready parcel in Lab & IES: one import-free compatibility adapter and one focused test over plain public request JSON.
 
-It must consume only stable public Engine output JSON and exact IES intent, quarantine traceability, preserve safe technical identities and rows, prove replay/idempotency and fail closed without generation or writes.
+It must preserve ready or blocked state, valid zeros, deterministic request/replay/audit identity, safe technical values and exact public rows while exposing no authority, generation or write capability.
 
-SEAM-G-C1, Seam G activation, IES generation, routes, persistence, email/export, main and unfinished runtime-port work remain blocked. Patrick has no action.
+SEAM-G-A1, actual IES generation, routes, persistence, downstream output, main and unfinished runtime-port work remain blocked. Patrick has no action.

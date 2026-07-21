@@ -1139,3 +1139,22 @@ SEAM-G-P1 exact files are new `packages/workspace-kernel/runtimeIesArtifactReque
 The request accepts an optional outer traceability envelope only to prove quarantine: changing user, project, owner, timeline or registration values must not change the request or appear in it. Identical stable Engine output and artifact intent must produce an identical request ID, replay key, audit projection and complete output. Blocked Engine output must remain blocked with no artifact-ready state or generated body.
 
 This decision admits SEAM-G-P1 only. SEAM-G-C1 and SEAM-G-A1 remain sequence-blocked. Main and unfinished runtime-port work remain excluded.
+
+## 2026-07-21 — SEAM-G-P1 producer accepted; Lab request compatibility admitted
+
+**Status:** PRODUCER ACCEPTED; READ-ONLY CONSUMER PARCEL ADMITTED; SEAM G STILL INACTIVE.
+
+Program accepts the isolated Selector receipt. The exact producer module and focused test were pushed after 115/115, followed by normal lane closeout at 107/107 with a clean ending tree. The temporary harness was removed.
+
+The accepted producer emits deterministic complete-or-blocked `controlstack.downstream.ies-artifact-request.v1` JSON from exact stable Engine output and exact `ies_lm63_reference_build` intent. Complete, blocked, valid-zero, replay-identical, governance-independent and technical-identity-moving cases passed. Unknown, over-rich, private/raw, contradictory, added-authority, unsafe, blocked-promotion and legacy-row cases fail closed. No route, persistence, file, email/export/download, generator, authority, reference mutation, Engine/donor invocation or downstream activation exists.
+
+Program admits **SEAM-G-C1** to Lab & IES with exact new files:
+
+- `packages/lab-kernel/ies-toolkit/iesArtifactRequestV1CompatibilityAdapter.js`;
+- `tests/lab-kernel/iesArtifactRequestV1CompatibilityAdapter.test.js`.
+
+The adapter must be import-free and consume plain public `controlstack.downstream.ies-artifact-request.v1` JSON only. It emits one deeply immutable read-only compatibility projection for ready or blocked requests, preserving only public schema/version/state, request/replay/audit identity, exact artifact intent, stable Engine identities, safe technical provenance/thermal values, exact public rows, canonical blockers/warnings and no-write/no-generation safety state.
+
+It must preserve valid zeros, prove different traceability envelopes cannot influence or appear, and fail closed on unknown version, extra fields/authority, private/raw content, contradictory request/audit/Engine/row/thermal identity, unsafe flags, blocked-to-ready promotion or legacy rows. It adds no IES generation, Lab authority, evidence acceptance, reference mutation, route, persistence, network write, file, download, email or readiness activation.
+
+The Lab orchestrator must preserve the existing expected branch marker and three protected untracked local items. Program does not touch Lab files in this decision. SEAM-G-A1 and actual generation remain blocked pending the consumer receipt.

@@ -746,3 +746,21 @@ Rollback is removal or non-use of the new producer module. It writes and persist
 3. SEAM-G-A1: Program may activate only the read-only request tunnel after all Seam G conditions pass.
 
 Actual IES generation, reference allocation/approval/sealing, file/download/email output, routes, persistence and main remain outside this candidate.
+
+### SEAM-G-P1 producer acceptance and SEAM-G-C1 consumer commission
+
+The producer request contract is accepted after 115/115 focused coverage and 107/107 normal Selector closeout. Its complete, blocked, valid-zero, replay/idempotency, governance-independence, technical-identity movement and failure-isolation cases are accepted. The implementation contains no route, persistence, file/email/export, generator, authority, reference mutation or downstream activation.
+
+The consumer parcel is now exact:
+
+```text
+public iesArtifactRequestV1 JSON
+-> import-free Lab compatibility validator/projection
+-> no IES body, generation, authority or write
+```
+
+The Lab adapter may retain only public request/intent/Engine schema and identities, deterministic request/replay/audit identity, safe selected-result provenance/thermal values, exact public rows, canonical blockers/warnings and no-write safety state. It may not import producer implementation or inspect outside traceability.
+
+Acceptance must prove ready and blocked compatibility, valid zeros, deterministic replay identity and governance absence. Unknown versions, extra authority, private/raw content, contradictory request/audit/Engine/thermal/row identity, unsafe flags, blocked promotion and legacy rows fail closed.
+
+The consumer adds no IES generation, authority allocation/approval/sealing, evidence acceptance, reference mutation, route, persistence, network/file/email write or readiness activation. SEAM-G-A1 remains blocked until Program accepts the consumer receipt.
