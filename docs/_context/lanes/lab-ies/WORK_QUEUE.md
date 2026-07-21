@@ -935,7 +935,9 @@ Completion evidence: The existing sealed-reference generator validator was expos
 - human observation: none; repository contract and gate evidence are sufficient
 - commit message: `lab: checkpoint IES materialisation job plan v1`
 - on success next: Program plan receipt review; sealed DTO loading and actual generator invocation remain blocked
-- status: ready
+- status: done
+
+Completion evidence: The import-free materialisation job-plan module and focused test were committed in the exact two-file scope as `lab: checkpoint IES materialisation job plan v1`, pushed only to the Lab lane, and passed 305/305 after correcting two test-fixture ordering issues without changing the production boundary. The planner independently validates exact generation, binding and inspection public identities; derives the multiplier only from Engine verified lm/m divided by sealed baseline lm/m; preserves Selector target as intent only; emits the exact empty-selection job; and proves deterministic replay and identity movement. Unknown, extra, private/raw, unsafe, mismatched, contradictory, missing-override, caller-override and non-positive/non-finite cases fail closed. No sealed DTO, resolver/storage, generator/materialise call, LM-63 text, project/customer metadata, route, persistence, write or readiness capability was added. Program plan receipt review is next; actual generator invocation remains blocked.
 
 ## Explicitly not queued
 

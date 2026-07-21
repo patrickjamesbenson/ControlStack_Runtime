@@ -386,6 +386,16 @@ Reject unknown, extra, private/raw, unsafe, mismatched, contradictory, non-posit
 
 No human observation is required. Preserve the expected marker and three protected local items. After the feature and five-record closeout, return the plan receipt to Program; actual generator invocation remains blocked.
 
+## 2026-07-21 SEAM-G-C4 complete — Program plan review next
+
+The deterministic no-generation materialisation job plan is complete and pushed in the exact two-file scope. The final Lab gate passed 305/305 after two focused test-fixture ordering corrections; the production contract did not change during correction.
+
+The import-free planner consumes exact public generation-input, generation-reference-binding and reference-inspection version-1 JSON. It independently validates the generation/replay, selection, run and reference chain; derives output multiplier only from Engine verified lm/m divided by sealed baseline lm/m; keeps Selector target as intent; and emits exactly run length, the positive finite multiplier and an empty selections object.
+
+Replay, immutability, identity movement, private/raw rejection, missing/caller override rejection, unsafe-state rejection and non-positive/non-finite failure cases passed. It contains no sealed DTO, resolver/storage, generator/materialise call, LM-63 text, project/customer metadata, route, persistence, file/network/email write or readiness activation.
+
+The expected marker and three protected local items remain untouched. The Lab queue is empty. Program plan receipt review is the next seam; actual generator invocation remains blocked.
+
 ## Prohibited actions retained
 
 - no LAB-017 change outside the recorded version-1 approval without a new seam decision;

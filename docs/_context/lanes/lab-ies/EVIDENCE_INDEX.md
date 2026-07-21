@@ -2030,6 +2030,22 @@ Current verification superseded the stale parts of that snapshot:
 - Protected state: expected marker and three protected untracked items remain outside the parcel — VERIFIED.
 - Queue result: SEAM-G-C4 sole ready item; actual generator invocation remains blocked — RECORDED.
 
+## SEAM-G-C4 materialisation job-plan completion — 2026-07-21
+
+- Exact feature scope: import-free materialisation job-plan module and focused test only — VERIFIED.
+- Final Lab gate: 305 passed, 0 failed, 0 skipped, 0 todo — VERIFIED.
+- First gate: 303/305 with two focused fixture-order failures; production behavior remained green — RECORDED.
+- Fixture correction: valid tiny positive baseline for overflow and already-valid public envelopes for private/raw rejection — VERIFIED.
+- Public inputs: exact generation-input, generation-reference-binding and reference-inspection version-1 shapes and safety state — VERIFIED.
+- Identity agreement: generation/replay, selection, run and binding/inspection reference identity — VERIFIED.
+- Multiplier authority: Engine verified lm/m divided by sealed baseline lm/m only; Selector target retained as intent — VERIFIED.
+- Exact job: run length, positive finite multiplier and empty selections object only — VERIFIED.
+- Replay and immutability: deterministic output, technical/reference identity movement and no caller mutation — VERIFIED.
+- Fail-closed: unknown/extra/private/raw/unsafe, source/selection/run/reference mismatch, missing or contradictory overrides and non-positive/non-finite values — VERIFIED.
+- Capability boundary: no import, sealed DTO, resolver/storage, generator/materialise call, LM-63, project/customer metadata, route, persistence or write seam — VERIFIED.
+- Protected inventory: expected marker and three protected untracked items remained untouched — VERIFIED.
+- Queue result: SEAM-G-C4 done, Lab queue empty, Program plan receipt review required — RECORDED.
+
 ## Evidence maintenance rule
 
 After each authorised lane parcel:

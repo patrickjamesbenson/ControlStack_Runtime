@@ -13,11 +13,11 @@ Current repository evidence overrides stale historical statements.
 - Root: `C:\ControlStack_Worktrees\code-pilot-lab`
 - Branch: `lane/code-pilot-lab`
 - Gate: `lab-ies`
-- Recorded branch HEAD: `341202f9caae0c7637d7c06b95f441b08c636808`
+- Recorded branch HEAD: `3aa118b5fe6af9fea8c5208eed3f96cf9439184f`
 - Branch-HEAD guard checkpoint: `6d34e500d407d5335e5eebb317636a67a5e98618`
-- Starting HEAD for SEAM-G-C3: `c5d4fc07fbdc0fbb168c60ed2f7e2111559b2397`
-- Completed feature HEAD: `573863a8e430a253928fc2add613862b70afd59e`
-- Feature subject: `lab: checkpoint sealed reference generation inspection v1`
+- Starting HEAD for SEAM-G-C4: `b81b0eb348791bf9ab1d3b4f0e65245e2ad5250f`
+- Completed feature HEAD: `3aa118b5fe6af9fea8c5208eed3f96cf9439184f`
+- Feature subject: `lab: checkpoint IES materialisation job plan v1`
 - Feature push: confirmed on origin `lane/code-pilot-lab`
 
 ## Branch-HEAD synchronisation invariant
@@ -935,3 +935,13 @@ The only multiplier authority is Engine verified lm/m divided by sealed referenc
 The generator job is exactly run length, the positive finite derived multiplier and an empty selections object. No caller keyword override, project/customer metadata, sealed DTO, resolver/storage, generator/materialise call, LM-63 text, route, persistence, write or readiness activation is authorised.
 
 No human observation is required. The expected marker and three protected untracked items remain outside the parcel. Program plan receipt review is next; actual generation remains blocked.
+
+## 2026-07-21 SEAM-G-C4 materialisation job-plan closeout
+
+SEAM-G-C4 is complete and pushed in the exact two-file scope. The import-free planner consumes only exact public generation-input, reference-binding and sealed-reference inspection version-1 JSON and emits one deeply immutable ready-or-blocked no-generation job-plan projection.
+
+The final Lab gate passed 305/305. Exact source generation/replay, selection, run and reference identity agreement passed. The multiplier is derived only from Engine verified lm/m divided by sealed baseline lm/m; Selector target remains intent only. Positive finite values, exact empty selections, deterministic replay, identity movement and immutable/no-mutation behavior passed.
+
+Unknown, extra, private/raw, unsafe, mismatched, contradictory, missing-override, caller-override and non-positive/non-finite inputs fail closed. The first gate exposed two test-fixture ordering issues; both were corrected within the focused test only, with no production boundary change.
+
+No sealed DTO, resolver/storage, generator/materialise invocation, LM-63 text, project/customer metadata, route, persistence, network/file/email write or readiness capability was added. The Lab queue is empty. Program plan receipt review is next; actual generation remains blocked.
