@@ -249,11 +249,22 @@ foreach ($canonicalName in $FoundingFiles.Keys) {
 }
 foreach ($canonicalName in $GeneratedFoundingFiles.Keys) {
   $destination = Join-Path $targetContextRoot $canonicalName
+  $relativeDestination = "$LaneContext\$canonicalName"
   $content = $GeneratedFoundingFiles[$canonicalName]
   if (Test-Path -LiteralPath $destination -PathType Leaf) {
     $existing = Get-Content -LiteralPath $destination -Raw
-    if ($existing -ne $content) {
-      throw "A generated Governance lane file already exists with different content: $canonicalName"
+    $existingNormalised = (($existing -replace "`r`n", "`n") -replace "`r", "`n").TrimEnd()
+    $contentNormalised = (($content -replace "`r`n", "`n") -replace "`r", "`n").TrimEnd()
+    if ($existingNormalised -ne $contentNormalised) {
+      $status = (Invoke-Git -Root $TargetRoot -Arguments @('status', '--porcelain=v1', '--', $relativeDestination)).Output.Trim()
+      $existingHeader = (($existingNormalised -split "`n", 2)[0]).Trim()
+      $generatedHeader = (($contentNormalised -split "`n", 2)[0]).Trim()
+      if ($status -match '^\?\?\s' -and $existingHeader -eq $generatedHeader) {
+        Write-Host ("Governance & Shell provisioning: refreshing interrupted generated record {0}" -f $canonicalName)
+        [IO.File]::WriteAllText($destination, $content, $Utf8NoBom)
+      } else {
+        throw "A generated Governance lane file already exists with different content: $canonicalName"
+      }
     }
   } else {
     [IO.File]::WriteAllText($destination, $content, $Utf8NoBom)
