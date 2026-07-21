@@ -646,3 +646,12 @@ The Program walkthrough handoff is ingested. WALK-001 is the sole commissioned p
 Return the complete guarded dry-run, Ambient-row, archive, promotion, focused-test, full-gate, exact staged-set, commit/push and final-Git receipt. Do not change Selector feature behaviour, touch later walkthrough parcels, save/register a project, invoke Engine, perform CRM/provider mutation, persistence or IES work, or write any other lane, main or donor root.
 
 After WALK-001, stop. The orchestrator must review and close it in lane memory and obtain Program admission before WALK-002 can become ready. One Selector writer only.
+
+
+## 2026-07-22 WALK-001 protected stop
+
+WALK-001 did not close. Its guarded dry-run passed identity, memory, Git, Google configuration, credential-readability and disclosure preflight, but the running service could not load the declared Google Sheets reader dependency. Validation therefore failed before source-shape and Ambient proof.
+
+The active authority stayed readable and unchanged. No materialisation, archive, promotion, feature edit, test gate, stage, commit, Engine action or later walkthrough work occurred. Git ended clean.
+
+WALK-001 is blocked until Program admits a bounded runtime dependency repair or retry after the service can load the dependency. WALK-002 remains blocked and no second Selector worker may start.

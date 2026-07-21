@@ -652,3 +652,16 @@ WALK-001 must complete the guarded dry-run and prove every existing source-shape
 WALK-001 changes no Selector feature behaviour and performs no Engine run, project save/registration, CRM/provider mutation, persistence, IES generation/retrieval/delivery, cross-lane write or later walkthrough work. The worker must return the complete dry-run, Ambient, archive, promotion, focused-test, gate, exact staged-set, commit/push and final-Git receipt.
 
 Completion of WALK-001 does not release WALK-002. The orchestrator reviews and closes WALK-001 in durable lane memory, then stops for Program admission before WALK-002 may become ready. One Selector writer only; one parcel at a time.
+
+
+## 2026-07-22 WALK-001 guarded dry-run stop — latest controlling state
+
+**Recorded lane work HEAD:** `64df370924c68e43570e75941836ee59f7bea275` — `docs(selector): reconcile lane state for WALK-001 review stop`.
+
+The standing worker passed lane identity, branch, memory guard and clean-Git checks. Google configuration and credential preflight were green and redacted. The previously promoted authority remained readable and parseable with 15 of 15 expected tables and did not change.
+
+The guarded dry-run reached the reader boundary but failed validation because the running service could not load the declared Google Sheets dependency. Current source shape was unavailable, so the required finite, genuinely tier-gated `SYSTEM_POLICY.ambient_temp` row was not proven. This is a validation failure, not a source acceptance.
+
+The worker stopped before every write. Materialisation, archive and promotion were not invoked; no feature, test, gate, stage, commit/push, Engine, project, provider, persistence, IES or later walkthrough action occurred. Disclosure remained safe and final Git remained clean.
+
+WALK-001 is incomplete and now blocked on runtime dependency availability. WALK-002 through WALK-007 remain blocked; WALK-008 remains ruled and closed. No retry or repair parcel is commissioned. Program must admit the next bounded action.

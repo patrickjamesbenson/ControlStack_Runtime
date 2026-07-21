@@ -726,3 +726,14 @@ Every completed worker updates this index with:
 - Actual HEAD was the lane documentation commit adding Patrick's default-acknowledgement ruling, while the latest recorded lane work HEAD still named the earlier walkthrough commission — VERIFIED MEMORY DIVERGENCE.
 - Program's authoritative handoff records PWS-001, PWS-002 and PWS-005 complete; WALK-001 sole ready; the guarded dry-run plus finite tier-gated Ambient requirement; archive-before-promotion order; later WALK sequence; one writer; and Patrick's single default-acknowledgement ruling — VERIFIED FROM PROGRAM REPOSITORY.
 - Lane queue now binds WALK-001 to a complete receipt and mandatory orchestrator review/Program-admission stop before WALK-002 — RECORDED.
+
+
+## 2026-07-22 — WALK-001 guarded dry-run stop evidence
+
+- Starting and final Selector identity, branch, memory guard and Git state passed and remained clean — VERIFIED.
+- Google source configuration and credential readability passed; credential, user, row, provider body and private-path disclosure flags remained false — VERIFIED REDACTED PREFLIGHT.
+- Existing active authority remained readable/parseable with 15/15 expected tables and unchanged fingerprint, timestamp and size — VERIFIED READ-ONLY PROBE.
+- Guarded dry-run transport returned, but validation failed because the running service could not load the declared Google Sheets reader dependency; current source shape and Ambient row were unavailable — VERIFIED.
+- No materialised or active-snapshot write was attempted; archive and promotion were not invoked — VERIFIED.
+- No focused/full gate, staging, feature commit/push, Engine, project, CRM/provider, persistence, IES or later walkthrough action occurred — VERIFIED WORKER RECEIPT AND FINAL GIT.
+- Queue result: WALK-001 incomplete and blocked; WALK-002 and later parcels not released; Program admission required for the next bounded action — RECORDED.

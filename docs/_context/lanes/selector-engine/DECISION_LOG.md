@@ -542,3 +542,12 @@ This log is append-oriented. Do not silently rewrite historical decisions.
 **Guard:** every existing dry-run source-shape, validation, identity and disclosure check and one finite, genuinely tier-gated `SYSTEM_POLICY.ambient_temp` row must pass before write. The guarded live order is materialise, archive current authority, promote new authority. Archive failure blocks promotion; promotion failure or uncertainty stops without success.
 
 **Review boundary:** the worker returns the complete dry-run, Ambient, archive, promotion, test, gate, exact staged-set, commit/push and final-Git receipt, then stops. The orchestrator closes WALK-001 in lane memory and stops for Program admission before WALK-002 is released. No later walkthrough work or live Engine run is implied.
+
+
+## 2026-07-22 — Accept WALK-001 protected stop; do not close or advance
+
+**Decision:** Accept the standing worker's validation-failure stop as correct guarded behaviour. Do not close WALK-001 and do not release WALK-002.
+
+**Evidence:** lane identity, memory and Git checks passed; Google configuration and credential readability passed with safe redaction; the old active authority remained readable and unchanged. The dry-run could not load the declared Google Sheets reader dependency, returned no current-source shape and could not prove the finite tier-gated Ambient row.
+
+**Consequence:** no materialisation, archive or promotion was attempted. No feature, test, gate, stage, commit, Engine, project, provider, persistence, IES or later walkthrough action occurred. WALK-001 is blocked pending Program admission of a bounded dependency repair or proven retry path.

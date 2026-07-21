@@ -545,7 +545,7 @@ Runtime 8788 has not loaded the repair: the post-commit empty-body dry-run still
 **Batch rule:** one Selector writer and one parcel at a time. WALK-001 is the only commissioned parcel. Completion does not release WALK-002: the worker must return the complete receipt, the orchestrator must review and close WALK-001 in lane memory, and the lane must stop for Program admission before WALK-002 can become ready. No live Engine run is authorised until WALK-002 through WALK-006 are complete. PWS-001, PWS-002 and PWS-005 are already done and must not be recommissioned.
 
 ### WALK-001 Refresh active authority snapshot
-* status: ready
+* status: blocked (guarded dry-run stopped before write: running service cannot load declared Google reader dependency; no later parcel released)
 * objective: use the already-repaired guarded materialiser path to run the dry-run, prove the redacted source-shape summary includes the tier-gated `ambient_temp` row in `SYSTEM_POLICY`, then run the existing live materialisation/archive/promotion workflow.
 * acceptance: the complete guarded dry-run passes every existing source-shape, validation, identity and disclosure check; all required tables remain present; the current source contains one finite, genuinely tier-gated `SYSTEM_POLICY.ambient_temp` row; no credential, user, row, provider body or private path is exposed; only then the existing guarded workflow materialises the validated authority, archives the currently promoted authority, and promotes the new authority; archive succeeds before promotion; the promoted active fingerprint and timestamp move; post-promotion read-only status reports the new source; Selector Ambient becomes available without default or inference.
 * stop: stop before any write on validation failure, missing/non-finite/non-tier-gated Ambient policy, source identity contradiction or unsafe disclosure. Archive failure stops before promotion. Promotion failure or uncertainty stops immediately and must not be reported as success.
@@ -602,3 +602,12 @@ Runtime 8788 has not loaded the repair: the post-commit empty-body dry-run still
 
 **Ending order:** WALK-001 → WALK-002 → WALK-003 → WALK-004 → WALK-005 → WALK-005A → WALK-006 → WALK-007. WALK-008 is ruled and closed.
 
+
+
+## 2026-07-22 WALK-001 guarded dry-run result
+
+**Result:** protected pre-write stop. Identity, branch, memory guard, Git cleanliness, Google configuration and credential readability passed. The active authority remained readable and unchanged with all 15 expected tables.
+
+The guarded dry-run returned a redacted validation failure because the running service could not load its declared Google Sheets reader dependency. No current-source shape or finite tier-gated Ambient row could therefore be proven. No materialisation, archive, promotion, feature change, test gate, staging, commit, Engine action or later walkthrough work occurred. Disclosure checks remained safe.
+
+WALK-001 is incomplete and blocked on runtime dependency availability. WALK-002 and every later parcel remain blocked. Do not recommission until the running service can load the declared dependency and Program admits the retry or repair path.
