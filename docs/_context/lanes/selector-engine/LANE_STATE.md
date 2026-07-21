@@ -561,3 +561,9 @@ The single data-retrieval gateway rule applies immediately. Selector, Engine and
 Standing acceptance remains binding: different and absent traceability envelopes cannot alter Engine output; changed optic rise must move lookup and verified output; identical placeholder rows require a varied-row movement test; and ownership assertions must cover every governed system/row.
 
 Lab SEAM-G-C4 may run in parallel in its separate lane. No second Selector writer, direct provider push, direct artifact delivery, main or runtime-port work is authorised.
+
+## 2026-07-21 post-admission worker-guard reconciliation — latest controlling state
+
+**Recorded lane work HEAD:** `2fd45ac3f8870bb2be91c95209536b72c4878b8f` — `docs(selector): admit Program work shape`.
+
+Program admission is now the recorded work boundary. PWS-001 remains the sole ready parcel; PWS-002 and PWS-005 remain blocked in strict sequence. The next commit is a dedicated lane-state reconciliation wrapper only. No feature, test, provider, browser, Engine, Lab/IES, route, persistence, RuntimeData, main or runtime-port work is included.
