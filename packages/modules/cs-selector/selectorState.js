@@ -884,6 +884,7 @@ function createManualConstraintScaffold(sectionFieldContract = DEFAULT_SECTION_F
     filteringActive: false,
     specReady: false,
     buildReady: false,
+    factoryReady: false,
     writes: false,
   };
 }
@@ -895,6 +896,7 @@ const SELECTOR_STATE_CONTRACT_TEMPLATE = Object.freeze({
   selectorMode: "default-preview",
   specReady: false,
   buildReady: false,
+  factoryReady: false,
   specGateComplete: false,
   buildGateComplete: false,
   specSlug: null,
@@ -981,6 +983,7 @@ function cloneManualConstraintScaffold(value = {}, sectionFieldContract = DEFAUL
     filteringActive: false,
     specReady: false,
     buildReady: false,
+    factoryReady: false,
     writes: false,
   };
 }
@@ -1255,6 +1258,7 @@ function recomputeSelectorStateContract(contract = {}) {
     previewDefaultState: manualConstraintCount === 0,
     specReady: false,
     buildReady: false,
+    factoryReady: false,
     specGateComplete: false,
     buildGateComplete: false,
     specSlug: null,
@@ -1279,6 +1283,7 @@ function recomputeSelectorStateContract(contract = {}) {
       filteringActive: false,
       specReady: false,
       buildReady: false,
+      factoryReady: false,
       writes: false,
     },
     autoConsequences,

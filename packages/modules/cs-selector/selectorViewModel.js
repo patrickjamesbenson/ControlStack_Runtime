@@ -2,7 +2,10 @@ import { buildSelectedResultProjectionContract } from "../../workspace-kernel/se
 import { buildSelectorSpecialPartsEntitlementPreview } from "./selectorSpecialPartsEntitlementPreview.js";
 import { buildSelectorRunAccessoryPlacementPreview } from "./selectorRunAccessoryPlacementPreview.js";
 import { buildSelectorRunIntakePreview, SUPPORTED_SELECTOR_RUN_LENGTH_MODES } from "./selectorRunIntakePreview.js";
-import { buildSelectorFactoryApprovedInputsSummary } from "./selectorFactoryApprovedInputsSummary.js";
+import {
+  buildSelectorFactoryApprovedInputsSummary,
+  deriveSelectorFactoryReadyState,
+} from "./selectorFactoryApprovedInputsSummary.js";
 import { buildSelectorSafeDraftProjectEnvelopePreview } from "./selectorSafeDraftProjectEnvelopePreview.js";
 import { buildSelectorSafeHydrateValidationPreview } from "./selectorSafeHydrateValidationPreview.js";
 import { buildRuntimeSealedCandidateAssemblyPreviewSummary } from "../../workspace-kernel/engineRunTableSealedCandidateAssemblyPreview.js";
@@ -981,6 +984,7 @@ function createStateContractRows(contract = {}) {
     ["fresh load is preamble/default-preview only", boolString(contract.freshLoad === true && contract.previewDefaultState === true)],
     ["spec-ready", boolString(contract.specReady === true)],
     ["build-ready", boolString(contract.buildReady === true)],
+    ["factory-ready", boolString(contract.factoryReady === true)],
     ["Spec Ready", boolString(contract.specGateComplete === true)],
     ["Build Ready", boolString(contract.buildGateComplete === true)],
     ["spec slug", contract.specSlug || ""],
@@ -1040,6 +1044,7 @@ function createDefaultPreviewBucketDiagnostics(contract = {}) {
       ["committed spec exists", boolString(contract.committedSpecExists === true)],
       ["spec-ready", boolString(contract.specReady === true)],
       ["build-ready", boolString(contract.buildReady === true)],
+      ["factory-ready", boolString(contract.factoryReady === true)],
       ["spec slug", contract.specSlug || ""],
       ["committed spec", contract.committedSpec ? "present" : "empty/null"],
       ["provenance entries", objectFieldCount(contract.provenanceMap)],
@@ -1157,6 +1162,7 @@ function readManualConstraintScaffold(contract = {}) {
     filteringActive: scaffold.filteringActive === true,
     specReady: scaffold.specReady === true || contract.specReady === true,
     buildReady: scaffold.buildReady === true || contract.buildReady === true,
+    factoryReady: scaffold.factoryReady === true || contract.factoryReady === true,
     writes: scaffold.writes === true,
   };
 }
@@ -1172,6 +1178,7 @@ function createManualConstraintScaffoldRows(contract = {}) {
     ["filtering active", boolString(scaffold.filteringActive)],
     ["specReady", boolString(scaffold.specReady)],
     ["buildReady", boolString(scaffold.buildReady)],
+    ["factoryReady", boolString(scaffold.factoryReady)],
     ["writes", boolString(scaffold.writes)],
     ["placeholder action", scaffold.placeholderActions.join(", ") || "Set constraint later"],
     ["blocked reason", scaffold.blockedReason],
@@ -1438,6 +1445,8 @@ function createManualConstraintBehaviour(contract = {}, selectorState, onLocalSt
       ["compatibility warnings", Array.isArray(diagnostics.warnings) && diagnostics.warnings.length ? diagnostics.warnings.map((warning) => warning.message).join(" | ") : "none"],
       ["blocked/incompatible fields", Array.isArray(diagnostics.blockedIncompatibleFields) && diagnostics.blockedIncompatibleFields.length ? diagnostics.blockedIncompatibleFields.map((field) => `${field.label || field.fieldKey}: ${field.reason}`).join(" | ") : "none"],
       ["specReady", boolString(contract.specReady === true)],
+      ["buildReady", boolString(contract.buildReady === true)],
+      ["factoryReady", boolString(contract.factoryReady === true)],
       ["slugGenerationEnabled", boolString(contract.slugGenerationEnabled === true)],
       ["selectorMutationScope", contract.selectorMutationScope || "local UI state only"],
       ["boardDataMutationEnabled", boolString(contract.boardDataMutationEnabled === true)],
@@ -5323,6 +5332,16 @@ function createSpecBuildReadinessPreview({
     readonlyEngineCandidateApplicability,
   });
   const factoryApprovedInputsReady = factoryApprovedInputsSummary.factoryApprovedInputsReady === true;
+  const factoryReadyState = deriveSelectorFactoryReadyState({
+    specReady,
+    buildReady,
+    factoryApprovedInputsSummary,
+    committedSelectorConstraints: buildAuthorityConstraints,
+    missingSpecRequirements,
+    missingBuildRequirements,
+    blockedIncompatibleSelections: blockedRows,
+  });
+  const factoryReady = factoryReadyState.factoryReady === true;
   const readonlyEngineCandidateMapperResult = buildSelectorReadonlyEngineCandidateForInternalSeam({
     factoryApprovedInputsSummary,
     committedSelectorConstraints: buildAuthorityConstraints,
@@ -5346,7 +5365,7 @@ function createSpecBuildReadinessPreview({
   const stageIndicators = [
     { stage: 1, key: "specReady", label: "Stage 1 — Spec Ready", ready: specReady, authority: "committed selector state", sourceAuthority: "manualConstraints or acceptedDefaults only; provisional defaults do not count", failClosed: !specReady },
     { stage: 2, key: "proofOfConceptBuildable", label: "Stage 2 — Proof-of-Concept Buildable", ready: buildReady, authority: "committed selector state only: manualConstraints or acceptedDefaults", sourceAuthority: "manualConstraints or acceptedDefaults only; product-spine/display rows do not count", failClosed: !buildReady },
-    { stage: 3, key: "factoryApprovedInputs", label: "Stage 3 — Factory Approved Inputs", ready: factoryApprovedInputsReady, authority: "committed selector state plus safe factory-input summaries", sourceAuthority: factoryApprovedInputsSummary.sourceAuthority, failClosed: !factoryApprovedInputsReady, blocker: factoryApprovedInputsSummary.blocker || null, summary: factoryApprovedInputsSummary },
+    { stage: 3, key: "factoryReady", label: "Stage 3 — Factory Approved Inputs", stateLabel: "Factory Ready", ready: factoryReady, authority: "derived readiness over committed selector state and the existing Factory Approved Inputs summary", sourceAuthority: factoryReadyState.sourceAuthority, failClosed: !factoryReady, blocker: factoryReadyState.blocker || null, summary: factoryApprovedInputsSummary },
     { stage: 4, key: "engineOutcomeProven", label: "Stage 4 — Engine Outcome Proven", ready: false, authority: "Engine/RunTable proof remains downstream", sourceAuthority: "not implemented — fail closed", failClosed: true },
     { stage: 5, key: "standaloneProGradeHardening", label: "Stage 5 — Standalone / Pro-grade Hardening", ready: false, authority: "standalone/pro-grade hardening deferred", sourceAuthority: "not implemented — fail closed", failClosed: true },
   ];
@@ -5403,6 +5422,16 @@ function createSpecBuildReadinessPreview({
     buildReady,
     buildGateComplete: buildReady,
     buildGateState: buildReady ? "complete enough for future build slug/spec input metadata" : "incomplete — build/order context still required",
+    factoryReady,
+    factoryReadyState,
+    factoryReadyRows: [
+      ["factoryReady", factoryReady ? "true" : "false"],
+      ["state", factoryReadyState.state],
+      ["blocker", factoryReadyState.blocker || "none"],
+      ["factoryApprovedInputsReady", factoryApprovedInputsReady ? "true" : "false"],
+      ["diagnostic fallback accepted", "false"],
+      ["provider push enabled", "false"],
+    ],
     factoryApprovedInputsReady,
     factoryApprovedInputsSummary,
     factoryApprovedInputsRows: factoryApprovedInputsSummary.summaryRows,
@@ -5421,7 +5450,7 @@ function createSpecBuildReadinessPreview({
     stageIndicators,
     stageIndicatorRows: stageIndicators.map((stage) => [stage.label, stage.ready ? "true" : "false"]),
     businessStageIndicatorContract: {
-      sourceAuthority: "committed selector state for Stage 1/2; Stage 3 uses committed selector state plus safe factory-input summaries; Stage 4/5 remain fail-closed",
+      sourceAuthority: "committed selector state for Stage 1/2; Stage 3 Factory Ready derives from those states plus the existing Factory Approved Inputs summary; Stage 4/5 remain fail-closed",
       stages: stageIndicators,
       writes: false,
       rawRowsExposed: false,
@@ -5482,8 +5511,10 @@ function createSpecBuildReadinessPreview({
       ["candidate state", candidateState],
       ["Spec Ready state", specReady ? "ready" : "incomplete"],
       ["Build Ready state", buildReady ? "ready" : "incomplete"],
-      ["factory-approved inputs", factoryApprovedInputsReady ? "ready" : "blocked/fail-closed"],
-      ["factory-approved blocker", factoryApprovedInputsSummary.blocker || "none"],
+      ["Factory Ready state", factoryReady ? "ready" : "blocked/fail-closed"],
+      ["Factory Ready blocker", factoryReadyState.blocker || "none"],
+      ["factory-approved inputs evidence", factoryApprovedInputsReady ? "ready" : "blocked/fail-closed"],
+      ["factory-approved evidence blocker", factoryApprovedInputsSummary.blocker || "none"],
       ["Stage 4 Step 1 readonly mapper", readonlyEngineCandidateMapperSummary?.readonlyEngineCandidateMapperReady === true ? "ready" : (readonlyEngineCandidateMapperSummary?.blocker || "blocked/fail-closed")],
       ["Stage 4 Step 1 readonly seam", readonlyEngineStep1SafeSummary?.readonlyEngineStep1Ready === true ? "ready" : (readonlyEngineStep1SafeSummary?.blocker || "host-local-readonly-engine-seam-not-invoked")],
       ["Stage 4 Step 2 selected-result source/projection", readonlyEngineStep2SelectedResultSummary?.readonlyEngineStep2Ready === true ? "summary-ready" : (readonlyEngineStep2SelectedResultSummary?.blocker || "blocked/fail-closed")],

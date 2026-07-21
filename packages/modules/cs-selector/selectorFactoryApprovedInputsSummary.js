@@ -1065,6 +1065,90 @@ function buildReadonlyEngineCandidateInputAvailabilitySummary(
   };
 }
 
+function factoryReadyCommittedConstraintBlockers(committedSelectorConstraints = []) {
+  if (!Array.isArray(committedSelectorConstraints) || committedSelectorConstraints.length === 0) {
+    return ["factory-ready-committed-selector-constraints-missing"];
+  }
+  const blockers = [];
+  const fieldKeys = new Set();
+  committedSelectorConstraints.forEach((constraint, index) => {
+    if (!isPlainObject(constraint)) {
+      blockers.push(`factory-ready-constraint-${index + 1}-malformed`);
+      return;
+    }
+    const fieldKey = safeString(constraint.fieldKey);
+    const value = text(constraint.value);
+    if (!fieldKey) blockers.push(`factory-ready-constraint-${index + 1}-field-key-missing`);
+    if (!value) blockers.push(`factory-ready-constraint-${index + 1}-value-missing`);
+    if (constraint.committedSelectorState !== true) blockers.push(`factory-ready-constraint-${index + 1}-uncommitted`);
+    if (constraint.blocked === true) blockers.push(`factory-ready-constraint-${index + 1}-blocked`);
+    if (!["manualConstraints", "acceptedDefaults"].includes(constraint.authoritySource)) {
+      blockers.push(`factory-ready-constraint-${index + 1}-non-source-backed`);
+    }
+    const manual = constraint.manualConstraint === true;
+    const acceptedDefault = constraint.acceptedDefault === true;
+    if (manual === acceptedDefault) blockers.push(`factory-ready-constraint-${index + 1}-authority-contradictory`);
+    if (fieldKey) {
+      if (fieldKeys.has(fieldKey)) blockers.push(`factory-ready-constraint-${index + 1}-duplicate-field`);
+      fieldKeys.add(fieldKey);
+    }
+  });
+  return blockers;
+}
+
+export function deriveSelectorFactoryReadyState({
+  specReady = false,
+  buildReady = false,
+  factoryApprovedInputsSummary = {},
+  committedSelectorConstraints = [],
+  missingSpecRequirements = [],
+  missingBuildRequirements = [],
+  blockedIncompatibleSelections = [],
+} = {}) {
+  const blockers = [];
+  if (specReady !== true) blockers.push("factory-ready-spec-ready-required");
+  if (buildReady !== true) blockers.push("factory-ready-build-ready-required");
+  if (!Array.isArray(missingSpecRequirements) || missingSpecRequirements.length > 0) blockers.push("factory-ready-spec-requirements-incomplete");
+  if (!Array.isArray(missingBuildRequirements) || missingBuildRequirements.length > 0) blockers.push("factory-ready-build-requirements-incomplete");
+  if (!Array.isArray(blockedIncompatibleSelections) || blockedIncompatibleSelections.length > 0) blockers.push("factory-ready-incompatible-selection-present");
+
+  if (!isPlainObject(factoryApprovedInputsSummary)) {
+    blockers.push("factory-ready-approved-inputs-summary-malformed");
+  } else {
+    if (factoryApprovedInputsSummary.factoryApprovedInputsReady !== true || factoryApprovedInputsSummary.ready !== true) {
+      blockers.push("factory-ready-approved-inputs-not-ready");
+    }
+    if (factoryApprovedInputsSummary.stage2Ready !== true) blockers.push("factory-ready-stage2-evidence-not-ready");
+    if (text(factoryApprovedInputsSummary.blocker)) blockers.push("factory-ready-approved-inputs-blocker-present");
+    const checks = factoryApprovedInputsSummary.checks;
+    if (!Array.isArray(checks) || checks.length === 0 || checks.some((check) => !isPlainObject(check) || check.ready !== true)) {
+      blockers.push("factory-ready-approved-input-check-incomplete");
+    }
+    const diagnostics = factoryApprovedInputsSummary.failClosedDiagnostics;
+    if (!Array.isArray(diagnostics) || diagnostics.length > 0) blockers.push("factory-ready-fail-closed-diagnostic-present");
+  }
+  blockers.push(...factoryReadyCommittedConstraintBlockers(committedSelectorConstraints));
+
+  const uniqueBlockers = Object.freeze([...new Set(blockers)]);
+  const factoryReady = uniqueBlockers.length === 0;
+  return Object.freeze({
+    factoryReady,
+    ready: factoryReady,
+    state: factoryReady ? "factory-ready" : "factory-ready-fail-closed",
+    blocker: uniqueBlockers[0] || null,
+    blockers: uniqueBlockers,
+    specReady: specReady === true,
+    buildReady: buildReady === true,
+    factoryApprovedInputsReady: factoryApprovedInputsSummary?.factoryApprovedInputsReady === true,
+    sourceAuthority: "derived only from Spec Ready, Build Ready, committed selector state and the existing Factory Approved Inputs summary",
+    diagnosticFallbackAccepted: false,
+    providerPushEnabled: false,
+    writes: false,
+    generation: false,
+    rawRowsExposed: false,
+  });
+}
+
 export function buildSelectorFactoryApprovedInputsSummary({
   stage2Ready = false,
   committedSelectorConstraints = [],

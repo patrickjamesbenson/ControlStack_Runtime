@@ -547,6 +547,8 @@ function appendSelectorManualConstraintBehaviour(parent, shell = {}) {
     ["compatibility warnings", "none"],
     ["blocked/incompatible fields", "none"],
     ["specReady", "false"],
+    ["buildReady", "false"],
+    ["factoryReady", "false"],
     ["slugGenerationEnabled", "false"],
     ["selectorMutationScope", "local UI state only"],
     ["boardDataMutationEnabled", "false"],
@@ -941,6 +943,7 @@ function appendSelectorExpanderShell(parent, viewModel) {
     ["filtering active", "false"],
     ["specReady", "false"],
     ["buildReady", "false"],
+    ["factoryReady", "false"],
     ["writes", "false"],
   ]);
 
@@ -2143,6 +2146,7 @@ function appendSelectorSpecBuildReadinessPreview(parent, preview = {}) {
   section.dataset.productFacing = preview.productFacing === false ? "false" : "true";
   section.dataset.specReady = preview.specReady === true ? "true" : "false";
   section.dataset.buildReady = preview.buildReady === true ? "true" : "false";
+  section.dataset.factoryReady = preview.factoryReady === true ? "true" : "false";
   section.dataset.downstreamBlocked = preview.downstreamBlocked === false ? "false" : "true";
   section.dataset.rawRowsExposed = preview.rawRowsExposed === true ? "true" : "false";
 
@@ -2154,6 +2158,7 @@ function appendSelectorSpecBuildReadinessPreview(parent, preview = {}) {
     "Downstream authorities remain separate and fail closed.",
   ]);
   appendSection(section, "Readiness status", preview.summaryRows || [["candidate state", preview.candidateState || "fresh/default-preview only"]]);
+  appendSection(section, "Factory Ready derivation", preview.factoryReadyRows || [["factoryReady", "false"], ["blocker", "factory-ready-fail-closed"]]);
   appendSection(section, "Manual constraints summary", preview.manualConstraintRows || [["manual constraints", "—"]]);
   appendSection(section, "Auto consequences summary", preview.autoConsequenceRows || [["auto consequences", "—"]]);
   appendSection(section, "Missing spec requirements", preview.missingSpecRequirementRows || [["spec requirements", "missing"]]);
