@@ -47,7 +47,7 @@ test("output collection routing contract keeps the existing public schemas and e
   );
 });
 
-test("prepared actions are retained privately by descriptor and exact exportId", async () => {
+test("output collection retains one preview descriptor but no module-owned prepared action", async () => {
   const workflowSource = await readFile(
     new URL(
       "../apps/workspace-shell/src/projectBrowserSelectedProjectExportsWorkflow.js",
@@ -62,22 +62,14 @@ test("prepared actions are retained privately by descriptor and exact exportId",
   );
   assert.match(workflowSource, /function buildProjectIesExportItem\s*\(/);
   assert.doesNotMatch(workflowSource, /function buildExportItem\s*\(/);
+  assert.doesNotMatch(workflowSource, /PRIVATE_PREPARED_ACTIONS/);
+  assert.doesNotMatch(workflowSource, /new Map\(\[\["project-ies", preparedAction\]\]\)/);
+  assert.doesNotMatch(workflowSource, /\bpreparedAction\s*=|preparedAction\(\)/);
   assert.match(
     workflowSource,
-    /PRIVATE_PREPARED_ACTIONS\.set\(\s*descriptor,\s*new Map\(\[\["project-ies", preparedAction\]\]\),\s*\)/s,
+    /export function getShellProjectBrowserSelectedProjectExportAction\(\)\s*\{\s*return null;\s*\}/,
   );
-  assert.match(
-    workflowSource,
-    /getShellProjectBrowserSelectedProjectExportAction\(\s*workflowDescriptor,\s*exportId = "project-ies",\s*\)/s,
-  );
-  assert.match(
-    workflowSource,
-    /PRIVATE_PREPARED_ACTIONS\.get\(workflowDescriptor\)\?\.get\(exportId\) \|\| null/,
-  );
-  assert.doesNotMatch(
-    workflowSource,
-    /PRIVATE_PREPARED_ACTIONS\.set\(descriptor, preparedAction\)/,
-  );
+  assert.match(workflowSource, /governance-data-retrieval-gateway-required/);
 });
 
 test("shell renders the descriptor output collection and routes delegated actions by exact exportId", async () => {
@@ -119,8 +111,10 @@ test("shell renders the descriptor output collection and routes delegated action
   );
   assert.match(
     shellSource,
-    /getShellProjectBrowserSelectedProjectExportAction\(\s*projectBrowserSelectedProjectExportsWorkflow,\s*exportId,\s*\)/s,
+    /handleProjectBrowserSelectedProjectRetrievalRequest\(\{\s*exportId,\s*output,\s*control,\s*outcomeState,\s*\}\);/s,
   );
+  assert.doesNotMatch(shellSource, /getShellProjectBrowserSelectedProjectExportAction/);
+  assert.doesNotMatch(shellSource, /preparedAction\(\)/);
   assert.match(
     shellSource,
     /projectBrowserSelectedProjectExportsItems\?\.addEventListener\(\s*"click",\s*handleProjectBrowserSelectedProjectExportAction,\s*\)/s,

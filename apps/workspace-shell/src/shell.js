@@ -26,7 +26,6 @@ import {
 } from "./moduleStatusRegistry.js";
 import {
   createShellProjectBrowserProjectIesExportDownloadOutcomeState,
-  getShellProjectBrowserSelectedProjectExportAction,
   getShellProjectBrowserSelectedProjectExportDetailPreview,
   getShellProjectBrowserSelectedProjectExportManifestPreview,
   prepareShellProjectBrowserSelectedProjectExportsWorkflow,
@@ -1608,11 +1607,11 @@ function renderProjectBrowserSelectedProjectExportItem(workflowDescriptor, outpu
   button.type = "button";
   button.className = "cs-shell__project-browser-export-download";
   button.dataset.shellExportId = exportId;
-  button.textContent = output.actionLabel || "Download project IES (.ies)";
+  button.textContent = output.actionLabel || "Open data retrieval";
   button.disabled = output.ready !== true;
   button.title = output.ready === true
-    ? `Download the selected project's prepared ${output.format || "export"} output.`
-    : `${output.label || "Project export"} is unavailable until the selected project export is ready.`;
+    ? "Open the central Governance data-retrieval gateway."
+    : `${output.label || "Project export"} is unavailable until Governance retrieval is activated.`;
 
   const status = document.createElement("p");
   status.className = "cs-shell__project-browser-export-status";
@@ -3206,53 +3205,27 @@ function bootWorkspaceShell() {
     const outcomeState = projectBrowserSelectedProjectExportOutcomeStates.get(exportId);
     if (!output || !control || !outcomeState || control.button !== button) return;
 
-    handleProjectBrowserProjectIesExportDownload({
+    handleProjectBrowserSelectedProjectRetrievalRequest({
       exportId,
       output,
       control,
       outcomeState,
-      preparedAction: getShellProjectBrowserSelectedProjectExportAction(
-        projectBrowserSelectedProjectExportsWorkflow,
-        exportId,
-      ),
     });
   }
 
-  function handleProjectBrowserProjectIesExportDownload() {
+  function handleProjectBrowserSelectedProjectRetrievalRequest() {
     const {
       exportId,
       output,
       control,
       outcomeState,
-      preparedAction,
     } = arguments[0] || {};
-    if (typeof preparedAction !== "function") {
-      const outcomeSnapshot = outcomeState.recordBlocked(
-        "project-ies-export-download-action-unavailable",
-      );
-      renderProjectBrowserSelectedProjectExportOutcome(exportId, outcomeSnapshot, output);
-      setStatus(`${output?.label || "Project export"} is not ready for the selected project.`);
-      return;
-    }
-
+    const outcomeSnapshot = outcomeState.recordBlocked(
+      "governance-data-retrieval-gateway-not-activated",
+    );
+    renderProjectBrowserSelectedProjectExportOutcome(exportId, outcomeSnapshot, output);
     control.button.disabled = true;
-    try {
-      const receipt = preparedAction();
-      const outcomeSnapshot = outcomeState.recordReceipt(receipt);
-      renderProjectBrowserSelectedProjectExportOutcome(exportId, outcomeSnapshot, output);
-      setStatus(outcomeSnapshot.state
-        === SHELL_PROJECT_BROWSER_FIRST_PROJECT_IES_EXPORT_DOWNLOAD_OUTCOME_STATES.started
-        ? `${output.label} download started.`
-        : `${output.label} download was blocked safely.`);
-    } catch {
-      const outcomeSnapshot = outcomeState.recordBlocked(
-        "project-ies-export-download-action-failed",
-      );
-      renderProjectBrowserSelectedProjectExportOutcome(exportId, outcomeSnapshot, output);
-      setStatus(`${output?.label || "Project export"} download was blocked safely.`);
-    } finally {
-      control.button.disabled = output?.ready !== true;
-    }
+    setStatus("Data retrieval is governed centrally and is not yet activated.");
   }
 
   function handleProjectBrowserEnvelopeSelection(envelopeId) {

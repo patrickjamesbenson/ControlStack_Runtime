@@ -688,11 +688,12 @@ test("detail preview contract lock preserves PRIVATE_DETAIL_PREVIEWS as the only
   );
   assert.match(
     workflowSource,
-    /export function getShellProjectBrowserSelectedProjectExportAction\([\s\S]*?return PRIVATE_PREPARED_ACTIONS\.get\(workflowDescriptor\)\?\.get\(exportId\) \|\| null;\s*\}/,
+    /export function getShellProjectBrowserSelectedProjectExportAction\(\)\s*\{\s*return null;\s*\}/,
   );
   assert.match(workflowSource, /outputs: Object\.freeze\(\[output\]\)/);
-  assert.match(workflowSource, /new Map\(\[\["project-ies", preparedAction\]\]\)/);
-  assert.doesNotMatch(workflowSource, /new Map\(\[\["(?:detail|export-detail|export-details|candidate-output-detail)"/);
+  assert.doesNotMatch(workflowSource, /PRIVATE_PREPARED_ACTIONS/);
+  assert.doesNotMatch(workflowSource, /new Map\(\[\["project-ies", preparedAction\]\]\)/);
+  assert.doesNotMatch(workflowSource, /\bpreparedAction\s*=|preparedAction\(\)/);
 
   for (const prohibited of [
     "Download details",

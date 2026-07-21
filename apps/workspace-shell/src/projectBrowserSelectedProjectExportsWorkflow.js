@@ -1,10 +1,3 @@
-import {
-  resolveIesBuilderSelectedProjectIesExportDownloadSourceBoundary,
-} from "../../../packages/modules/ies-builder/iesBuilderSelectedProjectIesExportDownloadSourceBoundary.js";
-import {
-  prepareIesBuilderProjectIesExportDownloadCapabilityAction,
-} from "../../../packages/modules/ies-builder/iesBuilderViewModel.js";
-
 export const SHELL_PROJECT_BROWSER_FIRST_SELECTED_PROJECT_EXPORTS_WORKFLOW_SURFACE_CONTRACT_ID =
   "SHELL-PROJECT-BROWSER-FIRST-SELECTED-PROJECT-EXPORTS-WORKFLOW-SURFACE-1";
 export const SHELL_PROJECT_BROWSER_FIRST_SELECTED_PROJECT_EXPORTS_WORKFLOW_OUTPUT_COLLECTION_ROUTING_CONTRACT_ID =
@@ -259,7 +252,6 @@ export const SHELL_PROJECT_BROWSER_PROJECT_IES_EXPORT_ITEM_FIELD_ORDER = Object.
   "blocker",
 ]);
 
-const PRIVATE_PREPARED_ACTIONS = new WeakMap();
 const PRIVATE_MANIFEST_PREVIEWS = new WeakMap();
 const PRIVATE_DETAIL_PREVIEWS = new WeakMap();
 const SAFE_ID_PATTERN = /^[0-9A-Za-z_.:-]{1,760}$/;
@@ -752,7 +744,7 @@ function buildProjectIesExportItem({ ready, blocker }) {
       label: "Project IES",
       format: "LM-63",
       extension: ".ies",
-      actionLabel: "Download project IES (.ies)",
+      actionLabel: "Open data retrieval",
       state: ready ? "ready" : "blocked",
       readiness: ready ? "ready" : "blocked_fail_closed",
       ready,
@@ -802,7 +794,7 @@ function buildWorkflowDescriptor({ context, ready, blocker }) {
       browserOnly: true,
       userGestureRequired: true,
       redacted: true,
-      preparedActionRetainedPrivately: ready,
+      preparedActionRetainedPrivately: false,
       rawIesExposed: false,
       blobExposed: false,
       objectUrlExposed: false,
@@ -845,66 +837,16 @@ function buildWorkflowDescriptor({ context, ready, blocker }) {
 
 export async function prepareShellProjectBrowserSelectedProjectExportsWorkflow({
   context = {},
-  services = {},
-  browserDocument,
-  browserUrlApi,
 } = {}) {
-  let sourceBoundary;
-  try {
-    sourceBoundary = await resolveIesBuilderSelectedProjectIesExportDownloadSourceBoundary({
-      context,
-      services,
-    });
-  } catch {
-    return buildWorkflowDescriptor({
-      context,
-      ready: false,
-      blocker: "selected-project-ies-export-download-source-resolution-failed",
-    });
-  }
-
-  if (sourceBoundary?.ready !== true || sourceBoundary?.failClosed !== false) {
-    return buildWorkflowDescriptor({
-      context,
-      ready: false,
-      blocker: sourceBoundary?.blocker || "selected-project-ies-export-download-source-not-ready",
-    });
-  }
-
-  let preparedAction = null;
-  try {
-    preparedAction = await prepareIesBuilderProjectIesExportDownloadCapabilityAction({
-      projectIesExportDownloadSourceBoundary: sourceBoundary,
-      services,
-      context,
-      browserDocument,
-      browserUrlApi,
-    });
-  } catch {
-    preparedAction = null;
-  }
-
-  const ready = typeof preparedAction === "function";
-  const descriptor = buildWorkflowDescriptor({
+  return buildWorkflowDescriptor({
     context,
-    ready,
-    blocker: ready ? null : "project-ies-export-download-action-unavailable",
+    ready: false,
+    blocker: "governance-data-retrieval-gateway-required",
   });
-  if (ready) {
-    PRIVATE_PREPARED_ACTIONS.set(
-      descriptor,
-      new Map([["project-ies", preparedAction]]),
-    );
-  }
-  return descriptor;
 }
 
-export function getShellProjectBrowserSelectedProjectExportAction(
-  workflowDescriptor,
-  exportId = "project-ies",
-) {
-  if (typeof exportId !== "string") return null;
-  return PRIVATE_PREPARED_ACTIONS.get(workflowDescriptor)?.get(exportId) || null;
+export function getShellProjectBrowserSelectedProjectExportAction() {
+  return null;
 }
 
 export function getShellProjectBrowserSelectedProjectExportManifestPreview(workflowDescriptor) {

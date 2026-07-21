@@ -231,24 +231,21 @@ function assertNoPrivatePayload(value) {
   }
 }
 
-test("selected-project exports facade exposes one frozen redacted IES descriptor and retains the real prepared action privately", async () => {
+test("selected-project exports facade remains frozen and fail-closed behind the Governance retrieval gateway", async () => {
   const status = buildReadyReadbackStatus();
   assert.equal(status.ready, true);
   const context = selectedProjectContext(status);
-  const harness = browserHarness();
   let getterCalls = 0;
   let materialiserCalls = 0;
   const services = {
     savedProjects: {
-      getIesFirstNarrowProjectIesExportResultReadbackStatus(lookupId) {
+      getIesFirstNarrowProjectIesExportResultReadbackStatus() {
         getterCalls += 1;
-        assert.equal(lookupId, "env-shell-selected-project");
         return status;
       },
     },
-    materialiseProjectIesDownload(input) {
+    materialiseProjectIesDownload() {
       materialiserCalls += 1;
-      assert.equal(input.sourceKind, "ready-project-ies-export-result-readback-status-only");
       return VALID_LM63;
     },
   };
@@ -256,23 +253,22 @@ test("selected-project exports facade exposes one frozen redacted IES descriptor
   const workflow = await prepareShellProjectBrowserSelectedProjectExportsWorkflow({
     context,
     services,
-    browserDocument: harness.browserDocument,
-    browserUrlApi: harness.browserUrlApi,
   });
 
-  assert.equal(getterCalls, 1);
-  assert.equal(materialiserCalls, 1);
+  assert.equal(getterCalls, 0);
+  assert.equal(materialiserCalls, 0);
   assert.equal(Object.isFrozen(workflow), true);
   assert.deepEqual(Object.keys(workflow), SHELL_PROJECT_BROWSER_SELECTED_PROJECT_EXPORTS_WORKFLOW_FIELD_ORDER);
   assert.equal(workflow.schemaId, SHELL_PROJECT_BROWSER_SELECTED_PROJECT_EXPORTS_WORKFLOW_SCHEMA_ID);
   assert.equal(workflow.schemaVersion, SHELL_PROJECT_BROWSER_SELECTED_PROJECT_EXPORTS_WORKFLOW_SCHEMA_VERSION);
   assert.equal(workflow.contractId, SHELL_PROJECT_BROWSER_FIRST_SELECTED_PROJECT_EXPORTS_WORKFLOW_SURFACE_CONTRACT_ID);
-  assert.equal(workflow.state, SHELL_PROJECT_BROWSER_SELECTED_PROJECT_EXPORTS_WORKFLOW_STATES.ready);
+  assert.equal(workflow.state, SHELL_PROJECT_BROWSER_SELECTED_PROJECT_EXPORTS_WORKFLOW_STATES.blockedFailClosed);
+  assert.equal(workflow.blocker, "governance-data-retrieval-gateway-required");
   assert.equal(workflow.label, "Project exports");
   assert.equal(workflow.selectedProjectTitle, "Selected shell project");
   assert.equal(workflow.exportItemCount, 1);
-  assert.equal(workflow.readyExportItemCount, 1);
-  assert.equal(workflow.blockedExportItemCount, 0);
+  assert.equal(workflow.readyExportItemCount, 0);
+  assert.equal(workflow.blockedExportItemCount, 1);
   assert.equal(Object.isFrozen(workflow.outputs), true);
   assert.equal(workflow.outputs.length, 1);
 
@@ -286,15 +282,16 @@ test("selected-project exports facade exposes one frozen redacted IES descriptor
     label: "Project IES",
     format: "LM-63",
     extension: ".ies",
-    actionLabel: "Download project IES (.ies)",
-    state: "ready",
-    readiness: "ready",
-    ready: true,
-    failClosed: false,
-    blocker: null,
+    actionLabel: "Open data retrieval",
+    state: "blocked",
+    readiness: "blocked_fail_closed",
+    ready: false,
+    failClosed: true,
+    blocker: "governance-data-retrieval-gateway-required",
   });
 
   for (const key of [
+    "preparedActionRetainedPrivately",
     "rawIesExposed",
     "blobExposed",
     "objectUrlExposed",
@@ -318,32 +315,8 @@ test("selected-project exports facade exposes one frozen redacted IES descriptor
   ]) {
     assert.equal(workflow[key], false, key);
   }
-  for (const absent of [
-    "pdfExportAvailable",
-    "csvExportAvailable",
-    "jsonExportAvailable",
-    "zipExportAvailable",
-    "evidenceBundleAvailable",
-    "batchExportAvailable",
-    "exportAllAvailable",
-  ]) {
-    assert.equal(Object.hasOwn(workflow, absent), false, absent);
-  }
   assertNoPrivatePayload(workflow);
-
-  const preparedAction = getShellProjectBrowserSelectedProjectExportAction(workflow);
-  assert.equal(typeof preparedAction, "function");
-  const receipt = preparedAction();
-  assert.equal(receipt.downloadTriggered, true);
-  assert.equal(receipt.failClosed, false);
-  assert.deepEqual(harness.calls, [
-    "createObjectURL",
-    "createElement:a",
-    "append",
-    "click",
-    "remove",
-    "revokeObjectURL",
-  ]);
+  assert.equal(getShellProjectBrowserSelectedProjectExportAction(workflow), null);
 });
 
 test("selected-project exports facade stays fail-closed with exactly one blocked IES item when no project is selected", async () => {
@@ -383,27 +356,38 @@ test("shell renders and handles the facade without duplicating materialisation o
   for (const symbol of [
     "renderProjectBrowserSelectedProjectExportsWorkflow",
     "refreshProjectBrowserSelectedProjectExportsWorkflow",
-    "handleProjectBrowserProjectIesExportDownload",
-    "Download project IES (.ies)",
+    "handleProjectBrowserSelectedProjectRetrievalRequest",
+    "Open data retrieval",
     "LM-63 · .ies",
-    "getShellProjectBrowserSelectedProjectExportAction",
+    "governance-data-retrieval-gateway-not-activated",
   ]) {
     assert.equal(shellSource.includes(symbol), true, symbol);
   }
-  assert.equal(shellSource.includes("triggerIesBuilderProjectIesExportDownloadAction"), false);
-  assert.equal(shellSource.includes("buildRuntimeIesFirstNarrowProjectIesExportDownloadMaterialisationBoundary"), false);
-  assert.equal(shellSource.includes("materialiseRuntimeIesFirstNarrowProjectIesDownload"), false);
+  for (const prohibited of [
+    "handleProjectBrowserProjectIesExportDownload",
+    "getShellProjectBrowserSelectedProjectExportAction",
+    "triggerIesBuilderProjectIesExportDownloadAction",
+    "buildRuntimeIesFirstNarrowProjectIesExportDownloadMaterialisationBoundary",
+    "materialiseRuntimeIesFirstNarrowProjectIesDownload",
+    "preparedAction()",
+  ]) {
+    assert.equal(shellSource.includes(prohibited), false, prohibited);
+  }
 
   assert.match(styleSource, /\.cs-shell__project-browser-exports\s*\{/);
   assert.match(styleSource, /\.cs-shell__project-browser-export-download/);
 
-  assert.match(
-    facadeSource,
-    /resolveIesBuilderSelectedProjectIesExportDownloadSourceBoundary\s*\(\s*\{/,
+  assert.equal(
+    facadeSource.includes("resolveIesBuilderSelectedProjectIesExportDownloadSourceBoundary"),
+    false,
+  );
+  assert.equal(
+    facadeSource.includes("prepareIesBuilderProjectIesExportDownloadCapabilityAction"),
+    false,
   );
   assert.match(
     facadeSource,
-    /prepareIesBuilderProjectIesExportDownloadCapabilityAction\s*\(\s*\{/,
+    /export function getShellProjectBrowserSelectedProjectExportAction\(\)\s*\{\s*return null;\s*\}/,
   );
   for (const placeholder of [
     "Download PDF",

@@ -145,7 +145,7 @@ test("outcome reset returns a fresh frozen idle snapshot without retaining the r
   });
 });
 
-test("shell resets outcome on workflow descriptor replacement and never interprets receipts inline", async () => {
+test("shell resets outcome on workflow replacement and the active handler only records the Governance blocker", async () => {
   const [shellSource, styleSource, workflowSource] = await Promise.all([
     readFile(new URL("../apps/workspace-shell/src/shell.js", import.meta.url), "utf8"),
     readFile(new URL("../apps/workspace-shell/src/styles.css", import.meta.url), "utf8"),
@@ -159,7 +159,7 @@ test("shell resets outcome on workflow descriptor replacement and never interpre
   ]);
 
   const handlerStart = shellSource.indexOf(
-    "function handleProjectBrowserProjectIesExportDownload()",
+    "function handleProjectBrowserSelectedProjectRetrievalRequest()",
   );
   const nextHandlerStart = shellSource.indexOf(
     "function handleProjectBrowserListClick",
@@ -184,9 +184,9 @@ test("shell resets outcome on workflow descriptor replacement and never interpre
     shellSource,
     /if \(descriptorChanged\) projectBrowserProjectIesExportDownloadOutcomeState\.reset\(\);/,
   );
-  assert.match(handlerSource, /recordReceipt\(receipt\)/);
-  assert.match(handlerSource, /recordBlocked\(/);
-  assert.doesNotMatch(handlerSource, /receipt\?\.downloadTriggered|receipt\?\.failClosed|downloadMetadata/);
+  assert.doesNotMatch(handlerSource, /recordReceipt\(|preparedAction|downloadTriggered|downloadMetadata/);
+  assert.match(handlerSource, /recordBlocked\(\s*"governance-data-retrieval-gateway-not-activated"/s);
+  assert.match(handlerSource, /Data retrieval is governed centrally and is not yet activated/);
   assert.match(
     shellSource,
     /dataset\.shellProjectIesExportDownloadOutcomeState\s*=\s*outcomeSnapshot\.state/,
