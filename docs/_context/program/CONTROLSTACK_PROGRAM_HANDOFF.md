@@ -857,3 +857,17 @@ The repository-side infrastructure is implemented and green. Deployment v2 now k
 Run the provisioner once on Patrick's Windows host. It verifies the clean Program branch, creates or validates the Governance worktree and branch, copies exactly the six bootstrap records into the canonical context, refuses differing existing files, gates the lane, commits and pushes the founding checkpoint, reloads Deployment v2 and verifies the Governance MCP as healthy and managed.
 
 Do not manually copy individual files, create an alternate branch name, widen write globs, add a tunnel, or touch the staged Lab C4 files during activation. After successful activation, Governance may begin from its canonical queue; Lab fixture reconciliation resumes separately.
+
+### Governance first feature handoff — GOV-001
+
+The Governance & Shell lane is active. Implement one inert, versioned single data-retrieval gateway contract and shell view-state.
+
+Accept only safe scalar module/output descriptors, one readiness label, project-context presence, identity-capture presence and static discovery descriptors. Keep readiness and identity as separate fields and separate blockers. Recognise useful-output states at Spec Ready, Build Ready and Factory Ready without reading or changing Engine state.
+
+Return deterministic fail-closed states for: no useful output, project required, identity required and ready for future retrieval. The ready state is not a download permission and must not contain a path, URL, blob, raw artifact, file body or provider object.
+
+Reject unknown, extra, private, raw, nested authority, path-bearing, URL, blob, traceability-envelope and provider-shaped inputs. Freeze or otherwise make the public result immutable.
+
+Do not add a route, download, email, filesystem write, persistence, localStorage, CRM call, hard email verification, Engine invocation, readiness mutation or live cross-module read. Do not modify Selector, Engine, Lab authority, main or runtime-port work.
+
+Add ownership tests proving exactly one Governance gateway owner and no module-owned retrieval helper or action. Retain the standing cross-lane regressions. Run the fixed Governance gate, commit only the approved feature/test/lane-memory files and return the gated receipt to Program.

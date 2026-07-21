@@ -1339,3 +1339,17 @@ A fixed Governance lane gate discovers only reviewed governance/shell test famil
 Deployment v2 is upgraded from four worktrees/eight services to five worktrees/nine services without adding another tunnel. The installer permits a newly declared service to be absent before the upgrade while still requiring every previously installed service to be live; after manager reload every configured service must be running. Selector-only activation remains Selector-only, and Selector, Lab and Governance worktrees are protected against deployment mutation.
 
 Repository tests passed 48/48. No sibling worktree or Windows service was created by the lane tool because host-level Git worktree creation is outside its action set. One execution of the fixed provisioner is the remaining activation step; no design choice remains.
+
+## 2026-07-21 — Governance lane active; first parcel admitted
+
+**Status:** GOVERNANCE & SHELL ACTIVE; GOV-001 READY.
+
+Program accepts the completed Governance lane activation and admits one bounded first parcel: an inert, versioned single data-retrieval gateway contract and shell view-state.
+
+The parcel establishes one owner and one entry point before any real retrieval is activated. It keeps readiness and identity as separate named conditions. Readiness may recognise useful outputs at Spec Ready, Build Ready and Factory Ready; identity may recognise project and loose email capture. Neither condition becomes an Engine input, eligibility requirement or output influence.
+
+GOV-001 may expose safe scalar discovery descriptions and fail-closed gateway states only. It may not download, generate, deliver, persist, email, open a route, invoke Engine, mutate readiness, verify email, inspect traceability envelopes or call HubSpot. Unknown, extra, private, raw, path-bearing, URL, blob and provider-shaped input must fail closed.
+
+Project persistence restoration follows after the gateway contract closes. User identity and permissions follow project persistence. The deferred-decisions panel remains an independent small parcel that may be interleaved where file ownership does not overlap. CRM remains blocked and no provider mutation is authorised.
+
+The standing acceptance lock remains cross-lane and unchanged.

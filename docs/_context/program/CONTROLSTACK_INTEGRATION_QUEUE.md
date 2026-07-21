@@ -842,7 +842,7 @@ No implementation item is ready. A new exact Program parcel is required before a
 ### PWS-L0 — Provision Governance & Shell lane
 
 - **Owner:** Program & Integrate infrastructure.
-- **Status:** infrastructure implementation complete and gated; one fixed local activation remains before governance feature work.
+- **Status:** complete; isolated lane, founding checkpoint, fixed gate and scoped MCP service active.
 - **Lane:** Governance & Shell.
 - **Required isolation:** dedicated worktree, `lane/governance-shell`, separate MCP service identity on its own local port, exact write globs, required branch and dedicated gate.
 - **Prepared infrastructure:** Deployment v2 topology, scoped MCP service, fixed Governance gate and idempotent one-command provisioner.
@@ -880,6 +880,27 @@ No implementation item is ready. A new exact Program parcel is required before a
 - **Rule:** every module export/download/artifact retrieval path terminates through one gateway; no module-owned retrieval route or helper.
 - **Separate checks:** readiness and identity remain distinct.
 - **Seam G effect:** internal generation contracts may continue, but direct Selector/Lab delivery is prohibited.
+
+### GOV-001 — Inert single data-retrieval gateway contract and shell state
+
+- **Owner:** Governance & Shell.
+- **Status:** ready now.
+- **Purpose:** establish one canonical retrieval entry point before any module grows its own outward path.
+- **Inputs:** safe scalar module/output descriptors, readiness state (`spec-ready`, `build-ready`, `factory-ready`), project-context presence and identity-capture presence. No Engine payload, traceability envelope, raw artifact body, path, blob or provider object.
+- **Separate conditions:** readiness answers whether a useful output exists; identity answers who is taking it and under which project. Neither may substitute for the other or enter Engine eligibility.
+- **Output:** one immutable versioned gateway view-state contract with fail-closed states for no useful output, project required, identity required and ready-for-future-retrieval.
+- **Discovery:** safe static descriptions of what the current module can provide and what other modules may provide; no live cross-module reads.
+- **Boundary:** inert only. No download, file response, URL, blob, email, filesystem write, persistence, route, CRM call, hard email verification, Engine invocation or readiness mutation.
+- **Acceptance:** exactly one gateway owner; no module-owned retrieval helper or action; deterministic output; unknown/extra/private/raw/path-bearing input rejected; different or absent traceability envelopes cannot alter Engine results.
+- **Next:** Program receipt review, then project persistence and user identity can be restored behind the established gateway without changing its outside contract.
+
+### Governance follow-on order
+
+1. **GOV-001:** inert gateway contract and shell state — ready now.
+2. **Work item 4:** restore project persistence — admitted after GOV-001 closes.
+3. **Work item 6:** restore user identity and permissions — admitted after project persistence.
+4. **Work item 9:** deferred-decisions panel — independent small parcel, may be scheduled between the larger restorations without overlapping their files.
+5. **Work item 7:** CRM remains blocked; no provider mutation is authorised.
 
 ### Standing test lock
 

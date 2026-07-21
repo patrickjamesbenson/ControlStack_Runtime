@@ -601,4 +601,15 @@ P2 Checkpoint 1 is **IMPLEMENTATION COMPLETE / GATE GREEN / COMMIT BLOCKED BY SH
 - **TESTS:** Program infrastructure gate passed 48/48.
 - **LAB:** the staged C4 feature and protected local items remain untouched; fixture reconciliation is paused, not discarded.
 - **ACTIVATION:** one local execution is required because the connected lane cannot create a sibling Git worktree or reload Windows services.
-- **NEXT:** run the fixed provisioner, then verify the new lane is clean, on its required branch and ready/managed. No design decision remains.
+- **NEXT:** Governance lane activation is complete. GOV-001 is the sole ready Governance feature parcel.
+
+## 2026-07-21 Governance first-parcel state
+
+- **LANE:** active, isolated and ready for feature work.
+- **READY:** GOV-001 — inert single data-retrieval gateway contract and shell view-state.
+- **SEPARATION:** readiness and identity are distinct named checks; neither enters Engine eligibility or output.
+- **ALLOWED:** safe scalar module/output descriptors, readiness labels, project-context presence, identity-capture presence and static discovery descriptions.
+- **BLOCKED:** download, delivery, route, file/URL/blob, persistence, email, CRM, hard identity verification, Engine invocation, traceability-envelope inspection and readiness mutation.
+- **FOLLOW-ON:** project persistence, then user identity/permissions; deferred-decisions panel may be interleaved as a non-overlapping small parcel.
+- **CRM:** remains blocked.
+- **NEXT:** commission GOV-001 in the Governance & Shell lane and return its gated receipt to Program.
