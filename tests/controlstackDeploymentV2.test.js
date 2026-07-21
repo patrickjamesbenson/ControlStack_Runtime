@@ -714,11 +714,13 @@ test("Governance lane provisioner is fixed, idempotent and cannot overwrite dive
   assert.doesNotMatch(gate, /shell=True|os\.system|eval\(|exec\(/);
 });
 
-test("Governance tunnel provisioner is fixed, clipboard-bound and reuses only the protected runtime key", () => {
+test("Governance tunnel provisioner is fixed, interactively bound and reuses only the protected runtime key", () => {
   const provisioner = readFileSync(governanceTunnelProvisionerPath, "utf8");
   assert.match(provisioner, /controlstack-governance-shell-noauth/);
   assert.match(provisioner, /http:\/\/127\.0\.0\.1:8023\/mcp/);
-  assert.match(provisioner, /Get-Clipboard -Raw/);
+  assert.match(provisioner, /Read-Host 'Governance tunnel reference'/);
+  assert.match(provisioner, /\[string\]\$TunnelReference/);
+  assert.doesNotMatch(provisioner, /Get-Clipboard|Set-Clipboard/);
   assert.match(provisioner, /tunnel_\[a-z0-9\]\{16,/i);
   assert.match(provisioner, /tunnel-runtime-key\.dpapi/);
   assert.match(provisioner, /ConvertTo-SecureString/);

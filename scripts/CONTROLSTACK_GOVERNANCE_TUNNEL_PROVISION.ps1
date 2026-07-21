@@ -1,5 +1,6 @@
 param(
-  [switch]$PreflightOnly
+  [switch]$PreflightOnly,
+  [string]$TunnelReference
 )
 
 $ErrorActionPreference = 'Stop'
@@ -146,10 +147,14 @@ if ($PreflightOnly) {
   exit 0
 }
 
-$clipboard = (Get-Clipboard -Raw).Trim()
-$tunnelMatch = [regex]::Match($clipboard, '(?i)\btunnel_[a-z0-9]{16,}\b')
+if ([string]::IsNullOrWhiteSpace($TunnelReference)) {
+  Write-Host ''
+  Write-Host 'Copy the Governance tunnel reference in ChatGPT, then paste it below.'
+  $TunnelReference = Read-Host 'Governance tunnel reference'
+}
+$tunnelMatch = [regex]::Match($TunnelReference.Trim(), '(?i)\btunnel_[a-z0-9]{16,}\b')
 if (-not $tunnelMatch.Success) {
-  throw 'The clipboard does not contain a newly copied tunnel reference.'
+  throw 'The pasted value does not contain a valid Governance tunnel reference.'
 }
 $TunnelId = $tunnelMatch.Value
 
@@ -192,7 +197,8 @@ try {
 } finally {
   $env:CONTROL_PLANE_API_KEY = $null
   $key = $null
-  try { Set-Clipboard -Value '' } catch { }
+  $TunnelReference = $null
+  $TunnelId = $null
 }
 
 Write-Host ''
