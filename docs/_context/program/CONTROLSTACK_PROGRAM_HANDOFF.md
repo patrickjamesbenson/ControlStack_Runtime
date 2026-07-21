@@ -965,3 +965,15 @@ Selector has now returned the required redacted diagnosis. It reports that the s
 Patrick executes `npm ci` in the exact Selector worktree that serves port 8788. Use the lockfile exactly; do not use `npm install`, update packages, edit package files, change credentials or modify deployment configuration. If the command fails or creates a tracked change, stop.
 
 After success, open the existing ControlStack Manager panel, choose `CS Selector Runtime / Workspace Shell (8788)`, click `Restart`, and require that service alone to return Healthy and Managed. Then return to the Selector orchestrator. It must verify clean Git state, resume WALK-001R, and rerun the complete guarded WALK-001 dry-run before any materialise/archive/promote write. WALK-002 remains blocked.
+
+### Selector WALK-001V Ambient-visibility handoff
+
+Program accepts the latest clean fail-closed receipt. WALK-001I and reader transport recovery are complete: the current Google source is reachable and all 15 required tables are present. WALK-001 remains open because source acceptance failed before every write.
+
+The verified Driver boundary is source data, not Selector option behaviour. Canonical `DRIVERS.native_control_type` is populated on all 48 rows but contains only Boolean-like markers and supplies no protocol authority. Duplicate-normalised `native_control_type__2` is also populated on all 48 rows and carries 51 protocol values. BOARDS authority is populated but has no intersection with the required canonical Driver field. The existing Selector duplicate-field fallback must not be used to promote contradictory source identity.
+
+SYSTEM_POLICY is present with 133 rows, but Ambient is unproven rather than absent because the current redacted source-shape response does not summarize `ambient_temp`.
+
+Commission the standing Selector worker for **WALK-001V only**. Exact feature paths are `packages/workspace-kernel/authorityReferenceMaterialiserService.js` and `tests/selectorReferenceOptionsService.test.js`. Extend only `currentSourceShape` after a successful Google read and before any write. Add a value-free SYSTEM_POLICY/Ambient summary with table count, exact and approved `ambient_temp` row counts, and allowlisted `economy`, `business`, `first` and `charter` column presence/population plus finite and non-finite numeric-token counts. Include safe counts for rows with any finite tier value, finite values across multiple tier columns and generic-only rows. Return no values, rows, unrestricted headers, users, credentials, Sheet identity, provider body, full source JSON or paths.
+
+The gate-included test must prove tier-specific finite evidence, generic-only and non-numeric non-proof, duplicate exact-row counts, redaction and dry-run no-write behaviour. Do not change Driver rules, validation outcomes, Google reading, source data, materialisation, archive, promotion, Selector options, Engine or deployment. Gate and push the exact two-file feature parcel, update lane memory, and stop. Program will separately activate the runtime and decide the exact Google-source correction; WALK-002 remains blocked.

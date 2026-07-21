@@ -688,9 +688,10 @@ P2 Checkpoint 1 is **IMPLEMENTATION COMPLETE / GATE GREEN / COMMIT BLOCKED BY SH
 ## 2026-07-22 consolidated Selector walkthrough state
 
 - **COMPLETED:** PWS-001, PWS-002 and PWS-005 remain closed; no duplicate commission.
-- **SELECTOR WALK-001:** open and incomplete. Selector reports a clean, correctly fail-closed stop before all writes because the running service could not load the server-side Google Sheets reader. No Ambient/source validation, materialisation, archive or promotion is accepted.
-- **SELECTOR RECOVERY:** WALK-001R is blocked on approved operational parcel WALK-001I. Selector reports the locked `googleapis` dependency is declared and pinned but absent from the serving worktree installation; credentials and tracked code remain untouched.
-- **PROGRAM OPERATION READY:** WALK-001I only. Patrick runs `npm ci` in the exact Selector worktree serving port 8788, then restarts only `selector-runtime` through the existing ControlStack Manager panel. Package files, credentials, deployment configuration and all other services remain unchanged.
+- **SELECTOR WALK-001:** open and incomplete. Reader recovery succeeded and current-source validation stopped correctly before every write. The active authority is unchanged; no materialisation, archive or promotion is accepted.
+- **RECOVERY COMPLETE:** WALK-001I installed the existing locked dependency set and restarted only `selector-runtime`; WALK-001R now reaches current Google source validation with credentials and tracked code untouched.
+- **SOURCE BLOCK:** canonical `DRIVERS.native_control_type` is Boolean-like on all 48 rows and provides zero protocol authority, while duplicate-normalised identity carries 51 protocol values. BOARDS authority has no canonical Driver intersection. SYSTEM_POLICY is present with 133 rows; finite tier-gated Ambient is unproven because the bounded response has no Ambient summary.
+- **SELECTOR READY:** WALK-001V bounded Ambient validation visibility only. Exact feature scope is the materialiser service plus the gate-included Selector reference-options test. No Google source edit is admitted until Program reviews the safe Ambient evidence.
 - **SELECTOR ORDER:** Length Mode deletion → duplicate scaffold unmount → legacy TIERS readiness deletion → internal timeline/principal test-mode deletion → donor auto-fill defaults → truthful readiness counters → selections-only action-lane and thermal acceptance.
 - **AUTO-FILL:** each dropdown selects the first real NVB option in exact source order; `No manual constraint…` presentation rows are skipped. Auto-filled values are visibly LOOKED UP and distinct from manual constraints.
 - **ACKNOWLEDGEMENT:** one `Accept all defaults` action creates the GIVEN acknowledgement for every flagged default, including inherited finishes. Unacknowledged defaults do not satisfy readiness; per-field acknowledgement is prohibited.
@@ -699,7 +700,7 @@ P2 Checkpoint 1 is **IMPLEMENTATION COMPLETE / GATE GREEN / COMMIT BLOCKED BY SH
 - **THERMAL ACCEPTANCE:** one bounded run must prove selected room plus one measured optic rise exactly once and varied-rise movement of lookup and verified lm/m.
 - **FINISHES:** Patrick's ruling is closed and recorded in Governance. Inheritance or auto-fill alone does not satisfy Build Ready; WALK-005A restores the one-action donor acknowledgement.
 - **PARALLELISM:** Lab C5 remains independently ready. One writer per worktree; no cross-lane writes.
-- **NEXT:** Patrick executes WALK-001I. After the locked install and single-service managed restart, Selector resumes WALK-001R and WALK-001 only. WALK-002 through WALK-007 remain sequence-blocked, with WALK-005A inserted before WALK-006. WALK-008 is ruled and closed.
+- **NEXT:** Selector executes WALK-001V only, gates and pushes the bounded Ambient visibility change, then stops for Program activation and source-repair review. WALK-001 remains open; WALK-002 through WALK-007 remain sequence-blocked, with WALK-005A inserted before WALK-006. WALK-008 is ruled and closed.
 
 ## 2026-07-22 HubSpot and CRM ruling state
 
