@@ -37,8 +37,9 @@ Engine coupling remain disabled. Identity gate: 181/181.
 
 ## Current queue
 
-No Governance parcel is ready. The read-only deferred-decision panel now also records
-finishes default acceptance as an OPEN Patrick-owned ruling; Build Ready remains
-unchanged until he decides whether inheritance alone satisfies it or explicit
-acceptance remains required. CRM and integration remain held pending Program's lane and
-portal-scope decision. Two-factor authentication remains deferred. Stop for Program review.
+No Governance parcel is ready. The read-only deferred-decision panel now records
+Patrick's finishes default-acceptance ruling as RULED: inherited and auto-filled values
+do not satisfy Build Ready until one explicit `Accept all defaults` action acknowledges
+every flagged default; per-field acknowledgement is not required. CRM and integration
+remain held pending Program's lane and portal-scope decision. Two-factor authentication
+remains deferred. Stop for Program review.

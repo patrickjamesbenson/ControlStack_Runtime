@@ -58,8 +58,8 @@
 
 - Added one versioned, static Governance decision registry and read-only developer panel.
 - The six canonical entries expose status, ownership, kind, disposition, reason and citation.
-- The identity-first, state-to-deal-floor and finishes-default-acceptance questions remain OPEN and unresolved.
-- The finishes question is Patrick-owned and does not alter Build Ready until he rules whether inherited cover/end/flex finishes count without explicit acceptance.
+- The identity-first and state-to-deal-floor questions remain OPEN and unresolved.
+- Patrick ruled finishes default acceptance: inherited and auto-filled cover/end/flex finishes do not satisfy Build Ready until one explicit `Accept all defaults` action acknowledges every flagged default; per-field acknowledgement is not required.
 - Focused ownership tests prove the panel has no action, persistence, provider, CRM,
   retrieval or Engine path.
 - The fixed `governance-shell` gate passed on 2026-07-21.

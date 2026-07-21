@@ -14,7 +14,7 @@ const REQUIRED_DECISIONS = Object.freeze([
   ["two-factor-authentication", "PARKED", "Governance & Shell"],
   ["identity-first-question", "OPEN", "Program & Integrate"],
   ["state-to-deal-floor-mapping", "OPEN", "Program & Integrate"],
-  ["finishes-default-acceptance", "OPEN", "Patrick"],
+  ["finishes-default-acceptance", "RULED", "Patrick"],
 ]);
 
 async function readSurfaceSources() {
@@ -33,7 +33,7 @@ function sourceSlice(source, startToken, endToken) {
 }
 
 test("versioned Governance registry carries the canonical decisions with separate owner, kind, status, reason, and citation", () => {
-  assert.equal(DEFERRED_DECISION_REGISTRY_CONTRACT.version, "1.1.0");
+  assert.equal(DEFERRED_DECISION_REGISTRY_CONTRACT.version, "1.2.0");
   assert.equal(DEFERRED_DECISION_REGISTRY_CONTRACT.owner, "Governance & Shell");
   assert.equal(DEFERRED_DECISION_REGISTRY_CONTRACT.behavior, "read-only-static-registry");
   assert.deepEqual(
@@ -57,11 +57,16 @@ test("registry preserves the mockup status vocabulary and leaves OPEN rows unres
   const openRows = DEFERRED_DECISIONS.filter(({ status }) => status === "OPEN");
   assert.deepEqual(
     openRows.map(({ id }) => id),
-    ["identity-first-question", "state-to-deal-floor-mapping", "finishes-default-acceptance"],
+    ["identity-first-question", "state-to-deal-floor-mapping"],
   );
   for (const row of openRows) {
-    assert.match(row.disposition, /No implementation choice is authorised|Do not infer|Do not change Build Ready/);
+    assert.match(row.disposition, /No implementation choice is authorised|Do not infer/);
   }
+  const finishes = DEFERRED_DECISIONS.find(({ id }) => id === "finishes-default-acceptance");
+  assert.equal(finishes.status, "RULED");
+  assert.match(finishes.disposition, /Accept all defaults/);
+  assert.match(finishes.disposition, /do not satisfy Build Ready/);
+  assert.match(finishes.reason, /looked-up defaults remain distinct from manual constraints/);
   const snapshot = deferredDecisionRegistrySnapshot();
   assert.equal(Object.isFrozen(snapshot), true);
   assert.strictEqual(snapshot.decisions, DEFERRED_DECISIONS);

@@ -23,12 +23,12 @@ set of selections and nothing else — this lane never adds to it.
 ## Queue state
 See `WORK_QUEUE.md`. Bootstrap, deferred decisions, inert retrieval, project
 persistence and user identity/permissions are complete. Deferred-decision registry
-version 1.1.0 now also records finishes default acceptance as an OPEN Patrick ruling.
+version 1.2.0 now records Patrick's finishes default-acceptance ruling as RULED: inherited and auto-filled defaults require one explicit `Accept all defaults` acknowledgement before Build Ready; per-field acknowledgement is not required.
 No parcel is ready. CRM mutation remains held and two-factor authentication remains deferred.
 
 ## Evidence
 - Bootstrap and deferred-decisions closeouts remain intact.
-- The finishes default-acceptance question is visible, Patrick-owned and unresolved; Build Ready remains unchanged until a later explicit ruling.
+- Patrick's finishes default-acceptance ruling is visible and settled: looked-up defaults remain distinct from manual constraints, and one explicit `Accept all defaults` action acknowledges every flagged default before Build Ready.
 - Program explicitly reordered the inert retrieval gateway ahead of persistence.
 - The versioned immutable gateway separates readiness, project context and identity and
   returns four deterministic states without enabling retrieval or delivery.
