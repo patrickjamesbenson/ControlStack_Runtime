@@ -616,7 +616,7 @@ WALK-001 is incomplete and blocked on runtime dependency availability. WALK-002 
 ## 2026-07-22 Program recovery admission
 
 ### WALK-001R Recover the guarded Google reader and complete WALK-001
-* status: blocked (redacted failure reproduced; dependency installation and service restart require a Program-owned deployment/service-host parcel)
+* status: ready (WALK-001I locked installation complete; Selector runtime healthy; managed status reported by Patrick)
 * depends-on: WALK-001 protected pre-write stop accepted by Program
 * objective: reproduce the existing redacted Google Sheets reader-load failure; inspect only the running Selector service's existing dependency, module-resolution, working-directory and configuration boundary; apply the minimum repair available through Selector-owned files or existing managed-service controls; then complete the original WALK-001 guarded authority refresh.
 * authorised repair boundary: Selector-owned files already permitted by this lane and existing managed-service controls. No arbitrary shell workaround or broad environment repair.
@@ -633,3 +633,11 @@ WALK-001 is incomplete and blocked on runtime dependency availability. WALK-002 
 The worker reproduced the redacted reader-load failure and verified that the Google reader dependency is declared and locked. The running Selector runtime root has no installed dependency tree, and the connected Selector lane exposes neither dependency installation nor the existing service-manager restart control.
 
 WALK-001R is blocked for a separate Program-owned deployment/service-host parcel. WALK-001 remains incomplete; WALK-002 and every later implementation parcel remain blocked. No second Selector worker may start until Program admits and completes the required host action or an approved managed-service control becomes available.
+
+## 2026-07-22 WALK-001I host restoration admission
+
+Patrick reports that Program's bounded operational parcel installed the existing locked dependency set in the serving Selector worktree and restarted only `selector-runtime` / `CS Selector Runtime / Workspace Shell (8788)` through the existing manager, where it returned Healthy and Managed. The connected Selector endpoint independently returned HTTP 200 with `ok: true`, ready configuration and server-side redaction intact. Git is clean.
+
+WALK-001R is again the sole ready parcel. Rerun the complete original guarded source dry-run. No write is permitted until all original source-shape, validation, identity and disclosure checks pass and the current source proves one finite, genuinely tier-gated `SYSTEM_POLICY.ambient_temp` row. On a complete pass only: materialise, archive the current promoted authority, then promote the new authority. Archive must succeed before promotion.
+
+Stop after the source refresh for Program review. Do not release WALK-002 or begin any later Selector work, and do not invoke Engine.

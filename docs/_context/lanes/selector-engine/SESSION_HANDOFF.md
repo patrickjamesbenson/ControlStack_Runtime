@@ -673,3 +673,11 @@ The redacted failure was reproduced. The Google reader dependency is correctly d
 Recovery therefore requires a Program-owned deployment/service-host parcel to install the declared runtime dependencies and make the managed selector-runtime restart available. No credentials or protected secrets may be changed.
 
 WALK-001R and WALK-001 remain blocked. No snapshots, archive, promotion, Engine action or later walkthrough work occurred. Git remained clean.
+
+## 2026-07-22 WALK-001I host restoration complete; WALK-001R resumed
+
+Program's bounded locked-dependency restoration is complete as reported by Patrick. The package lock was used in the serving Selector worktree, only the Selector runtime service was restarted through the manager, and Patrick reports it returned Healthy and Managed. The connected runtime independently answers successfully with ready configuration and protected redaction intact. Git is clean.
+
+Resume WALK-001R only. Run the complete original guarded source dry-run and require every existing source-shape, validation, identity and disclosure check plus a finite, genuinely tier-gated `SYSTEM_POLICY.ambient_temp` row. Only after the entire dry-run passes may the existing guarded workflow materialise, archive the current promoted authority and promote the new authority. Archive success is mandatory before promotion.
+
+Stop after the source refresh for Program review. WALK-002 and all later Selector parcels remain blocked. Engine, feature changes, project actions, CRM/provider mutation, persistence and IES work remain prohibited.

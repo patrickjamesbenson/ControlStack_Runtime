@@ -689,3 +689,13 @@ The standing worker reproduced the safely redacted reader-load failure. Reposito
 A Selector-owned repair is therefore unavailable. Installing runtime dependencies and exposing or executing the managed selector-runtime restart are Program-owned deployment/service-host actions. Credentials and protected secrets were not accessed or changed.
 
 No repository file, service, snapshot, archive, promotion, test, commit, Engine action or later walkthrough work was touched. Git remained clean. WALK-001R and WALK-001 remain incomplete and blocked; WALK-002 through WALK-007 remain blocked. Return this redacted diagnosis to Program for a separate parcel.
+
+## 2026-07-22 WALK-001I host restoration handoff — latest controlling state
+
+**Recorded lane work HEAD:** `2515996d3426313b864424d9c81942c9f698c6ad` — `docs(selector): reconcile WALK-001R service-host stop`.
+
+Program's bounded operational dependency-restoration parcel is complete as reported by Patrick: the existing locked package set was installed in the worktree serving Selector, and only `selector-runtime` / `CS Selector Runtime / Workspace Shell (8788)` was restarted through the existing manager. Patrick reports the service returned Healthy and Managed. The connected Selector runtime independently returned HTTP 200 with `ok: true`, ready runtime configuration, server-side redaction intact and no repository-local secret exposure. Git is clean.
+
+WALK-001R is reopened as the sole ready recovery parcel. The worker must rerun the complete original guarded source dry-run. Every source-shape, validation, identity and disclosure check and one finite, genuinely tier-gated `SYSTEM_POLICY.ambient_temp` row must pass before any write. Only then may the existing guarded workflow materialise the validated authority, archive the currently promoted authority, and promote the new authority, in that order. Archive failure blocks promotion.
+
+Stop after the source refresh for Program review. WALK-002 and all later Selector work remain blocked. Do not invoke Engine, change Selector feature behaviour, save/register a project, perform CRM/provider mutation, persistence or IES work, or write another lane, main or donor root.

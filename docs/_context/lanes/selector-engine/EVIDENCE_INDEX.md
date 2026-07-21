@@ -757,3 +757,12 @@ Every completed worker updates this index with:
 - Repair therefore crosses into Program-owned deployment/service-host authority — REVIEWED AND ACCEPTED.
 - No repository files, credentials, protected secrets, service, snapshots, archive, promotion, tests, commits, Engine or later walkthrough work were touched; Git remained clean — VERIFIED FINAL RECEIPT.
 - WALK-001R and WALK-001 remain blocked; WALK-002 and later parcels are not released — RECORDED.
+
+## 2026-07-22 — WALK-001I host restoration and retry evidence
+
+- Program approved the bounded locked dependency installation with no code, manifest, lockfile, credential or deployment change — VERIFIED FROM AUTHORITATIVE PROGRAM CONTEXT.
+- Patrick reports the existing locked packages were installed in the serving Selector worktree and only `selector-runtime` / `CS Selector Runtime / Workspace Shell (8788)` was restarted through the existing manager, returning Healthy and Managed — REPORTED COMPLETION.
+- Connected Selector runtime returned HTTP 200 with `ok: true`, ready runtime configuration, server-side redaction and no repository-local secret exposure — VERIFIED.
+- Selector lane identity and branch remain correct and Git is clean after the host action — VERIFIED.
+- WALK-001R is the sole ready parcel; the complete original dry-run and finite tier-gated Ambient proof still gate materialisation, archive and promotion; archive remains mandatory before promotion — RECORDED.
+- WALK-002 and all later Selector work and every Engine invocation remain blocked pending source refresh and Program review — RECORDED.

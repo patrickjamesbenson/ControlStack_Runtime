@@ -569,3 +569,11 @@ This log is append-oriented. Do not silently rewrite historical decisions.
 **Decision:** Accept the standing worker's protected cross-lane stop. The declared dependency is present in repository authority but unavailable to the running Selector service because its runtime root has no installed dependency tree, and this lane exposes no approved installation or service-manager restart control.
 
 **Consequence:** WALK-001R and WALK-001 remain incomplete. Program must commission a separate deployment/service-host parcel. No credential or secret change is authorised, and no later Selector parcel is released.
+
+## 2026-07-22 — Accept WALK-001I completion and resume guarded WALK-001R
+
+**Decision:** Accept Patrick's report that Program's bounded locked-dependency installation completed in the serving Selector worktree and that only the Selector runtime was restarted through the existing manager, returning Healthy and Managed. Independently verify the connected runtime is live and ready and Git is clean. Reopen WALK-001R as the sole ready Selector parcel.
+
+**Guard:** the complete original dry-run, including every source-shape, validation, identity and disclosure check and a finite, genuinely tier-gated `SYSTEM_POLICY.ambient_temp` row, remains mandatory before any write. Materialisation may occur only after that full pass; archive of the current promoted authority must succeed before promotion of the new authority.
+
+**Boundary:** stop after the source refresh for Program review. Do not release WALK-002, begin later Selector work or invoke Engine.
