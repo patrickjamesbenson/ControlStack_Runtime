@@ -503,3 +503,13 @@ This log is append-oriented. Do not silently rewrite historical decisions.
 **Evidence:** The temporary focused harness passed 128/128 and was removed. The normal and guarded feature gates passed 107/107. The exact four Selector surfaces and focused runtime regression were committed and pushed, and the feature tree ended clean.
 
 **Consequence:** PWS-002 is done. PWS-005 may correct stale lifecycle copy only. No provider push, factory approval, output generation, route, persistence, Engine, Lab/IES, RuntimeData, retrieval or runtime-process work is authorised.
+
+## 2026-07-21 — PWS-005 accepted; shell lifecycle copy matches live ownership
+
+**Decision:** Accept PWS-005. Save, restore and hydrate are classified as shell-owned and live through Project Browser across Selector, Emergence, Scene Builder and the workspace contract. Module-local project mutation remains prohibited.
+
+**Separate deferred work:** Handoff/share and CRM/provider writes remain separately shell-owned and deferred. The correction does not promote either capability, add persistence or alter project storage.
+
+**Evidence:** The temporary focused harness passed 112/112 and was removed. The normal and guarded feature gates passed 107/107. Static and behavior assertions prove Project Browser still owns save/restore, the shell dispatches hydrate, the modules add no implementation and the stale save/restore-deferred phrases are absent.
+
+**Consequence:** PWS-005 is done. All three admitted PWS parcels are closed. No queue item is ready; Program may commission later Governance/provider or other bounded work separately.

@@ -687,3 +687,18 @@ Every completed worker updates this index with:
 - Normal lane gate after harness removal: 107 passed, 0 failed — VERIFIED.
 - Guarded feature commit/push gate: 107 passed, 0 failed; exact five-file staged set committed and pushed; feature tree clean — VERIFIED.
 - Queue result: PWS-002 done; PWS-005 sole ready — RECORDED.
+
+## 2026-07-21 — PWS-005 lifecycle-copy evidence
+
+- Starting identity and guard: clean Selector lane; actual HEAD was the dedicated PWS-002 reconciliation wrapper and its parent matched the recorded lane work HEAD — VERIFIED.
+- Exact stale boundary: two Selector lines, two Emergence lines, one Scene Builder combined status and one deferred sentence, plus the workspace deferred save/restore classification — VERIFIED BY BOUNDED SEARCH.
+- Corrected truth: all three module view models now state save/restore/hydrate are shell-owned and live through Project Browser; the workspace contract exposes save, restore and hydrate as live-through-Project-Browser and module-local mutation prohibited — VERIFIED.
+- Separate deferred boundary: handoff/share and CRM/provider writes remain separately deferred; no capability was promoted by implication — VERIFIED.
+- Existing live owner: Project Browser still dispatches save and restore, and shell restore still invokes module hydrate; governed modules add no project-browser save/restore implementation — VERIFIED BY FOCUSED STATIC/BEHAVIOR ASSERTIONS.
+- Stale wording search: zero governed occurrences of the old save/restore-deferred phrases or deferred saveRestore contract entry — VERIFIED.
+- Temporary harness: exactly one import of the focused lifecycle-copy suite was added to the gate-included test, then removed; final harness diff was empty — VERIFIED.
+- Focused gate: 112 passed, 0 failed — VERIFIED.
+- Normal lane gate after harness removal: 107 passed, 0 failed — VERIFIED.
+- Guarded feature commit/push gate: 107 passed, 0 failed; exact five-file staged set committed and pushed; feature tree clean — VERIFIED.
+- No browser action, lifecycle implementation, handoff/share, provider, project-store, route, persistence, Engine, Lab/IES, RuntimeData, retrieval, main or runtime-port work occurred — VERIFIED.
+- Queue result: all three admitted PWS parcels done; no item ready — RECORDED.

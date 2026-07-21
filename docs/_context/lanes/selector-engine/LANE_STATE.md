@@ -607,3 +607,17 @@ The temporary focused harness executed the Factory Ready suite and passed 128/12
 No factory authority, default, inference, automatic approval, CRM/provider push, Engine invocation, Lab/IES change, route, persistence, RuntimeData mutation, retrieval helper, main or runtime-port work occurred.
 
 PWS-002 is done. PWS-005 is now the sole ready parcel.
+
+## 2026-07-21 PWS-005 lifecycle-copy closeout — latest controlling state
+
+**Recorded lane work HEAD:** `325679acf1803a705127f27a2a3f951fea0f2c7c` — `docs(runtime): correct save restore lifecycle copy`.
+
+PWS-005 corrects stale lifecycle copy and diagnostics only. Selector, Emergence and Scene Builder now state that save, restore and hydrate are shell-owned and live through Project Browser. The workspace contract exposes the same current lifecycle classification and no longer lists save/restore as a deferred real implementation.
+
+Handoff/share and CRM/provider writes remain separately shell-owned and deferred. Module-local project mutation remains prohibited. Project Browser remains the actual save/restore owner and the shell remains the hydrate dispatcher. No module lifecycle implementation, route, project-store change or persistence migration was added.
+
+The temporary focused harness executed the lifecycle-copy suite and passed 112/112. The harness was removed and absent from the final diff. The normal lane gate passed 107/107 and the guarded feature commit/push gate passed 107/107. Exactly the four authorised copy/contract surfaces and focused runtime test were committed and pushed; the feature tree ended clean.
+
+No browser action, save, restore, hydrate, handoff/share, CRM/provider, project-store, route, persistence, Engine, Lab/IES, RuntimeData, retrieval, main or runtime-port operation changed or executed.
+
+PWS-005 is done. No queue item is ready.

@@ -607,3 +607,15 @@ The focused harness passed 128/128 and was removed with no final harness diff. T
 PWS-005 is the sole ready item. Correct only stale lifecycle copy and contract diagnostics so Selector, Emergence, Scene Builder and the workspace contract describe shell-owned save, restore and hydrate as live through Project Browser while module-local mutation remains prohibited.
 
 Do not implement or change save, restore, hydrate, handoff/share, CRM/provider, project storage, routes or persistence. Handoff/share and provider writes remain separately deferred. Do not invoke Engine, alter Lab/IES, mutate RuntimeData, change retrieval ownership, touch main or perform runtime-port work.
+
+## 2026-07-21 PWS-005 closeout — lifecycle copy matches current shell truth
+
+PWS-005 is complete and pushed. Selector, Emergence, Scene Builder and the workspace contract now consistently describe save, restore and hydrate as shell-owned and live through Project Browser. Module-local project mutation remains prohibited.
+
+Handoff/share and CRM/provider writes remain separately shell-owned and deferred. The parcel changed copy and contract diagnostics only; it did not add or alter any save, restore, hydrate, project-store, route or persistence implementation.
+
+The focused harness passed 112/112 and was removed with no final harness diff. The normal and guarded feature gates passed 107/107. The exact four governed copy/contract surfaces and focused runtime test were committed and pushed; the tree ended clean.
+
+## Current boundary
+
+All three admitted PWS parcels are complete. No Selector queue item is ready. A later parcel requires a new durable commission; Governance/provider association, handoff/share, retrieval, Engine, Lab/IES, RuntimeData, main and runtime-process work remain outside this completed batch.

@@ -359,7 +359,7 @@
 ### Q-11C Correct stale shell save/restore lifecycle copy
 
 * id: PWS-005
-* status: ready
+* status: done
 * depends-on: PWS-002 done; Program & Integrate admission recorded and satisfied on 2026-07-21
 * seam change: no — copy and diagnostics must describe the already-live shell-owned lifecycle truth without changing behaviour
 * gate: selector-engine
@@ -368,10 +368,11 @@
 * objective: remove stale statements that Save/Restore is shell-owned and deferred, and make all three view models plus the workspace contract describe the current shell-owned live save, restore and hydrate behaviour truthfully.
 * acceptance: Selector, Emergence and Scene Builder no longer claim save or restore is deferred; they state that save/restore/hydrate is shell-owned and live through Project Browser while module-local mutation remains prohibited. `contracts.js` no longer classifies save/restore as a deferred real implementation and exposes a current lifecycle classification consistent with `projectService` and Project Browser capabilities. Handoff/share and CRM/provider writes are described separately and are not accidentally promoted. Focused static and behaviour assertions prove the four files agree and no stale save/restore-deferred phrase remains in live view-model or contract output.
 * prohibitions: copy/contract truth only; no save, restore, hydrate, handoff/share, CRM, provider, project-store or route implementation change; no browser action, persistence migration, Engine, Lab/IES, RuntimeData, main or runtime-port work.
+* completion: Selector, Emergence, Scene Builder and the workspace contract now agree that save, restore and hydrate are shell-owned and live through Project Browser while module-local project mutation remains prohibited. Handoff/share and CRM/provider writes remain separately deferred. Focused harness coverage passed 112/112, the harness was removed, and normal plus guarded feature gates passed 107/107. Exactly the four authorised copy/contract surfaces and focused runtime test were committed and pushed; the feature tree ended clean.
 
 ### Program admission and active architectural constraints for PWS work
 
-Program & Integrate admitted all three items on 2026-07-21. PWS-001 and PWS-002 are done. PWS-005 is the sole ready Selector parcel; no second writer may use this worktree.
+Program & Integrate admitted all three items on 2026-07-21. PWS-001, PWS-002 and PWS-005 are done. No PWS item remains ready; no second writer may use this worktree.
 
 Selector owns the derived readiness state and immutable state-entry intent only. It must not invoke HubSpot, CRM, project persistence or identity logic. Governance & Shell owns provider policy, project/identity association, idempotency, retry and best-effort external push.
 
