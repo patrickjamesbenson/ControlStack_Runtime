@@ -766,3 +766,21 @@ Every completed worker updates this index with:
 - Selector lane identity and branch remain correct and Git is clean after the host action — VERIFIED.
 - WALK-001R is the sole ready parcel; the complete original dry-run and finite tier-gated Ambient proof still gate materialisation, archive and promotion; archive remains mandatory before promotion — RECORDED.
 - WALK-002 and all later Selector work and every Engine invocation remain blocked pending source refresh and Program review — RECORDED.
+
+
+## 2026-07-22 — WALK-001R guarded source-identity stop evidence
+
+- Starting Selector identity, branch, reconciliation-wrapper guard and Git cleanliness passed — VERIFIED.
+- Selector runtime returned HTTP 200 with ready configuration; Program manager status was Healthy and Managed as reported by Patrick — VERIFIED LIVE / REPORTED MANAGER STATE.
+- Google source configured; credentials configured and readable; installed reader dependency loaded successfully; explicit dry-run refresh returned HTTP 200 and `dry-run-ready` — VERIFIED REDACTED PREFLIGHT AND TRANSPORT.
+- All 15 required tables were present with safe counts: System 8, Optics 12, Accessories 36, Specification Codes 25, Boards 265, Drivers 48, Pure Reference State 1, System Components 37, System BOM Defaults 104, System Policy 133, Field Editability 75, Roles and Lanes 7, Code Policy 48, Messages 24 and Users 17 — VERIFIED SAFE SHAPE.
+- Primary Driver identity was populated on all 48 Driver rows but every value was Boolean-like; it supplied zero protocol-authority rows and zero protocol values — VERIFIED SOURCE-IDENTITY FAILURE.
+- Duplicate Driver identity was populated on all 48 Driver rows and carried 51 protocol values, making it appear protocol-authoritative contrary to the required primary identity — VERIFIED SOURCE-IDENTITY CONTRADICTION.
+- Board authority was populated; 265 option rows and 264 label rows were observed, with 264 matched lengths and one mismatch; source order remained retained — VERIFIED SAFE SHAPE.
+- Intersection between populated Board protocol authority and required primary Driver protocol authority was empty — VERIFIED VALIDATION FAILURE.
+- System Policy was present with 133 rows, but the redacted response returned no bounded Ambient-row summary; a finite, genuinely tier-gated `SYSTEM_POLICY.ambient_temp` row is not proven — VERIFIED UNPROVEN GUARD, ABSENCE NOT INFERRED.
+- Credential data/location, Sheet identity, provider body, raw rows/headers, Users data, personal identifiers, complete source JSON and private paths were not disclosed — VERIFIED.
+- Materialised-target confinement passed; dry-run wrote nothing; materialisation, archive and promotion were not invoked — VERIFIED.
+- Existing active authority remained the unchanged prior artifact, readable and parseable with the same size, timestamp and all 15 expected tables — VERIFIED READ-ONLY PROBE.
+- No focused/full gate, staging, commit/push, Selector feature, project, provider, persistence, IES, Engine or later walkthrough action occurred; final Git was clean — VERIFIED WORKER RECEIPT.
+- Queue result: WALK-001R and WALK-001 blocked for Program review; WALK-002 and later parcels not released — RECORDED.

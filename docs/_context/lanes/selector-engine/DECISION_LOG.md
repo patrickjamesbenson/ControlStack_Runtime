@@ -577,3 +577,10 @@ This log is append-oriented. Do not silently rewrite historical decisions.
 **Guard:** the complete original dry-run, including every source-shape, validation, identity and disclosure check and a finite, genuinely tier-gated `SYSTEM_POLICY.ambient_temp` row, remains mandatory before any write. Materialisation may occur only after that full pass; archive of the current promoted authority must succeed before promotion of the new authority.
 
 **Boundary:** stop after the source refresh for Program review. Do not release WALK-002, begin later Selector work or invoke Engine.
+
+
+## 2026-07-22 — Accept WALK-001R guarded source-identity stop
+
+**Decision:** Accept the standing worker's fail-closed source-validation stop. The reader dependency now loads and the dry-run reaches the current Google source, but the required primary Driver identity supplies only Boolean-like markers while the duplicate field supplies protocol values. The populated Board protocol authority therefore has no intersection with required primary Driver protocol authority. A finite, genuinely tier-gated `SYSTEM_POLICY.ambient_temp` row is also unproven.
+
+**Consequence:** no materialisation, archive or promotion was authorised or attempted. The active authority remains unchanged. WALK-001R and WALK-001 stay incomplete, WALK-002 and later work stay blocked, and Program must decide the exact source-authority repair or retry path.

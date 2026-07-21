@@ -681,3 +681,12 @@ Program's bounded locked-dependency restoration is complete as reported by Patri
 Resume WALK-001R only. Run the complete original guarded source dry-run and require every existing source-shape, validation, identity and disclosure check plus a finite, genuinely tier-gated `SYSTEM_POLICY.ambient_temp` row. Only after the entire dry-run passes may the existing guarded workflow materialise, archive the current promoted authority and promote the new authority. Archive success is mandatory before promotion.
 
 Stop after the source refresh for Program review. WALK-002 and all later Selector parcels remain blocked. Engine, feature changes, project actions, CRM/provider mutation, persistence and IES work remain prohibited.
+
+
+## 2026-07-22 WALK-001R guarded source-identity stop
+
+The installed Google reader now loads and the original guarded dry-run reached validation. All required tables were present, configuration and credential-readability checks passed, disclosure remained safe, and the active authority stayed unchanged.
+
+The dry-run failed closed before every write because the primary Driver identity contains Boolean-like markers rather than protocol authority, while the duplicate Driver field carries the protocol values. Board protocol authority therefore has no valid intersection with the required primary Driver authority. The response also did not prove a finite, genuinely tier-gated Ambient row.
+
+WALK-001R and WALK-001 remain incomplete. No materialisation, archive, promotion, Engine action or later walkthrough work occurred. Git is clean. Stop for Program source-authority review; do not release WALK-002.

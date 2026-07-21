@@ -616,7 +616,7 @@ WALK-001 is incomplete and blocked on runtime dependency availability. WALK-002 
 ## 2026-07-22 Program recovery admission
 
 ### WALK-001R Recover the guarded Google reader and complete WALK-001
-* status: ready (WALK-001I locked installation complete; Selector runtime healthy; managed status reported by Patrick)
+* status: blocked (reader recovered; guarded current-source identity contradiction and Ambient proof failure require Program review)
 * depends-on: WALK-001 protected pre-write stop accepted by Program
 * objective: reproduce the existing redacted Google Sheets reader-load failure; inspect only the running Selector service's existing dependency, module-resolution, working-directory and configuration boundary; apply the minimum repair available through Selector-owned files or existing managed-service controls; then complete the original WALK-001 guarded authority refresh.
 * authorised repair boundary: Selector-owned files already permitted by this lane and existing managed-service controls. No arbitrary shell workaround or broad environment repair.
@@ -641,3 +641,12 @@ Patrick reports that Program's bounded operational parcel installed the existing
 WALK-001R is again the sole ready parcel. Rerun the complete original guarded source dry-run. No write is permitted until all original source-shape, validation, identity and disclosure checks pass and the current source proves one finite, genuinely tier-gated `SYSTEM_POLICY.ambient_temp` row. On a complete pass only: materialise, archive the current promoted authority, then promote the new authority. Archive must succeed before promotion.
 
 Stop after the source refresh for Program review. Do not release WALK-002 or begin any later Selector work, and do not invoke Engine.
+
+
+## 2026-07-22 WALK-001R guarded source-identity stop result
+
+The reader recovery succeeded and the complete guarded dry-run reached current-source validation with all 15 required tables present. The dry-run stopped before every write because the required primary Driver identity field contains only Boolean-like markers and provides no protocol authority, while the duplicate Driver field contains the protocol values. Board protocol authority is populated, but no valid intersection with the required primary Driver authority exists. The bounded response also does not prove a finite, genuinely tier-gated `SYSTEM_POLICY.ambient_temp` row.
+
+No materialisation, archive or promotion was invoked. The active authority remains unchanged and readable. No tests, staging, commit, Engine action or later walkthrough work occurred; Git remained clean.
+
+WALK-001R and WALK-001 are blocked for Program source-authority review. WALK-002 and every later Selector parcel remain blocked. Do not recommission a source refresh until Program admits an exact source-identity and Ambient repair or proven retry path.

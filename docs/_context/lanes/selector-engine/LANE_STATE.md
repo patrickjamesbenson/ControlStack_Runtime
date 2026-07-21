@@ -699,3 +699,16 @@ Program's bounded operational dependency-restoration parcel is complete as repor
 WALK-001R is reopened as the sole ready recovery parcel. The worker must rerun the complete original guarded source dry-run. Every source-shape, validation, identity and disclosure check and one finite, genuinely tier-gated `SYSTEM_POLICY.ambient_temp` row must pass before any write. Only then may the existing guarded workflow materialise the validated authority, archive the currently promoted authority, and promote the new authority, in that order. Archive failure blocks promotion.
 
 Stop after the source refresh for Program review. WALK-002 and all later Selector work remain blocked. Do not invoke Engine, change Selector feature behaviour, save/register a project, perform CRM/provider mutation, persistence or IES work, or write another lane, main or donor root.
+
+
+## 2026-07-22 WALK-001R guarded source-identity stop — latest controlling state
+
+**Recorded lane work HEAD:** `1f7c0a5d2ccaa9d8b628b8a130a587516f5206b5` — `docs(selector): reconcile lane state for WALK-001I`.
+
+The standing worker passed lane identity, branch, memory guard and clean-Git checks. The Selector runtime was live and ready; Program's Healthy and Managed status was accepted from Patrick's manager report. Google configuration and credential-readability preflight passed with disclosure protections intact, and the installed reader dependency loaded successfully.
+
+The complete original guarded dry-run returned HTTP 200 and `dry-run-ready` with all 15 required tables present. It then failed the mandatory source-identity guard: every primary Driver identity value was Boolean-like and supplied no protocol authority, while the duplicate Driver field carried the protocol values. Board protocol authority was populated, but its intersection with the required primary Driver authority was empty. The System Policy table was present, but the bounded response did not prove a finite, genuinely tier-gated `SYSTEM_POLICY.ambient_temp` row.
+
+No materialisation, archive or promotion was invoked. The active authority remained readable, parseable and unchanged; no Selector feature, project, provider, persistence, IES, Engine or later walkthrough action occurred. Git remained clean.
+
+WALK-001R and WALK-001 remain incomplete and blocked. WALK-002 through WALK-007 remain blocked. Program must review the redacted current-source identity contradiction and missing Ambient proof before any further Selector source-refresh attempt.
