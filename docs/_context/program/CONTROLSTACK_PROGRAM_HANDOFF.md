@@ -957,3 +957,11 @@ Selector reports a clean, reconciled lane and a correct fail-closed WALK-001 sto
 Commission the standing Selector worker for WALK-001R only. Reproduce the redacted reader-load failure and inspect the existing Selector runtime dependency/module-resolution/working-directory/configuration boundary. Apply only the minimum repair available within Selector-owned paths or existing managed-service controls. Do not expose, copy, move or newly bind Google credentials; do not use arbitrary shell workarounds or broad environment repair.
 
 If repair requires a Program-owned deployment or service-host change, a protected-secret change, cross-lane writing or another root, stop with a redacted diagnosis. Otherwise restart only `selector-runtime` through the existing manager, rerun the complete original guarded dry-run, and continue to materialise/archive/promote only after every validation and the finite tier-gated `SYSTEM_POLICY.ambient_temp` proof pass. Stop again for Program review after WALK-001; do not start WALK-002.
+
+### Selector WALK-001I operational install handoff
+
+Selector has now returned the required redacted diagnosis. It reports that the serving worktree declares and lock-pins `googleapis`, but the live installation lacks the locked dependency set. Credentials were untouched, no tracked file changed and the Selector lane is clean. Program classifies this as service-host installation drift and approves WALK-001I with no Selector write scope and no code change.
+
+Patrick executes `npm ci` in the exact Selector worktree that serves port 8788. Use the lockfile exactly; do not use `npm install`, update packages, edit package files, change credentials or modify deployment configuration. If the command fails or creates a tracked change, stop.
+
+After success, open the existing ControlStack Manager panel, choose `CS Selector Runtime / Workspace Shell (8788)`, click `Restart`, and require that service alone to return Healthy and Managed. Then return to the Selector orchestrator. It must verify clean Git state, resume WALK-001R, and rerun the complete guarded WALK-001 dry-run before any materialise/archive/promote write. WALK-002 remains blocked.
