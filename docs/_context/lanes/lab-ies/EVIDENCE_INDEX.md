@@ -1979,10 +1979,10 @@ Current verification superseded the stale parts of that snapshot:
 ## SEAM-G-C2 generation reference binding completion — 2026-07-21
 
 - Exact feature files: import-free generation/reference binding adapter and focused test only — VERIFIED.
-- Final Lab gate: 284 passed, 0 failed, 0 skipped, 0 todo — VERIFIED.
-- Generation input: exact schema, deterministic identity/replay/audit and no-generation safety revalidated independently — VERIFIED.
-- Lab input: exact optic path, no unresolved blockers, public selection/evidence/reference shape and read-only state — VERIFIED.
-- Ready binding: optic key/variant, BOM, evidence ref, measured thermal triplet and canonical OPT identity agreement — VERIFIED.
+- Final Lab gate: 285 passed, 0 failed, 0 skipped, 0 todo — VERIFIED.
+- Generation input: exact schema, real selection fingerprint, artifact request identity, deterministic identity/replay/audit and no-generation safety revalidated independently — VERIFIED.
+- Lab input: exact optic path, no unresolved blockers, public selection/evidence/reference shape, canonical timestamp/serial bounds and read-only state — VERIFIED.
+- Ready binding: optic key/variant, BOM, evidence ref, exact-decimal measured thermal triplet and canonical OPT identity agreement — VERIFIED.
 - Valid zero fixture: zero target, ambient and measured thermal values preserved — VERIFIED.
 - Replay/governance: identical public inputs replay identically; outer traceability is ignored and absent — VERIFIED.
 - Identity movement: changed generation or OPT reference identity moves binding identity/replay — VERIFIED.

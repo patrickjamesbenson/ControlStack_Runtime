@@ -479,7 +479,7 @@ Unknown/extra/private/raw/unsafe input, unresolved or non-optic Lab state, missi
 
 **Status:** Complete and returned to Program on 2026-07-21.
 
-The import-free binding adapter and focused test were pushed in the exact two-file scope after 284/284. It consumes plain public generation-input and NVB Lab projection JSON only, validates deterministic source identity and no-generation safety, and emits one deeply immutable ready-or-blocked reference-binding projection.
+The import-free binding adapter and focused test were pushed across the exact feature and identity-tightening checkpoints after 285/285. It consumes plain public generation-input and NVB Lab projection JSON only, recomputes the real selection fingerprint and artifact request identity, validates exact-decimal thermal equations and canonical reference timestamps, and emits one deeply immutable ready-or-blocked reference-binding projection.
 
 Ready binding proves optic path, no unresolved blockers, optic key/variant, optic BOM, evidence reference, measured thermal triplet and canonical read-only OPT reference identity agreement. Valid zero and replay/governance cases pass; reference or generation identity movement moves binding identity.
 

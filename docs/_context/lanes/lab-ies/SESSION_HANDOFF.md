@@ -337,9 +337,9 @@ The expected marker and three protected untracked items remain untouched and out
 
 ## 2026-07-21 SEAM-G-C2 complete — Program binding review next
 
-The import-free generation/reference binding adapter is complete and pushed in the exact two-file scope. The final Lab gate passed 284/284.
+The import-free generation/reference binding adapter is complete and pushed across the exact feature and identity-tightening checkpoints. The final Lab gate passed 285/285.
 
-It independently revalidates generation identity/audit and no-generation safety, requires optic path with no unresolved blockers, and proves optic key/variant, BOM, evidence, measured thermal triplet and canonical read-only OPT reference identity agreement.
+It independently recomputes the real selection fingerprint and artifact request identity, revalidates generation identity/audit and no-generation safety, requires optic path with no unresolved blockers, and proves optic key/variant, BOM, evidence, exact-decimal measured thermal triplet and canonical read-only OPT reference timestamp/identity agreement.
 
 Ready, valid-zero, replay/governance and identity-movement fixtures passed. Unknown, extra, private/raw, unsafe, unresolved/non-optic, missing/wrong-kind reference, resolver contradiction and all optic/evidence/thermal mismatches fail closed.
 

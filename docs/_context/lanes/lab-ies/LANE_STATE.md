@@ -13,7 +13,7 @@ Current repository evidence overrides stale historical statements.
 - Root: `C:\ControlStack_Worktrees\code-pilot-lab`
 - Branch: `lane/code-pilot-lab`
 - Gate: `lab-ies`
-- Recorded branch HEAD: `5f34bcf13fd58cc152b87eff484407a8cba99fdd`
+- Recorded branch HEAD: `8050d222dc917f6e40ce36fed2988f8c06bb5754`
 - Branch-HEAD guard checkpoint: `6d34e500d407d5335e5eebb317636a67a5e98618`
 - Starting HEAD for SEAM-G-C2: `37401db23a42108c7b408e05919b600777034cf7`
 - Completed feature HEAD: `5f34bcf13fd58cc152b87eff484407a8cba99fdd`
@@ -897,7 +897,7 @@ It creates no resolver/storage access, sealed DTO load, authority/evidence mutat
 
 SEAM-G-C2 is complete and pushed in the exact two-file scope. The import-free adapter consumes plain public generation-input and NVB Lab projection JSON and emits one deeply immutable ready-or-blocked OPT reference-binding projection.
 
-The final Lab gate passed 284/284. Exact source identity/audit, optic path, no-unresolved state, optic key/variant, BOM, evidence, measured thermal triplet and canonical reference identity passed. Valid zeros, replay/governance and identity movement passed; all mismatch and unsafe cases fail closed.
+The final Lab gate passed 285/285 across the feature and identity-tightening checkpoints. The adapter independently recomputes the real selection fingerprint and artifact request identity, validates exact source identity/audit, optic path, no-unresolved state, optic key/variant, BOM, evidence, exact-decimal measured thermal triplet and canonical reference timestamp/identity. Valid zeros, replay/governance and identity movement passed; all mismatch and unsafe cases fail closed.
 
 No resolver/storage access, sealed DTO load, authority/evidence mutation, generator invocation, LM-63 text, route, persistence, network/file/email write or readiness capability was added. The expected marker and three protected untracked items remain untouched.
 
