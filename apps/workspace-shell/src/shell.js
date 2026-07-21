@@ -53,6 +53,11 @@ import {
 import {
   createShellProjectBrowserSelectedProjectServerOwnedRegistrationClientTransport,
 } from "./projectBrowserSelectedProjectServerOwnedRegistrationClientTransport.js";
+import {
+  DEFERRED_DECISION_REGISTRY_CONTRACT,
+  DEFERRED_DECISION_STATUS_DEFINITIONS,
+  DEFERRED_DECISIONS,
+} from "./deferredDecisionRegistry.js";
 
 const MODULE_ROUTE_ALIASES = Object.freeze({
   egres: "emergence",
@@ -2284,6 +2289,68 @@ function createInspectorSection(title, rows) {
   return section;
 }
 
+function createDeferredDecisionRegistrySection() {
+  const section = document.createElement("section");
+  section.className = "cs-shell__context-inspector-section cs-shell__deferred-decisions";
+  section.dataset.governanceSurface = DEFERRED_DECISION_REGISTRY_CONTRACT.surface;
+  section.dataset.contractVersion = DEFERRED_DECISION_REGISTRY_CONTRACT.version;
+
+  const heading = document.createElement("h3");
+  heading.textContent = "Deferred decisions";
+  const introduction = document.createElement("p");
+  introduction.textContent =
+    "Consciously parked and unresolved Governance decisions. This registry reports state; it does not resolve or activate anything.";
+
+  const legend = document.createElement("ul");
+  legend.className = "cs-shell__decision-status-legend";
+  legend.setAttribute("aria-label", "Decision registry status definitions");
+  for (const definition of DEFERRED_DECISION_STATUS_DEFINITIONS) {
+    const item = document.createElement("li");
+    item.dataset.decisionStatus = definition.status;
+    item.textContent = `${definition.label}: ${definition.meaning}`;
+    legend.appendChild(item);
+  }
+
+  const decisions = document.createElement("ol");
+  decisions.className = "cs-shell__deferred-decision-list";
+  decisions.setAttribute("aria-label", "Deferred decision registry");
+  for (const decision of DEFERRED_DECISIONS) {
+    const item = document.createElement("li");
+    item.className = "cs-shell__deferred-decision";
+    item.dataset.decisionId = decision.id;
+    item.dataset.decisionStatus = decision.status;
+
+    const header = document.createElement("div");
+    header.className = "cs-shell__deferred-decision-header";
+    const title = document.createElement("h4");
+    title.textContent = decision.title;
+    const status = document.createElement("span");
+    status.className = "cs-shell__decision-status";
+    status.dataset.decisionStatus = decision.status;
+    status.textContent = decision.status;
+    header.append(title, status);
+
+    const disposition = document.createElement("p");
+    disposition.className = "cs-shell__deferred-decision-disposition";
+    disposition.textContent = decision.disposition;
+    const reason = document.createElement("p");
+    reason.className = "cs-shell__deferred-decision-reason";
+    reason.textContent = `Why: ${decision.reason}`;
+    const ownership = document.createElement("p");
+    ownership.className = "cs-shell__deferred-decision-owner";
+    ownership.textContent = `Owner: ${decision.owner} · Kind: ${decision.kind}`;
+    const citation = document.createElement("p");
+    citation.className = "cs-shell__deferred-decision-citation";
+    citation.textContent = `Citation: ${decision.citation}`;
+
+    item.append(header, disposition, reason, ownership, citation);
+    decisions.appendChild(item);
+  }
+
+  section.append(heading, introduction, legend, decisions);
+  return section;
+}
+
 function renderShellContextInspector(context) {
   if (!contextInspectorContent) return;
   clearElement(contextInspectorContent);
@@ -2296,6 +2363,7 @@ function renderShellContextInspector(context) {
   const visibility = context.visibility || {};
   const specialParts = authority.privileges?.specialVisibility || [];
   contextInspectorContent.append(
+    createDeferredDecisionRegistrySection(),
     createInspectorSection("Current Project", [
       ["selected project id", currentProjectId(context) || "none"],
       ["project title", currentProjectTitle(context)],

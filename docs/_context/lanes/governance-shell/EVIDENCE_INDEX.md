@@ -20,3 +20,15 @@
 - Only canonical lane-memory files changed during closeout.
 - GOV-004 was not promoted and remains blocked behind GOV-001 and GOV-002 unless
   Program issues an explicit written reorder.
+
+
+## GOV-002 deferred-decisions panel closeout
+
+- Added one versioned, static Governance decision registry and read-only developer panel.
+- The first five canonical entries expose status, ownership, kind, disposition, reason
+  and citation.
+- The identity-first and state-to-deal-floor questions remain OPEN and unresolved.
+- Focused ownership tests prove the panel has no action, persistence, provider, CRM,
+  retrieval or Engine path.
+- The fixed `governance-shell` gate passed on 2026-07-21.
+- GOV-004 retrieval work was not promoted and remains blocked.

@@ -14,12 +14,15 @@
   pushed.
 
 ### GOV-002 Deferred-decisions panel (Work Shape item 9)
-* status: blocked (bootstrap review stop; GOV-001 complete)
+* status: done (2026-07-21)
 * objective: a visible dev-view list of every consciously parked decision and why.
   Promote the mockup's decision registry mechanism to product shape. First entries:
   HubSpot two-connector deferral · private-app scope pre-check (PARKED, Patrick) ·
   two-factor auth · identity-first question (OPEN) · state→deal-floor mapping (OPEN).
 * note: small, high leverage — deliberately first real parcel.
+* closeout: versioned static registry and read-only developer panel landed with five
+  canonical entries, named ownership, reasons and citations; both OPEN questions remain
+  unresolved; no action, persistence, CRM, retrieval or Engine behaviour was added.
 
 ### GOV-003 Project persistence restoration (Work Shape item 4)
 * status: blocked (depends-on: GOV-002 + Program seam decision)
