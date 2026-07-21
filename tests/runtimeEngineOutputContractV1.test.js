@@ -2,7 +2,6 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
-import { stableFingerprint } from "../packages/workspace-kernel/stableFingerprint.js";
 import {
   buildSafeEngineRunTableSelectedResultSourceObject,
 } from "../packages/workspace-kernel/engineRunTableSafeSelectedResultSourceObject.js";
@@ -24,6 +23,7 @@ import {
   ENGINE_SELECTION_SET_SCHEMA_VERSION,
   buildRuntimeEngineOutputContractV1,
   createEngineSelectionSetRequestV1,
+  validateEngineSelectionSetV1,
 } from "../packages/workspace-kernel/runtimeEngineOutputContractV1.js";
 
 const moduleUrl = new URL(
@@ -206,22 +206,15 @@ function acceptedRequest(overrides = {}) {
   return created.request;
 }
 
-function evidenceFingerprintFor(internal) {
-  return stableFingerprint("engine-evidence-v1", {
-    selectedOpticKey: internal.technicalProvenance.selectedOpticKey,
-    opticBomId: internal.technicalProvenance.opticBomId,
-    evidenceRef: internal.technicalProvenance.evidenceRef,
-    programValidationState: internal.technicalProvenance.programValidationState,
-  });
-}
-
 function build(overrides = {}) {
   const internal = overrides.internalSelectedResult ?? internalSelectedResult();
   return buildRuntimeEngineOutputContractV1({
     selectionRequest: overrides.selectionRequest ?? acceptedRequest(),
     internalSelectedResult: internal,
     policyFingerprint: overrides.policyFingerprint ?? "engine-policy-v1:0123456789abcdef",
-    evidenceFingerprints: overrides.evidenceFingerprints ?? [evidenceFingerprintFor(internal)],
+    ...(Object.prototype.hasOwnProperty.call(overrides, "evidenceFingerprints")
+      ? { evidenceFingerprints: overrides.evidenceFingerprints }
+      : {}),
     ...(Object.prototype.hasOwnProperty.call(overrides, "traceabilityEnvelope")
       ? { traceabilityEnvelope: overrides.traceabilityEnvelope }
       : {}),
@@ -258,14 +251,33 @@ test("creates one exact deterministic selections-only request", () => {
   assert.equal(Object.isFrozen(created.request.selectionSet), true);
 });
 
+test("validates the exact versioned selection-set draft shape", () => {
+  const validated = validateEngineSelectionSetV1({
+    schemaId: ENGINE_SELECTION_SET_SCHEMA_ID,
+    schemaVersion: ENGINE_SELECTION_SET_SCHEMA_VERSION,
+    selectionSet: engineeringSelections(),
+  });
+  assert.equal(validated.ok, true);
+  assert.equal(validated.request.schemaId, ENGINE_SELECTION_SET_SCHEMA_ID);
+  assert.match(validated.request.requestFingerprint, /^engine-selection-set-v1:[0-9a-f]{40}$/);
+
+  const unsupported = validateEngineSelectionSetV1({
+    schemaId: ENGINE_SELECTION_SET_SCHEMA_ID,
+    schemaVersion: 2,
+    selectionSet: engineeringSelections(),
+  });
+  assert.equal(unsupported.ok, false);
+  assert.equal(unsupported.blocker, "selection-request-schema-unsupported");
+});
+
 test("selection creation rejects governance, caller-derived, unsafe and invalid values", () => {
   const cases = [
-    [engineeringSelections({ project: "project-alpha" }), "selection-set-governance-field-rejected-project"],
-    [engineeringSelections({ tier: "business" }), "selection-set-governance-field-rejected-tier"],
-    [engineeringSelections({ derivedInternalTaC: 35 }), "selection-set-derived-field-rejected-derivedinternaltac"],
-    [engineeringSelections({ selectedResult: {} }), "selection-set-derived-field-rejected-selectedresult"],
-    [engineeringSelections({ note: "C:\\Users\\private" }), "selection-set-unsafe-text"],
-    [engineeringSelections({ lighting: { targetLmPerM: Infinity } }), "selection-set-non-finite-number"],
+    [engineeringSelections({ project: "project-alpha" }), "governance-field-rejected-project"],
+    [engineeringSelections({ tier: "business" }), "caller-derived-field-rejected-tier"],
+    [engineeringSelections({ derivedInternalTaC: 35 }), "caller-derived-field-rejected-derivedinternaltac"],
+    [engineeringSelections({ selectedResult: {} }), "caller-derived-field-rejected-selectedresult"],
+    [engineeringSelections({ note: "C:\\Users\\private" }), "selection-text-invalid"],
+    [engineeringSelections({ lighting: { targetLmPerM: Infinity } }), "selection-number-invalid"],
   ];
   for (const [selectionSet, blocker] of cases) {
     const created = createEngineSelectionSetRequestV1(selectionSet);
@@ -396,8 +408,8 @@ test("unknown, contradictory, mismatched and unsafe inputs fail closed", () => {
     "policy-fingerprint-invalid",
   );
   assertBlocked(
-    build({ evidenceFingerprints: ["engine-evidence-v1:wrong0000"] }),
-    "evidence-fingerprint-mismatch",
+    build({ evidenceFingerprints: ["engine-evidence-v1:caller-supplied"] }),
+    "engine-output-input-invalid-shape",
   );
 
   const contradicted = JSON.parse(JSON.stringify(internalSelectedResult()));
@@ -430,7 +442,6 @@ test("result identity changes only with technical request, source, policy or evi
   });
   const evidenceChanged = build({
     internalSelectedResult: evidenceInternal,
-    evidenceFingerprints: [evidenceFingerprintFor(evidenceInternal)],
   });
   assert.notEqual(baseline.resultId, requestChanged.resultId);
   assert.notEqual(baseline.resultId, policyChanged.resultId);

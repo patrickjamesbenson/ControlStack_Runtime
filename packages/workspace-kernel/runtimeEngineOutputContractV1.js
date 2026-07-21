@@ -46,6 +46,11 @@ export const ENGINE_RUNTABLE_ROW_FIELD_SET = Object.freeze([
   "rawPayloadReturned",
 ]);
 
+const SELECTION_DRAFT_KEYS = Object.freeze([
+  "schemaId",
+  "schemaVersion",
+  "selectionSet",
+]);
 const REQUEST_KEYS = Object.freeze([
   "schemaId",
   "schemaVersion",
@@ -56,7 +61,6 @@ const INPUT_REQUIRED_KEYS = Object.freeze([
   "selectionRequest",
   "internalSelectedResult",
   "policyFingerprint",
-  "evidenceFingerprints",
 ]);
 const INPUT_OPTIONAL_KEYS = Object.freeze(["traceabilityEnvelope"]);
 const INTERNAL_RESULT_KEYS = Object.freeze([
@@ -190,13 +194,13 @@ const GOVERNANCE_KEYS = Object.freeze(new Set([
   "selectedproject",
   "persistence",
   "persistenceacknowledgement",
-  "tier",
-  "selectedtier",
-  "tierstrategy",
   "governanceapproval",
   "eligibilityapproval",
 ]));
 const CALLER_DERIVED_KEYS = Object.freeze(new Set([
+  "tier",
+  "selectedtier",
+  "tierstrategy",
   "candidate",
   "candidates",
   "score",
@@ -213,6 +217,25 @@ const CALLER_DERIVED_KEYS = Object.freeze(new Set([
   "verifiedlmperm",
   "verifiedoutput",
   "deliveredlmperm",
+]));
+const UNSAFE_KEYS = Object.freeze(new Set([
+  "rawpayload",
+  "rawrows",
+  "rawsource",
+  "rawresult",
+  "rawenginepayload",
+  "rawselectedpayload",
+  "rawruntablerows",
+  "privatepath",
+  "localpath",
+  "filepath",
+  "absolutepath",
+  "credentials",
+  "password",
+  "secret",
+  "base64",
+  "iestext",
+  "candelagrid",
 ]));
 const FINGERPRINT_PATTERN = /^[0-9A-Za-z][0-9A-Za-z_.:-]{7,255}$/;
 const BLOCKER_PATTERN = /^[a-z][a-z0-9_-]{0,127}$/;
@@ -242,6 +265,14 @@ function validInputKeys(value) {
 
 function normalizedKey(value) {
   return String(value ?? "").replace(/[^0-9a-z]/gi, "").toLowerCase();
+}
+
+function blockerKey(value) {
+  return String(value ?? "field")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9_]+/g, "_")
+    .replace(/^_+|_+$/g, "") || "field";
 }
 
 function finiteNumber(value) {
@@ -285,11 +316,11 @@ function stableSelectionValue(value, seen = new Set()) {
   if (typeof value === "number") {
     const numeric = finiteNumber(value);
     return numeric === null
-      ? { ok: false, blocker: "selection-set-non-finite-number" }
+      ? { ok: false, blocker: "selection-number-invalid" }
       : { ok: true, value: numeric };
   }
   if (typeof value === "string") {
-    if (!boundedText(value, 512)) return { ok: false, blocker: "selection-set-unsafe-text" };
+    if (!boundedText(value, 512)) return { ok: false, blocker: "selection-text-invalid" };
     return { ok: true, value };
   }
   if (!value || typeof value !== "object") {
@@ -316,11 +347,15 @@ function stableSelectionValue(value, seen = new Set()) {
   const output = {};
   for (const key of keys) {
     const token = normalizedKey(key);
+    const safeKey = blockerKey(key);
     if (GOVERNANCE_KEYS.has(token)) {
-      return { ok: false, blocker: `selection-set-governance-field-rejected-${token}` };
+      return { ok: false, blocker: `governance-field-rejected-${safeKey}` };
     }
     if (CALLER_DERIVED_KEYS.has(token)) {
-      return { ok: false, blocker: `selection-set-derived-field-rejected-${token}` };
+      return { ok: false, blocker: `caller-derived-field-rejected-${safeKey}` };
+    }
+    if (UNSAFE_KEYS.has(token)) {
+      return { ok: false, blocker: `unsafe-field-rejected-${safeKey}` };
     }
     const child = stableSelectionValue(value[key], seen);
     if (!child.ok) return child;
@@ -332,6 +367,30 @@ function stableSelectionValue(value, seen = new Set()) {
 
 function requestFingerprintFor(selectionSet) {
   return stableFingerprint("engine-selection-set-v1", selectionSet);
+}
+
+export function validateEngineSelectionSetV1(value = {}) {
+  if (!exactKeys(value, SELECTION_DRAFT_KEYS)) {
+    return deepFreeze({ ok: false, request: null, blocker: "selection-request-invalid-shape" });
+  }
+  if (
+    value.schemaId !== ENGINE_SELECTION_SET_SCHEMA_ID
+    || value.schemaVersion !== ENGINE_SELECTION_SET_SCHEMA_VERSION
+  ) {
+    return deepFreeze({ ok: false, request: null, blocker: "selection-request-schema-unsupported" });
+  }
+  const selected = stableSelectionValue(value.selectionSet);
+  if (!selected.ok) return deepFreeze({ ok: false, request: null, blocker: selected.blocker });
+  if (!isPlainObject(selected.value) || Object.keys(selected.value).length === 0) {
+    return deepFreeze({ ok: false, request: null, blocker: "selection-set-empty" });
+  }
+  const request = deepFreeze({
+    schemaId: ENGINE_SELECTION_SET_SCHEMA_ID,
+    schemaVersion: ENGINE_SELECTION_SET_SCHEMA_VERSION,
+    selectionSet: selected.value,
+    requestFingerprint: requestFingerprintFor(selected.value),
+  });
+  return deepFreeze({ ok: true, request, blocker: null });
 }
 
 function validateRequest(value) {
@@ -540,6 +599,7 @@ function validateInternalSelectedResult(value) {
       provenance,
       thermal: thermal.value,
       runs,
+      internalSelectedResult: clonePlain(value),
     },
   };
 }
@@ -684,29 +744,21 @@ export function buildRuntimeEngineOutputContractV1(input = {}) {
 
   const policyFingerprint = fingerprint(input.policyFingerprint);
   if (!policyFingerprint) return blockedOutput("policy-fingerprint-invalid", { requestFingerprint });
-  const evidence = validateEvidenceFingerprints(input.evidenceFingerprints);
-  if (!evidence.ok) return blockedOutput(evidence.blocker, { requestFingerprint, policyFingerprint });
 
   const internal = validateInternalSelectedResult(input.internalSelectedResult);
   if (!internal.ok) return blockedOutput(internal.blocker, { requestFingerprint, policyFingerprint });
-  const expectedEvidenceFingerprint = stableFingerprint("engine-evidence-v1", {
+  const evidenceFingerprints = [stableFingerprint("engine-evidence-v1", {
     selectedOpticKey: internal.value.provenance.selectedOpticKey,
     opticBomId: internal.value.provenance.opticBomId,
     evidenceRef: internal.value.provenance.evidenceRef,
     programValidationState: internal.value.provenance.programValidationState,
-  });
-  if (!evidence.value.includes(expectedEvidenceFingerprint)) {
-    return blockedOutput("evidence-fingerprint-mismatch", {
-      requestFingerprint,
-      policyFingerprint,
-    });
-  }
+  })];
   const sourceVersionFingerprint = sourceVersionFingerprintFor(internal.value);
   const resultId = resultIdFor({
     requestFingerprint,
     sourceVersionFingerprint,
     policyFingerprint,
-    evidenceFingerprints: evidence.value,
+    evidenceFingerprints,
     internal: internal.value,
   });
   const identity = { requestFingerprint, sourceVersionFingerprint, policyFingerprint, resultId };
@@ -720,7 +772,7 @@ export function buildRuntimeEngineOutputContractV1(input = {}) {
     requestFingerprint,
     sourceVersionFingerprint,
     policyFingerprint,
-    evidenceFingerprints: [...evidence.value],
+    evidenceFingerprints: [...evidenceFingerprints],
     selectedResult: {
       resultId,
       accepted: true,
@@ -749,7 +801,7 @@ export function buildRuntimeEngineOutputContractV1(input = {}) {
       requestFingerprint,
       sourceVersionFingerprint,
       policyFingerprint,
-      evidenceFingerprints: [...evidence.value],
+      evidenceFingerprints: [...evidenceFingerprints],
       outputSchemaId: ENGINE_OUTPUT_SCHEMA_ID,
       outputSchemaVersion: ENGINE_OUTPUT_SCHEMA_VERSION,
     },
