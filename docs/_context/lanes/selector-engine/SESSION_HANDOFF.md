@@ -517,3 +517,15 @@ The producer consumes exact stable public Engine output and exact `ies_lm63_refe
 Blocked Engine output remains blocked with no result, rows or artifact-ready identity. Unknown versions, extra/nested governance, private paths, raw artifact text, legacy rows, identity tamper, added caller evidence, thermal contradiction, unsafe producer state, blocked promotion and over-rich intent fail closed.
 
 No Selector UI, existing IES scaffold, route, persistence, export/email/download, file, generation, authority, reference mutation, Engine/donor invocation, Lab, RuntimeData, main or runtime-port file changed. The Selector queue is empty. Program must accept the producer receipt before commissioning the separate import-free Lab consumer; actual IES generation remains blocked.
+
+## 2026-07-21 SEAM-G-P2 ready — generation input only
+
+Program has activated the read-only artifact-request tunnel and commissioned one exact Selector producer parcel before any reference binding or LM-63 generation.
+
+Create exactly `runtimeIesGenerationInputContractV1.js` and its focused test. Consume one ready artifact request version 1 plus the exact matching Engine selection-set request version 1.
+
+Recompute and match the selection fingerprint. Support exactly one product, lighting, run and control object; exactly one run; positive integer quantity and length; valid zero target lm/m and room ambient. Emit one immutable ready-or-blocked `controlstack.downstream.ies-generation-input.v1` envelope with deterministic identity/audit and safe request/result/source/policy/evidence and thermal identity only.
+
+Different user, project, owner, timeline, registration and renamed eligibility envelopes must return identical output and remain absent. Reject unknown, blocked, extra, multi-run, governance, private/raw, unsafe, fingerprint-mismatched and contradictory input.
+
+Do not alter the stable request contract, import Lab, bind a reference, load a sealed DTO, invoke Engine or generator, generate LM-63 text, add routes, persist, write, touch RuntimeData, main or runtime-port work. Return the producer receipt to Program; SEAM-G-C2 remains blocked.

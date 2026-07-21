@@ -593,3 +593,16 @@ Every completed worker updates this index with:
 - Dependency/static boundary: public Engine constants and stable fingerprint support only; no Lab/generator/scaffold import, route, network, filesystem write, clock, randomness or retired Selector output handler — VERIFIED.
 - Harness removal: gate host returned byte-identical to HEAD and remained unstaged/uncommitted — VERIFIED.
 - Lane result: exact feature push complete and tree clean; Program producer review next; SEAM-G-C1 and actual generation remain blocked — RECORDED.
+
+## 2026-07-21 — SEAM-G-P2 admission evidence
+
+- Program activated the version-1 read-only artifact-request tunnel and separately commissioned a generation-input sequence — PROGRAM-APPROVED.
+- Exact producer schema: `controlstack.downstream.ies-generation-input.v1` — RECORDED.
+- Exact feature scope: new runtime generation-input module and focused test only, with temporary gate harness and later five-file closeout — RECORDED.
+- Input binding: ready artifact request v1 plus exact matching Engine selection-set request v1 — RECORDED.
+- First-slice shape: one product, one lighting object, one run and one control object; one run only — RECORDED.
+- Identity rule: recompute and match selection fingerprint; preserve request/replay/result/source/policy/evidence and thermal identity — RECORDED.
+- Replay/governance rule: identical technical input is deterministic; traceability changes are inert and absent — RECORDED.
+- Failure rule: unknown, blocked, extra, multi-run, governance, private/raw, unsafe, fingerprint mismatch and contradiction fail closed — RECORDED.
+- Capability boundary: no reference, sealed DTO, authority, generator, LM-63 text, route, persistence, write or downstream activation — RECORDED.
+- Starting tree was clean — VERIFIED.

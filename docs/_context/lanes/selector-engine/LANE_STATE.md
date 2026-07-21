@@ -513,3 +513,13 @@ The producer emits deterministic complete-or-blocked `controlstack.downstream.ie
 The accepted regressions prove blocked Engine isolation, envelope independence and fail-closed rejection of unknown, over-rich, private/raw, contradictory, added-authority and legacy-row input. No existing IES handoff scaffold or downstream surface changed.
 
 No queue item is ready in Selector. Program producer review is the sole next boundary. SEAM-G-C1, tunnel activation, actual IES generation, routes, persistence, file/email output, main and unfinished runtime-port work remain blocked.
+
+## 2026-07-21 SEAM-G-P2 generation input admission — latest controlling state
+
+Program has activated the read-only artifact-request tunnel and commissioned one exact generation-input producer parcel without authorising reference binding or LM-63 generation.
+
+SEAM-G-P2 is the sole ready item. Its exact feature scope is `runtimeIesGenerationInputContractV1.js` and its focused test. It consumes one ready artifact request version 1 and the exact matching Engine selection-set request version 1.
+
+The output is one immutable ready-or-blocked `controlstack.downstream.ies-generation-input.v1` envelope for exactly one run. It normalises system, optic, target lm/m, room ambient, protocol, quantity and length; recomputes the selection fingerprint; preserves safe request/result/source/policy/evidence and thermal identity; and ignores optional traceability.
+
+No stable request-contract change, Lab import, reference identity, sealed DTO, authority, generator invocation, LM-63 text, route, persistence, write, RuntimeData, main or runtime-port work is authorised. SEAM-G-C2 and actual generation remain blocked.

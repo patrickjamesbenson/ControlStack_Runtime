@@ -425,3 +425,15 @@ This log is append-oriented. Do not silently rewrite historical decisions.
 **Failure and security result:** Unknown versions, extra fields, nested governance, private paths, raw artifact content, legacy rows, row identity tamper, added caller evidence, thermal contradiction, unsafe producer flags, blocked-to-ready promotion and over-rich intent all fail closed. Blocked Engine output has no selected result, rows, request ID, replay key or artifact-ready state.
 
 **Consequence:** SEAM-G-P1 is done. No Selector button, existing IES-handoff scaffold, route, persistence, email/export/download, file, raw photometry/candela, generator, authority, reference mutation, Engine/donor invocation, RuntimeData, Lab, main or runtime-port file changed. SEAM-G-C1 remains blocked pending Program producer acceptance; actual generation remains held.
+
+## 2026-07-21 — Program commissions SEAM-G-P2 generation input producer
+
+**Decision:** Admit SEAM-G-P2 as the sole ready Selector parcel in an exact two-file scope. The stable artifact-request version 1 contract remains unchanged.
+
+**Rationale:** The active artifact request intentionally carries technical identity but not the exact selection-set body required to derive one run length and bounded generation selections. The next safe step is a deterministic input contract, not a reference resolver or generator.
+
+**Contract:** `controlstack.downstream.ies-generation-input.v1` consumes one exact ready artifact request and the exact matching public Engine selection request. It recomputes the selection fingerprint, supports exactly one run, preserves safe request/result/source/policy/evidence and thermal identity, and quarantines optional traceability.
+
+**Acceptance lock:** Exact product, lighting, runs and control shapes only; positive integer quantity/length; valid zero target and ambient values; deterministic replay and audit; technical changes move identity; unknown, blocked, extra, multi-run, governance, private/raw, unsafe, fingerprint-mismatched or contradictory input fails closed.
+
+**Consequence:** SEAM-G-P2 is the sole ready item. No Lab import, reference identity, sealed DTO, authority, generator invocation, LM-63 text, route, persistence, write, RuntimeData, main or runtime-port change is authorised. SEAM-G-C2 remains blocked.
