@@ -485,3 +485,9 @@ The final corrective parcel derives evidence fingerprints internally from the ac
 Final focused coverage passed 116/116. It includes exact draft/version validation, governance and caller-derived rejection, complete/blocked/zero/replay fixtures, technical result-identity movement, component tamper detection, no legacy row reuse and different-envelope identical output. The temporary harness was removed and the tree returned clean before lane closeout.
 
 The producer contract is not yet stable. Program consumer review, Lab/IES compatibility evidence, full-output fixture evidence and rollback/readback acceptance remain separate. No route, persistence, downstream activation, RuntimeData, donor, Lab, main or runtime-port work occurred.
+
+## 2026-07-21 post-producer worker-guard reconciliation — latest controlling state
+
+**Recorded lane work HEAD:** `90f9a2bf4f68efec2b9dcaa37f29bab04f14541f` — `docs(selector): close Engine output producer`.
+
+The clean branch now contains the accepted public request, output and row producer plus its corrective evidence-identity parcel and durable closeout. No queue item is ready. Program & Integrate consumer review is the sole next boundary; it must either commission an exact compatibility parcel or keep stability withheld. Selector widening, Lab/IES changes, routes, persistence, downstream artifacts and main remain inactive until that decision is recorded.
