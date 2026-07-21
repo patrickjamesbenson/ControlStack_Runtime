@@ -965,3 +965,19 @@ It cannot be asked to:
 9. Deployment v2 service entries require id, name, unique port, absolute executable and cwd, args, credential mode, protected-secret IDs, health definition, and env object.
 10. The topology is hard-locked to eight services, so a new HubSpot sandbox service requires coordinated manifest, manager/installer, secret-boundary, test, and program-document changes.
 11. Program contracts already reserve persistence, authentication, deployment, endpoint ownership, schema changes, new producers/consumers, and persistence/readback identity changes for explicit Program governance.
+
+---
+
+## 2026-07-22 post-recon authority update
+
+This update supersedes only the prerequisite and business-decision status above; it does not convert reported credential handling into a repository-verifiable secret inspection.
+
+- Patrick reports `ControlsStack (Read Only)` created with exactly contacts-read, companies-read and deals-read scopes.
+- Patrick reports the token stored in the local secrets store. No token value or secret location is recorded here.
+- `writePolicy` remains disabled and the legacy OAuth public app remains in service.
+- HubSpot owns contacts, companies, deals and price; ControlStack owns engineering state and build detail.
+- One deal maps to one envelope using `controlstack_project_key` plus `controlstack_job_ref`.
+- CRM push intent occurs on genuine readiness-state entry, not module open or Engine run.
+- Leads use a separate deals pipeline; ControlStack is local-first and CRM reads are cached.
+- Exact writer-scope definition and separate Program admission remain required before live writes.
+- HubSpot Service Keys migration is deferred to cutover as an expected token swap with no ControlStack code change.

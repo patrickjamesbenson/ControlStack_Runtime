@@ -939,3 +939,13 @@ Only after those close may WALK-007 reconcile Run Engine to the selections-only 
 Patrick's finishes default-acceptance ruling is closed in Governance: inheritance or auto-fill alone does not satisfy Build Ready; one `Accept all defaults` action acknowledges all flagged defaults. Per-field acknowledgement is not required.
 
 Lab C5 may proceed independently in its isolated worktree. Do not add a second Selector writer, CRM/provider mutation, persistence, IES generation, delivery, module-owned retrieval, main or unrelated runtime work.
+
+### HubSpot and CRM changeover handoff
+
+Patrick completed the read-only HubSpot portal prerequisite on 2026-07-22. The private app is `ControlsStack (Read Only)` with exactly contacts-read, companies-read and deals-read scopes. Its token is held only in the local secrets store and must never be copied into repository files, prompts, logs, tests or receipts. `writePolicy` remains disabled.
+
+The legacy OAuth public app remains untouched and operational. Do not retire or replace it without a separate cutover parcel.
+
+The binding business scope is closed: HubSpot owns contacts, companies, deals and price; ControlStack owns engineering state and build detail. One ControlStack envelope maps to one HubSpot deal using `controlstack_project_key` plus `controlstack_job_ref`. Provider intent occurs on genuine readiness-state entry only. Leads are deals in a separate leads pipeline. ControlStack remains local-first, CRM reads are cached and later pushes must be best-effort, idempotent and replayable.
+
+GOV-006 / CRM remains held only for exact writer-scope definition and a separate Program admission. No live provider mutation is authorised. HubSpot Service Keys migration is PARKED until auth cutover as an expected token swap with no ControlStack code change. Governance must mirror the RULED business scope and PARKED Service Keys decision into the project-shell registry; Program must not cross-write Governance.

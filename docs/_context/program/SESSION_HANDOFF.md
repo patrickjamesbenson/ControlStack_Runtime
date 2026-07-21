@@ -83,8 +83,8 @@ Lab has no queued item. Sealed DTO loading, generator invocation, LM-63 generati
 
 - **Selector & Engine:** PWS-001, PWS-002 and PWS-005 complete in order; queue empty, worktree clean, temporary module write permissions retracted.
 - **Lab & IES:** SEAM-G-C4 complete and Program-accepted at 305/305; queue empty and generator invocation still blocked.
-- **Governance & Shell:** GOV-001 through GOV-005 are complete; final fixed gate 181/181; queue empty and CRM held.
-- **CRM:** no separate lane yet; item 7 remains blocked inside Governance.
+- **Governance & Shell:** GOV-001 through GOV-005 are complete; final fixed gate 181/181; CRM remains held pending writer-scope definition and separate Program admission.
+- **CRM:** no separate lane yet. Patrick's read-only portal prerequisite and business lifecycle ruling are complete; `writePolicy` remains disabled and no live provider write is authorised.
 - **Retrieval rule:** all module downloads/exports/artifact delivery must use one Governance gateway; readiness and identity are separate checks.
 - **Persistence rule:** server JSON is authoritative; browser storage is cache-only after server success; stable `projectId` owns one atomic file; fixtures are excluded.
 - **Standing tests:** no-envelope and changed-envelope Engine independence, changed-optic movement, varied placeholder row, and ownership-wide assertions remain mandatory.
@@ -107,4 +107,4 @@ No live Engine run is allowed before cleanup closes. The final parcel reconciles
 
 Patrick's finishes default-acceptance ruling is closed and recorded in Governance. Inheritance or auto-fill alone does not satisfy Build Ready; one `Accept all defaults` action acknowledges all flagged defaults. Lab C5 remains independently ready in its separate worktree.
 
-The only Patrick-held prerequisites are the HubSpot private-app portal-scope pre-check and the CRM business-scope/lifecycle decision. Nothing else needs him now.
+Patrick has no remaining CRM prerequisite. He completed `ControlsStack (Read Only)` with exact contact, company and deal read scopes and stored its token outside repository/chat/log surfaces. The ruled CRM boundary is one deal per envelope through `controlstack_project_key` plus `controlstack_job_ref`, readiness-state-entry push intent, HubSpot ownership of contacts/companies/deals/price, ControlStack ownership of build detail, a separate leads deals pipeline and local-first cached operation. `writePolicy` remains disabled; exact writer-scope definition and separate Program admission are the only CRM blockers. Service Keys migration is parked until cutover as a token swap, while the legacy OAuth public app remains in service.

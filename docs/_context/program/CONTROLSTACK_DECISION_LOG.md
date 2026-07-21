@@ -1473,3 +1473,17 @@ Every auto-filled value is visibly marked as a looked-up choice made on the user
 Readiness ignores unacknowledged defaults. The one acknowledgement covers every flagged value, including inherited finishes. Truthful counters may count genuine pending acknowledgements but must not classify them as missing source data or combine them with diagnostic/future rows.
 
 Governance registry version 1.2.0 records the finishes item as RULED. The remaining OPEN Governance questions are identity-first and state-to-deal-floor only. WALK-001 remains the sole ready Selector parcel; this addendum changes later sequence and acceptance, not current parallelism or the live-run hold.
+
+## 2026-07-22 — HubSpot read credential executed; CRM lifecycle ruled
+
+**Status:** PORTAL PREREQUISITE SATISFIED; BUSINESS SCOPE CLOSED; WRITES HELD.
+
+Patrick created the HubSpot private app `ControlsStack (Read Only)` with exactly three scopes: `crm.objects.contacts.read`, `crm.objects.companies.read` and `crm.objects.deals.read`. Patrick placed the token in the local secrets store. Program records no token value, secret location detail or credential body. The token must not appear in repository files, chat, logs, tests or receipts.
+
+The portal-scope prerequisite that previously blocked CRM work inside Governance is satisfied. `writePolicy` remains disabled, no writer credential exists in Program authority and no provider mutation is admitted. The existing OAuth public app remains untouched and in service until a separate future cutover parcel explicitly retires it.
+
+Patrick rules the CRM business boundary as follows: HubSpot owns contacts, companies, deals and price; ControlStack owns engineering state and build detail and must not calculate or display price. Each ControlStack envelope maps to one HubSpot deal through the mandatory identity pair `controlstack_project_key` plus `controlstack_job_ref`. CRM push intent is generated only on genuine readiness-state entry. It is not triggered by module open, render/hydrate or Engine execution, and provider availability cannot block local state, Selector or Engine.
+
+Leads are deals in a separate leads pipeline. ControlStack remains local-first for engineering state. CRM reads are cached with visible age; later writes must be best-effort, idempotent and replayable. The only remaining CRM precondition is exact writer-scope definition followed by a separate Program admission. No live write parcel is ready now.
+
+HubSpot's recommendation to use Service Keys for single-account API access is recorded as a deferred cutover decision. The expected migration is a token swap with no ControlStack code change. Program will revisit it only during the future auth cutover and will not retire the working OAuth public app or private app early. Governance owns mirroring the RULED CRM boundary and PARKED Service Keys migration into the project-shell decision registry; Program does not cross-write that lane.

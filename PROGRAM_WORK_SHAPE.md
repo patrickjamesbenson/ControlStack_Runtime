@@ -29,7 +29,7 @@ Patrick wants to run them at the same time.
 |---|---|---|
 | **Selector & Engine** (existing) | The kitchen. Selection surface, Engine, thermal chain, Seam G. | Active |
 | **Governance & Shell** (NEW — proposed) | Project, identity, permissions, data retrieval, CRM push. | To be created |
-| **CRM & Integration** (NEW — proposed, or fold into Governance) | HubSpot connector, deal lifecycle, leads, sync. | Blocked on Patrick |
+| **CRM & Integration** (folded into Governance) | HubSpot connector, deal lifecycle, leads, sync. | Writer scope pending |
 | **Program & Integrate** (existing) | Seams, rulings, promotion. | Active |
 | **Lab / IES** (existing) | Measured evidence. Complete through LAB-042. | Idle |
 
@@ -174,51 +174,59 @@ Size: moderate.
 
 ---
 
-## WORK ITEM 7 — HubSpot · *CRM & Integration* · **BLOCKED ON PATRICK**
+## WORK ITEM 7 — HubSpot · *CRM & Integration* · **RULED — WRITER SCOPE DEFINITION PENDING**
 
-**Blocked item, and the only one on the whole board that needs Patrick rather than a lane: the
-private-app portal scope pre-check.** Recorded as parked in the project shell provenance panel.
+**Private-app portal prerequisite satisfied 2026-07-22.** Patrick created `ControlsStack (Read Only)`
+with exactly `crm.objects.contacts.read`, `crm.objects.companies.read` and
+`crm.objects.deals.read`. Patrick stored the token in the local secrets store. The token is not in
+the repository, chat or logs. `writePolicy` remains disabled.
 
-**Decision made 2026-07-20:** do **not** block on consolidating to one connector. HubSpot is fully
-connected and working in the donor. Swap the data path later — there are no further holes either
-way. **Record the deferral in the dev view deferred-decisions panel** (item 9) so it is not lost.
+The legacy OAuth public app remains untouched and in service. Its retirement requires a separate
+future cutover parcel.
 
-**Ownership split:**
+**Ownership split — Patrick ruled 2026-07-22:**
 
 | HubSpot owns | ControlStack owns |
 |---|---|
-| Contacts, project handling, broad quoting, project management, **price** | The intricate project data layer, **build detail**, the project product component |
+| Contacts, companies, deals and **price** | Engineering state and **build detail** |
 
 **ControlStack must never display or compute a price.** Two places holding a price will drift and
 both will look correct.
 
-**Deal lifecycle:**
-- Deal creation triggers on **module open** — not on Engine run. No module opens without email and
-  project.
-- **Hazard: do not wire deal creation into the run path.** Local write succeeds first; the push
-  queues. Otherwise the Engine fails whenever HubSpot is unreachable, which also breaks the Boundary
-  Ruling.
-- Existing deal split → sub-deal, mirrored for CRM tracking. Donor briefs hold the full
+**Deal lifecycle — Patrick ruled 2026-07-22:**
+- One HubSpot deal exists per ControlStack envelope.
+- Deal identity is the mandatory pair `controlstack_project_key` + `controlstack_job_ref`.
+- Push intent occurs on genuine readiness-state entry, not on module open, render/hydrate or Engine
+  run.
+- **Hazard: do not wire provider mutation into the run path.** Local state succeeds first; the push
+  queues. A HubSpot outage cannot block Selector or Engine.
+- Existing deal split → sub-deal remains mirrored for CRM tracking. Donor briefs hold the full
   orders/RFQ split-reattach design — ten locked decisions D1–D10, **zero code**.
-- Idempotency key is the mandatory pair `controlstack_project_key` + `controlstack_job_ref`.
-- Push order is fixed and donor-tested: contact → company → deal → associations → quote rollup.
+- Push order remains contact → company → deal → associations → quote rollup.
 
-**Leads:** the portal exposes no LEAD object and the higher tier is deliberately not being bought.
-Leads are **deals in a separate leads pipeline**; converted leads are promoted to another pipeline.
-Multiple pipelines confirmed available. If a pipeline limit is ever hit, a tag achieves the same
+**Leads:** leads are **deals in a separate leads pipeline**; converted leads are promoted to another
+pipeline. Multiple pipelines are available. If a pipeline limit is ever hit, a tag achieves the same
 thing — do not bend the design around a tooling limit.
 
-**Storage model:** local is the system of record for engineering state; HubSpot push is best-effort.
-**Reads are cached too**, with visible data age, so lookups survive an outage. Push must be
-idempotent and replayable.
+**Storage model:** ControlStack is local-first for engineering state. HubSpot push is best-effort.
+**Reads are cached**, with visible data age, so lookups survive an outage. Push must be idempotent
+and replayable.
 
-**Existing runtime code:** contact and company lookups are real and working. **Deal lookup was never
-implemented anywhere** — that is the genuine new work.
+**Remaining CRM precondition:** define the exact writer scopes and obtain a separate Program
+admission. No live provider write is authorised before that parcel; `writePolicy` stays disabled.
+
+**Deferred cutover decision:** HubSpot now recommends Service Keys for single-account API access.
+Migration is parked until cutover and is expected to be a token swap with no ControlStack code
+change. The project-shell decision registry must retain this deferral alongside the legacy OAuth
+retirement decision.
+
+**Existing runtime code:** contact and company lookups are real and working. Deal lookup remains the
+genuine new read work.
 
 **Portal housekeeping:** timezone is US/Eastern while currency is AUD, so dates land ~14 hours out.
 Fix before reporting is built on it.
 
-Size: large, but mostly restoration once unblocked.
+Size: large, but mostly restoration once writer scope is admitted.
 
 ---
 
@@ -263,7 +271,9 @@ rendered in the running system do not.
 decision registry distinguishing donor-verified / ruled / planned / parked, with citations. Promote
 it from mockup to product.
 
-First entries: the HubSpot two-connector deferral, and two-factor authentication.
+First entries: the HubSpot Service Keys token-swap deferral, the future retirement of the legacy
+OAuth public app, and two-factor authentication. The CRM ownership/lifecycle ruling is RULED rather
+than parked and must be mirrored into the project-shell registry.
 
 Size: small. High leverage.
 

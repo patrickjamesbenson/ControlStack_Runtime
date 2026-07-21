@@ -682,7 +682,7 @@ P2 Checkpoint 1 is **IMPLEMENTATION COMPLETE / GATE GREEN / COMMIT BLOCKED BY SH
 - **C5 OUTPUT:** immutable redacted ready-or-blocked load receipt only.
 - **C5 BLOCKED:** generator/materialise invocation, LM-63 text, routes, persistence, files, delivery and readiness activation.
 - **CHAIN AFTER C5:** C6 in-memory generation; C7 validated opaque Seam G artifact handoff; Governance retrieval activation. Each requires its own accepted predecessor and Program admission.
-- **PATRICK:** only the HubSpot private-app portal-scope pre-check and business CRM scope/lifecycle decision await him. Nothing else needs Patrick and neither item blocks C5.
+- **CRM:** Patrick's HubSpot portal-scope prerequisite and business scope/lifecycle ruling are complete. No Patrick-held CRM prerequisite remains; exact writer-scope definition and separate Program admission still block live provider writes.
 - **NEXT:** Lab may execute C5 in its isolated worktree.
 
 ## 2026-07-22 consolidated Selector walkthrough state
@@ -698,3 +698,17 @@ P2 Checkpoint 1 is **IMPLEMENTATION COMPLETE / GATE GREEN / COMMIT BLOCKED BY SH
 - **FINISHES:** Patrick's ruling is closed and recorded in Governance. Inheritance or auto-fill alone does not satisfy Build Ready; WALK-005A restores the one-action donor acknowledgement.
 - **PARALLELISM:** Lab C5 remains independently ready. One writer per worktree; no cross-lane writes.
 - **NEXT:** Selector executes WALK-001 only; WALK-002 through WALK-007 remain sequence-blocked, with WALK-005A inserted before WALK-006. WALK-008 is ruled and closed.
+
+## 2026-07-22 HubSpot and CRM ruling state
+
+- **PRIVATE APP EXECUTED:** Patrick created `ControlsStack (Read Only)` with exactly `crm.objects.contacts.read`, `crm.objects.companies.read` and `crm.objects.deals.read`.
+- **SECRET SAFETY:** Patrick stored the token in the local secrets store; no token value belongs in repository memory, chat, logs, tests or receipts.
+- **WRITE HOLD:** `writePolicy` remains disabled. No writer credential, provider mutation or live deal sync is authorised.
+- **LEGACY AUTH:** the existing OAuth public app remains untouched and in service until a separately admitted cutover parcel retires it.
+- **OWNERSHIP:** HubSpot owns contacts, companies, deals and price. ControlStack owns engineering state and build detail and must not compute or display price.
+- **DEAL IDENTITY:** one HubSpot deal per ControlStack envelope, identified by `controlstack_project_key` plus `controlstack_job_ref`.
+- **TRIGGER:** provider intent occurs on genuine readiness-state entry; it is not a module-open, render/hydrate or Engine-run side effect.
+- **LEADS:** leads are deals in a separate leads pipeline.
+- **STORAGE:** ControlStack remains local-first for engineering state; CRM reads are cached and writes are best-effort, idempotent and replayable.
+- **REMAINING PRECONDITION:** exact writer-scope definition plus a separate Program admission.
+- **DEFERRED:** migrate from the private app to HubSpot Service Keys at cutover as an expected token swap with no ControlStack code change. Governance must mirror this parked decision in the project-shell decision registry.
