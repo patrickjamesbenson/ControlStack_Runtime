@@ -1252,3 +1252,28 @@ It must reuse the existing private `validateReference` path that the generator u
 The parcel may classify whether materialisation can proceed with no keyword overrides, but it must not derive an output multiplier, bind project/customer metadata, invoke `materialise`, call `buildIesFromReference`, emit LM-63 text, write, route, persist or load from storage.
 
 This inspection is the sole ready item. Multiplier policy, generation job construction, generator invocation, delivery and main remain separately blocked.
+
+## 2026-07-21 — SEAM-G-C3 accepted; materialisation job planning admitted
+
+**Status:** SEALED REFERENCE INSPECTION ACCEPTED; NO-GENERATION JOB PLAN ADMITTED.
+
+Program accepts the exact Lab inspection receipt after 295/295. The inspector reuses the generator's private reference validator, reports only redacted baseline and keyword readiness, preserves valid zeros, rejects invalid/private sealed input and leaves the existing generator deterministic. It contains no job, multiplier, materialisation, LM-63, route, persistence or write capability.
+
+Repository authority now supports one exact multiplier policy: the sealed reference is a one-millimetre photometric baseline and Engine `verifiedLmPerM` is the accepted selected output. The materialisation multiplier is therefore:
+
+`outputMultiplier = verifiedLmPerM / baselineLmPerM`
+
+The generator requires a positive multiplier. A zero or non-positive verified output, a zero or non-positive baseline, a non-finite ratio or a missing keyword override therefore blocks the job plan. Selector target lm/m remains intent only and must not replace Engine-verified lm/m in this calculation.
+
+Program admits **SEAM-G-C4** to Lab & IES with exact new files:
+
+- `packages/lab-kernel/ies-toolkit/iesMaterialisationJobPlanV1.js`;
+- `tests/lab-kernel/iesMaterialisationJobPlanV1.test.js`.
+
+The planner must be import-free and consume plain public generation-input version 1, generation-reference-binding version 1 and sealed-reference inspection version 1 JSON only. It emits one deeply immutable ready-or-blocked `controlstack.lab.ies-materialisation-job-plan.v1` projection.
+
+Ready planning requires exact generation/binding source identity, exact selection/run agreement, exact binding/inspection reference identity, ready inspection with no missing keyword overrides, positive Engine-verified lm/m, positive sealed baseline lm/m and a finite positive ratio. The exact generator job is `{ runLengthMm, outputMultiplier, selections: {} }`; no caller override values are accepted and sealed keyword authority cannot be replaced.
+
+Unknown/extra/private/raw/unsafe input, identity mismatch, missing overrides, non-positive ratio inputs or contradictory inspection state fail closed. The plan adds no sealed DTO, resolver/storage access, generator/materialise invocation, LM-63 text, route, persistence, file/network/email write or delivery readiness.
+
+SEAM-G-C4 is the sole ready item. Actual generator invocation remains a separate future Program decision.

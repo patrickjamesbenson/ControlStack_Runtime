@@ -75,8 +75,8 @@ No resolver, storage access, sealed DTO load, authority/evidence mutation, gener
 
 ## Next authorised parcel
 
-SEAM-G-C3 is the sole ready Lab parcel: expose the existing sealed-reference generator validator as a redacted inspection contract with one focused test.
+SEAM-G-C4 is the sole ready Lab parcel: build a deterministic no-generation materialisation job plan from the accepted generation, binding and inspection contracts.
 
-It must report public reference identity, safe one-millimetre baseline values and exact missing keyword override names without exposing candela or invoking materialisation.
+It must derive the multiplier only from Engine verified lm/m divided by sealed baseline lm/m and emit an exact empty-selection generator job only when no keyword authority is missing.
 
-Multiplier policy, generator job construction, LM-63 generation, delivery, main and unfinished runtime-port work remain blocked. Patrick has no action.
+Sealed DTO loading, generator invocation, LM-63 generation, delivery, main and unfinished runtime-port work remain blocked. Patrick has no action.

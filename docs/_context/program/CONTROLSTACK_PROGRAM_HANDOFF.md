@@ -815,3 +815,17 @@ The inspector must call the exact existing private reference validator and stop 
 It must not expose metadata, angles, candela, keyword values, provenance paths or the sealed DTO body. It must not derive a multiplier, accept project/customer data, resolve storage, invoke the generator, emit LM-63 text, add routes, persist or write.
 
 Return the inspection receipt to Program. Multiplier policy, generation job construction and actual generation remain blocked.
+
+## 2026-07-21 SEAM-G-C3 accepted — materialisation job-plan commission
+
+Program accepts the redacted sealed-reference inspection after 295/295. It reuses the generator's exact validator, exposes no sealed body and leaves materialisation untouched.
+
+Commission Lab & IES for SEAM-G-C4 with one new import-free job-plan module and one focused test.
+
+Consume only public generation-input, generation-reference-binding and reference-inspection version-1 JSON. Require exact generation/binding identity and selection/run agreement, exact binding/inspection reference identity, a ready reference-validated inspection, no missing keyword overrides and positive verified and baseline lm/m.
+
+Derive `outputMultiplier` only as Engine verified lm/m divided by sealed baseline lm/m. Selector target lm/m remains intent. Emit exactly `{ runLengthMm, outputMultiplier, selections: {} }` inside a deterministic no-generation plan.
+
+Do not accept caller keyword overrides, load a sealed DTO, resolve storage, invoke materialisation or generator code, emit LM-63 text, accept project/customer metadata, add routes, persist or write.
+
+Return the plan receipt to Program. Actual generator invocation remains blocked.

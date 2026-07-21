@@ -566,3 +566,14 @@ P2 Checkpoint 1 is **IMPLEMENTATION COMPLETE / GATE GREEN / COMMIT BLOCKED BY SH
 - **PRIVATE:** metadata, angles, candela, keyword values, provenance paths and sealed body never cross the inspection output.
 - **NOT AUTHORISED:** multiplier, generation job, project/customer metadata, generator/materialise call, LM-63 text, route, storage, persistence, files/delivery, main or runtime-port work.
 - **NEXT:** reconcile Lab queue and implement SEAM-G-C3 in the exact two-file scope. Patrick has no action.
+
+## 2026-07-21 materialisation job-plan commission state
+
+- **SEAM-G-C3:** complete and Program-accepted; exact inspection passed 295/295.
+- **SOLE READY ITEM:** SEAM-G-C4 in Lab & IES.
+- **INPUTS:** public generation-input, generation-reference-binding and reference-inspection version-1 JSON only.
+- **MULTIPLIER:** Engine verified lm/m divided by sealed baseline lm/m; target lm/m is intent only.
+- **READY JOB:** exact run length, finite positive derived multiplier and empty selections object; inspection must have no missing overrides.
+- **FAIL CLOSED:** identity mismatch, missing overrides, zero/non-positive verified or baseline output, non-finite ratio, private/raw/unsafe or contradictory state.
+- **NOT AUTHORISED:** caller keyword override, sealed DTO, resolver/storage, generator/materialise call, LM-63 text, project/customer metadata, route, persistence, files/delivery, main or runtime-port work.
+- **NEXT:** reconcile Lab queue and implement SEAM-G-C4 in exactly two new files. Patrick has no action.

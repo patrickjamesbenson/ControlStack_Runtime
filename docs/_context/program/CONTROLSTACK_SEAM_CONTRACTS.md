@@ -858,3 +858,25 @@ The exact generator override vocabulary is `lumcat`, `luminaire`, `lamp`, `cri`,
 The sealed reference body, metadata, angles, candela, keyword values and provenance paths remain private. No output multiplier, generator job, LM-63 text, route, storage, persistence or write is authorised.
 
 Rollback is removal or non-use of the inspection export and test; no stored state or artifact changes exist.
+
+## 2026-07-21 approved materialisation job-plan contract
+
+**Status:** LAB PLAN COMMISSIONED; GENERATOR INACTIVE.
+
+```text
+generationInputV1
++ generationReferenceBindingV1
++ referenceGenerationInspectionV1
+-> materialisationJobPlanV1
+-> no generator invocation
+```
+
+The plan derives the generator multiplier only from accepted technical authority:
+
+`Engine verified lm/m ÷ sealed reference baseline lm/m`
+
+Selector target lm/m remains intent and is preserved only for comparison; it cannot drive output scaling. The generator requires a strictly positive multiplier, so zero or non-positive verified output, zero or non-positive baseline and non-finite ratios fail closed.
+
+A ready plan additionally requires exact generation/binding source identity, exact selection/run equality, exact binding/inspection reference identity, a reference-validated inspection, no missing keyword overrides and `materialisationWithoutOverrides: true`. The exact generator job contains only run length, derived multiplier and an empty selections object; no caller keyword override is accepted.
+
+The plan returns no sealed DTO, metadata, angles, candela, keyword values or LM-63 text and cannot resolve storage or invoke materialisation. Rollback is removal or non-use only.

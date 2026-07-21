@@ -804,12 +804,12 @@ No implementation item is ready. A new exact Program parcel is required before a
 
 ## 2026-07-21 — Sealed-reference generation inspection
 
-**Status:** SEAM-G-C3 SOLE READY ITEM; GENERATOR INACTIVE.
+**Status:** SEAM-G-C4 SOLE READY ITEM; GENERATOR INACTIVE.
 
 ### SEAM-G-C3 — Inspect sealed reference for generation readiness
 
 - **Owner:** Lab & IES.
-- **Status:** ready.
+- **Status:** done and Program-accepted.
 - **Exact feature files:** modify `packages/lab-kernel/ies-toolkit/iesFromReference.js`; add `tests/lab-kernel/iesFromReferenceInspection.test.js`.
 - **Gate:** `lab-ies`.
 - **Input:** one exact sealed one-millimetre reference DTO.
@@ -817,4 +817,20 @@ No implementation item is ready. A new exact Program parcel is required before a
 - **Acceptance:** reuse the exact generator validator; full schema/identity/timestamp/approval/keyword/geometry/angle/candela/one-mm/baseline/hash-field checks; valid zero optional baseline values preserved; exact missing override list for lumcat/luminaire/lamp/cri/cct/driver/driverSetting; repeatable immutable output; malformed/unapproved/non-one-mm/baseline-mismatched/private-path or incomplete input fails closed; no metadata, angle, candela, keyword-value, provenance-path or sealed-body exposure.
 - **Boundary:** no multiplier derivation, project/customer metadata, resolver/storage access, generator/materialise call, LM-63 text, route, persistence, file/network/email write or readiness activation.
 - **Commit message:** `lab: checkpoint sealed reference generation inspection v1`.
-- **Next:** Program inspection receipt review; multiplier and generator work remain blocked.
+- **Accepted receipt:** exact two-file inspection passed 295/295; generator validator reuse, seven-field override reporting, baseline fallback/zeros, privacy, failure and generator-regression cases verified.
+- **Next:** SEAM-G-C4 is the sole ready item.
+
+### SEAM-G-C4 — Build deterministic no-generation materialisation job plan
+
+- **Owner:** Lab & IES.
+- **Status:** ready.
+- **Exact feature files:** new `packages/lab-kernel/ies-toolkit/iesMaterialisationJobPlanV1.js` and new `tests/lab-kernel/iesMaterialisationJobPlanV1.test.js`.
+- **Gate:** `lab-ies`.
+- **Inputs:** exact public generation-input v1, generation-reference-binding v1 and sealed-reference inspection v1 JSON.
+- **Output:** immutable `controlstack.lab.ies-materialisation-job-plan.v1` ready-or-blocked projection with deterministic plan/replay/audit identity, exact generator job shape, multiplier basis and no-generation/no-write state.
+- **Multiplier authority:** `verifiedLmPerM / baselineLmPerM`; target lm/m is intent only. Both values and the resulting ratio must be finite and strictly positive.
+- **Ready conditions:** generation ID/replay and selection/run match binding; binding reference identity exactly matches inspection; inspection is ready, reference-validated, has zero missing overrides and permits materialisation without overrides; exact job is `{ runLengthMm, outputMultiplier, selections: {} }`.
+- **Fail closed:** unknown/extra/private/raw/unsafe input, identity mismatch, missing overrides, non-positive verified/baseline/ratio, contradictory inspection or any caller keyword override.
+- **Boundary:** import-free; no sealed DTO, resolver/storage, generator/materialise call, LM-63 text, project/customer metadata, route, persistence, file/network/email write or readiness activation.
+- **Commit message:** `lab: checkpoint IES materialisation job plan v1`.
+- **Next:** Program plan receipt review; actual generator invocation remains blocked.
