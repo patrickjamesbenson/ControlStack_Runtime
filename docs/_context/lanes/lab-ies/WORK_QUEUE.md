@@ -976,7 +976,9 @@ Completion evidence: The import-free materialisation job-plan module and focused
 - human observation: none; repository contract and gate evidence are sufficient
 - commit message: `lab: checkpoint sealed reference load preflight v1`
 - on success next: Program C5 receipt review; C6 generator invocation remains blocked
-- status: ready
+- status: done
+
+Completion evidence: The Lab-owned read-only sealed-reference load preflight and focused test were committed in the exact two-file scope as `lab: checkpoint sealed reference load preflight v1`, pushed only to the Lab lane, and passed 314/314 after three authorised test-fixture corrections with no production behavior change. The loader validates exact ready plan, binding and inspection identities, derives the reference only from those matched contracts, invokes the injected resolver at most once, validates the loaded DTO through the existing generation-inspection path, requires exact identity/keyword-profile/baseline/missing-override/no-override agreement, emits one immutable redacted receipt and discards the body. Caller paths/URLs/provider input, malformed/extra/private/raw input, resolver failure, wrong DTO and every mismatch fail closed. No generator/materialise invocation, LM-63, route, persistence, write, delivery or readiness activation was added. Program C5 receipt review is next; C6 remains blocked.
 
 ## Explicitly not queued
 

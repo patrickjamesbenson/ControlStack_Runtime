@@ -2,7 +2,7 @@
 
 ## Evidence timestamp
 
-Latest lane coordination verified on 2026-07-21 through the connected `ControlStack Lab and IES Authority Lane` app.
+Latest lane coordination verified on 2026-07-22 through the connected `ControlStack Lab and IES Authority Lane` app.
 
 Current repository evidence overrides stale historical statements.
 
@@ -13,11 +13,11 @@ Current repository evidence overrides stale historical statements.
 - Root: `C:\ControlStack_Worktrees\code-pilot-lab`
 - Branch: `lane/code-pilot-lab`
 - Gate: `lab-ies`
-- Recorded branch HEAD: `b3e278ba245b57e2af4613a260c1b61d1cf3fcb9`
+- Recorded branch HEAD: `b517553ba011faedb7b20d7342358630ba7c0815`
 - Branch-HEAD guard checkpoint: `6d34e500d407d5335e5eebb317636a67a5e98618`
-- Starting HEAD for SEAM-G-C4: `b81b0eb348791bf9ab1d3b4f0e65245e2ad5250f`
-- Completed feature HEAD: `3aa118b5fe6af9fea8c5208eed3f96cf9439184f`
-- Feature subject: `lab: checkpoint IES materialisation job plan v1`
+- Starting HEAD for SEAM-G-C5: `2ebbade483b601f6610e5f6cfc711354eb504d7c`
+- Completed feature HEAD: `b517553ba011faedb7b20d7342358630ba7c0815`
+- Feature subject: `lab: checkpoint sealed reference load preflight v1`
 - Feature push: confirmed on origin `lane/code-pilot-lab`
 
 ## Branch-HEAD synchronisation invariant
@@ -957,3 +957,13 @@ The resolver may be called at most once and receives only the reference identity
 Only a deeply immutable redacted ready-or-blocked receipt may cross the boundary; the loaded body is discarded immediately. No generator/materialise invocation, LM-63 text, routes, persistence, writes, delivery or readiness activation is authorised.
 
 No human observation is required. The expected marker and three protected untracked items remain outside the parcel. Program C5 receipt review is next; C6 generation remains blocked.
+
+## 2026-07-22 SEAM-G-C5 sealed-reference load-preflight closeout
+
+SEAM-G-C5 is complete and pushed in the exact two-file scope. The Lab-owned read-only loader consumes exact ready plan, binding and inspection contracts plus one injected resolver capability and emits one immutable redacted ready-or-blocked load receipt.
+
+The final Lab gate passed 314/314. The resolver is called at most once, receives only the contract-derived reference identity, and the loaded DTO is validated through the existing generation-inspection path. Exact identity, keyword profile, baseline, missing overrides and no-override readiness agreement passed. The loaded body is discarded after validation and never crosses the receipt boundary.
+
+The first gate passed 311/314 with three test-fixture issues only. Orchestrator-authorised corrections narrowed the redaction assertion to actual candela content and cloned immutable contracts before deliberate mutation. Production behavior did not change.
+
+Caller paths, URLs, provider input, malformed/extra/private/raw values, resolver failure, wrong DTO and all identity/inspection mismatches fail closed. No generator/materialise invocation, LM-63 text, route, persistence, network/file/email write, delivery or readiness activation was added. The Lab queue is empty. Program C5 receipt review is next; C6 remains blocked.

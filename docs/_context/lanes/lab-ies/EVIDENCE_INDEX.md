@@ -2059,6 +2059,23 @@ Current verification superseded the stale parts of that snapshot:
 - Protected state: expected marker and three protected untracked items remain outside the parcel — VERIFIED.
 - Queue result: SEAM-G-C5 sole ready item; C6 generation remains blocked — RECORDED.
 
+## SEAM-G-C5 sealed-reference load-preflight completion — 2026-07-22
+
+- Exact feature scope: Lab-owned read-only loader module and focused test only — VERIFIED.
+- Final Lab gate: 314 passed, 0 failed, 0 skipped, 0 todo — VERIFIED.
+- First gate: 311/314 with three focused test-fixture failures only — RECORDED.
+- Authorised fixture correction: actual candela-content redaction check and cloned immutable contracts before deliberate mutation — VERIFIED.
+- Production behavior after correction: unchanged; no unstaged loader difference before rerun — VERIFIED.
+- Inputs: exact ready plan, matching binding and matching inspection plus one injected read-only resolver — VERIFIED.
+- Resolver authority: contract-derived identity only, at most one call, no caller path/URL/storage/provider authority — VERIFIED.
+- Validation: existing generation-inspection path; exact identity, keyword profile, baseline, missing overrides and no-override readiness — VERIFIED.
+- Receipt: deterministic immutable redacted ready-or-blocked scalar receipt; loaded body discarded and absent — VERIFIED.
+- Replay and movement: identical inputs replay identically; changed reference identity moves receipt identity — VERIFIED.
+- Fail-closed: malformed/extra/private/raw, caller location, resolver absence/failure, wrong DTO and inspection mismatch — VERIFIED.
+- Capability boundary: no generator/materialise, LM-63, route, persistence, write, delivery or readiness activation — VERIFIED.
+- Protected inventory: expected marker and three protected untracked items remained untouched — VERIFIED.
+- Queue result: SEAM-G-C5 done, Lab queue empty, Program C5 receipt review required — RECORDED.
+
 ## Evidence maintenance rule
 
 After each authorised lane parcel:

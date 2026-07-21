@@ -415,6 +415,16 @@ Reject caller paths, URLs, storage/provider objects, malformed/extra/private/raw
 
 No human observation is required. Preserve the expected marker and three protected local items. After the feature and four-record closeout, return the receipt to Program; C6 remains blocked.
 
+## 2026-07-22 SEAM-G-C5 complete — Program receipt review next
+
+The Lab-owned sealed-reference load preflight is complete and pushed in the exact two-file scope. The final Lab gate passed 314/314 after three authorised test-fixture corrections; production behavior did not change.
+
+The loader consumes exact ready materialisation-job-plan, matching generation-reference-binding and matching reference-generation-inspection version-1 contracts plus one injected read-only resolver. It derives the reference identity only from those contracts, calls the resolver at most once, validates the returned sealed DTO through the existing inspection path, requires exact identity/keyword-profile/baseline/missing-override/no-override agreement, emits one immutable redacted receipt and discards the body.
+
+Replay, changed-reference movement, no-caller-location authority, private/raw rejection, resolver failure, wrong-DTO rejection and inspection mismatch cases passed. The receipt contains no sealed body, metadata, keywords, angles, candela, provenance paths, LM-63 text, local location or provider material.
+
+No generator/materialise invocation, route, persistence, file/network/email write, delivery or readiness activation was added. The expected marker and three protected local items remain untouched. The Lab queue is empty. Program C5 receipt review is the next seam; C6 remains blocked.
+
 ## Prohibited actions retained
 
 - no LAB-017 change outside the recorded version-1 approval without a new seam decision;
