@@ -47,6 +47,8 @@ Engine output stability is not yet declared. Program accepts the SEL-007 candida
 
 The concurrently completed selected-result producer is accepted as an internal non-stable component and may be imported by ENG-OUT-P1; it does not replace the public three-schema contract.
 
-ENG-OUT-P1 is the sole ready item: create one new runtime module and one focused runtime test implementing deterministic complete, fail-closed blocked, zero-valued and replay-identical contract fixtures. It activates no Engine execution, route, persistence, IES/downstream readiness, RuntimeData, donor or main work.
+ENG-OUT-P1 is complete and Program-accepted. Final focused coverage passed 116/116, the normal Selector closeout passed 107/107 and the Selector tree is clean. The producer validates the exact selections-only draft, rejects caller Tier and derived/verified output, derives evidence identity internally, preserves valid zero values and emits one exact public row shape.
 
-After its pushed receipt, Program must accept the producer before commissioning consumer compatibility.
+ENG-STAB-C1 is admitted for Lab & IES but not started. Exact files are `engineOutputV1CompatibilityAdapter.js` and its focused Lab test. The adapter consumes plain public JSON only, imports no Selector/Workspace implementation and adds no IES generation, authority state, persistence, route or downstream activation.
+
+The Lab lane has protected unrelated dirty work and no ready item. Preserve that inventory exactly; reconcile ENG-STAB-C1 as the sole ready parcel before implementation. Stability, Seam G and main remain held. Patrick has no action.

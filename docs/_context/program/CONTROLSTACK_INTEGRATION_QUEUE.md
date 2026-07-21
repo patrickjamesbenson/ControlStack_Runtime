@@ -691,7 +691,7 @@ There is no outstanding Selector or Engine implementation item in this thermal s
 ### ENG-OUT-P1 — Implement the accepted version-1 request, output and row contracts
 
 - **Owner:** Selector & Engine.
-- **Status:** ready.
+- **Status:** done and Program-accepted.
 - **Depends on:** accepted SEL-007 candidate and Program review.
 - **Exact feature files:** new `packages/workspace-kernel/runtimeEngineOutputContractV1.js` and new `tests/runtimeEngineOutputContractV1.test.js`.
 - **Gate:** `selector-engine`.
@@ -699,12 +699,18 @@ There is no outstanding Selector or Engine implementation item in this thermal s
 - **Acceptance:** deterministic complete, fail-closed blocked, valid zero-valued and replay-identical fixtures; one exact row field set; result identity from request/source/policy/evidence fingerprints; governance-envelope independence; unknown versions and unsafe or contradictory inputs fail closed.
 - **Prohibitions:** no actual Engine invocation, persistence, route, IES handoff, downstream activation, RuntimeData mutation, donor use, legacy row-schema reuse, existing scaffold rewrite or main change.
 - **Commit message:** `feat(runtime): implement Engine output contract v1`.
+- **Accepted receipt:** exact public producer and focused test pushed; final focused coverage 116/116; normal closeout 107/107; exact draft validation, server-derived evidence identity, caller-Tier rejection, complete/blocked/zero/replay fixtures, envelope independence, technical identity movement and legacy-row non-reuse verified; ending tree clean.
 
 ### ENG-STAB-C1 — Prove one consumer compatibility adapter
 
-- **Status:** blocked behind Program acceptance of ENG-OUT-P1.
-- **Owner:** to be commissioned separately after the producer receipt.
-- **Boundary:** read-only compatibility only; no IES generation, downstream write, persistence or route activation.
+- **Status:** admitted; not started because the Lab lane has protected unrelated dirty work and no ready item.
+- **Owner:** Lab & IES after its orchestrator records this as the sole ready parcel.
+- **Exact feature files:** new `packages/lab-kernel/ies-toolkit/engineOutputV1CompatibilityAdapter.js` and new `tests/lab-kernel/engineOutputV1CompatibilityAdapter.test.js`.
+- **Gate:** `lab-ies`.
+- **Boundary:** read-only compatibility only; consume plain public JSON fixtures; no import from Selector/Workspace implementation modules; no IES generation, authority decision, downstream write, persistence or route activation.
+- **Acceptance:** exact complete and blocked public schema/version/key sets; immutable compatibility projection; safe thermal/provenance and exact public rows only; valid zero preservation; unknown/over-rich/unsafe/contradictory input fails closed; governance fields neither influence nor appear; no raw payload, private path, authority mutation, generation, write or readiness flag.
+- **Protected-state rule:** preserve the existing Lab modified and untracked inventory exactly; do not clean, stage, absorb or rewrite it merely to start this parcel.
+- **Next:** the Lab orchestrator may reconcile ENG-STAB-C1 as the sole ready item in a separate documentation checkpoint, then commission only the two new files.
 
 ### ENG-STAB-A1 — Final Seam B stability decision
 

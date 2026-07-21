@@ -661,3 +661,26 @@ The concurrently completed `controlstack.engine.selected-result.v1` producer is 
 ENG-OUT-P1 implements the three public contracts in one read-only runtime module with deterministic complete, blocked, zero-valued and replay-identical fixtures. It must not activate persistence, routes, IES handoff, downstream consumers, RuntimeData, donor code or main.
 
 Consumer compatibility and Program stability acceptance remain later parcels. Seam G remains inactive.
+
+### ENG-OUT-P1 producer acceptance
+
+The three public version-1 contracts are now implemented and accepted as producer evidence. The final producer derives evidence fingerprints from accepted internal technical provenance rather than caller input, validates the exact versioned selection-set draft, rejects caller Tier and caller-derived/verified output, preserves valid zero values and keeps governance envelopes output-inert. Focused evidence passed 116/116 and the normal lane closeout passed 107/107.
+
+### ENG-STAB-C1 Lab compatibility seam
+
+The consumer proof is owned by Lab & IES and uses one new adapter plus one focused test. The adapter receives a plain JSON `controlstack.engine.output.v1` fixture and must not import Selector or Workspace implementation modules.
+
+Its compatibility output is read-only and non-authoritative. It may retain only:
+
+- public Engine schema/version and complete-or-blocked state;
+- result, request, source, policy and evidence fingerprints;
+- safe selected-result technical provenance and thermal values;
+- exact `controlstack.engine.runtable-row.v1` rows;
+- canonical blockers and warnings;
+- explicit no-write/no-generation/no-authority safety flags.
+
+The adapter must preserve valid zero values and fail closed on unknown schema/version, extra authority fields, unsafe/raw/private content, contradictory identities or malformed rows. Human/project/owner/timeline/registration fields may not influence or appear in its output.
+
+Compatibility does not mean IES readiness. The adapter adds no IES generation, Lab approval, authority state, reference write, persistence, route, downstream write or activation. A separate Program decision is required after the Lab gate and sealed-fixture receipt before Seam B can be declared stable.
+
+The current Lab protected dirty inventory remains outside this seam and must be preserved during queue reconciliation.

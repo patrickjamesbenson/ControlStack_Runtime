@@ -445,3 +445,19 @@ P2 Checkpoint 1 is **IMPLEMENTATION COMPLETE / GATE GREEN / COMMIT BLOCKED BY SH
 - **SOLE READY ITEM:** ENG-OUT-P1, exactly one new runtime contract module and one focused runtime test; it may import the internal selected-result component while exposing only the accepted three-schema boundary.
 - **HELD:** consumer compatibility, stability declaration, Seam G, persistence and main promotion.
 - **NEXT:** commission ENG-OUT-P1 in the isolated Selector lane. Patrick has no action.
+
+## 2026-07-21 ENG-OUT-P1 accepted / consumer compatibility admitted state
+
+- **PRODUCER:** complete and Program-accepted in the isolated Selector lane.
+- **PUBLIC SCHEMAS:** `controlstack.engine.selection-set.v1`, `controlstack.engine.output.v1`, `controlstack.engine.runtable-row.v1`.
+- **FINAL PRODUCER EVIDENCE:** focused 116/116; normal closeout 107/107; ending Selector tree clean.
+- **REQUEST:** exact versioned selections-only draft; governance fields, caller Tier, candidates, scores and caller-derived/verified output rejected.
+- **EVIDENCE OWNERSHIP:** evidence fingerprints are derived server-side from accepted technical provenance; callers cannot supply evidence authority.
+- **OUTPUT:** deterministic complete or fail-closed blocked; valid zero values preserved; traceability envelopes inert and absent from output.
+- **ROWS:** one exact non-persistent field set; colliding legacy row schema not reused.
+- **STABILITY:** still not declared.
+- **NEXT PARCEL:** ENG-STAB-C1, Lab-owned read-only compatibility adapter and focused test only.
+- **LAB START STATE:** protected unrelated dirty inventory exists and no ready item is recorded; Program has not changed Lab files or started implementation.
+- **LAB RECONCILIATION RULE:** preserve all current Lab modified/untracked paths; record ENG-STAB-C1 as sole ready before creating the two new files.
+- **HELD:** IES generation, authority decisions, downstream writes/readiness, routes, persistence, Seam G and main promotion.
+- **PATRICK:** no action required.

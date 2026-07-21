@@ -694,3 +694,20 @@ ENG-OUT-P1 remains the sole ready parcel. Commission the isolated Selector & Eng
 Implement the three exact non-persistent contracts with deterministic complete, fail-closed blocked, zero-valued and replay-identical fixtures. Do not invoke Engine, reuse the colliding legacy row schema, modify existing scaffolds, persist, add routes, activate IES/downstream readiness, mutate RuntimeData, use donor code or touch main.
 
 Run focused coverage plus `selector-engine`, commit as `feat(runtime): implement Engine output contract v1`, push only the Selector lane and return a complete receipt. Consumer compatibility and final stability declaration remain separate Program parcels. Seam G and main promotion stay held.
+
+## 2026-07-21 producer accepted — Lab compatibility commission
+
+Program accepts ENG-OUT-P1. Final focused coverage passed 116/116, the normal closeout passed 107/107 and the Selector tree is clean.
+
+The public contract now validates the exact selections-only request draft, rejects governance fields and caller Tier/derived output, derives evidence fingerprints internally, emits deterministic complete or fail-closed blocked output, preserves zero values and produces one exact non-persistent row shape. Different traceability envelopes do not change or appear in output.
+
+ENG-STAB-C1 is admitted for Lab & IES with exactly two new files:
+
+- `packages/lab-kernel/ies-toolkit/engineOutputV1CompatibilityAdapter.js`
+- `tests/lab-kernel/engineOutputV1CompatibilityAdapter.test.js`
+
+The adapter must consume plain public JSON fixtures only. It must not import Selector or Workspace implementation modules. It may emit only an immutable read-only complete-or-blocked compatibility projection containing public schema/version, technical fingerprints, safe selected-result thermal/provenance values, public RunTable rows, blockers/warnings and no-write safety state.
+
+Complete, blocked, valid-zero, unknown-version, unsafe/over-rich, contradictory and governance-inert fixtures are required. No IES generation, approval/authority state, reference mutation, persistence, route, downstream write/readiness, raw payload or private path is permitted.
+
+The Lab lane currently has protected unrelated modified and untracked work and no ready item. Do not clean, stage or absorb it. The Lab orchestrator must first reconcile ENG-STAB-C1 as the sole ready parcel in a separate documentation checkpoint. Program has not started Lab implementation. Stability, Seam G and main remain held.

@@ -1078,3 +1078,28 @@ The isolated Selector lane completed the previously authorised selected-result p
 Program does not roll back this safe bounded artifact. `controlstack.engine.selected-result.v1` is classified as an internal selected-result component that ENG-OUT-P1 may validate and embed. It does not replace the accepted public schemas `controlstack.engine.selection-set.v1`, `controlstack.engine.output.v1` and `controlstack.engine.runtable-row.v1`, and it does not satisfy consumer compatibility or stability.
 
 ENG-OUT-P1 remains the sole ready item in its existing two-file scope. It may import the internal component but must expose only the accepted three-schema public boundary. Persistence, routes, Lab/IES compatibility, downstream activation and main remain held.
+
+## 2026-07-21 — ENG-OUT-P1 producer accepted; Lab compatibility parcel admitted
+
+**Status:** PRODUCER ACCEPTED; OUTPUT CONTRACT STILL NOT STABLE.
+
+Program accepts the isolated Selector lane receipt for the public version-1 producer. The exact module and focused test were pushed, followed by a bounded corrective parcel that made evidence fingerprints server-derived, added the exact versioned draft validator, classified caller Tier as derived/non-authoritative and retained one exact public row field set. Final focused coverage passed 116/116, the normal lane closeout passed 107/107, and the Selector tree ended clean.
+
+The accepted public boundary is:
+
+- `controlstack.engine.selection-set.v1` — engineering selections only;
+- `controlstack.engine.output.v1` — deterministic complete or fail-closed blocked output;
+- `controlstack.engine.runtable-row.v1` — one exact non-persistent row shape.
+
+Program records that caller-supplied evidence fingerprints are not part of the request. The producer derives evidence identity from accepted technical provenance. Different governance envelopes remain output-inert. Valid zero values remain complete. The colliding legacy row schema is not reused.
+
+Program admits **ENG-STAB-C1** as the next bounded consumer parcel, owned by Lab & IES, with exact new files:
+
+- `packages/lab-kernel/ies-toolkit/engineOutputV1CompatibilityAdapter.js`;
+- `tests/lab-kernel/engineOutputV1CompatibilityAdapter.test.js`.
+
+The adapter consumes plain public JSON fixtures only and must not import Selector or Workspace implementation modules. It emits one deeply immutable read-only compatibility projection for complete or blocked Engine output. It may preserve only public schema/version, result/request/source/policy/evidence fingerprints, safe selected-result thermal/provenance values, exact public RunTable rows, blockers, warnings and no-write safety state. It must preserve valid zero values, fail closed on unknown/over-rich/unsafe/contradictory input, and prove governance fields cannot affect or appear in the projection.
+
+ENG-STAB-C1 adds no IES generation, authority decision, reference mutation, route, persistence, downstream write or readiness activation. The current Lab lane contains protected unrelated dirty work and no ready item, so Program admits the parcel but does not start it or alter Lab files in this decision. The Lab orchestrator must reconcile it as the sole ready item without cleaning or absorbing the protected inventory.
+
+Stability, Seam G, downstream activation and main promotion remain held after ENG-STAB-C1 pending a separate Program acceptance decision.
