@@ -678,3 +678,14 @@ WALK-001R may reproduce the redacted Google Sheets reader-load failure and inspe
 If recovery requires Program-owned deployment or service-host work, a protected-secret change, another worktree or any cross-lane write, stop with a redacted diagnosis for a separate Program parcel. Otherwise restart only selector-runtime through the existing manager and rerun the complete original guarded WALK-001 workflow.
 
 Every original source-shape, validation, identity and disclosure check plus one finite, genuinely tier-gated `SYSTEM_POLICY.ambient_temp` row must pass before materialisation. The guarded live order remains materialise, archive current authority, promote new authority; archive must succeed before promotion. Success closes WALK-001R and WALK-001, then stops for Program review without releasing WALK-002.
+
+
+## 2026-07-22 WALK-001R Program-owned service-host stop — latest controlling state
+
+**Recorded lane work HEAD:** `853f4344570f05f188dc5f7bd05983200174458c` — `docs(selector): reconcile lane state for WALK-001R`.
+
+The standing worker reproduced the safely redacted reader-load failure. Repository manifests and the lockfile already declare the required Google reader dependency, but the running Selector runtime root has no installed dependency tree. The connected Selector lane exposes neither an approved dependency-install action nor the existing service-manager restart control.
+
+A Selector-owned repair is therefore unavailable. Installing runtime dependencies and exposing or executing the managed selector-runtime restart are Program-owned deployment/service-host actions. Credentials and protected secrets were not accessed or changed.
+
+No repository file, service, snapshot, archive, promotion, test, commit, Engine action or later walkthrough work was touched. Git remained clean. WALK-001R and WALK-001 remain incomplete and blocked; WALK-002 through WALK-007 remain blocked. Return this redacted diagnosis to Program for a separate parcel.

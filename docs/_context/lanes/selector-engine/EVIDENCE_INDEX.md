@@ -747,3 +747,13 @@ Every completed worker updates this index with:
 - Program-owned deployment/service-host or secret work requires a redacted stop for a separate Program parcel — RECORDED.
 - On bounded recovery, only selector-runtime may restart; the complete original WALK-001 dry-run and finite tier-gated Ambient proof still gate materialisation, archive and promotion; archive remains mandatory before promotion — RECORDED.
 - WALK-002 and all later Selector implementation remain blocked pending successful WALK-001R/WALK-001 closeout and Program review — RECORDED.
+
+
+## 2026-07-22 — WALK-001R protected service-host stop evidence
+
+- Redacted reader-load failure reproduced without credential, provider-body, row, identity or private-path disclosure — VERIFIED BY WORKER RECEIPT.
+- Required Google reader dependency is declared in repository manifests and lock authority — VERIFIED BY WORKER RECEIPT.
+- Running Selector runtime root has no installed dependency tree; the connected lane exposes no dependency-install or existing service-manager restart control — VERIFIED BY WORKER RECEIPT.
+- Repair therefore crosses into Program-owned deployment/service-host authority — REVIEWED AND ACCEPTED.
+- No repository files, credentials, protected secrets, service, snapshots, archive, promotion, tests, commits, Engine or later walkthrough work were touched; Git remained clean — VERIFIED FINAL RECEIPT.
+- WALK-001R and WALK-001 remain blocked; WALK-002 and later parcels are not released — RECORDED.

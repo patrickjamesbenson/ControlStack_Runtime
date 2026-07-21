@@ -562,3 +562,10 @@ This log is append-oriented. Do not silently rewrite historical decisions.
 **Execution:** if the repair stays within that boundary, restart only selector-runtime through the existing manager and execute the complete original WALK-001 guarded dry-run and archive-before-promotion workflow. If Program-owned deployment/service-host or secret work is required, stop with a redacted diagnosis for a separate Program parcel.
 
 **Review boundary:** successful recovery closes WALK-001R and WALK-001, then stops for Program review. WALK-002 is not automatically released.
+
+
+## 2026-07-22 — Return WALK-001R to Program for service-host recovery
+
+**Decision:** Accept the standing worker's protected cross-lane stop. The declared dependency is present in repository authority but unavailable to the running Selector service because its runtime root has no installed dependency tree, and this lane exposes no approved installation or service-manager restart control.
+
+**Consequence:** WALK-001R and WALK-001 remain incomplete. Program must commission a separate deployment/service-host parcel. No credential or secret change is authorised, and no later Selector parcel is released.

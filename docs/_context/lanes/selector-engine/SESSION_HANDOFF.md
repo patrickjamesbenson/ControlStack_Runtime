@@ -664,3 +664,12 @@ Program accepted the WALK-001 protected stop and admitted WALK-001R as the sole 
 Credentials remain protected: do not expose, copy, move or newly bind them. Do not use arbitrary shell workarounds, broad environment repair, another worktree or any cross-lane write. A Program-owned deployment/service-host requirement or protected-secret change stops with a redacted Program diagnosis.
 
 If the bounded repair is Selector-owned, restart only selector-runtime through the existing manager and rerun the complete original WALK-001 guarded dry-run. Materialise, archive and promote only after all original checks and the finite tier-gated Ambient row pass; archive must succeed before promotion. Stop after WALK-001 for Program review.
+
+
+## 2026-07-22 WALK-001R protected service-host stop
+
+The redacted failure was reproduced. The Google reader dependency is correctly declared and locked, but the running Selector runtime root has no installed dependency tree. This lane exposes no approved dependency installation or existing service-manager restart control.
+
+Recovery therefore requires a Program-owned deployment/service-host parcel to install the declared runtime dependencies and make the managed selector-runtime restart available. No credentials or protected secrets may be changed.
+
+WALK-001R and WALK-001 remain blocked. No snapshots, archive, promotion, Engine action or later walkthrough work occurred. Git remained clean.

@@ -616,7 +616,7 @@ WALK-001 is incomplete and blocked on runtime dependency availability. WALK-002 
 ## 2026-07-22 Program recovery admission
 
 ### WALK-001R Recover the guarded Google reader and complete WALK-001
-* status: ready (sole commissioned Selector parcel)
+* status: blocked (redacted failure reproduced; dependency installation and service restart require a Program-owned deployment/service-host parcel)
 * depends-on: WALK-001 protected pre-write stop accepted by Program
 * objective: reproduce the existing redacted Google Sheets reader-load failure; inspect only the running Selector service's existing dependency, module-resolution, working-directory and configuration boundary; apply the minimum repair available through Selector-owned files or existing managed-service controls; then complete the original WALK-001 guarded authority refresh.
 * authorised repair boundary: Selector-owned files already permitted by this lane and existing managed-service controls. No arbitrary shell workaround or broad environment repair.
@@ -626,3 +626,10 @@ WALK-001 is incomplete and blocked on runtime dependency availability. WALK-002 
 * acceptance: the dependency loads within the approved boundary; the full original dry-run passes; the Ambient row is finite and tier-gated; disclosure remains safe; materialisation succeeds; archive succeeds before promotion; promotion is certain; focused tests and the full gate pass; exact staged sets, commit/push and final clean Git are receipted.
 * closeout: success closes WALK-001R and WALK-001. Stop for Program review. Do not release or begin WALK-002.
 * prohibitions: no Selector feature change, Length Mode work, duplicate scaffold work, obsolete `TIERS` work, timeline/principal-test work, dropdown/default/readiness work, Engine invocation, project save/registration, CRM/provider mutation, persistence, IES work, Program/Lab/Governance/main/donor write, or second Selector writer.
+
+
+## 2026-07-22 WALK-001R protected stop result
+
+The worker reproduced the redacted reader-load failure and verified that the Google reader dependency is declared and locked. The running Selector runtime root has no installed dependency tree, and the connected Selector lane exposes neither dependency installation nor the existing service-manager restart control.
+
+WALK-001R is blocked for a separate Program-owned deployment/service-host parcel. WALK-001 remains incomplete; WALK-002 and every later implementation parcel remain blocked. No second Selector worker may start until Program admits and completes the required host action or an approved managed-service control becomes available.
