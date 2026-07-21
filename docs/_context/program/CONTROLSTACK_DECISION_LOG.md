@@ -1103,3 +1103,21 @@ The adapter consumes plain public JSON fixtures only and must not import Selecto
 ENG-STAB-C1 adds no IES generation, authority decision, reference mutation, route, persistence, downstream write or readiness activation. The current Lab lane contains protected unrelated dirty work and no ready item, so Program admits the parcel but does not start it or alter Lab files in this decision. The Lab orchestrator must reconcile it as the sole ready item without cleaning or absorbing the protected inventory.
 
 Stability, Seam G, downstream activation and main promotion remain held after ENG-STAB-C1 pending a separate Program acceptance decision.
+
+## 2026-07-21 — Seam B Engine output version 1 declared stable
+
+**Status:** STABLE CONTRACT BOUNDARY; NO DOWNSTREAM ACTIVATION.
+
+Program accepts the completed Lab consumer receipt. The import-free compatibility adapter and its focused test were pushed in the exact two-file Lab scope, followed by one same-scope thermal-tightening checkpoint. Each accepted checkpoint passed 269/269. The final adapter consumes only plain public JSON, preserves complete, blocked and valid-zero outputs, verifies the accepted reference and selected-room thermal equations plus clamp/mode combinations, rejects extra evidence authority, governance-bearing/private/unsafe/contradictory input and the colliding legacy row schema, and adds no IES, authority, persistence, route, network or downstream capability.
+
+Program verifies the five mandatory Seam B conditions:
+
+1. **Schema/version declaration — satisfied.** The public boundary is exactly `controlstack.engine.selection-set.v1`, `controlstack.engine.output.v1` and `controlstack.engine.runtable-row.v1`, each version 1 with exact shapes and fail-closed unknown-version handling.
+2. **Producer gate evidence — satisfied.** Selector producer evidence passed 116/116 focused coverage and 107/107 normal closeout, with a clean ending tree.
+3. **Consumer compatibility evidence — satisfied.** The Lab compatibility projection passed 269/269, imports no producer implementation and accepts only public JSON.
+4. **Live or sealed-fixture receipt — satisfied by sealed deterministic fixtures.** Complete, blocked, valid-zero, replay/governance-independent, thermal-identity, unsafe and legacy-row fixtures were executed through both producer and consumer boundaries.
+5. **Rollback/compatibility rule — satisfied.** Version 1 is exact-shape and exact-version; unknown or breaking changes fail closed and require a new schema decision. Both producer and consumer are read-only and non-persistent, so rollback is removal or non-use with no data migration, stored-record repair, route reversal or authority rollback.
+
+Program therefore declares **Seam B Engine output contract version 1 stable**. This declaration covers the contract and read-only compatibility boundary only. It does not declare the old diagnostic RunTable scaffold production-ready, does not rehabilitate the persistence-coupled legacy row path and does not permit the colliding legacy row schema.
+
+Seam G remains reserved and inactive. IES generation, downstream artifacts, writes/readiness, routes, persistence and main promotion require a new separately bounded Program parcel. No implementation parcel is admitted by this stability decision.

@@ -711,3 +711,13 @@ The adapter must consume plain public JSON fixtures only. It must not import Sel
 Complete, blocked, valid-zero, unknown-version, unsafe/over-rich, contradictory and governance-inert fixtures are required. No IES generation, approval/authority state, reference mutation, persistence, route, downstream write/readiness, raw payload or private path is permitted.
 
 The Lab lane currently has protected unrelated modified and untracked work and no ready item. Do not clean, stage or absorb it. The Lab orchestrator must first reconcile ENG-STAB-C1 as the sole ready parcel in a separate documentation checkpoint. Program has not started Lab implementation. Stability, Seam G and main remain held.
+
+## 2026-07-21 Seam B stable handoff
+
+Program accepts the completed Lab consumer receipt and declares the public Engine output contract version 1 stable.
+
+All five mandatory conditions are satisfied: exact versioned schemas; green producer evidence; import-free green consumer compatibility evidence; deterministic sealed complete, blocked, valid-zero, replay/governance and thermal-identity fixtures; and an exact-version fail-closed rollback rule requiring no data migration or stored-record repair.
+
+The stable boundary is limited to the selections-only request, complete-or-blocked output, exact non-persistent RunTable row and read-only Lab compatibility projection. The old diagnostic RunTable scaffold remains diagnostic-only. Persistence-coupled legacy rows and the colliding legacy row schema remain excluded.
+
+No route, persistence, IES generation, authority change, downstream write/readiness or main promotion is authorised. Seam G remains reserved and inactive. The Program queue is empty; any downstream implementation requires a new exact parcel and approval.

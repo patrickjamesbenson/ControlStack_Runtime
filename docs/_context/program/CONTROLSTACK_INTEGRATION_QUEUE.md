@@ -673,7 +673,7 @@ There is no outstanding Selector or Engine implementation item in this thermal s
 
 ## 2026-07-21 — Engine selected-result stability sequence
 
-**Status:** STABILITY NOT DECLARED; ENG-OUT-P1 IS THE SOLE READY ITEM.
+**Status:** SEAM B VERSION 1 STABLE; QUEUE EMPTY; SEAM G AND MAIN HELD.
 
 ### ENG-STAB-P1 — Seal the version-1 selected-result producer envelope
 
@@ -703,19 +703,19 @@ There is no outstanding Selector or Engine implementation item in this thermal s
 
 ### ENG-STAB-C1 — Prove one consumer compatibility adapter
 
-- **Status:** admitted; not started because the Lab lane has protected unrelated dirty work and no ready item.
-- **Owner:** Lab & IES after its orchestrator records this as the sole ready parcel.
+- **Status:** done and Program-accepted.
+- **Owner:** Lab & IES.
 - **Exact feature files:** new `packages/lab-kernel/ies-toolkit/engineOutputV1CompatibilityAdapter.js` and new `tests/lab-kernel/engineOutputV1CompatibilityAdapter.test.js`.
 - **Gate:** `lab-ies`.
-- **Boundary:** read-only compatibility only; consume plain public JSON fixtures; no import from Selector/Workspace implementation modules; no IES generation, authority decision, downstream write, persistence or route activation.
-- **Acceptance:** exact complete and blocked public schema/version/key sets; immutable compatibility projection; safe thermal/provenance and exact public rows only; valid zero preservation; unknown/over-rich/unsafe/contradictory input fails closed; governance fields neither influence nor appear; no raw payload, private path, authority mutation, generation, write or readiness flag.
-- **Protected-state rule:** preserve the existing Lab modified and untracked inventory exactly; do not clean, stage, absorb or rewrite it merely to start this parcel.
-- **Next:** the Lab orchestrator may reconcile ENG-STAB-C1 as the sole ready item in a separate documentation checkpoint, then commission only the two new files.
+- **Boundary:** read-only compatibility only; consumes plain public JSON fixtures; imports no Selector/Workspace/Runtime implementation; activates no IES generation, authority decision, downstream write, persistence or route.
+- **Accepted receipt:** initial exact two-file checkpoint plus one same-scope thermal tightening; each passed 269/269. Complete, blocked, zero-valued, governance-independent, exact-row, thermal-equation, clamp/mode, unknown-version, over-rich, unsafe/private, contradictory, extra-evidence and legacy-row cases verified.
+- **Protected-state result:** all protected Lab local inventory remained untouched and unstaged; Lab queue ended empty.
 
 ### ENG-STAB-A1 — Final Seam B stability decision
 
-- **Status:** blocked behind accepted producer and consumer receipts.
+- **Status:** done; Seam B Engine output contract version 1 stable.
 - **Owner:** Program & Integrate.
-- **Acceptance:** all five Seam B conditions must be verified: schema/version, producer gate, consumer compatibility, live or sealed fixture, and rollback/compatibility rule.
+- **Acceptance:** all five conditions verified: exact schema/version, green producer gate, green consumer compatibility gate, deterministic sealed complete/blocked/zero/replay/thermal fixtures, and exact-version fail-closed rollback with no data migration.
+- **Boundary:** stability covers only the public contract and read-only compatibility projection. It does not activate the diagnostic RunTable scaffold, legacy persistence-coupled rows, IES generation, downstream writes/readiness, routes, persistence or main.
 
-Seam G and main promotion remain held throughout this sequence.
+Seam G and main promotion remain held. No implementation item is ready; a new exact Program parcel is required for any downstream work.

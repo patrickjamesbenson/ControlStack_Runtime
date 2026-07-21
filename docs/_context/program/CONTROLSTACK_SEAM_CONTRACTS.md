@@ -684,3 +684,13 @@ The adapter must preserve valid zero values and fail closed on unknown schema/ve
 Compatibility does not mean IES readiness. The adapter adds no IES generation, Lab approval, authority state, reference write, persistence, route, downstream write or activation. A separate Program decision is required after the Lab gate and sealed-fixture receipt before Seam B can be declared stable.
 
 The current Lab protected dirty inventory remains outside this seam and must be preserved during queue reconciliation.
+
+### Seam B version-1 stability acceptance
+
+Program accepts the completed consumer proof and declares the three public version-1 contracts stable as a read-only, non-persistent boundary.
+
+The Lab adapter remains implementation-independent and consumes public JSON only. Its accepted evidence covers complete, blocked and valid-zero outputs; exact rows; server-derived single evidence identity; both thermal equations; accepted clamp and interpolation modes; governance independence; and fail-closed rejection of unknown, extra, unsafe/private, contradictory and legacy-row input.
+
+Version 1 compatibility is exact-shape and exact-version. A breaking field, ownership, identity or blocked-state change requires a new schema and Program decision. Unknown versions fail closed. Rollback is removal or non-use of the producer or compatibility adapter; because neither persists or writes, no data migration, record repair, route reversal, reference rollback or authority repair is required.
+
+This stability declaration does not activate IES readiness or Seam G. The diagnostic RunTable domain output remains diagnostic-only, and the persistence-coupled first-narrow row path and colliding legacy schema remain outside the stable boundary. Downstream generation, writes, routes, persistence and main require a separately commissioned parcel.

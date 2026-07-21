@@ -1,6 +1,6 @@
 # Program & Integrate Session Handoff
 
-Status: SELECTIONS-ONLY THERMAL COMPUTATION CHAIN ACCEPTED  
+Status: SEAM B ENGINE OUTPUT VERSION 1 STABLE — NO DOWNSTREAM ACTIVATION  
 Lane: `program-integrate`  
 Branch: `lane/program-integrate`
 
@@ -41,14 +41,18 @@ Project registration, active revision and selected-project eligibility are bypas
 
 Focused Engine coverage passed 120/120; normal Selector closeout passed 107/107. No live registration proof is required. Optional persistence, downstream artifacts and main promotion remain separate.
 
+## Current Engine output contract state
+
+Program has declared **Seam B Engine output contract version 1 stable**.
+
+The stable public boundary is the exact selections-only request, complete-or-fail-closed output and one non-persistent RunTable-row schema. Producer evidence passed 116/116 focused and 107/107 normal Selector closeout. The independent import-free Lab compatibility adapter and its thermal tightening each passed 269/269.
+
+Deterministic sealed fixtures prove complete, blocked, valid-zero, replay/governance-independent, exact-row and thermal-identity behavior. Unknown versions, extra authority, private/unsafe data, contradictory identities, added caller evidence and the colliding legacy row schema fail closed.
+
+Rollback is removal or non-use only. No data migration, record repair, route reversal or authority rollback is required because both boundaries are read-only and non-persistent.
+
+The old RunTable scaffold remains diagnostic-only, and persistence-coupled legacy rows remain excluded. Seam G, IES generation, downstream artifacts, writes/readiness, routes, persistence and main promotion remain held.
+
 ## Next authorised parcel
 
-Engine output stability is not yet declared. Program accepts the SEL-007 candidate with separate selection-set, output and RunTable-row version-1 schemas. Thermal execution is one bounded component; RunTable remains diagnostic-only, and persistence-coupled colliding legacy rows are excluded.
-
-The concurrently completed selected-result producer is accepted as an internal non-stable component and may be imported by ENG-OUT-P1; it does not replace the public three-schema contract.
-
-ENG-OUT-P1 is complete and Program-accepted. Final focused coverage passed 116/116, the normal Selector closeout passed 107/107 and the Selector tree is clean. The producer validates the exact selections-only draft, rejects caller Tier and derived/verified output, derives evidence identity internally, preserves valid zero values and emits one exact public row shape.
-
-ENG-STAB-C1 is admitted for Lab & IES but not started. Exact files are `engineOutputV1CompatibilityAdapter.js` and its focused Lab test. The adapter consumes plain public JSON only, imports no Selector/Workspace implementation and adds no IES generation, authority state, persistence, route or downstream activation.
-
-The Lab lane has protected unrelated dirty work and no ready item. Preserve that inventory exactly; reconcile ENG-STAB-C1 as the sole ready parcel before implementation. Stability, Seam G and main remain held. Patrick has no action.
+None. The Program queue is empty. A new exact Program decision is required before any downstream implementation. Patrick has no action.

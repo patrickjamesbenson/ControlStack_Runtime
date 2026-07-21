@@ -461,3 +461,17 @@ P2 Checkpoint 1 is **IMPLEMENTATION COMPLETE / GATE GREEN / COMMIT BLOCKED BY SH
 - **LAB RECONCILIATION RULE:** preserve all current Lab modified/untracked paths; record ENG-STAB-C1 as sole ready before creating the two new files.
 - **HELD:** IES generation, authority decisions, downstream writes/readiness, routes, persistence, Seam G and main promotion.
 - **PATRICK:** no action required.
+
+## 2026-07-21 Seam B Engine output version-1 stable state
+
+- **STABILITY:** declared for the public Engine output contract and read-only compatibility boundary only.
+- **PUBLIC SCHEMAS:** exact version 1 selection set, output and RunTable-row contracts.
+- **PRODUCER EVIDENCE:** focused 116/116; normal Selector closeout 107/107; clean ending Selector tree.
+- **CONSUMER EVIDENCE:** import-free Lab adapter; initial and thermal-tightening checkpoints each 269/269; Lab queue empty.
+- **SEALED FIXTURES:** complete, blocked, valid-zero, replay/governance-independent, exact-row, thermal-equation, clamp/mode, unsafe/private, contradictory, extra-evidence and legacy-row cases accepted.
+- **ROLLBACK:** exact-version fail-closed compatibility; removal or non-use only; no data migration, record repair, route reversal or authority rollback.
+- **LEGACY:** the diagnostic RunTable scaffold remains diagnostic-only; persistence-coupled first-narrow rows and the colliding legacy schema remain ineligible.
+- **SEAM G:** reserved and inactive.
+- **HELD:** IES generation, downstream artifacts, writes/readiness, routes, persistence and main promotion.
+- **QUEUE:** empty; no implementation parcel admitted by the stability decision.
+- **NEXT:** Program must create a separate exact parcel before any downstream work. Patrick has no action.
