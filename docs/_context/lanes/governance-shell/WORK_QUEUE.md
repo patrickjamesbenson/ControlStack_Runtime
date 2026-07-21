@@ -3,15 +3,18 @@
 **Status model:** `ready`, `blocked`, `held`, `done`. One `ready` item at a time.
 
 ### GOV-001 Lane bootstrap and canonical context
-* status: ready (first item once the lane exists)
+* status: done (2026-07-21)
 * objective: commit the canonical context files (charter, queue, state, handoff) at
   `docs/_context/lanes/governance-shell/`; verify identity, branch, gate and write
   scope; run the lane gate once green; record the standing prompts as authoritative.
 * acceptance: canonical files committed and pushed on `lane/governance-shell`; gate
   green; LANE_STATE records identity and HEAD.
+* closeout: identity, branch, registered gate, write scope, clean tree and recorded
+  branch HEAD verified; fixed lane gate green; canonical lane memory committed and
+  pushed.
 
 ### GOV-002 Deferred-decisions panel (Work Shape item 9)
-* status: blocked (depends-on: GOV-001)
+* status: blocked (bootstrap review stop; GOV-001 complete)
 * objective: a visible dev-view list of every consciously parked decision and why.
   Promote the mockup's decision registry mechanism to product shape. First entries:
   HubSpot two-connector deferral · private-app scope pre-check (PARKED, Patrick) ·
@@ -28,7 +31,8 @@
   The brief is the proposed contract; do not implement before the decision.
 
 ### GOV-004 Single data retrieval point (Work Shape items 3 + 10)
-* status: blocked (depends-on: GOV-002)
+* status: blocked (depends-on: GOV-001 + GOV-002; only explicit written Program
+  reorder may change this)
 * objective: one page every module's downloads pass through, opening after the Engine
   has run. Readiness and Identity as two separately named conditions. Loose validation
   by ruling ("bogus is fine, it's a net"). Discovery list of other modules' outputs.
