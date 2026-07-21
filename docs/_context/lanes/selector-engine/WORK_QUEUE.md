@@ -327,6 +327,50 @@
 * on success next: Program producer review; SEAM-G-C2 remains blocked.
 * completion: exact two-file producer plus one exact two-file tightening checkpoint pushed after 115/115. Selection fingerprint, artifact identity/audit, profile, row, thermal-mode/effective-temperature, private-path and no-generation boundaries passed. The temporary harness was removed and the tree returned clean. No reference binding or LM-63 generation occurred.
 
+### Q-11A Retire named readiness gates and emit state-entry push intent
+
+* id: PWS-001
+* status: blocked
+* depends-on: recorded Program & Integrate admission of PROGRAM_WORK_SHAPE item 1
+* seam change: yes — readiness transitions become state-entry push events and CRM-facing language must stop treating state as a gate
+* gate: selector-engine
+* execution order: first of three; PWS-002 and PWS-005 must not start before this item is fully closed
+* authorised files: minimum proven subset of `packages/modules/cs-selector/selectorViewModel.js`, `packages/modules/cs-selector/selectorView.js`, `packages/modules/cs-selector/index.js`, new `packages/workspace-kernel/selectorReadinessStateEntryPush.js`, new `tests/runtimeSelectorReadinessStateEntryPush.test.js`, existing focused readiness tests only when an assertion genuinely changes, temporary harness-only use of `tests/engineRunTableDomain.test.js`, and closeout updates to the five mutable lane context files. The harness may add exactly one side-effect import of `./runtimeSelectorReadinessStateEntryPush.test.js`; it must be removed, byte-identical to HEAD and absent from final staging/commit.
+* objective: retire Gate 1 and Gate 2 as named business/readiness gates, retain `specReady` and `buildReady` as truthful fail-closed states, and emit one deterministic safe push intent only when each state is entered.
+* acceptance: user-facing and CRM-facing live contracts no longer name Gate 1, Gate 2, spec gate, build gate, CRM gate or HubSpot gate; state names remain Spec Ready and Build Ready. A false-to-true transition emits exactly one immutable state-entry push intent; rerender, repeated snapshot evaluation, save/restore hydration and repeated true state do not duplicate it; leaving and genuinely re-entering a state may emit one new intent with a new deterministic transition identity. Build Ready cannot push before Spec Ready. Payload contains only bounded state, technical/project-safe identifiers and fingerprints approved by Program, never raw CRM/contact/company payloads, credentials, private paths or authority rows. Different traceability envelopes cannot alter the engineering state decision. Repository-wide focused search proves no CRM/HubSpot readiness construct remains named a gate.
+* provider boundary: this parcel creates the state-entry push contract/event only. It must not enable an external HubSpot/CRM mutation unless the recorded Program admission explicitly names the existing server-owned writer, exact target state, idempotency key, retry rule and rollback behaviour.
+* prohibitions: no change to readiness predicates, source authority, Selector choices, Tier, Engine eligibility, Lab/IES, persistence, routes, direct browser networking, hidden provider mutation, duplicate push on render/hydrate, main or runtime-port work.
+
+### Q-11B Add factoryReady on the existing readiness pattern
+
+* id: PWS-002
+* status: blocked
+* depends-on: PWS-001 done and recorded Program & Integrate admission of PROGRAM_WORK_SHAPE item 2
+* seam change: no unless Program changes the existing Factory Approved Inputs authority; this parcel exposes a truthful derived state only
+* gate: selector-engine
+* execution order: second of three
+* authorised files: minimum proven subset of `packages/modules/cs-selector/selectorState.js`, `packages/modules/cs-selector/selectorViewModel.js`, `packages/modules/cs-selector/selectorView.js`, `packages/modules/cs-selector/selectorFactoryApprovedInputsSummary.js`, new `tests/runtimeSelectorFactoryReadyState.test.js`, existing `tests/selectorSpecBuildReadinessPreview.test.js` and `tests/selectorSpinePayloadSkeleton.test.js` only where assertions genuinely change, temporary harness-only use of `tests/engineRunTableDomain.test.js`, and closeout updates to the five mutable lane context files. The harness may add exactly one side-effect import of `./runtimeSelectorFactoryReadyState.test.js`; it must be removed, byte-identical to HEAD and absent from final staging/commit.
+* objective: add `factoryReady` as the Stage 3 readiness state following the existing `specReady` and `buildReady` pattern without replacing or weakening `factoryApprovedInputsReady` evidence.
+* acceptance: `factoryReady` is false by default and becomes true only when Spec Ready and Build Ready are true, the existing Factory Approved Inputs summary is ready, every required committed source-backed input is present, and no blocker, ambiguity, invalid value or incompatible selection remains. It is carried consistently through state, view-model, payload/readiness preview, stage indicators and diagnostics; no diagnostic/display fallback can make it true. A false-to-true entry is observable for the later state-entry push sequence, but this parcel performs no CRM push itself. Missing, malformed, duplicate, uncommitted, non-source-backed or contradictory factory evidence fails closed. Existing `factoryApprovedInputsReady`, candidate mapping, Engine/Lex ownership, valid-zero handling and no-write flags remain unchanged.
+* prohibitions: no new factory authority, default, inference, automatic approval, output generation, provider write, Engine invocation, Lab/IES change, route, persistence, RuntimeData mutation, main or runtime-port work.
+
+### Q-11C Correct stale shell save/restore lifecycle copy
+
+* id: PWS-005
+* status: blocked
+* depends-on: PWS-002 done and recorded Program & Integrate admission of PROGRAM_WORK_SHAPE item 5
+* seam change: no — copy and diagnostics must describe the already-live shell-owned lifecycle truth without changing behaviour
+* gate: selector-engine
+* execution order: third of three
+* authorised files: exactly `packages/modules/cs-selector/selectorViewModel.js`, `packages/modules/emergence/emergenceViewModel.js`, `packages/modules/scene-builder/sceneBuilderViewModel.js`, `packages/workspace-kernel/contracts.js`, new `tests/runtimeWorkspaceSaveRestoreLifecycleCopy.test.js`, temporary harness-only use of `tests/engineRunTableDomain.test.js`, and closeout updates to the five mutable lane context files. The harness may add exactly one side-effect import of `./runtimeWorkspaceSaveRestoreLifecycleCopy.test.js`; it must be removed, byte-identical to HEAD and absent from final staging/commit.
+* objective: remove stale statements that Save/Restore is shell-owned and deferred, and make all three view models plus the workspace contract describe the current shell-owned live save, restore and hydrate behaviour truthfully.
+* acceptance: Selector, Emergence and Scene Builder no longer claim save or restore is deferred; they state that save/restore/hydrate is shell-owned and live through Project Browser while module-local mutation remains prohibited. `contracts.js` no longer classifies save/restore as a deferred real implementation and exposes a current lifecycle classification consistent with `projectService` and Project Browser capabilities. Handoff/share and CRM/provider writes are described separately and are not accidentally promoted. Focused static and behaviour assertions prove the four files agree and no stale save/restore-deferred phrase remains in live view-model or contract output.
+* prohibitions: copy/contract truth only; no save, restore, hydrate, handoff/share, CRM, provider, project-store or route implementation change; no browser action, persistence migration, Engine, Lab/IES, RuntimeData, main or runtime-port work.
+
+### Program admission hold for PWS-001, PWS-002 and PWS-005
+
+All three items are written but intentionally blocked. No worker may execute them until Program & Integrate records admission. Once admitted, the orchestrator must make only PWS-001 ready; later items advance strictly after the preceding parcel and its durable closeout are complete.
+
 <!--
 Historical pre-SEL queue retained as non-operative migration provenance. It is not an active queue and confers no implementation authority.
 

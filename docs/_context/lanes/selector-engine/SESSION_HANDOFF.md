@@ -539,3 +539,15 @@ It consumes exact ready artifact-request JSON plus the exact matching Engine sel
 Valid zeros, replay/governance independence and technical identity movement passed. Blocked requests, unknown schemas, extra/multi-run data, fingerprint or row tamper, profile/optic/ambient/thermal contradiction, unsafe flags and private values fail closed.
 
 No Lab/reference import, sealed DTO, authority, generator invocation, LM-63 text, route, persistence, file/network/email write, RuntimeData, main or runtime-port file changed. The Selector queue is empty. Program must accept this producer before commissioning the separate Lab reference-binding adapter; actual generation remains blocked.
+
+## 2026-07-21 Program work-shape items queued — admission required
+
+Patrick requested three new bounded parcels to be prepared but not executed. They are recorded in strict order and all remain blocked:
+
+1. Retire Gate 1 and Gate 2 as named readiness gates, preserve Spec Ready and Build Ready as states, and create deterministic push-on-state-entry intent without enabling hidden CRM/provider writes.
+2. Add fail-closed `factoryReady` on the established `specReady` / `buildReady` pattern, derived only from existing Factory Approved Inputs authority.
+3. Correct stale Save/Restore-deferred copy in the Selector, Emergence and Scene Builder view models and the workspace contract, without changing the already-live shell Project Browser behaviour.
+
+No queue item is ready and no worker has been commissioned. Program & Integrate must record admission before execution. After admission, the orchestrator makes only the first item ready and commissions the canonical standing worker; the second and third advance only after the prior parcel and durable closeout are complete.
+
+No feature code, tests, browser action, CRM/provider action, Engine invocation, Lab/IES action, route, persistence, RuntimeData, main or runtime-process change occurred during queue preparation.

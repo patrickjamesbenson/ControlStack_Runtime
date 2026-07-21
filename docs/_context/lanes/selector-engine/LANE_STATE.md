@@ -539,3 +539,13 @@ No queue item is ready in Selector. Program producer review is next. Reference b
 **Recorded lane work HEAD:** `2f33af90c3fe4fc8b615cf1ef79e8a9214e56c7f` — `docs(selector): close IES generation input producer`.
 
 The clean branch contains the accepted read-only IES artifact-request producer and the accepted single-run generation-input producer, including the exact tightening checkpoint. No queue item is ready. Program & Integrate producer review is the sole next boundary and must either commission one exact reference-binding consumer parcel or keep generation blocked with the exact missing evidence. LM-63 generation, Lab writes, routes, persistence, files, delivery, downstream activation, main and runtime-port work remain inactive.
+
+## 2026-07-21 Program work-shape queue preparation — latest controlling state
+
+**Recorded lane work HEAD:** `3fa8bf130fe7a83f004375695f110cc2f6803ee9` — `docs(selector): reconcile lane state after IES input producer`.
+
+Patrick requested preparation only for Program work-shape items 1, 2 and 5. Repository inspection confirms three bounded concerns: readiness still carries named gate language; `factoryReady` does not yet exist as a Selector state alongside `specReady` and `buildReady`; and stale save/restore-deferred copy remains in the Selector, Emergence and Scene Builder view models plus the workspace contract.
+
+Three ordered queue items are now written: retire named readiness gates in favour of deterministic push-on-state-entry intent; add fail-closed `factoryReady` from the existing Factory Approved Inputs evidence; then correct the stale save/restore lifecycle copy. All three remain blocked pending recorded Program & Integrate admission. After admission, only the first item may become ready; the other two advance strictly after the preceding feature and durable closeout.
+
+No feature file, test, browser state, CRM/provider state, project state, Engine path, Lab/IES path, RuntimeData source, route, persistence surface, main branch or runtime process was changed or executed during this preparation.

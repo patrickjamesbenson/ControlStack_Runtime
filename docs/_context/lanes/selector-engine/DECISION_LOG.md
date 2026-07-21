@@ -449,3 +449,15 @@ This log is append-oriented. Do not silently rewrite historical decisions.
 **Tightening result:** The producer validates exported Engine state, selected profile agreement, exact row kind/state and row identities, deterministic artifact request/replay/audit identity, non-negative thermal rise, safe curve filename and accepted effective-temperature modes.
 
 **Consequence:** SEAM-G-P2 is done. No stable request-contract edit, Lab import, reference binding, sealed DTO load, authority, generator invocation, LM-63 text, route, persistence, write, RuntimeData, main or runtime-port change occurred. Program producer review is next; SEAM-G-C2 remains blocked.
+
+## 2026-07-21 — Prepare Program work-shape items but hold execution
+
+**Decision:** Record three bounded Selector queue items for Program work-shape items 1, 2 and 5, in that exact order, while leaving every item blocked until Program & Integrate records admission.
+
+**Readiness naming:** Spec Ready and Build Ready remain truthful states, but Gate 1, Gate 2 and any CRM/HubSpot readiness construct named as a gate are retired from the proposed live language. The first parcel creates a deterministic push-on-state-entry intent/event by default. It must not enable external CRM/HubSpot mutation unless Program separately records the exact server-owned writer, target state, idempotency identity, retry policy and rollback behaviour.
+
+**Factory state:** `factoryReady` will be derived only from existing Spec Ready, Build Ready and Factory Approved Inputs evidence. It cannot create new factory authority, infer missing values, auto-approve, or replace `factoryApprovedInputsReady` diagnostics.
+
+**Lifecycle copy:** The final parcel corrects copy and contract diagnostics only. Save, restore and hydrate are already shell-owned and live through Project Browser; module-local mutation remains prohibited. Handoff/share and CRM/provider writes stay separately classified and cannot become live by implication.
+
+**Consequence:** No worker is commissioned. After Program admission, only the first queue item may be made ready; the second and third remain blocked until their predecessor and durable closeout complete. No feature, test, browser, CRM/provider, Engine, Lab/IES, route, persistence, RuntimeData, main or runtime-process action occurred in this decision parcel.

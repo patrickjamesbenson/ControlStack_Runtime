@@ -621,3 +621,16 @@ Every completed worker updates this index with:
 - Dependency/static boundary: public Engine/request constants and stable fingerprint only; no Lab/reference/generator/route/network/filesystem seam — VERIFIED.
 - Harness removal: gate host returned byte-identical to HEAD and remained unstaged/uncommitted — VERIFIED.
 - Lane result: producer and tightening pushed; tree clean; Program producer review next; SEAM-G-C2 and LM-63 generation blocked — RECORDED.
+
+## 2026-07-21 — Program work-shape queue-preparation evidence
+
+- Starting lane: correct isolated Selector worktree and branch, clean tree, valid documentation-wrapper guard and gated write/commit/push — VERIFIED.
+- Coordination input: Patrick requested preparation only for Program work-shape items 1, 2 and 5, strict order, with execution held for Program admission — USER-DIRECTED.
+- Shared work-shape file boundary: the named parent-level file is outside the configured Selector and Program connector roots; no cross-root or arbitrary-path read was attempted. The queue bounds use Patrick's exact item descriptions plus current repository evidence — VERIFIED TOOL BOUNDARY AND REPOSITORY TRACE.
+- Named readiness evidence: live Selector view-model and presentation contracts contain Spec Gate and Build Gate language while the underlying truthful booleans are `specReady` and `buildReady` — VERIFIED.
+- CRM naming evidence: current bounded search found no exact CRM/HubSpot readiness phrase already named as a gate; implementation acceptance nevertheless requires a zero-result search so renamed or newly introduced CRM gates cannot survive — VERIFIED CURRENT SEARCH / RECORDED ACCEPTANCE.
+- State-entry boundary: Selector exposes a module event bus, while CRM/provider writes remain disabled and read-only; the prepared first parcel therefore defaults to an immutable push intent/event and requires separate Program authority before any provider mutation — VERIFIED REPOSITORY TRACE / RECORDED SAFETY BOUNDARY.
+- Factory evidence: `factoryApprovedInputsReady` and Stage 3 Factory Approved Inputs summaries exist; a first-class `factoryReady` state parallel to `specReady` and `buildReady` does not — VERIFIED.
+- Stale-copy evidence: Selector and Emergence say Save and Restore are shell-owned and deferred; Scene Builder says save/restore/handoff remain deferred; the workspace contract still classifies saveRestore as a deferred real implementation, while Project Browser/project service reports live shell-owned save, restore and hydrate — VERIFIED.
+- Queue result: three bounded items written in strict order and all blocked pending Program admission; no worker commissioned — RECORDED.
+- Changed scope: five mutable Selector lane documents only after closeout; no feature/test/browser/provider/project/Engine/Lab/IES/RuntimeData/route/persistence/main/runtime action — VERIFIED BY DIFF AND OPERATIONS.
