@@ -720,6 +720,8 @@ test("Governance tunnel provisioner is fixed, interactively bound and reuses onl
   assert.match(provisioner, /http:\/\/127\.0\.0\.1:8023\/mcp/);
   assert.match(provisioner, /Read-Host 'Governance tunnel reference'/);
   assert.match(provisioner, /\[string\]\$TunnelReference/);
+  assert.match(provisioner, /existing fixed profile verified/);
+  assert.match(provisioner, /\$profileExists = Test-Path/);
   assert.doesNotMatch(provisioner, /Get-Clipboard|Set-Clipboard/);
   assert.match(provisioner, /tunnel_\[a-z0-9\]\{16,/i);
   assert.match(provisioner, /tunnel-runtime-key\.dpapi/);
@@ -736,6 +738,9 @@ test("Governance tunnel provisioner is fixed, interactively bound and reuses onl
   assert.match(provisioner, /transient manager status timeout or transport failure/);
   assert.match(provisioner, /Start-Sleep -Seconds 1/);
   assert.match(provisioner, /Wait-ForManagerServices -RequiredIds @\('governance-mcp', 'governance-tunnel'\)/);
+  assert.match(provisioner, /'--repair-tunnels'/);
+  assert.match(provisioner, /safe installer stage and reason are printed above/);
+  assert.doesNotMatch(provisioner, /@\(\$Installer, '--install'\)/);
   assert.doesNotMatch(provisioner, /\$finalStatus = Invoke-RestMethod|\$currentStatus = Invoke-RestMethod/);
   assert.match(provisioner, /READY FOR CHATGPT APP REGISTRATION/);
   assert.doesNotMatch(provisioner, /Write-Host\s+\$key|Write-Output\s+\$key|Remove-Item|git\.exe[^\n]*(?:reset|clean)|--force-with-lease/i);

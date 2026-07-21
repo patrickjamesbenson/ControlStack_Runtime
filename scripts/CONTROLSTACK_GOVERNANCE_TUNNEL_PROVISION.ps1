@@ -147,29 +147,34 @@ if ($PreflightOnly) {
   exit 0
 }
 
-if ([string]::IsNullOrWhiteSpace($TunnelReference)) {
-  Write-Host ''
-  Write-Host 'Copy the Governance tunnel reference in ChatGPT, then paste it below.'
-  $TunnelReference = Read-Host 'Governance tunnel reference'
+$profileExists = Test-Path -LiteralPath $ProfileFile -PathType Leaf
+if ($profileExists) {
+  $profileText = Get-Content -LiteralPath $ProfileFile -Raw
+  $existingTunnelMatch = [regex]::Match($profileText, '(?i)\btunnel_[a-z0-9]{16,}\b')
+  if (-not $existingTunnelMatch.Success -or -not $profileText.Contains($McpUrl)) {
+    throw 'The existing Governance tunnel profile has different fixed settings.'
+  }
+  $TunnelId = $existingTunnelMatch.Value
+  Write-Host 'Governance tunnel provisioning: existing fixed profile verified'
+} else {
+  if ([string]::IsNullOrWhiteSpace($TunnelReference)) {
+    Write-Host ''
+    Write-Host 'Copy the Governance tunnel reference in ChatGPT, then paste it below.'
+    $TunnelReference = Read-Host 'Governance tunnel reference'
+  }
+  $tunnelMatch = [regex]::Match($TunnelReference.Trim(), '(?i)\btunnel_[a-z0-9]{16,}\b')
+  if (-not $tunnelMatch.Success) {
+    throw 'The pasted value does not contain a valid Governance tunnel reference.'
+  }
+  $TunnelId = $tunnelMatch.Value
 }
-$tunnelMatch = [regex]::Match($TunnelReference.Trim(), '(?i)\btunnel_[a-z0-9]{16,}\b')
-if (-not $tunnelMatch.Success) {
-  throw 'The pasted value does not contain a valid Governance tunnel reference.'
-}
-$TunnelId = $tunnelMatch.Value
 
 $key = $null
 try {
   $key = Read-ProtectedRuntimeKey
   $env:CONTROL_PLANE_API_KEY = $key
 
-  if (Test-Path -LiteralPath $ProfileFile -PathType Leaf) {
-    $profileText = Get-Content -LiteralPath $ProfileFile -Raw
-    if (-not $profileText.Contains($TunnelId) -or -not $profileText.Contains($McpUrl)) {
-      throw 'The existing Governance tunnel profile has different fixed settings.'
-    }
-    Write-Host 'Governance tunnel provisioning: existing fixed profile verified'
-  } else {
+  if (-not $profileExists) {
     Write-Host 'Governance tunnel provisioning: creating fixed profile'
     $initialised = Invoke-Native -FileName $TunnelClient -Arguments @('init', '--profile', $Profile, '--tunnel-id', $TunnelId, '--mcp-server-url', $McpUrl)
     if ($initialised.Output) { Write-Host $initialised.Output }
@@ -190,8 +195,11 @@ try {
   }
 
   Write-Host 'Governance tunnel provisioning: activating managed tunnel'
-  $installed = Invoke-Native -FileName $Node -Arguments @($Installer, '--install')
+  $installed = Invoke-Native -FileName $Node -Arguments @($Installer, '--repair-tunnels') -AllowFailure
   if ($installed.Output) { Write-Host $installed.Output }
+  if ($installed.ExitCode -ne 0) {
+    throw 'Deployment v2 tunnel activation failed; the safe installer stage and reason are printed above.'
+  }
 
   $finalStatus = Wait-ForManagerServices -RequiredIds @('governance-mcp', 'governance-tunnel')
 } finally {
