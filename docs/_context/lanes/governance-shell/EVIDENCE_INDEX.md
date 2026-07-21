@@ -57,9 +57,9 @@
 ## GOV-002 deferred-decisions panel closeout
 
 - Added one versioned, static Governance decision registry and read-only developer panel.
-- The first five canonical entries expose status, ownership, kind, disposition, reason
-  and citation.
-- The identity-first and state-to-deal-floor questions remain OPEN and unresolved.
+- The six canonical entries expose status, ownership, kind, disposition, reason and citation.
+- The identity-first, state-to-deal-floor and finishes-default-acceptance questions remain OPEN and unresolved.
+- The finishes question is Patrick-owned and does not alter Build Ready until he rules whether inherited cover/end/flex finishes count without explicit acceptance.
 - Focused ownership tests prove the panel has no action, persistence, provider, CRM,
   retrieval or Engine path.
 - The fixed `governance-shell` gate passed on 2026-07-21.

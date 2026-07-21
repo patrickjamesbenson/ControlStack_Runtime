@@ -20,8 +20,9 @@
   HubSpot two-connector deferral · private-app scope pre-check (PARKED, Patrick) ·
   two-factor auth · identity-first question (OPEN) · state→deal-floor mapping (OPEN).
 * note: small, high leverage — deliberately first real parcel.
-* closeout: versioned static registry and read-only developer panel landed with five
-  canonical entries, named ownership, reasons and citations; both OPEN questions remain
+* closeout: versioned static registry and read-only developer panel landed with six
+  canonical entries, named ownership, reasons and citations. The identity-first,
+  state-to-deal-floor and finishes-default-acceptance questions remain OPEN and
   unresolved; no action, persistence, CRM, retrieval or Engine behaviour was added.
 
 ### GOV-003 Project persistence restoration (Work Shape item 4)

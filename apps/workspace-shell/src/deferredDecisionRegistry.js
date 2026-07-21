@@ -2,7 +2,7 @@ const freezeEntry = (entry) => Object.freeze({ ...entry });
 
 export const DEFERRED_DECISION_REGISTRY_CONTRACT = Object.freeze({
   id: "GOVERNANCE-DEFERRED-DECISION-REGISTRY",
-  version: "1.0.0",
+  version: "1.1.0",
   owner: "Governance & Shell",
   kind: "governance-decision-registry",
   surface: "developer-context-inspector",
@@ -87,6 +87,16 @@ export const DEFERRED_DECISIONS = Object.freeze([
     disposition: "Do not infer a mapping from the current readiness states.",
     reason: "The mapping remains an open Program decision.",
     citation: "WORK_QUEUE.md · GOV-002",
+  }),
+  freezeEntry({
+    id: "finishes-default-acceptance",
+    title: "Finishes default acceptance",
+    status: "OPEN",
+    owner: "Patrick",
+    kind: "governance-decision",
+    disposition: "Do not change Build Ready treatment of inherited cover, end and flex finishes until Patrick rules whether inheritance alone is accepted or explicit acceptance remains required.",
+    reason: "The current shell displays inherited finish consequences, but the business acceptance rule for Build Ready is unresolved.",
+    citation: "Selector walkthrough findings · item 9 · 2026-07-22",
   }),
 ]);
 
