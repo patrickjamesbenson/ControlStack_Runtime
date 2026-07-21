@@ -611,3 +611,18 @@ Runtime 8788 has not loaded the repair: the post-commit empty-body dry-run still
 The guarded dry-run returned a redacted validation failure because the running service could not load its declared Google Sheets reader dependency. No current-source shape or finite tier-gated Ambient row could therefore be proven. No materialisation, archive, promotion, feature change, test gate, staging, commit, Engine action or later walkthrough work occurred. Disclosure checks remained safe.
 
 WALK-001 is incomplete and blocked on runtime dependency availability. WALK-002 and every later parcel remain blocked. Do not recommission until the running service can load the declared dependency and Program admits the retry or repair path.
+
+
+## 2026-07-22 Program recovery admission
+
+### WALK-001R Recover the guarded Google reader and complete WALK-001
+* status: ready (sole commissioned Selector parcel)
+* depends-on: WALK-001 protected pre-write stop accepted by Program
+* objective: reproduce the existing redacted Google Sheets reader-load failure; inspect only the running Selector service's existing dependency, module-resolution, working-directory and configuration boundary; apply the minimum repair available through Selector-owned files or existing managed-service controls; then complete the original WALK-001 guarded authority refresh.
+* authorised repair boundary: Selector-owned files already permitted by this lane and existing managed-service controls. No arbitrary shell workaround or broad environment repair.
+* credential boundary: do not expose, copy, move or newly bind Google credentials; do not change a protected secret.
+* cross-lane stop: if recovery needs Program-owned deployment or service-host work, a protected-secret change, another worktree or any cross-lane write, stop and return only a redacted diagnosis for a separate Program parcel.
+* runtime order: after a bounded repair, restart only selector-runtime through the existing manager; rerun the complete original WALK-001 guarded dry-run; require every existing source-shape, validation, identity and disclosure check plus one finite, genuinely tier-gated `SYSTEM_POLICY.ambient_temp` row; only then materialise, archive the current authority, and promote the new authority. Archive must succeed before promotion.
+* acceptance: the dependency loads within the approved boundary; the full original dry-run passes; the Ambient row is finite and tier-gated; disclosure remains safe; materialisation succeeds; archive succeeds before promotion; promotion is certain; focused tests and the full gate pass; exact staged sets, commit/push and final clean Git are receipted.
+* closeout: success closes WALK-001R and WALK-001. Stop for Program review. Do not release or begin WALK-002.
+* prohibitions: no Selector feature change, Length Mode work, duplicate scaffold work, obsolete `TIERS` work, timeline/principal-test work, dropdown/default/readiness work, Engine invocation, project save/registration, CRM/provider mutation, persistence, IES work, Program/Lab/Governance/main/donor write, or second Selector writer.

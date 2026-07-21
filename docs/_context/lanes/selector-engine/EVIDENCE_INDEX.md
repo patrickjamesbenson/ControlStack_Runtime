@@ -737,3 +737,13 @@ Every completed worker updates this index with:
 - No materialised or active-snapshot write was attempted; archive and promotion were not invoked — VERIFIED.
 - No focused/full gate, staging, feature commit/push, Engine, project, CRM/provider, persistence, IES or later walkthrough action occurred — VERIFIED WORKER RECEIPT AND FINAL GIT.
 - Queue result: WALK-001 incomplete and blocked; WALK-002 and later parcels not released; Program admission required for the next bounded action — RECORDED.
+
+
+## 2026-07-22 — WALK-001R recovery admission evidence
+
+- Program accepted the prior fail-closed WALK-001 stop and admitted WALK-001R as the sole ready Selector parcel — REPORTED AUTHORITATIVE PROGRAM ADMISSION.
+- Recovery is confined to the running Selector service's existing dependency, module-resolution, working-directory and configuration boundary, using Selector-owned files or existing managed-service controls only — RECORDED.
+- Credential exposure/copy/move/new binding, protected-secret change, arbitrary shell workaround, broad environment repair, another worktree and cross-lane write are prohibited — RECORDED.
+- Program-owned deployment/service-host or secret work requires a redacted stop for a separate Program parcel — RECORDED.
+- On bounded recovery, only selector-runtime may restart; the complete original WALK-001 dry-run and finite tier-gated Ambient proof still gate materialisation, archive and promotion; archive remains mandatory before promotion — RECORDED.
+- WALK-002 and all later Selector implementation remain blocked pending successful WALK-001R/WALK-001 closeout and Program review — RECORDED.

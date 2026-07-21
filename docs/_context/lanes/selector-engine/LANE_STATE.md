@@ -665,3 +665,16 @@ The guarded dry-run reached the reader boundary but failed validation because th
 The worker stopped before every write. Materialisation, archive and promotion were not invoked; no feature, test, gate, stage, commit/push, Engine, project, provider, persistence, IES or later walkthrough action occurred. Disclosure remained safe and final Git remained clean.
 
 WALK-001 is incomplete and now blocked on runtime dependency availability. WALK-002 through WALK-007 remain blocked; WALK-008 remains ruled and closed. No retry or repair parcel is commissioned. Program must admit the next bounded action.
+
+
+## 2026-07-22 Program WALK-001R recovery admission — latest controlling state
+
+**Recorded lane work HEAD:** `ab72e1b965042dc5600ebda6e0c4f44132355461` — `docs(selector): reconcile lane state after WALK-001 guarded stop`.
+
+Program accepted the protected WALK-001 stop and admitted WALK-001R as the sole ready Selector recovery parcel. WALK-001 remains incomplete; WALK-002 through WALK-007 remain blocked; WALK-008 remains ruled and closed. One Selector writer and one parcel only.
+
+WALK-001R may reproduce the redacted Google Sheets reader-load failure and inspect only the running Selector service's existing dependency, module-resolution, working-directory and configuration boundary. The minimum repair may use Selector-owned files or existing managed-service controls only. It must not expose, copy, move or newly bind Google credentials; use arbitrary shell workarounds; broaden environment repair; write another worktree or lane; or change a protected secret.
+
+If recovery requires Program-owned deployment or service-host work, a protected-secret change, another worktree or any cross-lane write, stop with a redacted diagnosis for a separate Program parcel. Otherwise restart only selector-runtime through the existing manager and rerun the complete original guarded WALK-001 workflow.
+
+Every original source-shape, validation, identity and disclosure check plus one finite, genuinely tier-gated `SYSTEM_POLICY.ambient_temp` row must pass before materialisation. The guarded live order remains materialise, archive current authority, promote new authority; archive must succeed before promotion. Success closes WALK-001R and WALK-001, then stops for Program review without releasing WALK-002.

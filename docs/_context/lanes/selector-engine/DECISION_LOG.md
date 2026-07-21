@@ -551,3 +551,14 @@ This log is append-oriented. Do not silently rewrite historical decisions.
 **Evidence:** lane identity, memory and Git checks passed; Google configuration and credential readability passed with safe redaction; the old active authority remained readable and unchanged. The dry-run could not load the declared Google Sheets reader dependency, returned no current-source shape and could not prove the finite tier-gated Ambient row.
 
 **Consequence:** no materialisation, archive or promotion was attempted. No feature, test, gate, stage, commit, Engine, project, provider, persistence, IES or later walkthrough action occurred. WALK-001 is blocked pending Program admission of a bounded dependency repair or proven retry path.
+
+
+## 2026-07-22 — Admit WALK-001R bounded recovery
+
+**Decision:** Accept Program's recovery admission and make WALK-001R the sole ready Selector parcel. WALK-001 remains incomplete behind its protected reader-load stop, and no later walkthrough parcel is released.
+
+**Repair boundary:** reproduce only the redacted failure and inspect only the running Selector service's existing dependency, module-resolution, working-directory and configuration boundary. Repair only through Selector-owned files or existing managed-service controls. Credentials, protected secrets, broad environment work, arbitrary shell workarounds, another worktree and cross-lane writes are prohibited.
+
+**Execution:** if the repair stays within that boundary, restart only selector-runtime through the existing manager and execute the complete original WALK-001 guarded dry-run and archive-before-promotion workflow. If Program-owned deployment/service-host or secret work is required, stop with a redacted diagnosis for a separate Program parcel.
+
+**Review boundary:** successful recovery closes WALK-001R and WALK-001, then stops for Program review. WALK-002 is not automatically released.

@@ -655,3 +655,12 @@ WALK-001 did not close. Its guarded dry-run passed identity, memory, Git, Google
 The active authority stayed readable and unchanged. No materialisation, archive, promotion, feature edit, test gate, stage, commit, Engine action or later walkthrough work occurred. Git ended clean.
 
 WALK-001 is blocked until Program admits a bounded runtime dependency repair or retry after the service can load the dependency. WALK-002 remains blocked and no second Selector worker may start.
+
+
+## 2026-07-22 WALK-001R recovery commission
+
+Program accepted the WALK-001 protected stop and admitted WALK-001R as the sole ready Selector work. The standing worker must reproduce the redacted reader-load failure, inspect only the running Selector service's existing dependency/module-resolution/working-directory/configuration boundary, and apply only the minimum Selector-owned or existing managed-service repair.
+
+Credentials remain protected: do not expose, copy, move or newly bind them. Do not use arbitrary shell workarounds, broad environment repair, another worktree or any cross-lane write. A Program-owned deployment/service-host requirement or protected-secret change stops with a redacted Program diagnosis.
+
+If the bounded repair is Selector-owned, restart only selector-runtime through the existing manager and rerun the complete original WALK-001 guarded dry-run. Materialise, archive and promote only after all original checks and the finite tier-gated Ambient row pass; archive must succeed before promotion. Stop after WALK-001 for Program review.
