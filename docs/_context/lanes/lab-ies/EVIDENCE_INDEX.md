@@ -1919,6 +1919,25 @@ Current verification superseded the stale parts of that snapshot:
 - Protected working state: one branch-HEAD marker plus the three protected untracked items remain outside the parcel — VERIFIED.
 - Stability and downstream status: withheld; Program review required after the consumer receipt — RECORDED.
 
+## LAB-043 Engine output version-1 compatibility completion — 2026-07-21
+
+- Exact feature files: `engineOutputV1CompatibilityAdapter.js` and its focused test only — VERIFIED.
+- Feature checkpoints: `lab: checkpoint Engine output v1 compatibility` and `fix(lab): tighten Engine output thermal compatibility` — BOTH PUSHED TO LAB LANE ONLY.
+- Final gate after each accepted two-file checkpoint: 269 passed, 0 failed, 0 skipped, 0 todo — VERIFIED.
+- Public input: exact `controlstack.engine.output.v1` complete or blocked JSON and exact `controlstack.engine.runtable-row.v1` rows — VERIFIED.
+- Adapter isolation: production module has no imports and reads no Selector, Workspace, Runtime, source row, filesystem, browser storage or network implementation — VERIFIED.
+- Complete projection: technical result/request/source/policy/evidence identities, safe selected-result provenance/thermal values and exact rows preserved — VERIFIED.
+- Blocked projection: canonical blockers/warnings preserved with no selected result or RunTable — VERIFIED.
+- Zero-value fixture: zero temperatures, current, verified lm/m and row counts remain valid values, including valid low-clamp temperature handling — VERIFIED.
+- Thermal identity: reference room plus optic rise equals reference internal, selected room plus optic rise equals derived/lookup temperature, and clamp/mode combinations match the accepted Engine producer — VERIFIED.
+- Fail-closed fixtures: unknown version, extra fields, nested governance, private path, legacy row schema, contradictory row identity, thermal provenance/equation/mode mismatch, unsafe safety state and added caller evidence authority rejected — VERIFIED.
+- Governance independence: different user/project/owner/timeline/registration envelopes produced identical output and no envelope value appeared — VERIFIED.
+- Capability boundary: no IES generation, authority allocation/approval, evidence acceptance, sealing, reference mutation, route, persistence, network write or downstream readiness — VERIFIED.
+- Harness: the temporary keyword-test import was removed before final staging; the gate-included harness file returned byte-identical to HEAD and was not committed — VERIFIED.
+- Protected inventory: `README.zip`, the historical summary-normalise spec and `scripts/clear_chaff.ps1` remained untouched and unstaged — VERIFIED.
+- Queue result: LAB-043 done, ordered Lab queue empty, Program consumer receipt review required — RECORDED.
+- Stability: not declared by Lab; final Seam B decision remains Program-owned — RECORDED.
+
 ## Evidence maintenance rule
 
 After each authorised lane parcel:

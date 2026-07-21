@@ -825,7 +825,9 @@ Approval state: Corrected thermal envelope version 3 is fully implemented. LAB-0
 - seam change: yes
 - seam approval: Program & Integrate admitted ENG-STAB-C1 after accepting ENG-OUT-P1; exact two-file scope and protected-state rule recorded on 2026-07-21.
 - on success next: Program consumer receipt review; no downstream activation
-- status: ready
+- status: done
+
+Completion evidence: The import-free compatibility adapter and focused test were committed in the exact two-file scope as `lab: checkpoint Engine output v1 compatibility`, then tightened in the same exact scope as `fix(lab): tighten Engine output thermal compatibility`; both checkpoints were pushed only to the Lab lane and passed 269/269. The final adapter accepts exact complete or blocked public version-1 JSON, preserves safe thermal/provenance values and valid zeros, verifies both thermal equations plus accepted clamp/mode combinations, rejects unknown, over-rich, governance-bearing, private, contradictory, unsafe, extra-evidence and legacy-row input, and emits no IES, authority, route, persistence, write or readiness capability. The temporary keyword-test harness was removed before final staging and the harness file returned byte-identical to HEAD. The ordered Lab queue is empty; Program consumer receipt review is next.
 
 ## Explicitly not queued
 

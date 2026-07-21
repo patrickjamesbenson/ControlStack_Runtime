@@ -13,11 +13,11 @@ Current repository evidence overrides stale historical statements.
 - Root: `C:\ControlStack_Worktrees\code-pilot-lab`
 - Branch: `lane/code-pilot-lab`
 - Gate: `lab-ies`
-- Recorded branch HEAD: `a611d5d54a3d0a02d013db6935c2c81c91565b34`
+- Recorded branch HEAD: `576aa62a891434a953292020ae28870fadf5d970`
 - Branch-HEAD guard checkpoint: `6d34e500d407d5335e5eebb317636a67a5e98618`
-- Starting HEAD for LAB-042: `a91ec745180abe6e9c666212e2dd644df35311bd`
-- Completed feature HEAD: `46792ddfe23cd4999aa244f9eb745a94028af3d6`
-- Feature subject: `lab: checkpoint thermal semantics guard`
+- Starting HEAD for LAB-043: `576aa62a891434a953292020ae28870fadf5d970`
+- Completed feature HEAD: `ab3ef10a90eaaa406c2e4435bd9f78f116f513ce`
+- Feature subject: `fix(lab): tighten Engine output thermal compatibility`
 - Feature push: confirmed on origin `lane/code-pilot-lab`
 
 ## Branch-HEAD synchronisation invariant
@@ -828,11 +828,11 @@ tests/selectorCascadeCorrectness.test.js
 - `LAB-040-nvb-lab-thermal-projection-v2`: done.
 - `LAB-041-component-library-thermal-labels`: done.
 - `LAB-042-thermal-semantics-guard`: done under approved envelope version 3.
-- `LAB-043-engine-output-v1-compatibility`: ready under recorded Program approval.
-- Next ordered item: LAB-043.
-- Resulting status: one ready read-only consumer compatibility parcel.
-- Ready items: LAB-043 only.
-- Seam approval required: recorded and satisfied.
+- `LAB-043-engine-output-v1-compatibility`: done under recorded Program approval.
+- Next ordered item: none.
+- Resulting status: queue empty; Program consumer receipt review required.
+- Ready items: none.
+- Seam approval required: no.
 - Human observation required before implementation: no.
 
 LAB-042 is complete. The corrected thermal batch is closed.
@@ -848,3 +848,15 @@ The parcel proves complete and blocked compatibility, exact row shape, thermal/p
 Because the fixed Lab gate omits newly created tests, one temporary import in the gate-included keyword migration test is authorised. The harness must be removed, byte-identical to HEAD and absent from final staging and commit.
 
 Protected local items and the branch-HEAD marker remain unchanged and outside the feature parcel. Consumer acceptance does not declare the Engine output stable and does not activate downstream work.
+
+## 2026-07-21 LAB-043 Engine output compatibility closeout
+
+LAB-043 is complete and pushed in the exact two-file scope across the initial feature checkpoint and one corrective tightening checkpoint. The import-free adapter consumes plain public Engine JSON only and emits one deeply immutable Lab compatibility projection for complete or blocked version-1 output.
+
+The final gate passed 269/269. Complete, blocked, valid-zero, governance-independent, unknown-version, over-rich, private-path, contradictory-identity, unsafe-safety, extra-evidence and legacy-row fixtures passed. The first visible gate exposed that the exact producer owns one server-derived evidence fingerprint; the adapter and test were corrected to reject any added caller evidence authority. A concurrent post-checkpoint tightening then added exact reference and selected-room thermal equations plus valid clamp/mode checks; that same two-file delta passed 269/269 and was pushed separately.
+
+The fixed Lab gate directly included the new focused test after file creation, so the temporary keyword-test harness was removed before final staging and the harness file returned byte-identical to HEAD. Both feature checkpoints contain only the adapter and focused test.
+
+No Selector, Workspace, Runtime, donor, RuntimeData, IES generation, authority decision, sealing, reference mutation, route, persistence, network write, downstream readiness, main or runtime-port file changed. The three protected untracked items remain untouched.
+
+The ordered Lab queue is empty. Engine output stability remains withheld pending Program review of this consumer receipt and the separate final Seam B decision.

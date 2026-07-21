@@ -289,6 +289,16 @@ Program reported:
 
 The immutable receipt remains byte-for-byte unchanged. Promotion to main is a separate Program & Integrate action and was not performed by the Lab lane. The later consolidated batch approval superseded the former LAB-018 hold; sequence progression is recorded separately in current lane memory.
 
+## 2026-07-21 LAB-043 complete — Program stability review next
+
+LAB-043 is complete and pushed in the exact two-file scope across the initial compatibility checkpoint and one corrective thermal-tightening checkpoint. The final Lab gate passed 269/269 after each accepted checkpoint and the temporary keyword-test harness was removed before final staging.
+
+The new import-free adapter consumes only plain public `controlstack.engine.output.v1` JSON and exact `controlstack.engine.runtable-row.v1` rows. It emits a deeply immutable compatibility projection for complete or blocked output, preserves valid zero values and safe thermal/provenance values, verifies both accepted thermal equations and clamp/mode combinations, and rejects unknown versions, extra fields, governance-bearing content, private paths, contradictory identities, unsafe states, additional caller evidence authority and the legacy colliding row schema.
+
+It creates no IES, authority, evidence acceptance, sealing, reference mutation, route, persistence, network write or downstream-readiness capability. No Selector, Workspace, Runtime, donor, RuntimeData, main or runtime-port implementation changed.
+
+The three protected untracked items remain untouched and unstaged. The ordered Lab queue is empty. Program must review this consumer receipt and make the separate final Seam B stability decision; Lab must not activate downstream work.
+
 ## Prohibited actions retained
 
 - no LAB-017 change outside the recorded version-1 approval without a new seam decision;
