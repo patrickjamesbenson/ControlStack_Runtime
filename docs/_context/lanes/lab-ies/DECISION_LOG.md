@@ -462,3 +462,15 @@ The parcel is confined to one new import-free compatibility adapter and one focu
 Acceptance covers exact request, intent, Engine, audit and row identities; safe provenance/thermal values; valid zeros; replay/idempotency; governance absence; and fail-closed rejection of unknown, extra, private/raw, contradictory, unsafe, blocked-promotion and legacy-row input.
 
 No IES generation, Lab authority, evidence acceptance, sealing, reference mutation, route, persistence, network/file/email write, downstream readiness, RuntimeData, donor, main or runtime-port change is authorised. The expected branch marker and three protected untracked items must remain outside the parcel. Actual Seam G activation remains Program-owned and blocked.
+
+## DL-033 — SEAM-G-C2 generation input OPT reference binding
+
+**Status:** Approved by Program & Integrate and admitted on 2026-07-21.
+
+Program accepted the deterministic generation-input producer after focused 115/115 and normal 107/107 Selector evidence, then admitted one import-free Lab reference-binding proof.
+
+SEAM-G-C2 consumes plain public generation-input version 1 JSON and public NVB Lab projection version 2 JSON only. It binds the selected optic key/variant, optic BOM, evidence reference and measured thermal triplet to one exact read-only OPT reference identity with canonical resolver path.
+
+The adapter emits a deterministic ready-or-blocked binding projection only. It may preserve the public reference identity but must not execute the resolver, access storage, load the sealed DTO, inspect/mutate authority, accept evidence or invoke the generator.
+
+Unknown/extra/private/raw/unsafe input, unresolved or non-optic Lab state, missing/wrong-kind reference and identity/evidence/thermal mismatch fail closed. The expected marker and three protected untracked items remain outside the parcel. SEAM-G-A2 and actual LM-63 generation remain Program-owned and blocked.

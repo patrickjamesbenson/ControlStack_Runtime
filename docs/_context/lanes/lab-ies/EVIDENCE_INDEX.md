@@ -1964,6 +1964,18 @@ Current verification superseded the stale parts of that snapshot:
 - Protected inventory: expected branch marker plus the three protected untracked items remained untouched and outside feature staging — VERIFIED.
 - Queue result: SEAM-G-C1 done, Lab queue empty, Program SEAM-G-A1 review required — RECORDED.
 
+## SEAM-G-C2 generation reference binding admission — 2026-07-21
+
+- Program accepted the generation-input producer after focused 115/115 and normal 107/107 Selector evidence — PROGRAM-ACCEPTED.
+- Public inputs: `controlstack.downstream.ies-generation-input.v1` and `controlstack.lab.nvb-lab-projection.v2` — RECORDED.
+- Exact Lab scope: one new import-free binding adapter plus focused test only — RECORDED.
+- Required binding: optic key/variant, optic BOM, evidence ref, measured thermal triplet and read-only OPT reference identity — RECORDED.
+- Resolver boundary: preserve canonical public resolver path but do not execute it, access storage or load sealed DTO — RECORDED.
+- Fail-closed cases: unknown/extra/private/raw/unsafe, unresolved/non-optic, missing/wrong-kind reference and identity/evidence/thermal mismatch — RECORDED.
+- Capability boundary: no authority/evidence mutation, generator, LM-63 text, route, persistence, network/file/email write or readiness — RECORDED.
+- Protected state: expected marker and three protected untracked items remain outside the parcel — VERIFIED.
+- Queue result: SEAM-G-C2 sole ready item; binding activation and actual generation blocked — RECORDED.
+
 ## Evidence maintenance rule
 
 After each authorised lane parcel:

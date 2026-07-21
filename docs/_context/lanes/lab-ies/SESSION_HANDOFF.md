@@ -323,6 +323,18 @@ It creates no IES, authority, evidence acceptance, sealing, reference mutation, 
 
 The Lab queue is empty. Program must perform SEAM-G-A1 review; actual IES generation remains blocked.
 
+## 2026-07-21 SEAM-G-C2 ready — OPT reference identity binding only
+
+Program accepted the deterministic single-run generation-input producer after 115/115 focused and 107/107 normal Selector evidence.
+
+SEAM-G-C2 is the sole ready Lab parcel. Create only the new import-free reference-binding adapter and focused test. Consume plain public generation-input version 1 and exact NVB Lab projection version 2 JSON.
+
+Require optic path with no unresolved blockers; selected optic key equal to Lab optic variant; exact optic BOM and evidence-ref agreement; exact measured reference-room/reference-internal/rise triplet agreement; and one exact read-only OPT reference identity with canonical resolver path.
+
+Emit a deeply immutable ready-or-blocked binding projection only. Do not execute the resolver, access storage, load the sealed DTO, inspect/mutate authority, accept evidence, invoke the generator, emit LM-63 text, add routes, persist or write.
+
+The expected marker and three protected untracked items remain untouched and outside staging. Return the consumer receipt to Program; SEAM-G-A2 and actual generation remain blocked.
+
 ## Prohibited actions retained
 
 - no LAB-017 change outside the recorded version-1 approval without a new seam decision;

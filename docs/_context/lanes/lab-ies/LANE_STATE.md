@@ -13,7 +13,7 @@ Current repository evidence overrides stale historical statements.
 - Root: `C:\ControlStack_Worktrees\code-pilot-lab`
 - Branch: `lane/code-pilot-lab`
 - Gate: `lab-ies`
-- Recorded branch HEAD: `5e4b5be659dcc12e083bc399feacebe9f57a1aa3`
+- Recorded branch HEAD: `19665e9452452503c501c45aa5fd16758fb45308`
 - Branch-HEAD guard checkpoint: `6d34e500d407d5335e5eebb317636a67a5e98618`
 - Starting HEAD for SEAM-G-C1: `5e4b5be659dcc12e083bc399feacebe9f57a1aa3`
 - Completed feature HEAD: `30f2d2c83c05c0667301c947001a425714360343`
@@ -830,10 +830,11 @@ tests/selectorCascadeCorrectness.test.js
 - `LAB-042-thermal-semantics-guard`: done under approved envelope version 3.
 - `LAB-043-engine-output-v1-compatibility`: done under recorded Program approval.
 - `SEAM-G-C1-ies-artifact-request-v1-compatibility`: done under recorded Program approval.
-- Next ordered item: none.
-- Resulting status: queue empty; Program SEAM-G-A1 review required.
-- Ready items: none.
-- Seam approval required: no.
+- `SEAM-G-C2-ies-generation-reference-binding`: ready under recorded Program approval.
+- Next ordered item: SEAM-G-C2.
+- Resulting status: one ready import-free reference-binding parcel.
+- Ready items: SEAM-G-C2 only.
+- Seam approval required: recorded and satisfied.
 - Human observation required before implementation: no.
 
 LAB-042 is complete. The corrected thermal batch is closed.
@@ -881,3 +882,13 @@ The final Lab gate passed 276/276. Ready, blocked, valid-zero, replay-identical 
 The adapter imports no producer implementation and exposes no IES generation, authority, evidence acceptance, sealing, reference mutation, route, persistence, network/file/email write or readiness capability. The expected branch marker and three protected untracked items remain untouched.
 
 The ordered Lab queue is empty. Program SEAM-G-A1 review is next. Actual IES generation remains blocked.
+
+## 2026-07-21 SEAM-G-C2 generation reference binding admission
+
+Program accepted the deterministic generation-input producer after focused 115/115 and normal 107/107 Selector evidence, then admitted one import-free Lab binding parcel.
+
+SEAM-G-C2 is the sole ready Lab item. Its exact feature scope is `iesGenerationInputV1ReferenceBindingAdapter.js` and its focused test only. The adapter consumes plain public generation-input version 1 and NVB Lab projection version 2 JSON.
+
+Ready binding requires optic path, no unresolved blockers, selected optic key/variant agreement, optic BOM and evidence agreement, exact measured reference thermal-triplet agreement and one exact read-only OPT reference identity with canonical resolver path.
+
+It creates no resolver/storage access, sealed DTO load, authority/evidence mutation, generator invocation, LM-63 text, route, persistence, network/file/email write or readiness capability. The expected marker and three protected untracked items remain outside the parcel. SEAM-G-A2 and actual generation remain blocked.

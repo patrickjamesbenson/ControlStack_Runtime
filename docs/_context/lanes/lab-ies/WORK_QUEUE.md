@@ -854,6 +854,29 @@ Completion evidence: The import-free compatibility adapter and focused test were
 
 Completion evidence: The import-free request compatibility adapter and focused test were committed in the exact two-file scope as `lab: checkpoint IES artifact request v1 compatibility`, pushed only to the Lab lane, and passed 276/276. It accepts exact ready or blocked public request version-1 JSON, preserves request/replay/audit and safe Engine/thermal/row identities plus valid zeros, proves outer traceability is inert and absent, rejects unknown, extra, private/raw, contradictory, unsafe, blocked-promotion/body and legacy input, and emits no generation, authority, route, persistence, network/file/email write or readiness capability. The ordered Lab queue is empty; Program SEAM-G-A1 review is next.
 
+### Q-35 IES generation input OPT reference binding
+- id: SEAM-G-C2
+- objective: Bind exact public generation-input version 1 JSON to one exact read-only OPT reference identity through the public NVB Lab projection version 2 without resolving or loading the reference.
+- authorised files:
+  - `packages/lab-kernel/ies-toolkit/iesGenerationInputV1ReferenceBindingAdapter.js`
+  - `tests/lab-kernel/iesGenerationInputV1ReferenceBindingAdapter.test.js`
+- public contracts:
+  - `controlstack.downstream.ies-generation-input.v1`, schema version 1;
+  - `controlstack.lab.nvb-lab-projection.v2`, schema version 2;
+  - `controlstack.lab.reference-identity.v1`, schema version 1.
+- prohibitions:
+  - import-free; no Selector, Workspace, Runtime or producer implementation import;
+  - no resolver execution, storage access, sealed DTO load, authority inspection/mutation, evidence acceptance, sealing or reference mutation;
+  - no generator invocation, LM-63 text, route, persistence, browser storage, network/file/email write or readiness activation;
+  - no raw IES, photometry, candela, private path or caller authority;
+  - preserve the expected branch marker and three protected untracked items.
+- acceptance: Validate exact ready generation-input and Lab projection shapes. Require optic path, no unresolved blockers, selected optic key equal to Lab optic variant, exact optic BOM agreement across generation provenance/Lab selection/thermal evidence, exact evidence-ref agreement, exact measured reference-room/reference-internal/rise triplet agreement and one exact read-only OPT reference identity with canonical resolver path. Emit one deeply immutable ready-or-blocked `controlstack.lab.ies-generation-reference-binding.v1` projection with deterministic binding identity and no-load/no-generation safety state. Preserve valid zero thermal values and replay identity. Fail closed on unknown, extra, private/raw, unsafe, unresolved, non-optic, missing/wrong-kind reference, identity/evidence/thermal mismatch. Full `lab-ies` passes and exactly the two authorised feature files are committed as `lab: checkpoint IES generation reference binding v1` and pushed only to the Lab lane.
+- gate: lab-ies
+- depends on: Program acceptance of SEAM-G-P2
+- seam change: approved unchanged by Program & Integrate
+- on success next: Program SEAM-G-A2 review; no generation item becomes ready automatically
+- status: ready
+
 ## Explicitly not queued
 
 These protected paths remain outside implementation parcels unless the orchestrator makes a separate decision:
