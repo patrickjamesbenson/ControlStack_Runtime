@@ -537,6 +537,59 @@ The connected app would not permit edits to the two legacy authority test files 
 
 Runtime 8788 has not loaded the repair: the post-commit empty-body dry-run still returned the old generic `google-reader-failed` response with no `failureCategory` or `currentSourceShape`. The active 14 July snapshot remains unchanged and read-only at fingerprint `266de269e3e8f8b7191e4653d45580c251eb46025411574e0d1f2a27daca209d`, size 983727 bytes, modified `2026-07-14T10:07:13.715322+00:00`.
 
-**Exact next action:** the lifecycle owner must restart or reload runtime 8788 from `8d27498`. Through an approved runner, execute `tests/authorityReferenceGoogleReader.test.js`, `tests/authorityReferenceMaterialiserService.test.js`, and `tests/runtimeAuthorityReferenceMaterialiserDiagnostics.test.js`; then repeat only `POST /api/authority-reference/materialiser/refresh?dryRun=true` with `{}`. Classify the safe live result as A, C, or D. Do not materialise, archive, promote, repair Selector projection, invoke Engine, or change external Google configuration.
+**Exact next action:** superseded by the 2026-07-22 consolidated walkthrough batch below.
 -->
+
+## 2026-07-22 Consolidated Selector walkthrough batch
+
+**Batch rule:** one Selector writer, one ready parcel at a time. Source refresh executes first. No live Engine run is authorised until WALK-002 through WALK-006 are complete. PWS-001, PWS-002 and PWS-005 are already done and must not be recommissioned.
+
+### WALK-001 Refresh active authority snapshot
+* status: ready
+* objective: use the already-repaired guarded materialiser path to run the dry-run, prove the redacted source-shape summary includes the tier-gated `ambient_temp` row in `SYSTEM_POLICY`, then run the existing live materialisation/archive/promotion workflow.
+* acceptance: dry-run validation green; all required tables remain present; the ambient row is finite, source-backed and tier-gated; no credential, user, row, provider body or private path exposure; live sync archives the prior active snapshot before promotion; the promoted active fingerprint and timestamp move; post-promotion read-only status reports the new source; Selector Ambient becomes available without default or inference.
+* stop: any failed validation, missing ambient row, identity/shape contradiction, unsafe disclosure or archive/promotion blocker stops before write or promotion.
+* boundary: source operation only; no Selector feature edit, project save, registration, Engine invocation, RunTable, IES, delivery or CRM action.
+
+### WALK-002 Remove Length Mode input
+* status: blocked (depends-on: WALK-001)
+* objective: first diagnose read-only how the current UI `runLengthMode` selection affects candidate, Engine and downstream run semantics; then delete the obsolete narrowing input and every readiness requirement, persisted constraint, UI control and fabricated missing/unsupported diagnostic owned only by that input.
+* ruling: NVB supplies all valid length modes as candidates; Lex scores downstream. Length Mode is not Selector authority and is deleted, not reassigned.
+* acceptance: quantity and positive run length remain truthful run intent; all valid modes remain downstream candidates; identical technical selections no longer vary because of a removed UI mode; no hidden default or first-mode choice is introduced.
+
+### WALK-003 Unmount duplicate scaffold Selector
+* status: blocked (depends-on: WALK-002)
+* objective: unmount the old single-page expander scaffold below the live preview surface and remove its fabricated default selection ownership.
+* acceptance: only the source-backed live Selector surface may represent current selection; no rendered `Linear 60`, 1200 lm/m, IK07 or other scaffold default survives; diagnostic helpers may remain only if not mounted and not selection authority.
+
+### WALK-004 Delete legacy TIERS readiness owner
+* status: blocked (depends-on: WALK-003)
+* objective: delete the payload-preview source path that fail-closes on a missing `TIERS` table and make the live source-status bridge the single owner of source readiness.
+* ruling: Tier is not a Selector input. Server/Engine policy derives Tier from `SYSTEM_POLICY`; no Selector path may require `TIERS`, fabricate Tier or duplicate source-readiness ownership.
+* acceptance: all 15-table live bridge status remains authoritative; missing legacy `TIERS` cannot block payload preview, candidate readiness or execution; genuine required-table failures remain fail closed.
+
+### WALK-005 Relocate internal test modes to Governance ownership
+* status: blocked (depends-on: WALK-004; Program seam ruled)
+* objective: delete Selector-internal timeline test mode and special-parts principal test mode, using their current behaviour as regression specification for consuming shell-owned Governance identity and timeline policy snapshots.
+* ruling: Governance owns identity, principal/role, timeline policy and visibility. Selector may consume bounded read-only outcomes only and may not expose a parallel test authority.
+* acceptance: no Selector-owned principal selector, role override, timeline as-of control or special-parts test toggle remains; existing shell snapshots preserve equivalent diagnostic behaviour; no raw USERS/CRM/provider data enters Selector.
+
+### WALK-006 Truthful readiness counters
+* status: blocked (depends-on: WALK-005)
+* objective: count only genuine current prerequisites. Remove donor-parity/future rows, consequences, disabled outputs and diagnostic special-parts rows from user-facing missing/blocked totals.
+* acceptance: readiness totals equal the visible actionable prerequisite set; special-parts redacted placeholder candidates remain diagnostics only; zero diagnostic row can increase missing or blocked readiness counts.
+
+### WALK-007 Selections-only action lane and thermal live acceptance
+* status: blocked (depends-on: WALK-001 through WALK-006)
+* objective: reconcile Run Engine activation with the ruled selections-only boundary, then execute the held thermal live-acceptance proof once against the refreshed source.
+* ruling: server revision acknowledgement is not Engine authority. The action may require a valid source-backed selection set and the existing no-write transport safeguards, but not a governance/project envelope or separate server-revision gate.
+* acceptance: selected room Celsius is source-backed; one optic-bound measured rise is applied exactly once; lookup temperature equals selected room plus measured rise; verified lm/m is attributable; varied optic rise moves lookup and verified output with room/current/curve held fixed; no hardcoded constant, absolute internal temperature substitution or double count passes. One bounded run only.
+* boundary: no persistence, delivery, IES generation, CRM/provider action or module-owned retrieval path.
+
+### WALK-008 Finishes default acceptance
+* status: held (Patrick ruling; non-blocking)
+* objective: none until Patrick rules whether inherited cover/end/flex finishes satisfy Build Ready by inheritance alone or require explicit acceptance.
+* current rule: unchanged. The question is recorded in the Governance deferred-decisions panel and must not be inferred by Selector.
+
+**Ending order:** WALK-001 → WALK-002 → WALK-003 → WALK-004 → WALK-005 → WALK-006 → WALK-007. WALK-008 stays held and does not block the batch.
 

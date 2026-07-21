@@ -512,4 +512,22 @@ This log is append-oriented. Do not silently rewrite historical decisions.
 
 **Evidence:** The temporary focused harness passed 112/112 and was removed. The normal and guarded feature gates passed 107/107. Static and behavior assertions prove Project Browser still owns save/restore, the shell dispatches hydrate, the modules add no implementation and the stale save/restore-deferred phrases are absent.
 
-**Consequence:** PWS-005 is done. All three admitted PWS parcels are closed. No queue item is ready; Program may commission later Governance/provider or other bounded work separately.
+**Consequence:** PWS-005 is done. All three admitted PWS parcels are closed.
+
+## 2026-07-22 — Consolidated Selector walkthrough batch admitted
+
+**Decision:** Accept Patrick's nine live walkthrough findings as one ordered Selector batch. Do not recommission PWS-001, PWS-002 or PWS-005 because all three are already complete, gated and pushed.
+
+**Immediate authority action:** WALK-001 is the sole ready parcel. Run the repaired materialiser dry-run, require a redacted current-source proof of the tier-gated `SYSTEM_POLICY.ambient_temp` row and all required tables, then use the existing live materialise/archive/promote path. Failed validation, missing Ambient, unsafe disclosure or archive/promotion blocker stops before write.
+
+**Deletion order:** after refresh, diagnose and delete Length Mode as Selector authority; unmount the fabricated duplicate scaffold; delete the legacy `TIERS`-expecting readiness path; then delete Selector's internal timeline and special-parts principal test modes. These are deletions under the one-owner rule, not reassignments or defaults.
+
+**Seam ruling:** Governance owns human identity, principal/role, timeline policy and visibility. Selector consumes bounded shell outcomes only. The current internal test-mode behaviour is regression specification, not continuing ownership.
+
+**Truthfulness:** readiness totals count only visible actionable prerequisites. Donor-parity/future/consequence/disabled rows and special-parts diagnostic placeholders cannot increase user-facing missing or blocked totals.
+
+**Run boundary:** no live run before the deletion and counter parcels close. The final batch parcel reconciles Run Engine to the selections-only boundary: server revision acknowledgement and governance/project envelopes are not Engine authority. Preserve source-backed selections and no-write transport safety, then run one bounded thermal acceptance proving selected room plus measured optic rise exactly once and varied-rise movement.
+
+**Open decision:** finishes default acceptance remains unchanged and unresolved. Governance records it as an OPEN Patrick-owned decision; Selector must not infer whether inheritance alone satisfies Build Ready.
+
+**Consequence:** WALK-001 ready; WALK-002 through WALK-007 blocked in strict order; WALK-008 held. No second writer, CRM/provider mutation, persistence, IES generation, delivery, module-owned retrieval, main or unrelated runtime work is authorised.

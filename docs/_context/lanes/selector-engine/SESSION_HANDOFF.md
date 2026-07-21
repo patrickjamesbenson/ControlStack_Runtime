@@ -618,4 +618,21 @@ The focused harness passed 112/112 and was removed with no final harness diff. T
 
 ## Current boundary
 
-All three admitted PWS parcels are complete. No Selector queue item is ready. A later parcel requires a new durable commission; Governance/provider association, handoff/share, retrieval, Engine, Lab/IES, RuntimeData, main and runtime-process work remain outside this completed batch.
+All three admitted PWS parcels are complete and must not be recommissioned.
+
+## 2026-07-22 consolidated walkthrough commission
+
+WALK-001 is the sole ready item. Use the existing guarded source workflow: dry-run first, prove the current source shape includes a finite tier-gated Ambient row and all required tables, then materialise, archive the prior active snapshot and promote. Stop before write on any validation, shape, safety or promotion failure. Do not save a project, register, invoke Engine or change Selector feature code in WALK-001.
+
+After refresh, execute one writer in strict order:
+1. Diagnose and delete Length Mode as Selector authority; preserve quantity, length and downstream all-mode Lex scoring without a hidden default.
+2. Unmount the fabricated duplicate Selector scaffold so only the source-backed live surface owns current selection.
+3. Delete the legacy `TIERS`-expecting payload/readiness path; the live source-status bridge is the sole source-readiness owner and Tier remains server/Engine-derived from `SYSTEM_POLICY`.
+4. Delete Selector's internal timeline and special-parts principal test modes. Governance owns identity, principal/role, timeline policy and visibility; Selector consumes only bounded shell outcomes.
+5. Recalculate user-facing missing and blocked totals from genuine actionable prerequisites only; diagnostic and future rows cannot contribute.
+
+No live Engine run occurs before those parcels close. WALK-007 then removes server-revision acknowledgement as Engine authority while preserving source-backed selections and no-write transport safety, and performs exactly one thermal live proof: selected room plus optic-bound measured rise once, attributable lookup temperature, verified lm/m, and varied-rise movement.
+
+WALK-008 is held and non-blocking. Governance has recorded finishes default acceptance as an OPEN Patrick-owned ruling. Do not change Build Ready until Patrick decides whether inherited cover/end/flex finishes count without explicit acceptance.
+
+Current queue: WALK-001 ready; WALK-002 through WALK-007 blocked in sequence; WALK-008 held. No second writer, CRM/provider mutation, persistence, IES generation, delivery, module-owned retrieval, main or unrelated runtime work is authorised.

@@ -701,4 +701,19 @@ Every completed worker updates this index with:
 - Normal lane gate after harness removal: 107 passed, 0 failed — VERIFIED.
 - Guarded feature commit/push gate: 107 passed, 0 failed; exact five-file staged set committed and pushed; feature tree clean — VERIFIED.
 - No browser action, lifecycle implementation, handoff/share, provider, project-store, route, persistence, Engine, Lab/IES, RuntimeData, retrieval, main or runtime-port work occurred — VERIFIED.
-- Queue result: all three admitted PWS parcels done; no item ready — RECORDED.
+- Queue result: all three admitted PWS parcels done — RECORDED.
+
+## 2026-07-22 — Consolidated walkthrough admission evidence
+
+- Patrick completed a full live Selector walkthrough and supplied nine concrete findings with explicit sequencing — USER-PROVIDED LIVE EVIDENCE.
+- Repository reconciliation proves PWS-001, PWS-002 and PWS-005 are already complete, gated and pushed; no duplicate commission is required — VERIFIED.
+- Active authority snapshot remains the 14 July artifact; Ambient is the only genuine missing spec requirement and current source lacks the tier-gated `SYSTEM_POLICY.ambient_temp` row — USER-PROVIDED LIVE EVIDENCE CONSISTENT WITH RECORDED SOURCE STATE.
+- Length Mode remains present in run intake, readiness, constraint and presentation paths; its downstream effect requires read-only diagnosis before deletion — VERIFIED BY BOUNDED SEARCH.
+- The old scaffold still carries fabricated `Linear 60`, 1200 lm/m and IK07 defaults alongside the live source-backed surface — VERIFIED BY BOUNDED SEARCH.
+- Legacy `TIERS` expectations still exist in Selector option/readiness presentation while Tier authority is already server/Engine-owned through `SYSTEM_POLICY` — VERIFIED OWNERSHIP DUPLICATION.
+- Selector-internal timeline and special-parts principal test modes remain mounted even though Governance identity and shell timeline policy are live — VERIFIED DUPLICATE AUTHORITY.
+- Existing evidence classifies the 13 missing and 18 blocked totals as containing donor-parity, future, consequence, disabled and diagnostic rows rather than genuine prerequisites — VERIFIED FROM PRIOR LIVE REVIEW AND REPOSITORY CONTRACTS.
+- Program ruling: Governance owns identity/principal/timeline policy; Selector deletes its internal copies and consumes bounded shell outcomes only — RECORDED.
+- Program ruling: the Engine action boundary is selections-only; server revision acknowledgement and governance/project envelopes are not Engine authority — RECORDED FOR WALK-007.
+- Governance deferred-decision registry records finishes default acceptance as OPEN and Patrick-owned; current Build Ready rule remains unchanged — VERIFIED BY GOVERNANCE GATE 181/181.
+- Queue result: WALK-001 ready; WALK-002 through WALK-007 blocked in strict order; WALK-008 held — RECORDED.

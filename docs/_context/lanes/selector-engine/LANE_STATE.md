@@ -620,4 +620,18 @@ The temporary focused harness executed the lifecycle-copy suite and passed 112/1
 
 No browser action, save, restore, hydrate, handoff/share, CRM/provider, project-store, route, persistence, Engine, Lab/IES, RuntimeData, retrieval, main or runtime-port operation changed or executed.
 
-PWS-005 is done. No queue item is ready.
+PWS-005 is done.
+
+## 2026-07-22 consolidated walkthrough commission — latest controlling state
+
+Program accepted Patrick's nine live Selector findings as one sequenced batch. PWS-001, PWS-002 and PWS-005 are already complete and are not reopened.
+
+WALK-001 authority refresh is the sole ready item. It must use the existing guarded dry-run first, prove the current Google source includes a finite tier-gated `SYSTEM_POLICY.ambient_temp` row and all required source-shape checks, then use the existing archive-before-promotion live workflow. Any failed validation or missing ambient row stops before write.
+
+After WALK-001 closes, the lane executes one writer in strict order: remove Length Mode after read-only impact diagnosis; unmount the fabricated duplicate Selector scaffold; delete the legacy `TIERS` payload-preview readiness owner; delete Selector's internal timeline and special-parts principal test modes under the Program ruling that Governance owns identity and timeline policy; then correct readiness totals so only genuine actionable prerequisites count.
+
+No live Engine run is allowed before those cleanup parcels close. WALK-007 then reconciles the action lane to the selections-only boundary and performs one bounded thermal proof: selected room plus one optic-bound measured rise equals lookup temperature, and varied rise moves verified lm/m without hardcoded, substituted or double-counted temperature.
+
+The finishes default-acceptance question is held, Patrick-owned and non-blocking. Governance records it as OPEN; Selector must not infer the answer or change Build Ready until Patrick rules.
+
+Current queue: WALK-001 ready; WALK-002 through WALK-007 blocked in sequence; WALK-008 held. No second Selector writer, CRM/provider action, persistence, IES generation, delivery, module-owned retrieval, main or unrelated runtime work is authorised.
