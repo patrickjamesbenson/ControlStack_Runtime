@@ -834,3 +834,52 @@ No implementation item is ready. A new exact Program parcel is required before a
 - **Boundary:** import-free; no sealed DTO, resolver/storage, generator/materialise call, LM-63 text, project/customer metadata, route, persistence, file/network/email write or readiness activation.
 - **Commit message:** `lab: checkpoint IES materialisation job plan v1`.
 - **Next:** Program plan receipt review; actual generator invocation remains blocked.
+
+## 2026-07-21 — Program work-shape admission
+
+**Status:** TWO PARALLEL STREAMS ACTIVE; GOVERNANCE LANE APPROVED BUT NOT YET PROVISIONED.
+
+### PWS-L0 — Provision Governance & Shell lane
+
+- **Owner:** Program & Integrate infrastructure.
+- **Status:** approved; exact provisioning parcel required before governance feature work.
+- **Lane:** Governance & Shell.
+- **Required isolation:** dedicated worktree, `lane/governance-shell`, separate MCP service identity, exact write globs, required branch and dedicated gate.
+- **Initial owned items:** work-shape items 3, 4, 6 and 9.
+- **CRM item 7:** folded into this lane as blocked; no separate CRM lane yet.
+- **Boundary:** no Selector/Engine, Lab authority or main write scope.
+
+### PWS-001 — Retire CRM gate language and emit readiness state-entry intent
+
+- **Owner:** Selector & Engine.
+- **Status:** ready now.
+- **Acceptance boundary:** delete Gate 1/Gate 2 and CRM/HubSpot gate semantics; preserve truthful fail-closed readiness; emit one deterministic immutable false-to-true transition intent without duplicate render/hydrate emissions.
+- **Provider boundary:** no HubSpot or CRM mutation; Governance later consumes the intent.
+- **Next:** PWS-002 after feature and durable closeout.
+
+### PWS-002 — Add Factory Ready
+
+- **Owner:** Selector & Engine.
+- **Status:** admitted, blocked behind PWS-001.
+- **Authority:** derived only from existing source-backed Factory Approved Inputs evidence plus Spec Ready and Build Ready.
+- **Boundary:** no default, inference, external push or Engine change.
+
+### PWS-005 — Correct live save/restore copy
+
+- **Owner:** Selector & Engine.
+- **Status:** admitted, blocked behind PWS-002.
+- **Boundary:** copy and contract classification only; no lifecycle or persistence behavior change.
+
+### PWS-010 — Single data-retrieval gateway
+
+- **Owner:** Governance & Shell.
+- **Status:** binding architectural constraint now; implementation blocked until lane provisioning.
+- **Rule:** every module export/download/artifact retrieval path terminates through one gateway; no module-owned retrieval route or helper.
+- **Separate checks:** readiness and identity remain distinct.
+- **Seam G effect:** internal generation contracts may continue, but direct Selector/Lab delivery is prohibited.
+
+### Standing test lock
+
+Every affected parcel and gate plan must retain: envelope independence including no-envelope Engine execution; changed-optic movement; varied-row proof for identical placeholder lookup values; and ownership-wide tests instead of named-instance assertions.
+
+SEAM-G-C4 remains ready in Lab and may proceed in parallel with PWS-001. No second writer is permitted in the Selector worktree.

@@ -880,3 +880,40 @@ Selector target lm/m remains intent and is preserved only for comparison; it can
 A ready plan additionally requires exact generation/binding source identity, exact selection/run equality, exact binding/inspection reference identity, a reference-validated inspection, no missing keyword overrides and `materialisationWithoutOverrides: true`. The exact generator job contains only run length, derived multiplier and an empty selections object; no caller keyword override is accepted.
 
 The plan returns no sealed DTO, metadata, angles, candela, keyword values or LM-63 text and cannot resolve storage or invoke materialisation. Rollback is removal or non-use only.
+
+## 2026-07-21 approved governance-shell and retrieval-gateway seam
+
+**Status:** BINDING.
+
+```text
+Selector/Engine technical state
+-> immutable readiness transition intent
+-> Governance & Shell policy/identity/project handling
+-> optional best-effort CRM push
+```
+
+Selector owns Spec Ready, Build Ready, Factory Ready and the technical false-to-true transition fact. It does not own CRM identity, provider mutation, retry, project association or external lifecycle. Governance consumes the transition intent and performs any provider work outside the Engine path. Provider failure cannot reverse readiness or block computation.
+
+```text
+module technical artifact/readiness
+-> one Governance data-retrieval gateway
+-> separate readiness check
+-> separate identity/project capture
+-> retrieval/delivery
+```
+
+No module may expose its own download, export, file-delivery or artifact-retrieval path. The gateway is the only outward retrieval boundary. Readiness answers whether a useful artifact exists; identity answers who is taking it and under which project. Neither field may be substituted for the other.
+
+The gateway may accept useful outputs at Spec Ready, Build Ready and Factory Ready. Loose identity validation is a governance capture policy, not Engine authority. The Engine remains executable without any governance envelope.
+
+Seam G request, binding, inspection, planning and future pure generation may remain internal technical contracts. Any browser download, file response, email delivery or provider export must be downstream of the one gateway and requires a separate Program activation.
+
+### Cross-lane regression lock
+
+- identical selections plus changed traceability envelopes return identical output;
+- identical selections with no envelope remain runnable and deterministic;
+- changed optic rise changes lookup temperature and verified output;
+- identical placeholder source rows require a varied-row movement fixture;
+- ownership rules are tested across all governed rows/systems, not one named instance.
+
+These are seam-level acceptance requirements and cannot be dropped by moving ownership to a new lane.

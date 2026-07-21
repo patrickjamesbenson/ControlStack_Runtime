@@ -1277,3 +1277,53 @@ Ready planning requires exact generation/binding source identity, exact selectio
 Unknown/extra/private/raw/unsafe input, identity mismatch, missing overrides, non-positive ratio inputs or contradictory inspection state fail closed. The plan adds no sealed DTO, resolver/storage access, generator/materialise invocation, LM-63 text, route, persistence, file/network/email write or delivery readiness.
 
 SEAM-G-C4 is the sole ready item. Actual generator invocation remains a separate future Program decision.
+
+## 2026-07-21 — Program work-shape lane and gateway ruling
+
+**Status:** GOVERNANCE & SHELL LANE APPROVED; SELECTOR ITEMS 1, 2 AND 5 ADMITTED; SINGLE RETRIEVAL GATEWAY BINDING.
+
+Program accepts `PROGRAM_WORK_SHAPE.md` as the source proposal and makes the following binding rulings.
+
+### Lane split
+
+A new **Governance & Shell** lane is approved as a separate writer from Selector & Engine. The Boundary Ruling makes this separation real: Selector & Engine owns engineering selections, readiness derivation, candidate creation, scoring and verified output; Governance & Shell owns human/project identity, permissions, timeline, ownership, handoff, persistence, data retrieval and external CRM orchestration.
+
+The new lane will use its own worktree, branch `lane/governance-shell`, MCP service identity, exact write globs, required branch and lane gate. Program & Integrate owns provisioning and scope approval. An advisory session does not create or widen a writable lane.
+
+A separate CRM & Integration lane is **not created now**. CRM item 7 remains a blocked substream of Governance & Shell until the private-app portal-scope pre-check is resolved and an actual connector writer requires separate isolation. At that point Program may split it without changing the outside/inside boundary.
+
+### Immediate Selector admission
+
+The corrected thermal chain is closed and Seam G continuation is currently Lab-owned. Program therefore admits work-shape items 1, 2 and 5 to Selector & Engine in this order:
+
+1. **PWS-001 ready now:** retire Gate 1 and Gate 2 as named business/CRM gates and emit deterministic state-entry push intents.
+2. **PWS-002 admitted, blocked behind PWS-001:** add the derived `factoryReady` state from existing source-backed Factory Approved Inputs evidence.
+3. **PWS-005 admitted, blocked behind PWS-002:** correct stale save/restore/hydrate lifecycle copy only.
+
+One writer remains permitted in the Selector worktree. The parcels are not run concurrently because they overlap the same readiness/view-model surfaces.
+
+Selector owns readiness facts and transition intent only. It must not call HubSpot or any CRM provider. Governance & Shell later consumes the immutable state-entry intent, applies project/identity/idempotency/retry policy and performs best-effort external push. A CRM outage cannot block Selector or Engine.
+
+### Single retrieval gateway
+
+Every module's export, download, artifact retrieval or take-away action must pass through one Governance & Shell gateway. No module may add its own download route, file-delivery button, browser download helper, export transport or provider-specific retrieval path.
+
+The gateway keeps two conditions separate:
+
+- **readiness:** ControlStack decides whether a useful artifact exists and which readiness state produced it;
+- **identity:** Governance establishes email and project context for retrieval capture.
+
+Identity does not enter Engine eligibility or output. Readiness does not manufacture identity. The Engine remains runnable with no traceability envelope.
+
+Current Seam G work may build deterministic internal request, binding, inspection and materialisation contracts, but actual LM-63 retrieval or delivery must terminate at the single gateway. A direct Lab or Selector download path is a seam violation even if its output is technically correct.
+
+### Standing acceptance lock
+
+The following tests survive every lane split and reshuffle:
+
+1. identical engineering selections with different traceability envelopes produce identical Engine output, and the same selections also run with no envelope;
+2. changing one optic's measured thermal rise changes both lookup temperature and verified output;
+3. wherever lookup fixture values are identical across rows, acceptance varies one row and proves output movement;
+4. ownership tests quantify behavior across every governed row or system, rather than asserting one named product instance.
+
+No parcel may remove, weaken, replace with a narrower example or exclude these tests from its effective gate without a new explicit Program decision.

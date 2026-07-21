@@ -80,3 +80,14 @@ SEAM-G-C4 is the sole ready Lab parcel: build a deterministic no-generation mate
 It must derive the multiplier only from Engine verified lm/m divided by sealed baseline lm/m and emit an exact empty-selection generator job only when no keyword authority is missing.
 
 Sealed DTO loading, generator invocation, LM-63 generation, delivery, main and unfinished runtime-port work remain blocked. Patrick has no action.
+
+## Parallel Program work-shape streams
+
+- **Selector & Engine:** PWS-001 ready; PWS-002 and PWS-005 admitted in order and blocked behind the preceding closeout.
+- **Lab & IES:** SEAM-G-C4 remains ready and may proceed in parallel.
+- **Governance & Shell:** lane approved; feature work waits for a separately scoped worktree/service/gate provisioning parcel.
+- **CRM:** no separate lane yet; item 7 remains blocked inside Governance.
+- **Retrieval rule:** all module downloads/exports/artifact delivery must use one Governance gateway; readiness and identity are separate checks.
+- **Standing tests:** no-envelope and changed-envelope Engine independence, changed-optic movement, varied placeholder row, and ownership-wide assertions remain mandatory.
+
+No direct module download path, provider push from Selector, main work or runtime-port mixing is authorised. Patrick has no action.

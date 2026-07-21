@@ -577,3 +577,17 @@ P2 Checkpoint 1 is **IMPLEMENTATION COMPLETE / GATE GREEN / COMMIT BLOCKED BY SH
 - **FAIL CLOSED:** identity mismatch, missing overrides, zero/non-positive verified or baseline output, non-finite ratio, private/raw/unsafe or contradictory state.
 - **NOT AUTHORISED:** caller keyword override, sealed DTO, resolver/storage, generator/materialise call, LM-63 text, project/customer metadata, route, persistence, files/delivery, main or runtime-port work.
 - **NEXT:** reconcile Lab queue and implement SEAM-G-C4 in exactly two new files. Patrick has no action.
+
+## 2026-07-21 Program work-shape ruling state
+
+- **LANE RULING:** Governance & Shell approved as a separate lane from Selector & Engine.
+- **CRM RULING:** no separate CRM lane now; item 7 remains a blocked Governance substream until the portal-scope pre-check and exact connector writer exist.
+- **PROVISIONING OWNER:** Program & Integrate; dedicated worktree, branch, MCP identity, write globs and gate required before governance feature work.
+- **SELECTOR READY:** PWS-001 only — retire named CRM gates and emit deterministic state-entry intent.
+- **SELECTOR ADMITTED:** PWS-002 Factory Ready after PWS-001; PWS-005 lifecycle-copy correction after PWS-002.
+- **SIDE-EFFECT OWNER:** Selector emits readiness facts/intents; Governance performs project/identity/CRM policy and best-effort push.
+- **GATEWAY:** all module retrieval/download/export/delivery paths must use one Governance gateway; readiness and identity remain separate.
+- **SEAM G:** C4 remains ready in Lab in parallel; no direct Lab/Selector delivery path is permitted.
+- **STANDING TESTS:** envelope variation plus no-envelope execution, changed-optic movement, varied placeholder row, and ownership-wide assertions are binding.
+- **SOURCE RECORD:** `PROGRAM_WORK_SHAPE.md` retained unchanged with the Program ruling recorded separately.
+- **NEXT:** Selector reconciles PWS-001 to ready; Program defines the bounded Governance lane-provisioning parcel; Lab may continue C4. Patrick has no action.

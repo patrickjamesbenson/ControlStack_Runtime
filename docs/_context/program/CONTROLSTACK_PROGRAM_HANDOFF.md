@@ -829,3 +829,23 @@ Derive `outputMultiplier` only as Engine verified lm/m divided by sealed baselin
 Do not accept caller keyword overrides, load a sealed DTO, resolve storage, invoke materialisation or generator code, emit LM-63 text, accept project/customer metadata, add routes, persist or write.
 
 Return the plan receipt to Program. Actual generator invocation remains blocked.
+
+## 2026-07-21 Program work-shape handoff
+
+Program approves a separate Governance & Shell lane. It owns project, identity, permissions, timeline, ownership, handoff, persistence, data retrieval and external CRM orchestration. Selector & Engine remains the technical kitchen. A separate CRM lane is deferred; item 7 stays blocked inside Governance until its portal-scope prerequisite and writer scope are known.
+
+Program must provision the new lane with its own worktree, `lane/governance-shell`, MCP service identity, exact write globs, required branch and gate before items 3, 4, 6 or 9 begin.
+
+Selector has three admitted parcels in strict order:
+
+1. PWS-001 ready: remove named CRM gate semantics and emit deterministic false-to-true readiness transition intent only;
+2. PWS-002 blocked behind PWS-001: add derived Factory Ready from existing source-backed evidence;
+3. PWS-005 blocked behind PWS-002: correct stale save/restore/hydrate copy without behavior change.
+
+Selector must not call HubSpot. Governance later consumes the state-entry intent and owns identity/project association, idempotency, retry and best-effort provider push.
+
+Item 10 is binding immediately: no module-owned download/export/artifact-delivery path. Every retrieval passes through one Governance gateway, with readiness and identity implemented as separate checks. Seam G may continue internal contracts but cannot expose a direct download or delivery seam.
+
+Keep all standing tests: changed/absent traceability envelope independence; changed-optic thermal movement; varied-row movement wherever placeholder lookup values are identical; and ownership-wide tests instead of named-instance assertions.
+
+Lab C4 and Selector PWS-001 may run in parallel because they use separate worktrees. No second Selector writer is authorised. Patrick has no action.
