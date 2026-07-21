@@ -480,3 +480,13 @@ Create exactly `packages/workspace-kernel/runtimeEngineOutputContractV1.js` and 
 The module implements exact non-persistent validators/builders for `controlstack.engine.selection-set.v1`, `controlstack.engine.output.v1` and `controlstack.engine.runtable-row.v1`. Required fixtures are deterministic complete, fail-closed blocked, valid zero-valued and replay-identical results with one unambiguous row field set and result identity derived only from request, source, policy and evidence fingerprints.
 
 Optional traceability must not affect output. Unknown versions, unsafe data, contradictory identity and caller-supplied derived or verified output fail closed. Do not reuse the colliding legacy row schema, invoke Engine or donor code, recalculate thermal values, modify existing scaffolds, persist, add routes, activate IES/downstream readiness, mutate RuntimeData, write Lab or touch main. Do not declare stability after the parcel.
+
+## 2026-07-21 ENG-OUT-P1 complete — Program consumer review next
+
+The version-1 public request/output/row contract is complete and pushed. The final focused suite passed 116/116 and the temporary harness was removed.
+
+The request contract accepts engineering selections only, validates the exact versioned draft and rejects governance fields, caller Tier, caller candidates/scores and caller-derived or verified output. The output contract derives evidence identity server-side, returns deterministic complete or fail-closed blocked results, preserves valid zero values and ignores different traceability envelopes. The row contract has one exact field set and does not reuse the legacy collision.
+
+No route, persistence, actual Engine invocation, thermal recalculation, existing scaffold rewrite, Lab/IES change, downstream activation, RuntimeData, donor, main or runtime-port work occurred.
+
+The contract remains not stable. Program must review the producer receipt and separately decide the exact consumer-compatibility parcel. No Selector widening or downstream implementation is ready from this handoff.

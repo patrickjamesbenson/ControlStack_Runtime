@@ -391,3 +391,13 @@ This log is append-oriented. Do not silently rewrite historical decisions.
 **Rationale:** The newer Program review accepts the candidate's separate selections-only request, complete-or-blocked output and unambiguous RunTable-row schemas. This is more complete than the provisional single selected-result envelope and preserves the candidate's recorded legacy row-schema collision and persistence exclusion.
 
 **Consequence:** ENG-OUT-P1 may create only the new runtime contract module and focused runtime test. Consumer compatibility, stability declaration, downstream activation and main promotion remain held.
+
+## 2026-07-21 — ENG-OUT-P1 public contract accepted in the lane
+
+**Decision:** Accept the pushed version-1 request, output and RunTable-row producer contracts and return them to Program for consumer review without declaring stability.
+
+**Evidence:** The exact public module and focused regression were pushed, then one corrective two-file parcel resolved the concurrent post-commit race. Final focused coverage passed 116/116. The temporary harness was removed and the normal gate file returned unchanged.
+
+**Contract result:** `controlstack.engine.selection-set.v1` validates one exact selections-only draft and rejects governance fields, caller Tier and caller-derived/verified output. `controlstack.engine.output.v1` produces deterministic complete or fail-closed blocked results, preserves valid zero values, ignores optional traceability and derives result identity only from technical request, source, policy and internally derived evidence fingerprints. `controlstack.engine.runtable-row.v1` has one exact field set and does not reuse the colliding legacy row schema.
+
+**Consequence:** ENG-OUT-P1 is done. The producer boundary remains non-persistent and contract-only. Program must review consumer compatibility before any Lab/IES adapter or stability declaration. SEL-008, SEL-009, SEL-010, routes, persistence, downstream activation and main remain held.

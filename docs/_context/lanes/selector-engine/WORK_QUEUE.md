@@ -255,7 +255,7 @@
 ### Q-7B Implement the accepted version-1 request, output and row contracts
 
 * id: ENG-OUT-P1
-* status: ready
+* status: done
 * depends-on: SEL-007 and recorded Program acceptance of the three-schema candidate
 * seam approval: Program & Integrate accepted `controlstack.engine.selection-set.v1`, `controlstack.engine.output.v1` and `controlstack.engine.runtable-row.v1`; stability remains withheld
 * gate: selector-engine
@@ -264,6 +264,7 @@
 * acceptance: exact schema/version/key sets; deterministic complete, fail-closed blocked, valid zero-valued and replay-identical fixtures; one exact row field set; result identity derived only from request/source/policy/evidence fingerprints; governance-envelope independence; unknown versions, unsafe data, contradictory identities and caller-supplied derived or verified output fail closed; no legacy colliding row schema is reused.
 * prohibitions: no actual Engine or donor invocation, no thermal recalculation, no curve-parser or existing scaffold rewrite, no route, persistence, RuntimeData mutation, IES handoff, downstream activation, Lab, main or runtime-port change; do not declare the output contract stable.
 * commit message: `feat(runtime): implement Engine output contract v1`.
+* completion: exact public contract module and focused test pushed, followed by a corrective two-file parcel that derives evidence identity server-side, validates the exact versioned draft, classifies caller Tier as derived/non-authoritative and preserves one exact row field set. Focused coverage passed 116/116; the harness was removed; no consumer or stability activation occurred.
 
 ### Q-8 First contract-preserving widening pass
 

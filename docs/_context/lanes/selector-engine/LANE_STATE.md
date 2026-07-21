@@ -475,3 +475,13 @@ The active contract boundary is `controlstack.engine.selection-set.v1`, `control
 The exact feature scope is one new runtime contract module and one focused runtime test. It implements deterministic complete, fail-closed blocked, zero-valued and replay-identical fixtures without invoking Engine, recalculating thermal values, modifying existing scaffolds, persisting, adding routes, activating IES/downstream readiness, mutating RuntimeData, using donor code or touching main.
 
 Stability remains withheld after ENG-OUT-P1 pending separate consumer compatibility and Program acceptance.
+
+## 2026-07-21 ENG-OUT-P1 closeout
+
+ENG-OUT-P1 is complete and pushed. The public contract now implements exact version-1 selections-only request validation, deterministic complete-or-blocked output and one unambiguous public RunTable row shape.
+
+The final corrective parcel derives evidence fingerprints internally from the accepted selected-result component, so callers cannot supply evidence authority. Caller Tier remains rejected as derived/non-authoritative. Governance traceability is optional, ignored and absent from output. Valid zero-valued technical results remain complete rather than being mistaken for missing data.
+
+Final focused coverage passed 116/116. It includes exact draft/version validation, governance and caller-derived rejection, complete/blocked/zero/replay fixtures, technical result-identity movement, component tamper detection, no legacy row reuse and different-envelope identical output. The temporary harness was removed and the tree returned clean before lane closeout.
+
+The producer contract is not yet stable. Program consumer review, Lab/IES compatibility evidence, full-output fixture evidence and rollback/readback acceptance remain separate. No route, persistence, downstream activation, RuntimeData, donor, Lab, main or runtime-port work occurred.

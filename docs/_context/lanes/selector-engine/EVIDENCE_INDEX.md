@@ -533,7 +533,7 @@ Every completed worker updates this index with:
 ## 2026-07-21 — ENG-STAB-P1 admission evidence
 
 - Program review initially withheld stability and provisionally admitted a single-envelope producer parcel — RECORDED HISTORICAL COORDINATION.
-- The provisional parcel was not implemented — VERIFIED.
+- The parcel completed concurrently after the public-contract supersession, passed 114/114 and was accepted by Program only as an internal non-stable component — RECONCILED.
 
 ## 2026-07-21 — ENG-OUT-P1 admission evidence
 
@@ -545,3 +545,21 @@ Every completed worker updates this index with:
 - Complete, blocked, zero-valued and replay-identical fixtures are required; governance traceability cannot alter output — RECORDED.
 - Consumer compatibility, stability declaration, downstream activation and main promotion remain held — RECORDED.
 - Starting tree was clean and no implementation changed during admission — VERIFIED.
+
+## 2026-07-21 — ENG-OUT-P1 producer evidence
+
+- Final public feature paths: `runtimeEngineOutputContractV1.js` and its focused test only — VERIFIED.
+- Public schemas: selections-only request, complete-or-blocked output and one unambiguous RunTable row version 1 — VERIFIED.
+- Request validation: exact versioned draft and deterministic fingerprint; governance, caller Tier, caller candidates/scores, unsafe data and caller-derived/verified output rejected — VERIFIED BY EXECUTED TESTS.
+- Complete fixture: technical request/source/policy/evidence identity produces deterministic selected result and exact public rows — VERIFIED.
+- Blocked fixture: unknown version, fingerprint tamper, unsafe component, contradictory provenance and invalid policy fail closed with no selected result or rows — VERIFIED.
+- Zero fixture: valid zero lm/m and zero counts remain complete — VERIFIED.
+- Replay fixture: key-order variation and different user/project/owner/timeline/registration envelopes produce identical output — VERIFIED.
+- Evidence ownership: evidence fingerprints are derived internally from accepted technical provenance; caller-supplied evidence fingerprints are rejected as an invalid input shape — VERIFIED.
+- Result identity: request, policy and evidence changes move the result identity; governance changes do not — VERIFIED.
+- Row collision guard: the legacy `controlstack.runtime.runtable-first-narrow-row.v1` identifier is absent and one exact public row field set is exported and produced — VERIFIED.
+- Dependency boundary: public module imports only the internal selected-result component and stable fingerprint utility — VERIFIED.
+- Focused harness gate: 116 passed, 0 failed after the corrective race reconciliation — VERIFIED.
+- Harness removal: `tests/engineRunTableDomain.test.js` returned clean and unstaged — VERIFIED.
+- No route, persistence, actual Engine/donor invocation, thermal recalculation, existing scaffold rewrite, Lab/IES change, downstream activation, RuntimeData, main or runtime-port work occurred — VERIFIED.
+- Queue result: ENG-OUT-P1 done; Program consumer review required; stability remains withheld — RECORDED.
