@@ -577,3 +577,19 @@ Every completed worker updates this index with:
 - Write/security boundary: no raw IES, photometry, candela, file/path, route, persistence, email/export/download, generator, authority, reference mutation, Engine/donor invocation or downstream activation — RECORDED.
 - SEAM-G-C1 and tunnel activation remain blocked; main and runtime-port work remain excluded — RECORDED.
 - Starting Selector tree was clean — VERIFIED.
+
+## 2026-07-21 — SEAM-G-P1 producer completion evidence
+
+- Exact feature files: new read-only IES artifact request contract and focused regression only — VERIFIED.
+- Producer schema: `controlstack.downstream.ies-artifact-request.v1`; exact intent: `ies_lm63_reference_build` — VERIFIED.
+- Final focused/gated coverage: 115 passed, 0 failed, 0 skipped, 0 todo — VERIFIED.
+- Complete request: stable Engine identities, safe technical provenance/thermal values, exact public rows, deterministic request/replay/audit identity and no-write safety state — VERIFIED.
+- Blocked request: blocked Engine output remains blocked with no selected result, rows, request/replay identity or artifact-ready state — VERIFIED.
+- Zero fixture: valid zero temperatures, current, verified lm/m and row counts remain accepted — VERIFIED.
+- Replay/idempotency: identical technical input produces byte-equivalent output and identical request/replay/audit identities — VERIFIED.
+- Governance boundary: different user, project, owner, timeline, registration and renamed eligibility envelopes produce identical output and do not appear — VERIFIED.
+- Technical movement: policy and evidence identity changes move request identity — VERIFIED.
+- Fail-closed fixtures: unknown version, extra/nested governance, private path, raw content, legacy row, row tamper, added evidence, thermal contradiction, unsafe safety state, blocked promotion and over-rich intent rejected — VERIFIED.
+- Dependency/static boundary: public Engine constants and stable fingerprint support only; no Lab/generator/scaffold import, route, network, filesystem write, clock, randomness or retired Selector output handler — VERIFIED.
+- Harness removal: gate host returned byte-identical to HEAD and remained unstaged/uncommitted — VERIFIED.
+- Lane result: exact feature push complete and tree clean; Program producer review next; SEAM-G-C1 and actual generation remain blocked — RECORDED.

@@ -413,3 +413,15 @@ This log is append-oriented. Do not silently rewrite historical decisions.
 **Acceptance lock:** Different governance envelopes cannot alter or appear in output. Changed technical identity must move request identity. Blocked Engine output cannot become artifact-ready. Unknown, over-rich, unsafe/private, contradictory, added-authority or legacy-row input fails closed. No raw IES/photometry/candela/file/path, route, persistence, email, download, generation, authority, reference mutation, Engine/donor invocation or downstream activation is permitted.
 
 **Consequence:** SEAM-G-P1 is the sole ready item. SEAM-G-C1 and Program tunnel activation remain blocked. Existing IES handoff scaffolds are not rewritten, and generic downstream artifact work remains held.
+
+## 2026-07-21 — SEAM-G-P1 accepted in the Selector lane
+
+**Decision:** Accept the pushed read-only IES artifact request producer and return its receipt to Program without activating Seam G.
+
+**Evidence:** The exact two-file feature parcel passed 115/115. The temporary gate harness was removed and its host test returned byte-identical to HEAD. The lane tree returned clean.
+
+**Contract result:** `controlstack.downstream.ies-artifact-request.v1` accepts exact stable public Engine output plus exact `ies_lm63_reference_build` intent and emits deterministic complete-or-blocked request, replay and audit identities. Complete, blocked and valid-zero fixtures passed. Different user, project, owner, timeline, registration and renamed eligibility envelope values produced identical output and remained absent. Technical policy or evidence identity changes moved the request identity.
+
+**Failure and security result:** Unknown versions, extra fields, nested governance, private paths, raw artifact content, legacy rows, row identity tamper, added caller evidence, thermal contradiction, unsafe producer flags, blocked-to-ready promotion and over-rich intent all fail closed. Blocked Engine output has no selected result, rows, request ID, replay key or artifact-ready state.
+
+**Consequence:** SEAM-G-P1 is done. No Selector button, existing IES-handoff scaffold, route, persistence, email/export/download, file, raw photometry/candela, generator, authority, reference mutation, Engine/donor invocation, RuntimeData, Lab, main or runtime-port file changed. SEAM-G-C1 remains blocked pending Program producer acceptance; actual generation remains held.

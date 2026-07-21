@@ -302,7 +302,7 @@
 ### Q-10A Deterministic IES artifact request contract
 
 * id: SEAM-G-P1
-* status: ready
+* status: done
 * depends-on: Program declaration that Seam B version 1 is stable and Program commission `docs(program): commission Seam G IES request producer`
 * gate: selector-engine
 * authorised files: new `packages/workspace-kernel/runtimeIesArtifactRequestContractV1.js`, new `tests/runtimeIesArtifactRequestContractV1.test.js`, temporary harness-only use of `tests/engineRunTableDomain.test.js`, and closeout updates to the five mutable lane context files. The harness may add exactly one side-effect import of `./runtimeIesArtifactRequestContractV1.test.js`; it must be removed, byte-identical to HEAD and absent from final staging/commit.
@@ -311,6 +311,7 @@
 * prohibitions: no Selector UI/button change, no route or endpoint, no existing IES-handoff scaffold rewrite, no Lab import/write, no RuntimeData, donor, main or runtime-port change; do not activate Seam G or actual IES generation.
 * commit message: `feat(runtime): add IES artifact request contract v1`.
 * on success next: Program producer receipt review; SEAM-G-C1 remains blocked.
+* completion: exact two-file producer pushed after 115/115. Complete, blocked, zero, replay, envelope-independence, technical-identity movement and fail-closed security fixtures passed. The temporary harness was removed and the tree returned clean. No generation, route, write or activation occurred.
 
 <!--
 Historical pre-SEL queue retained as non-operative migration provenance. It is not an active queue and confers no implementation authority.

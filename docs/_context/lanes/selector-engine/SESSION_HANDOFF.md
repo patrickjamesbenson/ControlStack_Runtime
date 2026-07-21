@@ -507,3 +507,13 @@ Emit one immutable complete-or-blocked `controlstack.downstream.ies-artifact-req
 Prove complete, blocked, valid-zero, replay-identical, envelope-independent and technical-identity-moving behavior. Reject unknown versions, extra authority, raw/private/unsafe content, contradictory identities, blocked-to-ready promotion and legacy rows.
 
 Do not add a Selector button, route, endpoint, file/export/email/download path, persistence, actual IES generation, authority state, reference mutation, Engine/donor invocation, Lab import/write, RuntimeData, main or runtime-port change. Do not rewrite the existing diagnostic IES-handoff scaffold. Return the green producer receipt to Program; SEAM-G-C1 remains blocked.
+
+## 2026-07-21 SEAM-G-P1 complete — Program producer review next
+
+The read-only IES artifact request producer is complete and pushed in the exact two-file scope. Final coverage passed 115/115 and the temporary gate harness was removed cleanly.
+
+The producer consumes exact stable public Engine output and exact `ies_lm63_reference_build` intent, then emits one immutable complete-or-blocked request with deterministic request, replay and audit identities. Valid zero values remain accepted. Technical policy/evidence changes move request identity, while different user, project, owner, timeline, registration and renamed eligibility envelopes return identical output and remain absent.
+
+Blocked Engine output remains blocked with no result, rows or artifact-ready identity. Unknown versions, extra/nested governance, private paths, raw artifact text, legacy rows, identity tamper, added caller evidence, thermal contradiction, unsafe producer state, blocked promotion and over-rich intent fail closed.
+
+No Selector UI, existing IES scaffold, route, persistence, export/email/download, file, generation, authority, reference mutation, Engine/donor invocation, Lab, RuntimeData, main or runtime-port file changed. The Selector queue is empty. Program must accept the producer receipt before commissioning the separate import-free Lab consumer; actual IES generation remains blocked.

@@ -503,3 +503,13 @@ The output is one deeply immutable complete-or-blocked `controlstack.downstream.
 Acceptance must prove deterministic replay, valid zero preservation, governance-envelope independence, technical-identity movement, blocked Engine isolation, exact schema/version and fail-closed rejection of unknown, over-rich, unsafe/private, contradictory, added-authority and legacy-row input.
 
 No Selector UI/button, existing IES handoff scaffold, route, endpoint, persistence, file, email/export/download, raw IES/photometry/candela, generator, Lab import/write, authority, reference mutation, Engine/donor invocation, RuntimeData, main or runtime-port work is authorised. SEAM-G-C1 and Program activation remain blocked.
+
+## 2026-07-21 SEAM-G-P1 producer closeout — latest controlling state
+
+SEAM-G-P1 is complete and pushed in the exact two-file feature scope. Final coverage passed 115/115, the temporary gate harness was removed, and the Selector tree returned clean.
+
+The producer emits deterministic complete-or-blocked `controlstack.downstream.ies-artifact-request.v1` requests from exact stable Engine output and exact IES intent. It preserves valid zeros, quarantines all traceability, moves identity only with technical changes and exposes deterministic audit/replay state with every generation/write capability false.
+
+The accepted regressions prove blocked Engine isolation, envelope independence and fail-closed rejection of unknown, over-rich, private/raw, contradictory, added-authority and legacy-row input. No existing IES handoff scaffold or downstream surface changed.
+
+No queue item is ready in Selector. Program producer review is the sole next boundary. SEAM-G-C1, tunnel activation, actual IES generation, routes, persistence, file/email output, main and unfinished runtime-port work remain blocked.
