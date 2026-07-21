@@ -13,7 +13,7 @@ Current repository evidence overrides stale historical statements.
 - Root: `C:\ControlStack_Worktrees\code-pilot-lab`
 - Branch: `lane/code-pilot-lab`
 - Gate: `lab-ies`
-- Recorded branch HEAD: `3aa118b5fe6af9fea8c5208eed3f96cf9439184f`
+- Recorded branch HEAD: `b3e278ba245b57e2af4613a260c1b61d1cf3fcb9`
 - Branch-HEAD guard checkpoint: `6d34e500d407d5335e5eebb317636a67a5e98618`
 - Starting HEAD for SEAM-G-C4: `b81b0eb348791bf9ab1d3b4f0e65245e2ad5250f`
 - Completed feature HEAD: `3aa118b5fe6af9fea8c5208eed3f96cf9439184f`
@@ -945,3 +945,15 @@ The final Lab gate passed 305/305. Exact source generation/replay, selection, ru
 Unknown, extra, private/raw, unsafe, mismatched, contradictory, missing-override, caller-override and non-positive/non-finite inputs fail closed. The first gate exposed two test-fixture ordering issues; both were corrected within the focused test only, with no production boundary change.
 
 No sealed DTO, resolver/storage, generator/materialise invocation, LM-63 text, project/customer metadata, route, persistence, network/file/email write or readiness capability was added. The Lab queue is empty. Program plan receipt review is next; actual generation remains blocked.
+
+## 2026-07-22 SEAM-G-C5 sealed-reference load-preflight admission
+
+Program accepted the deterministic no-generation job-plan receipt and commissioned one exact Lab-owned read-only sealed-reference load preflight.
+
+SEAM-G-C5 is the sole ready Lab item. Its exact feature scope is `iesSealedReferenceLoadPreflightV1.js` and its focused test only. It consumes exact ready materialisation-job-plan version 1, matching generation-reference-binding version 1 and matching reference-generation-inspection version 1 values plus one injected Lab-owned read-only resolver capability.
+
+The resolver may be called at most once and receives only the reference identity derived from the matched contracts. Caller paths, URLs, storage locations, provider objects and alternate reference authority are rejected. The loaded DTO must pass the existing `inspectIesReferenceForGeneration` path and exactly match the accepted identity, keyword profile, baseline, missing overrides and no-override readiness.
+
+Only a deeply immutable redacted ready-or-blocked receipt may cross the boundary; the loaded body is discarded immediately. No generator/materialise invocation, LM-63 text, routes, persistence, writes, delivery or readiness activation is authorised.
+
+No human observation is required. The expected marker and three protected untracked items remain outside the parcel. Program C5 receipt review is next; C6 generation remains blocked.

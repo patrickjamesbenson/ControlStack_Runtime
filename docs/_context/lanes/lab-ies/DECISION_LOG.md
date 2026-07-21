@@ -524,3 +524,17 @@ The only scaling authority is Engine verified lm/m divided by sealed reference b
 The exact generator job is limited to run length, the derived positive finite multiplier and an empty selections object. Caller keyword overrides, project/customer metadata, sealed DTO content, resolver/storage access, generator/materialise calls, LM-63 text, routes, persistence, writes and readiness activation remain blocked.
 
 The expected branch marker and three protected untracked items stay outside the feature parcel. Program plan receipt review is the next boundary; actual generator invocation is not authorised.
+
+## DL-038 — SEAM-G-C5 sealed-reference load preflight
+
+**Status:** Approved by Program & Integrate and admitted on 2026-07-22.
+
+Program accepted the deterministic no-generation job-plan boundary and commissioned one Lab-only read-only sealed-reference load preflight.
+
+SEAM-G-C5 consumes exact ready materialisation-job-plan version 1, matching generation-reference-binding version 1 and matching reference-generation-inspection version 1 values plus one injected Lab-owned read-only resolver capability. It derives the reference identity only from those contracts and invokes the resolver at most once.
+
+The loaded DTO must pass the existing `inspectIesReferenceForGeneration` validation path. The resulting reference identity, keyword profile, baseline, missing override inventory and materialisation-without-overrides state must exactly match the accepted contracts. The loaded body is discarded immediately after validation.
+
+Only one immutable redacted ready-or-blocked receipt may cross the boundary. Sealed DTO content, metadata, keyword values, angles, candela, provenance paths, LM-63 text, local locations and provider material remain private. Generator/materialise invocation, routes, persistence, writes, delivery and readiness activation remain blocked.
+
+The expected branch marker and three protected untracked items stay outside the feature parcel. Program C5 receipt review is next; C6 generation remains separately blocked.

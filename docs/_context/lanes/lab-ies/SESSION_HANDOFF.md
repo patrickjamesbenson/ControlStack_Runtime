@@ -396,6 +396,25 @@ Replay, immutability, identity movement, private/raw rejection, missing/caller o
 
 The expected marker and three protected local items remain untouched. The Lab queue is empty. Program plan receipt review is the next seam; actual generator invocation remains blocked.
 
+## 2026-07-22 SEAM-G-C5 ready — sealed-reference load preflight
+
+Program accepted the deterministic no-generation job plan and commissioned one exact Lab-only read-only sealed-reference load preflight.
+
+Create exactly:
+
+```text
+packages/lab-kernel/ies-toolkit/iesSealedReferenceLoadPreflightV1.js
+tests/lab-kernel/iesSealedReferenceLoadPreflightV1.test.js
+```
+
+Consume exact ready materialisation-job-plan version 1, exact matching generation-reference-binding version 1 and exact matching reference-generation-inspection version 1 values. Accept one Lab-owned read-only resolver only as an injected capability. Derive the reference identity solely from those contracts and call the resolver at most once.
+
+Validate the returned sealed DTO through the existing `inspectIesReferenceForGeneration` path. Require exact identity, keyword profile, baseline, missing override and materialisation-without-overrides equality. Emit only one deterministic immutable redacted ready-or-blocked receipt, then discard the loaded body.
+
+Reject caller paths, URLs, storage/provider objects, malformed/extra/private/raw input, resolver failure, wrong DTO and every inspection mismatch. Do not invoke the generator or materialiser, emit LM-63, add routes, persist, write, deliver or activate readiness.
+
+No human observation is required. Preserve the expected marker and three protected local items. After the feature and four-record closeout, return the receipt to Program; C6 remains blocked.
+
 ## Prohibited actions retained
 
 - no LAB-017 change outside the recorded version-1 approval without a new seam decision;

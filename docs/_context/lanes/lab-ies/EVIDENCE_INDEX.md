@@ -2046,6 +2046,19 @@ Current verification superseded the stale parts of that snapshot:
 - Protected inventory: expected marker and three protected untracked items remained untouched — VERIFIED.
 - Queue result: SEAM-G-C4 done, Lab queue empty, Program plan receipt review required — RECORDED.
 
+## SEAM-G-C5 sealed-reference load-preflight admission — 2026-07-22
+
+- Program accepted C4 and commissioned one Lab-only read-only sealed-reference load preflight — PROGRAM-APPROVED.
+- Exact feature scope: one sealed-reference loader module and one focused test only — RECORDED.
+- Inputs: exact ready job plan, matching reference binding and matching generation inspection plus one injected Lab read-only resolver — RECORDED.
+- Resolver authority: identity derived only from matched contracts; at most one resolver call; no caller path, URL, storage or provider authority — RECORDED.
+- Validation: loaded DTO must pass the existing generation-inspection path and exactly match identity, keyword profile, baseline, missing overrides and no-override readiness — RECORDED.
+- Output: deterministic immutable redacted ready-or-blocked receipt only; loaded body discarded — RECORDED.
+- Prohibitions: no sealed body, raw/private values, generator/materialise, LM-63, route, persistence, write, delivery or readiness activation — RECORDED.
+- Human observation: none required; repository contract and gate evidence are sufficient — RECORDED.
+- Protected state: expected marker and three protected untracked items remain outside the parcel — VERIFIED.
+- Queue result: SEAM-G-C5 sole ready item; C6 generation remains blocked — RECORDED.
+
 ## Evidence maintenance rule
 
 After each authorised lane parcel:

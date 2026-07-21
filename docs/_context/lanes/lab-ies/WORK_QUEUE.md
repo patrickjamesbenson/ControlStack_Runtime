@@ -939,6 +939,45 @@ Completion evidence: The existing sealed-reference generator validator was expos
 
 Completion evidence: The import-free materialisation job-plan module and focused test were committed in the exact two-file scope as `lab: checkpoint IES materialisation job plan v1`, pushed only to the Lab lane, and passed 305/305 after correcting two test-fixture ordering issues without changing the production boundary. The planner independently validates exact generation, binding and inspection public identities; derives the multiplier only from Engine verified lm/m divided by sealed baseline lm/m; preserves Selector target as intent only; emits the exact empty-selection job; and proves deterministic replay and identity movement. Unknown, extra, private/raw, unsafe, mismatched, contradictory, missing-override, caller-override and non-positive/non-finite cases fail closed. No sealed DTO, resolver/storage, generator/materialise call, LM-63 text, project/customer metadata, route, persistence, write or readiness capability was added. Program plan receipt review is next; actual generator invocation remains blocked.
 
+### Q-38 Sealed-reference load preflight
+- id: SEAM-G-C5
+- objective: Load one exact sealed reference through an injected Lab-owned read-only resolver, validate it against the accepted job plan, binding and inspection, emit one redacted receipt, then discard the loaded body.
+- authorised files:
+  - `packages/lab-kernel/ies-toolkit/iesSealedReferenceLoadPreflightV1.js`
+  - `tests/lab-kernel/iesSealedReferenceLoadPreflightV1.test.js`
+- public contracts:
+  - input `controlstack.lab.ies-materialisation-job-plan.v1`, schema version 1;
+  - input `controlstack.lab.ies-generation-reference-binding.v1`, schema version 1;
+  - input `controlstack.lab.ies-reference-generation-inspection.v1`, schema version 1;
+  - output `controlstack.lab.ies-sealed-reference-load-receipt.v1`, schema version 1.
+- resolver authority:
+  - accept exactly one injected Lab-owned read-only resolver capability;
+  - derive the reference identity only from the matched plan, binding and inspection;
+  - call the resolver at most once;
+  - reject caller paths, URLs, storage locations, provider objects and alternate reference authority.
+- ready conditions:
+  - exact ready plan, binding and inspection shapes and safety states;
+  - exact generation, selection, run, job and reference identity agreement;
+  - loaded DTO passes the existing `inspectIesReferenceForGeneration` path;
+  - exact equality for reference identity, keyword profile, baseline, missing overrides and `materialisationWithoutOverrides`.
+- output boundary:
+  - one deeply immutable deterministic ready-or-blocked redacted receipt with scalar identity, audit and safety fields only;
+  - discard the loaded sealed DTO immediately after validation;
+  - no sealed body, metadata, keyword values, angles, candela, provenance paths, LM-63 text, local location or provider material.
+- prohibitions:
+  - no generator or `materialise` invocation;
+  - no route, persistence, browser storage, network/file/email write, delivery or readiness activation;
+  - no Selector, Workspace, Runtime, Governance or donor write;
+  - preserve the expected branch marker and three protected untracked items.
+- acceptance: Exact shape/version checks; single resolver call; no caller location authority; deterministic replay; changed reference identity moves receipt identity; missing, malformed, extra, private, raw, URL/path, resolver failure, wrong DTO and inspection mismatch fail closed; loaded body never crosses the receipt boundary.
+- gate: lab-ies
+- depends on: SEAM-G-C4 done and Program approval recorded in the active sealed-reference load-preflight contract
+- seam change: approved unchanged by Program & Integrate
+- human observation: none; repository contract and gate evidence are sufficient
+- commit message: `lab: checkpoint sealed reference load preflight v1`
+- on success next: Program C5 receipt review; C6 generator invocation remains blocked
+- status: ready
+
 ## Explicitly not queued
 
 These protected paths remain outside implementation parcels unless the orchestrator makes a separate decision:
