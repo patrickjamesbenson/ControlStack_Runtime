@@ -7,18 +7,28 @@
 ## Communication rule
 Evidence lives in repository files, not chat. Patrick receives finished copy-paste
 blocks only. Reports for the advisor go to
-`docs/_context/lanes/governance-shell/REPORT_<name>.md`, uncommitted is fine.
+`docs/_context/lanes/governance-shell/REPORT_<name>.md`.
 
-## Session evidence
-Bootstrap and the deferred-decisions panel are complete. Program then issued an explicit
-written reorder commissioning the inert retrieval gateway before persistence.
+## Completed parcels
 
-The retrieval parcel is complete and pushed. Its versioned immutable view-state accepts
-only safe scalar descriptions, one approved readiness label, project-context presence,
-identity-capture presence and static discovery text. It returns no-useful-output,
-project-required, identity-required or ready-for-future-retrieval. Ready is not download
-permission. All route, file, delivery, persistence, email, CRM and Engine flags remain
-false, and the prior shell-owned browser download action is now inert. Gate: 152/152.
+Bootstrap, the deferred-decisions panel, the inert retrieval gateway and project
+persistence are complete and pushed.
 
-No parcel is ready. GOV-003 project persistence is next but requires Program seam
-approval. The local persistence-seam report is protected and was not part of this parcel.
+The retrieval gateway is versioned, immutable and fail-closed. Readiness, project
+context and identity remain separate named conditions. Ready-for-future-retrieval is
+not permission to download or deliver. The prior shell-owned browser download action
+is inert. Retrieval gate: 152/152.
+
+Project persistence uses canonical `workspace_saved_project.v2` records, one
+server-authoritative JSON file per stable project, atomic replacement, bounded save and
+read operations, server-first browser caching, explicit migration and non-destructive
+rollback. Fixture identities are excluded; passive CRM identifiers do not call a
+provider; malformed data cannot block shell boot or Engine execution. Persistence gate:
+175/175.
+
+## Current queue
+
+GOV-005 user identity and permissions is the sole ready parcel. Restore the donor
+identity/permission shape with NVB-first lookup order. Identity must not become an
+Engine precondition or alter technical readiness. Two-factor authentication remains
+deferred and all CRM mutation remains held.

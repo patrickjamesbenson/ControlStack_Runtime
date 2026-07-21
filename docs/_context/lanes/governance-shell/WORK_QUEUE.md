@@ -25,13 +25,15 @@
   unresolved; no action, persistence, CRM, retrieval or Engine behaviour was added.
 
 ### GOV-003 Project persistence restoration (Work Shape item 4)
-* status: blocked (next parcel; requires Program seam decision)
+* status: done (2026-07-22; Program seam approved)
 * objective: execute `BRIEF_PROJECT_RESTORATION.md` — durable persistence (donor
   pattern: one JSON file per envelope, atomic writes, load on boot), real project
   identity replacing PROJECT_FIXTURES, nullable HubSpot link fields restored.
-* first action: Program reviews the prepared persistence seam proposal covering schema
-  `workspace_saved_project.v2`, storage location, identity rules, migration and rollback.
-  The brief is the proposed contract; do not implement before Program admits it.
+* closeout: canonical `workspace_saved_project.v2` records, server-authoritative
+  one-file-per-project storage, atomic replacement, bounded save/read routes,
+  browser cache after server success, explicit migration and rollback landed. Fixture
+  truth is absent; passive CRM identifiers round-trip without provider activity;
+  malformed records and unsafe identities fail closed. Fixed lane gate passed 175/175.
 
 ### GOV-004 / Program GOV-001 — Inert single data retrieval point (Work Shape items 3 + 10)
 * status: done (2026-07-21; explicit Program reorder)
@@ -47,7 +49,7 @@
   download path; all future retrieval terminates through Governance.
 
 ### GOV-005 User module (Work Shape item 6)
-* status: blocked (depends-on: GOV-003 project persistence)
+* status: ready (sole ready parcel; GOV-003 complete)
 * objective: restore the donor identity/permissions shape (roles external_user /
   internal_user / internal_engineer / developer; permissions block). Lookup order is
   NVB FIRST, then HubSpot — never reversed. NVB decides view and access; HubSpot

@@ -10,6 +10,26 @@
 - The standing acceptance lock remains binding: envelope independence including no-envelope execution, changed-optic movement, varied-row movement for placeholder rows and ownership-wide assertions.
 - No direct download, export, delivery or CRM mutation is activated by lane provisioning.
 
+## Retrieval gateway evidence
+
+- Governance owns one versioned immutable retrieval view-state contract.
+- Readiness, project context and identity remain separately named conditions.
+- Four deterministic states are covered: no useful output, project required, identity required and ready for future retrieval.
+- Ready is not permission; routes, download, delivery, filesystem, persistence, email, CRM and Engine invocation remain disabled.
+- The former shell-owned browser download action is inert and returns no callable action.
+- Fixed Governance gate: 152/152.
+
+## Project persistence evidence
+
+- Canonical persisted schema is `workspace_saved_project.v2`; runtime records require an explicit adapter.
+- Server JSON is authoritative, one file per stable project, with sibling temporary write and atomic replacement.
+- Browser cache writes occur only after server success; rollback mode performs no server or cache work.
+- Fixture identities, unsafe ids, traversal, malformed records, provider-shaped records and path/URL values fail closed.
+- Passive HubSpot contact, company and deal identifiers round-trip without provider activity.
+- Explicit migration is idempotent and retains legacy backups.
+- Engine execution and deterministic output remain independent of project persistence.
+- Fixed Governance gate: 175/175.
+
 ## GOV-001 bootstrap closeout
 
 - Reconciled actual branch HEAD:

@@ -10,7 +10,8 @@
 - Write scope: this worktree only; context writes limited to
   `docs/_context/lanes/governance-shell/`
 - Recorded retrieval feature checkpoint: `408eaeced381dfb5ab49b5420b41a4b957698375`
-- Tree after feature push: clean except one protected untracked persistence-seam report
+- Recorded persistence feature checkpoint: `a8de2049cfda57f1413ec3bb193fe42e235e7be6`
+- Tree before persistence documentation closeout: one queue edit and one lane report
 
 ## Boundary (fixed by Program's Boundary Ruling)
 This lane is the OUTSIDE layer: identity, project, permissions, retrieval, deferral
@@ -18,9 +19,9 @@ visibility. It shapes menus; it never blocks the kitchen. The Engine's contract 
 set of selections and nothing else — this lane never adds to it.
 
 ## Queue state
-See `WORK_QUEUE.md`. Bootstrap, deferred decisions and the Program-commissioned inert
-retrieval gateway are complete. No parcel is ready. GOV-003 project persistence is next
-but remains blocked until Program admits its seam contract; user identity follows it.
+See `WORK_QUEUE.md`. Bootstrap, deferred decisions, inert retrieval and project
+persistence are complete. GOV-005 user identity and permissions is the sole ready
+parcel. CRM mutation remains held and two-factor authentication remains deferred.
 
 ## Evidence
 - Bootstrap and deferred-decisions closeouts remain intact.
@@ -30,5 +31,7 @@ but remains blocked until Program admits its seam contract; user identity follow
 - The prior shell-owned browser download action is inactive: no source resolution,
   materialisation, object URL or callable action remains on the shell path.
 - The fixed `governance-shell` gate passed 152/152 for the retrieval feature.
-- One untracked persistence-seam report from another workflow remains protected and was
-  not staged, modified, committed or pushed by this parcel.
+- Project persistence now uses canonical versioned records, server-authoritative JSON,
+  atomic replacement, bounded routes, server-first browser caching and explicit
+  migration/rollback without fixture truth, provider calls or Engine coupling.
+- The fixed `governance-shell` gate passed 175/175 after persistence implementation.
