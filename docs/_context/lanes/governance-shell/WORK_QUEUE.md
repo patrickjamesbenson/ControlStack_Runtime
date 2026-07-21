@@ -25,27 +25,29 @@
   unresolved; no action, persistence, CRM, retrieval or Engine behaviour was added.
 
 ### GOV-003 Project persistence restoration (Work Shape item 4)
-* status: blocked (depends-on: GOV-002 + Program seam decision)
+* status: blocked (next parcel; requires Program seam decision)
 * objective: execute `BRIEF_PROJECT_RESTORATION.md` — durable persistence (donor
   pattern: one JSON file per envelope, atomic writes, load on boot), real project
   identity replacing PROJECT_FIXTURES, nullable HubSpot link fields restored.
-* first action: submit the seam decision request to Program (schema
-  workspace_saved_project.v2, storage location, identity rules, migration, rollback).
-  The brief is the proposed contract; do not implement before the decision.
+* first action: Program reviews the prepared persistence seam proposal covering schema
+  `workspace_saved_project.v2`, storage location, identity rules, migration and rollback.
+  The brief is the proposed contract; do not implement before Program admits it.
 
-### GOV-004 Single data retrieval point (Work Shape items 3 + 10)
-* status: blocked (depends-on: GOV-001 + GOV-002; only explicit written Program
-  reorder may change this)
-* objective: one page every module's downloads pass through, opening after the Engine
-  has run. Readiness and Identity as two separately named conditions. Loose validation
-  by ruling ("bogus is fine, it's a net"). Discovery list of other modules' outputs.
-  Internal stakeholder-coverage view. UI truth: the retrieval view in
-  `MOCKUP_PROJECT_SHELL.html`.
-* constraint (item 10, applies to everyone now): no module grows its own download
-  path. Program communicates this to Selector & Engine; this lane builds the gateway.
+### GOV-004 / Program GOV-001 — Inert single data retrieval point (Work Shape items 3 + 10)
+* status: done (2026-07-21; explicit Program reorder)
+* objective: one canonical Governance-owned retrieval view-state with readiness and
+  identity as separately named conditions, static discovery descriptions and no live
+  cross-module read.
+* closeout: versioned immutable contract returns no-useful-output, project-required,
+  identity-required and ready-for-future-retrieval states. Ready is not permission:
+  download, delivery, routes, filesystem, persistence, email, CRM and Engine invocation
+  remain false. The prior shell-owned browser download action is now permanently inert;
+  preview surfaces remain read-only. Fixed lane gate passed 152/152.
+* constraint (item 10, applies to everyone now): no module grows its own outward
+  download path; all future retrieval terminates through Governance.
 
 ### GOV-005 User module (Work Shape item 6)
-* status: blocked (depends-on: GOV-004)
+* status: blocked (depends-on: GOV-003 project persistence)
 * objective: restore the donor identity/permissions shape (roles external_user /
   internal_user / internal_engineer / developer; permissions block). Lookup order is
   NVB FIRST, then HubSpot — never reversed. NVB decides view and access; HubSpot

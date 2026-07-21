@@ -31,4 +31,23 @@
 - Focused ownership tests prove the panel has no action, persistence, provider, CRM,
   retrieval or Engine path.
 - The fixed `governance-shell` gate passed on 2026-07-21.
-- GOV-004 retrieval work was not promoted and remains blocked.
+- GOV-004 retrieval work was not promoted in that parcel.
+
+## Program GOV-001 / lane GOV-004 retrieval closeout
+
+- Program issued an explicit written reorder placing the inert retrieval gateway before
+  project persistence.
+- Added one versioned immutable Governance-owned gateway view-state with strict scalar
+  input fields and static discovery descriptions.
+- Readiness, project context and identity are separately named and independently tested.
+- Deterministic states are: no useful output, project required, identity required and
+  ready for future retrieval.
+- Ready for future retrieval does not grant retrieval, download or delivery permission.
+- Unknown, extra, nested, private, raw, URL, blob, traceability-envelope and
+  provider-shaped input is rejected.
+- The active shell path no longer resolves module download sources, materialises IES,
+  creates object URLs or retains a callable prepared action.
+- Existing manifest and detail previews remain read-only and redacted.
+- The fixed `governance-shell` gate passed 152/152; the exact feature set was committed
+  and pushed.
+- The unrelated local persistence-seam report remained untracked and untouched.

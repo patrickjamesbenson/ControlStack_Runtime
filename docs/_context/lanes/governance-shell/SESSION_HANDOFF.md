@@ -10,8 +10,15 @@ blocks only. Reports for the advisor go to
 `docs/_context/lanes/governance-shell/REPORT_<name>.md`, uncommitted is fine.
 
 ## Session evidence
-GOV-001 and GOV-002 completed on 2026-07-21. The deferred-decisions registry is
-versioned, static and visible in the developer context inspector; its five entries
-include named owners, reasons and citations, and both OPEN decisions remain unresolved.
-The fixed lane gate is green. No later parcel is ready: GOV-003 awaits a Program seam
-decision and GOV-004 remains blocked behind the queue unless Program explicitly reorders it.
+Bootstrap and the deferred-decisions panel are complete. Program then issued an explicit
+written reorder commissioning the inert retrieval gateway before persistence.
+
+The retrieval parcel is complete and pushed. Its versioned immutable view-state accepts
+only safe scalar descriptions, one approved readiness label, project-context presence,
+identity-capture presence and static discovery text. It returns no-useful-output,
+project-required, identity-required or ready-for-future-retrieval. Ready is not download
+permission. All route, file, delivery, persistence, email, CRM and Engine flags remain
+false, and the prior shell-owned browser download action is now inert. Gate: 152/152.
+
+No parcel is ready. GOV-003 project persistence is next but requires Program seam
+approval. The local persistence-seam report is protected and was not part of this parcel.
