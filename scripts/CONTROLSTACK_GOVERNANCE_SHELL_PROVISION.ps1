@@ -51,7 +51,7 @@ function Resolve-BootstrapFile {
   param(
     [Parameter(Mandatory = $true)][string]$CanonicalName,
     [Parameter(Mandatory = $true)][string[]]$Aliases,
-    [Parameter(Mandatory = $true)][System.Collections.Generic.HashSet[string]]$UsedPaths
+    [Parameter(Mandatory = $true)][AllowEmptyCollection()][System.Collections.Generic.HashSet[string]]$UsedPaths
   )
 
   $aliasMatches = @()

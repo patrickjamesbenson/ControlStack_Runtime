@@ -641,6 +641,7 @@ test("Governance lane provisioner is fixed, idempotent and cannot overwrite dive
   assert.match(provisioner, /Get-FileHash/);
   assert.match(provisioner, /DECISIONS\.md/);
   assert.match(provisioner, /Resolve-BootstrapFile/);
+  assert.match(provisioner, /AllowEmptyCollection/);
   assert.match(provisioner, /could not uniquely identify/);
   assert.match(provisioner, /\$FoundingFiles\.Keys/);
   assert.match(provisioner, /governance_shell_lane_gate\.py/);
