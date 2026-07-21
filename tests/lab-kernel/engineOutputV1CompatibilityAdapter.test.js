@@ -311,8 +311,10 @@ test("preserves valid zero technical values rather than treating them as missing
     opticThermalRiseTaC: 0,
     derivedInternalTaC: 0,
     curveLookupTaC: 0,
-    effectiveCurveTaC: 0,
+    effectiveCurveTaC: 25,
+    temperatureMode: "clamped-low",
     requestedCurrentMa: 0,
+    currentMode: "clamped-low",
     verifiedLmPerM: 0,
   });
   input.runTable.rows[0] = row(identities(), {
@@ -395,6 +397,29 @@ test("fails closed on unknown, over-rich, unsafe, contradictory and legacy input
   assertCompatibilityBlocked(
     contract.adaptEngineOutputV1Compatibility(thermalMismatch),
     "thermal_provenance_mismatch",
+  );
+
+  const referenceEquationMismatch = completeOutput();
+  referenceEquationMismatch.selectedResult.thermal.referenceInternalTaC = 36;
+  assertCompatibilityBlocked(
+    contract.adaptEngineOutputV1Compatibility(referenceEquationMismatch),
+    "thermal_lookup_identity_mismatch",
+  );
+
+  const derivedEquationMismatch = completeOutput();
+  derivedEquationMismatch.selectedResult.thermal.derivedInternalTaC = 36;
+  derivedEquationMismatch.selectedResult.thermal.curveLookupTaC = 36;
+  derivedEquationMismatch.selectedResult.thermal.effectiveCurveTaC = 36;
+  assertCompatibilityBlocked(
+    contract.adaptEngineOutputV1Compatibility(derivedEquationMismatch),
+    "thermal_lookup_identity_mismatch",
+  );
+
+  const modeMismatch = completeOutput();
+  modeMismatch.selectedResult.thermal.temperatureMode = "guessed";
+  assertCompatibilityBlocked(
+    contract.adaptEngineOutputV1Compatibility(modeMismatch),
+    "thermal_mode_unsupported",
   );
 
   const unsafeSafety = completeOutput();

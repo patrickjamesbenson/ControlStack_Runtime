@@ -257,6 +257,14 @@ function nonNegativeInteger(value) {
   return Number.isSafeInteger(value) && value >= 0 ? value : null;
 }
 
+function exactAdd(leftValue, rightValue) {
+  const left = finiteNumber(leftValue);
+  const right = finiteNumber(rightValue);
+  if (left === null || right === null) return null;
+  const total = left + right;
+  return Number.isFinite(total) ? (Object.is(total, -0) ? 0 : total) : null;
+}
+
 function canonicalBlocker(value) {
   return typeof value === "string" && BLOCKER_PATTERN.test(value)
     ? value
@@ -279,7 +287,7 @@ function canonicalStringArray(value, { minimum = 0, maximum = 64, blockerCodes =
   return output;
 }
 
-function fingerprintArray(value, { minimum = 0, maximum = 8 } = {}) {
+function fingerprintArray(value, { minimum = 0, maximum = 1 } = {}) {
   if (!Array.isArray(value) || value.length < minimum || value.length > maximum) return null;
   const output = [];
   const seen = new Set();
@@ -443,8 +451,22 @@ function validateThermal(value, provenance, sourceVersionMarker) {
   if (output.requestedCurrentMa < 0 || output.verifiedLmPerM < 0) {
     return { ok: false, blocker: "thermal_non_negative_value_required" };
   }
-  if (output.curveLookupTaC !== output.derivedInternalTaC) {
+  if (
+    exactAdd(output.referenceRoomTaC, output.opticThermalRiseTaC) !== output.referenceInternalTaC
+    || exactAdd(output.selectedRoomTaC, output.opticThermalRiseTaC) !== output.derivedInternalTaC
+    || output.curveLookupTaC !== output.derivedInternalTaC
+  ) {
     return { ok: false, blocker: "thermal_lookup_identity_mismatch" };
+  }
+  if (!TEMPERATURE_MODES.has(output.temperatureMode) || !CURRENT_MODES.has(output.currentMode)) {
+    return { ok: false, blocker: "thermal_mode_unsupported" };
+  }
+  if (
+    (output.temperatureMode === "clamped-low" && output.effectiveCurveTaC !== 25)
+    || (output.temperatureMode === "clamped-high" && output.effectiveCurveTaC !== 65)
+    || (output.temperatureMode === "interpolated" && output.effectiveCurveTaC !== output.curveLookupTaC)
+  ) {
+    return { ok: false, blocker: "thermal_effective_temperature_mismatch" };
   }
   if (
     output.selectedOpticKey !== provenance.selectedOpticKey
