@@ -590,4 +590,15 @@ P2 Checkpoint 1 is **IMPLEMENTATION COMPLETE / GATE GREEN / COMMIT BLOCKED BY SH
 - **SEAM G:** C4 remains ready in Lab in parallel; no direct Lab/Selector delivery path is permitted.
 - **STANDING TESTS:** envelope variation plus no-envelope execution, changed-optic movement, varied placeholder row, and ownership-wide assertions are binding.
 - **SOURCE RECORD:** `PROGRAM_WORK_SHAPE.md` retained unchanged with the Program ruling recorded separately.
-- **NEXT:** Selector reconciles PWS-001 to ready; Program defines the bounded Governance lane-provisioning parcel; Lab may continue C4. Patrick has no action.
+- **NEXT:** Selector PWS-001 remains ready; Governance host activation uses the fixed provisioner; Lab may continue C4.
+
+## 2026-07-21 Governance infrastructure implementation state
+
+- **REPOSITORY:** Deployment v2 now defines five worktrees and nine managed services.
+- **MCP:** Governance & Shell has a dedicated local MCP identity, branch guard, gate and conservative write globs.
+- **GATE:** fixed reviewed governance/shell test discovery; exact worktree and branch required; no arbitrary command.
+- **PROVISIONER:** fixed and idempotent; copies exactly six canonical founding records, refuses divergent overwrite, gates, commits, pushes, installs and verifies service health.
+- **TESTS:** Program infrastructure gate passed 48/48.
+- **LAB:** the staged C4 feature and protected local items remain untouched; fixture reconciliation is paused, not discarded.
+- **ACTIVATION:** one local execution is required because the connected lane cannot create a sibling Git worktree or reload Windows services.
+- **NEXT:** run the fixed provisioner, then verify the new lane is clean, on its required branch and ready/managed. No design decision remains.

@@ -40,6 +40,8 @@ const managerPath = path.join(deploymentRoot, "controlstack_lane_manager.mjs");
 const hostPath = path.join(deploymentRoot, "controlstack_service_host.mjs");
 const secretPath = path.join(deploymentRoot, "controlstack_secret_store.mjs");
 const uiPath = path.join(deploymentRoot, "controlstack_manager_ui.html");
+const governanceProvisionerPath = path.join(repoRoot, "scripts", "CONTROLSTACK_GOVERNANCE_SHELL_PROVISION.ps1");
+const governanceGatePath = path.join(repoRoot, "scripts", "governance_shell_lane_gate.py");
 
 async function listen(server) {
   await new Promise((resolve, reject) => {
@@ -79,11 +81,11 @@ function listenerSnapshot(manifest, selectorProcessId) {
   }));
 }
 
-test("deployment manifest defines the accepted eight-service topology and canonical 8788 shell", () => {
+test("deployment manifest defines the accepted nine-service topology and canonical 8788 shell", () => {
   const manifest = loadAndValidateManifest(manifestPath);
-  assert.equal(manifest.services.length, 8);
-  assert.equal(manifest.worktrees.length, 4);
-  assert.deepEqual(manifest.services.map((item) => item.port).sort((a, b) => a - b), [8000, 8021, 8022, 8080, 8081, 8082, 8788, 8899]);
+  assert.equal(manifest.services.length, 9);
+  assert.equal(manifest.worktrees.length, 5);
+  assert.deepEqual(manifest.services.map((item) => item.port).sort((a, b) => a - b), [8000, 8021, 8022, 8023, 8080, 8081, 8082, 8788, 8899]);
   assert.equal(manifest.services.filter((item) => item.credential === "control-plane-api-key").length, 3);
   assert.equal(manifest.services.some((item) => item.port === 8787), false);
   assert.equal(JSON.stringify(manifest).includes("8787"), false);
@@ -130,6 +132,47 @@ test("Selector MCP write guard appends only the approved exact Selector summary 
   assert.deepEqual(configuredGlobs.filter((item) => item.startsWith("packages/modules/")), [exactFile]);
 });
 
+test("Governance MCP is isolated to shell, persistence, identity and lane-owned tests", () => {
+  const manifest = loadAndValidateManifest(manifestPath);
+  const governance = manifest.services.find((item) => item.id === "governance-mcp");
+  const worktree = manifest.worktrees.find((item) => item.branch === "lane/governance-shell");
+  assert.deepEqual(worktree, {
+    root: "C:\\ControlStack_Worktrees\\governance-shell",
+    branch: "lane/governance-shell",
+  });
+  assert.equal(governance.port, 8023);
+  assert.equal(governance.env.CONTROLSTACK_RUNTIME_ROOT, "C:\\ControlStack_Worktrees\\governance-shell");
+  assert.equal(governance.env.CONTROLSTACK_LANE_NAME, "governance-shell");
+  assert.equal(governance.env.CONTROLSTACK_REQUIRED_BRANCH, "lane/governance-shell");
+  assert.equal(governance.env.CONTROLSTACK_ALLOWED_GATES, "governance-shell");
+  assert.equal(
+    governance.env.CONTROLSTACK_GATE_RUNNER,
+    "C:\\ControlStack_Worktrees\\governance-shell\\scripts\\governance_shell_lane_gate.py",
+  );
+  const configuredGlobs = governance.env.CONTROLSTACK_ALLOWED_WRITE_GLOBS.split(";");
+  assert.deepEqual(configuredGlobs, [
+    "apps/workspace-shell/**",
+    "packages/workspace-kernel/savedProjectStore.js",
+    "packages/workspace-kernel/projectService.js",
+    "packages/workspace-kernel/identityService.js",
+    "packages/workspace-kernel/governance/**",
+    "server.js",
+    "tests/runtimeShell*.test.js",
+    "tests/runtimeProjectBrowser*.test.js",
+    "tests/runtimeGovernance*.test.js",
+    "tests/governance*.test.js",
+    "docs/governance/**",
+    "docs/_context/lanes/governance-shell/**",
+    "package.json",
+    "package-lock.json",
+  ]);
+  assert.equal(configuredGlobs.includes("packages/workspace-kernel/**"), false);
+  assert.equal(configuredGlobs.includes("packages/modules/**"), false);
+  assert.equal(configuredGlobs.some((item) => /cs-selector|lab-kernel|runtime-web/.test(item)), false);
+  assert.equal(governance.env.CONTROLSTACK_ENABLE_DESTRUCTIVE, "0");
+  assert.equal(governance.env.CONTROLSTACK_ENABLE_CROSS_ROOT_COPY, "0");
+});
+
 test("Logo.dev configuration is allowlisted, external and selector-runtime only", () => {
   const manifest = loadAndValidateManifest(manifestPath);
   assert.equal(manifest.protectedEnvironment.length, 1);
@@ -171,7 +214,7 @@ test("BAT parser rejects missing, duplicate, malformed and wrong-case Logo.dev a
 
 test("service host accepts the manifest and removes Logo.dev from non-selector child environments", () => {
   const manifest = loadManifest(manifestPath);
-  assert.equal(manifest.services.length, 8);
+  assert.equal(manifest.services.length, 9);
   const host = readFileSync(hostPath, "utf8");
   assert.match(host, /delete childEnv\[LOGODEV_VARIABLE\]/);
   assert.match(host, /protectedEnvironmentFor\(manifest, service\)/);
@@ -252,7 +295,7 @@ test("control UI liveness is available before managed-service readiness", async 
   }
 });
 
-test("readiness probing tolerates a slow final topology scan and preserves all eight services", async () => {
+test("readiness probing tolerates a slow final topology scan and preserves all nine services", async () => {
   const sourceManifest = loadAndValidateManifest(manifestPath);
   const readiness = createManagerReadinessState();
   readiness.state = "ready";
@@ -279,7 +322,7 @@ test("readiness probing tolerates a slow final topology scan and preserves all e
       statusTimeoutMs: 1000,
       statusRetryDelayMs: 10,
     });
-    assert.equal(payload.services.length, 8);
+    assert.equal(payload.services.length, 9);
     assert.deepEqual(payload.services.map((service) => service.id), sourceManifest.services.map((service) => service.id));
     assert.equal(validateServiceTopology(payload, manifest), payload);
   } finally {
@@ -490,7 +533,7 @@ test("live validation reuses the slow-tolerant control probe and validates Selec
       request,
       processIdentity: () => selectorProcessIdentity(selector, 4200),
     });
-    assert.equal(live.statusPayload.services.length, 8);
+    assert.equal(live.statusPayload.services.length, 9);
     assert.equal(live.runtime.response.statusCode, 200);
     assert.equal(live.workspace.statusCode, 200);
   } finally {
@@ -585,6 +628,30 @@ test("resolved manager readiness detaches child error and exit handlers", async 
   child.emit("exit", 1);
 });
 
+test("Governance lane provisioner is fixed, idempotent and cannot overwrite divergent founding records", () => {
+  const provisioner = readFileSync(governanceProvisionerPath, "utf8");
+  const gate = readFileSync(governanceGatePath, "utf8");
+  for (const name of [
+    "LANE_CHARTER.md", "LANE_STATE.md", "WORK_QUEUE.md",
+    "DECISION_LOG.md", "EVIDENCE_INDEX.md", "SESSION_HANDOFF.md",
+  ]) assert.match(provisioner, new RegExp(name.replace(".", "\\.")));
+  assert.match(provisioner, /C:\\ControlStack_Worktrees\\governance-shell-bootstrap/);
+  assert.match(provisioner, /lane\/governance-shell/);
+  assert.match(provisioner, /worktree', 'add'/);
+  assert.match(provisioner, /Get-FileHash/);
+  assert.match(provisioner, /governance_shell_lane_gate\.py/);
+  assert.match(provisioner, /CONTROLSTACK_DEPLOYMENT_V2_INSTALL\.mjs/);
+  assert.match(provisioner, /governance-mcp/);
+  assert.doesNotMatch(provisioner, /Remove-Item|git\.exe[^\n]*(?:reset|clean)|--force-with-lease/i);
+
+  assert.match(gate, /GATE_NAME = "governance-shell"/);
+  assert.match(gate, /REQUIRED_BRANCH = "lane\/governance-shell"/);
+  assert.match(gate, /tests\/runtimeShell\*\.test\.js/);
+  assert.match(gate, /tests\/runtimeProjectBrowser\*\.test\.js/);
+  assert.match(gate, /shell=False/);
+  assert.doesNotMatch(gate, /shell=True|os\.system|eval\(|exec\(/);
+});
+
 test("installer, manager and service host self-tests pass without starting Windows services", () => {
   const installer = spawnSync(process.execPath, [installerPath, "--self-test"], { encoding: "utf8" });
   assert.equal(installer.status, 0, installer.stderr);
@@ -596,7 +663,7 @@ test("installer, manager and service host self-tests pass without starting Windo
 
   const host = spawnSync(process.execPath, [hostPath, "--self-test"], { encoding: "utf8" });
   assert.equal(host.status, 0, host.stderr);
-  assert.match(host.stdout, /8 services/);
+  assert.match(host.stdout, /9 services/);
 });
 
 test("Windows consolidation launcher preserves the complete console result", () => {
@@ -612,7 +679,7 @@ test("installer performs one idempotent consolidation operation and restarts onl
   const installer = readFileSync(installerPath, "utf8");
   assert.match(installer, /--consolidate/);
   assert.match(installer, /storeLogoDevSecret/);
-  assert.match(installer, /restartSelectorRuntimeOnly\(manifest, installed\.installedManager, beforeListeners\)/);
+  assert.match(installer, /restartSelectorRuntimeOnly\(manifest, installed\.installedManager, afterActivation\)/);
   assert.match(installer, /runAction\(installedManager, "restart", "selector-runtime"\)/);
   assert.match(installer, /waitForSelectorRuntimeReady/);
   assert.match(installer, /assertOnlySelectorRestarted/);
@@ -636,7 +703,7 @@ test("installer performs one idempotent consolidation operation and restarts onl
   assert.match(installer, /controlstack-manager-ui\.log/);
   assert.match(installer, /stdio: \["ignore", managerLogHandle, managerLogHandle\]/);
   assert.match(installer, /Validating Windows host and user/);
-  assert.match(installer, /Checking that all eight managed service ports are listening/);
+  assert.match(installer, /Checking that every previously installed managed service is listening/);
   assert.match(installer, /Missing listener ports:/);
   assert.match(installer, /timeout: 30000/);
   assert.match(installer, /CONTROLSTACK PROGRAM SHELL V2: FAILED/);

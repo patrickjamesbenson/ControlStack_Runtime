@@ -85,9 +85,9 @@ Sealed DTO loading, generator invocation, LM-63 generation, delivery, main and u
 
 - **Selector & Engine:** PWS-001 ready; PWS-002 and PWS-005 admitted in order and blocked behind the preceding closeout.
 - **Lab & IES:** SEAM-G-C4 remains ready and may proceed in parallel.
-- **Governance & Shell:** lane approved; feature work waits for a separately scoped worktree/service/gate provisioning parcel.
+- **Governance & Shell:** repository infrastructure complete and green; one fixed local provisioner execution creates the worktree, founding checkpoint and managed MCP service.
 - **CRM:** no separate lane yet; item 7 remains blocked inside Governance.
 - **Retrieval rule:** all module downloads/exports/artifact delivery must use one Governance gateway; readiness and identity are separate checks.
 - **Standing tests:** no-envelope and changed-envelope Engine independence, changed-optic movement, varied placeholder row, and ownership-wide assertions remain mandatory.
 
-No direct module download path, provider push from Selector, main work or runtime-port mixing is authorised. Patrick has no action.
+No direct module download path, provider push from Selector, main work or runtime-port mixing is authorised. Patrick must run the fixed Governance provisioner once; no manual design or file selection is required.

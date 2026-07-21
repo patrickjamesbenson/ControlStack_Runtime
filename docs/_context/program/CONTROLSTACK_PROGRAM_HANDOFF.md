@@ -848,4 +848,12 @@ Item 10 is binding immediately: no module-owned download/export/artifact-deliver
 
 Keep all standing tests: changed/absent traceability envelope independence; changed-optic thermal movement; varied-row movement wherever placeholder lookup values are identical; and ownership-wide tests instead of named-instance assertions.
 
-Lab C4 and Selector PWS-001 may run in parallel because they use separate worktrees. No second Selector writer is authorised. Patrick has no action.
+Lab C4 and Selector PWS-001 may run in parallel because they use separate worktrees. No second Selector writer is authorised.
+
+### Governance lane activation handoff
+
+The repository-side infrastructure is implemented and green. Deployment v2 now knows the Governance worktree and scoped MCP service; the lane has a fixed gate and an idempotent provisioner.
+
+Run the provisioner once on Patrick's Windows host. It verifies the clean Program branch, creates or validates the Governance worktree and branch, copies exactly the six bootstrap records into the canonical context, refuses differing existing files, gates the lane, commits and pushes the founding checkpoint, reloads Deployment v2 and verifies the Governance MCP as healthy and managed.
+
+Do not manually copy individual files, create an alternate branch name, widen write globs, add a tunnel, or touch the staged Lab C4 files during activation. After successful activation, Governance may begin from its canonical queue; Lab fixture reconciliation resumes separately.

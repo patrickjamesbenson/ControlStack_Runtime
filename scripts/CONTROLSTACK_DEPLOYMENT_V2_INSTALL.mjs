@@ -108,8 +108,8 @@ function safeReadText(file, maxBytes = 512 * 1024) {
 export function loadAndValidateManifest(file = sourceManifest) {
   const manifest = JSON.parse(readFileSync(file, "utf8"));
   if (manifest.schema !== "controlstack-deployment-v2/1") throw new Error("Unexpected deployment schema.");
-  if (!Array.isArray(manifest.worktrees) || manifest.worktrees.length !== 4) throw new Error("Exactly four worktree identities are required.");
-  if (!Array.isArray(manifest.services) || manifest.services.length !== 8) throw new Error("Exactly eight services are required.");
+  if (!Array.isArray(manifest.worktrees) || manifest.worktrees.length !== 5) throw new Error("Exactly five worktree identities are required.");
+  if (!Array.isArray(manifest.services) || manifest.services.length !== 9) throw new Error("Exactly nine services are required.");
   if (!manifest.controlUi || manifest.controlUi.host !== "127.0.0.1" || !Number.isInteger(manifest.controlUi.port)) {
     throw new Error("A loopback Deployment v2 control UI is required.");
   }
@@ -154,6 +154,17 @@ export function loadAndValidateManifest(file = sourceManifest) {
     ports.add(service.port);
   }
   if (!ids.has("selector-runtime")) throw new Error("The selector-runtime service is missing.");
+  const governance = manifest.services.find((service) => service.id === "governance-mcp");
+  if (
+    !governance || governance.port !== 8023
+    || governance.env?.CONTROLSTACK_RUNTIME_ROOT !== "C:\\ControlStack_Worktrees\\governance-shell"
+    || governance.env?.CONTROLSTACK_LANE_NAME !== "governance-shell"
+    || governance.env?.CONTROLSTACK_REQUIRED_BRANCH !== "lane/governance-shell"
+    || governance.env?.CONTROLSTACK_ALLOWED_GATES !== "governance-shell"
+    || governance.env?.CONTROLSTACK_GATE_RUNNER !== "C:\\ControlStack_Worktrees\\governance-shell\\scripts\\governance_shell_lane_gate.py"
+  ) {
+    throw new Error("The Governance & Shell MCP identity is invalid.");
+  }
   if (JSON.stringify(manifest).includes("8787")) throw new Error("Port 8787 must not be required by Deployment v2.");
   return manifest;
 }
@@ -187,6 +198,7 @@ function assertFeatureWorktreesUnchanged(before, after) {
   for (const requiredRoot of [
     "C:\\ControlStack_Worktrees\\selector-engine",
     "C:\\ControlStack_Worktrees\\code-pilot-lab",
+    "C:\\ControlStack_Worktrees\\governance-shell",
   ]) {
     const left = before.find((item) => normaliseWindows(item.root) === normaliseWindows(requiredRoot));
     const right = after.find((item) => normaliseWindows(item.root) === normaliseWindows(requiredRoot));
@@ -686,7 +698,7 @@ async function waitForReadyz(baseUrl, timeoutMs, { request = httpRequest, wait =
 }
 
 export function validateServiceTopology(payload, manifest) {
-  if (!payload?.ok || !Array.isArray(payload.services) || payload.services.length !== 8) {
+  if (!payload?.ok || !Array.isArray(payload.services) || payload.services.length !== manifest.services.length) {
     throw new Error("The Deployment v2 control API returned an invalid service topology.");
   }
   const expected = new Map(manifest.services.map((service) => [service.id, service]));
@@ -1158,9 +1170,9 @@ async function verifyConsolidation(manifest) {
   if (!managerListenerMatches(listener, installedManager)) throw new Error("The installed Deployment v2 manager does not own the control UI port.");
   const payload = await probeControlUiReadiness(manifest);
   if (!payload.services.every((service) => service.healthy && service.managed)) {
-    throw new Error("Not all eight Deployment v2 services are healthy and managed.");
+    throw new Error("Not all configured Deployment v2 services are healthy and managed.");
   }
-  progress("Verifying all eight configured listener ports");
+  progress("Verifying all configured listener ports");
   const activeListeners = listeners(manifest.services.map((service) => service.port));
   if (activeListeners.length !== manifest.services.length) throw new Error("One or more configured Deployment v2 service ports are not listening.");
   progress("Verifying the canonical 8788 workspace and Logo.dev configured state");
@@ -1181,7 +1193,7 @@ async function verifyConsolidation(manifest) {
     receipts.receipt.status !== "installed-consolidated-verified" ||
     receipts.receipt.canonicalRuntimeShell !== "http://127.0.0.1:8788/workspace" ||
     receipts.receipt.logoDev?.configured !== true ||
-    receipts.receipt.health?.allEightManagedServicesHealthy !== true ||
+    receipts.receipt.health?.allManagedServicesHealthy !== true ||
     path.win32.normalize(receipts.restoration.sourceReceipt || "").toLowerCase() !== path.win32.normalize(receipts.receiptPath).toLowerCase()
   ) {
     throw new Error("The Deployment v2 consolidation receipt state is incomplete or inconsistent.");
@@ -1236,7 +1248,7 @@ function writeReceipts(manifest, runStamp, runRoot, result) {
       managerVerify: "PASS",
       runtimeConfigStatus: result.live.runtimeConfigStatus,
       workspaceStatus: result.live.workspaceStatus,
-      allEightManagedServicesHealthy: true,
+      allManagedServicesHealthy: true,
     },
   };
   const receiptPath = path.join(manifest.receiptRoot, "CONTROLSTACK_PROGRAM_SHELL_V2_CONSOLIDATION_" + runStamp + ".json");
@@ -1260,15 +1272,30 @@ function writeReceipts(manifest, runStamp, runRoot, result) {
   return { receiptPath, restorationPath };
 }
 
+function requiredPreInstallServices(manifest) {
+  const installedManifest = path.join(manifest.installRoot, "controlstack-services.v2.json");
+  if (!existsSync(installedManifest)) return manifest.services;
+  try {
+    const previous = JSON.parse(readFileSync(installedManifest, "utf8"));
+    if (!Array.isArray(previous.services)) return manifest.services;
+    const currentIds = new Set(manifest.services.map((service) => service.id));
+    const previousIds = new Set(previous.services.map((service) => service?.id).filter((id) => currentIds.has(id)));
+    const required = manifest.services.filter((service) => previousIds.has(service.id));
+    return required.length ? required : manifest.services;
+  } catch {
+    return manifest.services;
+  }
+}
+
 async function consolidate(manifest) {
   progressIndex = 0;
   progress("Validating Windows host and user");
   ensureHostIdentity(manifest);
   progress("Running Deployment v2 source self-test");
   selfTest(manifest);
-  progress("Verifying all four ControlStack worktree identities");
+  progress("Verifying all five ControlStack worktree identities");
   assertWorktrees(manifest);
-  progress("Checking the eight configured service executables and working directories");
+  progress("Checking the nine configured service executables and working directories");
   for (const service of manifest.services) {
     if (!existsSync(service.executable) || !existsSync(service.cwd)) throw new Error("Missing executable or working directory for " + service.name);
   }
@@ -1287,12 +1314,14 @@ async function consolidate(manifest) {
   progress("Capturing pre-deployment worktree state");
   const beforeWorktrees = worktreeState(manifest);
   const servicePorts = manifest.services.map((service) => service.port);
-  progress("Checking that all eight managed service ports are listening");
+  const requiredBeforeServices = requiredPreInstallServices(manifest);
+  const requiredBeforePorts = requiredBeforeServices.map((service) => service.port);
+  progress("Checking that every previously installed managed service is listening");
   const beforeListeners = listeners(servicePorts);
-  if (beforeListeners.length !== manifest.services.length) {
-    const listeningPorts = beforeListeners.map((item) => Number(item.Port)).sort((a, b) => a - b);
-    const missingPorts = servicePorts.filter((port) => !listeningPorts.includes(port));
-    throw new Error("All eight managed services must be live before consolidation. Missing listener ports: " + missingPorts.join(", "));
+  const listeningPorts = new Set(beforeListeners.map((item) => Number(item.Port)));
+  const missingRequiredPorts = requiredBeforePorts.filter((port) => !listeningPorts.has(port));
+  if (missingRequiredPorts.length) {
+    throw new Error("A previously installed managed service is not live before consolidation. Missing listener ports: " + missingRequiredPorts.join(", "));
   }
 
   progress("Creating the timestamped archive and receipt workspace");
@@ -1311,12 +1340,15 @@ async function consolidate(manifest) {
   const controlUiActivation = await ensureControlUi(manifest, installed.installedManager);
 
   let selectorRestarted = false;
-  let afterActivation = beforeListeners;
+  let afterActivation = listeners(servicePorts);
+  if (afterActivation.length !== manifest.services.length) {
+    throw new Error("The installed manager did not start every configured service.");
+  }
   progress("Checking whether Selector requires Logo.dev activation");
   const selectorActivationRequired = logo.changed || !(await runtimeReportsLogoConfigured());
   if (selectorActivationRequired) {
     progress("Restarting selector-runtime only");
-    const selectorRestart = await restartSelectorRuntimeOnly(manifest, installed.installedManager, beforeListeners);
+    const selectorRestart = await restartSelectorRuntimeOnly(manifest, installed.installedManager, afterActivation);
     selectorRestarted = true;
     afterActivation = selectorRestart.afterListeners;
   } else {

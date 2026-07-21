@@ -24,6 +24,7 @@
     { "root": "C:\\ControlStack_Worktrees\\selector-engine", "branch": "lane/selector-engine" },
     { "root": "C:\\ControlStack_Worktrees\\code-pilot-lab", "branch": "lane/code-pilot-lab" },
     { "root": "C:\\ControlStack_Worktrees\\program-integrate", "branch": "lane/program-integrate" },
+    { "root": "C:\\ControlStack_Worktrees\\governance-shell", "branch": "lane/governance-shell" },
     { "root": "C:\\ControlStack_Worktrees\\controlstack-tooling-v2", "branch": "lane/controlstack-tooling-v2" }
   ],
   "services": [
@@ -149,6 +150,41 @@
       "protectedSecretIds": [],
       "health": { "type": "http-body", "url": "http://127.0.0.1:8081/readyz", "acceptedStatus": [200], "body": "ready" },
       "env": {}
+    },
+    {
+      "id": "governance-mcp",
+      "name": "CS Governance & Shell MCP",
+      "port": 8023,
+      "executable": "C:\\Users\\Patrick\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+      "args": ["tools\\controlstack-mcp\\controlstack_mcp.py"],
+      "cwd": "C:\\ControlStack_Worktrees\\controlstack-tooling-v2",
+      "credential": "none",
+      "protectedSecretIds": [],
+      "health": { "type": "tcp", "host": "127.0.0.1", "port": 8023 },
+      "env": {
+        "CONTROLSTACK_RUNTIME_ROOT": "C:\\ControlStack_Worktrees\\governance-shell",
+        "CONTROLSTACK_DONOR_REFERENCE_ROOT": "C:\\ControlStack",
+        "CONTROLSTACK_RUNTIMEDATA_ROOT": "C:\\ControlStack_RuntimeData",
+        "CONTROLSTACK_MCP_TRANSPORT": "streamable-http",
+        "CONTROLSTACK_MCP_HOST": "127.0.0.1",
+        "CONTROLSTACK_MCP_PORT": "8023",
+        "CONTROLSTACK_MCP_PATH": "/mcp",
+        "CONTROLSTACK_MCP_SERVER_NAME": "ControlStack Governance and Shell Lane",
+        "CONTROLSTACK_WEBHOOK_BASE_URL": "http://127.0.0.1:8788",
+        "CONTROLSTACK_LANE_NAME": "governance-shell",
+        "CONTROLSTACK_REQUIRED_BRANCH": "lane/governance-shell",
+        "CONTROLSTACK_ALLOWED_GATES": "governance-shell",
+        "CONTROLSTACK_GATE_RUNNER": "C:\\ControlStack_Worktrees\\governance-shell\\scripts\\governance_shell_lane_gate.py",
+        "CONTROLSTACK_ALLOWED_WRITE_GLOBS": "apps/workspace-shell/**;packages/workspace-kernel/savedProjectStore.js;packages/workspace-kernel/projectService.js;packages/workspace-kernel/identityService.js;packages/workspace-kernel/governance/**;server.js;tests/runtimeShell*.test.js;tests/runtimeProjectBrowser*.test.js;tests/runtimeGovernance*.test.js;tests/governance*.test.js;docs/governance/**;docs/_context/lanes/governance-shell/**;package.json;package-lock.json",
+        "CONTROLSTACK_IGNORED_DIRTY_GLOBS": "",
+        "CONTROLSTACK_ENABLE_WRITE": "1",
+        "CONTROLSTACK_ENABLE_GIT_STAGE": "1",
+        "CONTROLSTACK_ENABLE_GIT_COMMIT": "1",
+        "CONTROLSTACK_ENABLE_GIT_PUSH": "1",
+        "CONTROLSTACK_ENABLE_DESTRUCTIVE": "0",
+        "CONTROLSTACK_ENABLE_CROSS_ROOT_COPY": "0",
+        "PYTHONDONTWRITEBYTECODE": "1"
+      }
     },
     {
       "id": "program-mcp",

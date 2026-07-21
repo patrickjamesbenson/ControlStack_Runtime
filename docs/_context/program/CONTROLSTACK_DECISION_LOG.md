@@ -1327,3 +1327,15 @@ The following tests survive every lane split and reshuffle:
 4. ownership tests quantify behavior across every governed row or system, rather than asserting one named product instance.
 
 No parcel may remove, weaken, replace with a narrower example or exclude these tests from its effective gate without a new explicit Program decision.
+
+## 2026-07-21 — Governance & Shell lane infrastructure implemented
+
+**Status:** REPOSITORY IMPLEMENTATION GREEN; HOST ACTIVATION PENDING FIXED PROVISIONER.
+
+Program implements the approved fifth worktree identity and a ninth managed service: one local Governance & Shell MCP on its own port. The service is bound to `lane/governance-shell`, the dedicated Governance gate and a conservative write scope covering shell surfaces, exact project persistence and identity files, a new governance workspace-kernel area, governance-owned tests and the lane context only. Selector modules, Lab authority, runtime-web and broad package globs remain excluded.
+
+A fixed Governance lane gate discovers only reviewed governance/shell test families, verifies the exact root and branch and permits no arbitrary command. A fixed idempotent provisioner creates or verifies the sibling worktree, copies exactly the six drafted founding records into the canonical lane context, refuses to overwrite differing records, runs the gate, commits and pushes the founding checkpoint, installs Deployment v2 and requires the Governance MCP to report healthy and managed.
+
+Deployment v2 is upgraded from four worktrees/eight services to five worktrees/nine services without adding another tunnel. The installer permits a newly declared service to be absent before the upgrade while still requiring every previously installed service to be live; after manager reload every configured service must be running. Selector-only activation remains Selector-only, and Selector, Lab and Governance worktrees are protected against deployment mutation.
+
+Repository tests passed 48/48. No sibling worktree or Windows service was created by the lane tool because host-level Git worktree creation is outside its action set. One execution of the fixed provisioner is the remaining activation step; no design choice remains.

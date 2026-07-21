@@ -842,9 +842,12 @@ No implementation item is ready. A new exact Program parcel is required before a
 ### PWS-L0 — Provision Governance & Shell lane
 
 - **Owner:** Program & Integrate infrastructure.
-- **Status:** approved; exact provisioning parcel required before governance feature work.
+- **Status:** infrastructure implementation complete and gated; one fixed local activation remains before governance feature work.
 - **Lane:** Governance & Shell.
-- **Required isolation:** dedicated worktree, `lane/governance-shell`, separate MCP service identity, exact write globs, required branch and dedicated gate.
+- **Required isolation:** dedicated worktree, `lane/governance-shell`, separate MCP service identity on its own local port, exact write globs, required branch and dedicated gate.
+- **Prepared infrastructure:** Deployment v2 topology, scoped MCP service, fixed Governance gate and idempotent one-command provisioner.
+- **Founding checkpoint:** copies exactly the six drafted canonical lane records, refuses divergent overwrite, gates, commits and pushes them on the new branch.
+- **Activation boundary:** the provisioner creates the sibling worktree and reloads the Windows service manager; lane feature tools cannot perform that host-level Git operation directly.
 - **Initial owned items:** work-shape items 3, 4, 6 and 9.
 - **CRM item 7:** folded into this lane as blocked; no separate CRM lane yet.
 - **Boundary:** no Selector/Engine, Lab authority or main write scope.

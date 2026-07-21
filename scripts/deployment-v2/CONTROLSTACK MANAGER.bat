@@ -13,7 +13,7 @@ echo  2. Start all ControlStack services
 echo  3. Stop all managed ControlStack services
 echo  4. Restart all managed ControlStack services
 echo  5. Show service status
-echo  6. Verify all eight managed services
+echo  6. Verify all nine managed services
 echo  7. Exit
 echo.
 choice /C 1234567 /N /M "Choose 1-7: "
