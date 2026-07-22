@@ -137,4 +137,8 @@ POLICY-MAP-001 is the second blocked read-only parcel after TEST-AUDIT-001 and a
 
 Seed execution remains separately blocked; C6/C7, Engine, CRM/provider mutation, persistence, IES, retrieval and delivery remain blocked.
 
-The first WALK-002RG activation receipt is not accepted. Advisor correctly exposed a stale Program manifest that omitted six previously approved exact Selector permissions, and Program has reconciled its manifest and contract test to the full nine-file exact set. However, direct live verification still omits and rejects both new WALK-002R files. Advisor must reapply the reconciled configuration and restart only Selector MCP; acceptance requires all nine exact permissions, no broad module wildcards and successful no-change dry-run scope checks for both new files. WALK-002R remains blocked until that receipt is verified.
+WALK-002RG is accepted complete. The corrected live guard contains all nine exact module permissions once each, both broad module wildcards are absent, and both WALK-002R additions pass scope checks. Selector MCP is READY / MANAGED; Selector Runtime, unrelated services, repository source, runtime source and credentials were untouched.
+
+The existing standing worker resumes the same twelve-owner WALK-002R parcel without a new commission. Preserve the four banned-name zero searches, 71 encoded-assumption baseline across 32 test files, final zero residual, equal-or-broader eligible Board candidates and every no-execution/no-write prohibition; gate, push and stop before WALK-003.
+
+MGR-RESTART-001 is recorded as a blocked future infrastructure repair to reproduce the stale resident configuration layer and make one selected-service restart reload the latest validated manifest, recycle the complete host and leave all unrelated services unchanged.

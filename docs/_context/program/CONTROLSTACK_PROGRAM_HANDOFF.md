@@ -1185,3 +1185,11 @@ Direct live verification still shows the two WALK-002R files missing from the ac
 Advisor must reapply the reconciled manifest and restart only Selector MCP. The corrected receipt must prove all nine exact module permissions occur once each, broad `packages/modules/**` and `packages/modules/cs-selector/**` permissions remain absent, and no-change dry-run write probes for the run-intake and accessory-placement previews pass scope validation. Do not restart Selector Runtime.
 
 WALK-002R remains blocked until Program verifies that corrected activation. The existing worker and parcel resume afterward without a new commission; every prior production boundary, test-count and safety condition remains unchanged.
+
+### WALK-002RG accepted; standing WALK-002R worker resumed
+
+Program accepts the corrected activation. Direct live verification shows all nine exact module permissions once each, both broad module wildcards absent, and scope acceptance for the run-intake and accessory-placement previews. Selector MCP is READY / MANAGED and the Selector lane is clean. Selector Runtime, every other service, repository source, runtime source and credentials remained untouched.
+
+The existing Selector worker resumes WALK-002R without a new commission. Preserve the twelve-owner production boundary, zero searches for `runLengthMode`, `lengthMode`, `requested_length_basis` and `requestedLengthBasis`, the 71 encoded-assumption baseline across 32 test files, final zero residual, equal-or-broader eligible Board candidates and every no-execution/no-write prohibition. Gate, push the exact coupled parcel and stop before WALK-003.
+
+MGR-RESTART-001 is recorded as a blocked future infrastructure repair. The observed failure involved stale resident configuration despite selected-service restart. Because current code intends to terminate the service host tree while both manager and host load configuration at process startup, the future parcel must reproduce and identify the exact stale layer before changing behaviour. Its acceptance target is one selected-service restart that reloads the latest validated manifest, recycles the complete host, proves the new environment live and leaves every unrelated service unchanged.
