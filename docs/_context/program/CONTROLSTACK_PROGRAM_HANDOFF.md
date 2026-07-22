@@ -1221,3 +1221,15 @@ In the Selector run-intake capture test, two assertions still expect `missing-le
 Do not remove the valid rendered-copy absence proof, the deliberate `legacyMode` ignored-and-omitted proof, or the unrelated accessory phrase describing extend-to-min-accessory-length behaviour. No production edit or additional test cleanup is authorised unless the two-file repair exposes a real contradiction; stop if it does.
 
 The prior count receipt is invalid. Recompute and explain the baseline/deleted/rewritten/residual arithmetic, state the search terms and counting method, and require baseline = deleted + rewritten + residual with residual zero. Run both corrected test files, all previously affected focused tests and the full fixed Selector gate. Push only the exact same-parcel repair and stop before WALK-003.
+
+### WALK-002R accepted; WALK-003 duplicate-scaffold deletion released
+
+Program accepts the corrected WALK-002R repair. Independent production and test searches are zero for the four banned names plus `missing-length-mode` and `length_mode`. Corrected counts are baseline 75, deleted 71, rewritten 4, affected test files 34, residual 0; both repaired files and prior focused coverage pass 115/115, the fixed Selector gate passes 108/108, and the lane is pushed and clean.
+
+WALK-003 is the sole ready Selector parcel under one writer. Its exact production boundary is `packages/modules/cs-selector/selectorState.js`, `packages/modules/cs-selector/selectorViewModel.js` and `packages/modules/cs-selector/selectorView.js`. Stop if a fourth production owner is required.
+
+Delete the mounted runtime-native single-page expander scaffold and the fabricated module-local default selection state that supplies `Linear 60`, `1200 lm/m`, `IK07` and other static values. Those values must no longer populate effective selection, auto consequences, readiness, summaries, payloads or rendered current selection. Remove the scaffold view-model and renderer mount. A fresh load remains empty, preamble/incomplete and carries no selected product truth.
+
+Preserve the source-backed live Selector surface and its current-selection rail as the sole current-selection owner. Do not delete genuine source-backed fixtures merely because their real data includes the same labels or values. Do not implement later donor auto-fill/default acknowledgement work in this parcel. Any surviving diagnostic helper must be unmounted, unreachable from selection authority and unable to populate an authority-bearing projection.
+
+Before editing, mechanically count every test assertion and fixture encoding the mounted expander scaffold or fabricated default selection authority. Delete or rewrite the entire coupled class in the same parcel and report baseline, deleted, rewritten, affected-test-file and residual counts with residual zero. Run all affected focused tests and the fixed Selector gate, commit and push the exact implementation and lane-memory closeout, leave the lane clean and stop before WALK-004. Engine, seeds, Lab, persistence, routes, RuntimeData mutation, CRM/provider mutation, IES, retrieval, delivery, MGR-RESTART-001 and both audits remain blocked.
