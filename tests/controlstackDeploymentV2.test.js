@@ -100,10 +100,14 @@ test("deployment manifest defines the accepted ten-service topology and canonica
   assert.equal(manifest.controlUi.port, 8790);
 });
 
-test("Selector MCP write guard appends only the approved exact Selector summary file and lane context", () => {
+test("Selector MCP write guard includes only the approved exact Selector module files and lane context", () => {
   const manifest = loadAndValidateManifest(manifestPath);
   const selectorMcp = manifest.services.find((item) => item.id === "selector-mcp");
-  const exactFile = "packages/modules/cs-selector/selectorFactoryApprovedInputsSummary.js";
+  const exactFiles = [
+    "packages/modules/cs-selector/selectorFactoryApprovedInputsSummary.js",
+    "packages/modules/cs-selector/selectorRunIntakePreview.js",
+    "packages/modules/cs-selector/selectorRunAccessoryPlacementPreview.js",
+  ];
   const laneContext = ["docs", "_context", "lanes", "selector-engine", "**"].join("/");
   const moduleWildcard = ["packages", "modules", "**"].join("/");
   const selectorModuleWildcard = ["packages", "modules", "cs-selector", "**"].join("/");
@@ -121,16 +125,18 @@ test("Selector MCP write guard appends only the approved exact Selector summary 
     ["docs", "engine", "**"].join("/"),
     "package.json",
     "package-lock.json",
-    exactFile,
+    ...exactFiles,
     laneContext,
   ];
 
   assert.deepEqual(configuredGlobs, expectedGlobs);
-  assert.equal(configuredGlobs.filter((item) => item === exactFile).length, 1);
+  for (const exactFile of exactFiles) {
+    assert.equal(configuredGlobs.filter((item) => item === exactFile).length, 1);
+  }
   assert.equal(configuredGlobs.filter((item) => item === laneContext).length, 1);
   assert.equal(configuredGlobs.includes(moduleWildcard), false);
   assert.equal(configuredGlobs.includes(selectorModuleWildcard), false);
-  assert.deepEqual(configuredGlobs.filter((item) => item.startsWith("packages/modules/")), [exactFile]);
+  assert.deepEqual(configuredGlobs.filter((item) => item.startsWith("packages/modules/")), exactFiles);
 });
 
 test("Governance MCP is isolated to shell, persistence, identity and lane-owned tests", () => {

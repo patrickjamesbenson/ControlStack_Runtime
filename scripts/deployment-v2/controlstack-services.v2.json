@@ -52,7 +52,7 @@
         "CONTROLSTACK_REQUIRED_BRANCH": "lane/selector-engine",
         "CONTROLSTACK_ALLOWED_GATES": "selector-engine",
         "CONTROLSTACK_GATE_RUNNER": "C:\\ControlStack_Worktrees\\controlstack-tooling-v2\\scripts\\controlstack_lane_gate.py",
-        "CONTROLSTACK_ALLOWED_WRITE_GLOBS": "apps/**;packages/workspace-kernel/**;packages/runtime-web/**;server.js;tests/selector*.test.js;tests/engine*.test.js;tests/runtime*.test.js;tests/runTable*.test.js;docs/selector/**;docs/engine/**;package.json;package-lock.json;packages/modules/cs-selector/selectorFactoryApprovedInputsSummary.js;docs/_context/lanes/selector-engine/**",
+        "CONTROLSTACK_ALLOWED_WRITE_GLOBS": "apps/**;packages/workspace-kernel/**;packages/runtime-web/**;server.js;tests/selector*.test.js;tests/engine*.test.js;tests/runtime*.test.js;tests/runTable*.test.js;docs/selector/**;docs/engine/**;package.json;package-lock.json;packages/modules/cs-selector/selectorFactoryApprovedInputsSummary.js;packages/modules/cs-selector/selectorRunIntakePreview.js;packages/modules/cs-selector/selectorRunAccessoryPlacementPreview.js;docs/_context/lanes/selector-engine/**",
         "CONTROLSTACK_IGNORED_DIRTY_GLOBS": "",
         "CONTROLSTACK_ENABLE_WRITE": "1",
         "CONTROLSTACK_ENABLE_GIT_STAGE": "1",

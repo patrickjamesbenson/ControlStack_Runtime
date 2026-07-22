@@ -1667,3 +1667,15 @@ WALK-002R is amended rather than replaced. Its production boundary now contains 
 Completion search under `packages` must return zero `runLengthMode`, zero `lengthMode`, zero `requested_length_basis` and zero `requestedLengthBasis` occurrences. The receipt must still report baseline encoded-assumption assertions, deleted assertions, rewritten assertions, affected test files and zero residual encoded-assumption assertions. If any additional production owner or alias appears outside the twelve-owner boundary, stop again before edits outside scope.
 
 All prior WALK-002R acceptance rules remain binding: quantity and positive physical length only; no replacement/default/sentinel/proxy/inferred manufacturing interpretation; legacy mode data discarded; registration and saved-project validation mode-free; candidate breadth equal or broader; no Engine/RunTable/IES execution, persistence, routes, POST actions or RuntimeData mutation. Gate, push the exact coupled parcel, reconcile lane memory and stop before WALK-003.
+
+## 2026-07-22 — WALK-002R write-guard stop accepted; exact guard correction published
+
+**Status:** WALK-002R BLOCKED PENDING MANAGED GUARD ACTIVATION; WALK-002RG SOLE READY INFRASTRUCTURE PREREQUISITE.
+
+Program directly verified the clean Selector stop, 108/108 gate and current managed write guard. The twelve-owner implementation trace contains 46 banned-name production occurrences across exactly the authorised owners and no thirteenth owner. The coupled-test baseline is 71 encoded-assumption occurrence lines across 32 test files. No implementation remains changed; deleted 0, rewritten 0 and residual 71 accurately describe the pre-edit stop.
+
+The blocker is permission-only. The current Selector MCP guard already permits all tests and ten of the twelve production owners, but omits exactly the already-authorised run-intake preview and accessory-placement preview files. Program has amended the managed deployment manifest to add those two exact paths and has updated the deployment contract test. No module wildcard, Selector-module wildcard or unrelated write permission is added.
+
+Program admits **WALK-002RG — exact Selector write-guard activation** as the sole ready infrastructure prerequisite. An Advisor applies the published deployment configuration and restarts only the Selector MCP service through the existing manager. The Advisor then verifies the live write guard contains the two exact added files once each, preserves the existing exact-file list, and still excludes broad module wildcards.
+
+WALK-002R resumes only after managed activation is confirmed. The existing worker, parcel, twelve-owner scope, four banned-name searches, deletion-test coupling counts and every safety prohibition remain unchanged. Do not restart Selector Runtime, edit production, start another worker, begin WALK-003 or execute TEST-AUDIT-001 during guard activation.

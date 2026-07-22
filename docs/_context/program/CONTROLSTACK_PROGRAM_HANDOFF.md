@@ -1153,3 +1153,15 @@ Delete the `requested_length_basis` allowlist/emission from that projection and 
 Do not delete `length_policy_source` or `accessory_length_policy_source` by name alone. They remain valid policy provenance unless the worker proves a specific occurrence directly encodes the deleted Length Mode assumption; such proof must remain within the twelve-owner boundary or trigger another stop.
 
 Completion searches under production `packages` must return zero occurrences of `runLengthMode`, `lengthMode`, `requested_length_basis` and `requestedLengthBasis`. All prior mode-free authority, candidate-breadth and no-execution/no-write rules remain binding. If no further owner appears, run affected tests and the fixed gate, push the coupled WALK-002R implementation and lane-memory closeout, and stop before WALK-003.
+
+### WALK-002R permission stop and WALK-002RG managed activation
+
+Program accepts the clean permission stop. The current pre-edit baseline is 71 encoded assumptions across 32 test files; deleted 0, rewritten 0 and residual 71. No production or test implementation remains changed, the Selector gate passes 108/108 and the lane is clean.
+
+The live Selector MCP write guard omits exactly two already-authorised owners: the run-intake preview and accessory-placement preview. All test patterns and the remaining ten production owners are already permitted.
+
+Program has updated the managed deployment manifest and its contract test to add only those two exact paths. Broad `packages/modules/**` and `packages/modules/cs-selector/**` permissions remain prohibited.
+
+WALK-002RG is the sole ready infrastructure prerequisite. Advisor applies the published deployment configuration and restarts only Selector MCP through the existing manager. Do not restart Selector Runtime. Verification must show each added exact file once, the existing approved exact module files retained and both broad module wildcards absent.
+
+After activation, the existing Selector worker resumes the same WALK-002R parcel without a new commission. The twelve-owner production boundary, four banned-name searches, 71-assumption baseline, zero-residual test rule, no-execution/no-write boundaries and stop before WALK-003 remain unchanged.
