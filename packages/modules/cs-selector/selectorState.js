@@ -594,7 +594,7 @@ const DEFAULT_PREVIEW_DEFAULTS = Object.freeze(Object.fromEntries(
 
 const SELECTOR_FIELD_OPTIONS = Object.freeze({
   system: Object.freeze([
-    Object.freeze({ value: "linear-60", label: "Linear 60 — default-preview" }),
+    Object.freeze({ value: "linear-60", label: "Linear 60" }),
     Object.freeze({ value: "linear-80", label: "Linear 80" }),
   ]),
   variant: Object.freeze([
@@ -607,42 +607,42 @@ const SELECTOR_FIELD_OPTIONS = Object.freeze({
     Object.freeze({ value: "direct-indirect", label: "Direct / indirect" }),
   ]),
   application: Object.freeze([
-    Object.freeze({ value: "office", label: "Office — default-preview" }),
+    Object.freeze({ value: "office", label: "Office" }),
     Object.freeze({ value: "school", label: "School / education" }),
     Object.freeze({ value: "hospital", label: "Hospital / health" }),
     Object.freeze({ value: "exterior-amenity", label: "Exterior amenity" }),
   ]),
   interiorExterior: Object.freeze([
-    Object.freeze({ value: "interior", label: "Interior — default-preview" }),
+    Object.freeze({ value: "interior", label: "Interior" }),
     Object.freeze({ value: "exterior", label: "Exterior" }),
   ]),
   ipRating: Object.freeze([
-    Object.freeze({ value: "IP20", label: "IP20 — default-preview" }),
+    Object.freeze({ value: "IP20", label: "IP20" }),
     Object.freeze({ value: "IP44", label: "IP44" }),
     Object.freeze({ value: "IP65", label: "IP65" }),
   ]),
   ikRating: Object.freeze([
-    Object.freeze({ value: "IK07", label: "IK07 — default-preview" }),
+    Object.freeze({ value: "IK07", label: "IK07" }),
     Object.freeze({ value: "IK08", label: "IK08" }),
     Object.freeze({ value: "IK10", label: "IK10" }),
   ]),
   targetLumensPerMetre: Object.freeze([
     Object.freeze({ value: "800", label: "800 lm/m" }),
-    Object.freeze({ value: "1200", label: "1200 lm/m — default-preview" }),
+    Object.freeze({ value: "1200", label: "1200 lm/m" }),
     Object.freeze({ value: "1800", label: "1800 lm/m" }),
   ]),
   cctCri: Object.freeze([
     Object.freeze({ value: "cct_cri:3000K|CRI80", label: "3000K / CRI80" }),
-    Object.freeze({ value: "cct_cri:4000K|CRI80", label: "4000K / CRI80 — default-preview" }),
+    Object.freeze({ value: "cct_cri:4000K|CRI80", label: "4000K / CRI80" }),
     Object.freeze({ value: "cct_cri:TW_2700K_6500K|CRI90", label: "TW 2700K–6500K / CRI90" }),
   ]),
   optic: Object.freeze([
-    Object.freeze({ value: "opal", label: "Opal — default-preview" }),
+    Object.freeze({ value: "opal", label: "Opal" }),
     Object.freeze({ value: "microprism", label: "Microprism" }),
     Object.freeze({ value: "linear-lens", label: "Linear lens" }),
   ]),
   controlType: Object.freeze([
-    Object.freeze({ value: "dali-2", label: "DALI-2 — default-preview" }),
+    Object.freeze({ value: "dali-2", label: "DALI-2" }),
     Object.freeze({ value: "non-dim", label: "Non-dim" }),
     Object.freeze({ value: "phase-dim", label: "Phase dim" }),
   ]),
@@ -653,53 +653,53 @@ const SELECTOR_FIELD_OPTIONS = Object.freeze({
     Object.freeze({ value: "manual-driver-review", label: "Manual driver review" }),
   ]),
   mountStyle: Object.freeze([
-    Object.freeze({ value: "surface", label: "Surface — default-preview" }),
+    Object.freeze({ value: "surface", label: "Surface" }),
     Object.freeze({ value: "suspended", label: "Suspended" }),
     Object.freeze({ value: "recessed", label: "Recessed" }),
   ]),
   suspension: Object.freeze([
-    Object.freeze({ value: "none", label: "None — default-preview" }),
+    Object.freeze({ value: "none", label: "None" }),
     Object.freeze({ value: "wire", label: "Wire suspension" }),
     Object.freeze({ value: "rod", label: "Rod suspension" }),
   ]),
   ceilingType: Object.freeze([
-    Object.freeze({ value: "plasterboard", label: "Plasterboard — default-preview" }),
+    Object.freeze({ value: "plasterboard", label: "Plasterboard" }),
     Object.freeze({ value: "exposed", label: "Exposed services" }),
     Object.freeze({ value: "grid", label: "Grid ceiling" }),
   ]),
   powerEntryFace: Object.freeze([
-    Object.freeze({ value: "top", label: "Top — default-preview" }),
+    Object.freeze({ value: "top", label: "Top" }),
     Object.freeze({ value: "back", label: "Back" }),
     Object.freeze({ value: "end", label: "End" }),
   ]),
   powerEntryPosition: Object.freeze([
-    Object.freeze({ value: "start", label: "Start — default-preview" }),
+    Object.freeze({ value: "start", label: "Start" }),
     Object.freeze({ value: "centre", label: "Centre" }),
     Object.freeze({ value: "end", label: "End" }),
   ]),
   wiringType: Object.freeze([
-    Object.freeze({ value: "5-core-dali", label: "5-core DALI — default-preview" }),
+    Object.freeze({ value: "5-core-dali", label: "5-core DALI" }),
     Object.freeze({ value: "3-core-switched", label: "3-core switched" }),
   ]),
   bodyFinish: Object.freeze([
-    Object.freeze({ value: "white", label: "White — default-preview" }),
+    Object.freeze({ value: "white", label: "White" }),
     Object.freeze({ value: "black", label: "Black" }),
     Object.freeze({ value: "custom", label: "Custom / review" }),
   ]),
   diffuserFinish: Object.freeze([
-    Object.freeze({ value: "opal", label: "Opal — default-preview" }),
+    Object.freeze({ value: "opal", label: "Opal" }),
     Object.freeze({ value: "clear", label: "Clear" }),
   ]),
   trimFinish: Object.freeze([
-    Object.freeze({ value: "match-body", label: "Match body — default-preview" }),
+    Object.freeze({ value: "match-body", label: "Match body" }),
     Object.freeze({ value: "contrast", label: "Contrast" }),
   ]),
   emergency: Object.freeze([
-    Object.freeze({ value: "no", label: "No emergency — default-preview" }),
+    Object.freeze({ value: "no", label: "No emergency" }),
     Object.freeze({ value: "yes", label: "Emergency required" }),
   ]),
   sensor: Object.freeze([
-    Object.freeze({ value: "no", label: "No sensor — default-preview" }),
+    Object.freeze({ value: "no", label: "No sensor" }),
     Object.freeze({ value: "yes", label: "Sensor required" }),
   ]),
   specialParts: Object.freeze([
@@ -710,12 +710,12 @@ const SELECTOR_FIELD_OPTIONS = Object.freeze({
     Object.freeze({ value: "manual-special-parts-review", label: "Manual special parts review" }),
   ]),
   runCount: Object.freeze([
-    Object.freeze({ value: "1", label: "1 run — default-preview" }),
+    Object.freeze({ value: "1", label: "1 run" }),
     Object.freeze({ value: "2", label: "2 runs" }),
     Object.freeze({ value: "multiple", label: "Multiple runs" }),
   ]),
   totalLength: Object.freeze([
-    Object.freeze({ value: "preview-only", label: "Preview length only — default-preview" }),
+    Object.freeze({ value: "preview-only", label: "Preview length only" }),
     Object.freeze({ value: "short", label: "Short run" }),
     Object.freeze({ value: "long", label: "Long run" }),
   ]),
@@ -724,32 +724,6 @@ const SELECTOR_FIELD_OPTIONS = Object.freeze({
     Object.freeze({ value: "multi-run-review", label: "Multi-run review consequence" }),
     Object.freeze({ value: "long-run-segment-review", label: "Long-run segment review consequence" }),
   ]),
-});
-
-const DEFAULT_PREVIEW_SELECTION_VALUES = Object.freeze({
-  system: "linear-60",
-  emission: "direct",
-  application: "office",
-  interiorExterior: "interior",
-  ipRating: "IP20",
-  ikRating: "IK07",
-  targetLumensPerMetre: "1200",
-  cctCri: "cct_cri:4000K|CRI80",
-  optic: "opal",
-  controlType: "dali-2",
-  mountStyle: "surface",
-  suspension: "none",
-  ceilingType: "plasterboard",
-  powerEntryFace: "top",
-  powerEntryPosition: "start",
-  wiringType: "5-core-dali",
-  bodyFinish: "white",
-  diffuserFinish: "opal",
-  trimFinish: "match-body",
-  emergency: "no",
-  sensor: "no",
-  runCount: "1",
-  totalLength: "preview-only",
 });
 
 const DEFAULT_SECTION_FIELD_DEFINITIONS = Object.freeze({
@@ -1048,20 +1022,6 @@ function createSelectionRecord(field, value, kind, source, reason = "") {
   };
 }
 
-function createDefaultPreviewSelections(sectionFieldContract = DEFAULT_SECTION_FIELD_CONTRACT) {
-  return Object.fromEntries(Object.entries(DEFAULT_PREVIEW_SELECTION_VALUES).map(([fieldKey, value]) => {
-    const field = findFieldContract(sectionFieldContract, fieldKey);
-    if (!field || !optionExists(field, value)) return null;
-    return [fieldKey, createSelectionRecord(
-      field,
-      value,
-      "default-preview",
-      "module-local default preview",
-      "preamble/default-preview only; not a user-confirmed constraint"
-    )];
-  }).filter(Boolean));
-}
-
 function selectionValue(fieldKey, manualConstraints, defaultPreviewSelections) {
   return manualConstraints[fieldKey]?.value ?? defaultPreviewSelections[fieldKey]?.value ?? "";
 }
@@ -1091,28 +1051,32 @@ function deriveAutoConsequences(manualConstraints, defaultPreviewSelections, sec
   const runCount = selectionValue("runCount", manualConstraints, defaultPreviewSelections);
   const totalLength = selectionValue("totalLength", manualConstraints, defaultPreviewSelections);
 
-  putAutoConsequence(
-    output,
-    sectionFieldContract,
-    manualConstraints,
-    "variant",
-    system === "linear-80" ? "linear-80-core" : "linear-60-core",
-    "consequence of the current system selection/default"
-  );
+  if (system) {
+    putAutoConsequence(
+      output,
+      sectionFieldContract,
+      manualConstraints,
+      "variant",
+      system === "linear-80" ? "linear-80-core" : "linear-60-core",
+      "consequence of the current system selection"
+    );
+  }
 
   const driverValue = targetLumensPerMetre === "1800"
     ? "high-output-driver"
     : controlType === "non-dim"
       ? "standard-driver"
       : "dali-driver";
-  putAutoConsequence(
-    output,
-    sectionFieldContract,
-    manualConstraints,
-    "driver",
-    driverValue,
-    "consequence of current control type and lumen target constraints/defaults"
-  );
+  if (controlType || targetLumensPerMetre) {
+    putAutoConsequence(
+      output,
+      sectionFieldContract,
+      manualConstraints,
+      "driver",
+      driverValue,
+      "consequence of current control type and lumen target constraints"
+    );
+  }
 
   const specialPartsValue = emergency === "yes" || sensor === "yes"
     ? "emergency-sensor-review"
@@ -1121,28 +1085,32 @@ function deriveAutoConsequences(manualConstraints, defaultPreviewSelections, sec
       : mountStyle === "suspended"
         ? "suspension-kit"
         : "none";
-  putAutoConsequence(
-    output,
-    sectionFieldContract,
-    manualConstraints,
-    "specialParts",
-    specialPartsValue,
-    "consequence of current IP, mounting, emergency, and sensor constraints/defaults"
-  );
+  if (ipRating || mountStyle || emergency || sensor) {
+    putAutoConsequence(
+      output,
+      sectionFieldContract,
+      manualConstraints,
+      "specialParts",
+      specialPartsValue,
+      "consequence of current IP, mounting, emergency, and sensor constraints"
+    );
+  }
 
   const segmentStrategyValue = totalLength === "long"
     ? "long-run-segment-review"
     : runCount === "multiple" || runCount === "2"
       ? "multi-run-review"
       : "single-preview";
-  putAutoConsequence(
-    output,
-    sectionFieldContract,
-    manualConstraints,
-    "segmentStrategy",
-    segmentStrategyValue,
-    "consequence of current run count and length constraints/defaults"
-  );
+  if (runCount || totalLength) {
+    putAutoConsequence(
+      output,
+      sectionFieldContract,
+      manualConstraints,
+      "segmentStrategy",
+      segmentStrategyValue,
+      "consequence of current run count and length constraints"
+    );
+  }
 
   return output;
 }
@@ -1234,7 +1202,7 @@ function createProvenanceMap(effectiveSelection = {}) {
 function recomputeSelectorStateContract(contract = {}) {
   const sectionFieldContract = cloneSectionFieldContract(contract.sectionFieldContract || DEFAULT_SECTION_FIELD_CONTRACT);
   const manualConstraints = cloneObjectBucket(contract.manualConstraints);
-  const defaultPreviewSelections = createDefaultPreviewSelections(sectionFieldContract);
+  const defaultPreviewSelections = {};
   const autoConsequences = deriveAutoConsequences(manualConstraints, defaultPreviewSelections, sectionFieldContract);
   const effectiveSelection = {
     ...defaultPreviewSelections,
@@ -1248,7 +1216,7 @@ function recomputeSelectorStateContract(contract = {}) {
     ? "diagnostic"
     : manualConstraintCount
       ? "manual-constraint-editing"
-      : "default-preview";
+      : "empty-preamble";
 
   return {
     ...SELECTOR_STATE_CONTRACT_TEMPLATE,

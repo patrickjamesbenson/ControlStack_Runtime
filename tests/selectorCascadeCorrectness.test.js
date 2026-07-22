@@ -296,7 +296,7 @@ function truthItemsForField(summary = {}, fieldKey, truthKind = "manual-constrai
 }
 
 function visibleControlField(model = {}, fieldKey) {
-  const fields = (model.expanderShell?.manualConstraintBehaviour?.controlSections || [])
+  const fields = (model.selectorControls?.controlSections || [])
     .flatMap((section) => Array.isArray(section.fields) ? section.fields : []);
   const field = fields.find((item) => item.fieldKey === fieldKey);
   assert.ok(field, `expected visible/main control field ${fieldKey}`);
@@ -304,7 +304,7 @@ function visibleControlField(model = {}, fieldKey) {
 }
 
 function optionalVisibleControlField(model = {}, fieldKey) {
-  return (model.expanderShell?.manualConstraintBehaviour?.controlSections || [])
+  return (model.selectorControls?.controlSections || [])
     .flatMap((section) => Array.isArray(section.fields) ? section.fields : [])
     .find((item) => item.fieldKey === fieldKey) || null;
 }
@@ -1711,7 +1711,7 @@ test("visible System control paths hard-clear child manual constraints before th
     if (pathName === "selectorSurface") {
       model.selectorSurface.setFieldValue("system", "DNX 80 DI");
     } else {
-      const group = model.expanderShell.manualConstraintBehaviour.controlSections
+      const group = model.selectorControls.controlSections
         .find((section) => section.fields.some((field) => field.fieldKey === "system"));
       assert.ok(group, "expected visible control group containing System");
       group.setFieldValue("system", "DNX 80 DI");

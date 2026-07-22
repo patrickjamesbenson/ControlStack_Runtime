@@ -2814,7 +2814,6 @@ export function renderSelectorView(container, viewModel) {
   appendSelectorProductCompactStatus(diagnostics, surface);
   appendSelectorCodePolicyDiagnostics(diagnostics, surface);
 
-  appendSelectorExpanderShell(diagnostics, viewModel);
   appendSelectorReferencePanel(diagnostics, viewModel);
   appendSelectorCompatibilityFieldList(diagnostics, viewModel.selectorSurface || {});
 

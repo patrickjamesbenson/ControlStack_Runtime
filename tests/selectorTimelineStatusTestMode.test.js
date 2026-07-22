@@ -75,7 +75,7 @@ function model(result, constraints = {}, timelineStatusTest = {}) {
 }
 
 function visibleControlLabels(vm, fieldKey) {
-  const field = (vm.expanderShell.manualConstraintBehaviour.controlSections || [])
+  const field = (vm.selectorControls.controlSections || [])
     .flatMap((section) => section.fields || [])
     .find((item) => item.fieldKey === fieldKey);
   assert.ok(field, `expected visible field ${fieldKey}`);
@@ -253,9 +253,9 @@ test("live main controls consume internal timeline truth", () => {
 
 test("timeline model exposes roadmap checkbox option", () => {
   const vm = model(derive({ system: "DNX 80 DI" }, internalRoadmap), { system: "DNX 80 DI" }, internalRoadmap);
-  assert.equal(vm.expanderShell.timelineStatusTest.timelineAsOfDate, "2026-08-15");
-  assert.ok(vm.expanderShell.timelineStatusTest.timelineVisibleStatusOptions.includes("roadmap"));
-  assert.ok(vm.expanderShell.timelineStatusTest.timelineVisibleStatuses.includes("roadmap"));
+  assert.equal(vm.timelineStatusTest.timelineAsOfDate, "2026-08-15");
+  assert.ok(vm.timelineStatusTest.timelineVisibleStatusOptions.includes("roadmap"));
+  assert.ok(vm.timelineStatusTest.timelineVisibleStatuses.includes("roadmap"));
 });
 
 test("timeline status controls render in the visible Selector shell card", () => {

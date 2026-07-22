@@ -75,7 +75,7 @@ function createModel({ selectorState = createSelectorState(), selectorReferenceS
 
 test("Selector read-only resolver preview exposes required boundary copy, relationship map, categories, and fields", () => {
   const model = createModel();
-  const preview = model.expanderShell.readonlyResolverPreview;
+  const preview = model.selectorDiagnostics.readonlyResolverPreview;
 
   assert.equal(preview.readOnly, true);
   assert.equal(preview.diagnosticOnly, true);
@@ -138,7 +138,7 @@ test("Selector read-only resolver preview exposes required boundary copy, relati
 });
 
 test("Selector read-only resolver preview keeps all active resolver, generation, proof, write, and raw exposure flags disabled", () => {
-  const preview = createModel().expanderShell.readonlyResolverPreview;
+  const preview = createModel().selectorDiagnostics.readonlyResolverPreview;
   const flags = preview.runtimeStatusFlags;
 
   assert.equal(flags.readOnly, true);
@@ -182,7 +182,7 @@ test("Selector read-only resolver preview reflects source readiness and missing 
       privatePathsExposed: true,
     }),
   });
-  const preview = model.expanderShell.readonlyResolverPreview;
+  const preview = model.selectorDiagnostics.readonlyResolverPreview;
   const fields = preview.fields;
   const sourceRows = Object.fromEntries(preview.sourceRows);
 
@@ -208,14 +208,14 @@ test("Selector read-only resolver preview reflects manual constraints, auto cons
 
   const model = createModel({ selectorState });
   const after = selectorState.getSnapshot().selectorStateContract;
-  const preview = model.expanderShell.readonlyResolverPreview;
+  const preview = model.selectorDiagnostics.readonlyResolverPreview;
 
   assert.deepEqual(after.manualConstraints, before.manualConstraints);
   assert.deepEqual(after.autoConsequences, before.autoConsequences);
   assert.deepEqual(after.effectiveSelection, before.effectiveSelection);
   assert.equal(preview.fields.preview_state, "manually constrained preview");
   assert.match(preview.fields.manual_constraints, /CCT\/CRI: 3000K \/ CRI80/);
-  assert.match(preview.fields.auto_consequences, /Driver:/);
+  assert.equal(preview.fields.auto_consequences, "none");
   assert.match(preview.fields.effective_selection, /CCT\/CRI: 3000K \/ CRI80/);
   assert.equal(preview.fields.spec_gate_status, "incomplete — preview-ready does not mean spec-ready");
   assert.equal(preview.fields.slug_preview_status, "disabled — no slug generated, committed, or treated as authority");
@@ -229,11 +229,11 @@ test("Selector read-only resolver preview explains compatibility without clearin
 
   const model = createModel({ selectorState });
   const after = selectorState.getSnapshot().selectorStateContract;
-  const preview = model.expanderShell.readonlyResolverPreview;
+  const preview = model.selectorDiagnostics.readonlyResolverPreview;
 
   assert.deepEqual(after.manualConstraints, before.manualConstraints);
   assert.equal(after.manualConstraints.interiorExterior.value, "exterior");
-  assert.equal(after.effectiveSelection.ipRating.value, "IP20");
+  assert.equal(Object.hasOwn(after.effectiveSelection, "ipRating"), false);
   assert.equal(preview.fields.preview_state, "compatibility explained preview");
   assert.match(preview.fields.compatibility_summary, /compatible selections are not cleared/);
   assert.equal(preview.runtimeStatusFlags.compatibleSelectionClearingEnabled, false);
@@ -252,7 +252,7 @@ test("Selector read-only resolver preview fails closed when source is unavailabl
       missingTables: ["SYSTEM"],
     },
   });
-  const preview = model.expanderShell.readonlyResolverPreview;
+  const preview = model.selectorDiagnostics.readonlyResolverPreview;
 
   assert.equal(preview.fields.preview_state, "source unavailable");
   assert.equal(preview.fields.source_status, "source unavailable");

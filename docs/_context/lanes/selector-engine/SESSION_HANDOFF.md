@@ -811,3 +811,12 @@ Coupled-test receipt: 71 baseline assumptions; 69 deleted; 2 rewritten; 32 affec
 Program found four encoded Length Mode assumptions omitted from the original 71-item baseline. The existing parcel repaired only two tests: two diagnostics now require only missing physical length, and two guarded no-write fixtures use quantity and physical length without a legacy mode field. No production changed.
 
 Corrected mechanical receipt: baseline 75; deleted 71; rewritten 4; affected test files 34; residual 0. The four survivors were omitted from the original baseline. Searches cover `runLengthMode`, `lengthMode`, `requested_length_basis`, `requestedLengthBasis`, `missing-length-mode` and `length_mode`; residual is zero. Both repaired files and the previously affected focused gate passed together at 115/115, and the fixed gate remains 108/108. Stop for Program review; do not begin WALK-003.
+
+
+## 2026-07-22 WALK-003 completion handoff
+
+Program accepted WALK-002/WALK-002R complete and released WALK-003 only. The accepted branch tip and lane memory are reconciled.
+
+The mounted runtime-native expander scaffold and its fabricated current-selection authority are removed within the exact three-owner production boundary. Fresh load is an empty preamble with no selected product truth; the fabricated `Linear 60`, `1200 lm/m`, `IK07` and all other old local defaults cannot populate effective selection, consequences, readiness, summaries, payloads or rendered current selection. The source-backed workflow surface remains the sole current-selection owner. Unmounted read-only diagnostics remain outside authority-bearing projection.
+
+Receipt: baseline 37; deleted 0; rewritten 37; 8 affected tests; residual 0; equation `37 = 0 + 37 + 0`. Focused coverage and fixed gate are green. Stop for Program review; do not begin WALK-004 or later work.

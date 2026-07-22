@@ -7709,7 +7709,12 @@ export function createSelectorViewModel({ adapter, selectorState, selectorRefere
     runIntakePreviewReady: selectorSurface.runIntakePreviewReady,
     lmTemperatureReadinessPreview: selectorSurface.lmTemperatureReadinessPreview,
     lmTemperatureReadinessPreviewReady: false,
-    expanderShell: createSelectorExpanderShell(local, selectorState, onLocalStateChange, selectorReferenceStatus, selectorSurface),
+    selectorControls: createManualConstraintBehaviour(selectorStateContractFromLocal(local), selectorState, onLocalStateChange, selectorSurface),
+    selectorDiagnostics: {
+      readiness: createSelectorReadinessDiagnostics(selectorStateContractFromLocal(local)),
+      readonlyResolverPreview: createSelectorReadonlyResolverPreview(selectorStateContractFromLocal(local), selectorReferenceStatus),
+    },
+    timelineStatusTest: selectorSurface.timelineStatusTest,
     identity: {
       owner: identity.owner,
       status: identity.status,

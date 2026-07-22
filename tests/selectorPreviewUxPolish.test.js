@@ -11,12 +11,9 @@ test("Selector page renders product-facing controls before collapsed Diagnostics
 
   const productIndex = source.indexOf("appendSelectorProductSurface(article");
   const diagnosticsIndex = source.indexOf("const diagnosticsDetails = document.createElement(\"details\")");
-  const expanderDiagnosticsIndex = source.indexOf("appendSelectorExpanderShell(diagnostics");
-
   assert.ok(productIndex > 0, "product-facing Selector surface should be rendered");
   assert.ok(diagnosticsIndex > productIndex, "Diagnostics should come after the product surface");
-  assert.ok(expanderDiagnosticsIndex > diagnosticsIndex, "existing diagnostics should live inside Diagnostics");
-  assert.equal(source.includes("appendSelectorExpanderShell(article"), false);
+  assert.doesNotMatch(source, /appendSelectorExpanderShell\((?:article|diagnostics)/, "legacy expander scaffold must not be mounted");
   const disabledSummaryIndex = source.indexOf("appendSelectorDisabledHandoffSummary(diagnostics");
   const specBuildPreviewIndex = source.indexOf("appendSelectorSpecBuildReadinessPreview(diagnostics");
   const compactStatusIndex = source.indexOf("appendSelectorProductCompactStatus(diagnostics");
@@ -47,7 +44,7 @@ test("Selector diagnostics remain available behind the small d developer drawer"
   assert.match(source, /appendText\(diagnosticsSummary, "span", "d", "cs-selector-dev-drawer__key"\)/);
   assert.match(source, /dataset\.selectorDeveloperDrawer = "closed-default"/);
   assert.match(source, /appendSelectorReferencePanel\(diagnostics/);
-  assert.match(source, /appendSelectorExpanderShell\(diagnostics/);
+  assert.doesNotMatch(source, /appendSelectorExpanderShell\((?:article|diagnostics)/);
 });
 
 test("Selector module fetches DB-backed options endpoint and reloads it after manual constraint changes", async () => {

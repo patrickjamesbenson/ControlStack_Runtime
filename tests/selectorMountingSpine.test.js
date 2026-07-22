@@ -358,7 +358,7 @@ function compatibleOptionValues(model, fieldKey) {
 }
 
 function visibleControlField(model = {}, fieldKey) {
-  const field = (model.expanderShell?.manualConstraintBehaviour?.controlSections || [])
+  const field = (model.selectorControls?.controlSections || [])
     .flatMap((section) => Array.isArray(section.fields) ? section.fields : [])
     .find((item) => item.fieldKey === fieldKey);
   assert.ok(field, `expected visible/main control field ${fieldKey}`);

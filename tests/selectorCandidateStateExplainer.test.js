@@ -56,7 +56,7 @@ function createModel(selectorState = createSelectorState()) {
 
 test("Selector candidate-state explainer exposes required read-only runtime flags", () => {
   const model = createModel();
-  const explainer = model.expanderShell.readinessDiagnostics.candidateState;
+  const explainer = model.selectorDiagnostics.readiness.candidateState;
 
   assert.equal(explainer.runtimeStatusFlags.readOnly, true);
   assert.equal(explainer.runtimeStatusFlags.diagnosticOnly, true);
@@ -78,7 +78,7 @@ test("Selector candidate-state explainer exposes required read-only runtime flag
 
 test("Selector candidate-state explainer shows categories, field labels, readiness chain, and boundary copy", () => {
   const model = createModel();
-  const explainer = model.expanderShell.readinessDiagnostics.candidateState;
+  const explainer = model.selectorDiagnostics.readiness.candidateState;
 
   assert.deepEqual(explainer.categories, [
     "default preview",
@@ -86,7 +86,7 @@ test("Selector candidate-state explainer shows categories, field labels, readine
     "auto-consequence candidate",
     "compatibility-explained candidate",
     "candidate-ready",
-    "spec-gate incomplete",
+    "Spec Ready incomplete",
     "spec-ready candidate",
     "downstream artefacts disabled",
     "proof not established",
@@ -128,7 +128,7 @@ test("Selector candidate-state explainer shows categories, field labels, readine
 
 test("Selector candidate-state explainer distinguishes default, constrained, and compatibility-explained states without mutation", () => {
   const defaultModel = createModel();
-  const defaultFields = Object.fromEntries(defaultModel.expanderShell.readinessDiagnostics.candidateState.fieldRows);
+  const defaultFields = Object.fromEntries(defaultModel.selectorDiagnostics.readiness.candidateState.fieldRows);
   assert.equal(defaultFields.candidate_state, "default preview");
   assert.equal(defaultFields.proof_boundary, "candidate/spec-ready is not production-proven and is not Lab Proof");
 
@@ -138,7 +138,7 @@ test("Selector candidate-state explainer distinguishes default, constrained, and
 
   const constrainedModel = createModel(selectorState);
   const after = selectorState.getSnapshot().selectorStateContract;
-  const constrainedFields = Object.fromEntries(constrainedModel.expanderShell.readinessDiagnostics.candidateState.fieldRows);
+  const constrainedFields = Object.fromEntries(constrainedModel.selectorDiagnostics.readiness.candidateState.fieldRows);
 
   assert.deepEqual(after.manualConstraints, before.manualConstraints);
   assert.deepEqual(after.autoConsequences, before.autoConsequences);
@@ -152,7 +152,7 @@ test("Selector candidate-state explainer distinguishes default, constrained, and
 
 test("Selector candidate-state explainer does not duplicate generation, proof, record, or RREG authority claims", () => {
   const model = createModel();
-  const explainer = model.expanderShell.readinessDiagnostics.candidateState;
+  const explainer = model.selectorDiagnostics.readiness.candidateState;
   const fields = Object.fromEntries(explainer.fieldRows);
 
   assert.equal(fields.downstream_outputs_disabled, "IES, payload, RunTable, drawings, records, RREG approvals, and proof are disabled");

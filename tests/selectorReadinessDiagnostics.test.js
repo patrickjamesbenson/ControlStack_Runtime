@@ -56,7 +56,7 @@ function createModel(selectorState = createSelectorState()) {
 
 test("Selector readiness diagnostics include required boundary copy and relationship map", () => {
   const model = createModel();
-  const diagnostics = model.expanderShell.readinessDiagnostics;
+  const diagnostics = model.selectorDiagnostics.readiness;
 
   assert.equal(diagnostics.readOnly, true);
   assert.equal(diagnostics.diagnosticOnly, true);
@@ -89,7 +89,7 @@ test("Selector readiness diagnostics include required boundary copy and relation
 
 test("Selector compatibility diagnostics expose fail-closed status flags, dimensions, and reason states", () => {
   const model = createModel();
-  const compatibility = model.expanderShell.readinessDiagnostics.compatibility;
+  const compatibility = model.selectorDiagnostics.readiness.compatibility;
 
   assert.equal(compatibility.runtimeStatusFlags.readOnly, true);
   assert.equal(compatibility.runtimeStatusFlags.diagnosticOnly, true);
@@ -139,7 +139,7 @@ test("Selector compatibility diagnostics expose fail-closed status flags, dimens
 
 test("Selector spec-gate readiness diagnostics expose gates, requirements, and disabled generation flags", () => {
   const model = createModel();
-  const specGate = model.expanderShell.readinessDiagnostics.specGate;
+  const specGate = model.selectorDiagnostics.readiness.specGate;
 
   assert.equal(specGate.runtimeStatusFlags.readOnly, true);
   assert.equal(specGate.runtimeStatusFlags.diagnosticOnly, true);
@@ -162,7 +162,7 @@ test("Selector spec-gate readiness diagnostics expose gates, requirements, and d
     "manually constrained",
     "auto consequences visible",
     "candidate-ready",
-    "spec-gate incomplete",
+    "Spec Ready incomplete",
     "spec-ready",
     "blocked / requires review",
   ]);
@@ -211,10 +211,24 @@ test("Creating readiness diagnostics does not mutate Selector state or clear sel
   assert.deepEqual(after.effectiveSelection, before.effectiveSelection);
 
   assert.equal(after.manualConstraints.interiorExterior.value, "exterior");
-  assert.equal(after.effectiveSelection.ipRating.value, "IP20");
-  assert.equal(model.expanderShell.readinessDiagnostics.compatibility.runtimeStatusFlags.manualConstraintMutationEnabled, false);
-  assert.equal(model.expanderShell.readinessDiagnostics.specGate.runtimeStatusFlags.selectorMutationEnabled, false);
+  assert.equal(Object.hasOwn(after.effectiveSelection, "ipRating"), false);
+  assert.equal(model.selectorDiagnostics.readiness.compatibility.runtimeStatusFlags.manualConstraintMutationEnabled, false);
+  assert.equal(model.selectorDiagnostics.readiness.specGate.runtimeStatusFlags.selectorMutationEnabled, false);
 
-  const blockedRows = model.expanderShell.readinessDiagnostics.compatibility.blockedFieldRows;
+  const blockedRows = model.selectorDiagnostics.readiness.compatibility.blockedFieldRows;
   assert.equal(blockedRows.some(([, message]) => String(message).includes("autoCleared:false")), true);
+});
+
+
+test("fresh Selector state has no fabricated product selection truth", () => {
+  const contract = createSelectorState().getSnapshot().selectorStateContract;
+  assert.deepEqual(contract.defaultPreviewSelections, {});
+  assert.deepEqual(contract.autoConsequences, {});
+  assert.deepEqual(contract.effectiveSelection, {});
+  assert.equal(contract.selectorMode, "empty-preamble");
+  assert.doesNotMatch(JSON.stringify({
+    defaultPreviewSelections: contract.defaultPreviewSelections,
+    autoConsequences: contract.autoConsequences,
+    effectiveSelection: contract.effectiveSelection,
+  }), /linear-60|1200|IK07|preview-only|cut_to_length/);
 });

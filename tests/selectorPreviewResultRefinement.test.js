@@ -78,7 +78,7 @@ function rowsToObject(rows = []) {
 }
 
 test("Selector preview result summary exposes required product-facing boundary copy and flags", () => {
-  const preview = createModel().expanderShell.readonlyResolverPreview;
+  const preview = createModel().selectorDiagnostics.readonlyResolverPreview;
   const summary = preview.previewResultSummary;
 
   assert.equal(summary.title, "Preview result summary");
@@ -126,7 +126,7 @@ test("Selector preview result summary explains candidate, source readiness, cons
   assert.equal(contract.manualConstraints.cctCri.valueLabel, "3000K / CRI80");
   assert.equal(Object.prototype.hasOwnProperty.call(contract.manualConstraints, "cct"), false);
 
-  const summary = createModel({ selectorState }).expanderShell.readonlyResolverPreview.previewResultSummary;
+  const summary = createModel({ selectorState }).selectorDiagnostics.readonlyResolverPreview.previewResultSummary;
   const candidateSummary = rowsToObject(summary.candidateSummaryRows);
   const why = rowsToObject(summary.whyRows);
   const path = rowsToObject(summary.specReadyPathRows);
@@ -135,12 +135,12 @@ test("Selector preview result summary explains candidate, source readiness, cons
   assert.equal(candidateSummary["source state"], "source readable");
   assert.match(candidateSummary["table readiness"], /ready for preview summary/);
   assert.equal(candidateSummary["manual constraint count"], 1);
-  assert.ok(Number(candidateSummary["auto consequence count"]) >= 1);
+  assert.equal(Number(candidateSummary["auto consequence count"]), 0);
   assert.ok(Number(candidateSummary["effective selection count"]) >= 1);
   assert.equal(candidateSummary["Spec Ready state"], "incomplete — preview-ready does not mean spec-ready");
   assert.equal(candidateSummary["proof state"], "not established — this is not Lab Proof");
   assert.match(why["manual constraints"], /CCT\/CRI: 3000K \/ CRI80/);
-  assert.match(why["auto consequences"], /Driver:/);
+  assert.equal(why["auto consequences"], "none yet — no committed consequence is produced here");
   assert.match(why["effective selection"], /CCT\/CRI: 3000K \/ CRI80/);
   assert.equal(path["Lab Proof still required later"], "required later — not established here");
 });
@@ -160,7 +160,7 @@ test("Selector preview result summary explains blocked and missing reasons safel
       credentialsExposed: true,
       privatePathsExposed: true,
     }),
-  }).expanderShell.readonlyResolverPreview;
+  }).selectorDiagnostics.readonlyResolverPreview;
   const summary = preview.previewResultSummary;
   const blocked = rowsToObject(summary.blockedMissingRows);
   const path = rowsToObject(summary.specReadyPathRows);
@@ -184,7 +184,7 @@ test("Selector preview result summary explains blocked and missing reasons safel
 });
 
 test("Selector preview result summary keeps every downstream action disabled", () => {
-  const summary = createModel().expanderShell.readonlyResolverPreview.previewResultSummary;
+  const summary = createModel().selectorDiagnostics.readonlyResolverPreview.previewResultSummary;
   const disabled = rowsToObject(summary.downstreamDisabledRows);
 
   assert.equal(disabled["slug/spec generation"], "disabled");

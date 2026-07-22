@@ -707,3 +707,12 @@ This log is append-oriented. Do not silently rewrite historical decisions.
 - Classification: two removed legacy fixture fields count as deletions; two mode-free diagnostic expectation changes count as rewrites. Combined with the accepted parcel totals, deleted is 71 and rewritten is 4.
 - Invariant: `75 = 71 + 4 + 0`; residual is zero across 34 affected test files.
 - Boundary: no production change and no release of WALK-003 or any prohibited operational work.
+
+
+## 2026-07-22 — Remove mounted scaffold without replacing source-backed selection authority
+
+- Decision: remove the `expanderShell` projection and renderer mount, delete the static fabricated preview-selection constant, and make fresh local state an empty preamble.
+- Boundary: only the three Program-authorised Selector production owners and directly coupled tests.
+- Preservation: source-backed workflow controls remain the sole current-selection owner; read-only diagnostic helpers may remain only unmounted and outside authority-bearing projection.
+- Test coupling: 37 encoded assumptions across 8 tests were rewritten; none remain. No fabricated replacement default, sentinel, fallback or inferred product truth was introduced.
+- Consequence: stop WALK-003 for Program review with every later parcel and prohibited system blocked.

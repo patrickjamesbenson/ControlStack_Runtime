@@ -920,3 +920,16 @@ Every completed worker updates this index with:
 - Corrected count is baseline 75, deleted 71, rewritten 4, affected test files 34, residual 0; the four survivors were omitted from the prior baseline — VERIFIED MECHANICAL RECOUNT.
 - Temporary fixed-gate imports executed both corrected files with the previously affected focused gate at 115/115, then were restored byte-identical; ordinary fixed gate evidence remains 108/108 — VERIFIED.
 - Production, Engine, seeds, persistence, provider state, generation, artifacts and WALK-003 were untouched — VERIFIED BOUNDARY.
+
+
+## 2026-07-22 — WALK-003 completion evidence
+
+- Actual clean branch tip matched the accepted WALK-002R test-coupling repair; Program acceptance was ingested and lane memory reconciled — VERIFIED.
+- Required trace covered `appendSelectorExpanderShell`, `createSelectorExpanderShell`, the runtime-native shell title, `DEFAULT_PREVIEW_SELECTION_VALUES`, module-local default-preview provenance, exact fabricated labels and direct effective/current-selection assertions — VERIFIED.
+- No fourth production owner was required; changes are confined to the exact three authorised production owners — VERIFIED.
+- Renderer mount and view-model scaffold projection are absent — VERIFIED.
+- Static fabricated preview-selection values are absent; fresh default-preview selections, auto consequences and effective selection are empty and selector mode is `empty-preamble` — VERIFIED.
+- Source-backed workflow controls remain available; retained diagnostic helpers are unmounted and outside current-selection authority — VERIFIED.
+- Coupled-test receipt is baseline 37, deleted 0, rewritten 37, affected test files 8, residual 0; `37 = 0 + 37 + 0` — VERIFIED.
+- Affected focused coverage plus fixed gate passed together; ordinary fixed Selector gate passes 108/108 — VERIFIED.
+- Engine, generation, persistence, routes/POST, RuntimeData, provider and source mutation remain disabled and untouched — VERIFIED.

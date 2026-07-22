@@ -873,3 +873,12 @@ Program rejected the prior count receipt after independent verification found fo
 Mechanical recount searched the four production banned names plus the surviving test spellings `missing-length-mode` and `length_mode`. The four survivors were omitted from the original baseline, not misclassified. Corrected receipt: baseline 75; deleted 71; rewritten 4; affected test files 34; residual 0. The arithmetic closes: 75 = 71 + 4 + 0.
 
 Production remains unchanged and at zero for all four banned names. The temporary gate harness was restored byte-identical. Both corrected files plus the previously affected focused gate passed 115/115; the ordinary fixed Selector gate remains 108/108. WALK-002R is stopped for Program review and WALK-003 remains blocked.
+
+
+## 2026-07-22 WALK-003 duplicate scaffold unmounted — pending Program review
+
+Program accepted WALK-002 and WALK-002R complete. Actual clean branch tip was the accepted WALK-002R test-coupling repair; lane memory recorded that work as pending review and was reconciled to Program's acceptance before WALK-003 closeout.
+
+WALK-003 changed only the three authorised production owners. The runtime-native single-page expander scaffold is no longer projected by the view model or mounted by the renderer. The module-local fabricated selection constant was removed; fresh state now has empty default-preview selections, auto consequences and effective selection, with selector mode `empty-preamble`. All old `— default-preview` option labels were removed. Source-backed Selector controls remain available through the genuine workflow surface, and read-only diagnostic helpers remain unmounted and outside current-selection authority.
+
+Mechanical coupled-test receipt: baseline 37; deleted 0; rewritten 37; affected test files 8; residual 0. Arithmetic: 37 = 0 + 37 + 0. The affected focused set plus fixed gate passed together, and the ordinary fixed Selector gate passes 108/108. Engine, generation, persistence, routes/POST, RuntimeData, providers and sources were not enabled or mutated. WALK-003 is stopped for Program review; all later work remains blocked.

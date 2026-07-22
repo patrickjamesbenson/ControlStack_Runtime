@@ -821,3 +821,15 @@ Queue reconciliation: WALK-001V is already done, gated and pushed, so it was not
 * classification: four survivors were omitted from the original baseline, not misclassified
 * verification: zero residual for all six search terms; corrected files plus affected focused gate 115/115; fixed Selector gate 108/108
 * next: no ready Selector parcel; WALK-003 remains blocked pending Program acceptance
+
+
+## 2026-07-22 WALK-003 completion receipt
+
+### WALK-003 unmount duplicate scaffold Selector
+
+* status: complete; stopped for Program review
+* production boundary: exactly Selector state, view model and view
+* test coupling: baseline 37; deleted 0; rewritten 37; affected files 8; residual 0
+* result: legacy expander unmounted; fabricated fresh-load selection authority removed; source-backed current-selection rail retained
+* exclusions: no Engine, generation, persistence, route/POST, RuntimeData, provider or source mutation
+* queue: WALK-004, WALK-005, WALK-005A, WALK-006, WALK-007, audits, manager restart, Lab, retrieval and delivery remain blocked
