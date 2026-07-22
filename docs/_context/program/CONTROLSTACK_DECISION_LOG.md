@@ -1739,3 +1739,13 @@ Program has added exactly that golden witness test to the managed Selector MCP w
 Program admits **WALK-002RGT — exact golden-witness test guard activation** as the sole ready infrastructure prerequisite. Because deployment configuration is process-resident, activation must reload the manager from the latest validated manifest and recycle the complete Selector MCP service host—not merely restart its child—then start it fresh through the manager. Acceptance requires the live guard to retain all nine exact module permissions once each, add the golden witness test once, preserve existing test patterns, keep broad module and broad test wildcards absent, and pass a no-change guarded scope probe for the golden witness test.
 
 WALK-002R resumes afterward under the same standing worker and parcel. Its twelve-owner production boundary, four banned-name zero searches, 71-assumption baseline, 32 affected test files, final zero residual, equal-or-broader Board candidate rule and every no-execution/no-write prohibition remain unchanged. Do not begin WALK-003 or MGR-RESTART-001.
+
+## 2026-07-22 — WALK-002RGT accepted; golden-witness blocker cleared
+
+**Status:** WALK-002RGT ACCEPTED COMPLETE; WALK-002R SOLE READY SELECTOR PARCEL.
+
+Program independently verifies the live Selector MCP guard now contains the exact golden supported-machine witness test permission and the guarded scope probe passes. All nine exact module permissions remain present, existing bounded test patterns remain intact, and the broad module and broad test wildcards remain absent. The Selector lane is clean.
+
+The latest Selector stop remains accepted as a correct protected stop at the time it was taken: all partial edits were removed and the fixed gate passed 108/108. It is now superseded only as an active blocker because the live permission has subsequently become effective.
+
+WALK-002RGT is complete. The existing standing worker resumes the same WALK-002R parcel without a new commission. Preserve the twelve-owner production boundary, all four banned-name zero searches, the 71 encoded-assumption baseline across 32 test files, final zero residual, equal-or-broader Board candidate breadth, all no-execution/no-write boundaries and the stop before WALK-003. MGR-RESTART-001 and both post-WALK audits remain blocked.

@@ -139,8 +139,10 @@ Seed execution remains separately blocked; C6/C7, Engine, CRM/provider mutation,
 
 WALK-002RG is accepted complete. The corrected live guard contains all nine exact module permissions once each, both broad module wildcards are absent, and both WALK-002R additions pass scope checks. Selector MCP is READY / MANAGED; Selector Runtime, unrelated services, repository source, runtime source and credentials were untouched.
 
-WALK-002R stopped cleanly again because the authorised golden supported-machine witness test is outside every live test permission pattern. It contains four of the 71 encoded assumptions. All partial edits were removed, the fixed Selector gate passes 108/108 and the lane is clean.
+WALK-002R stopped cleanly again because the authorised golden supported-machine witness test was outside every live test permission pattern. It contains four of the 71 encoded assumptions. All partial edits were removed, the fixed Selector gate passes 108/108 and the lane is clean.
 
-Program has published WALK-002RGT, adding exactly that test file to the managed guard with no broad test permission. Advisor reloads the resident manager configuration, recycles the complete Selector MCP host and verifies the live test path passes a no-change scope check while all nine exact module permissions remain intact. WALK-002R resumes afterward under the same worker; stop before WALK-003.
+WALK-002RGT is now accepted complete. Direct live verification shows the exact golden witness test permission present and its guarded scope check passing; all nine exact module permissions and bounded test patterns remain intact, with broad module and broad test wildcards absent.
+
+The existing standing worker resumes the same twelve-owner WALK-002R parcel without a new commission. Preserve the four banned-name zero searches, 71 encoded-assumption baseline across 32 test files, final zero residual, equal-or-broader eligible Board candidates and every no-execution/no-write prohibition; gate, push and stop before WALK-003.
 
 MGR-RESTART-001 remains a separately blocked future infrastructure repair to reproduce the stale resident configuration layer and make one selected-service restart reload the latest validated manifest, recycle the complete host and leave all unrelated services unchanged.

@@ -1203,3 +1203,11 @@ Program has added exactly that test file to the managed deployment manifest and 
 WALK-002RGT is the sole ready infrastructure prerequisite. Reload the resident manager from the latest validated manifest, recycle the complete Selector MCP service host rather than only its child, and start it fresh through the manager. Verify the live guard retains all nine exact module permissions once each, contains the golden witness test once, preserves existing test patterns, has no broad module or test wildcard, and accepts a no-change scope probe for the golden witness test.
 
 After Program verifies activation, the existing worker resumes the same WALK-002R parcel. Preserve the twelve-owner production boundary, four banned-name zero searches, 71 encoded-assumption baseline across 32 test files, final zero residual, candidate breadth and every safety prohibition; stop before WALK-003.
+
+### WALK-002RGT accepted; standing worker resumed
+
+Program's direct live verification now shows the exact golden supported-machine witness test permission present and its guarded scope check passing. All nine exact module permissions and existing bounded test patterns remain present, while broad module and broad test wildcards remain absent. The Selector lane is clean.
+
+The most recent protected stop remains accepted as correct when taken: all partial edits were removed and the fixed gate passed 108/108. The permission blocker is now cleared by the live activation.
+
+Resume the existing WALK-002R worker and parcel without a new commission. Preserve the twelve-owner production boundary, zero searches for `runLengthMode`, `lengthMode`, `requested_length_basis` and `requestedLengthBasis`, the 71 encoded-assumption baseline across 32 test files, final zero residual, equal-or-broader eligible Board candidates and every no-execution/no-write prohibition. Gate, push the exact coupled parcel and stop before WALK-003.
