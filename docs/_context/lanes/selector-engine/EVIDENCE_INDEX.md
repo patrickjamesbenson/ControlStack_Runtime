@@ -856,3 +856,14 @@ Every completed worker updates this index with:
 - Quantity and positive physical length remain the only run-intake decisions; old stored mode values are ignored; no replacement, default, fallback, sentinel, derivation or hidden constraint is allowed — RECORDED.
 - Eligible source-backed NVB Board candidate breadth must remain equal or broaden for downstream Lex scoring; narrowing or manufacturing preselection is prohibited — RECORDED.
 - Engine/RunTable/IES invocation, persistence, route/POST creation, RuntimeData mutation, saved-seed action, CRM/provider mutation, artifact flow, cross-lane writes and later walkthrough work remain blocked — RECORDED.
+
+## 2026-07-22 — WALK-002 read-only trace scope-stop evidence
+
+- Standing worker passed identity, branch, recorded-work-HEAD and clean-Git guards — VERIFIED.
+- Read-only repository trace found current required owners outside all five Program-authorised production paths — VERIFIED BY ORCHESTRATOR REPEAT SEARCH.
+- Server-owned registration readiness still requires non-empty mode; persisted project-envelope allowlisting and exact-shape validation still require it — VERIFIED.
+- Candidate mapping fingerprints mode, defaults absence to `cut_to_length`, and emits both mode and requested-length basis — VERIFIED.
+- Accessory preview derives same-length intent from mode; sealed-candidate and RunTable previews normalise missing mode to `unresolved` and emit mode summaries/buckets — VERIFIED.
+- The exact current scope cannot meet positive quantity/length-only readiness, no-default/no-hidden-constraint and no-new-payload-mode acceptance without out-of-scope production edits — VERIFIED SCOPE BLOCKER.
+- No production/test edit, test/gate, stage, commit/push, runtime, Engine/RunTable, persistence, route, RuntimeData, seed, CRM/provider, artifact or later walkthrough action occurred; final Git was clean — VERIFIED.
+- Queue result: WALK-002 blocked for Program rescoping; WALK-003 and later work remain blocked — RECORDED.

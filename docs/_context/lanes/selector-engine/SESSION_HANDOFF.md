@@ -749,3 +749,11 @@ First trace every current `runLengthMode` owner and consumer read-only. Use only
 Delete Length Mode from Selector-owned run intake, stored constraints, readiness, summaries, spine/payload previews, reference metadata and rendered UI/copy. Preserve quantity and positive physical length as the only run-intake decisions, ignore stored mode values, add no replacement/default/hidden interpretation, and preserve or broaden eligible source-backed NVB Board candidates for downstream Lex scoring.
 
 All existing safe-local-intent and no-write/disabled-production boundaries remain unchanged. Do not invoke Engine or RunTable, generate IES, persist, add a route or POST action, mutate RuntimeData, execute or alter seed cases, touch CRM/provider state, retrieve/deliver artifacts, or begin duplicate-scaffold or later walkthrough work.
+
+## 2026-07-22 WALK-002 protected scope stop
+
+The mandatory read-only trace found required current Length Mode owners outside the five Program-authorised production paths. Registration readiness and persisted-envelope validation still require mode; the candidate mapper fingerprints it, defaults absence to `cut_to_length` and emits it into new payload fields; accessory preview derives a same-length interpretation; sealed-candidate and RunTable previews emit `unresolved` fallbacks and mode buckets.
+
+An edit restricted to the authorised five production paths cannot satisfy the deletion ruling without leaving positive quantity plus physical length incomplete, a hidden default/interpretation, or Length Mode in new projections. The worker correctly stopped without changing anything.
+
+WALK-002 is blocked for Program rescoping. Git is clean. No focused/full gate, stage, commit, runtime action, Engine/RunTable call, persistence, route, RuntimeData, seed, CRM/provider, artifact or later walkthrough work occurred. Do not begin WALK-003.

@@ -649,3 +649,11 @@ This log is append-oriented. Do not silently rewrite historical decisions.
 **Deletion ruling:** Length Mode is removed, not replaced. Quantity and positive physical length remain the only run-intake decisions. Stored mode values are ignored and omitted. No default, fallback, sentinel, derivation or hidden manufacturing interpretation may survive.
 
 **Candidate and safety ruling:** all otherwise eligible source-backed NVB Board candidates remain available for downstream Lex scoring. Candidate breadth may broaden or stay equal, never narrow. Engine, RunTable, IES, persistence, routes/POST actions, RuntimeData mutation, seed action, CRM/provider state, artifact flow and later walkthrough work remain prohibited.
+
+## 2026-07-22 — Accept WALK-002 read-only scope stop
+
+**Decision:** Accept the standing worker's protected stop. The required trace proved that current registration, persisted-envelope, candidate-mapping, accessory-interpretation and downstream-preview owners remain outside the five authorised production paths.
+
+**Exact conflict:** those owners still require mode for readiness/validation, default absence to `cut_to_length`, emit mode and requested-length basis, derive same-length intent, or emit `unresolved` sentinels and buckets. The authorised scope cannot truthfully delete Length Mode end to end.
+
+**Consequence:** no implementation or test change is allowed under the current parcel. WALK-002 is blocked for exact Program rescoping; WALK-003 and all later actions remain blocked. The no-Engine, no-write and no-seed boundaries were preserved.

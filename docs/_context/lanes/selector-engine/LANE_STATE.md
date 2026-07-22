@@ -791,3 +791,13 @@ The worker first traces every current `runLengthMode` owner and consumer read-on
 Delete Length Mode from Selector input, constraints, readiness, summaries, payload/spine preview, reference metadata and rendered copy. Preserve positive quantity and physical length as the only run-intake decisions, ignore old stored mode values, introduce no replacement/default/sentinel/derivation, and preserve or broaden all otherwise eligible NVB Board candidates for downstream Lex scoring.
 
 No Engine/RunTable/IES invocation, persistence, route/POST action, RuntimeData mutation, seed execution or mutation, CRM/provider action, artifact flow, cross-lane write, duplicate-scaffold work or later walkthrough action is authorised.
+
+## 2026-07-22 WALK-002 read-only trace scope stop — latest controlling state
+
+**Recorded lane work HEAD:** `b4180e699878ee062a7cec399547e1a495ae5ad0` — `docs(selector): reconcile lane state for WALK-002`.
+
+The standing worker passed lane identity, branch, memory and clean-Git guards, then completed the mandatory read-only Length Mode owner/consumer trace. It found required current production owners outside Program's five authorised production paths.
+
+The outside owners still make mode mandatory for server-owned registration readiness and exact persisted-envelope validation; fingerprint, default and emit mode in the candidate mapper; derive a hidden same-length accessory interpretation; and emit `unresolved` mode sentinels and buckets in downstream sealed-candidate and RunTable previews. These behaviours would keep positive quantity plus physical length incomplete, retain hidden defaults or interpretations, or leak mode into new projections after edits limited to the authorised five files.
+
+The worker stopped before every implementation change. No production/test file, gate, stage, commit, push, runtime service, Engine, RunTable, persistence, route, RuntimeData, seed, CRM/provider, artifact or later walkthrough action changed. Git remained clean. WALK-002 is blocked for exact Program rescoping; WALK-003 and later work remain blocked.
