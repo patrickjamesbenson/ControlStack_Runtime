@@ -286,7 +286,7 @@ test("partial input and clearing any required committed field fail closed immedi
   model = createModel(selectorState);
   assert.equal(model.runIntakePreview.runIntakePreviewReady, false);
   assert.equal(model.singleRunIntentCapture.completionCopy, "0/1 complete");
-  assert.deepEqual(model.runIntakePreview.runs[0].diagnostics, ["missing-run-length", "missing-length-mode"]);
+  assert.deepEqual(model.runIntakePreview.runs[0].diagnostics, ["missing-run-length"]);
 
   model.singleRunIntentCapture.setFieldValue("runLength", "4200");
   model = createModel(selectorState);
@@ -321,5 +321,5 @@ test("committed run constraints override the programmatic local run-intake compa
   assert.equal(model.runIntakePreview.runs[0].id, "run-1");
   assert.equal(model.runIntakePreview.runs[0].label, "Run 1");
   assert.equal(model.runIntakePreview.runs[0].quantity, "1");
-  assert.deepEqual(model.runIntakePreview.runs[0].diagnostics, ["missing-run-length", "missing-length-mode"]);
+  assert.deepEqual(model.runIntakePreview.runs[0].diagnostics, ["missing-run-length"]);
 });

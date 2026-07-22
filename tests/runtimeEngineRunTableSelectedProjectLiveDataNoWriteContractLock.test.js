@@ -203,7 +203,7 @@ result = module.engine_runtable_internal_readonly_invoke_probe(
         "host_local_readonly_engine_candidate": True,
         "selector_stage3_supported_subset": True,
         "tier": "Business",
-        "runs": [{"qty": 1, "run_length_mm": 3500, "length_mode": "cut_to_length"}],
+        "runs": [{"qty": 1, "run_length_mm": 3500}],
         "optic": {"key": "80|Inlay", "label": "Inlay"},
         "lighting": {
             "target_lm_per_m": "1200",
@@ -267,7 +267,7 @@ test("live active RuntimeData reaches donor run_engine only in memory under the 
       host_local_readonly_engine_candidate: true,
       selector_stage3_supported_subset: true,
       tier: "Business",
-      runs: [{ qty: 2, run_length_mm: 3500, length_mode: "cut_to_length" }],
+      runs: [{ qty: 2, run_length_mm: 3500 }],
       optic: { key: "80|Inlay", label: "Inlay" },
       lighting: {
         target_lm_per_m: "1200",

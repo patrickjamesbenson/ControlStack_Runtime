@@ -911,3 +911,12 @@ Every completed worker updates this index with:
 - Current lane `allowed_write_globs` omits the authorised run-intake preview and accessory-placement preview owners; both writes were rejected by the guard — VERIFIED.
 - Every partially applied edit to other authorised owners was restored; production and tests have no remaining diff and Git was clean before lane-memory receipt — VERIFIED.
 - Required recovery is a Program-owned write-guard amendment for exactly the two omitted authorised owners; WALK-002R remains open and no new parcel/worker or later action is released — RECORDED.
+
+## 2026-07-22 — WALK-002R test-coupling repair evidence
+
+- Independent Program verification identified two stale `missing-length-mode` diagnostic expectations and two `length_mode: "cut_to_length"` fixtures across two permitted tests — ACCEPTED INPUT / REPRODUCED.
+- Both diagnostics now expect only `missing-run-length`; both fixtures retain quantity and positive physical length while removing the legacy field — VERIFIED DIFF.
+- Search terms `runLengthMode`, `lengthMode`, `requested_length_basis`, `requestedLengthBasis`, `missing-length-mode` and `length_mode` return zero residual in their production/test scopes — VERIFIED.
+- Corrected count is baseline 75, deleted 71, rewritten 4, affected test files 34, residual 0; the four survivors were omitted from the prior baseline — VERIFIED MECHANICAL RECOUNT.
+- Temporary fixed-gate imports executed both corrected files with the previously affected focused gate at 115/115, then were restored byte-identical; ordinary fixed gate evidence remains 108/108 — VERIFIED.
+- Production, Engine, seeds, persistence, provider state, generation, artifacts and WALK-003 were untouched — VERIFIED BOUNDARY.

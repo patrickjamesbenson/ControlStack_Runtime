@@ -700,3 +700,10 @@ This log is append-oriented. Do not silently rewrite historical decisions.
 **Exact conflict:** the Selector lane's configured `allowed_write_globs` omits the already-authorised run-intake preview and accessory-placement preview owners. Both were rejected before write. Completing the coupled deletion while leaving either unchanged is impossible.
 
 **Consequence:** restore every partially applied edit, retain no production/test change, keep Git clean, and block WALK-002R pending a Program-owned guard correction adding exactly those two existing owners. Do not broaden scope, create another parcel/worker or begin later work.
+
+## 2026-07-22 — Correct WALK-002R encoded-assumption accounting
+
+- Decision: expand the mechanical baseline from 71 to 75 because four surviving assumptions in two permitted tests were omitted from the original count.
+- Classification: two removed legacy fixture fields count as deletions; two mode-free diagnostic expectation changes count as rewrites. Combined with the accepted parcel totals, deleted is 71 and rewritten is 4.
+- Invariant: `75 = 71 + 4 + 0`; residual is zero across 34 affected test files.
+- Boundary: no production change and no release of WALK-003 or any prohibited operational work.

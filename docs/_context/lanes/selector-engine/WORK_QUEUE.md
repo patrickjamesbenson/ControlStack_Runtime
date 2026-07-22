@@ -811,3 +811,13 @@ Queue reconciliation: WALK-001V is already done, gated and pushed, so it was not
 * deletion-test receipt: baseline 71; deleted 69; rewritten 2; affected test files 32; residual 0
 * gate: fixed Selector gate 108/108
 * next: Program review only; WALK-003 and every prohibited future action remain blocked
+
+
+### WALK-002R test-coupling correction
+
+* status: completed; pending Program review
+* scope: repair only the two Program-identified test files and the five lane-memory closeout files; production unchanged
+* corrected receipt: baseline 75; deleted 71; rewritten 4; affected test files 34; residual 0
+* classification: four survivors were omitted from the original baseline, not misclassified
+* verification: zero residual for all six search terms; corrected files plus affected focused gate 115/115; fixed Selector gate 108/108
+* next: no ready Selector parcel; WALK-003 remains blocked pending Program acceptance

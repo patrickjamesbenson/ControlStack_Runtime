@@ -864,3 +864,12 @@ Program accepted the live WALK-002RGT golden-witness guard correction. The exist
 All 46 banned production occurrences were removed within the exact twelve-owner boundary. Complete production search returns zero `runLengthMode`, `lengthMode`, `requested_length_basis` and `requestedLengthBasis`; the broader mode-alias search is also zero. Quantity and positive physical length are the complete run-intake authority. Legacy mode-shaped input is ignored and omitted, without replacement field, fallback, default, sentinel, proxy or inferred manufacturing meaning. Legitimate policy provenance remains.
 
 Deletion-test receipt: baseline 71; deleted 69; rewritten 2; affected test files 32; residual 0. The fixed Selector gate passes 108/108. WALK-002R is complete and stopped for Program review. WALK-003, future audits/restart work, Engine, seeds, Lab, persistence, routes, RuntimeData mutation, CRM/provider mutation, generation, retrieval and delivery remain blocked.
+
+
+## 2026-07-22 WALK-002R test-coupling repair — pending Program review
+
+Program rejected the prior count receipt after independent verification found four surviving encoded assumptions in two already-permitted tests. The same WALK-002R parcel repaired only those tests: two stale diagnostic assertions now expect `missing-run-length` alone, and two selected-project fixtures now use quantity plus physical length without `length_mode`.
+
+Mechanical recount searched the four production banned names plus the surviving test spellings `missing-length-mode` and `length_mode`. The four survivors were omitted from the original baseline, not misclassified. Corrected receipt: baseline 75; deleted 71; rewritten 4; affected test files 34; residual 0. The arithmetic closes: 75 = 71 + 4 + 0.
+
+Production remains unchanged and at zero for all four banned names. The temporary gate harness was restored byte-identical. Both corrected files plus the previously affected focused gate passed 115/115; the ordinary fixed Selector gate remains 108/108. WALK-002R is stopped for Program review and WALK-003 remains blocked.

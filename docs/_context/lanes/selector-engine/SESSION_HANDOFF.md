@@ -804,3 +804,10 @@ WALK-002R remains open but blocked for a Program-owned write-guard correction ad
 The existing WALK-002R worker resumed after Program accepted the live golden-witness test permission. The exact twelve production owners are now mode-free. Quantity plus positive physical length alone completes run intake; stored or supplied legacy mode data is discarded and omitted. Registration, saved-project, candidate, accessory, sealed-result and downstream preview shapes contain no deleted mode or requested-length-basis field, fallback, bucket, sentinel, proxy or inferred shared-length meaning. Source-backed Board candidate eligibility is not narrowed and all no-write/disabled-production boundaries remain intact.
 
 Coupled-test receipt: 71 baseline assumptions; 69 deleted; 2 rewritten; 32 affected test files; 0 residual. Production and test searches for all four banned names are zero, the wider production alias search is zero, and the fixed Selector gate passes 108/108. The exact implementation and lane closeout are ready for Program review; do not begin WALK-003 or any prohibited later action.
+
+
+## 2026-07-22 WALK-002R corrected completion receipt
+
+Program found four encoded Length Mode assumptions omitted from the original 71-item baseline. The existing parcel repaired only two tests: two diagnostics now require only missing physical length, and two guarded no-write fixtures use quantity and physical length without a legacy mode field. No production changed.
+
+Corrected mechanical receipt: baseline 75; deleted 71; rewritten 4; affected test files 34; residual 0. The four survivors were omitted from the original baseline. Searches cover `runLengthMode`, `lengthMode`, `requested_length_basis`, `requestedLengthBasis`, `missing-length-mode` and `length_mode`; residual is zero. Both repaired files and the previously affected focused gate passed together at 115/115, and the fixed gate remains 108/108. Stop for Program review; do not begin WALK-003.
