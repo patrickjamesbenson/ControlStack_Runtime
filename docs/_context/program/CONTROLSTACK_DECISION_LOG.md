@@ -1701,3 +1701,15 @@ After WALK-007, TEST-AUDIT-001 and the accepted reader contract, POLICY-MAP-001 
 The consumer-group column is the table spine. The audit records the current item identity, consumer-group value, classification, exact file/function where applicable and concise evidence. It does not expose policy values unless separately authorised. Any code read that cannot map to one of the current source rows is a blocking orphan-consumer exception in the audit receipt and must not be represented as a synthetic extra policy row.
 
 POLICY-MAP-001 exists to show which policy groups await implementation, feed later widening briefs, expose stale consumers and catch reads for policy identities that no longer exist. Its output creates no implementation authority; Program separately admits every resulting repair or widening parcel. Seed execution remains separately blocked and is not released by either audit.
+
+## 2026-07-22 — WALK-002RG activation receipt reconciled; corrected reactivation required
+
+**Status:** FIRST ACTIVATION NOT ACCEPTED; WALK-002RG REMAINS THE SOLE READY INFRASTRUCTURE PREREQUISITE.
+
+Program accepts the Advisor's discrepancy diagnosis: the Program deployment manifest had been rebuilt from a stale baseline and retained the two new WALK-002R permissions while omitting six previously approved exact Selector module permissions. Program has reconciled the manifest and deployment contract test to the complete intended exact permission set: the factory summary, run-intake preview, accessory-placement preview, the four Selector core files, and the emergence and scene-builder view models. Broad module wildcards remain prohibited.
+
+The activation itself is not accepted yet. Although the Advisor reports the Selector MCP service healthy and managed after restart, Program's direct live `repo_info` still omits both newly added WALK-002R files, and guarded dry-run write probes reject each as outside lane scope. Selector Runtime and the lane repository remain clean and unchanged.
+
+WALK-002RG therefore remains open. Advisor must reapply the newly reconciled Program manifest and restart only Selector MCP through the existing manager. Acceptance requires the live guard to list all nine exact module permissions once each, both broad module wildcards absent, and guarded dry-run write probes against the run-intake and accessory-placement previews to pass scope validation without changing either file.
+
+WALK-002R remains permission-blocked. Its standing worker, twelve-owner scope, 71-assumption baseline, four banned-name searches, coupled test rule and every safety prohibition remain unchanged. Do not begin implementation until Program receives and verifies the corrected activation receipt.

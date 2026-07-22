@@ -107,6 +107,12 @@ test("Selector MCP write guard includes only the approved exact Selector module 
     "packages/modules/cs-selector/selectorFactoryApprovedInputsSummary.js",
     "packages/modules/cs-selector/selectorRunIntakePreview.js",
     "packages/modules/cs-selector/selectorRunAccessoryPlacementPreview.js",
+    "packages/modules/cs-selector/index.js",
+    "packages/modules/cs-selector/selectorViewModel.js",
+    "packages/modules/cs-selector/selectorView.js",
+    "packages/modules/cs-selector/selectorState.js",
+    "packages/modules/emergence/emergenceViewModel.js",
+    "packages/modules/scene-builder/sceneBuilderViewModel.js",
   ];
   const laneContext = ["docs", "_context", "lanes", "selector-engine", "**"].join("/");
   const moduleWildcard = ["packages", "modules", "**"].join("/");

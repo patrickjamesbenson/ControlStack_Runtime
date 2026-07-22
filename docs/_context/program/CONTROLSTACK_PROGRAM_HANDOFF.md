@@ -1175,3 +1175,13 @@ POLICY-MAP-001 is the second blocked read-only parcel after TEST-AUDIT-001. Patr
 POLICY-MAP-001 uses the consumer-group column as its spine and returns one table with exactly one row per current SYSTEM_POLICY item. Each row is classified only as `CONSUMED-VERIFIED`, `CONSUMED-STALE` or `NO CONSUMER YET`. Verified and stale classifications name the exact consuming file and function and state concise shape/name evidence. The audit exposes item identities and consumer mapping, not policy values. A code read that maps to no current policy item is a blocking orphan-consumer exception in the receipt, not a fabricated extra table row.
 
 The audit exists to identify policy groups awaiting implementation, feed later widening briefs, expose stale reads and catch consumers of removed policy identities. It changes no source, code or test and releases no implementation, Engine, seed, Lab, CRM, persistence, IES, retrieval or delivery work. Program separately admits any repair or widening parcel.
+
+### WALK-002RG activation discrepancy and corrected reactivation
+
+The Advisor's first activation receipt is not accepted as completion. It correctly identified that Program's deployment manifest was stale and omitted six previously approved exact Selector permissions. Program has reconciled the manifest and contract test to the full nine-file exact module permission set: seven retained approvals and the two WALK-002R additions. Broad module wildcards remain absent.
+
+Direct live verification still shows the two WALK-002R files missing from the active guard. No-change guarded dry-run write probes reject both files as outside Selector lane scope. The service may be healthy, but the required permission activation is not effective through the live MCP boundary.
+
+Advisor must reapply the reconciled manifest and restart only Selector MCP. The corrected receipt must prove all nine exact module permissions occur once each, broad `packages/modules/**` and `packages/modules/cs-selector/**` permissions remain absent, and no-change dry-run write probes for the run-intake and accessory-placement previews pass scope validation. Do not restart Selector Runtime.
+
+WALK-002R remains blocked until Program verifies that corrected activation. The existing worker and parcel resume afterward without a new commission; every prior production boundary, test-count and safety condition remains unchanged.
