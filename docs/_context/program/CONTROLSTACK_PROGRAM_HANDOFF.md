@@ -1141,3 +1141,15 @@ Effective immediately, every WALK parcel that deletes an input, authority, prere
 Each deletion-parcel receipt reports five mechanical counts: baseline encoded-assumption assertions, assertions deleted, assertions rewritten, affected test files and residual encoded-assumption assertions. Residual must be zero unless Program has explicitly approved a historical non-runtime fixture. This requirement is part of WALK-002R now and every later WALK deletion parcel; it does not authorise unrelated test refactoring.
 
 TEST-AUDIT-001 is recorded as a blocked future read-only parcel after WALK-007. It audits the runtime test suite only for: deleted-input assertions including user-entered Tier and Length Mode; governance/project/revision/identity preconditions on Engine execution; future/diagnostic/consequence/disabled fields treated as prerequisites; and supposedly varied fixture rows carrying identical values. Its only output is a counted kill-list for separate Program deletion approval. It changes no test or production file and releases no seed, Engine, Lab, CRM, persistence, IES, retrieval or delivery work.
+
+### WALK-002R second protected stop and twelve-owner amendment
+
+Program accepts the second WALK-002R protected stop. The worker found one additional production owner before edits, stopped without broadening scope, pushed only lane-memory reconciliation, retained a clean lane and passed the fixed 108/108 gate.
+
+The exact missing owner is the safe selected-result source projection. It still allowlists and can emit `requested_length_basis` from controlled geometry. Add this owner to the previous eleven-owner boundary; WALK-002R remains the same sole parcel and now has twelve authorised production owners.
+
+Delete the `requested_length_basis` allowlist/emission from that projection and remove the field from its coupled fixtures, exact-shape assertions and downstream contract tests. Current repository evidence contains six test occurrences of the field. The worker must mechanically calculate the complete baseline encoded-assumption assertion count before editing and report the required deleted, rewritten, affected-file and zero-residual counts after editing.
+
+Do not delete `length_policy_source` or `accessory_length_policy_source` by name alone. They remain valid policy provenance unless the worker proves a specific occurrence directly encodes the deleted Length Mode assumption; such proof must remain within the twelve-owner boundary or trigger another stop.
+
+Completion searches under production `packages` must return zero occurrences of `runLengthMode`, `lengthMode`, `requested_length_basis` and `requestedLengthBasis`. All prior mode-free authority, candidate-breadth and no-execution/no-write rules remain binding. If no further owner appears, run affected tests and the fixed gate, push the coupled WALK-002R implementation and lane-memory closeout, and stop before WALK-003.

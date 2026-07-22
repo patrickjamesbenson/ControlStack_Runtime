@@ -1653,3 +1653,17 @@ Program queues **TEST-AUDIT-001 — runtime test-assumption audit** as a blocked
 4. fixtures whose supposedly varied rows use identical values, creating a placeholder trap.
 
 TEST-AUDIT-001 makes no production or test edit. Its sole output is a counted kill-list grouped by criterion, test file and assertion/fixture location, with a safe explanation of the encoded obsolete assumption. Program separately approves any deletion or rewrite parcel arising from that kill-list. No automatic cleanup follows the audit.
+
+## 2026-07-22 — WALK-002R twelfth-owner stop accepted; twelve-owner rescope released
+
+**Status:** WALK-002R REMAINS OPEN; AMENDED TWELVE-OWNER WALK-002R SOLE READY SELECTOR PARCEL.
+
+Program directly verified the second protected stop. The Selector lane is clean, the fixed gate passes 108/108, only lane-memory reconciliation was pushed, and no production or test implementation, runtime, Engine, RunTable, persistence, source, seed, CRM/provider, artifact or later walkthrough action changed.
+
+The accepted trace identifies one exact missing production owner: the safe selected-result source projection still allowlists and can emit `requested_length_basis` from controlled geometry. The only other current production occurrences are already inside the authorised candidate mapper. No `requestedLengthBasis` alias exists. Six current test occurrences encode the field or its fixture contract and fall under the mandatory deletion-test coupling rule.
+
+WALK-002R is amended rather than replaced. Its production boundary now contains the previous eleven owners plus the safe selected-result source projection as the twelfth and final currently known owner. Delete the allowlisted/emitted `requested_length_basis` contract effect there, and remove the field from every coupled fixture, exact-shape expectation and downstream contract test that encoded it. Do not delete `length_policy_source` or `accessory_length_policy_source` merely by association; they remain outside the deleted Length Mode assumption unless the implementation proves they directly encode a mode.
+
+Completion search under `packages` must return zero `runLengthMode`, zero `lengthMode`, zero `requested_length_basis` and zero `requestedLengthBasis` occurrences. The receipt must still report baseline encoded-assumption assertions, deleted assertions, rewritten assertions, affected test files and zero residual encoded-assumption assertions. If any additional production owner or alias appears outside the twelve-owner boundary, stop again before edits outside scope.
+
+All prior WALK-002R acceptance rules remain binding: quantity and positive physical length only; no replacement/default/sentinel/proxy/inferred manufacturing interpretation; legacy mode data discarded; registration and saved-project validation mode-free; candidate breadth equal or broader; no Engine/RunTable/IES execution, persistence, routes, POST actions or RuntimeData mutation. Gate, push the exact coupled parcel, reconcile lane memory and stop before WALK-003.
