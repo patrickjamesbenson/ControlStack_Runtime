@@ -734,7 +734,7 @@ Queue reconciliation: WALK-001V is already done, gated and pushed, so it was not
 
 ### WALK-002R Complete Length Mode owner deletion
 
-* status: ready (sole Selector parcel; one writer and one parcel only)
+* status: blocked (protected twelfth-owner stop; exact Program rescoping required)
 * depends-on: Program acceptance of the WALK-002 protected scope stop and exact owner rescope; accepted
 * parent: WALK-002 remains open until WALK-002R is accepted
 * exact production paths:
@@ -759,3 +759,14 @@ Queue reconciliation: WALK-001V is already done, gated and pushed, so it was not
 * production zero-search: `packages` must contain zero `runLengthMode` and zero `lengthMode`; another production occurrence or required owner is a protected stop
 * closeout: run all affected focused tests and fixed Selector gate; commit/push exact WALK-002R implementation and lane memory; stop for Program review without beginning WALK-003
 * prohibited: Engine invocation; saved seed execution or mutation; RunTable/IES generation; Lab C6/C7 release; CRM/provider mutation; persistence; new route or POST; RuntimeData mutation; retrieval/delivery; cross-lane, donor, main or later walkthrough work
+
+
+## 2026-07-22 WALK-002R protected scope stop receipt
+
+* result: stopped before every implementation/test edit; required twelfth production owner lies outside the exact eleven-path authority
+* outside owner: `packages/workspace-kernel/engineRunTableSafeSelectedResultSourceObject.js`
+* exact effect: `controlledIntentMarkersFrom()` allowlists, reads and may emit `requested_length_basis` from controlled geometry
+* dependency trace: directly imported by the authorised readonly candidate mapper and by the runtime selected-result contract
+* consequence: deleting only the eleven authorised owners would leave a current production contract effect and cannot satisfy the required zero-effect outcome
+* Git and safety: clean; no test/gate, stage, commit/push, runtime, Engine/RunTable, seed, Lab, CRM/provider, persistence, route/POST, RuntimeData, IES, retrieval/delivery or later work
+* queue: WALK-002 remains open; WALK-002R blocked for exact Program rescoping; WALK-003 and later work blocked; no Selector parcel ready

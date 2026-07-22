@@ -816,3 +816,16 @@ Delete every production occurrence and contract effect of `runLengthMode` and `l
 Registration, exact saved-project validation, current envelopes, readonly candidate mapping, accessory preview, sealed-candidate preview, downstream RunTable-domain preview and the controlled source probe must use mode-free shapes. All otherwise eligible source-backed NVB Board candidates remain available for downstream Lex scoring; quantity may bound accessory intent but may not imply a shared length basis.
 
 Before completion, production search across `packages` must return zero `runLengthMode` and zero `lengthMode` occurrences. Run all affected focused tests and the fixed Selector gate, commit and push only WALK-002R plus its lane-memory closeout, then stop for Program review. WALK-003 and every later walkthrough, Engine, seed, Lab generation, CRM/provider, persistence, IES, retrieval and delivery action remain blocked.
+
+
+## 2026-07-22 WALK-002R twelfth-owner protected scope stop — latest controlling state
+
+**Recorded lane work HEAD:** `77af4c71e0eeef219ccc003f12af32af23d9f03e` — `docs(selector): reconcile lane state for WALK-002R`.
+
+The standing worker passed the lane identity, branch, recorded-work-HEAD and clean-Git guards, then completed the required pre-edit production/test occurrence trace. The trace found a twelfth current production owner outside Program's exact eleven-path boundary.
+
+`packages/workspace-kernel/engineRunTableSafeSelectedResultSourceObject.js` still allowlists `requested_length_basis` in `controlledIntentMarkersFrom()`, reads it from controlled geometry and can emit it into the safe selected-result source object. The outside owner is imported directly by the authorised readonly candidate mapper and by the runtime selected-result contract. Completing the ordered deletion without changing that owner would leave a current mode-derived contract effect in production.
+
+The worker stopped before every implementation or test edit and did not broaden the parcel. No test, gate, stage, commit, push, runtime action, Engine/RunTable execution, seed action, Lab release, CRM/provider mutation, persistence, route/POST action, RuntimeData mutation, IES, retrieval, delivery or later walkthrough work occurred. Git remained clean.
+
+WALK-002 remains open. WALK-002R is blocked for exact Program rescoping and no Selector parcel is ready. WALK-003 and every later action remain blocked.

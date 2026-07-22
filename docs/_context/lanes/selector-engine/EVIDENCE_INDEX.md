@@ -880,3 +880,14 @@ Every completed worker updates this index with:
 - Registration and exact saved-project validation use the mode-free shape; eligible source-backed NVB Board candidates remain equal or broader for Lex scoring — RECORDED.
 - Completion requires zero production occurrences under `packages`, all affected focused tests, the fixed Selector gate, exact implementation and lane-memory commits/pushes, then Program review — RECORDED.
 - Engine, seeds, RunTable/IES generation, Lab releases, CRM/provider mutation, persistence, routes/POST actions, RuntimeData mutation, retrieval/delivery and later walkthrough work remain blocked — RECORDED.
+
+
+## 2026-07-22 — WALK-002R twelfth-owner scope-stop evidence
+
+- Standing worker passed identity, branch, recorded-work-HEAD and clean-Git guards — VERIFIED.
+- Pre-edit production/test trace found `requested_length_basis` allowlisted by `controlledIntentMarkersFrom()` in `packages/workspace-kernel/engineRunTableSafeSelectedResultSourceObject.js`, outside the eleven authorised owners — VERIFIED BY ORCHESTRATOR REPEAT SEARCH.
+- The outside owner reads the field from controlled geometry and may emit it into the safe selected-result source object — VERIFIED.
+- The outside owner is imported directly by the authorised readonly candidate mapper and the runtime selected-result contract — VERIFIED DEPENDENCY TRACE.
+- Eleven-owner-only implementation cannot meet the complete production-effect deletion or zero production occurrence contract without leaving the outside owner unchanged — VERIFIED SCOPE BLOCKER.
+- No production/test edit, focused/full test, gate, stage, commit/push, runtime, Engine/RunTable, seed, Lab, CRM/provider, persistence, route/POST, RuntimeData, IES, retrieval/delivery or later walkthrough action occurred; Git remained clean — VERIFIED.
+- Queue result: WALK-002 remains open; WALK-002R blocked for exact Program rescoping; WALK-003 and later work blocked; no Selector parcel ready — RECORDED.

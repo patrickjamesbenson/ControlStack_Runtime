@@ -670,3 +670,12 @@ This log is append-oriented. Do not silently rewrite historical decisions.
 **Scope ruling:** production is limited to the eleven exact owners in WORK_QUEUE.md. Tests are limited to current mode occurrences and direct importers that require exact-shape or fixture changes. Any additional production occurrence or owner is another protected stop. Completion requires zero production occurrences under `packages`, all affected focused tests and the fixed Selector gate.
 
 **Consequence:** Engine, seeds, RunTable/IES generation, Lab releases, CRM/provider state, persistence, routes/POST actions, RuntimeData mutation, retrieval/delivery, WALK-003 and every later action remain blocked.
+
+
+## 2026-07-22 — Stop WALK-002R at twelfth production owner
+
+**Decision:** Accept the standing worker's protected pre-edit stop. The exact eleven-owner boundary is still incomplete because the safe selected-result source-object production owner remains outside scope.
+
+**Exact conflict:** `controlledIntentMarkersFrom()` in `packages/workspace-kernel/engineRunTableSafeSelectedResultSourceObject.js` allowlists `requested_length_basis`, reads it from controlled geometry and may emit it. The owner is imported by both the authorised readonly candidate mapper and the runtime selected-result contract.
+
+**Consequence:** changing only the eleven authorised owners cannot truthfully remove every production mode contract effect. No implementation or test change is allowed under the current parcel. WALK-002 remains open; WALK-002R is blocked for exact Program rescoping; WALK-003 and all later actions remain blocked.

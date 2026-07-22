@@ -770,3 +770,12 @@ Quantity and positive physical length are the complete run-intake authority. Ign
 Preserve or broaden every otherwise eligible source-backed NVB Board candidate for downstream Lex scoring. Candidate identity may use quantity and physical length only. Accessory, sealed-candidate and downstream previews may expose safe quantity and physical-length information only, with no mode or hidden same-length meaning.
 
 Tests are limited to current mode occurrences and direct importers of the eleven owners that need exact-shape or fixture changes. Production search under `packages` must finish with zero `runLengthMode` and zero `lengthMode` occurrences. Any additional production occurrence or owner stops the parcel. Run all affected focused tests and the fixed Selector gate, commit and push the exact implementation and lane-memory closeout, then stop. Engine, RunTable/IES generation, seed cases, Lab releases, CRM/provider state, persistence, routes/POST actions, RuntimeData mutation, retrieval, delivery and later walkthrough work remain prohibited.
+
+
+## 2026-07-22 WALK-002R protected scope stop
+
+The mandatory pre-edit trace found a twelfth production owner outside the exact eleven-file Program boundary. The safe selected-result source-object owner still accepts and emits `requested_length_basis` from controlled geometry. It is directly consumed by the authorised readonly candidate mapper and the runtime selected-result contract, so deleting only the eleven authorised owners would leave a production contract effect behind.
+
+The worker correctly stopped without changing production or tests and without broadening scope. Git is clean. No focused/full test, gate, stage, commit, runtime action, Engine/RunTable execution, seed, Lab release, CRM/provider action, persistence, route/POST action, RuntimeData mutation, IES, retrieval, delivery or later walkthrough work occurred.
+
+WALK-002 remains open. WALK-002R is blocked pending exact Program rescoping. No Selector parcel is ready and WALK-003 must not begin.
