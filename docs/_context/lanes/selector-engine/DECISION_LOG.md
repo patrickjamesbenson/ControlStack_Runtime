@@ -629,3 +629,13 @@ This log is append-oriented. Do not silently rewrite historical decisions.
 **Consequence:** the known Driver contradiction and missing approved finite tier-specific Ambient evidence stop before every write. WALK-001 remains open for Program source repair. WALK-001VA is complete as a read-only evidence action; WALK-002 through WALK-007 and SEED-LIB-001 remain blocked. No Sheet edit, materialisation, archive, promotion, Engine or saved-case action is authorised.
 
 **Reconciliation:** Program's note that Selector had not recorded SEED-LIB-001 is stale relative to current clean Selector history. The blocked batch already exists in lane memory and is preserved without duplication.
+
+## 2026-07-22 — Accept corrected source and close WALK-001 at Program review
+
+**Decision:** Accept Program's WALK-001S admission and Patrick's bounded source correction without another source edit or service restart. The complete original guarded dry-run is authoritative and must pass every source-shape, validation, identity, Ambient and disclosure condition before any write.
+
+**Verified guard result:** the source has one exact approved `ambient_temp` row with finite economy, business, first and charter evidence and zero non-finite recognised-tier tokens. Canonical Driver authority is populated and protocol-bearing on all 48 rows, the duplicate-normalised authority is absent, and canonical Driver-to-BOARDS agreement is non-zero.
+
+**Execution ruling:** after the full dry-run passed, use only the existing guarded live workflow. Materialise first; archive the prior active authority before promotion; promote only after archive success. The resulting receipt proves all three steps completed in order and the new active authority is readable, complete and aligned with the materialised authority.
+
+**Consequence:** WALK-001 is complete but does not release WALK-002. Stop for Program review. WALK-002 through WALK-007 and SEED-LIB-001 remain blocked; Engine, saved cases, Selector feature behaviour, CRM/provider state and artifact flows remain untouched.

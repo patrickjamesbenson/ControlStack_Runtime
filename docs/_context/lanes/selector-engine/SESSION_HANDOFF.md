@@ -729,3 +729,13 @@ The complete guarded dry-run passed Google reading, required-table shape, valida
 DRIVERS has 48 rows. Canonical identity is populated and Boolean-like on all 48, with zero protocol-authoritative rows and values. Duplicate-normalised identity is populated and protocol-authoritative on all 48, carrying 51 protocol values. BOARDS has 265 rows; option authority is populated on 265, labels on 264, pair lengths agree on 264 and disagree on 1, and canonical Driver agreement remains zero.
 
 The known Driver contradiction and missing approved finite tier-specific Ambient evidence stopped the workflow before every write. No Sheet edit, materialisation, archive, promotion, Engine action or later walkthrough work occurred. SEED-LIB-001 remains recorded and sequence-blocked; do not execute, alter or reconstruct either saved case. WALK-001 stays open and WALK-002 through WALK-007 stay blocked. Stop for Program source-repair review; no Selector parcel is ready.
+
+## 2026-07-22 WALK-001S handoff
+
+Program accepted WALK-001VA and admitted WALK-001S. Patrick's corrected source is now visible without another source edit or service restart. The complete original guarded dry-run passed all source-shape, validation, identity and disclosure guards.
+
+Safe evidence: SYSTEM_POLICY 133 rows; exact and approved-exact `ambient_temp` rows 1/1; economy/business/first/charter present and populated; finite tokens 2/3/6/6; zero non-finite recognised-tier tokens; finite-tier, multi-tier and approved finite-tier row counts each 1. DRIVERS 48 rows; canonical authority populated 48, Boolean-like 0, protocol rows 48, protocol values 51; duplicate-normalised authority absent; canonical Driver-to-BOARDS agreement covers six protocol families.
+
+The guarded live workflow materialised the corrected authority, archived the prior active authority successfully, and only then promoted the new authority. Active and materialised authority state is readable, aligned, complete across all 15 required tables and safe under the read-only probe.
+
+WALK-001 is complete and held for Program review. Do not release WALK-002 or later work, invoke Engine, execute or alter either saved seed case, change CRM/provider state, or retrieve or deliver an artifact. SEED-LIB-001 remains sequence-blocked and no Selector parcel is ready.

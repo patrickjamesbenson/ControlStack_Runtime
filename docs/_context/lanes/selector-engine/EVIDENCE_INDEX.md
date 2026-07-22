@@ -832,3 +832,17 @@ Every completed worker updates this index with:
 - BOARDS row count 265; option authority populated 265; labels populated 264; pair-length match 264; mismatch 1; canonical Driver authority intersection 0; source order retained; independent duplicate removal not applied — VERIFIED SAFE COUNTS.
 - No materialised or active-snapshot write was attempted. No Sheet edit, archive, promotion, Engine, saved-case action or later walkthrough action occurred — VERIFIED LIVE NO-WRITE RECEIPT.
 - Stop result: known Driver contradiction and missing approved finite tier-specific Ambient evidence require Program source repair before every write. WALK-001 remains open; WALK-002 through WALK-007 and SEED-LIB-001 remain blocked; no Selector parcel is ready — RECORDED.
+
+## 2026-07-22 — WALK-001S corrected-source refresh evidence
+
+- Program accepted WALK-001VA and admitted WALK-001S as the sole ready Selector action; Patrick reported the bounded NVB correction complete — ACCEPTED HANDOFF.
+- Selector lane identity and branch matched the charter; starting Git state was clean; no source edit or service restart was performed — VERIFIED.
+- Complete original Google-backed dry-run returned HTTP 200 `dry-run-ready`, all 15 required tables present, validation green, zero blockers and all disclosure flags false — VERIFIED LIVE.
+- SYSTEM_POLICY row count 133; exact `ambient_temp` 1; approved exact 1; economy/business/first/charter present and populated; finite tokens 2/3/6/6; non-finite tokens 0/0/0/0 — VERIFIED SAFE COUNTS.
+- Rows with finite recognised-tier evidence 1; rows with finite values across multiple recognised tiers 1; approved rows with finite recognised-tier evidence 1; finite tier-specific Ambient evidence true — VERIFIED SAFE COUNTS.
+- DRIVERS row count 48; canonical authority populated 48, Boolean-like 0, protocol rows 48, protocol values 51; duplicate-normalised authority absent, unpopulated and non-authoritative — VERIFIED SAFE COUNTS.
+- BOARDS row count 265; canonical Driver-to-BOARDS intersection contains six recognised protocol families and excludes generic DALI — VERIFIED SAFE AGREEMENT.
+- Guarded live refresh materialised the validated source; promotion receipt proves the prior active authority archive was created before active-snapshot replacement; promotion completed with zero blockers — VERIFIED LIVE ORDER.
+- Promoted active and materialised authorities are present, readable and aligned in size and modification time; all 15 required tables are present; active read-only fingerprint probe has no missing tables, blockers, writes or raw-data disclosure — VERIFIED.
+- Engine, saved seed cases, Selector features, service lifecycle, CRM/provider state, artifacts and later walkthrough parcels were untouched — VERIFIED BOUNDARY.
+- Queue result: WALK-001 complete pending Program review; WALK-002 through WALK-007 and SEED-LIB-001 remain blocked; no Selector parcel is ready — RECORDED.

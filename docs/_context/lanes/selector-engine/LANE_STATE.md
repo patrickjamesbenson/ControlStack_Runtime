@@ -765,3 +765,17 @@ Safe Ambient evidence: SYSTEM_POLICY is present with 133 rows; exact `ambient_te
 Safe identity evidence: DRIVERS is present with 48 rows. Canonical identity is populated on 48 rows, Boolean-like on 48, protocol-authoritative on 0 rows with 0 protocol values. Duplicate-normalised identity is populated on 48 rows, Boolean-like on 0, protocol-authoritative on 48 rows with 51 protocol values. BOARDS is present with 265 rows; option authority is populated on 265, labels on 264, pair lengths agree on 264 and disagree on 1. Canonical Driver-to-BOARDS authority intersection count is 0. Source order is retained and independent duplicate removal is not applied.
 
 The known Driver contradiction and the absence of approved finite tier-specific Ambient evidence stop WALK-001 before every write. No Google Sheet edit, materialisation, archive, promotion, Engine action, saved-case action or later walkthrough work occurred. WALK-001VA read-only evidence is complete; WALK-001 remains open for Program source repair, WALK-002 through WALK-007 remain blocked, and SEED-LIB-001 remains sequence-blocked. No Selector parcel is ready.
+
+## 2026-07-22 WALK-001S corrected-source refresh closeout — latest controlling state
+
+**Recorded lane work HEAD before this closeout:** `d3baf1ef46493dfe5a9ec5b0be4e7ab8b7551f85` — `docs(selector): reconcile lane state after WALK-001VA`.
+
+Program accepted WALK-001VA and admitted WALK-001S as the sole ready Selector action. Patrick completed the bounded NVB source correction. No further source edit or service restart was performed.
+
+The complete original guarded Google dry-run returned HTTP 200 `dry-run-ready`, validation green, all 15 required tables present, zero blockers and all disclosure flags safe. SYSTEM_POLICY is present with 133 rows; there is exactly one exact and one approved-exact `ambient_temp` row. Economy, business, first and charter are each present and populated on that row, with finite-token counts 2, 3, 6 and 6 respectively and zero non-finite tokens. One row has finite recognised-tier evidence, one has finite values across multiple recognised tiers, one approved row has finite recognised-tier evidence, and finite tier-specific Ambient evidence is true.
+
+DRIVERS is present with 48 rows. Canonical `native_control_type` is populated on all 48 rows, has zero Boolean-like values, and supplies protocol authority on all 48 rows with 51 values. Duplicate-normalised Driver authority is absent and unpopulated. BOARDS remains present with 265 rows and the canonical Driver-to-BOARDS protocol intersection contains all six recognised protocol families.
+
+Only after every dry-run guard passed, the existing guarded live workflow materialised the corrected authority. It then created the required archive of the previously active authority before promoting the new active authority. Materialisation, archive and promotion all completed successfully. The promoted active and materialised authority are readable, identical in size and modification time, contain all 15 required tables, and the active read-only probe returns the new source fingerprint with no missing tables or blockers.
+
+WALK-001 is complete pending Program review. The fixed Selector gate and exact five-file lane-memory closeout are required before push. WALK-002 through WALK-007 remain blocked and must not be released without Program admission. SEED-LIB-001 remains sequence-blocked; Engine, saved cases, CRM/provider work, artifact retrieval/delivery and later walkthrough work remain untouched.

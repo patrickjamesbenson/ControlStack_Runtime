@@ -707,3 +707,17 @@ Queue reconciliation: WALK-001V is already done, gated and pushed, so it was not
 * stop: known Driver contradiction and missing approved finite tier-specific Ambient evidence stop WALK-001 before every write.
 * exclusions preserved: no Google Sheet edit, Driver-rule change, validation change, materialisation, archive, promotion, Engine, saved-case action or later walkthrough work.
 * next: Program source-repair review. WALK-001 remains open; WALK-002 through WALK-007 and SEED-LIB-001 remain blocked. No Selector parcel is ready.
+
+## 2026-07-22 corrected-source refresh
+
+### WALK-001S Corrected-source guarded materialisation and promotion
+
+* status: done (guarded refresh complete; awaiting Program review)
+* depends-on: Program acceptance of WALK-001VA and Patrick's bounded NVB source correction; accepted
+* dry-run: all original source-shape, validation, identity and disclosure guards passed with zero blockers.
+* Ambient evidence: SYSTEM_POLICY present with 133 rows; exact `ambient_temp` 1; approved exact 1; economy/business/first/charter present and populated; finite tokens 2/3/6/6; non-finite tokens 0/0/0/0; finite-tier rows 1; multi-tier finite rows 1; approved finite-tier rows 1.
+* Driver evidence: DRIVERS present with 48 rows; canonical authority populated 48, Boolean-like 0, protocol rows 48, protocol values 51; duplicate-normalised authority absent and unpopulated; non-zero canonical Driver-to-BOARDS agreement across all six recognised protocol families.
+* guarded live order: corrected authority materialised; prior active authority archived successfully; new authority promoted only after archive success.
+* active verification: promoted and materialised authorities are readable, aligned and contain all 15 required tables; active read-only probe has no missing tables or blockers.
+* exclusions preserved: no service restart, additional source edit, Selector feature change, Engine invocation, seed execution, saved-case mutation, CRM/provider work, artifact retrieval/delivery or later walkthrough work.
+* next: Program review and admission decision. WALK-002 through WALK-007 and SEED-LIB-001 remain blocked; no Selector item is ready.
