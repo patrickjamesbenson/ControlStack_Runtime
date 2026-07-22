@@ -1193,3 +1193,13 @@ Program accepts the corrected activation. Direct live verification shows all nin
 The existing Selector worker resumes WALK-002R without a new commission. Preserve the twelve-owner production boundary, zero searches for `runLengthMode`, `lengthMode`, `requested_length_basis` and `requestedLengthBasis`, the 71 encoded-assumption baseline across 32 test files, final zero residual, equal-or-broader eligible Board candidates and every no-execution/no-write prohibition. Gate, push the exact coupled parcel and stop before WALK-003.
 
 MGR-RESTART-001 is recorded as a blocked future infrastructure repair. The observed failure involved stale resident configuration despite selected-service restart. Because current code intends to terminate the service host tree while both manager and host load configuration at process startup, the future parcel must reproduce and identify the exact stale layer before changing behaviour. Its acceptance target is one selected-service restart that reloads the latest validated manifest, recycles the complete host, proves the new environment live and leaves every unrelated service unchanged.
+
+### WALK-002R golden-witness permission stop and WALK-002RGT
+
+Program accepts the clean stop. The Selector worker removed every partial edit, the fixed gate passes 108/108 and the lane is clean. The sole blocker is the authorised golden supported-machine witness test, which contains four current Length Mode assumption occurrences but matches none of the live permitted test patterns.
+
+Program has added exactly that test file to the managed deployment manifest and contract test. The nine exact module permissions and all existing test patterns remain unchanged; broad module and broad test wildcards remain prohibited.
+
+WALK-002RGT is the sole ready infrastructure prerequisite. Reload the resident manager from the latest validated manifest, recycle the complete Selector MCP service host rather than only its child, and start it fresh through the manager. Verify the live guard retains all nine exact module permissions once each, contains the golden witness test once, preserves existing test patterns, has no broad module or test wildcard, and accepts a no-change scope probe for the golden witness test.
+
+After Program verifies activation, the existing worker resumes the same WALK-002R parcel. Preserve the twelve-owner production boundary, four banned-name zero searches, 71 encoded-assumption baseline across 32 test files, final zero residual, candidate breadth and every safety prohibition; stop before WALK-003.

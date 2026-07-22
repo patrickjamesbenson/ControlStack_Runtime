@@ -100,7 +100,7 @@ test("deployment manifest defines the accepted ten-service topology and canonica
   assert.equal(manifest.controlUi.port, 8790);
 });
 
-test("Selector MCP write guard includes only the approved exact Selector module files and lane context", () => {
+test("Selector MCP write guard preserves exact Selector files, golden witness, and lane context", () => {
   const manifest = loadAndValidateManifest(manifestPath);
   const selectorMcp = manifest.services.find((item) => item.id === "selector-mcp");
   const exactFiles = [
@@ -114,9 +114,12 @@ test("Selector MCP write guard includes only the approved exact Selector module 
     "packages/modules/emergence/emergenceViewModel.js",
     "packages/modules/scene-builder/sceneBuilderViewModel.js",
   ];
+  const exactGoldenWitnessTest = "tests/goldenSupportedMachineValueWitness.test.js";
   const laneContext = ["docs", "_context", "lanes", "selector-engine", "**"].join("/");
   const moduleWildcard = ["packages", "modules", "**"].join("/");
   const selectorModuleWildcard = ["packages", "modules", "cs-selector", "**"].join("/");
+  const broadTestsWildcard = ["tests", "**"].join("/");
+  const broadTestFilesWildcard = ["tests", "*.test.js"].join("/");
   const configuredGlobs = selectorMcp.env.CONTROLSTACK_ALLOWED_WRITE_GLOBS.split(";");
   const expectedGlobs = [
     ["apps", "**"].join("/"),
@@ -127,6 +130,7 @@ test("Selector MCP write guard includes only the approved exact Selector module 
     "tests/engine*.test.js",
     "tests/runtime*.test.js",
     "tests/runTable*.test.js",
+    exactGoldenWitnessTest,
     ["docs", "selector", "**"].join("/"),
     ["docs", "engine", "**"].join("/"),
     "package.json",
@@ -139,9 +143,12 @@ test("Selector MCP write guard includes only the approved exact Selector module 
   for (const exactFile of exactFiles) {
     assert.equal(configuredGlobs.filter((item) => item === exactFile).length, 1);
   }
+  assert.equal(configuredGlobs.filter((item) => item === exactGoldenWitnessTest).length, 1);
   assert.equal(configuredGlobs.filter((item) => item === laneContext).length, 1);
   assert.equal(configuredGlobs.includes(moduleWildcard), false);
   assert.equal(configuredGlobs.includes(selectorModuleWildcard), false);
+  assert.equal(configuredGlobs.includes(broadTestsWildcard), false);
+  assert.equal(configuredGlobs.includes(broadTestFilesWildcard), false);
   assert.deepEqual(configuredGlobs.filter((item) => item.startsWith("packages/modules/")), exactFiles);
 });
 

@@ -1725,3 +1725,17 @@ WALK-002RG is complete. The existing standing worker resumes the same WALK-002R 
 Program records the activation failure mechanism for permanent repair. Both the manager and the per-service host load deployment configuration at process startup. The observed managed restart cycles failed to activate changed environment until the resident control layer was refreshed. Current repository code intends service restart to terminate the host process tree, so the exact stale layer and divergence between intended and observed behaviour must be reproduced before repair rather than assumed.
 
 Program queues **MGR-RESTART-001 — config-aware managed service restart** as a blocked future infrastructure parcel. It must first reproduce and identify whether stale configuration is retained by the resident manager, the per-service host, or their restart handshake. Then implement one bounded restart action that reloads the latest validated manifest, recycles the complete selected service host rather than only its child, starts a fresh host with the new environment, verifies identity/readiness, and touches no unrelated service. Tests must prove a changed exact environment value becomes live after one selected-service restart and that unchanged services retain process identity and environment. No implementation is authorised during the WALK batch.
+
+## 2026-07-22 — WALK-002R golden-witness guard stop accepted; exact test activation released
+
+**Status:** WALK-002R BLOCKED PENDING WALK-002RGT; WALK-002RGT SOLE READY INFRASTRUCTURE PREREQUISITE.
+
+Program accepts the protected stop. The Selector lane is clean, the fixed gate passes 108/108, all partial production and test edits were removed, and no Engine, runtime, persistence, source, seed, CRM/provider, artifact or later walkthrough action changed.
+
+The blocker is one already-authorised coupled test: the golden supported-machine witness. It contains four current Length Mode assumption occurrences and is part of the 71-assumption, 32-test-file baseline, but its filename matches none of the existing permitted test patterns. No other permission gap is authorised by this stop.
+
+Program has added exactly that golden witness test to the managed Selector MCP write guard and deployment contract test. The complete nine-file exact module permission set remains unchanged; both broad module wildcards remain prohibited; no broad `tests/**` or `tests/*.test.js` permission is added.
+
+Program admits **WALK-002RGT — exact golden-witness test guard activation** as the sole ready infrastructure prerequisite. Because deployment configuration is process-resident, activation must reload the manager from the latest validated manifest and recycle the complete Selector MCP service host—not merely restart its child—then start it fresh through the manager. Acceptance requires the live guard to retain all nine exact module permissions once each, add the golden witness test once, preserve existing test patterns, keep broad module and broad test wildcards absent, and pass a no-change guarded scope probe for the golden witness test.
+
+WALK-002R resumes afterward under the same standing worker and parcel. Its twelve-owner production boundary, four banned-name zero searches, 71-assumption baseline, 32 affected test files, final zero residual, equal-or-broader Board candidate rule and every no-execution/no-write prohibition remain unchanged. Do not begin WALK-003 or MGR-RESTART-001.
