@@ -1574,3 +1574,15 @@ Program directly verified the Lab correction receipt. The blocked SEED-LIB-001 q
 The Lab tracked tree is clean with nothing staged or deleted. The three protected local items remain unchanged and unstaged. No C6, C7, sealing, inspection, resolver execution, LM-63 generation, persistence, retrieval or delivery occurred.
 
 The Lab seed-memory correction is accepted complete. No Lab implementation parcel is released by this acceptance. C6 and all seed execution remain blocked pending the existing Program sequence and separate admission.
+
+## 2026-07-22 — WALK-001VA accepted and guarded WALK-001 rerun released
+
+**Status:** WALK-001VA ACCEPTED; SOURCE CORRECTION REPORTED COMPLETE; GUARDED WALK-001 RERUN READY.
+
+Program directly verified the clean pushed Selector activation receipt and 108/108 gate. The live read proved the prior Driver identity contradiction and absence of approved finite tier-specific Ambient evidence, and every write remained blocked.
+
+Patrick reports the source owner has now corrected only the identified source defects: the misnamed Driver approval/Boolean column has a non-authority header, leaving `native_control_type` unique and protocol-bearing; the existing exact `ambient_temp` row is approved and populated with finite Economy, Business, First and Charter values. `ENG` is removed and deferred pending a separate ruling.
+
+Selector is authorised to rerun the complete original guarded dry-run. It must require unique protocol-bearing canonical Driver authority, no duplicate-normalised Driver authority, one approved exact Ambient row, all four recognised tier columns present and populated, zero non-finite tier tokens, finite approved multi-tier evidence, non-zero Driver-to-Board agreement and every existing source-shape, validation, identity and disclosure guard.
+
+Only after the complete dry-run passes may the existing guarded materialise/archive/promote sequence continue. Archive must succeed before promotion. Stop after WALK-001 for Program review. WALK-002 through WALK-007, Engine, C6/C7, seed execution, CRM, retrieval and delivery remain blocked.

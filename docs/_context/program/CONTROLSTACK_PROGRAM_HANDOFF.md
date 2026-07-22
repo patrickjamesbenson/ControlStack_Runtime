@@ -1035,8 +1035,8 @@ The pair is deliberately different in profile, emission mode, optics, board fami
 
 Current sequencing remains binding:
 
-- Selector WALK-001V is the sole ready Selector parcel; no seed execution or Engine invocation occurs before WALK-001 through WALK-007 close in order.
-- Lab C5 implementation is technically complete and the fixed gate is verified at 314/314, but C5 lane-memory closeout is the sole ready Lab action. Preserve the protected local inventory and do not release C6 until Program accepts the clean closeout.
+- Selector WALK-001V and WALK-001VA are accepted complete. WALK-001S guarded completion against the corrected source is the sole ready Selector action.
+- Lab C5 and its corrected seed-memory closeout are accepted complete at 314/314; no Lab action is ready and C6 is not released.
 - SEED-LIB-001 is recorded as blocked in both affected lane queues. No real sealing, generation, C7 handoff or Governance retrieval is authorised by this handoff alone.
 
 ### WALK-001V/C5 acceptance and activation handoff
@@ -1047,8 +1047,22 @@ WALK-001V is accepted complete. The Selector feature and lane closeout are pushe
 
 C5 is accepted complete. The Lab feature and closeout are pushed and the fixed gate passes 314/314. The preflight remains one contract-derived read-only resolver call, validation through the real inspection path, one immutable redacted receipt and immediate loaded-body discard. C6 remains blocked by the canonical seed sequence and separate Program admission.
 
-WALK-001VA is the sole ready Selector operational action. An Advisor must restart only the managed Selector runtime and verify Healthy/Managed state. Selector then ingests current Program authority, verifies the live response contains the new Ambient summary and runs the complete guarded current-source dry-run. Return only safe Ambient counts and existing Driver source-shape counts. Any source contradiction, missing approved finite tier evidence, validation failure or stale runtime stops before every write. Do not edit the Google Sheet, materialise, archive, promote, invoke Engine or begin later walkthrough work.
+WALK-001VA is accepted complete at 108/108. The managed activation succeeded, the count-only Ambient summary is live, the read-only receipt is pushed and clean, and every write remained blocked by the then-current source defects. The later WALK-001S section below is the controlling next action.
 
-The seed-library lane-memory propagation remains incomplete only in Selector. Selector has not yet recorded SEED-LIB-001 and must add it as blocked during WALK-001VA lane closeout.
+Selector has durably recorded SEED-LIB-001 as blocked. The earlier missing-record note is superseded; no duplicate seed-memory action is required.
 
 The Lab correction is accepted complete. Its blocked SEED-LIB-001 entry now uses normal Markdown list markers, both canonical builds and all real-chain/fail-closed rules are unchanged, the fixed Lab gate passes 314/314, tracked files are clean and the three protected local items remain untouched and unstaged. No C6, C7, sealing, inspection, resolver execution, LM-63 generation, persistence, retrieval or delivery occurred. No Lab action is ready.
+
+### WALK-001S exact source correction and guarded completion handoff
+
+WALK-001VA is accepted complete at 108/108. The managed service is healthy and the activated count-only summary is live. The guarded run remained read-only and the Selector lane is clean.
+
+Live evidence: SYSTEM_POLICY has 133 rows, one exact `ambient_temp` row, zero approved exact rows and no Economy, Business, First or Charter columns or tier values. DRIVERS has 48 Boolean-like canonical rows with zero protocol authority; the duplicate-normalised column has protocol authority on all 48 rows with 51 values. BOARDS has 265 rows and zero canonical Driver agreement.
+
+Patrick reports the source correction is complete. The misnamed Driver approval/Boolean column now has its proper non-authority header, leaving exactly one `native_control_type` header and that column is protocol-bearing. No Driver row value was intentionally changed.
+
+The existing exact `ambient_temp` row is approved and has finite values in the Economy, Business, First and Charter tier columns. `ENG` was removed and remains deferred pending a separate ruling; it must not appear as a non-finite token in this acceptance run.
+
+The next guarded dry-run must show one approved exact Ambient row; all four tier columns present and populated; finite counts consistent with the corrected source and zero non-finite tier tokens; one approved finite multi-tier row; canonical Driver protocol authority on all 48 rows with 51 values; no duplicate-normalised Driver authority; and non-zero canonical Driver-to-Board agreement.
+
+Every original source-shape, validation, identity and disclosure guard must pass. Only after the complete dry-run passes may the existing guarded materialise/archive/promote sequence continue, with archive succeeding before promotion. Stop after WALK-001 for Program review.
