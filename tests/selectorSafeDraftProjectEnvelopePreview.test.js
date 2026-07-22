@@ -106,7 +106,7 @@ function runIntakePreviewSummary(overrides = {}) {
       label: "Boardroom run",
       quantity: 2,
       runLengthMm: 5600,
-      lengthMode: "same_length",
+      
       status: "complete-safe-preview-intent",
       safePreviewOnly: true,
       enginePayloadIncluded: false,

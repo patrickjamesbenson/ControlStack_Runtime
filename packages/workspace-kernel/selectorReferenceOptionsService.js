@@ -143,7 +143,6 @@ const WORKFLOW_SECTION_DEFINITIONS = Object.freeze([
       { fieldKey: "runCount", label: "Run count/list", role: "disabled", sourceTables: [] },
       { fieldKey: "runQty", label: "Qty", role: "disabled", sourceTables: [] },
       { fieldKey: "runLength", label: "Length", role: "disabled", sourceTables: [] },
-      { fieldKey: "runLengthMode", label: "Length mode", role: "disabled", sourceTables: [] },
       { fieldKey: "runOverrideStatus", label: "Override status", role: "future-mapped", sourceTables: [] },
       { fieldKey: "runPlacementStatus", label: "Placement status", role: "future-mapped", sourceTables: [] },
     ],
@@ -3785,7 +3784,6 @@ const DONOR_SUPPORTED_DISABLED_RUN_CONSTRAINT_FIELDS = Object.freeze(new Set([
   "runCount",
   "runQty",
   "runLength",
-  "runLengthMode",
 ]));
 
 function createDisabledWorkflowField(field, reason, selectedValue = "") {

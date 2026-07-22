@@ -80,7 +80,7 @@ function createModel(selectorState = createSelectorState()) {
 
 function baseRuns(overrides = {}) {
   return [
-    { id: "run-a", runNumber: 1, label: "Boardroom", quantity: 2, runLengthMm: "3500", lengthMode: "cut_to_length", ...overrides },
+    { id: "run-a", runNumber: 1, label: "Boardroom", quantity: 2, runLengthMm: "3500", ...overrides },
   ];
 }
 
@@ -148,6 +148,7 @@ test("valid run accessory intent appears in preview", () => {
   assert.equal(group.runLabel, "Boardroom");
   assert.equal(intent.accessoryTypeToken, "sensor");
   assert.equal(intent.quantityReceivingAccessory, 1);
+  assert.equal(Object.keys(intent).some((key) => /same.?length/i.test(key)), false);
   assert.equal(intent.placementPreference, "mid");
   assert.equal(intent.status, "confirmed");
   assert.equal(intent.safePreviewOnly, true);
@@ -234,15 +235,14 @@ test("unresolved placement blocks readiness", () => {
   assertDownstreamBlocked(preview);
 });
 
-test("same-length run with only one accessory quantity remains safe intent only", () => {
+test("repeated run quantity does not infer shared-length accessory meaning", () => {
   const preview = previewFor({
-    runs: baseRuns({ quantity: 4, lengthMode: "same-length" }),
+    runs: baseRuns({ quantity: 4}),
     intents: [baseIntent({ quantityReceivingAccessory: 1 })],
   });
   const [intent] = preview.safeAccessoryIntentRows;
 
   assert.equal(preview.runAccessoryPlacementPreviewReady, true);
-  assert.equal(intent.sameLengthRunIntentOnly, true);
   assert.equal(intent.quantityReceivingAccessory, 1);
   assert.equal(intent.accessoryReservationExecuted, false);
   assert.equal(intent.enginePayloadIncluded, false);

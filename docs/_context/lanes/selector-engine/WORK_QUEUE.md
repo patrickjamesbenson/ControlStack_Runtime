@@ -798,3 +798,16 @@ Queue reconciliation: WALK-001V is already done, gated and pushed, so it was not
 * required recovery: Program-owned guard correction adding exactly those two already-authorised owners; no scope broadening and no new parcel/worker
 * implementation state: all attempted bounded edits restored; no production/test change remains; Git clean before this receipt
 * queue: WALK-002R blocked; WALK-003, TEST-AUDIT-001 and every prohibited action remain blocked
+
+## 2026-07-22 WALK-002R completion receipt
+
+### WALK-002R Complete Length Mode owner deletion
+
+* status: complete; stopped for Program review
+* production boundary: exact twelve authorised owners; no outside owner or alias found
+* production result: zero `runLengthMode`, `lengthMode`, `requested_length_basis`, `requestedLengthBasis`; wider production mode-alias search also zero
+* authority result: positive quantity and positive physical length only; legacy mode discarded and omitted; no replacement/default/fallback/sentinel/proxy/inferred manufacturing meaning
+* contract result: mode-free registration, saved-project, candidate, accessory, sealed-result and downstream previews; legitimate policy provenance retained; source-backed Board candidate breadth not narrowed
+* deletion-test receipt: baseline 71; deleted 69; rewritten 2; affected test files 32; residual 0
+* gate: fixed Selector gate 108/108
+* next: Program review only; WALK-003 and every prohibited future action remain blocked

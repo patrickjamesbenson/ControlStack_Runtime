@@ -346,7 +346,6 @@ function candidateSummary(candidate, fieldStatusRows, sourceFingerprintInput) {
   const runs = Array.isArray(candidate.runs) ? candidate.runs : [];
   const fingerprint = stableFingerprint("safe-selector-readonly-engine-candidate", {
     runCount: runs.length,
-    runs: runs.map((run) => ({ qty: run.qty, runLengthMm: run.run_length_mm, lengthMode: run.lengthMode })),
     lighting: {
       target_lm_per_m: lighting.target_lm_per_m,
       cct: lighting.cct,
@@ -449,7 +448,6 @@ export function buildSelectorReadonlyEngineCandidateForInternalSeam({
   const runSummary = factoryApprovedInputsSummary.committedRunIntakeSummary || {};
   const runQuantity = positiveInteger(runSummary.runQuantity);
   const runLengthMm = positiveInteger(runSummary.runLengthMm);
-  const lengthMode = safeToken(runSummary.lengthMode, "cut_to_length");
   const optic = finalPipeToken(constraintValue(map, ["directOpticVar1", "optic", "opticVar1", "diffuserVar1"]));
   const light = directLightIntent(lmTemperatureReadinessPreview);
   const targetLmPerM = light.targetLmPerM ?? positiveInteger(constraintValue(map, ["targetLmPerM", "lightTarget"]));
@@ -493,8 +491,6 @@ export function buildSelectorReadonlyEngineCandidateForInternalSeam({
       "Required length (mm)": runLengthMm,
       length_mm: runLengthMm,
       lengthMm: String(runLengthMm),
-      lengthMode,
-      requested_length_basis: lengthMode,
       length_policy_source: "selector-stage3-supported-subset",
       accessory_length_policy_source: "selector-stage3-supported-subset",
       reserved_ranges: [],
@@ -925,7 +921,6 @@ function redactedStep2MetadataFromStep1(readonlyEngineStep1SafeSummary = {}) {
       classification: "controlled-selector-stage3-geometry-summary",
       length_class: safeToken(shape.runLengthBand, "stage3-supported-run-length"),
       qty: positiveInteger(shape.totalQuantity) || 1,
-      requested_length_basis: "selector-stage3-supported-subset",
       length_policy_source: "selector-stage3-supported-subset",
       accessory_length_policy_source: "selector-stage3-supported-subset",
       not_product_data: true,

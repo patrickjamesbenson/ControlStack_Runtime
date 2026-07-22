@@ -386,7 +386,6 @@ test("Selector checklist sections appear in the target order", () => {
     "Run count",
     "Run qty",
     "Run length",
-    "Length mode",
     "Run placement",
     "Override status",
     "RunTable generation",
@@ -443,7 +442,7 @@ test("Runs & Disabled Outputs rows render em dash when empty and keep every outp
     runCount: null,
     qty: null,
     lengthMm: null,
-    lengthMode: null,
+    
     placementStatus: null,
     overrideStatus: null,
     rows: [],
@@ -468,7 +467,6 @@ test("Donor-supported run manual constraints can fill preview rows without enabl
     configureState(selectorState) {
       selectorState.setDbBackedSelectorFieldValue("runQty", "2", "2");
       selectorState.setDbBackedSelectorFieldValue("runLength", "3500", "3500 mm");
-      selectorState.setDbBackedSelectorFieldValue("runLengthMode", "cut_to_length", "Cut to length");
     },
   });
   const spine = model.selectorSurface.productSpine;
@@ -476,11 +474,9 @@ test("Donor-supported run manual constraints can fill preview rows without enabl
 
   assert.equal(spineRow(spine, "runs", "runQty").displayValue, "2");
   assert.equal(spineRow(spine, "runs", "runLength").displayValue, "3500");
-  assert.equal(spineRow(spine, "runs", "runLengthMode").displayValue, "cut_to_length");
   assert.equal(spineRow(spine, "runs", "runTableGeneration").displayValue, "—");
   assert.equal(payload.runs.qty, "2");
   assert.equal(payload.runs.lengthMm, "3500");
-  assert.equal(payload.runs.lengthMode, "cut_to_length");
   assert.equal(payload.disabledOutputs.runTableGeneration, false);
   assert.equal(payload.safetyFlags.runTableGeneration, false);
   assert.equal(payload.safetyFlags.payloadGeneration, false);

@@ -57,7 +57,7 @@ function sealedCandidateAssemblyPreviewSummary(overrides = {}) {
           label: "Boardroom run",
           quantity: 2,
           runLengthMm: 5600,
-          lengthMode: "same-length",
+          
           safePreviewOnly: true,
           enginePayloadIncluded: false,
           runTableIncluded: false,

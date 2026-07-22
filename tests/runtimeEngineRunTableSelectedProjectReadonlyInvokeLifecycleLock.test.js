@@ -162,7 +162,7 @@ function stage3Inputs(suffix, { runQuantity = 2, runLengthMm = 3500 } = {}) {
         sourceAuthority: "committed selector state only",
         runQuantity,
         runLengthMm,
-        lengthMode: "cut_to_length",
+        
       },
       engineExecuted: false,
       donorEngineInvoked: false,

@@ -1,26 +1,3 @@
-const SUPPORTED_SELECTOR_RUN_LENGTH_MODES = Object.freeze([
-  "cut_to_length",
-  "nominal_module",
-  "site_trim",
-  "overall",
-  "centreline",
-  "nominal",
-  "fixed",
-  "same_length",
-]);
-
-const LENGTH_MODE_ALIASES = Object.freeze({
-  "cut-to-length": "cut_to_length",
-  "cut to length": "cut_to_length",
-  "nominal-module": "nominal_module",
-  "nominal module": "nominal_module",
-  "site-trim": "site_trim",
-  "site trim": "site_trim",
-  "same-length": "same_length",
-  "same length": "same_length",
-  sameLength: "same_length",
-});
-
 const DOWNSTREAM_BLOCKING_DIAGNOSTICS = Object.freeze([
   "engine-verify-not-approved",
   "runtable-generation-not-approved",
@@ -47,13 +24,6 @@ function parsePositiveMm(value) {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
 }
 
-function normaliseLengthMode(value) {
-  const raw = text(value);
-  if (!raw) return "";
-  const compact = raw.replace(/\s+/g, " ");
-  return LENGTH_MODE_ALIASES[compact] || LENGTH_MODE_ALIASES[compact.toLowerCase()] || raw;
-}
-
 function runIdentity(run = {}, index = 0) {
   const runNumber = parsePositiveInteger(run.runNumber) || index + 1;
   return {
@@ -71,7 +41,6 @@ export function normaliseSelectorRunIntakeRun(run = {}, index = 0) {
     label: text(run.label),
     quantity: text(quantity),
     runLengthMm: text(runLengthMm),
-    lengthMode: normaliseLengthMode(run.lengthMode),
   };
 }
 
@@ -109,8 +78,6 @@ export function evaluateSelectorRunIntakeRun(run = {}, index = 0) {
   if (!text(normalised.runLengthMm)) diagnostics.push("missing-run-length");
   else if (runLengthMm === null) diagnostics.push("invalid-run-length");
 
-  if (!normalised.lengthMode) diagnostics.push("missing-length-mode");
-  else if (!SUPPORTED_SELECTOR_RUN_LENGTH_MODES.includes(normalised.lengthMode)) diagnostics.push("unsupported-length-mode");
 
   const complete = diagnostics.length === 0;
   const safeIntent = {
@@ -119,8 +86,6 @@ export function evaluateSelectorRunIntakeRun(run = {}, index = 0) {
     label: normalised.label || `Run ${normalised.runNumber}`,
     quantity: quantity || 0,
     runLengthMm: runLengthMm || 0,
-    lengthMode: normalised.lengthMode,
-    sameLengthQuantityIntent: normalised.lengthMode === "same_length" && (quantity || 0) > 1,
     status: complete ? "complete-safe-preview-intent" : "incomplete-fail-closed",
     safePreviewOnly: true,
     enginePayloadIncluded: false,
@@ -168,7 +133,6 @@ export function buildSelectorRunIntakePreview(runs = []) {
       label: run.label,
       quantity: run.quantity,
       runLengthMm: run.runLengthMm,
-      lengthMode: run.lengthMode,
       complete: run.complete,
       diagnostics: [...run.diagnostics],
     })),
@@ -191,9 +155,9 @@ export function buildSelectorRunIntakePreview(runs = []) {
     generation: false,
     proof: false,
     boundaryCopy: [
-      "Run quantity, label, length, and length mode are captured as safe local intent only.",
-      "Completion requires run label, positive quantity, positive run length, and supported length mode.",
-      "Same-length multi-quantity intake is represented as safe intent only and does not expand manufacturing rows.",
+      "Run quantity, label, and physical length are captured as safe local intent only.",
+      "Completion requires run label, positive quantity, and positive physical run length.",
+      "Run quantity does not infer any shared-length or manufacturing interpretation.",
       "Engine verify, raw Engine payload, RunTable generation, IES generation, selected-result persistence, routes, POST endpoints, and RuntimeData mutation remain disabled.",
     ],
     summaryRows: [
@@ -219,5 +183,3 @@ export function buildSelectorRunIntakePreview(runs = []) {
     ],
   };
 }
-
-export { SUPPORTED_SELECTOR_RUN_LENGTH_MODES };

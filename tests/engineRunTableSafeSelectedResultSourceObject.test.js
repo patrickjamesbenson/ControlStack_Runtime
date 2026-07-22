@@ -60,7 +60,7 @@ function successfulSafeInput(overrides = {}) {
         length_class: "donor-selector-seed-5600mm",
         length_mm: 5600,
         qty: 1,
-        requested_length_basis: "cut_to_length",
+        
         length_policy_source: "tier_policy",
         accessory_length_policy_source: "tier_policy",
         not_product_data: true,

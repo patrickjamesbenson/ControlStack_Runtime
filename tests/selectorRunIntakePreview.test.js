@@ -110,7 +110,7 @@ function assertDownstreamBlocked(preview) {
 
 test("valid run intake appears in safe preview without Engine payload exposure", () => {
   const preview = previewForRuns([
-    { id: "run-a", runNumber: 1, label: "Boardroom", quantity: 2, runLengthMm: "3500", lengthMode: "cut_to_length" },
+    { id: "run-a", runNumber: 1, label: "Boardroom", quantity: 2, runLengthMm: "3500"},
   ]);
 
   assert.equal(preview.runIntakePreviewReady, true);
@@ -125,8 +125,6 @@ test("valid run intake appears in safe preview without Engine payload exposure",
     label: "Boardroom",
     quantity: 2,
     runLengthMm: 3500,
-    lengthMode: "cut_to_length",
-    sameLengthQuantityIntent: false,
     status: "complete-safe-preview-intent",
     safePreviewOnly: true,
     enginePayloadIncluded: false,
@@ -140,7 +138,7 @@ test("valid run intake appears in safe preview without Engine payload exposure",
 
 test("missing length blocks completion", () => {
   const preview = buildSelectorRunIntakePreview([
-    { id: "run-a", label: "Boardroom", quantity: 1, runLengthMm: "", lengthMode: "overall" },
+    { id: "run-a", label: "Boardroom", quantity: 1, runLengthMm: ""},
   ]);
 
   assert.equal(preview.runIntakePreviewReady, false);
@@ -152,7 +150,7 @@ test("missing length blocks completion", () => {
 
 test("missing quantity blocks completion", () => {
   const preview = buildSelectorRunIntakePreview([
-    { id: "run-a", label: "Boardroom", quantity: "", runLengthMm: "3500", lengthMode: "overall" },
+    { id: "run-a", label: "Boardroom", quantity: "", runLengthMm: "3500"},
   ]);
 
   assert.equal(preview.runIntakePreviewReady, false);
@@ -162,7 +160,7 @@ test("missing quantity blocks completion", () => {
 
 test("invalid quantity blocks completion", () => {
   const preview = buildSelectorRunIntakePreview([
-    { id: "run-a", label: "Boardroom", quantity: "two", runLengthMm: "3500", lengthMode: "overall" },
+    { id: "run-a", label: "Boardroom", quantity: "two", runLengthMm: "3500"},
   ]);
 
   assert.equal(preview.runIntakePreviewReady, false);
@@ -170,25 +168,20 @@ test("invalid quantity blocks completion", () => {
   assertDownstreamBlocked(preview);
 });
 
-test("length mode is required and unsupported modes fail closed", () => {
-  const missing = buildSelectorRunIntakePreview([
-    { id: "run-a", label: "Boardroom", quantity: 1, runLengthMm: "3500", lengthMode: "" },
+test("legacy mode-shaped inputs are ignored while positive quantity and physical length remain complete", () => {
+  const preview = buildSelectorRunIntakePreview([
+    { id: "run-a", label: "Boardroom", quantity: 1, runLengthMm: "3500", legacyMode: "engine_decides" },
   ]);
-  const unsupported = buildSelectorRunIntakePreview([
-    { id: "run-b", label: "Corridor", quantity: 1, runLengthMm: "3500", lengthMode: "engine_decides" },
-  ]);
-
-  assert.equal(missing.runIntakePreviewReady, false);
-  assert.match(missing.missingOrInvalidDiagnostics.join("|"), /missing-length-mode/);
-  assert.equal(unsupported.runIntakePreviewReady, false);
-  assert.match(unsupported.missingOrInvalidDiagnostics.join("|"), /unsupported-length-mode/);
-  assertDownstreamBlocked(missing);
-  assertDownstreamBlocked(unsupported);
+  assert.equal(preview.runIntakePreviewReady, true);
+  assert.equal(preview.safeRunIntentSummaries[0].quantity, 1);
+  assert.equal(preview.safeRunIntentSummaries[0].runLengthMm, 3500);
+  assert.equal(Object.hasOwn(preview.safeRunIntentSummaries[0], "legacyMode"), false);
+  assertDownstreamBlocked(preview);
 });
 
 test("missing run label fails closed", () => {
   const preview = buildSelectorRunIntakePreview([
-    { id: "run-a", label: "", quantity: 1, runLengthMm: "3500", lengthMode: "overall" },
+    { id: "run-a", label: "", quantity: 1, runLengthMm: "3500"},
   ]);
 
   assert.equal(preview.runIntakePreviewReady, false);
@@ -196,16 +189,15 @@ test("missing run label fails closed", () => {
   assertDownstreamBlocked(preview);
 });
 
-test("same-length multiple quantity is represented as safe intent only", () => {
+test("multiple quantity preserves quantity and physical length without shared-length interpretation", () => {
   const preview = buildSelectorRunIntakePreview([
-    { id: "run-a", label: "Typical classroom", quantity: 4, runLengthMm: "2800", lengthMode: "same-length" },
+    { id: "run-a", label: "Typical classroom", quantity: 4, runLengthMm: "2800" },
   ]);
   const [intent] = preview.safeRunIntentSummaries;
-
   assert.equal(preview.runIntakePreviewReady, true);
   assert.equal(preview.totalQuantity, 4);
-  assert.equal(intent.lengthMode, "same_length");
-  assert.equal(intent.sameLengthQuantityIntent, true);
+  assert.equal(intent.quantity, 4);
+  assert.equal(intent.runLengthMm, 2800);
   assert.equal(intent.enginePayloadIncluded, false);
   assert.equal(intent.runTableIncluded, false);
   assert.equal(intent.iesIncluded, false);
@@ -215,7 +207,7 @@ test("same-length multiple quantity is represented as safe intent only", () => {
 test("run intake state is local and does not persist selected result", () => {
   const selectorState = createSelectorState();
   selectorState.setRunIntakeRows([
-    { id: "run-a", label: "Boardroom", quantity: 1, runLengthMm: "3500", lengthMode: "overall" },
+    { id: "run-a", label: "Boardroom", quantity: 1, runLengthMm: "3500"},
   ]);
   const snapshot = selectorState.getSnapshot();
   const model = createModel(selectorState);
@@ -229,8 +221,8 @@ test("run intake state is local and does not persist selected result", () => {
 
 test("run intake view-model summary exposes readiness flags without raw payloads", () => {
   const preview = previewForRuns([
-    { id: "run-a", label: "Boardroom", quantity: 2, runLengthMm: "3500", lengthMode: "cut_to_length" },
-    { id: "run-b", label: "Corridor", quantity: 1, runLengthMm: "4200", lengthMode: "site_trim" },
+    { id: "run-a", label: "Boardroom", quantity: 2, runLengthMm: "3500"},
+    { id: "run-b", label: "Corridor", quantity: 1, runLengthMm: "4200"},
   ]);
   const summary = Object.fromEntries(preview.summaryRows);
 

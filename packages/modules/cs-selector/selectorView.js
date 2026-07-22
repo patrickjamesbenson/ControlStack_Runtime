@@ -1546,35 +1546,12 @@ function appendSelectorSingleRunIntentCapture(parent, capture = {}) {
   lengthLabel.appendChild(lengthInput);
   grid.appendChild(lengthLabel);
 
-  const modeLabel = document.createElement("label");
-  modeLabel.className = "cs-selector-run-intent-capture__control";
-  appendText(modeLabel, "span", "Length mode");
-  const modeSelect = document.createElement("select");
-  modeSelect.value = capture.lengthMode || "";
-  modeSelect.dataset.fieldKey = "runLengthMode";
-  modeSelect.dataset.runIntentControl = "length-mode";
-  const blankOption = document.createElement("option");
-  blankOption.value = "";
-  blankOption.textContent = "Select length mode";
-  modeSelect.appendChild(blankOption);
-  for (const supportedMode of capture.supportedLengthModes || []) {
-    const option = document.createElement("option");
-    option.value = supportedMode.value || "";
-    option.textContent = supportedMode.label || supportedMode.value || "Length mode";
-    option.selected = option.value === capture.lengthMode;
-    modeSelect.appendChild(option);
-  }
-  modeSelect.value = capture.lengthMode || "";
-  modeSelect.addEventListener("change", () => capture.setFieldValue?.("runLengthMode", modeSelect.value));
-  modeLabel.appendChild(modeSelect);
-  grid.appendChild(modeLabel);
-
   section.appendChild(grid);
   appendText(section, "p", capture.completionCopy || "0/1 complete", "cs-selector-run-intent-capture__completion");
   appendText(
     section,
     "p",
-    capture.missingFieldExplanation || "Run 1 incomplete: quantity is required; run length is required; length mode is required.",
+    capture.missingFieldExplanation || "Run 1 incomplete: quantity is required; run length is required.",
     "cs-selector-run-intent-capture__explanation",
   );
   appendBadgeList(section, [
@@ -2039,7 +2016,6 @@ function runIntentRows(preview = {}) {
   if (!intents.length) return [["run intents", "none captured yet"]];
   return intents.map((intent) => [
     intent.label || intent.id || "run",
-    `qty:${intent.quantity}; length:${intent.runLengthMm}mm; mode:${intent.lengthMode || "none"}; complete:${intent.status || "unknown"}; sameLengthIntent:${intent.sameLengthQuantityIntent === true ? "true" : "false"}`,
   ]);
 }
 
@@ -2057,7 +2033,7 @@ function appendSelectorRunIntakePreview(parent, preview = {}) {
   section.dataset.runtimeDataMutated = "false";
 
   appendText(section, "h4", preview.title || "Selector run intake preview");
-  appendText(section, "p", "Run label, quantity, length, and length mode are previewed as local safe intent only. This panel does not expose raw Engine payload, call Engine, generate RunTable or IES, persist selected results, mutate RuntimeData, add routes, or add POST actions.");
+  appendText(section, "p", "Run label, quantity, and physical length are previewed as local safe intent only. This panel does not expose raw Engine payload, call Engine, generate RunTable or IES, persist selected results, mutate RuntimeData, add routes, or add POST actions.");
   appendPillList(section, preview.boundaryCopy || [
     "Run intake is safe local intent only.",
     "Engine verify, RunTable, and IES remain disabled.",
@@ -2609,7 +2585,7 @@ function appendRailSelectionSources(parent, summary = {}) {
 
 function railNextSafeAction(surface = {}) {
   const runPreview = surface.runIntakePreview || {};
-  if (runPreview.runIntakePreviewReady !== true) return "Runs incomplete — add quantity, length, and length mode before Engine readiness can be reviewed.";
+  if (runPreview.runIntakePreviewReady !== true) return "Runs incomplete — add quantity and physical length before Engine readiness can be reviewed.";
   if ((surface.blockedItems || []).length) return "Review blocked selections before any future readiness review.";
   const workflow = surface.selectorWorkflowPreview || {};
   const blockedStage = (workflow.stageSummaries || workflow.selectorWorkflowStageSummaries || []).find((stage) => stage.blocked || stage.reviewRequired);

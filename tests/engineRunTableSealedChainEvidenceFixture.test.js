@@ -119,7 +119,7 @@ function selectorRuns() {
       label: "Boardroom run",
       quantity: 1,
       runLengthMm: "5600",
-      lengthMode: "overall",
+      
     },
   ];
 }

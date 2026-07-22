@@ -1,7 +1,7 @@
 import { buildSelectedResultProjectionContract } from "../../workspace-kernel/selectedResultProjectionService.js";
 import { buildSelectorSpecialPartsEntitlementPreview } from "./selectorSpecialPartsEntitlementPreview.js";
 import { buildSelectorRunAccessoryPlacementPreview } from "./selectorRunAccessoryPlacementPreview.js";
-import { buildSelectorRunIntakePreview, SUPPORTED_SELECTOR_RUN_LENGTH_MODES } from "./selectorRunIntakePreview.js";
+import { buildSelectorRunIntakePreview } from "./selectorRunIntakePreview.js";
 import {
   buildSelectorFactoryApprovedInputsSummary,
   deriveSelectorFactoryReadyState,
@@ -132,7 +132,6 @@ function projectFactoryApprovedInputsSummary(summary = {}, candidateInputsReady 
       sourceAuthority: String(run.sourceAuthority || "committed-selector-state"),
       runQuantity: Number.isSafeInteger(run.runQuantity) ? run.runQuantity : 0,
       runLengthMm: Number.isSafeInteger(run.runLengthMm) ? run.runLengthMm : 0,
-      lengthMode: String(run.lengthMode || ""),
       writes: false,
       rawRowsExposed: false,
     },
@@ -2421,23 +2420,12 @@ function createDbCommittedSelectorConstraints(selectorReferenceStatus = {}, loca
   });
 }
 
-const SELECTOR_RUN_INTENT_FIELD_KEYS = Object.freeze(["runQty", "runLength", "runLengthMode"]);
+
+const SELECTOR_RUN_INTENT_FIELD_KEYS = Object.freeze(["runQty", "runLength"]);
 
 const SELECTOR_RUN_INTENT_FIELD_LABELS = Object.freeze({
   runQty: "Run quantity",
   runLength: "Run length (mm)",
-  runLengthMode: "Run length mode",
-});
-
-const SELECTOR_RUN_LENGTH_MODE_LABELS = Object.freeze({
-  cut_to_length: "Cut to length",
-  nominal_module: "Nominal module",
-  site_trim: "Site trim",
-  overall: "Overall",
-  centreline: "Centreline",
-  nominal: "Nominal",
-  fixed: "Fixed",
-  same_length: "Same length",
 });
 
 const SELECTOR_RUN_INTENT_DIAGNOSTIC_COPY = Object.freeze({
@@ -2445,8 +2433,6 @@ const SELECTOR_RUN_INTENT_DIAGNOSTIC_COPY = Object.freeze({
   "invalid-run-quantity": "quantity must be a positive integer",
   "missing-run-length": "run length is required",
   "invalid-run-length": "run length must be a positive millimetre value",
-  "missing-length-mode": "length mode is required",
-  "unsupported-length-mode": "length mode must be one of the supported options",
   "missing-run-label": "run label is required",
 });
 
@@ -2467,7 +2453,6 @@ function createSelectorSingleRunIntentCapture({
 } = {}) {
   const quantity = selectorRunIntentConstraintValue(committedSelectorConstraints, "runQty");
   const runLengthMm = selectorRunIntentConstraintValue(committedSelectorConstraints, "runLength");
-  const lengthMode = selectorRunIntentConstraintValue(committedSelectorConstraints, "runLengthMode");
   const committedRunConstraintPresent = SELECTOR_RUN_INTENT_FIELD_KEYS.some((fieldKey) => (
     committedSelectorConstraintRecord(committedSelectorConstraints, fieldKey) !== null
   ));
@@ -2478,7 +2463,6 @@ function createSelectorSingleRunIntentCapture({
     label: "Run 1",
     quantity,
     runLengthMm,
-    lengthMode,
   };
   const compatibilityFallbackUsed = !committedRunConstraintPresent && compatibilityRuns.length > 0;
   const runs = compatibilityFallbackUsed ? compatibilityRuns : [derivedRun];
@@ -2495,11 +2479,6 @@ function createSelectorSingleRunIntentCapture({
     runNumber: 1,
     quantity,
     runLengthMm,
-    lengthMode,
-    supportedLengthModes: SUPPORTED_SELECTOR_RUN_LENGTH_MODES.map((value) => ({
-      value,
-      label: SELECTOR_RUN_LENGTH_MODE_LABELS[value] || value,
-    })),
     committedConstraintsAuthoritative: committedRunConstraintPresent,
     compatibilityFallbackUsed,
     runCountDerived: true,
@@ -2621,7 +2600,6 @@ const RUNTIME_PRESENTATION_PRIMARY_DECISION_FIELDS = Object.freeze(new Set([
   "runCount",
   "runQty",
   "runLength",
-  "runLengthMode",
 ]));
 
 const RUNTIME_PRESENTATION_CONDITIONAL_PRIMARY_FIELDS = Object.freeze(new Set([
@@ -2692,7 +2670,6 @@ const RUNTIME_PRESENTATION_DISABLED_HANDOFF_FIELDS = Object.freeze(new Set([
   "runCount",
   "runQty",
   "runLength",
-  "runLengthMode",
   "runOverrideStatus",
   "runPlacementStatus",
   "runTableGeneration",
@@ -3301,7 +3278,6 @@ const SELECTION_TRUTH_FIELD_GROUPS = Object.freeze({
   runCount: "runs",
   runQty: "runs",
   runLength: "runs",
-  runLengthMode: "runs",
   runOverrideStatus: "runs",
   runPlacementStatus: "runs",
   runTableGeneration: "futureHandoffs",
@@ -3791,7 +3767,6 @@ const PRODUCT_SPINE_SECTION_DEFINITIONS = Object.freeze([
       Object.freeze({ rowKey: "runCount", label: "Run count", fields: Object.freeze(["runCount"]) }),
       Object.freeze({ rowKey: "runQty", label: "Run qty", fields: Object.freeze(["runQty"]) }),
       Object.freeze({ rowKey: "runLength", label: "Run length", fields: Object.freeze(["runLength"]) }),
-      Object.freeze({ rowKey: "runLengthMode", label: "Length mode", fields: Object.freeze(["runLengthMode"]) }),
       Object.freeze({ rowKey: "runPlacementStatus", label: "Run placement", fields: Object.freeze(["runPlacementStatus"]) }),
       Object.freeze({ rowKey: "runOverrideStatus", label: "Override status", fields: Object.freeze(["runOverrideStatus"]) }),
       Object.freeze({ rowKey: "runTableGeneration", label: "RunTable generation", fields: Object.freeze(["runTableGeneration", "payloadRunTableGeneration"]) }),
@@ -4665,7 +4640,6 @@ function createPayloadPreviewSkeleton({ fields = [], workflowSections = [], summ
       runCount: payloadFieldValue(lookup, ["runCount"]),
       qty: payloadFieldValue(lookup, ["runQty"]),
       lengthMm: payloadFieldValue(lookup, ["runLength"]),
-      lengthMode: payloadFieldValue(lookup, ["runLengthMode"]),
       placementStatus: payloadFieldValue(lookup, ["runPlacementStatus"]),
       overrideStatus: payloadFieldValue(lookup, ["runOverrideStatus"]),
       rows: [],
@@ -5095,7 +5069,6 @@ const SPEC_BUILD_READINESS_BUILD_REQUIREMENTS = Object.freeze([
     rows: Object.freeze([
       Object.freeze({ sectionKey: "runs", rowKey: "runQty", label: "Run qty" }),
       Object.freeze({ sectionKey: "runs", rowKey: "runLength", label: "Run length" }),
-      Object.freeze({ sectionKey: "runs", rowKey: "runLengthMode", label: "Length mode" }),
     ]),
   }),
 ]);

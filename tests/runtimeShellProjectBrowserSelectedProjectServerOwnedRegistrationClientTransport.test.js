@@ -68,7 +68,7 @@ function readyProjection({
       sourceAuthority: "committed-selector-state",
       runQuantity: missingField === "runs" ? 0 : 1,
       runLengthMm: missingField === "runs" ? 0 : 3500,
-      lengthMode: "cut_to_length",
+      
     },
     runIntakePreviewSummary: {
       runIntakePreviewReady: missingField !== "runs",

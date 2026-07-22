@@ -32,7 +32,7 @@ function stage3Summary(overrides = {}) {
       sourceAuthority: "committed selector state only: manualConstraints or acceptedDefaults",
       runQuantity: 2,
       runLengthMm: 3500,
-      lengthMode: "cut_to_length",
+      
     },
     safetyFlags: {
       engineExecution: false,
@@ -367,7 +367,7 @@ test("fails closed for every remaining required readonly candidate input", () =>
           sourceAuthority: "committed selector state only",
           runQuantity: 0,
           runLengthMm: 0,
-          lengthMode: "cut_to_length",
+          
         },
       }),
       constraints: constraints(),

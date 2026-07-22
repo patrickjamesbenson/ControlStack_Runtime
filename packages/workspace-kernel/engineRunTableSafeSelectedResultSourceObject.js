@@ -276,7 +276,6 @@ function controlledIntentMarkersFrom(redactedMetadata) {
       "length_class",
       "length_mm",
       "qty",
-      "requested_length_basis",
       "length_policy_source",
       "accessory_length_policy_source",
       "not_product_data",

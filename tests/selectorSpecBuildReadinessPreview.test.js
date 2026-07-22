@@ -260,7 +260,6 @@ function addBuildOrderContext(selectorState) {
   selectorState.setDbBackedSelectorFieldValue("finishFlex", "White Flex", "White Flex");
   selectorState.setDbBackedSelectorFieldValue("runQty", "2", "2");
   selectorState.setDbBackedSelectorFieldValue("runLength", "3500", "3500 mm");
-  selectorState.setDbBackedSelectorFieldValue("runLengthMode", "cut_to_length", "Cut to length");
   return createModel({ selectorState });
 }
 
@@ -268,8 +267,6 @@ function acceptBuildOrderContext(selectorState, overrides = {}) {
   const runQty = overrides.runQty || "2";
   const runLength = overrides.runLength || "3500";
   const runLengthLabel = overrides.runLengthLabel || `${runLength} mm`;
-  const runLengthMode = overrides.runLengthMode || "cut_to_length";
-  const runLengthModeLabel = overrides.runLengthModeLabel || "Cut to length";
   selectorState.acceptDbBackedSelectorDefaults([
     { fieldKey: "mountStyle", label: "Mount style", value: "Suspended", valueLabel: "Suspended" },
     { fieldKey: "mountSelection", label: "Mount selection", value: "Wire", valueLabel: "Wire" },
@@ -279,7 +276,6 @@ function acceptBuildOrderContext(selectorState, overrides = {}) {
     { fieldKey: "finishFlex", label: "Flex colour", value: "White Flex", valueLabel: "White Flex" },
     { fieldKey: "runQty", label: "Run qty", value: runQty, valueLabel: runQty },
     { fieldKey: "runLength", label: "Run length", value: runLength, valueLabel: runLengthLabel },
-    { fieldKey: "runLengthMode", label: "Length mode", value: runLengthMode, valueLabel: runLengthModeLabel },
   ]);
   return createModel({ selectorState });
 }
@@ -301,7 +297,7 @@ function joinSensitiveStage3BPreview(snapshot = snapshotWithDoNotBridgeAuthority
     { fieldKey: "tier", label: "Tier", value: tier, valueLabel: tier },
   ]);
   selectorState.setRunIntakeRows([
-    { id: "run-1", runNumber: 1, label: "Run 1", quantity: "2", runLengthMm: "5620", lengthMode: "cut_to_length" },
+    { id: "run-1", runNumber: 1, label: "Run 1", quantity: "2", runLengthMm: "5620"},
   ]);
   selectorState.setRunAccessoryPlacementIntents([
     { runReference: "Run 1", accessoryType: "sensor", quantity: "1", placementPreference: "start", status: "confirmed" },
@@ -611,7 +607,7 @@ test("Stage 3B fails closed when non-zero accessory reservation cannot produce a
     { fieldKey: "tier", label: "Tier", value: "Economy", valueLabel: "Economy" },
   ]);
   selectorState.setRunIntakeRows([
-    { id: "run-1", runNumber: 1, label: "Run 1", quantity: "2", runLengthMm: "3500", lengthMode: "cut_to_length" },
+    { id: "run-1", runNumber: 1, label: "Run 1", quantity: "2", runLengthMm: "3500"},
   ]);
   selectorState.setRunAccessoryPlacementIntents([
     { runReference: "Run 1", accessoryType: "sensor", quantity: "1", placementPreference: "start", status: "confirmed" },
@@ -636,7 +632,7 @@ test("Stage 3B accepts non-zero accessory intent when it remains inside one seal
     { fieldKey: "tier", label: "Tier", value: "Economy", valueLabel: "Economy" },
   ]);
   selectorState.setRunIntakeRows([
-    { id: "run-1", runNumber: 1, label: "Run 1", quantity: "2", runLengthMm: "2820", lengthMode: "cut_to_length" },
+    { id: "run-1", runNumber: 1, label: "Run 1", quantity: "2", runLengthMm: "2820"},
   ]);
   selectorState.setRunAccessoryPlacementIntents([
     { runReference: "Run 1", accessoryType: "sensor", quantity: "1", placementPreference: "start", status: "confirmed" },
@@ -695,7 +691,7 @@ test("Stage 3B fails closed when non-zero accessory intent is join-sensitive wit
     { fieldKey: "tier", label: "Tier", value: "Economy", valueLabel: "Economy" },
   ]);
   selectorState.setRunIntakeRows([
-    { id: "run-1", runNumber: 1, label: "Run 1", quantity: "2", runLengthMm: "5620", lengthMode: "cut_to_length" },
+    { id: "run-1", runNumber: 1, label: "Run 1", quantity: "2", runLengthMm: "5620"},
   ]);
   selectorState.setRunAccessoryPlacementIntents([
     { runReference: "Run 1", accessoryType: "sensor", quantity: "1", placementPreference: "start", status: "confirmed" },
@@ -748,7 +744,7 @@ test("Stage 3B accepts join-sensitive accessory intent when do-not-bridge is phy
     { fieldKey: "tier", label: "Tier", value: "Economy", valueLabel: "Economy" },
   ]);
   selectorState.setRunIntakeRows([
-    { id: "run-1", runNumber: 1, label: "Run 1", quantity: "2", runLengthMm: "5620", lengthMode: "cut_to_length" },
+    { id: "run-1", runNumber: 1, label: "Run 1", quantity: "2", runLengthMm: "5620"},
   ]);
   selectorState.setRunAccessoryPlacementIntents([
     { runReference: "Run 1", accessoryType: "sensor", quantity: "1", placementPreference: "start", status: "confirmed" },
@@ -869,7 +865,7 @@ test("Stage 3B fails closed when board packing policy is not source-backed", () 
     { fieldKey: "tier", label: "Tier", value: "Economy", valueLabel: "Economy" },
   ]);
   selectorState.setRunIntakeRows([
-    { id: "run-1", runNumber: 1, label: "Run 1", quantity: "2", runLengthMm: "2820", lengthMode: "cut_to_length" },
+    { id: "run-1", runNumber: 1, label: "Run 1", quantity: "2", runLengthMm: "2820"},
   ]);
   selectorState.setRunAccessoryPlacementIntents([
     { runReference: "Run 1", accessoryType: "sensor", quantity: "1", placementPreference: "start", status: "confirmed" },
@@ -903,7 +899,7 @@ test("Stage 3B fails closed when frozen segment splits exceed source-backed spli
     { fieldKey: "tier", label: "Tier", value: "Economy", valueLabel: "Economy" },
   ]);
   selectorState.setRunIntakeRows([
-    { id: "run-1", runNumber: 1, label: "Run 1", quantity: "2", runLengthMm: "5620", lengthMode: "cut_to_length" },
+    { id: "run-1", runNumber: 1, label: "Run 1", quantity: "2", runLengthMm: "5620"},
   ]);
   selectorState.setRunAccessoryPlacementIntents([
     { runReference: "Run 1", accessoryType: "sensor", quantity: "1", placementPreference: "start", status: "confirmed" },

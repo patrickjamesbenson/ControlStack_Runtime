@@ -81,7 +81,7 @@ function readyProjection() {
       sourceAuthority: "committed-selector-state",
       runQuantity: 1,
       runLengthMm: 3500,
-      lengthMode: "cut_to_length",
+      
     },
     runIntakePreviewSummary: {
       runIntakePreviewReady: true,

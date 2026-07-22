@@ -798,3 +798,9 @@ The twelve-owner trace passed with no additional owner: 46 banned production occ
 The current Selector write guard rejects the already-authorised run-intake preview and accessory-placement preview production owners because their exact paths are absent from `allowed_write_globs`. All partially applied in-scope edits were restored; no production/test implementation remains changed and Git is clean.
 
 WALK-002R remains open but blocked for a Program-owned write-guard correction adding exactly those two existing authorised owners. No second worker or parcel is permitted. WALK-003, TEST-AUDIT-001, Engine, seeds, Lab, persistence, routes/POST, RuntimeData mutation, CRM/provider mutation, IES, retrieval and delivery remain blocked.
+
+## 2026-07-22 WALK-002R completion handoff
+
+The existing WALK-002R worker resumed after Program accepted the live golden-witness test permission. The exact twelve production owners are now mode-free. Quantity plus positive physical length alone completes run intake; stored or supplied legacy mode data is discarded and omitted. Registration, saved-project, candidate, accessory, sealed-result and downstream preview shapes contain no deleted mode or requested-length-basis field, fallback, bucket, sentinel, proxy or inferred shared-length meaning. Source-backed Board candidate eligibility is not narrowed and all no-write/disabled-production boundaries remain intact.
+
+Coupled-test receipt: 71 baseline assumptions; 69 deleted; 2 rewritten; 32 affected test files; 0 residual. Production and test searches for all four banned names are zero, the wider production alias search is zero, and the fixed Selector gate passes 108/108. The exact implementation and lane closeout are ready for Program review; do not begin WALK-003 or any prohibited later action.

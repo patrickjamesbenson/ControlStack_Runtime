@@ -121,7 +121,7 @@ function createModel(selectorState = createSelectorState()) {
 function createRunReadyState() {
   const selectorState = createSelectorState();
   selectorState.setRunIntakeRows([
-    { id: "run-a", runNumber: 1, label: "Boardroom", quantity: 2, runLengthMm: "3500", lengthMode: "cut_to_length" },
+    { id: "run-a", runNumber: 1, label: "Boardroom", quantity: 2, runLengthMm: "3500"},
   ]);
   selectorState.setRunAccessoryPlacementIntents([
     {
@@ -371,11 +371,11 @@ test("Selector view source keeps workflow diagnostics behind closed developer dr
   assert.match(view, /cs-selector-product__main-flow/);
   assert.match(view, /dataset\.defaultProductFlow = "product-first"/);
   assert.match(view, /dataset\.defaultReadiness = "plain-english"/);
-  assert.match(view, /Runs incomplete — add quantity, length, and length mode before Engine readiness can be reviewed/);
+  assert.match(view, /Runs incomplete — add quantity and physical length before Engine readiness can be reviewed/);
+  assert.doesNotMatch(view, /Length mode|length mode/);
   assert.match(view, /dataset\.singleRunIntentCapture = "module-local"/);
   assert.match(view, /dataset\.fieldKey = "runQty"/);
   assert.match(view, /dataset\.fieldKey = "runLength"/);
-  assert.match(view, /dataset\.fieldKey = "runLengthMode"/);
   assert.doesNotMatch(view, /dataset\.fieldKey = "runCount"/);
   assert.match(view, /workflowSection\.sectionKey === "runsPreview"/);
   assert.doesNotMatch(view, /workflowSection\.sectionKey === "runs"/);
@@ -445,7 +445,7 @@ test("full Stage-3 readiness emits a frozen allowlisted pre-Engine action projec
       sourceAuthority: "committed-selector-state",
       runQuantity: 2,
       runLengthMm: 3500,
-      lengthMode: "cut_to_length",
+      
     },
     runIntakePreviewSummary: {
       runIntakePreviewReady: true,

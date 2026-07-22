@@ -181,7 +181,6 @@ test("blank real UI state derives one incomplete safe Run 1 row and renders dedi
   assert.ok(descendants(runsPreviewSection).some((element) => element.dataset.singleRunIntentCapture === "module-local"));
   assert.equal(runIntentControl(runsPreviewSection, "runQty")?.type, "number");
   assert.equal(runIntentControl(runsPreviewSection, "runLength")?.type, "number");
-  assert.equal(runIntentControl(runsPreviewSection, "runLengthMode")?.tagName, "SELECT");
   assert.equal(runIntentControl(runsPreviewSection, "runCount"), null);
   assert.match(descendantText(runsPreviewSection), /Single-run intent capture active · Production outputs remain disabled\./);
   assert.match(descendantText(runsPreviewSection), /Run 1/);
@@ -198,33 +197,29 @@ test("blank real UI state derives one incomplete safe Run 1 row and renders dedi
   assert.equal(capture.completionCopy, "0/1 complete");
   assert.match(capture.missingFieldExplanation, /quantity is required/);
   assert.match(capture.missingFieldExplanation, /run length is required/);
-  assert.match(capture.missingFieldExplanation, /length mode is required/);
   assert.deepEqual(preview.runs[0], {
     id: "run-1",
     runNumber: 1,
     label: "Run 1",
     quantity: "",
     runLengthMm: "",
-    lengthMode: "",
+    
     complete: false,
-    diagnostics: ["missing-run-quantity", "missing-run-length", "missing-length-mode"],
+    diagnostics: ["missing-run-quantity", "missing-run-length"],
   });
 });
 
-test("visible controls commit the three existing DB-backed constraints and produce one complete safe run", () => {
+test("visible controls commit the two run-intake constraints and produce one complete safe run", () => {
   const selectorState = createSelectorState();
   const initialModel = createModel(selectorState);
   const container = renderModel(initialModel);
 
   const quantity = runIntentControl(container, "runQty");
   const length = runIntentControl(container, "runLength");
-  const mode = runIntentControl(container, "runLengthMode");
   quantity.value = "2";
   quantity.eventListeners.input();
   length.value = "3500";
   length.eventListeners.input();
-  mode.value = "cut_to_length";
-  mode.eventListeners.change();
 
   const model = createModel(selectorState);
   const capture = model.singleRunIntentCapture;
@@ -233,7 +228,6 @@ test("visible controls commit the three existing DB-backed constraints and produ
 
   assert.equal(localConstraints.runQty.value, "2");
   assert.equal(localConstraints.runLength.value, "3500");
-  assert.equal(localConstraints.runLengthMode.value, "cut_to_length");
   assert.equal(capture.committedConstraintsAuthoritative, true);
   assert.equal(capture.compatibilityFallbackUsed, false);
   assert.equal(capture.completionCopy, "1/1 complete");
@@ -248,8 +242,6 @@ test("visible controls commit the three existing DB-backed constraints and produ
     label: "Run 1",
     quantity: 2,
     runLengthMm: 3500,
-    lengthMode: "cut_to_length",
-    sameLengthQuantityIntent: false,
     status: "complete-safe-preview-intent",
     safePreviewOnly: true,
     enginePayloadIncluded: false,
@@ -297,7 +289,6 @@ test("partial input and clearing any required committed field fail closed immedi
   assert.deepEqual(model.runIntakePreview.runs[0].diagnostics, ["missing-run-length", "missing-length-mode"]);
 
   model.singleRunIntentCapture.setFieldValue("runLength", "4200");
-  model.singleRunIntentCapture.setFieldValue("runLengthMode", "overall");
   model = createModel(selectorState);
   assert.equal(model.runIntakePreview.runIntakePreviewReady, true);
 
@@ -313,7 +304,7 @@ test("partial input and clearing any required committed field fail closed immedi
 test("committed run constraints override the programmatic local run-intake compatibility fallback", () => {
   const selectorState = createSelectorState();
   selectorState.setRunIntakeRows([
-    { id: "legacy-run", runNumber: 1, label: "Legacy", quantity: 9, runLengthMm: 9000, lengthMode: "fixed" },
+    { id: "legacy-run", runNumber: 1, label: "Legacy", quantity: 9, runLengthMm: 9000},
   ]);
 
   let model = createModel(selectorState);

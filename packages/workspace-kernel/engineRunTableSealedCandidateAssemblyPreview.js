@@ -393,7 +393,6 @@ function normaliseRun(summary) {
     label: safeLabel(firstPresent(summary, ["label", "runLabel"]), "Run"),
     quantity: toPositiveInteger(firstPresent(summary, ["quantity", "qty"])) ?? 0,
     runLengthMm: toPositiveInteger(firstPresent(summary, ["runLengthMm", "lengthMm"])) ?? 0,
-    lengthMode: safeToken(firstPresent(summary, ["lengthMode", "mode"]), "unresolved"),
     safePreviewOnly: summary.safePreviewOnly !== false,
     enginePayloadIncluded: false,
     runTableIncluded: false,

@@ -273,7 +273,6 @@ function evaluateIntentWithLookup(intent, lookup, index = 0) {
     reservationIntentBand: normalised.reservationIntentBand,
     status: normalised.status,
     notes: normalised.notes,
-    sameLengthRunIntentOnly: run?.lengthMode === "same_length" && quantity !== null && quantity <= runQuantity,
     safePreviewOnly: true,
     accessoryReservationExecuted: false,
     accessoryReservationPayloadExposed: false,

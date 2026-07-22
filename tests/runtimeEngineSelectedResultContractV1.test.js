@@ -67,7 +67,7 @@ function safeSourceInput(overrides = {}) {
         length_class: "safe-length-band",
         length_mm: 5600,
         qty: 1,
-        requested_length_basis: "cut_to_length",
+        
         length_policy_source: "system_policy",
         accessory_length_policy_source: "system_policy",
         not_product_data: true,

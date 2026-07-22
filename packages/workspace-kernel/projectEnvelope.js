@@ -235,7 +235,6 @@ const CS_SELECTOR_PRE_ENGINE_RUN_SUMMARY_KEYS = Object.freeze([
   "sourceAuthority",
   "runQuantity",
   "runLengthMm",
-  "lengthMode",
   "writes",
   "rawRowsExposed",
 ]);
@@ -374,7 +373,6 @@ export function validateCsSelectorPreEngineActionEligibilityProjection(
     || run.runQuantity < 0
     || !Number.isSafeInteger(run.runLengthMm)
     || run.runLengthMm < 0
-    || !safeSelectorEnvelopeString(run.lengthMode, { maxLength: 120 })
     || run.writes !== false
     || run.rawRowsExposed !== false) {
     return { valid: false, reason: "Selector pre-Engine factory-approved input summary is invalid." };

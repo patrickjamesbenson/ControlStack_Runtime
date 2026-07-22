@@ -34,7 +34,7 @@ const patInputsMachineValues = Object.freeze({
   bodyFinish: "white textured",
   runQty: "2",
   runLength: "2820",
-  runLengthMode: "cut_to_length",
+  
   accessoryTypeToken: "sensor",
   accessoryQuantity: "1",
   accessoryPlacementPreference: "start",
@@ -82,7 +82,6 @@ function constraints() {
     "bodyFinish",
     "runQty",
     "runLength",
-    "runLengthMode",
   ].map((fieldKey) => committed(fieldKey, patInputsMachineValues[fieldKey]));
 }
 
@@ -97,7 +96,7 @@ function runs() {
     label: "run-1",
     quantity: patInputsMachineValues.runQty,
     runLengthMm: patInputsMachineValues.runLength,
-    lengthMode: patInputsMachineValues.runLengthMode,
+    
   }];
 }
 
@@ -145,7 +144,7 @@ function buildStage3ReservationWitness({ referenceOptions, sourceAccess }) {
     system: patInputsMachineValues.system,
     tier: patInputsMachineValues.tier,
     runLength: patInputsMachineValues.runLength,
-    lengthMode: patInputsMachineValues.runLengthMode,
+    
     accessoryTypeToken: patInputsMachineValues.accessoryTypeToken,
     accessoryQuantity: patInputsMachineValues.accessoryQuantity,
     accessoryPlacementPreference: patInputsMachineValues.accessoryPlacementPreference,

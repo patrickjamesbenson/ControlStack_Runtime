@@ -355,7 +355,6 @@ function buildSafeRealSourceProjection(sourceAccessSummary = {}) {
       controlledIntentOnly: true,
       runCount: 1,
       runLengthBand: "4000-7999mm",
-      lengthMode: "overall",
       lumenBasis: "active-illuminated-length",
       rawSelectorPayloadReturned: false,
       rawEnginePayloadReturned: false,
@@ -438,7 +437,6 @@ function selectorRuns() {
       label: "Controlled source-backed run",
       quantity: 1,
       runLengthMm: "5600",
-      lengthMode: "overall",
     },
   ];
 }

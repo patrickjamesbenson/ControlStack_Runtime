@@ -856,3 +856,11 @@ The standing worker verified the twelve-owner production trace: 46 banned-name o
 Implementation cannot proceed under the current Selector write guard. Two already-authorised production owners, `packages/modules/cs-selector/selectorRunIntakePreview.js` and `packages/modules/cs-selector/selectorRunAccessoryPlacementPreview.js`, are absent from the lane's configured `allowed_write_globs` and were rejected before write. The other attempted bounded edits were fully restored; no production or test implementation remains changed and Git is clean.
 
 WALK-002 remains open. WALK-002R is blocked pending a Program-owned lane write-guard correction that adds exactly those two already-authorised owners. Do not broaden production scope, create a parcel or worker, begin WALK-003 or TEST-AUDIT-001, invoke Engine, execute seeds, release Lab, persist, generate, mutate provider state, retrieve or deliver artifacts.
+
+## 2026-07-22 WALK-002R coupled deletion complete — pending Program review
+
+Program accepted the live WALK-002RGT golden-witness guard correction. The existing one-writer WALK-002R parcel resumed from the fixed baseline of 71 encoded assumptions across 32 affected test files.
+
+All 46 banned production occurrences were removed within the exact twelve-owner boundary. Complete production search returns zero `runLengthMode`, `lengthMode`, `requested_length_basis` and `requestedLengthBasis`; the broader mode-alias search is also zero. Quantity and positive physical length are the complete run-intake authority. Legacy mode-shaped input is ignored and omitted, without replacement field, fallback, default, sentinel, proxy or inferred manufacturing meaning. Legitimate policy provenance remains.
+
+Deletion-test receipt: baseline 71; deleted 69; rewritten 2; affected test files 32; residual 0. The fixed Selector gate passes 108/108. WALK-002R is complete and stopped for Program review. WALK-003, future audits/restart work, Engine, seeds, Lab, persistence, routes, RuntimeData mutation, CRM/provider mutation, generation, retrieval and delivery remain blocked.

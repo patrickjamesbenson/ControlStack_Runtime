@@ -225,8 +225,6 @@ test("host-local Engine evidence runner uses donor-compatible controlled run geo
     "run_length_mm",
     "length_mm",
     "lengthMm",
-    "lengthMode",
-    "requested_length_basis",
     "length_policy_source",
     "accessory_length_policy_source",
   ]) {

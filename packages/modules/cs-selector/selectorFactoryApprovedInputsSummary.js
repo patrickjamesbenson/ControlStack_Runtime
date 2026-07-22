@@ -41,7 +41,8 @@ const UNSAFE_TRUE_FIELDS = Object.freeze([
   "postEndpointsAdded",
 ]);
 
-const RUN_CONSTRAINT_KEYS = Object.freeze(["runQty", "runLength", "runLengthMode"]);
+const RUN_CONSTRAINT_KEYS = Object.freeze(["runQty", "runLength"]);
+
 const READONLY_ENGINE_DIRECT_CANDIDATE_REQUIREMENTS = Object.freeze([
   Object.freeze({ key: "tier", label: "Tier", fields: Object.freeze(["tier", "selectedTier", "tierToken"]) }),
   Object.freeze({ key: "optic", label: "Direct optic", fields: Object.freeze(["directOpticVar1", "optic", "opticVar1", "diffuserVar1"]) }),
@@ -668,11 +669,9 @@ function buildCommittedRunIntakeSummary(committedSelectorConstraints = []) {
   const missingKeys = RUN_CONSTRAINT_KEYS.filter((key) => !map.has(key));
   const runQuantity = parsePositiveInteger(map.get("runQty")?.value || map.get("runQty")?.valueLabel);
   const runLengthMm = parsePositiveInteger(map.get("runLength")?.value || map.get("runLength")?.valueLabel);
-  const lengthMode = safeString(map.get("runLengthMode")?.value || map.get("runLengthMode")?.valueLabel);
   const invalid = [];
   if (map.has("runQty") && runQuantity === null) invalid.push("invalid-run-quantity");
   if (map.has("runLength") && runLengthMm === null) invalid.push("invalid-run-length");
-  if (map.has("runLengthMode") && !lengthMode) invalid.push("invalid-run-length-mode");
   const ready = missingKeys.length === 0 && invalid.length === 0;
 
   return {
@@ -681,13 +680,11 @@ function buildCommittedRunIntakeSummary(committedSelectorConstraints = []) {
     sourceAuthority: "committed selector state only: manualConstraints or acceptedDefaults",
     runQuantity: runQuantity || 0,
     runLengthMm: runLengthMm || 0,
-    lengthMode,
     missingKeys,
     diagnostics: [...missingKeys.map((key) => `missing-${key}`), ...invalid],
     rows: [
       ["Run qty", constraintDisplayValue(map.get("runQty")) || "missing"],
       ["Run length", constraintDisplayValue(map.get("runLength")) || "missing"],
-      ["Length mode", constraintDisplayValue(map.get("runLengthMode")) || "missing"],
     ],
     writes: false,
     rawRowsExposed: false,
@@ -892,7 +889,6 @@ function buildStage3BReservationSummaryFromSafePreviews({
       label: safeRunLabel,
       quantity: parsePositiveInteger(safeRun.quantity) || 0,
       runLengthMm,
-      lengthMode: safeToken(safeRun.lengthMode, "unresolved"),
     },
     requests,
     sourceBackedBodyLengthPolicy: sourceBackedBodyLengthPolicySummary.fingerprintPayload,
