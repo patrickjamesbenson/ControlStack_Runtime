@@ -692,3 +692,11 @@ This log is append-oriented. Do not silently rewrite historical decisions.
 **Continuing ruling:** quantity plus positive physical length is complete authority; legacy mode is discarded; no replacement/default/fallback/sentinel/proxy/inferred interpretation is allowed; registration, saved-project, candidate, accessory, sealed and downstream contracts are mode-free; eligible NVB Board candidate breadth is equal or broader; all no-Engine/no-generation/no-persistence/no-route/no-mutation exclusions remain.
 
 **Consequence:** finish with zero production occurrences of all four banned names, run affected tests and the fixed gate, push the exact implementation and lane-memory closeout, and stop before WALK-003 and TEST-AUDIT-001.
+
+## 2026-07-22 — Stop WALK-002R at stale lane write guard
+
+**Decision:** Accept the standing worker's protected write-guard stop. The complete trace found no production owner outside the authorised twelve: 46 banned production occurrences are confined to those owners, and the mechanical coupled-test baseline is 71 occurrence lines across 32 files.
+
+**Exact conflict:** the Selector lane's configured `allowed_write_globs` omits the already-authorised run-intake preview and accessory-placement preview owners. Both were rejected before write. Completing the coupled deletion while leaving either unchanged is impossible.
+
+**Consequence:** restore every partially applied edit, retain no production/test change, keep Git clean, and block WALK-002R pending a Program-owned guard correction adding exactly those two existing owners. Do not broaden scope, create another parcel/worker or begin later work.

@@ -788,3 +788,13 @@ Queue reconciliation: WALK-001V is already done, gated and pushed, so it was not
 * continuing authority: positive quantity and positive physical length only; legacy mode discarded; no replacement/default/fallback/sentinel/proxy/inference; mode-free current contracts; eligible NVB Board breadth equal or broader
 * closeout: all affected focused tests and fixed Selector gate; exact implementation and lane-memory commit/push; stop for Program review
 * prohibited: WALK-003, TEST-AUDIT-001, Engine, saved seeds, Lab C6/C7, persistence, routes/POST, RuntimeData mutation, CRM/provider mutation, IES, retrieval and delivery
+
+## 2026-07-22 WALK-002R protected write-guard stop receipt
+
+* status: blocked; existing WALK-002R remains open; no Selector parcel ready
+* production trace: 46 banned-name occurrences across exactly the twelve authorised owners; no thirteenth owner or alias found
+* mechanical test baseline: 71 encoded-assumption occurrence lines across 32 test files; six are `requested_length_basis`
+* exact blocker: current `allowed_write_globs` omits `packages/modules/cs-selector/selectorRunIntakePreview.js` and `packages/modules/cs-selector/selectorRunAccessoryPlacementPreview.js`
+* required recovery: Program-owned guard correction adding exactly those two already-authorised owners; no scope broadening and no new parcel/worker
+* implementation state: all attempted bounded edits restored; no production/test change remains; Git clean before this receipt
+* queue: WALK-002R blocked; WALK-003, TEST-AUDIT-001 and every prohibited action remain blocked

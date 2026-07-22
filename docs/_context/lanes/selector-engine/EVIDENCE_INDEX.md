@@ -903,3 +903,11 @@ Every completed worker updates this index with:
 - Deletion-test coupling requires baseline, deleted, rewritten, affected-test-file and zero-residual counts in the completion receipt — RECORDED.
 - Production completion search must return zero `runLengthMode`, `lengthMode`, `requested_length_basis` and `requestedLengthBasis`; legitimate nearby policy provenance remains unless specifically proven to encode the deleted assumption — RECORDED.
 - All prior mode-free authority, equal-or-broader NVB candidate breadth, no-execution/no-write exclusions and Program-review stop before WALK-003 remain binding — RECORDED.
+
+## 2026-07-22 — WALK-002R protected write-guard evidence
+
+- Production search found 46 banned-name occurrences across exactly the twelve Program-authorised owners; no additional owner or alias appeared — VERIFIED.
+- Mechanical test search found 71 encoded-assumption occurrence lines across 32 test files, including exactly six `requested_length_basis` occurrences — VERIFIED.
+- Current lane `allowed_write_globs` omits the authorised run-intake preview and accessory-placement preview owners; both writes were rejected by the guard — VERIFIED.
+- Every partially applied edit to other authorised owners was restored; production and tests have no remaining diff and Git was clean before lane-memory receipt — VERIFIED.
+- Required recovery is a Program-owned write-guard amendment for exactly the two omitted authorised owners; WALK-002R remains open and no new parcel/worker or later action is released — RECORDED.

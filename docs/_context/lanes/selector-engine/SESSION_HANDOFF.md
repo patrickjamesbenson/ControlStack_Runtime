@@ -790,3 +790,11 @@ Remove every production effect and coupled test assumption for `runLengthMode`, 
 Before editing, mechanically count the complete encoded-assumption assertion baseline. Delete or rewrite every coupled fixture, exact-shape assertion and downstream contract lock in the same parcel, and report baseline, deleted, rewritten, affected test files and zero residual assertions.
 
 All prior mode-free intake, legacy discard, registration, saved-project, candidate-breadth, accessory, sealed/downstream preview and no-execution/no-write requirements remain binding. Production must finish with zero occurrences of all four banned names under `packages`. Run affected tests and the fixed Selector gate, commit and push the exact implementation plus lane-memory closeout, then stop for Program review.
+
+## 2026-07-22 WALK-002R protected write-guard stop
+
+The twelve-owner trace passed with no additional owner: 46 banned production occurrences are confined to the twelve authorised owners. The mechanical deletion-test baseline is 71 encoded-assumption occurrence lines across 32 test files, including six `requested_length_basis` occurrences.
+
+The current Selector write guard rejects the already-authorised run-intake preview and accessory-placement preview production owners because their exact paths are absent from `allowed_write_globs`. All partially applied in-scope edits were restored; no production/test implementation remains changed and Git is clean.
+
+WALK-002R remains open but blocked for a Program-owned write-guard correction adding exactly those two existing authorised owners. No second worker or parcel is permitted. WALK-003, TEST-AUDIT-001, Engine, seeds, Lab, persistence, routes/POST, RuntimeData mutation, CRM/provider mutation, IES, retrieval and delivery remain blocked.

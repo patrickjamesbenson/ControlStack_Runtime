@@ -846,3 +846,13 @@ The mandatory deletion-test coupling rule applies in the same parcel. Mechanical
 All previous WALK-002R authority remains binding: positive quantity plus positive physical length only; legacy mode input discarded and omitted; no replacement/default/fallback/sentinel/proxy/inferred interpretation; mode-free registration, saved-project, candidate, accessory, sealed and downstream contracts; equal-or-broader eligible NVB Board candidate breadth; and no Engine, generation, persistence, route, POST or RuntimeData mutation.
 
 Completion requires production search under `packages` to return zero occurrences of all four banned names, all affected focused tests and the complete fixed Selector gate to pass, the exact implementation and lane-memory closeout to be committed and pushed, and the lane to stop for Program review before WALK-003.
+
+## 2026-07-22 WALK-002R protected write-guard stop — latest controlling state
+
+**Recorded lane work HEAD:** `041e679c90edc3bc26025f55184da7cf5a2b124f` — `docs(selector): reconcile twelve-owner WALK-002R`.
+
+The standing worker verified the twelve-owner production trace: 46 banned-name occurrences exist across exactly the twelve Program-authorised owners and no thirteenth production owner or alias was found. The mechanical coupled-test baseline is 71 encoded-assumption occurrence lines across 32 test files, including the six current `requested_length_basis` occurrences identified by Program.
+
+Implementation cannot proceed under the current Selector write guard. Two already-authorised production owners, `packages/modules/cs-selector/selectorRunIntakePreview.js` and `packages/modules/cs-selector/selectorRunAccessoryPlacementPreview.js`, are absent from the lane's configured `allowed_write_globs` and were rejected before write. The other attempted bounded edits were fully restored; no production or test implementation remains changed and Git is clean.
+
+WALK-002 remains open. WALK-002R is blocked pending a Program-owned lane write-guard correction that adds exactly those two already-authorised owners. Do not broaden production scope, create a parcel or worker, begin WALK-003 or TEST-AUDIT-001, invoke Engine, execute seeds, release Lab, persist, generate, mutate provider state, retrieve or deliver artifacts.
