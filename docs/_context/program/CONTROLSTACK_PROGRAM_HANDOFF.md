@@ -1047,7 +1047,7 @@ WALK-001V is accepted complete. The Selector feature and lane closeout are pushe
 
 C5 is accepted complete. The Lab feature and closeout are pushed and the fixed gate passes 314/314. The preflight remains one contract-derived read-only resolver call, validation through the real inspection path, one immutable redacted receipt and immediate loaded-body discard. C6 remains blocked by the canonical seed sequence and separate Program admission.
 
-WALK-001VA is accepted complete at 108/108. The managed activation succeeded, the count-only Ambient summary is live, the read-only receipt is pushed and clean, and every write remained blocked by the then-current source defects. The later WALK-001S section below is the controlling next action.
+WALK-001VA is accepted complete at 108/108. The managed activation succeeded, the count-only Ambient summary is live, the read-only receipt is pushed and clean, and every write remained blocked by the then-current source defects. WALK-001S later completed the corrected-source refresh and is superseded by the WALK-002 handoff below.
 
 Selector has durably recorded SEED-LIB-001 as blocked. The earlier missing-record note is superseded; no duplicate seed-memory action is required.
 
@@ -1066,3 +1066,40 @@ The existing exact `ambient_temp` row is approved and has finite values in the E
 The next guarded dry-run must show one approved exact Ambient row; all four tier columns present and populated; finite counts consistent with the corrected source and zero non-finite tier tokens; one approved finite multi-tier row; canonical Driver protocol authority on all 48 rows with 51 values; no duplicate-normalised Driver authority; and non-zero canonical Driver-to-Board agreement.
 
 Every original source-shape, validation, identity and disclosure guard must pass. Only after the complete dry-run passes may the existing guarded materialise/archive/promote sequence continue, with archive succeeding before promotion. Stop after WALK-001 for Program review.
+
+### WALK-001 accepted; WALK-002 sole worker commission
+
+Program accepts WALK-001 complete. The corrected dry-run passed, materialisation succeeded, the previous active authority was archived before promotion, promotion completed without blockers, the active and materialised authorities align, the Selector gate passes 108/108, and the lane is clean. Program's independent read-only probe confirms all 15 required tables, a new active fingerprint, safe redaction, no mutation and no blockers.
+
+Commission the standing Selector worker for WALK-002 only. First perform a read-only trace of every current `runLengthMode` owner and consumer. Then delete Length Mode as Selector authority from:
+
+- run-intake state and validation;
+- committed or persisted Selector constraints;
+- Build Ready and run-readiness requirements or diagnostics;
+- factory-approved summaries;
+- spine and payload previews;
+- Selector reference-option metadata;
+- rendered controls, labels and next-action copy.
+
+Preserve `runQty` and `runLength` as the only run-intake decisions. A run with a positive quantity and positive physical length must no longer be incomplete because no mode exists. Do not create or infer a replacement mode, default, fallback, sentinel, derived value or hidden constraint. Old stored `runLengthMode` values must not become active truth or appear in new payloads, summaries or UI.
+
+Preserve all otherwise eligible source-backed NVB Board candidates for downstream Lex scoring. Removing Length Mode must broaden or preserve candidate availability; it must never narrow candidates or preselect a manufacturing interpretation. Keep the existing safe-local-intent, no Engine invocation, no RunTable/IES generation, no persistence, no route and no RuntimeData mutation boundaries.
+
+Authorised production paths are limited to:
+
+- `packages/modules/cs-selector/selectorRunIntakePreview.js`
+- `packages/modules/cs-selector/selectorFactoryApprovedInputsSummary.js`
+- `packages/modules/cs-selector/selectorView.js`
+- `packages/modules/cs-selector/selectorViewModel.js`
+- `packages/workspace-kernel/selectorReferenceOptionsService.js`
+
+Focused test scope may include only:
+
+- `tests/selectorRunIntakePreview.test.js`
+- `tests/selectorRunIntentCaptureSurface.test.js`
+- `tests/selectorSpecBuildReadinessPreview.test.js`
+- `tests/selectorSpinePayloadSkeleton.test.js`
+- `tests/selectorSafeWorkflowSurfaceIntegration.test.js`
+- `tests/goldenSupportedMachineValueWitness.test.js`
+
+If the read-only trace finds a required production owner outside the authorised list, stop with the exact diagnosis rather than broadening scope. Run all affected focused tests plus the fixed Selector gate. Commit and push the exact WALK-002 parcel, reconcile lane memory and stop for Program review. Do not begin WALK-003, invoke Engine, touch saved seed cases, release C6/C7, mutate CRM/provider state, persist, generate IES, retrieve or deliver artifacts.

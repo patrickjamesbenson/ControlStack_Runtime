@@ -686,18 +686,14 @@ P2 Checkpoint 1 is **IMPLEMENTATION COMPLETE / GATE GREEN / COMMIT BLOCKED BY SH
 - **SEED LIBRARY:** SEED-LIB-001 is ruled and queued as two Patrick-nominated Selector-saved cases. Canonical acceptance must use the real approval/sealer, real inspection, C5, C6 and C7 chain; hand-made artifacts and evidence substitution are prohibited.
 - **SEED SEQUENCE:** saved-case execution waits for WALK-007; Lab seed execution waits for separate C6/C7 admissions; Governance waits for C7.
 - **CRM:** Patrick's HubSpot portal-scope prerequisite and business scope/lifecycle ruling are complete. No Patrick-held CRM prerequisite remains. Exact writer-scope definition is the sole substantive CRM precondition; separate Program admission remains the normal release control before live provider writes.
-- **NEXT:** the bounded source correction is reported complete. Selector now executes the complete guarded WALK-001 completion workflow. No Lab action is ready and no seed artifact is generated.
+- **NEXT:** WALK-001 is accepted complete. Selector executes WALK-002 Length Mode deletion only. No Lab action is ready and no seed artifact is generated.
 
 ## 2026-07-22 consolidated Selector walkthrough state
 
 - **COMPLETED:** PWS-001, PWS-002 and PWS-005 remain closed; no duplicate commission.
-- **SELECTOR WALK-001:** open and incomplete. Reader recovery succeeded and current-source validation stopped correctly before every write. The active authority is unchanged; no materialisation, archive or promotion is accepted.
-- **RECOVERY COMPLETE:** WALK-001I installed the existing locked dependency set and restarted only `selector-runtime`; WALK-001R now reaches current Google source validation with credentials and tracked code untouched.
-- **SOURCE BLOCK:** live proof confirms canonical `DRIVERS.native_control_type` is Boolean-like on all 48 rows with zero protocol authority, duplicate-normalised identity carries 51 protocol values, and BOARDS has zero canonical Driver agreement. SYSTEM_POLICY has one exact unapproved Ambient row and no recognised tier columns or finite tier evidence.
-- **WALK-001V ACCEPTED:** bounded Ambient visibility is pushed and independently verified at 108/108 with count-only disclosure and dry-run no-write safety.
-- **WALK-001VA ACCEPTED:** managed activation and live current-source evidence are complete at 108/108; the lane is clean and every write remained blocked.
-- **SOURCE CORRECTION REPORTED:** `native_control_type` is now unique and protocol-bearing; the former misnamed Driver approval/Boolean column is non-authority. The exact Ambient row is approved with finite Economy, Business, First and Charter values; `ENG` is removed and deferred.
-- **SELECTOR READY:** WALK-001S guarded completion after source correction. Rerun the complete original guard; no further source edit is authorised.
+- **WALK-001 ACCEPTED:** the corrected source passed every guard; materialisation succeeded; the previous active authority was archived before promotion; the promoted and materialised authorities align; the final Selector gate passed 108/108 and the lane is clean.
+- **ACTIVE AUTHORITY VERIFIED:** Program's read-only probe confirms the promoted snapshot is present, readable, parseable, complete across all 15 required tables, newly fingerprinted, redacted, mutation-disabled and blocker-free.
+- **SELECTOR READY:** WALK-002 Length Mode deletion only. Delete `runLengthMode` from all Selector-owned input, persistence, readiness, summary, payload/spine, option-metadata and UI authority while preserving quantity, physical length and full downstream NVB candidate breadth.
 - **SELECTOR ORDER:** Length Mode deletion → duplicate scaffold unmount → legacy TIERS readiness deletion → internal timeline/principal test-mode deletion → donor auto-fill defaults → truthful readiness counters → selections-only action-lane and thermal acceptance.
 - **AUTO-FILL:** each dropdown selects the first real NVB option in exact source order; `No manual constraint…` presentation rows are skipped. Auto-filled values are visibly LOOKED UP and distinct from manual constraints.
 - **ACKNOWLEDGEMENT:** one `Accept all defaults` action creates the GIVEN acknowledgement for every flagged default, including inherited finishes. Unacknowledged defaults do not satisfy readiness; per-field acknowledgement is prohibited.
@@ -705,8 +701,8 @@ P2 Checkpoint 1 is **IMPLEMENTATION COMPLETE / GATE GREEN / COMMIT BLOCKED BY SH
 - **ENGINE BOUNDARY:** technical source-backed selections are authority; server revision acknowledgement and governance/project envelopes are not Engine prerequisites. No run is authorised until cleanup closes.
 - **THERMAL ACCEPTANCE:** one bounded run must prove selected room plus one measured optic rise exactly once and varied-rise movement of lookup and verified lm/m.
 - **FINISHES:** Patrick's ruling is closed and recorded in Governance. Inheritance or auto-fill alone does not satisfy Build Ready; WALK-005A restores the one-action donor acknowledgement.
-- **PARALLELISM:** no Lab action is ready. One Selector writer may execute WALK-001S now that the bounded source correction is reported complete; no cross-lane writes.
-- **NEXT:** Selector reruns every original guard against the corrected source. Only a full pass permits materialise, archive and promote, with archive before promotion. Stop after WALK-001 for Program review. WALK-002 through WALK-007 remain sequence-blocked, with WALK-005A inserted before WALK-006. WALK-008 is ruled and closed.
+- **PARALLELISM:** no Lab action is ready. One Selector writer may execute WALK-002 only; no cross-lane writes.
+- **NEXT:** diagnose and delete Length Mode authority without a replacement or default, preserve quantity and physical length, prove readiness/payload/UI cleanup and unchanged NVB candidate breadth, gate and push, then stop for Program review. WALK-003 through WALK-007 remain sequence-blocked, with WALK-005A inserted before WALK-006. WALK-008 is ruled and closed.
 
 ## 2026-07-22 HubSpot and CRM ruling state
 

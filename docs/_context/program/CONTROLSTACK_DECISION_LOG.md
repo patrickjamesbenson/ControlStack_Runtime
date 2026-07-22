@@ -1586,3 +1586,19 @@ Patrick reports the source owner has now corrected only the identified source de
 Selector is authorised to rerun the complete original guarded dry-run. It must require unique protocol-bearing canonical Driver authority, no duplicate-normalised Driver authority, one approved exact Ambient row, all four recognised tier columns present and populated, zero non-finite tier tokens, finite approved multi-tier evidence, non-zero Driver-to-Board agreement and every existing source-shape, validation, identity and disclosure guard.
 
 Only after the complete dry-run passes may the existing guarded materialise/archive/promote sequence continue. Archive must succeed before promotion. Stop after WALK-001 for Program review. WALK-002 through WALK-007, Engine, C6/C7, seed execution, CRM, retrieval and delivery remain blocked.
+
+## 2026-07-22 — WALK-001 accepted; WALK-002 Length Mode deletion released
+
+**Status:** WALK-001 ACCEPTED COMPLETE; WALK-002 SOLE READY SELECTOR PARCEL.
+
+Program directly verified the pushed Selector closeout, clean lane state and fixed 108/108 gate. The corrected dry-run passed every source-shape, validation, identity and disclosure guard. The existing guarded workflow then materialised the corrected authority, created the prior-authority archive before promotion, promoted without blockers, and verified the active and materialised authorities aligned.
+
+Program's independent read-only RuntimeData probe confirms the promoted authority is present, readable and parseable, contains all 15 required tables, has a new active fingerprint, returns no blockers or warnings, exposes no rows, headers, users or paths, and permits no write or mutation. WALK-001 is accepted complete.
+
+Program releases **WALK-002 — Length Mode deletion** as the sole ready Selector parcel. First trace the current `runLengthMode` effect read-only, then delete it as Selector authority from run intake, committed/persisted constraints, readiness, summaries, spine/payload preview, option metadata and rendered UI. Preserve run quantity and physical run length as the only run-intake decisions. Do not create, infer or retain any replacement mode, default, sentinel or hidden constraint.
+
+Removal must not narrow source-backed Board candidates or preselect a manufacturing interpretation. All otherwise eligible NVB candidates remain available for downstream Lex scoring. Existing safe-local-intent and no-Engine/no-generation/no-persistence boundaries remain intact.
+
+Authorised production scope is limited to the current proven owners: `packages/modules/cs-selector/selectorRunIntakePreview.js`, `packages/modules/cs-selector/selectorFactoryApprovedInputsSummary.js`, `packages/modules/cs-selector/selectorView.js`, `packages/modules/cs-selector/selectorViewModel.js`, and `packages/workspace-kernel/selectorReferenceOptionsService.js`. Focused tests may change only where needed to prove the deletion, including the run-intake, capture-surface, readiness, spine/payload, safe-workflow and golden-witness tests. Any newly discovered production owner outside this list stops for Program review rather than broadening scope.
+
+WALK-003 through WALK-007, Engine, saved seed cases, C6/C7, CRM/provider mutation, persistence, IES, retrieval and delivery remain blocked. Gate, push the exact WALK-002 parcel, reconcile lane memory and stop for Program review; do not continue automatically into WALK-003.
