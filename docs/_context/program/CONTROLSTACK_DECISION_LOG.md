@@ -1602,3 +1602,37 @@ Removal must not narrow source-backed Board candidates or preselect a manufactur
 Authorised production scope is limited to the current proven owners: `packages/modules/cs-selector/selectorRunIntakePreview.js`, `packages/modules/cs-selector/selectorFactoryApprovedInputsSummary.js`, `packages/modules/cs-selector/selectorView.js`, `packages/modules/cs-selector/selectorViewModel.js`, and `packages/workspace-kernel/selectorReferenceOptionsService.js`. Focused tests may change only where needed to prove the deletion, including the run-intake, capture-surface, readiness, spine/payload, safe-workflow and golden-witness tests. Any newly discovered production owner outside this list stops for Program review rather than broadening scope.
 
 WALK-003 through WALK-007, Engine, saved seed cases, C6/C7, CRM/provider mutation, persistence, IES, retrieval and delivery remain blocked. Gate, push the exact WALK-002 parcel, reconcile lane memory and stop for Program review; do not continue automatically into WALK-003.
+
+## 2026-07-22 — WALK-002 protected scope stop accepted; complete owner rescope released
+
+**Status:** WALK-002 REMAINS OPEN; WALK-002R SOLE READY SELECTOR PARCEL.
+
+Program directly verified the Selector protected stop. The lane is clean, the fixed gate passes 108/108, and only lane-memory reconciliation was pushed. No production or test implementation, runtime, Engine, RunTable, persistence, source, seed, CRM/provider, artifact or later walkthrough action changed.
+
+The read-only trace proves the first five-file boundary was incomplete. Required current owners outside that boundary still require Length Mode in server-owned registration and exact saved-project validation, fingerprint and default it in the readonly candidate mapper, derive a hidden same-length accessory interpretation, and emit `unresolved` mode sentinels or mode buckets in sealed-candidate and downstream RunTable previews. The previous parcel correctly stopped rather than leaving hidden authority behind.
+
+Program releases **WALK-002R — complete Length Mode owner deletion** as the sole ready Selector parcel. Production scope is expanded to every current production occurrence found by the accepted trace, exactly these eleven files:
+
+- `packages/modules/cs-selector/selectorRunIntakePreview.js`
+- `packages/modules/cs-selector/selectorRunAccessoryPlacementPreview.js`
+- `packages/modules/cs-selector/selectorFactoryApprovedInputsSummary.js`
+- `packages/modules/cs-selector/selectorView.js`
+- `packages/modules/cs-selector/selectorViewModel.js`
+- `packages/workspace-kernel/selectorReferenceOptionsService.js`
+- `packages/workspace-kernel/projectEnvelope.js`
+- `packages/workspace-kernel/selectorReadonlyEngineCandidateMapper.js`
+- `packages/workspace-kernel/engineRunTableSealedCandidateAssemblyPreview.js`
+- `packages/workspace-kernel/engineRunTableRuntimeRunTableDomainOutputScaffold.js`
+- `packages/workspace-kernel/engineRunTableControlledRealSourceSealedEvidenceProbe.js`
+
+Delete `runLengthMode`, `lengthMode`, supported-mode lists and labels, mode-derived readiness and diagnostics, the candidate default to `cut_to_length`, mode fingerprints, `requested_length_basis`, same-length accessory interpretation, downstream mode fields/buckets and `unresolved` mode sentinels. Do not replace any of them with a new field, constant, fallback, default, inference or manufacturing interpretation.
+
+Current and newly emitted run authority contains quantity and positive physical length only. Legacy stored mode data must be discarded at the bounded projection/hydration boundary and must not become active truth, block current validation or be persisted again. Current exact registration and project-envelope validation must require the mode-free shape.
+
+All otherwise eligible source-backed NVB Board candidates must remain equal or broaden for downstream Lex scoring. Candidate identity may fingerprint quantity and physical length but must not fingerprint or derive a mode. Accessory intent remains quantity-bounded only; it must not infer whether repeated quantities share a length basis. Downstream sealed and RunTable previews may report quantity and safe length bands only, with no mode field, bucket, sentinel or proxy.
+
+Focused test edits are confined to tests that currently contain `runLengthMode` or `lengthMode`, plus tests that directly import one of the eleven authorised production files and must change for the exact mode-free shape. No other production file is authorised. If implementation discovers another production occurrence or owner, stop again with the exact trace rather than broadening scope.
+
+Acceptance requires repository-wide production search across `packages` to return zero `runLengthMode` or `lengthMode` occurrences; UI and copy search to return no Length Mode control or requirement; positive quantity plus positive physical length to satisfy run intake; old stored mode input to be ignored and omitted; registration, saved-project validation, candidate mapping, accessory previews, sealed-candidate previews and downstream domain previews to use the mode-free shape; Board candidate breadth to remain equal or broaden; and all no-Engine/no-generation/no-persistence/no-route/no-mutation safety flags to remain intact.
+
+Run all affected focused tests and the complete fixed Selector gate. Commit and push the exact WALK-002R parcel, reconcile lane memory and stop for Program review. WALK-003 through WALK-007, Engine execution, seed execution, C6/C7, CRM/provider mutation, persistence, IES generation, retrieval and delivery remain blocked.

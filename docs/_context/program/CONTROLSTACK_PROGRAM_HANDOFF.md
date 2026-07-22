@@ -1103,3 +1103,33 @@ Focused test scope may include only:
 - `tests/goldenSupportedMachineValueWitness.test.js`
 
 If the read-only trace finds a required production owner outside the authorised list, stop with the exact diagnosis rather than broadening scope. Run all affected focused tests plus the fixed Selector gate. Commit and push the exact WALK-002 parcel, reconcile lane memory and stop for Program review. Do not begin WALK-003, invoke Engine, touch saved seed cases, release C6/C7, mutate CRM/provider state, persist, generate IES, retrieve or deliver artifacts.
+
+### WALK-002 protected stop accepted; WALK-002R complete owner commission
+
+Program accepts the WALK-002 protected stop. The trace found required production owners outside the first boundary, no production or test implementation changed, the fixed Selector gate passes 108/108, only the stop reconciliation was pushed, and the lane is clean.
+
+Commission the standing worker for WALK-002R only. The complete authorised production scope is exactly:
+
+- `packages/modules/cs-selector/selectorRunIntakePreview.js`
+- `packages/modules/cs-selector/selectorRunAccessoryPlacementPreview.js`
+- `packages/modules/cs-selector/selectorFactoryApprovedInputsSummary.js`
+- `packages/modules/cs-selector/selectorView.js`
+- `packages/modules/cs-selector/selectorViewModel.js`
+- `packages/workspace-kernel/selectorReferenceOptionsService.js`
+- `packages/workspace-kernel/projectEnvelope.js`
+- `packages/workspace-kernel/selectorReadonlyEngineCandidateMapper.js`
+- `packages/workspace-kernel/engineRunTableSealedCandidateAssemblyPreview.js`
+- `packages/workspace-kernel/engineRunTableRuntimeRunTableDomainOutputScaffold.js`
+- `packages/workspace-kernel/engineRunTableControlledRealSourceSealedEvidenceProbe.js`
+
+Delete every current production occurrence and contract effect of `runLengthMode` and `lengthMode`. This includes supported-mode values and labels, missing/unsupported-mode diagnostics, committed-run readiness requirements, summary and UI rows, option metadata, candidate fingerprints and the `cut_to_length` fallback, emitted mode fields, `requested_length_basis`, same-length accessory interpretation, mode buckets, `unresolved` mode sentinels and controlled-probe sample mode values.
+
+Do not create a replacement field, constant, fallback, default, sentinel, proxy or inferred manufacturing interpretation. Quantity and positive physical length are the complete run-intake authority. Legacy stored mode data is discarded at the bounded projection or hydration boundary and is neither active truth nor newly persisted. Current registration and exact project-envelope validation use the mode-free shape.
+
+The readonly candidate mapper must preserve all otherwise eligible source-backed NVB Board candidates for downstream Lex scoring. Candidate identity may include quantity and physical length only. Accessory intent may remain bounded by run quantity but may not infer same-length semantics. Sealed-candidate and downstream RunTable previews may expose safe quantity and length bands only, with no mode field, bucket, sentinel or proxy.
+
+Test edits are authorised only for tests that currently contain `runLengthMode` or `lengthMode`, plus tests that directly import one of the eleven production files and require fixture or exact-shape updates. Add focused proof that legacy mode input is ignored and omitted, registration and saved-project validation accept the mode-free current shape, candidate fingerprints and payloads contain no mode or requested-length basis, accessory and downstream previews contain no hidden interpretation, and eligible Board candidate breadth remains equal or broader.
+
+Before completion, repository-wide production search under `packages` must return zero `runLengthMode` and zero `lengthMode` occurrences. User-visible copy and rendered-control proof must contain no Length Mode requirement. Positive quantity plus positive physical length must satisfy run intake. All no-Engine, no-RunTable/IES-generation, no-persistence, no-route, no-POST and no-RuntimeData-mutation boundaries remain unchanged.
+
+If any additional production occurrence or required owner appears outside these eleven files, stop again with the exact trace. Otherwise run all affected focused tests and the complete fixed Selector gate, commit and push the exact WALK-002R parcel, reconcile lane memory and stop for Program review. Do not begin WALK-003 or any later walkthrough work; do not invoke Engine, execute seed cases, release C6/C7, mutate CRM/provider state, persist, generate IES, retrieve or deliver artifacts.
