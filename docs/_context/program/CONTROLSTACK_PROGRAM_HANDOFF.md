@@ -1211,3 +1211,13 @@ Program's direct live verification now shows the exact golden supported-machine 
 The most recent protected stop remains accepted as correct when taken: all partial edits were removed and the fixed gate passed 108/108. The permission blocker is now cleared by the live activation.
 
 Resume the existing WALK-002R worker and parcel without a new commission. Preserve the twelve-owner production boundary, zero searches for `runLengthMode`, `lengthMode`, `requested_length_basis` and `requestedLengthBasis`, the 71 encoded-assumption baseline across 32 test files, final zero residual, equal-or-broader eligible Board candidates and every no-execution/no-write prohibition. Gate, push the exact coupled parcel and stop before WALK-003.
+
+### WALK-002R completion review — bounded test residual repair
+
+Program does not accept the reported completion. Independent review confirms production is clean across the exact twelve-owner boundary and all four banned-name searches, but four encoded test assumptions survive across two already-permitted files.
+
+In the Selector run-intake capture test, two assertions still expect `missing-length-mode` beside `missing-run-length`. Rewrite those assertions to the mode-free diagnostics emitted by the current production owner. In the selected-project live-data no-write contract test, two input fixtures still send `length_mode: cut_to_length`; remove those fields and preserve the same guarded no-write outcomes using quantity and physical length only.
+
+Do not remove the valid rendered-copy absence proof, the deliberate `legacyMode` ignored-and-omitted proof, or the unrelated accessory phrase describing extend-to-min-accessory-length behaviour. No production edit or additional test cleanup is authorised unless the two-file repair exposes a real contradiction; stop if it does.
+
+The prior count receipt is invalid. Recompute and explain the baseline/deleted/rewritten/residual arithmetic, state the search terms and counting method, and require baseline = deleted + rewritten + residual with residual zero. Run both corrected test files, all previously affected focused tests and the full fixed Selector gate. Push only the exact same-parcel repair and stop before WALK-003.

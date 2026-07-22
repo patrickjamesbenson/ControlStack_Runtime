@@ -1749,3 +1749,20 @@ Program independently verifies the live Selector MCP guard now contains the exac
 The latest Selector stop remains accepted as a correct protected stop at the time it was taken: all partial edits were removed and the fixed gate passed 108/108. It is now superseded only as an active blocker because the live permission has subsequently become effective.
 
 WALK-002RGT is complete. The existing standing worker resumes the same WALK-002R parcel without a new commission. Preserve the twelve-owner production boundary, all four banned-name zero searches, the 71 encoded-assumption baseline across 32 test files, final zero residual, equal-or-broader Board candidate breadth, all no-execution/no-write boundaries and the stop before WALK-003. MGR-RESTART-001 and both post-WALK audits remain blocked.
+
+## 2026-07-22 — WALK-002R completion receipt rejected; bounded test residual repair released
+
+**Status:** WALK-002R REMAINS OPEN; SAME WORKER AND PARCEL; FOUR TEST RESIDUALS MUST BE REMOVED OR REWRITTEN.
+
+Program independently verifies that the exact twelve-owner production deletion is clean: production search is zero for `runLengthMode`, `lengthMode`, `requested_length_basis` and `requestedLengthBasis`, and a broader production search finds no mode field, diagnostic, bucket, sentinel, same-length proxy or requested-basis alias. The lane is clean, the feature commit is pushed and the fixed Selector gate is reported 108/108.
+
+Program cannot accept the completion receipt because the reported test residual of zero is false. Four Length Mode assumptions survive across two already-permitted test files:
+
+- two Selector run-intake assertions still require the deleted `missing-length-mode` diagnostic alongside `missing-run-length`;
+- two selected-project no-write fixtures still carry `length_mode: cut_to_length` into the Engine seam.
+
+These are not approved historical fixtures. The two stale diagnostic assertions directly contradict the new production owner, which emits only `missing-run-length` for the shown cases. The two mode-bearing seam fixtures must prove the same no-write boundary using quantity and physical length without a mode field. The valid negative proof that rendered copy does not contain Length Mode remains, the deliberate `legacyMode` ignored-and-omitted proof remains, and the unrelated accessory phrase `extend-to-min-accessory-length mode` is not part of this deletion.
+
+WALK-002R remains the same parcel; no new worker or production scope is authorised. Rewrite the two stale diagnostic assertions to the mode-free expected diagnostics and remove the two `length_mode` fixture fields while preserving their no-write outcomes. Then rerun those two focused test files, every previously affected focused test and the complete fixed Selector gate.
+
+The prior 71/69/2/32/0 count receipt is invalid and must be mechanically reconciled. The corrected receipt must state the search terms and counting method, explain whether the four surviving occurrences were omitted from the original baseline or misclassified in the deletion/rewrite totals, satisfy baseline = deleted + rewritten + residual, and finish with residual zero. Production remains unchanged unless this bounded test repair exposes a real production contradiction, in which case stop. WALK-003 and all later work remain blocked.

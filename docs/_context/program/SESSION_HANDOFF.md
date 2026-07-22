@@ -143,6 +143,8 @@ WALK-002R stopped cleanly again because the authorised golden supported-machine 
 
 WALK-002RGT is now accepted complete. Direct live verification shows the exact golden witness test permission present and its guarded scope check passing; all nine exact module permissions and bounded test patterns remain intact, with broad module and broad test wildcards absent.
 
-The existing standing worker resumes the same twelve-owner WALK-002R parcel without a new commission. Preserve the four banned-name zero searches, 71 encoded-assumption baseline across 32 test files, final zero residual, equal-or-broader eligible Board candidates and every no-execution/no-write prohibition; gate, push and stop before WALK-003.
+The existing standing worker resumed the same twelve-owner WALK-002R parcel without a new commission. Production is now clean across all four banned-name searches, but Program rejected the completion receipt because four encoded test assumptions survive across two already-permitted test files.
+
+The same worker must rewrite two stale `missing-length-mode` diagnostic assertions to mode-free `missing-run-length` expectations and remove two `length_mode: cut_to_length` fields from selected-project no-write fixtures while preserving the same no-write outcomes. The prior 71/69/2/32/0 receipt must be mechanically reconciled with explicit search terms, counting method and arithmetic ending at residual zero. Run the two corrected files, all previously affected focused tests and the full 108-check gate, push only the exact test repair and stop before WALK-003.
 
 MGR-RESTART-001 remains a separately blocked future infrastructure repair to reproduce the stale resident configuration layer and make one selected-service restart reload the latest validated manifest, recycle the complete host and leave all unrelated services unchanged.
