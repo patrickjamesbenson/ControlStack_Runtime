@@ -1679,3 +1679,25 @@ The blocker is permission-only. The current Selector MCP guard already permits a
 Program admits **WALK-002RG — exact Selector write-guard activation** as the sole ready infrastructure prerequisite. An Advisor applies the published deployment configuration and restarts only the Selector MCP service through the existing manager. The Advisor then verifies the live write guard contains the two exact added files once each, preserves the existing exact-file list, and still excludes broad module wildcards.
 
 WALK-002R resumes only after managed activation is confirmed. The existing worker, parcel, twelve-owner scope, four banned-name searches, deletion-test coupling counts and every safety prohibition remain unchanged. Do not restart Selector Runtime, edit production, start another worker, begin WALK-003 or execute TEST-AUDIT-001 during guard activation.
+
+## 2026-07-22 — post-WALK audit sequence expanded with POLICY-MAP-001
+
+**Status:** TEST-AUDIT-001 AND POLICY-MAP-001 BLOCKED FUTURE READ-ONLY PARCELS; CURRENT WALK-002RG PRIORITY UNCHANGED.
+
+Program confirms the existing immediate deletion-test coupling rule without duplication: every WALK deletion parcel removes or rewrites in the same parcel every test assertion, fixture expectation and contract lock that encoded the deleted assumption, and reports baseline, deleted, rewritten, affected-file and residual counts. Residual remains zero unless Program explicitly approves a historical non-runtime fixture.
+
+The post-WALK sequence is now: WALK-007 acceptance → TEST-AUDIT-001 → POLICY-MAP-001. Both audits are read-only, one parcel at a time, and neither authorises automatic deletion, implementation, Engine execution, seed execution, persistence, source mutation or delivery.
+
+**TEST-AUDIT-001** remains exactly as ruled: one bounded mechanical runtime-test audit across deleted inputs, governance preconditions on Engine execution, future/diagnostic fields treated as prerequisites and identical-row fixture placeholder traps. Its output is a counted kill-list for separate Program deletion approval.
+
+Program records **POLICY-MAP-001 — SYSTEM_POLICY consumer map** as the second blocked future audit. NVB is the authority and policy data leads code. Patrick reports SYSTEM_POLICY currently contains 133 rows and now includes a consumer-group column. The exact consumer-group header is not yet authority: the pending Selector reader contract must name and lock that header before any code consumes the column or before POLICY-MAP-001 is admitted to run.
+
+After WALK-007, TEST-AUDIT-001 and the accepted reader contract, POLICY-MAP-001 performs one bounded read-only audit of every current SYSTEM_POLICY item. Its primary output is exactly one table with one row per current policy item and these three classifications only:
+
+- `CONSUMED-VERIFIED` — the exact consuming file and function are named and the read matches the current item name and shape;
+- `CONSUMED-STALE` — the exact consuming file and function are named and the read uses a superseded name or shape;
+- `NO CONSUMER YET` — no current code consumer exists.
+
+The consumer-group column is the table spine. The audit records the current item identity, consumer-group value, classification, exact file/function where applicable and concise evidence. It does not expose policy values unless separately authorised. Any code read that cannot map to one of the current source rows is a blocking orphan-consumer exception in the audit receipt and must not be represented as a synthetic extra policy row.
+
+POLICY-MAP-001 exists to show which policy groups await implementation, feed later widening briefs, expose stale consumers and catch reads for policy identities that no longer exist. Its output creates no implementation authority; Program separately admits every resulting repair or widening parcel. Seed execution remains separately blocked and is not released by either audit.

@@ -1165,3 +1165,13 @@ Program has updated the managed deployment manifest and its contract test to add
 WALK-002RG is the sole ready infrastructure prerequisite. Advisor applies the published deployment configuration and restarts only Selector MCP through the existing manager. Do not restart Selector Runtime. Verification must show each added exact file once, the existing approved exact module files retained and both broad module wildcards absent.
 
 After activation, the existing Selector worker resumes the same WALK-002R parcel without a new commission. The twelve-owner production boundary, four banned-name searches, 71-assumption baseline, zero-residual test rule, no-execution/no-write boundaries and stop before WALK-003 remain unchanged.
+
+### Blocked post-WALK audits
+
+TEST-AUDIT-001 remains the first blocked read-only parcel after WALK-007. It mechanically audits runtime tests for deleted-input assertions, governance/project/revision/identity preconditions on Engine execution, future/diagnostic/consequence/disabled fields treated as prerequisites and identical-row fixture placeholder traps. It returns only a counted kill-list for separate Program approval. The immediate deletion-test coupling rule remains binding throughout the WALK batch.
+
+POLICY-MAP-001 is the second blocked read-only parcel after TEST-AUDIT-001. Patrick reports SYSTEM_POLICY currently has 133 rows and a newly added consumer-group column. The exact header is pending from the Selector reader contract and must be fixed and accepted before any code consumes that column or before this audit runs.
+
+POLICY-MAP-001 uses the consumer-group column as its spine and returns one table with exactly one row per current SYSTEM_POLICY item. Each row is classified only as `CONSUMED-VERIFIED`, `CONSUMED-STALE` or `NO CONSUMER YET`. Verified and stale classifications name the exact consuming file and function and state concise shape/name evidence. The audit exposes item identities and consumer mapping, not policy values. A code read that maps to no current policy item is a blocking orphan-consumer exception in the receipt, not a fabricated extra table row.
+
+The audit exists to identify policy groups awaiting implementation, feed later widening briefs, expose stale reads and catch consumers of removed policy identities. It changes no source, code or test and releases no implementation, Engine, seed, Lab, CRM, persistence, IES, retrieval or delivery work. Program separately admits any repair or widening parcel.
