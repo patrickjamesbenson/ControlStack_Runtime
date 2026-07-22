@@ -757,3 +757,16 @@ The mandatory read-only trace found required current Length Mode owners outside 
 An edit restricted to the authorised five production paths cannot satisfy the deletion ruling without leaving positive quantity plus physical length incomplete, a hidden default/interpretation, or Length Mode in new projections. The worker correctly stopped without changing anything.
 
 WALK-002 is blocked for Program rescoping. Git is clean. No focused/full gate, stage, commit, runtime action, Engine/RunTable call, persistence, route, RuntimeData, seed, CRM/provider, artifact or later walkthrough work occurred. Do not begin WALK-003.
+
+
+## 2026-07-22 WALK-002R sole worker commission
+
+Program accepted the WALK-002 protected scope stop and expanded the parcel to the complete eleven-owner production boundary recorded in WORK_QUEUE.md. WALK-002 remains open; WALK-002R alone is ready. One Selector writer may execute only this parcel and must stop for Program review before WALK-003.
+
+Delete every current production occurrence and contract effect of `runLengthMode` and `lengthMode`. Remove mode lists, labels, diagnostics, readiness requirements, rendered and summary rows, option metadata, fingerprint contributions, `cut_to_length` fallback, emitted mode fields, `requested_length_basis`, same-length accessory interpretation, mode buckets, `unresolved` sentinels and controlled-probe sample values.
+
+Quantity and positive physical length are the complete run-intake authority. Ignore and omit legacy stored mode input at the bounded projection or hydration boundary. Do not create a replacement, default, fallback, constant, sentinel, proxy or inferred manufacturing interpretation. Registration and exact saved-project validation must accept the current mode-free shape.
+
+Preserve or broaden every otherwise eligible source-backed NVB Board candidate for downstream Lex scoring. Candidate identity may use quantity and physical length only. Accessory, sealed-candidate and downstream previews may expose safe quantity and physical-length information only, with no mode or hidden same-length meaning.
+
+Tests are limited to current mode occurrences and direct importers of the eleven owners that need exact-shape or fixture changes. Production search under `packages` must finish with zero `runLengthMode` and zero `lengthMode` occurrences. Any additional production occurrence or owner stops the parcel. Run all affected focused tests and the fixed Selector gate, commit and push the exact implementation and lane-memory closeout, then stop. Engine, RunTable/IES generation, seed cases, Lab releases, CRM/provider state, persistence, routes/POST actions, RuntimeData mutation, retrieval, delivery and later walkthrough work remain prohibited.

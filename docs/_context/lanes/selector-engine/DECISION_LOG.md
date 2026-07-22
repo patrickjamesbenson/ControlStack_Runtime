@@ -657,3 +657,16 @@ This log is append-oriented. Do not silently rewrite historical decisions.
 **Exact conflict:** those owners still require mode for readiness/validation, default absence to `cut_to_length`, emit mode and requested-length basis, derive same-length intent, or emit `unresolved` sentinels and buckets. The authorised scope cannot truthfully delete Length Mode end to end.
 
 **Consequence:** no implementation or test change is allowed under the current parcel. WALK-002 is blocked for exact Program rescoping; WALK-003 and all later actions remain blocked. The no-Engine, no-write and no-seed boundaries were preserved.
+
+
+## 2026-07-22 — Accept WALK-002 stop and release WALK-002R complete owner deletion only
+
+**Decision:** Ingest Program's acceptance of the clean WALK-002 protected stop and release WALK-002R as the sole ready Selector parcel. WALK-002 remains open. One writer executes the exact eleven-owner production boundary and stops for Program review before WALK-003.
+
+**Deletion ruling:** every production occurrence and contract effect of `runLengthMode` and `lengthMode` is deleted. Positive quantity and physical length are complete run-intake authority. Legacy mode data is discarded and omitted. Replacement fields, constants, defaults, fallbacks, sentinels, proxies, fingerprints and inferred manufacturing interpretations are prohibited.
+
+**Contract ruling:** current registration and exact saved-project validation use the mode-free shape. Candidate identity may include quantity and physical length only and must preserve or broaden source-backed NVB Board candidate breadth. Accessory, sealed-candidate, downstream and controlled-probe previews contain no mode or same-length proxy.
+
+**Scope ruling:** production is limited to the eleven exact owners in WORK_QUEUE.md. Tests are limited to current mode occurrences and direct importers that require exact-shape or fixture changes. Any additional production occurrence or owner is another protected stop. Completion requires zero production occurrences under `packages`, all affected focused tests and the fixed Selector gate.
+
+**Consequence:** Engine, seeds, RunTable/IES generation, Lab releases, CRM/provider state, persistence, routes/POST actions, RuntimeData mutation, retrieval/delivery, WALK-003 and every later action remain blocked.

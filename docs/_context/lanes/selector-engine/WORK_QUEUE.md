@@ -728,3 +728,34 @@ Queue reconciliation: WALK-001V is already done, gated and pushed, so it was not
 * active verification: promoted and materialised authorities are readable, aligned and contain all 15 required tables; active read-only probe has no missing tables or blockers.
 * exclusions preserved: no service restart, additional source edit, Selector feature change, Engine invocation, seed execution, saved-case mutation, CRM/provider work, artifact retrieval/delivery or later walkthrough work.
 * next: Program review and admission decision. WALK-002 through WALK-007 and SEED-LIB-001 remain blocked; no Selector item is ready.
+
+
+## 2026-07-22 WALK-002R complete Length Mode owner deletion
+
+### WALK-002R Complete Length Mode owner deletion
+
+* status: ready (sole Selector parcel; one writer and one parcel only)
+* depends-on: Program acceptance of the WALK-002 protected scope stop and exact owner rescope; accepted
+* parent: WALK-002 remains open until WALK-002R is accepted
+* exact production paths:
+  * `packages/modules/cs-selector/selectorRunIntakePreview.js`
+  * `packages/modules/cs-selector/selectorRunAccessoryPlacementPreview.js`
+  * `packages/modules/cs-selector/selectorFactoryApprovedInputsSummary.js`
+  * `packages/modules/cs-selector/selectorView.js`
+  * `packages/modules/cs-selector/selectorViewModel.js`
+  * `packages/workspace-kernel/selectorReferenceOptionsService.js`
+  * `packages/workspace-kernel/projectEnvelope.js`
+  * `packages/workspace-kernel/selectorReadonlyEngineCandidateMapper.js`
+  * `packages/workspace-kernel/engineRunTableSealedCandidateAssemblyPreview.js`
+  * `packages/workspace-kernel/engineRunTableRuntimeRunTableDomainOutputScaffold.js`
+  * `packages/workspace-kernel/engineRunTableControlledRealSourceSealedEvidenceProbe.js`
+* authorised tests: only tests that currently contain `runLengthMode` or `lengthMode`, plus tests that directly import an exact production owner above and require fixture or exact-shape updates
+* deletion: remove every production occurrence and contract effect of `runLengthMode` and `lengthMode`, including lists, labels, diagnostics, readiness, UI/summary/spine/payload rows, metadata, fingerprints, fallback/defaults, emitted fields, requested-length basis, accessory interpretations, downstream buckets/sentinels and controlled-probe sample values
+* run intake: positive quantity plus positive physical length is complete without mode; no replacement field, constant, default, fallback, sentinel, proxy or inferred interpretation
+* legacy boundary: discard stored mode at bounded projection or hydration; it cannot validate, register, persist, fingerprint, emit or become active truth
+* candidates: preserve or broaden all otherwise eligible source-backed NVB Board candidates for Lex scoring; identity may include quantity and physical length only
+* previews: accessory intent may be quantity-bounded without same-length meaning; sealed-candidate and downstream previews may expose safe quantity and physical-length information only
+* proof: mode-free intake, UI, metadata, registration, exact saved envelope, fingerprints/payloads, accessory preview, sealed/downstream previews, unchanged-or-broader Board candidate breadth and intact no-write/disabled-production boundaries
+* production zero-search: `packages` must contain zero `runLengthMode` and zero `lengthMode`; another production occurrence or required owner is a protected stop
+* closeout: run all affected focused tests and fixed Selector gate; commit/push exact WALK-002R implementation and lane memory; stop for Program review without beginning WALK-003
+* prohibited: Engine invocation; saved seed execution or mutation; RunTable/IES generation; Lab C6/C7 release; CRM/provider mutation; persistence; new route or POST; RuntimeData mutation; retrieval/delivery; cross-lane, donor, main or later walkthrough work

@@ -801,3 +801,18 @@ The standing worker passed lane identity, branch, memory and clean-Git guards, t
 The outside owners still make mode mandatory for server-owned registration readiness and exact persisted-envelope validation; fingerprint, default and emit mode in the candidate mapper; derive a hidden same-length accessory interpretation; and emit `unresolved` mode sentinels and buckets in downstream sealed-candidate and RunTable previews. These behaviours would keep positive quantity plus physical length incomplete, retain hidden defaults or interpretations, or leak mode into new projections after edits limited to the authorised five files.
 
 The worker stopped before every implementation change. No production/test file, gate, stage, commit, push, runtime service, Engine, RunTable, persistence, route, RuntimeData, seed, CRM/provider, artifact or later walkthrough action changed. Git remained clean. WALK-002 is blocked for exact Program rescoping; WALK-003 and later work remain blocked.
+
+
+## 2026-07-22 Program WALK-002R complete owner deletion admission — latest controlling state
+
+**Recorded lane work HEAD:** `b8f66afb37cc738f878fc838520b27823a0159a4` — `docs(selector): reconcile WALK-002 scope stop`.
+
+Program has accepted the WALK-002 protected scope stop. No production or test implementation changed, the fixed Selector gate passed 108/108, only the stop reconciliation was pushed, and Git is clean.
+
+WALK-002 remains open. WALK-002R is the sole ready Selector parcel, with one writer and one parcel only. Its exact production boundary is the eleven owners recorded in WORK_QUEUE.md. Tests may change only when they currently contain `runLengthMode` or `lengthMode`, or directly import one of those eleven owners and require exact-shape or fixture updates. Any additional production occurrence or required owner is a protected stop.
+
+Delete every production occurrence and contract effect of `runLengthMode` and `lengthMode`. Quantity and positive physical length become the complete run-intake authority. Legacy stored mode input is discarded and omitted. No replacement field, default, fallback, constant, sentinel, proxy, fingerprint contribution or inferred manufacturing interpretation is permitted.
+
+Registration, exact saved-project validation, current envelopes, readonly candidate mapping, accessory preview, sealed-candidate preview, downstream RunTable-domain preview and the controlled source probe must use mode-free shapes. All otherwise eligible source-backed NVB Board candidates remain available for downstream Lex scoring; quantity may bound accessory intent but may not imply a shared length basis.
+
+Before completion, production search across `packages` must return zero `runLengthMode` and zero `lengthMode` occurrences. Run all affected focused tests and the fixed Selector gate, commit and push only WALK-002R plus its lane-memory closeout, then stop for Program review. WALK-003 and every later walkthrough, Engine, seed, Lab generation, CRM/provider, persistence, IES, retrieval and delivery action remain blocked.

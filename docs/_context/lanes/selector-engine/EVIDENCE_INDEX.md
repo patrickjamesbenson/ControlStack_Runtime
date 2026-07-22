@@ -867,3 +867,16 @@ Every completed worker updates this index with:
 - The exact current scope cannot meet positive quantity/length-only readiness, no-default/no-hidden-constraint and no-new-payload-mode acceptance without out-of-scope production edits — VERIFIED SCOPE BLOCKER.
 - No production/test edit, test/gate, stage, commit/push, runtime, Engine/RunTable, persistence, route, RuntimeData, seed, CRM/provider, artifact or later walkthrough action occurred; final Git was clean — VERIFIED.
 - Queue result: WALK-002 blocked for Program rescoping; WALK-003 and later work remain blocked — RECORDED.
+
+
+## 2026-07-22 — WALK-002R complete owner deletion admission evidence
+
+- Program directly accepted the WALK-002 protected stop: no production/test implementation changed, the fixed gate passed 108/108, the stop reconciliation was pushed and the lane is clean — VERIFIED FROM PROGRAM REPOSITORY.
+- Actual Selector identity and branch match the charter; Git is clean; the accepted stop reconciliation is the actual branch tip — VERIFIED.
+- Program releases WALK-002R alone while WALK-002 remains open, with one writer, one parcel and mandatory Program-review stop before WALK-003 — VERIFIED FROM PROGRAM HANDOFF.
+- Exact production scope contains the eleven current owners recorded in WORK_QUEUE.md; test scope is limited to current mode occurrences and direct owner importers needing exact-shape or fixture changes — RECORDED.
+- Complete deletion covers all `runLengthMode`/`lengthMode` production occurrences and contract effects, including readiness, UI/summary rows, metadata, fingerprints, defaults, emitted fields, requested-length basis, accessory interpretation, downstream buckets/sentinels and controlled-probe sample values — RECORDED.
+- Quantity plus positive physical length is complete run-intake authority; legacy mode data is discarded; no replacement, default, fallback, sentinel, proxy or inferred interpretation is permitted — RECORDED.
+- Registration and exact saved-project validation use the mode-free shape; eligible source-backed NVB Board candidates remain equal or broader for Lex scoring — RECORDED.
+- Completion requires zero production occurrences under `packages`, all affected focused tests, the fixed Selector gate, exact implementation and lane-memory commits/pushes, then Program review — RECORDED.
+- Engine, seeds, RunTable/IES generation, Lab releases, CRM/provider mutation, persistence, routes/POST actions, RuntimeData mutation, retrieval/delivery and later walkthrough work remain blocked — RECORDED.
