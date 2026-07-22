@@ -891,3 +891,15 @@ Every completed worker updates this index with:
 - Eleven-owner-only implementation cannot meet the complete production-effect deletion or zero production occurrence contract without leaving the outside owner unchanged — VERIFIED SCOPE BLOCKER.
 - No production/test edit, focused/full test, gate, stage, commit/push, runtime, Engine/RunTable, seed, Lab, CRM/provider, persistence, route/POST, RuntimeData, IES, retrieval/delivery or later walkthrough action occurred; Git remained clean — VERIFIED.
 - Queue result: WALK-002 remains open; WALK-002R blocked for exact Program rescoping; WALK-003 and later work blocked; no Selector parcel ready — RECORDED.
+
+
+## 2026-07-22 — amended twelve-owner WALK-002R admission evidence
+
+- Program accepted the second protected scope stop; no production/test implementation changed, only lane-memory reconciliation was pushed, fixed Selector gate passed 108/108 and Git is clean — VERIFIED FROM PROGRAM HANDOFF.
+- Actual lane is `selector-engine`, branch is `lane/selector-engine`, branch tip is the accepted stop closeout and Git is clean — VERIFIED.
+- WALK-002R remains the same sole ready parcel with one writer; only the safe selected-result source projection is added to make twelve production owners — RECORDED.
+- Added owner is `packages/workspace-kernel/engineRunTableSafeSelectedResultSourceObject.js`; it allowlists and may emit `requested_length_basis` from controlled geometry — VERIFIED BY ACCEPTED TRACE.
+- Current Program evidence reports six direct test occurrences of `requested_length_basis`; complete encoded-assumption assertion baseline must be mechanically calculated before editing — RECORDED.
+- Deletion-test coupling requires baseline, deleted, rewritten, affected-test-file and zero-residual counts in the completion receipt — RECORDED.
+- Production completion search must return zero `runLengthMode`, `lengthMode`, `requested_length_basis` and `requestedLengthBasis`; legitimate nearby policy provenance remains unless specifically proven to encode the deleted assumption — RECORDED.
+- All prior mode-free authority, equal-or-broader NVB candidate breadth, no-execution/no-write exclusions and Program-review stop before WALK-003 remain binding — RECORDED.

@@ -779,3 +779,14 @@ The mandatory pre-edit trace found a twelfth production owner outside the exact 
 The worker correctly stopped without changing production or tests and without broadening scope. Git is clean. No focused/full test, gate, stage, commit, runtime action, Engine/RunTable execution, seed, Lab release, CRM/provider action, persistence, route/POST action, RuntimeData mutation, IES, retrieval, delivery or later walkthrough work occurred.
 
 WALK-002 remains open. WALK-002R is blocked pending exact Program rescoping. No Selector parcel is ready and WALK-003 must not begin.
+
+
+## 2026-07-22 amended twelve-owner WALK-002R commission
+
+Program accepted the second clean protected scope stop and amended the existing WALK-002R boundary by adding only the safe selected-result source projection, `packages/workspace-kernel/engineRunTableSafeSelectedResultSourceObject.js`. WALK-002R remains the sole ready parcel; one writer and one parcel only. Do not create a replacement parcel or begin WALK-003.
+
+Remove every production effect and coupled test assumption for `runLengthMode`, `lengthMode`, `requested_length_basis` and `requestedLengthBasis`. In the added owner, delete the controlled-geometry allowlist/emission of `requested_length_basis`. Preserve `length_policy_source` and `accessory_length_policy_source` unless a specific occurrence is proven to encode the deleted assumption within the authorised boundary.
+
+Before editing, mechanically count the complete encoded-assumption assertion baseline. Delete or rewrite every coupled fixture, exact-shape assertion and downstream contract lock in the same parcel, and report baseline, deleted, rewritten, affected test files and zero residual assertions.
+
+All prior mode-free intake, legacy discard, registration, saved-project, candidate-breadth, accessory, sealed/downstream preview and no-execution/no-write requirements remain binding. Production must finish with zero occurrences of all four banned names under `packages`. Run affected tests and the fixed Selector gate, commit and push the exact implementation plus lane-memory closeout, then stop for Program review.

@@ -770,3 +770,21 @@ Queue reconciliation: WALK-001V is already done, gated and pushed, so it was not
 * consequence: deleting only the eleven authorised owners would leave a current production contract effect and cannot satisfy the required zero-effect outcome
 * Git and safety: clean; no test/gate, stage, commit/push, runtime, Engine/RunTable, seed, Lab, CRM/provider, persistence, route/POST, RuntimeData, IES, retrieval/delivery or later work
 * queue: WALK-002 remains open; WALK-002R blocked for exact Program rescoping; WALK-003 and later work blocked; no Selector parcel ready
+
+
+## 2026-07-22 amended WALK-002R twelve-owner release
+
+### WALK-002R Complete Length Mode owner deletion
+
+* status: ready; sole Selector parcel
+* parent: WALK-002 remains open until Program accepts this implementation
+* writer: one standing Selector writer; one parcel only
+* production boundary: the eleven owners already listed above plus only `packages/workspace-kernel/engineRunTableSafeSelectedResultSourceObject.js`
+* added-owner deletion: remove the `requested_length_basis` controlled-geometry allowlist and emission from the safe selected-result source projection
+* coupled tests: mechanically count the complete encoded-assumption assertion baseline before editing; delete or rewrite every coupled fixture, exact-shape assertion and downstream contract lock in the same parcel
+* required receipt: baseline assertions; deleted assertions; rewritten assertions; affected test-file count; residual assertions exactly zero
+* production zero-search: `packages` must contain zero `runLengthMode`, `lengthMode`, `requested_length_basis` and `requestedLengthBasis`
+* protected provenance: retain `length_policy_source` and `accessory_length_policy_source` unless a specific in-boundary occurrence is proven to encode the deleted assumption
+* continuing authority: positive quantity and positive physical length only; legacy mode discarded; no replacement/default/fallback/sentinel/proxy/inference; mode-free current contracts; eligible NVB Board breadth equal or broader
+* closeout: all affected focused tests and fixed Selector gate; exact implementation and lane-memory commit/push; stop for Program review
+* prohibited: WALK-003, TEST-AUDIT-001, Engine, saved seeds, Lab C6/C7, persistence, routes/POST, RuntimeData mutation, CRM/provider mutation, IES, retrieval and delivery

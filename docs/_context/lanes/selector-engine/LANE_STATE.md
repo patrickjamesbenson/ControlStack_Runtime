@@ -829,3 +829,20 @@ The standing worker passed the lane identity, branch, recorded-work-HEAD and cle
 The worker stopped before every implementation or test edit and did not broaden the parcel. No test, gate, stage, commit, push, runtime action, Engine/RunTable execution, seed action, Lab release, CRM/provider mutation, persistence, route/POST action, RuntimeData mutation, IES, retrieval, delivery or later walkthrough work occurred. Git remained clean.
 
 WALK-002 remains open. WALK-002R is blocked for exact Program rescoping and no Selector parcel is ready. WALK-003 and every later action remain blocked.
+
+
+## 2026-07-22 Program twelve-owner WALK-002R admission — latest controlling state
+
+**Recorded lane work HEAD:** `eba2ba06e1e68f16e00c8c6c22551cc0e740e411` — `docs(selector): reconcile lane state after WALK-002R scope stop`.
+
+Program has accepted the second protected scope stop. No production or test implementation changed, the fixed Selector gate passed 108/108, only lane-memory reconciliation was pushed, and Git is clean.
+
+WALK-002 remains open. WALK-002R remains the same sole ready parcel with one writer and one parcel only. Its production boundary is amended from the eleven owners already recorded in WORK_QUEUE.md to twelve by adding only `packages/workspace-kernel/engineRunTableSafeSelectedResultSourceObject.js`, the safe selected-result source projection.
+
+Delete every production occurrence and contract effect of `runLengthMode`, `lengthMode`, `requested_length_basis` and `requestedLengthBasis`. The added owner must stop allowlisting or emitting `requested_length_basis` from controlled geometry. Preserve legitimate `length_policy_source` and `accessory_length_policy_source` provenance unless a specific in-boundary occurrence is proven to encode the deleted Length Mode assumption.
+
+The mandatory deletion-test coupling rule applies in the same parcel. Mechanically calculate the complete baseline encoded-assumption assertion count before editing, remove or rewrite every coupled assertion and fixture, report deleted, rewritten and affected-file counts, and finish with zero residual encoded-assumption assertions.
+
+All previous WALK-002R authority remains binding: positive quantity plus positive physical length only; legacy mode input discarded and omitted; no replacement/default/fallback/sentinel/proxy/inferred interpretation; mode-free registration, saved-project, candidate, accessory, sealed and downstream contracts; equal-or-broader eligible NVB Board candidate breadth; and no Engine, generation, persistence, route, POST or RuntimeData mutation.
+
+Completion requires production search under `packages` to return zero occurrences of all four banned names, all affected focused tests and the complete fixed Selector gate to pass, the exact implementation and lane-memory closeout to be committed and pushed, and the lane to stop for Program review before WALK-003.

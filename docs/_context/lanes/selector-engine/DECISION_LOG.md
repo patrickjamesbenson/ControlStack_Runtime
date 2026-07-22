@@ -679,3 +679,16 @@ This log is append-oriented. Do not silently rewrite historical decisions.
 **Exact conflict:** `controlledIntentMarkersFrom()` in `packages/workspace-kernel/engineRunTableSafeSelectedResultSourceObject.js` allowlists `requested_length_basis`, reads it from controlled geometry and may emit it. The owner is imported by both the authorised readonly candidate mapper and the runtime selected-result contract.
 
 **Consequence:** changing only the eleven authorised owners cannot truthfully remove every production mode contract effect. No implementation or test change is allowed under the current parcel. WALK-002 remains open; WALK-002R is blocked for exact Program rescoping; WALK-003 and all later actions remain blocked.
+
+
+## 2026-07-22 — Accept second WALK-002R stop and amend boundary to twelve owners
+
+**Decision:** Program's accepted second protected stop is ingested. WALK-002R remains the same sole ready Selector parcel. Add only `packages/workspace-kernel/engineRunTableSafeSelectedResultSourceObject.js` to the previous eleven-owner production boundary; one writer and one parcel remain mandatory.
+
+**Deletion ruling:** remove every current production occurrence and contract effect of `runLengthMode`, `lengthMode`, `requested_length_basis` and `requestedLengthBasis`, including the added owner's controlled-geometry allowlist/emission and every coupled fixture, exact-shape assertion and downstream contract lock. Do not remove `length_policy_source` or `accessory_length_policy_source` by association alone.
+
+**Coupling ruling:** mechanically count the complete encoded-assumption assertion baseline before editing. The same parcel must report deleted, rewritten and affected-test-file counts and finish with zero residual encoded-assumption assertions.
+
+**Continuing ruling:** quantity plus positive physical length is complete authority; legacy mode is discarded; no replacement/default/fallback/sentinel/proxy/inferred interpretation is allowed; registration, saved-project, candidate, accessory, sealed and downstream contracts are mode-free; eligible NVB Board candidate breadth is equal or broader; all no-Engine/no-generation/no-persistence/no-route/no-mutation exclusions remain.
+
+**Consequence:** finish with zero production occurrences of all four banned names, run affected tests and the fixed gate, push the exact implementation and lane-memory closeout, and stop before WALK-003 and TEST-AUDIT-001.
