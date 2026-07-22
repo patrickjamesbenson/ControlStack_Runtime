@@ -1636,3 +1636,20 @@ Focused test edits are confined to tests that currently contain `runLengthMode` 
 Acceptance requires repository-wide production search across `packages` to return zero `runLengthMode` or `lengthMode` occurrences; UI and copy search to return no Length Mode control or requirement; positive quantity plus positive physical length to satisfy run intake; old stored mode input to be ignored and omitted; registration, saved-project validation, candidate mapping, accessory previews, sealed-candidate previews and downstream domain previews to use the mode-free shape; Board candidate breadth to remain equal or broaden; and all no-Engine/no-generation/no-persistence/no-route/no-mutation safety flags to remain intact.
 
 Run all affected focused tests and the complete fixed Selector gate. Commit and push the exact WALK-002R parcel, reconcile lane memory and stop for Program review. WALK-003 through WALK-007, Engine execution, seed execution, C6/C7, CRM/provider mutation, persistence, IES generation, retrieval and delivery remain blocked.
+
+## 2026-07-22 — deletion-test coupling ruled; TEST-AUDIT-001 queued
+
+**Status:** RULE EFFECTIVE IMMEDIATELY; TEST-AUDIT-001 BLOCKED BEHIND WALK-007.
+
+Every WALK parcel that deletes an input, authority, prerequisite, field, control, fallback, sentinel, proxy or interpretation must delete or rewrite in the same parcel every test assertion, fixture expectation and contract lock that encoded the deleted assumption. Production deletion is not complete while its test class survives. Tests with continuing value are rewritten to prove the new absence or replacement authority; tests whose sole purpose was the deleted assumption are removed. Each parcel receipt must report: baseline encoded-assumption assertion count, assertion count deleted, assertion count rewritten, affected test-file count and residual encoded-assumption count. Residual count must be zero unless the receipt identifies an explicitly retained historical/non-runtime fixture approved by Program.
+
+This rule applies immediately to WALK-002R and to every later WALK deletion parcel. It does not authorise unrelated test cleanup, production broadening or speculative refactoring. The fixed lane gate remains mandatory after the coupled production-and-test change.
+
+Program queues **TEST-AUDIT-001 — runtime test-assumption audit** as a blocked future read-only parcel, sequenced immediately after WALK-007 acceptance. Seed execution remains separately blocked and is not released by this ruling. It performs one bounded mechanical audit of the runtime test suite against four criteria:
+
+1. tests asserting deleted user inputs or deleted input authority, including user-entered Tier and Length Mode;
+2. tests requiring governance, project, revision or identity preconditions for Engine execution where selections-only authority has superseded them;
+3. tests treating future, diagnostic, consequence or disabled fields as readiness prerequisites;
+4. fixtures whose supposedly varied rows use identical values, creating a placeholder trap.
+
+TEST-AUDIT-001 makes no production or test edit. Its sole output is a counted kill-list grouped by criterion, test file and assertion/fixture location, with a safe explanation of the encoded obsolete assumption. Program separately approves any deletion or rewrite parcel arising from that kill-list. No automatic cleanup follows the audit.
