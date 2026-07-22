@@ -639,3 +639,13 @@ This log is append-oriented. Do not silently rewrite historical decisions.
 **Execution ruling:** after the full dry-run passed, use only the existing guarded live workflow. Materialise first; archive the prior active authority before promotion; promote only after archive success. The resulting receipt proves all three steps completed in order and the new active authority is readable, complete and aligned with the materialised authority.
 
 **Consequence:** WALK-001 is complete but does not release WALK-002. Stop for Program review. WALK-002 through WALK-007 and SEED-LIB-001 remain blocked; Engine, saved cases, Selector feature behaviour, CRM/provider state and artifact flows remain untouched.
+
+## 2026-07-22 — Accept WALK-001 and release WALK-002 Length Mode deletion only
+
+**Decision:** Ingest Program's independent acceptance of the corrected authority refresh and release WALK-002 as the sole ready Selector parcel. One writer executes one parcel and stops for Program review before WALK-003.
+
+**Scope ruling:** read-only trace first. Production edits are limited to the five exact owners and focused tests to the six exact files recorded in WORK_QUEUE.md. A required production owner outside that list is a protected stop.
+
+**Deletion ruling:** Length Mode is removed, not replaced. Quantity and positive physical length remain the only run-intake decisions. Stored mode values are ignored and omitted. No default, fallback, sentinel, derivation or hidden manufacturing interpretation may survive.
+
+**Candidate and safety ruling:** all otherwise eligible source-backed NVB Board candidates remain available for downstream Lex scoring. Candidate breadth may broaden or stay equal, never narrow. Engine, RunTable, IES, persistence, routes/POST actions, RuntimeData mutation, seed action, CRM/provider state, artifact flow and later walkthrough work remain prohibited.

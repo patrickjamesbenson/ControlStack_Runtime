@@ -739,3 +739,13 @@ Safe evidence: SYSTEM_POLICY 133 rows; exact and approved-exact `ambient_temp` r
 The guarded live workflow materialised the corrected authority, archived the prior active authority successfully, and only then promoted the new authority. Active and materialised authority state is readable, aligned, complete across all 15 required tables and safe under the read-only probe.
 
 WALK-001 is complete and held for Program review. Do not release WALK-002 or later work, invoke Engine, execute or alter either saved seed case, change CRM/provider state, or retrieve or deliver an artifact. SEED-LIB-001 remains sequence-blocked and no Selector parcel is ready.
+
+## 2026-07-22 WALK-002 sole worker commission
+
+Program accepted WALK-001 complete and independently verified the promoted authority, redaction, fixed 108/108 gate and clean lane. WALK-002 Length Mode deletion is the sole ready parcel. One Selector writer may execute only this parcel and must stop for Program review before WALK-003.
+
+First trace every current `runLengthMode` owner and consumer read-only. Use only the five authorised production paths and six focused test paths recorded in WORK_QUEUE.md. If any required production owner falls outside that list, stop with the exact diagnosis rather than broadening scope.
+
+Delete Length Mode from Selector-owned run intake, stored constraints, readiness, summaries, spine/payload previews, reference metadata and rendered UI/copy. Preserve quantity and positive physical length as the only run-intake decisions, ignore stored mode values, add no replacement/default/hidden interpretation, and preserve or broaden eligible source-backed NVB Board candidates for downstream Lex scoring.
+
+All existing safe-local-intent and no-write/disabled-production boundaries remain unchanged. Do not invoke Engine or RunTable, generate IES, persist, add a route or POST action, mutate RuntimeData, execute or alter seed cases, touch CRM/provider state, retrieve/deliver artifacts, or begin duplicate-scaffold or later walkthrough work.

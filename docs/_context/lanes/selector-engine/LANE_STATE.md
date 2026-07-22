@@ -779,3 +779,15 @@ DRIVERS is present with 48 rows. Canonical `native_control_type` is populated on
 Only after every dry-run guard passed, the existing guarded live workflow materialised the corrected authority. It then created the required archive of the previously active authority before promoting the new active authority. Materialisation, archive and promotion all completed successfully. The promoted active and materialised authority are readable, identical in size and modification time, contain all 15 required tables, and the active read-only probe returns the new source fingerprint with no missing tables or blockers.
 
 WALK-001 is complete pending Program review. The fixed Selector gate and exact five-file lane-memory closeout are required before push. WALK-002 through WALK-007 remain blocked and must not be released without Program admission. SEED-LIB-001 remains sequence-blocked; Engine, saved cases, CRM/provider work, artifact retrieval/delivery and later walkthrough work remain untouched.
+
+## 2026-07-22 Program WALK-002 Length Mode deletion admission — latest controlling state
+
+**Recorded lane work HEAD:** `eec1658a252b33576b7e60331e17a2c41f164d53` — `docs(selector): close WALK-001 corrected source refresh`.
+
+Program has accepted WALK-001 complete after independently verifying the corrected promoted authority, clean lane and fixed 108/108 gate. WALK-002 is now the sole ready Selector parcel; one writer and one parcel only. Stop for Program review after WALK-002 and do not release WALK-003.
+
+The worker first traces every current `runLengthMode` owner and consumer read-only. Production edits are confined to the five paths recorded in WORK_QUEUE.md; focused tests are confined to its six recorded paths. Any required production owner outside that list is a protected stop, not permission to broaden scope.
+
+Delete Length Mode from Selector input, constraints, readiness, summaries, payload/spine preview, reference metadata and rendered copy. Preserve positive quantity and physical length as the only run-intake decisions, ignore old stored mode values, introduce no replacement/default/sentinel/derivation, and preserve or broaden all otherwise eligible NVB Board candidates for downstream Lex scoring.
+
+No Engine/RunTable/IES invocation, persistence, route/POST action, RuntimeData mutation, seed execution or mutation, CRM/provider action, artifact flow, cross-lane write, duplicate-scaffold work or later walkthrough action is authorised.

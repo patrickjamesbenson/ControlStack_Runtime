@@ -846,3 +846,13 @@ Every completed worker updates this index with:
 - Promoted active and materialised authorities are present, readable and aligned in size and modification time; all 15 required tables are present; active read-only fingerprint probe has no missing tables, blockers, writes or raw-data disclosure — VERIFIED.
 - Engine, saved seed cases, Selector features, service lifecycle, CRM/provider state, artifacts and later walkthrough parcels were untouched — VERIFIED BOUNDARY.
 - Queue result: WALK-001 complete pending Program review; WALK-002 through WALK-007 and SEED-LIB-001 remain blocked; no Selector parcel is ready — RECORDED.
+
+## 2026-07-22 — WALK-002 Length Mode deletion admission evidence
+
+- Program repository accepts WALK-001 complete after independent active-authority, disclosure, clean-Git and fixed 108/108 verification — VERIFIED FROM PROGRAM REPOSITORY.
+- Actual Selector lane identity and branch match the charter; Git is clean; current documentation closeout is the actual branch tip — VERIFIED.
+- Program releases WALK-002 as the sole ready Selector parcel, with one writer, read-only trace first, five exact production paths, six exact focused tests and mandatory stop for any required production owner outside scope — VERIFIED FROM PROGRAM HANDOFF.
+- Required deletion covers run intake/state/validation, stored constraints, Build Ready and run-readiness diagnostics, factory summaries, spine/payload previews, reference-option metadata and rendered controls/copy — RECORDED.
+- Quantity and positive physical length remain the only run-intake decisions; old stored mode values are ignored; no replacement, default, fallback, sentinel, derivation or hidden constraint is allowed — RECORDED.
+- Eligible source-backed NVB Board candidate breadth must remain equal or broaden for downstream Lex scoring; narrowing or manufacturing preselection is prohibited — RECORDED.
+- Engine/RunTable/IES invocation, persistence, route/POST creation, RuntimeData mutation, saved-seed action, CRM/provider mutation, artifact flow, cross-lane writes and later walkthrough work remain blocked — RECORDED.
