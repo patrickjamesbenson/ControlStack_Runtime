@@ -1247,3 +1247,15 @@ Preserve `selectorReferenceService` unchanged as the sole source-readiness bridg
 Before editing, mechanically count the complete coupled test class encoding manual Tier or `TIERS` option authority. Delete or rewrite it in the same parcel and report baseline, deleted, rewritten, affected-test-file and residual counts with residual zero. Final bounded searches must show no `TIERS` identity or manual Tier option authority in the Selector options contract while legitimate server/Engine Tier derivation remains. Run affected focused tests and the fixed Selector gate, commit and push the exact parcel and lane-memory closeout, leave the lane clean and stop before WALK-005.
 
 Lab remains unchanged: the Q-39 Markdown correction and 314/314 gate are already accepted, SEED-LIB-001 remains blocked, and the three protected local items remain untouched. Governance also does not move: GOV-002 remains done, the live lane is clean, and no Governance parcel is ready; the pasted older review boundary is not current authority.
+
+### WALK-004 protected second-owner stop accepted; same parcel resumed
+
+Program accepts the clean stop. All partial edits were restored, the temporary harness was removed, the fixed Selector gate passes 108/108, the stop record is pushed and the lane is clean. Fourteen focused readiness tests exposed the Factory Approved Inputs summary emitting `missing-readonly-engine-candidate-input-tier` after the legacy options owner was removed.
+
+WALK-004 remains the sole ready parcel under the existing worker. Its exact production boundary is now two files: `packages/workspace-kernel/selectorReferenceOptionsService.js` and `packages/modules/cs-selector/selectorFactoryApprovedInputsSummary.js`. Both are already permitted by the live guard. Stop if a third production owner is required.
+
+Complete the original `TIERS` option deletion in the reference-options service. In the Factory summary, remove Tier from the readonly Engine direct-candidate requirements so committed Selector state no longer needs `tier`, `selectedTier` or `tierToken`, and the missing-Tier candidate blocker cannot be emitted.
+
+Also remove committed Selector Tier authority from Stage 3B body-length policy: delete the constraint Tier reader, committed-Tier prerequisite and committed/source Tier mismatch. Use only the tier carried by a valid source-backed `SYSTEM_POLICY` length-policy summary. Missing or invalid source-backed policy must still fail closed through its existing blocker. Do not default, infer or copy Tier from client state.
+
+Preserve legitimate server-derived Tier/profile values in runtime policy, board-fill and selected-result contracts, the unchanged 15-table source-status bridge and all no-execution/no-write boundaries. Recalculate the coupled-test baseline from the restored state; include manual Tier/TIERS options, missing-Tier candidate readiness, committed Tier aliases, Stage 3B committed-Tier prerequisite and mismatch assumptions. Finish at residual zero, run the full focused set and fixed gate, push the exact two-owner parcel and lane-memory closeout, and stop before WALK-005.
