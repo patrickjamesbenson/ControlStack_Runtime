@@ -2,6 +2,8 @@ import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as contract from "../packages/modules/sales-signals/opportunitySignalV1.js";
+import * as schemaSurface from "../packages/modules/sales-signals/opportunitySignalSchemaV1.js";
+import * as classifierSurface from "../packages/modules/sales-signals/keywordClassificationHarnessV1.js";
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
@@ -139,6 +141,14 @@ test("fixes schema versions, vocabulary and exact top-level field order", () => 
   ]);
   assert.equal(Object.isFrozen(contract.OPPORTUNITY_SIGNAL_FIELD_ORDER), true);
   assert.equal(Object.isFrozen(contract.CLASSIFICATION_VOCABULARY), true);
+});
+
+test("compatibility surfaces expose the single SS-1 implementation authority", () => {
+  assert.equal(schemaSurface.OPPORTUNITY_SIGNAL_SCHEMA_VERSION, contract.OPPORTUNITY_SIGNAL_SCHEMA_VERSION);
+  assert.equal(schemaSurface.validateOpportunitySignalV1, contract.validateOpportunitySignalV1);
+  assert.equal(classifierSurface.KEYWORD_CLASSIFICATION_SCHEMA_VERSION, contract.KEYWORD_CLASSIFICATION_SCHEMA_VERSION);
+  assert.equal(classifierSurface.classifyRedactedAlertTextV1, contract.classifyRedactedAlertTextV1);
+  assert.equal(classifierSurface.CORRECTION_CORPUS_V1, contract.CORRECTION_CORPUS_V1);
 });
 
 test("validates the exact required and optional opportunity-signal contract", () => {
