@@ -72,29 +72,27 @@
   app. The separate-lane decision remains deferred until load evidence exists.
 
 ### SS-1 Sales Signals schema and classification harness
-* status: ready; sole Governance parcel after Program acceptance of SS-1G.
+* status: blocked on authoritative requirements addendum after protected document-source stop.
 * programme: SALES SIGNALS (MODULE 06), authoritative `SALES_SIGNALS_BRIEF_r0.4.md`
   plus accepted `SALES_SIGNALS_r0.4_OWNER_RESPONSE.md` only.
-* source trace: exact brief sections 5, 9 and 10 are present in Governance context;
-  the owner response accepts all r0.4 decisions without exception. The supplied HTML
-  mockup is preserved as non-authoritative reference and must not supply requirements.
-* writer scope: `packages/modules/sales-signals/**`, `tests/salesSignals*.test.js`,
-  `docs/sales-signals/**`, and this lane context only.
-* exact outputs: one opportunity-signal schema contract document; one deterministic
-  keyword-classification harness with bounded correction corpus over manually supplied,
-  redacted alert text; focused tests and lane-memory closeout.
-* schema boundary: fixed version and field order; exact r0.4 vocabulary, ownership,
-  required/optional status, enums and validation; unknown, unsafe and widened fields
-  fail closed. The document is the only Selector-facing seam and Selector is untouched.
-* classification boundary: exact section-9 vocabulary, stable reason/evidence ordering,
-  deterministic replay and no model/provider/network call. Section-10 corrections remain
-  reviewed corpus evidence and never silently become production exclusions.
-* prohibited: mailbox access or automation; EstimateOne calls; HubSpot read/write;
-  Lusha or credit secrets; Research pipeline or Leads entitlement work; shell registration;
-  Selector changes; routes/POST handlers; persistence; retrieval; delivery; CRM actions.
-* infrastructure gates remain blocked and separate.
-* human observation: none; repository contracts and gates are sufficient.
-* on success: stop for Program review; do not start any later Sales Signals parcel.
+* verified source trace: the three supplied Sales Signals documents are committed and the
+  lane is clean. Brief sections 5, 9 and 10 are present, but they do not contain enough
+  exact implementation requirements to author the bounded SS-1 contracts without invention.
+* section 5 blocker: no exact schema field names, types, required/optional flags, enums,
+  deterministic order or field-level validation rules.
+* section 9 blocker: no deterministic rule precedence, reason-code vocabulary, thresholds,
+  tie/ambiguity rules or mLight interpretation rules.
+* section 10 blocker: no redacted example corpus, input-size bounds, correction-record
+  schema, malformed-input rules or promotion-test fixture format.
+* owner-response result: accepts r0.4 but supplies none of the missing details.
+* implementation result: no module code, tests or SS-1 deliverable documents were created;
+  no files were staged; no prohibited seam or later work was started.
+* writer scope remains reserved after a future Program release: `packages/modules/sales-signals/**`,
+  `tests/salesSignals*.test.js`, `docs/sales-signals/**`, and this lane context only.
+* required unblock: one authoritative approved addendum defining the missing section 5,
+  section 9 and section 10 contracts. Summaries, mockups and memory are not valid substitutes.
+* prohibited boundaries and separately gated infrastructure remain unchanged.
+* on receipt: stop for Program review; do not resume SS-1 until Program admits the addendum.
 
 ### Cross-cutting, never a separate parcel
 AI slots are added as each surface is built (named five-part slots, per the charter).

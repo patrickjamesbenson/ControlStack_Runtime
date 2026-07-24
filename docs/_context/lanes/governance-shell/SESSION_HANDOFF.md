@@ -37,10 +37,10 @@ Engine coupling remain disabled. Identity gate: 181/181.
 
 ## Current queue
 
-SS-1 is the sole ready Governance parcel. Program accepted SS-1G complete: the three exact Sales Signals guard permissions are live once each, existing permissions remain unchanged, broad module/test permissions are absent, scope probes pass, the full Governance MCP host was recycled fresh and unrelated source/services/secrets were untouched.
+SS-1 is blocked after a protected document-source stop. Program accepted SS-1G complete and the live guard remains correct, but no Governance implementation parcel is ready.
 
-The authoritative r0.4 brief and accepted owner response are present in `docs/sales-signals/`; exact sections 5, 9 and 10 are available. The supplied HTML mockup is non-authoritative and must not provide requirements.
+The authoritative r0.4 brief, owner response and non-authoritative HTML mockup are present and committed in `docs/sales-signals/`; the lane is clean. Sections 5, 9 and 10 are descriptive rather than implementation-complete. Section 5 omits exact schema names, types, requiredness, enums, ordering and field validation. Section 9 omits deterministic precedence, reason codes, thresholds, ambiguity rules and mLight interpretation. Section 10 omits a redacted example corpus, input bounds, correction-record schema and malformed-input rules. The accepted owner response supplies none of these details.
 
-The standing worker may deliver only: one fixed-version opportunity-signal schema contract document, one deterministic keyword classifier over manually supplied redacted text, one bounded correction corpus and focused tests. Unknown/unsafe/widened schema fields and malformed/unsafe alert input fail closed. Classification vocabulary is exactly section 9; corrections remain reviewed corpus evidence under section 10 and never silently become rules.
+No SS-1 module code, tests or deliverable documents were created; no files were staged and no prohibited seam or later action started. One authoritative approved addendum covering all listed gaps is required before Program may re-release SS-1. The HTML mockup, summaries and memory are not valid substitutes.
 
-No mailbox access, EstimateOne, HubSpot read/write, Lusha, credit secret, Research pipeline, Leads entitlement work, shell registration, Selector modification, route, POST handler, persistence, retrieval, delivery or later Sales Signals parcel is authorised. Stop after SS-1 for Program review.
+All mailbox, EstimateOne, HubSpot, Lusha, pipeline/entitlement, shell-registration, Selector, route, persistence, retrieval, delivery and later Sales Signals work remains blocked. Stop for Program review.
