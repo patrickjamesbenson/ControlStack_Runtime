@@ -717,6 +717,16 @@ P2 Checkpoint 1 is **IMPLEMENTATION COMPLETE / GATE GREEN / COMMIT BLOCKED BY SH
 - **PARALLELISM:** one Selector writer executes WALK-004 only. No Lab or Governance action is ready; MGR-RESTART-001 and both post-WALK audits remain blocked.
 - **NEXT:** resume WALK-004 within the exact two-owner production boundary. Remove legacy manual Tier/`TIERS` options plus committed Tier candidate and Stage 3B authority; consume only the valid source-backed policy-summary tier, preserve the 15-table bridge and server/Engine result contract, recalculate coupled tests to residual zero, run the fixed gate, push and stop for Program review. WALK-005 through WALK-007 remain sequence-blocked, with WALK-005A inserted before WALK-006. WALK-008 is ruled and closed.
 
+## 2026-07-24 Sales Signals state
+
+- **REGISTERED:** SALES SIGNALS (MODULE 06) is registered in Governance from brief SALES_SIGNALS r0.4 plus the accepted owner response.
+- **PORTAL PREREQUISITE:** satisfied by the live read-only private app; separate CRM lane remains deferred until load evidence exists.
+- **SS-1G READY:** exact Governance MCP guard additions are `packages/modules/sales-signals/**`, `tests/salesSignals*.test.js`, and `docs/sales-signals/**`; no broad module/test wildcard.
+- **SS-1 BLOCKED:** schema document plus keyword classification harness/correction corpus only, using manually supplied alert text.
+- **PROHIBITED:** mailbox automation, EstimateOne API, live HubSpot writes, Selector surface, shell registration, persistence, retrieval and delivery.
+- **INFRASTRUCTURE HELD:** mailbox read-only extraction, Lusha/credit secrets, and HubSpot Research pipeline/Leads checks require separate explicit rulings.
+- **SEAM:** Module 06 shell registration waits for Selector seam work; Selector boundary is schema-document only; single-write-path rules unchanged.
+
 ## 2026-07-22 HubSpot and CRM ruling state
 
 - **PRIVATE APP EXECUTED:** Patrick created `ControlsStack (Read Only)` with exactly `crm.objects.contacts.read`, `crm.objects.companies.read` and `crm.objects.deals.read`.

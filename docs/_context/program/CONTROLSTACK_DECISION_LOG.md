@@ -1818,3 +1818,15 @@ The Stage 3B body-length path must also cease treating client/committed Selector
 Preserve legitimate server-derived Tier/profile output needed by downstream runtime policy, board-fill and selected-result contracts. Preserve the 15-table source-status bridge, server/Engine `SYSTEM_POLICY` Tier derivation, downstream Tier result shape and all no-write/no-execution boundaries.
 
 Recalculate the deletion-test baseline from the fully restored clean state. Couple-delete or rewrite all tests that encode manual Tier/TIERS option authority, committed Tier candidate readiness, the missing-Tier candidate blocker, committed-Tier Stage 3B prerequisite or committed/source Tier mismatch. Final bounded checks must prove zero for the deleted client-authority patterns while preserving genuine server-derived Tier/profile fixtures. Run the complete focused set and fixed Selector gate, commit and push the exact two-owner parcel and lane-memory closeout, then stop before WALK-005.
+
+## 2026-07-24 — Sales Signals registered; SS-1G guard activation released
+
+**Status:** SALES SIGNALS REGISTERED IN GOVERNANCE; SS-1 BLOCKED PENDING SS-1G ACTIVATION.
+
+Program accepts brief SALES_SIGNALS r0.4 plus the owner response under the existing Boundary Ruling: external CRM orchestration belongs to Governance & Shell. The programme is registered in the Governance queue and its 181-check gate passes. The previous portal-scope prerequisite is satisfied by the live read-only private app. The separate CRM-lane decision remains deferred until load evidence exists.
+
+SS-1 is bounded to two outputs only: an opportunity-signal schema contract document per brief section 5, and a deterministic keyword-classification harness with correction corpus per sections 9 and 10 against manually supplied alert text. No mailbox automation, EstimateOne API, live HubSpot write, Selector surface, shell registration, persistence, retrieval or delivery is authorised.
+
+Program publishes SS-1G as the sole Governance infrastructure prerequisite. The managed Governance MCP guard adds exactly `packages/modules/sales-signals/**`, `tests/salesSignals*.test.js` and `docs/sales-signals/**`; lane context already exists. No broad `packages/modules/**` or broad tests wildcard is permitted. Advisor must reload the resident manager, recycle the complete Governance MCP host, start fresh through the manager, verify the three globs exactly once, preserve all existing globs and unrelated services, and return a live no-change scope receipt. SS-1 remains blocked until Program accepts activation.
+
+Mailbox read-only historical extraction, Lusha integration/credit secrets, and HubSpot Research pipeline creation plus Leads entitlement check are recorded as separately gated infrastructure actions requiring explicit rulings. Module 06 shell registration remains deferred behind Selector seam work; SS-1 exposes only a schema-document boundary toward Selector. Single-write-path rules remain unchanged.
