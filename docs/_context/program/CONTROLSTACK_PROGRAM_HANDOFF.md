@@ -1282,4 +1282,16 @@ Program independently verifies the clean pushed Selector closeout at `1ae56dca9f
 
 The coupled-test receipt is accepted: baseline 39, deleted 24, rewritten 15, affected test files 21, residual 0; `39 = 24 + 15 + 0`. The fixed Selector gate independently reruns at 108/108 and the lane is clean.
 
-WALK-004 is closed. WALK-005 and every later Selector parcel remain blocked pending a separate Program admission. Do not commission a Selector worker, start WALK-005, invoke Engine, execute seeds or begin either post-WALK audit from this receipt.
+WALK-004 is closed.
+
+### WALK-005 and Lab C6 released; WALK-001 source edit contract
+
+WALK-005 is the sole ready Selector parcel under one writer. Production is confined to `packages/modules/cs-selector/index.js`, `packages/modules/cs-selector/selectorState.js`, `packages/modules/cs-selector/selectorViewModel.js` and `packages/modules/cs-selector/selectorView.js`. Delete the internal timeline/status and special-parts principal test query/state/control/projection/save-hydrate authority. Preserve passive bounded Governance timeline/visibility and entitlement outcomes plus genuine special-parts compatibility. No fifth owner, replacement defaults, hidden modes or fallback principals. Count coupled tests to residual zero, gate, push and stop before WALK-005A.
+
+C6 is the sole ready Lab parcel under one writer. Add only `packages/lab-kernel/ies-toolkit/iesOneShotInMemoryGenerationV1.js`, `tests/lab-kernel/iesOneShotInMemoryGenerationV1.test.js` and Lab lane closeout. Consume exact ready plan, binding, inspection and C5 load receipt plus one injected resolver; call the resolver once, validate the sealed DTO with the existing inspection path, call `buildIesFromReference` once with the exact plan job, discard the DTO and return one immutable deterministic in-memory generation result. The LM-63 body remains in memory for C7 only. No existing C5/generator edit, route, file, persistence, storage mutation or delivery. Preserve all three protected Lab local items. Gate at 314 and stop before C7. Canonical saved-case execution remains blocked behind WALK-007.
+
+Patrick's WALK-001 sheet edit contract is exact lowercase `item`, `economy`, `business`, `first`, `charter`, `approved`; `item` value `ambient_temp`; approval value `approved`; finite numeric tier tokens only, with comma/semicolon/pipe/newline separators and optional Celsius suffix. Valid example: `ambient_temp | 25,35 | 25,30,35 | 25,30,35,40,45,50 | 25,30,35,40,45,50 | approved`. `status` is not the approval column and `ENG` is invalid.
+
+The earlier named Board mismatch is `BT_125mm_4000lm_ED12HW_M3500_W_703x32_TC17`: `board-to-wire` matched none of `to-board`, `to-wire`, `board-to-board`. The later one-of-265 list-length mismatch was returned only as a redacted count, so its row identity is not claimed.
+
+SS-1 remains blocked on an authoritative requirements addendum. Its discovered untracked draft schema and module are unaccepted and untouched. Patrick's HubSpot Leads entitlement check remains held until Program admits a Sales Signals CRM-design parcel; it is not a current action.

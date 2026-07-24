@@ -702,7 +702,8 @@ P2 Checkpoint 1 is **IMPLEMENTATION COMPLETE / GATE GREEN / COMMIT BLOCKED BY SH
 - **WALK-002R ACCEPTED:** corrected receipt baseline 75, deleted 71, rewritten 4, affected test files 34, residual 0. Production and tests are zero for `runLengthMode`, `lengthMode`, `requested_length_basis`, `requestedLengthBasis`, `missing-length-mode` and `length_mode`; focused coverage passes 115/115, the fixed gate passes 108/108, and the lane is pushed and clean.
 - **WALK-003 ACCEPTED:** exact three-owner production boundary; baseline 37, deleted 0, rewritten 37, affected test files 8, residual 0. The mounted duplicate scaffold and fabricated fresh-load selections are gone, the source-backed current-selection rail remains, focused coverage passes 166/166, the fixed gate passes 108/108, and the lane is pushed and clean.
 - **WALK-004 SCOPE STOP ACCEPTED:** all partial edits were restored; the fixed gate passes 108/108; the stop is pushed and the lane is clean. Fourteen focused readiness tests exposed `missing-readonly-engine-candidate-input-tier` from the Factory Approved Inputs summary.
-- **SELECTOR READY:** WALK-004 remains the sole ready parcel under the existing worker. Exact production boundary is now `selectorReferenceOptionsService.js` plus `selectorFactoryApprovedInputsSummary.js`; remove manual Tier/`TIERS` option authority and committed Tier readiness/Stage 3B authority while preserving server-derived `SYSTEM_POLICY` Tier/profile meaning.
+- **WALK-004 ACCEPTED:** exact two-owner implementation, mechanical receipt 39/24/15/21/0 and fixed gate 108/108; valid source-backed `SYSTEM_POLICY` Tier/profile meaning preserved.
+- **SELECTOR READY:** WALK-005 is the sole ready parcel under one writer. Exact production boundary is `index.js`, `selectorState.js`, `selectorViewModel.js` and `selectorView.js`; delete internal timeline/status and special-parts principal test authority while preserving bounded Governance outcomes and real compatibility/entitlement logic.
 - **SELECTOR ORDER:** Length Mode deletion → duplicate scaffold unmount → legacy TIERS readiness deletion → internal timeline/principal test-mode deletion → donor auto-fill defaults → truthful readiness counters → selections-only action-lane and thermal acceptance.
 - **AUTO-FILL:** each dropdown selects the first real NVB option in exact source order; `No manual constraint…` presentation rows are skipped. Auto-filled values are visibly LOOKED UP and distinct from manual constraints.
 - **ACKNOWLEDGEMENT:** one `Accept all defaults` action creates the GIVEN acknowledgement for every flagged default, including inherited finishes. Unacknowledged defaults do not satisfy readiness; per-field acknowledgement is prohibited.
@@ -714,17 +715,17 @@ P2 Checkpoint 1 is **IMPLEMENTATION COMPLETE / GATE GREEN / COMMIT BLOCKED BY SH
 - **TEST-AUDIT-001:** blocked behind WALK-007. One future read-only audit counts tests asserting deleted inputs, governance Engine preconditions, future/diagnostic prerequisites and identical-row fixture placeholder traps. Output is a kill-list only; no automatic deletion is authorised.
 - **POLICY-MAP-001:** blocked behind WALK-007, TEST-AUDIT-001 and an accepted Selector reader contract that fixes the exact consumer-group header. Read-only mapping of all current SYSTEM_POLICY rows to `CONSUMED-VERIFIED`, `CONSUMED-STALE` or `NO CONSUMER YET`, with exact file/function evidence where applicable. No policy value consumption or implementation is authorised before the reader contract.
 - **MGR-RESTART-001:** blocked future infrastructure repair. Reproduce the stale resident configuration layer, identify the exact manager/host/handshake fault, and make one selected-service restart reload the latest validated manifest and recycle the complete host without touching unrelated services.
-- **PARALLELISM:** one Selector writer executes WALK-004 while one Governance writer may execute SS-1. The parcels are isolated; no Lab action is ready. MGR-RESTART-001 and both post-WALK audits remain blocked.
-- **NEXT:** resume WALK-004 within the exact two-owner production boundary. Remove legacy manual Tier/`TIERS` options plus committed Tier candidate and Stage 3B authority; consume only the valid source-backed policy-summary tier, preserve the 15-table bridge and server/Engine result contract, recalculate coupled tests to residual zero, run the fixed gate, push and stop for Program review. WALK-005 through WALK-007 remain sequence-blocked, with WALK-005A inserted before WALK-006. WALK-008 is ruled and closed.
+- **PARALLELISM:** one Selector writer may execute WALK-005 while one Lab writer may execute C6. The parcels are isolated. Governance has no ready implementation parcel. MGR-RESTART-001 and both post-WALK audits remain blocked.
+- **NEXT:** delete internal Selector timeline/status and special-parts principal test authority within the exact four-owner WALK-005 boundary, while Lab implements only the one-shot in-memory C6 generator wrapper. Both lanes gate, push and stop for Program review. WALK-005A, C7, canonical seed execution and all later work remain blocked.
 
 ## 2026-07-24 Sales Signals state
 
 - **REGISTERED:** SALES SIGNALS (MODULE 06) is registered in Governance from brief SALES_SIGNALS r0.4 plus the accepted owner response.
 - **PORTAL PREREQUISITE:** satisfied by the live read-only private app; separate CRM lane remains deferred until load evidence exists.
 - **SS-1G ACCEPTED:** the three exact Governance guard additions are live once each; existing permissions remain; broad module/test wildcards are absent; all three no-change scope probes pass; the complete Governance MCP host was recycled through the manager and the lane is clean.
-- **SS-1 READY:** sole Governance parcel under one writer. Schema document plus deterministic keyword classification harness/correction corpus only, using manually supplied redacted alert text.
+- **SS-1 BLOCKED:** protected source review found sections 5, 9 and 10 implementation-incomplete. One authoritative approved addendum is required. The untracked schema and module drafts are unaccepted and remain untouched.
 - **PROHIBITED:** mailbox automation, EstimateOne API, live HubSpot writes, Selector surface, shell registration, persistence, retrieval and delivery.
-- **INFRASTRUCTURE HELD:** mailbox read-only extraction, Lusha/credit secrets, and HubSpot Research pipeline/Leads checks require separate explicit rulings.
+- **INFRASTRUCTURE HELD:** mailbox read-only extraction, Lusha/credit secrets, and HubSpot Research pipeline/Leads checks require separate explicit rulings. Patrick's Leads entitlement check is routed only when an accepted CRM-design parcel is admitted, not now.
 - **SEAM:** Module 06 shell registration waits for Selector seam work; Selector boundary is schema-document only; single-write-path rules unchanged.
 
 ## 2026-07-22 HubSpot and CRM ruling state
@@ -752,4 +753,11 @@ Any Program response that changes a ruling, authorisation or queue state must en
 - **GATE:** fixed `selector-engine` gate independently rerun green at 108/108.
 - **AUTHORITY RESULT:** manual Tier/`TIERS` option authority, committed Tier candidate readiness and committed-Tier Stage 3B prerequisite/mismatch are deleted. Stage 3B consumes only valid source-backed `SYSTEM_POLICY` policy Tier.
 - **PRESERVED:** unchanged 15-table bridge and legitimate server-derived Tier/profile outputs.
-- **SELECTOR HOLD:** WALK-005 and later work remain blocked pending separate Program admission; no Selector worker is commissioned.
+- **SELECTOR RELEASE:** WALK-005 is the sole ready Selector parcel; WALK-005A and later work remain blocked.
+
+## 2026-07-24 three-admission state
+
+- **LAB C6 READY:** sole Lab parcel under one writer; one new in-memory generator wrapper and one focused test only. Resolver once, existing generator once, LM-63 body retained only in memory for C7; no persistence or delivery. C7 and canonical seed execution remain blocked.
+- **WALK-001 SHEET CONTRACT:** exact lowercase headers `item`, `economy`, `business`, `first`, `charter`, `approved`; row identity `ambient_temp`; approval value `approved`; finite numeric tier tokens only. Valid example: `ambient_temp | 25,35 | 25,30,35 | 25,30,35,40,45,50 | 25,30,35,40,45,50 | approved`.
+- **EARLIER BOARD MISMATCH:** `BT_125mm_4000lm_ED12HW_M3500_W_703x32_TC17`; current `board-to-wire` did not match `to-board`, `to-wire`, or `board-to-board`. The separate later one-of-265 list-length mismatch remained identity-redacted.
+- **PATRICK CRM TRIGGER:** HubSpot Leads entitlement check is held and must be routed only when Program admits a Sales Signals CRM-design parcel.
