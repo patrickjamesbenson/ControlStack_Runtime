@@ -899,3 +899,11 @@ Electrical Class may remain only from a genuine existing non-TIERS authority sup
 Before edits, mechanically count every coupled assertion and fixture encoding the deleted Tier/TIERS authority class. Delete or rewrite the complete class in the same parcel and report search terms, counting method, baseline, deleted, rewritten, affected test files and residual, requiring baseline = deleted + rewritten + residual and residual 0. Final verification must prove no TIERS identity/manual Tier authority/TIERS-derived Electrical Class remains, the 15-table bridge is unchanged, server/Engine SYSTEM_POLICY Tier derivation remains intact and no execution, generation, persistence, route/POST, RuntimeData, provider or source mutation was enabled.
 
 Run all affected focused tests and the complete fixed Selector gate. Commit and push only WALK-004 implementation, coupled tests and lane-memory closeout, leave the lane clean and stop for Program review. WALK-005, WALK-005A, WALK-006, WALK-007, audits, manager restart, Engine/seeds, Lab, persistence, provider mutation, IES, retrieval and delivery remain blocked.
+
+## 2026-07-24 WALK-004 protected second-owner scope stop — latest controlling state
+
+**Recorded lane work HEAD:** `50e8188aa462b55b57dedfc8669c29c9470b03e6` — accepted WALK-003 feature work; no WALK-004 feature commit exists.
+
+WALK-004 stopped before any retained implementation because the required Tier-free focused proof exposed an existing readiness dependency outside the exact one-owner production boundary. `packages/modules/cs-selector/selectorFactoryApprovedInputsSummary.js` still emits `missing-readonly-engine-candidate-input-tier`; removing Tier from the authorised reference-options service caused fourteen focused readiness tests to stop at that Tier blocker before their intended outcomes. This is the exact safe trace requiring a second production owner. The worker did not widen scope.
+
+All partial WALK-004 production/test edits were restored byte-for-byte, the temporary harness was removed, the fixed Selector gate passes 108/108, and the feature tree is clean. WALK-004 remains open pending Program rescoping. WALK-005 and all later or prohibited work remain blocked.

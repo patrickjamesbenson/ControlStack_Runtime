@@ -831,3 +831,7 @@ Production may change only `packages/workspace-kernel/selectorReferenceOptionsSe
 Electrical Class survives only when genuinely sourced from a supported non-TIERS authority; otherwise it is unavailable with no inference, default, prior-value copy or TIERS-derived preservation. Do not implement WALK-005A early.
 
 Mechanically count the full coupled test class before editing, delete or rewrite it completely, require zero residual and close the arithmetic. Run every affected focused test plus the fixed Selector gate. A second production owner is a protected stop. Commit/push only the exact implementation, coupled tests and lane closeout, leave clean and stop before WALK-005 or any prohibited operational work.
+
+## 2026-07-24 WALK-004 protected scope stop
+
+WALK-004 remains open. Its exact one-owner deletion exposed a required second production owner: the factory-approved-inputs readiness summary still returns `missing-readonly-engine-candidate-input-tier`. Fourteen coupled focused tests consequently stop at the legacy Tier prerequisite instead of their intended readiness/blocker outcomes. No scope was widened. All partial edits were restored, the temporary harness is absent, the fixed gate passes 108/108, and the lane is clean. Program must rescope before WALK-004 resumes; all later work remains blocked.

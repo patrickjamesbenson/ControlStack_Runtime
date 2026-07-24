@@ -942,3 +942,12 @@ Every completed worker updates this index with:
 - WALK-004 is recorded as the sole ready parcel for the existing standing worker with production confined to the one exact reference-options service owner — RECORDED.
 - Complete TIERS/Tier option-readiness deletion, non-TIERS-only Electrical Class rule, unchanged 15-table bridge, intact SYSTEM_POLICY Engine/server Tier derivation, deletion-test accounting and all no-execution/no-mutation exclusions — RECORDED.
 - WALK-005 and every later/audit/operational parcel remain blocked pending Program review — RECORDED.
+
+## 2026-07-24 — WALK-004 protected second-owner stop evidence
+
+- All twelve production `TIERS` occurrences were confined to the authorised reference-options service — VERIFIED.
+- Tier-free reference-options implementation exposed `missing-readonly-engine-candidate-input-tier` from the separate factory-approved-inputs readiness summary — VERIFIED REQUIRED SECOND OWNER.
+- Fourteen coupled focused tests stopped at that legacy Tier prerequisite before their intended readiness/blocker assertions — VERIFIED.
+- No second production owner was edited; all partial authorised edits were restored and the temporary harness removed — VERIFIED.
+- Fixed Selector gate passes 108/108 and feature tree is clean — VERIFIED.
+- WALK-004 requires Program rescoping; later work remains blocked — RECORDED.

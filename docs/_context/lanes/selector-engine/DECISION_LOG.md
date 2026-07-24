@@ -726,3 +726,10 @@ This log is append-oriented. Do not silently rewrite historical decisions.
 - Electrical Class ruling: retain only genuine supported non-TIERS authority; otherwise unavailable without inference, default, prior-value copy or TIERS-derived preservation.
 - Coupling: mechanically account for and remove or rewrite the entire encoded test-assumption class with zero residual.
 - Consequence: stop for Program review after exact implementation, focused coverage, fixed gate, push and clean closeout; all later and operational work remains blocked.
+
+## 2026-07-24 — Stop WALK-004 at required second production owner
+
+- Decision: do not widen the exact one-owner WALK-004 boundary.
+- Evidence: the factory-approved-inputs readiness summary outside that boundary still emits `missing-readonly-engine-candidate-input-tier`; fourteen focused tests stop there once reference-options Tier authority is removed.
+- Recovery: restore all partial authorised edits byte-for-byte, remove the temporary harness, prove 108/108 and return a clean lane.
+- Consequence: WALK-004 remains open for Program rescoping; WALK-005 and later work remain blocked.

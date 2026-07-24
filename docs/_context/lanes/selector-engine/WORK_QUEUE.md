@@ -850,3 +850,13 @@ Queue reconciliation: WALK-001V is already done, gated and pushed, so it was not
 * verification: no TIERS identity, manual Tier option authority or TIERS-derived Electrical Class; unchanged 15-table bridge; intact SYSTEM_POLICY Tier derivation; all affected focused tests and fixed Selector gate green
 * closeout: exact implementation, coupled tests and lane memory only; commit/push, clean lane, stop for Program review
 * blocked: WALK-005, WALK-005A, WALK-006, WALK-007, audits, MGR-RESTART-001, Engine/seeds, Lab, persistence, CRM/provider mutation, IES, retrieval and delivery
+
+## WALK-004 protected scope stop — 2026-07-24
+
+- status: blocked-pending-program-rescope
+- production boundary attempted: exact reference-options service owner only
+- required additional owner: factory-approved-inputs readiness summary
+- exact trace: Tier-free reference options leave `missing-readonly-engine-candidate-input-tier` as the first readiness blocker; fourteen focused tests cannot reach their intended outcomes.
+- retained implementation: none; partial edits restored and temporary harness removed
+- verification: fixed Selector gate 108/108; clean lane
+- next: Program review/rescope only. Do not begin WALK-005 or later work.
