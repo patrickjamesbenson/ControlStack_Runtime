@@ -97,3 +97,15 @@
 - Requirements authority restricted to brief plus owner response; no reconstruction from summaries or mockup — RECORDED.
 - SS-1 sole ready Governance parcel under one writer — RECORDED.
 - Exact outputs and prohibitions bounded; all infrastructure and later Sales Signals actions remain blocked — RECORDED.
+
+## SS-1 protected document-source reconciliation — 2026-07-24
+
+- Canonical lane queue source stop pre-dated implementation attempt — VERIFIED.
+- Section 5 exact schema names/types/requiredness/order/validation absent — BLOCKER CONFIRMED.
+- Section 9 precedence/reason codes/thresholds/tie rules/mLight rules absent — BLOCKER CONFIRMED.
+- Section 10 supplied examples/bounds/correction schema/malformed-input fixture format absent — BLOCKER CONFIRMED.
+- Bounded implementation attempt and focused test were pushed after the stop — RECONCILED.
+- Fixed Governance gate after attempted feature and compatibility surfaces: 181 passed, 0 failed — VERIFIED.
+- Focused `salesSignals*.test.js` execution: not included by the exposed fixed gate — NOT VERIFIED.
+- Prohibited capability scan from repository scope: no mailbox, provider, network, route, persistence, shell, Selector, CRM-action or later-parcel work started — VERIFIED.
+- Completion status: attempted contracts are not accepted SS-1 evidence; Program rollback/replacement decision and authoritative addendum required — STOPPED.

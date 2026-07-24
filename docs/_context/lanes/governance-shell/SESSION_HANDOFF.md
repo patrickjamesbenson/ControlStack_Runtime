@@ -41,6 +41,8 @@ SS-1 is blocked after a protected document-source stop. Program accepted SS-1G c
 
 The authoritative r0.4 brief, owner response and non-authoritative HTML mockup are present and committed in `docs/sales-signals/`; the lane is clean. Sections 5, 9 and 10 are descriptive rather than implementation-complete. Section 5 omits exact schema names, types, requiredness, enums, ordering and field validation. Section 9 omits deterministic precedence, reason codes, thresholds, ambiguity rules and mLight interpretation. Section 10 omits a redacted example corpus, input bounds, correction-record schema and malformed-input rules. The accepted owner response supplies none of these details.
 
-No SS-1 module code, tests or deliverable documents were created; no files were staged and no prohibited seam or later action started. One authoritative approved addendum covering all listed gaps is required before Program may re-release SS-1. The HTML mockup, summaries and memory are not valid substitutes.
+A bounded SS-1 schema/classifier/corpus attempt and focused test were pushed after the protected stop. They are not accepted completion evidence because the exact addendum was absent, and the exposed fixed Governance gate did not invoke the focused Sales Signals test. The complete fixed gate remains green at 181/181.
+
+Program must decide rollback or replacement of the attempted files and provide one authoritative approved addendum covering all listed gaps before SS-1 may resume. The HTML mockup, summaries and memory are not valid substitutes.
 
 All mailbox, EstimateOne, HubSpot, Lusha, pipeline/entitlement, shell-registration, Selector, route, persistence, retrieval, delivery and later Sales Signals work remains blocked. Stop for Program review.

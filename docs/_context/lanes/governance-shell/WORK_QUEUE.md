@@ -85,8 +85,9 @@
 * section 10 blocker: no redacted example corpus, input-size bounds, correction-record
   schema, malformed-input rules or promotion-test fixture format.
 * owner-response result: accepts r0.4 but supplies none of the missing details.
-* implementation result: no module code, tests or SS-1 deliverable documents were created;
-  no files were staged; no prohibited seam or later work was started.
+* implementation result: a bounded schema/classifier/corpus attempt and focused test were pushed after the protected stop. Because the exact requirements addendum was absent, those files are not accepted SS-1 evidence and must not be treated as completion.
+* fixed-gate result: the complete Governance gate remains green at 181/181, but the fixed gate did not invoke the new focused Sales Signals test file.
+* no prohibited mailbox, provider, network, route, persistence, shell, Selector, CRM-action or later-parcel seam was started.
 * writer scope remains reserved after a future Program release: `packages/modules/sales-signals/**`,
   `tests/salesSignals*.test.js`, `docs/sales-signals/**`, and this lane context only.
 * required unblock: one authoritative approved addendum defining the missing section 5,

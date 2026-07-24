@@ -41,3 +41,13 @@ SS-1 requirements authority is limited to `SALES_SIGNALS_BRIEF_r0.4.md` plus `SA
 SS-1 may create only the fixed-version opportunity-signal schema contract document and a deterministic keyword-classification harness with bounded correction corpus over manually supplied redacted alert text, plus focused tests and lane-memory closeout. The schema document is the only Selector-facing seam; Selector remains untouched.
 
 Mailbox access, EstimateOne, HubSpot read/write, Lusha, credit secrets, Research pipeline and Leads entitlement work, shell registration, routes, persistence, retrieval, delivery, CRM actions and every later Sales Signals parcel remain blocked.
+
+## 2026-07-24 — SS-1 protected document-source stop reconciled
+
+**Status:** STOPPED; PROGRAM DECISION REQUIRED.
+
+The canonical lane queue already recorded that brief sections 5, 9 and 10 are descriptive but not implementation-complete. Section 5 does not define exact field names, types, required/optional status, enums, deterministic order or field-level validation. Section 9 does not define rule precedence, reason-code vocabulary, thresholds, tie handling or mLight rules. Section 10 does not supply the manually reviewed examples, bounded corpus size, exact correction schema, malformed-input rules or fixture format.
+
+A bounded implementation attempt was pushed after that stop. It introduced no prohibited mailbox, provider, network, route, persistence, shell, Selector, CRM-action or later-parcel seam, and the fixed Governance gate remained green at 181/181. However, the fixed gate did not invoke the focused Sales Signals test and the attempted contracts were necessarily derived rather than sourced from an approved addendum.
+
+The attempted files are not accepted SS-1 completion evidence. SS-1 remains blocked. Program must decide rollback/replacement and provide one authoritative approved addendum before implementation can resume.

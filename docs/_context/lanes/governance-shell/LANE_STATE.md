@@ -9,7 +9,7 @@
 - MCP: shared `controlstack_mcp.py`, scoped by env vars (same pattern as other lanes)
 - Write scope: this worktree only; context writes limited to
   `docs/_context/lanes/governance-shell/`
-- Recorded branch HEAD: `9e2bcfddcc6b5a0dcb02f023f62658c18056e8fa`
+- Recorded branch HEAD before corrective reconciliation: `f622f26e4cd17373d58b8b8794d2c7ffce243c80`
 - SS-1 admission starting HEAD: `6763e1fba843d534e4618bb97a352a0477ea109c`
 - Recorded retrieval feature checkpoint: `408eaeced381dfb5ab49b5420b41a4b957698375`
 - Recorded persistence feature checkpoint: `a8de2049cfda57f1413ec3bb193fe42e235e7be6`
@@ -35,7 +35,8 @@ SS-1 is blocked on an authoritative requirements addendum after a protected docu
 - Active writer scope: `packages/modules/sales-signals/**`, `tests/salesSignals*.test.js`, `docs/sales-signals/**`, and lane context.
 - Source package present and committed: approved r0.4 brief, accepted owner response and a non-authoritative HTML mockup. Requirements come only from the brief and owner response.
 - Protected source review found sections 5, 9 and 10 descriptive but not implementation-complete. Section 5 lacks exact fields/types/requiredness/enums/order/validation; section 9 lacks precedence/reason codes/thresholds/tie rules/mLight rules; section 10 lacks examples/bounds/correction schema/malformed-input rules.
-- SS-1 implementation did not start. One approved requirements addendum covering those exact gaps is required before Program may re-release the parcel.
+- A bounded implementation attempt was pushed after the protected stop, but it was derived from descriptive brief text rather than an authoritative addendum. It is not accepted SS-1 evidence and SS-1 remains blocked.
+- One approved requirements addendum covering the exact section 5, 9 and 10 gaps is required before Program may re-release the parcel or decide rollback/replacement of the attempted files.
 - SS-1 excludes mailbox automation, EstimateOne API, any HubSpot read/write, Lusha/credits, Selector modification, shell registration, routes, persistence, retrieval and delivery.
 - Mailbox extraction, Lusha/credits, HubSpot Research-pipeline/Leads checks and all later Sales Signals parcels remain blocked infrastructure or Program actions.
 - Module 06 shell registration remains deferred behind Selector seam work; Selector receives schema-document boundary only.
