@@ -714,15 +714,15 @@ P2 Checkpoint 1 is **IMPLEMENTATION COMPLETE / GATE GREEN / COMMIT BLOCKED BY SH
 - **TEST-AUDIT-001:** blocked behind WALK-007. One future read-only audit counts tests asserting deleted inputs, governance Engine preconditions, future/diagnostic prerequisites and identical-row fixture placeholder traps. Output is a kill-list only; no automatic deletion is authorised.
 - **POLICY-MAP-001:** blocked behind WALK-007, TEST-AUDIT-001 and an accepted Selector reader contract that fixes the exact consumer-group header. Read-only mapping of all current SYSTEM_POLICY rows to `CONSUMED-VERIFIED`, `CONSUMED-STALE` or `NO CONSUMER YET`, with exact file/function evidence where applicable. No policy value consumption or implementation is authorised before the reader contract.
 - **MGR-RESTART-001:** blocked future infrastructure repair. Reproduce the stale resident configuration layer, identify the exact manager/host/handshake fault, and make one selected-service restart reload the latest validated manifest and recycle the complete host without touching unrelated services.
-- **PARALLELISM:** one Selector writer executes WALK-004 only. No Lab or Governance action is ready; MGR-RESTART-001 and both post-WALK audits remain blocked.
+- **PARALLELISM:** one Selector writer executes WALK-004 while one Governance writer may execute SS-1. The parcels are isolated; no Lab action is ready. MGR-RESTART-001 and both post-WALK audits remain blocked.
 - **NEXT:** resume WALK-004 within the exact two-owner production boundary. Remove legacy manual Tier/`TIERS` options plus committed Tier candidate and Stage 3B authority; consume only the valid source-backed policy-summary tier, preserve the 15-table bridge and server/Engine result contract, recalculate coupled tests to residual zero, run the fixed gate, push and stop for Program review. WALK-005 through WALK-007 remain sequence-blocked, with WALK-005A inserted before WALK-006. WALK-008 is ruled and closed.
 
 ## 2026-07-24 Sales Signals state
 
 - **REGISTERED:** SALES SIGNALS (MODULE 06) is registered in Governance from brief SALES_SIGNALS r0.4 plus the accepted owner response.
 - **PORTAL PREREQUISITE:** satisfied by the live read-only private app; separate CRM lane remains deferred until load evidence exists.
-- **SS-1G READY:** exact Governance MCP guard additions are `packages/modules/sales-signals/**`, `tests/salesSignals*.test.js`, and `docs/sales-signals/**`; no broad module/test wildcard.
-- **SS-1 BLOCKED:** schema document plus keyword classification harness/correction corpus only, using manually supplied alert text.
+- **SS-1G ACCEPTED:** the three exact Governance guard additions are live once each; existing permissions remain; broad module/test wildcards are absent; all three no-change scope probes pass; the complete Governance MCP host was recycled through the manager and the lane is clean.
+- **SS-1 READY:** sole Governance parcel under one writer. Schema document plus deterministic keyword classification harness/correction corpus only, using manually supplied redacted alert text.
 - **PROHIBITED:** mailbox automation, EstimateOne API, live HubSpot writes, Selector surface, shell registration, persistence, retrieval and delivery.
 - **INFRASTRUCTURE HELD:** mailbox read-only extraction, Lusha/credit secrets, and HubSpot Research pipeline/Leads checks require separate explicit rulings.
 - **SEAM:** Module 06 shell registration waits for Selector seam work; Selector boundary is schema-document only; single-write-path rules unchanged.

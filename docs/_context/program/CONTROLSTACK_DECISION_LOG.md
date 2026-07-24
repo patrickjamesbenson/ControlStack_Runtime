@@ -1830,3 +1830,17 @@ SS-1 is bounded to two outputs only: an opportunity-signal schema contract docum
 Program publishes SS-1G as the sole Governance infrastructure prerequisite. The managed Governance MCP guard adds exactly `packages/modules/sales-signals/**`, `tests/salesSignals*.test.js` and `docs/sales-signals/**`; lane context already exists. No broad `packages/modules/**` or broad tests wildcard is permitted. Advisor must reload the resident manager, recycle the complete Governance MCP host, start fresh through the manager, verify the three globs exactly once, preserve all existing globs and unrelated services, and return a live no-change scope receipt. SS-1 remains blocked until Program accepts activation.
 
 Mailbox read-only historical extraction, Lusha integration/credit secrets, and HubSpot Research pipeline creation plus Leads entitlement check are recorded as separately gated infrastructure actions requiring explicit rulings. Module 06 shell registration remains deferred behind Selector seam work; SS-1 exposes only a schema-document boundary toward Selector. Single-write-path rules remain unchanged.
+
+## 2026-07-24 — SS-1G accepted; SS-1 released
+
+**Status:** SS-1G ACCEPTED COMPLETE; SS-1 SOLE READY GOVERNANCE PARCEL.
+
+Program accepts the live activation receipt. Independent Governance inspection confirms all three Sales Signals write permissions are present exactly once, all prior Governance permissions remain, `packages/modules/**` and broad test wildcards are absent, the lane identity/branch/gate are unchanged, no-change scope probes pass for a module file, test file and document, and the Governance tree is clean. The manager reload and complete Governance MCP host recycle are accepted; unrelated services, repository source, runtime source, credentials and protected secrets remained untouched.
+
+SS-1G is complete and must not be reopened without new guard evidence. Program releases SS-1 to one Governance writer only. The exact implementation scope remains `packages/modules/sales-signals/**`, `tests/salesSignals*.test.js`, `docs/sales-signals/**`, and Governance lane context.
+
+SS-1 delivers exactly two bounded artifacts: the opportunity-signal schema contract document from brief section 5, and a deterministic keyword-classification harness plus correction corpus from sections 9 and 10 against manually supplied alert text. The schema document is the only Selector-facing seam in this parcel; no Selector code or shell registration is authorised.
+
+No mailbox access or automation, EstimateOne API, live HubSpot read/write integration, Lusha integration or secrets, Research pipeline creation, Leads entitlement action, persistence, provider mutation, retrieval, delivery or module registration is authorised. Use only manually supplied redacted alert text committed as bounded test fixtures or corpus data; do not include mailbox metadata, credentials, personal contact details or provider tokens.
+
+Require deterministic classification, explicit reason codes, stable output ordering, correction cases that prove both false-positive and false-negative handling, and fail-closed rejection of malformed, path-bearing, URL-bearing, provider-shaped or secret-bearing inputs. Run focused Sales Signals tests and the complete fixed Governance gate, commit and push the exact parcel and lane-memory closeout, leave the lane clean and stop for Program review.

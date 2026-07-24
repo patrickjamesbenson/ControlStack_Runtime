@@ -1265,3 +1265,13 @@ Preserve legitimate server-derived Tier/profile values in runtime policy, board-
 SALES SIGNALS (MODULE 06) is registered in Governance. SS-1 is blocked pending SS-1G. The managed guard adds exactly `packages/modules/sales-signals/**`, `tests/salesSignals*.test.js` and `docs/sales-signals/**`; lane context remains. Advisor must reload the resident manager, recycle the complete Governance MCP host, start fresh through the manager, verify exact-once globs and no broad module/test wildcard, run no-change scope probes and leave unrelated services untouched.
 
 After activation, SS-1 remains limited to the opportunity-signal schema document and deterministic keyword-classification harness/correction corpus over manually supplied alert text. Mailbox automation, EstimateOne API, live HubSpot writes, Selector surface and shell registration remain prohibited. Mailbox read-only extraction, Lusha/credit secrets, and HubSpot Research pipeline/Leads checks are separately gated. The separate CRM lane remains deferred until load evidence exists.
+
+### SS-1G accepted; SS-1 released
+
+Program accepts the live Governance activation. The three Sales Signals globs are present exactly once, all prior permissions remain, broad module/test wildcards are absent, the three no-change scope probes pass, the Governance lane is clean, and the complete Governance MCP host was recycled fresh through the manager without touching unrelated services or protected material.
+
+SS-1 is now the sole ready Governance parcel under one writer. Deliver only the opportunity-signal schema contract document and a deterministic keyword-classification harness plus correction corpus over manually supplied redacted alert text. The schema document is the only Selector-facing boundary; no Selector implementation or shell registration is authorised.
+
+The harness must expose deterministic classifications, explicit reason codes and stable ordering; the correction corpus must prove both false-positive suppression and false-negative recovery. Malformed, nested, path-bearing, URL-bearing, provider-shaped, credential-bearing or secret-bearing inputs must fail closed without retaining unsafe material.
+
+Do not access a mailbox, call EstimateOne, read or write HubSpot, configure Lusha, create pipelines, check entitlements, persist records, add routes, register Module 06, invoke retrieval/delivery or alter the single-write-path seam. Run focused Sales Signals tests and the full fixed Governance gate, commit and push only the exact SS-1 parcel and lane-memory closeout, leave the lane clean and stop for Program review.
