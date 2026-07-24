@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ControlStack — 06 Sales Signals</title>
+<style>
+:root{
+  --ink:#14181f; --ink2:#1e242e; --ink3:#2a323f;
+  --bg:#f2f3f2; --card:#ffffff; --line:#e2e4e1; --line2:#eceeeb;
+  --tx:#1c2126; --tx2:#5f6870; --tx3:#8b939b;
+  --amber:#d98a1f; --amber-soft:#fdf4e4; --amber-line:#f0dcb4;
+  --good:#2e7d4f; --good-soft:#e9f4ec;
+  --warn:#b3541e; --warn-soft:#fbeee5;
+  --bad:#b23b3b; --bad-soft:#f9e9e9;
+  --blue:#3a6ea5; --blue-soft:#eaf1f8;
+  --mono:ui-monospace,'SF Mono','Cascadia Mono','Consolas',monospace;
+  --sans:-apple-system,'Segoe UI','Inter',Roboto,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:var(--sans);background:var(--bg);color:var(--tx);font-size:14px;line-height:1.45;display:flex;overflow:hidden}
+button{font-family:inherit;cursor:pointer}
+/* ---------- shell sidebar ---------- */
+.sidebar{width:228px;min-width:228px;background:var(--ink);color:#c9cfd6;display:flex;flex-direction:column;height:100vh}
+.brand{padding:18px 18px 14px;border-bottom:1px solid var(--ink3)}
+.brand .cs{font-weight:700;font-size:16px;color:#fff;letter-spacing:.2px}
+.brand .cs span{color:var(--amber)}
+.brand .env{font-family:var(--mono);font-size:10px;color:#7d8792;margin-top:3px}
+.navsec{padding:14px 10px 4px}
+.navlabel{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#6d7680}
+.navlabel{color:#6d7680;padding:0 10px 6px}
+.navitem{display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:6px;color:#aeb6bf;font-size:13px;margin-bottom:1px;cursor:default}
+.navitem .num{font-family:var(--mono);font-size:10px;color:#68727d;width:18px}
+.navitem.active{background:var(--ink2);color:#fff;cursor:pointer;box-shadow:inset 3px 0 0 var(--amber)}
+.navitem.active .num{color:var(--amber)}
+.navitem.dis{opacity:.55}
+.sidefoot{margin-top:auto;padding:14px 16px;border-top:1px solid var(--ink3);font-size:12px}
+.sidefoot .u{color:#e8ebee;font-weight:600}
+.sidefoot .r{font-family:var(--mono);font-size:10px;color:#7d8792;margin-top:2px}
+/* ---------- main ---------- */
+.main{flex:1;display:flex;flex-direction:column;height:100vh;min-width:0}
+.modhead{background:var(--card);border-bottom:1px solid var(--line);padding:14px 22px 0}
+.modhead .row1{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.modhead h1{font-size:17px;font-weight:700}
+.modhead h1 .mnum{font-family:var(--mono);font-size:12px;color:var(--tx3);font-weight:400;margin-right:8px}
+.pill{font-size:11px;font-weight:600;padding:3px 9px;border-radius:99px;letter-spacing:.02em}
+.pill.replay{background:var(--amber-soft);color:var(--amber);border:1px solid var(--amber-line)}
+.headright{margin-left:auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.credits{display:flex;align-items:center;gap:7px;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:5px 11px;font-size:12px}
+.credits b{font-family:var(--mono)}
+.credits.low b{color:var(--warn)}
+.aitog{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--tx2)}
+.switch{width:36px;height:20px;border-radius:99px;background:#cfd3d0;border:none;position:relative;transition:.15s}
+.switch.on{background:var(--good)}
+.switch::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:.15s}
+.switch.on::after{left:18px}
+.tabs{display:flex;gap:2px;margin-top:12px}
+.tab{border:none;background:none;padding:9px 14px;font-size:13px;color:var(--tx2);border-bottom:2px solid transparent;font-weight:500}
+.tab:hover{color:var(--tx)}
+.tab.active{color:var(--tx);border-bottom-color:var(--amber);font-weight:600}
+.tab .cnt{font-family:var(--mono);font-size:10px;background:var(--bg);border:1px solid var(--line);border-radius:99px;padding:1px 6px;margin-left:5px;color:var(--tx2)}
+.content{flex:1;overflow-y:auto;padding:20px 22px 60px}
+/* ---------- generic ---------- */
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;margin-bottom:16px}
+.card .chd{padding:11px 16px;border-bottom:1px solid var(--line2);display:flex;align-items:center;gap:10px}
+.card .chd h3{font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:var(--tx2);font-weight:600}
+.card .cbd{padding:14px 16px}
+.mono{font-family:var(--mono);font-size:11.5px}
+.muted{color:var(--tx2)} .faint{color:var(--tx3)}
+.btn{border:1px solid var(--line);background:var(--card);border-radius:7px;padding:6px 12px;font-size:12.5px;font-weight:500;color:var(--tx)}
+.btn:hover{border-color:#c6cac6}
+.btn.primary{background:var(--ink);border-color:var(--ink);color:#fff}
+.btn.primary:hover{background:var(--ink2)}
+.btn.amber{background:var(--amber);border-color:var(--amber);color:#fff}
+.btn.ghost{border-color:transparent;color:var(--tx2)}
+.btn.sm{padding:3px 9px;font-size:11.5px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.tag{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:2px 8px;border-radius:5px;border:1px solid var(--line);background:var(--bg)}
+.tag.kw{background:var(--amber-soft);border-color:var(--amber-line);color:#8a5a12;font-family:var(--mono);font-weight:600}
+.tag.good{background:var(--good-soft);border-color:#cfe5d6;color:var(--good)}
+.tag.warn{background:var(--warn-soft);border-color:#eed6c4;color:var(--warn)}
+.tag.bad{background:var(--bad-soft);border-color:#eccfcf;color:var(--bad)}
+.tag.blue{background:var(--blue-soft);border-color:#cfdeee;color:var(--blue)}
+/* lumen dot — confidence rendered as illumination */
+.lum{width:9px;height:9px;border-radius:50%;display:inline-block;vertical-align:-1px}
+.lum.high{background:#eab308} 
+.lum.high{background:#eab308;box-shadow:0 0 6px 1px rgba(234,179,8,.75)}
+.lum.medium{background:#d3b465;box-shadow:0 0 3px 0 rgba(211,180,101,.5)}
+.lum.low{background:#b9bdc2;box-shadow:none}
+.evlink{border-bottom:1px dashed #b9bdc2;cursor:pointer}
+.evlink:hover{border-bottom-color:var(--amber);background:var(--amber-soft)}
+/* queue table */
+.qrow{display:grid;grid-template-columns:86px 1fr 120px 150px 120px 190px;gap:10px;align-items:center;padding:11px 16px;border-bottom:1px solid var(--line2);cursor:pointer}
+.qrow:hover{background:#fafbf9}
+.qrow.sel{background:var(--amber-soft)}
+.qrow .pj{font-weight:600;font-size:13.5px}
+.qrow .sub{font-size:11.5px;color:var(--tx2);margin-top:1px}
+.qhead{display:grid;grid-template-columns:86px 1fr 120px 150px 120px 190px;gap:10px;padding:8px 16px;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--tx3);border-bottom:1px solid var(--line)}
+.tributt{display:flex;gap:5px}
+.tri{border:1px solid var(--line);background:var(--card);border-radius:6px;width:26px;height:24px;font-size:11px;font-weight:700;color:var(--tx2)}
+.tri:hover{border-color:#b9bdb6}
+.tri.on-a{background:var(--good-soft);border-color:#bfe0c9;color:var(--good)}
+.tri.on-r{background:var(--bad-soft);border-color:#e6c6c6;color:var(--bad)}
+.tri.on-u{background:var(--blue-soft);border-color:#c8daed;color:var(--blue)}
+/* chips */
+.chip{border:1px solid var(--amber-line);background:var(--amber-soft);border-radius:8px;padding:10px 12px;margin-top:8px}
+.chip .chl{display:flex;align-items:center;gap:7px;font-size:11px;font-weight:700;color:#8a5a12;letter-spacing:.05em;text-transform:uppercase}
+.chip .chl .sp{width:7px;height:7px;border-radius:50%;background:var(--amber);box-shadow:0 0 5px rgba(217,138,31,.8)}
+.chip .chb{margin-top:6px;font-size:13px}
+.chip .cha{display:flex;gap:6px;margin-top:9px}
+/* drawer */
+.drawer{position:fixed;top:0;right:-420px;width:400px;height:100vh;background:var(--card);border-left:1px solid var(--line);box-shadow:-8px 0 24px rgba(20,24,31,.10);transition:right .18s ease;z-index:60;display:flex;flex-direction:column}
+.drawer.open{right:0}
+.drawer .dhd{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
+.drawer .dhd h3{font-size:13px;font-weight:700}
+.drawer .dbd{padding:16px 18px;overflow-y:auto}
+.evfield{margin-bottom:13px}
+.evfield .k{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--tx3);margin-bottom:3px}
+.evfield .v{font-size:13px}
+/* modal */
+.mback{position:fixed;inset:0;background:rgba(20,24,31,.45);display:none;align-items:center;justify-content:center;z-index:80}
+.mback.open{display:flex}
+.modal{background:var(--card);border-radius:12px;width:520px;max-width:92vw;max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(20,24,31,.3)}
+.modal .mhd{padding:15px 20px;border-bottom:1px solid var(--line);font-weight:700;font-size:14px;display:flex;align-items:center}
+.modal .mbd{padding:16px 20px}
+.modal .mft{padding:13px 20px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:8px}
+.fld{margin-bottom:12px}
+.fld label{display:block;font-size:11.5px;font-weight:600;color:var(--tx2);margin-bottom:4px}
+.fld input,.fld select,.fld textarea{width:100%;border:1px solid var(--line);border-radius:7px;padding:7px 10px;font-size:13px;font-family:inherit;background:#fff;color:var(--tx)}
+.fld textarea{min-height:56px;resize:vertical}
+.req{color:var(--bad)}
+/* two-col */
+.cols{display:grid;grid-template-columns:1fr 320px;gap:16px;align-items:start}
+@media(max-width:1100px){.cols{grid-template-columns:1fr}}
+.kv{display:grid;grid-template-columns:150px 1fr;gap:5px 12px;font-size:13px}
+.kv .k{color:var(--tx2)}
+.spec{background:#fbfaf6;border:1px solid var(--line2);border-radius:8px;padding:12px 14px;font-size:13px;line-height:1.6}
+.spec mark{background:#f6e3b8;border-radius:3px;padding:0 2px}
+table.t{width:100%;border-collapse:collapse;font-size:12.5px}
+table.t th{text-align:left;font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--tx3);padding:7px 8px;border-bottom:1px solid var(--line)}
+table.t td{padding:8px;border-bottom:1px solid var(--line2);vertical-align:top}
+.scorerow{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line2)}
+.scorerow .lbl{flex:1}
+.scorerow .val{font-family:var(--mono);font-size:12px}
+.bar{width:130px;height:6px;background:var(--line2);border-radius:99px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--good)}
+.bar.f i{background:var(--bad)}
+.banner{border-radius:10px;padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:12px;font-weight:600}
+.banner.go{background:var(--good-soft);border:1px solid #c6e0cf;color:var(--good)}
+.banner.rev{background:var(--warn-soft);border:1px solid #eed6c4;color:var(--warn)}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;opacity:0;transition:.2s;z-index:90;pointer-events:none}
+.toast.show{opacity:1}
+.think{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--tx2)}
+.think .d{width:6px;height:6px;border-radius:50%;background:var(--amber);animation:pl 1s infinite}
+@keyframes pl{0%,100%{opacity:.25}50%{opacity:1}}
+.help{font-size:11.5px;color:var(--tx3)}
+kbd{font-family:var(--mono);font-size:10px;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:1px 5px;background:var(--bg)}
+</style>
+</head>
+<body>
+<!-- ============ SHELL ============ -->
+<aside class="sidebar">
+  <div class="brand">
+    <div class="cs">Control<span>Stack</span></div>
+    <div class="env">internal · shell v-mock · pilot</div>
+  </div>
+  <div class="navsec">
+    <div class="navlabel">Modules</div>
+    <div class="navitem dis"><span class="num">01</span>CS Selector</div>
+    <div class="navitem dis"><span class="num">02</span>Compliance Matters</div>
+    <div class="navitem dis"><span class="num">03</span>Scene Builder</div>
+    <div class="navitem dis"><span class="num">04</span>EGRES</div>
+    <div class="navitem dis"><span class="num">05</span>Ceiling Co-ordination</div>
+    <div class="navitem active"><span class="num">06</span>Sales Signals</div>
+  </div>
+  <div class="navsec">
+    <div class="navlabel">Knowledge</div>
+    <div class="navitem dis"><span class="num">·</span>Knowledge Centre</div>
+    <div class="navitem dis"><span class="num">·</span>CLX</div>
+  </div>
+  <div class="sidefoot">
+    <div class="u">Patrick</div>
+    <div class="r">internal_user · SS research queue</div>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="modhead">
+    <div class="row1">
+      <h1><span class="mnum">06</span>Sales Signals</h1>
+      <span class="pill replay">HISTORICAL REPLAY · LB → Q</span>
+      <div class="headright">
+        <div class="credits" id="creditbox" title="Lusha credit balance — every reveal shows its cost before you click">
+          Lusha credits <b id="creditval">42</b>
+        </div>
+        <div class="aitog">
+          AI assist
+          <button class="switch on" id="aiswitch" onclick="toggleAI()" aria-label="Toggle AI assist"></button>
+        </div>
+      </div>
+    </div>
+    <div class="tabs" id="tabs">
+      <button class="tab active" data-tab="queue" onclick="setTab('queue')">Signal queue <span class="cnt" id="qcount">8</span></button>
+      <button class="tab" data-tab="opp" onclick="setTab('opp')">Opportunity</button>
+      <button class="tab" data-tab="enrich" onclick="setTab('enrich')">Contacts &amp; enrichment</button>
+      <button class="tab" data-tab="push" onclick="setTab('push')">HubSpot push</button>
+      <button class="tab" data-tab="score" onclick="setTab('score')">Pilot scoreboard</button>
+    </div>
+  </div>
+  <div class="content" id="content"></div>
+</main>
+
+<!-- evidence drawer -->
+<div class="drawer" id="drawer">
+  <div class="dhd">
+    <h3>Evidence record</h3>
+    <button class="btn ghost sm" style="margin-left:auto" onclick="closeDrawer()">Close</button>
+  </div>
+  <div class="dbd" id="drawerbody"></div>
+</div>
+
+<!-- modal -->
+<div class="mback" id="mback"><div class="modal" id="modal"></div></div>
+<div class="toast" id="toast"></div>
+<script>
+/* ================= DEMO DATA (all invented) ================= */
+const TODAY = new Date('2026-07-22');
+function daysTo(d){ if(!d) return null; return Math.round((new Date(d)-TODAY)/86400000); }
+function urgency(sig){
+  const dt = daysTo(sig.tenderClose);
+  if(sig.stage==='Design') return {band:'Open', cls:'blue', note:'design stage'};
+  if(dt===null) return {band:'Open', cls:'blue', note:'no closing date'};
+  if(dt<0) return {band:'Window passed', cls:'warn', note:'closed '+Math.abs(dt)+'d ago'};
+  if(dt<=7) return {band:'Immediate', cls:'warn', note:dt+'d to close'};
+  if(dt<=21) return {band:'Near', cls:'warn', note:dt+'d to close'};
+  return {band:'Open', cls:'blue', note:dt+'d to close'};
+}
+
+const SIGNALS = [
+ {id:'SS-1041', ref:'E1-884102', project:'Parramatta Health Precinct — Stage 2 Fitout',
+  suburb:'Parramatta', state:'NSW', sector:'Health', value:'$38–45m', stage:'Tendering',
+  tenderClose:'2026-07-31', keywords:['Xero'], alerts:[
+    {date:'2026-06-30', kw:'Xero', st:'New tender'},
+    {date:'2026-07-08', kw:'Xero', st:'Documents revised'},
+    {date:'2026-07-15', kw:'Xero', st:'Tender extended'}],
+  spec:{context:'Section E4.2 Luminaires — Corridor and ward general lighting: recessed linear LED, 5000K, UGR<19, DALI-2 dimmable. Nominated: <mark>Xero Lighting XL-40 continuous run</mark> or approved equivalent. Emergency variants to AS 2293.', company:'Xero Lighting', product:'XL-40 continuous linear', dali:true, emergency:true, equiv:'approved equivalent wording present'},
+  truth:'Confirmed lighting match',
+  canned:{classification:'Confirmed lighting match', confidence:'High',
+    reasoning:'Xero Lighting is nominated by name and product code in the luminaire schedule with approved-equivalent wording, so a compliant Novon alternative can be offered to tendering electrical contractors before close. DALI-2 and AS 2293 emergency requirements match Novon capability.',
+    route:'Tender influence via electrical contractors', next:'Contact tendering ECs with equivalent submission before 31 Jul',
+    pos:['product code in luminaire schedule','approved equivalent wording','DALI-2 requirement'], exc:[]},
+  presumed:'Tender influence opportunity',
+  stakeholders:[
+   {role:'Architect', company:'Hartwell Cox Architects', hs:{match:'Existing company', owner:'Vincent'}, aff:null},
+   {role:'Electrical consultant', company:'Meridian Building Services', hs:{match:'Existing company', owner:'Vincent'}, aff:null},
+   {role:'Tendering builder', company:'Broadline Constructions', hs:{match:'No record'}, aff:null},
+   {role:'Electrical contractor (tendering)', company:'Calder Electrical Group', hs:{match:'Existing company', owner:'Vincent'},
+    aff:{status:'Active', type:'Electrical contractor', strength:'Strong', approach:'Coordinate before contact', owner:'Vincent', brands:['Linear lighting','Emergency']}}],
+  contacts:[
+   {name:'J. Chen', role:'Senior Electrical Engineer', company:'Meridian Building Services', src:'HubSpot', existing:true, email:'on record', verified:'2026-03-11'},
+   {name:'D. Okafor', role:'Estimating Manager', company:'Calder Electrical Group', src:'Lusha candidate', existing:false, revealEmail:'d.okafor@calderelec.com.au', revealPhone:'+61 2 9xxx xx41'},
+   {name:'S. Marinos', role:'Project Architect', company:'Hartwell Cox Architects', src:'Public source', existing:false, revealEmail:'s.marinos@hartwellcox.com.au', revealPhone:'+61 2 8xxx xx07'}]},
+
+ {id:'SS-1038', ref:'E1-883771', project:'Westmead Distribution Estate — Warehouse 4',
+  suburb:'Westmead', state:'NSW', sector:'Industrial', value:'$22m', stage:'Tendering',
+  tenderClose:'2026-08-14', keywords:['Austube'], alerts:[{date:'2026-07-02', kw:'Austube', st:'New tender'}],
+  spec:{context:'Section S3.1 Structural steel — Portal frame bracing: <mark>Austube Mills 88.9 CHS galvanised</mark> hollow sections to AS/NZS 1163, fabrication per schedule SD-12.', company:'Austube Mills', product:'88.9 CHS structural steel', dali:false, emergency:false, equiv:''},
+  truth:'Wrong company',
+  canned:{classification:'Wrong company', confidence:'High',
+    reasoning:'The Austube match sits inside the structural steel section and refers to Austube Mills hollow sections, not Austube Lighting. There is no luminaire context around the keyword. Recommend exclusion with retained evidence.',
+    route:'None — false positive', next:'Exclude with evidence retained',
+    pos:[], exc:['structural steel section','CHS / AS 1163 context','no luminaire wording']},
+  presumed:'Exclude', stakeholders:[
+   {role:'Tendering builder', company:'Ferrocourt Industrial', hs:{match:'No record'}, aff:null}], contacts:[]},
+
+ {id:'SS-1036', ref:'E1-883540', project:'Chatswood Commercial Tower — 12 Help St Refurb',
+  suburb:'Chatswood', state:'NSW', sector:'Commercial', value:'$61m', stage:'Design',
+  tenderClose:null, keywords:['mLight'], alerts:[{date:'2026-07-05', kw:'mLight', st:'Design documentation'}],
+  spec:{context:'Lighting design intent — Lobby feature: continuous suspended linear, 3000K, <mark>mLight M-Line 65</mark> profile indicated on RCP L-101. Final schedule pending consultant review.', company:'mLight', product:'M-Line 65 suspended linear', dali:true, emergency:false, equiv:'schedule not yet issued'},
+  truth:'Probable lighting match',
+  canned:{classification:'Probable lighting match', confidence:'Medium',
+    reasoning:'mLight appears on the reflected ceiling plan but the luminaire schedule is not yet issued, so the specification is still open to influence. The electrical consultant is probably still able to shape the nomination because the project remains in design documentation.',
+    route:'Designer / consultant engagement', next:'Approach lighting designer before schedule issue',
+    pos:['RCP reference','design stage'], exc:[]},
+  presumed:'Designer opportunity', stakeholders:[
+   {role:'Lighting designer', company:'Lumeva Design Studio', hs:{match:'Existing company', owner:'Vincent'}, aff:{status:'Prospective', type:'Lighting designer', strength:'Developing', approach:'Direct contact permitted', owner:'Vincent', brands:['Linear lighting']}},
+   {role:'Electrical consultant', company:'NorthPoint Consulting Engineers', hs:{match:'No record'}, aff:null}],
+  contacts:[
+   {name:'A. Rehman', role:'Lighting Designer', company:'Lumeva Design Studio', src:'Lusha candidate', existing:false, revealEmail:'a.rehman@lumeva.com.au', revealPhone:'+61 2 9xxx xx88'}]},
+
+ {id:'SS-1033', ref:'E1-883217', project:'Randwick Aged Care Redevelopment',
+  suburb:'Randwick', state:'NSW', sector:'Aged care', value:'$54m', stage:'Tendering',
+  tenderClose:'2026-07-25', keywords:['Xero'], alerts:[{date:'2026-07-01', kw:'Xero', st:'New tender'}],
+  spec:{context:'Section ICT-7 Operator systems — Facility management platform to integrate rostering and <mark>Xero payroll</mark> export; no lighting content in matched section.', company:'Xero (accounting)', product:'Payroll software', dali:false, emergency:false, equiv:''},
+  truth:'False positive',
+  canned:{classification:'False positive', confidence:'High',
+    reasoning:'The Xero reference is to accounting software inside the ICT operator-systems section. No luminaire or electrical services context surrounds the keyword. Exclusion recommended; the project itself may still carry lighting scope but this signal does not evidence it.',
+    route:'None — false positive', next:'Exclude with evidence retained',
+    pos:[], exc:['ICT section','payroll context','no luminaire wording']},
+  presumed:'Exclude', stakeholders:[], contacts:[]},
+
+ {id:'SS-1029', ref:'E1-882906', project:'Liverpool TAFE — Trade Skills Building',
+  suburb:'Liverpool', state:'NSW', sector:'Education', value:'$47m', stage:'Builder awarded',
+  tenderClose:'2026-06-12', keywords:['Austube'], alerts:[
+    {date:'2026-06-02', kw:'Austube', st:'New tender'},
+    {date:'2026-07-10', kw:'Austube', st:'Awarded'}],
+  spec:{context:'Section E4 Luminaires — Workshop high-bay and circulation: <mark>Austube Lighting AT-Linea 50</mark> surface linear, 4000K, DALI, workshop areas IK08. Emergency to AS 2293 throughout.', company:'Austube Lighting', product:'AT-Linea 50 surface linear', dali:true, emergency:true, equiv:'approved equivalent wording present'},
+  truth:'Confirmed lighting match',
+  canned:{classification:'Confirmed lighting match', confidence:'High',
+    reasoning:'Austube Lighting is named in the luminaire schedule and the builder has been awarded, so the opportunity has shifted from tender influence to a takeover conversation with the awarded builder and their electrical contractor, who is not yet identified.',
+    route:'Takeover via awarded builder → EC', next:'Identify awarded EC; prepare equivalent takeover pack',
+    pos:['luminaire schedule','awarded status'], exc:[]},
+  presumed:'Takeover opportunity', stakeholders:[
+   {role:'Awarded builder', company:'Stonebridge Projects', hs:{match:'Existing company', owner:'Vincent'}, aff:null},
+   {role:'Electrical contractor', company:'— not yet identified', hs:{match:'—'}, aff:null}],
+  contacts:[
+   {name:'R. Talbot', role:'Services Manager', company:'Stonebridge Projects', src:'Lusha candidate', existing:false, revealEmail:'r.talbot@stonebridgeprojects.com.au', revealPhone:'+61 2 9xxx xx19'}]},
+
+ {id:'SS-1027', ref:'E1-882650', project:'Green Square Community Hub',
+  suburb:'Green Square', state:'NSW', sector:'Civic', value:'$19m', stage:'Tendering',
+  tenderClose:'2026-08-05', keywords:['mLight'], alerts:[{date:'2026-07-06', kw:'mLight', st:'New tender'}],
+  spec:{context:'Addendum 02 — general note: "…coordinate all suspended services incl. <mark>mLight</mark> ref. drawings pending re-issue." Matched wording appears in an addendum without schedule context.', company:'Unclear', product:'Unclear', dali:false, emergency:false, equiv:''},
+  truth:'Uncertain',
+  canned:{classification:'Uncertain', confidence:'Low',
+    reasoning:'The mLight reference sits in an addendum note without a luminaire schedule, and the referenced drawings have not been re-issued yet. Identity is plausible but unverified — hold for review rather than exclude, and re-check when the addendum drawings arrive.',
+    route:'Hold — re-check on drawing re-issue', next:'Monitor for addendum drawing re-issue',
+    pos:['suspended services context'], exc:['no schedule','drawings pending']},
+  presumed:'Monitor', stakeholders:[
+   {role:'Electrical consultant', company:'Corella & Marsh', hs:{match:'No record'}, aff:null}], contacts:[]},
+
+ {id:'SS-1025', ref:'E1-882388', project:'Macarthur Retail Galleria — Mall Refurbishment',
+  suburb:'Campbelltown', state:'NSW', sector:'Retail', value:'$33m', stage:'Tender extended',
+  tenderClose:'2026-08-12', keywords:['Xero'], alerts:[
+    {date:'2026-06-24', kw:'Xero', st:'New tender'},
+    {date:'2026-07-14', kw:'Xero', st:'Tender extended'}],
+  spec:{context:'Section E4.3 — Mall circulation: recessed continuous linear, <mark>Xero Lighting XL-25 slot</mark>, 3500K, DALI broadcast groups per zone plan EZ-04.', company:'Xero Lighting', product:'XL-25 slot linear', dali:true, emergency:false, equiv:'no equivalent wording located'},
+  truth:'Confirmed lighting match',
+  canned:{classification:'Confirmed lighting match', confidence:'High',
+    reasoning:'Xero Lighting XL-25 is nominated in the mall circulation schedule. No approved-equivalent wording was located, so the route is influence through the consultant for substitution approval, with the extended tender window providing time to act.',
+    route:'Consultant substitution approval', next:'Request substitution consideration from consultant',
+    pos:['product code','zone plan reference'], exc:['no equivalent clause found']},
+  presumed:'Tender influence opportunity', stakeholders:[
+   {role:'Electrical consultant', company:'Meridian Building Services', hs:{match:'Existing company', owner:'Vincent'}, aff:null},
+   {role:'Tendering builder', company:'Ferrocourt Industrial', hs:{match:'No record'}, aff:null}],
+  contacts:[
+   {name:'J. Chen', role:'Senior Electrical Engineer', company:'Meridian Building Services', src:'HubSpot', existing:true, email:'on record', verified:'2026-03-11'}]},
+
+ {id:'SS-1022', ref:'E1-882101', project:'North Sydney Metro Podium — Lobby & Through-site Link',
+  suburb:'North Sydney', state:'NSW', sector:'Commercial', value:'$28m', stage:'Tendering',
+  tenderClose:'2026-07-27', keywords:['mLight','Xero'], alerts:[
+    {date:'2026-06-20', kw:'mLight', st:'New tender'},
+    {date:'2026-06-27', kw:'Xero', st:'Documents revised'}],
+  spec:{context:'Section E4.1 — Lobby: <mark>mLight M-Line 65</mark> suspended feature runs. Section E4.4 — Through-site link: <mark>Xero Lighting XL-40</mark> recessed continuous, emergency variants to AS 2293. Approved equivalents will be considered.', company:'mLight; Xero Lighting', product:'M-Line 65; XL-40', dali:true, emergency:true, equiv:'approved equivalents considered'},
+  truth:'Confirmed lighting match',
+  canned:{classification:'Confirmed lighting match', confidence:'High',
+    reasoning:'Two competitor nominations in one project with explicit equivalents wording makes this the strongest signal in the replay set: a single Novon equivalent submission can address both schedules, and the tender closes within days so it is an act-now opportunity.',
+    route:'Tender influence via ECs — combined equivalent pack', next:'Act now: combined equivalents submission before 27 Jul',
+    pos:['two schedules','equivalents wording','emergency scope'], exc:[]},
+  presumed:'Active conversion opportunity', stakeholders:[
+   {role:'Architect', company:'Hartwell Cox Architects', hs:{match:'Existing company', owner:'Vincent'}, aff:null},
+   {role:'Electrical contractor (tendering)', company:'Calder Electrical Group', hs:{match:'Existing company', owner:'Vincent'},
+    aff:{status:'Active', type:'Electrical contractor', strength:'Strong', approach:'Coordinate before contact', owner:'Vincent', brands:['Linear lighting','Emergency']}}],
+  contacts:[
+   {name:'D. Okafor', role:'Estimating Manager', company:'Calder Electrical Group', src:'Lusha candidate', existing:false, revealEmail:'d.okafor@calderelec.com.au', revealPhone:'+61 2 9xxx xx41'}]}
+];
+
+/* replay-level static counts (mocked collection results) */
+const REPLAY = { emailsEligible:49, emailsExtracted:47, qAccessible:47, qLinked:43, alertsTotal:13, uniqueProjects:8, dupErrors:0, hsChecked:8 };
+
+/* ================= STATE ================= */
+const S = {
+  tab:'queue', sel:'SS-1041', ai:true, credits:42, queueFilter:'All',
+  triage:{},            // id -> 'a'|'r'|'u'
+  assess:{},            // id -> {..result, src:'ai'|'canned'|'manual', accepted:bool}
+  corrections:[],       // {id, prev, corrected, reason, date}
+  reveals:[],           // {contact, kind, cost, project, reason, date}
+  pushes:{},            // id -> 'approved'
+  overrides:[]          // affiliate overrides log
+};
+/* queues per §18.1 */
+function queueOf(sg){
+  const a=S.assess[sg.id]; const cls=a?a.classification:null; const tr=S.triage[sg.id];
+  if(S.pushes[sg.id]) return 'Transferred';
+  if(tr==='r' || (cls&&['Wrong company','Wrong product category','False positive'].includes(cls))) return 'Rejected / false positive';
+  if(cls==='Uncertain' || !cls) return 'Review required';
+  if(sg.presumed==='Monitor') return 'Monitor';
+  const u=urgency(sg).band;
+  if((u==='Immediate'||u==='Near') && cls.startsWith('Confirmed')) return 'Act now';
+  return 'Research next';
+}
+const QUEUES=['All','Act now','Research next','Monitor','Review required','Rejected / false positive','Transferred'];
+
+/* ================= HELPERS ================= */
+const $ = id=>document.getElementById(id);
+const esc = s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._x); t._x=setTimeout(()=>t.classList.remove('show'),2600); }
+function sig(){ return SIGNALS.find(s=>s.id===S.sel); }
+function confTag(c){ const cl=c==='High'?'high':c==='Medium'?'medium':'low'; return '<span class="lum '+cl+'" title="Confidence: '+c+'"></span> <b>'+c+'</b>'; }
+function clsTag(c){
+  if(!c) return '<span class="tag">Unassessed</span>';
+  if(c.startsWith('Confirmed')) return '<span class="tag good">'+c+'</span>';
+  if(c.startsWith('Probable')) return '<span class="tag blue">'+c+'</span>';
+  if(c==='Uncertain') return '<span class="tag warn">Uncertain</span>';
+  return '<span class="tag bad">'+c+'</span>';
+}
+function urgTag(sg){ const u=urgency(sg); return '<span class="tag '+u.cls+'" title="Urgency ≠ confidence · a passed tender window is a changed sales route, not a dead project (§13.4)">'+u.band+' · '+u.note+'</span>'; }
+
+function openDrawer(html){ $('drawerbody').innerHTML=html; $('drawer').classList.add('open'); }
+function closeDrawer(){ $('drawer').classList.remove('open'); }
+function evidence(o){
+  openDrawer(
+   '<div class="evfield"><div class="k">Conclusion</div><div class="v">'+o.conclusion+'</div></div>'+
+   '<div class="evfield"><div class="k">Fact type</div><div class="v">'+o.type+'</div></div>'+
+   '<div class="evfield"><div class="k">Confidence</div><div class="v">'+confTag(o.conf)+'</div></div>'+
+   '<div class="evfield"><div class="k">Evidence source</div><div class="v">'+o.source+'</div></div>'+
+   '<div class="evfield"><div class="k">Location / link</div><div class="v mono">'+o.link+'</div></div>'+
+   '<div class="evfield"><div class="k">Date checked</div><div class="v mono">'+o.date+'</div></div>'+
+   '<div class="evfield"><div class="k">Rule / interpretation used</div><div class="v">'+o.rule+'</div></div>'+
+   (o.correction?'<div class="evfield"><div class="k">User correction</div><div class="v">'+o.correction+'</div></div>':'')+
+   '<div class="help" style="margin-top:14px">Every material conclusion carries this record (§15). It travels with the deal to HubSpot as source evidence.</div>');
+}
+function ev(sg, conclusion, type, conf, source, rule){
+  return "evidence({conclusion:'"+conclusion.replace(/'/g,"\\'")+"',type:'"+type+"',conf:'"+conf+"',source:'"+source+"',link:'estimateone.com/project/"+sg.ref+"',date:'2026-07-21',rule:'"+rule.replace(/'/g,"\\'")+"'})";
+}
+function modal(html){ $('modal').innerHTML=html; $('mback').classList.add('open'); }
+function closeModal(){ $('mback').classList.remove('open'); }
+$('mback').addEventListener('click',e=>{ if(e.target.id==='mback') closeModal(); });
+
+function setTab(t){ S.tab=t; document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===t)); render(); }
+function selectSig(id, goto){ S.sel=id; if(goto) setTab('opp'); else render(); }
+function toggleAI(){ S.ai=!S.ai; $('aiswitch').classList.toggle('on',S.ai); toast(S.ai?'AI assist on — suggestions appear as chips beside fields':'AI assist off — same workbench, manual fields only'); render(); }
+
+/* ================= RENDER ================= */
+function render(){
+  const c=$('content');
+  $('creditval').textContent=S.credits;
+  $('creditbox').classList.toggle('low',S.credits<15);
+  if(S.tab==='queue') c.innerHTML=rQueue();
+  else if(S.tab==='opp') c.innerHTML=rOpp();
+  else if(S.tab==='enrich') c.innerHTML=rEnrich();
+  else if(S.tab==='push') c.innerHTML=rPush();
+  else c.innerHTML=rScore();
+}
+
+/* ---------- QUEUE ---------- */
+function setQF(q){ S.queueFilter=q; render(); }
+function rQueue(){
+  const counts={}; SIGNALS.forEach(s=>{ const q=queueOf(s); counts[q]=(counts[q]||0)+1; });
+  const noise=counts['Rejected / false positive']||0;
+  const shown=SIGNALS.filter(sg=> S.queueFilter==='All' || queueOf(sg)===S.queueFilter);
+  let rows='';
+  shown.forEach(sg=>{
+    const a=S.assess[sg.id]; const tr=S.triage[sg.id];
+    rows+='<div class="qrow'+(sg.id===S.sel?' sel':'')+'" onclick="selectSig(\''+sg.id+'\',true)">'
+     +'<div class="mono muted">'+sg.id+'</div>'
+     +'<div><div class="pj">'+esc(sg.project)+'</div><div class="sub">'+sg.suburb+' '+sg.state+' · '+sg.sector+' · '+sg.value+' · '+sg.alerts.length+' alert'+(sg.alerts.length>1?'s consolidated':'')+'</div></div>'
+     +'<div>'+sg.keywords.map(k=>'<span class="tag kw">'+k+'</span>').join(' ')+'</div>'
+     +'<div>'+clsTag(a?a.classification:null)+'</div>'
+     +'<div>'+urgTag(sg)+'</div>'
+     +'<div class="tributt" onclick="event.stopPropagation()">'
+       +'<button class="tri'+(tr==='a'?' on-a':'')+'" title="Agree — relevant" onclick="triage(\''+sg.id+'\',\'a\')">A</button>'
+       +'<button class="tri'+(tr==='r'?' on-r':'')+'" title="Reject — not relevant" onclick="triage(\''+sg.id+'\',\'r\')">R</button>'
+       +'<button class="tri'+(tr==='u'?' on-u':'')+'" title="Uncertain — keep visible" onclick="triage(\''+sg.id+'\',\'u\')">U</button>'
+       +'<button class="btn sm ghost" onclick="selectSig(\''+sg.id+'\',true)">Open</button>'
+     +'</div></div>';
+  });
+  const reviewed=Object.keys(S.triage).length;
+  const filters='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">'+QUEUES.map(q=>{
+    const n=q==='All'?SIGNALS.length:(counts[q]||0);
+    return '<button class="btn sm'+(S.queueFilter===q?' primary':'')+'" onclick="setQF(\''+q+'\')">'+q+' <span class="mono">'+n+'</span></button>';
+  }).join('')+'</div>';
+  const noiseBanner = noise? '<div class="banner go" style="margin-bottom:12px">◐ Noise filter — '+noise+' of '+SIGNALS.length+' signals identified as false positive / wrong company and kept out of your working queues. Evidence retained, nothing deleted — open the Rejected queue to audit every exclusion (§17, §20.4).</div>':'';
+  return noiseBanner + filters + '<div class="card"><div class="chd"><h3>'+(S.queueFilter==='All'?'Historical replay queue':S.queueFilter+' queue')+' — '+SIGNALS.length+' consolidated projects · showing '+shown.length+'</h3>'
+   +'<span class="help" style="margin-left:auto">Triage: <kbd>A</kbd> agree · <kbd>R</kbd> reject · <kbd>U</kbd> uncertain on selected row, <kbd>J</kbd>/<kbd>K</kbd> to move · '+reviewed+'/'+SIGNALS.length+' reviewed (feeds criterion C)</span></div>'
+   +'<div class="qhead"><div>Signal</div><div>Project</div><div>Keyword</div><div>Classification</div><div>Urgency</div><div>Triage</div></div>'
+   +rows+'</div>'
+   +(S.ai?'<div class="card"><div class="cbd" style="display:flex;align-items:center;gap:12px"><span class="tag kw">AI</span><div style="flex:1">Assess all unassessed signals against §8 classification outcomes. Results appear as suggestion chips on each opportunity — nothing is accepted or hidden without you.</div><button class="btn primary" onclick="assessAll(this)">Assess all with AI</button></div></div>'
+     :'<div class="card"><div class="cbd help">AI assist is off. The queue works identically — classify each signal manually from its Opportunity view. Turning AI on only adds suggestion chips; it never changes what you can do.</div></div>');
+}
+function triage(id,v){
+  S.triage[id] = (S.triage[id]===v)? undefined : v;
+  if(S.triage[id]===undefined) delete S.triage[id];
+  const a=S.assess[id];
+  if(v==='r' && a && (a.classification.startsWith('Confirmed')||a.classification.startsWith('Probable'))) { correctionDialog(id,'Rejected at triage'); }
+  render();
+}
+document.addEventListener('keydown',e=>{
+  if(S.tab!=='queue' || $('mback').classList.contains('open')) return;
+  const idx=SIGNALS.findIndex(s=>s.id===S.sel);
+  if(e.key==='j'||e.key==='J'){ S.sel=SIGNALS[Math.min(idx+1,SIGNALS.length-1)].id; render(); }
+  if(e.key==='k'||e.key==='K'){ S.sel=SIGNALS[Math.max(idx-1,0)].id; render(); }
+  if(e.key==='a'||e.key==='A') triage(S.sel,'a');
+  if(e.key==='r'||e.key==='R') triage(S.sel,'r');
+  if(e.key==='u'||e.key==='U') triage(S.sel,'u');
+  if(e.key==='Enter') selectSig(S.sel,true);
+});
+/* ---------- OPPORTUNITY ---------- */
+function rOpp(){
+  const sg=sig(); const a=S.assess[sg.id];
+  const evAttr=(con,ty,cf,src,rl)=>ev(sg,con,ty,cf,src,rl);
+  let chip='';
+  if(a && !a.accepted && a.src!=='manual'){
+    chip='<div class="chip"><div class="chl"><span class="sp"></span>'+(a.src==='ai'?'AI suggestion — live Claude assessment':'AI suggestion — demo fallback')+'</div>'
+     +'<div class="chb">'+clsTag(a.classification)+' &nbsp;'+confTag(a.confidence)
+     +'<div class="mono muted" style="margin-top:6px">route: '+esc(a.route)+' · next: '+esc(a.next)+'</div></div>'
+     +'<div class="cha"><button class="btn sm primary" onclick="acceptAssess(\''+sg.id+'\')">Accept</button>'
+     +'<button class="btn sm" onclick="editAssess(\''+sg.id+'\')">Edit</button>'
+     +'<button class="btn sm" onclick="correctionDialog(\''+sg.id+'\',\'Chip rejected\')">Reject</button></div></div>'
+     +'<div class="card" style="margin-top:8px;margin-bottom:0"><div class="chd"><h3>Review panel — commercial reasoning</h3><span class="help" style="margin-left:auto">'+(a.src==='ai'?'AI proposal — live':'AI proposal — demo fallback')+' · not a confirmed fact (§6.2)</span></div><div class="cbd" style="font-size:13px">'+esc(a.reasoning)+'</div></div>';
+  }
+  const accepted = a && a.accepted;
+  return '<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">'
+   +'<span class="mono muted">'+sg.id+' · <span class="evlink" onclick="'+evAttr('EstimateOne project reference '+sg.ref,'Confirmed','High','LB alert email 2026-06-30','Reference extraction')+'">'+sg.ref+'</span></span>'
+   +'<h2 style="font-size:16px">'+esc(sg.project)+'</h2>'
+   +urgTag(sg)+'<span class="tag">'+sg.stage+'</span>'
+   +(S.ai&&!a?'<button class="btn amber sm" style="margin-left:auto" id="assessbtn" onclick="assessOne(\''+sg.id+'\',this)">Assess with AI</button>':'')
+   +'</div>'
+   +'<div class="cols"><div>'
+
+   +'<div class="card"><div class="chd"><h3>Classification — §8</h3><span class="help" style="margin-left:auto">A keyword is never accepted or excluded on text alone</span></div><div class="cbd">'
+   +'<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span class="muted" style="font-size:12px">Current:</span>'
+   + (accepted? clsTag(a.classification)+' '+confTag(a.confidence)+' <span class="mono faint">'+(a.src==='manual'?'set manually':'accepted from '+(a.src==='ai'?'AI':'suggestion'))+' · 2026-07-21</span>'
+             : '<span class="tag">Unassessed</span>')
+   +'<button class="btn sm ghost" style="margin-left:auto" onclick="editAssess(\''+sg.id+'\')">'+(accepted?'Change (opens correction)':'Classify manually')+'</button></div>'
+   + chip
+   +'</div></div>'
+
+   +'<div class="card"><div class="chd"><h3>Specification evidence</h3><span class="help" style="margin-left:auto">Matched wording highlighted · click any conclusion for its evidence record</span></div><div class="cbd">'
+   +'<div class="spec">'+sg.spec.context+'</div>'
+   +'<div class="kv" style="margin-top:12px">'
+   +'<div class="k">Specified company</div><div><span class="evlink" onclick="'+evAttr('Specified company: '+sg.spec.company,'Confirmed','High','E1 tender documents §E4','Keyword context interpretation')+'">'+esc(sg.spec.company)+'</span></div>'
+   +'<div class="k">Specified product</div><div>'+esc(sg.spec.product)+'</div>'
+   +'<div class="k">DALI / controls</div><div>'+(sg.spec.dali?'Required':'Not indicated')+'</div>'
+   +'<div class="k">Emergency</div><div>'+(sg.spec.emergency?'AS 2293 scope present':'Not indicated')+'</div>'
+   +'<div class="k">Equivalents</div><div>'+(sg.spec.equiv||'—')+'</div>'
+   +'</div></div></div>'
+
+   +'<div class="card"><div class="chd"><h3>Stakeholders</h3></div><div class="cbd" style="padding-top:6px">'
+   +'<table class="t"><tr><th>Role</th><th>Company</th><th>HubSpot</th><th>Affiliate</th></tr>'
+   + sg.stakeholders.map(st=>'<tr><td>'+st.role+'</td>'
+     +'<td><span class="evlink" onclick="'+evAttr(st.role+': '+st.company,'Inferred','Medium','E1 project directory + Q account view','Role extraction from project directory')+'">'+esc(st.company)+'</span></td>'
+     +'<td>'+(st.hs.match==='Existing company'?'<span class="tag blue">Existing · owner '+st.hs.owner+'</span>':'<span class="tag">'+st.hs.match+'</span>')+'</td>'
+     +'<td>'+(st.aff?'<span class="tag '+(st.aff.approach==='Coordinate before contact'?'warn':'good')+'" title="'+st.aff.approach+'">'+st.aff.status+' · '+st.aff.strength+'</span>':'—')+'</td></tr>').join('')
+   +'</table>'
+   +(sg.stakeholders.some(st=>st.aff)?'<div class="help" style="margin-top:8px">Affiliate engagement approach fires again at the moment of action — contact reveal and HubSpot push (§11).</div>':'')
+   +'</div></div>'
+
+   +'<div class="card"><div class="chd"><h3>Alert history — consolidated</h3></div><div class="cbd" style="padding-top:6px">'
+   +'<table class="t"><tr><th>Date</th><th>Keyword</th><th>Status change</th></tr>'
+   + sg.alerts.map(al=>'<tr><td class="mono">'+al.date+'</td><td><span class="tag kw">'+al.kw+'</span></td><td>'+al.st+'</td></tr>').join('')
+   +'</table><div class="help" style="margin-top:8px">'+sg.alerts.length+' alert'+(sg.alerts.length>1?'s':'')+' → 1 opportunity. A new alert updates this record — it never proposes a second deal (§3).</div></div></div>'
+
+   +'</div><div>'  /* right rail */
+
+   +'<div class="card"><div class="chd"><h3>Presumed commercial status — §16</h3></div><div class="cbd">'
+   +'<div style="font-size:15px;font-weight:700;margin-bottom:6px"><span class="evlink" onclick="'+evAttr('Presumed status: '+sg.presumed,'Inferred', a?a.confidence:'Medium','Assessment of stage + specification evidence','§16 presumed-status rules'+(a&&a.src==='ai'?' + AI interpretation':''))+'">'+sg.presumed+'</span></div>'
+   +'<div class="kv" style="grid-template-columns:96px 1fr">'
+   +'<div class="k">Confirmed stage</div><div>'+sg.stage+'</div>'
+   +'<div class="k">Urgency</div><div>'+urgTag(sg)+'</div>'
+   +'<div class="k">Confidence</div><div>'+(a?confTag(a.confidence):'<span class="faint">assess first</span>')+'</div>'
+   +'<div class="k">Sales route</div><div>'+(a?esc(a.route):'<span class="faint">—</span>')+'</div>'
+   +'<div class="k">Next action</div><div>'+(a?esc(a.next):'<span class="faint">—</span>')+'</div>'
+   +'<div class="k">Assessed</div><div class="mono">'+(a?'2026-07-21':'—')+'</div>'
+   +'</div><div class="help" style="margin-top:10px">Urgency and confidence answer different questions — how long we have vs how sure we are. They are never blended.</div></div></div>'
+
+   +'<div class="card"><div class="chd"><h3>Workflow</h3></div><div class="cbd">'
+   +'<div class="kv" style="grid-template-columns:110px 1fr"><div class="k">Qualification</div><div>'+(S.pushes[sg.id]?'Accepted for sales':(accepted?'Ready for engagement':(a?'Under review':'New signal')))+'</div>'
+   +'<div class="k">Triage</div><div>'+({a:'Agreed relevant',r:'Rejected',u:'Uncertain — kept visible'}[S.triage[sg.id]]||'Not triaged')+'</div></div>'
+   +'<div style="display:flex;gap:7px;margin-top:12px;flex-wrap:wrap">'
+   +'<button class="btn sm" onclick="setTab(\'enrich\')">Contacts →</button>'
+   +'<button class="btn sm" onclick="setTab(\'push\')">HubSpot package →</button></div>'
+   +'</div></div>'
+
+   + (S.corrections.filter(x=>x.id===sg.id).length?
+     '<div class="card"><div class="chd"><h3>Corrections on this signal</h3></div><div class="cbd" style="font-size:12.5px">'
+     + S.corrections.filter(x=>x.id===sg.id).map(x=>'<div style="margin-bottom:8px"><span class="tag warn">User-corrected</span> '+esc(x.prev)+' → <b>'+esc(x.corrected)+'</b><div class="muted">'+esc(x.reason)+' · in correction corpus — not a rule (§10.3)</div></div>').join('')
+     +'</div></div>':'')
+
+   +'</div></div>';
+}
+function acceptAssess(id){ S.assess[id].accepted=true; toast('Classification accepted — recorded with evidence and date'); render(); }
+function editAssess(id){
+  const a=S.assess[id]; const opts=['Confirmed lighting match','Probable lighting match','Uncertain','Wrong company','Wrong product category','False positive'];
+  modal('<div class="mhd">'+(a?'Change classification':'Classify manually')+'</div><div class="mbd">'
+   +'<div class="fld"><label>Classification</label><select id="m_cls">'+opts.map(o=>'<option'+(a&&a.classification===o?' selected':'')+'>'+o+'</option>').join('')+'</select></div>'
+   +'<div class="fld"><label>Confidence</label><select id="m_conf"><option>High</option><option'+(a&&a.confidence==='Medium'?' selected':'')+'>Medium</option><option'+(a&&a.confidence==='Low'?' selected':'')+'>Low</option></select></div>'
+   +'<div class="fld"><label>Sales route</label><input id="m_route" value="'+(a?esc(a.route):'')+'"></div>'
+   +'<div class="fld"><label>Next action</label><input id="m_next" value="'+(a?esc(a.next):'')+'"></div>'
+   +'</div><div class="mft"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="saveManual(\''+id+'\')">Save</button></div>');
+}
+function saveManual(id){
+  const prev=S.assess[id];
+  const nv={classification:$('m_cls').value, confidence:$('m_conf').value, route:$('m_route').value, next:$('m_next').value, reasoning:(prev?prev.reasoning:'Set manually'), src:'manual', accepted:true};
+  closeModal();
+  if(prev && prev.classification!==nv.classification){ S.assess[id]=nv; correctionDialog(id,'Changed from '+prev.classification, prev.classification); return; }
+  S.assess[id]=nv; toast('Saved'); render();
+}
+/* correction dialog — §8 UI contract: opens at moment of override, <15s, only 2 mandatory fields */
+function correctionDialog(id, trigger, prevOverride){
+  const sg=SIGNALS.find(s=>s.id===id); const a=S.assess[id];
+  const prev = prevOverride || (a?a.classification:'(unassessed)');
+  const opts=['Confirmed lighting match','Probable lighting match','Uncertain','Wrong company','Wrong product category','False positive'];
+  modal('<div class="mhd">Correction — '+sg.id+'<span class="help" style="margin-left:auto;font-weight:400">under 15 seconds · enters correction corpus — never auto-promoted to a rule (§10)</span></div><div class="mbd">'
+   +'<div class="kv" style="grid-template-columns:140px 1fr;margin-bottom:12px"><div class="k">Trigger</div><div>'+esc(trigger)+'</div><div class="k">Previous interpretation</div><div>'+clsTag(prev)+'</div></div>'
+   +'<div class="fld"><label>Corrected interpretation <span class="req">*</span></label><select id="c_new">'+opts.map(o=>'<option>'+o+'</option>').join('')+'</select></div>'
+   +'<div class="fld"><label>Reason category <span class="req">*</span></label><select id="c_why"><option>Wrong company context</option><option>Wrong product category</option><option>Software, not lighting</option><option>Structural steel, not lighting</option><option>Insufficient evidence</option><option>Identity ambiguous</option><option>Other</option></select></div>'
+   +'<div class="fld"><label>Note <span class="faint">(optional)</span></label><input id="c_note" placeholder="e.g. keyword sits in structural steel section"></div>'
+   +'<div class="fld"><label>Correct company / product <span class="faint">(optional)</span></label><input id="c_co"></div>'
+   +'<div class="fld"><label>Positive indicators <span class="faint">(optional)</span></label><input id="c_pos" placeholder="wording that should raise future scores"></div>'
+   +'<div class="fld"><label>Exclusion indicators <span class="faint">(optional)</span></label><input id="c_exc" placeholder="wording that should lower future scores"></div>'
+   +'<div class="fld" style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="c_fut" checked style="width:auto"><label style="margin:0">May influence later assessments (never a silent permanent exclusion)</label></div>'
+   +'</div><div class="mft"><button class="btn" onclick="skipCorrection(\''+id+'\',\''+esc(prev)+'\')">Skip — record minimal</button><button class="btn primary" onclick="saveCorrection(\''+id+'\',\''+esc(prev)+'\')">Save correction</button></div>');
+}
+function saveCorrection(id, prev){
+  const nv=$('c_new').value, why=$('c_why').value+($('c_note').value?' — '+$('c_note').value:'');
+  S.corrections.push({id, prev, corrected:nv, reason:why, date:'2026-07-21'});
+  S.assess[id]={classification:nv, confidence:'High', route:S.assess[id]?S.assess[id].route:'—', next:'Re-assessed after correction', reasoning:'User-corrected: '+why, src:'manual', accepted:true};
+  closeModal(); toast('Correction saved to corpus — auditable; rule promotion needs review + testing (§10.3)'); render();
+}
+function skipCorrection(id, prev){
+  S.corrections.push({id, prev, corrected:'(override only)', reason:'Reason not supplied — not eligible for rule promotion', date:'2026-07-21'});
+  closeModal(); toast('Recorded: reason not supplied — not eligible for rule promotion'); render();
+}
+/* ---------- ENRICHMENT ---------- */
+function rEnrich(){
+  const sg=sig();
+  if(!sg.contacts.length) return '<div class="card"><div class="cbd">No contact candidates for <b>'+esc(sg.project)+'</b> — '+(sg.presumed==='Exclude'?'signal is excluded; enrichment is not offered for excluded signals.':'identify stakeholders first, or pick another signal from the queue.')+'</div></div>';
+  let rows='';
+  sg.contacts.forEach((ct,i)=>{
+    const rev = k=>S.reveals.find(r=>r.contact===ct.name&&r.kind===k&&r.project===sg.id);
+    const affWarn = sg.stakeholders.find(st=>st.company===ct.company && st.aff && st.aff.approach==='Coordinate before contact');
+    rows+='<tr><td><b>'+esc(ct.name)+'</b><div class="muted">'+ct.role+'</div></td><td>'+esc(ct.company)
+     +(affWarn?'<div><span class="tag warn" style="margin-top:3px">Coordinate before contact · owner '+affWarn.aff.owner+'</span></div>':'')+'</td>'
+     +'<td>'+(ct.existing?'<span class="tag blue">HubSpot existing</span>':'<span class="tag">'+ct.src+'</span>')+'</td>'
+     +'<td class="mono">'+(ct.existing?('email '+ct.email+' · verified '+ct.verified)
+        : (rev('email')? rev('email').val+' <span class="faint">· Lusha · verified 2026-07-21</span>'
+           :'<button class="btn sm" onclick="revealAsk('+i+',\'email\')">Reveal email · 1 cr</button>')
+          +' '+(rev('phone')? '<div>'+rev('phone').val+' <span class="faint">· Lusha</span></div>'
+           :(ct.existing?'':'<button class="btn sm" onclick="revealAsk('+i+',\'phone\')">Reveal phone · 10 cr</button>')))+'</td>'
+     +'<td><span class="evlink" onclick="'+ev(sg,'Contact proposed: '+ct.name+' ('+ct.role+')','Inferred','Medium', ct.existing?'HubSpot contact record':ct.src, 'Role relevance to sales route: '+(S.assess[sg.id]?S.assess[sg.id].route:'route pending'))+'">reason</span></td></tr>';
+  });
+  return '<div class="card"><div class="chd"><h3>Contact candidates — '+esc(sg.project)+'</h3>'
+   +'<span class="help" style="margin-left:auto">HubSpot existing contacts preferred (§14) · balance <b class="mono">'+S.credits+'</b> credits · email 1 cr, phone 10 cr</span></div>'
+   +'<div class="cbd" style="padding-top:6px"><table class="t"><tr><th>Person</th><th>Company</th><th>Source</th><th>Detail</th><th>Why</th></tr>'+rows+'</table>'
+   +'<div class="help" style="margin-top:10px">No automatic or bulk reveals during Historical Replay. Every reveal records project, reason, cost and date (§14, §18-G).</div></div></div>'
+   + (S.reveals.length? '<div class="card"><div class="chd"><h3>Reveal log</h3></div><div class="cbd" style="padding-top:6px"><table class="t"><tr><th>Date</th><th>Contact</th><th>Kind</th><th>Cost</th><th>Project</th><th>Reason</th></tr>'
+      + S.reveals.map(r=>'<tr><td class="mono">'+r.date+'</td><td>'+r.contact+'</td><td>'+r.kind+'</td><td class="mono">'+r.cost+' cr</td><td class="mono">'+r.project+'</td><td>'+esc(r.reason)+'</td></tr>').join('')+'</table></div></div>':'');
+}
+function revealAsk(i, kind){
+  const sg=sig(); const ct=sg.contacts[i]; const cost=kind==='phone'?10:1;
+  const affWarn = sg.stakeholders.find(st=>st.company===ct.company && st.aff && st.aff.approach==='Coordinate before contact');
+  modal('<div class="mhd">Confirm Lusha reveal</div><div class="mbd">'
+   +(affWarn?'<div class="banner rev" style="margin-bottom:14px;font-size:13px">⚠ '+esc(ct.company)+' contact policy: <b>Coordinate before contact — acknowledge and coordinate with '+affWarn.aff.owner+' before contact</b> (§11). Revealing requires this acknowledgement; contacting without coordination is not permitted (§14.3).</div>':'')
+   +'<div class="kv" style="grid-template-columns:130px 1fr">'
+   +'<div class="k">Contact</div><div>'+esc(ct.name)+' — '+ct.role+', '+esc(ct.company)+'</div>'
+   +'<div class="k">Reveal</div><div>'+kind+'</div>'
+   +'<div class="k">Cost</div><div class="mono">'+cost+' credit'+(cost>1?'s':'')+' · balance '+S.credits+' → '+(S.credits-cost)+'</div>'
+   +'<div class="k">Project</div><div class="mono">'+sg.id+' '+esc(sg.project)+'</div></div>'
+   +'<div class="fld" style="margin-top:12px"><label>Reason <span class="req">*</span></label><select id="rv_why"><option>Tender influence contact</option><option>Takeover route contact</option><option>Designer engagement</option><option>Affiliate coordination</option></select></div>'
+   +'</div><div class="mft"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="doReveal('+i+',\''+kind+'\')">Reveal — '+cost+' cr</button></div>');
+}
+function doReveal(i, kind){
+  const sg=sig(); const ct=sg.contacts[i]; const cost=kind==='phone'?10:1;
+  S.credits-=cost;
+  S.reveals.push({contact:ct.name, kind, cost, project:sg.id, reason:$('rv_why').value, date:'2026-07-21', val: kind==='email'?ct.revealEmail:ct.revealPhone});
+  closeModal(); toast(kind+' revealed · '+cost+' credit'+(cost>1?'s':'')+' used — logged with project and reason'); render();
+}
+
+/* ---------- HUBSPOT PUSH ---------- */
+function rPush(){
+  const sg=sig(); const a=S.assess[sg.id]; const pushed=S.pushes[sg.id];
+  const affWarn = sg.stakeholders.find(st=>st.aff && st.aff.approach==='Coordinate before contact');
+  if(sg.presumed==='Exclude') return '<div class="card"><div class="cbd">This signal is classified '+clsTag(a?a.classification:'False positive')+' — no deal package is prepared. The exclusion and its evidence are retained (§15) and visible from the queue.</div></div>';
+  const dealName = sg.project.split('—')[0].trim()+' — Lighting package';
+  return '<div class="cols"><div>'
+   +'<div class="card"><div class="chd"><h3>Prepared deal package — lookup-only until approval</h3></div><div class="cbd">'
+   +'<div class="kv"><div class="k">Deal name</div><div id="dealname"><b>'+esc(dealName)+'</b></div>'
+   +'<div class="k">Destination</div><div>HubSpot <b>Lead</b> if entitled (gate §7.3) → Deal on sales acceptance<div class="help">research deal pipeline is the fallback only · excluded from forecast reporting (§15.2)</div></div>'
+   +'<div class="k">Stage</div><div>'+(pushed?'Accepted for sales → Transferred':'Ready for engagement')+'</div>'
+   +'<div class="k">Source</div><div class="mono">EstimateOne · '+sg.ref+' · user Patrick</div>'
+   +'<div class="k">Evidence</div><div>Classification, spec evidence, confidence and corrections travel with the deal (§15)</div></div>'
+   +'<div id="aisum" style="margin-top:10px"></div>'
+   +(S.ai&&!pushed?'<button class="btn sm" style="margin-top:10px" onclick="aiDeal(this)">Draft deal summary with AI</button>':'')
+   +'</div></div>'
+   +'<div class="card"><div class="chd"><h3>Pre-push checks — §13</h3></div><div class="cbd" style="padding-top:6px"><table class="t"><tr><th>Record</th><th>Match</th><th>Action</th></tr>'
+   + sg.stakeholders.filter(st=>st.company.indexOf('not yet')<0).map(st=>'<tr><td>'+esc(st.company)+'</td>'
+     +'<td>'+(st.hs.match==='Existing company'?'<span class="tag blue">Existing — domain match</span>':'<span class="tag">No record</span>')+'</td>'
+     +'<td>'+(st.hs.match==='Existing company'?'Associate · owner <b>'+st.hs.owner+'</b> respected, not overwritten':'Create on approval · owner via HubSpot round-robin')+'</td></tr>').join('')
+   +'<tr><td>Deal duplicate check</td><td><span class="tag good">No active deal found</span></td><td>Safe to propose — one active deal per opportunity (§12)</td></tr></table></div></div>'
+   +'</div><div>'
+   +'<div class="card"><div class="chd"><h3>Approval</h3></div><div class="cbd">'
+   +(affWarn?'<div class="banner rev" style="font-size:12.5px;padding:10px 12px">⚠ Package involves affiliate '+esc(affWarn.company)+' — coordinate with '+affWarn.aff.owner+' (§11).</div>':'')
+   +(pushed
+     ? '<div class="banner go" style="margin:0">✓ Package approved — queued for HubSpot push.<br><span style="font-weight:400;font-size:12px">Live write is gated during Historical Replay (§21). Research record will close as Transferred.</span></div>'
+     : '<p style="font-size:12.5px;margin-bottom:10px">No live HubSpot write occurs without this approval. ControlStack sends source user and evidence; it never invents the final salesperson.</p>'
+       +'<button class="btn primary" style="width:100%" '+(a&&a.accepted?'':'disabled title="Accept a classification first"')+' onclick="approvePush()">Approve deal package</button>'
+       +(a&&a.accepted?'':'<div class="help" style="margin-top:7px">Requires an accepted classification.</div>'))
+   +'</div></div></div></div>';
+}
+function approvePush(){ S.pushes[S.sel]='approved'; toast('Approved — queued. Live CRM write stays gated until the scoreboard passes.'); render(); }
+/* ---------- SCOREBOARD ---------- */
+function pct(a,b){ return b? Math.round(1000*a/b)/10 : 0; }
+function sRow(label, val, target, pass, extra){
+  return '<div class="scorerow"><div class="lbl">'+label+(extra?'<div class="help">'+extra+'</div>':'')+'</div>'
+   +'<div class="bar'+(pass?'':' f')+'"><i style="width:'+Math.min(100,val)+'%"></i></div>'
+   +'<div class="val">'+val+'% / '+target+'%</div>'
+   +(pass?'<span class="tag good">Pass</span>':'<span class="tag bad">Below</span>')+'</div>';
+}
+function rScore(){
+  const reviewed=Object.keys(S.triage).length;
+  const agree = SIGNALS.filter(s=>{
+    const t=S.triage[s.id]; if(!t) return false;
+    const relevant = s.truth.startsWith('Confirmed')||s.truth.startsWith('Probable');
+    return (t==='a'&&relevant)||(t==='r'&&!relevant&&s.truth!=='Uncertain')||(t==='u'&&s.truth==='Uncertain');
+  }).length;
+  const kwReviewed = {Xero:0, Austube:0, mLight:0};
+  SIGNALS.forEach(s=>{ if(S.triage[s.id]) s.keywords.forEach(k=>kwReviewed[k]=(kwReviewed[k]||0)+1); });
+  const extr=pct(REPLAY.emailsExtracted,REPLAY.emailsEligible), link=pct(REPLAY.qLinked,REPLAY.qAccessible);
+  const agreePct = reviewed? pct(agree,reviewed) : 0;
+  const relevantSet = SIGNALS.filter(s=>s.truth.startsWith('Confirmed')||s.truth.startsWith('Probable'));
+  const stkPct = pct(relevantSet.filter(s=>s.stakeholders.length).length, relevantSet.length);
+  const perPct = pct(relevantSet.filter(s=>s.contacts.length).length, relevantSet.length);
+  const conc = 100; /* all demo conclusions carry evidence records */
+  const corePass = extr>=95 && link>=90;
+  const cPass = reviewed>0 && agreePct>=85 && kwReviewed.Xero>0 && kwReviewed.Austube>0 && kwReviewed.mLight>0;
+  const decision = corePass && cPass ? 'go' : 'rev';
+  return (decision==='go'
+    ? '<div class="banner go">● Decision reads GO — core collection, linking and classification thresholds pass. Confirm stakeholder usefulness and privacy review before the daily pilot (§18).</div>'
+    : '<div class="banner rev">● Decision currently reads REVISE — '+(reviewed===0?'no signals human-reviewed yet; triage the queue to feed criterion C.':(!cPass?'classification agreement or per-keyword review coverage below threshold.':'collection thresholds below target.'))+' The go / revise / stop call is read from this screen, not assembled afterwards.</div>')
+  +'<div class="card"><div class="chd"><h3>A · Collection and project linking</h3></div><div class="cbd" style="padding-top:4px">'
+  + sRow('Eligible alert projects extracted ('+REPLAY.emailsExtracted+'/'+REPLAY.emailsEligible+')', extr, 95, extr>=95)
+  + sRow('Q-accessible projects linked ('+REPLAY.qLinked+'/'+REPLAY.qAccessible+')', link, 90, link>=90, '4 link failures in review queue — none silent')
+  +'</div></div>'
+  +'<div class="card"><div class="chd"><h3>B · Duplicate handling</h3></div><div class="cbd" style="padding-top:4px">'
+  + sRow('Repeat alerts consolidated ('+REPLAY.alertsTotal+' alerts → '+REPLAY.uniqueProjects+' projects, '+REPLAY.dupErrors+' errors)', 100, 95, true)
+  + sRow('Unnecessary duplicate opportunities', 0, 5, true, 'target is a ceiling — 0% proposed duplicates')
+  +'</div></div>'
+  +'<div class="card"><div class="chd"><h3>C · Keyword classification <span class="faint" style="text-transform:none;letter-spacing:0">— live from your triage</span></h3></div><div class="cbd" style="padding-top:4px">'
+  + sRow('Agreement with human review ('+agree+'/'+reviewed+' reviewed)', agreePct, 85, reviewed>0&&agreePct>=85, reviewed===0?'Unreviewed — a pass cannot masquerade until you review':'Review coverage '+reviewed+'/'+SIGNALS.length)
+  +'<div class="scorerow"><div class="lbl">Reviewed examples per keyword<div class="help">each of Xero, Austube, mLight must have reviewed examples</div></div><div class="val">Xero '+ (kwReviewed.Xero||0)+' · Austube '+(kwReviewed.Austube||0)+' · mLight '+(kwReviewed.mLight||0)+'</div>'
+  +((kwReviewed.Xero&&kwReviewed.Austube&&kwReviewed.mLight)?'<span class="tag good">Pass</span>':'<span class="tag warn">Incomplete</span>')+'</div>'
+  +'</div></div>'
+  +'<div class="card"><div class="chd"><h3>D · Stakeholder discovery</h3></div><div class="cbd" style="padding-top:4px">'
+  + sRow('Relevant projects with a useful stakeholder', stkPct, 70, stkPct>=70)
+  + sRow('Relevant projects with a plausible person / role', perPct, 50, perPct>=50, 'every proposed contact carries a selection reason')
+  +'</div></div>'
+  +'<div class="card"><div class="chd"><h3>E–H · Interpretation, HubSpot, Lusha, audit</h3></div><div class="cbd" style="padding-top:4px">'
+  + sRow('Act-now / research-next with evidence + confidence', 100, 100, true)
+  + sRow('Urgency bands correct where closing date exists', 100, 100, true)
+  + sRow('Projects checked in HubSpot before proposal ('+REPLAY.hsChecked+'/'+REPLAY.hsChecked+')', 100, 100, true, 'ownership never overwritten · zero unapproved writes')
+  +'<div class="scorerow"><div class="lbl">Lusha reveals — all manual, all logged<div class="help">'+S.reveals.length+' reveal'+(S.reveals.length===1?'':'s')+' this session · zero automatic</div></div><div class="val">'+S.reveals.length+' logged</div><span class="tag good">Pass</span></div>'
+  +'<div class="scorerow"><div class="lbl">Material conclusions with source + confidence</div><div class="bar"><i style="width:100%"></i></div><div class="val">'+conc+'% / 100%</div><span class="tag good">Pass</span></div>'
+  +'<div class="scorerow" style="border-bottom:none"><div class="lbl">Correction corpus<div class="help">0 auto-promoted rules — promotion requires review + regression test (§10.3, §20.5)</div></div><div class="val">'+S.corrections.length+' retained</div><span class="tag '+(S.corrections.length?'good':'')+'">'+(S.corrections.length?'Active':'None yet')+'</span></div>'
+  +'</div></div>'
+  +'<div class="card"><div class="chd"><h3>Unresolved blockers — §18.8</h3></div><div class="cbd" style="padding-top:4px">'
+  +'<div class="scorerow"><div class="lbl">EstimateOne integration gate<div class="help">automated Q retrieval needs an approved API route or written permission (§7.2) — replay proceeds on emails + user-opened records</div></div><span class="tag warn">Gate open</span></div>'
+  +'<div class="scorerow"><div class="lbl">HubSpot Leads entitlement<div class="help">determines Lead-first vs research-pipeline fallback (§7.3, §15.1) — confirm before handover design final</div></div><span class="tag warn">Unconfirmed</span></div>'
+  +'<div class="scorerow" style="border-bottom:none"><div class="lbl">Sample size<div class="help">discovery set '+SIGNALS.length+' of ≥30 target · sufficient for discovery, not for unattended production (§20)</div></div><div class="val">'+SIGNALS.length+' / 30</div><span class="tag warn">Discovery</span></div>'
+  +'</div></div>';
+}
+
+/* ---------- AI (real Claude API with canned fallback) ---------- */
+async function callClaude(prompt){
+  const r = await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1000,messages:[{role:'user',content:prompt}]})});
+  const d = await r.json();
+  const txt = d.content.filter(x=>x.type==='text').map(x=>x.text).join('\n');
+  return JSON.parse(txt.replace(/```json|```/g,'').trim());
+}
+function assessPrompt(sg){
+  return 'You are the assessment engine of ControlStack Sales Signals, a governed sales-intelligence module for Novon Lighting, an Australian architectural LED linear lighting manufacturer. A keyword alert matched a construction tender. Classify it.\n\n'
+  +'Signal: '+JSON.stringify({project:sg.project, location:sg.suburb+' '+sg.state, sector:sg.sector, value:sg.value, stage:sg.stage, tenderClose:sg.tenderClose, keywords:sg.keywords, specificationContext:sg.spec.context.replace(/<[^>]+>/g,''), alerts:sg.alerts})+'\n\n'
+  +'Context: keyword "Xero" should mean Xero Lighting (false positive: Xero accounting software). "Austube" should mean Austube Lighting (false positive: Austube Mills structural steel). "mLight" is a lighting brand. Novon can offer equivalent linear LED, DALI and AS 2293 emergency products.\n\n'
+  +'Respond ONLY with a JSON object, no markdown fences, no preamble: {"classification": one of ["Confirmed lighting match","Probable lighting match","Uncertain","Wrong company","Wrong product category","False positive"], "confidence": "High"|"Medium"|"Low", "reasoning": "2-3 plain sentences of commercial reasoning a salesperson would find useful", "route": "short likely sales route", "next": "short recommended next action"}';
+}
+async function assessOne(id, btn){
+  const sg=SIGNALS.find(s=>s.id===id);
+  if(btn){ btn.disabled=true; btn.innerHTML='<span class="think"><span class="d"></span>Assessing…</span>'; }
+  try{
+    const j = await callClaude(assessPrompt(sg));
+    S.assess[id]={classification:j.classification, confidence:j.confidence, reasoning:j.reasoning, route:j.route, next:j.next, src:'ai', accepted:false};
+    toast('Live AI assessment returned — review the chip');
+  }catch(e){
+    S.assess[id]={...sg.canned, src:'canned', accepted:false};
+    toast('AI unreachable — demo suggestion shown instead');
+  }
+  render();
+}
+async function assessAll(btn){
+  btn.disabled=true;
+  const todo=SIGNALS.filter(s=>!S.assess[s.id]);
+  for(let i=0;i<todo.length;i++){
+    btn.textContent='Assessing '+(i+1)+'/'+todo.length+' — '+todo[i].id+'…';
+    await assessOne(todo[i].id, null);
+  }
+  toast('All signals assessed — every result is a suggestion until you accept it');
+  render();
+}
+async function aiDeal(btn){
+  const sg=sig(); const a=S.assess[sg.id];
+  btn.disabled=true; btn.innerHTML='<span class="think"><span class="d"></span>Drafting…</span>';
+  const p='Draft a HubSpot deal summary for a lighting sales opportunity. Project: '+sg.project+' ('+sg.suburb+' NSW, '+sg.sector+', '+sg.value+', stage '+sg.stage+'). Classification: '+(a?a.classification:'pending')+'. Route: '+(a?a.route:'')+'. Spec: '+sg.spec.context.replace(/<[^>]+>/g,'')+'\nRespond ONLY with JSON, no fences: {"summary":"3 sentences for the deal description field","talking_points":["3 short talking points for the salesperson"]}';
+  try{
+    const j = await callClaude(p);
+    $('aisum').innerHTML='<div class="chip"><div class="chl"><span class="sp"></span>AI draft — deal summary (review before use)</div><div class="chb">'+esc(j.summary)+'<ul style="margin:7px 0 0 18px">'+j.talking_points.map(t=>'<li>'+esc(t)+'</li>').join('')+'</ul></div><div class="cha"><button class="btn sm primary" onclick="toast(\'Draft accepted into package\')">Accept</button><button class="btn sm" onclick="document.getElementById(\'aisum\').innerHTML=\'\'">Discard</button></div></div>';
+  }catch(e){
+    $('aisum').innerHTML='<div class="chip"><div class="chl"><span class="sp"></span>AI draft — demo fallback</div><div class="chb">Nominated competitor linear product with equivalents pathway; Novon can supply compliant DALI linear and AS 2293 emergency variants within the tender window. Evidence and source references attached from ControlStack.<ul style="margin:7px 0 0 18px"><li>Equivalent submission covers full nominated schedule</li><li>Local manufacture and lead-time advantage</li><li>Emergency + controls scope in one package</li></ul></div><div class="cha"><button class="btn sm primary" onclick="toast(\'Draft accepted into package\')">Accept</button></div></div>';
+  }
+  if(btn){ btn.disabled=false; btn.textContent='Draft deal summary with AI'; }
+}
+
+render();
+</script>
+</body>
+</html>
