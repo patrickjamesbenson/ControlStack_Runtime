@@ -263,13 +263,6 @@ function stage3Inputs() {
     },
     committedSelectorConstraints: [
       {
-        fieldKey: "tier",
-        value: "Business",
-        valueLabel: "Business",
-        committedSelectorState: true,
-        authoritySource: "acceptedDefaults",
-      },
-      {
         fieldKey: "directOpticVar1",
         value: "80|Inlay",
         valueLabel: "Inlay",

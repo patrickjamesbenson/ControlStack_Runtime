@@ -44,7 +44,6 @@ const UNSAFE_TRUE_FIELDS = Object.freeze([
 const RUN_CONSTRAINT_KEYS = Object.freeze(["runQty", "runLength"]);
 
 const READONLY_ENGINE_DIRECT_CANDIDATE_REQUIREMENTS = Object.freeze([
-  Object.freeze({ key: "tier", label: "Tier", fields: Object.freeze(["tier", "selectedTier", "tierToken"]) }),
   Object.freeze({ key: "optic", label: "Direct optic", fields: Object.freeze(["directOpticVar1", "optic", "opticVar1", "diffuserVar1"]) }),
   Object.freeze({ key: "targetLmPerM", label: "Direct target lm/m", fields: Object.freeze(["targetLmPerM", "lightTarget"]) }),
   Object.freeze({ key: "cctCri", label: "Direct CCT/CRI", fields: Object.freeze(["cctCri", "cct"]) }),
@@ -151,10 +150,6 @@ function constraintDisplayValue(constraint) {
   return safeString(constraint?.valueLabel || constraint?.value || "");
 }
 
-function selectedPolicyTierFromConstraints(map = new Map()) {
-  return safeString(map.get("tier")?.value || map.get("tier")?.valueLabel || "");
-}
-
 function selectedIpRequiresIpEndPlate(map = new Map()) {
   const raw = safeString(map.get("ipRating")?.value || map.get("ipRating")?.valueLabel || "").toUpperCase();
   const match = raw.match(/IP\s*(\d{2})/);
@@ -177,29 +172,19 @@ function buildSourceBackedStage3BBodyLengthPolicySummary({
   runLengthMm = 0,
 } = {}) {
   const map = constraintMap(committedSelectorConstraints);
-  const selectedTier = selectedPolicyTierFromConstraints(map) || safeString(sourceBackedLengthPolicySummary?.tier || "");
-  if (!selectedTier) {
-    return {
-      ok: false,
-      blocker: "stage3b-source-backed-tier-required",
-      diagnostic: "Stage 3B body-length authority requires a committed tier before resolving SYSTEM_POLICY deductions.",
-    };
-  }
   if (!isPlainObject(sourceBackedLengthPolicySummary) || sourceBackedLengthPolicySummary.ok !== true) {
     return {
       ok: false,
       blocker: sourceBackedLengthPolicySummary?.blocker || "stage3b-source-backed-length-policy-unresolved",
       diagnostic: sourceBackedLengthPolicySummary?.diagnostic || "Stage 3B body-length authority requires a safe source-backed SYSTEM_POLICY length summary.",
-      selectedTier,
     };
   }
-  if (safeToken(sourceBackedLengthPolicySummary.tier) !== safeToken(selectedTier)) {
+  const selectedTier = safeString(sourceBackedLengthPolicySummary.tier || "");
+  if (!selectedTier) {
     return {
       ok: false,
-      blocker: "stage3b-source-backed-length-policy-tier-mismatch",
-      diagnostic: "Stage 3B body-length authority requires the source-backed SYSTEM_POLICY summary to match the committed tier.",
-      selectedTier,
-      resolvedTier: safeString(sourceBackedLengthPolicySummary.tier),
+      blocker: sourceBackedLengthPolicySummary.blocker || "stage3b-source-backed-length-policy-unresolved",
+      diagnostic: sourceBackedLengthPolicySummary.diagnostic || "Stage 3B body-length authority requires a safe source-backed SYSTEM_POLICY length summary.",
     };
   }
 

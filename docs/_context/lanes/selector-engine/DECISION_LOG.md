@@ -742,3 +742,12 @@ This log is append-oriented. Do not silently rewrite historical decisions.
 - Tier ruling: Selector Tier input/readiness and committed Tier authority are deleted; Stage 3B consumes only valid source-backed SYSTEM_POLICY policy Tier and otherwise fails closed through the existing source-policy blocker.
 - Preservation: genuine server-derived Tier/profile results, the 15-table bridge, Engine contracts and all no-write/no-mutation boundaries remain unchanged.
 - Consequence: recalculate deletion-test coupling from the restored baseline, require zero residual, run the blocked and full focused sets plus fixed gate, push exact closeout and stop before WALK-005.
+
+
+## 2026-07-24 — Complete WALK-004 under the accepted two-owner rescope
+
+**Decision:** Delete legacy Selector Tier/TIERS option and readiness authority across the exact reference-options and Factory Approved Inputs owners. Stage 3B accepts Tier only from a valid source-backed SYSTEM_POLICY length-policy summary; absent or invalid policy keeps the existing fail-closed source-policy blocker.
+
+**Coupling receipt:** Mechanical search and logical-occurrence classification found 39 encoded assumptions across 21 tests. Twenty-four were deleted and fifteen rewritten to Tier-free or source-backed-policy contracts; residual is zero.
+
+**Preservation:** Genuine ACCESSORIES Electrical Class remains; otherwise it is unavailable without inference. The 15-table bridge, server/Engine Tier derivation, downstream Tier/profile shapes, Engine boundaries and all no-write/no-generation/no-persistence/no-provider-mutation guarantees remain unchanged. WALK-005 is not released.

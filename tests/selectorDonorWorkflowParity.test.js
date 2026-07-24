@@ -21,9 +21,6 @@ function workflowSnapshot() {
         approved: "yes",
       },
     ],
-    TIERS: [
-      { tier: "business", board: "B80", warranty: "7y", electrical_options: "Non SELV with Earth;SELV Class II", approved: "yes" },
-    ],
     OPTICS: [
       {
         system: "DNX",

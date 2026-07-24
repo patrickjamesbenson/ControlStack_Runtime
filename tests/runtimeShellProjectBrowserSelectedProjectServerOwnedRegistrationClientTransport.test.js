@@ -24,8 +24,6 @@ const ENVELOPE_ID = "local-envelope-registration-client";
 const SAVED_AT = "2026-07-15T01:30:00.000Z";
 
 function readyProjection({
-  includeTier = true,
-  tierBlocked = false,
   missingField = null,
   outerBlocker = null,
   accessoryIntentCount = 0,
@@ -37,18 +35,15 @@ function readyProjection({
       ? "4000K"
       : "4000K / CRI90";
   const committedSelectorConstraints = [
-    includeTier ? { fieldKey: "tier", value: "Stale Browser Tier", valueLabel: "Stale Browser Tier", committedSelectorState: true, blocked: false, authoritySource: "acceptedDefaults" } : null,
     { fieldKey: "system", value: "DNX 60", valueLabel: "DNX 60", committedSelectorState: true, blocked: false, authoritySource: "manualConstraints" },
     missingField === "optic" ? null : { fieldKey: "directOpticVar1", value: "80|Inlay", valueLabel: "Inlay", committedSelectorState: true, blocked: false, authoritySource: "manualConstraints" },
     missingField === "target_lm_per_m" ? null : { fieldKey: "targetLmPerM", value: "1200", valueLabel: "1200", committedSelectorState: true, blocked: false, authoritySource: "manualConstraints" },
     { fieldKey: "cctCri", value: cctCriValue, valueLabel: cctCriValue, committedSelectorState: true, blocked: false, authoritySource: "manualConstraints" },
     missingField === "control_type" ? null : { fieldKey: "controlType", value: "DALI-2", valueLabel: "DALI-2", committedSelectorState: true, blocked: false, authoritySource: "manualConstraints" },
   ].filter(Boolean);
-  const candidateInputBlocker = tierBlocked
-    ? "missing-readonly-engine-candidate-input-tier"
-    : missingField
-      ? `missing-readonly-engine-candidate-input-${missingField}`
-      : null;
+  const candidateInputBlocker = missingField
+    ? `missing-readonly-engine-candidate-input-${missingField}`
+    : null;
   const candidateInputsReady = candidateInputBlocker === null;
   const factoryApprovedInputsSummary = {
     readOnly: true,
@@ -324,7 +319,7 @@ test("client sends only the allowlisted pre-Engine projection and accepts the sc
   assert.equal(Object.prototype.hasOwnProperty.call(sentBody, "enginePayload"), false);
 });
 
-test("client repairs a Tier-only blocked projection without accepting browser Tier authority", async () => {
+test("client accepts a Tier-free ready projection without creating browser Tier authority", async () => {
   const registry = createProjectBrowserSelectedProjectServerOwnedRuntimeSavedRegistry();
   let sentBody = null;
   const transport =
@@ -335,9 +330,9 @@ test("client repairs a Tier-only blocked projection without accepting browser Ti
       },
     });
 
-  const projection = readyProjection({ includeTier: false, tierBlocked: true });
-  assert.equal(projection.ready, false);
-  assert.equal(projection.blocker, "missing-readonly-engine-candidate-input-tier");
+  const projection = readyProjection();
+  assert.equal(projection.ready, true);
+  assert.equal(projection.blocker, null);
 
   const result = await transport(clientRequest(localSave(projection)));
   assert.equal(result.ok, true);
@@ -372,7 +367,7 @@ test("client returns the actual safe blocker when a remaining candidate input is
     ["control_type", "missing-candidate-field-control_type"],
   ];
   for (const [missingField, expectedBlocker] of cases) {
-    const projection = readyProjection({ includeTier: false, missingField });
+    const projection = readyProjection({ missingField });
     assert.equal(projection.ready, false, missingField);
     const result = await transport(clientRequest(localSave(projection)));
     assert.equal(result.ok, false, missingField);

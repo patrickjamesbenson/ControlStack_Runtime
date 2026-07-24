@@ -1,4 +1,3 @@
-import { buildSourceBackedLengthPolicySummary } from "./engineRunTableRuntimePolicyIndexKernel.js";
 import {
   DEFAULT_SELECTOR_REFERENCE_FS_API,
   selectorReferenceRuntimeSnapshotCache,
@@ -32,7 +31,6 @@ const WORKFLOW_SECTION_DEFINITIONS = Object.freeze([
     sectionKey: "system",
     title: "System",
     fields: [
-      { fieldKey: "tier", label: "Tier", role: "manual-constraint", sourceTables: ["TIERS", "SYSTEM_POLICY"] },
       { fieldKey: "system", label: "System", role: "manual-constraint", sourceTables: ["SYSTEM"] },
       { fieldKey: "variantKey", label: "Variant", role: "auto-consequence", sourceTables: ["SYSTEM"] },
       { fieldKey: "emission", label: "Emission / direct-indirect mode", role: "manual-constraint", sourceTables: ["SYSTEM"] },
@@ -64,7 +62,7 @@ const WORKFLOW_SECTION_DEFINITIONS = Object.freeze([
     fields: [
       { fieldKey: "ipRating", label: "IP rating", role: "manual-constraint", sourceTables: ["OPTICS", "SYSTEM_POLICY"] },
       { fieldKey: "ikRating", label: "IK rating", role: "manual-constraint", sourceTables: ["OPTICS", "SYSTEM_POLICY"] },
-      { fieldKey: "electricalClass", label: "Electrical class", role: "manual-constraint", sourceTables: ["TIERS", "ACCESSORIES"] },
+      { fieldKey: "electricalClass", label: "Electrical class", role: "manual-constraint", sourceTables: ["ACCESSORIES"] },
       { fieldKey: "ambient", label: "Ambient temperature", role: "manual-constraint", sourceTables: ["SYSTEM_POLICY"] },
       { fieldKey: "application", label: "Application / environment", role: "manual-constraint", sourceTables: ["OPTICS", "SYSTEM_POLICY"] },
       { fieldKey: "interiorExterior", label: "Interior / exterior", role: "manual-constraint", sourceTables: ["OPTICS", "SYSTEM_POLICY"] },
@@ -175,7 +173,6 @@ const TARGET_FIELD_KEYS = new Set(ALL_FIELD_DEFINITIONS.map((field) => field.fie
 
 const TABLE_ALIASES = Object.freeze({
   SYSTEM: ["SYSTEM", "SYSTEMS", "system", "systems"],
-  TIERS: ["TIERS", "TIER", "tiers", "tier"],
   OPTICS: ["OPTICS", "OPTIC", "optics", "optic"],
   ACCESSORIES: ["ACCESSORIES", "ACCESSORY", "accessories", "accessory"],
   SPEC_CODES: ["SPEC_CODES", "spec_codes", "specCodes"],
@@ -222,7 +219,6 @@ const HEADER_CONTAINER_KEYS = Object.freeze([
 
 const SAFE_DEBUG_TABLES = Object.freeze([
   "SYSTEM",
-  "TIERS",
   "OPTICS",
   "BOARDS",
   "DRIVERS",
@@ -1616,17 +1612,7 @@ function accessoryLabels(snapshot, needles) {
 }
 
 const ELECTRICAL_CLASS_FIELD_KEY = "electricalClass";
-const ELECTRICAL_CLASS_TIER_FIELDS = Object.freeze(["tier", "tier_key", "name", "label", "id"]);
-const ELECTRICAL_CLASS_TIER_OPTION_FIELDS = Object.freeze(["electrical", "electrical_options", "elect_class"]);
 const DONOR_ELECTRICAL_CLASS_ACCESSORY_TYPE = "elect_class";
-
-function electricalClassTierKey(row = {}) {
-  return rowText(row, ELECTRICAL_CLASS_TIER_FIELDS);
-}
-
-function donorElectricalClassTierOptions(row = {}) {
-  return rowOptionValues(row, ELECTRICAL_CLASS_TIER_OPTION_FIELDS);
-}
 
 function isDonorElectricalClassAccessoryRow(row = {}) {
   return safeLower(rowText(row, ["accessory_type"])) === DONOR_ELECTRICAL_CLASS_ACCESSORY_TYPE;
@@ -1649,32 +1635,17 @@ function optionParentValues(option = {}) {
   ].map(safeString).filter(Boolean));
 }
 
-function donorElectricalClassScopedOptions(baseOptions = [], constraints = {}) {
-  const selectedTier = safeString(constraints.tier || "");
-  if (selectedTier) {
-    const tierOptions = baseOptions.filter((option) => optionParentValues(option)
-      .some((parentValue) => valuesMatch(parentValue, selectedTier)));
-    if (tierOptions.length) {
-      return {
-        options: tierOptions,
-        parentFieldKey: "tier",
-        parentValue: selectedTier,
-        childFiltered: true,
-        deferredOptions: [],
-        unavailableReason: "",
-      };
-    }
-  }
+function donorElectricalClassScopedOptions(baseOptions = []) {
   const accessoryOptions = baseOptions.filter((option) => optionHasSourceTable(option, "ACCESSORIES"));
   return {
     options: accessoryOptions,
-    parentFieldKey: selectedTier ? "tier" : "",
-    parentValue: selectedTier,
-    childFiltered: Boolean(selectedTier),
+    parentFieldKey: "",
+    parentValue: "",
+    childFiltered: false,
     deferredOptions: [],
     unavailableReason: accessoryOptions.length
       ? ""
-      : "Electrical class has no live donor TIERS.electrical value for the selected tier and no live ACCESSORIES.elect_class fallback.",
+      : "Electrical class is unavailable because no live ACCESSORIES.elect_class authority exists.",
   };
 }
 
@@ -1723,21 +1694,6 @@ function collectOptions(snapshot, timelineContext = createSelectorTimelineContex
   }
 
   const systemOptions = optionsFor(bucket, "system");
-
-  const tiers = liveTableRows(snapshot, "TIERS", timelineContext);
-  for (const row of tiers) {
-    const tier = electricalClassTierKey(row);
-    if (tier) addOption(bucket, "tier", tier, { sourceTables: ["TIERS"] });
-    for (const electrical of donorElectricalClassTierOptions(row)) {
-      addOption(bucket, ELECTRICAL_CLASS_FIELD_KEY, electrical, {
-        sourceTables: ["TIERS"],
-        parentFieldKey: "tier",
-        parentValue: tier,
-        parentValues: [tier].filter(Boolean),
-      });
-    }
-  }
-  for (const value of policyValues(snapshot, ["tier"])) addOption(bucket, "tier", value, { sourceTables: ["SYSTEM_POLICY"] });
 
   const optics = selectorOptionRows(snapshot, "OPTICS", timelineContext);
   for (const row of optics) {
@@ -1903,7 +1859,7 @@ function collectOptions(snapshot, timelineContext = createSelectorTimelineContex
     addOption(bucket, "finishCover", value, { sourceTables: ["SYSTEM_POLICY"] });
     addOption(bucket, "finishEnd", value, { sourceTables: ["SYSTEM_POLICY"] });
   }
-  // Donor parity: Electrical Class is not sourced from broad SYSTEM_POLICY policyValues; it resolves from TIERS.electrical for the selected tier or live ACCESSORIES.elect_class fallback.
+  // Electrical Class is not sourced from broad SYSTEM_POLICY policyValues; only live ACCESSORIES.elect_class authority is supported.
   for (const value of ambientPolicyValues(snapshot)) addOption(bucket, "ambient", value, { sourceTables: ["SYSTEM_POLICY"] });
   for (const value of policyValues(snapshot, ["wiring", "cable", "control cores"] )) addOption(bucket, "wiringType", value, { sourceTables: ["SYSTEM_POLICY"] });
   addOption(bucket, "indirectMatchDirect", "Match direct CCT/CRI and control", { value: "match-direct", sourceTables: ["SYSTEM", "OPTICS"] });
@@ -2396,15 +2352,6 @@ function diffuserOptionMeta(row, { layer, parentFieldKey = "", parentValue = "",
 function collectRecords(snapshot, bucket, timelineContext = createSelectorTimelineContext()) {
   const records = [];
   const systemOptions = optionsFor(bucket, "system");
-
-  for (const row of liveTableRows(snapshot, "TIERS", timelineContext)) {
-    const tier = electricalClassTierKey(row);
-    const electricalClass = donorElectricalClassTierOptions(row);
-    pushRelationshipRecord(records, ["TIERS"], {
-      tier,
-      electricalClass,
-    }, "TIERS row maps selected tier to electrical class options");
-  }
 
   for (const row of selectorOptionRows(snapshot, "SYSTEM", timelineContext)) {
     const tokens = systemTokens(row);
@@ -5113,9 +5060,15 @@ export function deriveSelectorReferenceOptionsFromSnapshot(snapshot = {}, { cons
     sourceVersionBinding,
   });
   const timelineStatusFiltering = createTimelineStatusFilteringSummary({ fields, workflowSections, timelineContext });
-  const sourceBackedLengthPolicySummary = buildSourceBackedLengthPolicySummary(safeSnapshot, {
-    tier: safeConstraints.tier || "",
-  });
+  const sourceBackedLengthPolicySummary = {
+    ok: false,
+    summaryAvailable: false,
+    summaryType: "source-backed-length-policy",
+    blocker: "stage3b-source-backed-length-policy-unresolved",
+    diagnostic: "Selector options do not choose policy Tier; a valid server-derived SYSTEM_POLICY length-policy summary is required.",
+    rawRowsReturned: false,
+    rawTableHeadersReturned: false,
+  };
 
   return {
     ok: true,

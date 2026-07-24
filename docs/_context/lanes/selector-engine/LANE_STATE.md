@@ -920,3 +920,12 @@ The reference-options owner deletes manual Tier workflow authority, all `TIERS` 
 The factory-approved-inputs owner deletes Tier, selectedTier and tierToken from readonly Engine direct-candidate requirements, permanently removes `missing-readonly-engine-candidate-input-tier`, and removes committed Selector Tier from Stage 3B body-length policy. Stage 3B uses only the Tier carried by a valid source-backed `SYSTEM_POLICY` length-policy summary and otherwise fails closed through the existing source-policy blocker. Legitimate server-derived Tier/profile outputs remain.
 
 The worker must recalculate the coupled baseline from the restored clean tree, account mechanically for every deleted or rewritten test assumption with zero residual, rerun the fourteen previously blocked focused tests, the complete affected focused set and fixed Selector gate, then commit/push only the two-owner implementation, coupled tests and lane-memory closeout. WALK-005 and all later or prohibited work remain blocked.
+
+
+## 2026-07-24 — WALK-004 two-owner implementation complete
+
+WALK-004 is complete and stopped for Program review. The exact two production owners remove legacy Selector Tier/TIERS option and readiness authority. Stage 3B now consumes Tier only from a valid source-backed SYSTEM_POLICY length-policy summary and otherwise fails closed through the existing source-policy blocker. Genuine downstream Tier/profile results and the unchanged 15-table bridge remain preserved.
+
+Mechanical coupling receipt: search terms `TIERS`, manual/selected Tier fixture forms, `selectedTier`, `tierToken`, `missing-readonly-engine-candidate-input-tier`, `stage3b-source-backed-tier-required`, `stage3b-source-backed-length-policy-tier-mismatch`, and direct `map.get("tier")`/committed-Tier effects; counted once per matching logical fixture, assertion, test title or exact contract expectation. Baseline 39; deleted 24; rewritten 15; affected test files 21; residual 0. Equation: `39 = 24 + 15 + 0`.
+
+The fixed Selector gate passes 108/108. The temporary focused harness is restored and absent from the final diff. No Engine execution, generation, persistence, route/POST, RuntimeData, provider or source mutation was enabled. WALK-005 and later work remain blocked.

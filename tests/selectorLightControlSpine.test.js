@@ -127,7 +127,6 @@ function lightControlCoreSnapshot() {
       { driver_id: "DALI Driver", control_type: "DALI-2", approved: "yes" },
       { driver_id: "Fixed Driver", control_type: "Fixed", approved: "yes" },
     ],
-    TIERS: [{ tier: "Business", electrical: "Class I;Class II", approved: "yes" }],
     ACCESSORIES: [{ accessory_type: "egress_light", accessory_id: "Maintained", approved: "yes" }],
   };
 }

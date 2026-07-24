@@ -117,10 +117,6 @@ function specGateSnapshot() {
       { driver_id: "DALI Driver", control_type: "DALI-2", approved: "yes" },
       { driver_id: "Standard Driver", control_type: "Non-dim", approved: "yes" },
     ],
-    TIERS: [
-      { tier: "Economy", electrical: "Class I;SELV", approved: "yes" },
-      { tier: "Business", electrical: "Class II", approved: "yes" },
-    ],
     ACCESSORIES: [
       { accessory_type: "elect_class", accessory_id: "Remote SELV", display_choice: "Remote SELV", approved: "yes" },
       {
@@ -246,7 +242,6 @@ function completeDirectReadonlyCandidateWithoutAmbient(selectorState, { includeC
   model = selectAndReload(selectorState, "cctCri", "cct_cri:4000K|CRI90");
   if (includeControl) model = selectAndReload(selectorState, "controlType", "DALI-2");
   selectorState.acceptDbBackedSelectorDefaults([
-    { fieldKey: "tier", label: "Tier", value: "Business", valueLabel: "Business" },
   ]);
   return model;
 }
@@ -294,7 +289,6 @@ function joinSensitiveStage3BPreview(snapshot = snapshotWithDoNotBridgeAuthority
   const selectorState = createSelectorState();
   completeSpecReadyCandidate(selectorState);
   selectorState.acceptDbBackedSelectorDefaults([
-    { fieldKey: "tier", label: "Tier", value: tier, valueLabel: tier },
   ]);
   selectorState.setRunIntakeRows([
     { id: "run-1", runNumber: 1, label: "Run 1", quantity: "2", runLengthMm: "5620"},
@@ -496,7 +490,6 @@ test("Stage 4 Step 1 readonly mapper uses Stage 3-supported selector state witho
   const selectorState = createSelectorState();
   completeSpecReadyCandidate(selectorState);
   selectorState.acceptDbBackedSelectorDefaults([
-    { fieldKey: "tier", label: "Tier", value: "Business", valueLabel: "Business" },
   ]);
   const value = preview(acceptBuildOrderContext(selectorState));
   const stageRows = rowsToObject(value.stageIndicatorRows);
@@ -604,7 +597,6 @@ test("Stage 3B fails closed when non-zero accessory reservation cannot produce a
   const selectorState = createSelectorState();
   completeSpecReadyCandidate(selectorState);
   selectorState.acceptDbBackedSelectorDefaults([
-    { fieldKey: "tier", label: "Tier", value: "Economy", valueLabel: "Economy" },
   ]);
   selectorState.setRunIntakeRows([
     { id: "run-1", runNumber: 1, label: "Run 1", quantity: "2", runLengthMm: "3500"},
@@ -629,7 +621,6 @@ test("Stage 3B accepts non-zero accessory intent when it remains inside one seal
   const selectorState = createSelectorState();
   completeSpecReadyCandidate(selectorState);
   selectorState.acceptDbBackedSelectorDefaults([
-    { fieldKey: "tier", label: "Tier", value: "Economy", valueLabel: "Economy" },
   ]);
   selectorState.setRunIntakeRows([
     { id: "run-1", runNumber: 1, label: "Run 1", quantity: "2", runLengthMm: "2820"},
@@ -688,7 +679,6 @@ test("Stage 3B fails closed when non-zero accessory intent is join-sensitive wit
   const selectorState = createSelectorState();
   completeSpecReadyCandidate(selectorState);
   selectorState.acceptDbBackedSelectorDefaults([
-    { fieldKey: "tier", label: "Tier", value: "Economy", valueLabel: "Economy" },
   ]);
   selectorState.setRunIntakeRows([
     { id: "run-1", runNumber: 1, label: "Run 1", quantity: "2", runLengthMm: "5620"},
@@ -741,7 +731,6 @@ test("Stage 3B accepts join-sensitive accessory intent when do-not-bridge is phy
   const snapshot = snapshotWithDoNotBridgeAuthority();
   completeSpecReadyCandidate(selectorState);
   selectorState.acceptDbBackedSelectorDefaults([
-    { fieldKey: "tier", label: "Tier", value: "Economy", valueLabel: "Economy" },
   ]);
   selectorState.setRunIntakeRows([
     { id: "run-1", runNumber: 1, label: "Run 1", quantity: "2", runLengthMm: "5620"},
@@ -862,7 +851,6 @@ test("Stage 3B fails closed when board packing policy is not source-backed", () 
   snapshot.SYSTEM_POLICY = snapshot.SYSTEM_POLICY.filter((row) => row.item !== "max_board_gap_mm");
   completeSpecReadyCandidate(selectorState);
   selectorState.acceptDbBackedSelectorDefaults([
-    { fieldKey: "tier", label: "Tier", value: "Economy", valueLabel: "Economy" },
   ]);
   selectorState.setRunIntakeRows([
     { id: "run-1", runNumber: 1, label: "Run 1", quantity: "2", runLengthMm: "2820"},
@@ -896,7 +884,6 @@ test("Stage 3B fails closed when frozen segment splits exceed source-backed spli
   ));
   completeSpecReadyCandidate(selectorState);
   selectorState.acceptDbBackedSelectorDefaults([
-    { fieldKey: "tier", label: "Tier", value: "Economy", valueLabel: "Economy" },
   ]);
   selectorState.setRunIntakeRows([
     { id: "run-1", runNumber: 1, label: "Run 1", quantity: "2", runLengthMm: "5620"},

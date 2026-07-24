@@ -108,10 +108,6 @@ function specGateSnapshot() {
       { driver_id: "DALI Driver", control_type: "DALI-2", approved: "yes" },
       { driver_id: "Standard Driver", control_type: "Non-dim", approved: "yes" },
     ],
-    TIERS: [
-      { tier: "Economy", electrical: "Class I;SELV", approved: "yes" },
-      { tier: "Business", electrical: "Class II", approved: "yes" },
-    ],
     ACCESSORIES: [
       { accessory_type: "elect_class", accessory_id: "Remote SELV", display_choice: "Remote SELV", approved: "yes" },
     ],

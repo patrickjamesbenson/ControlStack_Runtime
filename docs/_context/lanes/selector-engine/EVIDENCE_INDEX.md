@@ -961,3 +961,14 @@ Every completed worker updates this index with:
 - WALK-004 resumes as the same parcel and worker with no new commission; exact production ceiling is two owners and a third owner is a protected stop — RECORDED.
 - Selector Tier option/readiness and committed Stage 3B Tier authority must reach zero residual while SYSTEM_POLICY-derived downstream Tier/profile meaning and the unchanged 15-table bridge remain — RECORDED.
 - WALK-005 and all later or operational work remain blocked — RECORDED.
+
+
+## 2026-07-24 — WALK-004 completion evidence
+
+- Exact production owners: reference-options service and Factory Approved Inputs summary — VERIFIED.
+- Prohibited searches: `TIERS`, `missing-readonly-engine-candidate-input-tier`, `stage3b-source-backed-tier-required`, `stage3b-source-backed-length-policy-tier-mismatch`, committed Tier aliases and direct committed `map.get("tier")` effects — ZERO RESIDUAL.
+- Coupled-test accounting: baseline 39; deleted 24; rewritten 15; 21 unique affected test files; residual 0 — VERIFIED.
+- Source-policy result: Stage 3B Tier is carried only by a valid source-backed SYSTEM_POLICY length-policy summary; missing/invalid policy remains fail-closed — VERIFIED.
+- Preservation: ACCESSORIES-only Electrical Class, 15-table bridge, server-derived SYSTEM_POLICY Tier, downstream Tier/profile outputs and disabled mutation/execution boundaries — VERIFIED.
+- Fixed Selector gate: 108/108 — PASS.
+- Temporary harness: restored and absent from final diff — VERIFIED.

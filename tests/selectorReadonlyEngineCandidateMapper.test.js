@@ -343,8 +343,8 @@ test("fails closed for missing, malformed, duplicate, uncommitted, blocked, non-
 test("accepts the readonly candidate when Tier is absent from committed Selector state", () => {
   const result = buildSelectorReadonlyEngineCandidateForInternalSeam({
     factoryApprovedInputsSummary: stage3Summary({
-      readonlyEngineCandidateInputsReady: false,
-      readonlyEngineCandidateInputsBlocker: "missing-readonly-engine-candidate-input-tier",
+      readonlyEngineCandidateInputsReady: true,
+      readonlyEngineCandidateInputsBlocker: null,
     }),
     committedSelectorConstraints: constraints(),
     lmTemperatureReadinessPreview: lmTemperaturePreview(),

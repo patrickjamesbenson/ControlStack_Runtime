@@ -878,3 +878,13 @@ Queue reconciliation: WALK-001V is already done, gated and pushed, so it was not
 * verification: fourteen previously blocked focused tests; complete affected focused set; fixed Selector gate
 * closeout: exact implementation, coupled tests and five lane-memory files only; commit/push, clean lane, stop for Program review
 * blocked: WALK-005, WALK-005A, WALK-006, WALK-007, audits, MGR-RESTART-001, Engine/seeds, Lab, persistence, CRM/provider mutation, IES, retrieval and delivery
+
+
+## WALK-004 — completed; pending Program review (2026-07-24)
+
+* production boundary: exactly the reference-options service and Factory Approved Inputs summary
+* result: no Selector TIERS identity, manual Tier input, TIERS-derived Electrical Class, committed Tier candidate prerequisite, missing-Tier blocker, or committed-Tier Stage 3B mismatch authority
+* preserved: ACCESSORIES-only Electrical Class or truthful unavailable state; 15-table bridge; server-derived SYSTEM_POLICY Tier; downstream Tier/profile outputs; Engine and all disabled mutation boundaries
+* coupling: baseline 39; deleted 24; rewritten 15; affected test files 21; residual 0; equation `39 = 24 + 15 + 0`
+* verification: prohibited identity/blocker searches zero; fixed Selector gate 108/108; temporary harness absent
+* next: Program review only; WALK-005 and every later parcel remain blocked

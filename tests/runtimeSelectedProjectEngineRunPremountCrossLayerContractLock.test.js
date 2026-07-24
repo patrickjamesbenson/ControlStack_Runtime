@@ -155,6 +155,15 @@ function stage3Inputs() {
       diagnosticOnly: true,
       safeSummaryOnly: true,
       factoryApprovedInputsReady: true,
+    readonlyEngineCandidateInputsReady: true,
+    readonlyEngineCandidateInputsBlocker: null,
+    stage2Ready: true,
+    readonlyEngineCandidateApplicability: {
+      directSupported: true,
+      indirectRequired: false,
+      directOnly: true,
+      supportedSlice: "first-readonly-engine-direct-only",
+    },
       stage3Mode: "simple-run-stage3a-zero-accessory",
       blocker: null,
       committedRunIntakeSummary: {
@@ -178,11 +187,11 @@ function stage3Inputs() {
     },
     committedSelectorConstraints: [
       {
-        fieldKey: "tier",
-        value: "Business",
-        valueLabel: "Business",
+        fieldKey: "ambient",
+        value: "25C",
+        valueLabel: "25°C",
         committedSelectorState: true,
-        authoritySource: "acceptedDefaults",
+        authoritySource: "manualConstraints",
       },
       {
         fieldKey: "directOpticVar1",
@@ -225,6 +234,11 @@ function stage3Inputs() {
       },
       controlIntent: {
         direct: { ready: true, valueLabel: "DALI-2", sourceBacked: true },
+      },
+      ambientIntent: {
+        ready: true,
+        valueLabel: "25°C",
+        sourceBacked: true,
       },
       fingerprint: `safe-selector-lm-temp-readiness-preview:${FIXTURE_SUFFIX}`,
       donorEngineInvoked: false,

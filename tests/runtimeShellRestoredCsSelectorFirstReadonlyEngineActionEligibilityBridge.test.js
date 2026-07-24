@@ -51,7 +51,6 @@ function ordered(order, fields) {
 
 function readyProjection() {
   const committedSelectorConstraints = [
-    { fieldKey: "tier", value: "Business", valueLabel: "Business", committedSelectorState: true, blocked: false, authoritySource: "acceptedDefaults" },
     { fieldKey: "directOpticVar1", value: "80|Inlay", valueLabel: "Inlay", committedSelectorState: true, blocked: false, authoritySource: "manualConstraints" },
     { fieldKey: "targetLmPerM", value: "1200", valueLabel: "1200", committedSelectorState: true, blocked: false, authoritySource: "manualConstraints" },
     { fieldKey: "cctCri", value: "4000K / CRI90", valueLabel: "4000K / CRI90", committedSelectorState: true, blocked: false, authoritySource: "manualConstraints" },

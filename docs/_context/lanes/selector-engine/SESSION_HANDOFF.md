@@ -844,3 +844,12 @@ Program accepts the protected stop. The same standing worker and WALK-004 parcel
 Production may change only the reference-options service and factory-approved-inputs summary. Delete legacy `TIERS` option/readiness authority and committed Selector Tier candidate/Stage 3B authority. Stage 3B must use only valid source-backed `SYSTEM_POLICY` length-policy Tier and otherwise retain the existing fail-closed source-policy blocker. Preserve genuine server-derived Tier/profile outputs, the 15-table bridge, Engine contracts and every disabled execution/mutation boundary.
 
 Recalculate the full coupled-test baseline from the restored tree, require zero residual, run the fourteen previously blocked focused tests, the complete affected focused set and the fixed Selector gate. Commit/push only the exact two-owner implementation, coupled tests and five-file memory closeout; leave clean and stop for Program review. A third production owner is an exact protected stop. Do not begin WALK-005 or any prohibited later or operational work.
+
+
+## 2026-07-24 WALK-004 two-owner completion
+
+Program's protected-scope stop was accepted and the existing worker resumed without a new commission. The exact two-owner implementation removes legacy TIERS option authority and Tier from readonly candidate and committed Stage 3B prerequisites. Electrical Class now uses only genuine ACCESSORIES authority or reports unavailable. Stage 3B uses Tier only from a valid source-backed SYSTEM_POLICY length-policy summary and otherwise retains the existing source-policy blocker.
+
+Search terms were `TIERS`, manual/selected Tier fixture forms, `selectedTier`, `tierToken`, `missing-readonly-engine-candidate-input-tier`, `stage3b-source-backed-tier-required`, `stage3b-source-backed-length-policy-tier-mismatch`, and direct committed `map.get("tier")` effects. Counting was once per logical fixture, assertion, test title or exact contract expectation. Receipt: baseline 39; deleted 24; rewritten 15; affected test files 21; residual 0; equation `39 = 24 + 15 + 0`.
+
+The prohibited residual searches are zero and the fixed Selector gate passes 108/108. The temporary harness is absent. The 15-table bridge, server/Engine SYSTEM_POLICY Tier derivation, legitimate downstream Tier/profile values, source promotion, Engine contracts and every no-write/no-generation/no-persistence/no-provider-mutation boundary remain unchanged. Stop for Program review; do not begin WALK-005 or later work.

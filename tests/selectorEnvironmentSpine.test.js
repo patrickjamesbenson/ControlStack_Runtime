@@ -81,10 +81,6 @@ function environmentSnapshot({ includeAmbient = true, includeApplication = true 
         approved: "yes",
       },
     ],
-    TIERS: [
-      { tier: "Economy", electrical: "Class I;SELV", approved: "yes" },
-      { tier: "Business", electrical: "Class II", approved: "yes" },
-    ],
     ACCESSORIES: [
       { accessory_type: "elect_class", accessory_id: "Remote SELV", display_choice: "Display text not used", approved: "yes" },
     ],

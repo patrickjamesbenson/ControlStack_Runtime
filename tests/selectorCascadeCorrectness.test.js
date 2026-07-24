@@ -1934,7 +1934,7 @@ test("IP and IK candidates are limited by the real source-backed System plus sel
   assert.deepEqual(controlOptionLabels(visibleControlField(inlayModel, "ikRating")), ["IK10"]);
 });
 
-test("Electrical Class follows donor tier-first / exact ACCESSORIES fallback and ignores broad source pools", () => {
+test("Electrical Class follows exact ACCESSORIES authority and ignores legacy Tier and broad source pools", () => {
   const fallbackOptions = ["Donor class 1", "Donor class 2", "Donor class 3", "Donor class 4", "Donor class 5"];
   const broadPool = Array.from({ length: 88 }, (_, index) => `Broad source class ${index + 1}`);
   const snapshot = {
@@ -1947,9 +1947,6 @@ test("Electrical Class follows donor tier-first / exact ACCESSORIES fallback and
       { system: "80", optic_var_1: "Inlay", optic_var_2: "Antiglare", emission_permission: "Direct", ip_option_1: "IP65", ik_option_2: "IK10", approved: "yes" },
       { system: "80", optic_var_1: "Rope", optic_var_2: "Rope", emission_permission: "Indirect", ip_option_1: "IP65", ik_option_2: "IK10", approved: "yes" },
       { system: "60", optic_var_1: "Beam", optic_var_2: "Wide", emission_permission: "Direct, Indirect", ip_option_1: "IP20;IP44", ik_option_2: "IK07", approved: "yes" },
-    ],
-    TIERS: [
-      { tier: "Business", electrical: "Tier class A;Tier class B", approved: "yes" },
     ],
     ACCESSORIES: [
       ...fallbackOptions.map((accessory_id) => ({ accessory_type: "elect_class", accessory_id, approved: "yes" })),
@@ -1982,12 +1979,13 @@ test("Electrical Class follows donor tier-first / exact ACCESSORIES fallback and
     );
   }
 
-  const tierConstraints = { system: "DNX 80 D/I", emission: "Both", tier: "Business" };
-  const tierResult = deriveSelectorReferenceOptionsFromSnapshot(snapshot, {
+  const legacyTierConstraints = { system: "DNX 80 D/I", emission: "Both", tier: "Business" };
+  const legacyTierResult = deriveSelectorReferenceOptionsFromSnapshot(snapshot, {
     source: sourceReady(),
-    constraints: tierConstraints,
+    constraints: legacyTierConstraints,
   });
-  assert.deepEqual(compatibleLabels(workflowField(tierResult, "electricalClass")), ["Tier class A", "Tier class B"].sort());
+  assert.deepEqual(compatibleLabels(workflowField(legacyTierResult, "electricalClass")), expectedFallback);
+  assert.equal(legacyTierResult.workflowSections.flatMap((section) => section.fields).some((field) => field.fieldKey === "tier"), false);
 
   const staleConstraints = { system: "DNX 60 Beam D/I", emission: "Both", electricalClass: broadPool[21] };
   const staleResult = deriveSelectorReferenceOptionsFromSnapshot(snapshot, {

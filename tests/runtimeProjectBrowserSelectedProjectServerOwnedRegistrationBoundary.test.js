@@ -41,7 +41,6 @@ function ordered(order, fields) {
 
 function readyProjection({ quantity = 2, runLengthMm = 3500 } = {}) {
   const committedSelectorConstraints = [
-    { fieldKey: "tier", value: "Business", valueLabel: "Business", committedSelectorState: true, blocked: false, authoritySource: "acceptedDefaults" },
     { fieldKey: "directOpticVar1", value: "80|Inlay", valueLabel: "Inlay", committedSelectorState: true, blocked: false, authoritySource: "manualConstraints" },
     { fieldKey: "targetLmPerM", value: "1200", valueLabel: "1200", committedSelectorState: true, blocked: false, authoritySource: "manualConstraints" },
     { fieldKey: "cctCri", value: "4000K / CRI90", valueLabel: "4000K / CRI90", committedSelectorState: true, blocked: false, authoritySource: "manualConstraints" },
@@ -52,6 +51,15 @@ function readyProjection({ quantity = 2, runLengthMm = 3500 } = {}) {
     diagnosticOnly: true,
     safeSummaryOnly: true,
     factoryApprovedInputsReady: true,
+    readonlyEngineCandidateInputsReady: true,
+    readonlyEngineCandidateInputsBlocker: null,
+    stage2Ready: true,
+    readonlyEngineCandidateApplicability: {
+      directSupported: true,
+      indirectRequired: false,
+      directOnly: true,
+      supportedSlice: "first-readonly-engine-direct-only",
+    },
     ready: true,
     stage3Mode: "simple-run-stage3a-zero-accessory",
     blocker: null,
