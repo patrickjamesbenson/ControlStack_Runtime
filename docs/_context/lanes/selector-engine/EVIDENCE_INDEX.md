@@ -933,3 +933,12 @@ Every completed worker updates this index with:
 - Coupled-test receipt is baseline 37, deleted 0, rewritten 37, affected test files 8, residual 0; `37 = 0 + 37 + 0` — VERIFIED.
 - Affected focused coverage plus fixed gate passed together; ordinary fixed Selector gate passes 108/108 — VERIFIED.
 - Engine, generation, persistence, routes/POST, RuntimeData, provider and source mutation remain disabled and untouched — VERIFIED.
+
+
+## 2026-07-24 — WALK-004 admission evidence
+
+- Program accepted WALK-003 at exact three-owner scope with baseline 37, deleted 0, rewritten 37, eight affected tests, zero residual, focused 166/166, fixed gate 108/108, pushed clean lane — ACCEPTED PROGRAM EVIDENCE / MATCHES REPOSITORY.
+- Actual branch is `lane/selector-engine`, clean, and its tip is the WALK-003 feature/closeout commit — VERIFIED.
+- WALK-004 is recorded as the sole ready parcel for the existing standing worker with production confined to the one exact reference-options service owner — RECORDED.
+- Complete TIERS/Tier option-readiness deletion, non-TIERS-only Electrical Class rule, unchanged 15-table bridge, intact SYSTEM_POLICY Engine/server Tier derivation, deletion-test accounting and all no-execution/no-mutation exclusions — RECORDED.
+- WALK-005 and every later/audit/operational parcel remain blocked pending Program review — RECORDED.

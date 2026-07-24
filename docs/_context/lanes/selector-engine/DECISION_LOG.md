@@ -716,3 +716,13 @@ This log is append-oriented. Do not silently rewrite historical decisions.
 - Preservation: source-backed workflow controls remain the sole current-selection owner; read-only diagnostic helpers may remain only unmounted and outside authority-bearing projection.
 - Test coupling: 37 encoded assumptions across 8 tests were rewritten; none remain. No fabricated replacement default, sentinel, fallback or inferred product truth was introduced.
 - Consequence: stop WALK-003 for Program review with every later parcel and prohibited system blocked.
+
+
+## 2026-07-24 — Accept WALK-003 and release WALK-004 TIERS deletion only
+
+- Decision: accept Program's independently verified WALK-003 closeout and do not reopen it without new defect evidence.
+- Scope: WALK-004 alone is ready; production is limited exactly to `selectorReferenceOptionsService.js`; a second owner is a protected stop.
+- Authority ruling: Tier is not a Selector input, option, selected value, payload/readiness prerequisite or expected source table. Engine/server SYSTEM_POLICY derivation and downstream result meaning remain.
+- Electrical Class ruling: retain only genuine supported non-TIERS authority; otherwise unavailable without inference, default, prior-value copy or TIERS-derived preservation.
+- Coupling: mechanically account for and remove or rewrite the entire encoded test-assumption class with zero residual.
+- Consequence: stop for Program review after exact implementation, focused coverage, fixed gate, push and clean closeout; all later and operational work remains blocked.

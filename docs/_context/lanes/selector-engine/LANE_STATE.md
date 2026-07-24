@@ -882,3 +882,20 @@ Program accepted WALK-002 and WALK-002R complete. Actual clean branch tip was th
 WALK-003 changed only the three authorised production owners. The runtime-native single-page expander scaffold is no longer projected by the view model or mounted by the renderer. The module-local fabricated selection constant was removed; fresh state now has empty default-preview selections, auto consequences and effective selection, with selector mode `empty-preamble`. All old `— default-preview` option labels were removed. Source-backed Selector controls remain available through the genuine workflow surface, and read-only diagnostic helpers remain unmounted and outside current-selection authority.
 
 Mechanical coupled-test receipt: baseline 37; deleted 0; rewritten 37; affected test files 8; residual 0. Arithmetic: 37 = 0 + 37 + 0. The affected focused set plus fixed gate passed together, and the ordinary fixed Selector gate passes 108/108. Engine, generation, persistence, routes/POST, RuntimeData, providers and sources were not enabled or mutated. WALK-003 is stopped for Program review; all later work remains blocked.
+
+
+## 2026-07-24 Program WALK-004 TIERS authority deletion admission — latest controlling state
+
+**Recorded lane work HEAD:** `50e8188aa462b55b57dedfc8669c29c9470b03e6` — `feat(selector): unmount duplicate scaffold authority`.
+
+Program accepted WALK-003 complete with baseline 37, deleted 0, rewritten 37, eight affected test files, zero residual, focused coverage 166/166, fixed Selector gate 108/108, exact three-owner production boundary, clean pushed implementation, unmounted duplicate scaffold, empty-preamble fresh state and the genuine source-backed current-selection rail preserved. WALK-003 is closed and must not reopen without new defect evidence.
+
+WALK-004 is the sole ready Selector parcel with one standing worker, one writer and one parcel only. Production is confined exactly to `packages/workspace-kernel/selectorReferenceOptionsService.js`; a required second production owner is a protected stop with the exact safe trace.
+
+Delete every Selector reference-options ownership and contract effect of legacy `TIERS`: manual Tier workflow field, aliases, safe-debug exposure, live reads, emitted Tier options, TIERS-parented Electrical Class, source attribution, relationship records, payload/readiness prerequisites and expected Selector source-table status. Tier must not remain a manual control, selected value, option, payload prerequisite, readiness prerequisite or expected Selector source table. Preserve the unchanged 15-table source-status bridge, server/Engine Tier derivation from `SYSTEM_POLICY`, downstream Tier result shape, source materialisation/promotion, Engine contracts and all no-write/no-mutation boundaries.
+
+Electrical Class may remain only from a genuine existing non-TIERS authority supported by the service. Otherwise report unavailable without inference, default, prior-value copy or TIERS-derived preservation. WALK-005A auto-fill/default acknowledgement is not authorised early.
+
+Before edits, mechanically count every coupled assertion and fixture encoding the deleted Tier/TIERS authority class. Delete or rewrite the complete class in the same parcel and report search terms, counting method, baseline, deleted, rewritten, affected test files and residual, requiring baseline = deleted + rewritten + residual and residual 0. Final verification must prove no TIERS identity/manual Tier authority/TIERS-derived Electrical Class remains, the 15-table bridge is unchanged, server/Engine SYSTEM_POLICY Tier derivation remains intact and no execution, generation, persistence, route/POST, RuntimeData, provider or source mutation was enabled.
+
+Run all affected focused tests and the complete fixed Selector gate. Commit and push only WALK-004 implementation, coupled tests and lane-memory closeout, leave the lane clean and stop for Program review. WALK-005, WALK-005A, WALK-006, WALK-007, audits, manager restart, Engine/seeds, Lab, persistence, provider mutation, IES, retrieval and delivery remain blocked.

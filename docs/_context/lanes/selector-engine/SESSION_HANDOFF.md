@@ -820,3 +820,14 @@ Program accepted WALK-002/WALK-002R complete and released WALK-003 only. The acc
 The mounted runtime-native expander scaffold and its fabricated current-selection authority are removed within the exact three-owner production boundary. Fresh load is an empty preamble with no selected product truth; the fabricated `Linear 60`, `1200 lm/m`, `IK07` and all other old local defaults cannot populate effective selection, consequences, readiness, summaries, payloads or rendered current selection. The source-backed workflow surface remains the sole current-selection owner. Unmounted read-only diagnostics remain outside authority-bearing projection.
 
 Receipt: baseline 37; deleted 0; rewritten 37; 8 affected tests; residual 0; equation `37 = 0 + 37 + 0`. Focused coverage and fixed gate are green. Stop for Program review; do not begin WALK-004 or later work.
+
+
+## 2026-07-24 WALK-004 sole worker commission
+
+Program accepted WALK-003 complete and it is not reopened. WALK-004 alone is ready for the existing standing worker. One writer, one parcel, then stop for Program review.
+
+Production may change only `packages/workspace-kernel/selectorReferenceOptionsService.js`. Delete all legacy `TIERS` option/readiness ownership: manual Tier field, aliases, debug exposure, reads, emitted Tier and TIERS-parented Electrical Class options, attribution, relationships, payload/readiness prerequisites and expected-source-table treatment. Preserve the unchanged 15-table source-status bridge, Engine/server SYSTEM_POLICY Tier derivation, downstream Tier result shape, source materialisation/promotion, Engine contracts and all disabled/no-mutation boundaries.
+
+Electrical Class survives only when genuinely sourced from a supported non-TIERS authority; otherwise it is unavailable with no inference, default, prior-value copy or TIERS-derived preservation. Do not implement WALK-005A early.
+
+Mechanically count the full coupled test class before editing, delete or rewrite it completely, require zero residual and close the arithmetic. Run every affected focused test plus the fixed Selector gate. A second production owner is a protected stop. Commit/push only the exact implementation, coupled tests and lane closeout, leave clean and stop before WALK-005 or any prohibited operational work.

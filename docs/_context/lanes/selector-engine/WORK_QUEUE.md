@@ -833,3 +833,20 @@ Queue reconciliation: WALK-001V is already done, gated and pushed, so it was not
 * result: legacy expander unmounted; fabricated fresh-load selection authority removed; source-backed current-selection rail retained
 * exclusions: no Engine, generation, persistence, route/POST, RuntimeData, provider or source mutation
 * queue: WALK-004, WALK-005, WALK-005A, WALK-006, WALK-007, audits, manager restart, Lab, retrieval and delivery remain blocked
+
+
+## 2026-07-24 WALK-004 commission
+
+### WALK-004 delete legacy TIERS option/readiness authority
+
+* status: ready; sole Selector parcel
+* depends on: Program acceptance of WALK-003 — satisfied
+* writer: existing standing worker only; one writer and one parcel
+* exact production boundary: `packages/workspace-kernel/selectorReferenceOptionsService.js`; any second owner is a protected stop
+* delete: manual Tier workflow field; `TIERS` aliases/debug exposure/live reads; emitted Tier options; TIERS-parented Electrical Class; TIERS attribution/relationships; Tier/TIERS option, payload, readiness and expected-source contracts
+* preserve: unchanged 15-table source-status bridge; server/Engine `SYSTEM_POLICY` Tier derivation; downstream Tier result meaning/shape; source materialisation/promotion; Engine contracts; no-write/no-mutation boundaries
+* Electrical Class: retain only from genuine supported non-TIERS authority; otherwise unavailable with no inference/default/copy/preserved TIERS value
+* test coupling: mechanically count every encoded assumption before edits; delete/rewrite complete class; report search terms/method/baseline/deleted/rewritten/unique affected test files/residual; require baseline = deleted + rewritten + residual and residual 0
+* verification: no TIERS identity, manual Tier option authority or TIERS-derived Electrical Class; unchanged 15-table bridge; intact SYSTEM_POLICY Tier derivation; all affected focused tests and fixed Selector gate green
+* closeout: exact implementation, coupled tests and lane memory only; commit/push, clean lane, stop for Program review
+* blocked: WALK-005, WALK-005A, WALK-006, WALK-007, audits, MGR-RESTART-001, Engine/seeds, Lab, persistence, CRM/provider mutation, IES, retrieval and delivery
