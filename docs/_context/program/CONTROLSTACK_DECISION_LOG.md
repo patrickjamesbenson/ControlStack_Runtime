@@ -1844,3 +1844,13 @@ SS-1 delivers exactly two bounded artifacts: the opportunity-signal schema contr
 No mailbox access or automation, EstimateOne API, live HubSpot read/write integration, Lusha integration or secrets, Research pipeline creation, Leads entitlement action, persistence, provider mutation, retrieval, delivery or module registration is authorised. Use only manually supplied redacted alert text committed as bounded test fixtures or corpus data; do not include mailbox metadata, credentials, personal contact details or provider tokens.
 
 Require deterministic classification, explicit reason codes, stable output ordering, correction cases that prove both false-positive and false-negative handling, and fail-closed rejection of malformed, path-bearing, URL-bearing, provider-shaped or secret-bearing inputs. Run focused Sales Signals tests and the complete fixed Governance gate, commit and push the exact parcel and lane-memory closeout, leave the lane clean and stop for Program review.
+
+## 2026-07-24 — WALK-004 accepted complete; later walkthrough work held
+
+**Status:** WALK-004 ACCEPTED COMPLETE; NO SELECTOR PARCEL RELEASED.
+
+Program independently verifies the pushed Selector closeout at `1ae56dca9f30f331248cb2b800b397aac76def6a` on `lane/selector-engine`. The lane is clean. The exact two production owners contain no legacy `TIERS` reference-options identity, no committed-Tier candidate blocker, no `tierToken`, and no deleted Stage 3B committed-Tier prerequisite or mismatch blocker. Stage 3B retains only the legitimate Tier/profile value derived from the valid source-backed `SYSTEM_POLICY` length-policy summary.
+
+Program accepts the mechanical deletion-test receipt: baseline 39, deleted 24, rewritten 15, affected test files 21, residual 0; `39 = 24 + 15 + 0`. The fixed `selector-engine` gate independently reruns green at 108/108. The unchanged 15-table bridge and legitimate server-derived Tier/profile outputs remain intact.
+
+WALK-004 is closed and must not be reopened without new defect evidence. WALK-005, WALK-005A, WALK-006, WALK-007, both post-WALK audits, seed execution and all later work remain blocked pending a separate Program admission. No Selector worker is commissioned by this acceptance.

@@ -1275,3 +1275,11 @@ SS-1 is now the sole ready Governance parcel under one writer. Deliver only the 
 The harness must expose deterministic classifications, explicit reason codes and stable ordering; the correction corpus must prove both false-positive suppression and false-negative recovery. Malformed, nested, path-bearing, URL-bearing, provider-shaped, credential-bearing or secret-bearing inputs must fail closed without retaining unsafe material.
 
 Do not access a mailbox, call EstimateOne, read or write HubSpot, configure Lusha, create pipelines, check entitlements, persist records, add routes, register Module 06, invoke retrieval/delivery or alter the single-write-path seam. Run focused Sales Signals tests and the full fixed Governance gate, commit and push only the exact SS-1 parcel and lane-memory closeout, leave the lane clean and stop for Program review.
+
+### WALK-004 accepted complete; no later Selector release
+
+Program independently verifies the clean pushed Selector closeout at `1ae56dca9f30f331248cb2b800b397aac76def6a`. The exact two production owners delete legacy manual Tier/`TIERS` option authority, committed Tier candidate readiness and committed-Tier Stage 3B authority. Stage 3B now consumes Tier only from the valid source-backed `SYSTEM_POLICY` length-policy summary. The 15-table readiness bridge and legitimate server-derived Tier/profile result fields remain intact.
+
+The coupled-test receipt is accepted: baseline 39, deleted 24, rewritten 15, affected test files 21, residual 0; `39 = 24 + 15 + 0`. The fixed Selector gate independently reruns at 108/108 and the lane is clean.
+
+WALK-004 is closed. WALK-005 and every later Selector parcel remain blocked pending a separate Program admission. Do not commission a Selector worker, start WALK-005, invoke Engine, execute seeds or begin either post-WALK audit from this receipt.

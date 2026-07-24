@@ -744,3 +744,12 @@ P2 Checkpoint 1 is **IMPLEMENTATION COMPLETE / GATE GREEN / COMMIT BLOCKED BY SH
 ## Standing Program response rule
 
 Any Program response that changes a ruling, authorisation or queue state must end with `ROUTING`, list every affected lane, and either provide the full paste-ready message, state `<lane>: no action`, assign one plain-English Patrick action, or assign one Advisor infrastructure action. Unrouted authorisations remain stalled. When nothing moves, state `ROUTING: nothing moves`.
+
+## 2026-07-24 WALK-004 acceptance state
+
+- **WALK-004 ACCEPTED:** clean pushed Selector commit `1ae56dca9f30f331248cb2b800b397aac76def6a`; exact two-owner implementation.
+- **COUPLING:** baseline 39, deleted 24, rewritten 15, affected test files 21, residual 0; equation `39 = 24 + 15 + 0`.
+- **GATE:** fixed `selector-engine` gate independently rerun green at 108/108.
+- **AUTHORITY RESULT:** manual Tier/`TIERS` option authority, committed Tier candidate readiness and committed-Tier Stage 3B prerequisite/mismatch are deleted. Stage 3B consumes only valid source-backed `SYSTEM_POLICY` policy Tier.
+- **PRESERVED:** unchanged 15-table bridge and legitimate server-derived Tier/profile outputs.
+- **SELECTOR HOLD:** WALK-005 and later work remain blocked pending separate Program admission; no Selector worker is commissioned.

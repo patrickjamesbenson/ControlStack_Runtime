@@ -996,3 +996,12 @@ PWS-001, PWS-002 and PWS-005 are complete. C5 and the Lab seed-memory correction
 - **Gated infrastructure:** mailbox read-only historical extraction; Lusha integration and credit secrets; HubSpot Research pipeline creation and Leads entitlement check. Each requires a separate explicit ruling and is not lane code.
 - **Seam:** Module 06 shell registration remains deferred behind Selector seam work. Selector receives schema-document boundary only in SS-1. Single-write-path rules remain unchanged.
 - **Lane split:** separate CRM lane remains deferred until load evidence exists; the read-only private app satisfies the prior portal-scope prerequisite.
+
+### WALK-004 Program acceptance
+
+- **WALK-004 — legacy TIERS option/readiness deletion:** accepted complete at pushed commit `1ae56dca9f30f331248cb2b800b397aac76def6a`.
+- **Exact result:** two production owners; baseline 39, deleted 24, rewritten 15, affected test files 21, residual 0; equation `39 = 24 + 15 + 0`.
+- **Gate:** fixed `selector-engine` gate independently rerun green at 108/108; Selector lane clean.
+- **Preserved:** unchanged 15-table source-status bridge and legitimate source-backed/server-derived Tier/profile outputs.
+- **Queue effect:** WALK-004 closed. WALK-005 and every later Selector parcel remain blocked pending separate Program admission; no Selector worker is commissioned.
+
