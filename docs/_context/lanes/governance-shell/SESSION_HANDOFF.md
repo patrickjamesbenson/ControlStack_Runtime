@@ -37,9 +37,8 @@ Engine coupling remain disabled. Identity gate: 181/181.
 
 ## Current queue
 
-No Governance parcel is ready. The read-only deferred-decision panel now records
-Patrick's finishes default-acceptance ruling as RULED: inherited and auto-filled values
-do not satisfy Build Ready until one explicit `Accept all defaults` action acknowledges
-every flagged default; per-field acknowledgement is not required. CRM and integration
-remain held pending Program's lane and portal-scope decision. Two-factor authentication
-remains deferred. Stop for Program review.
+No implementation parcel is ready. The read-only deferred-decision panel records Patrick's finishes default-acceptance ruling as RULED.
+
+SALES SIGNALS (MODULE 06) is registered from brief SALES_SIGNALS r0.4 and the accepted owner response. SS-1 is blocked pending SS-1G managed guard activation. After activation, SS-1 is limited to an opportunity-signal schema document plus a deterministic keyword-classification harness and correction corpus over manually supplied alert text. No mailbox automation, EstimateOne API, live HubSpot writes, Selector surface or shell registration is authorised.
+
+Mailbox read-only historical extraction, Lusha integration/credit secrets, and HubSpot Research pipeline creation plus Leads entitlement check are separately gated infrastructure actions. The portal-scope prerequisite is satisfied; the separate CRM-lane decision remains deferred until load evidence exists. Stop for Program review.

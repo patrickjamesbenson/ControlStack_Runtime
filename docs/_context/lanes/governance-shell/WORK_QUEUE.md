@@ -68,7 +68,28 @@
 * status: held
 * note: deal lifecycle, leads pipeline, sync and the private-app cutover are either a
   separate CRM lane or a later phase of this one — Program's call at the lane-split
-  ruling. Blocked on Patrick's portal scope pre-check regardless. Do not start here.
+  ruling. The prior portal-scope prerequisite is satisfied by the live read-only private
+  app. The separate-lane decision remains deferred until load evidence exists.
+
+### SS-1 Sales Signals schema and classification harness
+* status: blocked pending SS-1G managed write-guard activation
+* programme: SALES SIGNALS (MODULE 06), brief SALES_SIGNALS r0.4 plus accepted owner response.
+* writer scope after activation: `packages/modules/sales-signals/**`,
+  `tests/salesSignals*.test.js`, `docs/sales-signals/**`, and this lane context.
+* objective: deliver the opportunity-signal schema contract from brief section 5 as a
+  document, plus a deterministic keyword-classification harness and correction corpus
+  from sections 9 and 10 against manually supplied alert text.
+* prohibited: no mailbox automation, EstimateOne API, live HubSpot writes, Selector
+  surface, shell registration, provider credentials, persistence, retrieval or delivery.
+* seam: Module 06 shell registration remains deferred behind Selector seam work. The
+  Selector opportunity-signal boundary is schema-document only in SS-1. Existing
+  single-write-path rules remain unchanged.
+* infrastructure gates, not lane code: mailbox read-only access for historical alert
+  extraction; Lusha integration and credit secrets; HubSpot Research pipeline creation
+  and Leads entitlement check. Each requires a separate explicit ruling and execution.
+* activation: Advisor must apply exactly the three new write globs, reload the resident
+  manager, recycle the complete Governance MCP host and start it fresh through the
+  manager. SS-1 remains blocked until Program accepts the live activation receipt.
 
 ### Cross-cutting, never a separate parcel
 AI slots are added as each surface is built (named five-part slots, per the charter).

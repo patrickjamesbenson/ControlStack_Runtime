@@ -24,7 +24,18 @@ set of selections and nothing else — this lane never adds to it.
 See `WORK_QUEUE.md`. Bootstrap, deferred decisions, inert retrieval, project
 persistence and user identity/permissions are complete. Deferred-decision registry
 version 1.2.0 now records Patrick's finishes default-acceptance ruling as RULED: inherited and auto-filled defaults require one explicit `Accept all defaults` acknowledgement before Build Ready; per-field acknowledgement is not required.
-No parcel is ready. CRM mutation remains held and two-factor authentication remains deferred.
+No implementation parcel is ready. SS-1 is registered but blocked pending SS-1G managed write-guard activation. CRM mutation remains held and two-factor authentication remains deferred.
+
+## Sales Signals programme registration — pending activation
+- Programme: SALES SIGNALS (MODULE 06), brief SALES_SIGNALS r0.4 plus accepted owner response.
+- Governance owns external CRM orchestration under the existing Boundary Ruling.
+- Planned writer scope: `packages/modules/sales-signals/**`, `tests/salesSignals*.test.js`, `docs/sales-signals/**`, and lane context.
+- SS-1 deliverables: opportunity-signal schema document; deterministic keyword-classification harness; correction corpus over manually supplied alerts.
+- SS-1 excludes mailbox automation, EstimateOne API, live HubSpot writes, Selector surface and shell registration.
+- Mailbox read-only extraction, Lusha/credits, and HubSpot Research-pipeline/Leads checks are separately gated infrastructure actions.
+- Module 06 shell registration remains deferred behind Selector seam work; Selector receives schema-document boundary only.
+- Separate CRM lane remains deferred until load evidence exists.
+- Current blocker: Advisor activation and Program acceptance of the live Governance MCP guard.
 
 ## Evidence
 - Bootstrap and deferred-decisions closeouts remain intact.
