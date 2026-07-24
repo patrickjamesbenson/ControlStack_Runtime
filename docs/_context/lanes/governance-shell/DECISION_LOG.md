@@ -29,3 +29,15 @@ or live cross-module read is authorised.
 The prior shell-owned browser download action is inactive. Existing read-only previews
 remain available, but no active outward path bypasses Governance. Project persistence is
 the next candidate parcel and still requires Program seam approval.
+
+## 2026-07-24 — SS-1G accepted and SS-1 admitted
+
+**Status:** SS-1 READY; SOLE GOVERNANCE WRITER PARCEL.
+
+Program accepted the live SS-1G activation receipt. The three Sales Signals permissions are live exactly once, all prior Governance permissions remain unchanged, broad module and test permissions are absent, all three scope probes pass, the complete Governance MCP host was recycled fresh through the manager, unrelated services were untouched, and repository/runtime source, credentials and protected secrets were unchanged.
+
+SS-1 requirements authority is limited to `SALES_SIGNALS_BRIEF_r0.4.md` plus `SALES_SIGNALS_r0.4_OWNER_RESPONSE.md`. Exact brief sections 5, 9 and 10 are present in Governance context; no summary reconstruction is permitted. The supplied HTML mockup is non-authoritative.
+
+SS-1 may create only the fixed-version opportunity-signal schema contract document and a deterministic keyword-classification harness with bounded correction corpus over manually supplied redacted alert text, plus focused tests and lane-memory closeout. The schema document is the only Selector-facing seam; Selector remains untouched.
+
+Mailbox access, EstimateOne, HubSpot read/write, Lusha, credit secrets, Research pipeline and Leads entitlement work, shell registration, routes, persistence, retrieval, delivery, CRM actions and every later Sales Signals parcel remain blocked.

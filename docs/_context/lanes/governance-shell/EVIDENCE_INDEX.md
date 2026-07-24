@@ -83,3 +83,17 @@
 - The fixed `governance-shell` gate passed 152/152; the exact feature set was committed
   and pushed.
 - The unrelated local persistence-seam report remained untracked and untouched.
+
+## SS-1 admission evidence — 2026-07-24
+
+- Program accepted SS-1G complete from live activation evidence — VERIFIED.
+- Exact live write permissions: Sales Signals module, focused tests and documentation present once each; broad module/test permissions absent — VERIFIED.
+- Existing Governance permissions and unrelated services preserved — VERIFIED.
+- Complete Governance MCP host recycled fresh through the manager — VERIFIED.
+- Repository/runtime source, credentials and protected secrets unchanged during activation — VERIFIED.
+- Actual branch reconciled to the Sales Signals registration checkpoint — VERIFIED.
+- Supplied source inventory: approved r0.4 brief, accepted owner response and non-authoritative HTML mockup — RECORDED.
+- Exact brief sections 5, 9 and 10 available in Governance context — VERIFIED.
+- Requirements authority restricted to brief plus owner response; no reconstruction from summaries or mockup — RECORDED.
+- SS-1 sole ready Governance parcel under one writer — RECORDED.
+- Exact outputs and prohibitions bounded; all infrastructure and later Sales Signals actions remain blocked — RECORDED.

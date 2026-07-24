@@ -37,8 +37,10 @@ Engine coupling remain disabled. Identity gate: 181/181.
 
 ## Current queue
 
-No implementation parcel is ready. The read-only deferred-decision panel records Patrick's finishes default-acceptance ruling as RULED.
+SS-1 is the sole ready Governance parcel. Program accepted SS-1G complete: the three exact Sales Signals guard permissions are live once each, existing permissions remain unchanged, broad module/test permissions are absent, scope probes pass, the full Governance MCP host was recycled fresh and unrelated source/services/secrets were untouched.
 
-SALES SIGNALS (MODULE 06) is registered from brief SALES_SIGNALS r0.4 and the accepted owner response. SS-1 is blocked pending SS-1G managed guard activation. After activation, SS-1 is limited to an opportunity-signal schema document plus a deterministic keyword-classification harness and correction corpus over manually supplied alert text. No mailbox automation, EstimateOne API, live HubSpot writes, Selector surface or shell registration is authorised.
+The authoritative r0.4 brief and accepted owner response are present in `docs/sales-signals/`; exact sections 5, 9 and 10 are available. The supplied HTML mockup is non-authoritative and must not provide requirements.
 
-Mailbox read-only historical extraction, Lusha integration/credit secrets, and HubSpot Research pipeline creation plus Leads entitlement check are separately gated infrastructure actions. The portal-scope prerequisite is satisfied; the separate CRM-lane decision remains deferred until load evidence exists. Stop for Program review.
+The standing worker may deliver only: one fixed-version opportunity-signal schema contract document, one deterministic keyword classifier over manually supplied redacted text, one bounded correction corpus and focused tests. Unknown/unsafe/widened schema fields and malformed/unsafe alert input fail closed. Classification vocabulary is exactly section 9; corrections remain reviewed corpus evidence under section 10 and never silently become rules.
+
+No mailbox access, EstimateOne, HubSpot read/write, Lusha, credit secret, Research pipeline, Leads entitlement work, shell registration, Selector modification, route, POST handler, persistence, retrieval, delivery or later Sales Signals parcel is authorised. Stop after SS-1 for Program review.

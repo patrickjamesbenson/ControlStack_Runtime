@@ -1,5 +1,5 @@
 # Governance & Shell Lane State
-*Live canonical state, verified 2026-07-22.*
+*Live canonical state, reconciled 2026-07-24.*
 
 ## Identity — VERIFIED
 - Lane: `governance-shell`
@@ -9,11 +9,12 @@
 - MCP: shared `controlstack_mcp.py`, scoped by env vars (same pattern as other lanes)
 - Write scope: this worktree only; context writes limited to
   `docs/_context/lanes/governance-shell/`
-- Recorded branch HEAD: `0fdcba270a9b296219c91560aa055dc70aae8644`
+- Recorded branch HEAD before SS-1 admission: `6763e1fba843d534e4618bb97a352a0477ea109c`
 - Recorded retrieval feature checkpoint: `408eaeced381dfb5ab49b5420b41a4b957698375`
 - Recorded persistence feature checkpoint: `a8de2049cfda57f1413ec3bb193fe42e235e7be6`
 - Recorded identity feature checkpoint: `87bf61db802bf6f31fc62eb0a75105b6efaabc48`
-- Tree after identity feature push: clean
+- Recorded Sales Signals registration checkpoint: `6763e1fba843d534e4618bb97a352a0477ea109c`
+- Reconciled working inventory: three supplied untracked Sales Signals source documents only; no tracked modification, staged file or deletion before admission.
 
 ## Boundary (fixed by Program's Boundary Ruling)
 This lane is the OUTSIDE layer: identity, project, permissions, retrieval, deferral
@@ -24,18 +25,20 @@ set of selections and nothing else — this lane never adds to it.
 See `WORK_QUEUE.md`. Bootstrap, deferred decisions, inert retrieval, project
 persistence and user identity/permissions are complete. Deferred-decision registry
 version 1.2.0 now records Patrick's finishes default-acceptance ruling as RULED: inherited and auto-filled defaults require one explicit `Accept all defaults` acknowledgement before Build Ready; per-field acknowledgement is not required.
-No implementation parcel is ready. SS-1 is registered but blocked pending SS-1G managed write-guard activation. CRM mutation remains held and two-factor authentication remains deferred.
+SS-1 is the sole ready Governance parcel after Program acceptance of SS-1G. CRM mutation remains held and two-factor authentication remains deferred. No later Sales Signals parcel or infrastructure action is ready.
 
-## Sales Signals programme registration — pending activation
-- Programme: SALES SIGNALS (MODULE 06), brief SALES_SIGNALS r0.4 plus accepted owner response.
+## Sales Signals programme registration — SS-1 admitted
+- Programme: SALES SIGNALS (MODULE 06), authoritative brief SALES_SIGNALS r0.4 plus accepted owner response.
+- Program accepted SS-1G: the three exact Sales Signals permissions are live once each, all existing Governance permissions remain unchanged, broad module/test permissions are absent, all scope probes pass, the complete Governance MCP host was recycled fresh and unrelated services/source/secrets were untouched.
 - Governance owns external CRM orchestration under the existing Boundary Ruling.
-- Planned writer scope: `packages/modules/sales-signals/**`, `tests/salesSignals*.test.js`, `docs/sales-signals/**`, and lane context.
-- SS-1 deliverables: opportunity-signal schema document; deterministic keyword-classification harness; correction corpus over manually supplied alerts.
-- SS-1 excludes mailbox automation, EstimateOne API, live HubSpot writes, Selector surface and shell registration.
-- Mailbox read-only extraction, Lusha/credits, and HubSpot Research-pipeline/Leads checks are separately gated infrastructure actions.
+- Active writer scope: `packages/modules/sales-signals/**`, `tests/salesSignals*.test.js`, `docs/sales-signals/**`, and lane context.
+- Source package present: approved r0.4 brief, accepted owner response and a non-authoritative HTML mockup. Requirements come only from the brief and owner response.
+- Exact sections 5, 9 and 10 are available and traced. SS-1 may proceed without reconstruction.
+- SS-1 deliverables: opportunity-signal schema contract document; deterministic keyword-classification harness; bounded correction corpus over manually supplied redacted alerts; focused tests and lane-memory closeout.
+- SS-1 excludes mailbox automation, EstimateOne API, any HubSpot read/write, Lusha/credits, Selector modification, shell registration, routes, persistence, retrieval and delivery.
+- Mailbox extraction, Lusha/credits, HubSpot Research-pipeline/Leads checks and all later Sales Signals parcels remain blocked infrastructure or Program actions.
 - Module 06 shell registration remains deferred behind Selector seam work; Selector receives schema-document boundary only.
 - Separate CRM lane remains deferred until load evidence exists.
-- Current blocker: Advisor activation and Program acceptance of the live Governance MCP guard.
 
 ## Evidence
 - Bootstrap and deferred-decisions closeouts remain intact.
