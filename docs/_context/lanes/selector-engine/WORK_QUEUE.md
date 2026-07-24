@@ -860,3 +860,21 @@ Queue reconciliation: WALK-001V is already done, gated and pushed, so it was not
 - retained implementation: none; partial edits restored and temporary harness removed
 - verification: fixed Selector gate 108/108; clean lane
 - next: Program review/rescope only. Do not begin WALK-005 or later work.
+
+
+## 2026-07-24 WALK-004 two-owner rescope
+
+### WALK-004 delete legacy TIERS and committed Selector Tier authority
+
+* status: ready; same existing parcel and standing worker
+* depends on: Program acceptance of protected stop and two-owner rescope — satisfied
+* exact production boundary: `packages/workspace-kernel/selectorReferenceOptionsService.js`; `packages/modules/cs-selector/selectorFactoryApprovedInputsSummary.js`
+* third-owner rule: stop with the exact safe trace; no widening
+* reference-options scope: delete manual Tier, `TIERS` aliases/debug/reads/options, TIERS-parented Electrical Class, attribution/relationships and Tier as Selector input, payload, option or readiness prerequisite
+* factory-summary scope: remove `tier`, `selectedTier` and `tierToken` from direct-candidate requirements; eliminate `missing-readonly-engine-candidate-input-tier`; remove committed Tier reader, `map.get("tier")`, committed prerequisite, source-backed Tier-required blocker and committed-versus-source mismatch blocker from Stage 3B
+* source-policy rule: Stage 3B uses only valid source-backed `SYSTEM_POLICY` length-policy Tier; missing/invalid/unresolved source policy fails closed through the existing source-policy blocker
+* preserve: genuine non-TIERS Electrical Class; 15-table bridge; server/Engine SYSTEM_POLICY Tier derivation; downstream Tier/profile result meaning; source materialisation/promotion; Engine/routes/POST and all no-write/no-generation/no-persistence/no-provider-mutation boundaries
+* coupled tests: recalculate from restored clean state; report search terms, counting method, baseline, deleted, rewritten, affected files and residual; require baseline = deleted + rewritten + residual and residual 0
+* verification: fourteen previously blocked focused tests; complete affected focused set; fixed Selector gate
+* closeout: exact implementation, coupled tests and five lane-memory files only; commit/push, clean lane, stop for Program review
+* blocked: WALK-005, WALK-005A, WALK-006, WALK-007, audits, MGR-RESTART-001, Engine/seeds, Lab, persistence, CRM/provider mutation, IES, retrieval and delivery

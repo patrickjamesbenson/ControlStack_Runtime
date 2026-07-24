@@ -951,3 +951,13 @@ Every completed worker updates this index with:
 - No second production owner was edited; all partial authorised edits were restored and the temporary harness removed — VERIFIED.
 - Fixed Selector gate passes 108/108 and feature tree is clean — VERIFIED.
 - WALK-004 requires Program rescoping; later work remains blocked — RECORDED.
+
+
+## 2026-07-24 — WALK-004 two-owner rescope evidence
+
+- Program accepts the protected stop: partial edits restored, temporary harness absent, fixed gate 108/108, stop record pushed and lane clean — ACCEPTED / VERIFIED.
+- Fourteen focused readiness tests stopped at `missing-readonly-engine-candidate-input-tier` — ACCEPTED REQUIRED SECOND-OWNER TRACE.
+- Live guard permits both exact production owners and no deployment or activation is required — VERIFIED.
+- WALK-004 resumes as the same parcel and worker with no new commission; exact production ceiling is two owners and a third owner is a protected stop — RECORDED.
+- Selector Tier option/readiness and committed Stage 3B Tier authority must reach zero residual while SYSTEM_POLICY-derived downstream Tier/profile meaning and the unchanged 15-table bridge remain — RECORDED.
+- WALK-005 and all later or operational work remain blocked — RECORDED.

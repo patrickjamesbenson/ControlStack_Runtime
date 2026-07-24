@@ -733,3 +733,12 @@ This log is append-oriented. Do not silently rewrite historical decisions.
 - Evidence: the factory-approved-inputs readiness summary outside that boundary still emits `missing-readonly-engine-candidate-input-tier`; fourteen focused tests stop there once reference-options Tier authority is removed.
 - Recovery: restore all partial authorised edits byte-for-byte, remove the temporary harness, prove 108/108 and return a clean lane.
 - Consequence: WALK-004 remains open for Program rescoping; WALK-005 and later work remain blocked.
+
+
+## 2026-07-24 — Accept WALK-004 protected stop and authorise exact second owner
+
+- Decision: accept the clean protected stop and resume the same WALK-004 worker and parcel without another commission.
+- Boundary: only the reference-options service and factory-approved-inputs summary are authorised production owners; a third owner stops the parcel.
+- Tier ruling: Selector Tier input/readiness and committed Tier authority are deleted; Stage 3B consumes only valid source-backed SYSTEM_POLICY policy Tier and otherwise fails closed through the existing source-policy blocker.
+- Preservation: genuine server-derived Tier/profile results, the 15-table bridge, Engine contracts and all no-write/no-mutation boundaries remain unchanged.
+- Consequence: recalculate deletion-test coupling from the restored baseline, require zero residual, run the blocked and full focused sets plus fixed gate, push exact closeout and stop before WALK-005.

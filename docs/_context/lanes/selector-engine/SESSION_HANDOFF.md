@@ -835,3 +835,12 @@ Mechanically count the full coupled test class before editing, delete or rewrite
 ## 2026-07-24 WALK-004 protected scope stop
 
 WALK-004 remains open. Its exact one-owner deletion exposed a required second production owner: the factory-approved-inputs readiness summary still returns `missing-readonly-engine-candidate-input-tier`. Fourteen coupled focused tests consequently stop at the legacy Tier prerequisite instead of their intended readiness/blocker outcomes. No scope was widened. All partial edits were restored, the temporary harness is absent, the fixed gate passes 108/108, and the lane is clean. Program must rescope before WALK-004 resumes; all later work remains blocked.
+
+
+## 2026-07-24 WALK-004 two-owner resume handoff
+
+Program accepts the protected stop. The same standing worker and WALK-004 parcel resume; do not create another worker or commission. The lane is clean and the fixed gate is 108/108.
+
+Production may change only the reference-options service and factory-approved-inputs summary. Delete legacy `TIERS` option/readiness authority and committed Selector Tier candidate/Stage 3B authority. Stage 3B must use only valid source-backed `SYSTEM_POLICY` length-policy Tier and otherwise retain the existing fail-closed source-policy blocker. Preserve genuine server-derived Tier/profile outputs, the 15-table bridge, Engine contracts and every disabled execution/mutation boundary.
+
+Recalculate the full coupled-test baseline from the restored tree, require zero residual, run the fourteen previously blocked focused tests, the complete affected focused set and the fixed Selector gate. Commit/push only the exact two-owner implementation, coupled tests and five-file memory closeout; leave clean and stop for Program review. A third production owner is an exact protected stop. Do not begin WALK-005 or any prohibited later or operational work.

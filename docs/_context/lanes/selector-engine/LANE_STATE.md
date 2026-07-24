@@ -907,3 +907,16 @@ Run all affected focused tests and the complete fixed Selector gate. Commit and 
 WALK-004 stopped before any retained implementation because the required Tier-free focused proof exposed an existing readiness dependency outside the exact one-owner production boundary. `packages/modules/cs-selector/selectorFactoryApprovedInputsSummary.js` still emits `missing-readonly-engine-candidate-input-tier`; removing Tier from the authorised reference-options service caused fourteen focused readiness tests to stop at that Tier blocker before their intended outcomes. This is the exact safe trace requiring a second production owner. The worker did not widen scope.
 
 All partial WALK-004 production/test edits were restored byte-for-byte, the temporary harness was removed, the fixed Selector gate passes 108/108, and the feature tree is clean. WALK-004 remains open pending Program rescoping. WALK-005 and all later or prohibited work remain blocked.
+
+
+## 2026-07-24 Program WALK-004 two-owner rescope — latest controlling state
+
+**Recorded lane work HEAD:** `80c0e97fd7a79e39d42d6ba11db342e1251a8c51` — `docs(selector): record WALK-004 protected scope stop`.
+
+Program accepts the protected stop and its verified clean recovery. WALK-004 resumes as the same parcel with the same standing worker, one writer and no new commission. The exact production boundary is now only `packages/workspace-kernel/selectorReferenceOptionsService.js` and `packages/modules/cs-selector/selectorFactoryApprovedInputsSummary.js`; a third production owner is a protected stop.
+
+The reference-options owner deletes manual Tier workflow authority, all `TIERS` aliases/debug exposure/reads/options, TIERS-parented Electrical Class, attribution and relationships, and Tier as a Selector payload, option or readiness prerequisite. Genuine non-TIERS Electrical Class may remain; otherwise it is unavailable without inference, default or copied legacy value.
+
+The factory-approved-inputs owner deletes Tier, selectedTier and tierToken from readonly Engine direct-candidate requirements, permanently removes `missing-readonly-engine-candidate-input-tier`, and removes committed Selector Tier from Stage 3B body-length policy. Stage 3B uses only the Tier carried by a valid source-backed `SYSTEM_POLICY` length-policy summary and otherwise fails closed through the existing source-policy blocker. Legitimate server-derived Tier/profile outputs remain.
+
+The worker must recalculate the coupled baseline from the restored clean tree, account mechanically for every deleted or rewritten test assumption with zero residual, rerun the fourteen previously blocked focused tests, the complete affected focused set and fixed Selector gate, then commit/push only the two-owner implementation, coupled tests and lane-memory closeout. WALK-005 and all later or prohibited work remain blocked.
